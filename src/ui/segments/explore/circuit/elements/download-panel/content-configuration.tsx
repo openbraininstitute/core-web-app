@@ -5,7 +5,9 @@ export type TCircuitContentConfigurationKeys =
   | 'nodes'
   | 'edges'
   | 'morphologies'
-  | 'configuration_files'
+  | 'configuration_file'
+  | 'node_sets_file'
+  | 'id_mapping'
   | 'electrical_models'
   | 'mechanisms';
 
@@ -56,12 +58,52 @@ export const morphologiesContentConfiguration: CircuitContentConfigurationProps 
   mimeType: 'h5',
 };
 
-export const configurationFilesContentConfiguration: CircuitContentConfigurationProps = {
-  key: 'configuration_files',
-  name: 'Configuration files',
+export const configurationFileContentConfiguration: CircuitContentConfigurationProps = {
+  key: 'configuration_file',
+  name: 'Configuration file',
   description: (
     <p className="text-primary-1 w-3/4 text-base font-light">
-      The SONATA circuit config, node sets file, and id mapping file.
+      SONATA circuit config JSON file.{' '}
+      <a
+        href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#tying-it-all-together---the-networkcircuit-config-file"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2"
+      >
+        See more here
+      </a>
+      .
+    </p>
+  ),
+  mimeType: 'json',
+};
+
+export const nodeSetsFileContentConfiguration: CircuitContentConfigurationProps = {
+  key: 'node_sets_file',
+  name: 'Node sets file',
+  description: (
+    <p className="text-primary-1 w-3/4 text-base font-light">
+      SONATA node sets JSON file.{' '}
+      <a
+        href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#node-sets-file"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2"
+      >
+        See more here
+      </a>
+      .
+    </p>
+  ),
+  mimeType: 'json',
+};
+
+export const idMappingContentConfiguration: CircuitContentConfigurationProps = {
+  key: 'id_mapping',
+  name: 'ID mapping',
+  description: (
+    <p className="text-primary-1 w-3/4 text-base font-light">
+      ID mapping JSON file for extracted sub-circuits, containing the original neuron IDs.
     </p>
   ),
   mimeType: 'json',
@@ -72,7 +114,7 @@ export const electricalModelsContentConfiguration: CircuitContentConfigurationPr
   name: 'Electrical models',
   description: (
     <p className="text-primary-1 w-3/4 text-base font-light">
-      Neuron electrical model templates (.hoc files), packaged as one archive per directory.
+      Electrical neuron model templates (.hoc files), packaged as one archive per directory.
     </p>
   ),
   mimeType: 'tar.gz',
@@ -83,7 +125,7 @@ export const mechanismsContentConfiguration: CircuitContentConfigurationProps = 
   name: 'Mechanisms',
   description: (
     <p className="text-primary-1 w-3/4 text-base font-light">
-      NEURON mechanism source files (.mod), packaged as a single archive.
+      Biophysical mechanism files (.mod), packaged as a single archive.
     </p>
   ),
   mimeType: 'tar.gz',

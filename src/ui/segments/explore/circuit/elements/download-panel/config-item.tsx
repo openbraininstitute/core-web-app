@@ -187,8 +187,8 @@ export function NetworkConfigItem({
 
   return (
     <div className={classNames('w-full', className)}>
-      <div className="mb-6 flex flex-row justify-between">
-        <div className="flex flex-col">
+      <div className="mb-6 flex flex-row justify-between gap-x-6">
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex flex-row items-center text-xl font-bold tracking-wider text-white uppercase before:mr-2 before:block before:h-3 before:w-3 before:rounded-full before:bg-white before:content-['']">
             {name}
           </div>

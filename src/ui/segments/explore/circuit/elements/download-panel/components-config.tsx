@@ -9,9 +9,11 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 import {
-  configurationFilesContentConfiguration,
+  configurationFileContentConfiguration,
   electricalModelsContentConfiguration,
+  idMappingContentConfiguration,
   mechanismsContentConfiguration,
+  nodeSetsFileContentConfiguration,
 } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import { DownloadPanelError } from '@/ui/segments/explore/circuit/elements/download-panel/error';
 import { FolderConfigGroup } from '@/ui/segments/explore/circuit/elements/download-panel/folder-config-item';
@@ -31,7 +33,11 @@ import type {
   ICircuitSonataConfiguration,
 } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
-import type { TConfigChild } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import type {
+  ConfigItemProps,
+  TConfigChild,
+} from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import type { ConfigurationFileItem } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
 
 export default function ComponentsConfig({ circuit }: { circuit: ICircuit }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
@@ -63,20 +69,27 @@ export default function ComponentsConfig({ circuit }: { circuit: ICircuit }) {
   const config = query.data?.config ?? null;
   const directory = query.data?.directory ?? null;
 
-  const configurationFiles = config && directory ? buildConfigurationFiles(config, directory) : [];
+  const configurationFiles =
+    config && directory ? buildConfigurationFiles(config, directory) : null;
   const electricalEntries =
     config && directory ? buildElectricalModelsEntries(config, directory) : [];
   const mechanismsEntry = config && directory ? buildMechanismsEntry(config, directory) : null;
 
+  const countItem = (item: ConfigurationFileItem | null) => (item?.size ? 1 : 0);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: stable updater
   useEffect(() => {
     updateFileCounter({
-      configuration_files: configurationFiles.filter((f) => f.size).length,
+      configuration_file: countItem(configurationFiles?.circuitConfig ?? null),
+      node_sets_file: countItem(configurationFiles?.nodeSetsFile ?? null),
+      id_mapping: countItem(configurationFiles?.idMapping ?? null),
       electrical_models: electricalEntries.reduce((acc, e) => acc + e.fileCount, 0),
       mechanisms: mechanismsEntry?.fileCount ?? 0,
     });
   }, [
-    configurationFiles.length,
+    configurationFiles?.circuitConfig.size,
+    configurationFiles?.nodeSetsFile?.size,
+    configurationFiles?.idMapping?.size,
     electricalEntries.length,
     mechanismsEntry?.fileCount,
     updateFileCounter,
@@ -109,31 +122,57 @@ export default function ComponentsConfig({ circuit }: { circuit: ICircuit }) {
       }
     )
     .with({ data: { directory: P.nonNullable, config: P.nonNullable } }, () => {
-      const configItems: TConfigChild[] = configurationFiles.map((f) => ({
-        asset: { path: f.path, name: f.title, size: f.size, last_modified: null },
-        title: f.title,
-        mimeType: f.path.split('.').pop() ?? 'json',
-        description: f.path,
-      }));
+      const toConfigItem = (f: ConfigurationFileItem): TConfigChild => {
+        const filename = f.path.split('/').pop() || f.path;
+        const hasDirectory = filename !== f.path;
+        return {
+          asset: { path: f.path, name: filename, size: f.size, last_modified: null },
+          title: filename,
+          mimeType: f.path.split('.').pop() ?? 'json',
+          description: hasDirectory ? f.path : null,
+        };
+      };
+
+      const fileSections: Array<{
+        contentConfiguration: Pick<ConfigItemProps, 'key' | 'name' | 'description' | 'mimeType'>;
+        item: ConfigurationFileItem | null;
+      }> = [
+        {
+          contentConfiguration: configurationFileContentConfiguration,
+          item: configurationFiles?.circuitConfig ?? null,
+        },
+        {
+          contentConfiguration: nodeSetsFileContentConfiguration,
+          item: configurationFiles?.nodeSetsFile ?? null,
+        },
+        {
+          contentConfiguration: idMappingContentConfiguration,
+          item: configurationFiles?.idMapping ?? null,
+        },
+      ];
 
       return (
         <>
-          <NetworkConfigItem
-            key="configuration_files"
-            name={configurationFilesContentConfiguration.name}
-            description={configurationFilesContentConfiguration.description}
-            count={configItems.filter((i) => i.asset?.size).length}
-            mimeType={configurationFilesContentConfiguration.mimeType}
-            items={configItems}
-            showType={null}
-            showPrefix={null}
-            forceDownload
-            downloadConfig={{
-              entityId: circuit.id,
-              assetConfigId: configAsset?.id,
-              context: { virtualLabId, projectId },
-            }}
-          />
+          {fileSections.map(({ contentConfiguration, item }) =>
+            item ? (
+              <NetworkConfigItem
+                key={contentConfiguration.key}
+                name={contentConfiguration.name}
+                description={contentConfiguration.description}
+                count={item.size ? 1 : 0}
+                mimeType={contentConfiguration.mimeType}
+                items={[toConfigItem(item)]}
+                showType={null}
+                showPrefix={null}
+                forceDownload
+                downloadConfig={{
+                  entityId: circuit.id,
+                  assetConfigId: configAsset?.id,
+                  context: { virtualLabId, projectId },
+                }}
+              />
+            ) : null
+          )}
           <FolderConfigGroup
             name={electricalModelsContentConfiguration.name}
             description={electricalModelsContentConfiguration.description}

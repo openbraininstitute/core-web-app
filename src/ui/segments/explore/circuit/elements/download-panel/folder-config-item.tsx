@@ -64,10 +64,10 @@ function FolderRow({ entry, archiveBaseName, mimeType, downloadConfig }: FolderR
   return (
     <div className="flex w-full flex-row items-center justify-between gap-y-10">
       <div className="w-2/3 hyphens-auto">
-        <div className="line-clamp-2 text-lg font-bold text-white">{entry.label}</div>
-        {entry.prefix !== entry.label && (
-          <div className="text-primary-2 text-sm font-light">{entry.prefix}</div>
-        )}
+        <div className="line-clamp-2 text-lg font-bold text-white">
+          {entry.label}.{mimeType}
+        </div>
+        <div className="text-primary-2 text-sm font-light">{entry.prefix}</div>
       </div>
       <div
         className={classNames(
@@ -124,8 +124,8 @@ export function FolderConfigGroup({
   const totalFiles = entries.reduce((acc, e) => acc + e.fileCount, 0);
   return (
     <div className="w-full">
-      <div className="mb-6 flex flex-row justify-between">
-        <div className="flex flex-col">
+      <div className="mb-6 flex flex-row justify-between gap-x-6">
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex flex-row items-center text-xl font-bold tracking-wider text-white uppercase before:mr-2 before:block before:h-3 before:w-3 before:rounded-full before:bg-white before:content-['']">
             {name}
           </div>

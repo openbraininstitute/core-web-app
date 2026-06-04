@@ -41,7 +41,9 @@ export const updateFileCounterAtom = atomFamily((key: string) => {
       morphologies: 0,
       nodes: 0,
       edges: 0,
-      configuration_files: 0,
+      configuration_file: 0,
+      node_sets_file: 0,
+      id_mapping: 0,
       electrical_models: 0,
       mechanisms: 0,
     };
@@ -181,6 +183,12 @@ export type ConfigurationFileItem = {
   size: number | null;
 };
 
+export type ConfigurationFiles = {
+  circuitConfig: ConfigurationFileItem;
+  nodeSetsFile: ConfigurationFileItem | null;
+  idMapping: ConfigurationFileItem | null;
+};
+
 export type FolderEntry = {
   prefix: string;
   label: string;
@@ -224,16 +232,19 @@ export function buildConfigurationFiles(
     manifest?: Record<string, string>;
   },
   directory: DirectoryListContent['files']
-): ConfigurationFileItem[] {
-  const items: Array<{ path: string; title: string }> = [
-    { path: CIRCUIT_CONFIG_PATH, title: 'Circuit config' },
-  ];
-  if (config.node_sets_file) {
-    items.push({
-      path: getAssetPath(config.node_sets_file, config.manifest),
-      title: 'Node sets',
-    });
-  }
+): ConfigurationFiles {
+  const toItem = (path: string, title: string): ConfigurationFileItem => ({
+    path,
+    title,
+    size: directory[path]?.size ?? null,
+  });
+
+  const circuitConfig = toItem(CIRCUIT_CONFIG_PATH, 'Configuration file');
+
+  const nodeSetsFile = config.node_sets_file
+    ? toItem(getAssetPath(config.node_sets_file, config.manifest), 'Node sets file')
+    : null;
+
   // Spec field is optional and often not set in older circuits - fall back to the
   // legacy hardcoded path only if it actually exists.
   const idMappingFromConfig = config.components?.provenance?.id_mapping;
@@ -242,14 +253,9 @@ export function buildConfigurationFiles(
     : directory[DEFAULT_ID_MAPPING_PATH]
       ? DEFAULT_ID_MAPPING_PATH
       : null;
-  if (idMappingPath) {
-    items.push({ path: idMappingPath, title: 'ID mapping' });
-  }
-  return items.map(({ path, title }) => ({
-    path,
-    title,
-    size: directory[path]?.size ?? null,
-  }));
+  const idMapping = idMappingPath ? toItem(idMappingPath, 'ID mapping') : null;
+
+  return { circuitConfig, nodeSetsFile, idMapping };
 }
 
 export function buildElectricalModelsEntries(
