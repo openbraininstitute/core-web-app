@@ -1,5 +1,6 @@
 import { Select } from 'antd';
 import { get } from 'es-toolkit/compat';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -18,7 +19,19 @@ export default function EntityPropertyDropdown({
   disabled?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 }) {
-  const options = get(schemaMappingConfig?.properties, property, []) as string[];
+  const options = useMemo(
+    () => get(schemaMappingConfig?.properties, property, []) as string[],
+    [schemaMappingConfig?.properties, property]
+  );
+
+  const previousOptions = useRef<string[]>(null);
+
+  useEffect(() => {
+    if (options.length > 0 && options !== previousOptions.current) {
+      onChange([options[0]]);
+      previousOptions.current = options;
+    }
+  }, [options, onChange]);
 
   return (
     <Select
