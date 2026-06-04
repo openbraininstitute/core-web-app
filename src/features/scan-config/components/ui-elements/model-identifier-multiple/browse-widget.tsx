@@ -3,6 +3,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
+import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import {
   countSelectedEntities,
   mergeConfigurationInputs,
@@ -20,7 +21,12 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { TWorkspaceSection } from '@/constants';
 import type { TModelIdentifierBrowseSelectionsByType } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
 import type { TFromIdRef } from '@/features/scan-config/helpers';
+import type { TWorkflowSessionPrerequisites } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
+import type {
+  TBrowsePrerequisiteValue,
+  TWorkflowBrowseConfig,
+} from '@/ui/segments/workflows/browse/browse-config';
 import type { TScanConfigConfigureBinding } from '@/ui/segments/workflows/config/scan-config-binding';
 import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config/types';
 
@@ -36,6 +42,10 @@ type TProps = {
   workspace: WorkspaceContext;
   sessionRefs?: readonly { type: TExtendedEntitiesTypeDict; id: string }[];
   requireSpecies?: boolean;
+  /** per-type browse rules; a custom loader scopes rows to the prerequisite (e.g. EM dataset) */
+  browseConfig?: TWorkflowBrowseConfig;
+  /** prerequisites picked during browse, keyed by share-key; used to rebuild the filtered loader */
+  prerequisites?: TWorkflowSessionPrerequisites;
   disabled?: boolean;
   onConfirm: (refs: TFromIdRef[], groupName?: string) => void;
   onCancel: () => void;
@@ -63,6 +73,8 @@ export function ModelIdentifierBrowseWidget({
   workspace,
   sessionRefs,
   requireSpecies = false,
+  browseConfig,
+  prerequisites,
   disabled,
   onConfirm,
   onCancel,
@@ -102,6 +114,52 @@ export function ModelIdentifierBrowseWidget({
   const activeInput = mergedInputs.find((input) => input.type === activeEntityType);
   const activeSelectedRows = activeEntityType ? (selectionsByType[activeEntityType] ?? []) : [];
   const selectedCount = countSelectedEntities(selectionsByType);
+
+  // custom loader = same dataset-scoped query the /new page used (e.g. EM cell morphologies
+  // derived from the chosen reconstruction dataset). when present we replace the base-entity
+  // query and hide the species/filter controls it can't honor, keeping only the scope selector.
+  const activeLoader = activeEntityType ? browseConfig?.[activeEntityType]?.loader : undefined;
+  const isCustomLoader = activeLoader?.kind === 'custom';
+
+  // prerequisites are persisted keyed by entity type, so this is a direct lookup
+  const activePrerequisite = activeEntityType ? prerequisites?.[activeEntityType] : undefined;
+
+  const prerequisiteValue = useMemo<TBrowsePrerequisiteValue | null>(
+    () =>
+      activePrerequisite
+        ? {
+            type: activePrerequisite.type,
+            id: activePrerequisite.id,
+            row: {
+              id: activePrerequisite.id,
+              name: activePrerequisite.name ?? '',
+            } as EntityCoreIdentifiableNamed,
+          }
+        : null,
+    [activePrerequisite]
+  );
+
+  const loaderListQueryFn = useMemo(
+    () => (isCustomLoader ? activeLoader.build(prerequisiteValue) : undefined),
+    [isCustomLoader, activeLoader, prerequisiteValue]
+  );
+  const loaderFacetsQueryFn = useMemo(
+    () => (isCustomLoader ? activeLoader.facets?.build(prerequisiteValue) : undefined),
+    [isCustomLoader, activeLoader, prerequisiteValue]
+  );
+
+  // tag the query cache with the prerequisite id (stripped before the HTTP request) so switching
+  // datasets refetches and matches the /new page cache
+  const extraQueryParams = useMemo(() => {
+    if (!isCustomLoader || !activePrerequisite) {
+      return activeInput?.filters;
+    }
+    return {
+      ...activeInput?.filters,
+      [`${INTERNAL_QUERY_CACHE_PREFIX}prerequisite_type`]: activePrerequisite.type,
+      [`${INTERNAL_QUERY_CACHE_PREFIX}prerequisite_id`]: activePrerequisite.id,
+    };
+  }, [activeInput?.filters, isCustomLoader, activePrerequisite]);
 
   const entityTypeSelectorOptions = useMemo(
     () =>
@@ -192,12 +250,15 @@ export function ModelIdentifierBrowseWidget({
           <BrowseEntityScope
             id={instanceId}
             requireMiniDetailView
-            requireBrainRegion={requireSpecies}
-            requireSpeciesSelector={requireSpecies}
+            requireBrainRegion={requireSpecies && !isCustomLoader}
+            requireSpeciesSelector={requireSpecies && !isCustomLoader}
             requireScopeSelector
+            allowFilter={!isCustomLoader}
             section={workspaceSection}
             dataType={activeEntityType}
-            extraQueryParams={activeInput?.filters}
+            extraQueryParams={extraQueryParams}
+            listQueryFn={loaderListQueryFn}
+            facetsQueryFn={loaderFacetsQueryFn}
             mainTableProps={{
               selectionType: 'checkbox',
               selectedRows: activeSelectedRows,

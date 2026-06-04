@@ -59,7 +59,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     breadcrumb: {
       root: 'Electron microscopy circuit (beta) build',
       steps: {
-        prerequisite: 'Select em-dense reconstruction dataset',
+        prerequisite: 'Select electron microscopy dense reconstruction dataset',
         selection: 'Select entities',
       },
     },

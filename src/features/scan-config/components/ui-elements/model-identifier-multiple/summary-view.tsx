@@ -71,6 +71,8 @@ export function ModelIdentifierAddActionButton({
 type Props = {
   parsedValue: TModelIdentifierParsedValue;
   fieldSchema: Record<string, unknown>;
+  /** root-element-scoped path (e.g. `initialize/neurons`); keys field errors so the left-menu tab matches */
+  errorPathPrefix?: string;
   configurationInputs?: readonly IWorkflowConfigurationInput[];
   resolvedEntities: Array<
     TResolvedModelIdentifierEntity & {
@@ -124,6 +126,7 @@ function getAddToScanLabel(mergedInputs: TModelIdentifierConfigurationInput[]): 
 export function ModelIdentifierSummaryView({
   parsedValue,
   fieldSchema,
+  errorPathPrefix,
   configurationInputs,
   resolvedEntities,
   pendingIds,
@@ -156,10 +159,8 @@ export function ModelIdentifierSummaryView({
     return duplicates;
   }, [parsedValue]);
 
-  // share duplicate names to the shared field-errors atom so the Generate
-  // button (which only sees ajv errors otherwise) stays disabled until resolved
   useFieldError(
-    `model-identifier-multiple/${instanceId}`,
+    errorPathPrefix ? `${errorPathPrefix}/group-names` : `model-identifier-multiple/${instanceId}`,
     duplicateGroupNames.size > 0 ? 'Group names must be unique.' : undefined
   );
 

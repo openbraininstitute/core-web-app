@@ -399,20 +399,34 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       return;
     }
 
+    // carry the confirmed prerequisites, keyed by entity type so the configure-page browse can
+    // look one up directly (no share-key logic on the read side) and rebuild the same loader
+    const prerequisites = Object.fromEntries(
+      configurationInputs.flatMap((input) => {
+        const key = resolvePrerequisiteKey(input.type);
+        const value = key ? confirmedPrerequisiteByKey[key] : undefined;
+        return value
+          ? [[input.type, { type: value.type, id: value.id, name: value.row.name }] as const]
+          : [];
+      })
+    );
+
     navigate(
       buildScanConfigConfigureHref({
         activity,
         targetType,
         workspace: { virtualLabId, projectId },
-        selection: payload,
+        selection: Object.keys(prerequisites).length > 0 ? { ...payload, prerequisites } : payload,
         standalone: workflow?.configureRouting === WorkflowConfigureRoutingDict.Standalone,
       })
     );
   }, [
     activity,
+    confirmedPrerequisiteByKey,
     configurationInputs,
     navigate,
     projectId,
+    resolvePrerequisiteKey,
     selectionConfig,
     selectionsByType,
     targetType,

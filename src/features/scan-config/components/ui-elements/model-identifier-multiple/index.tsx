@@ -34,6 +34,8 @@ type Props = {
   setState: (nextState: Record<string, ConfigValue>) => void;
   paramSchema: TModelIdentifierMultiple;
   disabled?: boolean;
+  /** root-element-scoped path (e.g. `initialize/neurons`) for left-menu field-error matching */
+  errorPathPrefix?: string;
 };
 
 function updateParsedValue(
@@ -50,6 +52,7 @@ export function ModelIdentifierMultiple({
   setState,
   paramSchema,
   disabled = false,
+  errorPathPrefix,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const workflowField = useScanConfigWorkflowEditorField();
@@ -281,6 +284,8 @@ export function ModelIdentifierMultiple({
           workspace={{ virtualLabId, projectId }}
           sessionRefs={sessionRefs}
           requireSpecies={workflowField?.requireSpecies}
+          browseConfig={workflowField?.browseConfig}
+          prerequisites={workflowField?.workflowSessionSelection?.prerequisites}
           disabled={disabled}
           onConfirm={(refs, groupName) => handleBrowseConfirm(refs, groupName, groupIndex)}
           onCancel={() => handleBrowseCancel(groupIndex)}
@@ -310,6 +315,7 @@ export function ModelIdentifierMultiple({
       <ModelIdentifierSummaryView
         parsedValue={parsedValue}
         fieldSchema={fieldSchema}
+        errorPathPrefix={errorPathPrefix}
         configurationInputs={workflowField?.configurationInputs}
         resolvedEntities={resolvedEntities}
         pendingIds={pendingIds}

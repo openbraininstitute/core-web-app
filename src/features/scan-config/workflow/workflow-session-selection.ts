@@ -23,27 +23,51 @@ const workflowSessionSelectionRefSchema = z.object({
   id: z.string(),
 });
 
-const workflowSessionSelectionPayloadSchema = z.discriminatedUnion('mode', [
-  z.object({
-    mode: z.literal(WorkflowSessionSelectionMode.Single),
-    item: workflowSessionSelectionRefSchema,
-  }),
-  z.object({
-    mode: z.literal(WorkflowSessionSelectionMode.List),
-    items: z.array(workflowSessionSelectionRefSchema).min(1),
-  }),
-  z.object({
-    mode: z.literal(WorkflowSessionSelectionMode.Grouped),
-    groups: z
-      .array(
-        z.object({
-          name: z.string().optional(),
-          items: z.array(workflowSessionSelectionRefSchema).min(1),
-        })
-      )
-      .min(1),
-  }),
-]);
+/**
+ * a browse prerequisite (e.g. EM dense reconstruction dataset) that scoped the selection.
+ * kept minimal — only what a loader needs (`id`/`type`) plus `name` for display.
+ */
+const workflowSessionPrerequisiteSchema = z.object({
+  type: z.string(),
+  id: z.string(),
+  name: z.string().optional(),
+});
+
+export type TWorkflowSessionPrerequisite = z.infer<typeof workflowSessionPrerequisiteSchema>;
+
+/**
+ * prerequisites keyed by entity type — the configure page looks one up directly for the type
+ * being browsed and rebuilds the same dataset-filtered loader used on /new. without it the
+ * browse falls back to the unfiltered base query. a record (not a single value) so each
+ * configuration input can carry its own prerequisite (shared inputs just repeat the value).
+ */
+export type TWorkflowSessionPrerequisites = Record<string, TWorkflowSessionPrerequisite>;
+
+const workflowSessionSelectionPayloadSchema = z
+  .discriminatedUnion('mode', [
+    z.object({
+      mode: z.literal(WorkflowSessionSelectionMode.Single),
+      item: workflowSessionSelectionRefSchema,
+    }),
+    z.object({
+      mode: z.literal(WorkflowSessionSelectionMode.List),
+      items: z.array(workflowSessionSelectionRefSchema).min(1),
+    }),
+    z.object({
+      mode: z.literal(WorkflowSessionSelectionMode.Grouped),
+      groups: z
+        .array(
+          z.object({
+            name: z.string().optional(),
+            items: z.array(workflowSessionSelectionRefSchema).min(1),
+          })
+        )
+        .min(1),
+    }),
+  ])
+  .and(
+    z.object({ prerequisites: z.record(z.string(), workflowSessionPrerequisiteSchema).optional() })
+  );
 
 export type TWorkflowSessionSelectionPayload = z.infer<
   typeof workflowSessionSelectionPayloadSchema

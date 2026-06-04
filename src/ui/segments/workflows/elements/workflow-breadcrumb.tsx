@@ -60,7 +60,7 @@ export function WorkflowBreadcrumb() {
           <BreadcrumbItem>
             <BreadcrumbLink
               asChild
-              className="text-primary-9 hover:text-primary-7 text-lg font-light select-none"
+              className="text-primary-9 hover:text-primary-7 text-lg font-light"
             >
               <Link href={homeLink}>{root}</Link>
             </BreadcrumbLink>
@@ -68,7 +68,7 @@ export function WorkflowBreadcrumb() {
           <BreadcrumbSeparator className="text-primary-9 text-lg font-bold">
             <RightOutlined className="text-sm" />
           </BreadcrumbSeparator>
-          <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold select-none">
+          <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold">
             {current}
           </BreadcrumbItem>
         </BreadcrumbList>
