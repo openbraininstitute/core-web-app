@@ -8,10 +8,14 @@ import { useParams, usePathname } from 'next/navigation';
 
 import { config } from '@/config';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { getWorkflowSegment } from '@/ui/segments/workflows/config';
+import {
+  getWorkflowSegment,
+  WORKFLOW_SESSION_ID_SEARCH_PARAM,
+} from '@/ui/segments/workflows/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { KebabCase } from '@/utils/type';
@@ -35,7 +39,12 @@ export function BrowseAction() {
       size={breakpoint === 'l' ? 'md' : 'lg'}
       className="gap-10 px-4 hover:text-white!"
     >
-      <Link href={{ pathname: link, query: { sessionId: crypto.randomUUID() } }}>
+      <Link
+        href={{
+          pathname: link,
+          query: { [WORKFLOW_SESSION_ID_SEARCH_PARAM]: createWorkflowSessionId() },
+        }}
+      >
         <div>{title}</div>
         <PlusOutlined />
       </Link>

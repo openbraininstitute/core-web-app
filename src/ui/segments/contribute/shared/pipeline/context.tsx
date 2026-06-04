@@ -70,7 +70,6 @@ export function ContributionPipelineProvider<
       const fieldKey = step.schemaFieldKey;
 
       if (Array.isArray(fieldKey)) {
-        // Create a pick object with all fields set to true
         const pickObject = fieldKey.reduce(
           (acc, key) => {
             acc[key] = true;
@@ -82,7 +81,6 @@ export function ContributionPipelineProvider<
         const partialSchema = schema.pick(pickObject);
         const parseResult = partialSchema.safeParse(allValues);
 
-        // For array fields, check if ANY field is dirty
         const isDirty = fieldKey.some((key) => dirtyFields.includes(key));
         const hasErrors = !parseResult.success;
 
@@ -160,9 +158,11 @@ export function ContributionPipelineProvider<
       config,
     ]
   );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const initialValues = useMemo(
     () => config.getInitialValues(brainRegionId as string) as TFormValues,
-    [config, brainRegionId]
+    []
   );
 
   return (

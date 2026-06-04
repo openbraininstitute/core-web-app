@@ -23,6 +23,10 @@ import { CircuitPreview } from '@/ui/segments/mini-detail-view/previews/circuit-
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
+import {
+  MiniDetailViewTheme,
+  type TMiniDetailViewTheme,
+} from '@/ui/segments/mini-detail-view/types';
 import { cn } from '@/utils/css-class';
 
 import { DataActions, WorkflowActions, WorkflowBuildActions } from './actions';
@@ -38,16 +42,19 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
-import type { TMiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 type Props = {
   section?: TWorkspaceSection;
   dataType: TExtendedEntitiesTypeDict;
+  hideUseModelAction?: boolean;
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
   dataType,
+  hideUseModelAction,
+  workflowTargetType,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   const { mdv, setMdv } = useMiniDetailView();
@@ -80,6 +87,8 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       record={record}
       dataType={dataType}
       onClose={onClose}
+      hideUseModelAction={hideUseModelAction}
+      workflowTargetType={workflowTargetType}
     />
   );
 }
@@ -91,6 +100,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   onClose,
   theme = 'default',
   enableAnimation = true,
+  hideUseModelAction,
+  workflowTargetType,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -98,6 +109,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   onClose?: () => void;
   theme?: TMiniDetailViewTheme;
   enableAnimation?: boolean;
+  hideUseModelAction?: boolean;
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 }) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
@@ -244,13 +257,28 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           WorkspaceSection.ProcessWorkflow
         ),
       },
-      ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
+      ({ section }) => (
+        <WorkflowActions
+          record={record}
+          dataType={dataType}
+          section={section}
+          hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
+        />
+      )
     )
     .with(
       {
         section: P.union(WorkspaceSection.ScanConfigBuildWorkflow, WorkspaceSection.BuildWorkflow),
       },
-      () => <WorkflowBuildActions record={record} dataType={dataType} />
+      () => (
+        <WorkflowBuildActions
+          record={record}
+          dataType={dataType}
+          hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
+        />
+      )
     )
     .otherwise(() => null);
 
@@ -301,9 +329,15 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-1.5 rounded-md p-2 hover:bg-white/20"
+                  className={cn('mt-1.5 rounded-full p-2 hover:bg-white/20', {
+                    'hover:bg-gray-100': theme === MiniDetailViewTheme.Light,
+                  })}
                 >
-                  <CloseOutlined className="text-white" />
+                  <CloseOutlined
+                    className={cn('text-white', {
+                      'text-primary-9': theme === MiniDetailViewTheme.Light,
+                    })}
+                  />
                 </button>
               )}
             </CardTitle>

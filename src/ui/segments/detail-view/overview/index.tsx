@@ -19,12 +19,11 @@ import {
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
-import { circuitTypes } from '@/entity-configuration/domain/helpers';
+import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
-  resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
@@ -42,6 +41,7 @@ import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   BuildScanConfigTabs,
+  type Config,
   ExtractScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
@@ -53,6 +53,7 @@ import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
+import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -69,6 +70,12 @@ const LegacySimulationCampaigns = [
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
 ] as const;
+
+type TLegacySimulationCampaignConfig = {
+  campaign: { id: string };
+  simulation?: { entity_id?: string | null } | null;
+  config?: { form?: Config } | null;
+};
 
 export default async function Overview({
   entity,
@@ -139,14 +146,21 @@ export default async function Overview({
         notFound();
       }
 
+      const scanConfig = findScanConfigRegistryByTargetType(
+        ExtendedEntitiesTypeDict.CircuitExtractionCampaign
+      );
+      if (!scanConfig) {
+        notFound();
+      }
+
       return (
         <>
           <ScanConfiguration
             entityId={extractionConfig.circuitId}
-            entityType={extendedType}
+            scanConfig={scanConfig}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={extractionConfig.campaign.id}
+            origin={extractionConfig.campaign.id}
             initialConfig={extractionConfig.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -174,14 +188,21 @@ export default async function Overview({
         notFound();
       }
 
+      const scanConfig = findScanConfigRegistryByTargetType(
+        ExtendedEntitiesTypeDict.EmSynapseMappingCampaign
+      );
+      if (!scanConfig) {
+        notFound();
+      }
+
       return (
         <>
           <ScanConfiguration
             entityId={config.sourceEntityId}
-            entityType={ExtendedEntitiesTypeDict.CellMorphology}
+            scanConfig={scanConfig}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={config.campaign.id}
+            origin={config.campaign.id}
             initialConfig={config.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -198,23 +219,38 @@ export default async function Overview({
   }
 
   if (includes(LegacySimulationCampaigns, extendedType)) {
-    let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
+    const simulationEntityConfig = getEntityByExtendedType({ type: extendedType });
+    const resolveCampaign = simulationEntityConfig?.api?.query?.resolve;
+
+    if (!resolveCampaign) {
+      notFound();
+    }
+
+    let config: TLegacySimulationCampaignConfig;
 
     try {
-      config = await resolveSimulationByCampaignId({ id: entity.id, context: context });
+      config = (await resolveCampaign({
+        id: entity.id,
+        context: context,
+      })) as TLegacySimulationCampaignConfig;
     } catch {
       notFound();
     }
 
     if (!config.simulation?.entity_id) notFound();
 
+    const scanConfig = findScanConfigRegistryByTargetType(extendedType);
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <ScanConfiguration
         entityId={config.simulation.entity_id}
-        entityType={extendedType}
+        scanConfig={scanConfig}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        origin={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -245,13 +281,20 @@ export default async function Overview({
 
     if (!config.simulation?.entity_id) notFound();
 
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.IonChannelModelSimulation
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <ScanConfiguration
         entityId={config.simulation.entity_id}
-        entityType={ExtendedEntitiesTypeDict.IonChannelModel}
+        scanConfig={scanConfig}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        origin={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -278,14 +321,21 @@ export default async function Overview({
       notFound();
     }
 
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.CircuitExtractionCampaign
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <>
         <ScanConfiguration
           entityId={extractionConfig.circuitId}
-          entityType={extendedType}
+          scanConfig={scanConfig}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          origin={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{
@@ -330,14 +380,21 @@ export default async function Overview({
       notFound();
     }
 
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.SkeletonizationCampaign
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <>
         <ScanConfiguration
           entityId={extractionConfig.emCellMeshId}
-          entityType={extendedType}
+          scanConfig={scanConfig}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          origin={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{

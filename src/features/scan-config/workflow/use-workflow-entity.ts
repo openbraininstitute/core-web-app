@@ -1,18 +1,21 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { getSupportedEntityTypesForScanConfiguration } from '@/features/scan-config/types';
+import { isWorkflowSessionId } from '@/features/scan-config/workflow/session';
+import {
+  readWorkflowSessionSelection,
+  resolvePrimarySessionEntityId,
+} from '@/features/scan-config/workflow/workflow-session-selection';
 
 import type {
   ScanConfigEntitySourceMode,
   TResolvedScanConfigEntity,
   TScanConfigEntitySource,
 } from '@/features/scan-config/workflow/types';
-import type { WorkspaceContext } from '@/types/common';
+import type { TScanConfigConfigureBinding } from '@/ui/segments/workflows/config/scan-config-binding';
 
-function readRouteEntityId(
+function readRouteParam(
   routeParams: Record<string, string | undefined>,
   param = 'id'
 ): string | undefined {
@@ -34,33 +37,43 @@ export function useStaticTypeWorkflowEntity(
   );
 }
 
-export function useRouteIdWorkflowEntity({
+export function useSessionWorkflowEntity({
   entitySource,
-  workspace,
   routeParams,
+  configureBinding,
 }: {
   entitySource: Extract<
     TScanConfigEntitySource,
-    { mode: typeof ScanConfigEntitySourceMode.RouteId }
+    { mode: typeof ScanConfigEntitySourceMode.Session }
   >;
-  workspace: WorkspaceContext;
   routeParams: Record<string, string | undefined>;
+  configureBinding: TScanConfigConfigureBinding;
 }): TResolvedScanConfigEntity {
   const param = entitySource.param ?? 'id';
-  const entityId = readRouteEntityId(routeParams, param);
+  const sessionId = readRouteParam(routeParams, param);
 
-  if (!entityId) {
-    throw new Error(`Missing route param "${param}" for scan config workflow entity`);
+  if (!sessionId || !isWorkflowSessionId(sessionId)) {
+    throw new Error(`Missing or invalid workflow session id in route param "${param}"`);
   }
 
-  const { data: entity } = useSuspenseQuery({
-    queryKey: entitySource.query.queryKey({ context: workspace, id: entityId }),
-    queryFn: () => entitySource.query.queryFn({ context: workspace, id: entityId }),
-  });
+  const workflowSessionSelection = readWorkflowSessionSelection(sessionId);
 
-  return {
-    entity,
-    entityType: getSupportedEntityTypesForScanConfiguration({ entity }),
-    entityId: entity.id,
-  };
+  return useMemo(() => {
+    const entityId = workflowSessionSelection
+      ? resolvePrimarySessionEntityId(workflowSessionSelection, configureBinding.browseType)
+      : undefined;
+
+    return {
+      entity: null,
+      entityType: configureBinding.scanConfigEntityType,
+      entityId,
+      workflowSessionId: sessionId,
+      workflowSessionSelection,
+    };
+  }, [
+    configureBinding.browseType,
+    configureBinding.scanConfigEntityType,
+    sessionId,
+    workflowSessionSelection,
+  ]);
 }

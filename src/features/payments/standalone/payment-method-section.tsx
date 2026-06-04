@@ -6,12 +6,14 @@ import { BillingAddressElement, BillingCardElement } from '@/features/stripe/pay
 import { Button as UiButton } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
+import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
 
 export function StandalonePaymentMethodSection({
   billingAddress,
   disabled,
   onCancel,
+  onCardChange,
   onPay,
   onPaymentReady,
   onBillingAddressChange,
@@ -23,6 +25,7 @@ export function StandalonePaymentMethodSection({
   billingAddress: TBillingAddress | null;
   disabled: boolean;
   onCancel: () => void;
+  onCardChange: (event: StripePaymentElementChangeEvent) => void;
   onPay: () => void;
   onPaymentReady: () => void;
   onBillingAddressChange: (address: TBillingAddress | null) => void;
@@ -46,6 +49,7 @@ export function StandalonePaymentMethodSection({
         <BillingCardElement
           disabled={disabled}
           framed={false}
+          onChange={onCardChange}
           onReady={onPaymentReady}
           paymentElementId="credits-form"
         />

@@ -64,9 +64,11 @@ export function useLastMessageDiffBar(
   );
 
   const accumulatedDiffs = React.useMemo(() => {
-    if (!preMessageConfig || !lastNewConfig) return [];
+    if (!lastNewConfig) return [];
+    // When preMessageConfig is null (first editstate call ever, no prior config),
+    // treat it as an empty object so diffs show all fields as "add".
     return computeLiveDiffs(
-      preMessageConfig as Record<string, unknown>,
+      (preMessageConfig ?? {}) as Record<string, unknown>,
       lastNewConfig as Record<string, unknown>
     );
   }, [preMessageConfig, lastNewConfig]);

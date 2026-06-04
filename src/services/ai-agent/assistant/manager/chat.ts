@@ -2,7 +2,7 @@ import { Signal } from '../signal';
 
 import type { UIMessage } from '@ai-sdk/react';
 
-type sendFn = (text: string) => void;
+type SendFn = (text: string, files?: File[]) => void;
 type StopFn = () => Promise<void>;
 
 export class ChatManager {
@@ -12,11 +12,11 @@ export class ChatManager {
 
   public readonly error = new Signal<Error | undefined>(undefined);
 
-  private _sendMessage: sendFn = () => {};
+  private _sendMessage: SendFn = () => {};
 
   private _stop: StopFn = async () => {};
 
-  readonly sendMessage: sendFn = (text: string) => this._sendMessage(text);
+  readonly sendMessage: SendFn = (text: string, files?: File[]) => this._sendMessage(text, files);
 
   readonly stop: StopFn = async () => this._stop();
 
@@ -28,7 +28,7 @@ export class ChatManager {
   }: {
     status: string;
     error: Error | undefined;
-    sendMessage: sendFn;
+    sendMessage: SendFn;
     stop: StopFn;
   }) {
     this.status.set(status);

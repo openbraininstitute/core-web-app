@@ -1,26 +1,22 @@
-import { match } from 'ts-pattern';
 import { z } from 'zod';
 
-import {
-  EntityTypeDict,
-  type ICellMorphology,
-  type ICircuit,
-  type IMEModel,
-  type IonChannelModel,
-  type TEntityTypeDict,
-} from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 // biome-ignore lint/style/useImportType: biome hallucination
-import {
-  ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import type {
+  ICellMorphology,
+  ICircuit,
+  IMEModel,
+  IonChannelModel,
+  TEntityTypeDict,
+} from '@/api/entitycore/types';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { Prettify } from '@/utils/type';
+
+export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 type Primitive = null | boolean | number | string;
 export interface ConfigObject {
@@ -165,7 +161,7 @@ export interface ModelIdentifier extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
 }
 
-export interface ModelIdentifierMultiple extends TBlockElement {
+export interface TModelIdentifierMultiple extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
 }
 export interface FloatParameterSweep extends TBlockElement {
@@ -348,7 +344,7 @@ export type TBlockElement = {
 export type ParamSchema =
   | StringInput
   | ModelIdentifier
-  | ModelIdentifierMultiple
+  | TModelIdentifierMultiple
   | FloatParameterSweep
   | IntParameterSweep
   | Reference
@@ -504,40 +500,3 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
   | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
-
-export const getSupportedEntityTypesForScanConfiguration = ({
-  entity,
-}: {
-  entity?: TSupportedEntitiesForScanConfiguration | { type: TExtendedEntitiesTypeDict };
-}) => {
-  return match({ entity })
-    .with(
-      {
-        entity: {
-          type: EntityTypeDict.Circuit,
-          scale: CircuitScaleDictionary.Single,
-        },
-      },
-      () => ExtendedEntitiesTypeDict.MEModelWithSynapses
-    )
-    .with({ entity: { type: EntityTypeDict.Circuit } }, () => ExtendedEntitiesTypeDict.Circuit)
-    .with(
-      { entity: { type: EntityTypeDict.Memodel } },
-      () => ExtendedEntitiesTypeDict.MemodelCircuit
-    )
-    .with(
-      { entity: { type: EntityTypeDict.IonChannelModel } },
-      () => ExtendedEntitiesTypeDict.IonChannelModel
-    )
-    .with(
-      { entity: { type: EntityTypeDict.EMCellMesh } },
-      () => ExtendedEntitiesTypeDict.EMCellMesh
-    )
-    .with(
-      { entity: { type: EntityTypeDict.CellMorphology } },
-      () => ExtendedEntitiesTypeDict.UniversalCellMorphology
-    )
-    .otherwise(() => {
-      throw new Error('Not supported entity for scan configuration');
-    });
-};

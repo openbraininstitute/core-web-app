@@ -375,3 +375,7 @@
     opacity: 1;
   }
 }
+
+.errorText {
+  color: #dc2626;
+}

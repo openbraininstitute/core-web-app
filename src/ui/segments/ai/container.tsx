@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import AiAssistant from '@/components/ai-assistant';
 import IconPlus from '@/components/icons/Plus';
-import { useAgentState } from '@/services/ai-agent';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
@@ -14,8 +13,6 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
-
-  useAgentState('smc_simulation_config');
 
   const isCollapsed = state === PanelState.Collapsed;
   const isFullscreen = state === PanelState.Fullscreen;

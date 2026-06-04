@@ -10,13 +10,8 @@
 import { get } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
-import {
-  getGeneratedApiUrl,
-  getScanConfigSchemaName,
-} from '@/features/scan-config/components/hooks';
 import {
   type TSchemaMappingConfiguration,
   useObioneJsonSchema,
@@ -29,34 +24,39 @@ import {
 import {
   type Config,
   type ConfigSchema,
-  getSupportedEntityTypesForScanConfiguration,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   SchemaMappingKeyDict,
   type SchemaName,
   type TScanConfigActivity,
   type TScanConfigTabs,
-  type TSchemaMappingKey,
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { resolvePrimaryEntityIdFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
+import {
+  resolveScanConfigFromRegistry,
+  type TScanConfigRegistryConfig,
+} from '@/ui/segments/workflows/config/scan-config-binding';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
 export type TUseScanConfigurationParams = {
   entityId?: string | Nullish;
-  entityType: TExtendedEntitiesTypeDict;
   entity?: TSupportedEntitiesForScanConfiguration | Nullish;
   virtualLabId: string;
   projectId: string;
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
   readOnly?: boolean;
   activity?: TScanConfigActivity;
-  schemaMappingKey?: TSchemaMappingKey;
   campaignOriginAction?: TScanConfigCampaignOriginActionDict;
+  scanConfig: TScanConfigRegistryConfig;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
 export type TScanConfigurationReadyState = {
@@ -64,7 +64,7 @@ export type TScanConfigurationReadyState = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   virtualLabId: string;
   projectId: string;
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   defaultTab: TScanConfigTabs;
   readOnly?: boolean;
@@ -75,6 +75,8 @@ export type TScanConfigurationReadyState = {
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   generatedEndpoint: string;
   aiEnabled: boolean;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
 /**
@@ -90,26 +92,42 @@ export type TUseScanConfigurationResult = {
 
 export function useScanConfiguration({
   entityId,
-  entityType,
   entity: entityFromProps,
   virtualLabId,
   projectId,
-  initialCampaignId,
+  origin,
   initialConfig,
   defaultTab = ScanConfigDefaultTab,
   readOnly,
   activity = ScanConfigActivity.Simulate,
-  schemaMappingKey,
   campaignOriginAction = ScanConfigCampaignOriginActionDict.Task,
+  scanConfig,
+  workflowSessionSelection,
+  resolveSessionFromIdType,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
-  const shouldFetchEntity = !entityFromProps && !!entityId;
+  const registryResolved = useMemo(() => resolveScanConfigFromRegistry(scanConfig), [scanConfig]);
+
+  const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
+    schemaName: registryResolved.schemaName,
+  });
+
+  const entityIdFromForm = useMemo(
+    () =>
+      schema && initialConfig
+        ? resolvePrimaryEntityIdFromConfigForm(schema, initialConfig)
+        : undefined,
+    [initialConfig, schema]
+  );
+
+  const effectiveEntityId = entityId ?? entityIdFromForm;
+  const shouldFetchEntity = !entityFromProps && !!effectiveEntityId;
 
   const {
     entity: fetchedEntity,
     isLoading: loadingEntity,
     error,
   } = useModelQuery({
-    id: shouldFetchEntity ? entityId : undefined,
+    id: shouldFetchEntity ? effectiveEntityId : undefined,
     context: { virtualLabId, projectId },
   });
 
@@ -121,48 +139,19 @@ export function useScanConfiguration({
       return null;
     }
 
-    if (!entity && !entityType) {
-      return null;
-    }
+    const entityConfig = getEntityByExtendedType({ type: registryResolved.entityType });
 
-    const usedType = getSupportedEntityTypesForScanConfiguration({
-      entity: entity ?? { type: entityType },
-    });
+    return {
+      usedType: registryResolved.entityType,
+      entityConfig,
+      endpoint: registryResolved.generatedEndpoint,
+      schemaName: registryResolved.schemaName,
+      effectiveSchemaMappingKey: registryResolved.schemaMappingKey,
+    };
+  }, [entity, isEntityLoading, registryResolved]);
 
-    const entityConfig = getEntityByExtendedType({ type: usedType });
-    const endpoint = getGeneratedApiUrl({
-      activity,
-      entityType: usedType,
-    });
-    const schemaName = getScanConfigSchemaName({
-      activity,
-      entityType: usedType,
-    });
-
-    return { usedType, entityConfig, endpoint, schemaName };
-  }, [activity, entity, entityType, isEntityLoading]);
-
-  const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
-    schemaName: resolved?.schemaName,
-  });
-
-  const effectiveSchemaMappingKey = useMemo((): TSchemaMappingKey | undefined => {
-    if (schemaMappingKey) {
-      return schemaMappingKey;
-    }
-
-    if (
-      resolved?.usedType === ExtendedEntitiesTypeDict.Circuit ||
-      resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses
-    ) {
-      return SchemaMappingKeyDict.Circuit;
-    }
-
-    return undefined;
-  }, [resolved?.usedType, schemaMappingKey]);
-
-  const property_endpoints = effectiveSchemaMappingKey
-    ? get(schema?.property_endpoints, effectiveSchemaMappingKey, '')
+  const property_endpoints = resolved?.effectiveSchemaMappingKey
+    ? get(schema?.property_endpoints, resolved.effectiveSchemaMappingKey, '')
     : '';
 
   const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
@@ -171,7 +160,9 @@ export function useScanConfiguration({
       workspace: { virtualLabId, projectId },
       endpoint: property_endpoints,
       isSchemaLoaded:
-        !loadingSchema && !!schema && effectiveSchemaMappingKey === SchemaMappingKeyDict.Circuit,
+        !loadingSchema &&
+        !!schema &&
+        resolved?.effectiveSchemaMappingKey === SchemaMappingKeyDict.Circuit,
     });
 
   const isLoading = loadingConfiguration || isEntityLoading || loadingSchema;
@@ -217,7 +208,8 @@ export function useScanConfiguration({
       };
     }
 
-    const aiEnabled = entity ? 'scale' in entity && entity.scale !== 'single' : false;
+    const aiEnabled =
+      activity === ScanConfigActivity.Simulate || activity === ScanConfigActivity.Process;
 
     if (!entity && !resolved.usedType) {
       return { isLoading: false, error: null, unresolvedMessage: null, ready: null };
@@ -232,7 +224,7 @@ export function useScanConfiguration({
         entityType: resolved.usedType,
         virtualLabId,
         projectId,
-        initialCampaignId,
+        origin,
         initialConfig,
         defaultTab,
         readOnly,
@@ -243,6 +235,8 @@ export function useScanConfiguration({
         schemaMappingConfig,
         generatedEndpoint: resolved.endpoint,
         aiEnabled,
+        workflowSessionSelection,
+        resolveSessionFromIdType,
       },
     };
   }, [
@@ -251,14 +245,16 @@ export function useScanConfiguration({
     defaultTab,
     entity,
     error,
-    initialCampaignId,
+    origin,
     initialConfig,
     isLoading,
     projectId,
     readOnly,
+    resolveSessionFromIdType,
     resolved,
     schema,
     schemaMappingConfig,
     virtualLabId,
+    workflowSessionSelection,
   ]);
 }

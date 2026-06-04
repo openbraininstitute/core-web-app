@@ -6,7 +6,7 @@ import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import { useSession } from 'next-auth/react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   BillingQuoteRequestFlowDict,
@@ -16,12 +16,17 @@ import { useAppNotification } from '@/components/notification';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
 import PricingToggleCards from '@/features/payments/subscription/pricing-toggle-cards';
-import { DefaultCurrency, flowAtom } from '@/features/payments/subscription/shared';
+import { DefaultCurrency, FlowStepDict, flowAtom } from '@/features/payments/subscription/shared';
 import {
-  confirmStripeSetupPaymentMethod,
-  StripeSetupConfirmationError,
-} from '@/features/stripe/confirm-setup';
-import { useSetupIntentQuery, useStripeInstanceQuery } from '@/features/stripe/hooks';
+  getBackendPaymentErrorDescription,
+  getStripeSetupErrorDescription,
+  isSetupIntentConsumedError,
+} from '@/features/stripe/errors';
+import {
+  resolvePaymentMethodId,
+  useSetupIntentQuery,
+  useStripeInstanceQuery,
+} from '@/features/stripe/hooks';
 import {
   BillingAddressElement,
   BillingCardElement,
@@ -36,6 +41,7 @@ import { cn } from '@/utils/css-class';
 
 import { useCreateSubscriptionMutation } from './hooks';
 
+import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
 import type { User } from 'next-auth';
 import type {
   CreditConversionResponse,
@@ -44,6 +50,7 @@ import type {
 
 type Props = {
   onPrevious: () => void;
+  onSetupIntentRefreshNeeded: () => Promise<void>;
 };
 
 const notificationConfig = {
@@ -51,7 +58,7 @@ const notificationConfig = {
   key: 'subscription-payment-error',
 };
 
-function Form({ onPrevious }: Props) {
+function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
   const { virtualLabId } = useWorkspace();
   const queryClient = useQueryClient();
   const elements = useElements();
@@ -62,6 +69,8 @@ function Form({ onPrevious }: Props) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const [isSubscribing, setSubscribing] = useState(false);
   const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
+  const [cachedPaymentMethodId, setCachedPaymentMethodId] = useState<string | null>(null);
+  const cachedPaymentMethodIdRef = useRef<string | null>(null);
   const { success: successNotify, error: errorNotify } = useAppNotification();
   const createSubscription = useCreateSubscriptionMutation();
 
@@ -117,6 +126,28 @@ function Form({ onPrevious }: Props) {
     quote.isFetching ||
     isSubscribing;
 
+  const cachePaymentMethodId = useCallback((paymentMethodId: string) => {
+    cachedPaymentMethodIdRef.current = paymentMethodId;
+    setCachedPaymentMethodId(paymentMethodId);
+  }, []);
+
+  const clearCachedPaymentMethodId = useCallback(() => {
+    cachedPaymentMethodIdRef.current = null;
+    setCachedPaymentMethodId(null);
+  }, []);
+
+  const handleCardChange = useCallback(
+    (event: StripePaymentElementChangeEvent) => {
+      if (isSubscribing || !cachedPaymentMethodIdRef.current || event.empty) {
+        return;
+      }
+
+      clearCachedPaymentMethodId();
+      void onSetupIntentRefreshNeeded();
+    },
+    [clearCachedPaymentMethodId, isSubscribing, onSetupIntentRefreshNeeded]
+  );
+
   const onSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -127,23 +158,24 @@ function Form({ onPrevious }: Props) {
 
     let paymentMethodId: string;
     try {
-      paymentMethodId = await confirmStripeSetupPaymentMethod({
+      paymentMethodId = await resolvePaymentMethodId({
         billingAddress: currentBillingAddress,
+        cachedPaymentMethodId,
         elements,
         returnUrl: window.location.href,
         stripe,
         user,
       });
+      cachePaymentMethodId(paymentMethodId);
     } catch (error) {
-      const description =
-        error instanceof StripeSetupConfirmationError && error.reason === 'missing_payment_method'
-          ? messages.paymentMethodSaveError
-          : error instanceof Error
-            ? (error.message ?? messages.paymentProcessingError)
-            : messages.paymentProcessingError;
+      if (isSetupIntentConsumedError(error)) {
+        clearCachedPaymentMethodId();
+        await onSetupIntentRefreshNeeded();
+      }
+
       errorNotify({
         message: messages.paymentProcessingErrorTitle,
-        description,
+        description: getStripeSetupErrorDescription(error),
         ...notificationConfig,
       });
       setSubscribing(false);
@@ -172,20 +204,13 @@ function Form({ onPrevious }: Props) {
         });
         makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
       }
+      clearCachedPaymentMethodId();
       setSubscribing(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
-      const errors = {
-        ENTITY_ALREADY_EXISTS: messages.subscriptionPaymentErrorEntityAlreadyExists,
-        ENTITY_NOT_CREATED: messages.subscriptionPaymentErrorEntityNotCreated,
-        ENTITY_NOT_FOUND: messages.subscriptionPaymentErrorEntityNotFound,
-        PAYMENT_ERROR: `We couldn’t process your payment because the billing country does not match the country associated with your payment method. Please verify your billing details and try again.`,
-        DEFAULT: messages.paymentProcessingError,
-      };
-      const description = get(errors, code, messages.paymentProcessingError);
       errorNotify({
         message: messages.paymentProcessingErrorTitle,
-        description,
+        description: getBackendPaymentErrorDescription(code, 'subscription'),
         ...notificationConfig,
       });
       setSubscribing(false);
@@ -220,6 +245,7 @@ function Form({ onPrevious }: Props) {
             <BillingCardElement
               disabled={isSubscribing}
               framed={false}
+              onChange={handleCardChange}
               onReady={() => setElementsReady(true)}
               paymentElementId="subscription-form"
             />
@@ -262,15 +288,25 @@ function Form({ onPrevious }: Props) {
   );
 }
 
-export default function PaymentForm({ onPrevious }: Props) {
+export default function PaymentForm({ onPrevious }: { onPrevious: () => void }) {
   const { step } = useAtomValue(flowAtom);
-  const setupIntent = useSetupIntentQuery({
-    enabled: step === 'pay',
+  const [elementsKey, setElementsKey] = useState(0);
+  const {
+    data: setupIntentData,
+    isLoading: isSetupIntentLoading,
+    refetch: refetchSetupIntent,
+  } = useSetupIntentQuery({
+    enabled: step === FlowStepDict.Pay,
     virtualLabId: 'subscription',
   });
-  const stripe = useStripeInstanceQuery({ enabled: step === 'pay' });
+  const stripe = useStripeInstanceQuery({ enabled: step === FlowStepDict.Pay });
 
-  if (setupIntent.isLoading || stripe.isLoading) {
+  const refreshSetupIntent = useCallback(async () => {
+    await refetchSetupIntent();
+    setElementsKey((currentKey) => currentKey + 1);
+  }, [refetchSetupIntent]);
+
+  if (isSetupIntentLoading || stripe.isLoading) {
     return (
       <div className="flex h-full grow items-center justify-center py-7">
         <Spin size="large" indicator={<LoadingOutlined className="text-white" />} />
@@ -278,17 +314,18 @@ export default function PaymentForm({ onPrevious }: Props) {
     );
   }
 
-  if (!setupIntent.data?.data?.client_secret || !stripe.data) {
+  if (!setupIntentData?.data?.client_secret || !stripe.data) {
     return null;
   }
 
   return (
     <div className="flex h-full min-h-0 grow flex-col">
       <Elements
+        key={elementsKey}
         stripe={stripe.data}
-        options={buildStripeFormOptions(setupIntent.data.data.client_secret)}
+        options={buildStripeFormOptions(setupIntentData.data.client_secret)}
       >
-        <Form onPrevious={onPrevious} />
+        <Form onPrevious={onPrevious} onSetupIntentRefreshNeeded={refreshSetupIntent} />
       </Elements>
     </div>
   );

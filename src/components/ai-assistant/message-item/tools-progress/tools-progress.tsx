@@ -143,6 +143,15 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
                 <pre className={styles.codeBlock}>{formatInputOutputs(part.output)}</pre>
               </div>
             ) : null}
+
+            {part.state === 'output-error' && 'errorText' in part ? (
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Error</div>
+                <pre className={cn(styles.codeBlock, styles.errorText)}>
+                  {(part as unknown as { errorText: string }).errorText}
+                </pre>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

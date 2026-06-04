@@ -8,7 +8,6 @@ import { upperFirst } from 'node_modules/es-toolkit/dist/string/upperFirst.mjs';
 import { convertEntitySlugToExtendedType } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   Breadcrumb,
@@ -17,52 +16,55 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
+import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-workflow-selection-config';
 import {
   getActivity,
-  getBaseModelType,
   getEntityMeta,
   getWorkflow,
+  getWorkflowNewPageBreadcrumbSelectNoun,
   getWorkflowSegment,
 } from '@/ui/segments/workflows/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceSection } from '@/constants';
 import type { KebabCase } from '@/utils/type';
 
-type Props = {
-  section: TWorkspaceSection;
-};
-
-export function SimulateWorkflowsBreadcrumb({ section }: Props) {
+export function SimulateWorkflowsBreadcrumb() {
   const pathname = usePathname();
-  const segment = getWorkflowSegment(pathname);
+  const activity = getWorkflowSegment(pathname);
 
   const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
   const { virtualLabId, projectId } = useWorkspace();
 
   const dataType = convertEntitySlugToExtendedType({ type });
-  const category = getActivity(segment)?.name;
+  const category = getActivity(activity)?.name;
 
-  const baseType = getBaseModelType({ type: dataType, section });
-  const selectTitle =
-    getEntityMeta(baseType)?.label ?? getEntityByExtendedType({ type: baseType })?.title;
-  const baseTitle = getEntityMeta(baseType)?.label;
+  const { workflow, selectionConfig } = useWorkflowSelectionConfig({
+    activity,
+    targetType: dataType,
+  });
+
   const resolvedWorkflow =
-    segment && dataType
-      ? (getWorkflow({
-          activity: segment,
-          targetType: dataType,
-        }) ??
-        getWorkflow({
-          activity: segment,
-          sourceType: dataType,
-        }))
-      : null;
+    workflow ??
+    (activity
+      ? (getWorkflow({ activity, targetType: dataType }) ??
+        getWorkflow({ activity, sourceType: dataType }))
+      : null);
+
+  const selectTitle = getWorkflowNewPageBreadcrumbSelectNoun({
+    workflow: resolvedWorkflow,
+    selectionConfig,
+  });
+
+  const leftEntityType =
+    resolvedWorkflow && resolvedWorkflow.sourceType !== resolvedWorkflow.targetType
+      ? resolvedWorkflow.sourceType
+      : dataType;
+  const leftEntityLabel = getEntityMeta(leftEntityType)?.label;
   const workflowLabel = resolvedWorkflow?.label;
   const leftTitle =
-    segment === WorkflowActivityDictValue.process && workflowLabel
+    activity === WorkflowActivityDictValue.process && workflowLabel
       ? `${workflowLabel} data processing`
-      : [baseTitle, category].filter(Boolean).join(' ');
+      : [leftEntityLabel, category].filter(Boolean).join(' ');
 
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
@@ -82,7 +84,7 @@ export function SimulateWorkflowsBreadcrumb({ section }: Props) {
             <RightOutlined className="text-sm" />
           </BreadcrumbSeparator>
           <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold select-none cursor-pointer">
-            {upperFirst(`Select ${selectTitle ?? 'entity'}`.toLocaleLowerCase())}
+            {upperFirst(`Select ${selectTitle}`.toLocaleLowerCase())}
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

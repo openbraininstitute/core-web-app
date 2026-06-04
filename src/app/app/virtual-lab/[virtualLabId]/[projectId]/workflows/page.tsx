@@ -1,33 +1,34 @@
 'use client';
 
 import { useRouter } from '@bprogress/next';
-import { kebabCase } from 'es-toolkit/compat';
+import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use } from 'react';
-import { match, P } from 'ts-pattern';
 
-import {
-  ExtendedEntitiesTypeDict,
-  type TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
-import { config } from '@/config';
-import { WorkflowActivityDictValue, WorkspaceScope } from '@/constants';
+import { WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
-import { getWorkflow, WorkflowSessionIdSearchParam } from '@/ui/segments/workflows/config';
+import {
+  buildWorkflowStartingPageUrl,
+  inferWorkflowStartingPageRemoteSchemaBased,
+} from '@/ui/segments/workflows/config';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
+  useNextStepOnboarding({ condition: true, tour: workflowTour });
+
   const { virtualLabId, projectId } = use(params);
   const { push: navigate } = useRouter();
+  const queryClient = useQueryClient();
 
   const [{ activity, entityType }, updateWorkflowState] = useQueryStates(
     {
@@ -52,55 +53,31 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     updateWorkflowState(() => ({ activity: value, entityType: null }));
   };
 
-  const onSelectType = (value: TExtendedEntitiesTypeDict | null) => {
-    return match({ activity, value })
-      .with(
-        {
-          activity: WorkflowActivityDictValue.build,
-        },
-        () => {
-          if (!value) return;
-          const sessionId = crypto.randomUUID();
-          const query = new URLSearchParams();
-          query.set(WorkflowSessionIdSearchParam, sessionId);
+  const onSelectType = async (value: TExtendedEntitiesTypeDict | null) => {
+    if (!activity || !value) return;
 
-          const workflow = getWorkflow({
-            activity: WorkflowActivityDictValue.build,
-            targetType: value,
-          });
-          const stage = workflow?.needsBrowse ? 'new' : 'configure';
-          navigate(
-            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/${stage}/${kebabCase(value)}?${query.toString()}`
-          );
-        }
-      )
-      .with({ activity: WorkflowActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
-        return match({ value })
-          .with({ value: ExtendedEntitiesTypeDict.IonChannelModelSimulation }, () =>
-            navigate(
-              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}`
-            )
-          )
-          .otherwise(() =>
-            navigate(
-              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
-            )
-          );
+    const { stage, workflow, schemaSelection } = await inferWorkflowStartingPageRemoteSchemaBased({
+      qc: queryClient,
+      activity,
+      targetType: value,
+    });
+
+    const query: Record<string, string | undefined> = {
+      [SCOPE_QUERY_PARAMS]: WorkspaceScope.Public,
+    };
+
+    navigate(
+      buildWorkflowStartingPageUrl({
+        activity,
+        targetType: value,
+        workspace: { virtualLabId, projectId },
+        stage,
+        workflow,
+        schemaSelection,
+        query,
       })
-      .with({ activity: WorkflowActivityDictValue.extract, value: P.nonNullable }, ({ value }) => {
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
-        );
-      })
-      .with({ activity: WorkflowActivityDictValue.process, value: P.nonNullable }, ({ value }) => {
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
-        );
-      })
-      .otherwise(() => null);
+    );
   };
-
-  useNextStepOnboarding({ condition: true, tour: workflowTour });
 
   return (
     <div className="mr-0 ml-3 flex h-full max-h-[calc(100vh-6rem)] flex-col gap-2.5">

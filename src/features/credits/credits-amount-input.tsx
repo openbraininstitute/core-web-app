@@ -1,9 +1,8 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-
 import { CoinsIcon } from '@/components/icons';
 import { Input } from '@/ui/molecules/input';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 const integerFormatter = new Intl.NumberFormat('en-US', {
@@ -27,6 +26,7 @@ export function parseCreditsAmount(value: string) {
 export function CreditsAmountInput({
   className,
   disabled,
+  error,
   hint,
   inputClassName,
   loadingHint = false,
@@ -35,6 +35,7 @@ export function CreditsAmountInput({
 }: {
   className?: string;
   disabled?: boolean;
+  error?: string;
   hint: string;
   inputClassName?: string;
   loadingHint?: boolean;
@@ -56,6 +57,7 @@ export function CreditsAmountInput({
               className={cn(
                 'h-12 w-full rounded-full border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
                 '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+                { 'border-red-400': error },
                 inputClassName
               )}
               disabled={disabled}
@@ -64,10 +66,15 @@ export function CreditsAmountInput({
               Credits
             </div>
           </div>
+          {error && <p className="mt-2 ml-2 text-xs text-red-400">{error}</p>}
           <div className="mt-2 ml-2 flex items-center gap-2 text-current">
             <CoinsIcon className="size-5" />
             <span className="text-sm">
-              {loadingHint ? <LoadingOutlined spin className="ml-2 text-current" /> : hint}
+              {loadingHint ? (
+                <Skeleton className="h-4 w-12 rounded-full animate-pulse bg-gray-50/30!" />
+              ) : (
+                hint
+              )}
             </span>
           </div>
         </div>

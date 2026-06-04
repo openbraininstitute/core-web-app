@@ -21,10 +21,11 @@ export const keyBuilder = {
     id,
     type,
     ...props
-  }: { id: string; context: WorkspaceContext; type?: TEntityTypeDict } & Record<string, any>) => [
-    'entity',
-    { context, id, type, ...props },
-  ],
+  }: {
+    id: string;
+    context: WorkspaceContext;
+    type?: TEntityTypeDict | TExtendedEntitiesTypeDict;
+  } & Record<string, any>) => ['entity', { context, id, type, ...props }],
   entities: ({
     context,
     filters,

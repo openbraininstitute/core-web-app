@@ -14,6 +14,7 @@ import { compact, get } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import NextLink from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 
 import { deleteCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
 import {
@@ -21,17 +22,13 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { config } from '@/config';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import Action from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import {
-  PanelQueryParam,
-  WorkflowSimulatePanels,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { buildSimulateConfigureUrlFromDataViewEntity } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -130,7 +127,20 @@ export default function ActionMenu({
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
       ? entityType.isSimulatable
-      : 'scale' in entity && entityType.isSimulatable(entity.scale);
+      : (entityType.isSimulatable as (e: typeof entity) => boolean)(entity);
+
+  const simulateHref = useMemo(() => {
+    if (!isSimulatable) {
+      return null;
+    }
+
+    return buildSimulateConfigureUrlFromDataViewEntity({
+      workspace: ctx,
+      extendedType: type,
+      entityId: entity.id,
+      entity: 'scale' in entity ? { scale: entity.scale } : {},
+    });
+  }, [isSimulatable, ctx, type, entity]);
 
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
@@ -146,18 +156,10 @@ export default function ActionMenu({
         {copying ? 'Copied' : 'Copy ID'}
       </Action>
 
-      {isSimulatable && (
+      {simulateHref && (
         <Action
           icon={
-            <NextLink
-              href={{
-                pathname: `${config.ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
-                query: {
-                  sessionId: crypto.randomUUID(),
-                  [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-                },
-              }}
-            >
+            <NextLink href={simulateHref}>
               <ExperimentOutlined className="text-primary-8" />
             </NextLink>
           }

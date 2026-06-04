@@ -88,6 +88,11 @@ export interface IMEModelFilter
   score__lte: number | null;
   score__gte: number | null;
   validation_status: ValidationStatus;
+  morphology__id__in: string[];
+  morphology__id: string;
+  morphology__name__ilike: string;
+  morphology__name__in: string[];
+  morphology__name: string;
 }
 
 export const CreateMEModelSchema = z.object({

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * loads an existing campaign when `initialCampaignId` is on the URL (or passed in)
+ * loads an existing campaign when `origin` is on the URL (or passed in)
  *
  * plug in a `resolve` function per workflow (simulate, extract, build, ...)
  * `shouldRenderScanConfig` tells when it's OK to show the editor
@@ -24,8 +24,8 @@ type CampaignWithFormConfig = {
 };
 
 export type UseScanConfigOriginCampaignParams<T extends CampaignWithFormConfig> = {
-  /** from `?initialCampaignId=`, skip the query when this is missing */
-  initialCampaignId?: string;
+  /** from `?origin=`, skip the query when this is missing */
+  origin?: string;
   context: WorkspaceContext;
   /** workflow-specific fetcher, e.g. `resolveSimulationByCampaignId` */
   resolve: (args: { id: string; context: WorkspaceContext }) => Promise<T | null>;
@@ -41,24 +41,24 @@ export type UseScanConfigOriginCampaignParams<T extends CampaignWithFormConfig> 
  * - `shouldRenderScanConfig`, false while loading an existing campaign that has no form yet
  */
 export function useScanConfigOriginCampaign<T extends CampaignWithFormConfig>({
-  initialCampaignId,
+  origin,
   context,
   resolve,
   enabled = true,
 }: UseScanConfigOriginCampaignParams<T>) {
   const { data, error, isLoading } = useQuery({
-    queryKey: initialCampaignId
-      ? keyBuilder.simCampaign({ entityId: initialCampaignId })
+    queryKey: origin
+      ? keyBuilder.simCampaign({ entityId: origin })
       : ['scan-config-campaign', 'idle', context],
     queryFn: async () => {
-      if (!initialCampaignId) return null;
-      return await resolve({ id: initialCampaignId, context });
+      if (!origin) return null;
+      return await resolve({ id: origin, context });
     },
-    enabled: enabled && !!initialCampaignId,
+    enabled: enabled && !!origin,
   });
 
   const shouldRenderScanConfig =
-    !initialCampaignId || (Boolean(initialCampaignId) && !isLoading && Boolean(data?.config?.form));
+    !origin || (Boolean(origin) && !isLoading && Boolean(data?.config?.form));
 
   return {
     campaignData: data,
