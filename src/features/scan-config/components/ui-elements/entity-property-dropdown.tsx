@@ -26,14 +26,11 @@ export default function EntityPropertyDropdown({
     [schemaMappingConfig?.properties, property]
   );
 
-  const previousOptions = useRef<string[]>(null);
-
   useEffect(() => {
-    if (options.length > 0 && options !== previousOptions.current) {
+    if (options.length > 0 && value.length === 0) {
       onChange([options[0]]);
-      previousOptions.current = options;
     }
-  }, [options, onChange]);
+  }, [options, onChange, value]);
 
   return (
     <Select
