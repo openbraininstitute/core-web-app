@@ -17,6 +17,10 @@ import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids'
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
+import {
+  VoltageDuration,
+  type VoltageDurationState,
+} from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type Config,
@@ -32,7 +36,6 @@ import NeuronPropertyFilter, { type INeuronPropertyFilter } from './neuron-prope
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { VoltageDurationState } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import type { Nullish } from '@/utils/type';
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
@@ -319,7 +322,7 @@ export function UIElementRender({
         const q = get(paramSchema, 'entity_query') as
           | {
               type: TEntityTypeDict;
-              filters: Record<string, any>;
+              filters: Record<string, unknown>;
             }
           | undefined;
         if (q) {
