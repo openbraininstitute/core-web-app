@@ -72,6 +72,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
             >
               See more here
             </a>
+            .
           </p>
         </div>
         <div className="text-primary-1 flex flex-row items-center gap-x-3 font-semibold">
