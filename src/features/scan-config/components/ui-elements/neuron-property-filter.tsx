@@ -38,9 +38,9 @@ export default function NeuronPropertyFilter({
             key={i}
             className="border border-gray-300 rounded-md relative p-3 flex flex-col gap-2 pt-2"
           >
-            {i !== 0 && (
+            {value.length > 1 && (
               <DeleteOutlined
-                className="absolute top-1 right-1 text-red-500 cursor-pointer hover:text-red-700 text-sm"
+                className="absolute top-1 right-1 text-gray-400 cursor-pointer text-sm"
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
               />
             )}
@@ -174,10 +174,7 @@ function PropertyValueSelector({
       })}
     >
       <div className="flex items-center gap-2 w-full">
-        <DeleteOutlined
-          className="text-red-500 cursor-pointer hover:text-red-700 text-xs"
-          onClick={onDelete}
-        />
+        <DeleteOutlined className="text-gray-400 cursor-pointer text-xs" onClick={onDelete} />
         <button
           type="button"
           className="font-semibold cursor-pointer text-primary-8"
