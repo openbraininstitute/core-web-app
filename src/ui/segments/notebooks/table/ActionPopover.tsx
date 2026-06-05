@@ -18,7 +18,9 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import { useAppNotification } from '@/components/notification';
+import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { config } from '@/config';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { downloadArchive } from '@/services/entity-download';
 import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -32,11 +34,20 @@ interface ActionPopoverProps {
   index: number;
 }
 
+const NOTEBOOK_LOW_FUNDS_CODE = 'INSUFFICIENT_FUNDS_ERROR';
+const notebookLowFundsMessages = {
+  admin: 'The project does not have sufficient credits to launch the notebook.',
+  nonAdmin:
+    'The project does not have sufficient credits to launch the notebook. Please contact your project administrator to request additional credits.',
+};
+
 export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
   const [loading, setLoading] = useState(false);
+  const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
+  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const isPublic = pathname.endsWith('/public');
@@ -108,11 +119,16 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
       window.open(retval.url, '_blank');
     } catch (error) {
       if (error instanceof Error && 'cause' in error) {
-        notification.error({
-          message: (error.cause as { error_code: string; hint: string }).hint,
-          key: 'notebook-error',
-          placement: 'topRight',
-        });
+        const cause = error.cause as { error_code?: string; hint?: string };
+        if (cause.error_code === NOTEBOOK_LOW_FUNDS_CODE) {
+          setShowLowFundsNotification(true);
+        } else {
+          notification.error({
+            message: cause.hint ?? 'An error occurred while starting the notebook',
+            key: 'notebook-error',
+            placement: 'topRight',
+          });
+        }
       } else {
         notification.error({
           message: `Failed to start notebook, unknown error: ${error}`,
@@ -127,6 +143,16 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
 
   return (
     <>
+      {showLowFundsNotification && (
+        <LowFundsNotification
+          title="Notebook launch failed"
+          description={
+            isProjectAdmin ? notebookLowFundsMessages.admin : notebookLowFundsMessages.nonAdmin
+          }
+          onClose={() => setShowLowFundsNotification(false)}
+          duration={10000}
+        />
+      )}
       <Modal open={open} footer={false} onCancel={() => setOpen(false)} width="40%">
         <div>
           <h1 className="text-primary-8 text-3xl font-bold">Readme</h1>

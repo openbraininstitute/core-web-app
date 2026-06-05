@@ -1,5 +1,6 @@
 .content {
   width: 100%;
+  margin-top: clamp(32px, 5vw, 48px);
   color: #002766;
 }
 

@@ -15,7 +15,7 @@ export default function ShowcaseDetailContent({ project }: { project: SanityShow
   return (
     <div className="min-h-screen bg-transparent">
       <div className="p-4">
-        <div className="grid min-h-[60vh] w-full grid-cols-1 gap-6 rounded-xl border border-neutral-2 p-5 md:grid-cols-[240px_1fr]">
+        <div className="grid w-full grid-cols-1 gap-6 rounded-xl border border-neutral-2 p-5 md:grid-cols-[240px_1fr]">
           <aside className="flex flex-col gap-2">
             <Button
               rounded
@@ -45,7 +45,7 @@ export default function ShowcaseDetailContent({ project }: { project: SanityShow
             </Link>
           </aside>
 
-          <main className="w-full overflow-y-auto">
+          <main className="w-full">
             <div className="space-y-8">
               <DescriptionSection content={project} />
             </div>

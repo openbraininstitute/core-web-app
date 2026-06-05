@@ -7,6 +7,16 @@ const singleShowcaseQuery = (
     projectId,
     authorsList,
     introduction,
+    "projectCategory": coalesce(
+      projectCategory->title,
+      projectCategory.title,
+      projectCategory,
+      category->title,
+      category.title,
+      category
+    ),
+    "projectType": coalesce(projectType, type),
+    "projectDate": coalesce(projectDate, customDate, date),
     _updatedAt,
     'heroImage': heroImage.asset->url,
     description,

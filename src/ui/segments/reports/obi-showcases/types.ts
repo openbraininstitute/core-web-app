@@ -27,6 +27,13 @@ export type SanityShowcaseType = {
     institution: string;
   }[];
   introduction: string;
+  projectCategory?: string | null;
+  projectType?: string | null;
+  projectDate?: string | null;
+  category?: string | null;
+  type?: string | null;
+  date?: string | null;
+  customDate?: string | null;
   _updatedAt: string;
   heroImage: string;
   description: any[]; // PortableTextBlock[]
@@ -401,6 +408,13 @@ const SanityShowcaseSchema = z.object({
   slug: z.string(),
   authorsList: z.array(SanityShowcaseAuthorSchema),
   introduction: z.string(),
+  projectCategory: z.string().nullable().optional(),
+  projectType: z.string().nullable().optional(),
+  projectDate: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  date: z.string().nullable().optional(),
+  customDate: z.string().nullable().optional(),
   _updatedAt: z.string(),
   heroImage: z.string(),
   description: z.array(z.any()), // PortableTextBlock[]
