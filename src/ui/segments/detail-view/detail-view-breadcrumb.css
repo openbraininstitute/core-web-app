@@ -18,10 +18,10 @@
 
 .breadcrumb-trail-on-primary .breadcrumb-on-primary-active,
 .breadcrumb-trail-on-primary .breadcrumb-on-primary-active a {
-  color: #c5e8ff !important;
-  font-weight: 600;
+  color: #adcdf2 !important;
+  font-weight: 700;
 }
 
 .breadcrumb-trail-on-primary .breadcrumb-on-primary-active a:hover {
-  color: #fff !important;
+  color: #c5e8ff !important;
 }

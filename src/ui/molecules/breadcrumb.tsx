@@ -25,10 +25,10 @@ export default function Breadcrumb({
       ? tone === 'active'
         ? 'breadcrumb-on-primary-active'
         : 'breadcrumb-on-primary-inactive'
-      : cn('text-primary-8', tone === 'active' && 'font-bold');
+      : cn('text-primary-9', tone === 'active' && 'font-bold');
 
   const separatorClass =
-    variant === 'onPrimary' ? 'breadcrumb-on-primary-separator' : 'text-primary-8';
+    variant === 'onPrimary' ? 'breadcrumb-on-primary-separator' : 'text-primary-9';
 
   return (
     <div className="align-center inline-flex items-center justify-center gap-2">

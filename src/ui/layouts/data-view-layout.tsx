@@ -66,7 +66,12 @@ export async function DataViewLayout({
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const useClassicLayout = entityType.group === EntityTypeGroup.Simulations;
-  const uiVariant = useClassicLayout ? 'light' : 'onPrimary';
+  const contentVariant = useClassicLayout ? 'light' : 'onPrimary';
+  /**
+   * Breadcrumb, side nav, and close button sit on a white header/rail.
+   * Section content is the only part that uses the blue panel variant.
+   */
+  const chromeVariant = 'light' as const;
 
   const breadcrumbs = (
     <DataBreadcrumb
@@ -74,10 +79,10 @@ export async function DataViewLayout({
       type={type}
       group={entityType.group}
       scope={scope}
-      variant={uiVariant}
+      variant={chromeVariant}
     />
   );
-  const closePage = <ClosePage url={parentLink} variant={uiVariant} />;
+  const closePage = <ClosePage url={parentLink} variant={chromeVariant} />;
 
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     if (useClassicLayout) {
@@ -93,13 +98,15 @@ export async function DataViewLayout({
     }
 
     return (
-      <div className="relative ml-5 flex h-full flex-col overflow-hidden rounded-2xl border border-primary-4/50 bg-primary-9 text-white">
+      <div className="relative ml-5 flex h-full flex-col overflow-hidden rounded-2xl border border-[#D9D9D9] bg-white">
         <div className="flex w-full items-center justify-between px-5 pt-4">
           {breadcrumbs}
           {closePage}
         </div>
         <div className="primary-scrollbar relative mx-5 mb-5 min-h-0 flex-1 overflow-y-auto">
-          <div className="rounded-3xl border border-neutral-2 px-5 py-5">{children}</div>
+          <div className="rounded-3xl border border-neutral-2 bg-primary-9 px-5 py-5 text-white">
+            {children}
+          </div>
         </div>
       </div>
     );
@@ -117,7 +124,7 @@ export async function DataViewLayout({
         <div className="flex h-full max-h-[calc(100%-56px)] overflow-hidden pt-2">
           <div className="w-1/5 pl-5">
             <div className="flex flex-col gap-3">
-              <DetailMenu sections={entityType.detailViewSections} variant={uiVariant} />
+              <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
             </div>
             <ActionMenu
               // TODO: fix entity type
@@ -127,13 +134,15 @@ export async function DataViewLayout({
               ctx={{ virtualLabId, projectId }}
               parentLink={parentLink}
               isPublicEntity={isPublicEntity}
-              variant={uiVariant}
+              variant={chromeVariant}
             />
           </div>
           <div className="w-4/5 pr-1">
             <div className="secondary-scrollbar flex h-full w-full flex-col overflow-x-auto overflow-y-auto p-10 pt-0">
-              <EntityNameDisplay name={entity.name} variant={uiVariant} />
-              <EntityNameDisplayWrapper variant={uiVariant}>{children}</EntityNameDisplayWrapper>
+              <EntityNameDisplay name={entity.name} variant={contentVariant} />
+              <EntityNameDisplayWrapper variant={contentVariant}>
+                {children}
+              </EntityNameDisplayWrapper>
             </div>
           </div>
         </div>
@@ -146,15 +155,15 @@ export async function DataViewLayout({
   }
 
   return (
-    <div className="relative ml-5 flex h-full flex-col overflow-hidden rounded-2xl border border-primary-4/50 bg-primary-9 text-white">
+    <div className="relative ml-5 flex h-full flex-col overflow-hidden rounded-2xl border border-[#D9D9D9] bg-white">
       <div className="flex w-full items-center justify-between px-5 pt-4">
         {breadcrumbs}
         {closePage}
       </div>
       <div className="flex h-full min-h-0 max-h-[calc(100%-3.5rem)] gap-6 overflow-hidden pt-2">
-        <div className="flex w-1/5 shrink-0 flex-col pl-5">
+        <div className="flex w-1/5 shrink-0 flex-col bg-white pl-5">
           <div className="flex flex-col gap-3">
-            <DetailMenu sections={entityType.detailViewSections} variant={uiVariant} />
+            <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
           </div>
           <ActionMenu
             // TODO: fix entity type
@@ -164,18 +173,20 @@ export async function DataViewLayout({
             ctx={{ virtualLabId, projectId }}
             parentLink={parentLink}
             isPublicEntity={isPublicEntity}
-            variant={uiVariant}
+            variant={chromeVariant}
           />
         </div>
         <div className="min-h-0 w-4/5 pl-2 pr-3 pb-3">
           <div className="primary-scrollbar h-full overflow-x-auto overflow-y-auto">
-            <div className="rounded-3xl border border-neutral-2 p-10 pt-4 pb-10">
+            <div className="rounded-3xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
               <EntityNameDisplay
                 name={entity.name}
                 description={'description' in entity ? entity.description : undefined}
-                variant={uiVariant}
+                variant={contentVariant}
               />
-              <EntityNameDisplayWrapper variant={uiVariant}>{children}</EntityNameDisplayWrapper>
+              <EntityNameDisplayWrapper variant={contentVariant}>
+                {children}
+              </EntityNameDisplayWrapper>
             </div>
           </div>
         </div>

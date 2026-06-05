@@ -43,7 +43,9 @@ export function BackToListingOriginButton({
   const query = new URLSearchParams(queryParams);
 
   const linkClass =
-    variant === 'onPrimary' ? 'breadcrumb-on-primary-link capitalize' : 'capitalize';
+    variant === 'onPrimary'
+      ? 'breadcrumb-on-primary-link capitalize'
+      : 'capitalize text-primary-9 hover:text-primary-8';
 
   return (
     <Breadcrumb variant={variant} tone="inactive">
@@ -72,7 +74,9 @@ export function BackToCategory({
   const groupDisplayName = getGroupDisplayName(group);
 
   const linkClass =
-    variant === 'onPrimary' ? 'breadcrumb-on-primary-link capitalize' : 'capitalize';
+    variant === 'onPrimary'
+      ? 'breadcrumb-on-primary-link capitalize'
+      : 'capitalize text-primary-9 hover:text-primary-8';
 
   return (
     <Breadcrumb variant={variant} tone="inactive">
@@ -113,7 +117,9 @@ export function BackToEntityType({
   query.set('scope', scope);
 
   const linkClass =
-    variant === 'onPrimary' ? 'breadcrumb-on-primary-link-active' : undefined;
+    variant === 'onPrimary'
+      ? 'breadcrumb-on-primary-link-active'
+      : 'font-bold text-primary-9 hover:text-primary-8';
 
   return (
     <Breadcrumb showChevron={false} variant={variant} tone="active">
