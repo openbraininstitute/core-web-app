@@ -288,10 +288,10 @@ export function Item({
                         'w-full justify-start bg-white! border shadow-none border-gray-200',
                         'hover:bg-gray-100!',
                         {
-                          'text-primary-8 scale-101 hover:text-primary-9 bg-white! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
+                          'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
                             isProjectActive,
                         },
-                        { 'border-2! border-primary-9!': isProjectSelected }
+                        { 'border-3! border-gray-200! bg-gray-50!': isProjectSelected }
                       )}
                       title={project.name}
                       onClick={() =>

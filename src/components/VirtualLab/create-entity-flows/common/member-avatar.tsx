@@ -1,14 +1,14 @@
+import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
 import get from 'es-toolkit/compat/get';
 import nth from 'es-toolkit/compat/nth';
 
-import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
+import { PendingInvite, StashUsersCrown } from '@/components/icons/EditorIcons';
 import {
   MemberRoleMap,
-  TMember,
   SIZE_MAP,
+  type TMember,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
-import { PendingInvite, StashUsersCrown } from '@/components/icons/EditorIcons';
 import { COLOR_DICTIONARY } from '@/util/color';
 import { cn } from '@/utils/css-class';
 
@@ -136,10 +136,10 @@ export function MemberAvatarCasual({
   const scale = get(SIZE_MAP, size, undefined);
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex w-full min-w-0 items-center justify-between">
       <div
         className={cn(
-          'flex w-full items-center',
+          'flex w-full min-w-0 items-center',
           layout === 'horizontal' ? 'flex-row gap-4' : 'flex-col gap-2',
           cls?.container
         )}
@@ -183,19 +183,25 @@ export function MemberAvatarCasual({
                 {initials}
               </div>
             </Avatar>
-            <div className="flex flex-1 items-center justify-between gap-4">
-              <div className={cn('flex flex-col')}>
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
+              <div className={cn('flex w-full min-w-0 flex-1 flex-col')}>
                 <h3
                   className={cn(
-                    'text-primary-8! text-xl font-bold',
+                    'text-primary-8! truncate text-xl font-bold',
                     status !== 'pending' && 'first-letter:uppercase',
                     cls?.text
                   )}
+                  title={name}
                 >
                   {name}
                 </h3>
                 {withEmail && (
-                  <p className={cn('text-primary-8! text-sm font-light', cls?.email)}> {email}</p>
+                  <p
+                    className={cn('text-primary-8! truncate text-sm font-light', cls?.email)}
+                    title={email}
+                  >
+                    {email}
+                  </p>
                 )}
               </div>
             </div>
