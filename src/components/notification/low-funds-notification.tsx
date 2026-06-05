@@ -13,13 +13,11 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 type Props = {
-  title: string;
-  description: string;
   onClose?: () => void;
   duration?: number;
 };
 
-export function LowFundsNotification({ title, description, onClose, duration = 10000 }: Props) {
+export function LowFundsNotification({ onClose, duration = 10000 }: Props) {
   const [isVisible, setIsVisible] = useState(true);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const { virtualLabId } = useWorkspace();
@@ -78,7 +76,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
                 <div className="shrink-0 pt-0.5">
                   <RiMoneyDollarCircleLine className="text-warning text-2xl" size={24} />
                 </div>
-                <h4 className="text-primary-9 m-0 text-lg font-semibold">{title}</h4>
+                <h4 className="text-primary-9 m-0 text-lg font-semibold">Insufficient credits</h4>
               </div>
               <button
                 type="button"
@@ -90,7 +88,12 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
                 <RiCloseFill className="text-xl" />
               </button>
             </div>
-            <p className="text-neutral-4 mb-4 text-base leading-normal">{description}</p>
+            <p className="text-neutral-4 mb-4 text-base leading-normal">
+              The project does not have sufficient credits to perform this action.
+              {isVirtualLabAdmin
+                ? ' Please transfer additional credits to continue.'
+                : ' Please contact your project administrator to request additional credits.'}
+            </p>
             {isVirtualLabAdmin ? (
               <button
                 type="button"

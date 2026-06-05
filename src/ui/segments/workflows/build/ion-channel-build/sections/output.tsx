@@ -20,7 +20,6 @@ import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { resolveIonChannelModelingCampaignBuilds } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { getStatusColor } from '@/features/task-runner/activity-execution/color-map';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { LOW_FUNDS_ERROR_CODE, message } from '@/i18n/en/ion-channel-build';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -345,10 +344,6 @@ export function Output({
   const queryClient = useQueryClient();
   const context = useWorkspace();
   const notification = useAppNotification();
-  const { isProjectAdmin } = useWorkspaceMembership({
-    virtualLabId: context.virtualLabId,
-    projectId: context.projectId,
-  });
   const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
   const safeSessionId = sessionId || '';
   const [ionState, updateIonState] = useAtom(
@@ -739,12 +734,7 @@ export function Output({
   return (
     <>
       {showLowFundsNotification && (
-        <LowFundsNotification
-          title="Ion channel build failed"
-          description={isProjectAdmin ? message.LowFundsError : message.LowFundsErrorNonAdmin}
-          onClose={() => setShowLowFundsNotification(false)}
-          duration={10000}
-        />
+        <LowFundsNotification onClose={() => setShowLowFundsNotification(false)} />
       )}
       <div
         className={cn('grid w-full grid-cols-[20rem_25rem_1fr] gap-8', {

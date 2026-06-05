@@ -24,7 +24,6 @@ import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { config } from '@/config';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -57,7 +56,6 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
   const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
-  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
 
   const { sessionValue } = useBuildMeModelSessionState({
     sessionId,
@@ -147,17 +145,12 @@ export function Menu({ sessionId }: { sessionId: string }) {
       log('error', 'Build me-model failed:', err);
       const isLowFundsError = get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE;
 
-      let message = messages.DefaultErrorMsg;
-      if (isLowFundsError) {
-        message = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-      }
-
       if (isLowFundsError) {
         setShowLowFundsNotification(true);
       } else {
         notification.error({
           message: 'ME-model creation failed',
-          description: message,
+          description: messages.DefaultErrorMsg,
           placement: 'topRight',
           duration: 10,
         });
@@ -187,12 +180,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   return (
     <>
       {showLowFundsNotification && (
-        <LowFundsNotification
-          title="ME-model creation failed"
-          description={isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin}
-          onClose={() => setShowLowFundsNotification(false)}
-          duration={10000}
-        />
+        <LowFundsNotification onClose={() => setShowLowFundsNotification(false)} />
       )}
       <div className="flex h-full flex-col gap-2">
         <div className="text-neutral-3 ml-4 font-light uppercase">Setup</div>

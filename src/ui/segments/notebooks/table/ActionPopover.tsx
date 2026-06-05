@@ -20,7 +20,6 @@ import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { config } from '@/config';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { downloadArchive } from '@/services/entity-download';
 import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -35,11 +34,6 @@ interface ActionPopoverProps {
 }
 
 const NOTEBOOK_LOW_FUNDS_CODE = 'INSUFFICIENT_FUNDS_ERROR';
-const notebookLowFundsMessages = {
-  admin: 'The project does not have sufficient credits to launch the notebook.',
-  nonAdmin:
-    'The project does not have sufficient credits to launch the notebook. Please contact your project administrator to request additional credits.',
-};
 
 export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
@@ -47,7 +41,6 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const [loading, setLoading] = useState(false);
   const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
-  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const isPublic = pathname.endsWith('/public');
@@ -144,14 +137,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   return (
     <>
       {showLowFundsNotification && (
-        <LowFundsNotification
-          title="Notebook launch failed"
-          description={
-            isProjectAdmin ? notebookLowFundsMessages.admin : notebookLowFundsMessages.nonAdmin
-          }
-          onClose={() => setShowLowFundsNotification(false)}
-          duration={10000}
-        />
+        <LowFundsNotification onClose={() => setShowLowFundsNotification(false)} />
       )}
       <Modal open={open} footer={false} onCancel={() => setOpen(false)} width="40%">
         <div>
