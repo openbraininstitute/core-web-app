@@ -54,7 +54,7 @@ export function EntityNameDisplay({
           id="entity-description"
           text={description}
           collapsedLines={3}
-          className="text-primary-3 mt-2 text-base leading-6"
+          className="text-white mt-2 text-base leading-6"
           btnWrapperClassName="mt-1"
         >
           {({ isExpanded, toggle }) => (

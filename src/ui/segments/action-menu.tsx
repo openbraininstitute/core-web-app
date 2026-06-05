@@ -12,7 +12,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popconfirm } from 'antd';
 import { compact, get } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
-import NextLink from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
@@ -26,7 +25,7 @@ import { type TViewVariant, ViewVariant, WorkspaceScope, WorkspaceSection } from
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
-import Action from '@/ui/molecules/side-menu-action';
+import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { buildSimulateConfigureUrlFromDataViewEntity } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
@@ -125,7 +124,14 @@ export default function ActionMenu({
       });
     },
   });
-
+  const downloadArchiveMutation = useMutation({
+    mutationFn: async () => {
+      if (entity.type === ExtendedEntitiesTypeDict.Circuit) setCircuit(entity as ICircuit);
+      else {
+        downloadArchive(entityType.type, [entity.id], ctx);
+      }
+    },
+  });
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
       ? entityType.isSimulatable
@@ -144,23 +150,27 @@ export default function ActionMenu({
     });
   }, [isSimulatable, ctx, type, entity]);
 
-  const iconClass = variant === ViewVariant.Default ? 'text-white' : 'text-primary-8';
-
   return (
     <div
       className={cn(
-        'mt-10 flex flex-col gap-5 px-5 text-base font-bold',
+        'mt-5 flex flex-col gap-2 px-5 text-base font-bold',
         variant === ViewVariant.Default ? 'text-white' : 'text-primary-9'
       )}
     >
       <Action
         variant={variant}
+        kind={ActionKind.Button}
         onClick={() => !copying && copy(entity.id)}
         icon={
           !copying ? (
-            <CopyOutlined className={iconClass} />
+            <CopyOutlined />
           ) : (
-            <CheckOutlined className="text-teal-400" />
+            <CheckOutlined
+              className={cn({
+                'text-teal-600': variant === ViewVariant.Light,
+                'text-white!': variant === ViewVariant.Default,
+              })}
+            />
           )
         }
       >
@@ -168,23 +178,22 @@ export default function ActionMenu({
       </Action>
 
       {simulateHref && (
-        <NextLink href={simulateHref}>
-          <Action variant={variant} icon={<ExperimentOutlined className={iconClass} />}>
-            Simulate
-          </Action>
-        </NextLink>
+        <Action
+          variant={variant}
+          kind={ActionKind.Link}
+          href={simulateHref}
+          icon={<ExperimentOutlined />}
+        >
+          Simulate
+        </Action>
       )}
 
       {entityType.isDownloadable && (
         <Action
           variant={variant}
-          onClick={() => {
-            if (entity.type === ExtendedEntitiesTypeDict.Circuit) setCircuit(entity as ICircuit);
-            else {
-              downloadArchive(entityType.type, [entity.id], ctx);
-            }
-          }}
-          icon={<DownloadOutlined className={iconClass} />}
+          kind={ActionKind.Button}
+          onClick={downloadArchiveMutation.mutateAsync}
+          icon={downloadArchiveMutation.isPending ? <LoadingOutlined /> : <DownloadOutlined />}
         >
           Download
         </Action>
@@ -221,6 +230,7 @@ export default function ActionMenu({
           <span className="cursor-pointer">
             <Action
               variant={variant}
+              kind={ActionKind.Button}
               icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}
             >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete'}

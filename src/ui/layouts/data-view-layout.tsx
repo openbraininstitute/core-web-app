@@ -117,7 +117,7 @@ export async function DataViewLayout({
   if (useClassicLayout) {
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border border-[#D9D9D9]">
-        <div className="flex w-full items-center justify-between px-5 py-2">
+        <div className="flex w-full items-center justify-between pl-5 pr-3 py-2">
           {breadcrumbs}
           {closePage}
         </div>
@@ -156,13 +156,13 @@ export async function DataViewLayout({
 
   return (
     <div className="relative ml-5 flex h-full flex-col overflow-hidden rounded-2xl border border-[#D9D9D9] bg-white">
-      <div className="flex w-full items-center justify-between px-5 pt-4">
+      <div className="flex w-full items-center justify-between pl-5 pr-3  pt-4">
         {breadcrumbs}
         {closePage}
       </div>
       <div className="flex h-full min-h-0 max-h-[calc(100%-3.5rem)] gap-6 overflow-hidden pt-2">
-        <div className="flex w-1/5 shrink-0 flex-col bg-white pl-5">
-          <div className="flex flex-col gap-3">
+        <div className="flex w-1/5 shrink-0 flex-col bg-white pl-3.5">
+          <div className="flex flex-col gap-1.5">
             <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
           </div>
           <ActionMenu
@@ -176,9 +176,9 @@ export async function DataViewLayout({
             variant={chromeVariant}
           />
         </div>
-        <div className="min-h-0 w-4/5 pl-2 pr-3 pb-3">
-          <div className="primary-scrollbar h-full overflow-x-auto overflow-y-auto">
-            <div className="rounded-3xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
+        <div className="min-h-0 w-4/5 pl-2 pr-3">
+          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
+            <div className="rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white h-full">
               <EntityNameDisplay
                 name={entity.name}
                 description={'description' in entity ? entity.description : undefined}

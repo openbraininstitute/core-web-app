@@ -1,4 +1,5 @@
 import { RightOutlined } from '@ant-design/icons';
+import { RiArrowRightSLine } from '@remixicon/react';
 
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { cn } from '@/utils/css-class';
@@ -40,7 +41,7 @@ export default function Breadcrumb({
       <span className={cn(textClass, cls?.label)}>{children}</span>
       {showChevron && (
         <div className={cn(separatorClass, cls?.icon)}>
-          <RightOutlined className="text-xs" />
+          <RiArrowRightSLine className="size-4 lg:size-5 2xl:size-6" />
         </div>
       )}
     </div>
