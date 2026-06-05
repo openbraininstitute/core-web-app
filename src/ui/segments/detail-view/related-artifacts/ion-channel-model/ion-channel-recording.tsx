@@ -10,12 +10,9 @@ import { getIonChannelModelingExecutions } from '@/api/entitycore/queries/model/
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
-import { WorkspaceScope } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import {
-  detailViewInsetPanelClass,
-  type DetailViewVariant,
-} from '@/ui/segments/detail-view/variant-styles';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
@@ -36,11 +33,11 @@ const browseScopeProps = {
 export function IonChannelRecordingRelatedArtifacts({
   icm,
   context,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   icm: IonChannelModel;
   context: WorkspaceContext;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   const { data, error } = useSuspenseQuery({
     queryKey: ['ion-channel-recording-related-artifacts', { id: icm.id, context }],
@@ -150,11 +147,11 @@ export function IonChannelRecordingRelatedArtifacts({
       <BrowseEntityScope
         dataType={ExtendedEntitiesTypeDict.IonChannelRecording}
         detailVariant={variant}
-        contentOnInsetPanel={variant === 'onPrimary'}
+        contentOnInsetPanel={variant === ViewVariant.Default}
         classNames={{
           container: cn(
             'max-h-none!',
-            variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+            variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
           ),
         }}
         {...browseScopeProps}
@@ -168,11 +165,11 @@ export function IonChannelRecordingRelatedArtifacts({
       extraQueryParams={{ id__in: data }}
       scope={WorkspaceScope.Combined}
       detailVariant={variant}
-      contentOnInsetPanel={variant === 'onPrimary'}
+      contentOnInsetPanel={variant === ViewVariant.Default}
       classNames={{
         container: cn(
           'max-h-none!',
-          variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+          variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
         ),
       }}
       {...browseScopeProps}

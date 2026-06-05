@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -12,7 +13,6 @@ import { RelatedArtifactEvents } from '@/ui/segments/detail-view/related-artifac
 import {
   detailViewPillTabsListClass,
   detailViewPillTabsTriggerClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
@@ -37,11 +37,11 @@ const tabsConfigItems: Array<{
 export function ICMRelatedArtifacts({
   icm,
   context,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   icm: IonChannelModel;
   context: WorkspaceContext;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   const breakpoint = useDefaultBreakpoint();
   const [currentTab, setCurrentTab] = useState<TKeys>(IonChannelRecording.extendedType);
@@ -57,10 +57,7 @@ export function ICMRelatedArtifacts({
         onValueChange={(value) => setCurrentTab(value as TKeys)}
       >
         <PillTabsList
-          className={detailViewPillTabsListClass(
-            variant,
-            cn({ 'h-12': breakpoint === 'xl' })
-          )}
+          className={detailViewPillTabsListClass(variant, cn({ 'h-12': breakpoint === 'xl' }))}
         >
           {tabsConfigItems.map((tab) => (
             <PillTabsTrigger

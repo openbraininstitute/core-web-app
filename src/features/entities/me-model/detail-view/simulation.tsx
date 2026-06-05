@@ -8,15 +8,15 @@ import { Spin } from 'antd';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { SimulationDetail } from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
 import {
   detailViewHeadingClass,
   detailViewInsetPanelClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
-import { cn } from '@/utils/css-class';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -24,10 +24,10 @@ import type { WorkspaceContext } from '@/types/common';
 type Props = {
   modelId: string;
   context: WorkspaceContext;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
-export default function Results({ modelId, context, variant = 'light' }: Props) {
+export default function Results({ modelId, context, variant = ViewVariant.Light }: Props) {
   const {
     data: simulations,
     isLoading: loading,
@@ -56,7 +56,7 @@ export default function Results({ modelId, context, variant = 'light' }: Props) 
     );
   }
 
-  if (!simulations || !simulations.data.length) {
+  if (!simulations?.data.length) {
     return (
       <div
         className={cn(
@@ -68,7 +68,7 @@ export default function Results({ modelId, context, variant = 'light' }: Props) 
         <p
           className={cn(
             'mt-4 max-w-2xl text-center text-sm font-light',
-            variant === 'onPrimary' ? 'text-primary-3' : 'text-gray-500'
+            variant === ViewVariant.Default ? 'text-primary-3' : 'text-gray-500'
           )}
         >
           It looks like you haven’t run any simulations yet. To view your simulations here, please
@@ -91,7 +91,7 @@ export default function Results({ modelId, context, variant = 'light' }: Props) 
         <p
           className={cn(
             'mt-4 max-w-2xl text-center text-sm font-light',
-            variant === 'onPrimary' ? 'text-primary-3' : 'text-gray-500'
+            variant === ViewVariant.Default ? 'text-primary-3' : 'text-gray-500'
           )}
         >
           An error occurred while fetching your simulations. Please check your connection and try
@@ -106,7 +106,7 @@ export default function Results({ modelId, context, variant = 'light' }: Props) 
     <div
       className={cn(
         'flex w-full flex-col gap-2',
-        variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+        variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
       )}
     >
       {simulations.data.map((sim, indx) => (

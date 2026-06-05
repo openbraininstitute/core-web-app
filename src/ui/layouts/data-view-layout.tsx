@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
-import { WorkspaceScope } from '@/constants';
+import { ViewVariant, WorkspaceScope } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
@@ -66,12 +66,12 @@ export async function DataViewLayout({
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const useClassicLayout = entityType.group === EntityTypeGroup.Simulations;
-  const contentVariant = useClassicLayout ? 'light' : 'onPrimary';
+  const contentVariant = useClassicLayout ? ViewVariant.Light : ViewVariant.Default;
   /**
    * Breadcrumb, side nav, and close button sit on a white header/rail.
    * Section content is the only part that uses the blue panel variant.
    */
-  const chromeVariant = 'light' as const;
+  const chromeVariant = ViewVariant.Light;
 
   const breadcrumbs = (
     <DataBreadcrumb

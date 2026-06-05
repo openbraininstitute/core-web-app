@@ -1,20 +1,17 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceScope } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import {
-  detailViewInsetPanelClass,
-  type DetailViewVariant,
-} from '@/ui/segments/detail-view/variant-styles';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 
 export function EmodelRelatedArtifacts({
   icm,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   icm: IonChannelModel;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   return (
     <BrowseEntityScope
@@ -24,11 +21,11 @@ export function EmodelRelatedArtifacts({
       extraQueryParams={{ ion_channel_model__id: icm.id }}
       scope={WorkspaceScope.Combined}
       detailVariant={variant}
-      contentOnInsetPanel={variant === 'onPrimary'}
+      contentOnInsetPanel={variant === ViewVariant.Default}
       classNames={{
         container: cn(
           'max-h-none!',
-          variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+          variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
         ),
       }}
       requireMiniDetailView={false}

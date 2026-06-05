@@ -2,19 +2,19 @@
 
 import Link from 'next/link';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { Field } from '@/features/entities/neuron-simulation/elements/field';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import {
   detailViewHeadingClass,
   detailViewLabelClass,
   detailViewLinkClass,
   detailViewPanelBorderClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { IMEModel } from '@/api/entitycore/types';
 
@@ -22,14 +22,14 @@ type Props = {
   virtualLabId: string;
   projectId: string;
   meModel: IMEModel;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
 export default function ModelDetails({
   virtualLabId,
   projectId,
   meModel,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: Props) {
   return (
     <div>

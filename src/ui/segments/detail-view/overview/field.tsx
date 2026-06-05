@@ -1,19 +1,20 @@
 'use client';
 
-import { ReactNode } from 'react';
-
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 type FieldProps = {
   field: EntityCoreFields;
   className?: string;
   data: any;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 };
 
-export function Field({ field, className, data, variant = 'light' }: FieldProps) {
+export function Field({ field, className, data, variant = ViewVariant.Light }: FieldProps) {
   const fieldObj = getFieldDefinition(field);
 
   let renderedContent: ReactNode = null;
@@ -27,24 +28,24 @@ export function Field({ field, className, data, variant = 'light' }: FieldProps)
 
   return (
     <div
-      className={classNames(
+      className={cn(
         'flex flex-col',
-        variant === 'onPrimary' ? 'text-white' : 'text-primary-7',
+        variant === ViewVariant.Default ? 'text-white' : 'text-primary-7',
         className
       )}
     >
       <div
-        className={classNames(
+        className={cn(
           'uppercase',
-          variant === 'onPrimary' ? 'text-primary-3' : 'text-neutral-4'
+          variant === ViewVariant.Default ? 'text-primary-3' : 'text-neutral-4'
         )}
       >
         {fieldObj?.title}
       </div>
       <div
-        className={classNames(
+        className={cn(
           'mt-2 break-words',
-          variant === 'onPrimary' && 'font-bold',
+          { 'font-bold': variant === ViewVariant.Default },
           fieldObj?.className
         )}
       >

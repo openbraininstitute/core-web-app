@@ -1,16 +1,14 @@
-import type { ReactNode } from 'react';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { detailViewHeadingClass } from '@/ui/segments/detail-view/variant-styles';
 
-import {
-  detailViewHeadingClass,
-  type DetailViewVariant,
-} from '@/ui/segments/detail-view/variant-styles';
+import type { ReactNode } from 'react';
 
 export function Header({
   children,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   children: ReactNode;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   return <div className={detailViewHeadingClass(variant, '2xl')}>{children}</div>;
 }

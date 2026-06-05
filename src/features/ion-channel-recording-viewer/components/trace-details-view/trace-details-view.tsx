@@ -1,7 +1,7 @@
 import React from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
-import type { EphysViewerVariant } from '@/features/ephys-viewer/label-styles';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
 import { cn } from '@/utils/css-class';
 
@@ -16,10 +16,14 @@ import styles from './trace-details-view.module.css';
 export interface TraceDetailsViewProps {
   trace: IonChannelRecordingParser;
   cls?: { plots: string };
-  variant?: EphysViewerVariant;
+  variant?: TViewVariant;
 }
 
-export function TraceDetailsView({ trace, cls, variant = 'light' }: TraceDetailsViewProps) {
+export function TraceDetailsView({
+  trace,
+  cls,
+  variant = ViewVariant.Light,
+}: TraceDetailsViewProps) {
   const protocolsNames = trace.protocols.map(({ name }) => name);
   const [protocolName, setProtocolName] = React.useState<string>(protocolsNames[0] ?? '');
   const protocol = React.useMemo(
@@ -32,6 +36,7 @@ export function TraceDetailsView({ trace, cls, variant = 'light' }: TraceDetails
     return protocol.repetitions.map(({ name }) => name);
   }, [protocol]);
   const [repetitionName, setRepetitionName] = React.useState(repetitionsNames[0] ?? '');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: protocolName is used to force a re-render of the repetition name
   React.useEffect(() => {
     setRepetitionName(repetitionsNames[0] ?? '');
   }, [protocolName, repetitionsNames]);
@@ -48,7 +53,7 @@ export function TraceDetailsView({ trace, cls, variant = 'light' }: TraceDetails
     lines.selection,
     lines.preview
   );
-  const plotHeadingClass = variant === 'onPrimary' ? '[&_h3]:!text-white' : undefined;
+  const plotHeadingClass = cn({ '[&_h3]:!text-white': variant === ViewVariant.Default });
 
   return (
     <div className={cn(styles.main, plotHeadingClass)}>

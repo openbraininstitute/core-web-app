@@ -22,7 +22,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -41,14 +41,14 @@ export default function ActionMenu({
   type,
   parentLink,
   isPublicEntity,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   entity: EntityTypeValue;
   ctx: WorkspaceContext;
   type: TExtendedEntitiesTypeDict;
   parentLink: string;
   isPublicEntity: boolean;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 }) {
   const { replace: navigate } = useRouter();
   const queryClient = useQueryClient();
@@ -144,13 +144,13 @@ export default function ActionMenu({
     });
   }, [isSimulatable, ctx, type, entity]);
 
-  const iconClass = variant === 'onPrimary' ? 'text-white' : 'text-primary-8';
+  const iconClass = variant === ViewVariant.Default ? 'text-white' : 'text-primary-8';
 
   return (
     <div
       className={cn(
         'mt-10 flex flex-col gap-5 px-5 text-base font-bold',
-        variant === 'onPrimary' ? 'text-white' : 'text-primary-9'
+        variant === ViewVariant.Default ? 'text-white' : 'text-primary-9'
       )}
     >
       <Action

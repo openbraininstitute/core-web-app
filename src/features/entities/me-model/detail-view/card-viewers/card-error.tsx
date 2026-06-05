@@ -1,18 +1,18 @@
 import { InfoCircleFilled } from '@ant-design/icons';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   detailViewHeadingClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
-export default function CardError({ variant = 'light' }: { variant?: DetailViewVariant }) {
+export default function CardError({ variant = ViewVariant.Light }: { variant?: TViewVariant }) {
   return (
     <div
       className={cn(
         'w-full rounded-[6px] border p-6',
-        variant === 'onPrimary' ? 'border-white/20 bg-white/10' : 'border-red-100 bg-white'
+        variant === ViewVariant.Default ? 'border-white/20 bg-white/10' : 'border-red-100 bg-white'
       )}
     >
       <div className="flex flex-col items-center justify-center py-6 text-center">

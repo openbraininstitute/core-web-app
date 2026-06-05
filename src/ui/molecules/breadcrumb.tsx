@@ -1,34 +1,39 @@
 import { RightOutlined } from '@ant-design/icons';
-import type { ReactNode } from 'react';
+
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { cn } from '@/utils/css-class';
 
-import '@/ui/segments/detail-view/detail-view-breadcrumb.css';
+import type { ReactNode } from 'react';
+
+export const ToneDict = {
+  Inactive: 'inactive',
+  Active: 'active',
+} as const;
+
+export type BreadcrumbTone = (typeof ToneDict)[keyof typeof ToneDict];
 
 export default function Breadcrumb({
   children,
   cls,
   showChevron = true,
-  variant = 'light',
-  tone = 'inactive',
+  variant = ViewVariant.Light,
+  tone = ToneDict.Inactive,
 }: {
   children?: ReactNode;
   showChevron?: boolean;
-  variant?: 'light' | 'onPrimary';
-  tone?: 'inactive' | 'active';
+  variant?: TViewVariant;
+  tone?: BreadcrumbTone;
   cls?: {
     label?: string;
     icon?: string;
   };
 }) {
   const textClass =
-    variant === 'onPrimary'
-      ? tone === 'active'
-        ? 'breadcrumb-on-primary-active'
-        : 'breadcrumb-on-primary-inactive'
-      : cn('text-primary-9', tone === 'active' && 'font-bold');
+    variant === ViewVariant.Default
+      ? cn('text-[#adcdf2]', { 'font-bold': tone === ToneDict.Active })
+      : cn('text-primary-9', { 'font-bold': tone === ToneDict.Active });
 
-  const separatorClass =
-    variant === 'onPrimary' ? 'breadcrumb-on-primary-separator' : 'text-primary-9';
+  const separatorClass = variant === ViewVariant.Default ? 'text-[#adcdf2]' : 'text-primary-9';
 
   return (
     <div className="align-center inline-flex items-center justify-center gap-2">

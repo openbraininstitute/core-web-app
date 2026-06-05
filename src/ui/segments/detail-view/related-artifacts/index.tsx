@@ -5,11 +5,12 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
+import { ViewVariant } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
 import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import { ICMRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/index';
+import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { RelatedCircuits } from '@/ui/segments/explore/circuit/elements/related-circuits';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -29,7 +30,7 @@ export default async function RelatedArtifacts({
   const entityConfig = getEntityByExtendedType({ type: extendedType });
   const fieldVariant = entityConfig
     ? detailViewVariantFromGroup(entityConfig.group)
-    : 'light';
+    : ViewVariant.Light;
 
   return match({ entityConfig })
     .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.Memodel } }, () => (
@@ -37,9 +38,7 @@ export default async function RelatedArtifacts({
     ))
     .with(
       { entityConfig: { extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome } },
-      () => (
-        <SynaptomeResults modelId={entity.id} context={context} variant={fieldVariant} />
-      )
+      () => <SynaptomeResults modelId={entity.id} context={context} variant={fieldVariant} />
     )
     .with(
       {

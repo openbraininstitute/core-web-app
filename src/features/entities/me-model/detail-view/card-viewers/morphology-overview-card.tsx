@@ -1,8 +1,9 @@
-import React from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useParams, useSearchParams } from 'next/navigation';
+import React from 'react';
 
-import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   EmptyValue,
   renderArray,
@@ -10,11 +11,10 @@ import {
   renderLicense,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { classNames } from '@/util/utils';
-import type { DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
 import { detailViewCardBorderClass } from '@/ui/segments/detail-view/variant-styles';
+import { classNames } from '@/util/utils';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 
@@ -22,7 +22,7 @@ type Props = {
   mode: 'select' | 'summary';
   data?: ICellMorphology | ICellMorphology;
   reselectLink?: boolean;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
 const title = 'M-Model';
@@ -32,7 +32,7 @@ function MorphologyOverviewCard({
   mode = 'summary',
   data,
   reselectLink = false,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: Props) {
   const searchParams = useSearchParams();
   const params = useParams<{
@@ -92,7 +92,7 @@ function MorphologyOverviewCard({
       className={classNames(
         'flex h-48 w-full items-center rounded-lg border pl-32 text-4xl',
         detailViewCardBorderClass(variant),
-        variant === 'onPrimary'
+        variant === ViewVariant.Default
           ? 'text-primary-2 hover:bg-primary-8 hover:text-white'
           : 'border-neutral-2 text-neutral-4 hover:bg-primary-7 hover:text-white'
       )}

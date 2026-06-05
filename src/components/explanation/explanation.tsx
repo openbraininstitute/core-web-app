@@ -1,9 +1,8 @@
 import { RiBook2Fill } from '@remixicon/react';
 import React from 'react';
 
-import type { DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { cn } from '@/utils/css-class';
-import { classNames } from '@/util/utils';
 
 import styles from './explanation.module.css';
 
@@ -12,7 +11,7 @@ export interface ExplanationProps {
   title: React.ReactNode;
   children?: React.ReactNode;
   hasDescription: boolean;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }
 
 /**
@@ -24,20 +23,20 @@ export function Explanation({
   title,
   children,
   hasDescription,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: ExplanationProps) {
   const [open, setOpen] = React.useState(false);
-  const onPrimary = variant === 'onPrimary';
+  const isPrimary = variant === ViewVariant.Default;
 
   if (open)
     return (
-      <div className={classNames(className, styles.open, onPrimary && styles.openOnPrimary)}>
+      <div className={cn(className, styles.open, { 'text-white': isPrimary })}>
         <header>
-          <div className={cn(styles.title, onPrimary && styles.titleOnPrimary)}>{title}</div>
+          <div className={cn(styles.title, { 'text-white': isPrimary })}>{title}</div>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className={onPrimary ? 'border-white/30 text-white' : undefined}
+            className={cn({ 'border-white/30 text-white': isPrimary })}
           >
             <Icon />
             <div>Close</div>
@@ -48,13 +47,13 @@ export function Explanation({
     );
 
   return (
-    <div className={classNames(className, styles.close, onPrimary && styles.closeOnPrimary)}>
-      <div className={cn(styles.title, onPrimary && styles.titleOnPrimary)}>{title}</div>
+    <div className={cn(className, styles.close, { 'text-white': isPrimary })}>
+      <div className={cn(styles.title, { 'text-white': isPrimary })}>{title}</div>
       {hasDescription && (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className={onPrimary ? 'border-white/30 text-white' : undefined}
+          className={cn({ 'border-white/30 text-white': isPrimary })}
         >
           <Icon />
           <div>Read description</div>

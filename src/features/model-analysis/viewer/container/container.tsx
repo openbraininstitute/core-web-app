@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   useFlatValidationResults,
   useSelectedValidationResults,
@@ -7,9 +8,7 @@ import {
 import { SelectAnalysis } from '@/features/model-analysis/viewer/container/select-analysis/select-analysis';
 import { ValidationExplanation } from '@/features/model-analysis/viewer/container/validation-explanation';
 import { ValidationResultCard } from '@/features/model-analysis/viewer/container/validation-explanation/card';
-
-import { detailViewValueClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
-import { cn } from '@/utils/css-class';
+import { detailViewValueClass } from '@/ui/segments/detail-view/variant-styles';
 
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
@@ -18,14 +17,14 @@ type Props = {
   rin: number | undefined;
   validationResults: TValidationResultNonUndefined;
   entity: TRetrieveEntityOutput;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
 export function ViewerContainer({
   rin,
   validationResults,
   entity,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: Props) {
   const [selectedId, setSelectedId] = useState<string>('all');
   const flatValidationResults = useFlatValidationResults(validationResults, rin, entity.type);

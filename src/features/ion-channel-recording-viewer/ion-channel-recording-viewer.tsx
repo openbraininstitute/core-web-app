@@ -2,17 +2,18 @@ import { Empty, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   TraceViewMode,
   TraceViewModeToggle,
 } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
 
-import useTrace from './hooks/use-nwb-trace';
-import { TraceOverview } from './components/trace-overview';
 import { TraceDetailsView } from './components/trace-details-view';
+import { TraceOverview } from './components/trace-overview';
+import useTrace from './hooks/use-nwb-trace';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type { WorkspaceContext } from '@/types/common';
 
 // import './styles/ephys-plugin-styles.css';
@@ -20,11 +21,11 @@ import type { WorkspaceContext } from '@/types/common';
 export default function IonChannelRecordingViewer({
   resource,
   ctx,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   resource: IIonChannelRecording;
   ctx?: WorkspaceContext;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 }) {
   const [trace, error] = useTrace({ resource, ctx });
   const [view, setView] = useState<TraceViewMode>(TraceViewMode.DETAILED);

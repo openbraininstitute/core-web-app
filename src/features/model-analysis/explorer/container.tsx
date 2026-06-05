@@ -4,6 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { useParams } from 'next/navigation';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { useAnalysis } from '@/features/model-analysis/explorer/use-analysis';
 import { useInputResistance } from '@/features/model-analysis/explorer/use-input-resistance';
@@ -12,7 +13,6 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   detailViewHeadingClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
@@ -20,10 +20,10 @@ import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/reques
 
 export default function Analysis({
   entity,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   entity: TRetrieveEntityOutput;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   const workspace = useWorkspace();
   const { id } = useParams<{ id: string }>();
@@ -61,7 +61,7 @@ export default function Analysis({
           <p
             className={cn(
               'mt-4 max-w-2xl text-center text-sm font-light',
-              variant === 'onPrimary' ? 'text-primary-3' : 'text-gray-500'
+              variant === ViewVariant.Default ? 'text-primary-3' : 'text-gray-500'
             )}
           >
             It looks like you haven&apos;t run any analysis yet. To view your analysis here, please

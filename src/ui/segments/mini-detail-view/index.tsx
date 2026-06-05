@@ -8,7 +8,7 @@ import { match, P } from 'ts-pattern';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { WorkspaceSection } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
@@ -23,10 +23,6 @@ import { CircuitPreview } from '@/ui/segments/mini-detail-view/previews/circuit-
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
-import {
-  MiniDetailViewTheme,
-  type TMiniDetailViewTheme,
-} from '@/ui/segments/mini-detail-view/types';
 import { cn } from '@/utils/css-class';
 
 import { DataActions, WorkflowActions, WorkflowBuildActions } from './actions';
@@ -107,7 +103,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   record: T | null;
   dataType: TExtendedEntitiesTypeDict;
   onClose?: () => void;
-  theme?: TMiniDetailViewTheme;
+  theme?: TViewVariant;
   enableAnimation?: boolean;
   hideUseModelAction?: boolean;
   workflowTargetType?: TExtendedEntitiesTypeDict;
@@ -330,12 +326,12 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   type="button"
                   onClick={onClose}
                   className={cn('mt-1.5 rounded-full p-2 hover:bg-white/20', {
-                    'hover:bg-gray-100': theme === MiniDetailViewTheme.Light,
+                    'hover:bg-gray-100': theme === ViewVariant.Light,
                   })}
                 >
                   <CloseOutlined
                     className={cn('text-white', {
-                      'text-primary-9': theme === MiniDetailViewTheme.Light,
+                      'text-primary-9': theme === ViewVariant.Light,
                     })}
                   />
                 </button>

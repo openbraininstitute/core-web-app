@@ -3,16 +3,17 @@
 import { capitalize } from 'es-toolkit/compat';
 import { usePathname, useSearchParams } from 'next/navigation';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import Tab from '@/ui/molecules/tab';
 
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
 
 export default function DetailMenu({
   sections,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   sections: TDetailViewSectionDict[];
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 }) {
   const path = usePathname();
   const parentPath = path.split('/').slice(0, -1).join('/');

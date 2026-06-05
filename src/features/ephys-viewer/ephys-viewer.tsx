@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
+import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import {
   TraceViewMode,
   TraceViewModeToggle,
 } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
-import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
-import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
@@ -22,13 +23,13 @@ export default function EphysViewer({
   assetId,
   ctx,
   defaultToInteractiveDetails = true,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   entity: IElectricalCellRecording | ISimulationResult;
   assetId?: string;
   ctx?: WorkspaceContext;
   defaultToInteractiveDetails?: boolean;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 }) {
   const [trace, error] = useTrace({ entity, assetId, ctx });
 
@@ -57,7 +58,11 @@ export default function EphysViewer({
 
   return (
     <div className="@container flex flex-col gap-6">
-      <TraceViewModeToggle value={view} onChange={(e) => setView(e.target.value as TraceViewMode)} variant={variant} />
+      <TraceViewModeToggle
+        value={view}
+        onChange={(e) => setView(e.target.value as TraceViewMode)}
+        variant={variant}
+      />
 
       {view === TraceViewMode.OVERVIEW && (
         <ErrorBoundary

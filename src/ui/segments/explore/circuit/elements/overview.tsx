@@ -2,21 +2,22 @@
 
 import toPairs from 'es-toolkit/compat/toPairs';
 
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
-import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
-import { detailViewInsetPanelClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
+import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Props = {
   circuit: ICircuit;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
-export default function Overview({ circuit, variant = 'light' }: Props) {
+export default function Overview({ circuit, variant = ViewVariant.Light }: Props) {
   const cellProperties = getAssetElement({
     assets: circuit.assets,
     filter(i) {
@@ -53,7 +54,7 @@ export default function Overview({ circuit, variant = 'light' }: Props) {
               <div
                 className={cn(
                   'flex w-full flex-col items-center gap-2',
-                  variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+                  variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
                 )}
               >
                 {items.map((asset, index) => (

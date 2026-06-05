@@ -14,6 +14,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
+import { ViewVariant } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   CommonSummaryViewFields,
@@ -57,6 +58,7 @@ import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-p
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
+import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -428,7 +430,7 @@ export default async function Overview({
 
   const isSimulationPage =
     getEntityByExtendedType({ type: extendedType })?.group === EntityTypeGroup.Simulations;
-  const fieldVariant = isSimulationPage ? 'light' : 'onPrimary';
+  const fieldVariant = isSimulationPage ? ViewVariant.Light : ViewVariant.Default;
   const metadataBorderClass = isSimulationPage ? 'border-gray-300' : 'border-white/20';
   const summaryFields: TypeSummaryProps[] = isSimulationPage
     ? [{ field: EntityCoreFields.Description, className: 'col-span-2' }, ...commonFields, ...fields]
@@ -451,7 +453,7 @@ export default async function Overview({
   );
 
   const visualizations = hasVisualization ? (
-    <div className={isSimulationPage ? undefined : 'mb-8'}>
+    <div className={cn({ 'mb-8': !isSimulationPage })}>
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
       {includes(morphologyTypes, extendedType) && (
         <CellMorphologyViewer entity={entity as ICellMorphology} />
@@ -483,11 +485,7 @@ export default async function Overview({
 
   const subjectSection =
     'subject' in entity ? (
-      <SubjectDetails
-        className="mb-8"
-        entity={entity}
-        variant={fieldVariant}
-      />
+      <SubjectDetails className="mb-8" entity={entity} variant={fieldVariant} />
     ) : null;
 
   const meModelSection =

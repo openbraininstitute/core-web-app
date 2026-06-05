@@ -3,25 +3,22 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 
+import { DocumentationIcon } from '@/components/icons/Documentation';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { StandardFallback } from '@/features/entities/e-model/detail-view/error-message-line';
 import { Header } from '@/features/entities/e-model/detail-view/header';
-import { DocumentationIcon } from '@/components/icons/Documentation';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-
-import {
-  detailViewInsetPanelClass,
-  type DetailViewVariant,
-} from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 type Props = {
   source: IEModel;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
-export default function IonChannels({ source, variant = 'light' }: Props) {
+export default function IonChannels({ source, variant = ViewVariant.Light }: Props) {
   const { data, error, isLoading } = useQuery({
     queryKey: keyBuilder.ionChannelsFile({ entityName: source.name }),
     queryFn: async () => {
@@ -56,7 +53,7 @@ export default function IonChannels({ source, variant = 'light' }: Props) {
       <div
         className={cn(
           'flex items-center justify-center text-3xl',
-          variant === 'onPrimary' ? 'text-white' : 'text-neutral-1'
+          variant === ViewVariant.Default ? 'text-white' : 'text-neutral-1'
         )}
       >
         <LoadingOutlined />

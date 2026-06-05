@@ -2,14 +2,14 @@
 
 import { Empty } from 'antd';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import {
   SECTION_TARGET_MAPPING,
-  SectionTargetMappingKeys,
+  type SectionTargetMappingKeys,
 } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
-import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
-import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
-
-import { detailViewHeadingClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import { detailViewHeadingClass } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
@@ -18,15 +18,17 @@ type Props = {
   config: {
     synapses: Array<TSingleNeuronSynaptomeConfiguration>;
   } | null;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
-export default function SynapseGroupList({ config, variant = 'light' }: Props) {
+export default function SynapseGroupList({ config, variant = ViewVariant.Light }: Props) {
   if (config && !config.synapses.length) {
     return (
       <Empty
         description="No synapses found"
-        className={variant === 'onPrimary' ? '[&_.ant-empty-description]:text-primary-3' : undefined}
+        className={cn({
+          '[&_.ant-empty-description]:text-primary-3': variant === ViewVariant.Default,
+        })}
       />
     );
   }

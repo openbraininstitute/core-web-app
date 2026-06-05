@@ -1,23 +1,21 @@
-import { useMemo } from 'react';
 import isString from 'es-toolkit/compat/isString';
 import Link from 'next/link';
-import type { ColumnsType } from 'antd/es/table';
+import { useMemo } from 'react';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import ErrorMessageLine, {
   StandardFallback,
 } from '@/features/entities/e-model/detail-view/error-message-line';
 import { Header } from '@/features/entities/e-model/detail-view/header';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import { BaseTable } from '@/ui/segments/data-table/table';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import {
-  detailViewInsetPanelClass,
-  type DetailViewVariant,
-} from '@/ui/segments/detail-view/variant-styles';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
+import type { ColumnsType } from 'antd/es/table';
 import type {
   EntityCoreObjectTypes,
   ICellMorphology,
@@ -49,10 +47,10 @@ function makeColumns(virtualLabId: string, projectId: string): ColumnsType<ICell
 
 type Props = {
   exemplarMorphology: ICellMorphology | ICellMorphologyExpanded;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
-export function ExemplarMorphology({ exemplarMorphology, variant = 'light' }: Props) {
+export function ExemplarMorphology({ exemplarMorphology, variant = ViewVariant.Light }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const exemplarMorphologyAsList = exemplarMorphology ? [exemplarMorphology] : [];
   const morphologies = exemplarMorphologyAsList;

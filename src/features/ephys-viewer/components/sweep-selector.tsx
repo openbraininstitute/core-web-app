@@ -1,10 +1,10 @@
-import React, { ChangeEvent } from 'react';
 import { Button } from 'antd';
+import React, { type ChangeEvent } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   ephysControlLabelClass,
   ephysControlSubLabelClass,
-  type EphysViewerVariant,
 } from '@/features/ephys-viewer/label-styles';
 import { classNames } from '@/util/utils';
 
@@ -17,7 +17,7 @@ type TraceSelectorGroupProps = {
   setSelectedSweeps: (sweeps: string[]) => void;
   colorMap: Map<string, string>;
   previewItem?: string;
-  variant?: EphysViewerVariant;
+  variant?: TViewVariant;
 };
 
 function SweepSelector({
@@ -27,7 +27,7 @@ function SweepSelector({
   onPreviewSweep,
   setSelectedSweeps,
   colorMap,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: TraceSelectorGroupProps) {
   const [preview, setPreview] = React.useState<string | undefined>(undefined);
   const handlePreviewSweep = (id: string | undefined) => {

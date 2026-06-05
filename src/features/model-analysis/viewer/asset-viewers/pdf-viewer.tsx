@@ -7,9 +7,10 @@ import { Fragment, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
 import { config } from '@/config';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
+import { detailViewLinkClass } from '@/ui/segments/detail-view/variant-styles';
 import { classNames } from '@/util/utils';
-import { detailViewLinkClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
@@ -23,7 +24,7 @@ type Props = {
   showPageCount?: boolean;
   documentClassName?: string;
   pageWidth?: number;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
 const options = {
@@ -37,7 +38,7 @@ export default function PDFViewer({
   showPageCount = true,
   documentClassName,
   pageWidth,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: Props) {
   const [totalPages, setNumPages] = useState<number>();
   const pdfFileUrl = `${config.ENTITY_CORE_URL}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
@@ -97,10 +98,7 @@ export default function PDFViewer({
             />
             {showPageCount && (
               <div
-                className={cn(
-                  'text-center',
-                  variant === 'onPrimary' ? 'text-primary-3' : undefined
-                )}
+                className={cn('text-center', { 'text-primary-3': variant === ViewVariant.Default })}
               >
                 Page {index + 1} of {totalPages}
               </div>
@@ -112,9 +110,11 @@ export default function PDFViewer({
         className={cn(
           detailViewLinkClass(variant),
           'mt-4 flex float-left items-center justify-center gap-1.5 rounded-full border border-transparent px-3 py-1',
-          variant === 'light' &&
-            'hover:border hover:border-primary-8 hover:text-primary-8 hover:shadow-bnb',
-          variant === 'onPrimary' && 'hover:border-white/40'
+          {
+            'hover:border hover:border-primary-8 hover:text-primary-8 hover:shadow-bnb':
+              variant === ViewVariant.Light,
+            'hover:border-white/40': variant === ViewVariant.Default,
+          }
         )}
         href={cachedUrl}
         target="PDF"

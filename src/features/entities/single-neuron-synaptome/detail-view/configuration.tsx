@@ -1,41 +1,40 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
+  renderArray,
   renderEmptyOrValue,
   renderPreview,
-  renderArray,
 } from '@/entity-configuration/definitions/renderer';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import {
   detailViewHeadingClass,
   detailViewLabelClass,
   detailViewLinkClass,
   detailViewPanelBorderClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 
 export default function Configuration({
   memodel,
   virtualLabId,
   projectId,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   memodel: IMEModel;
   virtualLabId: string;
   projectId: string;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   return (
     <div
@@ -75,7 +74,9 @@ export default function Configuration({
       </div>
       <div className="mt-12 min-w-0 flex-1">
         <div className={detailViewLabelClass(variant)}>NAME</div>
-        <div className={cn('my-1 break-words', detailViewHeadingClass(variant))}>{memodel.name}</div>
+        <div className={cn('my-1 break-words', detailViewHeadingClass(variant))}>
+          {memodel.name}
+        </div>
         <MeModelDetails memodel={memodel} variant={variant} />
       </div>
     </div>
@@ -84,7 +85,7 @@ export default function Configuration({
 
 type ModelDetails = {
   memodel: IMEModel;
-  variant: DetailViewVariant;
+  variant: TViewVariant;
 };
 
 function MeModelDetails({ memodel, variant }: ModelDetails) {

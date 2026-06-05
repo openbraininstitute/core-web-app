@@ -1,3 +1,4 @@
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import { cn } from '@/utils/css-class';
@@ -26,24 +27,24 @@ const columnFields: { field: EntityCoreFields; target: 'subject' | 'entity' }[][
 export default async function SubjectDetails({
   entity,
   className,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   entity: EntityCoreObjectTypes;
   className?: string;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 }) {
   return (
     <div
       className={cn(
         'mb-5 rounded-lg border p-5',
-        variant === 'onPrimary' ? 'border-white/20' : 'border-gray-300',
+        variant === ViewVariant.Default ? 'border-white/20' : 'border-gray-300',
         className
       )}
     >
       <h2
         className={cn(
           'text-xl font-bold',
-          variant === 'onPrimary' ? 'text-white' : 'text-primary-8'
+          variant === ViewVariant.Default ? 'text-white' : 'text-primary-8'
         )}
       >
         Subject

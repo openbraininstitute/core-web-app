@@ -1,9 +1,9 @@
 import { Select } from 'antd';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   ephysControlLabelClass,
   ephysControlSubLabelClass,
-  type EphysViewerVariant,
 } from '@/features/ephys-viewer/label-styles';
 
 import type { JSX } from 'react';
@@ -17,7 +17,7 @@ interface OptionSelectProps {
   onChange: (value: string) => void;
   options: JSX.Element[] | null;
   hideWhenSingle?: boolean;
-  variant?: EphysViewerVariant;
+  variant?: TViewVariant;
 }
 
 function OptionSelect({
@@ -26,7 +26,7 @@ function OptionSelect({
   onChange: handleChange,
   options,
   hideWhenSingle = false,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: OptionSelectProps) {
   if (hideWhenSingle && numberOfAvailable === 1) {
     return null;

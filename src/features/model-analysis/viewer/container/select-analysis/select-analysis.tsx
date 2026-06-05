@@ -1,3 +1,4 @@
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   Select,
   SelectContent,
@@ -5,9 +6,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
+import { detailViewLabelClass } from '@/ui/segments/detail-view/variant-styles';
 import { isType } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
-import { detailViewLabelClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -20,7 +21,7 @@ export interface SelectAnalysisProps {
   value: string;
   onChange(value: string): void;
   results: FlatValidationResult[];
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }
 
 export interface SelectAnalysisOption {
@@ -33,7 +34,7 @@ export function SelectAnalysis({
   value,
   onChange,
   results,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: SelectAnalysisProps) {
   const options: SelectAnalysisOption[] = [
     { label: 'All', value: 'all' },

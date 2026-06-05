@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, ReactNode, ReactElement } from 'react';
+import React, { type ReactElement, type ReactNode, useState } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   detailViewTabbedContentClass,
   detailViewTabbedEmptyClass,
   detailViewTabbedTabButtonClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
@@ -26,14 +26,14 @@ type TabsProps = {
   children: ReactElement<TabProps> | ReactElement<TabProps>[];
   defaultIndex?: number;
   defaultMessage: string;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
 export default function Tabs({
   children,
   defaultIndex = 0,
   defaultMessage,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: TabsProps) {
   const tabs = React.Children.toArray(children).filter((t) => {
     return Boolean((t as ReactElement<TabProps>).props.visible ?? true);
@@ -58,16 +58,16 @@ export default function Tabs({
         {tabs.map((tab, index) => (
           <Button
             size="lg"
-            variant={variant === 'onPrimary' ? 'ghost' : 'outline'}
+            variant={variant === ViewVariant.Default ? 'ghost' : 'outline'}
             key={tab.props.label}
             onClick={() => setActiveIndex(index)}
-            active={variant === 'light' && activeIndex === index}
+            active={variant === ViewVariant.Light && activeIndex === index}
             className={cn(
               detailViewTabbedTabButtonClass(variant, activeIndex === index),
               rounded(index),
-              variant === 'light' && 'rounded-none'
+              { 'rounded-none': variant === ViewVariant.Light }
             )}
-            borderless={variant === 'onPrimary'}
+            borderless={variant === ViewVariant.Default}
           >
             {tab.props.label}
           </Button>

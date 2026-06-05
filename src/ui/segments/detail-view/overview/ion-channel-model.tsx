@@ -3,6 +3,7 @@ import { sortBy } from 'es-toolkit/compat';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { PDFViewer } from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
 import {
   detailViewHeadingClass,
@@ -10,7 +11,6 @@ import {
   detailViewLabelClass,
   detailViewPanelBorderClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
@@ -28,7 +28,7 @@ type SummaryEntry = {
 
 type SummaryJson = Record<string, SummaryEntry>;
 
-function sectionHeadingClass(variant: DetailViewVariant) {
+function sectionHeadingClass(variant: TViewVariant) {
   return cn(
     'mb-5 mt-5 rounded-full border px-4 py-3 text-xl font-bold capitalize',
     detailViewHeadingClass(variant, 'xl'),
@@ -39,11 +39,11 @@ function sectionHeadingClass(variant: DetailViewVariant) {
 export default async function IonChannelModelOverview({
   icm,
   ctx,
-  variant = 'onPrimary',
+  variant = ViewVariant.Default,
 }: {
   icm: IonChannelModel;
   ctx: WorkspaceContext;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   const asset = icm.assets.filter((a) => a.label === AssetLabel.neuron_mechanisms)[0];
   if (!asset) return null;
@@ -233,7 +233,7 @@ export default async function IonChannelModelOverview({
       <div
         className={cn(
           'overflow-x-auto overflow-y-auto p-4 font-mono text-sm whitespace-pre shadow-lg',
-          variant === 'onPrimary'
+          variant === ViewVariant.Default
             ? cn(detailViewInsetPanelClass(variant), 'text-primary-8')
             : 'bg-neutral-2 text-black'
         )}

@@ -3,20 +3,16 @@ import DistinctColors from 'distinct-colors';
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import InteractivePlot, {
   currentUnitAtom,
   DEFAULT_CURRENT_UNIT,
 } from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import { ephysHeadingClass, ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
 import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-
-import {
-  ephysHeadingClass,
-  ephysSectionLabelClass,
-  type EphysViewerVariant,
-} from '@/features/ephys-viewer/label-styles';
 
 import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
@@ -25,7 +21,7 @@ interface TraceDetailsViewProps {
   defaultCellId?: string;
   defaultProtocol?: string;
   defaultRepetition?: string;
-  variant?: EphysViewerVariant;
+  variant?: TViewVariant;
 }
 
 interface CellDetailsProps {
@@ -34,7 +30,7 @@ interface CellDetailsProps {
   showCellLabel?: boolean;
   defaultProtocol?: string;
   defaultRepetition?: string;
-  variant?: EphysViewerVariant;
+  variant?: TViewVariant;
 }
 
 function CellDetails({
@@ -43,7 +39,7 @@ function CellDetails({
   showCellLabel,
   defaultProtocol,
   defaultRepetition,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: CellDetailsProps) {
   const [reset, setReset] = useState<boolean>(false);
 
@@ -147,6 +143,7 @@ function CellDetails({
     [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision]
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedSweeps is used to force a re-render of the plot
   useEffect(
     () => updatePlots(),
     [selectedProtocol, selectedRepetition, selectedSweeps, updatePlots]
@@ -257,7 +254,7 @@ function TraceDetailsView({
   defaultCellId,
   defaultProtocol,
   defaultRepetition,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: TraceDetailsViewProps) {
   const cellIds = useMemo(() => trace.getCellIds(), [trace]);
   const [selectedCellId, setSelectedCellId] = useState<string>(

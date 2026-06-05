@@ -5,6 +5,7 @@ import { Divider } from 'antd';
 import { startCase } from 'es-toolkit/compat';
 
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
@@ -40,12 +41,12 @@ export function Morphometrics({
   morphology,
   context,
   className,
-  variant = 'onPrimary',
+  variant = ViewVariant.Default,
 }: {
   morphology: ICellMorphology;
   className?: string;
   context: WorkspaceContext;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 }) {
   const { data: measurementKinds, isLoading } = useQuery({
     queryKey: ['measurement-annotations', morphology.id],
@@ -75,11 +76,11 @@ export function Morphometrics({
 
   return (
     <div className={cn('flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2', className)}>
-      <Divider className={cn('w-full', variant === 'onPrimary' && 'border-white/20')} />
+      <Divider className={cn('w-full', { 'border-white/20': variant === ViewVariant.Default })} />
       <h1
         className={cn(
           'text-xl font-bold',
-          variant === 'onPrimary' ? 'text-white' : 'text-primary-8'
+          variant === ViewVariant.Default ? 'text-white' : 'text-primary-8'
         )}
       >
         Morphometrics
@@ -93,7 +94,7 @@ export function Morphometrics({
               <h2
                 className={cn(
                   'mb-8 text-lg font-semibold',
-                  variant === 'onPrimary' ? 'text-white' : 'text-primary-8'
+                  variant === ViewVariant.Default ? 'text-white' : 'text-primary-8'
                 )}
               >
                 {startCase(group)}

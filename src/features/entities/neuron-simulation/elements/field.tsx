@@ -1,7 +1,7 @@
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   detailViewLabelClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { classNames } from '@/util/utils';
 
@@ -9,12 +9,12 @@ export function Field({
   label,
   value,
   className,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   label: string;
   value: string;
   className?: string;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   return (
     <div className={classNames('mr-10 mb-4 text-sm', detailViewValueClass(variant))}>

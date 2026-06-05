@@ -1,31 +1,25 @@
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { cn } from '@/utils/css-class';
 
-export type EphysViewerVariant = 'light' | 'onPrimary';
-
-export function ephysControlLabelClass(variant: EphysViewerVariant, className?: string) {
-  return cn(variant === 'onPrimary' ? 'font-bold text-white' : 'text-dark font-bold', className);
-}
-
-export function ephysControlSubLabelClass(variant: EphysViewerVariant, className?: string) {
+export function ephysControlLabelClass(variant: TViewVariant, className?: string) {
   return cn(
-    'text-sm font-light',
-    variant === 'onPrimary' ? 'text-white/80' : undefined,
+    variant === ViewVariant.Default ? 'font-bold text-white' : 'text-dark font-bold',
     className
   );
 }
 
-export function ephysHeadingClass(variant: EphysViewerVariant, className?: string) {
+export function ephysControlSubLabelClass(variant: TViewVariant, className?: string) {
+  return cn('text-sm font-light', { 'text-white/80': variant === ViewVariant.Default }, className);
+}
+
+export function ephysHeadingClass(variant: TViewVariant, className?: string) {
   return cn(
     'text-xl font-bold',
-    variant === 'onPrimary' ? 'text-white' : 'text-primary-9',
+    variant === ViewVariant.Default ? 'text-white' : 'text-primary-9',
     className
   );
 }
 
-export function ephysSectionLabelClass(variant: EphysViewerVariant, className?: string) {
-  return cn(
-    'text-sm font-medium',
-    variant === 'onPrimary' ? 'text-white' : undefined,
-    className
-  );
+export function ephysSectionLabelClass(variant: TViewVariant, className?: string) {
+  return cn('text-sm font-medium', { 'text-white': variant === ViewVariant.Default }, className);
 }

@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import {
   detailViewCardBorderClass,
@@ -8,14 +8,12 @@ import {
   detailViewLabelClass,
   detailViewLinkClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-
-import styles from './card-container.module.css';
 
 type Detail = {
   label: string;
@@ -26,7 +24,7 @@ type ModelDetailsProps = {
   details: Detail[];
 };
 
-function ModelDetails({ details, variant }: ModelDetailsProps & { variant: DetailViewVariant }) {
+function ModelDetails({ details, variant }: ModelDetailsProps & { variant: TViewVariant }) {
   return (
     <div className={cn('mt-4 grid grid-cols-3 gap-4', detailViewValueClass(variant))}>
       {details.map((detail) => (
@@ -51,7 +49,7 @@ type Props = {
   modelDetails: Detail[];
   thumbnail: ReactNode;
   reselectLink?: boolean;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
 export default function ModelCard({
@@ -63,7 +61,7 @@ export default function ModelCard({
   modelDetails,
   thumbnail,
   reselectLink = false,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: Props) {
   const cardLink = reselectLink ? (
     <Link
@@ -83,12 +81,9 @@ export default function ModelCard({
 
   return (
     <div
-      className={cn(
-        styles.cardContainer,
-        'border',
-        detailViewCardBorderClass(variant),
-        variant === 'onPrimary' && 'bg-transparent'
-      )}
+      className={cn('w-full rounded-[6px] border p-10', detailViewCardBorderClass(variant), {
+        'bg-transparent': variant === ViewVariant.Default,
+      })}
     >
       <div className="flex justify-between">
         <div className={cn('text-2xl uppercase font-thin', detailViewLabelClass(variant))}>
@@ -106,7 +101,9 @@ export default function ModelCard({
         </div>
         <div className="grow">
           <div className={detailViewLabelClass(variant)}>NAME</div>
-          <div className={cn('my-1 break-words', detailViewHeadingClass(variant))}>{model.name}</div>
+          <div className={cn('my-1 break-words', detailViewHeadingClass(variant))}>
+            {model.name}
+          </div>
           <ModelDetails details={modelDetails} variant={variant} />
         </div>
       </div>

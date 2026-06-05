@@ -1,22 +1,23 @@
-import type { EphysViewerVariant } from '@/features/ephys-viewer/label-styles';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { cn } from '@/utils/css-class';
 
-import { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
 import { TraceOverviewPlot } from './trace-overview-plot';
+
+import type { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
 
 import styles from './trace-overview.module.css';
 
 export interface TraceOverviewProps {
   trace: IonChannelRecordingParser;
-  variant?: EphysViewerVariant;
+  variant?: TViewVariant;
 }
 
-export function TraceOverview({ trace, variant = 'light' }: TraceOverviewProps) {
+export function TraceOverview({ trace, variant = ViewVariant.Light }: TraceOverviewProps) {
   return (
     <div
       className={cn(
         styles.traceOverview,
-        variant === 'onPrimary' &&
+        variant === ViewVariant.Default &&
           '[&_h2]:!border-white [&_h2]:!text-white [&_h2_small]:!text-white/80 [&_h3]:!text-white'
       )}
     >

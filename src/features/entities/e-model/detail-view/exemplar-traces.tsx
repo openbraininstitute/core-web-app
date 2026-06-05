@@ -1,29 +1,25 @@
+import { Pagination } from 'antd';
+import isString from 'es-toolkit/compat/isString';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { match, P } from 'ts-pattern';
-import { Pagination } from 'antd';
 
-import Link from 'next/link';
-import isString from 'es-toolkit/compat/isString';
-
-import type { ColumnsType } from 'antd/es/table';
-
-import { useElectricalCellRecordingsByDerivations, useEmodelDerivations } from '@/ui/hooks/data';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import { Header } from '@/features/entities/e-model/detail-view/header';
 import { ErrorData } from '@/components/message-banners/error';
-import { BaseTable } from '@/ui/segments/data-table/table';
+import { DEFAULT_PAGE_XSMALL_SIZE, type TViewVariant, ViewVariant } from '@/constants';
+import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { Header } from '@/features/entities/e-model/detail-view/header';
+import { useElectricalCellRecordingsByDerivations, useEmodelDerivations } from '@/ui/hooks/data';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
+import { BaseTable } from '@/ui/segments/data-table/table';
 import {
   detailViewInsetPanelClass,
   detailViewPaginationClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
-import '@/ui/segments/detail-view/detail-view-pagination.css';
 import { cn } from '@/utils/css-class';
 
+import type { ColumnsType } from 'antd/es/table';
 import type {
   EntityCoreObjectTypes,
   IElectricalCellRecording,
@@ -56,10 +52,10 @@ function makeColumns(
 
 type Props = {
   source: IEModel;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 };
 
-export function ExemplarTraces({ source, variant = 'light' }: Props) {
+export function ExemplarTraces({ source, variant = ViewVariant.Light }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const [{ pageNumber, pageSize }, updatePageState] = useState({
     pageNumber: 1,
@@ -108,7 +104,7 @@ export function ExemplarTraces({ source, variant = 'light' }: Props) {
                 key={`row-ske-${value}`}
                 className={cn(
                   'flex h-[132px] w-full items-center gap-x-6 border-b py-8',
-                  variant === 'onPrimary' ? 'border-white/20' : 'border-gray-300'
+                  variant === ViewVariant.Default ? 'border-white/20' : 'border-gray-300'
                 )}
               >
                 <div className="flex w-[330px] items-center justify-start">

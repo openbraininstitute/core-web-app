@@ -1,10 +1,11 @@
 import groupBy from 'es-toolkit/compat/groupBy';
 import omit from 'es-toolkit/compat/omit';
 
-import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
-import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
-import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
+import { EmptyValue } from '@/entity-configuration/definitions/renderer';
+import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 
 import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
@@ -12,7 +13,7 @@ import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-d
 export const useMorphometrics = (
   morphology: ICellMorphologyExpanded,
   showLabel: boolean = false,
-  variant: 'light' | 'onPrimary' = 'light'
+  variant: TViewVariant = ViewVariant.Light
 ) => {
   const groupedCardFields = groupBy(
     getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.CellMorphology)!.cardViewFields,
@@ -28,13 +29,15 @@ export const useMorphometrics = (
 
     return (
       <div
-        className={variant === 'onPrimary' ? 'mr-10 text-white' : 'text-primary-8 mr-10'}
+        className={variant === ViewVariant.Default ? 'mr-10 text-white' : 'text-primary-8 mr-10'}
         key={field.field}
       >
         {showLabel && (
           <div
             className={
-              variant === 'onPrimary' ? 'text-primary-3 uppercase' : 'text-neutral-4 uppercase'
+              variant === ViewVariant.Default
+                ? 'text-primary-3 uppercase'
+                : 'text-neutral-4 uppercase'
             }
           >
             {fieldObj?.title}

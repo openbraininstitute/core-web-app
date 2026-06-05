@@ -76,15 +76,3 @@
   align-items: center;
   gap: 1em;
 }
-
-.closeOnPrimary {
-  color: #fff;
-}
-
-.titleOnPrimary {
-  color: #fff;
-}
-
-.openOnPrimary > header .titleOnPrimary {
-  color: #fff;
-}

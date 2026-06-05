@@ -1,14 +1,14 @@
 import { useId } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { TextPatternTransformer } from '@/ui/molecules/text-pattern-transformer';
 import {
   detailViewHeadingClass,
   detailViewLinkClass,
   detailViewValueClass,
-  type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
-import { cn } from '@/utils/css-class';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
 
@@ -42,8 +42,8 @@ const markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
 export default function Documentation({
   className,
   value,
-  variant = 'light',
-}: DocumentationProps & { variant?: DetailViewVariant }) {
+  variant = ViewVariant.Light,
+}: DocumentationProps & { variant?: TViewVariant }) {
   const { documentation } = value;
 
   if (!documentation) return null;
@@ -55,7 +55,7 @@ export default function Documentation({
       className={classNames(
         className,
         styles.documentation,
-        variant === 'onPrimary' && detailViewValueClass(variant)
+        variant === ViewVariant.Default && detailViewValueClass(variant)
       )}
     >
       {value.extraVariables && (

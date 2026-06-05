@@ -2,10 +2,11 @@ import { get } from 'es-toolkit/compat';
 import ReactMarkdown from 'react-markdown';
 
 import { Explanation } from '@/components/explanation';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
-import { detailViewLinkClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
-import { cn } from '@/utils/css-class';
+import { detailViewLinkClass } from '@/ui/segments/detail-view/variant-styles';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import { validationDescription } from '../hooks/dictionary';
 
@@ -17,14 +18,14 @@ export interface ValidationExplanationProps {
   className?: string;
   passed: boolean;
   entity: TRetrieveEntityOutput;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }
 
 export function ValidationExplanation({
   className,
   passed,
   entity,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: ValidationExplanationProps) {
   const entityConfig = getEntityByCoreType({ type: entity.type });
   const title = entityConfig?.title;
@@ -37,7 +38,7 @@ export function ValidationExplanation({
       variant={variant}
       title={
         <>
-          <div className={variant === 'onPrimary' ? 'text-white' : undefined}>
+          <div className={cn({ 'text-white': variant === ViewVariant.Default })}>
             {title} Validation
           </div>
           <div className={passed ? styles.passed : styles.failed}>

@@ -1,22 +1,21 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { ErrorBoundary } from '@sentry/nextjs';
+import { useSearchParams } from 'next/navigation';
 
-import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
-import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import CardError from '@/features/entities/me-model/detail-view/card-viewers/card-error';
-
-import type { DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
+import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
 export default function Configuration({
   model: { morphology, emodel },
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   model: IMEModel;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   const params = useSearchParams();
   const emodelId = params?.get('e');

@@ -5,9 +5,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { CHART_LINE_COLOR } from '@/features/ephys-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import type { EphysViewerVariant } from '@/features/ephys-viewer/label-styles';
 import { ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
 import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
@@ -49,7 +49,7 @@ interface TraceOverviewComponentProps {
   onCellIdChange: (cellId: string) => void;
   onProtocolChange: (value: string) => void;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
-  variant?: EphysViewerVariant;
+  variant?: TViewVariant;
 }
 
 const colorMap = {
@@ -130,7 +130,7 @@ function TraceThumbnailContainer({
 
   useEffect(() => {
     if (ref.current) setInViewRef(ref.current);
-  }, [ref, setInViewRef]);
+  }, [setInViewRef]);
 
   return (
     <div ref={ref} className={cn('relative aspect-4/3 overflow-hidden bg-gray-100', className)}>
@@ -179,10 +179,9 @@ function ImageSetComponent({
 
     return (
       <button
-        className={cn(
-          'flex cursor-pointer flex-col gap-3 text-left',
-          hasMultipleRecordings && 'col-span-full'
-        )}
+        className={cn('flex cursor-pointer flex-col gap-3 text-left', {
+          'col-span-full': hasMultipleRecordings,
+        })}
         key={repetition}
         onClick={onRepetitionClick(protocol, repetition)}
         type="button"
@@ -280,7 +279,7 @@ export default function TraceOverview({
   onCellIdChange,
   onProtocolChange,
   onRepetitionClick,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: TraceOverviewComponentProps) {
   const cellIds = useMemo(() => trace.getCellIds(), [trace]);
 

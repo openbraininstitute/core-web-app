@@ -1,20 +1,24 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 type EntityNameDisplayProps = {
   name: string;
   description?: string | null;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 };
 
 export function EntityNameDisplay({
   name,
   description,
-  variant = 'onPrimary',
+  variant = ViewVariant.Default,
 }: EntityNameDisplayProps) {
   const pathname = usePathname();
 
@@ -33,7 +37,7 @@ export function EntityNameDisplay({
     return null;
   }
 
-  if (variant === 'light') {
+  if (variant === ViewVariant.Light) {
     return (
       <div className="mb-4">
         <div className="text-neutral-4 uppercase">Name</div>
@@ -70,12 +74,12 @@ export function EntityNameDisplay({
 
 type EntityNameDisplayWrapperProps = {
   children: ReactNode;
-  variant?: 'light' | 'onPrimary';
+  variant?: TViewVariant;
 };
 
 export function EntityNameDisplayWrapper({
   children,
-  variant = 'onPrimary',
+  variant = ViewVariant.Default,
 }: EntityNameDisplayWrapperProps) {
   const pathname = usePathname();
 
@@ -91,9 +95,10 @@ export function EntityNameDisplayWrapper({
 
   return (
     <div
-      className={
-        shouldHide ? 'h-full' : variant === 'light' ? 'h-[calc(100%-7rem)]' : undefined
-      }
+      className={cn({
+        'h-full': shouldHide,
+        'h-[calc(100%-7rem)]': !shouldHide && variant === ViewVariant.Light,
+      })}
     >
       {children}
     </div>

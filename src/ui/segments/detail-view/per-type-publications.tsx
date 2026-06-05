@@ -5,8 +5,9 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { detailViewValueClass } from '@/ui/segments/detail-view/variant-styles';
 import { Card } from '@/ui/segments/explore/circuit/elements/publication-item/card';
-import { detailViewValueClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
@@ -16,11 +17,11 @@ import type { WorkspaceContext } from '@/types/common';
 export function PerTypePublications({
   entity,
   type,
-  variant = 'light',
+  variant = ViewVariant.Light,
 }: {
   entity: TRetrieveEntityOutput;
   type: TPublicationTypeDictionary;
-  variant?: DetailViewVariant;
+  variant?: TViewVariant;
 }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const [pagination, setPagination] = useState<{
@@ -93,9 +94,7 @@ export function PerTypePublications({
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <p
-                    className={
-                      variant === 'onPrimary' ? 'text-primary-3' : 'text-gray-500'
-                    }
+                    className={variant === ViewVariant.Default ? 'text-primary-3' : 'text-gray-500'}
                   >
                     No related publications found
                   </p>
