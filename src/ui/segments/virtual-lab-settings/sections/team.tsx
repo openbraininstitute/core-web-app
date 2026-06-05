@@ -444,64 +444,52 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         title: 'name',
         dataIndex: 'name',
         key: 'name',
-        width: '200px',
         render: (_: string, record: Member, indx) => (
-          <div className="flex w-max items-start justify-start">
-            <MemberAvatarCasual
-              withEmail
-              isOwner={ownerId === record.id}
-              shape={record.role === 'admin' ? 'square' : 'circle'}
-              key={`vlab-avatar-${record.id ?? record.email}`}
-              index={indx}
-              size="small"
-              layout="horizontal"
-              id={record.id ?? record.email}
-              email={record.email}
-              role={record.role}
-              pending={!record.invite_accepted}
-              name={
-                record.id
-                  ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
-                    get(record, 'username') ||
-                    record.email
-                  : record.email
-              }
-              initials={extractInitials(
-                record.id
-                  ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+          <div className="flex w-full min-w-0 items-center justify-between gap-4">
+            <div className="flex min-w-0 flex-1 items-start justify-start">
+              <MemberAvatarCasual
+                withEmail
+                isOwner={ownerId === record.id}
+                shape={record.role === 'admin' ? 'square' : 'circle'}
+                key={`vlab-avatar-${record.id ?? record.email}`}
+                index={indx}
+                size="small"
+                layout="horizontal"
+                id={record.id ?? record.email}
+                email={record.email}
+                role={record.role}
+                pending={!record.invite_accepted}
+                name={
+                  record.id
+                    ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
                       get(record, 'username') ||
                       record.email
-                  : record.email
-              )}
-              pendingIcon={{
-                envelop: '#90a1b9',
-                halfCircle: '#002766',
-              }}
-              cls={{
-                text: classNames(
-                  'text-primary-9! w-full wrap-text',
-                  record.invite_accepted ? 'font-bold' : 'font-light'
-                ),
-                email: 'text-primary-8!',
-              }}
-            />
+                    : record.email
+                }
+                initials={extractInitials(
+                  record.id
+                    ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+                        get(record, 'username') ||
+                        record.email
+                    : record.email
+                )}
+                pendingIcon={{
+                  envelop: '#90a1b9',
+                  halfCircle: '#002766',
+                }}
+                cls={{
+                  text: classNames(
+                    'text-primary-9! w-full',
+                    record.invite_accepted ? 'font-bold' : 'font-light'
+                  ),
+                  email: 'text-primary-8!',
+                }}
+              />
+            </div>
+            <div className="shrink-0">
+              <CancelInvitation virtualLabId={virtualLabId} user={record} />
+            </div>
           </div>
-        ),
-      },
-      {
-        title: 'Last active',
-        dataIndex: 'last_active',
-        key: 'last_active',
-        render: () => <span className="text-primary-9 w-full" />,
-      },
-      {
-        title: 'Action',
-        key: 'role',
-        dataIndex: 'role',
-        align: 'right',
-        width: '200px',
-        render: (_: TRole, record) => (
-          <CancelInvitation virtualLabId={virtualLabId} user={record} />
         ),
       },
     ],

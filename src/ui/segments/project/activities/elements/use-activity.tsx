@@ -26,6 +26,8 @@ export function useQueryActivity({
   page,
   pageSize = DEFAULT_PAGE_MEDIUM_SIZE,
   useKeepPreviousData = false,
+  targetVirtualLabId,
+  targetProjectId,
 }: {
   selectionType: TExtendedEntitiesTypeDict;
   activity: TActivityValue;
@@ -33,8 +35,12 @@ export function useQueryActivity({
   page: number;
   pageSize?: number;
   useKeepPreviousData?: boolean;
+  targetVirtualLabId?: string;
+  targetProjectId?: string;
 }) {
-  const { virtualLabId, projectId } = useWorkspace();
+  const context = useWorkspace();
+  const virtualLabId = targetVirtualLabId || context.virtualLabId;
+  const projectId = targetProjectId || context.projectId;
 
   const queryKey = keyBuilder.activities({
     virtualLabId,

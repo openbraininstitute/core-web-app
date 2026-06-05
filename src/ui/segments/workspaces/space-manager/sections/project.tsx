@@ -995,70 +995,65 @@ function ProjectMembersListing({
         title: 'name',
         dataIndex: 'name',
         key: 'name',
-        width: '200px',
         render: (_: string, record: Member, indx) => (
-          <div className="flex w-max items-start justify-start">
-            <MemberAvatarCasual
-              withEmail
-              isOwner={ownerId === record.id || virtualLabAdmins?.includes(record.id)}
-              shape={record.role === 'admin' ? 'square' : 'circle'}
-              key={`project-avatar-${record.id ?? record.email}`}
-              index={indx}
-              size="small"
-              layout="horizontal"
-              id={record.id ?? record.email}
-              email={record.email}
-              role={record.role}
-              pending={!record.invite_accepted}
-              name={
-                record.id
-                  ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
-                    get(record, 'username') ||
-                    record.email
-                  : record.email
-              }
-              initials={extractInitials(
-                record.id
-                  ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+          <div className="flex w-full min-w-0 items-center justify-between gap-4">
+            <div className="flex min-w-0 flex-1 items-start justify-start">
+              <MemberAvatarCasual
+                withEmail
+                isOwner={ownerId === record.id || virtualLabAdmins?.includes(record.id)}
+                shape={record.role === 'admin' ? 'square' : 'circle'}
+                key={`project-avatar-${record.id ?? record.email}`}
+                index={indx}
+                size="small"
+                layout="horizontal"
+                id={record.id ?? record.email}
+                email={record.email}
+                role={record.role}
+                pending={!record.invite_accepted}
+                name={
+                  record.id
+                    ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
                       get(record, 'username') ||
                       record.email
-                  : record.email
+                    : record.email
+                }
+                initials={extractInitials(
+                  record.id
+                    ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
+                        get(record, 'username') ||
+                        record.email
+                    : record.email
+                )}
+                pendingIcon={{
+                  envelop: '#90a1b9',
+                  halfCircle: '#002766',
+                }}
+                cls={{
+                  text: classNames(
+                    'text-primary-9! w-full',
+                    record.invite_accepted ? 'font-bold' : 'font-light'
+                  ),
+                  avatar: 'p-7!',
+                  email: 'text-primary-8!',
+                }}
+              />
+            </div>
+            <div className="shrink-0">
+              {isMembershipLoading ? (
+                <LoadingOutlined />
+              ) : (
+                <ProjectRoleModifier
+                  user={record}
+                  targetVirtualLabId={targetVirtualLabId}
+                  targetProjectId={targetProjectId}
+                  virtualLabOwnerId={virtualLabOwnerId}
+                  virtualLabAdmins={virtualLabAdmins}
+                  projectAdmins={projectAdmins}
+                />
               )}
-              pendingIcon={{
-                envelop: '#90a1b9',
-                halfCircle: '#002766',
-              }}
-              cls={{
-                text: classNames(
-                  'text-primary-9! w-full wrap-text',
-                  record.invite_accepted ? 'font-bold' : 'font-light'
-                ),
-                avatar: 'p-7!',
-                email: 'text-primary-8!',
-              }}
-            />
+            </div>
           </div>
         ),
-      },
-      {
-        title: 'Action',
-        key: 'role',
-        dataIndex: 'role',
-        align: 'right',
-        width: '260px',
-        render: (_: TRole, record: Member) => {
-          if (isMembershipLoading) return <LoadingOutlined />;
-          return (
-            <ProjectRoleModifier
-              user={record}
-              targetVirtualLabId={targetVirtualLabId}
-              targetProjectId={targetProjectId}
-              virtualLabOwnerId={virtualLabOwnerId}
-              virtualLabAdmins={virtualLabAdmins}
-              projectAdmins={projectAdmins}
-            />
-          );
-        },
       },
     ],
     [
@@ -1205,10 +1200,12 @@ function ProjectResolvedContent({
   activeSection,
   targetProjectId,
   targetVirtualLabId,
+  onClose,
 }: {
   activeSection: string;
   targetProjectId?: string;
   targetVirtualLabId?: string;
+  onClose: () => void;
 }) {
   if (activeSection === 'members' && targetProjectId && targetVirtualLabId) {
     return (
@@ -1241,6 +1238,7 @@ function ProjectResolvedContent({
           showTitle={false}
           targetProjectId={targetProjectId}
           targetVirtualLabId={targetVirtualLabId}
+          onNavigate={onClose}
         />
       </div>
     );
@@ -1301,6 +1299,7 @@ export function ProjectContent({
       activeSection={activeSection}
       targetProjectId={targetProjectId}
       targetVirtualLabId={targetVirtualLabId}
+      onClose={onClose}
     />
   );
 }

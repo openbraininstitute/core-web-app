@@ -1,23 +1,23 @@
 'use client';
 
 import { RightSquareOutlined } from '@ant-design/icons';
-import { Pagination as AntPagination, ConfigProvider, Empty, Table } from 'antd';
-import { get, kebabCase } from 'es-toolkit/compat';
+import { Pagination as AntPagination, Empty, Table } from 'antd';
+import { get } from 'es-toolkit/compat';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Card, CardContent, CardHeader } from '@/ui/molecules/card';
+import { Card, CardContent } from '@/ui/molecules/card';
 import { Header } from '@/ui/segments/project/activities/elements/header';
 import { Scales, StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityValues } from '@/ui/segments/workflows/config';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ColumnsType } from 'antd/es/table';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -29,11 +29,13 @@ export function ProjectActivities({
   targetProjectId,
   showTitle = true,
   card = true,
+  onNavigate,
 }: {
   targetVirtualLabId?: string;
   targetProjectId?: string;
   showTitle?: boolean;
   card?: boolean;
+  onNavigate?: () => void;
 }) {
   const context = useWorkspace();
   const virtualLabId = targetVirtualLabId || context.virtualLabId;
@@ -53,12 +55,35 @@ export function ProjectActivities({
     throw new Error(`No entity found for type: ${entityType}`);
   }
 
+  const tableSlotRef = useRef<HTMLDivElement>(null);
+  const [tableBodyScrollY, setTableBodyScrollY] = useState<number>();
+
+  useLayoutEffect(() => {
+    const el = tableSlotRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const slotHeight = el.getBoundingClientRect().height;
+      const headerHeight =
+        el.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 0;
+      const bodyHeight = Math.floor(slotHeight - headerHeight);
+      setTableBodyScrollY(bodyHeight > 12 ? Math.max(80, bodyHeight - 4) : undefined);
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const { data, isFetching, isQueryEnabled } = useQueryActivity({
     activity,
     selectionType: entityType,
     entityType: entity?.extendedType,
     page,
     useKeepPreviousData: true,
+    targetVirtualLabId: virtualLabId,
+    targetProjectId: projectId,
   });
 
   const columns: ColumnsType<EntityCoreObjectTypes> = [
@@ -107,15 +132,21 @@ export function ProjectActivities({
         const color = get(StatusMap, status, null)?.color;
         const scaleType = get(record, 'type', null);
 
-        if (scaleType) {
-          const linkUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entity?.extendedType)}/${record.id}`;
-          return (
-            <Link href={linkUrl} aria-label={record.name} style={{ color }}>
-              <RightSquareOutlined />
-            </Link>
-          );
+        if (!scaleType) {
+          return null;
         }
-        return null;
+
+        const linkUrl = resolveExploreDetailsPageUrl({
+          ctx: { virtualLabId, projectId },
+          entityId: record.id,
+          dataType: entity.extendedType,
+        });
+
+        return (
+          <Link href={linkUrl} aria-label={record.name} style={{ color }} onClick={onNavigate}>
+            <RightSquareOutlined />
+          </Link>
+        );
       },
     },
   ];
@@ -143,7 +174,7 @@ export function ProjectActivities({
           </Card>
         ) : (
           <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 overflow-hidden">
+            <div ref={tableSlotRef} className="flex-1 overflow-hidden">
               <Table
                 bordered
                 className={cn(
@@ -158,7 +189,7 @@ export function ProjectActivities({
                   '[&_.ant-spin-container]:bg-zinc-100! [&_.ant-spin-nested-loading]:bg-zinc-100!',
                   '[&_.ant-table-body]:secondary-scrollbar!'
                 )}
-                scroll={{ y: 'calc(100vh - 20rem)' }}
+                scroll={{ y: tableBodyScrollY ?? 'calc(100vh - 20rem)' }}
                 loading={isFetching}
                 dataSource={data?.data}
                 columns={columns}
@@ -192,6 +223,7 @@ export function ProjectActivities({
                 size="default"
                 onChange={(_page) => setPage(_page)}
                 className={cn(
+                  '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!',
                   '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
                   '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!'
                 )}
