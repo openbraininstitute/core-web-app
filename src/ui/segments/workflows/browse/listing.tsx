@@ -2,7 +2,7 @@
 
 import { useRouter } from '@bprogress/next';
 import { notFound, useSearchParams } from 'next/navigation';
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import {
@@ -18,6 +18,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { WorkflowBrowsePrerequisite } from '@/ui/segments/workflows/browse/prerequisite';
 import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-workflow-selection-config';
+import { useWorkflowBreadcrumbState } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
 import {
   buildScanConfigConfigureHref,
   getEntityMeta,
@@ -28,6 +29,11 @@ import {
   WorkflowInitialStageDict,
   workflowHasMultipleSources,
 } from '@/ui/segments/workflows/config';
+import {
+  type IWorkflowConfigurationInput,
+  type TActivityValue,
+  WorkflowBreadcrumbPhaseDict,
+} from '@/ui/segments/workflows/config/types';
 import { cn } from '@/utils/css-class';
 import { resolveExtendedTypeFromPathParamUrl } from '@/utils/url-builder';
 
@@ -36,10 +42,6 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { TWorkspaceSection } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TBrowsePrerequisiteValue } from '@/ui/segments/workflows/browse/browse-config';
-import type {
-  IWorkflowConfigurationInput,
-  TActivityValue,
-} from '@/ui/segments/workflows/config/types';
 import type { KebabCase } from '@/utils/type';
 
 /** height reserved for the multi-entity "Use selection" footer in workflow browse grids. */
@@ -134,6 +136,10 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();
+  const { setBreadcrumbState } = useWorkflowBreadcrumbState();
+  // confirm prerequisite → swap to the entity browser (lazy chunk + real fetch)
+  // startTransition keeps the picker visible until that's ready, avoids an empty page + fallback flash
+  const [isConfirmingPrerequisite, startPrerequisiteTransition] = useTransition();
   const [selectionsByType, setSelectionsByType] = useState<TWorkflowBrowseSelectionsByType>({});
 
   const { workflow, configurationInputs, selectionConfig, isLoading } = useWorkflowSelectionConfig({
@@ -254,10 +260,12 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
 
   const handlePrerequisiteContinue = useCallback(() => {
     if (!activePrerequisiteKey || !draftPrerequisite) return;
-    setConfirmedPrerequisiteByKey((previous) => ({
-      ...previous,
-      [activePrerequisiteKey]: draftPrerequisite,
-    }));
+    startPrerequisiteTransition(() => {
+      setConfirmedPrerequisiteByKey((previous) => ({
+        ...previous,
+        [activePrerequisiteKey]: draftPrerequisite,
+      }));
+    });
   }, [activePrerequisiteKey, draftPrerequisite]);
 
   const handlePrerequisiteChange = useCallback(() => {
@@ -343,6 +351,27 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     workflow,
   ]);
 
+  // header breadcrumb lives in the layout, not here, push step (prerequisite vs pick entities) +
+  // active tab so it can label the trail correctly
+  // leaving /new unmounts the provider and wipes state; no need to reset in this effect's cleanup
+  useEffect(() => {
+    setBreadcrumbState({
+      phase:
+        showPrerequisitePhase && activePrerequisiteConfig
+          ? WorkflowBreadcrumbPhaseDict.Prerequisite
+          : WorkflowBreadcrumbPhaseDict.Selection,
+      activeEntityType,
+    });
+  }, [showPrerequisitePhase, activePrerequisiteConfig, activeEntityType, setBreadcrumbState]);
+
+  // warm the lazy data-table chunk while the user is on the prerequisite step, so confirming
+  // resolves near-instantly instead of waiting on a first-time chunk download
+  useEffect(() => {
+    if (showPrerequisitePhase) {
+      void import('@/ui/segments/data-table');
+    }
+  }, [showPrerequisitePhase]);
+
   const handleEntityTypeSelect = useCallback((entityType: TExtendedEntitiesTypeDict) => {
     setSelectedEntityType(entityType);
   }, []);
@@ -370,20 +399,34 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       return;
     }
 
+    // carry the confirmed prerequisites, keyed by entity type so the configure-page browse can
+    // look one up directly (no share-key logic on the read side) and rebuild the same loader
+    const prerequisites = Object.fromEntries(
+      configurationInputs.flatMap((input) => {
+        const key = resolvePrerequisiteKey(input.type);
+        const value = key ? confirmedPrerequisiteByKey[key] : undefined;
+        return value
+          ? [[input.type, { type: value.type, id: value.id, name: value.row.name }] as const]
+          : [];
+      })
+    );
+
     navigate(
       buildScanConfigConfigureHref({
         activity,
         targetType,
         workspace: { virtualLabId, projectId },
-        selection: payload,
+        selection: Object.keys(prerequisites).length > 0 ? { ...payload, prerequisites } : payload,
         standalone: workflow?.configureRouting === WorkflowConfigureRoutingDict.Standalone,
       })
     );
   }, [
     activity,
+    confirmedPrerequisiteByKey,
     configurationInputs,
     navigate,
     projectId,
+    resolvePrerequisiteKey,
     selectionConfig,
     selectionsByType,
     targetType,
@@ -415,6 +458,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         value={draftPrerequisite}
         onSelect={handlePrerequisiteSelect}
         onContinue={handlePrerequisiteContinue}
+        pending={isConfirmingPrerequisite}
       />
     );
   }
@@ -436,6 +480,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         requireBrainRegion={workflow.requireSpecies}
         requireSpeciesSelector={workflow.requireSpecies}
         requireScopeSelector={workflow.requireScope}
+        allowFilter={workflow.requireFilters}
         section={section}
         classNames={{
           container: browseLayoutClassNames.container,
@@ -474,10 +519,14 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
           className={cn(browseLayoutClassNames.footer, 'items-end gap-3')}
         >
           {confirmedPrerequisite && (
-            <div className="mr-auto flex items-center gap-2 text-neutral-5">
-              <span className="truncate ">
+            <div className="mr-auto flex min-w-0 items-center gap-2 text-neutral-5">
+              <span>
                 {activePrerequisiteConfig?.label}:{' '}
-                <strong className="font-bold text-primary-9">
+                <strong
+                  id="workflow-browse-use-selection-prerequisite-name"
+                  title={confirmedPrerequisite.row.name}
+                  className="inline-block max-w-64 truncate align-bottom font-bold text-primary-9"
+                >
                   {confirmedPrerequisite.row.name}
                 </strong>
               </span>

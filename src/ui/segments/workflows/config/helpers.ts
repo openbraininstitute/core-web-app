@@ -2,13 +2,10 @@ import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 
 import { WorkspaceSection } from '@/constants';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { fetchObiOneJsonSchema } from '@/features/scan-config/components/hooks/schema';
 import {
   parseWorkflowSchemaSelection,
   type TWorkflowSchemaSelection,
-  type TWorkflowSchemaSelectionGrouped,
-  type TWorkflowSchemaSelectionMultiple,
   WorkflowSchemaSelectionMode,
 } from '@/features/scan-config/workflow/workflow-schema-selection';
 
@@ -25,6 +22,9 @@ import {
   type TEntityTypeMeta,
   type TGroupedWorkflows,
   type TResolvedWorkflowInitialStage,
+  type TWorkflowBreadcrumbContext,
+  type TWorkflowBreadcrumbNode,
+  type TWorkflowBreadcrumbPhase,
   type TWorkflowInitialStage,
   type TWorkflowListContext,
   type TWorkflowListSort,
@@ -35,6 +35,7 @@ import {
 } from './types';
 
 import type { QueryClient } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceSection } from '@/constants';
 import type { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
@@ -262,15 +263,6 @@ export function getWorkflowSegment(url: string): TActivityValue | null {
   return match ? (match[1] as TActivityValue) : null;
 }
 
-function workflowSchemaSelectionHasAcceptedEntityTypes(
-  config: TWorkflowSchemaSelection | null | undefined
-): config is TWorkflowSchemaSelectionMultiple | TWorkflowSchemaSelectionGrouped {
-  return (
-    config?.selectionMode === WorkflowSchemaSelectionMode.Multiple ||
-    config?.selectionMode === WorkflowSchemaSelectionMode.Grouped
-  );
-}
-
 function getWorkflowInitialStageFromSelection(
   selection: TWorkflowSchemaSelection | null | undefined
 ): TWorkflowInitialStage {
@@ -345,39 +337,35 @@ export async function inferWorkflowStartingPageRemoteSchemaBased(opts: {
   };
 }
 
-/** Noun after "Select" in build/simulate workflow breadcrumbs on `/workflows/.../new/[type]`. */
-export function getWorkflowNewPageBreadcrumbSelectNoun(opts: {
-  workflow: IWorkflowDescriptor | null | undefined;
-  selectionConfig: TWorkflowSchemaSelection | null | undefined;
-}): string {
-  const { workflow, selectionConfig } = opts;
-  if (!workflow) return 'entity';
+function renderBreadcrumbNode(
+  node: TWorkflowBreadcrumbNode,
+  context: TWorkflowBreadcrumbContext
+): ReactNode {
+  return typeof node === 'function' ? node(context) : node;
+}
 
-  const mode = selectionConfig?.selectionMode;
+/**
+ * resolves the `/new/{type}` breadcrumb directly from the workflow's definition
+ * {@link IWorkflowDescriptor.breadcrumb}
+ */
+export function resolveWorkflowBreadcrumb(opts: {
+  workflow: IWorkflowDescriptor;
+  activity: TActivityValue;
+  phase: TWorkflowBreadcrumbPhase;
+  activeEntityType: TExtendedEntitiesTypeDict | null;
+}): { root: ReactNode; current: ReactNode } {
+  const { workflow, activity, phase, activeEntityType } = opts;
+  const breadcrumb = workflow.breadcrumb;
 
-  if (
-    workflowHasMultipleSources(workflow) ||
-    workflowSchemaSelectionHasAcceptedEntityTypes(selectionConfig)
-  ) {
-    return 'entities';
+  if (!breadcrumb) {
+    return { root: null, current: null };
   }
 
-  if (mode === WorkflowSchemaSelectionMode.Single) {
-    const entityType = workflow.sourceType;
-    return (
-      getEntityMeta(entityType)?.title ??
-      getEntityByExtendedType({ type: entityType })?.title ??
-      'entity'
-    );
-  }
+  const context: TWorkflowBreadcrumbContext = { workflow, activity, phase, activeEntityType };
+  const step = breadcrumb.steps?.[phase];
 
-  if (workflow.sourceType !== workflow.targetType) {
-    return (
-      getEntityMeta(workflow.sourceType)?.title ??
-      getEntityByExtendedType({ type: workflow.sourceType })?.title ??
-      'entity'
-    );
-  }
-
-  return 'entity';
+  return {
+    root: renderBreadcrumbNode(breadcrumb.root, context),
+    current: step !== undefined ? renderBreadcrumbNode(step, context) : null,
+  };
 }

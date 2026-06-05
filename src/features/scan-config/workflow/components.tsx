@@ -96,13 +96,17 @@ function ScanConfigWorkflowEditor() {
       workspaceSection: scanConfigActivityToWorkspaceSection(definition.activity),
       configureBinding,
       configurationInputs: workflowDescriptor?.configurationInputs ?? [],
+      workflowSessionId: entity.workflowSessionId,
       workflowSessionSelection: entity.workflowSessionSelection,
       requireSpecies: workflowDescriptor?.requireSpecies,
+      browseConfig: workflowDescriptor?.browseConfig,
     }),
     [
       configureBinding,
       definition.activity,
+      entity.workflowSessionId,
       entity.workflowSessionSelection,
+      workflowDescriptor?.browseConfig,
       workflowDescriptor?.configurationInputs,
       workflowDescriptor?.requireSpecies,
     ]

@@ -98,6 +98,7 @@ export function UIElementRender({
           setState={setState}
           paramSchema={paramSchema}
           disabled={disabled}
+          errorPathPrefix={errorPathPrefix}
         />
       )
     )

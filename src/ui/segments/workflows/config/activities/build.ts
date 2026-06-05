@@ -55,22 +55,27 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     hasMultipleSources: true,
-    label: 'Electron microscopy synaptome',
+    label: 'Electron microscopy circuit (beta)',
+    breadcrumb: {
+      root: 'Electron microscopy circuit (beta) build',
+      steps: {
+        prerequisite: 'Select electron microscopy dense reconstruction dataset',
+        selection: 'Select entities',
+      },
+    },
     scanConfig: {
       definition: buildEmSynapseMappingWorkflow,
       schemaName: SchemaNameDict.EMSynapseMappingScanConfig,
       configureBinding: buildEmSynapseMappingConfigureBinding(),
     },
-    requireSpecies: true,
+    requireFilters: false,
+    requireSpecies: false,
     order: 5,
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.UniversalCellMorphology,
         label: 'Cell morphology',
         required: true,
-        filters: {
-          has_segmented_spines: true,
-        },
       },
       {
         type: ExtendedEntitiesTypeDict.Memodel,

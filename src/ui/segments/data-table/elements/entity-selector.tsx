@@ -26,7 +26,7 @@ function EntityTypeCountBadge({ count, className }: { count: number; className?:
       rounded
       variant="default"
       className={cn(
-        'border-transparent bg-primary-8 h-7 min-w-7 px-2.5 py-1 text-xs font-bold text-white',
+        'border-transparent bg-primary-8 h-7 min-w-7 px-2.5 py-1 text-sm font-bold text-white',
         className
       )}
     >

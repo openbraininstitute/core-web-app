@@ -178,7 +178,7 @@ function TaskConfigSelectionCardWithStatus<TMeta extends Record<string, unknown>
       selected={selected}
       configId={config.id}
       configName={config.name}
-      scanParams={config.meta.scan_parameters as Record<string, string | number>}
+      scanParams={config.meta.scan_parameters as Record<string, unknown>}
       execStatus={resolvedExecution?.status}
       statusLoading={isLoading && !statusLoaded}
       onSelect={onSelect}

@@ -13,6 +13,10 @@ export const ProcessingWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.EMCellMesh,
     targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+    breadcrumb: {
+      root: 'EM mesh skeletonization data processing',
+      steps: { selection: 'Select EM mesh' },
+    },
     scanConfig: {
       definition: processEmCellMeshWorkflow,
       schemaName: SchemaNameDict.SkeletonizationScanConfig,

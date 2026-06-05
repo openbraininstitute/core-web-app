@@ -101,7 +101,11 @@ export function EmDatasetPrerequisiteCards({ value, onSelect }: TBrowsePrerequis
         {datasets.map((dataset) => {
           const selected = value?.id === dataset.id;
           const select = () =>
-            onSelect({ type: EM_DENSE_RECONSTRUCTION_DATASET_TYPE, id: dataset.id, row: dataset });
+            onSelect({
+              type: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+              id: dataset.id,
+              row: dataset,
+            });
           return (
             <Card
               key={dataset.id}
@@ -118,17 +122,23 @@ export function EmDatasetPrerequisiteCards({ value, onSelect }: TBrowsePrerequis
               className={cn(
                 'bg-white shadow-xs hover:shadow-md hover:border-gray-200!',
                 'relative cursor-pointer gap-2 transition-colors hover:border-primary-6 ',
-                selected && 'ring-1 ring-primary-7 bg-gray-50'
+                { 'ring-1 ring-primary-7 bg-gray-50': selected }
               )}
             >
               {selected && (
                 <CheckCircleFilled className="absolute right-3 top-3 text-primary-7 [&_svg]:size-5" />
               )}
-              <span className="line-clamp-2 pr-6 font-bold text-primary-9">{dataset.name}</span>
+              <span className="line-clamp-2 pr-6 font-bold text-lg text-primary-9">
+                {dataset.name}
+              </span>
               {dataset.brain_region?.name && (
-                <span className="text-gray-600 mb-5">{upperFirst(dataset.brain_region.name)}</span>
+                <span className="text-gray-600 mb-5 text-base">
+                  {upperFirst(dataset.brain_region.name)}
+                </span>
               )}
-              {dataset.description && <span className=" text-gray-500">{dataset.description}</span>}
+              {dataset.description && (
+                <span className=" text-gray-500 text-base">{dataset.description}</span>
+              )}
             </Card>
           );
         })}

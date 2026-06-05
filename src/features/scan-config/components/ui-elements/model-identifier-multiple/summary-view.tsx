@@ -11,12 +11,13 @@
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
-import { useId } from 'react';
+import { useId, useMemo } from 'react';
 
 import {
   useScanConfigEntityPreview,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
+import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { mergeConfigurationInputs } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { getFromIdRefTypeBadgeLabel, type TFromIdRef } from '@/features/scan-config/helpers';
@@ -70,6 +71,8 @@ export function ModelIdentifierAddActionButton({
 type Props = {
   parsedValue: TModelIdentifierParsedValue;
   fieldSchema: Record<string, unknown>;
+  /** root-element-scoped path (e.g. `initialize/neurons`); keys field errors so the left-menu tab matches */
+  errorPathPrefix?: string;
   configurationInputs?: readonly IWorkflowConfigurationInput[];
   resolvedEntities: Array<
     TResolvedModelIdentifierEntity & {
@@ -123,6 +126,7 @@ function getAddToScanLabel(mergedInputs: TModelIdentifierConfigurationInput[]): 
 export function ModelIdentifierSummaryView({
   parsedValue,
   fieldSchema,
+  errorPathPrefix,
   configurationInputs,
   resolvedEntities,
   pendingIds,
@@ -139,6 +143,26 @@ export function ModelIdentifierSummaryView({
   const mergedInputs = mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs });
   const addEntitiesLabel = getAddEntitiesLabel(mergedInputs);
   const addToScanLabel = getAddToScanLabel(mergedInputs);
+
+  // group names must be unique (backend rejects duplicate NamedTuple names); flag
+  // every name that collides so the offending inputs can surface the error
+  const duplicateGroupNames = useMemo(() => {
+    if (parsedValue.storageMode !== ModelIdentifierFieldStorageMode.Grouped) {
+      return new Set<string>();
+    }
+    const seen = new Set<string>();
+    const duplicates = new Set<string>();
+    for (const { name } of parsedValue.groups) {
+      if (seen.has(name.trim())) duplicates.add(name.trim());
+      seen.add(name.trim());
+    }
+    return duplicates;
+  }, [parsedValue]);
+
+  useFieldError(
+    errorPathPrefix ? `${errorPathPrefix}/group-names` : `model-identifier-multiple/${instanceId}`,
+    duplicateGroupNames.size > 0 ? 'Group names must be unique.' : undefined
+  );
 
   const renderEntityCards = (refs: TFromIdRef[], groupIndex?: number) => {
     const canRemove = refs.length > 1;
@@ -190,6 +214,7 @@ export function ModelIdentifierSummaryView({
     const canRemoveGroup =
       parsedValue.storageMode === ModelIdentifierFieldStorageMode.Grouped &&
       parsedValue.groups.length > 1;
+    const hasDuplicateName = duplicateGroupNames.has(group.name.trim());
 
     return (
       <div
@@ -209,9 +234,15 @@ export function ModelIdentifierSummaryView({
               disabled={disabled}
               placeholder="Name of the group"
               variant="borderless"
+              status={hasDuplicateName ? 'error' : undefined}
+              aria-invalid={hasDuplicateName}
               className={cn(
                 'min-w-0 flex-1 px-0 text-sm shadow-none',
-                group.name ? 'font-medium text-primary-9 not-italic' : 'italic text-gray-400'
+                hasDuplicateName
+                  ? 'font-medium text-red-500 not-italic'
+                  : group.name
+                    ? 'font-medium text-primary-9 not-italic'
+                    : 'italic text-gray-400'
               )}
               onChange={(event) => onGroupNameChange?.(groupIndex, event.currentTarget.value)}
             />
@@ -239,6 +270,10 @@ export function ModelIdentifierSummaryView({
             {group.elements.length}
           </Badge>
         </div>
+
+        {hasDuplicateName ? (
+          <p className="-mt-2 text-sm text-red-500">Group names must be unique.</p>
+        ) : null}
 
         <ScrollableList itemCount={group.elements.length}>
           {renderEntityCards(group.elements, groupIndex)}

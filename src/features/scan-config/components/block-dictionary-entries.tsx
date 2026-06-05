@@ -9,11 +9,10 @@ import {
 } from '@ant-design/icons';
 import { Input } from 'antd';
 import { kebabCase } from 'es-toolkit/compat';
-import { useAtom } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useMemo } from 'react';
 
-import { fieldErrorsAtom } from '@/features/scan-config/components/hooks/field-errors';
+import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -127,7 +126,7 @@ export default function BlockDictionaryEntries({
   visible: boolean;
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
-  const [fieldErrors] = useAtom(fieldErrorsAtom);
+  const fieldErrors = useFieldErrors();
 
   const configKeys = useMemo(
     () => new Set(Object.keys(config[rootElement] ?? {})),
