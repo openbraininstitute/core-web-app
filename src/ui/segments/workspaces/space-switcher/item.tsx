@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
   type TTriggerWorkspaceConfigurationClickEvent,
@@ -131,18 +132,29 @@ export function Item({
 
   const projectRows = projects?.data ?? [];
   const hasProjects = projectRows.length > 0;
-  const showProjectsEmpty =
-    expandedLabs.has(lab.id) && !projectsLoading && isFetched && !hasProjects;
+  const isExpanded = expandedLabs.has(lab.id);
+  const showProjectsSkeleton = isExpanded && !hasProjects && (projectsLoading || !isFetched);
+  const showProjectsEmpty = isExpanded && !projectsLoading && isFetched && !hasProjects;
 
-  // Which lab (if any) currently has a manager modal open.
+  // Which lab/project (if any) currently has a manager modal open.
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   useWorkspaceConfigurationClickEvent(
     useCallback((event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
-      const payload = event.detail.data as { virtualLabId?: string } | null;
+      const payload = event.detail.data as {
+        virtualLabId?: string;
+        projectId?: string;
+        data?: { id?: string } | null;
+      } | null;
       const isManagerModal =
         event.detail.type === WorkspaceActions.VirtualLabConfiguration ||
         event.detail.type === WorkspaceActions.ProjectPreview;
       setSelectedLabId(event.detail.on && isManagerModal ? (payload?.virtualLabId ?? null) : null);
+      setSelectedProjectId(
+        event.detail.on && event.detail.type === WorkspaceActions.ProjectPreview
+          ? (payload?.projectId ?? payload?.data?.id ?? null)
+          : null
+      );
     }, [])
   );
 
@@ -159,7 +171,7 @@ export function Item({
     <div
       className={cn('text-primary-9 mx-3 overflow-hidden rounded-2xl border', {
         'border-[#E9F7FF]! bg-white! shadow-xs border-3!': isActive,
-        'border-background bg-background': !isActive,
+        'border-gray-200 bg-background': !isActive,
         'border-2! border-primary-9!': isSelected,
       })}
     >
@@ -167,6 +179,7 @@ export function Item({
       <div
         role="button"
         tabIndex={-1}
+        id={`virtual-lab-item-${lab.id}`}
         aria-label="virtual-lab-item"
         data-testid="virtual-lab-item"
         className={cn(
@@ -245,9 +258,18 @@ export function Item({
               }
             )}
           >
+            {showProjectsSkeleton &&
+              Array.from({ length: 3 }).map((_, skeletonIndex) => (
+                <Skeleton
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder list
+                  key={`project-skeleton-${skeletonIndex}`}
+                  className="h-10 w-full rounded-full"
+                />
+              ))}
             {hasProjects &&
               projectRows.map((project, projectIndex) => {
                 const isProjectActive = project.id === activeProjectId;
+                const isProjectSelected = project.id === selectedProjectId;
                 return (
                   <motion.div
                     key={project.id}
@@ -268,7 +290,8 @@ export function Item({
                         {
                           'text-primary-8 scale-101 hover:text-primary-9 bg-white! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
                             isProjectActive,
-                        }
+                        },
+                        { 'border-2! border-primary-9!': isProjectSelected }
                       )}
                       title={project.name}
                       onClick={() =>

@@ -1205,10 +1205,12 @@ function ProjectResolvedContent({
   activeSection,
   targetProjectId,
   targetVirtualLabId,
+  onClose,
 }: {
   activeSection: string;
   targetProjectId?: string;
   targetVirtualLabId?: string;
+  onClose: () => void;
 }) {
   if (activeSection === 'members' && targetProjectId && targetVirtualLabId) {
     return (
@@ -1241,6 +1243,7 @@ function ProjectResolvedContent({
           showTitle={false}
           targetProjectId={targetProjectId}
           targetVirtualLabId={targetVirtualLabId}
+          onNavigate={onClose}
         />
       </div>
     );
@@ -1301,6 +1304,7 @@ export function ProjectContent({
       activeSection={activeSection}
       targetProjectId={targetProjectId}
       targetVirtualLabId={targetVirtualLabId}
+      onClose={onClose}
     />
   );
 }

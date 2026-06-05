@@ -3,8 +3,9 @@
 import { RiArrowDownSLine, RiArrowRightSLine, RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { type ComponentProps, useCallback, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
@@ -264,18 +265,33 @@ export function SpaceSwitcher({ className }: Props) {
   const projectSegmentActive =
     activeModal?.type === WorkspaceActions.ProjectPreview && activeModal.projectId === projectId;
 
+  // closing the panel collapses every lab card; the active lab re-expands on
+  // its own (empty sets => visibleExpandedLabs auto-includes virtualLabId)
+  const collapsePanel = useCallback(() => {
+    setExpandedLabs(new Set());
+    setTryingToExpand(new Set());
+    setCollapsedLabs(new Set());
+    setCurrentVirtualLabId(null);
+    setIsExpanded(false);
+  }, []);
+
   const onTogglePanel = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
-    // closing the panel collapses every lab card; the active lab re-expands on
-    // its own (empty sets => visibleExpandedLabs auto-includes virtualLabId)
     if (isExpanded) {
-      setExpandedLabs(new Set());
-      setTryingToExpand(new Set());
-      setCollapsedLabs(new Set());
-      setCurrentVirtualLabId(null);
+      collapsePanel();
+    } else {
+      setIsExpanded(true);
     }
-    setIsExpanded((prev) => !prev);
   };
+
+  const pathname = usePathname();
+  const previousPathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (previousPathnameRef.current !== pathname) {
+      previousPathnameRef.current = pathname;
+      collapsePanel();
+    }
+  }, [pathname, collapsePanel]);
 
   return (
     <div
@@ -417,7 +433,7 @@ export function SpaceSwitcher({ className }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.05, duration: 0.1 }}
-                className="mt-auto w-full gap-2 p-4 pb-2 grid grid-cols-2"
+                className="border-gray-100 mt-auto grid w-full grid-cols-2 gap-2 border-t p-4 pb-2"
               >
                 <GhostRoundedIconButton
                   type="button"
