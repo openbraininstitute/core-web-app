@@ -1,16 +1,16 @@
 export default function SubscriptionToggle({
   billingInterval,
   setBillingInterval,
-  dark,
+  isCurrentTier,
 }: {
   billingInterval: 'month' | 'year';
   setBillingInterval: (billingInterval: 'month' | 'year') => void;
-  dark?: boolean;
+  isCurrentTier?: boolean;
 }) {
-  const offBg = dark ? '#1d4ed8' : '#fff';
-  const onBg = dark ? '#fff' : '#002766';
-  const offThumb = dark ? '#fff' : '#002766';
-  const onThumb = dark ? '#002766' : '#fff';
+  const offBg = isCurrentTier ? '#1d4ed8' : '#fff';
+  const onBg = isCurrentTier ? '#fff' : '#002766';
+  const offThumb = isCurrentTier ? '#fff' : '#002766';
+  const onThumb = isCurrentTier ? '#002766' : '#fff';
 
   return (
     <div className="relative flex flex-row items-center gap-x-2 text-base font-normal">

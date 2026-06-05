@@ -43,7 +43,7 @@ export function CreditsAmountInput({
   value: number | undefined;
 }) {
   return (
-    <div className={cn('rounded-lg border border-white/10 bg-white/5 p-4 text-white', className)}>
+    <div className={cn('rounded-lg  text-primary-9', className)}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start">
         <div className="min-w-0 flex-1">
           <div className="relative w-full">
@@ -55,9 +55,13 @@ export function CreditsAmountInput({
               onChange={(event) => onValueChange(parseCreditsAmount(event.target.value))}
               placeholder="0"
               className={cn(
-                'h-12 w-full rounded-full border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
-                '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-                { 'border-red-400': error },
+                'rounded-2xl min-h-14 text-xl! border-2 border-gray-100! bg-transparent! px-3 py-2 font-bold tracking-wide text-primary-9! focus:ring-0',
+                'transition-[border-color,box-shadow] duration-200 ease-in-out',
+                'hover:bg-transparent! hover:text-primary-9! focus:bg-transparent! focus:text-primary-9! [&_.ant-input-outlined]:bg-transparent!',
+                'focus:border-pr placeholder:text-primary-9! hover:border-gray-200!',
+                ' focus-within:border-gray-300! focus-visible:ring-0',
+                '[&.ant-input-status-error]:border-1.5! [&.ant-XInput-status-error]:border-destructive!',
+                '[&.ant-input-status-error]:border-1.5! [&.ant-input-status-error]:border-destructive!',
                 inputClassName
               )}
               disabled={disabled}

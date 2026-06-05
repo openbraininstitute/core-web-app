@@ -1,161 +1,154 @@
-import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
-import { Button, ConfigProvider, theme } from 'antd';
-import Table, { type ColumnsType } from 'antd/es/table';
-import { format } from 'date-fns';
-import flatMap from 'es-toolkit/compat/flatMap';
+'use client';
 
-import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
+import { LoadingOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { useMemo, useState } from 'react';
+
+import { listUserSubscriptionInvoicePayments } from '@/api/virtual-lab-svc/queries/payment';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
-import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
+import { EmptyMinimal, ErrorMinimal } from '@/ui/molecules/feedback-card';
+import { ListPagination } from '@/ui/molecules/list-pagination';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 import { formatCurrency } from '@/utils/format';
 
 import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 
+const PAGE_SIZE = 4;
+
+type InvoicePayment = SubscriptionPaymentDetails & {
+  subscription_id?: string;
+  subscription_type?: 'FREE' | 'PREMIUM' | 'PRO';
+};
+
+function getInvoiceObject(payment: InvoicePayment) {
+  if (payment.subscription_type === 'PRO') return 'Pro';
+  if (payment.subscription_type === 'PREMIUM') return 'Premium';
+  if (payment.subscription_type === 'FREE') return 'Free';
+  return 'Subscription';
+}
+
+function getInvoiceDownloadUrl(payment: InvoicePayment) {
+  return payment.invoice_pdf ?? payment.receipt_url;
+}
+
+function InvoiceCard({ payment }: { payment: InvoicePayment }) {
+  const downloadUrl = getInvoiceDownloadUrl(payment);
+  const period = `${format(new Date(payment.period_start), 'MMM dd')} - ${format(
+    new Date(payment.period_end),
+    'MMM dd, yyyy'
+  )}`;
+
+  return (
+    <article
+      className={cn(
+        'rounded-2xl border border-gray-200 bg-white px-4 py-4',
+        'text-primary-9',
+        'hover:bg-gray-50'
+      )}
+    >
+      <div className="grid grid-cols-2 gap-x-10 gap-y-1">
+        <div>
+          <p className="text-neutral-4 text-base">Object</p>
+          <p className="text-primary-9 text-base font-bold">{getInvoiceObject(payment)}</p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-base">Period</p>
+          <p className="text-primary-9 text-base font-bold">{period}</p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-base">Status</p>
+          <p className="text-primary-9 text-base font-bold capitalize">{payment.status}</p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-base">Payment method</p>
+          <p
+            className="text-primary-9 text-base font-bold"
+            title={
+              payment.card_brand && payment.card_last4
+                ? `${payment.card_brand} **** ${payment.card_last4}`
+                : undefined
+            }
+          >
+            Credit card
+          </p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-base">Amount</p>
+          <p className="text-primary-9 text-base font-bold">
+            {formatCurrency(payment.amount_paid / 100, payment.currency)}
+          </p>
+        </div>
+      </div>
+      <div className="border-neutral-2 mt-3 flex justify-end border-t pt-3">
+        {downloadUrl ? (
+          <a
+            className="text-primary-9 hover:text-primary-7 inline-flex items-center gap-2 text-sm font-bold"
+            href={downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Download <FileDownloadFill className="size-5" />
+          </a>
+        ) : (
+          <span className="text-neutral-4 inline-flex items-center gap-3 text-lg font-bold">
+            Download <FileDownloadFill className="size-5" />
+          </span>
+        )}
+      </div>
+    </article>
+  );
+}
+
 export function Invoices() {
-  const { data, isError, isLoading } = useQuery({
-    queryKey: keyBuilder.invoices(),
-    queryFn: listUserSubscriptionsHistory,
+  const [page, setPage] = useState(1);
+
+  const { data, error, isLoading } = useQuery({
+    queryKey: keyBuilder.invoicesPaginated({ page, pageSize: PAGE_SIZE }),
+    queryFn: () =>
+      listUserSubscriptionInvoicePayments({
+        page,
+        pageSize: PAGE_SIZE,
+      }),
   });
 
-  const allPayments = flatMap(data?.subscriptions, (subscription) =>
-    subscription.payments
-      .filter((payment) => !payment.is_standalone)
-      .map((payment) => ({
-        ...payment,
-        subscription_id: subscription.id,
-        subscription_type: subscription.subscription_type,
-      }))
-  );
+  const payments = useMemo(() => {
+    const rows = (data?.data?.payments ?? []).filter((payment) => !payment.is_standalone);
+    return rows as InvoicePayment[];
+  }, [data?.data?.payments]);
+  const totalItems = data?.data?.total_count ?? 0;
 
-  if (isError) {
+  if (error) {
     return (
-      <div className={cn('my-6 flex w-full flex-col items-center justify-center gap-2')}>
-        <ExclamationCircleOutlined className="text-current" />
-        <div className="text-current">There is some issues loading your invoices history</div>
-      </div>
+      <ErrorMinimal
+        title="Invoices error"
+        description="We were unable to fetch your invoices history from our servers. Please refresh the page or try again later. if the issue persists, please contact support at support@openbraininstitute.org."
+      />
     );
   }
 
-  const columns: ColumnsType<SubscriptionPaymentDetails> = [
-    {
-      title: 'Object',
-      dataIndex: '',
-      key: 'subscription_type',
-      render: (record) => {
-        if (record.subscription_type === 'PRO') {
-          return <span className="font-bold text-white">Subscription Pro</span>;
-        }
-        if (record.subscription_type === 'PREMIUM') {
-          return <span className="font-bold text-white">Subscription Premium</span>;
-        }
-        if (record.subscription_type === 'FREE') {
-          return <span className="font-bold text-white">Subscription Free</span>;
-        }
-      },
-    },
-    {
-      title: 'Period',
-      key: 'period',
-      render: (_, record) => (
-        <span>
-          {format(new Date(record.period_start), 'MMM dd')} -{' '}
-          {format(new Date(record.period_end), 'MMM dd, yyyy')}
-        </span>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <span className={`rounded-sm px-2 py-1 text-base capitalize ${getStatusColor(status)}`}>
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Payment Method',
-      key: 'payment_method',
-      render: (_, record) => `${record.card_brand} **** ${record.card_last4}`,
-    },
-    {
-      title: 'Amount',
-      dataIndex: 'amount_paid',
-      key: 'amount_paid',
-      render: (amount: number, record) => formatCurrency(amount / 100, record.currency),
-    },
-    {
-      title: 'Invoice',
-      key: 'receipt',
-      align: 'center',
-      render: (_, record) => (
-        <>
-          {record.receipt_url && (
-            <a href={record.receipt_url} target="_blank" rel="noopener noreferrer">
-              <Button
-                aria-label="download invoice"
-                type="text"
-                icon={<FileDownloadFill className="text-xl text-white!" />}
-                size="small"
-              />
-            </a>
-          )}
-          {record.invoice_pdf && (
-            <a href={record.invoice_pdf} target="_blank" rel="noopener noreferrer">
-              <Button
-                aria-label="download invoice"
-                type="text"
-                icon={<FileDownloadFill className="text-xl text-white!" />}
-                size="small"
-              />
-            </a>
-          )}
-        </>
-      ),
-    },
-  ];
-
   return (
-    <div data-testid="payments-list" className="h-full w-full py-5">
-      <ConfigProvider
-        theme={{
-          algorithm: theme.defaultAlgorithm,
-          components: {
-            Table: {
-              colorBgContainer: '#002766',
-              colorText: 'white',
-              colorTextHeading: 'white',
-              borderColor: '#096DD9',
-              headerBg: '#002766',
-              headerColor: '#BAE7FF',
-              headerSplitColor: 'transparent',
-              rowHoverBg: '#0050B3',
-              borderRadius: 0,
-            },
-          },
-        }}
+    <div data-testid="payments-list" className="flex min-h-0 w-full flex-1 flex-col gap-5">
+      <div
+        className={cn(
+          'secondary-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-1'
+        )}
       >
-        <Table
-          loading={isLoading}
-          data-testid="invoices-history"
-          rootClassName={cn(
-            '[&_.ant-spin-blur]:opacity-0! [&_.ant-table-thead>tr>th]:font-light!',
-            '[&_.ant-table-thead>tr>th]:font-light! [&_.ant-table-thead]:text-sm',
-            '[&_.ant-empty-description]:text-white!',
-            '[&_.ant-table-cell]:bg-primary-9! [&_.ant-table-cell]:text-white!'
-          )}
-          rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
-          columns={columns}
-          dataSource={allPayments}
-          rowKey="id"
-          pagination={false}
-          className="w-full"
-          size="middle"
-        />
-      </ConfigProvider>
+        {isLoading ? (
+          <div className="text-primary-9 flex min-h-32 flex-1 items-center justify-center">
+            <LoadingOutlined spin />
+          </div>
+        ) : payments.length === 0 ? (
+          <EmptyMinimal
+            title="No invoices found"
+            description="You have not made any payments yet."
+          />
+        ) : (
+          payments.map((payment) => <InvoiceCard key={payment.id} payment={payment} />)
+        )}
+      </div>
+      <ListPagination current={page} pageSize={PAGE_SIZE} total={totalItems} onChange={setPage} />
     </div>
   );
 }

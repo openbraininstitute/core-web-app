@@ -1,38 +1,217 @@
 'use client';
 
-import {
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  LoadingOutlined,
-  SwapOutlined,
-} from '@ant-design/icons';
+import { ArrowLeftOutlined, LoadingOutlined, SwapOutlined } from '@ant-design/icons';
+import { RiArrowRightSLine } from '@remixicon/react';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { Select } from 'antd';
+import { get } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { CoinsIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
+import { formatCreditsAmount, parseCreditsAmount } from '@/features/credits';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
-import { Button, Button as UiButton } from '@/ui/molecules/button';
+import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 import type { ProjectBalance } from '@/types/accounting';
+
+const PROJECT_SELECT_TRIGGER_CLASSNAME = cn(
+  'w-full h-10! min-h-10! bg-transparent',
+  '[&_.ant-select-arrow]:text-primary-9! [&_.ant-select-selection-item]:text-base! [&_.ant-select-selection-item]:leading-10!',
+  '[&_.ant-select-selection-item]:font-semibold! [&_.ant-select-selection-item]:text-primary-9!',
+  '[&_.ant-select-selector]:border-gray-200! [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:shadow-none!',
+  '[&_.ant-select-selection-search]:text-primary-9'
+);
+
+const PROJECT_SELECT_POPUP_CLASSNAMES = {
+  popup: {
+    root: cn(
+      '!bg-white !text-primary-9',
+      '[&_.ant-select-item-option-content]:text-primary-9!',
+      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-primary-9!',
+      '[&_.ant-empty-description]:text-primary-9!'
+    ),
+  },
+} as const;
+
+/** Ease-out curve (approx. quint); motion skill: decelerate into rest, no bounce */
+const SWAP_EASE = [0.22, 1, 0.36, 1] as const;
+/** One outward swipe; direction flips at end, then transform snaps back (no second glide). */
+const SWAP_OUT_MS = 300;
+
+type SwapCardPhase = 'idle' | 'cross';
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduced(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return reduced;
+}
+
+function VirtualLabNameCell({ name }: { name: string }) {
+  return (
+    <div
+      title={name}
+      className={cn(
+        'flex h-10! min-h-10! items-center justify-center truncate rounded-lg',
+        'border border-gray-200 px-3 text-base leading-10 font-semibold line-clamp-2 text-primary-9'
+      )}
+    >
+      {name}
+    </div>
+  );
+}
+
+type ProjectOption = { value: string; label: string };
+
+function ProjectCreditSelect({
+  options,
+  loading,
+  value,
+  onChange,
+  disabled,
+}: {
+  options: ProjectOption[];
+  loading: boolean;
+  value: string | undefined;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Select
+      showSearch
+      loading={loading}
+      value={value}
+      onChange={onChange}
+      size="middle"
+      className={PROJECT_SELECT_TRIGGER_CLASSNAME}
+      options={options}
+      classNames={PROJECT_SELECT_POPUP_CLASSNAMES}
+      optionFilterProp="label"
+      disabled={disabled}
+    />
+  );
+}
+
+function TransferEndpointCard({
+  balance,
+  heading,
+  entityLabel,
+  coinsIconClassName,
+  footer,
+  className,
+}: {
+  balance: number;
+  heading: string;
+  entityLabel: string;
+  coinsIconClassName?: string;
+  footer: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex h-full w-full min-w-0 flex-1 flex-col justify-between rounded-2xl border border-gray-100 bg-white p-5 text-primary-9 shadow-bnb hover:bg-gray-50',
+        className
+      )}
+    >
+      <div className="mb-5 ml-auto flex items-center gap-2 rounded-full border border-gray-100 bg-gray-100 px-3 py-1 text-sm text-primary-9">
+        <CoinsIcon className={coinsIconClassName} />
+        <span className="font-bold">{balance}</span>
+      </div>
+      <div className="mb-3 flex w-full items-center gap-2">
+        <span className="text-gray-500">{heading}</span>
+        <Badge className="rounded-full border-gray-100 bg-gray-100 text-primary-9">
+          {entityLabel}
+        </Badge>
+      </div>
+      <div className="mt-auto">{footer}</div>
+    </div>
+  );
+}
+
+function SwapDirectionTooltip({
+  onSwap,
+  disabled,
+  swapSpinTurns,
+  reduceMotion,
+}: {
+  onSwap: () => void;
+  disabled: boolean;
+  /** Full 180° turns; each swap increments for a continuous spin read */
+  swapSpinTurns: number;
+  reduceMotion: boolean;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">
+          <Button
+            rounded
+            type="button"
+            variant="icon"
+            size="md"
+            aria-label="Swap transfer direction"
+            className={cn(
+              'flex items-center justify-center rounded-full border border-gray-100 bg-white',
+              'text-primary-9 shadow-bnb hover:border-gray-200 hover:shadow-bnb'
+            )}
+            onClick={onSwap}
+            disabled={disabled}
+          >
+            <motion.span
+              className="inline-flex will-change-transform"
+              animate={
+                reduceMotion ? { rotate: 0, scale: 1 } : { rotate: swapSpinTurns * 180, scale: 1 }
+              }
+              transition={{
+                rotate: {
+                  duration: SWAP_OUT_MS / 1000,
+                  ease: SWAP_EASE,
+                },
+                scale: { duration: 0.2, ease: SWAP_EASE },
+              }}
+            >
+              <SwapOutlined className="text-sm" />
+            </motion.span>
+          </Button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent
+        avoidCollisions
+        align="center"
+        sideOffset={4}
+        className="z-2000 border border-gray-100 bg-white text-primary-9 shadow-bnb"
+        arrowClassName="bg-white"
+        showArrow
+      >
+        Swap transfer direction
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 type Props = {
   virtualLabId: string;
   onBack: () => void;
   shouldHaveBack?: boolean;
   shouldShowSwap?: boolean;
-  swapClassname?: string;
-  buttonClassname?: string;
 };
 
 export type ManageCreditsStepHandle = {
@@ -75,31 +254,38 @@ async function transferCredits({
   } else throw new Error('Transfer type not supported');
 }
 
-export function ManageCreditsStep({
+export function TransferCredits({
   onBack,
   virtualLabId,
   shouldHaveBack = true,
   shouldShowSwap = true,
-  swapClassname,
-  buttonClassname,
+  classnames,
   ref,
 }: Props & {
   ref?: React.Ref<ManageCreditsStepHandle>;
+  classnames?: {
+    root?: string;
+    content?: string;
+    body?: string;
+  };
 }) {
   const queryClient = useQueryClient();
-  const [amount, setAmount] = useState<string | undefined>(undefined);
-  const [isSwapping, setIsSwapping] = useState<boolean>(false);
+  const [amount, setAmount] = useState<number | undefined>(undefined);
+  const [swapPhase, setSwapPhase] = useState<SwapCardPhase>('idle');
+  const [swapSpinTurns, setSwapSpinTurns] = useState(0);
   const [isLabToProject, setIsLabToProject] = useState<boolean>(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
   const notify = useAppNotification();
   const amountInputRef = useRef<HTMLInputElement>(null);
+  const swapTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const { projectId } = useWorkspace();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const [labDetails, accountingRes, projectsRes] = useQueries({
     queries: [
       {
         queryKey: keyBuilder.getOneLab({ virtualLabId }),
-        queryFn: () => getVirtualLab(virtualLabId),
+        queryFn: () => getVirtualLab({ id: virtualLabId }),
         enabled: Boolean(virtualLabId),
       },
       {
@@ -109,11 +295,26 @@ export function ManageCreditsStep({
       },
       {
         queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
-        queryFn: () => listProjects({ virtualLabId, page: 1, size: 40 }),
+        // TODO: do not fetch by fixed page_size
+        // make it loop through pages until it gets all projects
+        queryFn: () => listProjects({ virtualLabId, pagination: { page: 1, page_size: 40 } }),
         enabled: Boolean(virtualLabId),
       },
     ],
   });
+
+  const projects = useMemo(() => {
+    const list = (projectsRes?.data?.data ?? []).map((p) => ({
+      value: String(p.id),
+      label: String(p.name ?? ''),
+    }));
+    return list;
+  }, [projectsRes]);
+
+  const selectedProjectName = useMemo(
+    () => projects.find((p) => p.value === selectedProjectId)?.label ?? '',
+    [projects, selectedProjectId]
+  );
 
   const { mutateAsync: transferCreditsAsync, isPending } = useMutation({
     mutationKey: [
@@ -134,9 +335,11 @@ export function ManageCreditsStep({
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
-      await queryClient.invalidateQueries({
-        queryKey: keyBuilder.wallet({ virtualLabId, projectId: selectedProjectId! }),
-      });
+      if (selectedProjectId) {
+        await queryClient.invalidateQueries({
+          queryKey: keyBuilder.wallet({ virtualLabId, projectId: selectedProjectId }),
+        });
+      }
       notify.success({
         message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
         description: (
@@ -144,20 +347,14 @@ export function ManageCreditsStep({
             {isLabToProject && (
               <span>
                 You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
-                to{' '}
-                <span className="text-primary-9 font-bold">
-                  {projectsRes.data?.data?.results.find((p) => p.id === selectedProjectId)?.name}
-                </span>
+                to <span className="text-primary-9 font-bold">{selectedProjectName}</span>
               </span>
             )}
             {!isLabToProject && (
               <span>
                 You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
-                from{' '}
-                <span className="text-primary-9 font-bold">
-                  {projectsRes.data?.data?.results.find((p) => p.id === selectedProjectId)?.name}
-                </span>{' '}
-                to <span className="text-primary-9 font-bold">{virtualLabName}</span>
+                from <span className="text-primary-9 font-bold">{selectedProjectName}</span> to{' '}
+                <span className="text-primary-9 font-bold">{virtualLabName}</span>
               </span>
             )}
           </div>
@@ -168,12 +365,20 @@ export function ManageCreditsStep({
       setAmount(undefined);
     },
     onError: (error) => {
+      const codeError = get(error, 'cause.error_code', 'DEFAULT');
+      const description = {
+        EXTERNAL_SERVICE_ERROR: get(
+          error,
+          'cause.message',
+          'An external service error occurred. Please try again.'
+        ),
+        DEFAULT: 'There was an error transferring credits. Please try again.',
+      };
       notify.error({
         message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
         description: (
           <div className="flex flex-col items-start gap-2">
-            <span>There was an error transferring credits. Please try again.</span>
-            {'message' in error && <small className="text-red-500">{error.message}</small>}
+            <span>{description[codeError]}</span>
           </div>
         ),
         placement: 'topRight',
@@ -181,14 +386,6 @@ export function ManageCreditsStep({
       });
     },
   });
-
-  const projects = useMemo(() => {
-    const list = (projectsRes?.data?.data?.results ?? []).map((p) => ({
-      value: String(p.id),
-      label: String(p.name ?? ''),
-    }));
-    return list;
-  }, [projectsRes]);
 
   const balanceMap: Map<string, number> = useMemo(() => {
     const map = new Map<string, number>();
@@ -211,14 +408,37 @@ export function ManageCreditsStep({
   }, [balanceMap, selectedProjectId]);
 
   const virtualLabName = useMemo(() => {
-    return labDetails?.data?.data?.virtual_lab?.name ?? 'Virtual Lab';
+    return labDetails?.data?.name ?? 'Virtual Lab';
   }, [labDetails]);
 
+  useEffect(() => {
+    return () => {
+      for (const id of swapTimersRef.current) {
+        clearTimeout(id);
+      }
+      swapTimersRef.current = [];
+    };
+  }, []);
+
   const onSwap = () => {
-    if (isSwapping) return;
-    setIsSwapping(true);
-    setTimeout(() => setIsLabToProject((v) => !v), 250);
-    setTimeout(() => setIsSwapping(false), 600);
+    if (isPending || swapPhase !== 'idle') return;
+    if (prefersReducedMotion) {
+      setIsLabToProject((v) => !v);
+      return;
+    }
+    for (const id of swapTimersRef.current) {
+      clearTimeout(id);
+    }
+    swapTimersRef.current = [];
+    setSwapSpinTurns((t) => t + 1);
+    setSwapPhase('cross');
+    swapTimersRef.current.push(
+      setTimeout(() => {
+        setIsLabToProject((v) => !v);
+        setSwapPhase('idle');
+        swapTimersRef.current = [];
+      }, SWAP_OUT_MS)
+    );
   };
 
   useImperativeHandle(ref, () => ({
@@ -240,223 +460,200 @@ export function ManageCreditsStep({
     }
   }, []);
 
-  return (
-    <div className="flex h-full w-full flex-col gap-6">
-      {(shouldHaveBack || shouldShowSwap) && (
-        <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center px-6 py-5">
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-4">
-              {shouldHaveBack && (
-                <UiButton
-                  rounded
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={onBack}
-                  className="hover:bg-neutral-2/20 h-auto px-4! py-2! text-white hover:text-white"
-                >
-                  <ArrowLeftOutlined className="text-lg" />
-                  <span className="ml-4 text-lg font-bold text-white">Credits</span>
-                </UiButton>
-              )}
-            </div>
+  const selectLoading = projectsRes.isLoading;
+  const selectDisabled = isPending;
+  const handleProjectChange = (value: string) => setSelectedProjectId(value);
 
-            {shouldShowSwap && (
-              <motion.button
-                type="button"
-                aria-label="Swap transfer direction"
-                className={cn(
-                  'bg-primary-8 hover:bg-primary-7 flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-white transition-all hover:scale-105 disabled:opacity-50',
-                  swapClassname
-                )}
-                onClick={onSwap}
-                disabled={isPending}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.div
-                  animate={{ rotate: isSwapping ? 180 : 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                >
-                  <SwapOutlined className="text-sm" />
-                </motion.div>
-              </motion.button>
-            )}
-          </div>
+  const fromFooter = (
+    <AnimatePresence mode="wait">
+      {isLabToProject ? (
+        <div key="from-lab">
+          <VirtualLabNameCell name={virtualLabName} />
+        </div>
+      ) : (
+        <div key="from-project">
+          <ProjectCreditSelect
+            options={projects}
+            loading={selectLoading}
+            value={selectedProjectId}
+            onChange={handleProjectChange}
+            disabled={selectDisabled}
+          />
         </div>
       )}
+    </AnimatePresence>
+  );
 
-      <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4">
-        <div className="bg-primary-8 flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 p-5 text-white shadow-2xl">
-          <div className="flex w-full items-center gap-2">
-            <span className="text-neutral-3">From</span>
-            <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
-              {isLabToProject ? 'Virtual Lab' : 'Project'}
-            </Badge>
-            <div className="ml-auto flex items-center gap-2 rounded-full bg-[#123e7d] px-3 py-1 text-sm">
-              <CoinsIcon />
-              <span className="font-bold">
-                {isLabToProject ? (virtualLabBalance ?? 0) : selectedProjectBalance}
-              </span>
-            </div>
-          </div>
-          <div className="mt-auto">
-            <AnimatePresence mode="wait">
-              {isLabToProject ? (
-                <div key="lab-name" className="truncate text-xl leading-10 font-semibold">
-                  {virtualLabName}
-                </div>
-              ) : (
-                <div key="project-select">
-                  <Select
-                    showSearch
-                    loading={projectsRes.isLoading}
-                    value={selectedProjectId}
-                    onChange={(value: string) => setSelectedProjectId(value)}
-                    size="large"
-                    className={cn(
-                      'w-full bg-transparent [&_.ant-select-arrow]:text-white! [&_.ant-select-selection-item]:text-xl!',
-                      '[&_.ant-select-selection-item]:font-semibold! [&_.ant-select-selection-item]:text-white!',
-                      '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:shadow-none!',
-                      '[&_.ant-select-selection-search]:text-white'
-                    )}
-                    options={projects}
-                    classNames={{
-                      popup: {
-                        root: cn(
-                          '!bg-primary-8 !text-white',
-                          '[&_.ant-select-item-option-content]:text-white!',
-                          '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
-                          '[&_.ant-empty-description]:text-white!'
-                        ),
-                      },
-                    }}
-                    optionFilterProp="label"
-                    disabled={isPending}
-                  />
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
+  const toFooter = (
+    <AnimatePresence mode="wait">
+      {isLabToProject ? (
+        <div key="to-project">
+          <ProjectCreditSelect
+            options={projects}
+            loading={selectLoading}
+            value={selectedProjectId}
+            onChange={handleProjectChange}
+            disabled={selectDisabled}
+          />
         </div>
-
-        <div className="flex w-10 shrink-0 items-center">
-          <div className="bg-primary-9 flex h-10 w-10 items-center justify-center rounded-lg text-white">
-            <ArrowRightOutlined className="text-2xl" />
-          </div>
+      ) : (
+        <div key="to-lab">
+          <VirtualLabNameCell name={virtualLabName} />
         </div>
+      )}
+    </AnimatePresence>
+  );
 
-        <div className="bg-primary-8 flex h-full w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 p-5 text-white shadow-2xl">
-          <div className="flex items-center gap-2">
-            <span className="text-neutral-3">To</span>
-            <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
-              {isLabToProject ? 'Project' : 'Virtual Lab'}
-            </Badge>
-            <div className="ml-auto flex items-center gap-2 rounded-full bg-[#123e7d] px-3 py-1 text-sm">
-              <CoinsIcon />
-              <span className="font-bold">
-                {isLabToProject ? selectedProjectBalance : (virtualLabBalance ?? 0)}
-              </span>
-            </div>
-          </div>
-          <div className="mt-auto">
-            <AnimatePresence mode="wait">
-              {isLabToProject ? (
-                <div key="project-select-to">
-                  <Select
-                    showSearch
-                    loading={projectsRes.isLoading}
-                    value={selectedProjectId}
-                    onChange={(value: string) => setSelectedProjectId(value)}
-                    size="large"
-                    className={cn(
-                      'w-full bg-transparent [&_.ant-select-arrow]:text-white! [&_.ant-select-selection-item]:text-xl!',
-                      '[&_.ant-select-selection-item]:font-semibold! [&_.ant-select-selection-item]:text-white!',
-                      '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:shadow-none!',
-                      '[&_.ant-select-selection-search]:text-white'
-                    )}
-                    options={projects}
-                    classNames={{
-                      popup: {
-                        root: cn(
-                          '!bg-primary-8 !text-white',
-                          '[&_.ant-select-item-option-content]:text-white!',
-                          '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
-                          '[&_.ant-empty-description]:text-white!'
-                        ),
-                      },
-                    }}
-                    optionFilterProp="label"
-                    disabled={isPending}
-                  />
-                </div>
-              ) : (
-                <div key="lab-name-to" className="truncate text-xl leading-10 font-semibold">
-                  {virtualLabName}
-                </div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-3xl px-3">
-        <div className="bg-primary-9 rounded-2xl border border-white/10 p-5 text-white">
-          <div className="mb-3 text-lg font-semibold">Amount</div>
-          <div className="relative w-full max-w-md">
-            <Input
-              id="amount"
-              ref={amountInputRef}
-              type="number"
-              min={0}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0"
-              className={cn(
-                'text-primary-9 placeholder:text-neutral-3 h-16 rounded-xl border-white/20 bg-white pr-28 text-xl! font-bold',
-                '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
-              )}
-              disabled={isPending}
-            />
-            <div className="text-primary-9 pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg">
-              Credits
-            </div>
-          </div>
-        </div>
-      </div>
-
+  return (
+    <div
+      id="transfer-credits"
+      data-testid="transfer-credits"
+      className={cn(
+        'flex h-full min-h-0 w-full flex-1 flex-col gap-3.5 rounded-2xl bg-white px-4 pt-0',
+        classnames?.root
+      )}
+    >
       <div
-        className={cn('mx-auto flex w-full max-w-3xl justify-end gap-4 self-end', buttonClassname)}
+        id="transfer-credits-content"
+        className={cn(
+          'mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3.5',
+          classnames?.content
+        )}
       >
-        <Button
-          rounded
-          type="button"
-          variant="ghost"
-          size="lg"
-          className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
-          onClick={onBack}
-        >
-          Cancel
-        </Button>
-        <Button
-          rounded
-          type="button"
-          variant="default"
-          size="lg"
+        {(shouldHaveBack || shouldShowSwap) && (
+          <div className="flex w-full shrink-0 items-center justify-between pt-5">
+            <div className="flex items-center gap-4">
+              {shouldHaveBack && (
+                <GhostRoundedIconButton
+                  icon={<ArrowLeftOutlined />}
+                  label="Credits"
+                  classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
+                  onClick={onBack}
+                  iconPosition="start"
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        <div
           className={cn(
-            'border-primary-4! w-max border shadow-2xl',
-            'hover:bg-primary-8/40',
-            'hover:shadow-[1px_2px_4px_0px_#00000099]',
-            'shadow-[8px_12px_24px_0px_#00000099]',
-            'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
-            'disabled:opacity-50'
+            'mr-1 flex flex-col gap-8 rounded-2xl border border-gray-100 p-4',
+            classnames?.body
           )}
-          disabled={isPending || !amount}
-          onClick={() => transferCreditsAsync()}
         >
-          Transfer Credits
-          {isPending && <LoadingOutlined spin className="ml-2 text-white" />}
-        </Button>
+          <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4 overflow-visible">
+            <motion.div
+              className={cn(
+                'flex w-[calc(50%-2.5rem)] min-w-0 flex-1 shrink-0 will-change-transform',
+                swapPhase !== 'idle' && 'relative z-10'
+              )}
+              animate={
+                swapPhase === 'cross'
+                  ? { x: '18vw', opacity: 0.9, scale: 0.985 }
+                  : { x: 0, opacity: 1, scale: 1 }
+              }
+              transition={{
+                duration: swapPhase === 'cross' ? SWAP_OUT_MS / 1000 : 0,
+                ease: SWAP_EASE,
+              }}
+            >
+              <TransferEndpointCard
+                heading="From"
+                entityLabel={isLabToProject ? 'Virtual Lab' : 'Project'}
+                balance={isLabToProject ? (virtualLabBalance ?? 0) : selectedProjectBalance}
+                coinsIconClassName="text-primary-9"
+                footer={fromFooter}
+              />
+            </motion.div>
+
+            <div className="flex w-10 shrink-0 items-center">
+              <SwapDirectionTooltip
+                onSwap={onSwap}
+                disabled={isPending || swapPhase !== 'idle'}
+                swapSpinTurns={swapSpinTurns}
+                reduceMotion={prefersReducedMotion}
+              />
+            </div>
+
+            <motion.div
+              className={cn(
+                'flex w-[calc(50%-2.5rem)] min-w-0 flex-1 shrink-0 will-change-transform',
+                swapPhase !== 'idle' && 'relative z-10'
+              )}
+              animate={
+                swapPhase === 'cross'
+                  ? { x: '-18vw', opacity: 0.9, scale: 0.985 }
+                  : { x: 0, opacity: 1, scale: 1 }
+              }
+              transition={{
+                duration: swapPhase === 'cross' ? SWAP_OUT_MS / 1000 : 0,
+                ease: SWAP_EASE,
+              }}
+            >
+              <TransferEndpointCard
+                heading="To"
+                entityLabel={isLabToProject ? 'Project' : 'Virtual Lab'}
+                balance={isLabToProject ? selectedProjectBalance : (virtualLabBalance ?? 0)}
+                footer={toFooter}
+              />
+            </motion.div>
+          </div>
+
+          <div className="mx-auto max-w-3xl px-3">
+            <div className="rounded-2xl border border-gray-100 bg-white p-5 text-primary-9 shadow-bnb">
+              <div className="mb-0.5 ml-1 text-base font-light text-gray-500">Amount</div>
+              <div className="relative w-full max-w-md">
+                <Input
+                  id="amount"
+                  ref={amountInputRef}
+                  autoComplete="off"
+                  inputMode="numeric"
+                  pattern="[0-9,]*"
+                  min={0}
+                  value={formatCreditsAmount(Number(amount))}
+                  onChange={(event) => setAmount(parseCreditsAmount(event.target.value))}
+                  placeholder="0"
+                  className={cn(
+                    'min-h-14 rounded-2xl border-2 border-gray-100! bg-transparent! px-3 py-2 text-xl! font-bold tracking-wide text-primary-9! focus:ring-0',
+                    'transition-[border-color,box-shadow] duration-200 ease-in-out',
+                    'hover:bg-transparent! hover:text-primary-9! focus:bg-transparent! focus:text-primary-9! [&_.ant-input-outlined]:bg-transparent!',
+                    'focus:border-pr placeholder:text-primary-9! hover:border-gray-200!',
+                    ' focus-within:border-gray-300! focus-visible:ring-0',
+                    '[&.ant-input-status-error]:border-1.5! [&.ant-XInput-status-error]:border-destructive!',
+                    '[&.ant-input-status-error]:border-1.5! [&.ant-input-status-error]:border-destructive!'
+                  )}
+                  disabled={isPending}
+                />
+                <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-base text-gray-500">
+                  Credits
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 flex items-center justify-end gap-3">
+            <GhostRoundedIconButton
+              label="Cancel"
+              classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
+              onClick={onBack}
+              iconPosition="start"
+            />
+
+            <GhostRoundedIconButton
+              label="Transfer credits"
+              icon={isPending ? <LoadingOutlined spin /> : <RiArrowRightSLine />}
+              classNames={{
+                root: 'bg-primary-9 text-white hover:bg-primary-8 group',
+                label: 'text-white pr-3',
+                iconWrapper: 'bg-primary-9 text-white group-hover:bg-primary-8 [&_svg]:size-5!',
+              }}
+              disabled={isPending || !amount}
+              onClick={() => transferCreditsAsync()}
+              iconPosition="end"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

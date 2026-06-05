@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeftOutlined, CloseOutlined, SwapOutlined } from '@ant-design/icons';
+import { CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -12,8 +12,8 @@ import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import {
-  ManageCreditsStep,
   type ManageCreditsStepHandle,
+  TransferCredits,
 } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
 import {
   PaymentModeSelection,
@@ -34,11 +34,29 @@ function BuyCreditsTab({
   onClose,
   mode,
   onModeChange,
+  classnames,
 }: {
   virtualLabId: string;
   onClose: () => void;
   mode: TPurchaseModeDictionary;
   onModeChange: (mode: TPurchaseModeDictionary) => void;
+  classnames?: {
+    mode?: {
+      root?: string;
+    };
+    flow?: {
+      root?: string;
+      content?: string;
+      emailVerification?: {
+        codeForm?: string;
+        requestForm?: string;
+      };
+    };
+    promotion?: {
+      root?: string;
+      content?: string;
+    };
+  };
 }) {
   const handleModeChange = (newMode: TPurchaseModeDictionary) => {
     // When user goes back to selection (either from cancel or after successful payment), close the modal
@@ -47,11 +65,6 @@ function BuyCreditsTab({
     } else {
       onModeChange(newMode);
     }
-  };
-
-  const handleBackToSelection = () => {
-    // Directly set mode to Selection without triggering close
-    onModeChange(PurchaseModeDictionary.Selection);
   };
 
   // Override handleModeChange to prevent closing when going back via back button
@@ -65,41 +78,32 @@ function BuyCreditsTab({
     }
   };
 
-  const showBackButton =
-    mode === PurchaseModeDictionary.Buy || mode === PurchaseModeDictionary.Promo;
-
   const content = match({ mode })
     .with({ mode: PurchaseModeDictionary.Selection }, () => (
-      <PaymentModeSelection virtualLabId={virtualLabId} onModeChange={handleModeChange} />
+      <PaymentModeSelection
+        virtualLabId={virtualLabId}
+        onModeChange={handleModeChange}
+        classnames={classnames?.mode}
+      />
     ))
     .with({ mode: PurchaseModeDictionary.Buy }, () => (
       <StripePaymentFlow
         virtualLabId={virtualLabId}
         onModeChange={handleModeChangeFromComponents}
+        classnames={classnames?.flow}
       />
     ))
     .with({ mode: PurchaseModeDictionary.Promo }, () => (
-      <PromotionCode virtualLabId={virtualLabId} onModeChange={handleModeChangeFromComponents} />
+      <PromotionCode
+        virtualLabId={virtualLabId}
+        onModeChange={handleModeChangeFromComponents}
+        classnames={classnames?.promotion}
+      />
     ))
     .otherwise(() => null);
 
   return (
     <div className="flex h-full w-full flex-col" data-widget="buy-credits-form">
-      {showBackButton && (
-        <div className="mb-4 flex items-center">
-          <Button
-            rounded
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleBackToSelection}
-            className="hover:bg-neutral-2/20 h-auto px-4! py-2! text-white hover:text-white"
-          >
-            <ArrowLeftOutlined className="text-lg" />
-            <span className="ml-2 text-base font-semibold text-white select-none">Back</span>
-          </Button>
-        </div>
-      )}
       <div className="w-full h-full" data-widget={mode}>
         {content}
       </div>
@@ -109,7 +113,6 @@ function BuyCreditsTab({
 
 export function CreditsTransferModal({ open, onClose }: Props) {
   const creditsRef = useRef<ManageCreditsStepHandle>(null);
-  const [isTransferPending, setIsTransferPending] = useState(false);
   const [activeTab, setActiveTab] = useState('transfer');
   const [buyMode, setBuyMode] = useState<TPurchaseModeDictionary>(PurchaseModeDictionary.Selection);
 
@@ -131,23 +134,20 @@ export function CreditsTransferModal({ open, onClose }: Props) {
     if (activeTab !== 'transfer') {
       return;
     }
-
-    const interval = window.setInterval(() => {
-      setIsTransferPending(Boolean(creditsRef.current?.isPending));
-    }, 250);
-
-    return () => window.clearInterval(interval);
   }, [activeTab]);
 
   const handleClose = () => {
     setBuyMode(PurchaseModeDictionary.Selection);
-    setActiveTab('transfer');
-    setIsTransferPending(false);
+  };
+
+  const onCloseModal = () => {
+    setBuyMode(PurchaseModeDictionary.Selection);
     onClose();
   };
 
   return (
     <Modal
+      maskClosable
       id="model-credits-manager"
       closable={false}
       open={open}
@@ -155,19 +155,20 @@ export function CreditsTransferModal({ open, onClose }: Props) {
         <div className="flex w-full flex-col gap-4 select-none">
           <div className="flex w-full items-center justify-between gap-4">
             <div className="flex flex-col items-start justify-between">
-              <h2 className="text-2xl font-semibold text-white">{project?.data.project.name}</h2>
-              <p className="text-neutral-1 text-sm font-light">
+              <h2 className="text-2xl font-semibold text-primary-9">{project?.name}</h2>
+              <p className="text-primary-9 text-sm font-light">
                 Buy and transfer credits between your virtual lab and projects.
               </p>
             </div>
             <div className="flex items-center justify-center gap-2">
               <Button
-                size="sm"
-                variant="outline"
-                onClick={handleClose}
-                className="bg-primary-9 hover:bg-neutral-1/40 border-none !p-2"
+                rounded
+                size="md"
+                variant="icon"
+                onClick={onCloseModal}
+                className="bg-white hover:bg-gray-100 border-gray-100"
               >
-                <CloseOutlined className="text-lg text-white!" />
+                <CloseOutlined className="text-lg text-primary-9!" />
               </Button>
             </div>
           </div>
@@ -177,16 +178,22 @@ export function CreditsTransferModal({ open, onClose }: Props) {
             className="w-full"
             activationMode="manual"
           >
-            <PillTabsList className="bg-primary-8 grid h-12 w-full grid-cols-2 p-0">
+            <PillTabsList className="bg-gray-100 border border-gray-100 rounded-full grid h-12 w-full grid-cols-2 p-0 shadow-sm">
               <PillTabsTrigger
                 value="transfer"
-                className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
+                className={cn(
+                  'hover:bg-gray-200 bg-white hover:text-primary-8 data-[state=active]:text-white h-12 px-6 py-5',
+                  'text-lg text-primary-9 select-none data-[state=active]:bg-primary-9 data-[state=active]:font-bold'
+                )}
               >
                 Transfer Credits
               </PillTabsTrigger>
               <PillTabsTrigger
                 value="buy"
-                className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
+                className={cn(
+                  'hover:bg-gray-200 bg-white hover:text-primary-8 data-[state=active]:text-white h-12 px-6 py-5',
+                  'text-lg text-primary-9 select-none data-[state=active]:bg-primary-9 data-[state=active]:font-bold'
+                )}
               >
                 Buy Credits
               </PillTabsTrigger>
@@ -195,16 +202,18 @@ export function CreditsTransferModal({ open, onClose }: Props) {
         </div>
       }
       size="auto"
+      onClose={onCloseModal}
       position="center"
       animation="scale"
       maxWidth={700}
       width={700}
       className={cn(
-        'bg-primary-9! fixed! top-1/2! left-1/2! z-1000! -translate-x-1/2! -translate-y-1/2! transform!',
-        'h-190'
+        'bg-white! fixed! top-1/2! left-1/2! z-1000! -translate-x-1/2! -translate-y-1/2! transform!',
+        'h-190 rounded-2xl'
       )}
       headerClassName={cn('[&>div]:w-full')}
-      bodyClassName="pt-0 max-h-[calc(100%-150px)] h-full primary-scrollbar"
+      overlayClassName="bg-primary-8/10 backdrop-blur-xs"
+      bodyClassName="pt-0 max-h-[calc(100%-150px)] h-full secondary-scrollbar px-0"
     >
       <PillTabs
         value={activeTab}
@@ -212,35 +221,41 @@ export function CreditsTransferModal({ open, onClose }: Props) {
         activationMode="manual"
         className="h-full"
       >
-        <PillTabsContent value="transfer" className="mt-0 h-full">
-          <div className="flex flex-col h-full">
-            <div className="mb-4 flex justify-end">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => creditsRef.current?.swap()}
-                className="bg-primary-8 hover:bg-neutral-1/40 border-white/20 p-2!"
-                disabled={isTransferPending}
-              >
-                <SwapOutlined className="text-sm text-white!" />
-              </Button>
-            </div>
-            <ManageCreditsStep
-              virtualLabId={virtualLabId}
-              onBack={handleClose}
-              shouldHaveBack={false}
-              shouldShowSwap={false}
-              buttonClassname="mt-10"
-              ref={creditsRef}
-            />
-          </div>
+        <PillTabsContent value="transfer" className="mt-0 h-full px-5 bg-white">
+          <TransferCredits
+            virtualLabId={virtualLabId}
+            onBack={onCloseModal}
+            shouldHaveBack={false}
+            shouldShowSwap={false}
+            ref={creditsRef}
+            classnames={{
+              root: 'bg-white px-0 pt-1 h-max',
+              content: 'bg-white px-0 rounded-2xl',
+              body: 'border-none bg-white p-0 px-2',
+            }}
+          />
         </PillTabsContent>
-        <PillTabsContent value="buy" className="mt-0 h-full">
+        <PillTabsContent value="buy" className="mt-0 h-full px-8 bg-white">
           <BuyCreditsTab
             virtualLabId={virtualLabId}
             onClose={handleClose}
             mode={buyMode}
             onModeChange={setBuyMode}
+            classnames={{
+              mode: {
+                root: 'py-0',
+              },
+              flow: {
+                root: 'pt-1 bg-white rounded-2xl [&_.back-button-wrapper]:pt-0',
+                emailVerification: {
+                  codeForm: 'px-10',
+                  requestForm: 'pt-1 bg-white rounded-2xl [&_.back-button-wrapper]:pt-0 px-10',
+                },
+              },
+              promotion: {
+                root: 'pt-1 bg-white rounded-2xl [&_.back-button-wrapper]:pt-0',
+              },
+            }}
           />
         </PillTabsContent>
       </PillTabs>

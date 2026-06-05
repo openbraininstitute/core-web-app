@@ -1,38 +1,7 @@
-import authFetch, { authFetchRetryOnError } from '@/auth-fetch';
+import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { assertApiResponse } from '@/util/utils';
 
-import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import type { VirtualLabBalanceResponse } from '@/types/accounting';
-import type { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-
-export async function getVirtualLabsOfUser(): Promise<
-  VlmResponse<VirtualLabAPIListData<TVirtualLab>>
-> {
-  const response = await authFetchRetryOnError(`${config.VIRTUAL_LAB_API_URL}/virtual-labs`);
-
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-  return response.json();
-}
-
-export async function patchVirtualLab(
-  partialVlab: Partial<TVirtualLab>,
-  id: string
-): Promise<
-  VlmResponse<{
-    virtual_lab: TVirtualLab;
-  }>
-> {
-  const res = await authFetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(partialVlab),
-  });
-
-  return assertApiResponse(res);
-}
 
 export async function getVirtualLabAccountBalance({
   virtualLabId,

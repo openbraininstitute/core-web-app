@@ -62,7 +62,7 @@ export function CreditConverter({
         {showActions && (
           <div className="flex items-center justify-center gap-2">
             <Button
-              key="back-to-btn"
+              key="cancel-btn"
               className={classNames(
                 'text-primary-8 rounded-md bg-white px-6',
                 'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
@@ -75,7 +75,7 @@ export function CreditConverter({
               Cancel
             </Button>
             <Button
-              key="back-to-btn"
+              key="payment-btn"
               className={classNames(
                 'text-primary-8 rounded-md border-neutral-300 bg-white px-6',
                 'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'

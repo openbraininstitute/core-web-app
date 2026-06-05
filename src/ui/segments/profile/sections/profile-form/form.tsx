@@ -1,6 +1,11 @@
 'use client';
 
-import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
+import {
+  CheckCircleFilled,
+  CloseCircleFilled,
+  EditOutlined,
+  LoadingOutlined,
+} from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Checkbox, Form } from 'antd';
 import { useSession } from 'next-auth/react';
@@ -12,11 +17,11 @@ import { checkUserProfileEmailAvailability } from '@/api/virtual-lab-svc/queries
 import { useAppNotification } from '@/components/notification';
 import { Button } from '@/ui/molecules/button';
 import { CustomFormError, createZodFieldValidator } from '@/ui/segments/contribute/shared/helpers';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
-import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import { EntraIdIcon, GitHubIcon, GoogleIcon, Label, label, Select, XInput } from './elements';
+import { EntraIdIcon, GitHubIcon, GoogleIcon, Label, Select, XInput } from './elements';
 import { useSubmitCallback } from './hooks';
 import { ProfileFormSchema } from './validator';
 
@@ -60,7 +65,9 @@ export function Profile({ data }: ProfileProps) {
   const formValues = Form.useWatch([], form);
   const isValid = ProfileFormSchema.safeParse(formValues ?? initialValues).success;
   const [hasEmailError, setEmailError] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const { mutateAsync, isPending } = useSubmitCallback(errorNotify, successNotify);
+
   const { data: countries = [], isLoading: isCountriesLoading } = useQuery({
     queryKey: keyBuilder.countries(),
     queryFn: getCountries,
@@ -132,13 +139,24 @@ export function Profile({ data }: ProfileProps) {
     }
   };
 
+  const identityProvider = getIdentityProviderDisplay(session?.user?.identityProvider);
+  const onSubmit = async (values: TUpdateUserProfileRequest) => {
+    await mutateAsync(values);
+    setIsEditing(false);
+  };
+
+  const formDisabled = !isEditing || isPending;
+  const readOnly = !isEditing;
+  const readOnlyLabelClassName = {
+    'text-gray-500': readOnly,
+  };
   return (
     <div
       id="profile-form-container"
       data-testid="profile-form-container"
-      className="animate-fade-in flex items-center justify-center p-4"
+      className="flex items-center justify-center"
     >
-      <div className="w-full max-w-3xl">
+      <section className="w-full rounded-2xl bg-white p-7">
         <Form
           id="profile-form"
           data-testid="profile-form"
@@ -146,19 +164,19 @@ export function Profile({ data }: ProfileProps) {
           layout="vertical"
           className="profile-form"
           initialValues={initialValues}
-          disabled={isPending}
-          onFinish={mutateAsync}
+          disabled={formDisabled}
+          onFinish={onSubmit}
           scrollToFirstError
-          autoComplete="false"
+          autoComplete="off"
           requiredMark={false}
           preserve={false}
-          validateTrigger={['onBlur', 'onChange']}
+          validateTrigger={isEditing ? ['onBlur', 'onChange'] : []}
           rootClassName={cn(
-            '[&_.ant-form-item-explain-error]:text-sm! ',
+            '[&_.ant-form-item]:mb-0! [&_.ant-form-item-explain-error]:text-sm! w-f',
             '[&_.ant-form-item-explain-error]:pl-0.5! [&_.ant-form-item-explain-error]:select-none!'
           )}
         >
-          <div className="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-2">
+          <div className="grid w-full min-w-0 grid-cols-1 gap-x-6 gap-y-4 p-4 md:grid-cols-2">
             <Form.Item
               rules={[
                 {
@@ -166,11 +184,23 @@ export function Profile({ data }: ProfileProps) {
                   validator: createZodFieldValidator(ProfileFormSchema, 'first_name', form),
                 },
               ]}
+              className="w-full min-w-0 [&_.ant-form-item-label]:pb-0!"
               name="first_name"
-              className="space-y-1"
-              label={label('First name', <sup className="text-base text-red-500">*</sup>)}
+              label={
+                <Label
+                  title="First Name"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
             >
-              <XInput id="first_name" name="first_name" type="text" />
+              <XInput
+                id="first_name"
+                name="first_name"
+                type="text"
+                plain={readOnly}
+                className="w-full"
+              />
             </Form.Item>
             <Form.Item
               rules={[
@@ -180,72 +210,43 @@ export function Profile({ data }: ProfileProps) {
                 },
               ]}
               name="last_name"
-              className="space-y-1"
-              label={label('Last name', <sup className="text-base text-red-500">*</sup>)}
+              className="w-full min-w-0 [&_.ant-form-item-label]:pb-0!"
+              label={
+                <Label
+                  title="Last Name"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
             >
-              <XInput id="last_name" name="last_name" type="text" />
-            </Form.Item>
-            <Form.Item
-              name="street"
-              className="space-y-1 md:col-span-2"
-              label={<Label title="Address" />}
-            >
-              <XInput id="street" name="street" type="text" />
-            </Form.Item>
-            <Form.Item
-              name="postal_code"
-              className="space-y-1"
-              label={<Label title="Postal code" />}
-            >
-              <XInput id="postal_code" name="postal_code" type="text" />
-            </Form.Item>
-
-            <Form.Item name="locality" className="space-y-1" label={<Label title="City" />}>
-              <XInput id="locality" name="locality" type="text" />
-            </Form.Item>
-            <Form.Item name="region" className="space-y-1" label={<Label title="State/Canton" />}>
-              <XInput id="region" name="region" type="text" />
-            </Form.Item>
-            <Form.Item
-              name="country"
-              className="space-y-1"
-              rules={[
-                {
-                  required: true,
-                  validator: createZodFieldValidator(ProfileFormSchema, 'country', form),
-                },
-              ]}
-              label={label('Country', <sup className="text-base text-red-500">*</sup>)}
-            >
-              <Select
-                showSearch
-                id="country"
-                placeholder={isCountriesLoading ? 'Loading countries...' : 'Select a country'}
-                className={classNames(
-                  'border-primary-4! min-w-36 border-0 border-b ring-0 focus:border-b-2! [&.ant-select-focused]:border-b-2',
-                  'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:ring-0!',
-                  '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! focus:[&_.ant-select-selector]:ring-0!',
-                  'hover:border-primary-4 bg-transparent! hover:bg-transparent! [&_.ant-select-selection-item]:text-white!',
-                  '[&_.ant-select-selection-item]:font-bold! [&_.ant-select-selection-search-input]:text-white!',
-                  '[&_.ant-select-selection-placeholder]:text-white!'
-                )}
-                classNames={{ popup: { root: 'rounded-none shadow-md' } }}
-                loading={isCountriesLoading}
-                filterOption={(input, option) =>
-                  (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-                options={countries}
+              <XInput
+                id="last_name"
+                name="last_name"
+                type="text"
+                plain={readOnly}
+                className="w-full"
               />
             </Form.Item>
-
             <Form.Item
               name="email"
-              className="space-y-1 md:col-span-2"
-              validateDebounce={500}
+              className="w-full min-w-0 md:col-span-2 [&_.ant-form-item-label]:pb-0!"
+              validateDebounce={isEditing ? 500 : 0}
               validateStatus={
-                isEmailValidating ? 'validating' : hasEmailErrors ? 'error' : undefined
+                !isEditing
+                  ? undefined
+                  : isEmailValidating
+                    ? 'validating'
+                    : hasEmailErrors
+                      ? 'error'
+                      : undefined
               }
-              label={label('Email', <sup className="text-base text-red-500">*</sup>)}
+              label={
+                <Label
+                  title="Email"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
               rules={[
                 {
                   required: true,
@@ -258,37 +259,41 @@ export function Profile({ data }: ProfileProps) {
                 name="email"
                 autoComplete="false"
                 type="email"
-                className="disabled:text-white!"
+                plain={readOnly}
+                className={cn('w-full', !readOnly && 'disabled:text-white!')}
                 suffix={
-                  <span className="inline-flex w-4 items-center justify-center">
-                    {isEmailValidating ? (
-                      <LoadingOutlined />
-                    ) : hasEmailErrors ? (
-                      <CloseCircleFilled className="text-destructive" />
-                    ) : isEmailTouched && isCurrentEmailAvailable ? (
-                      <CheckCircleFilled className="text-teal-600" />
-                    ) : null}
-                  </span>
+                  isEditing ? (
+                    <span className="inline-flex w-4 items-center justify-center">
+                      {isEmailValidating ? (
+                        <LoadingOutlined />
+                      ) : hasEmailErrors ? (
+                        <CloseCircleFilled className="text-destructive" />
+                      ) : isEmailTouched && isCurrentEmailAvailable ? (
+                        <CheckCircleFilled className="text-teal-600" />
+                      ) : null}
+                    </span>
+                  ) : null
                 }
               />
             </Form.Item>
-            <Form.Item
-              name="sync_billing_address"
-              valuePropName="checked"
-              className="md:col-span-2"
-            >
-              <Checkbox className="text-white">
-                Sync this address with my billing customer address
-              </Checkbox>
-            </Form.Item>
-            <div className="space-y-1 md:col-span-2">
-              <Label title="Social login" />
-              <div className="flex items-center gap-2 border-b border-white/30 py-2">
-                {getIdentityProviderDisplay(session?.user?.identityProvider).icon}
-                <span className="font-bold text-white select-none">
-                  {getIdentityProviderDisplay(session?.user?.identityProvider).name}
+
+            <div className="md:col-span-2">
+              <Label
+                title="Social Login"
+                className={cn('text-primary-9', readOnlyLabelClassName)}
+              />
+              <div
+                className={cn(
+                  'flex h-12 min-h-12 items-center gap-2 rounded-lg py-2 text-primary-9',
+                  'transition-[padding,border-color,box-shadow] duration-200 ease-in-out border-2!',
+                  readOnly ? 'border-transparent px-0 py-2' : 'border-gray-100! px-3 py-2'
+                )}
+              >
+                {identityProvider.icon}
+                <span className="font-bold select-none">
+                  {identityProvider.name}
                   {data?.preferred_username && (
-                    <span className="ml-2 font-normal text-white/70">
+                    <span className="ml-2 font-normal text-neutral-4">
                       ({data.preferred_username})
                     </span>
                   )}
@@ -296,31 +301,180 @@ export function Profile({ data }: ProfileProps) {
               </div>
             </div>
           </div>
-
-          <div className="mt-8 flex justify-end">
-            <Button
-              rounded
-              key="update-profile-btn"
-              type="submit"
-              variant="default"
-              size="lg"
-              className={cn(
-                'border-primary-4! w-max border shadow-2xl',
-                'hover:bg-primary-8/40',
-                'hover:shadow-[1px_2px_4px_0px_#00000099]',
-                'shadow-[8px_12px_24px_0px_#00000099]',
-                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
-              )}
-              disabled={isPending || !isValid || isEmailValidating || hasEmailErrors}
+          <div className="border mt-4 border-gray-100 rounded-lg p-4 w-full grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+            <Form.Item
+              name="street"
+              className="md:col-span-2 [&_.ant-form-item-label]:pb-0!"
+              label={
+                <Label title="Address" className={cn('text-primary-9', readOnlyLabelClassName)} />
+              }
             >
-              <div className="flex items-center gap-2 px-6">
-                {isPending && <LoadingOutlined />}
-                Update
+              <XInput id="street" name="street" type="text" plain={readOnly} />
+            </Form.Item>
+            <Form.Item
+              name="postal_code"
+              className="[&_.ant-form-item-label]:pb-0!"
+              label={
+                <Label
+                  title="Postal Code"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                />
+              }
+            >
+              <XInput id="postal_code" name="postal_code" type="text" plain={readOnly} />
+            </Form.Item>
+            <Form.Item
+              name="locality"
+              className="[&_.ant-form-item-label]:pb-0!"
+              label={
+                <Label title="City" className={cn('text-primary-9', readOnlyLabelClassName)} />
+              }
+            >
+              <XInput id="locality" name="locality" type="text" plain={readOnly} />
+            </Form.Item>
+            <Form.Item
+              name="region"
+              className="[&_.ant-form-item-label]:pb-0!"
+              label={
+                <Label
+                  title="State/Canton"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                />
+              }
+            >
+              <XInput id="region" name="region" type="text" plain={readOnly} />
+            </Form.Item>
+            <Form.Item
+              name="country"
+              className="[&_.ant-form-item-label]:pb-0!"
+              rules={[
+                {
+                  required: true,
+                  validator: createZodFieldValidator(ProfileFormSchema, 'country', form),
+                },
+              ]}
+              label={
+                <Label
+                  title="Country"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
+            >
+              <Select
+                showSearch
+                id="country"
+                size="large"
+                placeholder={
+                  readOnly ? (
+                    isCountriesLoading ? (
+                      <LoadingOutlined />
+                    ) : (
+                      <span className="text-primary-9">\u2014</span>
+                    )
+                  ) : isCountriesLoading ? (
+                    <LoadingOutlined />
+                  ) : (
+                    <span className="text-primary-9">Select a country</span>
+                  )
+                }
+                className={cn(
+                  'min-h-12 rounded-lg min-w-36 shadow-none ring-0',
+                  'transition-[border-color,box-shadow] duration-200 ease-in-out',
+                  '[&_.ant-select-selector]:bg-transparent!',
+                  'hover:bg-transparent! [&_.ant-select-selection-item]:text-primary-9!',
+                  '[&_.ant-select-selection-item]:font-bold! [&_.ant-select-selection-search-input]:text-primary-9!',
+                  '[&_.ant-select-selection-placeholder]:text-primary-9!',
+                  {
+                    [cn(
+                      'border-0! border-transparent!',
+                      '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:shadow-none!',
+                      '[&_.ant-select-selector]:px-0! [&_.ant-select-selector]:py-0!',
+                      '[&.ant-select-disabled]:text-primary-9!',
+                      '[&_.ant-select-selection-item]:text-primary-9! [&.ant-select-disabled_.ant-select-selector]:text-primary-9!',
+                      '[&.ant-select-outlined:not(.ant-select-customize-input)_.ant-select-selector]:border-0!',
+                      '[&_.ant-select-arrow]:hidden'
+                    )]: readOnly,
+                  },
+                  {
+                    [cn(
+                      'border-gray-100! focus:border-2! [&.ant-select-focused]:border-2',
+                      '[&.ant-select-focused_.ant-select-selector]:ring-0!',
+                      'focus:[&_.ant-select-selector]:border-2!',
+                      'hover:border-gray-200!'
+                    )]: !readOnly,
+                  }
+                )}
+                classNames={{ popup: { root: 'rounded-none shadow-md' } }}
+                loading={isCountriesLoading}
+                filterOption={(input, option) =>
+                  (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                options={countries}
+              />
+            </Form.Item>
+          </div>
+          <Form.Item
+            name="sync_billing_address"
+            valuePropName="checked"
+            className={cn(
+              'md:col-span-2 [&_.ant-form-item-label]:pb-0!',
+              readOnly && 'invisible pointer-events-none'
+            )}
+            aria-hidden={readOnly}
+          >
+            <Checkbox className={cn('text-primary-9')}>
+              Use this address as my billing address
+            </Checkbox>
+          </Form.Item>
+          <div className="relative mt-3 min-h-14">
+            {isEditing ? (
+              <div
+                key="profile-form-actions-edit"
+                className="absolute inset-y-0 right-0 flex flex-wrap items-center justify-end gap-3"
+              >
+                <Button
+                  rounded
+                  type="button"
+                  variant="ghost"
+                  size="lg"
+                  className="rounded-full px-8 py-2 text-base font-semibold transition-colors"
+                  onClick={() => {
+                    form.resetFields();
+                    setIsEditing(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <GhostRoundedIconButton
+                  key="update-profile-btn"
+                  type="submit"
+                  label="Update"
+                  disabled={isPending || !isValid}
+                  icon={isPending && <LoadingOutlined spin />}
+                  classNames={{
+                    root: 'bg-primary-9 text-white hover:bg-primary-8 group',
+                    label: 'text-white',
+                    iconWrapper: 'bg-primary-9 text-white! group-hover:bg-primary-8!',
+                  }}
+                />
               </div>
-            </Button>
+            ) : (
+              <div
+                key="profile-form-actions-view"
+                className="absolute inset-y-0 right-0 flex items-center justify-end"
+              >
+                <GhostRoundedIconButton
+                  icon={<EditOutlined />}
+                  label="Edit information"
+                  classNames={{ label: 'text-lg font-semibold' }}
+                  onClick={() => setIsEditing(true)}
+                />
+              </div>
+            )}
           </div>
         </Form>
-      </div>
+      </section>
     </div>
   );
 }

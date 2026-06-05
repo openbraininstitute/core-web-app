@@ -32,7 +32,7 @@ export function StandaloneStripePayment({
 
   if (loadingStripe) {
     return (
-      <div className="flex h-full grow items-center justify-center">
+      <div className="flex min-h-[240px] grow items-center justify-center">
         <Spin size="large" indicator={<LoadingOutlined className="text-white" />} />
       </div>
     );

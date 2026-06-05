@@ -4,10 +4,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
-import TiersList from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
-import { EmailVerificationWithBack } from '@/features/email-verification';
+import { getSelfVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { TiersList } from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
+import { EmailVerification } from '@/features/email-verification';
 import { flowAtom, SubscriptionPaymentForm } from '@/features/payments/subscription';
 import {
   DefaultCurrency,
@@ -20,9 +19,10 @@ import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queri
 
 type Props = {
   data: UserActiveSubscriptionResponse | null;
+  onExpandedChange: ((expanded: boolean) => void) | undefined;
 };
 
-export function CheckoutFlow({ data }: Props) {
+export function CheckoutFlow({ data, onExpandedChange }: Props) {
   const [flow, updateFlow] = useAtom(flowAtom);
   const queryClient = useQueryClient();
 
@@ -31,13 +31,13 @@ export function CheckoutFlow({ data }: Props) {
   };
 
   const { data: virtualLabData } = useQuery({
-    queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
-    queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
+    queryKey: keyBuilder.myLab(),
+    queryFn: async () => await getSelfVirtualLab(),
   });
 
   const onVerificationComplete = async () => {
     await queryClient.invalidateQueries({
-      queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
+      queryKey: keyBuilder.myLab(),
     });
     updateFlow((prev) => ({ ...prev, step: FlowStepDict.Pay }));
   };
@@ -54,15 +54,23 @@ export function CheckoutFlow({ data }: Props) {
   }, [updateFlow]);
 
   return (
-    <div className="relative flex h-full grow flex-col">
+    <div className="relative flex h-full grow flex-col mt-3">
       <div className={flow.step !== FlowStepDict.Select ? 'hidden' : 'h-full'}>
-        <TiersList subscriptionData={data} currentTier={data?.subscription.tier} />
+        <TiersList
+          subscriptionData={data}
+          currentTier={data?.subscription.tier}
+          onExpandedChange={onExpandedChange}
+        />
       </div>
-      <div className={flow.step !== FlowStepDict.EmailVerification ? 'hidden' : 'h-full'}>
-        {virtualLabData?.data?.virtual_lab.id && (
-          <EmailVerificationWithBack
-            onBack={() => updateFlow({ ...flow, step: FlowStepDict.Select, tier: null })}
-            virtualLabId={virtualLabData?.data?.virtual_lab.id}
+
+      <div
+        className={
+          flow.step !== FlowStepDict.EmailVerification ? 'hidden' : 'h-full p-10 max-w-3xl mx-auto'
+        }
+      >
+        {virtualLabData?.data?.id && !virtualLabData.data.email_verified && (
+          <EmailVerification
+            virtualLabId={virtualLabData?.data?.id}
             onVerificationComplete={onVerificationComplete}
           />
         )}

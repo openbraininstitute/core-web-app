@@ -12,10 +12,16 @@ function FeatureIcon({ value }: { value: boolean }) {
   );
 }
 
-export default function PlanBody({ plan, dark }: { plan: PlanV2; dark?: boolean }) {
-  const textColor = dark ? 'text-white' : 'text-primary-9';
-  const mutedColor = dark ? 'text-primary-4' : 'text-neutral-400';
-  const dividerColor = dark ? 'bg-white/60' : 'bg-neutral-2';
+export default function PlanBody({
+  plan,
+  isCurrentTier,
+}: {
+  plan: PlanV2;
+  isCurrentTier?: boolean;
+}) {
+  const textColor = isCurrentTier ? 'text-white' : 'text-primary-9!';
+  const mutedColor = isCurrentTier ? 'text-primary-4' : 'text-primary-6!';
+  const dividerColor = isCurrentTier ? 'bg-white/60' : 'bg-primary-9!';
 
   return (
     <div className="relative mt-10">

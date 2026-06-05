@@ -17,7 +17,7 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-primary-9 text-white shadow-xs hover:bg-primary-9/90',
         destructive:
-          '"bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",',
+          'bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         success:
           'bg-accent-dark text-white shadow-xs hover:bg-accent-dark/90 focus-visible:ring-accent-light/20 disabled:text-white!',
         outline:
@@ -65,17 +65,17 @@ const buttonVariants = cva(
       {
         size: 'sm',
         variant: 'icon',
-        className: 'h-8 w-8',
+        className: 'h-8 w-8 size-8!',
       },
       {
         size: 'md',
         variant: 'icon',
-        className: 'h-10 w-10',
+        className: 'h-10 w-10 size-10!',
       },
       {
         size: 'lg',
         variant: 'icon',
-        className: 'h-12 w-12',
+        className: 'h-12 w-12 size-12!',
       },
     ],
   }

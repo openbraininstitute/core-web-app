@@ -1,29 +1,28 @@
 'use client';
 
-import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
+import { RiArrowDownSLine, RiArrowRightSLine, RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { compact } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
-import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, useCallback, useMemo, useRef, useState } from 'react';
 
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { UserFilled } from '@/components/icons/buttons';
+import { SignOutFill } from '@/components/icons/EditorIcons';
+import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
   type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
+  type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { Item } from '@/ui/segments/workspaces/space-switcher/item';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -60,40 +59,46 @@ export function SpaceSwitcher({ className }: Props) {
   };
   const [tryingToExpand, setTryingToExpand] = useState<Set<string>>(new Set([]));
   const [expandedLabs, setExpandedLabs] = useState<Set<string>>(new Set([]));
+  const [collapsedLabs, setCollapsedLabs] = useState<Set<string>>(new Set([]));
   const [currentVirtualLabId, setCurrentVirtualLabId] = useState<string | null>(null);
-  const [boardModalOpen, setBoardModalOpen] = useState(false);
-  const pathname = usePathname();
-  const { replace: navigateWithReplace } = useRouter();
-
+  const [activeModal, setActiveModal] = useState<{
+    type: WorkspaceActionType;
+    virtualLabId: string | null;
+    projectId: string | null;
+  } | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { status: userStatus } = useSession();
+  const { status: userStatus, data: sessionData } = useSession();
+  const [, copyAccessToken, , copying] = useCopyToClipboard();
 
-  const onCreateProject = () =>
-    makeTriggerWorkspaceConfigurationClickEvent({
-      on: true,
-      type: WorkspaceActions.NewProject,
-      data: null,
-    });
+  const onCopyToken = () => {
+    if (sessionData?.accessToken) void copyAccessToken(sessionData.accessToken);
+  };
 
+  const labFilters = {
+    scope: 'all',
+    order_by: 'owner',
+    order_direction: 'asc',
+  } as const;
   const [
+    { data: myLab, isLoading: myLabLoading },
     { data: virtualLabs, isLoading: labsLoading },
-    { data: subscription },
     { data: user, isLoading: userLoading },
   ] = useQueries({
     queries: [
       {
-        queryKey: keyBuilder.listAllLabs({
-          includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
-        }),
-        queryFn: async () =>
-          await listVirtualLabs({ include: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
+        queryKey: keyBuilder.myLab(),
+        queryFn: async () => await getSelfVirtualLab(),
         staleTime: Number.POSITIVE_INFINITY,
         gcTime: Number.POSITIVE_INFINITY,
       },
       {
-        queryKey: userKeyBuilder.subscription(),
-        queryFn: getUserActiveSubscription,
+        queryKey: keyBuilder.listTenantVirtualLabs({
+          filters: labFilters,
+        }),
+        queryFn: async () => await listVirtualLabs({ filters: labFilters }),
+        staleTime: Number.POSITIVE_INFINITY,
+        gcTime: Number.POSITIVE_INFINITY,
       },
       {
         queryKey: userKeyBuilder.profile(),
@@ -108,45 +113,22 @@ export function SpaceSwitcher({ className }: Props) {
     ? `${user.profile.first_name} ${user.profile.last_name}`
     : (user?.profile.preferred_username ?? user?.profile.email);
 
-  const myVirtualLab = useMemo(
-    () =>
-      virtualLabs?.data?.virtual_lab
-        ? { ...virtualLabs?.data?.virtual_lab, isMine: true }
-        : undefined,
-    [virtualLabs]
-  );
-
-  const membershipLabs = useMemo(
-    () =>
-      virtualLabs?.data?.membership_labs
-        ? virtualLabs?.data?.membership_labs.results.map((p) => ({
-            ...p,
-            isMine: false,
-          }))
-        : [],
-    [virtualLabs]
-  );
+  const labs = virtualLabs?.data;
+  const myLabId = myLab?.data?.id;
 
   const { isLoading: projectsLoading, data: projects } = useQuery({
     queryKey: keyBuilder.listWorkspaceProjects(workspaceProjectList),
-    queryFn: async () => await listProjects({ ...workspaceProjectList, page: 1, size: 40 }),
+    queryFn: async () =>
+      // TODO: do not fetch by fixed page_size
+      // make it loop through pages until it gets all projects
+      await listProjects({ ...workspaceProjectList, pagination: { page: 1, page_size: 40 } }),
     enabled: !!virtualLabId,
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: Number.POSITIVE_INFINITY,
   });
 
-  const labs = useMemo(
-    () => compact([myVirtualLab, ...membershipLabs]),
-    [myVirtualLab, membershipLabs]
-  );
-
-  const onProfileClick = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const onUserClick = () => {
     setIsExpanded(true);
-    setBoardModalOpen(true);
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
       type: WorkspaceActions.ProfileSettings,
@@ -154,52 +136,84 @@ export function SpaceSwitcher({ className }: Props) {
     });
   };
 
-  useEffect(() => {
-    if (virtualLabId && labs.length > 0) {
-      setCurrentVirtualLabId(virtualLabId);
-      setExpandedLabs(new Set([virtualLabId]));
-    } else if (!virtualLabId) {
-      setCurrentVirtualLabId(null);
-      setExpandedLabs(new Set([]));
-    }
-  }, [virtualLabId, labs.length]);
+  const onVlabBannerClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if (!virtualLabId) return;
+    setIsExpanded(true);
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: true,
+      type: WorkspaceActions.VirtualLabConfiguration,
+      data: { virtualLabId, data: { id: virtualLabId } },
+    });
+  };
+
+  const onProjectBannerClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if (!virtualLabId || !projectId) return;
+    setIsExpanded(true);
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: true,
+      type: WorkspaceActions.ProjectPreview,
+      data: { virtualLabId, projectId, data: { id: projectId, virtual_lab_id: virtualLabId } },
+    });
+  };
+
+  const visibleExpandedLabs = useMemo(() => {
+    if (!virtualLabId || labs?.length === 0 || collapsedLabs.has(virtualLabId)) return expandedLabs;
+    const nextExpandedLabs = new Set(expandedLabs);
+    nextExpandedLabs.add(virtualLabId);
+    return nextExpandedLabs;
+  }, [collapsedLabs, expandedLabs, labs?.length, virtualLabId]);
+
+  const visibleCurrentVirtualLabId =
+    currentVirtualLabId ?? (virtualLabId && !collapsedLabs.has(virtualLabId) ? virtualLabId : null);
 
   const toggleLabExpansion = (labId: string, action?: 'trying' | 'opened') => {
     if (action === 'trying') {
       // add to trying state, do not show children yet
       const newTrying = new Set(tryingToExpand);
+      const newCollapsed = new Set(collapsedLabs);
       newTrying.add(labId);
+      newCollapsed.delete(labId);
       setTryingToExpand(newTrying);
+      setCollapsedLabs(newCollapsed);
       setCurrentVirtualLabId(labId);
     } else if (action === 'opened') {
       // move from trying to expanded, show children
       const newTrying = new Set(tryingToExpand);
       const newExpanded = new Set(expandedLabs);
+      const newCollapsed = new Set(collapsedLabs);
 
       newTrying.delete(labId);
       newExpanded.add(labId);
+      newCollapsed.delete(labId);
 
       setTryingToExpand(newTrying);
       setExpandedLabs(newExpanded);
+      setCollapsedLabs(newCollapsed);
     } else {
       // toggle behavior for closing
       const newExpanded = new Set(expandedLabs);
       const newTrying = new Set(tryingToExpand);
+      const newCollapsed = new Set(collapsedLabs);
 
-      if (expandedLabs.has(labId)) {
+      if (visibleExpandedLabs.has(labId)) {
         newExpanded.delete(labId);
+        newCollapsed.add(labId);
         setCurrentVirtualLabId(null);
       } else if (tryingToExpand.has(labId)) {
         newTrying.delete(labId);
+        newCollapsed.add(labId);
         setCurrentVirtualLabId(null);
       }
 
       setExpandedLabs(newExpanded);
       setTryingToExpand(newTrying);
+      setCollapsedLabs(newCollapsed);
     }
   };
 
-  const currentVirtualLabName = labs.find((lab) => lab.id === virtualLabId)?.name;
+  const currentVirtualLabName = labs?.find((lab) => lab.id === virtualLabId)?.name;
 
   const { data: activeProject, isLoading: activeProjectLoading } = useQuery({
     queryKey: keyBuilder.getWorkspace(activeWorkspace),
@@ -211,174 +225,151 @@ export function SpaceSwitcher({ className }: Props) {
 
   const currentProjectName = resolveCurrentProjectName({
     projectId,
-    listedProjectName:
-      projects?.data?.results.find((project) => project.id === projectId)?.name ?? null,
-    activeProjectName: activeProject?.data.project.name ?? null,
+    listedProjectName: projects?.data?.find((project) => project.id === projectId)?.name ?? null,
+    activeProjectName: activeProject?.name ?? null,
   });
 
   const currentProjectLabel = currentProjectName ?? (projectId ? 'Project' : 'Select project');
   const isCurrentProjectLoading =
     !!projectId && !currentProjectName && (projectsLoading || activeProjectLoading);
 
-  useWorkspaceConfigurationClickEvent((event) => {
-    if (isExpanded && event.detail.on) setBoardModalOpen(event.detail.on);
-    else if (isExpanded && !event.detail.on) {
-      setBoardModalOpen(event.detail.on);
-      // TODO: ask for right behavior needed either to close the space switcher or to keep it open
-      setIsExpanded(false);
-    }
-  });
+  // Modals are decoupled from the panel: opening/closing a modal only tracks
+  // which trigger is active (for elevation + selection state); it never
+  // collapses the workspace panel.
+  useWorkspaceConfigurationClickEvent(
+    useCallback((event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
+      if (!event.detail.on || !event.detail.type) {
+        setActiveModal(null);
+        return;
+      }
+      const payload = event.detail.data as {
+        virtualLabId?: string | null;
+        projectId?: string | null;
+        data?: { id?: string | null; virtual_lab_id?: string | null } | null;
+      } | null;
+      setActiveModal({
+        type: event.detail.type,
+        virtualLabId: payload?.virtualLabId ?? payload?.data?.virtual_lab_id ?? null,
+        projectId: payload?.projectId ?? payload?.data?.id ?? null,
+      });
+    }, [])
+  );
+  const boardModalOpen = activeModal !== null;
+  // Banner segments highlight only when the open modal targets the *current*
+  // workspace lab/project (not a different card selected from the panel).
+  const profileActive = activeModal?.type === WorkspaceActions.ProfileSettings;
+  const vlabSegmentActive =
+    activeModal?.type === WorkspaceActions.VirtualLabConfiguration &&
+    activeModal.virtualLabId === virtualLabId;
+  const projectSegmentActive =
+    activeModal?.type === WorkspaceActions.ProjectPreview && activeModal.projectId === projectId;
 
-  const onClick = () => setIsExpanded(true);
-  const onProClick = () => {
-    makeTriggerWorkspaceConfigurationClickEvent({
-      on: true,
-      type: WorkspaceActions.ProfileSettings,
-      data: { section: 'subscription' },
-    });
-    navigateWithReplace(`${pathname}?section=subscription`);
-  };
-
-  const onExpandClick = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+  const onTogglePanel = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
+    // closing the panel collapses every lab card; the active lab re-expands on
+    // its own (empty sets => visibleExpandedLabs auto-includes virtualLabId)
+    if (isExpanded) {
+      setExpandedLabs(new Set());
+      setTryingToExpand(new Set());
+      setCollapsedLabs(new Set());
+      setCurrentVirtualLabId(null);
+    }
     setIsExpanded((prev) => !prev);
-    makeTriggerWorkspaceConfigurationClickEvent({
-      on: false,
-      data: null,
-      type: null,
-    });
   };
 
   return (
-    <div className="flex items-start justify-center gap-1.5">
+    <div
+      className={cn('relative flex items-start justify-center gap-1.5', {
+        'z-1001': boardModalOpen,
+      })}
+    >
       <div id="workspace-switcher" className={cn('relative', className)} ref={dropdownRef}>
-        <button
+        <div
           id="virtual-lab-menu-banner"
-          type="button"
           role="menubar"
-          onClick={onClick}
           className={cn(
-            'relative flex h-10 w-full items-center justify-between gap-1.5 pl-4 text-sm transition-all duration-150 ease-out',
-            'hover:bg-background',
+            'relative flex h-10 w-full items-center gap-1.5 pl-2 pr-4 text-sm transition-all duration-150 ease-out',
             {
-              'border-neutral-2 h-16! rounded-2xl rounded-b-none border border-b-0 bg-white pr-4':
+              'border-neutral-2 h-16! rounded-2xl rounded-b-none border border-b-0 bg-white shadow-2xl':
                 isExpanded,
             },
             {
-              'bg-background hover:shadow-sm border-neutral-2 gap-2 rounded-full border text-gray-700 hover:bg-gray-50':
+              'bg-background hover:shadow-sm border-neutral-2 rounded-full border text-gray-700':
                 !isExpanded,
             },
-            { 'z-1001': boardModalOpen },
             { 'h-12': breakpoint === 'xl' }
           )}
           aria-label={`${currentVirtualLabName}/${currentProjectLabel}`}
-          disabled={labsLoading || isCurrentProjectLoading}
         >
-          <div
-            className={cn('flex items-center justify-center gap-2', {
-              hidden: isExpanded,
-            })}
-          >
-            {/** biome-ignore lint/a11y/noStaticElementInteractions: button can not have nested buttons */}
-            <div
-              className={cn(
-                'flex items-center gap-1.5 rounded-full',
-                'hover:bg-background border-none'
-              )}
-              onKeyDown={onProfileClick}
-              onClick={onProfileClick}
-              tabIndex={-1}
-              title={username}
-              data-label={username}
-            >
-              <UserFilled className="hover:text-primary-6 text-primary-9 shrink-0 text-lg xl:text-xl" />
-            </div>
-            <RightOutlined className="text-primary-8 font-bold" />
-            {labsLoading && !isExpanded ? (
-              <Skeleton className="h-4 w-16 rounded-full" />
-            ) : (
-              currentVirtualLabName &&
-              !isExpanded && (
-                <div
-                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden pl-2 select-none"
+          <UserIconButton
+            username={username}
+            onClick={onUserClick}
+            active={profileActive}
+            hidden={userStatus !== 'authenticated' || userLoading}
+          />
+          {!virtualLabId ? (
+            <span className="text-gray-500">Select virtual lab</span>
+          ) : (
+            <>
+              {labsLoading || myLabLoading ? (
+                <Skeleton className="h-4 w-16 rounded-full" />
+              ) : (
+                <button
+                  type="button"
+                  id="current-virtual-lab-name"
+                  data-testid="current-virtual-lab-name"
+                  onClick={onVlabBannerClick}
                   title={currentVirtualLabName}
-                  data-label={currentVirtualLabName}
-                >
-                  <h3 className="text-primary-9 min-w-0 flex-1 truncate group-hover:font-bold">
-                    {currentVirtualLabName}
-                  </h3>
-                </div>
-              )
-            )}
-            <RightOutlined className="text-primary-8 font-bold" />
-          </div>
-          <AnimatePresence mode="wait">
-            {!isExpanded ? (
-              <div
-                id="breadcrumb"
-                className={cn(
-                  'flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full py-2 pr-4',
-                  {
-                    'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white':
-                      isExpanded,
-                  }
-                )}
-              >
-                {virtualLabId && (
-                  <>
-                    {isCurrentProjectLoading ? (
-                      <Skeleton className="h-5 w-24 flex-1 rounded-full" />
-                    ) : (
-                      <span className="text-primary-9 min-w-0 flex-1 truncate pl-2 text-left font-bold">
-                        {currentProjectLabel}
-                      </span>
-                    )}
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                    >
-                      {isCurrentProjectLoading ? (
-                        <Skeleton className="h-4 w-4 rounded-full" />
-                      ) : (
-                        <DownOutlined
-                          className="text-gray-400"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (boardModalOpen) return;
-                            setIsExpanded((prev) => !prev);
-                          }}
-                        />
-                      )}
-                    </motion.div>
-                  </>
-                )}
-                {!virtualLabId && <span className="text-gray-500">Select virtual lab</span>}
-              </div>
-            ) : (
-              userStatus === 'authenticated' &&
-              !userLoading && (
-                <div
-                  id="user-info"
                   className={cn(
-                    'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between gap-2'
+                    'group flex h-7 max-w-28 shrink-0 items-center overflow-hidden rounded-full px-2 transition-colors select-none',
+                    { 'bg-primary-9! text-white': vlabSegmentActive }
                   )}
                 >
-                  <ProfileButton username={username} onProfileClick={onProfileClick} />
-                  <div className="ml-2 flex shrink-0 items-center gap-2">
-                    <motion.div
-                      className="hover:bg-white hover:shadow-[-2px_0px_20px_-3px_rgba(0,0,0,0.2)] group flex size-8 items-center justify-center rounded-full"
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                      onClick={onExpandClick}
-                    >
-                      <DownOutlined className="text-neutral-3 group-hover:text-primary-8" />
-                    </motion.div>
-                  </div>
-                </div>
-              )
-            )}
-          </AnimatePresence>
-        </button>
+                  <h3
+                    className={cn('min-w-0 truncate font-medium group-hover:font-bold', {
+                      'text-white!': vlabSegmentActive,
+                      'text-primary-9': !vlabSegmentActive,
+                    })}
+                  >
+                    {currentVirtualLabName}
+                  </h3>
+                </button>
+              )}
+              <RiArrowRightSLine className="text-primary-8 size-5 shrink-0" />
+              {isCurrentProjectLoading ? (
+                <Skeleton className="h-5 w-24 flex-1 rounded-full" />
+              ) : (
+                <button
+                  type="button"
+                  id="current-project-name"
+                  data-testid="current-project-name"
+                  onClick={onProjectBannerClick}
+                  title={currentProjectLabel}
+                  className={cn(
+                    'min-w-0 flex-1 truncate rounded-full px-3 py-1 text-left font-bold transition-colors',
+                    projectSegmentActive
+                      ? 'bg-primary-9! text-white'
+                      : 'text-primary-9 hover:underline'
+                  )}
+                >
+                  {currentProjectLabel}
+                </button>
+              )}
+              <motion.button
+                type="button"
+                aria-label="toggle-workspace-panel"
+                data-testid="toggle-workspace-panel"
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="bg-transparent group flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={onTogglePanel}
+                disabled={boardModalOpen}
+              >
+                <RiArrowDownSLine className="text-primary-9 size-5" />
+              </motion.button>
+            </>
+          )}
+        </div>
 
         <AnimatePresence>
           {isExpanded && (
@@ -392,28 +383,12 @@ export function SpaceSwitcher({ className }: Props) {
                 'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-2xl border border-t-0 bg-white',
                 'relative flex flex-col pt-1 pb-2 shadow-2xl',
                 'h-full max-h-[calc(100vh-5.5rem)] min-h-[calc(100vh-5.5rem)]',
-                { 'rounded-t-none': isExpanded },
-                { 'z-1001': boardModalOpen }
+                { 'rounded-t-none': isExpanded }
               )}
             >
-              {subscription?.subscription.tier === 'FREE' && (
-                <button
-                  type="button"
-                  aria-label="get pro subscription"
-                  className="m-2 rounded-md bg-linear-to-r from-[#003A8C] to-[#2D5A99]"
-                  onClick={onProClick}
-                >
-                  <div className="flex flex-col items-start px-4 py-2 text-left text-white">
-                    <h2 className="mb-1.5 text-lg font-bold">Get your Pro plan</h2>
-                    <p className="text-base font-light">
-                      Discover more features, build models, launch experiments...
-                    </p>
-                  </div>
-                </button>
-              )}
               {/* list of user labs */}
               <div className="secondary-scrollbar flex max-h-[calc(100vh-7rem)] flex-col gap-1.5 overflow-y-auto rounded-md bg-white py-2">
-                {labs.map((lab, index) => (
+                {labs?.map((lab, index) => (
                   <motion.div
                     key={lab.id}
                     initial={{ opacity: 0, y: -5 }}
@@ -426,10 +401,11 @@ export function SpaceSwitcher({ className }: Props) {
                     <Item
                       key={lab.id}
                       lab={lab}
+                      isUserLab={myLabId === lab.id}
                       activeProjectId={projectId}
                       isActive={virtualLabId === lab.id}
-                      isOpen={currentVirtualLabId === lab.id}
-                      expandedLabs={expandedLabs}
+                      isOpen={visibleCurrentVirtualLabId === lab.id}
+                      expandedLabs={visibleExpandedLabs}
                       tryingToExpand={tryingToExpand}
                       toggleLabExpansion={toggleLabExpansion}
                     />
@@ -441,18 +417,40 @@ export function SpaceSwitcher({ className }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.05, duration: 0.1 }}
-                className="mt-auto p-4"
+                className="mt-auto w-full gap-2 p-4 pb-2 grid grid-cols-2"
               >
-                <Button
-                  rounded
-                  size="md"
-                  variant="default"
-                  className="w-full"
-                  onClick={onCreateProject}
-                >
-                  Add project
-                  <PlusOutlined className="ml-auto text-sm" />
-                </Button>
+                <GhostRoundedIconButton
+                  type="button"
+                  label="Copy token"
+                  onClick={onCopyToken}
+                  icon={
+                    copying ? (
+                      <RiCheckFill className="size-5! text-emerald-600! hover:text-emerald-700!" />
+                    ) : (
+                      <RiFileCopyLine className="size-3.5" />
+                    )
+                  }
+                  size="responsive"
+                  className="shrink-0 sm:max-w-[min(100%,14rem)]"
+                  classNames={{
+                    label: 'text-base font-semibold text-primary-9',
+                    iconWrapper: 'border-neutral-2/80',
+                    root: 'min-w-0 flex-1 justify-between pl-4! pr-2!',
+                  }}
+                />
+                <GhostRoundedIconButton
+                  href="/app/log-out"
+                  prefetch={false}
+                  label="Logout"
+                  icon={<SignOutFill className="size-3.5" />}
+                  size="responsive"
+                  className="min-w-0 flex-1"
+                  classNames={{
+                    label: 'text-base font-semibold text-white',
+                    iconWrapper: 'text-white hover:bg-primary-8',
+                    root: 'group min-w-0 flex-1 justify-between pr-2! pl-4! bg-primary-9 text-white hover:bg-primary-8',
+                  }}
+                />
               </motion.div>
             </motion.div>
           )}
@@ -464,41 +462,36 @@ export function SpaceSwitcher({ className }: Props) {
 
 export default SpaceSwitcher;
 
-function ProfileButton({
+function UserIconButton({
   username,
-  onProfileClick,
+  onClick,
+  active,
+  hidden,
 }: {
   username?: string;
-  onProfileClick: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
-  ) => void;
+  onClick: () => void;
+  active?: boolean;
+  hidden?: boolean;
 }) {
-  const [isActive, setIsActive] = useState(false);
-  useWorkspaceConfigurationClickEvent(
-    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
-      const incomingType = data.detail.type;
-      if (incomingType === WorkspaceActions.ProfileSettings) {
-        setIsActive(true);
-      }
-    }, [])
-  );
+  if (hidden) return null;
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: button can't have nested buttons
-    <div
-      className={cn(
-        'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-5 py-2 shadow-md md:h-9 lg:h-10',
-        'hover:bg-background',
-        { 'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive }
-      )}
-      onKeyDown={onProfileClick}
-      onClick={onProfileClick}
-      tabIndex={-1}
+    <button
+      type="button"
+      id="user-profile-button"
+      data-testid="user-profile-button"
+      onClick={onClick}
       title={username}
       data-label={username}
+      aria-label={username}
+      className={cn(
+        'border-neutral-2 bg-white relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors hover:shadow-sm xl:size-8',
+        { 'bg-primary-9! hover:bg-primary-8!': active }
+      )}
     >
-      <UserFilled className="shrink-0 text-base text-current xl:text-lg" />
-      <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">{username}</h3>
-    </div>
+      <UserFilled
+        className={cn('text-primary-9 text-base xl:text-lg', { 'text-white!': active })}
+      />
+    </button>
   );
 }

@@ -13,7 +13,8 @@ import type { EmailVerificationProps } from './types';
 export function EmailVerification({
   virtualLabId,
   onVerificationComplete,
-}: EmailVerificationProps) {
+  classnames,
+}: EmailVerificationProps & { classnames?: { codeForm?: string; requestForm?: string } }) {
   const [email, setEmail] = useState<string | null>(null);
   const [codeSent, setCodeSent] = useState(false);
 
@@ -23,6 +24,7 @@ export function EmailVerification({
         virtualLabId={virtualLabId}
         email={email}
         onVerificationComplete={onVerificationComplete}
+        classname={classnames?.codeForm}
       />
     );
   }
@@ -32,6 +34,7 @@ export function EmailVerification({
       virtualLabId={virtualLabId}
       onCodeSent={setCodeSent}
       onEmailChange={setEmail}
+      classname={classnames?.requestForm}
     />
   );
 }

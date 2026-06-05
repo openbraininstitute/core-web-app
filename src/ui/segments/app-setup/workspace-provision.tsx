@@ -9,7 +9,6 @@ import {
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { delay, find, unionBy } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -265,7 +264,6 @@ export function WorkspaceProvision({
     retryState: null,
   });
   const [isResuming, setIsResuming] = useState(false);
-  const session = useSession();
 
   const setProgress = useCallback((progress: number) => {
     setBootstrapState((prev) => ({ ...prev, progress }));
@@ -297,7 +295,6 @@ export function WorkspaceProvision({
           method: 'post',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.data?.accessToken}`,
           },
           body: JSON.stringify({
             accountPayload: payload,
@@ -320,7 +317,6 @@ export function WorkspaceProvision({
       }
     },
     [
-      session.data?.accessToken,
       workspaceResolution,
       shouldCreateVirtualLab,
       shouldCreateProject,

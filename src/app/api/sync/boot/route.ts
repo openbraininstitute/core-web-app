@@ -12,7 +12,7 @@ import { log } from '@/utils/logger';
 
 import type { NextRequest } from 'next/server';
 import type {
-  Project,
+  IProject,
   TVirtualLab,
   UserProfileResponse,
 } from '@/api/virtual-lab-svc/queries/types';
@@ -36,7 +36,7 @@ type BootstrapBody = {
 type BootstrapState = {
   virtualLab: TVirtualLab | null;
   profile: UserProfileResponse | null;
-  project: Project | null;
+  project: IProject | null;
 };
 
 export type StreamChunk = {
@@ -103,6 +103,7 @@ async function processIdentity(body: BootstrapBody, state: BootstrapState): Prom
       message: 'Your account  completed!',
     };
   }
+  log('error', '[ERROR][ProcessIdentity]', error);
 
   return {
     status: WorkspaceBootstrapStepStatus.Error,
@@ -118,18 +119,17 @@ async function processVirtualLab(body: BootstrapBody, state: BootstrapState): Pr
       createVirtualLab({
         entity: accountPayload.entity,
         name: accountPayload.name,
-        description: '',
       })
     );
 
-    if (data?.data?.virtual_lab) {
-      state.virtualLab = data.data.virtual_lab;
+    if (data) {
+      state.virtualLab = data;
       return {
         status: WorkspaceBootstrapStepStatus.Completed,
         message: 'Setting up your Virtual Lab  completed!',
       };
     }
-
+    log('error', '[ERROR][ProcessVirtualLab]', error);
     const cause = (error as Error & { cause?: Record<string, string> })?.cause;
     if (cause?.error_code === 'ENTITY_ALREADY_EXISTS') {
       return {
@@ -184,17 +184,17 @@ async function processProject(body: BootstrapBody, state: BootstrapState): Promi
       name: `${displayName} first project`,
       description:
         'Your initial project has been set up as a ready-to-use workspace to jumpstart your work. Personalize its name and description to showcase your goals and make it truly yours.',
-      include_members: [],
     })
   );
 
-  if (data?.data?.project) {
-    state.project = data.data.project;
+  if (data) {
+    state.project = data;
     return {
       status: WorkspaceBootstrapStepStatus.Completed,
       message: 'Initializing your first project  completed!',
     };
   }
+  log('error', '[ERROR][ProcessProject]', error);
 
   return {
     status: WorkspaceBootstrapStepStatus.Error,

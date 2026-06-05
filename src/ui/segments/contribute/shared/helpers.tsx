@@ -1,5 +1,4 @@
 import { initial, join, last, split } from 'es-toolkit/compat';
-import { z } from 'zod';
 
 import { cn } from '@/utils/css-class';
 

@@ -24,9 +24,15 @@ type RequestCodeFormProps = {
   virtualLabId: string;
   onCodeSent: (value: boolean) => void;
   onEmailChange: (email: string) => void;
+  classname?: string;
 };
 
-export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: RequestCodeFormProps) {
+export function RequestCodeForm({
+  virtualLabId,
+  onCodeSent,
+  onEmailChange,
+  classname,
+}: RequestCodeFormProps) {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const email = Form.useWatch('email', form);
@@ -64,8 +70,12 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
   );
 
   return (
-    <div className="text-white w-full px-10">
-      <h4 className="text-lg font-semibold">Verify your email to continue</h4>
+    <div
+      id="request-code-form"
+      data-testid="request-code-form"
+      className={cn('text-primary-9 w-full px-2', classname)}
+    >
+      <h4 className="text-lg font-bold">Verify your email to continue</h4>
       <p className="text-base font-light">
         We'll send a one-time code to your email. Enter it to confirm your identity and proceed with
         your purchase
@@ -83,13 +93,14 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
               onEmailChange(changed[0]?.value);
             }
           }}
+          autoComplete="off"
           onFinish={generateNewCode}
-          className="w-3/4 mx-auto relative"
+          className="w-full mx-auto relative"
         >
           <Form.Item
             name="email"
             className={cn(
-              'border border-white rounded-full w-full',
+              'border border-gray-200 rounded-full w-full',
               '[&_.ant-row]:w-full [&_.ant-row]:relative',
               '[&_.ant-form-item-row]:w-full! [&_.ant-form-item-row]:flex!',
               '[&_.ant-form-item-control]:max-w-full! [&_.ant-form-item-control]:flex!',
@@ -106,7 +117,7 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
             <Input
               className={cn(
                 'h-12 border-none focus-visible:ring-0 pr-52! w-full placeholder:text-white/80',
-                'text-white text-lg!',
+                'text-primary-8! font-semibold text-lg! rounded-full',
                 '[&:-webkit-autofill]:rounded-full'
               )}
               placeholder="Enter the reference email"
@@ -116,10 +127,17 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
           <Button
             rounded
             variant="outline"
-            className="absolute right-1.5 top-[calc(50%-12px)] -translate-y-1/2 border-white"
+            className={cn(
+              'absolute right-1.5 top-[calc(50%-12px)] -translate-y-1/2 border-gray-200',
+              'hover:border-gray-400 hover:bg-primary-8 hover:text-white group'
+            )}
             disabled={isLocked}
           >
-            {isPending ? <LoadingOutlined /> : <RiMailSendLine className="text-primary-8" />}
+            {isPending ? (
+              <LoadingOutlined />
+            ) : (
+              <RiMailSendLine className="text-primary-8 group-hover:text-white" />
+            )}
             <span>Send verification email</span>
           </Button>
         </Form>

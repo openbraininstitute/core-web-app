@@ -1,26 +1,27 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
-import { useSession } from 'next-auth/react';
+import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
-import { Card, CardDescription } from '@/ui/molecules/card';
-import { getErrorUrl } from '@/ui/segments/invites/helpers';
-import { Button } from '@/ui/molecules/button';
-import { ApiErrorCause } from '@/api/error';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
+import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { config } from '@/config';
 import {
-  InvitationContentResponse,
+  type InvitationContentResponse,
   InviteErrorCodes,
   InviteOriginDict,
 } from '@/types/virtual-lab/invites';
+import { Button } from '@/ui/molecules/button';
+import { Card, CardDescription } from '@/ui/molecules/card';
+import { getErrorUrl } from '@/ui/segments/invites/helpers';
+import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+
+import type { ApiErrorCause } from '@/api/error';
 
 export function InvitationProcessing({ data }: { data: InvitationContentResponse }) {
   const { data: session } = useSession();
@@ -50,12 +51,15 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
         if (origin) {
           if (origin === InviteOriginDict.Lab) {
             const { data: results, error } = await tryCatch(
-              listProjects({ virtualLabId: result.data.virtual_lab_id, page: 1, size: 1 })
+              listProjects({
+                virtualLabId: result.data.virtual_lab_id,
+                pagination: { page: 1, page_size: 1 },
+              })
             );
             if (error) {
               navigate(`${config.ROOT_ROUTE}/sync`);
             }
-            const projectId = results?.data?.results.at(0)?.id;
+            const projectId = results?.data.at(0)?.id;
             if (projectId) {
               navigate(`${config.ROOT_ROUTE}/${result.data.virtual_lab_id}/${projectId}`);
             } else {
@@ -92,8 +96,8 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
     <Card
       borderless
       className={cn(
-        'relative z-[9999] w-full max-w-2xl bg-white',
-        '[box-shadow:12px_12px_45px_0px_#0000001F,_-8px_-8px_24px_0px_#FFFFFFD1]'
+        'relative z-9999 w-full max-w-2xl bg-white',
+        '[box-shadow:12px_12px_45px_0px_#0000001F,-8px_-8px_24px_0px_#FFFFFFD1]'
       )}
     >
       <CardDescription className="flex flex-col items-center gap-4 px-10 select-none">
