@@ -18,6 +18,7 @@ import type { TWorkflowBreadcrumbPhase } from '@/ui/segments/workflows/config';
 type TWorkflowBreadcrumbState = {
   phase: TWorkflowBreadcrumbPhase;
   activeEntityType: TExtendedEntitiesTypeDict | null;
+  onBack: (() => void) | null;
 };
 
 type TWorkflowBreadcrumbContextValue = TWorkflowBreadcrumbState & {
@@ -30,6 +31,7 @@ export function WorkflowBreadcrumbProvider({ children }: { children: ReactNode }
   const [state, setBreadcrumbState] = useState<TWorkflowBreadcrumbState>({
     phase: WorkflowBreadcrumbPhaseDict.Selection,
     activeEntityType: null,
+    onBack: null,
   });
 
   const value = useMemo<TWorkflowBreadcrumbContextValue>(
