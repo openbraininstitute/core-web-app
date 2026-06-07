@@ -92,7 +92,7 @@ export function EmDatasetPrerequisiteCards({ value, onSelect }: TBrowsePrerequis
   }
 
   return (
-    <div ref={scrollRef} className="h-full overflow-y-auto p-4">
+    <div ref={scrollRef} className="h-full overflow-y-auto py-4 px-2">
       <div
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
         role="radiogroup"
@@ -122,7 +122,10 @@ export function EmDatasetPrerequisiteCards({ value, onSelect }: TBrowsePrerequis
               className={cn(
                 'bg-white shadow-xs hover:shadow-md hover:border-gray-200!',
                 'relative cursor-pointer gap-2 transition-colors hover:border-primary-6 ',
-                { 'ring-1 ring-primary-7 bg-gray-50': selected }
+                {
+                  'ring-2 ring-primary-7 bg-gray-50 transition-all duration-300 ease-in-out':
+                    selected,
+                }
               )}
             >
               {selected && (
