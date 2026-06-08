@@ -8,6 +8,7 @@ import remarkMath from 'remark-math';
 import { classNames } from '@/util/utils';
 
 import { Highlighter } from './highlighter';
+import { MarkdownTable, MarkdownTd } from './markdown-table';
 import PlotErrorMessage from './plot-error-message';
 import StorageImage from './storage-image/storage-image';
 
@@ -53,6 +54,8 @@ function RawGithubFlavorMarkdown({
           img: ImageComponent,
           p: ({ children }) => <div>{children}</div>,
           pre: Highlighter,
+          table: MarkdownTable,
+          td: MarkdownTd,
         }}
       >
         {children}

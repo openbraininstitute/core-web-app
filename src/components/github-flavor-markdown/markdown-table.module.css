@@ -1,0 +1,153 @@
+.tableOuter {
+  position: relative;
+  margin: 0.6em 0;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: var(--color-neutral-9, #fff);
+  overflow: hidden;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 7px;
+
+  /* Smooth scrolling on touch devices */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scroll shadow indicators — fixed on edges, fade in/out */
+.shadowLeft,
+.shadowRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.shadowLeft {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.1), transparent);
+  border-radius: 7px 0 0 7px;
+}
+
+.shadowRight {
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), transparent);
+  border-radius: 0 7px 7px 0;
+}
+
+.shadowLeft[data-visible="true"],
+.shadowRight[data-visible="true"] {
+  opacity: 1;
+}
+
+/* ── Shared table base ── */
+
+.tableCompact,
+.tableWide {
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.tableCompact th,
+.tableCompact td,
+.tableWide th,
+.tableWide td {
+  padding: 5px 10px;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-7));
+}
+
+.tableCompact th,
+.tableWide th {
+  position: sticky;
+  top: 0;
+  color: var(--color-primary-5, #003a8c);
+  background-color: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-7));
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: left;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.tableCompact th:first-child,
+.tableWide th:first-child {
+  border-top-left-radius: 7px;
+}
+
+.tableCompact th:last-child,
+.tableWide th:last-child {
+  border-top-right-radius: 7px;
+}
+
+.tableCompact td,
+.tableWide td {
+  color: var(--color-neutral-1, #444);
+}
+
+.tableCompact tr:last-child td,
+.tableWide tr:last-child td {
+  border-bottom: none;
+}
+
+.tableCompact tr:hover td,
+.tableWide tr:hover td {
+  background-color: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-9));
+}
+
+/* Alternating row colors */
+.tableCompact tbody tr:nth-child(even) td,
+.tableWide tbody tr:nth-child(even) td {
+  background-color: color-mix(in srgb, var(--color-primary-6) 3%, var(--color-neutral-9));
+}
+
+.tableCompact tbody tr:nth-child(even):hover td,
+.tableWide tbody tr:nth-child(even):hover td {
+  background-color: color-mix(in srgb, var(--color-primary-6) 7%, var(--color-neutral-9));
+}
+
+/* ── Compact mode: single line, truncated, scrollable ── */
+
+.tableCompact {
+  width: max-content;
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+.tableCompact td {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Wide mode: cells wrap with clamped height ── */
+
+.tableWide {
+  width: max-content;
+  min-width: 100%;
+}
+
+.tableWide td,
+.tableWide th {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 80px;
+  max-width: 260px;
+}
+
+/* Cell content clamp wrapper */
+.cellClamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
