@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { get } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -306,7 +307,7 @@ export default function SimulationsTab({
     setSelectedSimulationIds([]);
   };
 
-  const scale = model && 'scale' in model ? model.scale : null;
+  const scale = get(model, 'scale', null);
   const shouldTreatSimulationAsTask = scale !== null && TASK_LAUNCH_SCALES.has(scale);
 
   // TODO Refactor
