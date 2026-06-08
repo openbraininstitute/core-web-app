@@ -14,6 +14,24 @@
     pointer-events: all;
   }
 
+  > .atlasLabel {
+    position: absolute;
+    right: 1em;
+    bottom: 1em;
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.92);
+    padding: 0.5em 0.85em;
+    border-radius: 999vmax;
+    background-color: rgba(0, 12, 30, 0.65);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+
   > header {
     position: absolute;
     left: 0;
