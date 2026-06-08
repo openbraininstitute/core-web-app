@@ -36,6 +36,7 @@ import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/sim
 import { RegionCircuitSimulation } from '@/entity-configuration/domain/simulation/region-circuit-simulation';
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -82,6 +83,7 @@ const EntityCoreSimulationConfiguration = {
   MicrocircuitSimulation,
   IonChannelModelSimulation,
   RegionCircuitSimulation,
+  WholeBrainCircuitSimulation,
 };
 
 const EntityCoreExtractionConfiguration = {

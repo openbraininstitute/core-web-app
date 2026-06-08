@@ -25,6 +25,7 @@ export const ExtendedEntitiesTypeDict = {
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   SkeletonizationCampaign: 'skeletonization_campaign',
   RegionCircuitSimulation: 'region_circuit_simulation',
+  WholeBrainCircuitSimulation: 'whole_brain_circuit_simulation',
 } as const;
 
 export type TExtendedEntitiesTypeDict =
@@ -41,6 +42,7 @@ const DATA_SIMULATION_LISTING_EXTENDED_TYPES: ReadonlySet<TExtendedEntitiesTypeD
   ExtendedEntitiesTypeDict.MicrocircuitSimulation,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
 ]);
 
 /**

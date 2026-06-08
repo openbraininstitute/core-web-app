@@ -108,6 +108,7 @@ export type TabType = 'configuration' | 'simulations';
 export const SchemaNameDict = {
   // simulation
   CircuitSimulationScanConfig: 'CircuitSimulationScanConfig',
+  Brian2CircuitSimulationScanConfig: 'Brian2CircuitSimulationScanConfig',
   MEModelSimulationScanConfig: 'MEModelSimulationScanConfig',
   MEModelWithSynapsesCircuitSimulationScanConfig: 'MEModelWithSynapsesCircuitSimulationScanConfig',
   IonChannelModelSimulationScanConfig: 'IonChannelModelSimulationScanConfig',

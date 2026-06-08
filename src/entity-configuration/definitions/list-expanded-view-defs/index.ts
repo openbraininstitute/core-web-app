@@ -7,6 +7,7 @@ import {
   regionCircuitSimulationExpandedViewConfig,
   singleNeuronCircuitSimulationExpandedViewConfig,
   smallMicrocircuitSimulationExpandedViewConfig,
+  wholeBrainCircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
 import { TaskViewConfig } from '@/features/task-runner/expanded-view';
 
@@ -30,4 +31,6 @@ export const listExpandedViewRegistry: ListExpandedViewRegistry = {
   [ExtendedEntitiesTypeDict.SkeletonizationCampaign]: skeletonizationCampaignExpandedViewConfig,
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: ionChannelSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.RegionCircuitSimulation]: regionCircuitSimulationExpandedViewConfig,
+  [ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation]:
+    wholeBrainCircuitSimulationExpandedViewConfig,
 };

@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { wholeBrainSimulationFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { simulateIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/simulate-ion-channel';
 import { simulateMemodelCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-memodel-circuit';
@@ -7,11 +8,13 @@ import { simulatePairedNeuronCircuitWorkflow } from '@/features/scan-config/work
 import { simulateRegionCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-region-circuit';
 import { simulateSingleNeuronCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-single-neuron-circuit';
 import { simulateSmallMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-small-microcircuit';
+import { simulateWholeBrainCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-whole-brain-circuit';
 
 import {
   circuitSimulationConfigureBinding,
   ionChannelSimulationConfigureBinding,
   memodelCircuitSimulationConfigureBinding,
+  wholeBrainBrian2SimulationConfigureBinding,
 } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
 
@@ -234,9 +237,21 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   },
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.Disabled,
+    ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.WholeBrain,
-    targetType: ExtendedEntitiesTypeDict.WholeBrain,
-    disabled: true,
+    targetType: ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
+    breadcrumb: {
+      root: 'Whole brain simulation',
+      steps: { selection: 'Select whole brain' },
+    },
+    scanConfig: {
+      definition: simulateWholeBrainCircuitWorkflow,
+      schemaName: SchemaNameDict.Brian2CircuitSimulationScanConfig,
+      configureBinding: wholeBrainBrian2SimulationConfigureBinding(),
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.WholeBrain }],
+    requiredFeatures: [wholeBrainSimulationFlag.key],
+    order: 10,
+    disabled: false,
   },
 ];

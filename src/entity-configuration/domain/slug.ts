@@ -36,6 +36,7 @@ const SimulationEntitySlug = {
   MicrocircuitSimulation: 'microcircuit-simulation',
   IonChannelModelSimulation: 'ion-channel-model-simulation',
   RegionCircuitSimulation: 'region-circuit-simulation',
+  WholeBrainCircuitSimulation: 'whole-brain-circuit-simulation',
 } as const;
 
 const ExtractionEntitySlug = {

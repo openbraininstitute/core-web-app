@@ -223,11 +223,16 @@ export default function SimulationsTab({
     let nSubmissions = 0;
     let lowFundsError = false;
 
+    const taskType =
+      model && 'target_simulator' in model && model.target_simulator === 'Brian2'
+        ? ObiOneTaskTypeDict.CircuitSimulationBrian2
+        : ObiOneTaskTypeDict.CircuitSimulation;
+
     for (const simId of simIds) {
       try {
         const res = await runTask({
           ctx: { virtualLabId, projectId },
-          task_type: ObiOneTaskTypeDict.CircuitSimulation,
+          task_type: taskType,
           config_id: simId,
         });
         log('info', res);
