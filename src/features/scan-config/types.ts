@@ -483,4 +483,5 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.EMCellMesh
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
-  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
+  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit
+  | typeof ExtendedEntitiesTypeDict.WholeBrain;
