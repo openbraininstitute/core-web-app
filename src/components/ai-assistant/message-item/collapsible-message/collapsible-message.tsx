@@ -92,12 +92,20 @@ export function CollapsibleMessage({
   // Indices currently sliding from the visible area into the collapsible during streaming.
   const [animatingIndices, setAnimatingIndices] = React.useState<Set<number>>(new Set());
   const previousStepStartRef = React.useRef(lastStepStartIndex);
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const isExpandedRef = React.useRef(isExpanded);
+  isExpandedRef.current = isExpanded;
 
   React.useEffect(() => {
     const previous = previousStepStartRef.current;
     previousStepStartRef.current = lastStepStartIndex;
 
     if (status !== 'streaming' || lastStepStartIndex <= previous) return undefined;
+
+    // When the reasoning box is expanded, items are already visible inside it,
+    // so skip the slide-out animation to avoid a jarring jump when they reappear
+    // in the collapsible content after the animation ends.
+    if (isExpandedRef.current) return undefined;
 
     const toAnimate = new Set<number>();
     for (let i = Math.max(0, previous); i < lastStepStartIndex; i++) {
@@ -165,8 +173,15 @@ export function CollapsibleMessage({
     }
   });
 
-  const [isExpanded, setIsExpanded] = React.useState(false);
-  const toggleExpanded = () => setIsExpanded(!isExpanded);
+  const toggleExpanded = () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    // If expanding while items are mid-animation, cancel the animation immediately
+    // so they appear in the collapsible content without a jump.
+    if (next && animatingIndices.size > 0) {
+      setAnimatingIndices(new Set());
+    }
+  };
   const showCollapsibleContainer = collapsedChildren.length > 0 || animatingIndices.size > 0;
 
   return (
