@@ -4,7 +4,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewDefForPairedNeuronCircuit: ViewDefinitionConfig = {
-  title: 'Paired neurons (beta)',
+  title: 'Paired neurons',
   name: EntitySlug.PairedNeuronsCircuit,
   curated: false,
   columns: [

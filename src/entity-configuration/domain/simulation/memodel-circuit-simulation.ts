@@ -128,7 +128,7 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Single neuron (beta)',
+  title: 'Single neuron',
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   discriminator: { key: 'entity__type', value: [ENTITY_TYPE] },
   type: EntityTypeDict.SimulationCampaign,

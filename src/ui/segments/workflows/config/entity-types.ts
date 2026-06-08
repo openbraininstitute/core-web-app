@@ -14,7 +14,7 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.IonChannelModel]: {
     value: ExtendedEntitiesTypeDict.IonChannelModel,
     group: EntityGroupDict.Subcellular,
-    label: 'Ion channel',
+    label: 'Ion channel (legacy)',
   },
   [ExtendedEntitiesTypeDict.IonChannelModelingCampaign]: {
     value: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
@@ -24,7 +24,7 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: {
     value: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
     group: EntityGroupDict.Subcellular,
-    label: 'Ion channel simulation',
+    label: 'Ion channel simulation (legacy)',
   },
   [ExtendedEntitiesTypeDict.Metabolism]: {
     value: ExtendedEntitiesTypeDict.Metabolism,
@@ -39,64 +39,64 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.Memodel]: {
     value: ExtendedEntitiesTypeDict.Memodel,
     group: EntityGroupDict.Cellular,
-    label: 'Single neuron',
-    title: 'Single neuron',
+    label: 'Single neuron (legacy)',
+    title: 'Single neuron (legacy)',
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSimulation]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
     group: EntityGroupDict.Cellular,
-    label: 'Single neuron simulation',
+    label: 'Single neuron simulation (legacy)',
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     group: EntityGroupDict.Cellular,
-    label: 'Synaptome',
-    title: 'Synaptome',
+    label: 'Synaptome (legacy)',
+    title: 'Synaptome (legacy)',
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     group: EntityGroupDict.Cellular,
-    label: 'Synaptome simulation',
+    label: 'Synaptome simulation (legacy)',
   },
   [ExtendedEntitiesTypeDict.MemodelCircuit]: {
     value: ExtendedEntitiesTypeDict.MemodelCircuit,
     group: EntityGroupDict.Cellular,
-    label: 'Single neuron (beta)',
+    label: 'Single neuron',
   },
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: {
     value: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
     group: EntityGroupDict.Cellular,
-    label: 'Single neuron simulation (beta)',
+    label: 'Single neuron simulation',
   },
   [ExtendedEntitiesTypeDict.MEModelWithSynapses]: {
     value: ExtendedEntitiesTypeDict.MEModelWithSynapses,
     group: EntityGroupDict.Cellular,
-    label: 'Synaptome (beta)',
+    label: 'Synaptome',
   },
   [ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
     group: EntityGroupDict.Cellular,
-    label: 'Synaptome simulation (beta)',
+    label: 'Synaptome simulation',
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
     value: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     group: EntityGroupDict.Circuit,
-    label: 'Paired neurons (beta)',
+    label: 'Paired neurons',
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]: {
     value: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
     group: EntityGroupDict.Circuit,
-    label: 'Paired neurons simulation (beta)',
+    label: 'Paired neurons simulation',
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
     value: ExtendedEntitiesTypeDict.SmallMicrocircuit,
     group: EntityGroupDict.Circuit,
-    label: 'Small microcircuit (beta)',
+    label: 'Small microcircuit',
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: {
     value: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
     group: EntityGroupDict.Circuit,
-    label: 'Small microcircuit simulation (beta)',
+    label: 'Small microcircuit simulation',
   },
   [ExtendedEntitiesTypeDict.Microcircuit]: {
     value: ExtendedEntitiesTypeDict.Microcircuit,
@@ -106,7 +106,7 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.MicrocircuitSimulation]: {
     value: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
     group: EntityGroupDict.Circuit,
-    label: 'Microcircuit simulation',
+    label: 'Microcircuit simulation (legacy)',
   },
   [ExtendedEntitiesTypeDict.NGVCircuit]: {
     value: ExtendedEntitiesTypeDict.NGVCircuit,
@@ -116,18 +116,18 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.Circuit]: {
     value: ExtendedEntitiesTypeDict.Circuit,
     group: EntityGroupDict.Circuit,
-    label: 'Circuit (beta)',
+    label: 'Circuit',
   },
   [ExtendedEntitiesTypeDict.CircuitExtractionCampaign]: {
     value: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
     group: EntityGroupDict.Circuit,
-    label: 'Circuit extraction campaign (beta)',
+    label: 'Circuit extraction campaign',
   },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {
     value: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     group: EntityGroupDict.Circuit,
-    label: 'Electron Microscopy Circuit',
-    title: 'Electron Microscopy Circuit',
+    label: 'Electron Microscopy Circuit (legacy)',
+    title: 'Electron Microscopy Circuit (legacy)',
     description: 'Build a circuit campaign from an electron-microscopy cell morphology.',
   },
   [ExtendedEntitiesTypeDict.EMCellMesh]: {

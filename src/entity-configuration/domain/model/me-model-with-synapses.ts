@@ -14,7 +14,7 @@ export const circuitScaleFilter = {
 
 export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Synaptome (beta)',
+  title: 'Synaptome',
   extendedType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,

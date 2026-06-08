@@ -4,7 +4,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewDefForSmallMicrocircuit: ViewDefinitionConfig = {
-  title: 'Small microcircuit (beta)',
+  title: 'Small microcircuit',
   name: EntitySlug.SmallMicrocircuit,
   curated: false,
   columns: [

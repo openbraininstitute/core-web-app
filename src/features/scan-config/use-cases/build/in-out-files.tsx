@@ -179,13 +179,7 @@ export function InOutFiles({
         return (
           <TaskIOFileItem
             id={file.id}
-            label={
-              isBuiltCircuit ? (
-                <small className="uppercase">
-                  Synaptome <span className="lowercase">(beta)</span>
-                </small>
-              ) : null
-            }
+            label={isBuiltCircuit ? <small className="uppercase">Synaptome</small> : null}
             selected={file.id === selectedFile?.id}
             key={file.id}
             file={file}

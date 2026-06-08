@@ -25,7 +25,7 @@ export const apiQueryExpand = {
 
 export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome> = {
   group: EntityTypeGroup.Models,
-  title: 'Synaptome',
+  title: 'Synaptome (legacy)',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   type: EntityTypeDict.SingleNeuronSynaptome,
   slug: EntitySlug.SingleNeuronSynaptome,

@@ -4,7 +4,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
-  title: 'Synaptome (beta)',
+  title: 'Synaptome',
   name: EntitySlug.MEModelWithSynapses,
   curated: false,
   columns: [

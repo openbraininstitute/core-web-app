@@ -82,7 +82,7 @@ export const IonChannelModelSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Ion channel (beta)',
+  title: 'Ion channel',
   extendedType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.IonChannelModelSimulation,

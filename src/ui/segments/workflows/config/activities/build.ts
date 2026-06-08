@@ -19,34 +19,10 @@ import type { IWorkflowDescriptor } from '../types';
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.DirectConfigure,
-    sourceType: ExtendedEntitiesTypeDict.Memodel,
-    targetType: ExtendedEntitiesTypeDict.Memodel,
-    order: 1,
-    disabled: false,
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.DirectConfigure,
-    sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    order: 2,
-    disabled: false,
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.DirectConfigure,
-    sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
-    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
-    order: 3,
-    disabled: false,
-  },
-  {
-    ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
     targetType: ExtendedEntitiesTypeDict.MemodelCircuit,
-    order: 4,
+    order: 1,
     disabled: true,
   },
   {
@@ -55,9 +31,9 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     hasMultipleSources: true,
-    label: 'Electron microscopy circuit (beta)',
+    label: 'Electron microscopy circuit',
     breadcrumb: {
-      root: 'Electron microscopy circuit (beta) build',
+      root: 'Electron microscopy circuit build',
       steps: {
         prerequisite: 'Select electron microscopy dense reconstruction dataset',
         selection: 'Select entities',
@@ -70,7 +46,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     requireFilters: false,
     requireSpecies: false,
-    order: 5,
+    order: 2,
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -122,7 +98,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-    order: 6,
+    order: 3,
     disabled: true,
   },
   {
@@ -130,7 +106,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
-    order: 7,
+    order: 4,
     disabled: true,
   },
   {
@@ -138,8 +114,32 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
     targetType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
-    order: 8,
+    order: 5,
     disabled: true,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.DirectConfigure,
+    sourceType: ExtendedEntitiesTypeDict.Memodel,
+    targetType: ExtendedEntitiesTypeDict.Memodel,
+    order: 6,
+    disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.DirectConfigure,
+    sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+    targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+    order: 7,
+    disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.DirectConfigure,
+    sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
+    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    order: 8,
+    disabled: false,
   },
   {
     ...WorkflowBrowseDefaults,
