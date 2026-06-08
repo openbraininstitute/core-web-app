@@ -145,22 +145,24 @@ export function MemberAvatarCasual({
         )}
       >
         {pending ? (
-          <div className={cn('flex items-center justify-center gap-2', cls?.pending)}>
+          <div className={cn('flex w-full min-w-0 items-center gap-2', cls?.pending)}>
             <PendingInvite
               width={48}
               height={48}
-              className="avatar-icon"
+              className="avatar-icon shrink-0"
               envelop={pendingIcon?.envelop}
               halfCircle={pendingIcon?.halfCircle}
             />
             <div
               className={cn(
-                'text-primary-8 text-xl font-bold',
+                'text-primary-8 min-w-0 flex-1 text-xl font-bold',
                 !pending && 'first-letter:uppercase',
                 cls?.text
               )}
             >
-              <div className="avatar-email"> {email} </div>
+              <div className="avatar-email truncate" title={email}>
+                {email}
+              </div>
               <div className="avatar-role text-sm capitalize">{MemberRoleMap[role]}</div>
             </div>
           </div>
