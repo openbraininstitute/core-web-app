@@ -1,4 +1,3 @@
-import { InboxOutlined } from '@ant-design/icons';
 import { compact } from 'es-toolkit/array';
 import { findKey } from 'es-toolkit/object';
 import Link from 'next/link';
@@ -19,6 +18,8 @@ import {
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+
+import { QuickAccessEmptyState } from './quick-access-empty-state';
 
 import type { Metadata } from 'next';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -97,34 +98,12 @@ export default async function Page({
     const capitalizedGroup = findKey(QuickAccessGroupDict, (p) => p === group);
 
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <div className="flex items-center justify-center size-20 rounded-full bg-primary-8 mb-6">
-          <InboxOutlined className="text-white! text-3xl" />
-        </div>
-        <h2 className="text-primary-8 text-xl font-semibold mb-2">
-          No {capitalizedGroup?.toLowerCase() ?? group} examples yet
-        </h2>
-        <p className="text-neutral-4 text-sm max-w-md leading-relaxed">
-          Curated {group} examples for quick access will appear here once they become available.
-          Check back soon or explore other categories.
-        </p>
-        {group === QuickAccessGroupDict.Workflows && (
-          <Button
-            asChild
-            rounded
-            size="responsive"
-            variant="outline"
-            className="mt-6 px-4 py-4 bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md"
-          >
-            <Link
-              href={`${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/workflows`}
-              className="text-primary-8 hover:text-primary-9 text-base!"
-            >
-              View all Workflows
-            </Link>
-          </Button>
-        )}
-      </div>
+      <QuickAccessEmptyState
+        group={group}
+        capitalizedGroup={capitalizedGroup}
+        workflowsHref={`${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/workflows`}
+        showWorkflowsLink={group === QuickAccessGroupDict.Workflows}
+      />
     );
   }
 

@@ -1,3 +1,5 @@
+'use client';
+
 import { BuildOutlined, SearchOutlined, SettingFilled } from '@ant-design/icons';
 
 const CONTENT_SECTIONS = [

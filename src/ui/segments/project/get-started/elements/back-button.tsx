@@ -1,3 +1,5 @@
+'use client';
+
 import { RiArrowLeftLongLine, RiArrowRightSLine } from '@remixicon/react';
 import Link from 'next/link';
 import { Fragment } from 'react/jsx-runtime';
