@@ -153,7 +153,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
     >
       <div
         className={cn(
-          'secondary-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1'
+          'secondary-scrollbar flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1'
         )}
       >
         {isLoading ? (

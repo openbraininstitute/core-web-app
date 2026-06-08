@@ -1,8 +1,9 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
+import { RiArrowLeftLongLine, RiArrowLeftRightLine, RiShoppingCart2Line } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
@@ -10,7 +11,6 @@ import { StripePaymentFlow } from '@/features/payments/standalone';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
-import { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import {
   type ManageCreditsStepHandle,
   TransferCredits,
@@ -24,10 +24,91 @@ import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promo
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
+export const CreditsAction = {
+  Transfer: {
+    key: 'transfer',
+    label: 'Transfer credits between your virtual lab and projects.',
+  },
+  Buy: {
+    key: 'buy',
+    label: 'Buy credits for your virtual lab and projects.',
+  },
+  Selection: {
+    key: 'selection',
+    label: 'Buy or transfer credits for your virtual lab and projects.',
+  },
+} as const;
+
+export type TCreditsAction = (typeof CreditsAction)[keyof typeof CreditsAction]['key'];
+export type TCreditsFlowAction = Exclude<TCreditsAction, typeof CreditsAction.Selection.key>;
+
+const CREDITS_ACTION_LABEL: Record<TCreditsAction, string> = {
+  transfer: CreditsAction.Transfer.label,
+  buy: CreditsAction.Buy.label,
+  selection: CreditsAction.Selection.label,
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
+  /**
+   * which action the modal performs. use `'selection'` to let the user choose
+   * between buy and transfer (e.g. low-credits flow). default to `'transfer'`.
+   */
+  action?: TCreditsAction;
 };
+
+type CreditsActionOptionConfig = {
+  action: TCreditsFlowAction;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+};
+
+const CreditsActionOptions: CreditsActionOptionConfig[] = [
+  {
+    action: CreditsAction.Buy.key,
+    icon: <RiShoppingCart2Line className="size-8 text-primary-9" />,
+    title: 'Buy credits',
+    description: 'Purchase credits with your card and start using them immediately',
+  },
+  {
+    action: CreditsAction.Transfer.key,
+    icon: <RiArrowLeftRightLine className="size-8 text-primary-9" />,
+    title: 'Transfer credits',
+    description: 'Move credits between your virtual lab and projects',
+  },
+];
+
+function CreditsActionSelection({ onSelect }: { onSelect: (action: TCreditsFlowAction) => void }) {
+  return (
+    <div
+      id="credits-action-selection"
+      data-testid="credits-action-selection"
+      className="w-full px-8 select-none"
+    >
+      <div className="mx-auto grid w-full max-w-lg gap-4 md:grid-cols-2">
+        {CreditsActionOptions.map(({ action, icon, title, description }) => (
+          <button
+            key={action}
+            type="button"
+            onClick={() => onSelect(action)}
+            className={cn(
+              'group flex w-full flex-col items-center rounded-2xl border border-gray-100 bg-white p-8 text-center',
+              'transition-colors duration-200 hover:border-gray-200 hover:bg-gray-50'
+            )}
+          >
+            <div className="mb-4 inline-flex rounded-xl border border-gray-100 bg-gray-50 p-3 transition-colors group-hover:border-gray-200 group-hover:bg-gray-100">
+              {icon}
+            </div>
+            <h2 className="mb-2 text-lg font-semibold text-primary-9">{title}</h2>
+            <p className="text-sm leading-relaxed text-gray-500">{description}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function BuyCreditsTab({
   virtualLabId,
@@ -111,10 +192,14 @@ function BuyCreditsTab({
   );
 }
 
-export function CreditsTransferModal({ open, onClose }: Props) {
+export function CreditsTransferModal({
+  open,
+  onClose,
+  action = CreditsAction.Transfer.key,
+}: Props) {
   const creditsRef = useRef<ManageCreditsStepHandle>(null);
-  const [activeTab, setActiveTab] = useState('transfer');
   const [buyMode, setBuyMode] = useState<TPurchaseModeDictionary>(PurchaseModeDictionary.Selection);
+  const [selectedAction, setSelectedAction] = useState<TCreditsFlowAction | null>(null);
 
   const { virtualLabId, projectId } = useWorkspace();
   const { data: project } = useQuery({
@@ -122,28 +207,28 @@ export function CreditsTransferModal({ open, onClose }: Props) {
     queryFn: () => getProject({ virtualLabId, projectId }),
   });
 
-  // Reset buy mode when switching tabs or closing modal
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    if (tab !== 'buy') {
-      setBuyMode(PurchaseModeDictionary.Selection);
-    }
-  };
+  const isSelectionMode = action === CreditsAction.Selection.key;
+  const activeAction = isSelectionMode ? selectedAction : action;
 
-  useEffect(() => {
-    if (activeTab !== 'transfer') {
-      return;
-    }
-  }, [activeTab]);
-
-  const handleClose = () => {
-    setBuyMode(PurchaseModeDictionary.Selection);
-  };
+  const resetBuyMode = () => setBuyMode(PurchaseModeDictionary.Selection);
 
   const onCloseModal = () => {
-    setBuyMode(PurchaseModeDictionary.Selection);
+    resetBuyMode();
+    setSelectedAction(null);
     onClose();
   };
+
+  const handleBack = () => {
+    if (isSelectionMode) {
+      resetBuyMode();
+      setSelectedAction(null);
+      return;
+    }
+
+    onCloseModal();
+  };
+
+  const titleAction = activeAction ?? CreditsAction.Selection.key;
 
   return (
     <Modal
@@ -152,53 +237,37 @@ export function CreditsTransferModal({ open, onClose }: Props) {
       closable={false}
       open={open}
       title={
-        <div className="flex w-full flex-col gap-4 select-none">
-          <div className="flex w-full items-center justify-between gap-4">
-            <div className="flex flex-col items-start justify-between">
-              <h2 className="text-2xl font-semibold text-primary-9">{project?.name}</h2>
-              <p className="text-primary-9 text-sm font-light">
-                Buy and transfer credits between your virtual lab and projects.
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-2">
+        <div className="flex w-full items-center justify-between gap-4 select-none">
+          <div className="flex items-center justify-center gap-2">
+            {isSelectionMode && activeAction !== null && (
               <Button
                 rounded
                 size="md"
                 variant="icon"
-                onClick={onCloseModal}
-                className="bg-white hover:bg-gray-100 border-gray-100"
+                onClick={handleBack}
+                className="text-primary-9 border-gray-100 mt-2.5 bg-white hover:bg-gray-100"
               >
-                <CloseOutlined className="text-lg text-primary-9!" />
+                <RiArrowLeftLongLine className="size-4" />
               </Button>
+            )}
+            <div className="flex flex-col items-start justify-between">
+              <h2 className="text-2xl font-semibold text-primary-9">{project?.name}</h2>
+              <p className="text-primary-9 text-sm font-light">
+                {CREDITS_ACTION_LABEL[titleAction]}
+              </p>
             </div>
           </div>
-          <PillTabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-            activationMode="manual"
-          >
-            <PillTabsList className="bg-gray-100 border border-gray-100 rounded-full grid h-12 w-full grid-cols-2 p-0 shadow-sm">
-              <PillTabsTrigger
-                value="transfer"
-                className={cn(
-                  'hover:bg-gray-200 bg-white hover:text-primary-8 data-[state=active]:text-white h-12 px-6 py-5',
-                  'text-lg text-primary-9 select-none data-[state=active]:bg-primary-9 data-[state=active]:font-bold'
-                )}
-              >
-                Transfer Credits
-              </PillTabsTrigger>
-              <PillTabsTrigger
-                value="buy"
-                className={cn(
-                  'hover:bg-gray-200 bg-white hover:text-primary-8 data-[state=active]:text-white h-12 px-6 py-5',
-                  'text-lg text-primary-9 select-none data-[state=active]:bg-primary-9 data-[state=active]:font-bold'
-                )}
-              >
-                Buy Credits
-              </PillTabsTrigger>
-            </PillTabsList>
-          </PillTabs>
+          <div className="flex items-center gap-2">
+            <Button
+              rounded
+              size="md"
+              variant="icon"
+              onClick={onCloseModal}
+              className="bg-white hover:bg-gray-100 border-gray-100"
+            >
+              <CloseOutlined className="text-lg text-primary-9!" />
+            </Button>
+          </div>
         </div>
       }
       size="auto"
@@ -209,36 +278,38 @@ export function CreditsTransferModal({ open, onClose }: Props) {
       width={700}
       className={cn(
         'bg-white! fixed! top-1/2! left-1/2! z-1000! -translate-x-1/2! -translate-y-1/2! transform!',
-        'h-190 rounded-2xl'
+        'flex h-190 flex-col rounded-2xl'
       )}
-      headerClassName={cn('[&>div]:w-full')}
+      headerClassName={cn('[&>div]:w-full shrink-0')}
       overlayClassName="bg-primary-8/10 backdrop-blur-xs"
-      bodyClassName="pt-0 max-h-[calc(100%-150px)] h-full secondary-scrollbar px-0"
+      bodyClassName={cn(
+        'min-h-0 flex-1 overflow-auto px-0 pt-0 pb-0 secondary-scrollbar rounded-b-2xl!',
+        isSelectionMode && activeAction === null && 'flex items-center justify-center'
+      )}
     >
-      <PillTabs
-        value={activeTab}
-        onValueChange={handleTabChange}
-        activationMode="manual"
-        className="h-full"
-      >
-        <PillTabsContent value="transfer" className="mt-0 h-full px-5 bg-white">
+      {isSelectionMode && activeAction === null ? (
+        <CreditsActionSelection onSelect={setSelectedAction} />
+      ) : activeAction === CreditsAction.Transfer.key ? (
+        <div className="h-full bg-white px-5 rounded-b-2xl!">
           <TransferCredits
             virtualLabId={virtualLabId}
-            onBack={onCloseModal}
+            onBack={handleBack}
             shouldHaveBack={false}
             shouldShowSwap={false}
             ref={creditsRef}
             classnames={{
-              root: 'bg-white px-0 pt-1 h-max',
-              content: 'bg-white px-0 rounded-2xl',
-              body: 'border-none bg-white p-0 px-2',
+              root: 'bg-white px-0 pt-1 h-full',
+              content: 'bg-white px-0 rounded-2xl h-full',
+              body: 'border-none bg-white p-0 px-2 h-[calc(100%-30px)]',
+              footer: 'mt-auto',
             }}
           />
-        </PillTabsContent>
-        <PillTabsContent value="buy" className="mt-0 h-full px-8 bg-white">
+        </div>
+      ) : (
+        <div className="h-full bg-white px-8 rounded-b-2xl!">
           <BuyCreditsTab
             virtualLabId={virtualLabId}
-            onClose={handleClose}
+            onClose={resetBuyMode}
             mode={buyMode}
             onModeChange={setBuyMode}
             classnames={{
@@ -257,8 +328,8 @@ export function CreditsTransferModal({ open, onClose }: Props) {
               },
             }}
           />
-        </PillTabsContent>
-      </PillTabs>
+        </div>
+      )}
     </Modal>
   );
 }

@@ -1,6 +1,8 @@
-import { SwapOutlined, WarningOutlined } from '@ant-design/icons';
+import { WarningOutlined } from '@ant-design/icons';
+import { RiArrowLeftRightLine, RiShoppingCart2Line } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 
+import { PricingButton } from '@/features/credits';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -12,9 +14,10 @@ import { cn } from '@/utils/css-class';
 
 type Props = {
   onTransferCredits?: () => void;
+  onBuyCredits?: () => void;
 };
 
-export function BalanceCard({ onTransferCredits }: Props) {
+export function BalanceCard({ onTransferCredits, onBuyCredits }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const { data } = useQuery({
@@ -42,34 +45,50 @@ export function BalanceCard({ onTransferCredits }: Props) {
           </div>
         </div>
 
-        <Tooltip open={isAdmin ? false : undefined}>
-          <TooltipTrigger asChild>
-            <span className={cn({ 'cursor-not-allowed': !isAdmin })}>
-              <Button
-                rounded
-                borderless
-                className="text-primary-9 hover:bg-primary-8 not-disabled:shadow-2xl hover:border-white hover:text-white disabled:text-gray-500"
-                size="md"
-                variant="outline"
-                onClick={onTransferCredits}
-                disabled={!isAdmin}
-              >
-                Transfer credits
-                <SwapOutlined />
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent
-            avoidCollisions
-            side="left"
-            sideOffset={1}
-            collisionPadding={{ bottom: 20 }}
-            className="text-primary-8 max-w-[200px] bg-white text-base text-balance shadow-lg"
-            arrowClassName="bg-white"
+        <div className="flex items-center gap-3">
+          <PricingButton />
+
+          <Button
+            rounded
+            borderless
+            className="text-primary-9 hover:bg-primary-8 not-disabled:shadow-2xl hover:border-white hover:text-white"
+            size="md"
+            variant="outline"
+            onClick={onBuyCredits}
           >
-            <WarningOutlined /> Only available to Virtual Lab admins
-          </TooltipContent>
-        </Tooltip>
+            Buy credits
+            <RiShoppingCart2Line className="size-4" />
+          </Button>
+
+          <Tooltip open={isAdmin ? false : undefined}>
+            <TooltipTrigger asChild>
+              <span className={cn({ 'cursor-not-allowed': !isAdmin })}>
+                <Button
+                  rounded
+                  borderless
+                  className="text-primary-9 hover:bg-primary-8 not-disabled:shadow-2xl hover:border-white hover:text-white disabled:text-gray-500"
+                  size="md"
+                  variant="outline"
+                  onClick={onTransferCredits}
+                  disabled={!isAdmin}
+                >
+                  Transfer credits
+                  <RiArrowLeftRightLine className="size-4" />
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              avoidCollisions
+              side="left"
+              sideOffset={1}
+              collisionPadding={{ bottom: 20 }}
+              className="text-primary-8 max-w-[200px] bg-white text-base text-balance shadow-lg"
+              arrowClassName="bg-white"
+            >
+              <WarningOutlined /> Only available to Virtual Lab admins
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </CardContent>
     </Card>
   );

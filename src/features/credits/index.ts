@@ -5,3 +5,4 @@ export {
   parseCreditsAmount,
 } from './credits-amount-input';
 export { useCreditConversionQuery } from './hooks';
+export { PricingButton } from './pricing-button';

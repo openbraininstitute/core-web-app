@@ -474,6 +474,10 @@ export type CreditConversionResponse = {
   currency: string;
   amount: number;
   rate: string;
+  /** discount applied to this conversion, as a percentage (e.g. 10 = 10%). */
+  discount_pct?: number;
+  /** base rate, present when a discount was applied. */
+  base_rate?: string | null;
 };
 
 type ProjectStats = {
