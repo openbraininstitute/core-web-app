@@ -44,7 +44,7 @@ export function WorkflowBrowsePrerequisite({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 justify-end bg-background px-4 py-3">
+      <div className="flex shrink-0 justify-end bg-background pt-3">
         <Button
           rounded
           variant="default"

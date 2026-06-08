@@ -13,6 +13,7 @@ import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/dis
 import {
   buildWorkflowStartingPageUrl,
   inferWorkflowStartingPageRemoteSchemaBased,
+  WORKFLOW_HOME_QUERY_KEYS,
 } from '@/ui/segments/workflows/config';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
@@ -43,8 +44,8 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     },
     {
       urlKeys: {
-        activity: 'activity',
-        entityType: 'type',
+        activity: WORKFLOW_HOME_QUERY_KEYS.activity,
+        entityType: WORKFLOW_HOME_QUERY_KEYS.entityType,
       },
     }
   );

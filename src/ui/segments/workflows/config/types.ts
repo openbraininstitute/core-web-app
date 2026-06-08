@@ -85,6 +85,17 @@ export const WorkflowBreadcrumbPhaseDict = {
 export type TWorkflowBreadcrumbPhase =
   (typeof WorkflowBreadcrumbPhaseDict)[keyof typeof WorkflowBreadcrumbPhaseDict];
 
+/**
+ * the phases in the order they happen (first → last).
+ * the one list that builds the breadcrumb trail, show every phase from the start up
+ * to the one the app is on right now
+ * if we want to add a new phase, just add it here in the right spot and the trail grows on its own
+ */
+export const WORKFLOW_BREADCRUMB_PHASE_ORDER = [
+  WorkflowBreadcrumbPhaseDict.Prerequisite,
+  WorkflowBreadcrumbPhaseDict.Selection,
+] as const;
+
 /** inputs handed to a breadcrumb resolver function so a crumb can be computed at render time */
 export type TWorkflowBreadcrumbContext = {
   workflow: IWorkflowDescriptor;
@@ -107,6 +118,14 @@ export type TWorkflowBreadcrumb = {
   root: TWorkflowBreadcrumbNode;
   /** crumb rendered per browse phase; only the phases a workflow reaches need an entry */
   steps?: Partial<Record<TWorkflowBreadcrumbPhase, TWorkflowBreadcrumbNode>>;
+};
+
+/** one crumb in the `/new/{type}` trail */
+export type TWorkflowBreadcrumbCrumb = {
+  phase: TWorkflowBreadcrumbPhase;
+  node: ReactNode;
+  /** true = the screen you're on now (just text). the older crumbs you can click to go back. */
+  isCurrent: boolean;
 };
 
 export type IWorkflowDescriptor = {

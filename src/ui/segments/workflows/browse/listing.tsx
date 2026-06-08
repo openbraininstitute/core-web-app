@@ -14,6 +14,7 @@ import {
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useLatest } from '@/ui/hooks/use-latest';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { WorkflowBrowsePrerequisite } from '@/ui/segments/workflows/browse/prerequisite';
@@ -21,6 +22,7 @@ import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-w
 import { useWorkflowBreadcrumbState } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
 import {
   buildScanConfigConfigureHref,
+  buildWorkflowHomeHref,
   getEntityMeta,
   getPrimaryConfigurationInput,
   getWorkflowInitialStage,
@@ -128,7 +130,7 @@ function getBrowseClassNames(isMultiEntityBrowse: boolean) {
     miniView: isMultiEntityBrowse
       ? 'max-h-[calc(100vh-11rem)] [grid-area:mini-view] row-span-2 self-stretch'
       : 'max-h-[calc(100vh-11rem)] [grid-area:mini-view]',
-    footer: 'flex shrink-0 justify-end bg-background px-4 py-3 [grid-area:footer]',
+    footer: 'flex shrink-0 justify-end bg-background pt-3 pb-2 [grid-area:footer]',
   };
 }
 
@@ -291,6 +293,19 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     });
   }, [activePrerequisiteKey, configurationInputs, resolvePrerequisiteKey]);
 
+  const goBack = () => {
+    if (activePrerequisiteConfig?.required && confirmedPrerequisite) {
+      handlePrerequisiteChange();
+      return;
+    }
+    navigate(
+      buildWorkflowHomeHref({ activity, targetType, workspace: { virtualLabId, projectId } })
+    );
+  };
+
+  const goBackRef = useLatest(goBack);
+  const handleBack = useCallback(() => goBackRef.current(), [goBackRef]);
+
   const activeSelectedRows = activeEntityType ? (selectionsByType[activeEntityType] ?? []) : [];
 
   const handleRowsSelected = useCallback(
@@ -361,8 +376,15 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
           ? WorkflowBreadcrumbPhaseDict.Prerequisite
           : WorkflowBreadcrumbPhaseDict.Selection,
       activeEntityType,
+      onBack: handleBack,
     });
-  }, [showPrerequisitePhase, activePrerequisiteConfig, activeEntityType, setBreadcrumbState]);
+  }, [
+    showPrerequisitePhase,
+    activePrerequisiteConfig,
+    activeEntityType,
+    setBreadcrumbState,
+    handleBack,
+  ]);
 
   // warm the lazy data-table chunk while the user is on the prerequisite step, so confirming
   // resolves near-instantly instead of waiting on a first-time chunk download

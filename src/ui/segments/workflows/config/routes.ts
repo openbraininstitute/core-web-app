@@ -37,6 +37,26 @@ function workflowWorkspaceBasePath(workspace: WorkspaceContext) {
   return `${config.ROOT_ROUTE}/${workspace.virtualLabId}/${workspace.projectId}/workflows`;
 }
 
+export const WORKFLOW_HOME_QUERY_KEYS = {
+  activity: 'activity',
+  entityType: 'type',
+} as const;
+
+export function buildWorkflowHomeHref({
+  activity,
+  targetType,
+  workspace,
+}: {
+  activity?: TActivityValue;
+  targetType?: TExtendedEntitiesTypeDict;
+  workspace: WorkspaceContext;
+}): string {
+  return appendQuery(workflowWorkspaceBasePath(workspace), {
+    [WORKFLOW_HOME_QUERY_KEYS.activity]: activity,
+    [WORKFLOW_HOME_QUERY_KEYS.entityType]: targetType,
+  });
+}
+
 function appendQuery(pathname: string, query: Record<string, string | undefined>) {
   const params = new URLSearchParams();
 
