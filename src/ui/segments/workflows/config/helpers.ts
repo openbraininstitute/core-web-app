@@ -23,11 +23,14 @@ import {
   type TGroupedWorkflows,
   type TResolvedWorkflowInitialStage,
   type TWorkflowBreadcrumbContext,
+  type TWorkflowBreadcrumbCrumb,
   type TWorkflowBreadcrumbNode,
   type TWorkflowBreadcrumbPhase,
   type TWorkflowInitialStage,
   type TWorkflowListContext,
   type TWorkflowListSort,
+  WORKFLOW_BREADCRUMB_PHASE_ORDER,
+  WorkflowBreadcrumbPhaseDict,
   WorkflowInitialStageDict,
   WorkflowInitialStagePolicyDict,
   WorkflowListContextDict,
@@ -345,27 +348,66 @@ function renderBreadcrumbNode(
 }
 
 /**
- * resolves the `/new/{type}` breadcrumb directly from the workflow's definition
- * {@link IWorkflowDescriptor.breadcrumb}
+ * builds the `/new/{type}` breadcrumb from the workflow's own setup
+ * ({@link IWorkflowDescriptor.breadcrumb})
+ *
+ * it gives you the FULL trail, every screen you passed, in order, up to the one the app is on
+ * so a flow with a pre-step reads `root → Select dataset → Select entities` instead of forgetting the
+ * dataset once you picked it, it only shows the steps a workflow actually lists, so flows with no
+ * pre-step just stay two crumbs
  */
 export function resolveWorkflowBreadcrumb(opts: {
   workflow: IWorkflowDescriptor;
   activity: TActivityValue;
   phase: TWorkflowBreadcrumbPhase;
   activeEntityType: TExtendedEntitiesTypeDict | null;
-}): { root: ReactNode; current: ReactNode } {
+}): { root: ReactNode; trail: TWorkflowBreadcrumbCrumb[] } {
   const { workflow, activity, phase, activeEntityType } = opts;
   const breadcrumb = workflow.breadcrumb;
 
   if (!breadcrumb) {
-    return { root: null, current: null };
+    return { root: null, trail: [] };
   }
 
-  const context: TWorkflowBreadcrumbContext = { workflow, activity, phase, activeEntityType };
-  const step = breadcrumb.steps?.[phase];
+  // does the type you're on need a pre-step first? we only keep the done pre-step crumb for types
+  // that really have one, some workflows mix types where only a few need it
+  const activeTypeHasPrerequisite = activeEntityType
+    ? Boolean(workflow.browseConfig?.[activeEntityType]?.prerequisite?.required)
+    : false;
 
-  return {
-    root: renderBreadcrumbNode(breadcrumb.root, context),
-    current: step !== undefined ? renderBreadcrumbNode(step, context) : null,
-  };
+  const context: TWorkflowBreadcrumbContext = { workflow, activity, phase, activeEntityType };
+  const currentPhaseIndex = WORKFLOW_BREADCRUMB_PHASE_ORDER.indexOf(phase);
+
+  const trail = WORKFLOW_BREADCRUMB_PHASE_ORDER.flatMap<TWorkflowBreadcrumbCrumb>(
+    (stepPhase, index) => {
+      // stop at the screen you're on — don't show screens that come later
+      if (index > currentPhaseIndex) {
+        return [];
+      }
+
+      const node = breadcrumb.steps?.[stepPhase];
+      if (node === undefined) {
+        return [];
+      }
+
+      // drop the done pre-step crumb if the type you're on doesn't even use a pre-step
+      if (
+        stepPhase === WorkflowBreadcrumbPhaseDict.Prerequisite &&
+        phase !== WorkflowBreadcrumbPhaseDict.Prerequisite &&
+        !activeTypeHasPrerequisite
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          phase: stepPhase,
+          node: renderBreadcrumbNode(node, context),
+          isCurrent: stepPhase === phase,
+        },
+      ];
+    }
+  );
+
+  return { root: renderBreadcrumbNode(breadcrumb.root, context), trail };
 }

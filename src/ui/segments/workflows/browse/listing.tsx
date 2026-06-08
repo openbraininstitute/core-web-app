@@ -130,7 +130,7 @@ function getBrowseClassNames(isMultiEntityBrowse: boolean) {
     miniView: isMultiEntityBrowse
       ? 'max-h-[calc(100vh-11rem)] [grid-area:mini-view] row-span-2 self-stretch'
       : 'max-h-[calc(100vh-11rem)] [grid-area:mini-view]',
-    footer: 'flex shrink-0 justify-end bg-background px-4 pt-3 pb-2 [grid-area:footer]',
+    footer: 'flex shrink-0 justify-end bg-background pt-3 pb-2 [grid-area:footer]',
   };
 }
 
