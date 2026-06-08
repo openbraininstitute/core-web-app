@@ -6,6 +6,7 @@ import { simulatePairedNeuronCircuitWorkflow } from '@/features/scan-config/work
 import { simulateRegionCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-region-circuit';
 import { simulateSingleNeuronCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-single-neuron-circuit';
 import { simulateSmallMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-small-microcircuit';
+import { simulateWholeBrainCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-whole-brain-circuit';
 
 import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -19,6 +20,7 @@ export const SIMULATE_CIRCUIT_SOURCE_TYPES = [
   ExtendedEntitiesTypeDict.Microcircuit,
   ExtendedEntitiesTypeDict.BrainRegion,
   ExtendedEntitiesTypeDict.MEModelWithSynapses,
+  ExtendedEntitiesTypeDict.WholeBrain,
 ] as const;
 
 export type TSimulateCircuitSourceType = (typeof SIMULATE_CIRCUIT_SOURCE_TYPES)[number];
@@ -30,6 +32,7 @@ export const simulateCircuitWorkflowBySourceType = {
   [ExtendedEntitiesTypeDict.Microcircuit]: simulateMicrocircuitWorkflow,
   [ExtendedEntitiesTypeDict.BrainRegion]: simulateRegionCircuitWorkflow,
   [ExtendedEntitiesTypeDict.MEModelWithSynapses]: simulateMEModelWithSynapsesCircuitWorkflow,
+  [ExtendedEntitiesTypeDict.WholeBrain]: simulateWholeBrainCircuitWorkflow,
 } as const satisfies Record<TSimulateCircuitSourceType, TScanConfigWorkflowDefinition>;
 
 export function isSimulateCircuitSourceType(
@@ -67,6 +70,8 @@ export function getSimulateCircuitSourceTypeByScale(
       return ExtendedEntitiesTypeDict.Microcircuit;
     case CircuitScaleDictionary.Region:
       return ExtendedEntitiesTypeDict.BrainRegion;
+    case CircuitScaleDictionary.WholeBrain:
+      return ExtendedEntitiesTypeDict.WholeBrain;
     default:
       return null;
   }

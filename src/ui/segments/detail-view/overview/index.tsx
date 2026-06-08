@@ -69,6 +69,7 @@ const LegacySimulationCampaigns = [
   ExtendedEntitiesTypeDict.MicrocircuitSimulation,
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
 ] as const;
 
 type TLegacySimulationCampaignConfig = {
@@ -258,7 +259,8 @@ export default async function Overview({
         defaultTab={{
           __activity: ScanConfigActivity.Simulate,
           id:
-            extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
+            extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
+            extendedType === ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation
               ? SimulateScanConfigTabs.simulations
               : ExtractScanConfigTabs.configuration,
         }}

@@ -10,6 +10,7 @@ import { viewDefForSingleNeuronCircuitSimulation } from './single-neuron-circuit
 import { viewDefForSingleNeuronSimulation } from './single-neuron-simulation';
 import { viewDefForSingleNeuronSynaptomeSimulation } from './single-neuron-synaptome-simulation';
 import { viewDefForSmallMicrocircuitSimulation } from './small-microcircuit-simulation';
+import { viewDefForWholeBrainCircuitSimulation } from './whole-brain-circuit-simulation';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
@@ -25,4 +26,5 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: viewDefForMEModelCircuitSimulation,
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: viewDefForIonChannelModelSimulation,
   [ExtendedEntitiesTypeDict.RegionCircuitSimulation]: viewDefForRegionCircuitSimulation,
+  [ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation]: viewDefForWholeBrainCircuitSimulation,
 };

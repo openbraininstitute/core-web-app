@@ -38,11 +38,20 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
+import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
+
+const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
+  CircuitScaleDictionary.Microcircuit,
+  CircuitScaleDictionary.Region,
+  CircuitScaleDictionary.System,
+  CircuitScaleDictionary.WholeBrain,
+]);
+
 type SimulationTabProps = {
   campaignId: string;
   virtualLabId: string;
@@ -223,11 +232,16 @@ export default function SimulationsTab({
     let nSubmissions = 0;
     let lowFundsError = false;
 
+    const taskType =
+      model && 'target_simulator' in model && model.target_simulator === 'Brian2'
+        ? ObiOneTaskTypeDict.CircuitSimulationBrian2
+        : ObiOneTaskTypeDict.CircuitSimulation;
+
     for (const simId of simIds) {
       try {
         const res = await runTask({
           ctx: { virtualLabId, projectId },
-          task_type: ObiOneTaskTypeDict.CircuitSimulation,
+          task_type: taskType,
           config_id: simId,
         });
         log('info', res);
@@ -293,9 +307,8 @@ export default function SimulationsTab({
     setSelectedSimulationIds([]);
   };
 
-  const shouldTreatSimulationAsTask =
-    get(model, 'scale', null) === CircuitScaleDictionary.Microcircuit ||
-    get(model, 'scale', null) === CircuitScaleDictionary.Region;
+  const scale = get(model, 'scale', null);
+  const shouldTreatSimulationAsTask = scale !== null && TASK_LAUNCH_SCALES.has(scale);
 
   // TODO Refactor
   const run = async (simIds: string[]) => {

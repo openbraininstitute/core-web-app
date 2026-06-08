@@ -36,6 +36,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.EMCellMesh,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
 ] as const;
 
 export default async function Page({

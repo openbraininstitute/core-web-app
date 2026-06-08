@@ -21,6 +21,7 @@ import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simu
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,
@@ -52,6 +53,7 @@ export const SimulationEntitiesTileTypes = {
   MicrocircuitSimulation,
   IonChannelModelSimulation,
   RegionCircuitSimulation,
+  WholeBrainCircuitSimulation,
 } as const;
 
 export function getEntityTypeFromUrlOnEntityScope(url: string) {

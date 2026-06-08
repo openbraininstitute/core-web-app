@@ -23,6 +23,7 @@ export type TScanConfigFromIdType =
 
 export const ScanConfigGeneratedApiPath = {
   CircuitSimulation: 'circuit-simulation-scan-config-generate-grid',
+  Brian2CircuitSimulation: 'brian-2-circuit-simulation-scan-config-generate-grid',
   MEModelWithSynapsesCircuitSimulation:
     'me-model-with-synapses-circuit-simulation-scan-config-generate-grid',
   MEModelSimulation: 'me-model-simulation-scan-config-generate-grid',
@@ -162,5 +163,17 @@ export function buildEmSynapseMappingConfigureBinding(): TScanConfigConfigureBin
     },
     generatedApiPath: ScanConfigGeneratedApiPath.EMSynapseMapping,
     mergeBrowseSelectionIntoSingleGroup: true,
+  };
+}
+
+export function wholeBrainBrian2SimulationConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.WholeBrain,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.WholeBrain,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.WholeBrain]: ScanConfigFromIdType.CircuitFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.Brian2CircuitSimulation,
+    schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }
