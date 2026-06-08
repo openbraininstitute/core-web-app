@@ -13,10 +13,13 @@ jobs:
     env:
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
-      - name: Fail if branch is not main
-        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+      - name: Fail if branch is not main or a hotfix/* branch
+        if: >-
+          github.event_name == 'workflow_dispatch'
+          && github.ref != 'refs/heads/main'
+          && !startsWith(github.ref, 'refs/heads/hotfix/')
         run: |
-          echo "This workflow should not be triggered with workflow_dispatch on a branch other than main"
+          echo "This workflow must be dispatched from main or a hotfix/* branch."
           exit 1
 
       - name: Checkout repository
