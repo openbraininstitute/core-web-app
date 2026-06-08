@@ -12,7 +12,6 @@ import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { CoinsIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
-import { formatCreditsAmount, parseCreditsAmount } from '@/features/credits';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -270,7 +269,7 @@ export function TransferCredits({
   };
 }) {
   const queryClient = useQueryClient();
-  const [amount, setAmount] = useState<number | undefined>(undefined);
+  const [amount, setAmount] = useState<string>('');
   const [swapPhase, setSwapPhase] = useState<SwapCardPhase>('idle');
   const [swapSpinTurns, setSwapSpinTurns] = useState(0);
   const [isLabToProject, setIsLabToProject] = useState<boolean>(true);
@@ -362,7 +361,7 @@ export function TransferCredits({
         placement: 'topRight',
         key: 'transfer-credits-success',
       });
-      setAmount(undefined);
+      setAmount('');
     },
     onError: (error) => {
       const codeError = get(error, 'cause.error_code', 'DEFAULT');
@@ -600,7 +599,11 @@ export function TransferCredits({
             </motion.div>
           </div>
 
-          <div className="mx-auto max-w-3xl px-3">
+          <div
+            className="mx-auto max-w-3xl px-3"
+            id="transfer-credits__amount"
+            data-testid="transfer-credits__amount"
+          >
             <div className="rounded-2xl border border-gray-100 bg-white p-5 text-primary-9 shadow-bnb">
               <div className="mb-0.5 ml-1 text-base font-light text-gray-500">Amount</div>
               <div className="relative w-full max-w-md">
@@ -608,11 +611,11 @@ export function TransferCredits({
                   id="amount"
                   ref={amountInputRef}
                   autoComplete="off"
-                  inputMode="numeric"
-                  pattern="[0-9,]*"
+                  inputMode="decimal"
+                  pattern="[0-9.]*"
                   min={0}
-                  value={formatCreditsAmount(Number(amount))}
-                  onChange={(event) => setAmount(parseCreditsAmount(event.target.value))}
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value.replace(/[^\d.]/g, ''))}
                   placeholder="0"
                   className={cn(
                     'min-h-14 rounded-2xl border-2 border-gray-100! bg-transparent! px-3 py-2 text-xl! font-bold tracking-wide text-primary-9! focus:ring-0',
@@ -648,7 +651,7 @@ export function TransferCredits({
                 label: 'text-white pr-3',
                 iconWrapper: 'bg-primary-9 text-white group-hover:bg-primary-8 [&_svg]:size-5!',
               }}
-              disabled={isPending || !amount}
+              disabled={isPending || !Number(amount)}
               onClick={() => transferCreditsAsync()}
               iconPosition="end"
             />

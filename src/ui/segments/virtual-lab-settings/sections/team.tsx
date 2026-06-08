@@ -350,11 +350,22 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
   );
 }
 
-function CancelInvitation({ user, virtualLabId }: { user: Member; virtualLabId: string }) {
+/**
+ * only the owner and admins may cancel pending invites; everyone else sees nothing
+ */
+function CancelInvitation({
+  user,
+  virtualLabId,
+  canManage,
+}: {
+  user: Member;
+  virtualLabId: string;
+  canManage: boolean;
+}) {
   const queryClient = useQueryClient();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
 
-  const mutateInvite = useMutation({
+  const cancelInviteMutation = useMutation({
     mutationKey: [`${virtualLabId}/delete-item/${user.email}`],
     mutationFn: () =>
       cancelVirtualLabInvite({
@@ -401,21 +412,25 @@ function CancelInvitation({ user, virtualLabId }: { user: Member; virtualLabId: 
     },
   });
 
+  if (!canManage || user.invite_accepted) return null;
+
   return (
-    !user.invite_accepted && (
-      <div className="flex w-full flex-col items-end justify-end text-right">
-        <GhostRoundedIconButton
-          icon={
-            mutateInvite.isPending ? <LoadingOutlined spin /> : <MailRemove className="size-6!" />
-          }
-          label="Cancel invitation"
-          size="md"
-          onClick={() => mutateInvite.mutateAsync()}
-          disabled={mutateInvite.isPending}
-          classNames={{ root: 'w-max group' }}
-        />
-      </div>
-    )
+    <div className="flex w-full flex-col items-end justify-end text-right">
+      <GhostRoundedIconButton
+        icon={
+          cancelInviteMutation.isPending ? (
+            <LoadingOutlined spin />
+          ) : (
+            <MailRemove className="size-6!" />
+          )
+        }
+        label="Cancel invitation"
+        size="md"
+        onClick={() => cancelInviteMutation.mutateAsync()}
+        disabled={cancelInviteMutation.isPending}
+        classNames={{ root: 'w-max group' }}
+      />
+    </div>
   );
 }
 
@@ -437,6 +452,8 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
 
   const ownerId = team?.data?.owner_id;
   const users = team?.data?.users;
+  const isOwner = Boolean(ownerId) && data?.user.id === ownerId;
+  const canManage = isOwner || isVirtualLabAdmin;
 
   const columns: Array<ColumnType<Member>> = useMemo(
     () => [
@@ -487,13 +504,13 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
               />
             </div>
             <div className="shrink-0">
-              <CancelInvitation virtualLabId={virtualLabId} user={record} />
+              <CancelInvitation virtualLabId={virtualLabId} user={record} canManage={canManage} />
             </div>
           </div>
         ),
       },
     ],
-    [ownerId, virtualLabId]
+    [ownerId, virtualLabId, canManage]
   );
 
   const orderedUsers = useMemo(
