@@ -1,7 +1,8 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
 import { capitalize } from 'es-toolkit/compat';
+import { usePathname, useSearchParams } from 'next/navigation';
+
 import Tab from '@/ui/molecules/tab';
 
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';

@@ -8,6 +8,7 @@ import {
   getDocumentationForInputResistance,
   type IValidationDocumentation,
 } from '@/features/model-analysis/viewer/container/hooks/dictionary';
+import { isNumber } from '@/util/type-guards';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
@@ -34,9 +35,10 @@ export interface FlatValidationResult {
 
 export function useFlatValidationResults(
   validationResults: TValidationResultNonUndefined,
-  rin: number | undefined,
+  inputResistanceInMegaOhms: number | undefined,
   entityType: TEntityTypeDict
 ) {
+  console.log('🐞 [index@40] inputResistanceInMegaOhms =', inputResistanceInMegaOhms); // @FIXME: Remove this line written on 2026-06-09 at 10:31
   return React.useMemo(() => {
     const output: FlatValidationResult[] = [];
     for (const result of validationResults) {
@@ -67,10 +69,10 @@ export function useFlatValidationResults(
             name: 'Input Resistance Validation',
             passed: result.passed,
             documentation: getDocumentationForInputResistance(entityType),
-            extraVariables: rin
+            extraVariables: isNumber(inputResistanceInMegaOhms)
               ? {
                   Rin: {
-                    value: rin.toFixed(2),
+                    value: inputResistanceInMegaOhms.toFixed(2),
                     unit: 'MΩ',
                   },
                 }
@@ -80,7 +82,7 @@ export function useFlatValidationResults(
       }
     }
     return output.sort(customSorting);
-  }, [validationResults, rin, entityType]);
+  }, [validationResults, inputResistanceInMegaOhms, entityType]);
 }
 
 export function useSelectedValidationResults(

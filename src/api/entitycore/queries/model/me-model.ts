@@ -54,13 +54,16 @@ export async function getMEModel({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<IMEModel>(`${baseUri}/${id}`, {
+  console.log('🐞 [me-model@57] id =', id); // @FIXME: Remove this line written on 2026-06-09 at 11:05
+  const result = await api.get<IMEModel>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
   });
+  console.log('🐞 [me-model@65] result =', result); // @FIXME: Remove this line written on 2026-06-09 at 11:05
+  return result;
 }
 
 /**

@@ -13,8 +13,11 @@ export function useInputResistance({ entity }: { entity: TRetrieveEntityOutput }
     queryKey: keyBuilder.meModel({ projectId, virtualLabId, entityId: entity.id }),
     queryFn: async () => {
       const model = await getMEModel({ context: { projectId, virtualLabId }, id: entity.id });
+      if (!model) throw new Error('ME-Model not found!');
+
       return model.calibration_result?.rin;
     },
+    retry: 2,
     enabled: entity.type === EntityTypeDict.Memodel,
   });
 

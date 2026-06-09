@@ -39,10 +39,17 @@ export default function Page({
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
   const sessionId = useLegacyWorkflowSessionFromSearchParams(searchParams);
 
-  const { data: entity } = useSuspenseQuery({
+  const { data: entity, status } = useSuspenseQuery({
     queryKey: keyBuilder.meModel({ virtualLabId, projectId, entityId: modelId }),
-    queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
+    queryFn: async () => {
+      const result = await getMEModel({ id: modelId, context: { virtualLabId, projectId } });
+      if (!result) throw new Error('ME-Model not found!');
+
+      return result;
+    },
+    retry: 2,
   });
+  console.log('🐞 [page@46] status, entity =', status, entity); // @FIXME: Remove this line written on 2026-06-09 at 11:12
 
   return (
     <WorkflowSimulateLayout>
