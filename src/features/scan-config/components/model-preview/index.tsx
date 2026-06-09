@@ -10,7 +10,15 @@ import ViewerLayout from './viewer-layout';
 
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
-export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfiguration }) {
+export function ModelPreview({
+  model,
+  positionAbsolute,
+  onCollapsed,
+}: {
+  model: TSupportedEntitiesForScanConfiguration;
+  positionAbsolute?: boolean;
+  onCollapsed?(value: boolean): void;
+}) {
   return match(model)
     .with({ type: EntityTypeDict.Memodel }, () => (
       <NeuronVisualizer
@@ -18,6 +26,8 @@ export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfig
         sessionId={model.id}
         disableElectrodes
         disableSynapses
+        positionAbsolute={positionAbsolute}
+        onCollapsed={onCollapsed}
       />
     ))
     .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (

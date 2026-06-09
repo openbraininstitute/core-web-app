@@ -223,9 +223,9 @@ function ScanConfigTemplateContent({
         <div
           id="scan-config-content-columns"
           className={cn(
-            'py-2',
+            'py-2 @container',
             {
-              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden *:min-w-0':
+              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,auto)] gap-[5px] h-full overflow-hidden *:min-w-0':
                 isConfigurationTab && !browseOverlay,
             },
             { hidden: !isConfigurationTab || Boolean(browseOverlay) }

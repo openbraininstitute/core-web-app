@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ViewVariant, WorkspaceSection } from '@/constants';
@@ -17,10 +17,14 @@ import {
 } from '@/features/scan-config/types';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
+import { cn } from '@/utils/css-class';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { Config } from '@/features/scan-config/types';
 import type { Nullish } from '@/utils/type';
+
+import styles from './right.module.css';
 
 const ModelPreview = dynamic(
   () => import('@/features/scan-config/components/model-preview').then((m) => m.ModelPreview),
@@ -62,6 +66,7 @@ export function Right({
   const searchParams = useSearchParams();
   const sessionId = params?.id;
   const origin = searchParams.get('origin') ?? '';
+  const [collapsed, setCollapsed] = React.useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: clear stale preview when route session or entity changes
   useEffect(() => {
@@ -91,28 +96,46 @@ export function Right({
     );
   }
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 py-1 h-full">
-      {activity === ScanConfigActivity.Simulate &&
-        entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
-          <IonChannelModelRecordingRender
-            selectedRootElement={selectedRootElement}
-            selectedEntry={selectedEntry}
-            config={config}
-          />
-        )}
-      {((activity === ScanConfigActivity.Simulate &&
-        (entityType === ExtendedEntitiesTypeDict.Circuit ||
-          entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
-          entityType === ExtendedEntitiesTypeDict.WholeBrain ||
-          entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) &&
-        entity) ||
-        (activity === ScanConfigActivity.Extract &&
-          entity &&
-          entityType === ExtendedEntitiesTypeDict.Circuit)) && (
-        <div className="rounded-lg h-full" id="scan-config-right-model-preview">
-          <ModelPreview model={entity} />
+    <div
+      id="scan-config-controls-right-preview"
+      className={cn(styles.right, collapsed && styles.collapsed, 'rounded-lg px-0.5 py-1 h-full')}
+    >
+      {showIonChannel(activity, entityType) && (
+        <IonChannelModelRecordingRender
+          selectedRootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          config={config}
+        />
+      )}
+      {showModelPreview(activity, entityType, entity) && (
+        <div className="rounded-lg h-full relative" id="scan-config-right-model-preview">
+          <ModelPreview model={entity} positionAbsolute onCollapsed={setCollapsed} />
         </div>
       )}
     </div>
+  );
+}
+
+function showIonChannel(activity: string, entityType: string) {
+  return (
+    activity === ScanConfigActivity.Simulate &&
+    entityType === ExtendedEntitiesTypeDict.IonChannelModel
+  );
+}
+
+function showModelPreview(
+  activity: string,
+  entityType: string,
+  entity: TSupportedEntitiesForScanConfiguration | Nullish
+): entity is TSupportedEntitiesForScanConfiguration {
+  if (!entity) return false;
+
+  return (
+    (activity === ScanConfigActivity.Simulate &&
+      (entityType === ExtendedEntitiesTypeDict.Circuit ||
+        entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
+        entityType === ExtendedEntitiesTypeDict.WholeBrain ||
+        entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses)) ||
+    (activity === ScanConfigActivity.Extract && entityType === ExtendedEntitiesTypeDict.Circuit)
   );
 }

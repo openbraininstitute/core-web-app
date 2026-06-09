@@ -29,6 +29,8 @@ type Props = {
   sessionId: string;
   disableElectrodes?: boolean;
   disableSynapses?: boolean;
+  positionAbsolute?: boolean;
+  onCollapsed?(value: boolean): void;
 };
 
 export function NeuronViewerContainer({
@@ -36,8 +38,14 @@ export function NeuronViewerContainer({
   sessionId,
   disableElectrodes,
   disableSynapses,
+  positionAbsolute,
+  onCollapsed,
 }: Props) {
   const [collapsed, setCollapsed] = React.useState(false);
+  const updateCollapsed = (value: boolean) => {
+    setCollapsed(value);
+    onCollapsed?.(value);
+  };
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const { loading, error, morphology } = useCleanMorphology(meModelId, sessionId);
   const tree = React.useMemo(
@@ -55,7 +63,7 @@ export function NeuronViewerContainer({
   }
   if (loading)
     return (
-      <div className={styles.viewerContainer}>
+      <div className={cn(styles.viewerContainer, positionAbsolute && styles.positionAbsolute)}>
         <LoadingNeuronSpinner />
       </div>
     );
@@ -69,7 +77,7 @@ export function NeuronViewerContainer({
           error: '[&_h2]:text-primary-8 bg-transparent px-0',
         },
         children: (
-          <div className={styles.reloadButton}>
+          <div className={cn(styles.reloadButton, positionAbsolute && styles.positionAbsolute)}>
             <button type="button" onClick={() => document.location.reload()}>
               <ReloadIcon />
               Reload the page
@@ -80,9 +88,15 @@ export function NeuronViewerContainer({
       })}
     >
       <DefaultLoadingSuspense>
-        <div className={cn(styles.viewerContainer, collapsed && styles.collapsed)}>
+        <div
+          className={cn(
+            styles.viewerContainer,
+            collapsed && styles.collapsed,
+            positionAbsolute && styles.positionAbsolute
+          )}
+        >
           {collapsed ? (
-            <CollapsedViewer onClick={() => setCollapsed(false)} />
+            <CollapsedViewer onClick={() => updateCollapsed(false)} />
           ) : (
             <>
               <MorphoViewerSimul
@@ -95,7 +109,7 @@ export function NeuronViewerContainer({
                 disableClick={
                   disableElectrodes || simulationStatus?.status === SimulationStatus.LAUNCHED
                 }
-                onMinimize={() => setCollapsed(true)}
+                onMinimize={() => updateCollapsed(true)}
               />
               <DebugPanel morphology={morphology} synapses={synapses} />
             </>

@@ -1,0 +1,7 @@
+.right {
+  width: 50cqw;
+
+  &.collapsed {
+    width: 3em;
+  }
+}
