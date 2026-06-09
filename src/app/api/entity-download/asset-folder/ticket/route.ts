@@ -7,26 +7,21 @@ import { ticketStore } from '@/features/entity-download/ticket-store';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 
-// Schema for ticket creation request
-const createTicketSchema = z.object({
+const createAssetFolderTicketSchema = z.object({
+  entityType: z.enum(['circuit']),
+  entityId: z.uuid(),
+  assetId: z.uuid(),
+  prefix: z.string().min(1),
+  filename: z.string().min(1),
   virtualLabId: z.uuid().optional().nullable(),
   projectId: z.uuid().optional().nullable(),
-  entityIds: z.uuid().array().max(100),
 });
 
 /**
- * Creates a download ticket for a batch of entity IDs
- *
- * @returns A ticket ID that can be used to initiate the download
- *
- * Expected JSON body:
- * {
- *   virtualLabId?: string | null,  // Optional UUID of virtual lab context
- *   projectId?: string | null,     // Optional UUID of project context
- *   entityIds: string[]            // Array of entity UUIDs to download (max 100)
- * }
+ * Creates a download ticket for a folder inside one asset of a single entity.
+ * The GET endpoint streams a tar.gz of every file under `prefix`.
  */
-export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
+export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session) {
     return new Response('Unauthorized', {
@@ -35,19 +30,18 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
     });
   }
 
-  const { entityType: entityTypeRaw } = await params;
-  const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
-
   try {
-    const reqData = createTicketSchema.parse(await request.json());
+    const reqData = createAssetFolderTicketSchema.parse(await request.json());
 
-    // Store the download information with creation timestamp
     const ticketId = ticketStore.createTicket({
-      kind: 'entity-batch',
-      entityType,
+      kind: 'asset-folder',
+      entityType: snakeCase(reqData.entityType) as TEntityTypeDict,
+      entityId: reqData.entityId,
+      assetId: reqData.assetId,
+      prefix: reqData.prefix,
+      filename: reqData.filename,
       virtualLabId: reqData.virtualLabId,
       projectId: reqData.projectId,
-      entityIds: reqData.entityIds,
     });
 
     return NextResponse.json({ ticketId });
@@ -55,7 +49,6 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues }, { status: 400 });
     }
-
     return NextResponse.json({ error: 'Failed to create download ticket' }, { status: 500 });
   }
 }

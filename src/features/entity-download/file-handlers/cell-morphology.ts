@@ -2,12 +2,13 @@ import { getCellMorphology } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { ReconstructionMorphologyJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
+
+import type { ReconstructionMorphologyJsonMetadata } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function* getCellMorphologyFiles(entityIds: string[], ctx?: WorkspaceContext) {
