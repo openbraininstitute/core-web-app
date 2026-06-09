@@ -58,7 +58,7 @@ export function getConfigKeyForEntity(
   if (entityType === ExtendedEntitiesTypeDict.IonChannelModel) {
     return 'ion_channel_model_simulation_config';
   }
-  if (entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) {
+  if (entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) {
     return 'me_model_with_synapses_simulation_config';
   }
   // Circuit type — check scale for synaptome disambiguation

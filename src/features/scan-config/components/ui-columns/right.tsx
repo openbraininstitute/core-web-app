@@ -105,7 +105,7 @@ export function Right({
       {((activity === ScanConfigActivity.Simulate &&
         (entityType === ExtendedEntitiesTypeDict.Circuit ||
           entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
-          entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
+          entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) &&
         entity) ||
         (activity === ScanConfigActivity.Extract &&
           entity &&

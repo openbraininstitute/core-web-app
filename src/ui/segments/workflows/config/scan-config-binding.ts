@@ -89,19 +89,19 @@ export function getScanConfigConfigureBinding(
 export function circuitSimulationConfigureBinding(
   browseType: TExtendedEntitiesTypeDict
 ): TScanConfigConfigureBinding {
-  const isMeModelWithSynapses = browseType === ExtendedEntitiesTypeDict.MEModelWithSynapses;
+  const isSingleNeuronCircuit = browseType === ExtendedEntitiesTypeDict.SingleNeuronCircuit;
 
   return {
     browseType,
-    scanConfigEntityType: isMeModelWithSynapses
-      ? ExtendedEntitiesTypeDict.MEModelWithSynapses
+    scanConfigEntityType: isSingleNeuronCircuit
+      ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
       : ExtendedEntitiesTypeDict.Circuit,
     fromIdTypeByBrowseType: {
-      [browseType]: isMeModelWithSynapses
+      [browseType]: isSingleNeuronCircuit
         ? ScanConfigFromIdType.MEModelWithSynapsesCircuitFromID
         : ScanConfigFromIdType.CircuitFromID,
     },
-    generatedApiPath: isMeModelWithSynapses
+    generatedApiPath: isSingleNeuronCircuit
       ? ScanConfigGeneratedApiPath.MEModelWithSynapsesCircuitSimulation
       : ScanConfigGeneratedApiPath.CircuitSimulation,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,

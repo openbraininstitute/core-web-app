@@ -26,7 +26,7 @@ async function retrieveCircuit({
     const circuit = await getCircuit({ id, context });
 
     if (circuit.scale === CircuitScaleDictionary.Single)
-      return ExtendedEntitiesTypeDict.MEModelWithSynapses;
+      return ExtendedEntitiesTypeDict.SingleNeuronCircuit;
   }
   return type;
 }
@@ -54,7 +54,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
       redirectCtx.virtualLabId = workspace.recentWorkspace.virtual_lab_id;
       redirectCtx.projectId = workspace.recentWorkspace.project_id;
     }
-    // NOTE: circuit with scale "single" needs to be redirected to MEModelWithSynapses
+    // NOTE: circuit with scale "single" needs to be redirected to SingleNeuronCircuit
     // as it has a different details page
     entityType = await retrieveCircuit({ id, type: entity.type });
 

@@ -38,7 +38,7 @@ export default async function RelatedArtifacts({
         entityConfig: {
           extendedType: P.union(
             ExtendedEntitiesTypeDict.Circuit,
-            ExtendedEntitiesTypeDict.MEModelWithSynapses
+            ExtendedEntitiesTypeDict.SingleNeuronCircuit
           ),
         },
       },

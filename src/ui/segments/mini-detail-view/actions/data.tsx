@@ -45,7 +45,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   const onDownload = () => {
     if (
       includes(
-        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
         dataType
       )
     ) {
