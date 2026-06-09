@@ -166,7 +166,7 @@ export const networksContentConfiguration: CircuitContentConfigurationProps[] = 
         </a>
         ,{' '}
         <a
-          href="https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html"
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html#node-file"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2"
@@ -194,7 +194,7 @@ export const networksContentConfiguration: CircuitContentConfigurationProps[] = 
         </a>
         ,{' '}
         <a
-          href="https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html"
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html#edge-file"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2"
