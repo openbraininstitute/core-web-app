@@ -145,9 +145,10 @@ export default function ActionMenu({
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
       <Action
+        onClick={() => !copying && copy(entity.id)}
         icon={
           !copying ? (
-            <CopyOutlined onClick={() => copy(entity.id)} className="text-primary-8" />
+            <CopyOutlined className="text-primary-8" />
           ) : (
             <CheckOutlined className="text-teal-400" />
           )
@@ -157,31 +158,20 @@ export default function ActionMenu({
       </Action>
 
       {simulateHref && (
-        <Action
-          icon={
-            <NextLink href={simulateHref}>
-              <ExperimentOutlined className="text-primary-8" />
-            </NextLink>
-          }
-        >
-          Simulate
-        </Action>
+        <NextLink href={simulateHref}>
+          <Action icon={<ExperimentOutlined className="text-primary-8" />}>Simulate</Action>
+        </NextLink>
       )}
 
       {entityType.isDownloadable && (
         <Action
-          icon={
-            <DownloadOutlined
-              className="text-primary-8"
-              onClick={() => {
-                if (entity.type === ExtendedEntitiesTypeDict.Circuit)
-                  setCircuit(entity as ICircuit);
-                else {
-                  downloadArchive(entityType.type, [entity.id], ctx);
-                }
-              }}
-            />
-          }
+          onClick={() => {
+            if (entity.type === ExtendedEntitiesTypeDict.Circuit) setCircuit(entity as ICircuit);
+            else {
+              downloadArchive(entityType.type, [entity.id], ctx);
+            }
+          }}
+          icon={<DownloadOutlined className="text-primary-8" />}
         >
           Download
         </Action>
