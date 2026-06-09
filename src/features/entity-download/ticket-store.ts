@@ -70,7 +70,7 @@ class TicketStore {
 
     // Generate a unique ticket ID
     const ticketId = randomUUID();
-    const newTicket = { ...ticket, createdAt: Date.now() } as DownloadTicket;
+    const newTicket = { ...ticket, createdAt: Date.now() };
     this.tickets.set(ticketId, newTicket);
 
     return ticketId;
