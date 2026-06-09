@@ -409,7 +409,7 @@ export class NodesSession {
       return out;
     }
 
-    if (!useGather && !this.loaded.has(name)) {
+    if (!useGather && !this.loaded.has(name) && !isVariableLengthString(handle)) {
       const sliced = handle.dataset.slice([[sliceStart, sliceEnd]]);
       return decodeSliceForPage(handle, sliced);
     }
@@ -439,6 +439,13 @@ export class NodesSession {
     }
     return out;
   }
+}
+
+function isVariableLengthString(handle: ColumnHandle): boolean {
+  // h5wasm reports variable-length strings as "S" (no size suffix) and
+  // fixed-length strings as "S<n>". Dataset.slice() aborts on vlen strings,
+  // so route them through the full-column path (Dataset.value), which works.
+  return handle.kind === 'string' && handle.dtype === 'S';
 }
 
 function range(start: number, end: number): number[] {
