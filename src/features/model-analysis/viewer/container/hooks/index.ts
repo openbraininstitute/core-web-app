@@ -38,7 +38,6 @@ export function useFlatValidationResults(
   inputResistanceInMegaOhms: number | undefined,
   entityType: TEntityTypeDict
 ) {
-  console.log('🐞 [index@40] inputResistanceInMegaOhms =', inputResistanceInMegaOhms); // @FIXME: Remove this line written on 2026-06-09 at 10:31
   return React.useMemo(() => {
     const output: FlatValidationResult[] = [];
     for (const result of validationResults) {
