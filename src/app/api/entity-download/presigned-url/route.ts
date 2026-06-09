@@ -13,7 +13,7 @@ const querySchema = z.object({
   virtualLabId: z.uuid(),
   projectId: z.uuid(),
   configAssetId: z.uuid(),
-  assetPath: z.string().min(1),
+  assetPath: z.string().min(1).optional(),
 });
 
 export async function GET(request: NextRequest) {
