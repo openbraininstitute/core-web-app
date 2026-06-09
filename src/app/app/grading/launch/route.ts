@@ -1,18 +1,21 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { tryCatch } from '@/api/utils';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { auth } from '@/auth';
 import { serverConfig } from '@/config/server';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { startNotebook } from '@/services/notebooks';
-import { resolveWorkspace } from '@/ui/segments/app-setup/helpers';
 import { log } from '@/utils/logger';
+
+import type { IVirtualLabExpandedResponse } from '@/api/virtual-lab-svc/queries/types';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const ERROR_PATH = '/app/grading/launch/error';
 const LOG_IN_PATH = '/app/log-in';
-const SYNC_PATH = '/app/virtual-lab/sync';
 const DEFAULT_COMPUTE_CELL = 'aws';
 
 type LaunchErrorReason =
@@ -22,13 +25,15 @@ type LaunchErrorReason =
   | 'notebook-service-failed'
   | 'insufficient-funds'
   | 'accounting-error'
-  | 'jupyter-error';
+  | 'jupyter-error'
+  | 'no-project-access'
+  | 'template-not-initialized'
+  | 'notebook-not-found';
 
 interface VerifiedParams {
   token: string;
   exercise_id: string;
-  notebook_id: string;
-  tenant_id: string;
+  virtual_lab_id: string;
   exp: string;
   sig: string;
 }
@@ -43,12 +48,11 @@ function verifyLaunch(request: NextRequest, secret: string): VerificationResult 
   const q = request.nextUrl.searchParams;
   const token = q.get('token');
   const exercise_id = q.get('exercise_id');
-  const notebook_id = q.get('notebook_id');
-  const tenant_id = q.get('tenant_id');
+  const virtual_lab_id = q.get('virtual_lab_id');
   const exp = q.get('exp');
   const sig = q.get('sig');
 
-  if (!token || !exercise_id || !notebook_id || !tenant_id || !exp || !sig) {
+  if (!token || !exercise_id || !virtual_lab_id || !exp || !sig) {
     return { ok: false, reason: 'invalid' };
   }
   if (!/^\d+$/.test(exp)) {
@@ -59,7 +63,7 @@ function verifyLaunch(request: NextRequest, secret: string): VerificationResult 
     return { ok: false, reason: 'expired' };
   }
 
-  const signingString = `${token}|${exercise_id}|${notebook_id}|${tenant_id}|${exp}`;
+  const signingString = `${token}|${exercise_id}|${virtual_lab_id}|${exp}`;
   const expected = createHmac('sha256', secret).update(signingString, 'utf8').digest('hex');
   const a = Buffer.from(expected, 'utf8');
   const b = Buffer.from(sig, 'utf8');
@@ -69,7 +73,7 @@ function verifyLaunch(request: NextRequest, secret: string): VerificationResult 
 
   return {
     ok: true,
-    params: { token, exercise_id, notebook_id, tenant_id, exp, sig },
+    params: { token, exercise_id, virtual_lab_id, exp, sig },
   };
 }
 
@@ -95,13 +99,6 @@ function loginRedirect(request: NextRequest): NextResponse {
   return redirectWithNoStore(url);
 }
 
-function syncRedirect(request: NextRequest): NextResponse {
-  const url = new URL(SYNC_PATH, request.nextUrl);
-  url.search = '';
-  url.searchParams.set('redirectUrl', request.nextUrl.pathname + request.nextUrl.search);
-  return redirectWithNoStore(url);
-}
-
 function notebookErrorReason(err: unknown): LaunchErrorReason {
   const code = (err as { cause?: { error_code?: string } } | null | undefined)?.cause?.error_code;
   switch (code) {
@@ -114,6 +111,47 @@ function notebookErrorReason(err: unknown): LaunchErrorReason {
     default:
       return 'notebook-service-failed';
   }
+}
+
+type WorkspaceResolution =
+  | { ok: true; virtualLab: IVirtualLabExpandedResponse; projectId: string }
+  | { ok: false; reason: LaunchErrorReason };
+
+// VL admin → template project (instructor flow).
+// Otherwise → first project under this VL where user has admin membership (student flow).
+async function resolveGradingWorkspace(virtualLabId: string): Promise<WorkspaceResolution> {
+  const [groupsResult, vlResult] = await Promise.all([
+    tryCatch(getUserGroups()),
+    tryCatch(getVirtualLab({ id: virtualLabId })),
+  ]);
+
+  if (groupsResult.error || !groupsResult.data || vlResult.error || !vlResult.data) {
+    log('error', '[grading-launch] workspace resolve failed', {
+      groups_error: groupsResult.error,
+      vl_error: vlResult.error,
+    });
+    return { ok: false, reason: 'notebook-service-failed' };
+  }
+
+  const groups = groupsResult.data;
+  const virtualLab = vlResult.data;
+  const { isVirtualLabAdmin } = makeRoles(groups, virtualLabId, undefined);
+
+  if (isVirtualLabAdmin) {
+    const templateProjectId = virtualLab.course?.template_project_id;
+    if (!templateProjectId) {
+      return { ok: false, reason: 'template-not-initialized' };
+    }
+    return { ok: true, virtualLab, projectId: templateProjectId };
+  }
+
+  const projectGroup = groups.data?.groups?.find(
+    (g) => g.group_type === 'project' && g.virtual_lab_id === virtualLabId && g.role === 'admin'
+  );
+  if (!projectGroup?.project_id) {
+    return { ok: false, reason: 'no-project-access' };
+  }
+  return { ok: true, virtualLab, projectId: projectGroup.project_id };
 }
 
 // Outlook Safe Links, Slack unfurls, and email link scanners issue HEAD requests
@@ -135,11 +173,10 @@ export async function GET(request: NextRequest) {
     log('info', '[grading-launch] launch URL rejected', { reason: verified.reason });
     return errorRedirect(request, verified.reason);
   }
-  const { token, exercise_id, notebook_id, tenant_id, exp } = verified.params;
+  const { token, exercise_id, virtual_lab_id, exp } = verified.params;
   log('info', '[grading-launch] launch URL verified', {
     exercise_id,
-    notebook_id,
-    tenant_id,
+    virtual_lab_id,
     exp,
   });
 
@@ -151,49 +188,47 @@ export async function GET(request: NextRequest) {
     return loginRedirect(request);
   }
 
-  const { data: workspace, error: workspaceError } = await tryCatch(resolveWorkspace());
-  if (workspaceError || !workspace) {
-    log('error', '[grading-launch] resolveWorkspace failed', workspaceError);
-    return errorRedirect(request, 'notebook-service-failed');
+  const resolved = await resolveGradingWorkspace(virtual_lab_id);
+  if (!resolved.ok) {
+    log('info', '[grading-launch] workspace not resolved', {
+      reason: resolved.reason,
+      virtual_lab_id,
+    });
+    return errorRedirect(request, resolved.reason);
   }
-
-  let virtualLabId: string | undefined;
-  let projectId: string | undefined;
-  if (workspace.recentWorkspace) {
-    virtualLabId = workspace.recentWorkspace.virtual_lab_id;
-    projectId = workspace.recentWorkspace.project_id;
-  } else if (workspace.virtualLab && workspace.project) {
-    virtualLabId = workspace.virtualLab.id;
-    projectId = workspace.project.id;
-  }
-
-  if (!virtualLabId || !projectId) {
-    log('info', '[grading-launch] no resolved workspace; routing through sync wizard');
-    return syncRedirect(request);
-  }
+  const { virtualLab, projectId } = resolved;
+  const cloud = virtualLab.compute_cell ?? DEFAULT_COMPUTE_CELL;
 
   log('info', '[grading-launch] workspace resolved', {
-    virtualLabId,
-    projectId,
+    virtual_lab_id,
+    project_id: projectId,
     exercise_id,
-    notebook_id,
-    tenant_id,
   });
 
-  let cloud: string;
-  try {
-    const lab = await getVirtualLab(virtualLabId);
-    cloud = lab?.data?.virtual_lab?.compute_cell ?? DEFAULT_COMPUTE_CELL;
-  } catch (err) {
-    log('error', '[grading-launch] getVirtualLab failed', err);
+  const { data: notebooksResponse, error: notebooksError } = await tryCatch(
+    getNotebooks({
+      filters: { exercise_id },
+      context: { virtualLabId: virtual_lab_id, projectId },
+    })
+  );
+  if (notebooksError) {
+    log('error', '[grading-launch] getNotebooks failed', notebooksError);
     return errorRedirect(request, 'notebook-service-failed');
+  }
+  const notebookId = notebooksResponse?.data?.[0]?.id;
+  if (!notebookId) {
+    log('info', '[grading-launch] no analysis notebook for exercise_id', {
+      exercise_id,
+      virtual_lab_id,
+      project_id: projectId,
+    });
+    return errorRedirect(request, 'notebook-not-found');
   }
 
   try {
-    const retval = await startNotebook(notebook_id, '', virtualLabId, projectId, cloud, 0, {
+    const retval = await startNotebook(notebookId, '', virtual_lab_id, projectId, cloud, 0, {
       token,
       exercise_id,
-      tenant_id,
     });
     if (!retval?.url) {
       log('error', '[grading-launch] notebook service returned empty url');

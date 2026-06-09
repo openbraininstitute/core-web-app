@@ -30,7 +30,6 @@ export interface NotebookStartInNumberedPodRequest {
 export interface NotebookGradingLaunch {
   token: string;
   exercise_id: string;
-  tenant_id: string;
 }
 
 export interface EmptyNotebookStartRequest {
