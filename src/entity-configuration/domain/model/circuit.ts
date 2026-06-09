@@ -77,6 +77,8 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
         CircuitScaleDictionary.PairNeuron,
         CircuitScaleDictionary.SmallMicrocircuit,
         CircuitScaleDictionary.Microcircuit,
+        CircuitScaleDictionary.Region,
+        CircuitScaleDictionary.WholeBrain,
       ],
       entity.scale
     ),
