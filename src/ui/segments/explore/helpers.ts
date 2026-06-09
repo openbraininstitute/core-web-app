@@ -9,7 +9,7 @@ import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
-import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
+import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
@@ -35,7 +35,7 @@ export const ExperimentalEntitiesTileTypes = {
 
 export const ModelEntitiesTileTypes = {
   SingleNeuronSynaptome,
-  MEModelWithSynapsesCircuit,
+  SingleNeuronCircuit,
   Emodel,
   MEmodel,
   Circuit,

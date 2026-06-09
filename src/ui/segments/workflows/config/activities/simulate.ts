@@ -2,11 +2,11 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { wholeBrainSimulationFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { simulateIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/simulate-ion-channel';
+import { simulateMEModelWithSynapsesCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-me-model-with-synapses-circuit';
 import { simulateMemodelCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-memodel-circuit';
 import { simulateMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-microcircuit';
 import { simulatePairedNeuronCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-paired-neuron-circuit';
 import { simulateRegionCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-region-circuit';
-import { simulateSingleNeuronCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-single-neuron-circuit';
 import { simulateSmallMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-small-microcircuit';
 import { simulateWholeBrainCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-whole-brain-circuit';
 
@@ -89,22 +89,22 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfig,
-    sourceType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
+    sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
     breadcrumb: {
       root: 'Synaptome (beta) simulation',
       steps: { selection: 'Select synaptome (beta)' },
     },
     scanConfig: {
-      definition: simulateSingleNeuronCircuitWorkflow,
+      definition: simulateMEModelWithSynapsesCircuitWorkflow,
       schemaName: SchemaNameDict.MEModelWithSynapsesCircuitSimulationScanConfig,
       configureBinding: circuitSimulationConfigureBinding(
-        ExtendedEntitiesTypeDict.MEModelWithSynapses
+        ExtendedEntitiesTypeDict.SingleNeuronCircuit
       ),
     },
     configurationInputs: [
       {
-        type: ExtendedEntitiesTypeDict.MEModelWithSynapses,
+        type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
         filters: simulatableCircuitFilters,
       },
     ],

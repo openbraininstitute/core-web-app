@@ -15,7 +15,6 @@ import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
-import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { Microcircuit } from '@/entity-configuration/domain/model/microcircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -60,7 +59,6 @@ export const EntityCoreModelConfiguration = {
   MEmodel,
   MEModelCircuit,
   SingleNeuronSynaptome,
-  SingleNeuronCircuit,
   PairedNeuronCircuit,
   SmallMicrocircuit,
   Microcircuit,
@@ -70,7 +68,7 @@ export const EntityCoreModelConfiguration = {
   IonChannelModel,
   IonChannelModelingCampaign,
   EmSynapseMappingCampaign,
-  MEModelWithSynapsesCircuit,
+  SingleNeuronCircuit,
   SynthesizedCellMorphology,
 } as const;
 

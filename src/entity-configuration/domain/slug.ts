@@ -13,7 +13,6 @@ export const ModelEntitySlug = {
   MeModel: 'me-model',
   SingleNeuronSynaptome: 'synaptome',
   SingleNeuronSimulation: 'single-neuron-simulation',
-  SingleNeuronCircuit: 'single-neuron-circuit',
   PairedNeuronsCircuit: 'paired-neurons',
   SmallMicrocircuit: 'small-microcircuit',
   Microcircuit: 'microcircuit',
@@ -22,7 +21,7 @@ export const ModelEntitySlug = {
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
-  MEModelWithSynapses: 'me-model-with-synapses',
+  SingleNeuronCircuit: 'single-neuron-circuit',
   EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
 } as const;
 

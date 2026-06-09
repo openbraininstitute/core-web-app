@@ -189,7 +189,7 @@ export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged
               <MiniDetailViewRenderer
                 section={WorkspaceSection.Data}
                 record={selectedFile.entity as ICircuit}
-                dataType={ExtendedEntitiesTypeDict.MEModelWithSynapses}
+                dataType={ExtendedEntitiesTypeDict.SingleNeuronCircuit}
                 theme={MiniDetailViewTheme.Light}
                 enableAnimation={false}
               />

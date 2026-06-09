@@ -327,7 +327,7 @@ export function resolveSimulateSourceTypeFromDataView(
       return ExtendedEntitiesTypeDict.PairedNeuronCircuit;
     }
     if (entity.scale === CircuitScaleDictionary.Single) {
-      return ExtendedEntitiesTypeDict.MEModelWithSynapses;
+      return ExtendedEntitiesTypeDict.SingleNeuronCircuit;
     }
     if (entity.scale === CircuitScaleDictionary.Microcircuit) {
       return ExtendedEntitiesTypeDict.Microcircuit;

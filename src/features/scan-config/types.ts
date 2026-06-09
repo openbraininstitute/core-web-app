@@ -478,10 +478,9 @@ export type TSupportedEntitiesForScanConfiguration =
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
-  | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
+  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit
   | typeof ExtendedEntitiesTypeDict.IonChannelModel
   | typeof ExtendedEntitiesTypeDict.EMCellMesh
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
-  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit
   | typeof ExtendedEntitiesTypeDict.WholeBrain;

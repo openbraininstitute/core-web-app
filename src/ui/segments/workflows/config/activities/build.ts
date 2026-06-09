@@ -120,14 +120,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.Disabled,
-    sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-    targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-    order: 6,
-    disabled: true,
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     order: 7,

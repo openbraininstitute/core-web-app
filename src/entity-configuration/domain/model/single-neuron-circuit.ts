@@ -12,17 +12,12 @@ export const circuitScaleFilter = {
   scale__in: [CircuitScaleDictionary.Single],
 };
 
-/**
- * @deprecated Use {@link MEModelWithSynapsesCircuit} from
- * `@/entity-configuration/domain/model/me-model-with-synapses` for workflow browse
- * and simulation configuration. Retained for existing entity listings and detail views.
- */
 export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Single neuron',
+  title: 'Synaptome (beta)',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
   type: EntityTypeDict.Circuit,
-  slug: EntitySlug.SingleNeuronCircuit,
+  slug: EntitySlug.Circuit,
   api: {
     config: {
       allowedFacets: true,
@@ -35,10 +30,7 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
-          filters: {
-            ...circuitScaleFilter,
-            ...params[0].filters,
-          },
+          filters: { ...params[0].filters, ...circuitScaleFilter },
         });
       },
       one: getCircuit,
@@ -49,7 +41,6 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
-    DetailViewSectionsDict.Analysis,
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],

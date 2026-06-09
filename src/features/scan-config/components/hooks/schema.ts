@@ -161,7 +161,7 @@ export async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
 
 const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.Memodel]: 'MEModelFromID',
-  [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'MEModelWithSynapsesCircuitFromID',
+  [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: 'MEModelWithSynapsesCircuitFromID',
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
 };
@@ -213,7 +213,7 @@ function buildInitialConfigState(
                 type: EntityTypeDict.Circuit,
                 scale: CircuitScaleDictionary.Single,
               },
-              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.SingleNeuronCircuit]
             )
             .with(
               { type: EntityTypeDict.Circuit },

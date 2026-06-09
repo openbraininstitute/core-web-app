@@ -102,7 +102,12 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
     if (opts.mergeBrowseSelectionIntoSingleGroup) {
       return {
         mode: WorkflowSessionSelectionMode.Grouped,
-        groups: [{ name: 'Default name', items: groups.flatMap((group) => group.items) }],
+        groups: [
+          {
+            name: 'Default name',
+            items: groups.flatMap((group) => group.items),
+          },
+        ],
       };
     }
 
@@ -255,7 +260,10 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
   const handlePrerequisiteSelect = useCallback(
     (value: TBrowsePrerequisiteValue) => {
       if (!activePrerequisiteKey) return;
-      setDraftPrerequisiteByKey((previous) => ({ ...previous, [activePrerequisiteKey]: value }));
+      setDraftPrerequisiteByKey((previous) => ({
+        ...previous,
+        [activePrerequisiteKey]: value,
+      }));
     },
     [activePrerequisiteKey]
   );
@@ -299,7 +307,11 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       return;
     }
     navigate(
-      buildWorkflowHomeHref({ activity, targetType, workspace: { virtualLabId, projectId } })
+      buildWorkflowHomeHref({
+        activity,
+        targetType,
+        workspace: { virtualLabId, projectId },
+      })
     );
   };
 
@@ -587,7 +599,9 @@ export function createWorkflowNewRoutePage(activity: TActivityValue, section: TW
     null
   >) {
     const { type } = use(params);
-    const { type: targetType } = resolveExtendedTypeFromPathParamUrl({ pathParam: type });
+    const { type: targetType } = resolveExtendedTypeFromPathParamUrl({
+      pathParam: type,
+    });
 
     return <WorkflowNewBrowsePage activity={activity} section={section} targetType={targetType} />;
   }

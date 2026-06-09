@@ -116,7 +116,11 @@ type Props = {
   requireScopeSelector?: boolean;
   requireEntityTypeSelector?: {
     value: TExtendedEntitiesTypeDict;
-    options: Array<{ label: string; value: TExtendedEntitiesTypeDict; count?: number }>;
+    options: Array<{
+      label: string;
+      value: TExtendedEntitiesTypeDict;
+      count?: number;
+    }>;
     enabled: boolean;
     onSelect: (value: TExtendedEntitiesTypeDict) => void;
   };
@@ -354,7 +358,11 @@ export function BrowseEntityScope({
     workspace: { virtualLabId, projectId },
     queryFilters,
     queryFnOverride: facetsQueryFn
-      ? () => facetsQueryFn({ filters: queryFilters, context: { virtualLabId, projectId } })
+      ? () =>
+          facetsQueryFn({
+            filters: queryFilters,
+            context: { virtualLabId, projectId },
+          })
       : undefined,
     enabled: () => {
       if (!allowQuery) return false;

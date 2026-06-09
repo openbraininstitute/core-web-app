@@ -55,7 +55,7 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
     record.type === EntityTypeDict.Circuit &&
     (record as ICircuit).scale === CircuitScaleDictionary.Single
   ) {
-    detailUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.MEModelWithSynapses)}/${record.id}`;
+    detailUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronCircuit)}/${record.id}`;
   }
 
   const configureSegment = resolveSimulateConfigureSegment({

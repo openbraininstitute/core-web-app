@@ -112,7 +112,7 @@ export async function DataViewLayout({
         </div>
       </div>
       {includes(
-        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
         entityType.extendedType
       ) && <CircuitDownloadPanel />}
     </div>
