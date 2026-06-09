@@ -37,7 +37,6 @@ export default function Page({
 >) {
   const sessionId = useLegacyWorkflowSessionFromSearchParams(searchParams);
   const entity = useEntity(pathParams);
-  console.log('🐞 [page@52] entity =', entity); // @FIXME: Remove this line written on 2026-06-09 at 15:26
   if (!entity) return <Spinner />;
 
   return (
