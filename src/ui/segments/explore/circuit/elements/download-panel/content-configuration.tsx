@@ -65,7 +65,7 @@ export const configurationFileContentConfiguration: CircuitContentConfigurationP
     <p className="text-primary-1 w-3/4 text-base font-light">
       SONATA circuit config JSON file.{' '}
       <a
-        href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#tying-it-all-together---the-networkcircuit-config-file"
+        href="https://sonata-extension.readthedocs.io/en/latest/sonata_config.html"
         target="_blank"
         rel="noopener noreferrer"
         className="underline underline-offset-2"
@@ -85,7 +85,7 @@ export const nodeSetsFileContentConfiguration: CircuitContentConfigurationProps 
     <p className="text-primary-1 w-3/4 text-base font-light">
       SONATA node sets JSON file.{' '}
       <a
-        href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#node-sets-file"
+        href="https://sonata-extension.readthedocs.io/en/latest/sonata_nodeset.html"
         target="_blank"
         rel="noopener noreferrer"
         className="underline underline-offset-2"
@@ -114,7 +114,16 @@ export const electricalModelsContentConfiguration: CircuitContentConfigurationPr
   name: 'Electrical models',
   description: (
     <p className="text-primary-1 w-3/4 text-base font-light">
-      Electrical neuron model templates (.hoc files), packaged as one archive per directory.
+      Electrical neuron model templates (.hoc files), packaged as one archive per directory.{' '}
+      <a
+        href="https://sonata-extension.readthedocs.io/en/latest/hoc-emodel.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2"
+      >
+        See more here
+      </a>
+      .
     </p>
   ),
   mimeType: 'tar.gz',
@@ -125,7 +134,16 @@ export const mechanismsContentConfiguration: CircuitContentConfigurationProps = 
   name: 'Mechanisms',
   description: (
     <p className="text-primary-1 w-3/4 text-base font-light">
-      Biophysical mechanism files (.mod), packaged as a single archive.
+      Biophysical mechanism files (.mod), packaged as a single archive.{' '}
+      <a
+        href="https://sonata-extension.readthedocs.io/en/latest/mod_files.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2"
+      >
+        See more here
+      </a>
+      .
     </p>
   ),
   mimeType: 'tar.gz',
@@ -139,7 +157,7 @@ export const networksContentConfiguration: CircuitContentConfigurationProps[] = 
       <p className="text-primary-1 w-3/4 text-base font-light">
         Files containing information on the population of neurons in the circuit.{' '}
         <a
-          href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#neuron_networks_nodes"
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_population.html"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2"
@@ -158,7 +176,7 @@ export const networksContentConfiguration: CircuitContentConfigurationProps[] = 
       <p className="text-primary-1 w-3/4 text-base font-light">
         Files containing information on the connections between neurons in the circuit.{' '}
         <a
-          href="https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#neuron_networks_edges"
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_population.html"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2"

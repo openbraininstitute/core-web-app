@@ -65,7 +65,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
           <p className="text-primary-2 text-sm leading-normal font-light hyphens-auto">
             The complete circuit compressed in SONATA format.{' '}
             <a
-              href="https://sonata-extension.readthedocs.io/en/latest/"
+              href="https://sonata-extension.readthedocs.io/en/latest/sonata_overview.html"
               target="_blank"
               rel="noopener noreferrer"
               className="underline underline-offset-2"
