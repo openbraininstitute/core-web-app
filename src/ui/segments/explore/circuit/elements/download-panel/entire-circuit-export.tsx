@@ -70,7 +70,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
               rel="noopener noreferrer"
               className="underline underline-offset-2"
             >
-              See more here
+              Documentation
             </a>
             .
           </p>

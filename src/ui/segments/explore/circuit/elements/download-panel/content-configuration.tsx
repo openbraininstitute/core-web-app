@@ -30,7 +30,7 @@ export const connectivityMetricsContentConfiguration: CircuitContentConfiguratio
         rel="noopener noreferrer"
         className="underline underline-offset-2"
       >
-        See more here
+        Documentation
       </a>
       .
     </p>
@@ -50,7 +50,7 @@ export const morphologiesContentConfiguration: CircuitContentConfigurationProps 
         rel="noopener noreferrer"
         className="underline underline-offset-2"
       >
-        See more here
+        Documentation
       </a>
       .
     </p>
@@ -70,7 +70,7 @@ export const configurationFileContentConfiguration: CircuitContentConfigurationP
         rel="noopener noreferrer"
         className="underline underline-offset-2"
       >
-        See more here
+        Documentation
       </a>
       .
     </p>
@@ -90,7 +90,7 @@ export const nodeSetsFileContentConfiguration: CircuitContentConfigurationProps 
         rel="noopener noreferrer"
         className="underline underline-offset-2"
       >
-        See more here
+        Documentation
       </a>
       .
     </p>
@@ -121,7 +121,7 @@ export const electricalModelsContentConfiguration: CircuitContentConfigurationPr
         rel="noopener noreferrer"
         className="underline underline-offset-2"
       >
-        See more here
+        Documentation
       </a>
       .
     </p>
@@ -141,7 +141,7 @@ export const mechanismsContentConfiguration: CircuitContentConfigurationProps = 
         rel="noopener noreferrer"
         className="underline underline-offset-2"
       >
-        See more here
+        Documentation
       </a>
       .
     </p>
@@ -157,12 +157,21 @@ export const networksContentConfiguration: CircuitContentConfigurationProps[] = 
       <p className="text-primary-1 w-3/4 text-base font-light">
         Files containing information on the population of neurons in the circuit.{' '}
         <a
-          href="https://sonata-extension.readthedocs.io/en/latest/sonata_population.html"
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_population.html#nodes"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2"
         >
-          See more here
+          Documentation
+        </a>
+        ,{' '}
+        <a
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2"
+        >
+          Technical Description
         </a>
         .
       </p>
@@ -176,12 +185,21 @@ export const networksContentConfiguration: CircuitContentConfigurationProps[] = 
       <p className="text-primary-1 w-3/4 text-base font-light">
         Files containing information on the connections between neurons in the circuit.{' '}
         <a
-          href="https://sonata-extension.readthedocs.io/en/latest/sonata_population.html"
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_population.html#edges"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2"
         >
-          See more here
+          Documentation
+        </a>
+        ,{' '}
+        <a
+          href="https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2"
+        >
+          Technical Description
         </a>
         .
       </p>
