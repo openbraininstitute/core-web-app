@@ -64,7 +64,7 @@ export function LowFundsNotification({ onClose, duration = 10000 }: Props) {
     <>
       <div
         className={cn(
-          'border-neutral-2 fixed top-4 right-4 z-99999 max-w-[448px] min-w-[384px] rounded-2xl border bg-white shadow-lg transition-all duration-300',
+          'border-neutral-2 fixed top-4 right-4 z-99999 w-[min(448px,calc(100vw-2rem))] rounded-2xl border bg-white shadow-lg transition-all duration-300',
           isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
         )}
         role="alert"
@@ -88,12 +88,12 @@ export function LowFundsNotification({ onClose, duration = 10000 }: Props) {
                 <RiCloseFill className="text-xl" />
               </button>
             </div>
-            <p className="text-neutral-4 mb-4 text-base leading-normal">
+            <div className="text-neutral-4 mb-4 text-base leading-normal wrap-break-word flex flex-col items-start whitespace-normal">
               The project does not have sufficient credits to perform this action.
               {isVirtualLabAdmin
                 ? ' Please transfer additional credits to continue.'
                 : ' Please contact your project administrator to request additional credits.'}
-            </p>
+            </div>
             {isVirtualLabAdmin ? (
               <button
                 type="button"
