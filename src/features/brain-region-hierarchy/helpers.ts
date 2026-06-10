@@ -263,18 +263,50 @@ export function normalizeBrainRegionName(name: string) {
   return first.toUpperCase() + name.slice(1);
 }
 
+/**
+ * pick the first candidate hierarchy id that still exists in `available`,
+ * falling back to `defaultId` (or, failing that, the first available id).
+ *
+ * while `available` is undefined/empty the list has not loaded yet, so we
+ * cannot validate and return the first truthy candidate unchanged — validation
+ * only kicks in once the available hierarchies are known. this is what protects
+ * the UI from a persisted selection (localStorage snapshot or remote preference)
+ * whose hierarchy was removed or renamed by a later deploy: instead of resolving
+ * to a dead id (empty species panel + 404 hierarchy fetch) we fall back to a
+ * valid default.
+ */
+export function pickValidHierarchyId(
+  candidates: ReadonlyArray<string | null | undefined>,
+  available: ReadonlyArray<{ id: string }> | undefined,
+  defaultId: string
+): string {
+  if (!available?.length) {
+    return candidates.find(Boolean) || defaultId;
+  }
+  const validIds = new Set(available.map((hierarchy) => hierarchy.id));
+  const firstValid = candidates.find((id): id is string => !!id && validIds.has(id));
+  if (firstValid) return firstValid;
+  return validIds.has(defaultId) ? defaultId : (available[0]?.id ?? defaultId);
+}
+
 export function resolveEffectiveHierarchyId({
   urlHierarchyId,
   remoteHierarchyId,
   storageHierarchyId,
   defaultHierarchyId,
+  availableHierarchies,
 }: {
   urlHierarchyId?: string | null;
   remoteHierarchyId?: string | null;
   storageHierarchyId?: string | null;
   defaultHierarchyId: string;
+  availableHierarchies?: ReadonlyArray<{ id: string }>;
 }): string {
-  return urlHierarchyId || remoteHierarchyId || storageHierarchyId || defaultHierarchyId;
+  return pickValidHierarchyId(
+    [urlHierarchyId, remoteHierarchyId, storageHierarchyId],
+    availableHierarchies,
+    defaultHierarchyId
+  );
 }
 
 export function createAllSpeciesSelection(

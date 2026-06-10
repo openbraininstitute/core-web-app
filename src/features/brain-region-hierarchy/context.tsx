@@ -20,8 +20,10 @@ import {
   injectHierarchyId,
   mergeHierarchyWithAtlas,
   normalizeBrainRegionName,
+  pickValidHierarchyId,
 } from '@/features/brain-region-hierarchy/helpers';
 import {
+  useAvailableHierarchySpeciesQuery,
   useHierarchyRuntimeMetadataQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
@@ -166,6 +168,7 @@ export function useHierarchyBrainRegionUrlState() {
 export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
   const { remoteUserPreferenceHierarchySpecies, loading: loadingRemote } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
+  const { remoteAvailableHierarchies } = useAvailableHierarchySpeciesQuery();
   const { urlOverride } = useBrainRegionUrlBoundaryContext();
   const [browserStorageHierarchy] = useLocalStorage<BrainRegionHierarchySelection | null>(
     VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
@@ -173,12 +176,19 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
   );
   const focusedUrlOverrideHierarchyId =
     urlOverride?.kind === SpeciesSelectionMode.Focused ? urlOverride.hierarchyId : undefined;
-  // Priority: URL override > Remote ID > browser storage selection > config default
-  const hierarchyId =
-    focusedUrlOverrideHierarchyId ||
-    remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
-    browserStorageHierarchy?.hierarchyId ||
-    APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
+  // Priority: URL override > Remote ID > browser storage selection > config default.
+  // Each candidate is validated against the available hierarchies so a stale
+  // persisted id (e.g. removed/renamed by a later deploy) falls back to the
+  // default instead of fetching a 404 and stranding consumers with empty options.
+  const hierarchyId = pickValidHierarchyId(
+    [
+      focusedUrlOverrideHierarchyId,
+      remoteUserPreferenceHierarchySpecies?.hierarchy_id,
+      browserStorageHierarchy?.hierarchyId,
+    ],
+    remoteAvailableHierarchies,
+    APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID
+  );
 
   const usedHierarchyId = config?.hId ?? hierarchyId;
 
