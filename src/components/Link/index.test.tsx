@@ -1,11 +1,11 @@
-import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import Link from './index';
 
-const useSearchParamsMockFn = jest.fn();
+const useSearchParamsMockFn = vi.hoisted(() => vi.fn());
 
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   useSearchParams: () => useSearchParamsMockFn(),
 }));
 

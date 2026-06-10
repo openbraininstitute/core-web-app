@@ -358,6 +358,7 @@ export function getHierarchyBannerLoading({
   isRootHierarchyLoading,
   isAllMode,
   displaySpecies,
+  hasAvailableHierarchies,
 }: {
   syncSettled: boolean;
   hasPendingUrlOverride: boolean;
@@ -365,12 +366,18 @@ export function getHierarchyBannerLoading({
   isRootHierarchyLoading: boolean;
   isAllMode: boolean;
   displaySpecies: IWorkspaceSpecies | null;
+  hasAvailableHierarchies: boolean;
 }): boolean {
   return (
     !syncSettled ||
     hasPendingUrlOverride ||
     isBootstrapLoading ||
     isRootHierarchyLoading ||
-    (!isAllMode && !displaySpecies?.displayName)
+    // in focused mode the species pill keeps its skeleton until a species
+    // resolves, but only while one can still be expected, once the hierarchies
+    // list has settled empty (the request failed or returned nothing) there is
+    // nothing left to wait for, so we stop loading instead of stranding both
+    // the species and region pills in a permanent skeleton.
+    (!isAllMode && !displaySpecies?.displayName && hasAvailableHierarchies)
   );
 }

@@ -802,6 +802,7 @@ export function useWorkspaceHierarchyRegistry() {
     isRootHierarchyLoading,
     isAllMode,
     displaySpecies,
+    hasAvailableHierarchies: !!remoteAvailableHierarchies?.length,
   });
 
   return {

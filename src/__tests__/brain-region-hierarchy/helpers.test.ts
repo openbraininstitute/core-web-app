@@ -253,6 +253,7 @@ describe('brain region hierarchy', () => {
       isRootHierarchyLoading: false,
       isAllMode: false,
       displaySpecies: mouse.species,
+      hasAvailableHierarchies: true,
     };
 
     it('is done loading once everything has settled and a species is resolved', () => {
@@ -271,8 +272,20 @@ describe('brain region hierarchy', () => {
       expect(getHierarchyBannerLoading({ ...settled, hasPendingUrlOverride: true })).toBe(true);
     });
 
-    it('stays loading in focused mode when no species could be resolved (the stuck-panel case)', () => {
+    it('stays loading in focused mode while a species is still expected to resolve', () => {
       expect(getHierarchyBannerLoading({ ...settled, displaySpecies: null })).toBe(true);
+    });
+
+    it('stops loading when the hierarchies list settled empty and no species could resolve', () => {
+      // failed/empty `/brain-region-hierarchy` list: nothing left to wait for,
+      // so the banner must not be stranded in a permanent skeleton.
+      expect(
+        getHierarchyBannerLoading({
+          ...settled,
+          displaySpecies: null,
+          hasAvailableHierarchies: false,
+        })
+      ).toBe(false);
     });
 
     it('is done in "all species" mode even without a resolved species', () => {
@@ -397,6 +410,7 @@ describe('the stuck-panel fix, end to end through the public helpers', () => {
       isRootHierarchyLoading: false,
       isAllMode: false,
       displaySpecies,
+      hasAvailableHierarchies: !!available.length,
     });
     return { workspaceHierarchyId, displaySpecies, isLoading };
   }

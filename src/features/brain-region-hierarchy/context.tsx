@@ -47,7 +47,7 @@ import type {
 } from '@/features/brain-region-hierarchy/types';
 
 export const VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT =
-  'species-brain-region-selection-snapshot-v06-02-2026';
+  'species-brain-region-selection-snapshot-v12-06-2026';
 
 /**
  * url parameter keys for brain region hierarchy
