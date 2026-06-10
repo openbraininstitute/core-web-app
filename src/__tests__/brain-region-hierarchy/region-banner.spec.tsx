@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { createStore, Provider } from 'jotai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
@@ -237,5 +239,53 @@ describe('PortalRegionBanner', () => {
     );
 
     expect(screen.getByTestId('tree-panel')).toBeInTheDocument();
+  });
+
+  it('keeps the tree panel closed in all-species mode even when opened', () => {
+    setRegistry({
+      speciesSelectionMode: SpeciesSelectionMode.All,
+      displaySpecies: null,
+      selectedBrainRegion: null,
+    });
+    const store = createStore();
+    store.set(speciesSelectionModeAtom, SpeciesSelectionMode.All);
+
+    render(
+      <Provider store={store}>
+        <PortalRegionBanner initialOpen portalContainer={document.body}>
+          <div data-testid="tree-panel">tree</div>
+        </PortalRegionBanner>
+      </Provider>
+    );
+
+    expect(screen.queryByTestId('tree-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('portal-region-banner')).not.toBeInTheDocument();
+  });
+
+  it('renders the tree panel inside a provided portal container', () => {
+    const customContainer = document.createElement('div');
+    document.body.appendChild(customContainer);
+
+    render(
+      <PortalRegionBanner initialOpen portalContainer={customContainer}>
+        <div data-testid="tree-panel">tree</div>
+      </PortalRegionBanner>
+    );
+
+    expect(customContainer.querySelector('[data-testid="tree-panel"]')).not.toBeNull();
+    customContainer.remove();
+  });
+
+  it('closes the open tree panel when Escape is pressed', () => {
+    render(
+      <PortalRegionBanner initialOpen portalContainer={document.body}>
+        <div data-testid="tree-panel">tree</div>
+      </PortalRegionBanner>
+    );
+    expect(screen.getByTestId('tree-panel')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
+
+    expect(screen.queryByTestId('tree-panel')).not.toBeInTheDocument();
   });
 });
