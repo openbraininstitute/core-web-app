@@ -14,7 +14,7 @@ import {
   circuitSimulationConfigureBinding,
   ionChannelSimulationConfigureBinding,
   memodelCircuitSimulationConfigureBinding,
-  wholeBrainBrian2SimulationConfigureBinding,
+  wholeBrainCircuitSimulationConfigureBinding,
 } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
 
@@ -246,8 +246,9 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     },
     scanConfig: {
       definition: simulateWholeBrainCircuitWorkflow,
-      schemaName: SchemaNameDict.Brian2CircuitSimulationScanConfig,
-      configureBinding: wholeBrainBrian2SimulationConfigureBinding(),
+      // Default schema/endpoint; Brian2 is selected from `target_simulator` at configure time.
+      schemaName: SchemaNameDict.CircuitSimulationScanConfig,
+      configureBinding: wholeBrainCircuitSimulationConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.WholeBrain }],
     requiredFeatures: [wholeBrainSimulationFlag.key],

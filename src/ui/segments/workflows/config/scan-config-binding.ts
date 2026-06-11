@@ -1,7 +1,8 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config as appConfig } from '@/config';
-import { SchemaMappingKeyDict } from '@/features/scan-config/types';
+import { SchemaMappingKeyDict, SchemaNameDict } from '@/features/scan-config/types';
 
+import type { TCircuitTargetSimulator } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   SchemaName,
@@ -24,6 +25,7 @@ export type TScanConfigFromIdType =
 export const ScanConfigGeneratedApiPath = {
   CircuitSimulation: 'circuit-simulation-scan-config-generate-grid',
   Brian2CircuitSimulation: 'brian-2-circuit-simulation-scan-config-generate-grid',
+  LearningEngineCircuitSimulation: 'learning-engine-circuit-simulation-scan-config-generate-grid',
   MEModelWithSynapsesCircuitSimulation:
     'me-model-with-synapses-circuit-simulation-scan-config-generate-grid',
   MEModelSimulation: 'me-model-simulation-scan-config-generate-grid',
@@ -61,8 +63,37 @@ export function resolveScanConfigFromIdType(
   return binding.fromIdTypeByBrowseType[browseType];
 }
 
+export function buildGeneratedApiUrl(generatedApiPath: string): string {
+  return `${appConfig.OBI_ONE_URL}/generated/${generatedApiPath}`;
+}
+
 export function resolveScanConfigGeneratedApiUrl(binding: TScanConfigConfigureBinding): string {
-  return `${appConfig.OBI_ONE_URL}/generated/${binding.generatedApiPath}`;
+  return buildGeneratedApiUrl(binding.generatedApiPath);
+}
+
+/**
+ * Data-driven selection of the circuit-simulation generation endpoint + schema by the
+ * circuit's `target_simulator`. Returns `null` for `NEURON`/`null` (use the descriptor default).
+ * This is what lets a single scale-based simulate workflow target the Brian2 or
+ * LearningEngine (INAIT) obi-one endpoint without scale-pinned descriptors.
+ */
+export function resolveSimulatorScanConfigOverride(
+  targetSimulator: TCircuitTargetSimulator | null | undefined
+): { generatedApiPath: string; schemaName: SchemaName } | null {
+  switch (targetSimulator) {
+    case 'Brian2':
+      return {
+        generatedApiPath: ScanConfigGeneratedApiPath.Brian2CircuitSimulation,
+        schemaName: SchemaNameDict.Brian2CircuitSimulationScanConfig,
+      };
+    case 'LearningEngine':
+      return {
+        generatedApiPath: ScanConfigGeneratedApiPath.LearningEngineCircuitSimulation,
+        schemaName: SchemaNameDict.LearningEngineCircuitSimulationScanConfig,
+      };
+    default:
+      return null;
+  }
 }
 
 /** Workflow registry scan-config entry — single source for configure resolution. */
@@ -166,14 +197,17 @@ export function buildEmSynapseMappingConfigureBinding(): TScanConfigConfigureBin
   };
 }
 
-export function wholeBrainBrian2SimulationConfigureBinding(): TScanConfigConfigureBinding {
+export function wholeBrainCircuitSimulationConfigureBinding(): TScanConfigConfigureBinding {
   return {
     browseType: ExtendedEntitiesTypeDict.WholeBrain,
     scanConfigEntityType: ExtendedEntitiesTypeDict.WholeBrain,
     fromIdTypeByBrowseType: {
       [ExtendedEntitiesTypeDict.WholeBrain]: ScanConfigFromIdType.CircuitFromID,
     },
-    generatedApiPath: ScanConfigGeneratedApiPath.Brian2CircuitSimulation,
+    // Generic circuit-simulation endpoint/schema by default; the actual endpoint
+    // (e.g. Brian2) is selected from the circuit's `target_simulator` at configure time
+    // via `resolveSimulatorScanConfigOverride`.
+    generatedApiPath: ScanConfigGeneratedApiPath.CircuitSimulation,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }

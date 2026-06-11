@@ -35,7 +35,9 @@ import {
 } from '@/features/scan-config/types';
 import { resolvePrimaryEntityIdFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import {
+  buildGeneratedApiUrl,
   resolveScanConfigFromRegistry,
+  resolveSimulatorScanConfigOverride,
   type TScanConfigRegistryConfig,
 } from '@/ui/segments/workflows/config/scan-config-binding';
 
@@ -107,16 +109,20 @@ export function useScanConfiguration({
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
   const registryResolved = useMemo(() => resolveScanConfigFromRegistry(scanConfig), [scanConfig]);
 
-  const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
-    schemaName: registryResolved.schemaName,
+  // When the entity id must be extracted from a saved config form, we need a schema to do so.
+  // Use the descriptor's default schema for that extraction — the circuit reference shape is the
+  // same across circuit-simulation schemas, so it resolves the primary entity id regardless.
+  const needsFormEntityId = !entityFromProps && !entityId && !!initialConfig;
+  const { schema: formSchema } = useObioneJsonSchema({
+    schemaName: needsFormEntityId ? registryResolved.schemaName : undefined,
   });
 
   const entityIdFromForm = useMemo(
     () =>
-      schema && initialConfig
-        ? resolvePrimaryEntityIdFromConfigForm(schema, initialConfig)
+      formSchema && initialConfig
+        ? resolvePrimaryEntityIdFromConfigForm(formSchema, initialConfig)
         : undefined,
-    [initialConfig, schema]
+    [initialConfig, formSchema]
   );
 
   const effectiveEntityId = entityId ?? entityIdFromForm;
@@ -134,6 +140,22 @@ export function useScanConfiguration({
   const entity = entityFromProps ?? fetchedEntity;
   const isEntityLoading = shouldFetchEntity && loadingEntity;
 
+  // Select the circuit-simulation generation endpoint + schema from the circuit's
+  // `target_simulator` (Brian2 / LearningEngine), falling back to the descriptor default.
+  const simulatorOverride = useMemo(() => {
+    const targetSimulator = entity && 'target_simulator' in entity ? entity.target_simulator : null;
+    return resolveSimulatorScanConfigOverride(targetSimulator);
+  }, [entity]);
+
+  const effectiveSchemaName = simulatorOverride?.schemaName ?? registryResolved.schemaName;
+  const effectiveEndpoint = simulatorOverride
+    ? buildGeneratedApiUrl(simulatorOverride.generatedApiPath)
+    : registryResolved.generatedEndpoint;
+
+  const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
+    schemaName: effectiveSchemaName,
+  });
+
   const resolved = useMemo(() => {
     if (isEntityLoading && !entity) {
       return null;
@@ -144,11 +166,11 @@ export function useScanConfiguration({
     return {
       usedType: registryResolved.entityType,
       entityConfig,
-      endpoint: registryResolved.generatedEndpoint,
-      schemaName: registryResolved.schemaName,
+      endpoint: effectiveEndpoint,
+      schemaName: effectiveSchemaName,
       effectiveSchemaMappingKey: registryResolved.schemaMappingKey,
     };
-  }, [entity, isEntityLoading, registryResolved]);
+  }, [entity, isEntityLoading, registryResolved, effectiveEndpoint, effectiveSchemaName]);
 
   const property_endpoints = resolved?.effectiveSchemaMappingKey
     ? get(schema?.property_endpoints, resolved.effectiveSchemaMappingKey, '')

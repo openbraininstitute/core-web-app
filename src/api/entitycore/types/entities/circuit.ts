@@ -74,7 +74,7 @@ export type TCircuitScaleDictionary =
 export type TCircuitBuildCategoryDictionary =
   (typeof CircuitBuildCategory)[keyof typeof CircuitBuildCategory]['key'];
 
-export type TCircuitTargetSimulator = 'NEURON' | 'Brian2';
+export type TCircuitTargetSimulator = 'NEURON' | 'Brian2' | 'LearningEngine';
 
 interface CircuitBase {
   description: string;

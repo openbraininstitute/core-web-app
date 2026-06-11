@@ -308,7 +308,12 @@ export default function SimulationsTab({
   };
 
   const scale = get(model, 'scale', null);
-  const shouldTreatSimulationAsTask = scale !== null && TASK_LAUNCH_SCALES.has(scale);
+  const targetSimulator = get(model, 'target_simulator', null);
+  // Circuits targeting an external simulator (Brian2 / LearningEngine) always launch through the
+  // task system (obi-one `/declared/task/launch`), independent of scale.
+  const isExternalSimulator = targetSimulator === 'Brian2' || targetSimulator === 'LearningEngine';
+  const shouldTreatSimulationAsTask =
+    isExternalSimulator || (scale !== null && TASK_LAUNCH_SCALES.has(scale));
 
   // TODO Refactor
   const run = async (simIds: string[]) => {

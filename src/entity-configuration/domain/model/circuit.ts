@@ -70,16 +70,18 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: (entity: ICircuit) =>
-    entity.has_electrical_cell_models &&
-    includes(
-      [
-        CircuitScaleDictionary.Single,
-        CircuitScaleDictionary.PairNeuron,
-        CircuitScaleDictionary.SmallMicrocircuit,
-        CircuitScaleDictionary.Microcircuit,
-        CircuitScaleDictionary.Region,
-        CircuitScaleDictionary.WholeBrain,
-      ],
-      entity.scale
-    ),
+    // LearningEngine (INAIT) circuits are simulatable regardless of biophysical models.
+    entity.target_simulator === 'LearningEngine' ||
+    (entity.has_electrical_cell_models &&
+      includes(
+        [
+          CircuitScaleDictionary.Single,
+          CircuitScaleDictionary.PairNeuron,
+          CircuitScaleDictionary.SmallMicrocircuit,
+          CircuitScaleDictionary.Microcircuit,
+          CircuitScaleDictionary.Region,
+          CircuitScaleDictionary.WholeBrain,
+        ],
+        entity.scale
+      )),
 } as const;
