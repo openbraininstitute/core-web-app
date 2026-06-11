@@ -8,7 +8,7 @@ import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
-import { logError } from '@/utils/logger';
+import { logError, logWarn } from '@/utils/logger';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { useAiAgentHealthCheck } from '../hooks/health';
@@ -174,7 +174,7 @@ class AiAssistantClass {
         this.isEmptyThread.set(isEmpty);
       })
       .catch((err: unknown) => {
-        logError('Failed to initialize AI assistant thread:', err);
+        logWarn('AI assistant thread init failed (handled):', err);
         this.healthError.set(
           err instanceof Error ? err.message : 'Failed to initialize AI assistant.'
         );
