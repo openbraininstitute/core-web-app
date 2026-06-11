@@ -1,3 +1,5 @@
+import { logError } from '@/utils/logger';
+
 import { serviceAiAgentThreadCreate, serviceAiAgentThreadList } from '../../api';
 
 import type { Signal } from '../signal';
@@ -17,9 +19,14 @@ export class ThreadManager {
    */
   readonly init = async (context: AssistantContext) => {
     this.context = context;
-    const { threadId, isEmpty } = await this.createThread();
-    this.target.threadId.set(threadId);
-    return { threadId, isEmpty };
+    try {
+      const { threadId, isEmpty } = await this.createThread();
+      this.target.threadId.set(threadId);
+      return { threadId, isEmpty };
+    } catch (err) {
+      logError('ThreadManager.init failed:', err);
+      throw err;
+    }
   };
 
   readonly createThread = async () => {

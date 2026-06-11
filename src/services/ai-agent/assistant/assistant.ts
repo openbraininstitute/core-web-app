@@ -168,9 +168,17 @@ class AiAssistantClass {
   }
 
   private readonly handleInit = debounce(() => {
-    this.threadmanager.init(this.context).then(({ isEmpty }) => {
-      this.isEmptyThread.set(isEmpty);
-    });
+    this.threadmanager
+      .init(this.context)
+      .then(({ isEmpty }) => {
+        this.isEmptyThread.set(isEmpty);
+      })
+      .catch((err: unknown) => {
+        logError('Failed to initialize AI assistant thread:', err);
+        this.healthError.set(
+          err instanceof Error ? err.message : 'Failed to initialize AI assistant.'
+        );
+      });
   }, 50);
 }
 
