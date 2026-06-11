@@ -5,11 +5,13 @@ import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
-import { getClient } from '@/services/sanity/client';
+import { getClient, getProductionClient } from '@/services/sanity/client';
 import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
+  ProjectHomeGetStartedQuery,
+  type TProjectHomeGetStartedCard,
   type TTutorial,
   TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
@@ -52,6 +54,17 @@ export default async function Layout({
     queryKey: keyBuilderExternal.quickAccessList(),
     queryFn: () =>
       client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery(), {}, { next: { revalidate: 0 } }),
+  });
+
+  const productionClient = getProductionClient();
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderExternal.projectHomeGetStarted(),
+    queryFn: () =>
+      productionClient.fetch<{ getStarted: TProjectHomeGetStartedCard[] | null }>(
+        ProjectHomeGetStartedQuery,
+        {},
+        { next: { revalidate: 0 } }
+      ),
   });
 
   return (
