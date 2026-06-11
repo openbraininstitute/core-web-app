@@ -14,6 +14,7 @@ import {
   clearDiffStateAtom,
   messageSubmittedCounterAtom,
 } from '@/state/config-highlights';
+import { pendingAssistantQuestionAtom } from '@/ui/segments/project/get-started/sections/use-assistant-question';
 import { classNames } from '@/util/utils';
 
 import ErrorPanel from '../error';
@@ -55,10 +56,10 @@ export default function Chat({
   const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally only re-run when refetchSuggestions identity changes to register the latest callback references
   React.useEffect(() => {
     onRefetchSuggestions?.(refetchSuggestions);
     onClearSuggestions?.(clearSuggestions);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchSuggestions]);
 
   const accessToken = useAccessToken();
@@ -124,6 +125,7 @@ export default function Chat({
   ]);
 
   // Clear active diff view when switching conversations
+  // biome-ignore lint/correctness/useExhaustiveDependencies: threadId is a reactive trigger only; not used inside the effect body
   React.useEffect(() => {
     setActiveDiffMessageId(null);
     clearDiffBarData();
@@ -157,6 +159,32 @@ export default function Chat({
     scrollToBottom();
     requestAnimationFrame(scrollToBottom);
   };
+
+  const [pendingQuestion, setPendingQuestion] = useAtom(pendingAssistantQuestionAtom);
+  const pendingConsumedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (pendingQuestion && threadId && status === 'ready' && !pendingConsumedRef.current) {
+      pendingConsumedRef.current = true;
+      const question = pendingQuestion;
+      setPendingQuestion(null);
+      setAutoScroll(true);
+      sendMessage(question);
+      scrollToBottom();
+      requestAnimationFrame(scrollToBottom);
+    }
+    if (!pendingQuestion) {
+      pendingConsumedRef.current = false;
+    }
+  }, [
+    pendingQuestion,
+    threadId,
+    status,
+    setPendingQuestion,
+    sendMessage,
+    setAutoScroll,
+    scrollToBottom,
+  ]);
 
   const lastMessage = messages[messages.length - 1];
   const hasVisibleContent = lastMessage?.parts.some(
@@ -286,6 +314,7 @@ function PendingUserMessage({
             // (no wrapper div) to avoid layout shift on transition.
             if (file.uploaded) {
               return (
+                // biome-ignore lint/performance/noImgElement: blob: URL preview — Next/Image does not support blob: protocol
                 <img
                   key={file.name}
                   src={file.previewUrl}
@@ -296,6 +325,7 @@ function PendingUserMessage({
             }
             return (
               <div key={file.name} className={styles.pendingFile}>
+                {/* biome-ignore lint/performance/noImgElement: blob: URL preview — Next/Image does not support blob: protocol */}
                 <img
                   src={file.previewUrl}
                   alt={file.name}

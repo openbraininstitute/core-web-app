@@ -152,9 +152,10 @@ export function useServiceAiAgentChat(threadId: string) {
     if (!editstateResult?.output) return;
 
     try {
-      const result = editstateResult.output as Record<string, any>;
-      const detectedKey = findConfigKeyInState(result.state);
-      const newConfig = detectedKey ? result.state[detectedKey] : null;
+      const resultState = ((editstateResult.output as Record<string, unknown>).state ??
+        {}) as Record<string, unknown>;
+      const detectedKey = findConfigKeyInState(resultState);
+      const newConfig = detectedKey ? resultState[detectedKey] : null;
       // Use lastAppliedConfigRef for incremental flash diffs. Falls back
       // to the live agentStateAtom for the very first editstate call.
       const currentState = jotaiStore.get(agentStateAtom) as Record<string, unknown>;
@@ -265,20 +266,20 @@ export function useServiceAiAgentChat(threadId: string) {
         ...(fileUIParts && fileUIParts.length > 0 ? { files: fileUIParts } : {}),
       });
 
-      if (chat.messages.length === 0) {
-        try {
-          serviceAiAgentThreadSuggestTitle({
-            accessToken: accessToken ?? 'NO-TOKEN',
-            threadId,
-            title: text,
-          }).then(() => {
+      if (chat.messages.length === 0 && threadId) {
+        serviceAiAgentThreadSuggestTitle({
+          accessToken: accessToken ?? 'NO-TOKEN',
+          threadId,
+          title: text,
+        })
+          .then(() => {
             queryClient.invalidateQueries({
               queryKey: keyBuilderAI.history(virtualLabId, projectId),
             });
+          })
+          .catch((ex) => {
+            logError('Unable to rename the thread:', ex);
           });
-        } catch (ex) {
-          logError('Unable to rename the thread:', ex);
-        }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -387,18 +388,21 @@ export function useAIConfig() {
   };
 
   const activeKey = findConfigKeyInState(aiAgentState as Record<string, unknown>);
+  const agentKeyEntry = activeKey
+    ? (aiAgentState as Record<string, Record<string, unknown>>)[activeKey]
+    : undefined;
 
   if (
     !isPlainObject(aiConfig?.initialize) ||
     !activeKey ||
-    !isPlainObject((aiAgentState as any)?.[activeKey]?.initialize)
+    !isPlainObject(agentKeyEntry?.initialize)
   )
     return defaultConfig;
 
   // Circuit identity guard: only apply when both configs have a circuit object.
   // Non-circuit workflows (ion channel, skeletonization, etc.) skip this check.
   const aiCircuit = aiConfig.initialize?.circuit;
-  const agentCircuit = (aiAgentState as any)?.[activeKey]?.initialize?.circuit;
+  const agentCircuit = (agentKeyEntry?.initialize as Record<string, unknown>)?.circuit;
 
   if (isPlainObject(aiCircuit) && isPlainObject(agentCircuit)) {
     if (aiCircuit.id_str !== agentCircuit.id_str) return defaultConfig;
