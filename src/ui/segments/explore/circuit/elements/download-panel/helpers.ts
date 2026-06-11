@@ -1,9 +1,6 @@
-import escapeRegExp from 'es-toolkit/compat/escapeRegExp';
 import get from 'es-toolkit/compat/get';
 import has from 'es-toolkit/compat/has';
-import isEmpty from 'es-toolkit/compat/isEmpty';
 import map from 'es-toolkit/compat/map';
-import reduce from 'es-toolkit/compat/reduce';
 import sumBy from 'es-toolkit/compat/sumBy';
 import toPairs from 'es-toolkit/compat/toPairs';
 import values from 'es-toolkit/compat/values';
@@ -13,6 +10,7 @@ import { atomFamily } from 'jotai-family';
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
+import { resolveManifestPath as getAssetPath } from '@/utils/circuit-manifest';
 
 import type {
   CircuitConnectivityMatricesConfiguration,
@@ -137,45 +135,8 @@ export function buildNetworksConfig(
   };
 }
 
-export function getAssetPath(path: string, manifest?: Record<string, string>): string {
-  if (!manifest || isEmpty(manifest)) {
-    return sanitizePath(path);
-  }
-
-  let resolvedPath = path;
-  const maxIterations = 50; // Prevent infinite loops
-  let iteration = 0;
-
-  // Keep replacing variables until no more variables exist or max iterations reached
-  while (resolvedPath.includes('$') && iteration < maxIterations) {
-    const previousPath = resolvedPath;
-
-    // Use  es-toolkit's reduce for efficient variable replacement
-    resolvedPath = reduce(
-      manifest,
-      (currentPath, value, key) => {
-        // Use global regex replace for all occurrences
-        return currentPath.replace(new RegExp(escapeRegExp(key), 'g'), value);
-      },
-      resolvedPath
-    );
-
-    // Break if no changes were made (no more replacements possible)
-    if (previousPath === resolvedPath) {
-      break;
-    }
-
-    iteration++;
-  }
-
-  return sanitizePath(resolvedPath);
-}
-
-function sanitizePath(path: string): string {
-  let sanitized = path.replace(/^\.\//, ''); // Remove leading ./
-  sanitized = sanitized.replace(/^\/+/, ''); // Remove leading slashes
-  return sanitized;
-}
+// Re-exported from the shared resolver so existing call sites keep importing `getAssetPath`.
+export { getAssetPath };
 
 export type ConfigurationFileItem = {
   path: string;
