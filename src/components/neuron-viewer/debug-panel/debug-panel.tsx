@@ -1,3 +1,5 @@
+import { log } from 'node:console';
+
 import React from 'react';
 
 import { classNames } from '@/util/utils';
@@ -29,6 +31,7 @@ export function DebugPanel({ className, morphology, synapses }: DebugPanelProps)
     dialog.showModal();
   };
   const debugMode = useDebugMode();
+  console.log('🐞 [debug-panel@33] debugMode =', debugMode); // @FIXME: Remove this line written on 2026-06-10 at 10:22
   if (!debugMode) return null;
 
   return (
@@ -61,7 +64,7 @@ export function DebugPanel({ className, morphology, synapses }: DebugPanelProps)
 function useDebugMode(): boolean {
   const [debugMode, setDebugMode] = React.useState(false);
   React.useEffect(() => {
-    const item = globalThis.localStorage.getItem('@bbp/morphoviewer:debug');
+    const item = globalThis.localStorage.getItem('@openbraininstitute/morphoviewer:debug');
     setDebugMode(!!item && item.length > 0);
   }, []);
   return debugMode;

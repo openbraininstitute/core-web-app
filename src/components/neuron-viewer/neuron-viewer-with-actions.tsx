@@ -74,6 +74,7 @@ export function NeuronViewerContainer({
               <ReloadIcon />
               Reload the page
             </button>
+            <DebugPanel morphology={morphology} synapses={synapses} />
           </div>
         ),
       })}

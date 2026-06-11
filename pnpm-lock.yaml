@@ -36,8 +36,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: ^0.25.4
-        version: 0.25.4(react@19.2.6)
+        specifier: ^0.26.4
+        version: 0.26.4(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -2355,10 +2355,10 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@0.25.4':
-    resolution: {integrity: sha512-ifbbLz+BZv1EL2qe5+nvh0VXaeeyOg7tLtWEj26F+CI7+KSok8rOOBq7i6UKOBkDSqR32wkcmg1F4tejWlslnw==}
+  '@openbraininstitute/morphoviewer@0.26.4':
+    resolution: {integrity: sha512-sttQLVctsHOno92dzVY2j2rgiAyvrOX4/tR5CY3sE3YNA6JyslTTHlZoG8bShNmWT4fLBhYpoR7gUsbixa2CNg==}
     peerDependencies:
-      react: ^19.2.4
+      react: ^19.2.5
 
   '@opentelemetry/api-logs@0.207.0':
     resolution: {integrity: sha512-lAb0jQRVyleQQGiuuvCOTDVspc14nx6XJjP4FspJ1sNARo3Regq4ZZbrc3rN4b1TYSuUCvgH+UXUPug4SLOqEQ==}
@@ -4305,8 +4305,8 @@ packages:
   '@tanstack/virtual-core@3.14.0':
     resolution: {integrity: sha512-JLANqGy/D6k4Ujmh8Tr25lGimuOXNiaVyXaCAZS0W+1390sADdGnyUdSWNIfd49gebtIxGMij4IktRVzrdr12Q==}
 
-  '@tolokoban/tgd@2.0.139':
-    resolution: {integrity: sha512-DQg/20917gpPkTf0UO4tV2CSfK/TjB6JbZHkGk4+iTAYLtzDqTzeQaLdtqiYskhB0vip2FV6Fky07UhbLcI+jQ==}
+  '@tolokoban/tgd@2.0.143':
+    resolution: {integrity: sha512-YDFqfzBZqAMz2vxR0NgsgEQeSrS75/OXmmRkgFMY6rnKAbcKoG6u2DsyWgMf7hIEmx18i6rqDHyJOF1XM7wx4A==}
 
   '@tolokoban/tgd@2.0.78':
     resolution: {integrity: sha512-nEpIwkOO/bEEk0Fetpjc8iAaBYsRf9wZQgUMQLvrjCSv9VnG8bzOh4WKeRcSufkgUw7+Sqoe2kV3MVXB+lFL+w==}
@@ -5724,8 +5724,8 @@ packages:
   fflate@0.6.10:
     resolution: {integrity: sha512-IQrh3lEPM93wVCEczc9SaAOvkmcoQn/G8Bo1e8ZPlY3X3bnAxWaBdvTdvM1hP62iZp0BXWDy4vTAy4fF0+Dlpg==}
 
-  fflate@0.8.2:
-    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   figures@6.1.0:
     resolution: {integrity: sha512-d+l3qxjSesT4V7v2fh+QnmFnUWv9lSpjarhShNTgBOfA0ttejbQUAlHLitbjkoRiDulW0OPoQPYIGhIC8ohejg==}
@@ -6533,6 +6533,7 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonify@0.0.1:
     resolution: {integrity: sha512-2/Ki0GcmuqSrgFyelQq9M05y7PS0mEwuIzrf3f1fPqkVDVRvZrPZtVSMHxdgo8Aq0sxAOb/cr2aqqA3LeWHVPg==}
@@ -11400,10 +11401,10 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@0.25.4(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@0.26.4(react@19.2.6)':
     dependencies:
-      '@tolokoban/tgd': 2.0.139
-      fflate: 0.8.2
+      '@tolokoban/tgd': 2.0.143
+      fflate: 0.8.3
       react: 19.2.6
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -13630,7 +13631,7 @@ snapshots:
 
   '@tanstack/virtual-core@3.14.0': {}
 
-  '@tolokoban/tgd@2.0.139':
+  '@tolokoban/tgd@2.0.143':
     dependencies:
       '@loaders.gl/core': 4.4.1
       '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
@@ -15164,7 +15165,7 @@ snapshots:
 
   fflate@0.6.10: {}
 
-  fflate@0.8.2: {}
+  fflate@0.8.3: {}
 
   figures@6.1.0:
     dependencies:
