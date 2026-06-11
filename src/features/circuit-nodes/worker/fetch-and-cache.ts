@@ -22,10 +22,12 @@ export async function fetchToFS({
   url,
   headers,
   fileKey,
+  onProgress,
 }: {
   url: string;
   headers: Record<string, string>;
   fileKey: string;
+  onProgress?: (received: number, total: number | null) => void;
 }): Promise<{ filename: string }> {
   const { FS } = await ready;
   if (!FS) throw new Error('h5wasm FS not initialized');
@@ -39,26 +41,50 @@ export async function fetchToFS({
   }
 
   const cache = await caches.open(CIRCUIT_H5_CACHE);
-  let response = await cache.match(url);
+  const cached = await cache.match(url);
 
-  if (!response) {
+  // Stream the *live network response* into the FS while tee-ing a second branch into CacheStorage,
+  // so progress reflects the actual download (not a fast local cache read). The network is the
+  // bottleneck, so the tee's buffers stay near-empty and memory stays at ~chunk + final file size.
+  let body: ReadableStream<Uint8Array> | null;
+  let total: number | null;
+  let cachePut: Promise<void> | null = null;
+
+  if (cached) {
+    body = cached.body;
+    total = Number(cached.headers.get('content-length')) || null;
+  } else {
     const fresh = await fetch(url, { headers });
     if (!fresh.ok) {
       throw new AssetFetchError(fresh.status, `Asset fetch failed (${fresh.status})`);
     }
-    await cache.put(url, fresh);
-    response = await cache.match(url);
-    if (!response) {
-      throw new AssetFetchError(0, 'CacheStorage match failed immediately after put');
+    if (!fresh.body) {
+      throw new AssetFetchError(0, 'Asset response has no body stream');
     }
+    total = Number(fresh.headers.get('content-length')) || null;
+    const [toFs, toCache] = fresh.body.tee();
+    // Best-effort cross-session cache. The .catch keeps this from becoming an unhandled rejection if
+    // the FS-write loop below throws and we bail before awaiting it; a failed write just re-downloads.
+    cachePut = cache
+      .put(url, new Response(toCache, { headers: fresh.headers, status: 200 }))
+      .catch(() => {});
+    body = toFs;
   }
 
-  if (!response.body) {
+  if (!body) {
     throw new AssetFetchError(0, 'Asset response has no body stream');
   }
 
-  const reader = response.body.getReader();
+  const reader = body.getReader();
   const stream = FS.open(filename, 'w+');
+  // Only surface progress for genuine network downloads. A cache hit reads from disk fast enough that
+  // the bar would just flicker, so we leave `progress` null and the UI shows the quick spinner.
+  const reportProgress = cached ? undefined : onProgress;
+  // Throttle progress emits so a 1 GB file doesn't flood the Comlink channel: when the total is
+  // known, emit on each whole-percent change; otherwise emit roughly every 2 MB.
+  let lastPercent = -1;
+  let lastEmittedBytes = 0;
+  const PROGRESS_BYTE_STEP = 2 * 1024 * 1024;
   try {
     let offset = 0;
     for (;;) {
@@ -66,7 +92,20 @@ export async function fetchToFS({
       if (done) break;
       FS.write(stream, value, 0, value.byteLength, offset);
       offset += value.byteLength;
+      if (reportProgress) {
+        if (total) {
+          const percent = Math.floor((offset / total) * 100);
+          if (percent !== lastPercent) {
+            lastPercent = percent;
+            reportProgress(offset, total);
+          }
+        } else if (offset - lastEmittedBytes >= PROGRESS_BYTE_STEP) {
+          lastEmittedBytes = offset;
+          reportProgress(offset, total);
+        }
+      }
     }
+    reportProgress?.(offset, total);
   } catch (err) {
     try {
       FS.unlink(filename);
@@ -77,6 +116,9 @@ export async function fetchToFS({
   } finally {
     FS.close(stream);
   }
+
+  // Ensure the cross-session cache entry is fully written before returning.
+  if (cachePut) await cachePut;
 
   return { filename };
 }

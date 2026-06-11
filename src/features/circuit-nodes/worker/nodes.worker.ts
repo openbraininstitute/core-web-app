@@ -13,7 +13,10 @@ import type {
 let session: NodesSession | null = null;
 
 const api = {
-  async open(opts: OpenRequest): Promise<OpenResponse> {
+  async open(
+    opts: OpenRequest,
+    onProgress?: (received: number, total: number | null) => void
+  ): Promise<OpenResponse> {
     if (session) {
       session.close();
       await unlinkFromFS(session.filename);
@@ -23,6 +26,7 @@ const api = {
       url: opts.url,
       headers: opts.headers,
       fileKey: opts.fileKey,
+      onProgress,
     });
     session = new NodesSession(filename, opts.populationKey);
     return { rowCount: session.rowCount, columns: session.columns };
