@@ -174,7 +174,7 @@ function renderBody({
 function CenteredSpin({ label }: { label: string }) {
   return (
     <div className={styles.centered}>
-      <Spin tip={label} size="large">
+      <Spin tip={label} size="large" className="[&_.ant-spin-dot-item]:bg-primary-6!">
         <div className={styles.spinBox} />
       </Spin>
     </div>
@@ -196,7 +196,7 @@ function DownloadProgress({
   return (
     <div className={styles.centered}>
       <div style={{ width: 280 }} className="text-center">
-        <div className="mb-1 text-sm text-primary-8">
+        <div className="mb-1 text-sm text-primary-9">
           Downloading nodes…{' '}
           <span className="tabular-nums">
             {formatBytes(progress.received, 0)} / {formatBytes(progress.total, 0)}
@@ -206,7 +206,7 @@ function DownloadProgress({
           type="line"
           percent={percent}
           strokeColor="var(--color-primary-6)"
-          className="[&_.ant-progress-text]:text-primary-8!"
+          className="[&_.ant-progress-text]:text-primary-9!"
         />
       </div>
     </div>
