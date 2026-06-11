@@ -1,8 +1,15 @@
 'use client';
 
+import {
+  CheckOutlined,
+  CopyOutlined,
+  DownloadOutlined,
+  FullscreenOutlined,
+} from '@ant-design/icons';
 import React from 'react';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '@/components/ai-assistant/hooks';
+import FullscreenDialog from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog';
 
 import styles from './markdown-table.module.css';
 
@@ -17,9 +24,12 @@ const WIDE_PANEL_THRESHOLD = MINIMAL_PANEL_SIZE + 250;
  * - Large panel: cells wrap across multiple lines, no truncation.
  *
  * Subtle shadow indicators appear on the edges when content overflows.
+ * Hover toolbar provides fullscreen and CSV download actions.
  */
 export function MarkdownTable({ children, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const tableRef = React.useRef<HTMLTableElement>(null);
+  const dialogRef = React.useRef<HTMLDialogElement>(null);
   const [canScrollLeft, setCanScrollLeft] = React.useState(false);
   const [canScrollRight, setCanScrollRight] = React.useState(false);
   const { panelWidth } = usePanelWidth();
@@ -48,16 +58,106 @@ export function MarkdownTable({ children, ...props }: React.TableHTMLAttributes<
     };
   }, []);
 
+  const handleFullscreen = () => {
+    dialogRef.current?.showModal();
+  };
+
+  const [isCopied, setIsCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    const table = tableRef.current;
+    if (!table) return;
+
+    const rows = extractTableData(table);
+    const tsv = rows.map((row) => row.join('\t')).join('\n');
+    navigator.clipboard.writeText(tsv).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  };
+
+  const handleDownloadCsv = () => {
+    const table = tableRef.current;
+    if (!table) return;
+
+    const rows = extractTableData(table);
+    const csv = rowsToCsv(rows);
+    downloadBlob(csv, 'text/csv;charset=utf-8;', `table-${Date.now()}.csv`);
+  };
+
   return (
-    <div className={styles.tableOuter}>
-      <div className={styles.shadowLeft} data-visible={canScrollLeft} aria-hidden="true" />
-      <div className={styles.shadowRight} data-visible={canScrollRight} aria-hidden="true" />
-      <div ref={scrollRef} className={styles.tableWrapper}>
-        <table {...props} className={isCompact ? styles.tableCompact : styles.tableWide}>
-          {children}
-        </table>
+    <>
+      <div className={styles.tableOuter}>
+        <div className={styles.toolbar} role="toolbar" aria-label="Table actions">
+          <button
+            type="button"
+            className={styles.toolbarBtn}
+            onClick={handleFullscreen}
+            aria-label="View fullscreen"
+            title="View fullscreen"
+          >
+            <FullscreenOutlined />
+          </button>
+          <button
+            type="button"
+            className={styles.toolbarBtn}
+            onClick={handleDownloadCsv}
+            aria-label="Download as CSV"
+            title="Download as CSV"
+          >
+            <DownloadOutlined />
+          </button>
+          <button
+            type="button"
+            className={styles.toolbarBtn}
+            onClick={handleCopy}
+            aria-label="Copy as TSV"
+            title="Copy to clipboard"
+          >
+            {isCopied ? <CheckOutlined /> : <CopyOutlined />}
+          </button>
+        </div>
+        <div className={styles.shadowLeft} data-visible={canScrollLeft} aria-hidden="true" />
+        <div className={styles.shadowRight} data-visible={canScrollRight} aria-hidden="true" />
+        <div ref={scrollRef} className={styles.tableWrapper}>
+          <table
+            {...props}
+            ref={tableRef}
+            className={isCompact ? styles.tableCompact : styles.tableWide}
+          >
+            {children}
+          </table>
+        </div>
       </div>
-    </div>
+
+      <FullscreenDialog dialogRef={dialogRef}>
+        <div className={styles.fullscreenToolbar} role="toolbar" aria-label="Table actions">
+          <button
+            type="button"
+            className={styles.fullscreenToolbarBtn}
+            onClick={handleDownloadCsv}
+            aria-label="Download as CSV"
+            title="Download as CSV"
+          >
+            <DownloadOutlined />
+          </button>
+          <button
+            type="button"
+            className={styles.fullscreenToolbarBtn}
+            onClick={handleCopy}
+            aria-label="Copy to clipboard"
+            title="Copy to clipboard"
+          >
+            {isCopied ? <CheckOutlined /> : <CopyOutlined />}
+          </button>
+        </div>
+        <div className={styles.fullscreenTableWrapper}>
+          <table {...props} className={styles.tableWide}>
+            {children}
+          </table>
+        </div>
+      </FullscreenDialog>
+    </>
   );
 }
 
@@ -86,6 +186,10 @@ export function MarkdownTd({ children, ...props }: React.TdHTMLAttributes<HTMLTa
   );
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 /** Recursively extract plain text from React children for the title attribute. */
 function extractText(node: React.ReactNode): string {
   if (node == null || typeof node === 'boolean') return '';
@@ -96,4 +200,49 @@ function extractText(node: React.ReactNode): string {
     return extractText(element.props.children);
   }
   return '';
+}
+
+/** Extract a 2D string array from a <table> DOM element. */
+function extractTableData(table: HTMLTableElement): string[][] {
+  const rows: string[][] = [];
+
+  const headerRow = table.querySelector('thead tr');
+  if (headerRow) {
+    const cells = headerRow.querySelectorAll('th, td');
+    rows.push(Array.from(cells).map((cell) => (cell.textContent ?? '').trim()));
+  }
+
+  const bodyRows = table.querySelectorAll('tbody tr');
+  for (const row of bodyRows) {
+    const cells = row.querySelectorAll('td, th');
+    rows.push(Array.from(cells).map((cell) => (cell.textContent ?? '').trim()));
+  }
+
+  return rows;
+}
+
+/** Escape a CSV field value (wrap in quotes if it contains comma, quote, or newline). */
+function escapeCsvField(field: string): string {
+  if (/[",\n\r]/.test(field)) {
+    return `"${field.replace(/"/g, '""')}"`;
+  }
+  return field;
+}
+
+/** Convert a 2D array of strings to a CSV string. */
+function rowsToCsv(rows: string[][]): string {
+  return rows.map((row) => row.map(escapeCsvField).join(',')).join('\n');
+}
+
+/** Trigger a file download from a string blob. */
+function downloadBlob(content: string, mimeType: string, filename: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }

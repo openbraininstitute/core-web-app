@@ -15,6 +15,83 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* ── Hover toolbar (download + fullscreen) ── */
+
+.toolbar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.tableOuter:hover .toolbar {
+  opacity: 1;
+}
+
+.toolbarBtn {
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  font-size: 11px;
+  color: white;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+
+.toolbarBtn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* ── Fullscreen table wrapper ── */
+
+.fullscreenTableWrapper {
+  overflow: auto;
+  max-width: 90vw;
+  max-height: 85vh;
+  padding: 1rem;
+}
+
+.fullscreenTableWrapper table {
+  font-size: 0.875rem;
+}
+
+.fullscreenToolbar {
+  position: absolute;
+  top: 56px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.fullscreenToolbarBtn {
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+
+.fullscreenToolbarBtn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
 /* Scroll shadow indicators — fixed on edges, fade in/out */
 .shadowLeft,
 .shadowRight {
