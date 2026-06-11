@@ -103,6 +103,11 @@ export const ProjectHomeGetStartedQuery = defineQuery(
         label,
         link
       }
+    },
+    "obiAssistant": obiAssistant[]{
+      _key,
+      title,
+      question
     }
   }`
 );
@@ -123,4 +128,15 @@ export type TProjectHomeGetStartedCard = {
   video?: string;
   image?: { url: string; width: number; height: number };
   resources: Array<TProjectHomeResource>;
+};
+
+export type TObiAssistantTopic = {
+  _key: string;
+  title: string;
+  question: string;
+};
+
+export type TProjectHomeData = {
+  getStarted: TProjectHomeGetStartedCard[] | null;
+  obiAssistant: TObiAssistantTopic[] | null;
 };

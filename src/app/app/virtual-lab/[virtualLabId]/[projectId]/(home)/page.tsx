@@ -42,7 +42,7 @@ export async function generateMetadata({
 
 export default async function Page(_props: ServerSideComponentProp<WorkspaceContext, null>) {
   return (
-    <div className="flex w-full flex-col gap-6 pr-2">
+    <div className="flex h-full w-full flex-col gap-4 overflow-hidden pr-2">
       <GetStartedCards />
     </div>
   );

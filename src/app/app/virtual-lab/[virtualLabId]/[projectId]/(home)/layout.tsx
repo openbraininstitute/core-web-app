@@ -11,7 +11,7 @@ import {
   getQuickAccessQuery,
   type IQuickAccessList,
   ProjectHomeGetStartedQuery,
-  type TProjectHomeGetStartedCard,
+  type TProjectHomeData,
   type TTutorial,
   TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
@@ -60,7 +60,7 @@ export default async function Layout({
   queryClient.prefetchQuery({
     queryKey: keyBuilderExternal.projectHomeGetStarted(),
     queryFn: () =>
-      productionClient.fetch<{ getStarted: TProjectHomeGetStartedCard[] | null }>(
+      productionClient.fetch<TProjectHomeData>(
         ProjectHomeGetStartedQuery,
         {},
         { next: { revalidate: 0 } }
