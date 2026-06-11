@@ -2,14 +2,14 @@
   position: relative;
   margin: 0.6em 0;
   border: 1px solid #d9d9d9;
-  border-radius: 8px;
+  border-radius: 5px;
   background: var(--color-neutral-9, #fff);
   overflow: hidden;
 }
 
 .tableWrapper {
   overflow-x: auto;
-  border-radius: 7px;
+  border-radius: 4px;
 
   /* Smooth scrolling on touch devices */
   -webkit-overflow-scrolling: touch;
@@ -21,7 +21,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 24px;
+  width: 28px;
   pointer-events: none;
   z-index: 1;
   opacity: 0;
@@ -30,14 +30,14 @@
 
 .shadowLeft {
   left: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.1), transparent);
-  border-radius: 7px 0 0 7px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.15), transparent);
+  border-radius: 4px 0 0 4px;
 }
 
 .shadowRight {
   right: 0;
-  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), transparent);
-  border-radius: 0 7px 7px 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.15), transparent);
+  border-radius: 0 4px 4px 0;
 }
 
 .shadowLeft[data-visible="true"],
@@ -68,7 +68,7 @@
   position: sticky;
   top: 0;
   color: var(--color-primary-5, #003a8c);
-  background-color: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-7));
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-8));
   padding: 6px 10px;
   font-weight: 600;
   font-size: 0.7rem;
@@ -80,12 +80,12 @@
 
 .tableCompact th:first-child,
 .tableWide th:first-child {
-  border-top-left-radius: 7px;
+  border-top-left-radius: 4px;
 }
 
 .tableCompact th:last-child,
 .tableWide th:last-child {
-  border-top-right-radius: 7px;
+  border-top-right-radius: 4px;
 }
 
 .tableCompact td,
@@ -123,7 +123,7 @@
 }
 
 .tableCompact td {
-  max-width: 160px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
 }

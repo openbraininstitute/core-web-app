@@ -8,7 +8,7 @@ import remarkMath from 'remark-math';
 import { classNames } from '@/util/utils';
 
 import { Highlighter } from './highlighter';
-import { MarkdownTable, MarkdownTd } from './markdown-table';
+import { MarkdownTable, MarkdownTd } from './markdown-table/markdown-table';
 import PlotErrorMessage from './plot-error-message';
 import StorageImage from './storage-image/storage-image';
 
