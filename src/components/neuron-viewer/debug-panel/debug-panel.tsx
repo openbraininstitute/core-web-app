@@ -1,5 +1,3 @@
-import { log } from 'node:console';
-
 import React from 'react';
 
 import { classNames } from '@/util/utils';
@@ -31,7 +29,6 @@ export function DebugPanel({ className, morphology, synapses }: DebugPanelProps)
     dialog.showModal();
   };
   const debugMode = useDebugMode();
-  console.log('🐞 [debug-panel@33] debugMode =', debugMode); // @FIXME: Remove this line written on 2026-06-10 at 10:22
   if (!debugMode) return null;
 
   return (
