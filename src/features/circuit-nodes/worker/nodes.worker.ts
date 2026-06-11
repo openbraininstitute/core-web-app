@@ -4,6 +4,7 @@ import { fetchToFS, unlinkFromFS } from '@/features/circuit-nodes/worker/fetch-a
 import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
 
 import type {
+  DownloadProgress,
   GetRowsRequest,
   GetRowsResponse,
   OpenRequest,
@@ -15,7 +16,7 @@ let session: NodesSession | null = null;
 const api = {
   async open(
     opts: OpenRequest,
-    onProgress?: (received: number, total: number | null) => void
+    onProgress?: (progress: DownloadProgress) => void
   ): Promise<OpenResponse> {
     if (session) {
       session.close();

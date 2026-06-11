@@ -6,7 +6,12 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IDatasource } from 'ag-grid-community';
-import type { ColumnMeta, NodePopulation, OpenResponse } from '@/features/circuit-nodes/types';
+import type {
+  ColumnMeta,
+  DownloadProgress,
+  NodePopulation,
+  OpenResponse,
+} from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
 
 type Args = {
@@ -33,7 +38,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
   const [openResult, setOpenResult] = useState<OpenResponse | null>(null);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const [progress, setProgress] = useState<{ received: number; total: number | null } | null>(null);
+  const [progress, setProgress] = useState<DownloadProgress | null>(null);
 
   useEffect(() => {
     if (!enabled || !population || !circuitAssetId || !circuitId) {
@@ -81,9 +86,9 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
             url,
             headers,
           },
-          Comlink.proxy((received: number, total: number | null) => {
+          Comlink.proxy((next: DownloadProgress) => {
             if (cancelled || generationRef.current !== generation) return;
-            setProgress({ received, total });
+            setProgress(next);
           })
         );
         if (cancelled || generationRef.current !== generation) return;

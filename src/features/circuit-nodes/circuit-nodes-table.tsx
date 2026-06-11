@@ -9,6 +9,7 @@ import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-con
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { cn } from '@/utils/css-class';
+import { formatBytes } from '@/utils/format';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
@@ -180,10 +181,6 @@ function CenteredSpin({ label }: { label: string }) {
   );
 }
 
-function bytesToMb(n: number): string {
-  return (n / 1024 / 1024).toFixed(0);
-}
-
 function DownloadProgress({
   progress,
 }: {
@@ -192,7 +189,7 @@ function DownloadProgress({
   // No bytes yet (or no Content-Length to compute a percent): fall back to the indeterminate spinner.
   if (!progress) return <CenteredSpin label="Loading nodes…" />;
   if (!progress.total) {
-    return <CenteredSpin label={`Downloading nodes… ${bytesToMb(progress.received)} MB`} />;
+    return <CenteredSpin label={`Downloading nodes… ${formatBytes(progress.received, 0)}`} />;
   }
 
   const percent = Math.round((progress.received / progress.total) * 100);
@@ -202,7 +199,7 @@ function DownloadProgress({
         <div className="mb-1 text-sm text-primary-8">
           Downloading nodes…{' '}
           <span className="tabular-nums">
-            {bytesToMb(progress.received)} / {bytesToMb(progress.total)} MB
+            {formatBytes(progress.received, 0)} / {formatBytes(progress.total, 0)}
           </span>
         </div>
         <Progress

@@ -2,6 +2,8 @@ import { ready } from 'h5wasm';
 
 import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
 
+import type { DownloadProgress } from '@/features/circuit-nodes/types';
+
 class AssetFetchError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -27,7 +29,7 @@ export async function fetchToFS({
   url: string;
   headers: Record<string, string>;
   fileKey: string;
-  onProgress?: (received: number, total: number | null) => void;
+  onProgress?: (progress: DownloadProgress) => void;
 }): Promise<{ filename: string }> {
   const { FS } = await ready;
   if (!FS) throw new Error('h5wasm FS not initialized');
@@ -51,6 +53,9 @@ export async function fetchToFS({
   let cachePut: Promise<void> | null = null;
 
   if (cached) {
+    if (!cached.body) {
+      throw new AssetFetchError(0, 'Asset response has no body stream');
+    }
     body = cached.body;
     total = Number(cached.headers.get('content-length')) || null;
   } else {
@@ -69,10 +74,6 @@ export async function fetchToFS({
       .put(url, new Response(toCache, { headers: fresh.headers, status: 200 }))
       .catch(() => {});
     body = toFs;
-  }
-
-  if (!body) {
-    throw new AssetFetchError(0, 'Asset response has no body stream');
   }
 
   const reader = body.getReader();
@@ -97,15 +98,15 @@ export async function fetchToFS({
           const percent = Math.floor((offset / total) * 100);
           if (percent !== lastPercent) {
             lastPercent = percent;
-            reportProgress(offset, total);
+            reportProgress({ received: offset, total });
           }
         } else if (offset - lastEmittedBytes >= PROGRESS_BYTE_STEP) {
           lastEmittedBytes = offset;
-          reportProgress(offset, total);
+          reportProgress({ received: offset, total });
         }
       }
     }
-    reportProgress?.(offset, total);
+    reportProgress?.({ received: offset, total });
   } catch (err) {
     try {
       FS.unlink(filename);
