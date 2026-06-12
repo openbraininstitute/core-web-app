@@ -1,12 +1,13 @@
 'use client';
 
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, ViewTransition } from 'react';
 import { match } from 'ts-pattern';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { config } from '@/config';
 import { Button } from '@/ui/molecules/button';
@@ -409,6 +410,11 @@ export function WorkspaceManagerModal({
     onOpenChange?.(false);
   };
 
+  const mutateRecentWorkspace = useMutation({
+    mutationFn: (workspace: { virtualLabId: string; projectId: string }) =>
+      setUserRecentWorkspace({ workspace }),
+  });
+
   const mainContent = match(kind)
     .with(WorkspaceManagerKindDict.Account, () => (
       <AccountContent
@@ -467,6 +473,12 @@ export function WorkspaceManagerModal({
             href={`/app/virtual-lab/${x.targetVirtualLabId}/${x.targetProjectId}`}
             data-testid="workspace-manager-go-to-project-link"
             id="workspace-manager-go-to-project-link"
+            onClick={() =>
+              mutateRecentWorkspace.mutate({
+                virtualLabId: x.targetVirtualLabId,
+                projectId: x.targetProjectId,
+              })
+            }
           >
             Go to project <RightOutlined />
           </Link>
