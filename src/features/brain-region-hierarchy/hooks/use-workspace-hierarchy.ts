@@ -200,6 +200,7 @@ export function useWorkspaceHierarchyRegistry() {
     remoteHierarchyId: remoteUserPreferenceHierarchySpecies?.hierarchy_id,
     storageHierarchyId: browserStorageHierarchy?.hierarchyId,
     defaultHierarchyId: config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
+    availableHierarchies: remoteAvailableHierarchies,
   });
 
   const defaultBrainRegionId =
@@ -801,6 +802,7 @@ export function useWorkspaceHierarchyRegistry() {
     isRootHierarchyLoading,
     isAllMode,
     displaySpecies,
+    hasAvailableHierarchies: !!remoteAvailableHierarchies?.length,
   });
 
   return {
