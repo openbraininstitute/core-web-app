@@ -64,17 +64,23 @@ export type TBrowsePrerequisite = {
   entityType: TBrowsePrerequisiteEntityType;
   /** human label for the pre-step header */
   label: string;
-  /** when true, the entity table is gated until an prerequisite is chosen */
-  required?: boolean /**
+  /** when true, the entity table is gated until a prerequisite is chosen */
+  required?: boolean;
+  /**
    * opt-in sharing, browse entries whose prerequisites declare the **same** `shareKey` share a
    * single prerequisite selection: the user picks it once and it applies to every type in the
    * group (e.g. one EM dataset scoping both Cell morphology and ME-model in EM synaptome)
    *
    * omit it for an independent (types have different prerequisites) prerequisite:
    * each entity type then picks its own, even when the `entityType` is the same
-   */;
+   */
   shareKey?: string;
   presentation: TBrowsePrerequisitePresentation;
+  /**
+   * when true, picking a prerequisite option advances to the entity table immediately
+   * and the Continue button is hidden; omit or set false to require an explicit Continue click
+   */
+  autoContinueOnSelect?: boolean;
 };
 
 /**

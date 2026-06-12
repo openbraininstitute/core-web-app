@@ -257,27 +257,59 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     [isCustomLoader, confirmedPrerequisite]
   );
 
-  const handlePrerequisiteSelect = useCallback(
+  const confirmPrerequisite = useCallback(
     (value: TBrowsePrerequisiteValue) => {
       if (!activePrerequisiteKey) return;
-      setDraftPrerequisiteByKey((previous) => ({
-        ...previous,
-        [activePrerequisiteKey]: value,
-      }));
+      startPrerequisiteTransition(() => {
+        setDraftPrerequisiteByKey((previous) => ({
+          ...previous,
+          [activePrerequisiteKey]: value,
+        }));
+        setConfirmedPrerequisiteByKey((previous) => ({
+          ...previous,
+          [activePrerequisiteKey]: value,
+        }));
+      });
     },
     [activePrerequisiteKey]
   );
 
   const handlePrerequisiteContinue = useCallback(() => {
-    if (!activePrerequisiteKey || !draftPrerequisite) return;
-    startPrerequisiteTransition(() => {
-      setConfirmedPrerequisiteByKey((previous) => ({
-        ...previous,
-        [activePrerequisiteKey]: draftPrerequisite,
-      }));
-    });
-  }, [activePrerequisiteKey, draftPrerequisite]);
+    if (!draftPrerequisite) return;
+    confirmPrerequisite(draftPrerequisite);
+  }, [draftPrerequisite, confirmPrerequisite]);
 
+  /**
+   * handles a prerequisite pick from the phase-1 picker.
+   *
+   * when {@link TBrowsePrerequisite.autoContinueOnSelect} is set, confirms immediately via
+   * `confirmPrerequisite`; otherwise stores the pick in `draftPrerequisiteByKey` until the
+   * user clicks Continue.
+   *
+   * @param value - the selected prerequisite row passed to downstream loaders after confirm.
+   */
+  const handlePrerequisiteSelect = useCallback(
+    (value: TBrowsePrerequisiteValue) => {
+      if (!activePrerequisiteKey) return;
+      if (activePrerequisiteConfig?.autoContinueOnSelect) {
+        confirmPrerequisite(value);
+        return;
+      }
+      setDraftPrerequisiteByKey((previous) => ({
+        ...previous,
+        [activePrerequisiteKey]: value,
+      }));
+    },
+    [activePrerequisiteKey, activePrerequisiteConfig?.autoContinueOnSelect, confirmPrerequisite]
+  );
+
+  /**
+   * clears the confirmed prerequisite for the active share key and returns to the picker phase.
+   *
+   * also drops entity row selections for every configuration input that resolves to the same
+   * prerequisite key (shared prerequisites affect multiple entity types), so stale table picks
+   * are not carried into a re-selected dataset scope.
+   */
   const handlePrerequisiteChange = useCallback(() => {
     if (!activePrerequisiteKey) return;
     setConfirmedPrerequisiteByKey((previous) => {
@@ -285,8 +317,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       delete next[activePrerequisiteKey];
       return next;
     });
-    // changing a (possibly shared) prerequisite invalidates rows picked under it, for every type
-    // that resolves to the same key.
     const affectedTypes = new Set(
       configurationInputs
         .map((input) => input.type)

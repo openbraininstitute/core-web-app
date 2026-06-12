@@ -10,32 +10,44 @@ import { DEFAULT_PAGE_SMALL_SIZE } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card } from '@/ui/molecules/card';
 import { Skeleton } from '@/ui/molecules/skeleton';
+import { EM_DENSE_RECONSTRUCTION_DATASET_TYPE } from '@/ui/segments/workflows/browse/prerequisite/em-dataset-cards.constants';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
 import type { TBrowsePrerequisitePickerProps } from '@/ui/segments/workflows/browse/browse-config';
 
-/** prerequisite type string for the EM dense reconstruction dataset (not a standard browse type). */
-export const EM_DENSE_RECONSTRUCTION_DATASET_TYPE = 'em_dense_reconstruction_dataset';
+type EmDatasetPrerequisiteCardsProps = TBrowsePrerequisitePickerProps & {
+  /** when set, scopes the list query via Entity Core `id__in` */
+  idIn?: readonly string[];
+};
 
 /**
- * prerequisite picker (cards) for choosing one EM dense reconstruction dataset
- * used as a `custom` presentation so the EM-specific data fetch stays out of the generic browse code.
- * paginated with infinite scroll ({@link DEFAULT_PAGE_SMALL_SIZE} per page).
+ * prerequisite picker (cards) for choosing one EM dense reconstruction dataset.
+ * pass `idIn` to scope the API request instead of listing every dataset.
  */
-export function EmDatasetPrerequisiteCards({ value, onSelect }: TBrowsePrerequisitePickerProps) {
+export function EmDatasetPrerequisiteCards({
+  value,
+  onSelect,
+  idIn,
+}: EmDatasetPrerequisiteCardsProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const context = { virtualLabId, projectId };
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
-    queryKey: keyBuilder.emDenseReconstructionDatasets(context, {
+  const listFilters = useMemo(
+    () => ({
       page_size: DEFAULT_PAGE_SMALL_SIZE,
+      ...(idIn?.length ? { id__in: [...idIn] } : {}),
     }),
+    [idIn]
+  );
+
+  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
+    queryKey: keyBuilder.emDenseReconstructionDatasets(context, listFilters),
     initialPageParam: 1,
     queryFn: ({ pageParam }) =>
       getEmDenseReconstructionDatasets({
         context,
-        filters: { page: pageParam, page_size: DEFAULT_PAGE_SMALL_SIZE },
+        filters: { ...listFilters, page: pageParam },
       }),
     getNextPageParam: (lastPage) => {
       const { page, page_size, total_items } = lastPage.pagination;
@@ -45,7 +57,6 @@ export function EmDatasetPrerequisiteCards({ value, onSelect }: TBrowsePrerequis
 
   const datasets = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
 
-  // load the next page when the bottom sentinel scrolls into view
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -71,7 +82,7 @@ export function EmDatasetPrerequisiteCards({ value, onSelect }: TBrowsePrerequis
       <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
-          <Card key={index} className="h-50 animate-pulse bg-gray-50">
+          <Card key={index} className="h-54 animate-pulse bg-gray-50">
             <div className="flex flex-col gap-2">
               <Skeleton className="h-4 w-full rounded-full bg-gray-200" />
               <Skeleton className="h-4 w-2/3 rounded-full bg-gray-200" />
