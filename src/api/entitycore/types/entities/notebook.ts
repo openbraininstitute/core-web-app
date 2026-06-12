@@ -105,4 +105,5 @@ export interface INotebook
     EntityCoreOwnership,
     TAnalysisNotebookTemplateBase {
   description: string;
+  exercise_id?: string | null;
 }

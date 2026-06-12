@@ -101,12 +101,6 @@ export interface IProjectExpandedResponse extends IProject, IProjectExtra {
   virtual_lab: TVirtualLab | null;
 }
 
-// TODO: drop when PR #1555 (course-vlabs) merges and brings the real Course type in.
-export type Course = {
-  template_project_id: string;
-  is_initialized: boolean;
-};
-
 export type TVirtualLab = {
   id: string;
   name: string;
@@ -119,7 +113,6 @@ export type TVirtualLab = {
   projects_count: number | null;
   created_by: string | null;
   compute_cell: string;
-  course?: Course | null;
 };
 
 export interface IVirtualLabExpandedResponse extends TVirtualLab {
