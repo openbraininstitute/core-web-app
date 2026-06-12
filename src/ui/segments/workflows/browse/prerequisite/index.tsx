@@ -20,11 +20,8 @@ type WorkflowBrowsePrerequisiteProps = {
 };
 
 /**
- * phase 1 of an prerequisite browse step: renders the prerequisite picker for the configured
- * `presentation` and a continue action
- * the picker yields a {@link TBrowsePrerequisiteValue}
- * that downstream code (the loader) consumes; the prerequisite is never persisted for the time being
- * in the workflow session nor the schema configuration
+ * phase 1 of a prerequisite browse step: renders the configured picker.
+ * shows Continue unless `autoContinueOnSelect` is set on the browse entry.
  */
 export function WorkflowBrowsePrerequisite({
   prerequisite,
@@ -33,9 +30,16 @@ export function WorkflowBrowsePrerequisite({
   onContinue,
   pending = false,
 }: WorkflowBrowsePrerequisiteProps) {
+  const showContinueButton = !prerequisite.autoContinueOnSelect;
+
   return (
     <div className="flex h-full min-h-0 flex-col [grid-area:body]">
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        {pending && prerequisite.autoContinueOnSelect && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 bg-background/60 text-gray-600">
+            <LoadingOutlined /> Loading…
+          </div>
+        )}
         {prerequisite.presentation.kind === 'custom' ? (
           <prerequisite.presentation.render value={value} onSelect={onSelect} />
         ) : (
@@ -44,26 +48,28 @@ export function WorkflowBrowsePrerequisite({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 justify-end bg-background pt-3">
-        <Button
-          rounded
-          variant="default"
-          disabled={!value || pending}
-          className={cn(
-            'h-12 min-w-64 px-10 text-lg font-bold shadow-skmp-s',
-            'disabled:bg-neutral-2 disabled:text-neutral-4!'
-          )}
-          onClick={onContinue}
-        >
-          {pending ? (
-            <>
-              <LoadingOutlined /> Loading…
-            </>
-          ) : (
-            'Continue'
-          )}
-        </Button>
-      </div>
+      {showContinueButton && (
+        <div className="flex shrink-0 justify-end bg-background pt-3">
+          <Button
+            rounded
+            variant="default"
+            disabled={!value || pending}
+            className={cn(
+              'h-12 min-w-64 px-10 text-lg font-bold shadow-skmp-s',
+              'disabled:bg-neutral-2 disabled:text-neutral-4!'
+            )}
+            onClick={onContinue}
+          >
+            {pending ? (
+              <>
+                <LoadingOutlined /> Loading…
+              </>
+            ) : (
+              'Continue'
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
