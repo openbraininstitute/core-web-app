@@ -61,7 +61,6 @@ export async function getMEModel({
       ...getEntityCoreContext(context).headers,
     },
   });
-  console.log('🐞 [me-model@64] result =', result); // @FIXME: Remove this line written on 2026-06-12 at 14:07
   return result;
 }
 

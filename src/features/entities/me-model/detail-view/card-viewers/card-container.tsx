@@ -1,9 +1,9 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { classNames } from '@/util/utils';
 
+import type { ReactNode } from 'react';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
@@ -34,7 +34,6 @@ function ModelDetails({ details }: ModelDetailsProps) {
 }
 
 type Props = {
-  // @FIXME: Is this property used somewhere?
   // eslint-disable-next-line react/no-unused-prop-types
   mode: 'select' | 'summary';
   model: IEModel | ICellMorphology;
