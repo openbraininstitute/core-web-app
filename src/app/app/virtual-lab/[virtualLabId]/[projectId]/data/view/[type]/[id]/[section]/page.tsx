@@ -23,7 +23,7 @@ export default async function Page({
     type: snakeCase(type) as TExtendedEntitiesTypeDict,
   });
 
-  if (!entityType || !entityType.detailViewSections?.includes(section)) notFound();
+  if (!entityType?.detailViewSections?.includes(section)) notFound();
 
   const { data: entity, error } = await tryCatch(
     retrieveEntity({

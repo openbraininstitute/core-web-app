@@ -2,9 +2,19 @@ import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
-export default function Action({ children, icon }: { children: ReactNode; icon: ReactNode }) {
+import styles from './side-menu-action.module.css';
+
+export default function Action({
+  children,
+  icon,
+  onClick,
+}: {
+  children: ReactNode;
+  icon: ReactNode;
+  onClick?: () => void;
+}) {
   return (
-    <div className="flex w-full items-center justify-between gap-3 cursor-pointer">
+    <button className={cn(styles.sideMenuAction, 'w-full gap-3')} onClick={onClick} type="button">
       <div className="min-w-max">{children}</div>
       <div
         className={cn(
@@ -14,6 +24,6 @@ export default function Action({ children, icon }: { children: ReactNode; icon: 
       >
         {icon}
       </div>
-    </div>
+    </button>
   );
 }
