@@ -37,7 +37,9 @@ export default function Page({
 >) {
   const sessionId = useLegacyWorkflowSessionFromSearchParams(searchParams);
   const entity = useEntity(pathParams);
-  if (!entity) return <Spinner />;
+  if (entity === undefined) return <Spinner />;
+
+  if (entity instanceof Error) throw entity;
 
   return (
     <WorkflowSimulateLayout>
