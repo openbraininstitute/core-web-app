@@ -232,9 +232,9 @@ export default async function IonChannelModelOverview({
       <div className={sectionHeadingClass(variant)}>File preview</div>
       <div
         className={cn(
-          'overflow-x-auto overflow-y-auto p-4 font-mono text-sm whitespace-pre shadow-lg',
+          'overflow-x-auto secondary-scrollbar overflow-y-auto p-4 font-mono text-sm whitespace-pre shadow-lg',
           variant === ViewVariant.Default
-            ? cn(detailViewInsetPanelClass(variant), 'text-primary-8')
+            ? cn(detailViewInsetPanelClass(variant), 'text-white')
             : 'bg-neutral-2 text-black'
         )}
       >

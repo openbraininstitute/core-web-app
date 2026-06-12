@@ -73,7 +73,7 @@ export function ICMRelatedArtifacts({
           ))}
         </PillTabsList>
       </PillTabs>
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="h-[calc(100vh-18rem)] min-h-96 overflow-hidden">
         {currentTab === IonChannelRecording.extendedType && (
           <IonChannelRecordingRelatedArtifacts context={context} icm={icm} variant={variant} />
         )}

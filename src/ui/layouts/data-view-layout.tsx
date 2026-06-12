@@ -147,7 +147,7 @@ export async function DataViewLayout({
           </div>
         </div>
         {includes(
-          [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+          [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
           entityType.extendedType
         ) && <CircuitDownloadPanel />}
       </div>
@@ -160,7 +160,7 @@ export async function DataViewLayout({
         {breadcrumbs}
         {closePage}
       </div>
-      <div className="flex h-full min-h-0 max-h-[calc(100%-3.5rem)] gap-6 overflow-hidden pt-2">
+      <div className="flex h-full min-h-0 max-h-[calc(100%-3.5rem)] gap-3 overflow-hidden pt-2">
         <div className="flex w-1/5 shrink-0 flex-col bg-white pl-3.5">
           <div className="flex flex-col gap-1.5">
             <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
@@ -177,8 +177,8 @@ export async function DataViewLayout({
           />
         </div>
         <div className="min-h-0 w-4/5 pl-2 pr-3">
-          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
-            <div className="rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white h-full">
+          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto [scrollbar-gutter:stable] pr-0.5">
+            <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
               <EntityNameDisplay
                 name={entity.name}
                 description={'description' in entity ? entity.description : undefined}

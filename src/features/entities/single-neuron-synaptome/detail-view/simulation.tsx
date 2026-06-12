@@ -57,7 +57,7 @@ export default function Results({ modelId, context, variant = ViewVariant.Light 
     );
   }
 
-  if (!simulations || !simulations?.data.length) {
+  if (!simulations?.data?.length) {
     return (
       <div
         className={cn(
@@ -128,11 +128,12 @@ export default function Results({ modelId, context, variant = ViewVariant.Light 
               if (!config.synaptome) return null;
               return (
                 <>
-                  <div className="text-primary-8 text-lg font-bold">Synaptic Inputs</div>
+                  <div className="text-white text-lg font-bold">Synaptic Inputs</div>
                   <div className="flex flex-wrap gap-4">
                     {config.synaptome.map((c, ind) => (
                       <div
                         key={c.id}
+                        id={`synaptic-input-${c.id}`}
                         className="flex w-max min-w-96 flex-col items-start justify-start"
                       >
                         <div
@@ -145,12 +146,18 @@ export default function Results({ modelId, context, variant = ViewVariant.Light 
                         </div>
                         <div className="flex w-full flex-col gap-5 border border-gray-300 p-6">
                           <div className="grid grid-cols-3 gap-2">
-                            <ConfigItem {...{ label: 'delay', value: c.delay, unit: 'ms' }} />
-                            <ConfigItem {...{ label: 'duration', value: c.duration, unit: 'ms' }} />
                             <ConfigItem
-                              {...{ label: 'frequency', value: c.frequency, unit: 'hz' }}
+                              {...{ label: 'delay', value: c.delay, unit: 'ms', variant }}
                             />
-                            <ConfigItem {...{ label: 'weight scalar', value: c.weight_scalar }} />
+                            <ConfigItem
+                              {...{ label: 'duration', value: c.duration, unit: 'ms', variant }}
+                            />
+                            <ConfigItem
+                              {...{ label: 'frequency', value: c.frequency, unit: 'hz', variant }}
+                            />
+                            <ConfigItem
+                              {...{ label: 'weight scalar', value: c.weight_scalar, variant }}
+                            />
                           </div>
                         </div>
                       </div>

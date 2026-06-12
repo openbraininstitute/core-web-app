@@ -20,9 +20,9 @@ export function Field({ field, className, data, variant = ViewVariant.Light }: F
   let renderedContent: ReactNode = null;
   if (fieldObj) {
     if (fieldObj.renderForDetailView) {
-      renderedContent = fieldObj.renderForDetailView(data);
+      renderedContent = fieldObj.renderForDetailView(data, variant);
     } else if (fieldObj.render) {
-      renderedContent = fieldObj.render(data);
+      renderedContent = fieldObj.render(data, undefined, variant);
     }
   }
 
@@ -37,7 +37,7 @@ export function Field({ field, className, data, variant = ViewVariant.Light }: F
       <div
         className={cn(
           'uppercase',
-          variant === ViewVariant.Default ? 'text-primary-3' : 'text-neutral-4'
+          variant === ViewVariant.Default ? 'text-primary-3!' : 'text-neutral-4'
         )}
       >
         {fieldObj?.title}

@@ -1,8 +1,8 @@
 import { type TViewVariant, ViewVariant } from '@/constants';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntityTypeGroup, type TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import { cn } from '@/utils/css-class';
 
-export function detailViewVariantFromGroup(group: EntityTypeGroup): TViewVariant {
+export function detailViewVariantFromGroup(group: TEntityTypeGroup): TViewVariant {
   return group === EntityTypeGroup.Simulations ? ViewVariant.Light : ViewVariant.Default;
 }
 
@@ -39,7 +39,7 @@ export function detailViewCardBorderClass(variant: TViewVariant) {
 
 /** White inset panel for tables and dense UI on the blue detail background */
 export function detailViewInsetPanelClass(variant: TViewVariant) {
-  return cn({ 'rounded-lg border border-neutral-2 bg-white p-4': variant === ViewVariant.Default });
+  return cn({ 'rounded-lg': variant === ViewVariant.Default });
 }
 
 /** Ant Design simple pagination on the blue detail-view panel */

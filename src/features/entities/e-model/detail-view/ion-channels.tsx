@@ -95,7 +95,7 @@ function ListingGrid({ ionChannels }: { ionChannels: Record<string, Array<string
             {location.toUpperCase()}
             <DocumentationIcon className="h-3 w-auto" />
           </div>
-          <ol className="text-primary-8 list-inside list-decimal">
+          <ol className="text-white list-inside list-decimal">
             {channelList.map((channelName) => (
               <li key={channelName} className="font-bold marker:font-light">
                 {channelName}

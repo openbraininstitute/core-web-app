@@ -36,10 +36,10 @@ export function Explanation({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className={cn({ 'border-white/30 text-white': isPrimary })}
+            className={cn({ 'border-white text-white': isPrimary })}
           >
-            <Icon />
-            <div>Close</div>
+            <RiBook2Fill size={16} className={cn({ 'text-primary-9': isPrimary })} />
+            <div className={cn({ 'text-primary-9': isPrimary })}>Close</div>
           </button>
         </header>
         <section>{children}</section>
@@ -53,16 +53,12 @@ export function Explanation({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className={cn({ 'border-white/30 text-white': isPrimary })}
+          className={cn({ 'border-white! border text-white': isPrimary })}
         >
-          <Icon />
-          <div>Read description</div>
+          <RiBook2Fill size={16} className={cn({ 'text-white': isPrimary })} />
+          <div className={cn({ 'text-white': isPrimary })}>Read description</div>
         </button>
       )}
     </div>
   );
-}
-
-function Icon() {
-  return <RiBook2Fill size={16} />;
 }

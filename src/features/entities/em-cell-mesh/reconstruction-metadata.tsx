@@ -13,6 +13,7 @@ import {
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 
 type Props = {
@@ -36,7 +37,7 @@ function renderFieldValue(
   if (renderer) {
     return renderer(value as string);
   }
-  return value;
+  return value as ReactNode;
 }
 
 export async function ReconstructionMetadata({ entity, variant = ViewVariant.Light }: Props) {

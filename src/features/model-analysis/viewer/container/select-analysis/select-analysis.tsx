@@ -1,3 +1,5 @@
+import { RiArrowDownSLine } from '@remixicon/react';
+
 import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   Select,
@@ -53,6 +55,7 @@ export function SelectAnalysis({
         <SelectTrigger
           size="default"
           className="min-w-70 h-11! text-lg! rounded-full bg-white border-gray-300 focus-visible:ring-0"
+          icon={<RiArrowDownSLine size={16} className="text-primary-9" />}
         >
           <SelectValue />
         </SelectTrigger>
@@ -62,7 +65,7 @@ export function SelectAnalysis({
         >
           {options.map((option) => (
             <SelectItem
-              checkClassName="text-primary-8"
+              checkIconClassName="text-white"
               key={option.value}
               value={option.value}
               className={cn('cursor-pointer text-lg w-full [&_span:nth-child(2)]:w-full group')}

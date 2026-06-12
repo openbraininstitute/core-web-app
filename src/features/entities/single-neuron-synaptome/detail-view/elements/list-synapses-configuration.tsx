@@ -34,14 +34,14 @@ export default function SynapseGroupList({ config, variant = ViewVariant.Light }
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full @container">
       <h2 className={cn('mb-8', detailViewHeadingClass(variant, '2xl'))}>Synapse groups</h2>
-      <div className="flex flex-row flex-wrap gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 4xl:grid-cols-4 gap-4">
         {config?.synapses?.map(
           ({ id, name, formula, target, type, color, soma_synapse_count }, indx) => (
             <div
               key={id}
-              className="flex w-max max-w-max min-w-96 flex-1 flex-col items-start justify-start"
+              className="flex min-w-96 max-w-full flex-1 flex-col items-start justify-start"
             >
               <div
                 className="flex items-center justify-center px-4 py-2 text-base text-white"
@@ -52,22 +52,35 @@ export default function SynapseGroupList({ config, variant = ViewVariant.Light }
                 {indx + 1}
               </div>
               <div className="flex w-full flex-col gap-5 border border-gray-300 bg-white p-6">
-                <ConfigItem {...{ label: 'name', value: name }} />
+                <ConfigItem {...{ label: 'name', value: name, variant: ViewVariant.Light }} />
                 <div className="grid grid-cols-2 gap-2">
                   <ConfigItem
                     {...{
                       label: 'target',
                       value: SECTION_TARGET_MAPPING[target as SectionTargetMappingKeys],
+                      variant: ViewVariant.Light,
                     }}
                   />
                   <ConfigItem
-                    {...{ label: 'type', value: type ? SYNAPSE_CODE_TO_TYPE[type] : undefined }}
+                    {...{
+                      label: 'type',
+                      value: type ? SYNAPSE_CODE_TO_TYPE[type] : undefined,
+                      variant: ViewVariant.Light,
+                    }}
                   />
                 </div>
                 {target === 'soma' ? (
-                  <ConfigItem {...{ label: 'Synapse Count', value: `${soma_synapse_count}` }} />
+                  <ConfigItem
+                    {...{
+                      label: 'Synapse Count',
+                      value: `${soma_synapse_count}`,
+                      variant: ViewVariant.Light,
+                    }}
+                  />
                 ) : (
-                  <ConfigItem {...{ label: 'formula', value: formula }} />
+                  <ConfigItem
+                    {...{ label: 'formula', value: formula, variant: ViewVariant.Light }}
+                  />
                 )}
               </div>
             </div>

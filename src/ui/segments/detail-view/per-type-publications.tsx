@@ -9,6 +9,7 @@ import { type TViewVariant, ViewVariant } from '@/constants';
 import { detailViewValueClass } from '@/ui/segments/detail-view/variant-styles';
 import { Card } from '@/ui/segments/explore/circuit/elements/publication-item/card';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
@@ -77,6 +78,18 @@ export function PerTypePublications({
           hideOnSinglePage: true,
           pageSize: pagination.pageSize,
           total: result?.pagination.total_items ?? pagination.pageSize,
+          className: cn(
+            '[&_.ant-pagination-item-link]:text-white',
+            '[&_.ant-pagination-item]:rounded-full!',
+            '[&_.ant-pagination-item-active]:bg-primary-9',
+            '[&_.ant-pagination-item-active]:text-white',
+            '[&_.ant-pagination-item-active]:border-primary-9',
+            '[&_.ant-pagination-item-active]:border-primary-9',
+            '[&_.ant-pagination-prev_.ant-pagination-item-link]:text-white!',
+            '[&_.ant-pagination-prev_.ant-pagination-disabled_.ant-pagination-item-link]:text-gray-100!',
+            '[&_.ant-pagination-next_.ant-pagination-disabled_.ant-pagination-item-link]:text-gray-100!',
+            '[&_.ant-pagination-next_.ant-pagination-item-link]:text-white!'
+          ),
           onChange: (page, pageSize) => {
             setPagination(() => ({
               page,

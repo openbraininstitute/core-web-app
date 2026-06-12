@@ -75,8 +75,12 @@ export function Morphometrics({
   );
 
   return (
-    <div className={cn('flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2', className)}>
-      <Divider className={cn('w-full', { 'border-white/20': variant === ViewVariant.Default })} />
+    <div
+      className={cn(
+        'flex max-w-(--breakpoint-2xl) flex-col gap-5 pl-2 rounded-lg border p-5 border-white/20 mb-2',
+        className
+      )}
+    >
       <h1
         className={cn(
           'text-xl font-bold',
