@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
 import { useAppNotification } from '@/components/notification';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
+import { useLowCredits } from '@/features/low-credits';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -65,7 +65,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const launchSimulation = useSetAtom(launchSimulationAtom);
-  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
+  const { notifyLowCredits, creditsModal } = useLowCredits({ subject: 'run the simulation' });
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const step = searchParams.get('step') ?? ExperimentStep.Info;
 
@@ -175,7 +175,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
       () => updatePanelSelection(),
       notify,
-      isProjectAdmin
+      notifyLowCredits
     );
 
     setIsLaunching(false);
@@ -219,120 +219,29 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     simulationStatus?.status === SimulationStatus.LAUNCHED;
 
   return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="text-neutral-3 ml-4 font-light uppercase">Setup</div>
-      <Button
-        rounded
-        variant="outline"
-        size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2! font-bold shadow-md')}
-        active={step === ExperimentStep.Info}
-        onClick={() => onStepChange(ExperimentStep.Info)}
-      >
-        <div className="flex w-full items-center justify-between gap-2">
-          <div>
-            <SettingFilled
-              className={cn('text-neutral-3 mr-2 [&_svg]:size-3!', {
-                'text-primary-4!': step === ExperimentStep.Info,
-              })}
-            />
-            Info
-          </div>
-          <div className="flex items-center justify-center gap-3">
-            {!!warnInfo && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <WarningFilled className="text-sm text-yellow-300!" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent
-                  avoidCollisions
-                  side="bottom"
-                  sideOffset={10}
-                  collisionPadding={{ left: 25 }}
-                  className="text-destructive! shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
-                  arrowClassName="bg-amber-100"
-                >
-                  {Object.values(warnInfo ?? {}).map((e1) => {
-                    return e1.map((err1) => (
-                      <p key={err1} className="w-full pb-0.5 wrap-break-words hyphens-auto">
-                        • {err1}
-                      </p>
-                    ));
-                  })}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <RightOutlined
-              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                '-rotate-180 transform text-white!': step === ExperimentStep.Info,
-              })}
-            />
-          </div>
-        </div>
-      </Button>
-      <div className="text-neutral-3 ml-4 font-light uppercase">Experiment</div>
-      <Button
-        rounded
-        variant="outline"
-        size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2 shadow-md')}
-        active={step === ExperimentStep.ExperimentalSetup}
-        onClick={() => onStepChange(ExperimentStep.ExperimentalSetup)}
-      >
-        <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-          <div className="shrink-0 font-bold">Experimental setup</div>
-          <div className="flex items-center justify-center gap-3">
-            {warnExperimentalSetup && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <WarningFilled className="text-sm text-yellow-300!" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent
-                  avoidCollisions
-                  side="bottom"
-                  sideOffset={10}
-                  collisionPadding={{ left: 25 }}
-                  className="text-destructive! shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
-                  arrowClassName="bg-amber-100"
-                >
-                  {warnExperimentalSetup &&
-                    Object.values(warnExperimentalSetup).map((e2) => {
-                      return e2.map((err2) => {
-                        return (
-                          <p key={err2} className="w-full pb-0.5 wrap-break-words hyphens-auto">
-                            • {err2}
-                          </p>
-                        );
-                      });
-                    })}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <RightOutlined
-              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                '-rotate-180 transform text-white!': step === ExperimentStep.ExperimentalSetup,
-              })}
-            />
-          </div>
-        </div>
-      </Button>
-      {simulationType === SimulationType.SingleNeuronSynaptome && (
+    <>
+      {creditsModal}
+      <div className="flex h-full flex-col gap-2">
+        <div className="text-neutral-3 ml-4 font-light uppercase">Setup</div>
         <Button
           rounded
           variant="outline"
           size={breakpoint === 'l' ? 'md' : 'lg'}
-          className={cn('w-full justify-start pr-2 shadow-md')}
-          active={step === ExperimentStep.SynapticInputs}
-          onClick={() => onStepChange(ExperimentStep.SynapticInputs)}
+          className={cn('w-full justify-start pr-2! font-bold shadow-md')}
+          active={step === ExperimentStep.Info}
+          onClick={() => onStepChange(ExperimentStep.Info)}
         >
-          <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-            <div className="shrink-0 font-bold">Synaptic Input</div>
+          <div className="flex w-full items-center justify-between gap-2">
+            <div>
+              <SettingFilled
+                className={cn('text-neutral-3 mr-2 [&_svg]:size-3!', {
+                  'text-primary-4!': step === ExperimentStep.Info,
+                })}
+              />
+              Info
+            </div>
             <div className="flex items-center justify-center gap-3">
-              {!!Object.keys(warnSynaptome ?? {}).length && (
+              {!!warnInfo && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span>
@@ -344,18 +253,159 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                     side="bottom"
                     sideOffset={10}
                     collisionPadding={{ left: 25 }}
-                    className="text-destructive shadow-bnb w-full max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap wrap-break-words"
+                    className="text-destructive! shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
                     arrowClassName="bg-amber-100"
                   >
-                    {warnSynaptome &&
-                      Object.values(warnSynaptome).map((e3) => {
-                        return Array.isArray(e3)
-                          ? e3.map((err3: string) => (
-                              <p
-                                key={err3}
-                                className="pb-0.5 wrap-anywhere] hyphens-auto whitespace-pre-wrap"
-                              >
-                                • {err3}
+                    {Object.values(warnInfo ?? {}).map((e1) => {
+                      return e1.map((err1) => (
+                        <p key={err1} className="w-full pb-0.5 wrap-break-words hyphens-auto">
+                          • {err1}
+                        </p>
+                      ));
+                    })}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <RightOutlined
+                className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                  '-rotate-180 transform text-white!': step === ExperimentStep.Info,
+                })}
+              />
+            </div>
+          </div>
+        </Button>
+        <div className="text-neutral-3 ml-4 font-light uppercase">Experiment</div>
+        <Button
+          rounded
+          variant="outline"
+          size={breakpoint === 'l' ? 'md' : 'lg'}
+          className={cn('w-full justify-start pr-2 shadow-md')}
+          active={step === ExperimentStep.ExperimentalSetup}
+          onClick={() => onStepChange(ExperimentStep.ExperimentalSetup)}
+        >
+          <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
+            <div className="shrink-0 font-bold">Experimental setup</div>
+            <div className="flex items-center justify-center gap-3">
+              {warnExperimentalSetup && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <WarningFilled className="text-sm text-yellow-300!" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    avoidCollisions
+                    side="bottom"
+                    sideOffset={10}
+                    collisionPadding={{ left: 25 }}
+                    className="text-destructive! shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
+                    arrowClassName="bg-amber-100"
+                  >
+                    {warnExperimentalSetup &&
+                      Object.values(warnExperimentalSetup).map((e2) => {
+                        return e2.map((err2) => {
+                          return (
+                            <p key={err2} className="w-full pb-0.5 wrap-break-words hyphens-auto">
+                              • {err2}
+                            </p>
+                          );
+                        });
+                      })}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <RightOutlined
+                className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                  '-rotate-180 transform text-white!': step === ExperimentStep.ExperimentalSetup,
+                })}
+              />
+            </div>
+          </div>
+        </Button>
+        {simulationType === SimulationType.SingleNeuronSynaptome && (
+          <Button
+            rounded
+            variant="outline"
+            size={breakpoint === 'l' ? 'md' : 'lg'}
+            className={cn('w-full justify-start pr-2 shadow-md')}
+            active={step === ExperimentStep.SynapticInputs}
+            onClick={() => onStepChange(ExperimentStep.SynapticInputs)}
+          >
+            <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
+              <div className="shrink-0 font-bold">Synaptic Input</div>
+              <div className="flex items-center justify-center gap-3">
+                {!!Object.keys(warnSynaptome ?? {}).length && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <WarningFilled className="text-sm text-yellow-300!" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      avoidCollisions
+                      side="bottom"
+                      sideOffset={10}
+                      collisionPadding={{ left: 25 }}
+                      className="text-destructive shadow-bnb w-full max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap wrap-break-words"
+                      arrowClassName="bg-amber-100"
+                    >
+                      {warnSynaptome &&
+                        Object.values(warnSynaptome).map((e3) => {
+                          return Array.isArray(e3)
+                            ? e3.map((err3: string) => (
+                                <p
+                                  key={err3}
+                                  className="pb-0.5 wrap-anywhere] hyphens-auto whitespace-pre-wrap"
+                                >
+                                  • {err3}
+                                </p>
+                              ))
+                            : null;
+                        })}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                <RightOutlined
+                  className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                    '-rotate-180 transform text-white!': step === ExperimentStep.SynapticInputs,
+                  })}
+                />
+              </div>
+            </div>
+          </Button>
+        )}
+        <Button
+          rounded
+          variant="outline"
+          size={breakpoint === 'l' ? 'md' : 'lg'}
+          className={cn('w-full justify-start pr-2 shadow-md')}
+          active={step === ExperimentStep.StimulationProtocol}
+          onClick={() => onStepChange(ExperimentStep.StimulationProtocol)}
+        >
+          <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
+            <div className="shrink-0 font-bold">Stimulation protocol</div>
+            <div className="flex items-center justify-center gap-3">
+              {!!Object.keys(warnStimulationProtocol ?? {}).length && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <WarningFilled className="text-sm text-yellow-300!" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    avoidCollisions
+                    side="bottom"
+                    sideOffset={10}
+                    collisionPadding={{ left: 25 }}
+                    className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                    arrowClassName="bg-amber-100"
+                  >
+                    {warnStimulationProtocol &&
+                      Object.values(warnStimulationProtocol).map((e4) => {
+                        return Array.isArray(e4)
+                          ? e4.map((err4: string) => (
+                              <p key={err4} className="w-full pb-0.5 wrap-break-words hyphens-auto">
+                                • {err4}
                               </p>
                             ))
                           : null;
@@ -365,147 +415,100 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               )}
               <RightOutlined
                 className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                  '-rotate-180 transform text-white!': step === ExperimentStep.SynapticInputs,
+                  '-rotate-180 transform text-white!': step === ExperimentStep.StimulationProtocol,
                 })}
               />
             </div>
           </div>
         </Button>
-      )}
-      <Button
-        rounded
-        variant="outline"
-        size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2 shadow-md')}
-        active={step === ExperimentStep.StimulationProtocol}
-        onClick={() => onStepChange(ExperimentStep.StimulationProtocol)}
-      >
-        <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-          <div className="shrink-0 font-bold">Stimulation protocol</div>
-          <div className="flex items-center justify-center gap-3">
-            {!!Object.keys(warnStimulationProtocol ?? {}).length && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <WarningFilled className="text-sm text-yellow-300!" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent
-                  avoidCollisions
-                  side="bottom"
-                  sideOffset={10}
-                  collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
-                  arrowClassName="bg-amber-100"
-                >
-                  {warnStimulationProtocol &&
-                    Object.values(warnStimulationProtocol).map((e4) => {
-                      return Array.isArray(e4)
-                        ? e4.map((err4: string) => (
-                            <p key={err4} className="w-full pb-0.5 wrap-break-words hyphens-auto">
-                              • {err4}
-                            </p>
-                          ))
-                        : null;
-                    })}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <RightOutlined
-              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                '-rotate-180 transform text-white!': step === ExperimentStep.StimulationProtocol,
-              })}
-            />
-          </div>
-        </div>
-      </Button>
-      <Button
-        rounded
-        variant="outline"
-        size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2 shadow-md')}
-        active={step === ExperimentStep.Recording}
-        onClick={() => onStepChange(ExperimentStep.Recording)}
-      >
-        <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-          <div className="shrink-0 font-bold">Recording</div>
-          <div className="flex items-center justify-center gap-3">
-            {!!Object.keys(warnRecordLocation ?? {}).length && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <WarningFilled className="text-sm text-yellow-300!" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent
-                  avoidCollisions
-                  side="bottom"
-                  sideOffset={10}
-                  collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
-                  arrowClassName="bg-amber-100"
-                >
-                  {warnRecordLocation &&
-                    Object.values(warnRecordLocation).map((error) => {
-                      return Array.isArray(error)
-                        ? error.map((err5: string) => (
-                            <p key={err5} className="w-full pb-0.5 wrap-break-words hyphens-auto">
-                              • {err5}
-                            </p>
-                          ))
-                        : null;
-                    })}
-                </TooltipContent>
-              </Tooltip>
-            )}
-            <RightOutlined
-              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                '-rotate-180 transform text-white!': step === ExperimentStep.Recording,
-              })}
-            />
-          </div>
-        </div>
-      </Button>
-      <Tooltip open={overResourceThreshold ? true : undefined}>
-        <TooltipTrigger asChild>
-          <div className="mt-auto w-full">
-            <Button
-              rounded
-              variant="success"
-              size={breakpoint === 'l' ? 'md' : 'lg'}
-              className={cn(
-                'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
-              )}
-              disabled={disableRunSimulation}
-              onClick={onRun}
-            >
-              <div className="shrink-0 font-bold">Run experiment</div>
-            </Button>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          sideOffset={0}
-          arrowClassName={overResourceThreshold ? 'bg-warning' : 'bg-primary-9'}
-          className={overResourceThreshold ? 'bg-warning!' : undefined}
+        <Button
+          rounded
+          variant="outline"
+          size={breakpoint === 'l' ? 'md' : 'lg'}
+          className={cn('w-full justify-start pr-2 shadow-md')}
+          active={step === ExperimentStep.Recording}
+          onClick={() => onStepChange(ExperimentStep.Recording)}
         >
-          {overResourceThreshold ? (
-            <div className="max-w-80 text-white">
-              <span className="text-sm">Simulation is too complex, please decrease either:</span>
-              <ul className="mt-2 list-disc pl-4">
-                <li>Number of steps for current/synaptic inputs</li>
-                <li>Number of recording locations and/or current recordings</li>
-                <li>Duration of the simulation</li>
-                <li>Precision by increasing time step</li>
-              </ul>
+          <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
+            <div className="shrink-0 font-bold">Recording</div>
+            <div className="flex items-center justify-center gap-3">
+              {!!Object.keys(warnRecordLocation ?? {}).length && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <WarningFilled className="text-sm text-yellow-300!" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    avoidCollisions
+                    side="bottom"
+                    sideOffset={10}
+                    collisionPadding={{ left: 25 }}
+                    className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                    arrowClassName="bg-amber-100"
+                  >
+                    {warnRecordLocation &&
+                      Object.values(warnRecordLocation).map((error) => {
+                        return Array.isArray(error)
+                          ? error.map((err5: string) => (
+                              <p key={err5} className="w-full pb-0.5 wrap-break-words hyphens-auto">
+                                • {err5}
+                              </p>
+                            ))
+                          : null;
+                      })}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <RightOutlined
+                className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                  '-rotate-180 transform text-white!': step === ExperimentStep.Recording,
+                })}
+              />
             </div>
-          ) : (
-            <p className={cn('max-w-80 text-left text-base text-balance')}>
-              Please fill all the required information <br />
-              along with experiment configurations.
-            </p>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </div>
+          </div>
+        </Button>
+        <Tooltip open={overResourceThreshold ? true : undefined}>
+          <TooltipTrigger asChild>
+            <div className="mt-auto w-full">
+              <Button
+                rounded
+                variant="success"
+                size={breakpoint === 'l' ? 'md' : 'lg'}
+                className={cn(
+                  'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
+                )}
+                disabled={disableRunSimulation}
+                onClick={onRun}
+              >
+                <div className="shrink-0 font-bold">Run experiment</div>
+              </Button>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent
+            sideOffset={0}
+            arrowClassName={overResourceThreshold ? 'bg-warning' : 'bg-primary-9'}
+            className={overResourceThreshold ? 'bg-warning!' : undefined}
+          >
+            {overResourceThreshold ? (
+              <div className="max-w-80 text-white">
+                <span className="text-sm">Simulation is too complex, please decrease either:</span>
+                <ul className="mt-2 list-disc pl-4">
+                  <li>Number of steps for current/synaptic inputs</li>
+                  <li>Number of recording locations and/or current recordings</li>
+                  <li>Duration of the simulation</li>
+                  <li>Precision by increasing time step</li>
+                </ul>
+              </div>
+            ) : (
+              <p className={cn('max-w-80 text-left text-base text-balance')}>
+                Please fill all the required information <br />
+                along with experiment configurations.
+              </p>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </>
   );
 }

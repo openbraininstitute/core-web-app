@@ -19,6 +19,7 @@ import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
+import { useLowCredits } from '@/features/low-credits';
 import { downloadArchive } from '@/services/entity-download';
 import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -32,11 +33,15 @@ interface ActionPopoverProps {
   index: number;
 }
 
-export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
+export function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
-  const [loading, setLoading] = useState(false);
+  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
+    subject: 'run the notebook',
+  });
+  const [runningTarget, setRunningTarget] = useState<string | null>(null);
+  const loading = runningTarget !== null;
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const isPublic = pathname.endsWith('/public');
@@ -84,12 +89,12 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
     enabled: Boolean(virtualLabId),
   });
 
-  async function handleRunNotebook(cloud: string, podNum?: number) {
+  async function handleRunNotebook(target: string, cloud: string, podNum?: number) {
     if (loading) return;
     const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
     if (!asset) return;
 
-    setLoading(true);
+    setRunningTarget(target);
 
     try {
       const retval: NotebookStartResponse = await startNotebook(
@@ -107,6 +112,9 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
       });
       window.open(retval.url, '_blank');
     } catch (error) {
+      if (reportLowCredits(error)) {
+        return;
+      }
       if (error instanceof Error && 'cause' in error) {
         notification.error({
           message: (error.cause as { error_code: string; hint: string }).hint,
@@ -121,12 +129,13 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
         });
       }
     } finally {
-      setLoading(false);
+      setRunningTarget(null);
     }
   }
 
   return (
     <>
+      {creditsModal}
       <Modal open={open} footer={false} onCancel={() => setOpen(false)} width="40%">
         <div>
           <h1 className="text-primary-8 text-3xl font-bold">Readme</h1>
@@ -239,11 +248,14 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                         `Could not fetch virtual lab data with useQuery ${virtualLabData}`
                       );
                     }
-                    handleRunNotebook(virtualLabData.compute_cell, 0);
+                    handleRunNotebook('default', virtualLabData.compute_cell, 0);
                   }}
                 >
-                  {!loading && <PlayCircleOutlined aria-label="Run" />}
-                  {loading && <LoadingOutlined />}
+                  {runningTarget === 'default' ? (
+                    <LoadingOutlined />
+                  ) : (
+                    <PlayCircleOutlined aria-label="Run" />
+                  )}
                   Run
                 </button>
               </div>
@@ -257,11 +269,14 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                       className="hover:text-primary-4 inline-flex items-center gap-2.5"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRunNotebook('aws', 0);
+                        handleRunNotebook('aws-dev', 'aws', 0);
                       }}
                     >
-                      {!loading && <PlayCircleOutlined aria-label="Run" />}
-                      {loading && <LoadingOutlined />}
+                      {runningTarget === 'aws-dev' ? (
+                        <LoadingOutlined />
+                      ) : (
+                        <PlayCircleOutlined aria-label="Run" />
+                      )}
                       Run in single pod 0 on AWS (dev only)
                     </button>
                   </div>
@@ -272,11 +287,14 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                       className="hover:text-primary-4 inline-flex items-center gap-2.5"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRunNotebook('azure', 0);
+                        handleRunNotebook('azure-dev', 'azure', 0);
                       }}
                     >
-                      {!loading && <PlayCircleOutlined aria-label="Run" />}
-                      {loading && <LoadingOutlined />}
+                      {runningTarget === 'azure-dev' ? (
+                        <LoadingOutlined />
+                      ) : (
+                        <PlayCircleOutlined aria-label="Run" />
+                      )}
                       Run in single pod 0 on Azure (dev only)
                     </button>
                   </div>
