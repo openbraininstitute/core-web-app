@@ -5,10 +5,12 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
+import { ViewVariant } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
 import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import { ICMRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/index';
+import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { RelatedCircuits } from '@/ui/segments/explore/circuit/elements/related-circuits';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -25,13 +27,18 @@ export default async function RelatedArtifacts({
   extendedType: TExtendedEntitiesTypeDict;
   context: WorkspaceContext;
 }) {
-  return match({ entityConfig: getEntityByExtendedType({ type: extendedType }) })
+  const entityConfig = getEntityByExtendedType({ type: extendedType });
+  const fieldVariant = entityConfig
+    ? detailViewVariantFromGroup(entityConfig.group)
+    : ViewVariant.Light;
+
+  return match({ entityConfig })
     .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.Memodel } }, () => (
-      <MEModelResults modelId={entity.id} context={context} />
+      <MEModelResults modelId={entity.id} context={context} variant={fieldVariant} />
     ))
     .with(
       { entityConfig: { extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome } },
-      () => <SynaptomeResults modelId={entity.id} context={context} />
+      () => <SynaptomeResults modelId={entity.id} context={context} variant={fieldVariant} />
     )
     .with(
       {
@@ -42,10 +49,14 @@ export default async function RelatedArtifacts({
           ),
         },
       },
-      () => <RelatedCircuits circuit={entity as ICircuit} />
+      () => <RelatedCircuits circuit={entity as ICircuit} variant={fieldVariant} />
     )
     .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.IonChannelModel } }, () => (
-      <ICMRelatedArtifacts icm={entity as IonChannelModel} context={context} />
+      <ICMRelatedArtifacts
+        icm={entity as IonChannelModel}
+        context={context}
+        variant={fieldVariant}
+      />
     ))
     .otherwise(() => notFound());
 }

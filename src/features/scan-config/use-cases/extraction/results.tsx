@@ -7,7 +7,7 @@ import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { WorkspaceSection } from '@/constants';
+import { ViewVariant, WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
@@ -19,7 +19,6 @@ import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
-import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
@@ -189,7 +188,7 @@ export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdCh
                 section={WorkspaceSection.Data}
                 record={selectedFile.entity as ICircuit}
                 dataType={ExtendedEntitiesTypeDict.Circuit}
-                theme={MiniDetailViewTheme.Light}
+                theme={ViewVariant.Light}
                 enableAnimation={false}
               />
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
 import { cn } from '@/utils/css-class';
@@ -15,9 +16,14 @@ import styles from './trace-details-view.module.css';
 export interface TraceDetailsViewProps {
   trace: IonChannelRecordingParser;
   cls?: { plots: string };
+  variant?: TViewVariant;
 }
 
-export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
+export function TraceDetailsView({
+  trace,
+  cls,
+  variant = ViewVariant.Light,
+}: TraceDetailsViewProps) {
   const protocolsNames = trace.protocols.map(({ name }) => name);
   const [protocolName, setProtocolName] = React.useState<string>(protocolsNames[0] ?? '');
   const protocol = React.useMemo(
@@ -30,6 +36,7 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
     return protocol.repetitions.map(({ name }) => name);
   }, [protocol]);
   const [repetitionName, setRepetitionName] = React.useState(repetitionsNames[0] ?? '');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: protocolName is used to force a re-render of the repetition name
   React.useEffect(() => {
     setRepetitionName(repetitionsNames[0] ?? '');
   }, [protocolName, repetitionsNames]);
@@ -46,14 +53,17 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
     lines.selection,
     lines.preview
   );
+  const plotHeadingClass = cn({ '[&_h3]:!text-white': variant === ViewVariant.Default });
+
   return (
-    <div className={styles.main}>
+    <div className={cn(styles.main, plotHeadingClass)}>
       <header>
         <OptionSelect
           label={{ title: 'Protocol', numberOfAvailable: protocolsNames.length }}
           value={protocolName}
           onChange={setProtocolName}
           options={protocolsNames.map((name) => <div key={name}>{name}</div>)}
+          variant={variant}
         />
         {repetitionsNames.length > 1 && (
           <OptionSelect
@@ -61,6 +71,7 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
             value={repetitionName}
             onChange={setRepetitionName}
             options={repetitionsNames.map((name) => <div key={name}>{name}</div>)}
+            variant={variant}
           />
         )}
       </header>
@@ -71,6 +82,7 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
         setSelectedSweeps={lines.setSelection}
         colorMap={colorMap}
         sweepOptions={(repetition?.plot.lines ?? []).map(({ id }) => ({ label: id, value: id }))}
+        variant={variant}
       />
       <div className={cn(styles.plots, cls?.plots)}>
         {(paramsStimuli.plot?.lines ?? []).length > 0 && (

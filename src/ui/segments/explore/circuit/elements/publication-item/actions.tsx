@@ -1,6 +1,6 @@
 import { CheckCircleFilled } from '@ant-design/icons';
 
-import { LinkFill, CopyDocumentFill } from '@/components/icons/EditorIcons';
+import { CopyDocumentFill, LinkFill } from '@/components/icons/EditorIcons';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 
 interface Props {
@@ -12,14 +12,14 @@ interface Props {
 export function Actions({ doi, url, className }: Props) {
   const [, copy, , copying] = useCopyToClipboard();
   return (
-    <div className={`flex flex-shrink-0 items-center gap-1 ${className || ''}`}>
+    <div className={`flex shrink-0 items-center gap-1 ${className || ''}`}>
       {url && (
         <button
           type="button"
           onClick={() => window.open(url, '_blank')}
           className="flex h-8 items-center justify-center gap-2 px-2"
         >
-          <LinkFill className="text-primary-8 mr-1" />
+          <LinkFill className="text-white mr-1" />
           Link
         </button>
       )}
@@ -27,7 +27,7 @@ export function Actions({ doi, url, className }: Props) {
         <button
           type="button"
           onClick={() => copy(doi)}
-          className="text-primary-8 flex h-8 w-[100px] items-center justify-center gap-2 px-2"
+          className="text-white flex h-8 w-[100px] items-center justify-center gap-2 px-2"
         >
           {copying ? (
             <>
@@ -36,7 +36,7 @@ export function Actions({ doi, url, className }: Props) {
             </>
           ) : (
             <>
-              <CopyDocumentFill className="text-primary-8 mr-1" />
+              <CopyDocumentFill className="text-white mr-1" />
               Copy DOI
             </>
           )}

@@ -1,8 +1,11 @@
+'use client';
+
 import { useQuery } from '@tanstack/react-query';
 import { Divider } from 'antd';
 import { startCase } from 'es-toolkit/compat';
 
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
@@ -38,10 +41,12 @@ export function Morphometrics({
   morphology,
   context,
   className,
+  variant = ViewVariant.Default,
 }: {
   morphology: ICellMorphology;
   className?: string;
   context: WorkspaceContext;
+  variant?: TViewVariant;
 }) {
   const { data: measurementKinds, isLoading } = useQuery({
     queryKey: ['measurement-annotations', morphology.id],
@@ -63,19 +68,41 @@ export function Morphometrics({
     },
   } as ICellMorphologyExpanded;
 
-  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(expandedMorphology, true);
+  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(
+    expandedMorphology,
+    true,
+    variant
+  );
 
   return (
-    <div className={cn('flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2', className)}>
-      <Divider className="w-full" />
-      <h1 className="text-primary-8 text-xl font-bold">Morphometrics</h1>
+    <div
+      className={cn(
+        'flex max-w-(--breakpoint-2xl) flex-col gap-5 pl-2 rounded-lg border p-5 border-white/20 mb-2',
+        className
+      )}
+    >
+      <h1
+        className={cn(
+          'text-xl font-bold',
+          variant === ViewVariant.Default ? 'text-white' : 'text-primary-8'
+        )}
+      >
+        Morphometrics
+      </h1>
       {isLoading ? (
         <MorphometricsSkeleton />
       ) : (
         <div className="grid grid-cols-5 gap-4 wrap-break-word">
           {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
             <div key={group}>
-              <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
+              <h2
+                className={cn(
+                  'mb-8 text-lg font-semibold',
+                  variant === ViewVariant.Default ? 'text-white' : 'text-primary-8'
+                )}
+              >
+                {startCase(group)}
+              </h2>
               {fields.map((field) => renderMetric(field))}
             </div>
           ))}

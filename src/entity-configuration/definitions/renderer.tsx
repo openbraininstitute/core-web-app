@@ -8,9 +8,11 @@ import { isValidElement, type JSX, type ReactNode, useEffect, useState } from 'r
 
 import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
+import { cn } from '@/utils/css-class';
 
 import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
@@ -95,10 +97,16 @@ export const renderDate = (isoDateString?: string | null) => {
   return format(parseISO(isoDateString), 'dd.MM.yyyy');
 };
 
-export const renderEmail = (email?: string | null) => {
+export const renderEmail = (email?: string | null, variant?: TViewVariant) => {
   if (isNil(email)) return EmptyValue;
   return (
-    <a href={`mailto:${email}`} className="text-primary-8 hover:underline">
+    <a
+      href={`mailto:${email}`}
+      className={cn('hover:underline', {
+        'text-white!': variant === ViewVariant.Default,
+        'text-primary-7': variant === ViewVariant.Light,
+      })}
+    >
       {email}
     </a>
   );

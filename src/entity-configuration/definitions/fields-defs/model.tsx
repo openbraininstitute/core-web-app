@@ -415,7 +415,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Contact email',
     filter: null,
     isDisplayable: true,
-    render: (r) => renderEmptyOrValue(renderEmail((r as ICircuit).contact_email)),
+    render: (r, _, variant) =>
+      renderEmptyOrValue(renderEmail((r as ICircuit).contact_email, variant)),
     vocabulary: {
       plural: 'Contact emails',
       singular: 'Contact email',

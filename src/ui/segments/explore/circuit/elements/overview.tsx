@@ -2,18 +2,22 @@
 
 import toPairs from 'es-toolkit/compat/toPairs';
 
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
-import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
+import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
+import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Props = {
   circuit: ICircuit;
+  variant?: TViewVariant;
 };
 
-export default function Overview({ circuit }: Props) {
+export default function Overview({ circuit, variant = ViewVariant.Light }: Props) {
   const cellProperties = getAssetElement({
     assets: circuit.assets,
     filter(i) {
@@ -46,8 +50,13 @@ export default function Overview({ circuit }: Props) {
         {toPairs(list).map(([key, { items, title }]) => {
           return (
             <div key={key} className="flex w-full flex-col gap-2">
-              <Header title={title} />
-              <div className="flex w-full flex-col items-center gap-2">
+              <Header title={title} variant={variant} />
+              <div
+                className={cn(
+                  'flex w-full flex-col items-center gap-2',
+                  variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
+                )}
+              >
                 {items.map((asset, index) => (
                   <ProgressiveEntityImage
                     key={`${key}-${asset?.id || index}`}
@@ -61,6 +70,7 @@ export default function Overview({ circuit }: Props) {
                     maxWidth="100%"
                     yPadding={16}
                     xPadding={40}
+                    variant={variant}
                   />
                 ))}
               </div>

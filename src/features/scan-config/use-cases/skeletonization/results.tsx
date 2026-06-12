@@ -7,7 +7,7 @@ import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity'
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { WorkspaceSection } from '@/constants';
+import { ViewVariant, WorkspaceSection } from '@/constants';
 import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
@@ -22,7 +22,6 @@ import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
-import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 import { InOutFiles } from './in-out-files';
 
@@ -204,7 +203,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
                   section={WorkspaceSection.Data}
                   record={selectedFile.entity as ICellMorphology}
                   dataType={EntityTypeDict.CellMorphology}
-                  theme={MiniDetailViewTheme.Light}
+                  theme={ViewVariant.Light}
                   enableAnimation={false}
                 />
               </div>
