@@ -280,7 +280,7 @@ export function buildElectricalModelsEntries(
   const seenPrefixes = new Set<string>();
   for (const raw of candidates) {
     const entry = buildFolderEntry(raw, config.manifest, directory);
-    if (entry && !seenPrefixes.has(entry.prefix)) {
+    if (entry && entry.fileCount > 0 && !seenPrefixes.has(entry.prefix)) {
       seenPrefixes.add(entry.prefix);
       entries.push(entry);
     }
