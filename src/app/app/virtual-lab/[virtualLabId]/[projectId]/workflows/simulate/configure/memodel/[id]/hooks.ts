@@ -20,6 +20,7 @@ export function useEntity(
   const { virtualLabId, projectId, id: entityId } = React.use(params);
   const queryClient = useQueryClient();
   const queryKey = keyBuilder.meModel({ virtualLabId, projectId, entityId });
+  console.log('🐞 [hooks@23] queryKey =', queryKey); // @FIXME: Remove this line written on 2026-06-12 at 14:16
   const { data, isLoading, error } = useQuery({
     queryKey,
     queryFn: async () => {
