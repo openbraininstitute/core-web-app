@@ -11,21 +11,18 @@ import {
 import { useRouter } from '@bprogress/next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import delay from 'es-toolkit/compat/delay';
-import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { checkSingleNeuronCompatibility } from '@/api/small-scale-simulator';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
-import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { config } from '@/config';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
-import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
+import { useLowCredits } from '@/features/low-credits';
+import { messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -56,8 +53,9 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const { virtualLabId, projectId } = useWorkspace();
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
-  const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
-  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
+  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
+    subject: 'build the ME-model',
+  });
 
   const { sessionValue } = useBuildMeModelSessionState({
     sessionId,
@@ -145,23 +143,14 @@ export function Menu({ sessionId }: { sessionId: string }) {
     },
     onError(err) {
       log('error', 'Build me-model failed:', err);
-      const isLowFundsError = get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE;
+      if (reportLowCredits(err)) return;
 
-      let message = messages.DefaultErrorMsg;
-      if (isLowFundsError) {
-        message = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-      }
-
-      if (isLowFundsError) {
-        setShowLowFundsNotification(true);
-      } else {
-        notification.error({
-          message: 'ME-model creation failed',
-          description: message,
-          placement: 'topRight',
-          duration: 10,
-        });
-      }
+      notification.error({
+        message: 'ME-model creation failed',
+        description: messages.DefaultErrorMsg,
+        placement: 'topRight',
+        duration: 10,
+      });
     },
     async onSettled() {
       await queryClient.invalidateQueries({
@@ -186,14 +175,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
 
   return (
     <>
-      {showLowFundsNotification && (
-        <LowFundsNotification
-          title="ME-model creation failed"
-          description={isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin}
-          onClose={() => setShowLowFundsNotification(false)}
-          duration={10000}
-        />
-      )}
+      {creditsModal}
       <div className="flex h-full flex-col gap-2">
         <div className="text-neutral-3 ml-4 font-light uppercase">Setup</div>
         <Button

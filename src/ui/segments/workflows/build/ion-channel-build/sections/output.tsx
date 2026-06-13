@@ -10,7 +10,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { ApiError } from '@/api/error';
 import {
   build as buildIonChannel,
   DataType,
@@ -18,6 +17,7 @@ import {
 } from '@/api/small-scale-simulator/ion-channel/build';
 import { useAppNotification } from '@/components/notification';
 import { resolveIonChannelModelingCampaignBuilds } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { useLowCredits } from '@/features/low-credits';
 import { getStatusColor } from '@/features/task-runner/activity-execution/color-map';
 import { message } from '@/i18n/en/ion-channel-build';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
@@ -343,6 +343,10 @@ export function Output({
   const queryClient = useQueryClient();
   const context = useWorkspace();
   const notification = useAppNotification();
+  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
+    context,
+    subject: 'build the ion channel model',
+  });
   const safeSessionId = sessionId || '';
   const [ionState, updateIonState] = useAtom(
     useMemo(() => IonChannelModelingSharedStateFamily(safeSessionId), [safeSessionId])
@@ -394,13 +398,9 @@ export function Output({
 
             return messageGenerator(createAsyncIterableStream<string>(stream));
           } catch (error) {
-            const errorMsg =
-              error instanceof ApiError &&
-              error.cause?.code === 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR'
-                ? message.LowFunds
-                : message.GenericFailed;
-
-            notification.error({ message: errorMsg, duration: null });
+            if (!reportLowCredits(error)) {
+              notification.error({ message: message.GenericFailed, duration: null });
+            }
 
             throw error;
           }
@@ -729,167 +729,208 @@ export function Output({
     (isBuilding && !hasOutputForSelectedBuild) || (loadingSummary && outputListItems.length === 0);
 
   return (
-    <div
-      className={cn('grid w-full grid-cols-[20rem_25rem_1fr] gap-8', {
-        'h-[calc(100vh-13rem)]': readonly,
-        'h-[calc(100vh-11rem)]': !readonly,
-      })}
-    >
-      <div className="bg-background flex shrink-0 flex-col gap-3 overflow-y-auto">
-        {(isLoading || isFetching) && !hasBuilds ? (
-          <Card key="build-0" className="p-4">
-            <div className="flex items-center justify-between gap-2">
-              <Skeleton className="h-5 w-20" />
-              <Skeleton className="h-6 w-24 rounded-full" />
-            </div>
-          </Card>
-        ) : (
-          builds.map((build, index) => {
-            const statusColor = getStatusColor(build.status as ActivityStatus);
-            const isSelected = selectedBuildIndex === index;
-
-            return (
-              <Card
-                key={build.executionId}
-                className={cn('cursor-pointer select-none p-4 transition-all', {
-                  'border-2': isSelected,
-                })}
-                style={{
-                  borderColor: isSelected ? statusColor : undefined,
-                  backgroundColor: `${statusColor}15`,
-                }}
-                onClick={() => {
-                  setSelectedBuildIndex(index);
-                  setSelectedPreview(null);
-                }}
-                aria-checked={isSelected}
-              >
-                <CardTitle className="flex items-center justify-between gap-2">
-                  <div className="text-primary-9 font-bold">Build {index}</div>
-                  <div className="flex items-center gap-2">
-                    {(build.status === ActivityStatus.RUNNING ||
-                      build.status === ActivityStatus.PENDING) && (
-                      <LoadingOutlined
-                        spin
-                        className="text-lg"
-                        style={{
-                          color: statusColor,
-                        }}
-                      />
-                    )}
-                    <Badge
-                      rounded
-                      className="px-4"
-                      style={{
-                        backgroundColor: statusColor,
-                        color: '#fff',
-                      }}
-                    >
-                      {build.status || build.executionStatus}
-                    </Badge>
-                  </div>
-                </CardTitle>
-              </Card>
-            );
-          })
-        )}
-      </div>
-
-      <div className="bg-background secondary-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto pr-3 mb-5">
-        {!selectedBuild || !hasBuilds ? (
-          <div className="flex flex-col gap-4">
-            <Skeleton className="h-4 w-2/5 rounded-full" />
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-12 w-full rounded-full" />
-            </div>
-            <Skeleton className="h-4 w-2/5 rounded-full" />
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: 8 })
-                .fill('')
-                .map((_, index) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
-                  <Skeleton key={index} className="h-12 w-full rounded-full" />
-                ))}
-            </div>
-          </div>
-        ) : (
-          <>
-            {(selectedBuild.config?.assets?.length ?? 0) > 0 && (
-              <div>
-                <h3 className="text-label mb-3 text-lg font-semibold">Inputs</h3>
-                <div className="flex flex-col gap-2">
-                  {selectedBuild.config?.assets?.map((asset) => {
-                    const fileName = getFileName(asset.path);
-                    const extension = getFileExtension(asset);
-                    const isActive =
-                      selectedPreview?.kind === SelectedPreviewDict.Input &&
-                      selectedPreview.id === asset.id;
-
-                    return (
-                      <Tooltip key={asset.id}>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant={isActive ? 'shadow' : 'outline'}
-                            rounded
-                            size="lg"
-                            active={isActive}
-                            onClick={() =>
-                              setSelectedPreview({
-                                kind: 'input',
-                                id: asset.id,
-                                asset,
-                                entity: selectedBuild.config,
-                              })
-                            }
-                            className={cn('w-full justify-between gap-2', {
-                              'shadow-[8px_12px_24px_0px_#0000000F,-16px_-16px_20px_0px_#FFFFFFD1]!':
-                                isActive,
-                            })}
-                          >
-                            <span className="truncate">{fileName}</span>
-                            <Badge rounded className="shrink-0">
-                              {extension}
-                            </Badge>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          sideOffset={5}
-                          className="text-white max-w-2xs bg-primary-8 text-base shadow-lg"
-                          arrowClassName="bg-primary-8"
-                        >
-                          {fileName}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
+    <>
+      {creditsModal}
+      <div
+        className={cn('grid w-full grid-cols-[20rem_25rem_1fr] gap-8', {
+          'h-[calc(100vh-13rem)]': readonly,
+          'h-[calc(100vh-11rem)]': !readonly,
+        })}
+      >
+        <div className="bg-background flex shrink-0 flex-col gap-3 overflow-y-auto">
+          {(isLoading || isFetching) && !hasBuilds ? (
+            <Card key="build-0" className="p-4">
+              <div className="flex items-center justify-between gap-2">
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-6 w-24 rounded-full" />
               </div>
-            )}
+            </Card>
+          ) : (
+            builds.map((build, index) => {
+              const statusColor = getStatusColor(build.status as ActivityStatus);
+              const isSelected = selectedBuildIndex === index;
 
-            <div>
-              <h3 className="text-label mb-3 text-lg font-semibold">Outputs</h3>
-              {isOutputLoading ? (
-                <div className="flex flex-col gap-2">
-                  {Array.from({ length: 8 })
-                    .fill('')
-                    .map((_, index) => (
-                      // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
-                      <Skeleton key={index} className="h-12 w-full rounded-full" />
-                    ))}
-                </div>
-              ) : selectedBuild.entity ? (
-                <div className="flex flex-col gap-2">
-                  {outputListItems.map((outputItem) => {
-                    if (outputItem.kind === 'trace-group') {
-                      const tracesExt = getFileExtension(outputItem.entry.traces);
-                      const stimuliExt = getFileExtension(outputItem.entry.stimuli);
-                      const showBothBadges =
-                        tracesExt &&
-                        stimuliExt &&
-                        tracesExt.toUpperCase() !== stimuliExt.toUpperCase();
+              return (
+                <Card
+                  key={build.executionId}
+                  className={cn('cursor-pointer select-none p-4 transition-all', {
+                    'border-2': isSelected,
+                  })}
+                  style={{
+                    borderColor: isSelected ? statusColor : undefined,
+                    backgroundColor: `${statusColor}15`,
+                  }}
+                  onClick={() => {
+                    setSelectedBuildIndex(index);
+                    setSelectedPreview(null);
+                  }}
+                  aria-checked={isSelected}
+                >
+                  <CardTitle className="flex items-center justify-between gap-2">
+                    <div className="text-primary-9 font-bold">Build {index}</div>
+                    <div className="flex items-center gap-2">
+                      {(build.status === ActivityStatus.RUNNING ||
+                        build.status === ActivityStatus.PENDING) && (
+                        <LoadingOutlined
+                          spin
+                          className="text-lg"
+                          style={{
+                            color: statusColor,
+                          }}
+                        />
+                      )}
+                      <Badge
+                        rounded
+                        className="px-4"
+                        style={{
+                          backgroundColor: statusColor,
+                          color: '#fff',
+                        }}
+                      >
+                        {build.status || build.executionStatus}
+                      </Badge>
+                    </div>
+                  </CardTitle>
+                </Card>
+              );
+            })
+          )}
+        </div>
+
+        <div className="bg-background secondary-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto pr-3 mb-5">
+          {!selectedBuild || !hasBuilds ? (
+            <div className="flex flex-col gap-4">
+              <Skeleton className="h-4 w-2/5 rounded-full" />
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-12 w-full rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-2/5 rounded-full" />
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 8 })
+                  .fill('')
+                  .map((_, index) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
+                    <Skeleton key={index} className="h-12 w-full rounded-full" />
+                  ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {(selectedBuild.config?.assets?.length ?? 0) > 0 && (
+                <div>
+                  <h3 className="text-label mb-3 text-lg font-semibold">Inputs</h3>
+                  <div className="flex flex-col gap-2">
+                    {selectedBuild.config?.assets?.map((asset) => {
+                      const fileName = getFileName(asset.path);
+                      const extension = getFileExtension(asset);
                       const isActive =
-                        selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup &&
+                        selectedPreview?.kind === SelectedPreviewDict.Input &&
+                        selectedPreview.id === asset.id;
+
+                      return (
+                        <Tooltip key={asset.id}>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={isActive ? 'shadow' : 'outline'}
+                              rounded
+                              size="lg"
+                              active={isActive}
+                              onClick={() =>
+                                setSelectedPreview({
+                                  kind: 'input',
+                                  id: asset.id,
+                                  asset,
+                                  entity: selectedBuild.config,
+                                })
+                              }
+                              className={cn('w-full justify-between gap-2', {
+                                'shadow-[8px_12px_24px_0px_#0000000F,-16px_-16px_20px_0px_#FFFFFFD1]!':
+                                  isActive,
+                              })}
+                            >
+                              <span className="truncate">{fileName}</span>
+                              <Badge rounded className="shrink-0">
+                                {extension}
+                              </Badge>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            sideOffset={5}
+                            className="text-white max-w-2xs bg-primary-8 text-base shadow-lg"
+                            arrowClassName="bg-primary-8"
+                          >
+                            {fileName}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-label mb-3 text-lg font-semibold">Outputs</h3>
+                {isOutputLoading ? (
+                  <div className="flex flex-col gap-2">
+                    {Array.from({ length: 8 })
+                      .fill('')
+                      .map((_, index) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
+                        <Skeleton key={index} className="h-12 w-full rounded-full" />
+                      ))}
+                  </div>
+                ) : selectedBuild.entity ? (
+                  <div className="flex flex-col gap-2">
+                    {outputListItems.map((outputItem) => {
+                      if (outputItem.kind === 'trace-group') {
+                        const tracesExt = getFileExtension(outputItem.entry.traces);
+                        const stimuliExt = getFileExtension(outputItem.entry.stimuli);
+                        const showBothBadges =
+                          tracesExt &&
+                          stimuliExt &&
+                          tracesExt.toUpperCase() !== stimuliExt.toUpperCase();
+                        const isActive =
+                          selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup &&
+                          selectedPreview.id === outputItem.id;
+
+                        return (
+                          <Tooltip key={outputItem.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={isActive ? 'shadow' : 'outline'}
+                                rounded
+                                size="lg"
+                                active={isActive}
+                                onClick={() =>
+                                  setSelectedPreview(toSelectedOutputPreview(outputItem))
+                                }
+                                className={cn('w-full justify-between gap-2', {
+                                  'shadow-[8px_12px_24px_0px_#0000000F,-16px_-16px_20px_0px_#FFFFFFD1]!':
+                                    isActive,
+                                })}
+                              >
+                                <span className="truncate">{outputItem.entry.name}</span>
+                                <div className="flex shrink-0 gap-1">
+                                  <Badge rounded>{stimuliExt}</Badge>
+                                  {showBothBadges && <Badge rounded>{tracesExt}</Badge>}
+                                </div>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="top"
+                              sideOffset={5}
+                              className="text-white max-w-2xs bg-primary-8 text-base shadow-lg"
+                              arrowClassName="bg-primary-8"
+                            >
+                              {outputItem.entry.name}
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+
+                      const isActive =
+                        selectedPreview?.kind === SelectedPreviewDict.OutputAsset &&
                         selectedPreview.id === outputItem.id;
 
                       return (
@@ -909,13 +950,13 @@ export function Output({
                               })}
                             >
                               <span className="truncate">{outputItem.entry.name}</span>
-                              <div className="flex shrink-0 gap-1">
-                                <Badge rounded>{stimuliExt}</Badge>
-                                {showBothBadges && <Badge rounded>{tracesExt}</Badge>}
-                              </div>
+                              <Badge rounded className="shrink-0">
+                                {outputItem.entry.extension}
+                              </Badge>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent
+                            avoidCollisions
                             side="top"
                             sideOffset={5}
                             className="text-white max-w-2xs bg-primary-8 text-base shadow-lg"
@@ -925,90 +966,56 @@ export function Output({
                           </TooltipContent>
                         </Tooltip>
                       );
-                    }
+                    })}
 
-                    const isActive =
-                      selectedPreview?.kind === SelectedPreviewDict.OutputAsset &&
-                      selectedPreview.id === outputItem.id;
+                    {outputListItems.length === 0 && (
+                      <div className="p-4 text-center text-sm text-gray-400">
+                        No output files yet
+                      </div>
+                    )}
+                  </div>
+                ) : readonly ? (
+                  <Skeleton />
+                ) : (
+                  <div className="p-4 text-center text-sm text-gray-400">No output files yet</div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
-                    return (
-                      <Tooltip key={outputItem.id}>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant={isActive ? 'shadow' : 'outline'}
-                            rounded
-                            size="lg"
-                            active={isActive}
-                            onClick={() => setSelectedPreview(toSelectedOutputPreview(outputItem))}
-                            className={cn('w-full justify-between gap-2', {
-                              'shadow-[8px_12px_24px_0px_#0000000F,-16px_-16px_20px_0px_#FFFFFFD1]!':
-                                isActive,
-                            })}
-                          >
-                            <span className="truncate">{outputItem.entry.name}</span>
-                            <Badge rounded className="shrink-0">
-                              {outputItem.entry.extension}
-                            </Badge>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          avoidCollisions
-                          side="top"
-                          sideOffset={5}
-                          className="text-white max-w-2xs bg-primary-8 text-base shadow-lg"
-                          arrowClassName="bg-primary-8"
-                        >
-                          {outputItem.entry.name}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-
-                  {outputListItems.length === 0 && (
-                    <div className="p-4 text-center text-sm text-gray-400">No output files yet</div>
-                  )}
-                </div>
-              ) : readonly ? (
-                <Skeleton />
-              ) : (
-                <div className="p-4 text-center text-sm text-gray-400">No output files yet</div>
-              )}
+        <div className="bg-background flex flex-1 flex-col overflow-auto px-2 pb-2 max-h-[calc(100%-.5rem)]">
+          {selectedPreview?.kind === 'input' ||
+          selectedPreview?.kind === SelectedPreviewDict.OutputAsset ? (
+            <FileViewer
+              asset={selectedPreview.asset}
+              entity={selectedPreview.entity}
+              context={context}
+            />
+          ) : selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup ? (
+            <div className="flex h-full flex-col gap-4 overflow-hidden">
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <FileViewer
+                  asset={selectedPreview.protocol.stimuli}
+                  entity={selectedPreview.entity}
+                  context={context}
+                />
+              </div>
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <FileViewer
+                  asset={selectedPreview.protocol.traces}
+                  entity={selectedPreview.entity}
+                  context={context}
+                />
+              </div>
             </div>
-          </>
-        )}
+          ) : (
+            <div className="flex h-full items-center justify-center text-gray-400">
+              {selectedBuild ? 'Select a file to preview' : 'No output file selected'}
+            </div>
+          )}
+        </div>
       </div>
-
-      <div className="bg-background flex flex-1 flex-col overflow-auto px-2 pb-2 max-h-[calc(100%-.5rem)]">
-        {selectedPreview?.kind === 'input' ||
-        selectedPreview?.kind === SelectedPreviewDict.OutputAsset ? (
-          <FileViewer
-            asset={selectedPreview.asset}
-            entity={selectedPreview.entity}
-            context={context}
-          />
-        ) : selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup ? (
-          <div className="flex h-full flex-col gap-4 overflow-hidden">
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <FileViewer
-                asset={selectedPreview.protocol.stimuli}
-                entity={selectedPreview.entity}
-                context={context}
-              />
-            </div>
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <FileViewer
-                asset={selectedPreview.protocol.traces}
-                entity={selectedPreview.entity}
-                context={context}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center text-gray-400">
-            {selectedBuild ? 'Select a file to preview' : 'No output file selected'}
-          </div>
-        )}
-      </div>
-    </div>
+    </>
   );
 }

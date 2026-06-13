@@ -21,10 +21,11 @@ export default function SectionBuildSynaptomeButton({
   active,
   sessionId,
 }: SectionBuildSynaptomeButtonProps) {
-  const { isPending, buildSynaptome } = useBuildSynaptome(sessionId);
+  const { isPending, buildSynaptome, creditsModal } = useBuildSynaptome(sessionId);
 
   return (
     <div className={cn(className, styles.sectionBuildSynaptomeButton, 'mt-auto w-full')}>
+      {creditsModal}
       <Tooltip>
         <TooltipTrigger asChild>
           <div>
