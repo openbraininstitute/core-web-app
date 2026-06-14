@@ -1,72 +1,12 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  clearDeletedBlockReferences,
+  resolveNeuronSet,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+
 import type { Config } from '@/features/scan-config/types';
-
-const assert: typeof import('node:assert/strict') = require('node:assert/strict');
-const fs: typeof import('node:fs') = require('node:fs');
-const Module: typeof import('node:module') = require('node:module');
-const path: typeof import('node:path') = require('node:path');
-const test: typeof import('node:test') = require('node:test');
-const ts: typeof import('typescript') = require('typescript');
-const { describe, it } = test;
-
-type NodeModuleConstructor = typeof Module & {
-  _nodeModulePaths(from: string): string[];
-};
-type TranspiledModule = InstanceType<typeof Module> & {
-  _compile(code: string, filename: string): void;
-};
-
-const ScanConfigUIElementDict = {
-  BlockSingle: 'block_single',
-  BlockDictionary: 'block_dictionary',
-  BlockUnion: 'block_union',
-  Reference: 'reference',
-  IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
-  ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
-} as const;
-
-function loadStateHelpers(): typeof import('./state') {
-  const statePath = path.join(__dirname, 'state.ts');
-  const source = fs.readFileSync(statePath, 'utf8');
-  const output = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-    },
-  }).outputText;
-  const NodeModule = Module as NodeModuleConstructor;
-  const stateModule = new NodeModule(statePath, module) as TranspiledModule;
-
-  stateModule.filename = statePath;
-  stateModule.paths = NodeModule._nodeModulePaths(path.dirname(statePath));
-  stateModule.require = ((id: string) => {
-    if (id === '../../../utils') {
-      return {
-        isPlainObject: (value: unknown) =>
-          typeof value === 'object' && value !== null && !Array.isArray(value),
-      };
-    }
-
-    if (id === '../../../../types') {
-      return {
-        isType: (value: unknown) =>
-          typeof value === 'object' &&
-          value !== null &&
-          !Array.isArray(value) &&
-          'const' in value &&
-          !('ui_element' in value),
-        ScanConfigUIElementDict,
-      };
-    }
-
-    return require(id);
-  }) as NodeJS.Require;
-
-  stateModule._compile(output, statePath);
-  return stateModule.exports;
-}
-
-const stateHelpers = loadStateHelpers();
-const { clearDeletedBlockReferences, resolveNeuronSet } = stateHelpers;
 
 describe('circuit ion-channel manipulation state', () => {
   it('changes the target signature when the referenced neuron-set content changes', () => {
@@ -93,8 +33,7 @@ describe('circuit ion-channel manipulation state', () => {
       block_dict_name: 'neuron_sets',
     };
 
-    assert.notEqual(
-      resolveNeuronSet(firstConfig, reference).signature,
+    expect(resolveNeuronSet(firstConfig, reference).signature).not.toBe(
       resolveNeuronSet(secondConfig, reference).signature
     );
   });
@@ -163,7 +102,7 @@ describe('circuit ion-channel manipulation state', () => {
 
     const next = clearDeletedBlockReferences(config, schema, 'neuron_sets', 'target-set');
 
-    assert.deepEqual(next.initialize, {
+    expect(next.initialize).toEqual({
       type: 'Initialize',
       neuron_set: null,
       manipulation: null,
