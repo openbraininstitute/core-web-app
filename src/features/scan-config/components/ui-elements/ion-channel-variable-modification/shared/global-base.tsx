@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import {
   SectionListConfigEditor,
@@ -15,13 +15,14 @@ import {
   MechanismVariableTypeDict,
   type SectionListEntry,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import { ModificationShell } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/modification-shell';
 import {
   type IonChannelSelection,
   IonChannelVariableSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
-interface GlobalProps {
+export interface GlobalModificationBaseProps {
   data: MechanismVariablesRoot | null;
   disabled: boolean;
   state: Record<string, ConfigValue>;
@@ -29,9 +30,21 @@ interface GlobalProps {
   fieldKey: string;
   modificationType: string;
   errorPathPrefix?: string;
+  /** circuit variant: variables are being fetched for the selected neuron set */
+  loading?: boolean;
+  /** circuit variant: rendered note for why the picker is unavailable (error, no variables) */
+  reason?: ReactNode | null;
 }
 
-export function Global({
+/**
+ * presentational base for the "Full Neuron Variable Modification"
+ * (`ion_channel_variable_modification_by_neuron`) ui element.
+ *
+ * renders the channel/variable picker and a single value editor from a provided
+ * {@link MechanismVariablesRoot}. it does not fetch data; the me-model and circuit
+ * wrappers each supply data (and, for circuit, loading/emptyReason).
+ */
+export function GlobalModificationBase({
   data,
   disabled,
   state,
@@ -39,7 +52,9 @@ export function Global({
   fieldKey,
   modificationType,
   errorPathPrefix,
-}: GlobalProps) {
+  loading = false,
+  reason = null,
+}: GlobalModificationBaseProps) {
   const currentModification = state[fieldKey];
   const isValidModification =
     !!currentModification &&
@@ -111,8 +126,6 @@ export function Global({
     return { [sectionLabel]: newValue };
   }, [isValidModification, newValue, sectionLabel]);
 
-  if (!data) return null;
-
   const handleVariableChange = (selection: IonChannelSelection) => {
     setState({
       ...state,
@@ -135,13 +148,14 @@ export function Global({
   };
 
   return (
-    <div
-      data-scan-config-block-element={
-        ScanConfigUIElementDict.IonChannelVariableModificationByNeuron
-      }
+    <ModificationShell
+      uiElement={ScanConfigUIElementDict.IonChannelVariableModificationByNeuron}
+      data={data}
+      loading={loading}
+      reason={reason}
     >
       <IonChannelVariableSelector
-        data={data}
+        data={data ?? {}}
         variableType={[MechanismVariableTypeDict.Global, MechanismVariableTypeDict.Range]}
         value={currentValue}
         onChange={handleVariableChange}
@@ -158,6 +172,6 @@ export function Global({
           errorPathPrefix={errorPathPrefix}
         />
       )}
-    </div>
+    </ModificationShell>
   );
 }
