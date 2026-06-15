@@ -1,7 +1,9 @@
+import { RiArrowRightSLine } from '@remixicon/react';
 import NextLink from 'next/link';
-import { RightOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
+
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export default function Tab({
   children,
@@ -22,7 +24,7 @@ export default function Tab({
     >
       {children}
       <div className="text-gray-500">
-        <RightOutlined className={highlight ? 'text-white' : ''} />
+        <RiArrowRightSLine className={cn('size-4', highlight && 'text-white')} />
       </div>
     </NextLink>
   );

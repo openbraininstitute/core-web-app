@@ -1,18 +1,18 @@
-import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  CheckOutlined,
-  CloseOutlined,
-  DownOutlined,
-  InfoCircleFilled,
-  LoadingOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  RiArrowDownSLine,
+  RiCheckLine,
+  RiCloseLine,
+  RiInformationFill,
+  RiLoader2Line,
+  RiSearchLine,
+} from '@remixicon/react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
@@ -156,12 +156,9 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
     return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current?.get(selectedValue);
   }, [currentOptionsMap, selectedValue]);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = useCallback((el: HTMLDivElement) => {
+    setParent(el);
+  }, []);
 
   useEffect(() => {
     if (!open || !parent) return;
@@ -218,26 +215,22 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           </div>
           {/* eslint-disable-next-line no-nested-ternary */}
           {isLoading || isFetching ? (
-            <LoadingOutlined className="opacity-50 [&_svg]:size-3!" spin />
+            <RiLoader2Line className="size-3 opacity-50 animate-spin" />
           ) : selectedValue ? (
-            <div
+            <button
+              type="button"
+              tabIndex={-1}
               className={cn(
                 'group-hover:bg-neutral-1 group-hover:text-primary-8',
                 'flex cursor-pointer items-center justify-center rounded-full p-1'
               )}
-              role="button"
-              tabIndex={-1}
-              onKeyDown={(e) => {
-                e.stopPropagation();
-                handleSelect(undefined);
-              }}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelect(undefined);
               }}
             >
-              <CloseOutlined className="opacity-50 [&_svg]:size-3!" />
-            </div>
+              <RiCloseLine className="size-3 opacity-50" />
+            </button>
           ) : (
             <div
               className={cn(
@@ -245,7 +238,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                 'flex cursor-pointer items-center justify-center rounded-full p-1'
               )}
             >
-              <DownOutlined className="opacity-50 [&_svg]:size-3!" />
+              <RiArrowDownSLine className="size-3 opacity-50" />
             </div>
           )}
         </Button>
@@ -269,7 +262,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                 'focus-within:bg-neutral-0.5 flex h-9 items-center gap-2 rounded-md px-3 transition-colors duration-200'
               )}
             >
-              <SearchOutlined className="text-primary-8 size-4 shrink-0 transition-opacity duration-200" />
+              <RiSearchLine className="text-primary-8 size-4 shrink-0 transition-opacity duration-200" />
               <input
                 placeholder={searchPlaceholder}
                 value={searchTerm}
@@ -330,9 +323,9 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                     >
                       <span className="line-clamp-2 w-full group-hover:font-black">{label}</span>
                       <div className="flex items-center justify-center gap-1">
-                        <CheckOutlined
+                        <RiCheckLine
                           className={cn(
-                            'ml-auto text-sm transition-opacity duration-200',
+                            'ml-auto size-4 transition-opacity duration-200',
                             isSelected ? 'opacity-100' : 'opacity-0'
                           )}
                         />
@@ -340,7 +333,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="h-8 rounded-full border-none">
-                                <InfoCircleFilled className="text-primary-8" />
+                                <RiInformationFill className="size-4 text-primary-8" />
                               </div>
                             </TooltipTrigger>
                             <TooltipContent
@@ -366,7 +359,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           )}
           {isFetchingNextPage && (
             <div className="sticky bottom-0 left-0 z-[99999] flex items-center justify-center gap-2 py-3">
-              <LoadingOutlined className="text-primary-8" spin />
+              <RiLoader2Line className="size-4 text-primary-8 animate-spin" />
               <span className="text-primary-8 text-sm font-medium">Loading next results...</span>
             </div>
           )}

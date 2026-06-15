@@ -3,10 +3,10 @@ import { Suspense, useEffect, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
 import { SonataViewer } from '@/features/sonata-viewer';
 import { SpikeViewer } from '@/features/spike-viewer';
+import { Loader } from '@/ui/molecules/loader';
 import { cn } from '@/utils/css-class';
 
 import { jsonFileAtomFamily } from '../atoms';

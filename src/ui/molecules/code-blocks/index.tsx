@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckOutlined as CheckIcon, CopyOutlined as CopyIcon } from '@ant-design/icons';
+import { RiCheckLine as CheckIcon, RiFileCopyLine as CopyIcon } from '@remixicon/react';
 import {
   type ComponentProps,
   createContext,

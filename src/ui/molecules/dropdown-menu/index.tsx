@@ -1,7 +1,7 @@
 'use client';
 
-import { CheckOutlined, RightOutlined } from '@ant-design/icons';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import { RiArrowRightSLine, RiCheckLine } from '@remixicon/react';
 
 import { cn } from '@/utils/css-class';
 
@@ -88,7 +88,7 @@ function DropdownMenuCheckboxItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CheckOutlined className="size-4" />
+          <RiCheckLine className="size-4" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -189,7 +189,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <RightOutlined className="ml-auto size-4" />
+      <RiArrowRightSLine className="ml-auto size-4" />
     </DropdownMenuPrimitive.SubTrigger>
   );
 }

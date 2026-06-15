@@ -2,7 +2,7 @@
 
 'use client';
 
-import { CloseOutlined } from '@ant-design/icons';
+import { RiCloseLine } from '@remixicon/react';
 import {
   type CSSProperties,
   type ReactNode,
@@ -194,7 +194,9 @@ export function Modal({
   animation = 'fade',
 
   closable = true,
-  closeIcon = <CloseOutlined className="text-current hover:text-neutral-6 transition-colors" />,
+  closeIcon = (
+    <RiCloseLine className="size-4 text-current hover:text-neutral-6 transition-colors" />
+  ),
   maskClosable = true,
   keyboard = true,
   destroyOnClose = false,

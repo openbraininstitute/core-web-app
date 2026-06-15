@@ -1,10 +1,11 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { RightOutlined, MoreOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
-import * as React from 'react';
+import { RiArrowRightSLine, RiMoreLine } from '@remixicon/react';
 
 import { cn } from '@/utils/css-class';
+
+import type * as React from 'react';
 
 function Breadcrumb({ ...props }: React.ComponentProps<'nav'>) {
   return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
@@ -55,8 +56,6 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span
       data-slot="breadcrumb-page"
-      role="link"
-      aria-disabled="true"
       aria-current="page"
       className={cn('text-foreground font-normal', className)}
       {...props}
@@ -73,7 +72,7 @@ function BreadcrumbSeparator({ children, className, ...props }: React.ComponentP
       className={cn('[&>svg]:size-3.5', className)}
       {...props}
     >
-      {children ?? <RightOutlined />}
+      {children ?? <RiArrowRightSLine />}
     </li>
   );
 }
@@ -87,7 +86,7 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<'span'
       className={cn('flex size-9 items-center justify-center', className)}
       {...props}
     >
-      <MoreOutlined className="size-4 rotate-90" />
+      <RiMoreLine className="size-4 rotate-90" />
       <span className="sr-only">More</span>
     </span>
   );
@@ -95,10 +94,10 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<'span'
 
 export {
   Breadcrumb,
-  BreadcrumbList,
+  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
+  BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  BreadcrumbEllipsis,
 };

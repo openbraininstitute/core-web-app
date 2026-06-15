@@ -1,6 +1,6 @@
 'use client';
 
-import { CloseOutlined } from '@ant-design/icons';
+import { RiCloseLine } from '@remixicon/react';
 import NextLink from 'next/link';
 
 import { cn } from '@/utils/css-class';
@@ -16,7 +16,7 @@ export default function Close({ href, className }: { href: string; className?: s
       )}
       title="Close"
     >
-      <CloseOutlined />
+      <RiCloseLine className="size-4" />
     </NextLink>
   );
 }

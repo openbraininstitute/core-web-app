@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-import { Loader } from '@/components/loader';
+import { Loader } from '@/ui/molecules/loader';
 
 import type { ReactNode } from 'react';
 

@@ -1,6 +1,8 @@
-import { RightOutlined } from '@ant-design/icons';
-import type { ReactNode } from 'react';
+import { RiArrowRightSLine } from '@remixicon/react';
+
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export default function Breadcrumb({
   children,
@@ -19,7 +21,7 @@ export default function Breadcrumb({
       <span className={cn('text-primary-8', cls?.label)}>{children}</span>
       {showChevron && (
         <div className={cn('text-primary-8', cls?.icon)}>
-          <RightOutlined className="text-xs" />
+          <RiArrowRightSLine className="size-3" />
         </div>
       )}
     </div>

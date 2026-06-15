@@ -1,10 +1,11 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import * as React from 'react';
+import { RiCloseCircleLine } from '@remixicon/react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { CloseCircleOutlined } from '@ant-design/icons';
 
 import { cn } from '@/utils/css-class';
+
+import type * as React from 'react';
 
 const alertVariants = cva('flex items-stretch w-full gap-2 group-[.toaster]:w-(--width)', {
   variants: {
@@ -234,7 +235,7 @@ function Alert({
           data-slot="alert-close"
           className={cn('group size-4 shrink-0 cursor-pointer')}
         >
-          <CloseCircleOutlined className="size-4 opacity-60 group-hover:opacity-100" />
+          <RiCloseCircleLine className="size-4 opacity-60 group-hover:opacity-100" />
         </button>
       )}
     </div>

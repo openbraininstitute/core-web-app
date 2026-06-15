@@ -1,7 +1,8 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from '@radix-ui/react-slot';
+import { cva, type VariantProps } from 'class-variance-authority';
+
 import { cn } from '@/utils/css-class';
 
 const badgeVariants = cva(
@@ -11,7 +12,7 @@ const badgeVariants = cva(
       variant: {
         default: 'border-transparent bg-primary-9 text-white [a&]:hover:bg-primary/90',
         destructive:
-          'border-transparent bg-red-500 text-white [a&]:hover:bg-red-500/90 focus-visible:ring-red-500/20 dark:focus-visible:ring-red-500/40 dark:bg-red-500/60',
+          'border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20',
         outline:
           'text-primary-9 border border-neutral-2 [a&]:hover:bg-white [a&]:hover:text-primary-9/90',
       },

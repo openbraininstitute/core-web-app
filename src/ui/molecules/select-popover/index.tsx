@@ -1,16 +1,16 @@
-import { ComponentProps, useCallback, useMemo, useState } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import {
-  CheckOutlined,
-  CloseOutlined,
-  DownOutlined,
-  LoadingOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
+  RiArrowDownSLine,
+  RiCheckLine,
+  RiCloseLine,
+  RiLoader2Line,
+  RiSearchLine,
+} from '@remixicon/react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { type ComponentProps, useCallback, useMemo, useState } from 'react';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 export type SelectPopoverOption<T = unknown> = {
@@ -55,12 +55,9 @@ export function SelectPopover<T = unknown>({
     );
   }, [options, searchTerm]);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = useCallback((el: HTMLDivElement) => {
+    setParent(el);
+  }, []);
 
   const rowVirtualizer = useVirtualizer({
     count: filteredOptions.length,
@@ -109,24 +106,20 @@ export function SelectPopover<T = unknown>({
             {selectedOption?.label || placeholder}
           </div>
           {selectedValue ? (
-            <div
-              role="button"
-              className="group-hover:bg-neutral-1 group-hover:text-primary-8 flex cursor-pointer items-center justify-center rounded-full p-1"
+            <button
+              type="button"
               tabIndex={-1}
-              onKeyDown={(e) => {
-                e.stopPropagation();
-                handleSelect(undefined);
-              }}
+              className="group-hover:bg-neutral-1 group-hover:text-primary-8 flex cursor-pointer items-center justify-center rounded-full p-1"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSelect(undefined);
               }}
             >
-              <CloseOutlined className="opacity-50 [&_svg]:size-3!" />
-            </div>
+              <RiCloseLine className="size-3 opacity-50" />
+            </button>
           ) : (
             <div className="group-hover:bg-neutral-1 group-hover:text-primary-8 flex cursor-pointer items-center justify-center rounded-full p-1">
-              <DownOutlined className="opacity-50 [&_svg]:size-3!" />
+              <RiArrowDownSLine className="size-3 opacity-50" />
             </div>
           )}
         </Button>
@@ -144,7 +137,7 @@ export function SelectPopover<T = unknown>({
               data-slot="command-input-wrapper"
               className={cn('flex h-9 items-center gap-2 px-3')}
             >
-              <SearchOutlined className="size-4 shrink-0 opacity-50" />
+              <RiSearchLine className="size-4 shrink-0 opacity-50" />
               <input
                 placeholder={searchPlaceholder}
                 value={searchTerm}
@@ -168,7 +161,7 @@ export function SelectPopover<T = unknown>({
           {/* eslint-disable-next-line no-nested-ternary */}
           {filteredOptions.length === 0 ? (
             <div className="flex h-full w-full items-center justify-center py-5">
-              <LoadingOutlined className="text-neutral-4" spin />
+              <RiLoader2Line className="size-4 text-neutral-4 animate-spin" />
             </div>
           ) : filteredOptions.length === 0 ? (
             <div className="flex h-full w-full items-center justify-center py-5">
@@ -218,8 +211,8 @@ export function SelectPopover<T = unknown>({
                       title={label}
                     >
                       <span className="line-clamp-2 w-full">{label}</span>
-                      <CheckOutlined
-                        className={cn('ml-auto text-sm', isSelected ? 'opacity-100' : 'opacity-0')}
+                      <RiCheckLine
+                        className={cn('ml-auto size-4', isSelected ? 'opacity-100' : 'opacity-0')}
                       />
                     </button>
                   </div>

@@ -2,8 +2,8 @@
 
 'use client';
 
-import Icon, { DownOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
+import { type RemixiconComponentType, RiArrowDownSLine } from '@remixicon/react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/utils/css-class';
@@ -114,13 +114,11 @@ function Button({
 }
 
 interface ButtonArrowProps extends React.SVGProps<SVGSVGElement> {
-  icon?: typeof Icon;
+  icon?: RemixiconComponentType;
 }
 
-function ButtonArrow({ icon: UIcon = DownOutlined, className }: ButtonArrowProps) {
-  return (
-    <Icon component={UIcon} data-slot="button-arrow" className={cn('ms-auto -me-1', className)} />
-  );
+function ButtonArrow({ icon: UIcon = RiArrowDownSLine, className }: ButtonArrowProps) {
+  return <UIcon data-slot="button-arrow" className={cn('ms-auto -me-1 size-4', className)} />;
 }
 
 export { Button, ButtonArrow, buttonVariants };

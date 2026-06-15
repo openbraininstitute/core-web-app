@@ -1,6 +1,6 @@
 'use client';
 
-import { RightOutlined } from '@ant-design/icons';
+import { RiArrowRightSLine } from '@remixicon/react';
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
@@ -104,7 +104,7 @@ export default function AccordionButton({
             open ? 'rotate-90' : 'rotate-0'
           )}
         >
-          <RightOutlined className="text-current" />
+          <RiArrowRightSLine className="size-4 text-current" />
         </span>
       </button>
 

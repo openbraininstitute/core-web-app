@@ -5,12 +5,12 @@ import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { Loader } from '@/components/loader';
 import { BrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf';
 import { FullScreen } from '@/features/brain-atlas-viewer/full-screen';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { SPECIES_IMAGE_MAP, SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
+import { Loader } from '@/ui/molecules/loader';
 
 export function AtlasViewer({ children }: { children?: ReactNode }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
