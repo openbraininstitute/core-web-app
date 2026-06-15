@@ -32,7 +32,7 @@ export const wholeBrainSimulationFlag = defineFlag<boolean>({
   key: 'whole-brain-simulation',
   defaultValue: false,
   values: [true, false],
-  description: 'Whole brain / Brian2 FlyWire simulations',
+  description: 'Whole brain simulations',
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
