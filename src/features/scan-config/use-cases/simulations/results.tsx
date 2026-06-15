@@ -5,15 +5,21 @@ import { match } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { useAppNotification } from '@/components/notification';
-import { listAllChildren as listAllSimulationChildren } from '@/entity-configuration/domain/simulation/simulation-campaign';
-import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
+import {
+  listAllChildren as listAllSimulationChildren,
+  listExecutionsBySimulationId,
+} from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
+import {
+  hasSimConfigAsset,
+  shouldLaunchSimulationViaTaskSystem,
+} from '@/entity-configuration/domain/simulation/utils';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -35,17 +41,9 @@ import { MessageType } from '@/services/small-scale-simulator/types';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
-import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
-
-const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
-  CircuitScaleDictionary.Microcircuit,
-  CircuitScaleDictionary.Region,
-  CircuitScaleDictionary.System,
-  CircuitScaleDictionary.WholeBrain,
-]);
 
 type SimulationTabProps = {
   campaignId: string;
@@ -78,6 +76,13 @@ export default function SimulationsTab({
   const { entity: model } = useModelQuery({
     context,
     id: simulations[0]?.entity_id,
+  });
+
+  const scale = get(model, 'scale', null);
+  const targetSimulator = get(model, 'target_simulator', null);
+  const shouldTreatSimulationAsTask = shouldLaunchSimulationViaTaskSystem({
+    scale,
+    targetSimulator,
   });
 
   const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
@@ -127,8 +132,29 @@ export default function SimulationsTab({
   } = useLowCredits({ context, subject: 'run the simulation' });
 
   const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
+  const activeSimulationJobIdFromLaunch = activeSimulation
+    ? jobIdMap.get(activeSimulation.id)
+    : undefined;
 
-  const activeJobId = activeSimulation ? jobIdMap.get(activeSimulation.id) : undefined;
+  const { data: recoveredJobId } = useQuery({
+    queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
+    queryFn: async () => {
+      const executions = await listExecutionsBySimulationId({
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when activeSimulation exists
+        simulationId: activeSimulation!.id,
+        context,
+      });
+      return getLatestSimulationExecution({ executions })?.execution_id ?? null;
+    },
+    enabled:
+      shouldTreatSimulationAsTask &&
+      Boolean(activeSimulation?.id) &&
+      !activeSimulationJobIdFromLaunch,
+  });
+
+  const activeJobId = shouldTreatSimulationAsTask
+    ? (activeSimulationJobIdFromLaunch ?? recoveredJobId ?? undefined)
+    : undefined;
   const taskLogsViewerEnabled = !!activeSimulation && !!activeJobId;
   const taskLogsShouldReadSnapshot =
     !!activeSimulationExecStatus &&
@@ -265,14 +291,6 @@ export default function SimulationsTab({
 
     setSelectedSimulationIds([]);
   };
-
-  const scale = get(model, 'scale', null);
-  const targetSimulator = get(model, 'target_simulator', null);
-  // Circuits targeting an external simulator (Brian2 / LearningEngine) always launch through the
-  // task system (obi-one `/declared/task/launch`), independent of scale.
-  const isExternalSimulator = targetSimulator === 'Brian2' || targetSimulator === 'LearningEngine';
-  const shouldTreatSimulationAsTask =
-    isExternalSimulator || (scale !== null && TASK_LAUNCH_SCALES.has(scale));
 
   // TODO Refactor
   const run = async (simIds: string[]) => {

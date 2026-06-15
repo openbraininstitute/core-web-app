@@ -17,6 +17,14 @@ export function hasSimulationConfigAsset(simulation: SimulationLike) {
   );
 }
 
+export function getLatestSimulationExecution<T extends { creation_date: string }>({
+  executions,
+}: {
+  executions: T[];
+}): T | undefined {
+  return [...executions].sort((a, b) => a.creation_date.localeCompare(b.creation_date)).at(-1);
+}
+
 export function getSimulationStatusFromExecutions<TStatus extends string>({
   simulation,
   executions,
@@ -29,9 +37,7 @@ export function getSimulationStatusFromExecutions<TStatus extends string>({
   errorStatus: TStatus;
 }) {
   const fallbackStatus = hasSimulationConfigAsset(simulation) ? createdStatus : errorStatus;
-  const latestExecution = [...executions].sort((a, b) =>
-    a.creation_date.localeCompare(b.creation_date)
-  )[executions.length - 1];
+  const latestExecution = getLatestSimulationExecution({ executions });
 
   return latestExecution?.status ?? fallbackStatus;
 }
