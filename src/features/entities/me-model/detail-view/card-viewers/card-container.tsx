@@ -38,8 +38,6 @@ function ModelDetails({ details, variant }: ModelDetailsProps & { variant: TView
 }
 
 type Props = {
-  // @FIXME: Is this property used somewhere?
-  // eslint-disable-next-line react/no-unused-prop-types
   mode: 'select' | 'summary';
   model: IEModel | ICellMorphology;
   title: string;
