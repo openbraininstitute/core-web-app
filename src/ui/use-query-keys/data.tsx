@@ -110,7 +110,7 @@ export const keyBuilder = {
   ],
   meModel: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-model`,
-    JSON.stringify({ virtualLabId, projectId, entityId }),
+    { virtualLabId, projectId, entityId },
   ],
   meModelCompatibility: ({
     virtualLabId,

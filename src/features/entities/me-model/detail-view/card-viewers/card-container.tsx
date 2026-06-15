@@ -34,7 +34,6 @@ function ModelDetails({ details }: ModelDetailsProps) {
 }
 
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
   mode: 'select' | 'summary';
   model: IEModel | ICellMorphology;
   title: string;

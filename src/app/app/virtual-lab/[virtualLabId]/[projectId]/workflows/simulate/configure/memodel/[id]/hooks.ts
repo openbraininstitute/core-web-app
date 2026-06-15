@@ -16,9 +16,7 @@ export function useEntity(
     }
   >
 ) {
-  const [entity, setEntity] = React.useState<IMEModel | Error | undefined>(undefined);
   const { virtualLabId, projectId, id: entityId } = React.use(params);
-  const queryClient = useQueryClient();
   const queryKey = keyBuilder.meModel({ virtualLabId, projectId, entityId });
   const { data, isLoading, error } = useQuery({
     queryKey,
@@ -33,19 +31,9 @@ export function useEntity(
     },
     retry: 2,
   });
-  React.useEffect(() => {
-    if (isLoading) {
-      setEntity(undefined);
-      return;
-    }
-    if (error) {
-      setEntity(error);
-      return;
-    }
-    setEntity(data);
-    if (!data) {
-      queryClient.invalidateQueries({ queryKey });
-    }
-  }, [data, isLoading, error, queryKey, queryClient]);
-  return entity;
+  if (isLoading) return undefined;
+
+  if (error) return error;
+
+  return data;
 }
