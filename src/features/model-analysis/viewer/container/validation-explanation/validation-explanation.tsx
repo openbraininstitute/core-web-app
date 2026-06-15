@@ -1,8 +1,8 @@
 import { get } from 'es-toolkit/compat';
 import ReactMarkdown from 'react-markdown';
 
-import { Explanation } from '@/components/explanation';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { Explanation } from '@/ui/molecules/explanation';
 import { classNames } from '@/util/utils';
 
 import { validationDescription } from '../hooks/dictionary';

@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { PainterManager } from '../painter';
-
 import { IconCenter } from '@/components/icons/Center';
-import Tooltip from '@/components/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { classNames } from '@/util/utils';
+
+import type { PainterManager } from '../painter';
 
 import styles from './button-reset-camera.module.css';
 
@@ -18,10 +18,15 @@ export function ButtonResetCamera({ className, painterManager }: ButtonResetCame
 
   return (
     <div className={classNames(className, styles.buttonResetCamera, restPosition && styles.hide)}>
-      <Tooltip tooltip="Recenter the view" arrow="topLeft" foreColor="#fff" backColor="#05a">
-        <button type="button" onClick={painterManager.resetCamera}>
-          <IconCenter />
-        </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" onClick={painterManager.resetCamera}>
+            <IconCenter />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" align="start" className="bg-[#05a] text-white">
+          Recenter the view
+        </TooltipContent>
       </Tooltip>
     </div>
   );
