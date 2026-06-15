@@ -1,10 +1,8 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 
 import { getMEModel } from '@/api/entitycore/queries';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-
-import type { IMEModel } from '@/api/entitycore/types';
 
 export function useEntity(
   params: Promise<
