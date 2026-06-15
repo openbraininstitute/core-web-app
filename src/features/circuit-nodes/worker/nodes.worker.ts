@@ -4,6 +4,7 @@ import { fetchToFS, unlinkFromFS } from '@/features/circuit-nodes/worker/fetch-a
 import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
 
 import type {
+  DownloadProgress,
   GetRowsRequest,
   GetRowsResponse,
   OpenRequest,
@@ -13,7 +14,10 @@ import type {
 let session: NodesSession | null = null;
 
 const api = {
-  async open(opts: OpenRequest): Promise<OpenResponse> {
+  async open(
+    opts: OpenRequest,
+    onProgress?: (progress: DownloadProgress) => void
+  ): Promise<OpenResponse> {
     if (session) {
       session.close();
       await unlinkFromFS(session.filename);
@@ -23,6 +27,7 @@ const api = {
       url: opts.url,
       headers: opts.headers,
       fileKey: opts.fileKey,
+      onProgress,
     });
     session = new NodesSession(filename, opts.populationKey);
     return { rowCount: session.rowCount, columns: session.columns };
