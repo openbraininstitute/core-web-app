@@ -1,4 +1,5 @@
 import { assertType } from '@/util/type-guards';
+import { normalizeRelativePath, resolveManifestPath } from '@/utils/circuit-manifest';
 
 import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
 
@@ -25,30 +26,7 @@ export class CircuitConfig {
   }
 
   private resolvePath(path: string) {
-    const manifest = this.config.manifest ?? {};
-    const parts = (path ?? '')
-      .split('/')
-      .map((part) => {
-        const value = manifest[part];
-        return value ? value : part;
-      })
-      .join('/')
-      .split('/')
-      .filter((item) => !!item);
-    const result: string[] = [];
-    for (const part of parts) {
-      if (typeof part !== 'string' || part.trim().length === 0 || part === '.') continue;
-
-      if (part === '..') {
-        if (result.length > 0) {
-          result.pop();
-        }
-        continue;
-      }
-
-      result.push(part);
-    }
-    return result.join('/');
+    return normalizeRelativePath(resolveManifestPath(path ?? '', this.config.manifest));
   }
 }
 
