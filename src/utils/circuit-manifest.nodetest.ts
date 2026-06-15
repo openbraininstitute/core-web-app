@@ -57,6 +57,36 @@
       const result = resolveManifestPath('$A/file.h5', cyclic);
       assert.equal(typeof result, 'string');
     });
+
+    // Manifests where one variable's value references another variable, and
+    // where a short key (`$NETWORK`) is a prefix of a longer one
+    // (`$NETWORK_NODES_DIR`). Matching whole `$VAR` tokens must resolve these
+    // without the prefix corrupting the longer key.
+    const NESTED_MANIFEST = {
+      $BASE_DIR: '.',
+      $COMPONENTS_DIR: '$BASE_DIR/components',
+      $NETWORK: '$BASE_DIR/networks',
+      $NETWORK_NODES_DIR: '$NETWORK/nodes',
+      $NETWORK_EDGES_DIR: '$NETWORK/edges/functional',
+    } as const;
+
+    it('resolves transitive variable references (nodes)', () => {
+      assert.equal(
+        resolveManifestPath('$NETWORK_NODES_DIR/hippocampus_neurons/nodes.h5', NESTED_MANIFEST),
+        'networks/nodes/hippocampus_neurons/nodes.h5'
+      );
+    });
+
+    it('resolves transitive variable references (edges)', () => {
+      assert.equal(
+        resolveManifestPath('$NETWORK_EDGES_DIR/foo/edges.h5', NESTED_MANIFEST),
+        'networks/edges/functional/foo/edges.h5'
+      );
+    });
+
+    it('does not let a prefix key collide with a sibling', () => {
+      assert.equal(resolveManifestPath('$COMPONENTS_DIR/x.h5', NESTED_MANIFEST), 'components/x.h5');
+    });
   });
 
   describe('normalizeRelativePath', () => {

@@ -1,6 +1,4 @@
-import escapeRegExp from 'es-toolkit/compat/escapeRegExp';
 import isEmpty from 'es-toolkit/compat/isEmpty';
-import reduce from 'es-toolkit/compat/reduce';
 
 function sanitizePath(path: string): string {
   let sanitized = path.replace(/^\.\//, ''); // Remove leading ./
@@ -11,15 +9,17 @@ function sanitizePath(path: string): string {
 /**
  * Resolves SONATA `circuit_config.json` manifest variables in a path.
  *
- * Manifest entries are `$VAR` keys that may reference one another, e.g.
- * `$NETWORK_NODES_DIR` -> `$BASE_DIR/networks/nodes` -> `.`. We iterate
- * (up to `maxIterations`) replacing every key globally until the path is
- * stable, then strip a leading `./` or `/`.
+ * Manifest entries are `$VAR` keys that may reference one another, possibly
+ * transitively, e.g. `$NETWORK_NODES_DIR` -> `$NETWORK/nodes` ->
+ * `$BASE_DIR/networks/nodes` -> `.`. We iterate (up to `maxIterations`)
+ * replacing every `$VAR` token until the path is stable, then strip a leading
+ * `./` or `/`.
  *
- * Note: replacement order follows manifest insertion order and is not sorted
- * longest-key-first, so overlapping keys (e.g. `$NET` vs `$NETWORK`) could
- * collide. Real circuit manifests don't define such keys; this matches the
- * behavior previously shipped by the circuit download panel.
+ * Each pass matches whole `$VAR` tokens (greedy `\$[A-Za-z_][A-Za-z0-9_]*`) and
+ * looks each up in the manifest, so prefix-overlapping keys (e.g. `$NETWORK` vs
+ * `$NETWORK_NODES_DIR`) never collide. Unknown tokens are left intact, which
+ * makes the next pass a no-op and terminates the loop. Cyclic manifests stop at
+ * `maxIterations`.
  */
 export function resolveManifestPath(path: string, manifest?: Record<string, string>): string {
   if (!manifest || isEmpty(manifest)) {
@@ -34,14 +34,10 @@ export function resolveManifestPath(path: string, manifest?: Record<string, stri
   while (resolvedPath.includes('$') && iteration < maxIterations) {
     const previousPath = resolvedPath;
 
-    // Use es-toolkit's reduce for efficient variable replacement
-    resolvedPath = reduce(
-      manifest,
-      (currentPath, value, key) => {
-        // Use global regex replace for all occurrences
-        return currentPath.replace(new RegExp(escapeRegExp(key), 'g'), value);
-      },
-      resolvedPath
+    // Match whole `$VAR` tokens and look each up; unknown tokens pass through
+    // unchanged. Matching whole tokens avoids prefix-overlap collisions.
+    resolvedPath = resolvedPath.replace(/\$[A-Za-z_][A-Za-z0-9_]*/g, (token) =>
+      token in manifest ? manifest[token] : token
     );
 
     // Break if no changes were made (no more replacements possible)
