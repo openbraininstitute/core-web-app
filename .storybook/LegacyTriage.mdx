@@ -1,0 +1,134 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Legacy Triage (src/components)" />
+
+# `src/components/*` — Legacy Triage
+
+49 entries audited. Each one is bucketed: **PROMOTE** to the design system,
+**LEAVE-AS-FEATURE** for app-specific use, or **DELETE-CANDIDATE** for no
+consumers / CSS-only stubs.
+
+This is a proposal. No code has moved yet. Treat it as the worklist.
+
+---
+
+## Summary
+
+| Verdict | Count |
+| --- | --- |
+| ✅ PROMOTE | 10 |
+| 🧹 DELETE-CANDIDATE | 18 |
+| 🏠 LEAVE-AS-FEATURE | 21 |
+
+### Top 5 priority actions
+
+1. **Delete CSS-only artifacts** — 11 directories that only contain a `.module.css`
+   with no `.tsx`. Zero risk, big cleanup.
+2. **Promote `loader.tsx` → `src/ui/molecules/loader`** — single file, 4 consumers,
+   wraps AntD `Spin` (needs swap for a Remix-icon-based spinner).
+3. **Promote `Menu` (Radix Menubar wrapper) → `src/ui/molecules/menu`** — already
+   uses Radix. Just needs the AntD icons swapped for Remix.
+4. **Promote `DetailViewTabs` → consolidate with `src/ui/molecules/tabs`** — 4
+   consumers, generic, uses nuqs for URL state.
+5. **Audit `src/components/icons`** — mixes custom SVG with AntD icons. Should
+   become the single source for non-Remix custom icons (brand glyphs only).
+
+---
+
+## ✅ PROMOTE (10)
+
+These have no domain coupling and one or more external consumers. They graduate
+into `src/ui/molecules/*`.
+
+| Source | → Target | Consumers | Notes |
+| --- | --- | --- | --- |
+| `CenteredMessage` | `ui/molecules/centered-message` | 1 | Pure layout. Drop-in. |
+| `GenericErrorFallback` | `ui/molecules/error-boundary` | 12 | Remove hardcoded `/app/virtual-lab/sync` link before moving. |
+| `tooltip` | merge with `ui/molecules/tooltip` | 1 | Already have a Radix tooltip — replace this one. |
+| `explanation` | `ui/molecules/explanation` | 1 | Already uses Remix icons. ✅ |
+| `responsive-side-viewer` | `ui/layouts/side-viewer` | 3 | Layout, not molecule. |
+| `detail-view-tabs` | merge with `ui/molecules/tabs` | 4 | Bring the URL-binding (nuqs) as an optional `Tabs.Url` variant. |
+| `Menu` | `ui/molecules/menu` | 2 | Radix Menubar wrapper. Swap AntD icons. |
+| `loader.tsx` | `ui/molecules/loader` | 4 | Currently wraps AntD `Spin`. Reimplement using `RiLoader2Line` + `animate-spin`. |
+| `tree` | `ui/molecules/tree` | 2 | Generic tree view. Drop-in candidate. |
+| `notification` (hooks) | `hooks/` or stays | 39 | Already widely used. AntD `App.useApp()` wrappers — likely keep as hook utility, don't promote to a primitive. |
+
+---
+
+## 🧹 DELETE-CANDIDATE (18)
+
+Zero consumers OR superseded by an existing molecule. Suggest verifying with a
+final grep, then removing.
+
+### Unused components
+
+- `ConditionalRenderer` — modern React patterns supersede this.
+- `CentralLoadingSpinner` — wraps AntD `Spin`, no consumers.
+- `common/Slider` & `common/Switch` — thin AntD wrappers, no consumers.
+- `buttons/legacy-btn` — name says it all.
+- `buttons/toolbar` — unused.
+- `inputs` — single thin AntD `Input` wrapper, no consumers.
+- `logo` — brand asset, no consumers (verify before delete).
+
+### CSS-only stubs (no `.tsx`, just `.module.css`)
+
+These directories contain styles for components that were either moved away or
+never built. Either move the styles inline to the consumer, or delete:
+
+- `Spinner` · `IconButton` · `Placeholder` · `Filter` · `TreeNavItem` ·
+  `VirtualLab` · `PublicProjects` · `ConnectomeModelAssignment` ·
+  `InteractiveBrayns` · `ListTable` · `VerticalSwitch`
+
+Verify with: `grep -rl "from '@/components/<name>'" src`
+
+---
+
+## 🏠 LEAVE-AS-FEATURE (21)
+
+Domain-aware, has data fetching, or is app-shell infrastructure. These don't
+belong in the design system; they should stay in `src/components/` (or move to
+`src/features/` / `src/providers/` later).
+
+### App infrastructure (providers / wrappers)
+
+- `ThemeProvider` — jotai theme atoms. → `src/providers/theme` eventually.
+- `SessionStateProvider` — session hook wrapper. → `src/providers/session`.
+- `Matomo` — analytics. → `src/lib/analytics`.
+- `DefaultLoadingSuspense` — Suspense boundary with AntD spin. → `src/ui/providers`.
+
+### Domain features
+
+- `ai-assistant` — full AI chat UI.
+- `neuron-viewer`, `MorphoViewer` — domain visualization.
+- `user-menu`, `HelpMenu`, `main` — app navigation.
+- `Link` — Next.js link wrapper with search-param preservation.
+- `Search` — AntD select-based domain search.
+- `FilterControls` — generic-ish but tightly coupled to data-grid usage.
+- `github-flavor-markdown` — markdown renderer with math + GFM.
+- `documentation`, `explore-section`, `experiment-interactive`,
+  `tutorials-carrousel`, `simulate`, `viewers`, `connectome-definition` —
+  feature-specific pages or widgets.
+- `message-banners` (`ErrorData`) — error UI banner; could promote later.
+
+### Special: `icons`
+
+15 consumers. Mixes custom SVG (Brain, Chevron, Settings) with AntD icons. This
+contradicts the design-system rule "Remix only". Two options:
+
+1. **Replace AntD bits with Remix**, keep custom SVG (brand-specific glyphs).
+2. **Move custom SVG to `src/ui/assets/icons`** and let app code import from
+   `@remixicon/react` for everything else.
+
+Recommend option 2 — it draws a cleaner line.
+
+---
+
+## Suggested execution order
+
+1. Delete the 11 CSS-only stubs (1 commit).
+2. Delete the 7 unused components after verifying with grep (1 commit each, or
+   one bulk commit if you've grepped them all).
+3. Promote in this order, one at a time, replacing call-sites:
+   `loader` → `Menu` → `tree` → `detail-view-tabs` → `responsive-side-viewer` →
+   `explanation` → `CenteredMessage` → `tooltip` (de-dup) → `GenericErrorFallback`.
+4. Refactor `icons` last, since it touches 15 files.

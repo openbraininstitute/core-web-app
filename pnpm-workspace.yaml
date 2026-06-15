@@ -5,11 +5,15 @@ allowBuilds:
   esbuild: true
   lefthook: true
   sharp: true
+blockExoticSubdeps: true
 
 minimumReleaseAge: 10080
-minimumReleaseAgeStrict: true
 minimumReleaseAgeExclude:
   - '@openbraininstitute/*'
   - '@tolokoban/tgd'
-blockExoticSubdeps: true
+  - storybook
+  - '@storybook/*'
+  - eslint-plugin-storybook
+  - '@chromatic-com/storybook'
+minimumReleaseAgeStrict: true
 verifyDepsBeforeRun: error

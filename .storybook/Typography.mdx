@@ -1,0 +1,83 @@
+import { Meta, Typeset } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Typography" />
+
+# Typography
+
+Three typefaces are defined as CSS variables in
+[`globals.css`](../src/styles/globals.css). They're loaded via `next/font` in the app
+shell so Storybook may render fallback fonts unless your component pulls them through.
+
+| Token | Family | Usage |
+| --- | --- | --- |
+| `--font-sans` | **Titillium Web** | Body copy. Default for the whole app. |
+| `--font-title` | **Gabarito** | Display / titles. Used on landing + section headings. |
+| `--font-serif` | **DM Serif Text** | Editorial accents — quotes, intros, marketing. |
+
+Tailwind exposes them as `font-sans`, `font-title`, `font-serif`.
+
+> The HTML root is set to **`font-size: 14px`** (not the browser default 16px). That
+> shifts every `rem`-based Tailwind size down. `text-base` = 14px, `text-sm` = 12.25px,
+> `text-lg` = 15.75px, etc. Worth keeping in mind when comparing to other Tailwind
+> projects.
+
+---
+
+## Sans (body)
+
+<Typeset
+  fontSizes={[10, 12, 14, 16, 18, 20, 24, 32, 48]}
+  fontWeight={400}
+  sampleText="A neural circuit emerges from a thousand precise connections."
+  fontFamily="var(--font-sans, ui-sans-serif, system-ui, sans-serif)"
+/>
+
+<Typeset
+  fontSizes={[14, 18, 24]}
+  fontWeight={600}
+  sampleText="Semibold for emphasis and section labels."
+  fontFamily="var(--font-sans, ui-sans-serif, system-ui, sans-serif)"
+/>
+
+## Title (display)
+
+<Typeset
+  fontSizes={[20, 28, 36, 48, 64]}
+  fontWeight={400}
+  sampleText="Open Brain Institute"
+  fontFamily="var(--font-title, ui-sans-serif, system-ui, sans-serif)"
+/>
+
+## Serif (editorial)
+
+<Typeset
+  fontSizes={[16, 20, 28, 40]}
+  fontWeight={400}
+  sampleText="The brain is the most complex object in the known universe."
+  fontFamily="var(--font-serif, ui-serif, Georgia, serif)"
+/>
+
+---
+
+## Type scale (effective px at 14px root)
+
+| Class | Rem | Effective |
+| --- | --- | --- |
+| `text-xs` | 0.75 | 10.5px |
+| `text-sm` | 0.875 | 12.25px |
+| `text-base` | 1 | **14px** |
+| `text-lg` | 1.125 | 15.75px |
+| `text-xl` | 1.25 | 17.5px |
+| `text-2xl` | 1.5 | 21px |
+| `text-3xl` | 1.875 | 26.25px |
+| `text-4xl` | 2.25 | 31.5px |
+| `text-5xl` | 3 | 42px |
+
+## Conventions for primitives
+
+1. Default body text uses no font class (it inherits `font-sans` from the html root).
+2. Headings inside the design system use `font-title`.
+3. Don't reach for `font-serif` inside primitives — it belongs to compositions
+   (landing pages, editorial content).
+4. Avoid pixel font sizes. Always use the Tailwind utility (`text-sm`, `text-base`,
+   etc.) so the 14px root remains the single source of truth.

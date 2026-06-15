@@ -1,0 +1,110 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Scope" />
+
+# Design System — Scope
+
+This Storybook documents the **OBI design system**: the layer of reusable UI primitives
+that the product is built from. Not every component in the repo belongs here. This page
+defines what's in scope, what isn't, and the rules that primitives follow.
+
+---
+
+## The four layers
+
+The codebase has four layers. Only the first two belong in this design system.
+
+| Layer | Lives in | In design system? | Owns |
+| --- | --- | --- | --- |
+| **Tokens** | `src/styles/globals.css` (`@theme` block) | ✅ | Colors, typography, spacing, radii — the raw values everything else consumes. |
+| **Primitives** | `src/ui/molecules/*` | ✅ | Stateless, presentational, framework-agnostic UI building blocks: `Button`, `Badge`, `Input`, `Select`, `Tabs`, etc. |
+| **Compositions** | `src/ui/segments/*` | ❌ | Feature-aware chunks that wire primitives together for a specific screen (e.g. workspace setup, project settings, profile). |
+| **Pages / Features** | `src/app/*`, `src/features/*`, `src/components/*` (legacy) | ❌ | Routes, data-fetching containers, business logic. |
+
+A component graduates **upward** into a primitive when it stops knowing about the
+domain. A `WorkspaceCreateModal` is a composition; the generic `Modal` it sits inside
+is a primitive.
+
+---
+
+## Rules for primitives (`src/ui/molecules/*`)
+
+These rules keep the design system coherent. If a component breaks one of them, it
+either needs refactoring or it doesn't belong here.
+
+### 1. No business knowledge
+
+Primitives never reference domain types (no `Workspace`, no `User`, no `Project`). They
+take generic props. If a component needs to know what a workspace is, it's a composition.
+
+### 2. No data fetching
+
+No `useQuery`, no `fetch`, no Jotai atoms tied to app state. Primitives are pure:
+props in, JSX out. State they own is local UI state only (open/closed, hover, focus).
+
+### 3. Tokens, not hex
+
+All colors, fonts, and spacing come from CSS variables defined in `globals.css`
+(`bg-primary-9`, `text-neutral-4`, `font-title`). No raw hex codes inside component
+files. If a value isn't in `@theme`, add it there first.
+
+### 4. Variants via `cva`
+
+Visual variants are expressed with [`class-variance-authority`](https://cva.style/),
+not boolean props branching `className`. See `button/index.tsx` for the reference
+pattern.
+
+### 5. Polymorphism via `asChild` + `Slot`
+
+When a primitive needs to render as a different element (a `<Button>` that becomes a
+`<Link>`), use `@radix-ui/react-slot` + an `asChild` prop. Don't fork the component.
+
+### 6. Icons from `@remixicon/react`
+
+The design system standardizes on Remix Icons. **Do not import from
+`@ant-design/icons` in any primitive or its story.** Antd icons exist elsewhere in
+the codebase for legacy reasons — they don't propagate into this layer.
+
+### 7. Headless behavior from Radix
+
+Interactive primitives (dropdown, tabs, popover, tooltip, etc.) are built on
+`@radix-ui/*` for accessibility and keyboard handling. Style the unstyled Radix
+primitives; don't re-implement focus traps.
+
+---
+
+## What you'll find here
+
+- **Foundations** — these docs, plus tokens, typography, color palette.
+- **Molecules** — every primitive in `src/ui/molecules/`, one story file per component,
+  colocated as `<name>.stories.tsx`.
+
+What you **won't** find:
+
+- Pages or routes (those live in the running app).
+- Feature compositions from `src/ui/segments/*`.
+- Legacy components from `src/components/*` until they've been refactored into the
+  molecules layer.
+
+---
+
+## Adding a new primitive
+
+1. Create `src/ui/molecules/<name>/index.tsx`.
+2. Express variants with `cva`. Use existing CSS variables for colors.
+3. Use Remix Icons (`@remixicon/react`) for any iconography.
+4. Add `<name>.stories.tsx` next to it. Cover every variant + size + interaction state.
+5. If it wraps a Radix primitive, expose the same `asChild` / `data-slot` patterns the
+   existing components use.
+
+---
+
+## Promoting a legacy component
+
+When something from `src/components/*` is generic enough to belong here:
+
+1. Strip business types and data fetching from the API.
+2. Move it to `src/ui/molecules/<name>/`.
+3. Replace any Antd icons with Remix Icons.
+4. Replace any hex literals with theme tokens.
+5. Add a story file and link callers to the new location.

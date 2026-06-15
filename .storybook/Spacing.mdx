@@ -1,0 +1,91 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Spacing" />
+
+# Spacing & Layout
+
+Tailwind v4's default spacing scale is in play (`p-1` … `p-96`), plus a handful of
+project-specific tokens defined in
+[`globals.css`](../src/styles/globals.css).
+
+> Remember the 14px root font size — `p-4` resolves to `0.875rem` × 4 = 14px × 1 = **14px**
+> (vs 16px in a default Tailwind project).
+
+---
+
+## Custom spacing tokens
+
+| Token | Value | Tailwind class | Notes |
+| --- | --- | --- | --- |
+| `--spacing-10percent` | 10% | `p-10percent` etc. | Used for percentage-based padding. |
+| `--spacing-90percent` | 90% | `p-90percent` etc. | Pair with `10percent`. |
+| `--width-10vw` | 10vw | `w-10vw` | Viewport-relative widths. |
+| `--width-15vw` | 15vw | `w-15vw` | |
+| `--width-20vw` | 20vw | `w-20vw` | |
+| `--width-25vw` | 25vw | `w-25vw` | |
+| `--width-20vh` | 20vh | `w-20vh` | (intentionally `width` set to `vh`) |
+| `--width-25vh` | 25vh | `w-25vh` | |
+| `--height-10vh` | 10vh | `h-10vh` | |
+| `--height-15vh` | 15vh | `h-15vh` | |
+| `--height-20vh` | 20vh | `h-20vh` | |
+| `--height-25vh` | 25vh | `h-25vh` | |
+| `--min-height-10vh` | 10vh | `min-h-10vh` | Mirror for `min-height`. |
+| `--min-height-15vh` | 15vh | `min-h-15vh` | |
+| `--min-height-20vh` | 20vh | `min-h-20vh` | |
+| `--min-height-25vh` | 25vh | `min-h-25vh` | |
+
+## Spacing scale preview (default Tailwind)
+
+<div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+  {[1, 2, 3, 4, 6, 8, 12, 16, 20, 24, 32, 48, 64].map((n) => (
+    <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <code style={{ minWidth: 80 }}>p-{n}</code>
+      <div
+        style={{
+          height: 14,
+          width: `${n * 0.25 * 14}px`,
+          background: '#bae7ff',
+          border: '1px solid #096dd9',
+        }}
+      />
+      <span style={{ color: '#595959', fontSize: 12 }}>{n * 0.25 * 14}px</span>
+    </div>
+  ))}
+</div>
+
+---
+
+## Layout tokens
+
+### Shadows
+
+Defined as `--shadow-*` and exposed as `shadow-strong-image`, `shadow-super-shadow`,
+`shadow-bnb`, `shadow-lift`, `shadow-lift-hover`, `shadow-lift-active`, `shadow-skmp-s`.
+
+`shadow-lift` is the convention for elevated cards in this design system. Prefer it
+over reaching for `shadow-md` or `shadow-lg`.
+
+### Easings
+
+`--ease-in-expo`, `--ease-out-expo`, `--ease-out-back`, `--ease-smooth` are available as
+`ease-in-expo` etc. for `transition-timing-function`. Use these on hover/expand
+animations to keep motion consistent across primitives.
+
+### Animations
+
+Reusable keyframes registered as `--animate-*`: `slide-out`, `slide-up`, `scale-down`,
+`scale-up`, `fade-in`, `fade-out`, `rotate`, `shimmer`. Apply with `animate-fade-in`,
+`animate-rotate` etc.
+
+---
+
+## Conventions
+
+1. **Component padding is symmetric and rem-based.** Use Tailwind's `p-*` /
+   `px-*` / `py-*`, not custom pixel values.
+2. **Gaps over margins.** Use `gap-*` on flex/grid parents instead of margins
+   between children.
+3. **`vw`/`vh` tokens are for layout primitives**, not for individual components.
+   A button shouldn't depend on viewport size.
+4. **Avoid arbitrary spacing values** (`p-[13px]`). If you need a value not in the
+   scale, add it as a token to `globals.css`.

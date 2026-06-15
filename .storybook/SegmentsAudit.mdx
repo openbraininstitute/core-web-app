@@ -1,0 +1,107 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Segments Audit (src/ui/segments)" />
+
+# `src/ui/segments/*` — Composition Audit
+
+24 segments audited for how cleanly they sit on top of the design-system molecules.
+A healthy composition only consumes molecules + raw HTML; an unhealthy one reaches
+around them to import `antd` visual primitives or hardcodes hex colors.
+
+---
+
+## Summary
+
+| Verdict | Count |
+| --- | --- |
+| ✅ HEALTHY | 12 |
+| ⚠️ REFACTOR-LATER | 9 |
+| 🔧 NEEDS-WORK | 3 |
+
+**50% of segments have zero significant design-system debt.** The debt is
+concentrated in form-heavy areas (workflows, contribute) and in the data-grid
+machinery (data-table, explore/circuit).
+
+---
+
+## 🔧 NEEDS-WORK (3) — refactor first
+
+### `workflows`
+
+Heavy AntD form usage (27 imports) + 32 hex color literals. Builds neural
+simulation forms directly with `antd` `Form`/`InputNumber`/`Select`/`Switch`/etc.
+This is where most of the design-system debt lives.
+
+- Replace AntD form primitives with the corresponding molecule (or add the missing
+  ones — there's no `InputNumber` or `DatePicker` molecule yet).
+- Centralize plot color tokens.
+
+### `contribute`
+
+30 AntD imports for multi-step contribution forms. Same shape as `workflows` —
+form complexity drives the AntD direct usage.
+
+- Build a `form-builder` molecule (or move to `react-hook-form` + molecule
+  controls).
+
+### `explore/circuit`
+
+10 AntD imports + 13 hex literals. Circuit table styled with inline AntD theme,
+not tokens.
+
+- Wrap `Button` from molecules everywhere.
+- Move table styling tokens to `globals.css`.
+
+---
+
+## ⚠️ REFACTOR-LATER (9) — small smells, schedule a pass
+
+| Segment | Smells |
+| --- | --- |
+| `data-table` | 14 AntD imports (Table, Spin types). 20+ hex literals for theme. |
+| `mini-detail-view` | 5 AntD imports (Empty, List, Image, Popconfirm). |
+| `app-setup` | Mixes AntD `Form` with molecule `Input`. |
+| `project` | 7 AntD imports incl. `Button as AntdButton` (clear intent to replace, not done). |
+| `virtual-lab-settings` | 4 AntD imports for settings forms. |
+| `gallery` | One AntD `Select` for region filter. |
+| `invites` | One stray AntD import. |
+| `plans` | One AntD `Tooltip` in header. |
+| `workspaces` | Few AntD imports in space-manager. |
+
+Most of these are 1–4 imports — small targeted PRs.
+
+---
+
+## ✅ HEALTHY (12)
+
+These consume molecules cleanly. Use them as **reference** for what composition
+should look like:
+
+- `ai` · `feedbacks` · `offline-consent` · `sfn-2025` · `shared`
+- `detail-view` · `help` · `landing` · `notebooks` · `profile` · `reports` · `action-menu`
+
+Each has zero or one AntD import (typically `Empty` or `Popconfirm` for legacy
+empty/confirm states — not problematic).
+
+---
+
+## Observations
+
+- **Form-heavy areas are where the design system breaks down.** Either build
+  molecule-wrapped form controls (`<FormInput>`, `<FormSelect>`, `<FormNumber>`)
+  or adopt a form library (react-hook-form, formik) with molecule controls.
+- **Color literals cluster in three places**: plot/visualization configs (Plotly),
+  shadow definitions, and inline AntD theme overrides. Each can be tokenized.
+- **Strong molecule adoption** in healthy segments (workflows uses 70 molecule
+  imports despite its smells) → the molecules ARE discoverable and useful, the
+  AntD usage is gap-driven, not preference-driven.
+
+---
+
+## Recommended order
+
+1. **`workflows`** — highest impact. Build the missing form-control molecules
+   first, then migrate. Big PR, but pays off everywhere.
+2. **`contribute`** — apply the form-builder pattern from step 1.
+3. **`explore/circuit`** — tokenize the table styles.
+4. Sweep the 9 REFACTOR-LATER segments in a single PR per segment (each is small).

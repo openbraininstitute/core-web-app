@@ -1,0 +1,77 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Antd Role" />
+
+# Ant Design — Position
+
+**Recommendation: keep `antd` as a runtime dependency. Forbid it from the design
+system. Allow it in compositions where no molecule yet replaces it.**
+
+This document explains the boundary so future contributors don't have to
+re-litigate it.
+
+---
+
+## Why we can't just remove it
+
+`antd` is load-bearing today:
+
+- **`@rjsf/antd`** generates JSON-schema forms with AntD components. Removing it
+  means choosing and migrating to a different RJSF theme or rebuilding the form
+  layer. Big project.
+- **`ag-grid-community` + `antd`** combos appear in data tables.
+- **`workflows/`** and **`contribute/`** segments use AntD `Form` heavily.
+- **`@ant-design/icons`** is still imported across `src/components/*` and several
+  segments. Removing those is part of the legacy triage, not a same-day fix.
+
+Total: dozens of files. Removing AntD is a quarter-long project, not a refactor.
+
+## Where AntD is allowed
+
+| Layer | Allowed? | Notes |
+| --- | --- | --- |
+| `src/ui/molecules/*` | ❌ | Design system. Use Radix + Tailwind + Remix only. |
+| `src/ui/molecules/*.stories.tsx` | ❌ | Same rule. |
+| `src/ui/segments/*` | ⚠️ allowed where no molecule covers it | Form primitives (`InputNumber`, `DatePicker`), `Empty` state, `Popconfirm`. Replace incrementally. |
+| `src/ui/layouts/*` | ⚠️ avoid | Layouts should be Tailwind-only. |
+| `src/components/*` (legacy) | ✅ accepted, not endorsed | This is the parking lot. New code shouldn't land here. |
+| `src/features/*`, `src/app/*` | ⚠️ via segments only | Avoid importing `antd` directly in route files. |
+
+## Where AntD is forbidden
+
+- Anything in `src/ui/molecules/*` (enforced by stories + reviewer).
+- Anything imported via `@ant-design/icons` in `src/ui/*`. Use `@remixicon/react`.
+- New components / segments where a molecule already exists. If `<Button>` works,
+  do not import AntD `Button`.
+
+## Migration policy
+
+When you touch an AntD usage site in a segment:
+
+1. Check if a molecule covers it. If yes, replace.
+2. If no molecule covers it, **decide whether to build one**. Two questions:
+   - Will more than one segment need it? (→ build a molecule)
+   - Is it a one-off use case? (→ leave the AntD usage, don't promote)
+3. If you build a molecule, port the AntD-using site to it in the same PR.
+
+## Missing molecules
+
+The audit surfaced four AntD primitives with no molecule equivalent:
+
+- `InputNumber` — used in workflows form controls. Should become
+  `src/ui/molecules/input-number`.
+- `DatePicker` — used in contribute pipelines.
+- `Empty` — used as empty-state placeholder across many segments.
+- `Popconfirm` — small inline confirm dialog.
+
+Build these (or document why we won't) before another round of segment cleanup,
+otherwise the AntD usage keeps coming back.
+
+## Icons specifically
+
+`@ant-design/icons` is **completely banned from `src/ui/molecules`** (verified
+after the icon sweep). The design system uses `@remixicon/react` exclusively.
+
+The remaining `@ant-design/icons` imports live in `src/components/*` and
+`src/ui/segments/*`. They get removed as part of the broader legacy triage and
+segment refactor, not as their own task.

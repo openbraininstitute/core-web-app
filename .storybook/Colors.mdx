@@ -1,0 +1,151 @@
+import { ColorPalette, ColorItem, Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations/Colors" />
+
+# Colors
+
+Every color in the design system is a CSS variable defined in
+[`src/styles/globals.css`](../src/styles/globals.css) inside the `@theme` block. Tailwind
+turns them into utility classes automatically: `--color-primary-9` becomes
+`bg-primary-9`, `text-primary-9`, `border-primary-9`.
+
+**Rule:** primitives never use hex literals. If a color isn't in `@theme`, add it
+there first.
+
+---
+
+## Primary
+
+The brand scale. `primary-9` is the "default" brand color used by `Button` etc.
+
+<ColorPalette>
+  <ColorItem
+    title="primary"
+    subtitle="--color-primary-0 → --color-primary-10"
+    colors={{
+      '0': '#e8f7ff',
+      '1': '#bae7ff',
+      '2': '#91d5ff',
+      '3': '#69c0ff',
+      '4': '#40a9ff',
+      '5': '#1890ff',
+      '6': '#096dd9',
+      '7': '#0050b3',
+      '8': '#003a8c',
+      '9': '#002766',
+      '10': '#001026',
+      highlight: '#b1f0ff',
+    }}
+  />
+</ColorPalette>
+
+## Secondary
+
+<ColorPalette>
+  <ColorItem
+    title="secondary"
+    subtitle="--color-secondary-0 → --color-secondary-5"
+    colors={{
+      '0': '#daffd7',
+      '1': '#95de64',
+      '2': '#389e0d',
+      '3': '#00b212',
+      '4': '#95de64',
+      '5': '#5af56a',
+    }}
+  />
+</ColorPalette>
+
+> ⚠️ `secondary-1` and `secondary-4` are both `#95de64`. Worth deduplicating.
+
+## Neutral
+
+<ColorPalette>
+  <ColorItem
+    title="neutral"
+    subtitle="--color-neutral-* (incl. neutral-light)"
+    colors={{
+      light: '#f2f2f2',
+      '1': '#f5f5f5',
+      '2': '#d9d9d9',
+      '3': '#bfbfbf',
+      '4': '#595959',
+      '5': '#434343',
+      '6': '#141414',
+      '7': '#262626',
+      '8': '#434343',
+      '9': '#262626',
+      '10': '#1f1f1f',
+    }}
+  />
+</ColorPalette>
+
+> ⚠️ Several duplicates: `4`==`8` (`#434343`), `5`==`8` (`#434343`), `6`==`9` (`#141414`/`#262626` mix is suspect). The scale isn't monotonic. Worth a token cleanup.
+
+## Accent
+
+<ColorPalette>
+  <ColorItem
+    title="accent"
+    subtitle="Background tint + state-success"
+    colors={{
+      accent: '#eef6fb',
+      'accent-foreground': '#050a17',
+      'accent-light': '#95de64',
+      'accent-dark': '#389e0d',
+    }}
+  />
+</ColorPalette>
+
+## Semantic
+
+State colors for success / error / warning / info / destructive use cases.
+
+<ColorPalette>
+  <ColorItem
+    title="status"
+    subtitle="Feedback colors"
+    colors={{
+      error: '#ff4d4f',
+      warning: '#cb5c00',
+      destructive: '#eb3333',
+      'destructive-foreground': '#f5f9fc',
+      brand: '#00d4fe',
+      'green-main': '#008c05',
+      'highlight-post': '#ff4d4f',
+      'highlight-pre': '#40a9ff',
+    }}
+  />
+</ColorPalette>
+
+> ⚠️ `error` and `highlight-post` are identical (`#ff4d4f`). `destructive` is a slightly different red. Pick one.
+
+## Surface
+
+<ColorPalette>
+  <ColorItem
+    title="surface"
+    subtitle="Backgrounds, dividers, foregrounds"
+    colors={{
+      background: '#fafafa',
+      light: '#ffffff',
+      dark: '#002766',
+      label: '#8c8c8c',
+    }}
+  />
+</ColorPalette>
+
+---
+
+## Drift to fix
+
+While documenting the palette I noticed these usages that don't go through tokens:
+
+- **`src/ui/molecules/badge/index.tsx`** uses `bg-red-500` for the `destructive`
+  variant instead of `bg-destructive` (defined in `@theme`).
+- **`src/ui/molecules/button/index.tsx`** uses `bg-destructive` ✅ — Badge should
+  match.
+- A handful of segments use `dark:` Tailwind classes without a corresponding dark
+  theme being defined. Either define dark tokens or remove the classes.
+
+Track these as a token-audit task before adding new primitives.
