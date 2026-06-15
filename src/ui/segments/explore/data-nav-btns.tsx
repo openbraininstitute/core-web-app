@@ -7,7 +7,7 @@ import { config } from '@/config';
 import { WorkspaceSection } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import Breadcrumb from '@/ui/molecules/breadcrumb';
+import Breadcrumb from '@/ui/molecules/breadcrumb-legacy';
 import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';

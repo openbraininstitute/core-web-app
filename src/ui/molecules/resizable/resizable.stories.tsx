@@ -19,12 +19,12 @@ const Pane = ({ children }: { children: React.ReactNode }) => (
 export const Horizontal: Story = {
   render: () => (
     <div className="border-neutral-2 h-60 w-[640px] overflow-hidden rounded-md border">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={30}>
+      <ResizablePanelGroup orientation="horizontal">
+        <ResizablePanel defaultSize="30%">
           <Pane>Sidebar</Pane>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={70}>
+        <ResizablePanel defaultSize="70%">
           <Pane>Main content</Pane>
         </ResizablePanel>
       </ResizablePanelGroup>
@@ -35,12 +35,12 @@ export const Horizontal: Story = {
 export const Vertical: Story = {
   render: () => (
     <div className="border-neutral-2 h-80 w-[480px] overflow-hidden rounded-md border">
-      <ResizablePanelGroup direction="vertical">
-        <ResizablePanel defaultSize={60}>
+      <ResizablePanelGroup orientation="vertical">
+        <ResizablePanel defaultSize="60%">
           <Pane>Top</Pane>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={40}>
+        <ResizablePanel defaultSize="40%">
           <Pane>Bottom</Pane>
         </ResizablePanel>
       </ResizablePanelGroup>
@@ -51,16 +51,16 @@ export const Vertical: Story = {
 export const ThreePanes: Story = {
   render: () => (
     <div className="border-neutral-2 h-60 w-[720px] overflow-hidden rounded-md border">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={20}>
+      <ResizablePanelGroup orientation="horizontal">
+        <ResizablePanel defaultSize="20%">
           <Pane>Left</Pane>
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize={50}>
+        <ResizablePanel defaultSize="50%">
           <Pane>Center</Pane>
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize={30}>
+        <ResizablePanel defaultSize="30%">
           <Pane>Right</Pane>
         </ResizablePanel>
       </ResizablePanelGroup>

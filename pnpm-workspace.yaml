@@ -15,5 +15,8 @@ minimumReleaseAgeExclude:
   - '@storybook/*'
   - eslint-plugin-storybook
   - '@chromatic-com/storybook'
+  - playwright
+  - playwright-core
+  - '@playwright/*'
 minimumReleaseAgeStrict: true
 verifyDepsBeforeRun: error

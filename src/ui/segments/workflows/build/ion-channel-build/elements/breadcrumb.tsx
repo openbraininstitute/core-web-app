@@ -1,12 +1,12 @@
 import Link from 'next/link';
 
-import Breadcrumb from '@/ui/molecules/breadcrumb';
 import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from '@/ui/molecules/breadcrumb/index';
+} from '@/ui/molecules/breadcrumb';
+import LegacyBreadcrumb from '@/ui/molecules/breadcrumb-legacy';
 
 export function AutomatedFormBreadcrumb({
   category: { label: categoryLabel, link: categoryLink, isUrl: categoryIsUrl },
@@ -16,7 +16,7 @@ export function AutomatedFormBreadcrumb({
   type: { label: string; link: string; isUrl: boolean };
 }) {
   return (
-    <Breadcrumb showChevron={false}>
+    <LegacyBreadcrumb showChevron={false}>
       <BreadcrumbList className="select-none">
         <BreadcrumbItem className="[&_a]:hover:text-primary-8! cursor-pointer text-base hover:font-medium!">
           <BreadcrumbLink asChild className="transition-colors hover:text-gray-900">
@@ -30,6 +30,6 @@ export function AutomatedFormBreadcrumb({
           </BreadcrumbLink>
         </BreadcrumbItem>
       </BreadcrumbList>
-    </Breadcrumb>
+    </LegacyBreadcrumb>
   );
 }

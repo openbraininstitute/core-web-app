@@ -1,4 +1,4 @@
-import Breadcrumb from '@/ui/molecules/breadcrumb';
+import Breadcrumb from '@/ui/molecules/breadcrumb-legacy';
 
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
