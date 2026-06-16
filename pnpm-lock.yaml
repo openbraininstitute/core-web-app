@@ -36,8 +36,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: ^0.26.5
-        version: 0.26.5(react@19.2.6)
+        specifier: ^0.27.1
+        version: 0.27.1(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -2355,8 +2355,8 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@0.26.5':
-    resolution: {integrity: sha512-jLcdyeDuIS+5am25k9UDZtJ99qbFBWWuARXZLetRyfytiuXPNZYCebS13mVtZhNWX76cL+sxpRMdXHuoH9L+iw==}
+  '@openbraininstitute/morphoviewer@0.27.1':
+    resolution: {integrity: sha512-uQAFYovnTZ5WYwtzP7X4WkAqE0dSdI/Q8t1qNWEFkXUA1ajLqRjRO05KR16raS05tcsoWhUc0DGzbp6/Okt4HQ==}
     peerDependencies:
       react: ^19.2.5
 
@@ -4305,8 +4305,8 @@ packages:
   '@tanstack/virtual-core@3.14.0':
     resolution: {integrity: sha512-JLANqGy/D6k4Ujmh8Tr25lGimuOXNiaVyXaCAZS0W+1390sADdGnyUdSWNIfd49gebtIxGMij4IktRVzrdr12Q==}
 
-  '@tolokoban/tgd@2.0.143':
-    resolution: {integrity: sha512-YDFqfzBZqAMz2vxR0NgsgEQeSrS75/OXmmRkgFMY6rnKAbcKoG6u2DsyWgMf7hIEmx18i6rqDHyJOF1XM7wx4A==}
+  '@tolokoban/tgd@2.0.145':
+    resolution: {integrity: sha512-sYzp0fl+k7itgAIw33gzP0D3lrouw5mEReJNTA8Y1faIidz4gWaKwh3uCwTvL/BBJmItVdYgZP+R2eiYZxZP/w==}
 
   '@tolokoban/tgd@2.0.78':
     resolution: {integrity: sha512-nEpIwkOO/bEEk0Fetpjc8iAaBYsRf9wZQgUMQLvrjCSv9VnG8bzOh4WKeRcSufkgUw7+Sqoe2kV3MVXB+lFL+w==}
@@ -11401,9 +11401,9 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@0.26.5(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@0.27.1(react@19.2.6)':
     dependencies:
-      '@tolokoban/tgd': 2.0.143
+      '@tolokoban/tgd': 2.0.145
       fflate: 0.8.3
       react: 19.2.6
       tslib: 2.8.1
@@ -13631,7 +13631,7 @@ snapshots:
 
   '@tanstack/virtual-core@3.14.0': {}
 
-  '@tolokoban/tgd@2.0.143':
+  '@tolokoban/tgd@2.0.145':
     dependencies:
       '@loaders.gl/core': 4.4.1
       '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
