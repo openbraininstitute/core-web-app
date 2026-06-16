@@ -224,6 +224,7 @@ export default function Prompt({
         <textarea
           ref={textareaRef}
           className={styles.textarea}
+          data-testid="ai-chat-input"
           placeholder="What would you like to do?"
           // biome-ignore lint/a11y/noAutofocus: Autofocus
           autoFocus

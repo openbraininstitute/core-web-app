@@ -1,9 +1,22 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkflowActivityDictValue } from '@/constants';
 import type { FlagKey } from '@/features/feature-flags/flags';
+import type { SchemaName } from '@/features/scan-config/types';
+import type { TScanConfigWorkflowDefinition } from '@/features/scan-config/workflow/types';
+import type { TWorkflowSchemaSelection } from '@/features/scan-config/workflow/workflow-schema-selection';
+import type { TWorkflowBrowseConfig } from '@/ui/segments/workflows/browse/browse-config';
+import type { TScanConfigConfigureBinding } from './scan-config-binding';
 
-export const WorkflowSessionIdSearchParam = 'sessionId';
+export const WORKFLOW_SESSION_ID_SEARCH_PARAM = 'session' as const;
+
+export const WorkflowConfigureRoutingDict = {
+  Session: 'session',
+  Standalone: 'standalone',
+} as const;
+
+export type TWorkflowConfigureRouting =
+  (typeof WorkflowConfigureRoutingDict)[keyof typeof WorkflowConfigureRoutingDict];
 
 export const EntityGroupDict = {
   Subcellular: 'Subcellular',
@@ -16,6 +29,23 @@ export type TEntityGroupValue = (typeof EntityGroupDict)[keyof typeof EntityGrou
 
 export type TActivityValue =
   (typeof WorkflowActivityDictValue)[keyof typeof WorkflowActivityDictValue];
+
+/**
+ * How the workflow picks the first route segment (`new` vs `configure`).
+ *
+ * - `configure`: open configure directly (legacy static workflows).
+ * - `browse`: always open `/new` entity browse first (legacy browse-first workflows).
+ * - `schema`: `new` vs `configure` is resolved from the ObiOne scan-config schema
+ *   `initialize` block (`model_identifier` / `model_identifier_multiple`) in step 2+.
+ */
+export const WorkflowInitialStagePolicyDict = {
+  Configure: 'configure',
+  Browse: 'browse',
+  Schema: 'schema',
+} as const;
+
+export type TWorkflowInitialStagePolicy =
+  (typeof WorkflowInitialStagePolicyDict)[keyof typeof WorkflowInitialStagePolicyDict];
 
 /**
  * Presentation metadata for an extended entity type. Used for labels, grouping,
@@ -33,48 +63,166 @@ export type TEntityTypeMeta = {
 };
 
 /**
- * An entity the user must pick during the configuration step of a workflow.
- * A workflow can declare zero, one or many inputs.
+ * browse table metadata for `/workflows/{activity}/new/{targetType}`.
+ * does not drive single vs multiple selection, that comes from the remote schema.
  */
 export type IWorkflowConfigurationInput = {
   type: TExtendedEntitiesTypeDict;
   label?: string;
   required?: boolean;
-  multiple?: boolean;
   filters?: Record<string, unknown>;
+};
+
+/**
+ * browse phase on `/workflows/{activity}/new/{type}`
+ * selection: is the entity-picking step
+ * prerequisite: is the optional pre-step a workflow gates the table behind
+ */
+export const WorkflowBreadcrumbPhaseDict = {
+  Prerequisite: 'prerequisite',
+  Selection: 'selection',
+} as const;
+export type TWorkflowBreadcrumbPhase =
+  (typeof WorkflowBreadcrumbPhaseDict)[keyof typeof WorkflowBreadcrumbPhaseDict];
+
+/**
+ * the phases in the order they happen (first → last).
+ * the one list that builds the breadcrumb trail, show every phase from the start up
+ * to the one the app is on right now
+ * if we want to add a new phase, just add it here in the right spot and the trail grows on its own
+ */
+export const WORKFLOW_BREADCRUMB_PHASE_ORDER = [
+  WorkflowBreadcrumbPhaseDict.Prerequisite,
+  WorkflowBreadcrumbPhaseDict.Selection,
+] as const;
+
+/** inputs handed to a breadcrumb resolver function so a crumb can be computed at render time */
+export type TWorkflowBreadcrumbContext = {
+  workflow: IWorkflowDescriptor;
+  activity: TActivityValue;
+  phase: TWorkflowBreadcrumbPhase;
+  activeEntityType: TExtendedEntitiesTypeDict | null;
+};
+
+/** a breadcrumb crumb: static `ReactNode` (the default) or a function of the render context */
+export type TWorkflowBreadcrumbNode =
+  | ReactNode
+  | ((context: TWorkflowBreadcrumbContext) => ReactNode);
+
+/**
+ * explicit, per-workflow breadcrumb definition for the `/new/{type}` page. When omitted the
+ * resolver derives the trail from the workflow + activity + active selection
+ */
+export type TWorkflowBreadcrumb = {
+  /** first crumb, links back to the workflows home */
+  root: TWorkflowBreadcrumbNode;
+  /** crumb rendered per browse phase; only the phases a workflow reaches need an entry */
+  steps?: Partial<Record<TWorkflowBreadcrumbPhase, TWorkflowBreadcrumbNode>>;
+};
+
+/** one crumb in the `/new/{type}` trail */
+export type TWorkflowBreadcrumbCrumb = {
+  phase: TWorkflowBreadcrumbPhase;
+  node: ReactNode;
+  /** true = the screen you're on now (just text). the older crumbs you can click to go back. */
+  isCurrent: boolean;
 };
 
 export type IWorkflowDescriptor = {
   sourceType: TExtendedEntitiesTypeDict;
   targetType: TExtendedEntitiesTypeDict;
   /**
-   * Entity type(s) the user must pick during the configuration step.
-   * - Build workflows: usually empty (creating from scratch).
-   * - Simulate workflows: typically `[{ type: <sourceType> }]` but can hold
-   *   multiple inputs (e.g. a model + a stimulus protocol).
-   * - Extract workflows: the entity to extract from (e.g. `Circuit`).
-   *
-   * If omitted, the configuration step does not require any entity selection.
+   * When `true`, the workflow accepts more than one entity type as input on `/new`.
+   * `sourceType` and `targetType` are still the same campaign type; accepted input
+   * types come from the scan-config schema (not from {@link configurationInputs}).
+   */
+  hasMultipleSources?: boolean;
+  /** first route segment after choosing this workflow on the workflow */
+  initialStage: TWorkflowInitialStagePolicy;
+  /** when true, configure UI and schema-driven routing use scan-config */
+  isScanConfig: boolean;
+  /** scan-config configure binding; required when {@link isScanConfig} is true */
+  scanConfig?: {
+    definition: TScanConfigWorkflowDefinition;
+    /** ObiOne JSON schema used for `initialize` selection rules and the editor */
+    schemaName: SchemaName;
+    /** Browse type, API entity type, FromID mapping, and generated grid endpoint */
+    configureBinding: TScanConfigConfigureBinding;
+  };
+  /**
+   * Optional browse-table entity types, labels, and filters.
+   * Not used to decide single vs multiple selection (schema only).
    */
   configurationInputs?: readonly IWorkflowConfigurationInput[];
+  /**
+   * optional per-entity-type browse prerequisite + loader configuration
+   * lets a browse input require a "parent" pick first (prerequisite) and/or fetch its rows
+   * through a custom paginated query (loader), absent = default browse behaviour
+   */
+  browseConfig?: TWorkflowBrowseConfig;
+  /**
+   * explicit breadcrumb for the `/new/{type}` browse page
+   */
+  breadcrumb?: TWorkflowBreadcrumb;
   label?: string;
   description?: string;
   tags?: readonly string[];
   filters?: Record<string, unknown>;
   disabled?: boolean;
   order?: number;
-  beta?: boolean;
   requiredFeatures?: readonly FlagKey[];
+  /** when true, browse table shows species / brain region selector */
+  requireSpecies?: boolean;
+  /** when true, browse table shows workspace scope selector */
+  requireScope?: boolean;
+  /** when true, browse table shows filter controls */
+  requireFilters?: boolean;
   /**
-   * When `true`, the configuration flow first routes to a browse page
-   * (`/workflows/<activity>/new/<kebab(targetType)>`) where the user picks
-   * the primary `configurationInputs` entity before landing on the configure
-   * page (`/workflows/<activity>/configure/<kebab(targetType)>/<id>`).
-   *
-   * When `false` or omitted, the configure page is opened directly.
+   * scan-config configure URL shape; defaults to {@link WorkflowConfigureRoutingDict.Session}.
+   * {@link WorkflowConfigureRoutingDict.Standalone} skips persisting a browse selection.
    */
-  needsBrowse?: boolean;
+  configureRouting?: TWorkflowConfigureRouting;
 };
+
+/** Resolved route segment after choosing a workflow on the workflow or `/new` guard. */
+export const WorkflowInitialStageDict = {
+  New: 'new',
+  Configure: 'configure',
+} as const;
+
+export type TWorkflowInitialStage =
+  (typeof WorkflowInitialStageDict)[keyof typeof WorkflowInitialStageDict];
+
+export type TResolvedWorkflowInitialStage = {
+  stage: TWorkflowInitialStage;
+  workflow: IWorkflowDescriptor | null;
+  schemaSelection?: TWorkflowSchemaSelection | null;
+};
+
+/** shared {@link IWorkflowDescriptor} fragments for activity registry entries */
+export const WorkflowStagePresets = {
+  DirectConfigure: {
+    initialStage: WorkflowInitialStagePolicyDict.Configure,
+    isScanConfig: false,
+  },
+  BrowseFirst: {
+    initialStage: WorkflowInitialStagePolicyDict.Browse,
+    isScanConfig: false,
+  },
+  ScanConfig: {
+    initialStage: WorkflowInitialStagePolicyDict.Schema,
+    isScanConfig: true,
+  },
+  Disabled: {
+    initialStage: WorkflowInitialStagePolicyDict.Configure,
+    isScanConfig: false,
+  },
+} as const;
+
+export const WorkflowBrowseDefaults = {
+  requireSpecies: false,
+  requireScope: false,
+} as const satisfies Pick<IWorkflowDescriptor, 'requireSpecies' | 'requireScope'>;
 
 export type TActivityEntry = {
   value: TActivityValue;

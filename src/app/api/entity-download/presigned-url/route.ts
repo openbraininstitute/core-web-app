@@ -1,21 +1,22 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
 
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+const querySchema = z.object({
+  entityType: z.enum(EntityTypeDict),
+  entityId: z.uuid(),
+  virtualLabId: z.uuid(),
+  projectId: z.uuid(),
+  configAssetId: z.uuid(),
+  assetPath: z.string().min(1).optional(),
+});
 
 export async function GET(request: NextRequest) {
-  const query = request.nextUrl.searchParams;
-  const entityType = query.get('entityType')! as TEntityTypeDict;
-  const entityId = query.get('entityId')!;
-  const virtualLabId = query.get('virtualLabId')!;
-  const projectId = query.get('projectId')!;
-  const configAssetId = query.get('configAssetId')!;
-  const assetPath = query.get('assetPath')!;
-
   const session = await auth();
 
   if (!session) {
@@ -24,11 +25,18 @@ export async function GET(request: NextRequest) {
       statusText: 'The supplied authentication is not authorized for this action',
     });
   }
+
+  const parsed = querySchema.safeParse(Object.fromEntries(request.nextUrl.searchParams));
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+  }
+  const { entityType, entityId, virtualLabId, projectId, configAssetId, assetPath } = parsed.data;
+
   try {
     const response = await downloadAsset({
       entityType,
-      entityId: entityId!,
-      id: configAssetId!,
+      entityId,
+      id: configAssetId,
       assetPath,
       asRawResponse: true,
       ctx: { virtualLabId, projectId },

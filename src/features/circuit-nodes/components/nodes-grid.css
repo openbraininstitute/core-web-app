@@ -1,0 +1,7 @@
+/* Let antd Select/Dropdown popups (anchored inside the custom filter popover
+   via getPopupContainer) escape the ag-grid popup's clipping bounds. */
+.ag-theme-quartz .ag-popup-child,
+.ag-theme-quartz .ag-filter,
+.ag-theme-quartz .ag-filter-wrapper {
+  overflow: visible;
+}

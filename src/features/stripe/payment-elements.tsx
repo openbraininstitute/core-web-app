@@ -11,7 +11,7 @@ import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
-import type { StripeElementsOptions } from '@stripe/stripe-js';
+import type { StripeElementsOptions, StripePaymentElementChangeEvent } from '@stripe/stripe-js';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
 
 export const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => ({
@@ -125,21 +125,26 @@ export function BillingAddressElement({
   saveAddress: boolean;
 }) {
   return (
-    <div className={cn('text-white', framed && 'rounded-lg border border-white/10 bg-white/5 p-4')}>
+    <div
+      className={cn(
+        'text-primary-9',
+        framed && 'rounded-lg border border-primary-9/10 bg-primary-9/5 p-4'
+      )}
+    >
       <IsolatedStripeAddressElement disabled={disabled} onAddressChange={onAddressChange} />
       <div className="mt-4 flex items-center justify-start gap-1.5">
         <Checkbox
           id="save-address-checkbox"
           checked={saveAddress}
           className={cn(
-            'text-white! disabled:text-white! shadow-lg size-5 focus:shadow-2xl',
-            'data-[state=checked]:bg-white! data-[state=checked]:text-primary-9!'
+            'text-primary-9! disabled:text-primary-9! shadow-lg size-5 focus:shadow-2xl',
+            'data-[state=checked]:bg-primary-9! data-[state=checked]:text-white!'
           )}
           disabled={disabled || !address?.country}
           onCheckedChange={(checked) => onSaveAddressChange(Boolean(checked))}
         />
         <label className="cursor-pointer" htmlFor="save-address-checkbox">
-          Save this as my profile address
+          Use this as my profile address
         </label>
       </div>
     </div>
@@ -149,25 +154,28 @@ export function BillingAddressElement({
 export function BillingCardElement({
   disabled = false,
   framed = true,
+  onChange,
   onReady,
   paymentElementId,
 }: {
   disabled?: boolean;
   framed?: boolean;
+  onChange?: (event: StripePaymentElementChangeEvent) => void;
   onReady: () => void;
   paymentElementId: string;
 }) {
   return (
     <div
       className={cn(
-        'text-white',
-        framed && 'rounded-lg border border-white/10 bg-white/5 p-4',
+        'text-primary-9',
+        framed && 'rounded-lg border border-primary-9/10 bg-primary-9/5 p-4',
         disabled && 'pointer-events-none opacity-70'
       )}
     >
       <PaymentElement
         id={paymentElementId}
         onReady={onReady}
+        onChange={(event) => onChange?.(event)}
         options={{
           fields: {
             billingDetails: 'never',

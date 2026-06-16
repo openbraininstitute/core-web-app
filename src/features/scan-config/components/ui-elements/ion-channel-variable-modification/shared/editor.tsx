@@ -149,7 +149,6 @@ function SectionConfigRow({
       >
         <input
           data-scan-config-block-element-item={`${uiElement}_editor_item_input`}
-          type="number"
           value={draft}
           onChange={(e) => {
             const newDraft = e.target.value;

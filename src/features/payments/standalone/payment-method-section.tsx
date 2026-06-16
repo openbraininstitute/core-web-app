@@ -1,17 +1,19 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
+import { RiSecurePaymentFill } from '@remixicon/react';
 
 import { BillingAddressElement, BillingCardElement } from '@/features/stripe/payment-elements';
-import { Button as UiButton } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 
+import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
 
 export function StandalonePaymentMethodSection({
   billingAddress,
   disabled,
   onCancel,
+  onCardChange,
   onPay,
   onPaymentReady,
   onBillingAddressChange,
@@ -23,6 +25,7 @@ export function StandalonePaymentMethodSection({
   billingAddress: TBillingAddress | null;
   disabled: boolean;
   onCancel: () => void;
+  onCardChange: (event: StripePaymentElementChangeEvent) => void;
   onPay: () => void;
   onPaymentReady: () => void;
   onBillingAddressChange: (address: TBillingAddress | null) => void;
@@ -32,7 +35,7 @@ export function StandalonePaymentMethodSection({
   submitting: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-white">
+    <div className="rounded-2xl text-primary-9">
       <div className="mb-4 font-semibold">Payment method</div>
       <div className="flex flex-col gap-4">
         <BillingAddressElement
@@ -46,42 +49,34 @@ export function StandalonePaymentMethodSection({
         <BillingCardElement
           disabled={disabled}
           framed={false}
+          onChange={onCardChange}
           onReady={onPaymentReady}
           paymentElementId="credits-form"
         />
       </div>
-      <div className="mt-5 flex items-center justify-end gap-4">
-        <UiButton
-          rounded
-          type="button"
-          variant="ghost"
-          size="lg"
-          className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
-          disabled={submitting}
+      <div className="mt-5 flex items-center justify-end gap-4 pb-5">
+        <GhostRoundedIconButton
+          label="Cancel"
+          classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
           onClick={onCancel}
-        >
-          Cancel
-        </UiButton>
-        <UiButton
-          rounded
-          type="button"
-          variant="default"
-          size="lg"
-          className={cn(
-            'border-primary-4! w-max border shadow-2xl',
-            'hover:bg-primary-8/40',
-            'hover:shadow-[1px_2px_4px_0px_#00000099]',
-            'shadow-[8px_12px_24px_0px_#00000099]',
-            'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
-          )}
-          disabled={payDisabled}
+          iconPosition="start"
+          disabled={submitting}
+        />
+
+        <GhostRoundedIconButton
+          label="Pay"
+          icon={
+            submitting ? <LoadingOutlined spin className="text-white" /> : <RiSecurePaymentFill />
+          }
+          classNames={{
+            root: 'bg-primary-9 text-white hover:bg-primary-8 group',
+            label: 'text-white pr-6',
+            iconWrapper: 'bg-primary-9 text-white! group-hover:bg-primary-8!',
+          }}
+          disabled={payDisabled || submitting}
           onClick={onPay}
-        >
-          <div className="flex w-24 items-center justify-center">
-            Pay
-            {submitting && <LoadingOutlined spin className="ml-2 text-white" />}
-          </div>
-        </UiButton>
+          iconPosition="end"
+        />
       </div>
     </div>
   );

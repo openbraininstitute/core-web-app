@@ -6,17 +6,17 @@ import {
   type TScanConfigEntitySource,
 } from '@/features/scan-config/workflow/types';
 import {
-  useRouteIdWorkflowEntity,
+  useSessionWorkflowEntity,
   useStaticTypeWorkflowEntity,
 } from '@/features/scan-config/workflow/use-workflow-entity';
 
 import type { ReactNode } from 'react';
-import type { WorkspaceContext } from '@/types/common';
+import type { TScanConfigConfigureBinding } from '@/ui/segments/workflows/config/scan-config-binding';
 
 type TScanConfigWorkflowEntityProviderProps = {
   entitySource: TScanConfigEntitySource;
-  workspace: WorkspaceContext;
   routeParams: Record<string, string | undefined>;
+  configureBinding?: TScanConfigConfigureBinding;
   children: (entity: TResolvedScanConfigEntity) => ReactNode;
 };
 
@@ -34,26 +34,29 @@ function StaticTypeEntityProvider({
   return children(entity);
 }
 
-function RouteIdEntityProvider({
+function SessionEntityProvider({
   entitySource,
-  workspace,
   routeParams,
+  configureBinding,
   children,
-}: TScanConfigWorkflowEntityProviderProps & {
+}: {
   entitySource: Extract<
     TScanConfigEntitySource,
-    { mode: typeof ScanConfigEntitySourceMode.RouteId }
+    { mode: typeof ScanConfigEntitySourceMode.Session }
   >;
+  routeParams: Record<string, string | undefined>;
+  configureBinding: TScanConfigConfigureBinding;
+  children: (entity: TResolvedScanConfigEntity) => ReactNode;
 }) {
-  const entity = useRouteIdWorkflowEntity({ entitySource, workspace, routeParams });
+  const entity = useSessionWorkflowEntity({ entitySource, routeParams, configureBinding });
   return children(entity);
 }
 
 /** Picks the correct entity hook implementation for the workflow definition. */
 export function ScanConfigWorkflowEntityProvider({
   entitySource,
-  workspace,
   routeParams,
+  configureBinding,
   children,
 }: TScanConfigWorkflowEntityProviderProps) {
   if (entitySource.mode === ScanConfigEntitySourceMode.StaticType) {
@@ -62,13 +65,17 @@ export function ScanConfigWorkflowEntityProvider({
     );
   }
 
+  if (!configureBinding) {
+    throw new Error('Session scan-config workflows require configureBinding from workflow config');
+  }
+
   return (
-    <RouteIdEntityProvider
+    <SessionEntityProvider
       entitySource={entitySource}
-      workspace={workspace}
       routeParams={routeParams}
+      configureBinding={configureBinding}
     >
       {children}
-    </RouteIdEntityProvider>
+    </SessionEntityProvider>
   );
 }

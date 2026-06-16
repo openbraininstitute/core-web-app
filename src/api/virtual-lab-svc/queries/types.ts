@@ -7,6 +7,20 @@ interface VlmResponse<T> {
   data: T | null;
 }
 
+export type TGetProjectExpandParam = 'admins' | 'virtual_lab';
+export type TCreateProjectExpandParam = 'balance' | 'virtual_lab';
+export type TGetVirtualLabExpandParam = 'admins' | 'owner';
+
+interface IVirtualLabUser {
+  id: string;
+  username: string;
+  email: string;
+  created_at: string;
+  first_name: string;
+  last_name: string;
+  name: string;
+}
+
 export type TRole = TUserRole;
 export type Member = {
   id: string;
@@ -30,33 +44,62 @@ export type MemberResponse = VlmResponse<{
   user: Member;
 }>;
 
+/**
+ * @deprecated
+ *
+ * use IProject instead
+ */
 export type Project = {
   id: string;
-  nexus_project_id: string;
   name: string;
-  description: string;
+  description: string | null;
+  contact_email?: string | null;
   created_at: string;
-  updated_at: string;
-  virtual_lab_id: string;
+  updated_at: string | null;
+  virtual_lab_id?: string;
   user_count?: number;
 };
 
-type ProjectsResponse = {
-  results: Array<Project>;
+/**
+ * Legacy pagination shape (e.g. `PaginatedProjectsPayload`). Not used for virtual-lab
+ * `ListResponse` — that uses {@link PaginationResponse}.
+ */
+export type Pagination = {
   page: number;
   size: number;
   page_size: number;
   total: number;
+  has_next: boolean;
+  has_previous: boolean;
+};
+
+export type PaginatedProjectsPayload = {
+  data: Array<Project>;
+  pagination: Pagination;
 };
 
 type ProjectResponse = {
   data: Project;
 };
 
-export type ProjectCreationResponse = VlmResponse<{
-  project: Project;
-  balance_added: boolean;
-}>;
+export interface IProjectExtra {
+  user_count: number;
+  admins: Array<string> | null;
+}
+
+export interface IProject {
+  id: string;
+  name: string;
+  description: string;
+  contact_email: string;
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+  virtual_lab_id: string;
+}
+
+export interface IProjectExpandedResponse extends IProject, IProjectExtra {
+  virtual_lab: TVirtualLab | null;
+}
 
 export type TVirtualLab = {
   id: string;
@@ -67,11 +110,32 @@ export type TVirtualLab = {
   entity: string;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
-  members_count: number | null;
   projects_count: number | null;
   created_by: string | null;
   compute_cell: string;
 };
+
+export interface IVirtualLabExpandedResponse extends TVirtualLab {
+  owner: IVirtualLabUser | null;
+  admins: Array<string> | null;
+}
+
+export type TVirtualLabWithInviteRow = TVirtualLab & { invite_id: string };
+
+/** Virtual-lab service `PaginationResponse` — current page, page size, total rows in DB. */
+export type PaginationResponse = {
+  page: number;
+  page_size: number;
+  total_items: number;
+};
+
+/** Virtual-lab service `ListResponse[M]`. */
+export type ListResponse<TRow> = {
+  data: TRow[];
+  pagination: PaginationResponse;
+};
+
+export type TGetSelfVirtualLabResponse = VlmResponse<TVirtualLab>;
 
 export type TVirtualLabExistsVerificationResponse = VlmResponse<{
   exists: boolean;
@@ -97,6 +161,11 @@ export type VirtualLabResponseData = {
   admins: Array<string> | null;
 };
 
+/**
+ * @deprecated
+ *
+ * use TVirtualLab
+ */
 export type TVirtualLabResponse = VlmResponse<VirtualLabResponseData>;
 
 type VerificationCodeEmailResponseData = {
@@ -176,7 +245,7 @@ export type SubscriptionTiersResponse = {
 
 export type TVirtualLabListResponse = VlmResponse<{
   pending_labs: Array<TVirtualLab & { invite_id: string }>;
-  virtual_lab: TVirtualLab;
+  virtual_lab: TVirtualLab | null;
   membership_labs: {
     total: number;
     filtered_total: number;
@@ -544,7 +613,7 @@ export type VlmListSubscriptionTiersResponse = VlmResponse<SubscriptionTiersResp
 export type VlmActiveSubscriptionResponse = VlmResponse<UserActiveSubscriptionResponse>;
 export type VlmNextPaymentResponse = VlmResponse<NextPaymentDateResponse>;
 export type VlmUserProfile = VlmResponse<{ profile: UserProfileResponse }>;
-export type VlmProjectsResponse = VlmResponse<ProjectsResponse>;
+export type VlmProjectsResponse = VlmResponse<PaginatedProjectsPayload>;
 export type VlmProjectResponse = VlmResponse<ProjectResponse>;
 export type VlmProjectStatsResponse = VlmResponse<ProjectStats>;
 export type VlmVirtualLabStatsResponse = VlmResponse<VirtualLabStats>;

@@ -3,7 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
-import { get, includes, kebabCase } from 'es-toolkit/compat';
+import { get } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
@@ -19,9 +19,8 @@ import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entitie
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-import { DEFAULT_PAGE_MEDIUM_SIZE, WorkflowActivityDictValue } from '@/constants';
+import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
-import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -39,7 +38,6 @@ import {
   getTaskCampaignStatusCountMap,
   type TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-functions';
-import { isSimulateCircuitSourceType } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
 import { ActivityAggregatedStatus } from '@/features/task-runner/activity-execution/status';
 import { ActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
@@ -57,28 +55,19 @@ import {
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
-import { ORIGINAL_CAMPAIGN_ID_QUERY } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { ActivityValues, getActivity, getWorkflow } from '@/ui/segments/workflows/config';
+import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
+import {
+  buildWorkflowActivityConfigurationHref,
+  buildWorkflowActivityDetailResultsHref,
+  buildWorkflowActivityDuplicateHref,
+  canDuplicateWorkflowActivityRow,
+} from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table/interface';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/config';
-
-const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
-  EntityTypeDict.SimulationCampaign,
-  EntityTypeDict.CircuitExtractionCampaign,
-  EntityTypeDict.IonChannelModelingCampaign,
-  EntityTypeDict.EmSynapseMappingCampaign,
-  EntityTypeDict.TaskConfig,
-];
-
-const AllowedDuplicateBuildEntityTypes: TEntityTypeDict[] = [
-  ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
-  ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
-];
 
 const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
@@ -87,6 +76,7 @@ const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.MicrocircuitSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
@@ -287,7 +277,6 @@ export function WorkflowActivity() {
     },
   ];
 
-  const entity = getEntityByExtendedType({ type: resolvedEntityType });
   const {
     data: activityResult,
     isFetching,
@@ -312,6 +301,35 @@ export function WorkflowActivity() {
 
   const selectedRow = selectedRows.at(0);
   const [isResolvingResults, setIsResolvingResults] = useState(false);
+  const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
+
+  const appendCurrentQueryParams = useCallback(
+    (href: string) => {
+      const currentQuery = query.toString();
+      if (!currentQuery) {
+        return href;
+      }
+
+      const separator = href.includes('?') ? '&' : '?';
+      return `${href}${separator}${currentQuery}`;
+    },
+    [query]
+  );
+
+  const configurationHref = useMemo(() => {
+    if (!entityType || !selectedRow) {
+      return null;
+    }
+
+    const href = buildWorkflowActivityConfigurationHref({
+      activity: resolvedActivityType,
+      listEntityType: entityType,
+      workspace,
+      row: selectedRow,
+    });
+
+    return href ? appendCurrentQueryParams(href) : null;
+  }, [appendCurrentQueryParams, entityType, resolvedActivityType, selectedRow, workspace]);
 
   const onViewIonChannelResults = useCallback(async () => {
     if (!selectedRow) return;
@@ -339,27 +357,18 @@ export function WorkflowActivity() {
     }
   }, [selectedRow, navigate, virtualLabId, projectId, notification]);
 
-  const configurationLink = entityType
-    ? entity?.detailViewSections?.includes('configuration')
-      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
-      : entity?.detailViewSections?.includes('overview')
-        ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/overview`
-        : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
-    : null;
+  const resultsLink = useMemo(() => {
+    if (!entityType || !selectedRow) {
+      return null;
+    }
 
-  const configurationQuery = query.toString();
+    return buildWorkflowActivityDetailResultsHref({
+      workspace,
+      listEntityType: entityType,
+      rowId: selectedRow.id,
+    });
+  }, [entityType, selectedRow, workspace]);
 
-  const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
-    ? DetailViewSectionsDict.Results
-    : entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts)
-      ? DetailViewSectionsDict.RelatedArtifacts
-      : null;
-
-  const resultsLink = entityType
-    ? resultsPath
-      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
-      : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
-    : null;
   const isIonChannelModelingCampaign =
     entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
   const isBuildActivity = activityType === ActivityValues.Build;
@@ -368,81 +377,34 @@ export function WorkflowActivity() {
   );
   const resultsActionLink = resultsLink ?? undefined;
 
-  const onDuplicate = () => {
-    if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
-      const taskConfig = selectedRow as ITaskConfig<Record<string, unknown>>;
-      if (taskConfig.task_config_type === TaskConfigType.CircuitExtractionCampaign) {
-        const circuitId = taskConfig.inputs.at(0)?.id;
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
-            circuitId
-          }?initialCampaignId=${selectedRow.id}`
-        );
-      }
-      if (taskConfig.task_config_type === TaskConfigType.SkeletonizationCampaign) {
-        const emCellMeshId = taskConfig.inputs.at(0)?.id;
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/process/configure/em-cell-mesh/${
-            emCellMeshId
-          }?initialCampaignId=${selectedRow.id}`
-        );
-      }
-      if (
-        (selectedRow as ITaskConfig<any>).task_config_type ===
-        TaskConfigType.EmSynapseMappingCampaign
-      ) {
-        const morphologyId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/em-synapse-mapping-campaign/${morphologyId}?initialCampaignId=${selectedRow?.id}`
-        );
-      }
-    }
-    if (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-modeling-campaign?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}`
-      );
+  const onDuplicate = useCallback(() => {
+    if (!selectedRow || !entityType) {
       return;
     }
-    if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/me-model-circuit/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id
-        }?initialCampaignId=${selectedRow?.id}`
-      );
 
-      return;
-    }
-    if (
-      selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign &&
-      entityType === ExtendedEntitiesTypeDict.IonChannelModelSimulation
-    ) {
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?initialCampaignId=${selectedRow.id}`
-      );
-      return;
-    }
-    if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign && entityType) {
-      const workflow = getWorkflow({
-        activity: WorkflowActivityDictValue.simulate,
-        targetType: entityType,
-      });
-      const entityId = (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id;
-      const query = new URLSearchParams({ initialCampaignId: selectedRow.id });
+    const href = buildWorkflowActivityDuplicateHref({
+      activity: resolvedActivityType,
+      listEntityType: entityType,
+      workspace,
+      row: selectedRow,
+    });
 
-      if (workflow && isSimulateCircuitSourceType(workflow.sourceType)) {
-        query.set('dataType', workflow.sourceType);
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${entityId}?${query}`
-        );
-        return;
-      }
-
-      const configureSegment = workflow ? kebabCase(workflow.sourceType) : 'circuit';
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${configureSegment}/${entityId}?${query}`
-      );
+    if (href) {
+      navigate(href);
     }
-  };
+  }, [entityType, navigate, resolvedActivityType, selectedRow, workspace]);
+
+  const canDuplicate = useMemo(() => {
+    if (!selectedRow || !entityType) {
+      return false;
+    }
+
+    return canDuplicateWorkflowActivityRow({
+      activity: resolvedActivityType,
+      listEntityType: entityType,
+      row: selectedRow,
+    });
+  }, [entityType, resolvedActivityType, selectedRow]);
 
   const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
 
@@ -651,12 +613,13 @@ export function WorkflowActivity() {
                     showSizeChanger={false}
                     aria-label="pagination for listing results"
                     className={cn(
+                      '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!',
                       '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
                       '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
                     )}
                   />
                 </div>
-                {selectedRow && configurationLink && (
+                {selectedRow && configurationHref && (
                   <div className="flex h-15 shrink-0 items-center justify-center gap-2">
                     <Button
                       rounded
@@ -665,10 +628,7 @@ export function WorkflowActivity() {
                       size={breakpoint === 'l' ? 'md' : 'lg'}
                       className="select-none"
                     >
-                      <Link
-                        href={{ pathname: configurationLink, query: configurationQuery }}
-                        className="text-primary-9!"
-                      >
+                      <Link href={configurationHref} className="text-primary-9!">
                         View configuration
                       </Link>
                     </Button>
@@ -710,11 +670,7 @@ export function WorkflowActivity() {
                       size={breakpoint === 'l' ? 'md' : 'lg'}
                       onClick={onDuplicate}
                       className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9!"
-                      disabled={
-                        (activityType === ActivityValues.Build &&
-                          !includes(AllowedDuplicateBuildEntityTypes, entityType)) ||
-                        !includes(AllowedDuplicateEntityTypes, selectedRow.type)
-                      }
+                      disabled={!canDuplicate}
                     >
                       Duplicate
                     </Button>

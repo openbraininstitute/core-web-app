@@ -32,6 +32,7 @@ import {
   useHierarchyRuntimeMetadataQuery,
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { shouldClearAppliedUrlOverrideState } from '@/features/brain-region-hierarchy/url-boundary-state';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
@@ -152,7 +153,7 @@ export function useWorkspaceHierarchyRegistry() {
     workspaceSpecies,
   } = useLocalStoreHierarchySpeciesAndBrainRegion();
 
-  const { urlOverride } = useBrainRegionUrlBoundaryContext();
+  const { mode: urlBoundaryMode, urlOverride } = useBrainRegionUrlBoundaryContext();
   const allowAllSpecies = useAtomValue(allowAllSpeciesAtom);
   const [speciesSelectionMode, setSpeciesSelectionMode] = useAtom(speciesSelectionModeAtom);
   const {
@@ -172,6 +173,7 @@ export function useWorkspaceHierarchyRegistry() {
 
   const focusedUrlOverride = urlOverride?.kind === 'focused' ? urlOverride : null;
   const isAllUrlOverride = urlOverride?.kind === 'all';
+  const hasActiveUrlOverride = !!focusedUrlOverride || isAllUrlOverride;
 
   // get default hierarchy based on configured species
   const defaultHierarchy = remoteAvailableHierarchies?.find(
@@ -200,6 +202,7 @@ export function useWorkspaceHierarchyRegistry() {
     remoteHierarchyId: remoteUserPreferenceHierarchySpecies?.hierarchy_id,
     storageHierarchyId: browserStorageHierarchy?.hierarchyId,
     defaultHierarchyId: config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
+    availableHierarchies: remoteAvailableHierarchies,
   });
 
   const defaultBrainRegionId =
@@ -611,7 +614,12 @@ export function useWorkspaceHierarchyRegistry() {
       remoteAvailableHierarchies?.length === 0 ||
       (!focusedUrlOverride && !isAllUrlOverride)
     ) {
-      if (!focusedUrlOverride && !isAllUrlOverride) {
+      if (
+        shouldClearAppliedUrlOverrideState({
+          boundaryMode: urlBoundaryMode,
+          hasActiveUrlOverride,
+        })
+      ) {
         setLastAppliedUrlOverride(null);
       }
       return;
@@ -696,6 +704,8 @@ export function useWorkspaceHierarchyRegistry() {
     setSelectedBrainRegion,
     setWorkspaceSpecies,
     setSpeciesSelectionMode,
+    urlBoundaryMode,
+    hasActiveUrlOverride,
   ]);
 
   /**
@@ -801,6 +811,7 @@ export function useWorkspaceHierarchyRegistry() {
     isRootHierarchyLoading,
     isAllMode,
     displaySpecies,
+    hasAvailableHierarchies: !!remoteAvailableHierarchies?.length,
   });
 
   return {

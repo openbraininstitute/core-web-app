@@ -128,7 +128,7 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
   );
 }
 
-function FocusedModeContent({
+export function FocusedModeContent({
   loading,
   selectedBrainRegion,
   onOpenTree,
@@ -169,7 +169,7 @@ function FocusedModeContent({
   );
 }
 
-function SelectedRegionPill({ region }: { region: BrainRegionHierarchyBase }) {
+export function SelectedRegionPill({ region }: { region: BrainRegionHierarchyBase }) {
   return (
     <div className="text-primary-9/90 flex items-center gap-1.5 flex-1 min-w-0">
       <div
@@ -197,7 +197,7 @@ function SelectedRegionPill({ region }: { region: BrainRegionHierarchyBase }) {
   );
 }
 
-function HierarchyToggleButton({
+export function HierarchyToggleButton({
   view,
   onSwitchView,
 }: {

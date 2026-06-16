@@ -1,6 +1,7 @@
 export const ObiOneTaskTypeDict = {
   CircuitExtraction: 'circuit_extraction',
   CircuitSimulation: 'circuit_simulation',
+  CircuitSimulationBrian2: 'circuit_simulation_brian2_machine',
   Skeletonization: 'morphology_skeletonization',
   MorphologySkeletonization: 'morphology_skeletonization',
   IonChannelModelSimulationExecution: 'ion_channel_model_simulation_execution',

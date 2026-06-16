@@ -14,10 +14,10 @@ export const circuitScaleFilter = {
 
 export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Single neuron',
+  title: 'Synaptome (beta)',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
   type: EntityTypeDict.Circuit,
-  slug: EntitySlug.SingleNeuronCircuit,
+  slug: EntitySlug.Circuit,
   api: {
     config: {
       allowedFacets: true,
@@ -30,10 +30,7 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
-          filters: {
-            ...circuitScaleFilter,
-            ...params[0].filters,
-          },
+          filters: { ...params[0].filters, ...circuitScaleFilter },
         });
       },
       one: getCircuit,
@@ -44,12 +41,11 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
-    DetailViewSectionsDict.Analysis,
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: false,
+  isSimulatable: (entity: ICircuit) => entity.has_electrical_cell_models,
 } as const;

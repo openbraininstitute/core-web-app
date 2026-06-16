@@ -237,54 +237,59 @@ export function useDataTableColumns<T>({
 
   const columns: ColumnProps<T>[] = useMemo(
     () =>
-      keys.reduce((acc, key) => {
-        const term = getFieldDefinition(key as EntityCoreFields);
-        const isSortable =
-          !!setSortState && term?.isSortable && !!getOrderValue(term?.order, dataType);
+      keys.reduce(
+        (acc, key) => {
+          const term = getFieldDefinition(key as EntityCoreFields);
+          const isSortable =
+            !!setSortState && term?.isSortable && !!getOrderValue(term?.order, dataType);
 
-        acc.push({
-          key,
-          title: (
-            <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-              <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title ?? '')}</div>
-              {term?.unit &&
-                dataType !== ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection && (
-                  <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>
-                )}
-            </div>
-          ),
-          className: classNames(
-            'text-primary-7 cursor-pointer before:!content-none',
-            term?.className
-          ),
-          sorter: isSortable ? { multiple: 1 } : false,
-          ellipsis: true,
-          width: columnWidths.find(({ key: colKey }) => colKey === key)?.width,
-          render: (_, r, i) => term?.render?.(r as EntityCoreIdentifiable, i),
-          onHeaderCell: () => {
-            const currentWidth =
-              columnWidths.find(({ key: colKey }) => colKey === key)?.width ?? COL_SIZING.default;
-            return {
-              columnWidth: currentWidth,
-              handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
-              onClick: () => {
-                if (!isSortable || !term.order) return;
-                const field = getOrderValue(term.order, dataType);
-                if (field) {
-                  columnOrderBy(key as EntityCoreFields, field);
-                }
-              },
-              showsortertooltip: {
-                title: term?.description ? term.description : term?.title,
-              },
-            };
-          },
-          sortOrder: getOrderDirection(key),
-          sortDirections: ['ascend', 'descend'],
-          align: term?.style?.align,
-        });
-        return acc;
-      }, initialColumns),
+          acc.push({
+            key,
+            title: (
+              <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
+                <div className={styles.columnTitle}>
+                  {fieldTitleSentenceCase(term?.title ?? '')}
+                </div>
+                {term?.unit &&
+                  dataType !== ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection && (
+                    <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>
+                  )}
+              </div>
+            ),
+            className: classNames(
+              'text-primary-7 cursor-pointer before:!content-none',
+              term?.className
+            ),
+            sorter: isSortable ? { multiple: 1 } : false,
+            ellipsis: true,
+            width: columnWidths.find(({ key: colKey }) => colKey === key)?.width,
+            render: (_, r, i) => term?.render?.(r as EntityCoreIdentifiable, i),
+            onHeaderCell: () => {
+              const currentWidth =
+                columnWidths.find(({ key: colKey }) => colKey === key)?.width ?? COL_SIZING.default;
+              return {
+                columnWidth: currentWidth,
+                handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
+                onClick: () => {
+                  if (!isSortable || !term.order) return;
+                  const field = getOrderValue(term.order, dataType);
+                  if (field) {
+                    columnOrderBy(key as EntityCoreFields, field);
+                  }
+                },
+                showsortertooltip: {
+                  title: term?.description ? term.description : term?.title,
+                },
+              };
+            },
+            sortOrder: getOrderDirection(key),
+            sortDirections: ['ascend', 'descend'],
+            align: term?.style?.align,
+          });
+          return acc;
+        },
+        [...initialColumns]
+      ),
     [
       columnWidths,
       initialColumns,

@@ -27,13 +27,7 @@ export function ListingMembers({
 }) {
   const { data } = useSession();
   const { virtualLabId, projectId } = useWorkspace();
-  const {
-    virtualLabAdmins,
-    projectAdmins,
-    isVirtualLabAdmin: isAdmin,
-    isProjectAdmin,
-    isLoading,
-  } = useWorkspaceMembership({
+  const { virtualLabAdmins, projectAdmins, virtualLabOwnerId, isLoading } = useWorkspaceMembership({
     virtualLabId,
     projectId,
   });
@@ -105,9 +99,7 @@ export function ListingMembers({
         if (isLoading) return <LoadingOutlined />;
         return (
           <RoleModifier
-            projectOwnerId={ownerId}
-            isVirtualLabAdmin={isAdmin}
-            isProjectAdmin={isProjectAdmin}
+            virtualLabOwnerId={virtualLabOwnerId}
             virtualLabAdmins={virtualLabAdmins}
             projectAdmins={projectAdmins}
             user={record}

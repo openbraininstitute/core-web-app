@@ -1,9 +1,8 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-
 import { CoinsIcon } from '@/components/icons';
 import { Input } from '@/ui/molecules/input';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 const integerFormatter = new Intl.NumberFormat('en-US', {
@@ -27,6 +26,7 @@ export function parseCreditsAmount(value: string) {
 export function CreditsAmountInput({
   className,
   disabled,
+  error,
   hint,
   inputClassName,
   loadingHint = false,
@@ -35,6 +35,7 @@ export function CreditsAmountInput({
 }: {
   className?: string;
   disabled?: boolean;
+  error?: string;
   hint: string;
   inputClassName?: string;
   loadingHint?: boolean;
@@ -42,7 +43,7 @@ export function CreditsAmountInput({
   value: number | undefined;
 }) {
   return (
-    <div className={cn('rounded-lg border border-white/10 bg-white/5 p-4 text-white', className)}>
+    <div className={cn('rounded-lg  text-primary-9', className)}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start">
         <div className="min-w-0 flex-1">
           <div className="relative w-full">
@@ -54,8 +55,13 @@ export function CreditsAmountInput({
               onChange={(event) => onValueChange(parseCreditsAmount(event.target.value))}
               placeholder="0"
               className={cn(
-                'h-12 w-full rounded-full border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
-                '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+                'rounded-2xl min-h-14 text-xl! border-2 border-gray-100! bg-transparent! px-3 py-2 font-bold tracking-wide text-primary-9! focus:ring-0',
+                'transition-[border-color,box-shadow] duration-200 ease-in-out',
+                'hover:bg-transparent! hover:text-primary-9! focus:bg-transparent! focus:text-primary-9! [&_.ant-input-outlined]:bg-transparent!',
+                'focus:border-pr placeholder:text-primary-9! hover:border-gray-200!',
+                ' focus-within:border-gray-300! focus-visible:ring-0',
+                '[&.ant-input-status-error]:border-1.5! [&.ant-XInput-status-error]:border-destructive!',
+                '[&.ant-input-status-error]:border-1.5! [&.ant-input-status-error]:border-destructive!',
                 inputClassName
               )}
               disabled={disabled}
@@ -64,10 +70,15 @@ export function CreditsAmountInput({
               Credits
             </div>
           </div>
+          {error && <p className="mt-2 ml-2 text-xs text-red-400">{error}</p>}
           <div className="mt-2 ml-2 flex items-center gap-2 text-current">
             <CoinsIcon className="size-5" />
             <span className="text-sm">
-              {loadingHint ? <LoadingOutlined spin className="ml-2 text-current" /> : hint}
+              {loadingHint ? (
+                <Skeleton className="h-4 w-12 rounded-full animate-pulse bg-gray-50/30!" />
+              ) : (
+                hint
+              )}
             </span>
           </div>
         </div>

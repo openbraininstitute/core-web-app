@@ -1,21 +1,107 @@
-import { isEmpty } from 'es-toolkit/compat';
-
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type {
+  IVirtualLabExpandedResponse,
+  ListResponse,
+  TGetSelfVirtualLabResponse,
+  TGetVirtualLabExpandParam,
   TVirtualLab,
   TVirtualLabExistsVerificationResponse,
-  TVirtualLabListResponse,
-  TVirtualLabResponse,
+  TVirtualLabWithInviteRow,
 } from '@/api/virtual-lab-svc/queries/types';
 import type { TVirtualLabPayload } from '@/api/virtual-lab-svc/validation';
 import type { VlmResponse } from '@/types/virtual-lab/common';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
+}
+
+export function virtualLabServiceRowToClient(row: TVirtualLab): TVirtualLab {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    reference_email: row.reference_email ?? '',
+    email_verified: row.email_verified ?? false,
+    entity: row.entity,
+    compute_cell: row.compute_cell ?? 'cell_a',
+    created_at: row.created_at,
+    updated_at: row.updated_at ?? row.created_at,
+    projects_count: row.projects_count ?? null,
+    created_by: null,
+  };
+}
+
+/**
+ * Lists pending virtual lab requests (invite / access rows) with optional pagination.
+ *
+ * @param {Object} [params={}] - Request parameters.
+ * @param {{ page: number; page_size: number }} [params.pagination] - Page index and page size.
+ * @returns {Promise<ListResponse<TVirtualLabWithInviteRow>>} Paginated pending request rows.
+ * @throws {Error} Throws if the virtual lab API request fails.
+ */
+export async function listPendingVirtualLabRequests({
+  pagination,
+}: {
+  pagination?: { page: number; page_size: number };
+} = {}) {
+  const api = await virtualLabRootApi();
+  return api.get<ListResponse<TVirtualLabWithInviteRow>>('/virtual-labs/requests', {
+    headers: { accept: 'application/json' },
+    queryParams: { ...pagination },
+  });
+}
+
+/**
+ * Lists virtual labs visible to the caller with optional pagination and filters.
+ *
+ * @param {Object} params - Request parameters.
+ * @param {{ page: number; page_size: number }} [params.pagination] - Page index and page size.
+ * @param {Object} [params.filters] - Filter and sort options forwarded as query parameters.
+ * @param {'all'|'self'|'external'} params.filters.scope - Which labs to include when filters are sent.
+ * @param {boolean} [params.filters.admin_access_only] - Restrict to labs where the user has admin access.
+ * @param {'created_at'|'updated_at'|'name'|'owner'} [params.filters.order_by] - Sort field.
+ * @param {'asc'|'desc'} [params.filters.order_direction] - Sort direction.
+ * @param {string} [params.filters.query] - Case-insensitive search on lab fields (API-defined).
+ * @returns {Promise<ListResponse<TVirtualLab>>} Paginated virtual lab rows.
+ * @throws {Error} Throws if the virtual lab API request fails.
+ */
+export async function listVirtualLabs({
+  pagination,
+  filters,
+}: {
+  pagination?: { page: number; page_size: number };
+  filters?: {
+    scope?: 'all' | 'self' | 'external';
+    admin_access_only?: boolean;
+    order_by?: 'created_at' | 'updated_at' | 'name' | 'owner';
+    order_direction?: 'asc' | 'desc';
+    query?: string;
+  };
+}) {
+  const api = await virtualLabRootApi();
+  return api.get<ListResponse<TVirtualLab>>('/virtual-labs', {
+    headers: { accept: 'application/json' },
+    queryParams: {
+      ...pagination,
+      ...filters,
+    },
+  });
+}
+
+/**
+ * Fetches the virtual lab associated with the authenticated user (`/virtual-labs/self`).
+ *
+ * @returns {Promise<TGetSelfVirtualLabResponse>} The current user's virtual lab payload from the API.
+ * @throws {Error} Throws if the virtual lab API request fails.
+ */
+export async function getSelfVirtualLab(): Promise<TGetSelfVirtualLabResponse> {
+  const api = await virtualLabRootApi();
+  return api.get<TGetSelfVirtualLabResponse>('/virtual-labs/self', {
+    headers: { accept: 'application/json' },
+  });
 }
 
 /**
@@ -53,78 +139,21 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
  *
  * @param {Object} params - Parameters for virtual lab creation.
  * @param {VirtualLabPayload} lab - The virtual lab details.
- * @returns {Promise<TVirtualLabResponse>} - api response with the created virtual lab.
+ * @returns {Promise<TVirtualLab>} - api response with the created virtual lab.
  * @throws {Error} - Throws an error if the request fails or the response is invalid.
  */
 export async function createVirtualLab({
-  ...lab
-}: TVirtualLabPayload): Promise<TVirtualLabResponse> {
-  const session = await getSession();
-  const response = await fetch(getBaseUrl(), {
-    method: 'post',
+  name,
+  description,
+  entity,
+}: TVirtualLabPayload): Promise<TVirtualLab> {
+  const api = await virtualLabRootApi();
+  return await api.post('/virtual-labs', {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
     },
-    body: JSON.stringify({ ...lab, description: '' }),
+    body: { name, description: description ?? '', entity },
   });
-
-  if (!response.ok) {
-    const res = await response.json();
-    throw new Error(`creating virtual lab failed`, { cause: res });
-  }
-
-  const result: TVirtualLabResponse = await response.json();
-  return result;
-}
-
-/**
- * List all virtual labs for a user.
- *
- * @returns {Promise<TVirtualLabResponse[]>} - api response with the list of virtual labs.
- * @throws {Error} - Throws an error if the request fails or the response is invalid.
- */
-
-export async function listVirtualLabs({
-  include = [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS, LabTypeEnum.PENDING_LABS],
-  page = 1,
-  size = 10,
-  query = '',
-}: {
-  include: Array<LabTypeEnum>;
-  page?: number;
-  size?: number;
-  query?: string;
-}): Promise<TVirtualLabListResponse> {
-  const session = await getSession();
-  const params = new URLSearchParams({
-    page: page.toString(),
-    size: size.toString(),
-    ...(!isEmpty(query) ? { query } : {}),
-  });
-  for (const item of include) {
-    params.append('include', item);
-  }
-  const url = `${getBaseUrl()}?${params.toString()}`;
-
-  const response = await fetch(url, {
-    method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    cache: 'no-store',
-    next: {
-      tags: ['list-virtual-labs'],
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`listing virtual labs failed`, { cause: await response.json() });
-  }
-
-  const result: TVirtualLabListResponse = await response.json();
-  return result;
 }
 
 /**
@@ -134,22 +163,20 @@ export async function listVirtualLabs({
  * @returns {Promise<TVirtualLabResponse>} - API response with the virtual lab details
  * @throws {Error} - Throws an error if the request fails or the response is invalid
  */
-export async function getVirtualLab(id: string): Promise<TVirtualLabResponse> {
-  const session = await getSession();
-  const response = await fetch(`${getBaseUrl()}/${id}`, {
-    method: 'get',
+export async function getVirtualLab({
+  id,
+  expand,
+}: {
+  id: string;
+  expand?: Array<TGetVirtualLabExpandParam>;
+}) {
+  const api = await virtualLabRootApi();
+  return await api.get<IVirtualLabExpandedResponse>(`/virtual-labs/${id}`, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
     },
+    queryParams: { expand },
   });
-
-  if (!response.ok) {
-    throw new Error(`getting virtual lab failed`, { cause: await response.json() });
-  }
-
-  const result: TVirtualLabResponse = await response.json();
-  return result;
 }
 
 export interface VirtualLabUpdate {

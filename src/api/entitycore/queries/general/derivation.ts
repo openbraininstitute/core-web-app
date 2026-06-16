@@ -3,14 +3,38 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type {
   IDerivationBase,
   IDerivationFilter,
+  IDerivationForwardFilter,
+  IDerivationRead,
 } from '@/api/entitycore/types/entities/derivation';
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 import type { KebabCase, NormalizeChars } from '@/utils/type';
 
+const DerivationBaseUri = '/derivation';
+
+export async function searchDerivations({
+  filters,
+  context,
+}: {
+  filters: IDerivationForwardFilter;
+  context?: WorkspaceContext | null;
+}): Promise<EntityCoreResponse<IDerivationRead>> {
+  const api = await entityCoreApi();
+  return await api.get<EntityCoreResponse<IDerivationRead>>(DerivationBaseUri, {
+    queryParams: {
+      ...filters,
+    },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
 /**
- * Retrieves derivations for a specific entity using the provided route, entity ID, and filter parameters.
+ * Retrieves derivations for a specific entity using the provided route, entity id, and filter parameters.
  *
  * @param params - The parameters for the derivation query.
  * @param params.entityRoute - The API route for the entity.

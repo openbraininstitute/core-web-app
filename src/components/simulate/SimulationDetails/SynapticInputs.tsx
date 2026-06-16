@@ -1,6 +1,7 @@
 import { renderAsString, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { SynaptomeConfig } from '@/types/small-scale-simulator/single-neuron';
 import { classNames } from '@/util/utils';
+
+import type { SynaptomeConfig } from '@/types/small-scale-simulator/single-neuron';
 
 type Props = {
   synapses: SynaptomeConfig;
@@ -18,11 +19,11 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={classNames('text-primary-7 mr-10 mb-4', className)}>
+    <div className={classNames(' mr-10 mb-4', className)}>
       <div className="text-neutral-4 text-sm uppercase">{label}</div>
       <div>
-        <span className="mr-2 font-bold">{value}</span>
-        {unit && <span>[{unit}]</span>}
+        <span className="mr-2 font-bold text-primary-8">{value}</span>
+        {unit && <span className="text-primary-8">[{unit}]</span>}
       </div>
     </div>
   );

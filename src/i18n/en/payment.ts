@@ -2,6 +2,11 @@ export const messages = {
   paymentProcessingErrorTitle: 'Payment processing error',
   paymentMethodSaveError:
     'We couldn’t save your payment method. Please try again, or use a different card.',
+  paymentProcessingErrorBillingCountryMismatch:
+    'The billing country must match your card’s country. Update your billing address to match your card, then click Pay again.',
+  setupIntentSessionExpired:
+    'This payment session has expired. Please close this window and start the payment process again.',
+  creditsAmountRequired: 'Enter the number of credits you want to purchase.',
   paymentProcessingErrorFallback:
     "We couldn't process your payment. Please check your card details and try again.",
   paymentSuccess: `Successfully purchased $$credits credits for $$price`,

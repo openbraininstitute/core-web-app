@@ -5,6 +5,7 @@ import { hasAssets } from '@/api/entitycore/guards';
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { WorkspaceSection } from '@/constants';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -20,6 +21,10 @@ import {
   renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
+import {
+  type FieldsDefinitionRegistry,
+  FilterOptionsSourceKind,
+} from '@/entity-configuration/definitions/types';
 import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
 import { isNumber } from '@/util/type-guards';
 
@@ -29,7 +34,6 @@ import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
@@ -180,11 +184,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       {
         types: [
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
           ExtendedEntitiesTypeDict.PairedNeuronCircuit,
           ExtendedEntitiesTypeDict.SmallMicrocircuit,
           ExtendedEntitiesTypeDict.Microcircuit,
-          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
         ],
         property: 'order_by',
         value: 'number_neurons',
@@ -209,11 +212,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       {
         types: [
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
           ExtendedEntitiesTypeDict.PairedNeuronCircuit,
           ExtendedEntitiesTypeDict.SmallMicrocircuit,
           ExtendedEntitiesTypeDict.Microcircuit,
-          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
         ],
         property: 'order_by',
         value: 'number_synapses',
@@ -238,10 +240,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       {
         types: [
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
           ExtendedEntitiesTypeDict.Microcircuit,
           ExtendedEntitiesTypeDict.PairedNeuronCircuit,
-          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
           ExtendedEntitiesTypeDict.SmallMicrocircuit,
         ],
         property: 'order_by',
@@ -267,7 +268,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     order: [
       {
-        types: [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        types: [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
         property: 'order_by',
         value: 'build_category',
       },
@@ -287,28 +288,59 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-left',
     title: 'Scale',
     filter: CoreFieldFilterTypeEnum.DropdownList,
-    filterData: map(omit(CircuitScale, ['Single']), (item) => ({
-      label: item.label,
-      value: item.key,
-    })),
-    defaultConstraint: 'scale__in',
-    isFilterable: true,
-    isDisplayable: true,
     isSortable: true,
     order: [
       {
         types: [
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
           ExtendedEntitiesTypeDict.PairedNeuronCircuit,
           ExtendedEntitiesTypeDict.SmallMicrocircuit,
           ExtendedEntitiesTypeDict.Microcircuit,
-          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
         ],
         property: 'order_by',
         value: 'scale',
       },
     ],
+    presentation: {
+      column: {
+        available: {
+          default: true,
+        },
+      },
+      filter: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.Circuit,
+                section: [WorkspaceSection.Data],
+              },
+              value: true,
+            },
+          ],
+        },
+        constraint: {
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.Circuit,
+                section: [WorkspaceSection.Data],
+              },
+              value: 'scale__in',
+            },
+          ],
+        },
+        options: {
+          kind: FilterOptionsSourceKind.Static,
+          items: map(omit(CircuitScale, ['Single']), (item) => ({
+            label: item.label,
+            value: item.key,
+          })),
+        },
+      },
+    },
     render: (r) => renderEmptyOrValue(find(CircuitScale, { key: (r as ICircuit).scale })?.label),
     vocabulary: {
       plural: 'Scales',
@@ -383,7 +415,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Contact email',
     filter: null,
     isDisplayable: true,
-    render: (r) => renderEmptyOrValue(renderEmail((r as ICircuit).contact_email)),
+    render: (r, _, variant) =>
+      renderEmptyOrValue(renderEmail((r as ICircuit).contact_email, variant)),
     vocabulary: {
       plural: 'Contact emails',
       singular: 'Contact email',

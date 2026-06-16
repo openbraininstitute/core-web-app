@@ -5,6 +5,8 @@ import { get, isEqual, isString, pick } from 'es-toolkit/compat';
 import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
+import { useLowCredits } from '@/features/low-credits';
+import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import {
   BuildScanConfigTabs,
   ExtractScanConfigTabs,
@@ -15,8 +17,6 @@ import {
   type TScanConfigTabs,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { useCreditsAccessGuard } from '@/hooks/use-credits-access-guard';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { getTargetType } from '@/ui/segments/workflows/config';
@@ -25,10 +25,13 @@ import { assertErrorMessage, classNames } from '@/util/utils';
 import type { ErrorObject } from 'ajv';
 import type { Config } from '@/features/scan-config/types';
 
-const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
+const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
+  [ScanConfigActivity.Simulate]: 'run the simulation',
+  [ScanConfigActivity.Extract]: 'run the extraction',
+  [ScanConfigActivity.Process]: 'run the skeletonization',
+  [ScanConfigActivity.Build]: 'build the model',
+};
 
-// TODO: the credits checks are not straightforward
-// it must be a clean way to do it (to be checked in another PR)
 export default function GenerateConfigButton({
   loading,
   errors,
@@ -53,17 +56,20 @@ export default function GenerateConfigButton({
   entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
+  // ajv schema errors plus field-level errors (e.g. duplicate group names) that
+  // schema validation can't catch; either kind blocks generation
+  const fieldErrors = useFieldErrors();
+  const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
   const notification = useAppNotification();
-  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
   const queryClient = useQueryClient();
-  const { notifyCredits, shouldShowError } = useCreditsAccessGuard({
+  const {
+    guard,
+    reportError: reportLowCredits,
+    creditsModal,
+  } = useLowCredits({
     context: { virtualLabId, projectId },
-    message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
-    description: get(
-      messages,
-      `${activity}.InsufficientCreditsNonAdmin`,
-      messages[ScanConfigActivity.Simulate].InsufficientCreditsNonAdmin
-    ),
+    subject: LOW_CREDITS_SUBJECT[activity],
+    watchBalance: true,
   });
 
   const onTabChange = () => {
@@ -90,30 +96,53 @@ export default function GenerateConfigButton({
   };
 
   return (
-    <button
-      type="button"
-      className={classNames(
-        'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
-        (errors && errors.length > 0) || loading
-          ? 'bg-gray-300 text-gray-500'
-          : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
-      )}
-      onClick={async () => {
-        if (loading) return;
-        if (campaignId) {
-          setCampaignId('');
-          return;
-        }
-        if (shouldShowError) {
-          notifyCredits();
-          return;
-        }
+    <>
+      {creditsModal}
+      <button
+        type="button"
+        className={classNames(
+          'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
+          hasBlockingErrors || loading
+            ? 'bg-gray-300 text-gray-500'
+            : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
+        )}
+        onClick={async () => {
+          if (loading) return;
+          if (campaignId) {
+            setCampaignId('');
+            return;
+          }
+          if (guard()) return;
 
-        setLoading(true);
-        try {
-          const coordinateCountRes = await authFetch(
-            `${appConfig.OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
-            {
+          setLoading(true);
+          try {
+            const coordinateCountRes = await authFetch(
+              `${appConfig.OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
+              {
+                method: 'POST',
+                body: JSON.stringify(config),
+                headers: {
+                  Accept: 'application/json',
+                  'Content-Type': 'application/json',
+                  'virtual-lab-id': virtualLabId,
+                  'project-id': projectId,
+                },
+              }
+            );
+
+            if (!coordinateCountRes.ok) {
+              const message = await coordinateCountRes.json();
+              if (reportLowCredits(message)) return;
+
+              const detailStr = typeof message?.detail === 'string' ? message.detail : '';
+              notification.error({
+                message: get(messages, `${activity}.CoordinateCountFailed`),
+                description: detailStr || (message?.detail ?? 'Unknown error'),
+              });
+              return;
+            }
+
+            const res = await authFetch(generatedApiUrl, {
               method: 'POST',
               body: JSON.stringify(config),
               headers: {
@@ -122,112 +151,68 @@ export default function GenerateConfigButton({
                 'virtual-lab-id': virtualLabId,
                 'project-id': projectId,
               },
-            }
-          );
+            });
 
-          if (!coordinateCountRes.ok) {
-            const message = await coordinateCountRes.json();
-            const detailStr = typeof message?.detail === 'string' ? message.detail : '';
-            const isLowFunds =
-              message?.error_code === LOW_FUNDS_ERROR_CODE ||
-              detailStr.toLowerCase().includes('insufficient') ||
-              detailStr.toLowerCase().includes('credits');
+            if (res.status !== 200) {
+              const errorRes = await res.json();
+              if (reportLowCredits(errorRes)) return;
 
-            if (isLowFunds && !isVirtualLabAdmin) {
-              notifyCredits();
-            } else {
-              notification.error({
-                message: get(messages, `${activity}.CoordinateCountFailed`),
-                description: detailStr || (message?.detail ?? 'Unknown error'),
-              });
-            }
-            return;
-          }
-
-          const res = await authFetch(generatedApiUrl, {
-            method: 'POST',
-            body: JSON.stringify(config),
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              'virtual-lab-id': virtualLabId,
-              'project-id': projectId,
-            },
-          });
-
-          if (res.status !== 200) {
-            const errorRes = await res.json();
-
-            const isLowFundsFromApi =
-              errorRes?.error_code === LOW_FUNDS_ERROR_CODE ||
-              (typeof errorRes?.detail === 'string' &&
-                (errorRes.detail.toLowerCase().includes('insufficient') ||
-                  errorRes.detail.toLowerCase().includes('credits')));
-
-            // When non-admin gets any error: show credits message. Backend may return
-            // misleading errors (sonata_circuit, no calibration result, etc.) when
-            // the real issue is insufficient credits.
-            const shouldShowCreditsMessage = isLowFundsFromApi && !isVirtualLabAdmin;
-
-            if (shouldShowCreditsMessage) {
-              notifyCredits();
-            } else {
               const details =
                 res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
               notification.error({
                 message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
                 description: details,
               });
+              return;
             }
-            return;
-          }
 
-          const returnedCampaignId = (await res.json()) as string;
-          if (returnedCampaignId === '') {
-            notification.error({
-              message: get(messages, `${activity}.ScanConfigGenerateGridCampaignIdFailed`),
+            const returnedCampaignId = (await res.json()) as string;
+            if (returnedCampaignId === '') {
+              notification.error({
+                message: get(messages, `${activity}.ScanConfigGenerateGridCampaignIdFailed`),
+              });
+              return;
+            }
+            queryClient.invalidateQueries({
+              predicate: (query) => {
+                const baseQueryKey = query.queryKey.at(0);
+                const filtersQueryKey = query.queryKey.at(1);
+                if (
+                  isString(baseQueryKey) &&
+                  baseQueryKey.startsWith('workspace/activities') &&
+                  isEqual(
+                    pick(filtersQueryKey, ['virtualLabId', 'projectId', 'activity', 'entityType']),
+                    {
+                      virtualLabId,
+                      projectId,
+                      activity,
+                      entityType: getTargetType({ activity, sourceType: entityType }),
+                    }
+                  )
+                ) {
+                  return true;
+                }
+                return false;
+              },
             });
+            setCampaignId(returnedCampaignId);
+            onTabChange();
+          } catch (e) {
+            notification.error({ message: assertErrorMessage(e) });
             return;
+          } finally {
+            setLoading(false);
           }
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const baseQueryKey = query.queryKey.at(0);
-              const filtersQueryKey = query.queryKey.at(1);
-              if (
-                isString(baseQueryKey) &&
-                baseQueryKey.startsWith('workspace/activities') &&
-                isEqual(
-                  pick(filtersQueryKey, ['virtualLabId', 'projectId', 'activity', 'entityType']),
-                  {
-                    virtualLabId,
-                    projectId,
-                    activity,
-                    entityType: getTargetType({ activity, sourceType: entityType }),
-                  }
-                )
-              ) {
-                return true;
-              }
-              return false;
-            },
-          });
-          setCampaignId(returnedCampaignId);
-          onTabChange();
-        } catch (e) {
-          notification.error({ message: assertErrorMessage(e) });
-          return;
-        } finally {
-          setLoading(false);
-        }
-      }}
-      disabled={!!(errors && errors.length > 0) || loading}
-    >
-      <div className="flex justify-between gap-5">
-        {!campaignId
-          ? get(messages, `${activity}.Generate`, 'Generate campaign')
-          : get(messages, `${activity}.New`, 'New campaign')}
-        {loading && <LoadingOutlined />}
-      </div>
-    </button>
+        }}
+        disabled={hasBlockingErrors || loading}
+      >
+        <div className="flex justify-between gap-5">
+          {!campaignId
+            ? get(messages, `${activity}.Generate`, 'Generate campaign')
+            : get(messages, `${activity}.New`, 'New campaign')}
+          {loading && <LoadingOutlined />}
+        </div>
+      </button>
+    </>
   );
 }

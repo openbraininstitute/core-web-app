@@ -14,16 +14,20 @@ import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
+import { useLowCredits } from '@/features/low-credits';
 import { messages } from '@/i18n/en/synaptome';
-import useWorkspace from '@/ui/hooks/use-workspace';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ActivityValues } from '@/ui/segments/workflows/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '../../helpers';
 
+import type { ReactNode } from 'react';
+
 export function useBuildSynaptome(sessionId: string): {
   isPending: boolean;
   buildSynaptome: () => Promise<{ entity: ISingleNeuronSynaptome } | undefined>;
+  creditsModal: ReactNode;
 } {
   const { sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
@@ -32,6 +36,9 @@ export function useBuildSynaptome(sessionId: string): {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
+  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
+    subject: 'build the synaptome',
+  });
   const mutate = useMutation({
     mutationFn: () => buildSynaptome(virtualLabId, projectId, sessionValue),
     onSuccess: (data) => {
@@ -51,13 +58,10 @@ export function useBuildSynaptome(sessionId: string): {
       }, 500);
     },
     onError: (error) => {
-      const errorMessage =
-        (error as any)?.cause?.error_code === 'INSUFFICIENT_FUNDS'
-          ? messages.LowFundsError
-          : messages.CreationModelFailed;
+      if (reportLowCredits(error)) return;
       notification.error({
-        message: errorMessage,
-        duration: 7,
+        message: messages.CreationModelFailed,
+        duration: 5,
         placement: 'topRight',
         key: 'synaptome-config',
       });
@@ -88,6 +92,7 @@ export function useBuildSynaptome(sessionId: string): {
   return {
     isPending: mutate.isPending,
     buildSynaptome: () => mutate.mutateAsync(),
+    creditsModal,
   };
 }
 
@@ -135,7 +140,8 @@ const buildSynaptome = async (
         },
       })
     );
-    if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
+
+    if (error) throw error;
 
     return {
       entity: data.data,

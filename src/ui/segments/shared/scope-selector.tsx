@@ -51,23 +51,28 @@ export function TabsSelector({
       id={id}
       data-testid={id}
       value={activeTab}
-      className={cn('w-full', className)}
+      className={cn('w-full min-w-0 shrink-0', className)}
       activationMode="manual"
       onValueChange={onValueChange}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-md ml-0.5', {
-          'h-12': breakpoint === 'xl',
-        })}
+        className={cn(
+          'grid h-10 w-full grid-cols-2 bg-white p-0 shadow-md ml-0.5 min-w-0 shrink-0',
+          {
+            'h-12': breakpoint === 'xl',
+          }
+        )}
       >
         {items.map((tab) => (
           <PillTabsTrigger
+            id={`scope-selector-tab-${tab.key}`}
+            data-testid={`scope-selector-tab-${tab.key}`}
             key={tab.key}
             value={tab.key}
             disabled={tab.disabled}
             className={cn(
-              'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3',
-              'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
+              'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 min-w-0',
+              'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white shrink-0',
               { 'h-12': breakpoint === 'xl' }
             )}
           >

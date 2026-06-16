@@ -6,7 +6,7 @@ export const MODEL_DATATYPES = [
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.MemodelCircuit,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-  ExtendedEntitiesTypeDict.MEModelWithSynapses,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
 ] as const;
 
 export enum ModelTypeNames {

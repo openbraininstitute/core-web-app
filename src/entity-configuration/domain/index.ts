@@ -15,13 +15,13 @@ import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
-import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
-import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
+import { Microcircuit } from '@/entity-configuration/domain/model/microcircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
+import { WholeBrain } from '@/entity-configuration/domain/model/whole-brain';
 import { Notebook } from '@/entity-configuration/domain/notebook';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
@@ -36,6 +36,7 @@ import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/sim
 import { RegionCircuitSimulation } from '@/entity-configuration/domain/simulation/region-circuit-simulation';
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -58,16 +59,16 @@ export const EntityCoreModelConfiguration = {
   MEmodel,
   MEModelCircuit,
   SingleNeuronSynaptome,
-  SingleNeuronCircuit,
   PairedNeuronCircuit,
   SmallMicrocircuit,
   Microcircuit,
   BrainRegion,
+  WholeBrain,
   Circuit,
   IonChannelModel,
   IonChannelModelingCampaign,
   EmSynapseMappingCampaign,
-  MEModelWithSynapsesCircuit,
+  SingleNeuronCircuit,
   SynthesizedCellMorphology,
 } as const;
 
@@ -82,6 +83,7 @@ const EntityCoreSimulationConfiguration = {
   MicrocircuitSimulation,
   IonChannelModelSimulation,
   RegionCircuitSimulation,
+  WholeBrainCircuitSimulation,
 };
 
 const EntityCoreExtractionConfiguration = {

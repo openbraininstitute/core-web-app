@@ -1,13 +1,14 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForSingleNeuronCircuit: ViewDefinitionConfig = {
-  title: 'Single neuron',
+  title: 'Synaptome (beta)',
   name: EntitySlug.SingleNeuronCircuit,
   curated: false,
   columns: [
+    EntityCoreFields.Download,
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.BrainRegion,
@@ -20,15 +21,22 @@ export const ViewDefForSingleNeuronCircuit: ViewDefinitionConfig = {
     EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [
-    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.CircuitScale },
-    { field: EntityCoreFields.CircuitSubCircuit },
-    { field: EntityCoreFields.CircuitNumberNeurons },
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.CircuitNumberSynapses },
     { field: EntityCoreFields.CircuitNumberConnections },
     { field: EntityCoreFields.CircuitBuildCategory },
     { field: EntityCoreFields.RegistrationDate },
     { field: EntityCoreFields.License },
+  ],
+  summaryViewFields: [
+    { field: EntityCoreFields.BrainRegion },
+    { field: EntityCoreFields.CircuitRootCircuit },
+    { field: EntityCoreFields.License },
+    { field: EntityCoreFields.CircuitNumberConnections },
+    { field: EntityCoreFields.CircuitNumberSynapses },
+    { field: EntityCoreFields.ArtifactPublishedIn },
+    { field: EntityCoreFields.ArtifactExperimentDate },
+    { field: EntityCoreFields.ArtifactContactEmail },
   ],
 };

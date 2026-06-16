@@ -28,12 +28,14 @@ type VerificationCodeFormProps = {
   email: string;
   virtualLabId: string;
   onVerificationComplete?: () => void;
+  classname?: string;
 };
 
 export function VerificationCodeForm({
   email,
   virtualLabId,
   onVerificationComplete,
+  classname,
 }: VerificationCodeFormProps) {
   const queryClient = useQueryClient();
   const [otpKey, setOtpKey] = useState(0);
@@ -127,11 +129,18 @@ export function VerificationCodeForm({
   );
 
   return (
-    <div className="flex flex-col gap-8 items-center justify-center mx-auto relative rounded-md p-10">
-      <div className="flex flex-col items-center justify-center text-white">
+    <div
+      id="verification-code-form"
+      data-testid="verification-code-form"
+      className={cn(
+        'flex flex-col gap-8 items-center justify-center mx-auto relative rounded-md p-10',
+        classname
+      )}
+    >
+      <div className="flex flex-col items-center justify-center text-primary-9">
         <h4 className="font-semibold text-2xl">Enter Verification Code</h4>
         <p className="text-lg">
-          We sent a 6-digit code to <strong className="text-white">{email}</strong>
+          We sent a 6-digit code to <strong className="text-primary-9">{email}</strong>
         </p>
       </div>
 
@@ -142,7 +151,7 @@ export function VerificationCodeForm({
             cls={{
               container: cn('bg-white'),
               slot: cn('bg-white h-18 w-13 font-bold text-primary-8', {
-                'bg-destructive/40 text-white border-none': isNotMatch && code?.length === 6,
+                'bg-destructive/90 text-white border-none': isNotMatch && code?.length === 6,
               }),
               caret: 'text-primary-9 [&_#caret]:bg-primary-8!',
             }}
@@ -156,19 +165,22 @@ export function VerificationCodeForm({
         </form>
 
         {isNotMatch && (
-          <p className="text-center text-red-300 text-sm">
+          <p className="text-center text-destructive text-sm">
             Incorrect code. {verifyStatus?.data?.remaining_attempts ?? 0} attempt(s) remaining.
           </p>
         )}
 
         {isVerifyLocked && (
-          <div className="flex flex-col items-center justify-center text-white">
-            <p>Too many incorrect attempts. Please wait before trying again.</p>
+          <div className="flex flex-col items-center justify-center text-primary-9">
+            <div className="flex flex-col gap-1 items-center justify-center">
+              <p>Too many incorrect attempts.</p>
+              <p>Please wait before trying again.</p>
+            </div>
             <Timer
-              className="text-white!"
+              className="text-primary-9!"
               type="countdown"
               value={verifyLockDeadline}
-              valueStyle={{ color: 'white' }}
+              valueStyle={{ color: '#003a8c' }}
               onFinish={() =>
                 queryClient.invalidateQueries({
                   queryKey: ['get-email-verify-status', { virtualLabId, email }],
@@ -179,7 +191,7 @@ export function VerificationCodeForm({
         )}
 
         {isCodeExpired && !isGenerationLocked && (
-          <div className="flex flex-col items-center justify-center text-white gap-2">
+          <div className="flex flex-col items-center justify-center text-primary-9 gap-2">
             <p>Your code has expired. Please request a new one.</p>
             <Button
               rounded
@@ -187,7 +199,7 @@ export function VerificationCodeForm({
               onClick={() => generateNewCode()}
               variant="outline"
               size="lg"
-              className="border-white w-82"
+              className="border-gray-200 w-82"
               disabled={pendingGeneration}
             >
               {pendingGeneration ? (
@@ -195,7 +207,7 @@ export function VerificationCodeForm({
               ) : (
                 <RiMailSendLine className="text-primary-8" />
               )}
-              <span>Send new verification email</span>
+              <span className="text-primary-8">Send new verification email</span>
             </Button>
           </div>
         )}
@@ -209,22 +221,22 @@ export function VerificationCodeForm({
             }}
             variant="outline"
             size="lg"
-            className="border-white w-82 mx-auto"
+            className="border-gray-200 w-82 mx-auto"
             disabled={code?.trim()?.length !== 6 || pendingSubmit}
           >
             {pendingSubmit && <LoadingOutlined />}
-            <span>Verify code</span>
+            <span className="text-primary-8">Verify code</span>
           </Button>
         )}
 
         {isGenerationLocked && (
-          <div className="flex flex-col items-center justify-center text-white">
+          <div className="flex flex-col items-center justify-center text-primary-9">
             <p>Too many code requests. Please wait before requesting again.</p>
             <Timer
-              className="text-white!"
+              className="text-primary-9!"
               type="countdown"
               value={generationLockDeadline}
-              valueStyle={{ color: 'white' }}
+              valueStyle={{ color: 'primary-9' }}
               onFinish={() =>
                 queryClient.invalidateQueries({
                   queryKey: ['get-email-initial-verification-status', { virtualLabId, email }],
@@ -236,7 +248,7 @@ export function VerificationCodeForm({
       </div>
 
       {canSubmitCode && !isGenerationLocked && (
-        <div className="flex flex-col items-center justify-center gap-2.5 text-white">
+        <div className="flex flex-col items-center justify-center gap-2.5 text-primary-9">
           Didn't receive the code?
           <Button
             rounded
@@ -246,7 +258,11 @@ export function VerificationCodeForm({
             className="w-max underline disabled:pointer-events-none disabled:cursor-not-allowed"
             disabled={pendingGeneration}
           >
-            {pendingGeneration ? <LoadingOutlined /> : 'Resend Code'}
+            {pendingGeneration ? (
+              <LoadingOutlined />
+            ) : (
+              <span className="text-primary-8">Resend Code</span>
+            )}
           </Button>
         </div>
       )}

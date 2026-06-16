@@ -1,7 +1,9 @@
+'use client';
+
 import $RefParser from '@apidevtools/json-schema-ref-parser';
-import { useQuery } from '@tanstack/react-query';
+import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -21,19 +23,45 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { applyWorkflowSessionSelectionPatch } from '@/features/scan-config/workflow/workflow-session-selection';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { Nullish } from '@/utils/type';
 
+const OBI_ONE_JSON_SCHEMA_STALE_TIME_MS = Number.POSITIVE_INFINITY;
+
+function obiOneJsonSchemaQueryOptions(schemaName: SchemaName) {
+  return {
+    queryKey: keyBuilder.obiOneJsonSchema(schemaName),
+    queryFn: () => fetchSchema({ schemaName }),
+    staleTime: OBI_ONE_JSON_SCHEMA_STALE_TIME_MS,
+  } as const;
+}
+
+export async function fetchObiOneJsonSchema(opts: {
+  qc?: QueryClient;
+  schemaName: SchemaName;
+}): Promise<ConfigSchema> {
+  if (opts.qc) {
+    return opts.qc.fetchQuery(obiOneJsonSchemaQueryOptions(opts.schemaName));
+  }
+
+  return fetchSchema({ schemaName: opts.schemaName });
+}
+
 export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | undefined }) {
   const { data: schema, isLoading } = useQuery({
-    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
-    queryKey: keyBuilder.obiOneJsonSchema(schemaName!),
-    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
-    queryFn: () => fetchSchema({ schemaName: schemaName! }),
-    // keep data fresh indefinitely to prevent atom regeneration on window focus
-    staleTime: Infinity,
+    ...(schemaName
+      ? obiOneJsonSchemaQueryOptions(schemaName)
+      : {
+          queryKey: ['obi-one-json-schema', 'disabled'] as const,
+          queryFn: (): Promise<ConfigSchema> =>
+            Promise.reject(new Error('useObioneJsonSchema: schemaName is required')),
+          enabled: false,
+        }),
     refetchOnWindowFocus: false,
     enabled: !!schemaName,
   });
@@ -113,12 +141,19 @@ export function isRootBlock(schema: ConfigSchema, key: string) {
   );
 }
 
-async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
+export function isRootBlockSingle(schema: ConfigSchema, key: string) {
+  return (
+    schema.properties?.[key] &&
+    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockUnion
+  );
+}
+
+export async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
   const json = await res.json();
   const dereferenced = await $RefParser.dereference(json);
 
-  // @ts-expect-error
+  // @ts-expect-error: dereferenced is a JSONSchema6 object, but we know it has the components property
   const theSchema = dereferenced.components.schemas[schemaName] as ConfigSchema;
 
   return theSchema;
@@ -126,7 +161,7 @@ async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
 
 const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.Memodel]: 'MEModelFromID',
-  [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'MEModelWithSynapsesCircuitFromID',
+  [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: 'MEModelWithSynapsesCircuitFromID',
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
 };
@@ -178,7 +213,7 @@ function buildInitialConfigState(
                 type: EntityTypeDict.Circuit,
                 scale: CircuitScaleDictionary.Single,
               },
-              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.SingleNeuronCircuit]
             )
             .with(
               { type: EntityTypeDict.Circuit },
@@ -207,15 +242,22 @@ function buildInitialConfigState(
               { type: EntityTypeDict.CellMorphology },
               () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
             )
+            .with(
+              { type: EntityTypeDict.Memodel },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+            )
             .otherwise(() => {
               throw new Error(`Unsupported entity type: ${model.type}`);
             });
-          initialConfigforKey[subkey] = [
-            {
-              type: formModelType,
-              id_str: model.id,
-            },
-          ];
+
+          if (formModelType) {
+            initialConfigforKey[subkey] = [
+              {
+                type: formModelType,
+                id_str: model.id,
+              },
+            ];
+          }
         }
       });
 
@@ -237,18 +279,144 @@ function buildInitialConfigState(
   return state;
 }
 
+/**
+ * determines whether browse {@link applyWorkflowSessionSelectionPatch session selection}
+ * should overwrite the initialize model field when building editor state
+ *
+ * @returns `true` only for fresh configure flows (no origin campaign). Returns `false`
+ *   when session/resolver inputs are missing, or when an origin campaign config is
+ *   already available
+ *
+ * @remarks
+ * resume and duplicate URLs pass `?origin=` and load `initialConfig` from the stored
+ * campaign form. Patching session selection on top would replace grouped model inputs
+ * (e.g. EM synapse mapping neuron sets) with a partial browse selection
+ */
+function shouldApplyWorkflowSessionSelection(opts: {
+  origin?: string;
+  initialConfig?: Config;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+}): boolean {
+  if (!opts.workflowSessionSelection || !opts.resolveFromIdType) {
+    return false;
+  }
+
+  if (opts.origin || opts.initialConfig) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * builds the scan-config editor state from schema defaults, optional origin form,
+ * entity model, and optional workflow browse session selection
+ *
+ * session selection is applied only when {@link shouldApplyWorkflowSessionSelection}
+ * returns `true`; otherwise the origin/initial form is returned unchanged
+ *
+ * @param schema: scan-config schema
+ * @param initialConfig: optional origin form
+ * @param model: entity model
+ * @param workflowSessionSelection: optional workflow browse session selection
+ * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
+ * @param origin: optional campaign id from `?origin=` when resuming or duplicating
+ * @returns the scan-config editor state
+ */
+function buildConfigState(
+  schema: ConfigSchema,
+  initialConfig: Config | undefined,
+  model: TSupportedEntitiesForScanConfiguration | Nullish,
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null,
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined,
+  origin?: string
+): Config {
+  const baseConfig = buildInitialConfigState(schema, initialConfig, model);
+
+  // new browse → configure: seed the initialize model field from sessionStorage
+  // duplicate/resume: keep origin campaign form; session selection is route-only
+  if (
+    !shouldApplyWorkflowSessionSelection({
+      origin,
+      initialConfig,
+      workflowSessionSelection,
+      resolveFromIdType,
+    })
+  ) {
+    return baseConfig;
+  }
+
+  if (!workflowSessionSelection || !resolveFromIdType) {
+    return baseConfig;
+  }
+
+  return applyWorkflowSessionSelectionPatch({
+    config: baseConfig,
+    schema,
+    sessionSelection: workflowSessionSelection,
+    resolveFromIdType,
+  });
+}
+
+/**
+ * hook for the scan-config form blob (`config` + `setConfig`).
+ *
+ * @param origin: campaign id from `?origin=` when resuming or duplicating
+ * when set, session selection is not merged into the form (see
+ * {@link shouldApplyWorkflowSessionSelection})
+ *
+ * @param schema: scan-config schema
+ * @param initialConfig: optional origin form
+ * @param model: entity model
+ * @param workflowSessionSelection: optional workflow browse session selection
+ * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
+ * @returns the scan-config form blob (`config` + `setConfig`)
+ */
 export function useConfig({
   schema,
   initialConfig,
   model,
+  origin,
+  workflowSessionSelection,
+  resolveFromIdType,
 }: {
   schema: ConfigSchema;
   initialConfig?: Config;
   model: TSupportedEntitiesForScanConfiguration | Nullish;
+  origin?: string;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 }) {
   const [configState, setConfigState] = useState<Config>(() =>
-    buildInitialConfigState(schema, initialConfig, model)
+    buildConfigState(
+      schema,
+      initialConfig,
+      model,
+      workflowSessionSelection,
+      resolveFromIdType,
+      origin
+    )
   );
+  const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
+
+  useEffect(() => {
+    if (appliedInitialConfigRef.current === initialConfig) {
+      return;
+    }
+
+    appliedInitialConfigRef.current = initialConfig;
+    setConfigState(
+      buildConfigState(
+        schema,
+        initialConfig,
+        model,
+        workflowSessionSelection,
+        resolveFromIdType,
+        origin
+      )
+    );
+  }, [initialConfig, model, origin, resolveFromIdType, schema, workflowSessionSelection]);
 
   return [configState, setConfigState] as const;
 }

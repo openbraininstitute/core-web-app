@@ -74,6 +74,8 @@ export type TCircuitScaleDictionary =
 export type TCircuitBuildCategoryDictionary =
   (typeof CircuitBuildCategory)[keyof typeof CircuitBuildCategory]['key'];
 
+export type TCircuitTargetSimulator = 'NEURON' | 'Brian2' | 'LearningEngine';
+
 interface CircuitBase {
   description: string;
   number_neurons: number;
@@ -85,6 +87,8 @@ interface CircuitBase {
   experiment_date: string | null;
   contact_email: string | null;
   published_in: string | null;
+  has_electrical_cell_models: boolean;
+  target_simulator: TCircuitTargetSimulator | null;
 }
 
 export interface ICircuit
@@ -107,7 +111,9 @@ export interface ICircuitFilter
     SharedFilter,
     PaginationFilter,
     CircuitScaleFilter,
-    IlikeSearchFilter {}
+    IlikeSearchFilter {
+  has_electrical_cell_models?: boolean;
+}
 
 export type SonataCircuitNetworkEdgeConfigItem = {
   edges_file: string;

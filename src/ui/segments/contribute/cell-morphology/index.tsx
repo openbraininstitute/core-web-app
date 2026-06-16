@@ -81,7 +81,7 @@ export function CellMorphology({ sessionId }: ICellMorphologyProps) {
     <ContributionForm
       config={cellMorphologyConfig}
       sessionId={sessionId}
-      brainRegionId={selectedBrainRegion?.id!}
+      brainRegionId={selectedBrainRegion?.id ?? null}
       pipeline={useCellMorphologyPipeline}
       progressSteps={CELL_MORPHOLOGY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}

@@ -6,7 +6,7 @@ import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import { useSession } from 'next-auth/react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   BillingQuoteRequestFlowDict,
@@ -16,12 +16,17 @@ import { useAppNotification } from '@/components/notification';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
 import PricingToggleCards from '@/features/payments/subscription/pricing-toggle-cards';
-import { DefaultCurrency, flowAtom } from '@/features/payments/subscription/shared';
+import { DefaultCurrency, FlowStepDict, flowAtom } from '@/features/payments/subscription/shared';
 import {
-  confirmStripeSetupPaymentMethod,
-  StripeSetupConfirmationError,
-} from '@/features/stripe/confirm-setup';
-import { useSetupIntentQuery, useStripeInstanceQuery } from '@/features/stripe/hooks';
+  getBackendPaymentErrorDescription,
+  getStripeSetupErrorDescription,
+  isSetupIntentConsumedError,
+} from '@/features/stripe/errors';
+import {
+  resolvePaymentMethodId,
+  useSetupIntentQuery,
+  useStripeInstanceQuery,
+} from '@/features/stripe/hooks';
 import {
   BillingAddressElement,
   BillingCardElement,
@@ -30,12 +35,12 @@ import {
 import { messages } from '@/i18n/en/payment';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
 import { useCreateSubscriptionMutation } from './hooks';
 
+import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
 import type { User } from 'next-auth';
 import type {
   CreditConversionResponse,
@@ -44,6 +49,7 @@ import type {
 
 type Props = {
   onPrevious: () => void;
+  onSetupIntentRefreshNeeded: () => Promise<void>;
 };
 
 const notificationConfig = {
@@ -51,7 +57,7 @@ const notificationConfig = {
   key: 'subscription-payment-error',
 };
 
-function Form({ onPrevious }: Props) {
+function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
   const { virtualLabId } = useWorkspace();
   const queryClient = useQueryClient();
   const elements = useElements();
@@ -62,6 +68,8 @@ function Form({ onPrevious }: Props) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const [isSubscribing, setSubscribing] = useState(false);
   const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
+  const [cachedPaymentMethodId, setCachedPaymentMethodId] = useState<string | null>(null);
+  const cachedPaymentMethodIdRef = useRef<string | null>(null);
   const { success: successNotify, error: errorNotify } = useAppNotification();
   const createSubscription = useCreateSubscriptionMutation();
 
@@ -117,6 +125,28 @@ function Form({ onPrevious }: Props) {
     quote.isFetching ||
     isSubscribing;
 
+  const cachePaymentMethodId = useCallback((paymentMethodId: string) => {
+    cachedPaymentMethodIdRef.current = paymentMethodId;
+    setCachedPaymentMethodId(paymentMethodId);
+  }, []);
+
+  const clearCachedPaymentMethodId = useCallback(() => {
+    cachedPaymentMethodIdRef.current = null;
+    setCachedPaymentMethodId(null);
+  }, []);
+
+  const handleCardChange = useCallback(
+    (event: StripePaymentElementChangeEvent) => {
+      if (isSubscribing || !cachedPaymentMethodIdRef.current || event.empty) {
+        return;
+      }
+
+      clearCachedPaymentMethodId();
+      void onSetupIntentRefreshNeeded();
+    },
+    [clearCachedPaymentMethodId, isSubscribing, onSetupIntentRefreshNeeded]
+  );
+
   const onSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -127,23 +157,24 @@ function Form({ onPrevious }: Props) {
 
     let paymentMethodId: string;
     try {
-      paymentMethodId = await confirmStripeSetupPaymentMethod({
+      paymentMethodId = await resolvePaymentMethodId({
         billingAddress: currentBillingAddress,
+        cachedPaymentMethodId,
         elements,
         returnUrl: window.location.href,
         stripe,
         user,
       });
+      cachePaymentMethodId(paymentMethodId);
     } catch (error) {
-      const description =
-        error instanceof StripeSetupConfirmationError && error.reason === 'missing_payment_method'
-          ? messages.paymentMethodSaveError
-          : error instanceof Error
-            ? (error.message ?? messages.paymentProcessingError)
-            : messages.paymentProcessingError;
+      if (isSetupIntentConsumedError(error)) {
+        clearCachedPaymentMethodId();
+        await onSetupIntentRefreshNeeded();
+      }
+
       errorNotify({
         message: messages.paymentProcessingErrorTitle,
-        description,
+        description: getStripeSetupErrorDescription(error),
         ...notificationConfig,
       });
       setSubscribing(false);
@@ -170,22 +201,14 @@ function Form({ onPrevious }: Props) {
           description: messages.subscriptionPaymentSuccessDescription,
           ...notificationConfig,
         });
-        makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
       }
+      clearCachedPaymentMethodId();
       setSubscribing(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
-      const errors = {
-        ENTITY_ALREADY_EXISTS: messages.subscriptionPaymentErrorEntityAlreadyExists,
-        ENTITY_NOT_CREATED: messages.subscriptionPaymentErrorEntityNotCreated,
-        ENTITY_NOT_FOUND: messages.subscriptionPaymentErrorEntityNotFound,
-        PAYMENT_ERROR: `We couldn’t process your payment because the billing country does not match the country associated with your payment method. Please verify your billing details and try again.`,
-        DEFAULT: messages.paymentProcessingError,
-      };
-      const description = get(errors, code, messages.paymentProcessingError);
       errorNotify({
         message: messages.paymentProcessingErrorTitle,
-        description,
+        description: getBackendPaymentErrorDescription(code, 'subscription'),
         ...notificationConfig,
       });
       setSubscribing(false);
@@ -196,17 +219,17 @@ function Form({ onPrevious }: Props) {
     <form
       data-testid="subscription-payment-from"
       name="stripe-payment-flow-step"
-      className="mx-auto flex h-full min-h-0 w-full flex-col overflow-y-auto primary-scrollbar px-4 py-6"
+      className="mx-auto flex h-full min-h-0 w-full flex-col overflow-y-auto secondary-scrollbar px-4 py-6"
       onSubmit={onSubmit}
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3">
         <PricingToggleCards />
         <BillingSummary
           quote={quote.data ?? null}
           conversion={billingSummaryFallback}
           loading={quote.isFetching}
         />
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-white">
+        <div className="rounded-2xl border border-gray-200 bg-white/5 p-4 text-primary-9">
           <div className="mb-4 font-semibold">Payment method</div>
           <div className="flex flex-col gap-4">
             <BillingAddressElement
@@ -220,6 +243,7 @@ function Form({ onPrevious }: Props) {
             <BillingCardElement
               disabled={isSubscribing}
               framed={false}
+              onChange={handleCardChange}
               onReady={() => setElementsReady(true)}
               paymentElementId="subscription-form"
             />
@@ -230,7 +254,11 @@ function Form({ onPrevious }: Props) {
               type="button"
               variant="ghost"
               size="lg"
-              className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
+              className={cn(
+                'w-max border border-none text-primary-9',
+                'shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]',
+                'hover:bg-gray-100'
+              )}
               disabled={isSubscribing}
               onClick={onPrevious}
             >
@@ -241,13 +269,7 @@ function Form({ onPrevious }: Props) {
               type="submit"
               variant="default"
               size="lg"
-              className={cn(
-                'border-primary-4! w-max border shadow-2xl',
-                'hover:bg-primary-8/40',
-                'hover:shadow-[1px_2px_4px_0px_#00000099]',
-                'shadow-[8px_12px_24px_0px_#00000099]',
-                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
-              )}
+              className={cn('w-max border border-none shadow-2xl text-white', 'hover:bg-primary-8')}
               disabled={disableForm}
             >
               <div className="flex items-center gap-2 px-6">
@@ -262,15 +284,25 @@ function Form({ onPrevious }: Props) {
   );
 }
 
-export default function PaymentForm({ onPrevious }: Props) {
+export default function PaymentForm({ onPrevious }: { onPrevious: () => void }) {
   const { step } = useAtomValue(flowAtom);
-  const setupIntent = useSetupIntentQuery({
-    enabled: step === 'pay',
+  const [elementsKey, setElementsKey] = useState(0);
+  const {
+    data: setupIntentData,
+    isLoading: isSetupIntentLoading,
+    refetch: refetchSetupIntent,
+  } = useSetupIntentQuery({
+    enabled: step === FlowStepDict.Pay,
     virtualLabId: 'subscription',
   });
-  const stripe = useStripeInstanceQuery({ enabled: step === 'pay' });
+  const stripe = useStripeInstanceQuery({ enabled: step === FlowStepDict.Pay });
 
-  if (setupIntent.isLoading || stripe.isLoading) {
+  const refreshSetupIntent = useCallback(async () => {
+    await refetchSetupIntent();
+    setElementsKey((currentKey) => currentKey + 1);
+  }, [refetchSetupIntent]);
+
+  if (isSetupIntentLoading || stripe.isLoading) {
     return (
       <div className="flex h-full grow items-center justify-center py-7">
         <Spin size="large" indicator={<LoadingOutlined className="text-white" />} />
@@ -278,17 +310,18 @@ export default function PaymentForm({ onPrevious }: Props) {
     );
   }
 
-  if (!setupIntent.data?.data?.client_secret || !stripe.data) {
+  if (!setupIntentData?.data?.client_secret || !stripe.data) {
     return null;
   }
 
   return (
     <div className="flex h-full min-h-0 grow flex-col">
       <Elements
+        key={elementsKey}
         stripe={stripe.data}
-        options={buildStripeFormOptions(setupIntent.data.data.client_secret)}
+        options={buildStripeFormOptions(setupIntentData.data.client_secret)}
       >
-        <Form onPrevious={onPrevious} />
+        <Form onPrevious={onPrevious} onSetupIntentRefreshNeeded={refreshSetupIntent} />
       </Elements>
     </div>
   );

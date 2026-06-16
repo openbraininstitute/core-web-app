@@ -5,3 +5,4 @@ export { viewConfig as pairedNeuronsCircuitSimulationExpandedViewConfig } from '
 export { viewConfig as regionCircuitSimulationExpandedViewConfig } from './region-circuit-simulation';
 export { viewConfig as singleNeuronCircuitSimulationExpandedViewConfig } from './single-neuron-circuit-simulation';
 export { viewConfig as smallMicrocircuitSimulationExpandedViewConfig } from './small-microcircuit-simulation';
+export { viewConfig as wholeBrainCircuitSimulationExpandedViewConfig } from './whole-brain-circuit-simulation';

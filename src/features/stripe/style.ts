@@ -31,7 +31,7 @@ export const stripeAppearance: StripeElementsOptions['appearance'] = {
   },
   rules: {
     '.Input:focus': {
-      color: '#fff',
+      color: '#002766',
       fontWeight: '700',
       borderColor: 'none',
     },
@@ -40,26 +40,29 @@ export const stripeAppearance: StripeElementsOptions['appearance'] = {
       fontSize: '12px',
     },
     '.Input': {
-      color: '#fff',
-      border: '1px solid rgba(255, 255, 255, 0.24)',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.16)',
+      color: '#002766',
+      border: '1px solid rgba(0, ​39, 102, 0.24)',
+      // boxShadow: '0 2px 8px rgba(0, 0, 0, 0.16)',
       fontSize: '16px',
       fontWeight: '500',
       padding: '10px',
     },
     '.Label': {
-      color: '#fff',
+      color: '#002766',
       fontSize: '14px',
       fontWeight: '400',
       marginBottom: '8px',
     },
     '.Tab': {
-      border: '1px solid rgba(255, 255, 255, 0.24)',
+      border: '1px solid rgba(0, ​39, 102, 0.24)',
       borderRadius: '6px',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.16)',
+      // boxShadow: '0 2px 8px rgba(0, 0, 0, 0.16)',
     },
     '.Tab--selected': {
-      borderColor: '#fff',
+      borderColor: '#002766',
+    },
+    '.CheckboxLabel': {
+      color: '#002766',
     },
   },
 };

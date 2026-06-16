@@ -1,4 +1,4 @@
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Table } from 'antd';
 import find from 'es-toolkit/compat/find';
 import { useCallback, useState } from 'react';
@@ -41,7 +41,7 @@ const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.WholeBrainSimulation]: 'Simulate',
 };
 
-function categoryRenderFn(subtype: ServiceSubtype) {
+export function categoryRenderFn(subtype: ServiceSubtype) {
   return categoryLabel[subtype] ?? subtype;
 }
 
@@ -75,7 +75,7 @@ const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.WholeBrainSimulation]: 'Circuit representing an entire brain',
 };
 
-function TypeRenderFn(subtype: ServiceSubtype) {
+export function typeRenderFn(subtype: ServiceSubtype) {
   return typeLabel[subtype] ?? subtype;
 }
 
@@ -89,12 +89,16 @@ export function JobReportList() {
   const { virtualLabId, projectId } = useWorkspace();
   const [pagination, setPagination] = useState({ page: 1, pageSize: 8 });
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading: isLoadingUsers } = useQuery({
     queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
     queryFn: () => listProjectMembers({ virtualLabId, projectId }),
   });
 
-  const { data } = useSuspenseQuery({
+  const {
+    data,
+    isPending: isLoadingJobReports,
+    isFetching: isFetchingJobReports,
+  } = useQuery({
     queryKey: keyBuilder.credits({ virtualLabId, projectId, ...pagination }),
     queryFn: () =>
       getProjectJobReports({
@@ -103,6 +107,7 @@ export function JobReportList() {
         page: pagination.page,
         pageSize: pagination.pageSize,
       }),
+    placeholderData: keepPreviousData,
   });
 
   const jobReports = data?.data.items;
@@ -125,6 +130,7 @@ export function JobReportList() {
             sticky
             size="middle"
             className={cn(
+              '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!',
               '[&.ant-table]:bg-neutral-1! w-full!',
               '[&_.ant-table-thead_th]:text-neutral-4! [&_.ant-table-thead_th]:font-light!',
               '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
@@ -132,7 +138,7 @@ export function JobReportList() {
               '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!',
               '[&_th]:uppercase!'
             )}
-            loading={isLoading}
+            loading={isLoadingJobReports || isLoadingUsers || isFetchingJobReports}
             dataSource={jobReports}
             pagination={{
               pageSize: pagination.pageSize,
@@ -143,7 +149,7 @@ export function JobReportList() {
             rowKey="job_id"
           >
             <Column title="Category" dataIndex="subtype" key="category" render={categoryRenderFn} />
-            <Column title="Type" dataIndex="subtype" key="type" render={TypeRenderFn} />
+            <Column title="Type" dataIndex="subtype" key="type" render={typeRenderFn} />
             <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
             <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
             <Column title="Cost (Credits)" dataIndex="amount" key="cost" render={costRenderFn} />

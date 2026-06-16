@@ -3,18 +3,22 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 
+import { DocumentationIcon } from '@/components/icons/Documentation';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { StandardFallback } from '@/features/entities/e-model/detail-view/error-message-line';
 import { Header } from '@/features/entities/e-model/detail-view/header';
-import { DocumentationIcon } from '@/components/icons/Documentation';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 type Props = {
   source: IEModel;
+  variant?: TViewVariant;
 };
 
-export default function IonChannels({ source }: Props) {
+export default function IonChannels({ source, variant = ViewVariant.Light }: Props) {
   const { data, error, isLoading } = useQuery({
     queryKey: keyBuilder.ionChannelsFile({ entityName: source.name }),
     queryFn: async () => {
@@ -46,27 +50,38 @@ export default function IonChannels({ source }: Props) {
 
   if (isLoading)
     return (
-      <div className="text-neutral-1 flex items-center justify-center text-3xl">
+      <div
+        className={cn(
+          'flex items-center justify-center text-3xl',
+          variant === ViewVariant.Default ? 'text-white' : 'text-neutral-1'
+        )}
+      >
         <LoadingOutlined />
       </div>
     );
   if (error)
     return (
-      <StandardFallback type="info" message={error.message}>
+      <StandardFallback type="info" message={error.message} variant={variant}>
         Ion channel models
       </StandardFallback>
     );
   if (!data)
     return (
-      <StandardFallback type="info" message="No ion channel location distribution found">
+      <StandardFallback
+        type="info"
+        message="No ion channel location distribution found"
+        variant={variant}
+      >
         Ion channel models
       </StandardFallback>
     );
 
   return (
     <div className="flex flex-col gap-2">
-      <Header>Ion channel models</Header>
-      <ListingGrid ionChannels={data} />
+      <Header variant={variant}>Ion channel models</Header>
+      <div className={cn(detailViewInsetPanelClass(variant))}>
+        <ListingGrid ionChannels={data} />
+      </div>
     </div>
   );
 }
@@ -76,11 +91,11 @@ function ListingGrid({ ionChannels }: { ionChannels: Record<string, Array<string
     <div className="grid grid-flow-col gap-2">
       {Object.entries(ionChannels).map(([location, channelList]) => (
         <div key={location} className="flex flex-col items-start justify-start">
-          <div className="my-4 flex items-center gap-2 text-gray-400">
+          <div className="my-4 flex items-center gap-2 text-gray-400 uppercase">
             {location.toUpperCase()}
             <DocumentationIcon className="h-3 w-auto" />
           </div>
-          <ol className="list-inside list-decimal">
+          <ol className="text-white list-inside list-decimal">
             {channelList.map((channelName) => (
               <li key={channelName} className="font-bold marker:font-light">
                 {channelName}

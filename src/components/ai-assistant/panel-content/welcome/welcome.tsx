@@ -14,8 +14,8 @@ export default function Welcome({ className }: WelcomeProps) {
       <div>
         <p>Welcome to the OBI platform! </p>
         <p>
-          I&apos;m here to help with your literature searches, exploring our database and soon
-          I&apos;ll assist you in setting up your own simulations.
+          I&apos;m here to help you search the literature, explore our database, and set up your own
+          simulations.
         </p>
       </div>
     </div>

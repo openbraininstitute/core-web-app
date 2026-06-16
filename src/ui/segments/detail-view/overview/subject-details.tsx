@@ -1,3 +1,4 @@
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import { cn } from '@/utils/css-class';
@@ -26,13 +27,28 @@ const columnFields: { field: EntityCoreFields; target: 'subject' | 'entity' }[][
 export default async function SubjectDetails({
   entity,
   className,
+  variant = ViewVariant.Light,
 }: {
   entity: EntityCoreObjectTypes;
   className?: string;
+  variant?: TViewVariant;
 }) {
   return (
-    <div className={cn('mb-5 rounded-lg border border-gray-300 p-5', className)}>
-      <h2 className="text-primary-8 text-xl font-bold">Subject</h2>
+    <div
+      className={cn(
+        'mb-5 rounded-lg border p-5',
+        variant === ViewVariant.Default ? 'border-white/20' : 'border-gray-300',
+        className
+      )}
+    >
+      <h2
+        className={cn(
+          'text-xl font-bold',
+          variant === ViewVariant.Default ? 'text-white' : 'text-primary-8'
+        )}
+      >
+        Subject
+      </h2>
 
       <div className="flex flex-row flex-wrap">
         {columnFields.map((fields) => (
@@ -46,6 +62,7 @@ export default async function SubjectDetails({
                 className="not-first:mt-4"
                 field={field}
                 data={target === 'subject' && 'subject' in entity ? entity.subject : entity}
+                variant={variant}
               />
             ))}
           </div>

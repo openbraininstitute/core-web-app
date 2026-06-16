@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { match } from 'ts-pattern';
+
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { useTabs } from '@/components/detail-view-tabs';
 import { SignOutFill } from '@/components/icons/EditorIcons';
@@ -170,7 +171,11 @@ function Content({ defaultKey }: { defaultKey?: string }) {
     .with(null, () => <UserProfile />)
     .with('profile', () => <UserProfile />)
     .with('subscription', () => <Subscription />)
-    .with('invoices', () => <Invoices />)
+    .with('invoices', () => (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <Invoices />
+      </div>
+    ))
     .with('experimental-features', () => <ExperimentalFeatures />)
     .otherwise(() => {
       return <UserProfile />;
@@ -211,10 +216,12 @@ export function AccountSettings({ onClose, data }: Props) {
       <div
         id="account-settings-content"
         className={cn(
-          'primary-scrollbar mb-1 h-full flex-1 overflow-y-auto px-6 py-4 transition-opacity duration-200 ease-in-out'
+          'mb-1 flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-4 transition-opacity duration-200 ease-in-out'
         )}
       >
-        <Content defaultKey={data?.section} />
+        <div className="primary-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <Content defaultKey={data?.section} />
+        </div>
       </div>
     </div>
   );

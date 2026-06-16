@@ -28,10 +28,19 @@ export const emSynapseMappingActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const wholeBrainSimulationFlag = defineFlag<boolean>({
+  key: 'whole-brain-simulation',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Whole brain simulations',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
   emSynapseMappingActivityFlag,
+  wholeBrainSimulationFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

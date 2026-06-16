@@ -340,7 +340,7 @@ export function Modal({
       <div
         id="modal-overlay"
         className={cn(
-          'fixed inset-0 bg-black/50 backdrop-blur-sm',
+          'fixed inset-0 bg-black/12 backdrop-blur-sm',
           modalAnimations[animation].overlay,
           overlayClassName
         )}

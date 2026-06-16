@@ -1,5 +1,4 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -93,7 +92,7 @@ export type EntityCoreTypeConfig<
   isDownloadable?: boolean;
   isCopyable?: boolean;
   isDeletable?: boolean;
-  isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
+  isSimulatable: boolean | ((entity: T) => boolean);
   isContributionOption?: boolean;
   isContributable?: boolean;
 };

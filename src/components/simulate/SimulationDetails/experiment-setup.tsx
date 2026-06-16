@@ -1,17 +1,16 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { match, P } from 'ts-pattern';
-import { useState } from 'react';
 import { Spin } from 'antd';
+import { useState } from 'react';
+import { match, P } from 'ts-pattern';
 
-import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
-import AnalysisTab from '@/components/simulate/SimulationDetails/AnalysisTab';
-import ResultsTab from '@/components/simulate/SimulationDetails/recording-tab';
 import { ErrorData } from '@/components/message-banners/error';
-
+import AnalysisTab from '@/components/simulate/SimulationDetails/AnalysisTab';
+import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
+import ResultsTab from '@/components/simulate/SimulationDetails/recording-tab';
 import { classNames } from '@/util/utils';
 
-import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 import type { IMEModel } from '@/api/entitycore/types';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 
 type TabKeys = 'configuration' | 'results' | 'analysis';
 type Tab = { key: TabKeys; title: string };
@@ -51,7 +50,7 @@ export default function ExperimentSetupTab({
     .with({ loading: true }, () => (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading experiment setup...</h2>
+        <h2 className="text-white font-light">Loading experiment setup...</h2>
       </div>
     ))
     .with({ error: P.string }, () => (
@@ -60,8 +59,8 @@ export default function ExperimentSetupTab({
         description={error}
         cls={{
           container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full! mt-4',
-          title: 'text-primary-9',
-          description: 'text-primary-9',
+          title: 'text-white',
+          description: 'text-white',
         }}
       />
     ))
@@ -71,8 +70,8 @@ export default function ExperimentSetupTab({
         description="The experiment configuration/results is not available for this simulation"
         cls={{
           container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full! mt-4',
-          title: 'text-primary-9',
-          description: 'text-primary-9',
+          title: 'text-white',
+          description: 'text-white',
         }}
       />
     ))
