@@ -48,9 +48,9 @@ export function GetStartedCards() {
   const assistantTopics = data?.obiAssistant ?? [];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {cards.length > 0 && (
-        <section className="grid min-h-0 flex-1 grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
             <GetStartedCard key={card._key} card={card} />
           ))}

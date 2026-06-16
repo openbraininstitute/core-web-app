@@ -47,13 +47,13 @@ export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
   const baseRoute = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
 
   return (
-    <div className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-xl border border-neutral-300 p-5">
+    <div className="flex flex-col gap-3 rounded-xl border border-neutral-300 p-5">
       <h3 className="text-primary-8 shrink-0 text-3xl font-bold">{card.title}</h3>
       <p className="text-primary-8 shrink-0 text-sm font-normal leading-normal">
         {card.description}
       </p>
 
-      <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-lg">
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-lg">
         <CardMedia card={card} />
       </div>
 
