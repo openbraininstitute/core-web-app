@@ -52,6 +52,8 @@ export default function Overview({ circuit, variant = ViewVariant.Light }: Props
             <div key={key} className="flex w-full flex-col gap-2">
               <Header title={title} variant={variant} />
               <div
+                id={`${key}-overview`}
+                data-testid={`${key}-overview`}
                 className={cn(
                   'flex w-full flex-col items-center gap-2',
                   variant === ViewVariant.Default && detailViewInsetPanelClass(variant)

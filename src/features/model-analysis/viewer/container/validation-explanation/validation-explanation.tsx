@@ -55,7 +55,7 @@ export function ValidationExplanation({
               href={href}
               target="_blank"
               rel="noreferrer"
-              className={cn('underline', detailViewLinkClass(variant))}
+              className={cn('underline text-primary-7! hover:text-primary-6')}
             >
               {children}
             </a>

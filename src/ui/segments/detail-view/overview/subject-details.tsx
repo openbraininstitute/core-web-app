@@ -1,3 +1,5 @@
+import { kebabCase } from 'es-toolkit/compat';
+
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { Field } from '@/ui/segments/detail-view/overview/field';
@@ -35,6 +37,8 @@ export default async function SubjectDetails({
 }) {
   return (
     <div
+      id={`subject-details-${kebabCase(entity.type)}-${entity.id}`}
+      data-testid="subject-details"
       className={cn(
         'mb-5 rounded-lg border p-5',
         variant === ViewVariant.Default ? 'border-white/20' : 'border-gray-300',
