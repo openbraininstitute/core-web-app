@@ -8,10 +8,10 @@ import { ErrorBoundary } from 'react-error-boundary';
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { MorphoViewer } from '@/components/MorphoViewer';
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
+import { withErrorConfig } from '@/ui/molecules/error-fallback';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';

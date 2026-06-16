@@ -1,7 +1,7 @@
 import { ErrorBoundary } from 'react-error-boundary';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { getNewsItem } from '@/services/sanity/api/get-news-item';
+import SimpleErrorComponent from '@/ui/molecules/error-fallback';
 import LandingPage from '@/ui/segments/landing';
 import NewsPageClient from '@/ui/segments/landing/components/news-page/news-page-client';
 import FooterServer from '@/ui/segments/landing/layout/footer/footer-server';

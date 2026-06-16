@@ -1,6 +1,6 @@
 'use client';
 
-import { WarningOutlined } from '@ant-design/icons';
+import { RiErrorWarningLine } from '@remixicon/react';
 import Link from 'next/link';
 
 import { cn } from '@/utils/css-class';
@@ -12,6 +12,8 @@ interface Props {
   cls?: { container?: string; error?: string };
   showButtons?: boolean;
   customError?: string;
+  homeHref?: string;
+  homeLabel?: string;
   children?: ReactNode;
 }
 
@@ -30,6 +32,8 @@ export function ErrorComponent({
   cls,
   customError = '',
   showButtons = true,
+  homeHref = '/',
+  homeLabel = 'Back to Home',
   children,
 }: Props) {
   return (
@@ -41,8 +45,8 @@ export function ErrorComponent({
     >
       <div className="mx-auto w-full max-w-md">
         <div className="mb-2 flex items-center justify-start gap-2">
-          <WarningOutlined className="text-2xl text-[#f0c75e]" />
-          <h1 className="text-xl font-bold text-[#f0c75e]">An error occurred</h1>
+          <RiErrorWarningLine className="size-6 text-warning" />
+          <h1 className="text-xl font-bold text-warning">An error occurred</h1>
         </div>
 
         <div className={cn('text-primary-8 mb-2 w-full bg-white p-6', cls?.error)}>
@@ -52,7 +56,7 @@ export function ErrorComponent({
         {children}
         {showButtons && (
           <div className="flex w-full gap-2">
-            <ErrorLink href="/app/virtual-lab/sync" title="Back to Home" />
+            <ErrorLink href={homeHref} title={homeLabel} />
           </div>
         )}
       </div>
@@ -64,11 +68,15 @@ export function withErrorConfig({
   cls,
   showButtons,
   customError,
+  homeHref,
+  homeLabel,
   children,
 }: {
   cls?: { container?: string; error?: string };
   showButtons?: boolean;
   customError?: string;
+  homeHref?: string;
+  homeLabel?: string;
   children?: ReactNode;
 }) {
   return function wrapper({ error }: { error?: unknown }) {
@@ -79,6 +87,8 @@ export function withErrorConfig({
         customError={customError}
         cls={cls}
         showButtons={showButtons}
+        homeHref={homeHref}
+        homeLabel={homeLabel}
       >
         {children}
       </ErrorComponent>

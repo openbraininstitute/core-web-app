@@ -8,13 +8,13 @@ import { z } from 'zod';
 
 import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
-import { useTabs } from '@/components/detail-view-tabs';
 import { useAppNotification } from '@/components/notification';
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/virtual-lab';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { useTabs } from '@/ui/molecules/detail-view-tabs';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';

@@ -2,11 +2,11 @@ import { ConfigProvider, Select } from 'antd';
 import delay from 'es-toolkit/compat/delay';
 import { useCallback, useState } from 'react';
 
-import { scrollToNode } from '@/components/tree/elements/helpers';
+import { scrollToNode } from '@/ui/molecules/tree/elements/helpers';
 import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
 import { classNames } from '@/util/utils';
 
-import type { TTreeNode } from '@/components/tree/types';
+import type { TTreeNode } from '@/ui/molecules/tree/types';
 
 interface Props {
   options: Array<{ value: string; label: string; data: TTreeNode }>;

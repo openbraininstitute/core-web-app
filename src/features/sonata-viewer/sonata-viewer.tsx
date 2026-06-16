@@ -3,11 +3,11 @@ import { Empty, Radio, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
 import ReportOverview from '@/features/sonata-viewer/components/report-overview';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
+import SimpleErrorComponent from '@/ui/molecules/error-fallback';
 
 import type { RadioChangeEvent } from 'antd';
 import type { ComponentType } from 'react';

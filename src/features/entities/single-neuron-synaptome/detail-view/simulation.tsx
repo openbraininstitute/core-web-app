@@ -7,9 +7,9 @@ import { Spin } from 'antd';
 
 import { getSingleNeuronSynaptomeSimulations } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
 import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
 import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
+import { withErrorConfig } from '@/ui/molecules/error-fallback';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';

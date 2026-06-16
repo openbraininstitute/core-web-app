@@ -4,11 +4,11 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { use } from 'react';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
 import {
   type TLegacyWorkflowSessionSearchParams,
   useLegacyWorkflowSessionFromSearchParams,
 } from '@/features/scan-config/workflow/legacy-session';
+import { ResponsiveSideViewer } from '@/ui/layouts/responsive-side-viewer';
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';

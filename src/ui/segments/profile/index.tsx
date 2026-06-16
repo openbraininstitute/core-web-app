@@ -8,12 +8,12 @@ import { useSession } from 'next-auth/react';
 import { match } from 'ts-pattern';
 
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { useTabs } from '@/components/detail-view-tabs';
 import { SignOutFill } from '@/components/icons/EditorIcons';
 import { hasVisibleFlags } from '@/features/feature-flags/flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { useTabs } from '@/ui/molecules/detail-view-tabs';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { ExperimentalFeatures } from '@/ui/segments/profile/sections/experimental-features';
 import { Invoices } from '@/ui/segments/profile/sections/invoices';

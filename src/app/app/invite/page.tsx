@@ -4,7 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { tryCatch } from '@/api/utils';
 import { getInviteContent } from '@/api/virtual-lab-svc/queries/invite';
 import { getSession } from '@/auth-fetch';
-import { ErrorComponent as SimpleErrorComponent } from '@/components/GenericErrorFallback';
+import { ErrorComponent as SimpleErrorComponent } from '@/ui/molecules/error-fallback';
 import { InvitationProcessing } from '@/ui/segments/invites';
 import { getErrorUrl } from '@/ui/segments/invites/helpers';
 

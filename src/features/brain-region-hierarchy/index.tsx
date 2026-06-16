@@ -4,7 +4,6 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { Tree } from '@/components/tree';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import { TreeSearch } from '@/components/tree/elements/search';
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
@@ -16,6 +15,7 @@ import {
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
+import { Tree } from '@/ui/molecules/tree';
 import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { classNames } from '@/util/utils';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';

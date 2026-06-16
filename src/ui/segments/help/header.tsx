@@ -2,8 +2,8 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 
-import { useTabs } from '@/components/detail-view-tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useTabs } from '@/ui/molecules/detail-view-tabs';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { cn } from '@/utils/css-class';
 

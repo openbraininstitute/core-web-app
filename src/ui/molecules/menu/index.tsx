@@ -2,13 +2,14 @@
 
 'use client';
 
-import * as React from 'react';
 import * as MenubarPrimitive from '@radix-ui/react-menubar';
 import {
-  CheckOutlined as Check,
-  ArrowRightOutlined as ChevronRight,
-  DownCircleOutlined as Circle,
-} from '@ant-design/icons';
+  RiCheckLine as Check,
+  RiArrowRightSLine as ChevronRight,
+  RiCircleFill as Circle,
+} from '@remixicon/react';
+import * as React from 'react';
+
 import { classNames } from '@/util/utils';
 
 function MenubarMenu({ ...props }: React.ComponentProps<typeof MenubarPrimitive.Menu>) {
@@ -200,4 +201,4 @@ function MenubarShortcut({ className, ...props }: React.HTMLAttributes<HTMLSpanE
 }
 MenubarShortcut.displayname = 'MenubarShortcut';
 
-export { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem };
+export { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger };

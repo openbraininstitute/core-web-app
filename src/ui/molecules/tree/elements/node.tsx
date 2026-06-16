@@ -1,14 +1,14 @@
 import { type CSSProperties, memo } from 'react';
 
-import DefaultNode from '@/components/tree/elements/default-node';
+import DefaultNode from '@/ui/molecules/tree/elements/default-node';
 import {
   HorizontalIndentationLine,
   VerticalIndentationLine,
-} from '@/components/tree/elements/indentation';
+} from '@/ui/molecules/tree/elements/indentation';
 import { classNames } from '@/util/utils';
 
 import type React from 'react';
-import type { NodeIndentation, RenderNodeProps, TTreeNode } from '@/components/tree/types';
+import type { NodeIndentation, RenderNodeProps, TTreeNode } from '@/ui/molecules/tree/types';
 
 interface NodeProps<TNode extends TTreeNode> {
   dataKey: string;

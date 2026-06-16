@@ -5,8 +5,8 @@ import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { MorphoViewerSimul, morphoViewerConvertMorphologyIntoTree } from '@/morpho-viewer';
+import { withErrorConfig } from '@/ui/molecules/error-fallback';
 import {
   SimulationStatus,
   simulationStatusAtomFamily,

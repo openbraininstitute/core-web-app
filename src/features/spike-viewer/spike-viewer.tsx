@@ -1,9 +1,9 @@
 import { Empty, Spin } from 'antd';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
+import SimpleErrorComponent from '@/ui/molecules/error-fallback';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IAsset } from '@/api/entitycore/types/shared/global';

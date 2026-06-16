@@ -1,8 +1,8 @@
 import { flatMap, map } from 'es-toolkit/compat';
 import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
-import { getParentsToRoot, scrollToNode } from '@/components/tree/elements/helpers';
-import { MemoizedNode as Node } from '@/components/tree/elements/node';
+import { getParentsToRoot, scrollToNode } from '@/ui/molecules/tree/elements/helpers';
+import { MemoizedNode as Node } from '@/ui/molecules/tree/elements/node';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -10,7 +10,7 @@ import type {
   NodeSubtitle,
   RenderNodeProps,
   TTreeNode,
-} from '@/components/tree/types';
+} from '@/ui/molecules/tree/types';
 
 interface Props<TNode extends TTreeNode> {
   dataKey: string;

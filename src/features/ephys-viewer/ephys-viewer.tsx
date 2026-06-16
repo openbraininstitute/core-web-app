@@ -3,10 +3,10 @@ import { Empty, Radio, type RadioChangeEvent, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
+import SimpleErrorComponent from '@/ui/molecules/error-fallback';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';

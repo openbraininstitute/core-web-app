@@ -2,7 +2,6 @@ import { useParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
-import Tree from '@/components/tree';
 import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import {
@@ -13,6 +12,7 @@ import { CellCompositionSkeleton } from '@/features/cell-composition/elements/ce
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
 import Node from '@/features/cell-composition/elements/default-node';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
+import Tree from '@/ui/molecules/tree';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 

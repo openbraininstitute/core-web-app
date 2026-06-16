@@ -1,11 +1,11 @@
 'use client';
 
-import { CaretRightFilled } from '@ant-design/icons';
+import { RiPlayFill as CaretRightFilled } from '@remixicon/react';
 import React, { type CSSProperties } from 'react';
 
 import { classNames } from '@/util/utils';
 
-import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
+import type { RenderNodeProps, TTreeNode } from '@/ui/molecules/tree/types';
 
 type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
 

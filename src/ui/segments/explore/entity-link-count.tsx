@@ -3,7 +3,6 @@ import { useAtomValue } from 'jotai';
 import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 
-import { useTabs } from '@/components/detail-view-tabs';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import {
   speciesSelectionModeAtom,
@@ -14,6 +13,7 @@ import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useFlags } from '@/features/feature-flags';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useTabs } from '@/ui/molecules/detail-view-tabs';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import {
