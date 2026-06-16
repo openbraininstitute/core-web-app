@@ -28,6 +28,7 @@ export function CreditsAmountInput({
   disabled,
   error,
   hint,
+  savingsHint,
   inputClassName,
   loadingHint = false,
   onValueChange,
@@ -37,6 +38,7 @@ export function CreditsAmountInput({
   disabled?: boolean;
   error?: string;
   hint: string;
+  savingsHint?: string;
   inputClassName?: string;
   loadingHint?: boolean;
   onValueChange: (credits: number | undefined) => void;
@@ -71,15 +73,20 @@ export function CreditsAmountInput({
             </div>
           </div>
           {error && <p className="mt-2 ml-2 text-xs text-red-400">{error}</p>}
-          <div className="mt-2 ml-2 flex items-center gap-2 text-current">
-            <CoinsIcon className="size-5" />
-            <span className="text-sm">
-              {loadingHint ? (
-                <Skeleton className="h-4 w-12 rounded-full animate-pulse bg-gray-50/30!" />
-              ) : (
-                hint
-              )}
-            </span>
+          <div className="mt-2 ml-2 flex items-center justify-between gap-2 text-current">
+            <div className="flex items-center gap-2">
+              <CoinsIcon className="size-5" />
+              <span className="text-sm">
+                {loadingHint ? (
+                  <Skeleton className="h-4 w-12 rounded-full animate-pulse bg-gray-50/30!" />
+                ) : (
+                  hint
+                )}
+              </span>
+            </div>
+            {!loadingHint && savingsHint && (
+              <span className="text-sm font-semibold text-emerald-600">{savingsHint}</span>
+            )}
           </div>
         </div>
       </div>

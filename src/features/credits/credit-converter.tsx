@@ -30,7 +30,6 @@ export function CreditConverter({
     payload: credits > 0 ? { credits, currency: 'chf' } : null,
     enabled: false,
   });
-
   const handleCreditsChange = (value: number | undefined) => {
     setConversion(null);
     updateCreditState((prev) => ({ ...prev, credits: value ?? 0 }));
@@ -54,6 +53,9 @@ export function CreditConverter({
           onValueChange={handleCreditsChange}
           hint={
             conversion ? formatMinorCurrency(conversion.amount, conversion.currency) : 'CHF 0.00'
+          }
+          savingsHint={
+            conversion?.discount_pct ? `You saved ${conversion.discount_pct}%` : undefined
           }
           className="mb-4 border-neutral-200 bg-white text-primary-8 shadow-xs"
           inputClassName="border-neutral-200 bg-white text-center text-primary-8 placeholder:text-primary-8/40"
