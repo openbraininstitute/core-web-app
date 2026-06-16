@@ -4,7 +4,7 @@
       transform 0.2s,
       opacity 0.5s;
     border: none;
-    opacity: 0.3;
+    opacity: 0.8;
 
     &.selected {
       opacity: 1;

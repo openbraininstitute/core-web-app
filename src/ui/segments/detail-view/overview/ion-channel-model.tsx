@@ -5,6 +5,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { PDFViewer } from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
+import { CodeBlock } from '@/ui/molecules/code-blocks';
 import {
   detailViewHeadingClass,
   detailViewInsetPanelClass,
@@ -232,13 +233,13 @@ export default async function IonChannelModelOverview({
       <div className={sectionHeadingClass(variant)}>File preview</div>
       <div
         className={cn(
-          'overflow-x-auto secondary-scrollbar overflow-y-auto p-4 font-mono text-sm whitespace-pre shadow-lg',
+          'overflow-x-auto secondary-scrollbar overflow-y-auto font-mono text-sm whitespace-pre shadow-lg',
           variant === ViewVariant.Default
             ? cn(detailViewInsetPanelClass(variant), 'text-white')
             : 'bg-neutral-2 text-black'
         )}
       >
-        {text.trimEnd().trimStart()}
+        <CodeBlock code={text.trimEnd().trimStart()} language="shell" showLineNumbers scrollableX />
       </div>
     </>
   );

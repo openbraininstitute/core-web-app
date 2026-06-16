@@ -1,4 +1,4 @@
-import { includes } from 'es-toolkit/compat';
+import { includes, kebabCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
@@ -437,7 +437,11 @@ export default async function Overview({
     : [...commonFields, ...fields];
 
   const metadataGrid = (
-    <div className={`mb-5 grid grid-cols-3 gap-4 rounded-lg border p-5 ${metadataBorderClass}`}>
+    <div
+      id={`metadata-grid-${kebabCase(extendedType)}-${entity.id}`}
+      data-testid="metadata-grid"
+      className={`mb-5 grid grid-cols-3 gap-4 rounded-lg border p-5 ${metadataBorderClass}`}
+    >
       {summaryFields.map(({ className, field }) => {
         return (
           <Field
@@ -453,8 +457,14 @@ export default async function Overview({
   );
 
   const visualizations = hasVisualization ? (
-    <div className={cn({ 'mb-8': !isSimulationPage })}>
-      {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
+    <div
+      id={`visualizations-${kebabCase(extendedType)}-${entity.id}`}
+      data-testid="visualizations"
+      className={cn({ 'mb-8': !isSimulationPage })}
+    >
+      <div className="bg-white rounded-md">
+        {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
+      </div>
       {includes(morphologyTypes, extendedType) && (
         <CellMorphologyViewer entity={entity as ICellMorphology} />
       )}

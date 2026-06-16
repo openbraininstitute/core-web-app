@@ -26,7 +26,7 @@ export function detailViewHeadingClass(variant: TViewVariant, size: 'xl' | '2xl'
 export function detailViewLinkClass(variant: TViewVariant) {
   return variant === ViewVariant.Default
     ? 'font-bold text-white hover:text-primary-2'
-    : 'font-bold text-primary-8 hover:text-primary-7';
+    : 'font-bold text-primary-8! hover:text-primary-7';
 }
 
 export function detailViewPanelBorderClass(variant: TViewVariant) {
