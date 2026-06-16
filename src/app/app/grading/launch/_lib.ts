@@ -105,9 +105,6 @@ type AccessibleProjectsResolution =
   | { ok: true; virtualLab: IVirtualLabExpandedResponse; projects: AccessibleProject[] }
   | { ok: false; reason: LaunchErrorReason };
 
-// Every project under this VL the caller belongs to — member/user OR admin role.
-// (Replaces the template-project / VL-admin resolution which depended on the unfinished
-// virtual-lab `course` API.)
 export async function resolveAccessibleProjects(
   virtualLabId: string
 ): Promise<AccessibleProjectsResolution> {
@@ -117,37 +114,34 @@ export async function resolveAccessibleProjects(
     tryCatch(listProjects({ virtualLabId, pagination: { page: 1, page_size: 100 } })),
   ]);
 
-  if (groupsResult.error || !groupsResult.data || vlResult.error || !vlResult.data) {
+  if (
+    groupsResult.error ||
+    !groupsResult.data ||
+    vlResult.error ||
+    !vlResult.data ||
+    projectsResult.error ||
+    !projectsResult.data
+  ) {
     log('error', '[grading-launch] accessible projects resolve failed', {
       groups_error: groupsResult.error,
       vl_error: vlResult.error,
+      projects_error: projectsResult.error,
     });
     return { ok: false, reason: 'notebook-service-failed' };
   }
 
-  // The user-groups payload only carries id-like group names, so map project_id -> the real,
-  // human-readable IProject.name. A listProjects failure is non-fatal — fall back to the group name.
-  const nameById = new Map<string, string>();
-  if (projectsResult.error) {
-    log('warn', '[grading-launch] listProjects failed; falling back to group names', {
-      error: projectsResult.error,
-    });
-  } else {
-    for (const p of projectsResult.data?.data ?? []) {
-      nameById.set(p.id, p.name);
-    }
-  }
-
-  const byId = new Map<string, AccessibleProject>();
+  const memberProjectIds = new Set<string>();
   for (const g of groupsResult.data.data?.groups ?? []) {
     if (g.group_type === 'project' && g.virtual_lab_id === virtualLabId && g.project_id) {
-      if (!byId.has(g.project_id)) {
-        byId.set(g.project_id, { id: g.project_id, name: nameById.get(g.project_id) ?? g.name });
-      }
+      memberProjectIds.add(g.project_id);
     }
   }
 
-  return { ok: true, virtualLab: vlResult.data, projects: [...byId.values()] };
+  const projects: AccessibleProject[] = (projectsResult.data.data ?? [])
+    .filter((p) => memberProjectIds.has(p.id))
+    .map((p) => ({ id: p.id, name: p.name }));
+
+  return { ok: true, virtualLab: vlResult.data, projects };
 }
 
 export type LaunchResolution =
