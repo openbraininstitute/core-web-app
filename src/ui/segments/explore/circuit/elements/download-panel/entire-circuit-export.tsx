@@ -1,4 +1,3 @@
-import { Button } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { useParams } from 'next/navigation';
 
@@ -9,6 +8,7 @@ import { tryCatch } from '@/api/utils';
 import { DownloadIcon } from '@/components/icons';
 import { useAppNotification } from '@/components/notification';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import { Button } from '@/ui/molecules/button';
 import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
 
@@ -79,14 +79,16 @@ export default function EntireCircuitExport({ circuit }: Props) {
           <div>{totalSize}</div>
           <div>{extension}</div>
           <Button
-            htmlType="button"
-            type="link"
+            type="button"
+            variant="ghost"
+            size="icon"
             className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
             aria-label={`Download ${circuit.name}`}
             title={`Download ${circuit.name}`}
-            icon={<DownloadIcon className="text-white!" />}
             onClick={onDownload}
-          />
+          >
+            <DownloadIcon className="text-white!" />
+          </Button>
         </div>
       </div>
     </div>

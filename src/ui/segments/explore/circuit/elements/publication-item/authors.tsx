@@ -1,6 +1,6 @@
-import { Button } from 'antd';
-import Popover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { Person } from '@/components/icons/EditorIcons';
+import Popover from '@/features/entities/neuron-simulation/experiment/elements/popover';
+import { Button } from '@/ui/molecules/button';
 
 import type { Author } from '@/api/entitycore/types/entities/publication';
 
@@ -45,8 +45,8 @@ export function Authors({ authors, className, maxVisible = 3 }: Props) {
             }
           >
             <Button
-              type="text"
-              className="text-paper-link hover:text-paper-hover h-auto p-0 font-normal underline"
+              variant="link"
+              className="text-paper-link hover:text-paper-hover h-auto p-0 font-normal"
             >
               + {hiddenAuthors.length} more
             </Button>
