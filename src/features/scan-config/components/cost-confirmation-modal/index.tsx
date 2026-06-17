@@ -12,6 +12,8 @@ import { useTaskCostEstimates } from './use-task-cost-estimates';
 
 import type { CostConfirmationModalProps } from './types';
 
+export { useCostConfirmation } from './use-cost-confirmation';
+
 const ITEMS_PER_PAGE = 10;
 
 export function CostConfirmationModal({
