@@ -9,7 +9,6 @@ import { classNames } from '@/util/utils';
 
 import { Highlighter } from './highlighter/highlighter';
 import { MarkdownTable, MarkdownTd } from './markdown-table/markdown-table';
-import PlotErrorMessage from './plot-error-message';
 import StorageImage from './storage-image/storage-image';
 
 import styles from './github-flavor-markdown.module.css';

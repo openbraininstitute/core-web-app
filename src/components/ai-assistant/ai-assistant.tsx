@@ -7,11 +7,11 @@ import React from 'react';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
+import Chat from './chat';
+import History from './history';
 import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } from './hooks';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
-import Chat from './panel-content/chat';
-import History from './panel-content/history';
 import PanelSplitter from './panel-splitter';
 
 import type { TAppUInterfaceSection } from '@/utils/key-builder';

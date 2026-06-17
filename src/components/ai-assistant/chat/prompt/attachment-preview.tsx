@@ -3,7 +3,7 @@ import { RiFileTextLine } from '@remixicon/react';
 
 import { classNames } from '@/util/utils';
 
-import type { FileAttachment } from '../hooks/use-file-attachments';
+import type { FileAttachment } from '../../hooks/use-file-attachments';
 
 import styles from './attachment-preview.module.css';
 

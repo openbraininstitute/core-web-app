@@ -17,7 +17,7 @@ import {
   findLastNewConfig,
   modifiedBlockSet,
   processAccumulatedDiffs,
-} from '../../message-item/use-message-diffs';
+} from '../message-item/use-message-diffs';
 
 import type { UIMessage } from '@ai-sdk/react';
 

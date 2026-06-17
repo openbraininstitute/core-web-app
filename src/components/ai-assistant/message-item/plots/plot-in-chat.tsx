@@ -1,11 +1,11 @@
 import React from 'react';
 
 import { useIsDragging, usePanelWidth } from '@/components/ai-assistant/hooks';
-import PlotErrorMessage from '@/components/github-flavor-markdown/plot-error-message';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { isString } from '@/util/type-guards';
 
 import { usePlotFile } from './hooks';
+import PlotErrorMessage from './plot-error-message';
 import ToolThumbnailGeneration from './renderers/image-renderer/tool-thumbnail-generation-morphology-getone';
 import ToolPlotGenerator from './renderers/plot-renderer/tool-plot-generator';
 import { ToolSkeletonStandalone } from './renderers/skeleton/tool-skeleton';

@@ -10,7 +10,7 @@ import { classNames } from '@/util/utils';
 import { AttachmentPreview } from './attachment-preview';
 
 import type React from 'react';
-import type { FileAttachment } from '../hooks/use-file-attachments';
+import type { FileAttachment } from '../../hooks/use-file-attachments';
 
 import styles from './prompt.module.css';
 

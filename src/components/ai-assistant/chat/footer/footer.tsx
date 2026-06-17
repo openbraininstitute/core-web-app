@@ -1,8 +1,8 @@
 import { useAtom } from 'jotai';
 
 import { useFileAttachments } from '../../hooks/use-file-attachments';
-import Prompt from '../../prompt';
 import { promptAtom } from '../../state';
+import Prompt from '../prompt';
 
 import type { FileAttachment } from '../../hooks/use-file-attachments';
 

@@ -1,6 +1,6 @@
-import PlotInChat from '@/components/ai-assistant/message-item/storage-plots/plot-in-chat';
+import PlotErrorMessage from '@/components/ai-assistant/message-item/plots/plot-error-message';
+import PlotInChat from '@/components/ai-assistant/message-item/plots/plot-in-chat';
 
-import PlotErrorMessage from '../plot-error-message';
 import TruncableImage from '../truncable-image';
 
 const StorageImage = ({

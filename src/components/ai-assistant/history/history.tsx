@@ -6,10 +6,10 @@ import IconPlus from '@/components/icons/Plus';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
-import { IconDelete } from '../../icons/delete';
-import { IconEdit } from '../../icons/edit';
-import { OverlayScrollbar } from '../overlay-scrollbar';
-import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
+import { OverlayScrollbar } from '../chat/overlay-scrollbar';
+import TabTransitionLoader from '../chat/tab-transition-loader/tab-transition-loader';
+import { IconDelete } from '../icons/delete';
+import { IconEdit } from '../icons/edit';
 import DialogDelete from './dialog-delete';
 import DialogEdit from './dialog-edit';
 import { useSections } from './hooks';

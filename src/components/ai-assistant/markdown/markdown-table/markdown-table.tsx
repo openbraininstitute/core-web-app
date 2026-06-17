@@ -9,7 +9,7 @@ import {
 import React from 'react';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '@/components/ai-assistant/hooks';
-import FullscreenDialog from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog';
+import FullscreenDialog from '@/components/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
 
 import styles from './markdown-table.module.css';
 
@@ -195,7 +195,7 @@ function extractText(node: React.ReactNode): string {
   if (node == null || typeof node === 'boolean') return '';
   if (typeof node === 'string' || typeof node === 'number') return String(node);
   if (Array.isArray(node)) return node.map(extractText).join('');
-  if (typeof node === 'object' && 'props' in node) {
+  if (React.isValidElement(node)) {
     const element = node as React.ReactElement<{ children?: React.ReactNode }>;
     return extractText(element.props.children);
   }

@@ -16,21 +16,21 @@ import {
 } from '@/state/config-highlights';
 import { classNames } from '@/util/utils';
 
-import ErrorPanel from '../../error';
-import FreeCreditsNotification from '../../free-credits-notification';
-import { MessageItem } from '../../message-item';
-import { ThinkingIndicator } from '../../message-item/thinking-indicator';
-import { atomRateLimit } from '../../state';
-import SuggestedQuestions from '../../suggested-questions';
-import DiffBar from '../diff-bar';
-import Footer from '../footer';
-import { OverlayScrollbar } from '../overlay-scrollbar';
-import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
-import Welcome from '../welcome';
+import ErrorPanel from '../error';
+import FreeCreditsNotification from '../free-credits-notification';
+import { MessageItem } from '../message-item';
+import { ThinkingIndicator } from '../message-item/thinking-indicator';
+import { atomRateLimit } from '../state';
+import DiffBar from './diff-bar';
+import Footer from './footer';
+import { OverlayScrollbar } from './overlay-scrollbar';
+import SuggestedQuestions from './suggested-questions';
+import TabTransitionLoader from './tab-transition-loader/tab-transition-loader';
 import { useAutoScroll } from './use-auto-scroll';
 import { useLastMessageDiffBar } from './use-last-message-diff-bar';
+import Welcome from './welcome';
 
-import messageStyles from '../../message-item/message-item.module.css';
+import messageStyles from '../message-item/message-item.module.css';
 import styles from './chat.module.css';
 
 export interface ChatProps {

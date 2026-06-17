@@ -4,13 +4,13 @@ import { RiFileLine } from '@remixicon/react';
 import { getToolName, isFileUIPart, isToolUIPart } from 'ai';
 import React from 'react';
 
-import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { classNames } from '@/util/utils';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
-import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots';
+import { GithubFlavorMarkdown } from '../markdown';
 import { CollapsibleMessage } from './collapsible-message';
 import { ExpandableImage } from './expandable-image';
+import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './plots';
 import { StorageImagePart } from './storage-image-part';
 import ToolsProgress from './tools-progress';
 import { useMessageDiffs } from './use-message-diffs';

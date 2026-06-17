@@ -4,10 +4,10 @@
 
 import { useRef } from 'react';
 
-import FullscreenDialog from './fullscreen-dialog/fullscreen-dialog';
+import FullscreenDialog from './plots/fullscreen-dialog/fullscreen-dialog';
 
-import dialogStyles from './fullscreen-dialog/fullscreen-dialog.module.css';
 import styles from './message-item.module.css';
+import dialogStyles from './plots/fullscreen-dialog/fullscreen-dialog.module.css';
 
 interface ExpandableImageProps {
   src: string;

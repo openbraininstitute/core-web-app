@@ -3,7 +3,7 @@ import React from 'react';
 
 import { classNames } from '@/util/utils';
 
-import { PlotInChat } from '../storage-plots';
+import { PlotInChat } from '.';
 
 import type { UIMessage } from '@ai-sdk/react';
 

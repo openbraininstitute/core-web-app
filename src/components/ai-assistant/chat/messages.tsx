@@ -1,4 +1,4 @@
-import { MessageItem } from '../../message-item';
+import { MessageItem } from '../message-item';
 
 import type { UIMessage } from '@ai-sdk/react';
 
