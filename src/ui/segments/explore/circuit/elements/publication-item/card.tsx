@@ -1,8 +1,8 @@
-import { Metadata } from '@/ui/segments/explore/circuit/elements/publication-item/metadata';
 import { Abstract } from '@/ui/segments/explore/circuit/elements/publication-item/abstract';
-import { Header } from '@/ui/segments/explore/circuit/elements/publication-item/header';
-import { Authors } from '@/ui/segments/explore/circuit/elements/publication-item/authors';
 import { Actions } from '@/ui/segments/explore/circuit/elements/publication-item/actions';
+import { Authors } from '@/ui/segments/explore/circuit/elements/publication-item/authors';
+import { Header } from '@/ui/segments/explore/circuit/elements/publication-item/header';
+import { Metadata } from '@/ui/segments/explore/circuit/elements/publication-item/metadata';
 
 import type { IPublication } from '@/api/entitycore/types/entities/publication';
 import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';
@@ -10,11 +10,12 @@ import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/sci
 interface Props {
   publication: IPublication;
   scientificArtifact: ScientificArtifactBase;
+  className?: string;
 }
 
-export function Card({ publication, scientificArtifact }: Props) {
+export function Card({ publication, scientificArtifact, className }: Props) {
   return (
-    <div className="w-full p-2">
+    <div className={className ?? 'w-full p-2'}>
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <Header title={publication.title!} />

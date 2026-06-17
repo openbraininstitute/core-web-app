@@ -1,5 +1,4 @@
 import { getSingleNeuronSimulation } from '@/api/entitycore/queries';
-
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
@@ -8,10 +7,11 @@ import {
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
+
 import type { WorkspaceContext } from '@/types/common';
 
 export async function* getSingleNeuronSimulationFiles(entityIds: string[], ctx?: WorkspaceContext) {
-  const metadata = new Metadata<Record<string, any>>();
+  const metadata = new Metadata<Record<string, unknown>>();
 
   try {
     yield await createTemplateFileEntry(EntityTypeDict.SingleNeuronSimulation);

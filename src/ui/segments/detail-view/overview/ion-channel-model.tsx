@@ -3,7 +3,17 @@ import { sortBy } from 'es-toolkit/compat';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { PDFViewer } from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
+import { CodeBlock } from '@/ui/molecules/code-blocks';
+import {
+  detailViewHeadingClass,
+  detailViewInsetPanelClass,
+  detailViewLabelClass,
+  detailViewPanelBorderClass,
+  detailViewValueClass,
+} from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { WorkspaceContext } from '@/types/common';
@@ -19,12 +29,22 @@ type SummaryEntry = {
 
 type SummaryJson = Record<string, SummaryEntry>;
 
+function sectionHeadingClass(variant: TViewVariant) {
+  return cn(
+    'mb-5 mt-5 rounded-full border px-4 py-3 text-xl font-bold capitalize',
+    detailViewHeadingClass(variant, 'xl'),
+    detailViewPanelBorderClass(variant)
+  );
+}
+
 export default async function IonChannelModelOverview({
   icm,
   ctx,
+  variant = ViewVariant.Default,
 }: {
   icm: IonChannelModel;
   ctx: WorkspaceContext;
+  variant?: TViewVariant;
 }) {
   const asset = icm.assets.filter((a) => a.label === AssetLabel.neuron_mechanisms)[0];
   if (!asset) return null;
@@ -87,23 +107,22 @@ export default async function IonChannelModelOverview({
       ]
     : [];
 
+  const columnHeaderClass = cn('text-center text-sm', detailViewLabelClass(variant));
+  const rowLabelClass = cn('font-bold uppercase', detailViewValueClass(variant));
+
   return (
     <>
       {orderedGroups.map(([groupName, entries]) => (
         <div key={groupName}>
-          <div className="text-primary-8 border-neutral-2 mb-5 mt-5 rounded-full border px-4 py-3 text-xl font-bold capitalize">
-            Model {groupName}
-          </div>
+          <div className={sectionHeadingClass(variant)}>Model {groupName}</div>
 
           {groupName === 'traces' && (
             <div className="flex flex-col">
-              {/* Header row */}
               <div className="grid grid-cols-[200px_1fr_1fr] gap-4 pb-3">
                 <div />
-                <div className="text-neutral-3 text-center text-sm uppercase">Stimulus</div>
-                <div className="text-neutral-3 text-center text-sm uppercase">Response</div>
+                <div className={columnHeaderClass}>Stimulus</div>
+                <div className={columnHeaderClass}>Response</div>
               </div>
-              {/* Data rows */}
               {entries.map(([key, value]) => {
                 const stimuliAsset = value.stimuli ? imagesByPath[value.stimuli] : undefined;
                 const tracesAsset = value.traces ? imagesByPath[value.traces] : undefined;
@@ -112,13 +131,11 @@ export default async function IonChannelModelOverview({
 
                 return (
                   <div key={key}>
-                    {/* Title row */}
                     <div className="grid grid-cols-[200px_1fr_1fr] gap-4 pt-4">
-                      <div className="text-primary-8 font-bold uppercase">{key}</div>
+                      <div className={rowLabelClass}>{key}</div>
                       <div />
                       <div />
                     </div>
-                    {/* Images row */}
                     <div className="grid grid-cols-[200px_1fr_1fr] gap-4 py-2">
                       <div />
                       <div className="min-w-0">
@@ -129,6 +146,7 @@ export default async function IonChannelModelOverview({
                             entityId={icm.id}
                             assetId={stimuliAsset.id}
                             showPageCount={false}
+                            variant={variant}
                           />
                         )}
                       </div>
@@ -140,6 +158,7 @@ export default async function IonChannelModelOverview({
                             entityId={icm.id}
                             assetId={tracesAsset.id}
                             showPageCount={false}
+                            variant={variant}
                           />
                         )}
                       </div>
@@ -152,13 +171,11 @@ export default async function IonChannelModelOverview({
 
           {groupName === 'parameters' && (
             <div className="flex flex-col">
-              {/* Header row */}
               <div className="grid grid-cols-[200px_1fr_1fr] gap-4 pb-3">
                 <div />
-                <div className="text-neutral-3 text-center text-sm uppercase">Steady State</div>
-                <div className="text-neutral-3 text-center text-sm uppercase">Time Constant</div>
+                <div className={columnHeaderClass}>Steady State</div>
+                <div className={columnHeaderClass}>Time Constant</div>
               </div>
-              {/* Data rows */}
               {entries.map(([key, value]) => {
                 const steadyStateAsset = value['steady state']
                   ? (imagesByPath[value['steady state']] ??
@@ -173,13 +190,11 @@ export default async function IonChannelModelOverview({
 
                 return (
                   <div key={key}>
-                    {/* Title row */}
                     <div className="grid grid-cols-[200px_1fr_1fr] gap-4 pt-4">
-                      <div className="text-primary-8 font-bold uppercase">{key}</div>
+                      <div className={rowLabelClass}>{key}</div>
                       <div />
                       <div />
                     </div>
-                    {/* Images row */}
                     <div className="grid grid-cols-[200px_1fr_1fr] gap-4 py-2">
                       <div />
                       <div className="min-w-0">
@@ -190,6 +205,7 @@ export default async function IonChannelModelOverview({
                             entityId={icm.id}
                             assetId={steadyStateAsset.id}
                             showPageCount={false}
+                            variant={variant}
                           />
                         )}
                       </div>
@@ -201,6 +217,7 @@ export default async function IonChannelModelOverview({
                             entityId={icm.id}
                             assetId={timeConstantAsset.id}
                             showPageCount={false}
+                            variant={variant}
                           />
                         )}
                       </div>
@@ -213,11 +230,16 @@ export default async function IonChannelModelOverview({
         </div>
       ))}
 
-      <div className="text-primary-8 border-neutral-2 mt-5 mb-5 rounded-full border px-4 py-3 text-xl font-bold">
-        File preview
-      </div>
-      <div className="bg-neutral-2 overflow-x-auto overflow-y-auto p-4 font-mono text-sm whitespace-pre text-black shadow-lg">
-        {text.trimEnd().trimStart()}
+      <div className={sectionHeadingClass(variant)}>File preview</div>
+      <div
+        className={cn(
+          'overflow-x-auto secondary-scrollbar overflow-y-auto font-mono text-sm whitespace-pre shadow-lg',
+          variant === ViewVariant.Default
+            ? cn(detailViewInsetPanelClass(variant), 'text-white')
+            : 'bg-neutral-2 text-black'
+        )}
+      >
+        <CodeBlock code={text.trimEnd().trimStart()} language="shell" showLineNumbers scrollableX />
       </div>
     </>
   );

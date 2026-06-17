@@ -14,17 +14,17 @@ export function Metadata({ publisher, date, className }: Props) {
       {publisher && (
         <div className="flex items-center gap-1">
           <div className="border-neutral-2 flex items-center justify-center rounded-full border p-1">
-            <BuildingLibrary className="text-primary-8" />
+            <BuildingLibrary className="text-white" />
           </div>
-          <span>{publisher}</span>
+          <span className="text-white">{publisher}</span>
         </div>
       )}
       {date && (
         <div className="flex items-center gap-1">
           <div className="border-neutral-2 flex items-center justify-center rounded-full border p-1">
-            <Calendar className="text-primary-8" />
+            <Calendar className="text-white" />
           </div>
-          <span>{renderDate(new Date(date).toISOString())}</span>
+          <span className="text-white">{renderDate(new Date(date).toISOString())}</span>
         </div>
       )}
     </div>

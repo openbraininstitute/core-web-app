@@ -1,5 +1,5 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import ActionPopover from '@/ui/segments/notebooks/table/ActionPopover';
+import { ActionPopover } from '@/ui/segments/notebooks/table/action-popover';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';

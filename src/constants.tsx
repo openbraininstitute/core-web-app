@@ -17,6 +17,14 @@ export const DEFAULT_PAGE_SMALL_SIZE = 10;
 export const DEFAULT_PAGE_XSMALL_SIZE = 5;
 export const DEFAULT_PAGE_NUMBER = 1;
 
+/** Shared visual variant for detail views, mini detail views and related viewers. */
+export const ViewVariant = {
+  Light: 'light',
+  Default: 'default',
+} as const;
+
+export type TViewVariant = (typeof ViewVariant)[keyof typeof ViewVariant];
+
 export const WorkspaceScope = {
   Combined: 'combined', // this is for both public and project
   Public: 'public',

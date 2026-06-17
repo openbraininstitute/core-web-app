@@ -300,8 +300,8 @@ export async function serviceAiAgentThreadSearch({
     path: 'threads/search',
     params: {
       query,
-      virtual_lab_id: virtualLabId,
-      project_id: projectId,
+      vlabId: virtualLabId,
+      projectId,
       limit: `${limit}`,
     },
     typeGuard: isThreadSearchResponse,
@@ -310,9 +310,9 @@ export async function serviceAiAgentThreadSearch({
 }
 
 export interface ThreadSearchResponse {
-  result_list: Array<{
-    thread_id: string;
-    message_id: string;
+  resultList: Array<{
+    threadId: string;
+    messageId: string;
     title: string;
     content: string;
   }>;
@@ -321,11 +321,11 @@ export interface ThreadSearchResponse {
 function isThreadSearchResponse(data: unknown): data is ThreadSearchResponse {
   try {
     assertType(data, {
-      result_list: [
+      resultList: [
         'array',
         {
-          thread_id: 'string',
-          message_id: 'string',
+          threadId: 'string',
+          messageId: 'string',
           title: 'string',
           content: 'string',
         },

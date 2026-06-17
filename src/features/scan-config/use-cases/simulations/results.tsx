@@ -5,16 +5,22 @@ import { match } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
-import { listAllChildren as listAllSimulationChildren } from '@/entity-configuration/domain/simulation/simulation-campaign';
-import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
+import {
+  listAllChildren as listAllSimulationChildren,
+  listExecutionsBySimulationId,
+} from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
+import {
+  hasSimConfigAsset,
+  shouldLaunchSimulationViaTaskSystem,
+} from '@/entity-configuration/domain/simulation/utils';
+import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
   useEnsureOfflineTokenConsent,
@@ -29,12 +35,9 @@ import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
-import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
@@ -42,7 +45,6 @@ import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
-const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 type SimulationTabProps = {
   campaignId: string;
   virtualLabId: string;
@@ -76,6 +78,13 @@ export default function SimulationsTab({
     id: simulations[0]?.entity_id,
   });
 
+  const scale = get(model, 'scale', null);
+  const targetSimulator = get(model, 'target_simulator', null);
+  const shouldTreatSimulationAsTask = shouldLaunchSimulationViaTaskSystem({
+    scale,
+    targetSimulator,
+  });
+
   const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
@@ -83,7 +92,6 @@ export default function SimulationsTab({
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
-  const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [jobIdMap, setJobIdMap] = useState<Map<string, string>>(new Map());
   const {
     modal: offlineTokenConsentModal,
@@ -117,17 +125,36 @@ export default function SimulationsTab({
     enabled: !!activeSimulation && !!simConfigAsset,
   });
 
-  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
-  const { data: membersData } = useQuery({
-    queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
-    queryFn: () => listVirtualLabMembers({ virtualLabId }),
-    enabled: !!virtualLabId && !isVirtualLabAdmin,
-  });
-  const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
+  const {
+    notifyLowCredits,
+    reportError: reportLowCredits,
+    creditsModal,
+  } = useLowCredits({ context, subject: 'run the simulation' });
 
   const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
+  const activeSimulationJobIdFromLaunch = activeSimulation
+    ? jobIdMap.get(activeSimulation.id)
+    : undefined;
 
-  const activeJobId = activeSimulation ? jobIdMap.get(activeSimulation.id) : undefined;
+  const { data: recoveredJobId } = useQuery({
+    queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
+    queryFn: async () => {
+      const executions = await listExecutionsBySimulationId({
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when activeSimulation exists
+        simulationId: activeSimulation!.id,
+        context,
+      });
+      return getLatestSimulationExecution({ executions })?.execution_id ?? null;
+    },
+    enabled:
+      shouldTreatSimulationAsTask &&
+      Boolean(activeSimulation?.id) &&
+      !activeSimulationJobIdFromLaunch,
+  });
+
+  const activeJobId = shouldTreatSimulationAsTask
+    ? (activeSimulationJobIdFromLaunch ?? recoveredJobId ?? undefined)
+    : undefined;
   const taskLogsViewerEnabled = !!activeSimulation && !!activeJobId;
   const taskLogsShouldReadSnapshot =
     !!activeSimulationExecStatus &&
@@ -223,11 +250,16 @@ export default function SimulationsTab({
     let nSubmissions = 0;
     let lowFundsError = false;
 
+    const taskType =
+      model && 'target_simulator' in model && model.target_simulator === 'Brian2'
+        ? ObiOneTaskTypeDict.CircuitSimulationBrian2
+        : ObiOneTaskTypeDict.CircuitSimulation;
+
     for (const simId of simIds) {
       try {
         const res = await runTask({
           ctx: { virtualLabId, projectId },
-          task_type: ObiOneTaskTypeDict.CircuitSimulation,
+          task_type: taskType,
           config_id: simId,
         });
         log('info', res);
@@ -236,7 +268,7 @@ export default function SimulationsTab({
         nSubmissions += 1;
       } catch (error) {
         log('error', 'Failed to submit a simulation');
-        if (error instanceof ApiError && error.cause?.code === LOW_FUNDS_ERROR_CODE) {
+        if (isLowCreditsError(error)) {
           lowFundsError = true;
         }
       }
@@ -244,40 +276,7 @@ export default function SimulationsTab({
     setSelectedSimulationIds([]);
     setSimRequestInProgress(false);
     if (lowFundsError) {
-      const notificationKey = 'simulation-low-funds';
-      notification.error({
-        message: messages.LowFundsError,
-        description: (
-          <div className="flex flex-col gap-2">
-            {isVirtualLabAdmin ? (
-              <button
-                type="button"
-                onClick={() => {
-                  notification.destroy(notificationKey);
-                  setShowCreditsModal(true);
-                }}
-                className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 hover:underline"
-              >
-                Add credits
-              </button>
-            ) : adminEmail ? (
-              <a
-                href={`mailto:${adminEmail}?subject=Insufficient%20credits%20for%20simulation`}
-                className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 no-underline hover:underline"
-              >
-                Contact Lab admin
-              </a>
-            ) : (
-              <span className="text-sm text-gray-600">
-                Contact your virtual lab administrator to request credits.
-              </span>
-            )}
-          </div>
-        ),
-        key: notificationKey,
-        duration: 0,
-        placement: 'topRight',
-      });
+      notifyLowCredits();
     } else if (nSubmissions !== simIds.length) {
       notification.error({
         message: 'We ran into a problem submitting your simulation(s). Please try again later.',
@@ -292,10 +291,6 @@ export default function SimulationsTab({
 
     setSelectedSimulationIds([]);
   };
-
-  const shouldTreatSimulationAsTask =
-    get(model, 'scale', null) === CircuitScaleDictionary.Microcircuit ||
-    get(model, 'scale', null) === CircuitScaleDictionary.Region;
 
   // TODO Refactor
   const run = async (simIds: string[]) => {
@@ -335,42 +330,7 @@ export default function SimulationsTab({
     } catch (error) {
       const defaultMsg = messages.RunningSimulationDefaultError;
 
-      if (error instanceof ApiError && error.cause?.code === LOW_FUNDS_ERROR_CODE) {
-        const notificationKey = 'simulation-low-funds';
-        return notification.error({
-          message: messages.LowFundsError,
-          description: (
-            <div className="flex flex-col gap-2">
-              {isVirtualLabAdmin ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    notification.destroy(notificationKey);
-                    setShowCreditsModal(true);
-                  }}
-                  className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 hover:underline"
-                >
-                  Add credits
-                </button>
-              ) : adminEmail ? (
-                <a
-                  href={`mailto:${adminEmail}?subject=Insufficient%20credits%20for%20simulation`}
-                  className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 no-underline hover:underline"
-                >
-                  Contact Lab admin
-                </a>
-              ) : (
-                <span className="text-sm text-gray-600">
-                  Contact your virtual lab administrator to request credits.
-                </span>
-              )}
-            </div>
-          ),
-          key: notificationKey,
-          duration: 0,
-          placement: 'topRight',
-        });
-      }
+      if (reportLowCredits(error)) return;
 
       if (error instanceof ApiError) {
         const message = getErrorMessage(error.cause?.code, errorRegistry, defaultMsg);
@@ -477,7 +437,7 @@ export default function SimulationsTab({
         onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
       />
 
-      <CreditsTransferModal open={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
+      {creditsModal}
     </>
   );
 }

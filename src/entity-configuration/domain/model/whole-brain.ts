@@ -9,15 +9,15 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const circuitScaleFilter = {
-  scale__in: [CircuitScaleDictionary.Single],
+  scale__in: [CircuitScaleDictionary.WholeBrain],
 };
 
-export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
+export const WholeBrain: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Synaptome (beta)',
-  extendedType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
+  title: 'Whole brain (beta)',
+  extendedType: ExtendedEntitiesTypeDict.WholeBrain,
   type: EntityTypeDict.Circuit,
-  slug: EntitySlug.Circuit,
+  slug: EntitySlug.WholeBrain,
   api: {
     config: {
       allowedFacets: true,
@@ -30,7 +30,10 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
-          filters: { ...params[0].filters, ...circuitScaleFilter },
+          filters: {
+            ...circuitScaleFilter,
+            ...params[0].filters,
+          },
         });
       },
       one: getCircuit,
@@ -41,11 +44,12 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Analysis,
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: (entity: ICircuit) => entity.has_electrical_cell_models,
+  isSimulatable: true,
 } as const;

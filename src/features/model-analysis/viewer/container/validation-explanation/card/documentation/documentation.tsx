@@ -1,7 +1,14 @@
 import { useId } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { TextPatternTransformer } from '@/ui/molecules/text-pattern-transformer';
+import {
+  detailViewHeadingClass,
+  detailViewLinkClass,
+  detailViewValueClass,
+} from '@/ui/segments/detail-view/variant-styles';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
 
@@ -32,7 +39,11 @@ export interface DocumentationProps {
 }
 const markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
 
-export default function Documentation({ className, value }: DocumentationProps) {
+export default function Documentation({
+  className,
+  value,
+  variant = ViewVariant.Light,
+}: DocumentationProps & { variant?: TViewVariant }) {
   const { documentation } = value;
 
   if (!documentation) return null;
@@ -41,7 +52,11 @@ export default function Documentation({ className, value }: DocumentationProps) 
   return (
     <div
       id={`${documentation}_${value.assetId}`}
-      className={classNames(className, styles.documentation)}
+      className={classNames(
+        className,
+        styles.documentation,
+        variant === ViewVariant.Default && detailViewValueClass(variant)
+      )}
     >
       {value.extraVariables && (
         <>
@@ -59,7 +74,9 @@ export default function Documentation({ className, value }: DocumentationProps) 
       )}
       <TextPatternTransformer
         regex={markdownLinkRegex}
-        component={(match) => <TransformedLink url={match} className="text-primary-8 underline" />}
+        component={(match) => (
+          <TransformedLink url={match} className={cn('underline', detailViewLinkClass(variant))} />
+        )}
       >
         {documentation.description}
       </TextPatternTransformer>
@@ -97,7 +114,9 @@ export default function Documentation({ className, value }: DocumentationProps) 
       </div>
       {documentation.validation_condition && (
         <div className="py-5">
-          <h4 className="text-primary-8 font-black">Validation condition: </h4>
+          <h4 className={cn('font-black', detailViewHeadingClass(variant, 'xl'))}>
+            Validation condition:{' '}
+          </h4>
           {documentation.validation_condition}
         </div>
       )}

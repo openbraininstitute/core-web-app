@@ -1,6 +1,6 @@
 'use client';
 
-import { Empty, Spin } from 'antd';
+import { Empty, Progress, Spin } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
@@ -9,6 +9,7 @@ import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-con
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { cn } from '@/utils/css-class';
+import { formatBytes } from '@/utils/format';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
@@ -47,6 +48,7 @@ export default function CircuitNodesTable({ circuit, className }: Props) {
     columns,
     datasource,
     isLoading: workerLoading,
+    progress: downloadProgress,
     error: workerError,
   } = useNodesWorker({
     enabled,
@@ -81,6 +83,7 @@ export default function CircuitNodesTable({ circuit, className }: Props) {
           configLoading,
           workerError,
           workerLoading,
+          downloadProgress,
           hasPopulation: !!population,
           columns,
           rowCount,
@@ -99,6 +102,7 @@ function renderBody({
   configLoading,
   workerError,
   workerLoading,
+  downloadProgress,
   hasPopulation,
   columns,
   rowCount,
@@ -111,6 +115,7 @@ function renderBody({
   configLoading: boolean;
   workerError: Error | null;
   workerLoading: boolean;
+  downloadProgress: ReturnType<typeof useNodesWorker>['progress'];
   hasPopulation: boolean;
   columns: ReturnType<typeof useNodesWorker>['columns'];
   rowCount: number;
@@ -152,7 +157,7 @@ function renderBody({
     );
   }
   if (workerLoading || !columns || !datasource) {
-    return <CenteredSpin label="Loading nodes…" />;
+    return <DownloadProgress progress={downloadProgress} />;
   }
   return (
     <NodesGrid
@@ -169,9 +174,41 @@ function renderBody({
 function CenteredSpin({ label }: { label: string }) {
   return (
     <div className={styles.centered}>
-      <Spin tip={label} size="large">
+      <Spin tip={label} size="large" className="[&_.ant-spin-dot-item]:bg-primary-6!">
         <div className={styles.spinBox} />
       </Spin>
+    </div>
+  );
+}
+
+function DownloadProgress({
+  progress,
+}: {
+  progress: ReturnType<typeof useNodesWorker>['progress'];
+}) {
+  // No bytes yet (or no Content-Length to compute a percent): fall back to the indeterminate spinner.
+  if (!progress) return <CenteredSpin label="Loading nodes…" />;
+  if (!progress.total) {
+    return <CenteredSpin label={`Downloading nodes… ${formatBytes(progress.received, 0)}`} />;
+  }
+
+  const percent = Math.round((progress.received / progress.total) * 100);
+  return (
+    <div className={styles.centered}>
+      <div style={{ width: 280 }} className="text-center">
+        <div className="mb-1 text-sm text-primary-9">
+          Downloading nodes…{' '}
+          <span className="tabular-nums">
+            {formatBytes(progress.received, 0)} / {formatBytes(progress.total, 0)}
+          </span>
+        </div>
+        <Progress
+          type="line"
+          percent={percent}
+          strokeColor="var(--color-primary-6)"
+          className="[&_.ant-progress-text]:text-primary-9!"
+        />
+      </div>
     </div>
   );
 }

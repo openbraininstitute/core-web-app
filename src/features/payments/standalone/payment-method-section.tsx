@@ -69,9 +69,10 @@ export function StandalonePaymentMethodSection({
             submitting ? <LoadingOutlined spin className="text-white" /> : <RiSecurePaymentFill />
           }
           classNames={{
-            root: 'bg-primary-9 text-white hover:bg-primary-8 group',
-            label: 'text-white pr-6',
-            iconWrapper: 'bg-primary-9 text-white! group-hover:bg-primary-8!',
+            root: 'bg-primary-9 text-white hover:bg-primary-8 group disabled:bg-neutral-2! disabled:text-neutral-4! disabled:opacity-100!',
+            label: 'text-white pr-6 group-disabled:text-neutral-4!',
+            iconWrapper:
+              'bg-primary-9 text-white! group-hover:bg-primary-8! group-disabled:bg-neutral-2! group-disabled:text-neutral-4!',
           }}
           disabled={payDisabled || submitting}
           onClick={onPay}

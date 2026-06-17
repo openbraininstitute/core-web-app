@@ -5,8 +5,11 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
+import { type TViewVariant, ViewVariant } from '@/constants';
+import { detailViewValueClass } from '@/ui/segments/detail-view/variant-styles';
 import { Card } from '@/ui/segments/explore/circuit/elements/publication-item/card';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
@@ -15,9 +18,11 @@ import type { WorkspaceContext } from '@/types/common';
 export function PerTypePublications({
   entity,
   type,
+  variant = ViewVariant.Light,
 }: {
   entity: TRetrieveEntityOutput;
   type: TPublicationTypeDictionary;
+  variant?: TViewVariant;
 }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const [pagination, setPagination] = useState<{
@@ -73,6 +78,20 @@ export function PerTypePublications({
           hideOnSinglePage: true,
           pageSize: pagination.pageSize,
           total: result?.pagination.total_items ?? pagination.pageSize,
+          className: cn(
+            '[&_.ant-pagination-item-link]:text-white',
+            '[&_.ant-pagination-item]:rounded-full!',
+            '[&_.ant-pagination-item-active]:bg-primary-9',
+            '[&_.ant-pagination-item]:hover:bg-primary-8/50!',
+            '[&_.ant-pagination-item:hover_a]:text-white!',
+            '[&_.ant-pagination-item-active]:text-white',
+            '[&_.ant-pagination-item-active]:border-primary-9',
+            '[&_.ant-pagination-item-active]:border-primary-9',
+            '[&_.ant-pagination-prev_.ant-pagination-item-link]:text-white!',
+            '[&_.ant-pagination-prev_.ant-pagination-disabled_.ant-pagination-item-link]:text-gray-100!',
+            '[&_.ant-pagination-next_.ant-pagination-disabled_.ant-pagination-item-link]:text-gray-100!',
+            '[&_.ant-pagination-next_.ant-pagination-item-link]:text-white!'
+          ),
           onChange: (page, pageSize) => {
             setPagination(() => ({
               page,
@@ -88,16 +107,23 @@ export function PerTypePublications({
             <div className="flex flex-col items-center justify-center">
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={<p className="text-gray-500">No related publications found</p>}
+                description={
+                  <p
+                    className={variant === ViewVariant.Default ? 'text-primary-3' : 'text-gray-500'}
+                  >
+                    No related publications found
+                  </p>
+                }
               />
             </div>
           ),
         }}
         renderItem={(publication) => (
-          <List.Item key={publication.id}>
+          <List.Item key={publication.id} className="border-none! px-0! py-2!">
             <Card
               publication={publication.publication}
               scientificArtifact={publication.scientific_artifact}
+              className="w-full"
             />
           </List.Item>
         )}
@@ -105,7 +131,7 @@ export function PerTypePublications({
       {isError && (
         <div className="my-5 flex flex-col items-center justify-center">
           <div className="flex w-max items-center justify-between gap-6 rounded-md bg-red-50 p-4">
-            <p className="text-primary-8">{error.message}</p>
+            <p className={detailViewValueClass(variant)}>{error.message}</p>
             <CloseCircleTwoTone
               twoToneColor="#ff4d4f"
               className="text-md cursor-pointer hover:scale-110"

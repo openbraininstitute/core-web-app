@@ -1,13 +1,12 @@
 'use client';
 
-import { RiErrorWarningFill } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { match } from 'ts-pattern';
 
+import { PricingButton } from '@/features/credits';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
-import { Button } from '@/ui/molecules/button';
 import { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { BuyCredits } from '@/ui/segments/virtual-lab-settings/elements/buy-credits';
 import { CreditsDistribution } from '@/ui/segments/virtual-lab-settings/elements/credits-distribution';
@@ -101,19 +100,7 @@ function History({ virtualLabId, listingTab, setListingTab }: ListingSectionProp
               </div>
 
               <div className="flex items-center gap-3">
-                <Button
-                  rounded
-                  size="md"
-                  variant="outline"
-                  type="button"
-                  className="border-gray-100 group shrink-0 bg-white px-4 text-primary-9 select-none hover:border-gray-300 hover:text-primary-8"
-                  onClick={() => window.open('/pricing', '_blank', 'noopener,noreferrer')}
-                >
-                  <span className="flex items-center gap-3">
-                    Pricing
-                    <RiErrorWarningFill className="text-primary-9 group-hover:text-primary-8" />
-                  </span>
-                </Button>
+                <PricingButton />
 
                 <PillTabsList
                   className="ml-auto grid p-0 w-full h-10 max-w-max shrink-0 grid-cols-2 rounded-full border border-gray-100 hover:border-gray-300 shadow-sm bg-white text-primary-9"

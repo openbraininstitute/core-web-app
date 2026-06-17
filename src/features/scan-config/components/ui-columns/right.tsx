@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceSection } from '@/constants';
+import { ViewVariant, WorkspaceSection } from '@/constants';
 import {
   usePreviewRecord,
   useSetScanConfigEntityPreview,
@@ -17,7 +17,6 @@ import {
 } from '@/features/scan-config/types';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
-import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { Config } from '@/features/scan-config/types';
@@ -80,7 +79,7 @@ export function Right({
             section={WorkspaceSection.Data}
             record={previewRecord as EntityCoreObjectTypes}
             dataType={entityPreview.dataType}
-            theme={MiniDetailViewTheme.Light}
+            theme={ViewVariant.Light}
             enableAnimation={false}
             hideUseModelAction
             onClose={() => setEntityPreview(null)}
@@ -105,7 +104,7 @@ export function Right({
       {((activity === ScanConfigActivity.Simulate &&
         (entityType === ExtendedEntitiesTypeDict.Circuit ||
           entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
-          entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
+          entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) &&
         entity) ||
         (activity === ScanConfigActivity.Extract &&
           entity &&

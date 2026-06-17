@@ -6,7 +6,12 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IDatasource } from 'ag-grid-community';
-import type { ColumnMeta, NodePopulation, OpenResponse } from '@/features/circuit-nodes/types';
+import type {
+  ColumnMeta,
+  DownloadProgress,
+  NodePopulation,
+  OpenResponse,
+} from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
 
 type Args = {
@@ -33,6 +38,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
   const [openResult, setOpenResult] = useState<OpenResponse | null>(null);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const [progress, setProgress] = useState<DownloadProgress | null>(null);
 
   useEffect(() => {
     if (!enabled || !population || !circuitAssetId || !circuitId) {
@@ -41,6 +47,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
       setOpenResult(null);
       setFilteredCount(null);
       setError(null);
+      setProgress(null);
       return;
     }
 
@@ -49,6 +56,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
 
     setStatus('loading');
     setError(null);
+    setProgress(null);
 
     (async () => {
       try {
@@ -71,16 +79,23 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
         workerRef.current = { worker, proxy, populationKey: population.name };
 
         const fileKey = `${circuitId}-${circuitAssetId}-${population.name}`;
-        const result = await proxy.open({
-          populationKey: population.name,
-          fileKey,
-          url,
-          headers,
-        });
+        const result = await proxy.open(
+          {
+            populationKey: population.name,
+            fileKey,
+            url,
+            headers,
+          },
+          Comlink.proxy((next: DownloadProgress) => {
+            if (cancelled || generationRef.current !== generation) return;
+            setProgress(next);
+          })
+        );
         if (cancelled || generationRef.current !== generation) return;
 
         setOpenResult(result);
         setFilteredCount(null);
+        setProgress(null);
         setStatus('ready');
       } catch (e) {
         if (cancelled || generationRef.current !== generation) return;
@@ -88,6 +103,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
         setError(e instanceof Error ? e : new Error(String(e)));
         setStatus('error');
         setOpenResult(null);
+        setProgress(null);
       }
     })();
 
@@ -141,6 +157,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     columns: openResult?.columns,
     datasource,
     isLoading: status === 'loading',
+    progress,
     error,
   };
 }

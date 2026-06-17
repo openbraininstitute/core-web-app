@@ -1,8 +1,9 @@
 import { getExperimentalNeuronDensity } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { ExperimentalNeuronDensityJsonMetadata } from '@/features/entity-download/types';
 import { createTemplateFileEntry, getMetadataCsvEntryBase } from '@/features/entity-download/utils';
+
+import type { ExperimentalNeuronDensityJsonMetadata } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function* getExperimentalNeuronDensityFiles(

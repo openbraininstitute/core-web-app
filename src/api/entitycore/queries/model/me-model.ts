@@ -54,13 +54,14 @@ export async function getMEModel({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<IMEModel>(`${baseUri}/${id}`, {
+  const result = await api.get<IMEModel>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
   });
+  return result;
 }
 
 /**

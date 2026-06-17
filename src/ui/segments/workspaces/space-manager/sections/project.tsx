@@ -35,7 +35,10 @@ import { ErrorSoft } from '@/ui/molecules/feedback-card';
 import { Label, XInput } from '@/ui/segments/profile/sections/profile-form/elements';
 import { ProjectActivities } from '@/ui/segments/project/activities';
 import { ProjectCreation } from '@/ui/segments/project/create';
-import { canChangeProjectMemberRole } from '@/ui/segments/project/team/role-changer';
+import {
+  canChangeProjectMemberRole,
+  canManagePendingProjectInviteWithoutMemberId,
+} from '@/ui/segments/project/team/role-changer';
 import {
   type TWorkspaceManagerSection,
   WorkspaceManagerSectionDict,
@@ -862,6 +865,23 @@ function ProjectRoleModifier({
   });
 
   if (!user.invite_accepted) {
+    const canCancelPendingInvite = user.id
+      ? canChangeProjectMemberRole({
+          viewerId: session?.user.id,
+          targetUserId: user.id,
+          virtualLabOwnerId,
+          virtualLabAdmins,
+          projectAdmins,
+        })
+      : canManagePendingProjectInviteWithoutMemberId({
+          viewerId: session?.user.id,
+          virtualLabOwnerId,
+          virtualLabAdmins,
+          projectAdmins,
+        });
+
+    if (!canCancelPendingInvite) return null;
+
     return (
       <CancelProjectInvitation
         user={user}

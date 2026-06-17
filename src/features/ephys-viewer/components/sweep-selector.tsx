@@ -1,6 +1,11 @@
-import React, { ChangeEvent } from 'react';
 import { Button } from 'antd';
+import React, { type ChangeEvent } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
+import {
+  ephysControlLabelClass,
+  ephysControlSubLabelClass,
+} from '@/features/ephys-viewer/label-styles';
 import { classNames } from '@/util/utils';
 
 import styles from './sweep-selector.module.css';
@@ -12,6 +17,7 @@ type TraceSelectorGroupProps = {
   setSelectedSweeps: (sweeps: string[]) => void;
   colorMap: Map<string, string>;
   previewItem?: string;
+  variant?: TViewVariant;
 };
 
 function SweepSelector({
@@ -21,6 +27,7 @@ function SweepSelector({
   onPreviewSweep,
   setSelectedSweeps,
   colorMap,
+  variant = ViewVariant.Light,
 }: TraceSelectorGroupProps) {
   const [preview, setPreview] = React.useState<string | undefined>(undefined);
   const handlePreviewSweep = (id: string | undefined) => {
@@ -45,6 +52,7 @@ function SweepSelector({
     };
 
     return (
+      // biome-ignore lint/a11y/noStaticElementInteractions: label is associated with input
       <div
         key={label}
         className={classNames(
@@ -56,9 +64,9 @@ function SweepSelector({
         onMouseEnter={() => handlePreviewSweep(value)}
         onMouseLeave={() => handlePreviewSweep(undefined)}
       >
-        <label // eslint-disable-line jsx-a11y/label-has-associated-control
+        <label
           className={classNames(
-            'flex h-[32px] w-[32px] cursor-pointer items-center rounded border-1 hover:opacity-75',
+            'flex h-[32px] w-[32px] cursor-pointer items-center rounded border hover:opacity-85',
             isSelected && styles.selected
           )}
           style={{
@@ -83,8 +91,11 @@ function SweepSelector({
   return (
     <div className={styles.flex}>
       <div className="flex flex-col gap-3">
-        <span className="text-dark font-bold">
-          Sweep <small className="text-sm font-light">({sweepOptions.length} available)</small>
+        <span className={ephysControlLabelClass(variant)}>
+          Sweep{' '}
+          <small className={ephysControlSubLabelClass(variant)}>
+            ({sweepOptions.length} available)
+          </small>
         </span>
         <div className="flex flex-wrap items-center">{sweeps}</div>
       </div>

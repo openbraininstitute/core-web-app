@@ -6,15 +6,23 @@ import {
   buildEmDenseMorphologyLoader,
   buildMemodelLoader,
 } from '@/features/scan-config/workflow/loaders/em-dense-morphology-loader';
-import {
-  EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
-  EmDatasetPrerequisiteCards,
-} from '@/ui/segments/workflows/browse/prerequisite/em-dataset-cards';
+import { EM_DENSE_RECONSTRUCTION_DATASET_TYPE } from '@/ui/segments/workflows/browse/prerequisite/em-dataset-cards.constants';
+import { EmSynapseMappingDatasetPrerequisiteCards } from '@/ui/segments/workflows/browse/prerequisite/em-synapse-mapping-dataset-cards';
 
 import { buildEmSynapseMappingConfigureBinding } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
 
+import type { TBrowsePrerequisite } from '@/ui/segments/workflows/browse/browse-config';
 import type { IWorkflowDescriptor } from '../types';
+
+const emSynapseMappingPrerequisite: TBrowsePrerequisite = {
+  entityType: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+  label: 'Choose an em-dense reconstruction dataset',
+  required: true,
+  shareKey: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+  autoContinueOnSelect: true,
+  presentation: { kind: 'custom', render: EmSynapseMappingDatasetPrerequisiteCards },
+};
 
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
@@ -88,26 +96,14 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     // ME-model tables alike, each type still loads its own rows from that dataset
     browseConfig: {
       [ExtendedEntitiesTypeDict.UniversalCellMorphology]: {
-        prerequisite: {
-          entityType: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
-          label: 'Choose an em-dense reconstruction dataset',
-          required: true,
-          shareKey: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
-          presentation: { kind: 'custom', render: EmDatasetPrerequisiteCards },
-        },
+        prerequisite: emSynapseMappingPrerequisite,
         loader: {
           kind: 'custom',
           build: buildEmDenseMorphologyLoader,
         },
       },
       [ExtendedEntitiesTypeDict.Memodel]: {
-        prerequisite: {
-          entityType: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
-          label: 'Choose an em-dense reconstruction dataset',
-          required: true,
-          shareKey: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
-          presentation: { kind: 'custom', render: EmDatasetPrerequisiteCards },
-        },
+        prerequisite: emSynapseMappingPrerequisite,
         loader: {
           kind: 'custom',
           build: buildMemodelLoader,
@@ -116,14 +112,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     disabled: false,
     requiredFeatures: [emSynapseMappingActivityFlag.key],
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.Disabled,
-    sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-    targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-    order: 6,
-    disabled: true,
   },
   {
     ...WorkflowBrowseDefaults,

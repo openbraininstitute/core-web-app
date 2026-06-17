@@ -1,17 +1,20 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { wholeBrainSimulationFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { simulateIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/simulate-ion-channel';
+import { simulateMEModelWithSynapsesCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-me-model-with-synapses-circuit';
 import { simulateMemodelCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-memodel-circuit';
 import { simulateMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-microcircuit';
 import { simulatePairedNeuronCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-paired-neuron-circuit';
 import { simulateRegionCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-region-circuit';
-import { simulateSingleNeuronCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-single-neuron-circuit';
 import { simulateSmallMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-small-microcircuit';
+import { simulateWholeBrainCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-whole-brain-circuit';
 
 import {
   circuitSimulationConfigureBinding,
   ionChannelSimulationConfigureBinding,
   memodelCircuitSimulationConfigureBinding,
+  wholeBrainCircuitSimulationConfigureBinding,
 } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
 
@@ -86,22 +89,22 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfig,
-    sourceType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
+    sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
     breadcrumb: {
       root: 'Synaptome (beta) simulation',
       steps: { selection: 'Select synaptome (beta)' },
     },
     scanConfig: {
-      definition: simulateSingleNeuronCircuitWorkflow,
+      definition: simulateMEModelWithSynapsesCircuitWorkflow,
       schemaName: SchemaNameDict.MEModelWithSynapsesCircuitSimulationScanConfig,
       configureBinding: circuitSimulationConfigureBinding(
-        ExtendedEntitiesTypeDict.MEModelWithSynapses
+        ExtendedEntitiesTypeDict.SingleNeuronCircuit
       ),
     },
     configurationInputs: [
       {
-        type: ExtendedEntitiesTypeDict.MEModelWithSynapses,
+        type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
         filters: simulatableCircuitFilters,
       },
     ],
@@ -234,9 +237,22 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   },
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.Disabled,
+    ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.WholeBrain,
-    targetType: ExtendedEntitiesTypeDict.WholeBrain,
-    disabled: true,
+    targetType: ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
+    breadcrumb: {
+      root: 'Whole brain simulation',
+      steps: { selection: 'Select whole brain' },
+    },
+    scanConfig: {
+      definition: simulateWholeBrainCircuitWorkflow,
+      // Default schema/endpoint; Brian2 is selected from `target_simulator` at configure time.
+      schemaName: SchemaNameDict.CircuitSimulationScanConfig,
+      configureBinding: wholeBrainCircuitSimulationConfigureBinding(),
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.WholeBrain }],
+    requiredFeatures: [wholeBrainSimulationFlag.key],
+    order: 10,
+    disabled: false,
   },
 ];

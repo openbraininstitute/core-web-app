@@ -36,6 +36,11 @@ export async function GET(
       return NextResponse.json({ error: 'Download ticket not found or expired' }, { status: 404 });
     }
 
+    // Only entity-batch tickets are valid on this route
+    if (ticket.kind !== 'entity-batch') {
+      return NextResponse.json({ error: 'Invalid ticket kind for this route' }, { status: 400 });
+    }
+
     // If the ticket is for a different entity type, reject the request
     if (ticket.entityType !== entityType) {
       return NextResponse.json(
@@ -46,12 +51,7 @@ export async function GET(
 
     ticketStore.deleteTicket(ticketId);
 
-    const downloadStream = await createDownloadStream({
-      entityType: ticket.entityType,
-      virtualLabId: ticket.virtualLabId,
-      projectId: ticket.projectId,
-      entityIds: ticket.entityIds,
-    });
+    const downloadStream = await createDownloadStream(ticket);
 
     return new NextResponse(downloadStream, {
       headers: getDownloadStreamHeaders({

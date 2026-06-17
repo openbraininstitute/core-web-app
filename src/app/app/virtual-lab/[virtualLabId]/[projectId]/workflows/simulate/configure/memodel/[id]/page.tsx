@@ -1,9 +1,7 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { use } from 'react';
+import { Spinner } from '@bprogress/next';
 
-import { getMEModel } from '@/api/entitycore/queries';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
 import {
   type TLegacyWorkflowSessionSearchParams,
@@ -15,8 +13,9 @@ import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/sha
 import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+
+import { useEntity } from './hooks';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type {
@@ -36,13 +35,11 @@ export default function Page({
     '3d': ThreeDVisualizerQueryParamKeys;
   }
 >) {
-  const { virtualLabId, projectId, id: modelId } = use(pathParams);
   const sessionId = useLegacyWorkflowSessionFromSearchParams(searchParams);
+  const entity = useEntity(pathParams);
+  if (entity === undefined) return <Spinner />;
 
-  const { data: entity } = useSuspenseQuery({
-    queryKey: keyBuilder.meModel({ virtualLabId, projectId, entityId: modelId }),
-    queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
-  });
+  if (entity instanceof Error) throw entity;
 
   return (
     <WorkflowSimulateLayout>

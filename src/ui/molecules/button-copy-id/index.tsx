@@ -10,12 +10,18 @@ interface ButtonCopyIdProps {
   label?: string;
   tooltip?: string;
   value: string;
+  classNames?: {
+    button?: string;
+    icon?: string;
+    tooltip?: string;
+  };
 }
 
 export function ButtonCopyId({
   value,
   tooltip = 'Database ID',
   label = 'Copy ID',
+  classNames,
 }: ButtonCopyIdProps) {
   const [, copyCampaignId, , copyingCampaignId] = useCopyToClipboard();
 
@@ -28,21 +34,22 @@ export function ButtonCopyId({
             variant="ghost"
             type="button"
             aria-label="Copy campaign ID"
-            className="pr-1"
+            className={cn('pr-1 text-primary-9 ', classNames?.button)}
             size="md"
             onClick={() => copyCampaignId(value)}
           >
-            <span className="text-primary-9 text-base">{label}</span>
+            <span className="text-base">{label}</span>
             <div
               className={cn(
-                'flex size-8 items-center justify-center border ',
-                'rounded-full border-neutral-2 border-solid hover:bg-gray-100 transition-colors'
+                'flex size-8 items-center justify-center border',
+                'rounded-full border-neutral-2 border-solid hover:bg-gray-100 transition-colors',
+                classNames?.icon
               )}
             >
               {copyingCampaignId ? (
                 <RiCheckLine className="text-green-400! text-sm" />
               ) : (
-                <RiFileCopyLine className="text-primary-8 text-sm" />
+                <RiFileCopyLine className="text-sm text-gray-400" />
               )}
             </div>
           </Button>
@@ -51,7 +58,7 @@ export function ButtonCopyId({
           avoidCollisions
           sideOffset={-10}
           side="bottom"
-          className="z-999"
+          className={cn('z-999', classNames?.tooltip)}
           arrowClassName="bg-primary-9! z-9999"
         >
           {tooltip}

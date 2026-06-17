@@ -108,6 +108,8 @@ export type TabType = 'configuration' | 'simulations';
 export const SchemaNameDict = {
   // simulation
   CircuitSimulationScanConfig: 'CircuitSimulationScanConfig',
+  Brian2CircuitSimulationScanConfig: 'Brian2CircuitSimulationScanConfig',
+  LearningEngineCircuitSimulationScanConfig: 'LearningEngineCircuitSimulationScanConfig',
   MEModelSimulationScanConfig: 'MEModelSimulationScanConfig',
   MEModelWithSynapsesCircuitSimulationScanConfig: 'MEModelWithSynapsesCircuitSimulationScanConfig',
   IonChannelModelSimulationScanConfig: 'IonChannelModelSimulationScanConfig',
@@ -477,9 +479,9 @@ export type TSupportedEntitiesForScanConfiguration =
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
-  | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
+  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit
   | typeof ExtendedEntitiesTypeDict.IonChannelModel
   | typeof ExtendedEntitiesTypeDict.EMCellMesh
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
-  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
+  | typeof ExtendedEntitiesTypeDict.WholeBrain;

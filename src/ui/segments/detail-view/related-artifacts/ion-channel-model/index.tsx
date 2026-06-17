@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -9,6 +10,10 @@ import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { EmodelRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/e-model';
 import { IonChannelRecordingRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/ion-channel-recording';
 import { RelatedArtifactEvents } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/table-click-events';
+import {
+  detailViewPillTabsListClass,
+  detailViewPillTabsTriggerClass,
+} from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -32,9 +37,11 @@ const tabsConfigItems: Array<{
 export function ICMRelatedArtifacts({
   icm,
   context,
+  variant = ViewVariant.Light,
 }: {
   icm: IonChannelModel;
   context: WorkspaceContext;
+  variant?: TViewVariant;
 }) {
   const breakpoint = useDefaultBreakpoint();
   const [currentTab, setCurrentTab] = useState<TKeys>(IonChannelRecording.extendedType);
@@ -50,19 +57,15 @@ export function ICMRelatedArtifacts({
         onValueChange={(value) => setCurrentTab(value as TKeys)}
       >
         <PillTabsList
-          className={cn('inline-flex h-10 w-fit bg-white p-0 shadow-md', {
-            'h-12': breakpoint === 'xl',
-          })}
+          className={detailViewPillTabsListClass(variant, cn({ 'h-12': breakpoint === 'xl' }))}
         >
           {tabsConfigItems.map((tab) => (
             <PillTabsTrigger
               key={tab.key}
               value={tab.key}
-              className={cn(
-                'max-w-max',
-                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-4 py-3',
-                'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
-                { 'h-12': breakpoint === 'xl' }
+              className={detailViewPillTabsTriggerClass(
+                variant,
+                cn({ 'h-12': breakpoint === 'xl' })
               )}
             >
               {tab.title}
@@ -70,11 +73,13 @@ export function ICMRelatedArtifacts({
           ))}
         </PillTabsList>
       </PillTabs>
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="h-[calc(100vh-18rem)] min-h-96 overflow-hidden">
         {currentTab === IonChannelRecording.extendedType && (
-          <IonChannelRecordingRelatedArtifacts context={context} icm={icm} />
+          <IonChannelRecordingRelatedArtifacts context={context} icm={icm} variant={variant} />
         )}
-        {currentTab === Emodel.extendedType && <EmodelRelatedArtifacts icm={icm} />}
+        {currentTab === Emodel.extendedType && (
+          <EmodelRelatedArtifacts icm={icm} variant={variant} />
+        )}
       </div>
     </div>
   );

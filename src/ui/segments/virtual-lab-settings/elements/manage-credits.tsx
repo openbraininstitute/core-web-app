@@ -12,7 +12,6 @@ import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { CoinsIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
-import { formatCreditsAmount, parseCreditsAmount } from '@/features/credits';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -267,10 +266,11 @@ export function TransferCredits({
     root?: string;
     content?: string;
     body?: string;
+    footer?: string;
   };
 }) {
   const queryClient = useQueryClient();
-  const [amount, setAmount] = useState<number | undefined>(undefined);
+  const [amount, setAmount] = useState<string>('');
   const [swapPhase, setSwapPhase] = useState<SwapCardPhase>('idle');
   const [swapSpinTurns, setSwapSpinTurns] = useState(0);
   const [isLabToProject, setIsLabToProject] = useState<boolean>(true);
@@ -362,7 +362,7 @@ export function TransferCredits({
         placement: 'topRight',
         key: 'transfer-credits-success',
       });
-      setAmount(undefined);
+      setAmount('');
     },
     onError: (error) => {
       const codeError = get(error, 'cause.error_code', 'DEFAULT');
@@ -506,15 +506,15 @@ export function TransferCredits({
 
   return (
     <div
-      id="transfer-credits"
-      data-testid="transfer-credits"
+      id="transfer-credits__root"
+      data-testid="transfer-credits__root"
       className={cn(
         'flex h-full min-h-0 w-full flex-1 flex-col gap-3.5 rounded-2xl bg-white px-4 pt-0',
         classnames?.root
       )}
     >
       <div
-        id="transfer-credits-content"
+        id="transfer-credits__content"
         className={cn(
           'mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3.5',
           classnames?.content
@@ -537,6 +537,8 @@ export function TransferCredits({
         )}
 
         <div
+          id="transfer-credits__body"
+          data-testid="transfer-credits__body"
           className={cn(
             'mr-1 flex flex-col gap-8 rounded-2xl border border-gray-100 p-4',
             classnames?.body
@@ -600,7 +602,11 @@ export function TransferCredits({
             </motion.div>
           </div>
 
-          <div className="mx-auto max-w-3xl px-3">
+          <div
+            className="mx-auto max-w-3xl px-3"
+            id="transfer-credits__amount"
+            data-testid="transfer-credits__amount"
+          >
             <div className="rounded-2xl border border-gray-100 bg-white p-5 text-primary-9 shadow-bnb">
               <div className="mb-0.5 ml-1 text-base font-light text-gray-500">Amount</div>
               <div className="relative w-full max-w-md">
@@ -608,11 +614,11 @@ export function TransferCredits({
                   id="amount"
                   ref={amountInputRef}
                   autoComplete="off"
-                  inputMode="numeric"
-                  pattern="[0-9,]*"
+                  inputMode="decimal"
+                  pattern="[0-9.]*"
                   min={0}
-                  value={formatCreditsAmount(Number(amount))}
-                  onChange={(event) => setAmount(parseCreditsAmount(event.target.value))}
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value.replace(/[^\d.]/g, ''))}
                   placeholder="0"
                   className={cn(
                     'min-h-14 rounded-2xl border-2 border-gray-100! bg-transparent! px-3 py-2 text-xl! font-bold tracking-wide text-primary-9! focus:ring-0',
@@ -632,7 +638,7 @@ export function TransferCredits({
             </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-end gap-3">
+          <div className={cn('mt-5 flex items-center justify-end gap-3', classnames?.footer)}>
             <GhostRoundedIconButton
               label="Cancel"
               classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
@@ -644,11 +650,12 @@ export function TransferCredits({
               label="Transfer credits"
               icon={isPending ? <LoadingOutlined spin /> : <RiArrowRightSLine />}
               classNames={{
-                root: 'bg-primary-9 text-white hover:bg-primary-8 group',
-                label: 'text-white pr-3',
-                iconWrapper: 'bg-primary-9 text-white group-hover:bg-primary-8 [&_svg]:size-5!',
+                root: 'bg-primary-9 text-white hover:bg-primary-8 group disabled:bg-neutral-2! disabled:text-neutral-4! disabled:opacity-100!',
+                label: 'text-white pr-3 group-disabled:text-neutral-4!',
+                iconWrapper:
+                  'bg-primary-9 text-white group-hover:bg-primary-8 group-disabled:bg-neutral-2! group-disabled:text-neutral-4! [&_svg]:size-5!',
               }}
-              disabled={isPending || !amount}
+              disabled={isPending || !Number(amount)}
               onClick={() => transferCreditsAsync()}
               iconPosition="end"
             />

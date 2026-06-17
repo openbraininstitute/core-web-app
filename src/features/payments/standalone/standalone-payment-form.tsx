@@ -125,6 +125,10 @@ export function StandalonePaymentForm({
     ? formatMinorCurrency(conversion.data.amount, conversion.data.currency)
     : '0.00 CHF';
 
+  const savingsText = conversion.data?.discount_pct
+    ? `You saved ${conversion.data.discount_pct}%`
+    : undefined;
+
   const limitReached = Boolean(conversionKey) && !conversionAllowed;
   const currentBillingAddress = billingAddress?.country ? billingAddress : null;
   const user = session?.user as User;
@@ -244,6 +248,7 @@ export function StandalonePaymentForm({
     <div className="flex w-full flex-col gap-6">
       <CreditsAmountInput
         hint={limitReached ? 'Calculation of order full amount limit reached' : conversionText}
+        savingsHint={limitReached ? undefined : savingsText}
         value={credits}
         disabled={isPaying}
         error={creditsError}

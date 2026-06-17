@@ -142,12 +142,12 @@ export function InOutFiles({
 
     queryClient.invalidateQueries({
       predicate: (query) =>
-        query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.MEModelWithSynapses}`,
+        query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.SingleNeuronCircuit}`,
     });
     queryClient.invalidateQueries({
       predicate: (query) =>
         get(query.queryKey[0], 'context.extendedEntityType') ===
-        ExtendedEntitiesTypeDict.MEModelWithSynapses,
+        ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     });
   }, [outputAvailable, builtCircuit, queryClient]);
 

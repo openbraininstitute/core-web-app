@@ -27,12 +27,12 @@ import {
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { config } from '@/config';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
+import { isLowCreditsError } from '@/features/low-credits';
 import { messages } from '@/i18n/en/simulation';
 import { JobStatus, type Message, MessageType } from '@/services/small-scale-simulator/types';
 import {
@@ -63,8 +63,6 @@ import type {
   TSimulationType,
   TStimulationConfiguration,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-
-const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 export const createSingleNeuronSimulationAtom = atom(
   null,
@@ -214,7 +212,7 @@ export const launchSimulationAtom = atom<
     number,
     () => void,
     NotificationInstance,
-    boolean,
+    () => void,
   ],
   void
 >(
@@ -237,7 +235,7 @@ export const launchSimulationAtom = atom<
     duration: number,
     onChangePanel: () => void,
     notify: NotificationInstance,
-    isProjectAdmin: boolean
+    reportLowCredits: () => void
   ) => {
     if (simulationType === 'single-neuron-simulation') {
       if (!stimulationConfiguration) {
@@ -249,19 +247,6 @@ export const launchSimulationAtom = atom<
       }
     }
     const simulationStatusAtom = simulationStatusAtomFamily(sessionId);
-    const lowFundsEmailSubject = 'Insufficient%20credits%20for%20simulation';
-    let labAdminContactHref: string | null = null;
-
-    const getLabAdminContactHref = async () => {
-      if (labAdminContactHref) return labAdminContactHref;
-      const { data: membersData } = await tryCatch(listVirtualLabMembers({ virtualLabId }));
-      const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
-
-      labAdminContactHref = adminEmail
-        ? `mailto:${adminEmail}?subject=${lowFundsEmailSubject}`
-        : null;
-      return labAdminContactHref;
-    };
 
     set(simulationStatusAtom, { status: SimulationStatus.LAUNCHED });
 
@@ -300,16 +285,17 @@ export const launchSimulationAtom = atom<
       );
 
       if (error) {
-        let errorMessage =
-          lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError;
-        const isLowFundsError = lget(error, 'cause.code') === LOW_FUNDS_ERROR_CODE;
-
-        if (isLowFundsError) {
-          errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-          if (!isProjectAdmin) {
-            labAdminContactHref = await getLabAdminContactHref();
-          }
+        if (isLowCreditsError(error)) {
+          set(simulationStatusAtom, {
+            status: SimulationStatus.ERROR,
+            description: messages.LowFundsError,
+          });
+          reportLowCredits();
+          return;
         }
+
+        const errorMessage =
+          lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError;
 
         set(simulationStatusAtom, {
           status: SimulationStatus.ERROR,
@@ -318,30 +304,7 @@ export const launchSimulationAtom = atom<
 
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: isLowFundsError ? (
-            <div className="flex flex-col gap-2  items-start">
-              <p>{errorMessage}</p>
-              {isProjectAdmin ? (
-                <Link
-                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Transfer credits
-                </Link>
-              ) : (
-                <Link
-                  href={labAdminContactHref ?? `${config.ROOT_ROUTE}/${virtualLabId}/overview`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Contact lab admin
-                </Link>
-              )}
-            </div>
-          ) : (
-            errorMessage
-          ),
+          description: errorMessage,
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
           duration: 1000,
@@ -355,12 +318,9 @@ export const launchSimulationAtom = atom<
 
         try {
           const errResponseObj = await response?.json();
-          if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
+          if (isLowCreditsError(errResponseObj)) {
             isLowFundsError = true;
-            errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-            if (!isProjectAdmin) {
-              labAdminContactHref = await getLabAdminContactHref();
-            }
+            errorMessage = messages.LowFundsError;
           }
         } catch {
           // ignore
@@ -371,40 +331,19 @@ export const launchSimulationAtom = atom<
           description: errorMessage,
         });
 
+        if (isLowFundsError) {
+          reportLowCredits();
+          return;
+        }
+
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: isLowFundsError ? (
-            <div className="flex flex-col gap-2 items-start">
-              <p>{errorMessage}</p>
-              {isProjectAdmin ? (
-                <Link
-                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Transfer credits
-                </Link>
-              ) : (
-                <Link
-                  href={labAdminContactHref ?? `${config.ROOT_ROUTE}/${virtualLabId}/overview`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Contact lab admin
-                </Link>
-              )}
-            </div>
-          ) : (
-            errorMessage
-          ),
+          description: errorMessage,
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
-          duration: isLowFundsError ? 0 : undefined,
         });
 
-        if (!isLowFundsError) {
-          delay(() => set(simulationStatusAtom, RESET), 1000);
-        }
+        delay(() => set(simulationStatusAtom, RESET), 1000);
         return;
       }
 

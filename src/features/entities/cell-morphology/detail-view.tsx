@@ -10,34 +10,28 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { MorphoViewer } from '@/components/MorphoViewer';
-import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
-export function CellMorphologyViewer({
-  entity,
-  context,
-}: {
-  entity: ICellMorphology;
-  context: WorkspaceContext;
-}) {
+export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
   if (!entity) return null;
 
   return (
-    <>
-      <Morphometrics className="mb-8" morphology={entity} context={context} />
-      <ErrorBoundary
-        FallbackComponent={withErrorConfig({
-          cls: { container: 'bg-white' },
-          showButtons: false,
-          customError: 'Error while loading morphology viewer',
-        })}
-      >
-        <MorphoViewerLoader morphology={entity} />
-      </ErrorBoundary>
-    </>
+    <div className="h-[min(360px,42vh)] min-h-[260px] w-full overflow-hidden rounded-2xl border border-neutral-2 bg-white">
+      <div className="h-full">
+        <ErrorBoundary
+          FallbackComponent={withErrorConfig({
+            cls: { container: 'bg-white' },
+            showButtons: false,
+            customError: 'Error while loading morphology viewer',
+          })}
+        >
+          <MorphoViewerLoader morphology={entity} />
+        </ErrorBoundary>
+      </div>
+    </div>
   );
 }
 
@@ -49,7 +43,7 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   // const swcContentUrl = useSwcContentUrl(resource.distribution);
   if (isLoading) {
     return (
-      <div className="flex w-full flex-col items-center justify-center gap-3 py-20">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
         <h2 className="text-primary-9 font-light">Loading morphology...</h2>
       </div>
@@ -58,7 +52,7 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   if (result) {
     return (
       <MorphoViewer
-        className="h-full"
+        className="h-full overflow-hidden rounded-2xl border-0!"
         swc={result}
         // We disable enhanced somas until they are fixed on the backend.
         // contentUrl={swcContentUrl}
@@ -67,14 +61,14 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   }
   if (!isLoading && !result) {
     return (
-      <div className="border-neutral-3 flex w-full flex-col items-center justify-center gap-3 border py-20">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-white">
         No morphology data available.
       </div>
     );
   }
   if (error) {
     return (
-      <div className="flex w-full flex-col items-center justify-center gap-3 py-20">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3">
         <h3>{error instanceof Error ? error.message : 'Error loading morphology viewer'}</h3>
       </div>
     );

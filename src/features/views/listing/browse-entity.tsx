@@ -21,7 +21,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { ApiError } from '@/api/error';
-import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_NUMBER, type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -48,6 +48,7 @@ import {
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { MainTableSkeleton } from '@/ui/segments/data-table/skeleton';
+import { detailViewPaginationClass } from '@/ui/segments/detail-view/variant-styles';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
@@ -116,11 +117,18 @@ type Props = {
   requireScopeSelector?: boolean;
   requireEntityTypeSelector?: {
     value: TExtendedEntitiesTypeDict;
-    options: Array<{ label: string; value: TExtendedEntitiesTypeDict; count?: number }>;
+    options: Array<{
+      label: string;
+      value: TExtendedEntitiesTypeDict;
+      count?: number;
+    }>;
     enabled: boolean;
     onSelect: (value: TExtendedEntitiesTypeDict) => void;
   };
   extraQueryParams?: Record<string, unknown>;
+  detailVariant?: TViewVariant;
+  /** When true, list content sits on a white inset panel — use default pagination styling */
+  contentOnInsetPanel?: boolean;
   /**
    * optional override for the list fetch. when provided, replaces the entity's domain
    * `query.list` (a "loader")
@@ -165,6 +173,8 @@ export function BrowseEntityScope({
   requireScopeSelector,
   requireEntityTypeSelector,
   extraQueryParams,
+  detailVariant = ViewVariant.Light,
+  contentOnInsetPanel = false,
   listQueryFn,
   facetsQueryFn,
 }: Props) {
@@ -354,7 +364,11 @@ export function BrowseEntityScope({
     workspace: { virtualLabId, projectId },
     queryFilters,
     queryFnOverride: facetsQueryFn
-      ? () => facetsQueryFn({ filters: queryFilters, context: { virtualLabId, projectId } })
+      ? () =>
+          facetsQueryFn({
+            filters: queryFilters,
+            context: { virtualLabId, projectId },
+          })
       : undefined,
     enabled: () => {
       if (!allowQuery) return false;
@@ -468,6 +482,11 @@ export function BrowseEntityScope({
               }}
               {...mainTableProps}
               requireEntityTypeSelector={requireEntityTypeSelector}
+              paginationClassName={
+                detailVariant === ViewVariant.Default && !contentOnInsetPanel
+                  ? detailViewPaginationClass(detailVariant)
+                  : undefined
+              }
               filterClassNames={classNames?.filterClassNames}
               // @ts-expect-error
               expandableOptions={expandableOptions}

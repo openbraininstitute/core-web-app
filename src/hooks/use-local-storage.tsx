@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import isNil from 'es-toolkit/compat/isNil';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
 function dispatchStorageEvent(key: string, newValue: string | null): void {
   window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
@@ -21,6 +21,17 @@ const removeLocalStorageItem = (key: string): void => {
 const getLocalStorageItem = (key: string): string | null => {
   return window.localStorage.getItem(key);
 };
+
+// A corrupted or schema-changed value must never crash the render that reads it;
+// fall back to the initial value instead, mirroring an absent key.
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (raw === null) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 const useLocalStorageSubscribe = (callback: (event: StorageEvent) => void): (() => void) => {
   window.addEventListener('storage', callback);
@@ -68,9 +79,7 @@ export function useLocalStorage<T>(
     (v: T | ((val: T) => T)) => {
       try {
         const nextState =
-          typeof v === 'function'
-            ? (v as (val: T) => T)(store ? JSON.parse(store) : initialValue)
-            : v;
+          typeof v === 'function' ? (v as (val: T) => T)(safeParse(store, initialValue)) : v;
 
         if (isNil(nextState)) {
           removeLocalStorageItem(key);
@@ -91,5 +100,5 @@ export function useLocalStorage<T>(
     }
   }, [key, initialValue]);
 
-  return [store ? (JSON.parse(store) as T) : initialValue, setState];
+  return [safeParse(store, initialValue), setState];
 }
