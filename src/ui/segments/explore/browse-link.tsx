@@ -285,7 +285,7 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: fallbackQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
-    enabled: enabled && brainRegionDependentFetch && !isActiveEntity,
+    enabled: enabled && brainRegionDependentFetch && (!isActiveEntity || tableCount == null),
     staleTime: Infinity,
   });
 
@@ -300,10 +300,11 @@ export function BrowseLink({
     staleTime: Infinity,
   });
 
-  const count = isActiveEntity ? tableCount : fallbackData;
-  const loadingCurrent = isActiveEntity ? tableCountLoading : loadingFallback;
+  const resolvedCount = isActiveEntity ? (tableCount ?? fallbackData) : fallbackData;
+  const loadingCurrent = isActiveEntity ? tableCountLoading && tableCount == null : loadingFallback;
+  const count = resolvedCount;
   const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
-  const isLoading = loadingCurrent && loadingRoot;
+  const isLoading = loadingCurrent && loadingRoot && resolvedCount == null;
 
   const countRenderer = match({
     isCurrentError,

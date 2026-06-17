@@ -103,11 +103,12 @@ export function useTableQueryCount({
   const count = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
 
   const queryState = isActiveEntity ? cache.find({ queryKey })?.state : undefined;
+  const isFetching = queryState?.fetchStatus === 'fetching';
 
   return {
     dataKey,
     count,
-    isLoading: queryState?.fetchStatus === 'fetching',
+    isLoading: isActiveEntity && isFetching && count === undefined,
     isError: queryState?.status === 'error',
   };
 }
