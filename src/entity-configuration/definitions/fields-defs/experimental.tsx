@@ -54,6 +54,21 @@ const emodelEtypes = (emodel?: IEModel) => {
 };
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
+  [EntityCoreFields.HasSegmentedSpines]: {
+    className: 'text-left',
+    title: 'Segmented spines',
+    filter: CoreFieldFilterTypeEnum.Boolean,
+    defaultConstraint: 'has_segmented_spines',
+    isFilterable: true,
+    render: (r) => {
+      if (!('has_segmented_spines' in r)) return EmptyValue;
+      const value = (r as ICellMorphology).has_segmented_spines;
+      // null/undefined -> "—" so morphologies without the property aren't mislabeled "False"
+      if (value === true) return 'True';
+      if (value === false) return 'False';
+      return EmptyValue;
+    },
+  },
   [EntityCoreFields.License]: {
     title: 'License',
     filter: CoreFieldFilterTypeEnum.CheckList,

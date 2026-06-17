@@ -96,6 +96,7 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
     { field: EntityCoreFields.BrainRegion },
     { field: EntityCoreFields.MType },
     { field: EntityCoreFields.License },
+    { field: EntityCoreFields.HasSegmentedSpines },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
@@ -103,5 +104,6 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
     { field: EntityCoreFields.MType },
     { field: EntityCoreFields.License },
   ],
+  filterableFields: [EntityCoreFields.HasSegmentedSpines],
   mlTopic: 'Neuron morphology',
 };
