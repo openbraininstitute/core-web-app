@@ -227,23 +227,21 @@ export function BrowseLink({
   defaultBrainRegionId,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
-  const { type } = useParams<{ type: TExtendedEntitiesTypeDict }>();
+  const pathname = usePathname();
+  const { type } = useParams<{ type?: string }>();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
 
-  // determine if this entity type is the one currently displayed in the data table
-  const activeEntityType = snakeCase(type);
+  const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType;
 
-  // read the filtered count from the table's cached query
   const {
     count: tableCount,
     isLoading: tableCountLoading,
     isError: isTableCountError,
-    hasCachedData,
   } = useTableQueryCount({
     extendedType,
     scope,
@@ -287,8 +285,7 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: fallbackQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
-    // fetch for inactive entities and as bootstrap for active entities without cached table count yet
-    enabled: enabled && brainRegionDependentFetch,
+    enabled: enabled && brainRegionDependentFetch && !isActiveEntity,
     staleTime: Infinity,
   });
 
@@ -303,10 +300,9 @@ export function BrowseLink({
     staleTime: Infinity,
   });
 
-  // resolve current count: prioritize table query when active, fallback otherwise
-  const count = isActiveEntity && hasCachedData ? tableCount : fallbackData;
-  const loadingCurrent = isActiveEntity && hasCachedData ? tableCountLoading : loadingFallback;
-  const isCurrentError = isActiveEntity && hasCachedData ? isTableCountError : isFallbackError;
+  const count = isActiveEntity ? tableCount : fallbackData;
+  const loadingCurrent = isActiveEntity ? tableCountLoading : loadingFallback;
+  const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
   const isLoading = loadingCurrent && loadingRoot;
 
   const countRenderer = match({

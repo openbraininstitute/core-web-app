@@ -1,8 +1,8 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
+import { hashKey, useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import { useCallback, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 import {
   dataBrowseListingUsesBrainRegionHierarchy,
@@ -18,11 +18,8 @@ import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
 
 /**
- * subscribes to the data table's cached query for a given extended entity type
- * and returns `total_items` from the pagination.
- *
- * this allows the browse-link sidebar to reactively reflect the filtered count
- * when the table is filtered / searched / sorted, without a separate query.
+ * Reads `pagination.total_items` from the data table's React Query cache entry so
+ * the sidebar count stays in sync with filters, search, sort, and pagination.
  */
 export function useTableQueryCount({
   extendedType,
@@ -60,55 +57,57 @@ export function useTableQueryCount({
     { requireBrainRegion }
   );
 
-  const queryKey = buildQueryKey({
-    workspace,
-    context: {
-      key: dataKey,
-      extendedEntityType: extendedType,
-      workspaceScope: scope,
-    },
-    queryParameters,
-    requireBrainRegion,
-    speciesSelectionMode,
-  });
-
-  const prevCountRef = useRef<number | undefined>(undefined);
-  const queryKeyRef = useRef(queryKey);
-  queryKeyRef.current = queryKey;
-
-  const cache = queryClient.getQueryCache();
-
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => cache.subscribe(onStoreChange),
-    [cache]
+  const queryKey = useMemo(
+    () =>
+      buildQueryKey({
+        workspace,
+        context: {
+          key: dataKey,
+          extendedEntityType: extendedType,
+          workspaceScope: scope,
+        },
+        queryParameters,
+        requireBrainRegion,
+        speciesSelectionMode,
+      }),
+    [
+      workspace,
+      dataKey,
+      extendedType,
+      scope,
+      queryParameters,
+      requireBrainRegion,
+      speciesSelectionMode,
+    ]
   );
+
+  const queryKeyHash = useMemo(() => hashKey(queryKey), [queryKey]);
+  const cache = queryClient.getQueryCache();
 
   const getSnapshot = useCallback(() => {
     if (!isActiveEntity) return undefined;
-    const query = cache.find({ queryKey: queryKeyRef.current });
-    const data = query?.state?.data as EntityCoreResponse<unknown> | undefined;
-    const total = data?.pagination?.total_items;
-    if (total !== prevCountRef.current) {
-      prevCountRef.current = total;
-    }
-    return prevCountRef.current;
-  }, [isActiveEntity, cache]);
+    const data = cache.find({ queryKey })?.state?.data as EntityCoreResponse<unknown> | undefined;
+    return data?.pagination?.total_items;
+  }, [cache, isActiveEntity, queryKey]);
+
+  const subscribe = useCallback(
+    (onStoreChange: () => void) =>
+      cache.subscribe((event) => {
+        if (hashKey(event.query.queryKey) === queryKeyHash) {
+          onStoreChange();
+        }
+      }),
+    [cache, queryKeyHash]
+  );
 
   const count = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
 
-  if (!isActiveEntity) {
-    return { count: undefined, isLoading: false, isError: false, hasCachedData: false };
-  }
-
-  const query = cache.find({ queryKey });
-  const isFetching = query?.state?.fetchStatus === 'fetching';
-  const isError = query?.state?.status === 'error';
+  const queryState = isActiveEntity ? cache.find({ queryKey })?.state : undefined;
 
   return {
     dataKey,
     count,
-    isLoading: isFetching,
-    isError,
-    hasCachedData: count !== undefined,
+    isLoading: queryState?.fetchStatus === 'fetching',
+    isError: queryState?.status === 'error',
   };
 }
