@@ -888,6 +888,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Version',
     isFilterable: true,
     filter: CoreFieldFilterTypeEnum.CheckList,
+    // Backend facets are ordered alphanumerically; sort the version options numerically here.
+    sortFacetOptions: 'numeric',
     isDisplayable: true,
     isSortable: true,
     order: [

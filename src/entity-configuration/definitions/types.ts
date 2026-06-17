@@ -245,6 +245,13 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
    */
   isDisplayable?: boolean;
   order?: OrderShape;
+  /**
+   * Opt-in client-side ordering for this field's CheckList facet options.
+   * Facet options otherwise render in the order the backend returns them.
+   * `'numeric'` sorts them ascending by numeric value (e.g. release versions
+   * `1, 2, 10` instead of the backend's alphanumeric `1, 10, 2`).
+   */
+  sortFacetOptions?: 'numeric';
   unit?: ReactNode;
   group?: StructuralDomain;
   render?: (entity: T, i?: number, variant?: TViewVariant) => ReactNode;
