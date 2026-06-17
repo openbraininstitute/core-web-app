@@ -183,6 +183,8 @@ export type TFilterOptionsSource =
  */
 export interface IFieldColumnPresentation {
   available?: TContextualValue<boolean>;
+  /** When true, the column can appear in the table but is omitted from the filter panel (no filter UI, no eye toggle). */
+  hideInFilterPanel?: TContextualValue<boolean>;
 }
 
 /**
