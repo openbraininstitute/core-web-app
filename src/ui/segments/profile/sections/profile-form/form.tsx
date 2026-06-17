@@ -289,7 +289,7 @@ export function Profile({ data }: ProfileProps) {
                   readOnly ? 'border-transparent px-0 py-2' : 'border-gray-100! px-3 py-2'
                 )}
               >
-                {identityProvider.icon}
+                <span className="inline-flex shrink-0 items-center">{identityProvider.icon}</span>
                 <span className="font-bold select-none">
                   {identityProvider.name}
                   {data?.preferred_username && (
