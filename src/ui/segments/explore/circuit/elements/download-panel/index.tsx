@@ -74,7 +74,7 @@ export function DownloadPanel() {
           <button
             type="button"
             onClick={onClose}
-            className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"
+            className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white!"
             aria-label="Close"
           >
             <CloseOutlined />
@@ -93,7 +93,7 @@ export function DownloadPanel() {
             <Button
               type="link"
               htmlType="button"
-              className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
+              className="border-primary-6 flex items-center justify-center rounded-none border border-solid text-white! hover:text-white! [&_.ant-btn-icon]:text-white!"
               aria-label="Download metadata"
               title="Download metadata"
               icon={<DownloadIcon className="text-white!" />}

@@ -81,7 +81,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
           <Button
             htmlType="button"
             type="link"
-            className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
+            className="border-primary-6 flex items-center justify-center rounded-none border border-solid text-white! hover:text-white! [&_.ant-btn-icon]:text-white!"
             aria-label={`Download ${circuit.name}`}
             title={`Download ${circuit.name}`}
             icon={<DownloadIcon className="text-white!" />}

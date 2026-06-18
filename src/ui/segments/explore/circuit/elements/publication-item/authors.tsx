@@ -47,7 +47,7 @@ export function Authors({ authors, className, maxVisible = 3 }: Props) {
           >
             <Button
               type="text"
-              className="text-paper-link hover:text-paper-hover h-auto p-0 font-normal underline text-white"
+              className="h-auto p-0 font-normal text-white! underline hover:text-white!"
             >
               + {hiddenAuthors.length} more
             </Button>
