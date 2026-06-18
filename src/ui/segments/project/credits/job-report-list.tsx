@@ -74,7 +74,7 @@ const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.SystemSimulation]:
     'System: Non-continuous circuit consisting of at least two microcircuits/regions that are connected by inter-region connectivity',
   [ServiceSubtype.WholeBrainSimulation]: 'Circuit representing an entire brain',
-  [ServiceSubtype.EM_SYNAPSE_MAPPING]: 'Electron Microscopy Circuit',
+  [ServiceSubtype.EM_SYNAPSE_MAPPING]: 'Electron microscopy circuit',
 };
 
 export function typeRenderFn(subtype: ServiceSubtype) {
