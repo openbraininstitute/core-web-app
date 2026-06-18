@@ -16,7 +16,7 @@ export interface E2EState {
   virtualLabId: string;
   projectId: string;
   projects: E2EProject[];
-  accessToken: string;
+  accessToken?: string;
 }
 
 export function assertProjectLimit(projects: readonly E2EProject[], nextProjects = 0): void {

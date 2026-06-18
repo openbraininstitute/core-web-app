@@ -199,7 +199,10 @@ env cascade:
 
 CI must not rely on `.env.test.secrets`. Add the secret values in GitHub Actions
 repository or environment secrets and expose them as environment variables when
-running `pnpm run test:e2e`.
+running `pnpm run test:e2e`. In CI, the E2E workflow uses one low-privilege
+Keycloak user, provisions one virtual lab/project before the browser matrix,
+shares that provisioned state with the matrix jobs, and deletes it in the final
+cleanup job.
 
 ### Required core variables
 

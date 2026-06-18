@@ -19,6 +19,11 @@ import {
 
 const skipPreExistingVirtualLabCleanup =
   process.env.E2E_SKIP_PRE_EXISTING_VIRTUAL_LAB_CLEANUP === 'true';
+// CI reuses this setup test in three modes: provision creates the single shared
+// virtual lab, auth-only gives each matrix leg fresh browser storage, and
+// cleanup-only logs in again for a fresh token before deleting the shared lab.
+const authOnly = process.env.E2E_AUTH_ONLY === 'true';
+const cleanupOnly = process.env.E2E_CLEANUP_ONLY === 'true';
 const setupLogger = createCleanupLogger('auth-setup');
 
 function requireSetupValue(value: string | undefined, label: string): string {
@@ -103,6 +108,18 @@ setup('authenticate and provision virtual lab', async ({ page, context }) => {
     requireSetupValue(accessToken, 'access token')
   );
 
+  if (authOnly) {
+    if (!fileExists(E2E_STATE_PATH)) {
+      throw new Error(
+        `E2E_AUTH_ONLY requires provisioned state at ${E2E_STATE_PATH}. ` +
+          'Run the provision step before the browser matrix.'
+      );
+    }
+
+    setupLogger.info('authenticated with existing provisioned virtual lab state.');
+    return;
+  }
+
   await setup.step('teardown pre-existing virtual labs', async () => {
     if (fileExists(E2E_STATE_PATH)) {
       try {
@@ -126,6 +143,11 @@ setup('authenticate and provision virtual lab', async ({ page, context }) => {
 
     removeFileIfExists(E2E_STATE_PATH);
   });
+
+  if (cleanupOnly) {
+    setupLogger.info('cleanup-only mode completed.');
+    return;
+  }
 
   let virtualLabId: string | undefined;
   await setup.step('create single virtual lab', async () => {

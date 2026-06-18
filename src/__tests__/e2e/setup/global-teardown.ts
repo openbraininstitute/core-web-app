@@ -23,11 +23,13 @@ teardown('delete virtual lab and local e2e state', async () => {
     }
   })();
 
-  if (apiUrl && state) {
+  if (apiUrl && state?.accessToken) {
     const api = new VirtualLabManagerApi(apiUrl, state.accessToken);
     await deleteVirtualLabState({ api, state, logger: teardownLogger });
   } else {
-    teardownLogger.warn('missing api url or e2e state - skipping workspace deletion.');
+    teardownLogger.warn(
+      'missing api url, access token, or e2e state - skipping workspace deletion.'
+    );
   }
 
   // Clean up local state files after remote teardown has run.

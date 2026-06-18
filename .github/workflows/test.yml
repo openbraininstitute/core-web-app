@@ -59,10 +59,12 @@ jobs:
           path: test-artifacts/unit-coverage-summary.json
           if-no-files-found: warn
 
-  # removes leftover virtual labs from previous runs before the e2e matrix
-  # starts, so the test accounts begin from a known-clean state
-  e2e-precleanup:
-    name: E2E pre-cleanup
+  # provisions exactly one virtual lab/project for the whole E2E workflow
+  # matrix jobs authenticate separately but reuse this same provisioned state
+  # TODO: we may either use different users per os/browser
+  # or use the same user but each os/browser uses separate project
+  e2e-provision:
+    name: E2E provision
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # skip on pull requests from forks: forked PRs don't get access to the repository secrets below
@@ -75,6 +77,13 @@ jobs:
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
       E2E_TEST_USERNAME: ${{ secrets.E2E_TEST_USERNAME }}
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      # keep the provisioned lab alive after auth-setup. the final e2e-cleanup
+      # job is responsible for deleting it after all browser matrix legs finish
+      E2E_DISABLE_AUTH_SETUP_TEARDOWN: "true"
+      # store provision output in test-artifacts so we can upload a sanitized
+      # state artifact for the parallel matrix jobs
+      E2E_AUTH_STATE_PATH: test-artifacts/e2e-provision/auth/user.json
+      E2E_STATE_PATH: test-artifacts/e2e-provision/state.json
       PLAYWRIGHT_BROWSER: chromium
       PLAYWRIGHT_BROWSER_CHANNEL: chrome
     steps:
@@ -97,32 +106,52 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      # only chrome is needed here; the auth-setup project drives a single
-      # browser to sign in and clean up state.
       - name: Install Chrome for auth setup
         run: pnpm exec playwright install --with-deps chrome
 
-      # the auth-setup project both authenticates and tears down stale labs
-      - name: Delete pre-existing virtual labs
+      - name: Authenticate and provision virtual lab
         run: pnpm exec playwright test --project=auth-setup --reporter=list
 
-  # runs the public/private e2e suites across the browser/os matrix once the
-  # shared test state has been cleaned up
+      - name: Prepare provisioned E2E state artifact
+        run: |
+          mkdir -p test-artifacts/e2e-state
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const sourcePath = process.env.E2E_STATE_PATH;
+          const targetPath = 'test-artifacts/e2e-state/state.json';
+          const state = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
+          // the matrix only needs stable workspace IDs. each job logs in again
+          // for its own browser session, so never put bearer tokens in artifacts
+          delete state.accessToken;
+          fs.writeFileSync(targetPath, JSON.stringify(state, null, 2));
+          NODE
+
+      - name: Upload provisioned E2E state
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-provisioned-state
+          path: test-artifacts/e2e-state/state.json
+          retention-days: 1
+          if-no-files-found: error
+
+  # runs the public/private E2E suites across the browser/OS matrix. each matrix
+  # leg logs in with the same test user, then reuses the single provisioned
+  # virtual lab/project from e2e-provision
   e2e-tests:
     name: E2E tests (${{ matrix.os }} / ${{ matrix.browser-label }})
     needs:
-      - e2e-precleanup
+      - e2e-provision
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     strategy:
-      # let every matrix combination finish even if one fails
+      # let every matrix combination finish even if one fails, so we can upload all artifacts
       fail-fast: false
       matrix:
         # each entry pairs a runner OS with a playwright engine. `playwright-browser`
-        # is the engine name, `playwright-channel` selects a branded channel (e.g.
-        # real Chrome) and is empty for bundled engines, and `install-target` is
-        # what `playwright install` downloads.
+        # is the engine name, `playwright-channel` selects a branded channel (e.g. real Chrome)
+        # and is empty for bundled engines, and `install-target` is what `playwright install` downloads
         include:
           - os: ubuntu-latest
             browser: chrome
@@ -156,11 +185,14 @@ jobs:
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
       E2E_TEST_USERNAME: ${{ secrets.E2E_TEST_USERNAME }}
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-      # Unique per matrix leg so parallel jobs don't clobber each other's artifacts.
+      # the matrix still runs auth-setup as a project dependency so each browser
+      # gets a fresh storageState file. auth-only mode stops setup from creating
+      # another virtual lab, because the user may own only one
+      E2E_AUTH_ONLY: "true"
+      E2E_DISABLE_AUTH_SETUP_TEARDOWN: "true"
+      E2E_STATE_PATH: test-artifacts/e2e-state/state.json
+      # unique per matrix leg so parallel jobs don't clobber each other's artifacts
       E2E_ARTIFACT_SLUG: ${{ matrix.os }}-${{ matrix.browser }}
-      # Cleanup already happened in e2e-precleanup; skip it here so concurrent
-      # matrix jobs don't delete labs out from under one another.
-      E2E_SKIP_PRE_EXISTING_VIRTUAL_LAB_CLEANUP: "true"
       PLAYWRIGHT_BROWSER: ${{ matrix.playwright-browser }}
       PLAYWRIGHT_BROWSER_CHANNEL: ${{ matrix.playwright-channel }}
     steps:
@@ -180,10 +212,31 @@ jobs:
           node-version: 24
           cache: "pnpm"
 
+      - name: Validate E2E secrets
+        run: |
+          missing=()
+          if [[ -z "$E2E_TEST_USERNAME" ]]; then
+            missing+=(E2E_TEST_USERNAME)
+          fi
+          if [[ -z "$E2E_TEST_PASSWORD" ]]; then
+            missing+=(E2E_TEST_PASSWORD)
+          fi
+
+          if (( ${#missing[@]} > 0 )); then
+            printf '::error::Missing GitHub Actions secret(s): %s\n' "${missing[*]}"
+            exit 1
+          fi
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      # on Linux, --with-deps also installs the OS libraries the browser needs;
+      - name: Download provisioned E2E state
+        uses: actions/download-artifact@v7
+        with:
+          name: e2e-provisioned-state
+          path: test-artifacts/e2e-state
+
+      # on Linux, --with-deps also installs the OS libraries the browser needs,
       # macOS runners already ship those, so we install the browser only
       - name: Install Playwright browsers
         env:
@@ -254,6 +307,67 @@ jobs:
             test-results/
             playwright-report/
           if-no-files-found: warn
+
+  # always attempts to delete the single E2E virtual lab after the browser matrix
+  # finishes. it logs in again for a fresh token instead of relying on an
+  # uploaded auth state
+  e2e-cleanup:
+    name: E2E cleanup
+    needs:
+      - e2e-provision
+      - e2e-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    env:
+      CI: true
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+      E2E_TEST_USERNAME: ${{ secrets.E2E_TEST_USERNAME }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      # cleanup-only mode authenticates for a fresh token, deletes the
+      # provisioned virtual lab from the downloaded state, and exits before
+      # creating a replacement lab
+      E2E_CLEANUP_ONLY: "true"
+      E2E_DISABLE_AUTH_SETUP_TEARDOWN: "true"
+      E2E_AUTH_STATE_PATH: test-artifacts/e2e-cleanup-auth/user.json
+      E2E_STATE_PATH: test-artifacts/e2e-state/state.json
+      PLAYWRIGHT_BROWSER: chromium
+      PLAYWRIGHT_BROWSER_CHANNEL: chrome
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - name: Set-up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Download provisioned E2E state
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: e2e-provisioned-state
+          path: test-artifacts/e2e-state
+
+      - name: Install Chrome for cleanup
+        run: pnpm exec playwright install --with-deps chrome
+
+      - name: Delete E2E virtual lab
+        run: pnpm exec playwright test --project=auth-setup --reporter=list
 
   # aggregates unit + e2e results into a single report, posts it to the run
   # summary, and (for same-repo PRs) keeps a sticky PR comment up to date

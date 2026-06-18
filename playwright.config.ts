@@ -56,6 +56,9 @@ function resolveBrowserUse() {
 }
 
 function getWebServerEnv(): Record<string, string> {
+  // playwright starts `webServer.command` as a child process. the config has
+  // already loaded `.env`/`.env.test`, so pass the resolved environment through
+  // explicitly; otherwise next.js can fail its runtime config validation in CI
   return Object.fromEntries(
     Object.entries(process.env).filter((entry): entry is [string, string] => {
       return typeof entry[1] === 'string';
@@ -64,6 +67,10 @@ function getWebServerEnv(): Record<string, string> {
 }
 
 const isCI = !!process.env.CI;
+// CI splits e2e workflow into provision -> browser matrix -> cleanup jobs. in those jobs
+// teardown is controlled by the workflow, not by playwright project dependency,
+// so the single provisioned virtual lab is not deleted before the matrix runs
+const disableAuthSetupTeardown = process.env.E2E_DISABLE_AUTH_SETUP_TEARDOWN === 'true';
 
 loadEnvFile('.env');
 loadEnvFile('.env.test');
@@ -80,6 +87,8 @@ const browserUse = resolveBrowserUse();
 const e2eRunId = process.env.E2E_RUN_ID ?? `${Date.now()}-${process.pid}`;
 const e2eRunDir = path.resolve(process.cwd(), '.e2e-runs', e2eRunId);
 
+// Keep auth/session state in a per-run directory by default. CI overrides
+// E2E_STATE_PATH when it needs to pass sanitized virtual-lab IDs between jobs.
 process.env.E2E_RUN_ID = e2eRunId;
 process.env.E2E_RUN_DIR = e2eRunDir;
 process.env.E2E_AUTH_STATE_PATH ??= path.join(e2eRunDir, 'auth', 'user.json');
@@ -109,7 +118,7 @@ export default defineConfig({
       name: 'auth-setup',
       testDir: `${e2eRoot}/setup`,
       testMatch: 'auth.setup.ts',
-      teardown: 'global-teardown',
+      teardown: disableAuthSetupTeardown ? undefined : 'global-teardown',
     },
     {
       name: 'global-teardown',
