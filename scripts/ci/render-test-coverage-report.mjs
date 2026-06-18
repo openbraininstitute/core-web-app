@@ -49,7 +49,7 @@ function findFileByBasename(directory, basename) {
   return null;
 }
 
-function findArtifactFilesByPrefix(prefix) {
+function findArtifactFilesByPrefix(prefix, extension = '.json') {
   const matches = [];
   const seen = new Set();
   const roots = ['test-artifacts', 'artifacts'];
@@ -61,7 +61,7 @@ function findArtifactFilesByPrefix(prefix) {
         visit(entryPath);
         continue;
       }
-      if (entry.isFile() && entry.name.startsWith(prefix) && entry.name.endsWith('.json')) {
+      if (entry.isFile() && entry.name.startsWith(prefix) && entry.name.endsWith(extension)) {
         const absolutePath = path.resolve(entryPath);
         if (!seen.has(absolutePath)) {
           seen.add(absolutePath);
@@ -238,6 +238,29 @@ function formatE2ETarget(metadata) {
   return `${os} / ${browser}`;
 }
 
+function getWorkflowRunUrl() {
+  if (!process.env.GITHUB_REPOSITORY || !process.env.GITHUB_RUN_ID) return null;
+  return `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+}
+
+function renderFailureLogDownloads() {
+  const failureLogFiles = findArtifactFilesByPrefix('e2e-failed-tests', '.md').map((filePath) =>
+    path.basename(filePath)
+  );
+  if (failureLogFiles.length === 0) return [];
+
+  const workflowRunUrl = getWorkflowRunUrl();
+  const target = workflowRunUrl
+    ? `[workflow run artifacts](${workflowRunUrl})`
+    : 'workflow run artifacts';
+
+  return [
+    '',
+    `Failed test logs: download ${target} and open:`,
+    ...failureLogFiles.map((fileName) => `- \`${fileName}\``),
+  ];
+}
+
 function renderUnitCoverage(summary, jobStatus) {
   const lines = [`### Unit Tests`, '', `Status: **${formatStatus(jobStatus)}**`, ''];
 
@@ -292,7 +315,7 @@ function renderE2ESummary(runs, jobStatus) {
     `Overall: **${totals.passed}/${totals.total} passed**` +
       `, **${totals.failed} failed**, **${totals.flaky} flaky**, **${totals.skipped} skipped**.`
   );
-  lines.push(`Aggregate duration: **${formatDuration(totals.durationMs)}**`);
+  lines.push(...renderFailureLogDownloads());
 
   return lines;
 }

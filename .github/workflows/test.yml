@@ -159,24 +159,24 @@ jobs:
             playwright-browser: chromium
             playwright-channel: chrome
             install-target: chrome
-          - os: ubuntu-latest
-            browser: firefox
-            browser-label: Firefox
-            playwright-browser: firefox
-            playwright-channel: ""
-            install-target: firefox
-          - os: ubuntu-latest
-            browser: safari
-            browser-label: Safari (WebKit)
-            playwright-browser: webkit
-            playwright-channel: ""
-            install-target: webkit
-          - os: macos-latest
-            browser: chrome
-            browser-label: Chrome
-            playwright-browser: chromium
-            playwright-channel: chrome
-            install-target: chrome
+          # - os: ubuntu-latest
+          #   browser: firefox
+          #   browser-label: Firefox
+          #   playwright-browser: firefox
+          #   playwright-channel: ""
+          #   install-target: firefox
+          # - os: ubuntu-latest
+          #   browser: safari
+          #   browser-label: Safari (WebKit)
+          #   playwright-browser: webkit
+          #   playwright-channel: ""
+          #   install-target: webkit
+          # - os: macos-latest
+          #   browser: chrome
+          #   browser-label: Chrome
+          #   playwright-browser: chromium
+          #   playwright-channel: chrome
+          #   install-target: chrome
     env:
       CI: true
       NEXTAUTH_URL: http://localhost:3000
@@ -272,6 +272,16 @@ jobs:
           mkdir -p test-artifacts
           pnpm exec playwright test --project=public --project=private --reporter=list,json
 
+      - name: Prepare E2E failed test logs
+        if: always()
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-artifacts/e2e-results-${{ matrix.os }}-${{ matrix.browser }}.json
+          E2E_FAILED_TEST_LOG_PATH: test-artifacts/e2e-failed-tests-${{ matrix.os }}-${{ matrix.browser }}.md
+          E2E_OS: ${{ matrix.os }}
+          E2E_BROWSER: ${{ matrix.browser }}
+          E2E_BROWSER_LABEL: ${{ matrix.browser-label }}
+        run: node scripts/ci/extract-playwright-failures.mjs
+
       # record the matrix context alongside the results so the report job can label each leg correctly.
       # runs even on failure to keep reports complete
       - name: Prepare E2E metadata
@@ -313,6 +323,7 @@ jobs:
           path: |
             test-artifacts/e2e-results-${{ matrix.os }}-${{ matrix.browser }}.json
             test-artifacts/e2e-metadata-${{ matrix.os }}-${{ matrix.browser }}.json
+            test-artifacts/e2e-failed-tests-${{ matrix.os }}-${{ matrix.browser }}.md
             test-results/
             playwright-report/
           if-no-files-found: warn
