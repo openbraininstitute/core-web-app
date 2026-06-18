@@ -1,7 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useMutation } from '@tanstack/react-query';
-import { includes, kebabCase } from 'es-toolkit/compat';
+import { includes } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import { motion } from 'motion/react';
 import Link from 'next/link';
@@ -17,6 +17,7 @@ import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { cn } from '@/utils/css-class';
+import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -153,7 +154,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
       >
         <Link
           href={{
-            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`,
+            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(dataType)}/${record.id}`,
           }}
         >
           View details

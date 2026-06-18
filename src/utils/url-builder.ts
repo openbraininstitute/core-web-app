@@ -1,5 +1,6 @@
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import {
   getEntityByCoreType,
@@ -102,4 +103,20 @@ export function makePathParamUrlFromExtendedType({
   return {
     pathParam: kebabCase(extendedType),
   };
+}
+
+const BASE_ENTITY_TYPE_FALLBACK: Partial<
+  Record<TExtendedEntitiesTypeDict, TExtendedEntitiesTypeDict>
+> = {
+  [ExtendedEntitiesTypeDict.UniversalCellMorphology]: ExtendedEntitiesTypeDict.CellMorphology,
+  [ExtendedEntitiesTypeDict.SmallMicrocircuit]: ExtendedEntitiesTypeDict.Circuit,
+  [ExtendedEntitiesTypeDict.Microcircuit]: ExtendedEntitiesTypeDict.Circuit,
+  [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: ExtendedEntitiesTypeDict.Circuit,
+  [ExtendedEntitiesTypeDict.WholeBrain]: ExtendedEntitiesTypeDict.Circuit,
+  [ExtendedEntitiesTypeDict.BrainRegion]: ExtendedEntitiesTypeDict.Circuit,
+};
+
+export function resolveConcreteEntityPathParam(extendedType?: TExtendedEntitiesTypeDict) {
+  if (!extendedType) return '';
+  return kebabCase(BASE_ENTITY_TYPE_FALLBACK[extendedType] ?? extendedType);
 }

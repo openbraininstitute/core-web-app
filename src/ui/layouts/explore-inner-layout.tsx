@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'motion/react';
-import type { ReactNode } from 'react';
 
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;
@@ -28,7 +29,7 @@ export function DataInnerLayout({ children }: Props) {
         gridTemplateAreas: "'aside body'",
       }}
       animate={{
-        gridTemplateColumns: mdv ? '3fr 2fr' : '27rem 1fr',
+        gridTemplateColumns: mdv ? '3fr 2fr' : '24rem 1fr',
         gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",
       }}
       transition={{
