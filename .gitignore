@@ -239,3 +239,4 @@ CLAUDE.md
 .playwright-mcp
 .code-review
 .release-notes
+.env.test.secrets

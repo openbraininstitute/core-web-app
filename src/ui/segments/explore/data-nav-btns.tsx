@@ -13,6 +13,7 @@ import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elemen
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
+import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -128,7 +129,7 @@ export function BackToEntityType({
       <Link
         onClick={onClick}
         href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}`,
+          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}`,
           query: query.toString(),
         }}
         className={linkClass}

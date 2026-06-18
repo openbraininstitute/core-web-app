@@ -132,28 +132,33 @@ export function EntityLinkCount() {
     .otherwise(() => null);
 
   return (
-    <div className="px-2 py-2">
-      <div className="w-full px-2">
+    <div id="data-type-items-container" data-testid="data-type-items-container" className="py-2">
+      <div id="data-type-tabs-container" data-testid="data-type-tabs-container" className="w-full">
         <PillTabs
           id="data-type-selector"
           data-testid="data-type-selector"
           value={activeTab ?? ExploreDataTypeTabs.Experimental}
           defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
-          className="w-full"
+          className="w-full px-1"
           activationMode="manual"
           onValueChange={(value) => {
             onChangeTab(value as TExploreDataTypeTabs)();
           }}
         >
           <PillTabsList
-            className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
-              'h-12': breakpoint === 'xl',
-            })}
+            className={cn(
+              'grid h-10 w-full grid-cols-3 bg-white p-0 shadow-sm border-gray-100 border',
+              {
+                'h-12': breakpoint === 'xl',
+              }
+            )}
           >
             {tabsConfigItems.map((tab) => (
               <PillTabsTrigger
                 key={tab.key}
                 value={tab.key}
+                id={`data-type-tab-${tab.key}`}
+                data-testid={`data-type-tab-${tab.key}`}
                 className={cn(
                   'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
                   'data-[state=active]:font-bold data-[state=active]:text-white',
@@ -169,7 +174,7 @@ export function EntityLinkCount() {
       <div
         id="data-type-items-container"
         data-testid="data-type-items-container"
-        className="mb-4 mt-2 flex w-full flex-col items-center justify-center gap-2 px-2 py-2"
+        className="mb-4 mt-2 flex w-full flex-col items-center justify-center gap-2 py-2"
       >
         {content}
       </div>

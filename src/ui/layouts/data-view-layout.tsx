@@ -16,6 +16,7 @@ import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
+import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { PropsWithChildren } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -63,7 +64,7 @@ export async function DataViewLayout({
 
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
 
   const useClassicLayout = entityType.group === EntityTypeGroup.Simulations;
   const contentVariant = useClassicLayout ? ViewVariant.Light : ViewVariant.Default;
