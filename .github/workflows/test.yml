@@ -236,14 +236,23 @@ jobs:
           name: e2e-provisioned-state
           path: test-artifacts/e2e-state
 
-      # on Linux, --with-deps also installs the OS libraries the browser needs,
-      # macOS runners already ship those, so we install the browser only
+      # Linux needs browser binaries plus os dependencies, macOS chrome jobs use
+      # the hosted runner's preinstalled Google Chrome; `playwright install chrome`
+      # removes `/Applications/Google Chrome.app` before downloading a dmg, which
+      # makes the job brittle when the download endpoint is unavailable
       - name: Install Playwright browsers
         env:
           PLAYWRIGHT_INSTALL_TARGET: ${{ matrix.install-target }}
         run: |
           if [[ "$RUNNER_OS" == "Linux" ]]; then
             pnpm exec playwright install --with-deps "$PLAYWRIGHT_INSTALL_TARGET"
+          elif [[ "$PLAYWRIGHT_INSTALL_TARGET" == "chrome" ]]; then
+            chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            if [[ ! -x "$chrome" ]]; then
+              printf '::error::Google Chrome is not installed at %s\n' "$chrome"
+              exit 1
+            fi
+            "$chrome" --version
           else
             pnpm exec playwright install "$PLAYWRIGHT_INSTALL_TARGET"
           fi
