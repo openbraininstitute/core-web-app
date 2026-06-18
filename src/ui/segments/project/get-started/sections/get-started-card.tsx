@@ -42,6 +42,11 @@ function CardMedia({ card }: { card: TProjectHomeGetStartedCard }) {
   );
 }
 
+function resolveHref(link: string, baseRoute: string): string {
+  if (link.startsWith('/app/') || link.startsWith('http')) return link;
+  return `${baseRoute}${link}`;
+}
+
 export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
   const { virtualLabId, projectId } = useWorkspace();
   const baseRoute = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
@@ -58,7 +63,7 @@ export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
       </div>
 
       <Link
-        href={`${baseRoute}${card.link}`}
+        href={resolveHref(card.link, baseRoute)}
         className="flex w-full shrink-0 flex-row items-center justify-between rounded-[60px] border-2 border-white/20 bg-[#002766] px-6 py-2.5 text-xl font-semibold text-white no-underline shadow-[-8px_-8px_12px_0_rgba(255,255,255,0.92),6px_8px_12px_0_rgba(0,0,0,0.12)] transition-opacity hover:opacity-90"
       >
         {card.label}
@@ -71,7 +76,7 @@ export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
             <li key={resource._key}>
               {idx > 0 && <div className="bg-neutral-300 my-0 h-px" />}
               <Link
-                href={`${baseRoute}${resource.link}`}
+                href={resolveHref(resource.link, baseRoute)}
                 className="text-primary-8 flex items-center justify-between py-2.5 text-sm font-normal no-underline transition-colors hover:opacity-80"
               >
                 <span>{resource.label}</span>

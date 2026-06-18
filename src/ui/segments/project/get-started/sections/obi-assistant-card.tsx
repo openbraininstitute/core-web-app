@@ -57,7 +57,7 @@ export function ObiAssistantCard({ topic }: { topic: TObiAssistantTopic }) {
           onClick={() => sendQuestion(topic.question)}
           className="text-primary-8 flex shrink-0 flex-row items-center justify-between rounded-full border border-neutral-300 px-3 py-2 text-xs font-medium transition-colors hover:bg-neutral-50"
         >
-          Try in Assistant
+          Try in OBI Assistant
           <RiArrowRightLine className="size-3.5 shrink-0" />
         </button>
       </div>
