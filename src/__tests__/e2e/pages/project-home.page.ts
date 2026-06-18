@@ -11,10 +11,10 @@ export class ProjectHomePage {
     private vlabId: string,
     private projectId: string
   ) {
-    this.projectLeftMenu = this.page.locator('#project-left-menu');
-    this.projectMainContent = this.page.locator('#project-main-content');
+    this.projectLeftMenu = this.page.getByTestId('project-left-menu');
+    this.projectMainContent = this.page.getByTestId('project-main-content');
     this.mainDataCards = this.page.getByTestId('main-data-category-cards');
-    this.getStartedLink = this.page.locator('[data-menu-item="Get started"]');
+    this.getStartedLink = this.page.getByTestId('project-left-menu-item-get-started');
   }
 
   async goto(): Promise<void> {

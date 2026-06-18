@@ -107,6 +107,18 @@ setup('authenticate and provision virtual lab', async ({ page, context }) => {
     env.VIRTUAL_LAB_API_URL,
     requireSetupValue(accessToken, 'access token')
   );
+  // the shared test user's saved hierarchy/species preference can retain a stale or
+  // malformed (JSON-quoted) hierarchy id from earlier runs, which the app forwards
+  // un-validated and surfaces as an intermittent 422 on brain-region-hierarchy, stalling
+  // sidebar counts. Reset it (best-effort) so every run starts from a valid state
+  // this runs in all modes (provision/auth-only/cleanup) since the preference is per-use
+  await setup.step('reset workspace hierarchy/species preference', async () => {
+    try {
+      await api.resetWorkspaceHierarchySpeciesPreference();
+    } catch (error) {
+      setupLogger.warn(`failed to reset hierarchy/species preference: ${error}.`);
+    }
+  });
 
   if (authOnly) {
     if (!fileExists(E2E_STATE_PATH)) {

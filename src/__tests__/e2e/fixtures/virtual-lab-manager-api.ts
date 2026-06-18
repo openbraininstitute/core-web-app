@@ -90,6 +90,37 @@ export class VirtualLabManagerApi {
     return this.delete(`/virtual-labs/${encodeURIComponent(virtualLabId)}`);
   }
 
+  /**
+   * resets the shared test user's server-side workspace hierarchy/species preference to a neutral "all species" selection
+   * earlier runs can leave a stale or malformed (e.g. JSON-quoted) hierarchy id on this preference;
+   * the app forwards it un-validated while the available-hierarchy list is loading, producing an intermittent 422 on brain-region-hierarchy
+   * that stalls sidebar counts. Clearing it makes every run start from a valid state. Uses a raw request because the endpoint may answer 204 (no body)
+   */
+  async resetWorkspaceHierarchySpeciesPreference(): Promise<void> {
+    const path = '/users/preferences/workspace-hierarchy-species';
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        hierarchy_id: null,
+        species_name: null,
+        brain_region_id: null,
+        brain_region_name: null,
+        species_selection_mode: 'all',
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(
+        `Virtual Lab Manager request failed: PATCH ${path} returned ${response.status}. ${body}`
+      );
+    }
+  }
+
   private async listResources(
     path: string,
     queryOverrides: Record<string, string> = {}

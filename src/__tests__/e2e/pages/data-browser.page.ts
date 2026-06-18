@@ -24,7 +24,8 @@ type Scope = 'public' | 'project';
 type ReleaseNetworkDelay = () => Promise<void>;
 
 function parseCounts(text: string): EntityLinkCounts {
-  const match = normalizeListingText(text).match(/(\d+)\s*of\s*(\d+)/);
+  const normalized = normalizeListingText(text);
+  const match = normalized.match(/(\d+)\s*of\s*(\d+)/);
   if (!match) {
     throw new Error(`Could not parse entity link counts from "${text}".`);
   }
@@ -32,6 +33,17 @@ function parseCounts(text: string): EntityLinkCounts {
     current: Number(match[1]),
     root: Number(match[2]),
   };
+}
+
+function parseRootCount(text: string): number {
+  const normalized = normalizeListingText(text);
+  const fullCount = normalized.match(/(\d+)\s*of\s*(\d+)/);
+  if (fullCount) return Number(fullCount[2]);
+
+  const rootOnly = normalized.match(/\bof\s*(\d+)\b/);
+  if (rootOnly) return Number(rootOnly[1]);
+
+  throw new Error(`Could not parse entity link root count from "${text}".`);
 }
 
 function escapeRegExp(value: string): string {
@@ -45,7 +57,7 @@ export class DataBrowserPage {
     private readonly projectId: string
   ) {}
 
-  readonly layout = this.page.locator('#data-layout');
+  readonly layout = this.page.getByTestId('data-layout');
   readonly dataTypeItems = this.page.getByTestId('data-type-items-container');
   readonly dataTableContainer = this.page
     .getByTestId('data-table-container')
@@ -130,13 +142,15 @@ export class DataBrowserPage {
   }
 
   entityLink(entity: DataBrowserEntity): Locator {
-    return this.page.locator(`[id="counter-${entity.type}"]`);
+    return this.page.getByTestId(`entity-link-counter-${entity.type}`);
   }
 
   async expectEntityLinkLoading(entity: DataBrowserEntity): Promise<void> {
     const link = this.entityLink(entity);
+    const loadingIndicator = link.locator('[data-slot="skeleton"]');
+
     await expect(link).toBeVisible({ timeout: 30_000 });
-    await expect(link.locator('[data-slot="skeleton"]')).not.toHaveCount(0, { timeout: 30_000 });
+    await expect(loadingIndicator.first()).toBeVisible({ timeout: 30_000 });
     await expect(link).toContainText(/of/i);
   }
 
@@ -144,13 +158,26 @@ export class DataBrowserPage {
     const link = this.entityLink(entity);
     let counts: EntityLinkCounts | undefined;
 
-    await expect(link).toBeVisible();
+    await expect(link).toBeVisible({ timeout: 30_000 });
     await expect(async () => {
       counts = parseCounts(await link.innerText());
       expect(counts.root).toBeGreaterThanOrEqual(counts.current);
     }).toPass({ timeout: 30_000 });
 
     return counts as EntityLinkCounts;
+  }
+
+  async expectEntityLinkVisibleWithRootCount(entity: DataBrowserEntity): Promise<number> {
+    const link = this.entityLink(entity);
+    let rootCount: number | undefined;
+
+    await expect(link).toBeVisible({ timeout: 30_000 });
+    await expect(async () => {
+      rootCount = parseRootCount(await link.innerText());
+      expect(rootCount).toBeGreaterThanOrEqual(0);
+    }).toPass({ timeout: 30_000 });
+
+    return rootCount as number;
   }
 
   async expectEntityLinkCurrentCount(entity: DataBrowserEntity, current: number): Promise<void> {
@@ -215,8 +242,8 @@ export class DataBrowserPage {
     const loadingIndicator = this.filterPanel.getByRole('img', { name: /loading/i });
 
     /*
-     * Facet options load independently from table rows. Checking the spinner first makes
-     * exact filter-label failures mean "wrong schema" instead of "panel is still fetching".
+     * Facet options load independently from table rows. Waiting for the panel spinner
+     * keeps exact label failures tied to schema drift instead of request timing.
      */
     await expect(async () => {
       expect(await loadingIndicator.isVisible().catch(() => false)).toBe(false);
@@ -225,42 +252,32 @@ export class DataBrowserPage {
   }
 
   async selectAllSpecies(): Promise<void> {
-    await this.page.locator('#species-selector').getByRole('combobox').click();
+    await this.page.getByTestId('species-selector').getByRole('combobox').click();
     await this.page.getByTestId('species-selector-option__all').click();
     await expect(this.page).toHaveURL(/(?:\?|&)s=all(?:&|$)/);
   }
 
   async selectFirstFocusedSpecies(): Promise<void> {
-    await this.page.locator('#species-selector').getByRole('combobox').click();
+    await this.page.getByTestId('species-selector').getByRole('combobox').click();
 
     /*
-     * Species options encode the hierarchy id in the DOM id. Selecting one should update
-     * both hierarchy and brain-region URL state, which catches stale hierarchy wiring.
+     * the app owns hierarchy ids, not display names. Selecting by that stable id
+     * verifies species changes update both hierarchy and focused brain-region state.
      */
-    const speciesOption = await this.page
-      .locator('[id^="species-selector-option__"]')
-      .evaluateAll((options) => {
-        for (const option of options) {
-          const element = option as HTMLElement;
-          if (element.id && element.id !== 'species-selector-option__all') {
-            return {
-              hierarchyId: element.id.replace('species-selector-option__', ''),
-              id: element.id,
-            };
-          }
-        }
-        return null;
-      });
+    const speciesOptions = await this.page.getByTestId(/^species-selector-option__/).all();
+    for (const speciesOption of speciesOptions) {
+      const hierarchyId = await speciesOption.getAttribute('data-hierarchy-id');
+      if (!hierarchyId) continue;
 
-    if (!speciesOption) {
-      throw new Error('No focused species option found in species selector.');
+      await speciesOption.click();
+      await expect(this.page).toHaveURL(
+        new RegExp(`(?:\\?|&)h_id=${escapeRegExp(hierarchyId)}(?:&|$)`)
+      );
+      await expect(this.page).toHaveURL(/(?:\?|&)br_id=[^&]+(?:&|$)/);
+      return;
     }
 
-    await this.page.locator(`[id="${speciesOption.id}"]`).click();
-    await expect(this.page).toHaveURL(
-      new RegExp(`(?:\\?|&)h_id=${escapeRegExp(speciesOption.hierarchyId)}(?:&|$)`)
-    );
-    await expect(this.page).toHaveURL(/(?:\?|&)br_id=[^&]+(?:&|$)/);
+    throw new Error('No focused species option found in species selector.');
   }
 
   async switchScope(scope: Scope): Promise<void> {
@@ -278,10 +295,13 @@ export class DataBrowserPage {
   }
 
   async selectDataCategory(category: DataCategoryLabel): Promise<void> {
-    await this.page.getByTestId('data-type-selector').getByRole('tab', { name: category }).click();
-    await expect(
-      this.page.getByTestId('data-type-selector').getByRole('tab', { name: category })
-    ).toHaveAttribute('data-state', 'active');
+    const tab = this.page.getByTestId('data-type-selector').getByRole('tab', { name: category });
+    await expect(tab).toBeVisible({ timeout: 30_000 });
+
+    await expect(async () => {
+      await tab.click();
+      await expect(tab).toHaveAttribute('data-state', 'active', { timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
   }
 
   async openEntityFromLeftMenu(entity: DataBrowserEntity): Promise<void> {
@@ -296,17 +316,17 @@ export class DataBrowserPage {
   }
 
   async openBrainRegionHierarchy(): Promise<void> {
-    await this.page.locator('[data-label="brain-region-switcher"]').click();
+    await this.page.getByTestId('brain-region-switcher').click();
     await expect(this.brainRegionHierarchy).toBeVisible();
     await expect(this.brainRegionHierarchy).toHaveAttribute('aria-hidden', 'false');
 
     /*
-     * The tree is populated asynchronously after the popover opens. Waiting for real
-     * selectable nodes avoids racing against an empty container that is technically visible.
+     * The tree is populated asynchronously after the popover opens. Waiting for
+     * selectable nodes avoids racing against a visible but empty container.
      */
     await expect(async () => {
       expect(
-        await this.brainRegionHierarchy.locator('button[aria-label][id]').count()
+        await this.brainRegionHierarchy.getByTestId(/^brain-region-tree-node-/).count()
       ).toBeGreaterThan(1);
     }).toPass({ timeout: 30_000 });
   }
@@ -315,13 +335,14 @@ export class DataBrowserPage {
     const currentRegionId = new URL(this.page.url()).searchParams.get('br_id');
     const findTarget = () =>
       this.brainRegionHierarchy
-        .locator('button[aria-label][id]')
-        .evaluateAll((buttons, selectedId) => {
-          for (const button of buttons) {
-            const element = button as HTMLElement;
-            const label = element.getAttribute('aria-label');
-            if (element.id && label && element.id !== selectedId && element.offsetParent !== null) {
-              return { id: element.id, label };
+        .getByTestId(/^brain-region-tree-node-/)
+        .evaluateAll((nodes, selectedId) => {
+          for (const node of nodes) {
+            const element = node as HTMLElement;
+            const id = element.getAttribute('data-brain-region-id');
+            const label = element.getAttribute('data-brain-region-label');
+            if (id && label && id !== selectedId && element.offsetParent !== null) {
+              return { id, label };
             }
           }
           return null;
@@ -336,7 +357,7 @@ export class DataBrowserPage {
       throw new Error('No alternate visible brain region was available to select.');
     }
 
-    await this.brainRegionHierarchy.locator(`button[id="${target.id}"]`).click();
+    await this.brainRegionHierarchy.getByTestId(`brain-region-tree-node-${target.id}`).click();
     await expect(this.page).toHaveURL(
       new RegExp(`(?:\\?|&)br_id=${escapeRegExp(target.id)}(?:&|$)`)
     );

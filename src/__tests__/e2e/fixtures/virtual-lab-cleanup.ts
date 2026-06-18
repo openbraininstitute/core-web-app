@@ -17,12 +17,6 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function uniqueProjects(
-  projects: readonly E2EProject[] | readonly ProjectSummary[]
-): ProjectSummary[] {
-  return Array.from(new Map(projects.map((project) => [project.id, project])).values());
-}
-
 function shouldRetryDeleteResult(result: DeleteResult): boolean {
   return !result.ok && (result.status === 429 || result.status >= 500);
 }
@@ -68,7 +62,7 @@ export async function deleteVirtualLabWorkspace({
   projects: readonly E2EProject[] | readonly ProjectSummary[];
   logger: CleanupLogger;
 }): Promise<void> {
-  for (const project of uniqueProjects(projects)) {
+  for (const project of projects) {
     try {
       const result = await deleteWithRetry({
         label: `delete project ${project.id}`,

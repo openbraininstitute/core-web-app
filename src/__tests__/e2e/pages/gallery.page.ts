@@ -14,7 +14,7 @@ export class GalleryPage {
       name: /Discover image and video assets/i,
       level: 2,
     });
-    this.galleryItems = this.page.locator('button[aria-label]:not([aria-label="Popup menu"])');
+    this.galleryItems = this.page.getByTestId('gallery-media-item');
   }
 
   async goto(): Promise<void> {

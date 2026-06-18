@@ -13,7 +13,7 @@ export class NotebookWorkspacePage {
     private readonly projectId: string
   ) {}
 
-  readonly layout = this.page.locator('#notebooks-layout');
+  readonly layout = this.page.getByTestId('notebooks-layout');
   readonly dataTableContainer = this.page.getByTestId('data-table-container');
   readonly filterPanel = this.page.getByTestId('listing-view-filter-panel');
 

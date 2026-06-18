@@ -78,7 +78,7 @@ export class WorkflowsPage {
   }
 
   private async dismissOnboarding(): Promise<void> {
-    const onboardingCard = this.page.locator('#onboarding-card');
+    const onboardingCard = this.page.getByTestId('onboarding-card');
 
     /*
      * The onboarding card appears only for some fresh accounts/projects and can cover

@@ -157,6 +157,7 @@ export function NotebooksLayout({ children, active }: Props) {
 
       <div
         id="notebooks-layout"
+        data-testid="notebooks-layout"
         className="bg-background border-neutral-2 ml-5 h-[calc(100vh-11rem)] rounded-2xl border p-5"
       >
         {children}

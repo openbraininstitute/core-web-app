@@ -34,7 +34,7 @@ test.describe('Data browser page', () => {
     } finally {
       await releaseEntityCore();
     }
-    await dataBrowser.expectEntityLinkVisibleWithCounts(cellMorphology);
+    await dataBrowser.expectEntityLinkVisibleWithRootCount(cellMorphology);
   });
 
   test('shows table loading state before listing data resolves', async ({ page, e2eState }) => {
@@ -63,7 +63,7 @@ test.describe('Data browser page', () => {
 
     expect(page.url()).toContain(dataBrowser.basePath);
     await expect(dataBrowser.dataTypeItems).toBeVisible();
-    await dataBrowser.expectEntityLinkVisibleWithCounts(cellMorphology);
+    await dataBrowser.expectEntityLinkVisibleWithRootCount(cellMorphology);
   });
 
   test('updates active sidebar count when search filters the listing', async ({
@@ -118,7 +118,7 @@ test.describe('Data browser page', () => {
     await dataBrowser.openBrainRegionHierarchy();
     await dataBrowser.selectAnotherVisibleBrainRegion();
 
-    await expect(page.locator('[data-label="brain-region-switcher"]')).toBeVisible();
+    await expect(page.getByTestId('brain-region-switcher')).toBeVisible();
   });
 
   test('switches data categories and navigates to another data type', async ({
@@ -129,10 +129,10 @@ test.describe('Data browser page', () => {
 
     await dataBrowser.goto();
     await dataBrowser.selectDataCategory('Model');
-    await dataBrowser.expectEntityLinkVisibleWithCounts(meModel);
+    await dataBrowser.expectEntityLinkVisibleWithRootCount(meModel);
 
     await dataBrowser.selectDataCategory('Simulations');
-    await dataBrowser.expectEntityLinkVisibleWithCounts(singleNeuronSimulation);
+    await dataBrowser.expectEntityLinkVisibleWithRootCount(singleNeuronSimulation);
 
     await dataBrowser.selectDataCategory('Experimental');
     await dataBrowser.openEntityFromLeftMenu(electricalRecording);

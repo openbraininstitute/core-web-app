@@ -124,7 +124,12 @@ export function LeftMenu({ className }: Props) {
           const ArrowIcon = isExpanded ? DownOutlined : RightOutlined;
 
           return (
-            <div key={key} data-menu-item={title} className="w-full">
+            <div
+              key={key}
+              data-menu-item={title}
+              data-testid={`project-left-menu-item-${key}`}
+              className="w-full"
+            >
               <Button
                 rounded
                 borderless
