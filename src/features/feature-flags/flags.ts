@@ -16,15 +16,7 @@ export const extractionActivityFlag = defineFlag<boolean>({
   key: 'extraction-activity',
   defaultValue: false,
   values: [true, false],
-  description: 'Enable extraction activity',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
-
-export const emSynapseMappingActivityFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
-  defaultValue: false,
-  values: [true, false],
-  description: 'Em synapse mapping activity',
+  description: 'Full extraction workflow',
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
@@ -36,12 +28,7 @@ export const wholeBrainSimulationFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const flags = [
-  aiPanelStateFlag,
-  extractionActivityFlag,
-  emSynapseMappingActivityFlag,
-  wholeBrainSimulationFlag,
-] as const;
+export const flags = [aiPanelStateFlag, extractionActivityFlag, wholeBrainSimulationFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 
