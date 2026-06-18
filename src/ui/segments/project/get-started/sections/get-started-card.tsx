@@ -47,7 +47,7 @@ export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
   const baseRoute = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-neutral-300 p-5">
+    <div className="flex h-full flex-col gap-3 rounded-xl border border-neutral-300 p-5">
       <h3 className="text-primary-8 shrink-0 text-3xl font-bold">{card.title}</h3>
       <p className="text-primary-8 shrink-0 text-sm font-normal leading-normal">
         {card.description}
@@ -65,7 +65,7 @@ export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
         <RiArrowRightLine className="size-4 shrink-0" />
       </Link>
 
-      {card.resources.length > 0 && (
+      {card.resources && card.resources.length > 0 && (
         <ul className="flex shrink-0 flex-col">
           {card.resources.map((resource, idx) => (
             <li key={resource._key}>

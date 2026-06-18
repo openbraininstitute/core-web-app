@@ -5,7 +5,7 @@ import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
-import { getClient, getProductionClient } from '@/services/sanity/client';
+import { getClient } from '@/services/sanity/client';
 import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
 import {
   getQuickAccessQuery,
@@ -56,15 +56,10 @@ export default async function Layout({
       client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery(), {}, { next: { revalidate: 0 } }),
   });
 
-  const productionClient = getProductionClient();
   queryClient.prefetchQuery({
     queryKey: keyBuilderExternal.projectHomeGetStarted(),
     queryFn: () =>
-      productionClient.fetch<TProjectHomeData>(
-        ProjectHomeGetStartedQuery,
-        {},
-        { next: { revalidate: 0 } }
-      ),
+      client.fetch<TProjectHomeData>(ProjectHomeGetStartedQuery, {}, { next: { revalidate: 0 } }),
   });
 
   return (

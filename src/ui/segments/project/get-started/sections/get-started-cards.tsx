@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { getProductionClient } from '@/services/sanity/client';
+import { getClient } from '@/services/sanity/client';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import {
   ProjectHomeGetStartedQuery,
@@ -34,12 +34,13 @@ function GetStartedCardsSkeleton() {
 }
 
 export function GetStartedCards() {
-  const client = getProductionClient();
+  const client = getClient();
 
   const { data, isLoading } = useQuery({
     queryKey: keyBuilderExternal.projectHomeGetStarted(),
-    queryFn: () => client.fetch<TProjectHomeData>(ProjectHomeGetStartedQuery),
-    staleTime: 60_000,
+    queryFn: () =>
+      client.fetch<TProjectHomeData>(ProjectHomeGetStartedQuery, {}, { next: { revalidate: 0 } }),
+    staleTime: 0,
   });
 
   if (isLoading) return <GetStartedCardsSkeleton />;
