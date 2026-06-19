@@ -76,7 +76,7 @@ export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
             <li key={resource._key}>
               {idx > 0 && <div className="bg-neutral-300 my-0 h-px" />}
               <Link
-                href={resolveHref(resource.link, baseRoute)}
+                href={resource.link}
                 className="text-primary-8 flex items-center justify-between py-2.5 text-sm font-normal no-underline transition-colors hover:opacity-80"
               >
                 <span>{resource.label}</span>
