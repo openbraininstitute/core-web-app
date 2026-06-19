@@ -82,6 +82,8 @@ process.env.APP_VERSION ??= 'test';
 
 const baseURL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 const e2eRoot = 'src/__tests__/e2e';
+// Shared budget for web-first assertions and actions. Tune CI flakiness here, once.
+const ASSERTION_TIMEOUT = 30_000;
 const workers = resolveWorkerCount();
 const browserUse = resolveBrowserUse();
 const e2eRunId = process.env.E2E_RUN_ID ?? `${Date.now()}-${process.pid}`;
@@ -103,10 +105,17 @@ export default defineConfig({
   workers,
   outputDir: 'test-results/',
 
+  // Single source of truth for how long web-first assertions auto-retry. These are not
+  // sleeps: an assertion resolves the instant its condition holds and only consumes the
+  // full budget when the condition never becomes true. Set it once here instead of
+  // hardcoding `{ timeout }` at each call site.
+  expect: { timeout: ASSERTION_TIMEOUT },
+
   reporter: isCI ? [['list'], ['html', { open: 'never' }]] : [['html', { open: 'on-failure' }]],
 
   use: {
     baseURL,
+    actionTimeout: ASSERTION_TIMEOUT,
     navigationTimeout: isCI ? 90_000 : 60_000,
     screenshot: 'only-on-failure',
     trace: isCI ? 'on-first-retry' : 'off',

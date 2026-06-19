@@ -117,28 +117,22 @@ export class DataBrowserPage {
 
   async goto(): Promise<void> {
     await this.page.goto(this.basePath, { waitUntil: 'domcontentloaded' });
-    await expect(this.layout).toBeVisible({ timeout: 30_000 });
-    await expect(this.page.getByTestId('brain-region-entities-switcher')).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(this.layout).toBeVisible();
+    await expect(this.page.getByTestId('brain-region-entities-switcher')).toBeVisible();
   }
 
   async gotoEntityPath(entity: DataBrowserEntity, scope: Scope = 'public'): Promise<void> {
     await this.page.goto(`${this.basePath}/browse/entity/${entity.routeSegment}?scope=${scope}`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(this.layout).toBeVisible({ timeout: 30_000 });
+    await expect(this.layout).toBeVisible();
   }
 
   async gotoEntity(entity: DataBrowserEntity, scope: Scope = 'public'): Promise<void> {
     await this.gotoEntityPath(entity, scope);
-    await expect(this.dataTableContainer).toBeVisible({ timeout: 30_000 });
-    await expect(this.page.getByRole('table', { name: 'listing-view-table' })).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(this.page.getByLabel('listing-view-filter-button')).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(this.dataTableContainer).toBeVisible();
+    await expect(this.page.getByRole('table', { name: 'listing-view-table' })).toBeVisible();
+    await expect(this.page.getByLabel('listing-view-filter-button')).toBeVisible();
   }
 
   entityLink(entity: DataBrowserEntity): Locator {
@@ -149,8 +143,8 @@ export class DataBrowserPage {
     const link = this.entityLink(entity);
     const loadingIndicator = link.locator('[data-slot="skeleton"]');
 
-    await expect(link).toBeVisible({ timeout: 30_000 });
-    await expect(loadingIndicator.first()).toBeVisible({ timeout: 30_000 });
+    await expect(link).toBeVisible();
+    await expect(loadingIndicator.first()).toBeVisible();
     await expect(link).toContainText(/of/i);
   }
 
@@ -158,7 +152,7 @@ export class DataBrowserPage {
     const link = this.entityLink(entity);
     let counts: EntityLinkCounts | undefined;
 
-    await expect(link).toBeVisible({ timeout: 30_000 });
+    await expect(link).toBeVisible();
     await expect(async () => {
       counts = parseCounts(await link.innerText());
       expect(counts.root).toBeGreaterThanOrEqual(counts.current);
@@ -171,7 +165,7 @@ export class DataBrowserPage {
     const link = this.entityLink(entity);
     let rootCount: number | undefined;
 
-    await expect(link).toBeVisible({ timeout: 30_000 });
+    await expect(link).toBeVisible();
     await expect(async () => {
       rootCount = parseRootCount(await link.innerText());
       expect(rootCount).toBeGreaterThanOrEqual(0);
@@ -188,13 +182,9 @@ export class DataBrowserPage {
   }
 
   async expectTableLoading(): Promise<void> {
-    await expect(this.dataTableContainer).toBeVisible({ timeout: 30_000 });
-    await expect(this.page.getByRole('table', { name: 'listing-view-table' })).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(this.dataTableContainer.getByRole('img', { name: /loading/i })).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(this.dataTableContainer).toBeVisible();
+    await expect(this.page.getByRole('table', { name: 'listing-view-table' })).toBeVisible();
+    await expect(this.dataTableContainer.getByRole('img', { name: /loading/i })).toBeVisible();
   }
 
   async fillSearch(query: string): Promise<void> {
@@ -207,7 +197,7 @@ export class DataBrowserPage {
 
   async openFilterPanel(): Promise<void> {
     await this.page.getByLabel('listing-view-filter-button').click();
-    await expect(this.filterPanel).toBeVisible({ timeout: 30_000 });
+    await expect(this.filterPanel).toBeVisible();
   }
 
   async closeFilterPanel(): Promise<void> {
@@ -216,14 +206,12 @@ export class DataBrowserPage {
   }
 
   async expectFilterPanelLoading(): Promise<void> {
-    await expect(this.filterPanel).toBeVisible({ timeout: 30_000 });
-    await expect(this.filterPanel.getByRole('img', { name: /loading/i })).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(this.filterPanel).toBeVisible();
+    await expect(this.filterPanel.getByRole('img', { name: /loading/i })).toBeVisible();
   }
 
   async expectPaginationVisible(): Promise<void> {
-    await expect(this.page.getByTestId('listing-pagination')).toBeVisible({ timeout: 30_000 });
+    await expect(this.page.getByTestId('listing-pagination')).toBeVisible();
   }
 
   async columnHeaders(): Promise<string[]> {
@@ -282,9 +270,7 @@ export class DataBrowserPage {
 
   async switchScope(scope: Scope): Promise<void> {
     await this.page.getByTestId(`scope-selector-tab-${scope}`).click();
-    await expect(this.page).toHaveURL(new RegExp(`(?:\\?|&)scope=${scope}(?:&|$)`), {
-      timeout: 30_000,
-    });
+    await expect(this.page).toHaveURL(new RegExp(`(?:\\?|&)scope=${scope}(?:&|$)`));
   }
 
   async expectScope(scope: Scope): Promise<void> {
@@ -296,7 +282,7 @@ export class DataBrowserPage {
 
   async selectDataCategory(category: DataCategoryLabel): Promise<void> {
     const tab = this.page.getByTestId('data-type-selector').getByRole('tab', { name: category });
-    await expect(tab).toBeVisible({ timeout: 30_000 });
+    await expect(tab).toBeVisible();
 
     await expect(async () => {
       await tab.click();
@@ -309,10 +295,8 @@ export class DataBrowserPage {
     await expect(this.page).toHaveURL(
       new RegExp(`/data/browse/entity/${escapeRegExp(entity.routeSegment)}(?:\\?|$)`)
     );
-    await expect(this.dataTableContainer).toBeVisible({ timeout: 30_000 });
-    await expect(this.page.getByRole('table', { name: 'listing-view-table' })).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(this.dataTableContainer).toBeVisible();
+    await expect(this.page.getByRole('table', { name: 'listing-view-table' })).toBeVisible();
   }
 
   async openBrainRegionHierarchy(): Promise<void> {
