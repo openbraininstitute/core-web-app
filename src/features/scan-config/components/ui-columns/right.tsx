@@ -90,7 +90,6 @@ export function Right({
       </div>
     );
   }
-
   return (
     <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 py-1 h-full">
       {activity === ScanConfigActivity.Simulate &&
@@ -104,6 +103,7 @@ export function Right({
       {((activity === ScanConfigActivity.Simulate &&
         (entityType === ExtendedEntitiesTypeDict.Circuit ||
           entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
+          entityType === ExtendedEntitiesTypeDict.WholeBrain ||
           entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) &&
         entity) ||
         (activity === ScanConfigActivity.Extract &&
