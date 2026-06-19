@@ -101,11 +101,6 @@ export interface ICircuit
     EntityCoreType,
     EntityCoreBaseAsset {
   subject?: ISubject;
-  // {
-  //   species?: {
-  //     name?: string;
-  //   };
-  // };
 }
 
 type CircuitScaleFilter = {
