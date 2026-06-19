@@ -25,7 +25,7 @@ interface CellInfo {
 }
 
 export function LargeCircuitPreview({ className, circuit }: LargeCircuitPreviewProps) {
-  // const debug = useMorphoViewerDebugMode();
+  const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);
   const nodes = useCircuitNodes(circuit);
   const handleDownload = () => {
@@ -63,17 +63,17 @@ export function LargeCircuitPreview({ className, circuit }: LargeCircuitPreviewP
             scalebar
             cellInfos={cellInfos}
             controls={[
-              // debug
-              //   ? [
-              //       <Button
-              //         key="doanload"
-              //         onClick={handleDownload}
-              //         className={styles.downloadButton}
-              //       >
-              //         Download {nodes.length} nodes
-              //       </Button>,
-              //     ]
-              //   : [],
+              debugMode
+                ? [
+                    <Button
+                      key="download"
+                      onClick={handleDownload}
+                      className={styles.downloadButton}
+                    >
+                      Download {nodes.length} nodes
+                    </Button>,
+                  ]
+                : [],
               'reset-camera',
               'fullscreen',
             ]}
