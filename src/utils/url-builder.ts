@@ -114,6 +114,7 @@ const BASE_ENTITY_TYPE_FALLBACK: Partial<
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: ExtendedEntitiesTypeDict.Circuit,
   [ExtendedEntitiesTypeDict.WholeBrain]: ExtendedEntitiesTypeDict.Circuit,
   [ExtendedEntitiesTypeDict.BrainRegion]: ExtendedEntitiesTypeDict.Circuit,
+  [ExtendedEntitiesTypeDict.IonChannelModelingCampaign]: ExtendedEntitiesTypeDict.IonChannelModel,
 };
 
 export function resolveConcreteEntityPathParam(extendedType?: TExtendedEntitiesTypeDict) {

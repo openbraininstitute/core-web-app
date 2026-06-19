@@ -101,17 +101,17 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.Microcircuit]: {
     value: ExtendedEntitiesTypeDict.Microcircuit,
     group: EntityGroupDict.Circuit,
-    label: 'Microcircuit',
+    label: 'Microcircuit (beta)',
   },
   [ExtendedEntitiesTypeDict.MicrocircuitSimulation]: {
     value: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
     group: EntityGroupDict.Circuit,
-    label: 'Microcircuit simulation',
+    label: 'Microcircuit simulation (beta)',
   },
   [ExtendedEntitiesTypeDict.NGVCircuit]: {
     value: ExtendedEntitiesTypeDict.NGVCircuit,
     group: EntityGroupDict.Circuit,
-    label: 'NGV circuit',
+    label: 'NGV circuit (beta)',
   },
   [ExtendedEntitiesTypeDict.Circuit]: {
     value: ExtendedEntitiesTypeDict.Circuit,
@@ -143,16 +143,16 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.BrainRegion]: {
     value: ExtendedEntitiesTypeDict.BrainRegion,
     group: EntityGroupDict.System,
-    label: 'Brain region',
+    label: 'Brain region (beta)',
   },
   [ExtendedEntitiesTypeDict.BrainSystems]: {
     value: ExtendedEntitiesTypeDict.BrainSystems,
     group: EntityGroupDict.System,
-    label: 'Brain system',
+    label: 'Brain system (beta)',
   },
   [ExtendedEntitiesTypeDict.WholeBrain]: {
     value: ExtendedEntitiesTypeDict.WholeBrain,
     group: EntityGroupDict.System,
-    label: 'Whole brain',
+    label: 'Whole brain (beta)',
   },
 };
