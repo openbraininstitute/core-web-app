@@ -63,11 +63,7 @@ export const { APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID, MOUSE_ATLAS__ID } = confi
 export const brainRegionSidebarAtom = atom(false);
 export const selectedBrainRegionAtom = atom<BrainRegionHierarchyBase | null>(null);
 
-/**
- * capability flag: indicates whether the "All" species option is allowed
- * on the current route. Defaults to true; the 3D viewer page opts out by
- * setting this to false while it is mounted.
- */
+/** capability flag: whether the "All" species option is shown in the selector. */
 export const allowAllSpeciesAtom = atom<boolean>(true);
 export const AllSpeciesDisplayName = 'All';
 /**

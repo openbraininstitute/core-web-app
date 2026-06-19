@@ -768,8 +768,8 @@ export function useWorkspaceHierarchyRegistry() {
   ]);
 
   /**
-   * when the current page does not allow the "all species" mode (the 3D viewer),
-   * fall back to a focused selection instead of rendering a broken state.
+   * defensive fallback: if "all species" is active where it is not allowed,
+   * restore a focused selection instead of leaving the UI in a broken state.
    */
   useEffect(() => {
     if (!syncSettled) return;

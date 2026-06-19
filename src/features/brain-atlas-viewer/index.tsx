@@ -1,5 +1,6 @@
 'use client';
 
+import { useAtomValue } from 'jotai';
 import Image from 'next/image';
 import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -8,11 +9,30 @@ import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { Loader } from '@/components/loader';
 import { BrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf';
 import { FullScreen } from '@/features/brain-atlas-viewer/full-screen';
-import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
+import {
+  speciesSelectionModeAtom,
+  useBrainRegionRootHierarchyQuery,
+} from '@/features/brain-region-hierarchy/context';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
-import { SPECIES_IMAGE_MAP, SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
+import {
+  SPECIES_IMAGE_MAP,
+  SPECIES_TAXONOMY_IDS,
+  SpeciesSelectionMode,
+} from '@/features/brain-region-hierarchy/types';
 
-export function AtlasViewer({ children }: { children?: ReactNode }) {
+function AllSpeciesAtlasMessage() {
+  return (
+    <div
+      className="@container relative flex h-full max-h-full w-full max-w-full flex-col items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
+      <p className="text-lg font-semibold text-white">All species selected.</p>
+    </div>
+  );
+}
+
+function FocusedAtlasViewer({ children }: { children?: ReactNode }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -100,6 +120,17 @@ export function AtlasViewer({ children }: { children?: ReactNode }) {
       )}
     </div>
   );
+}
+
+export function AtlasViewer({ children }: { children?: ReactNode }) {
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
+
+  if (isAllSpeciesMode) {
+    return <AllSpeciesAtlasMessage />;
+  }
+
+  return <FocusedAtlasViewer>{children}</FocusedAtlasViewer>;
 }
 
 export default AtlasViewer;
