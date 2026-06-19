@@ -8,7 +8,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DownloadIcon } from '@/components/icons';
-import { WorkspaceSection } from '@/constants';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -23,7 +23,12 @@ import {
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import {
+  BrowseExperimentalDataExtendedTypes,
+  ModelDataExtendedTypes,
+} from '@/ui/segments/explore/helpers';
 import { ensureArray } from '@/utils/array';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -319,6 +324,32 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             {
               when: {
                 dataType: [
+                  ...Object.values(BrowseExperimentalDataExtendedTypes).map(
+                    (entity) => entity.extendedType
+                  ),
+                  ...Object.values(ModelDataExtendedTypes).map((entity) => entity.extendedType),
+                ],
+                section: [WorkspaceSection.Data],
+                speciesSelectionMode: SpeciesSelectionMode.All,
+              },
+              value: true,
+            },
+            {
+              when: {
+                dataType: [
+                  ExtendedEntitiesTypeDict.IonChannelRecording,
+                  ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                  ExtendedEntitiesTypeDict.Emodel,
+                  ExtendedEntitiesTypeDict.Memodel,
+                ],
+                section: [WorkspaceSection.BuildWorkflow],
+                speciesSelectionMode: SpeciesSelectionMode.All,
+              },
+              value: true,
+            },
+            {
+              when: {
+                dataType: [
                   ExtendedEntitiesTypeDict.Circuit,
                   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
                   ExtendedEntitiesTypeDict.MemodelCircuit,
@@ -327,7 +358,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ExtendedEntitiesTypeDict.Microcircuit,
                   ExtendedEntitiesTypeDict.BrainRegion,
                   ExtendedEntitiesTypeDict.EMCellMesh,
-                  ExtendedEntitiesTypeDict.IonChannelModel,
                   ExtendedEntitiesTypeDict.Memodel,
                 ],
                 section: [
@@ -355,6 +385,27 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             {
               when: {
                 dataType: [
+                  ...Object.values(BrowseExperimentalDataExtendedTypes).map(
+                    (entity) => entity.extendedType
+                  ),
+                  ...Object.values(ModelDataExtendedTypes).map((entity) => entity.extendedType),
+                ],
+                section: [WorkspaceSection.Data],
+                speciesSelectionMode: SpeciesSelectionMode.All,
+              },
+              value: true,
+            },
+            {
+              when: {
+                dataType: [ExtendedEntitiesTypeDict.IonChannelRecording],
+                section: [WorkspaceSection.BuildWorkflow],
+                speciesSelectionMode: SpeciesSelectionMode.All,
+              },
+              value: true,
+            },
+            {
+              when: {
+                dataType: [
                   ExtendedEntitiesTypeDict.Circuit,
                   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
                   ExtendedEntitiesTypeDict.MemodelCircuit,
@@ -363,7 +414,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ExtendedEntitiesTypeDict.Microcircuit,
                   ExtendedEntitiesTypeDict.BrainRegion,
                   ExtendedEntitiesTypeDict.EMCellMesh,
-                  ExtendedEntitiesTypeDict.IonChannelModel,
                   ExtendedEntitiesTypeDict.Memodel,
                 ],
                 section: [
@@ -462,6 +512,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     isFilterable: true,
     isDisplayable: true,
+    style: { width: 130 },
   },
   [EntityCoreFields.StrainName]: {
     title: 'Strain',

@@ -23,8 +23,8 @@ import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/s
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
-export const ExperimentalEntitiesTileTypes = {
-  ReconstructionMorphology: CellMorphology,
+export const BrowseExperimentalDataExtendedTypes = {
+  CellMorphology,
   ElectricalCellRecording,
   IonChannelRecording,
   NeuronDensity,
@@ -33,7 +33,7 @@ export const ExperimentalEntitiesTileTypes = {
   EmCellMesh,
 } as const;
 
-export const ModelEntitiesTileTypes = {
+export const ModelDataExtendedTypes = {
   SingleNeuronSynaptome,
   SingleNeuronCircuit,
   Emodel,
@@ -43,7 +43,7 @@ export const ModelEntitiesTileTypes = {
   SynthesizedCellMorphology,
 } as const;
 
-export const SimulationEntitiesTileTypes = {
+export const SimulationDataExtendedTypes = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
   MEModelCircuitSimulation,

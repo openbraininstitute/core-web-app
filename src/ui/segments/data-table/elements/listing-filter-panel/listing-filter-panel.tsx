@@ -2,7 +2,7 @@ import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useIsFetching } from '@tanstack/react-query';
 import { Spin } from 'antd';
 import { get } from 'es-toolkit/compat';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import {
   type Dispatch,
@@ -17,8 +17,13 @@ import {
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope, type TWorkspaceSection } from '@/constants';
+import { buildFieldListingContext } from '@/entity-configuration/definitions/listing';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  speciesSelectionModeAtom,
+  workspaceHierarchySpeciesAtom,
+} from '@/features/brain-region-hierarchy/context';
 import { Button } from '@/ui/molecules/button';
 import {
   coreActiveColumnsAtom,
@@ -146,13 +151,19 @@ export function ListingFilterPanel({
     [activeColumns, setActiveColumns]
   );
 
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
+
   const fieldApiContext = useMemo(
-    () => ({
-      dataType,
-      section,
-      scope: dataScope,
-    }),
-    [dataScope, dataType, section]
+    () =>
+      buildFieldListingContext({
+        dataType,
+        section,
+        scope: dataScope,
+        speciesSelectionMode,
+        workspaceSpecies,
+      }),
+    [dataScope, dataType, section, speciesSelectionMode, workspaceSpecies]
   );
 
   useEffect(() => {
@@ -199,7 +210,7 @@ export function ListingFilterPanel({
     resetFilters();
     setSearchString('');
     runStorageSync({
-      Filters: makeTypeDefaultFilters({ dataType, section, scope: dataScope }),
+      Filters: makeTypeDefaultFilters(fieldApiContext),
       Search: '',
     });
   };

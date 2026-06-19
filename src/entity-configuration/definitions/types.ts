@@ -8,6 +8,7 @@ import type {
   EntityCoreFields,
   EntityCoreFieldsValue,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { TSpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type CoreFilterValues = {
@@ -111,6 +112,10 @@ export type TFieldApiContext = {
   dataType: TExtendedEntitiesTypeDict;
   section?: TWorkspaceSection;
   scope?: TWorkspaceScope;
+  /** taxonomy id of the species selected in the hierarchy view, when focused on a single species */
+  selectedSpecies?: string;
+  /** hierarchy species selector mode for the current data browse context */
+  speciesSelectionMode?: TSpeciesSelectionMode;
 };
 
 export type TMatchable<T> = T | readonly T[];
@@ -127,6 +132,8 @@ export type TFieldApiWhen = {
   dataType?: TMatchable<TExtendedEntitiesTypeDict>;
   section?: TMatchable<TWorkspaceSection>;
   scope?: TMatchable<TWorkspaceScope>;
+  selectedSpecies?: TMatchable<string>;
+  speciesSelectionMode?: TMatchable<TSpeciesSelectionMode>;
 };
 
 /**

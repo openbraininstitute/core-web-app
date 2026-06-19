@@ -17,9 +17,9 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import {
-  ExperimentalEntitiesTileTypes,
-  ModelEntitiesTileTypes,
-  SimulationEntitiesTileTypes,
+  BrowseExperimentalDataExtendedTypes,
+  ModelDataExtendedTypes,
+  SimulationDataExtendedTypes,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
 
@@ -72,15 +72,15 @@ export function EntityLinkCount() {
     shallow: true,
   });
 
-  const experimental = Object.values(ExperimentalEntitiesTileTypes).filter(
+  const experimental = Object.values(BrowseExperimentalDataExtendedTypes).filter(
     (config) =>
       !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
-  const models = Object.values(ModelEntitiesTileTypes).filter(
+  const models = Object.values(ModelDataExtendedTypes).filter(
     (config) =>
       !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
-  const simulations = Object.values(SimulationEntitiesTileTypes).filter(
+  const simulations = Object.values(SimulationDataExtendedTypes).filter(
     (config) =>
       !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
