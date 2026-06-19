@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 
 import { useTabs } from '@/components/detail-view-tabs';
-import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import {
   speciesSelectionModeAtom,
   useGetSelectedBrainRegion,
@@ -18,35 +18,15 @@ import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import {
   BrowseExperimentalDataExtendedTypes,
+  DataSectionDataTypeTabsConfig,
+  ExploreDataTypeTabs,
   ModelDataExtendedTypes,
   SimulationDataExtendedTypes,
+  type TExploreDataTypeTabs,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
 
-export const ExploreDataTypeTabs = {
-  Experimental: 'experimental',
-  Models: 'models',
-  Simulations: 'simulations',
-} as const;
-export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
-
-export const tabsConfigItems: Array<{
-  key: TExploreDataTypeTabs;
-  title: string;
-}> = [
-  {
-    key: ExploreDataTypeTabs.Experimental,
-    title: 'Experimental',
-  },
-  {
-    key: ExploreDataTypeTabs.Models,
-    title: 'Model',
-  },
-  {
-    key: ExploreDataTypeTabs.Simulations,
-    title: 'Simulations',
-  },
-];
+export { ExploreDataTypeTabs, type TExploreDataTypeTabs } from '@/ui/segments/explore/helpers';
 
 export function EntityLinkCount() {
   const featureFlags = useFlags();
@@ -56,7 +36,8 @@ export function EntityLinkCount() {
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
-  const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
+  const scope = (useSearchParams().get(SCOPE_QUERY_PARAMS) ??
+    WorkspaceScope.Public) as TWorkspaceScope;
 
   const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
@@ -67,7 +48,7 @@ export function EntityLinkCount() {
   const effectiveDefaultBrainRegionId = isAllMode ? undefined : brainRegionHierarchy?.root.id;
 
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
-    tabsConfig: tabsConfigItems,
+    tabsConfig: DataSectionDataTypeTabsConfig,
     tabKey: 'group',
     shallow: true,
   });
@@ -153,7 +134,7 @@ export function EntityLinkCount() {
               }
             )}
           >
-            {tabsConfigItems.map((tab) => (
+            {DataSectionDataTypeTabsConfig.map((tab) => (
               <PillTabsTrigger
                 key={tab.key}
                 value={tab.key}

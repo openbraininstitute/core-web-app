@@ -4,7 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
-import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -44,7 +44,7 @@ export function DataScopeTabs() {
 
 export function DataHeader() {
   const searchParams = useSearchParams();
-  const scope = (searchParams.get('scope') as TWorkspaceScope) ?? WorkspaceScope.Public;
+  const scope = (searchParams.get(SCOPE_QUERY_PARAMS) as TWorkspaceScope) ?? WorkspaceScope.Public;
   const breakpoint = useDefaultBreakpoint();
 
   const onContribute = () => {

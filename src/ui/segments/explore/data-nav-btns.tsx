@@ -4,7 +4,13 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
-import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
+import {
+  DATA_GROUP_QUERY_PARAM,
+  SCOPE_QUERY_PARAMS,
+  type TViewVariant,
+  ViewVariant,
+  WorkspaceSection,
+} from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
@@ -116,8 +122,8 @@ export function BackToEntityType({
 }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
-  query.set('group', group);
-  query.set('scope', scope);
+  query.set(DATA_GROUP_QUERY_PARAM, group);
+  query.set(SCOPE_QUERY_PARAMS, scope);
 
   const linkClass =
     variant === ViewVariant.Default
