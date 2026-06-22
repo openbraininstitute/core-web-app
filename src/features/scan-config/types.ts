@@ -150,6 +150,7 @@ export const ScanConfigUIElementDict = {
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
   VoltageDuration: 'voltage_duration',
   ModelIdentifierMultiple: 'model_identifier_multiple',
+  StringSelectionEnhanced: 'string_selection_enhanced',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -298,6 +299,20 @@ export interface BooleanInput extends TBlockElement {
   false_label?: string;
 }
 
+/**
+ * Enhanced string selection: a dropdown where each enum value can carry a custom title, a
+ * description and/or a LaTeX representation. Per the obi-one spec, `title_by_key` is provided
+ * together with at least one of `description_by_key` / `latex_by_key`, each holding a value for
+ * every enum key.
+ */
+export interface StringSelectionEnhanced extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringSelectionEnhanced;
+  enum: string[];
+  title_by_key?: Record<string, string>;
+  description_by_key?: Record<string, string>;
+  latex_by_key?: Record<string, string>;
+}
+
 export interface VoltageDuration extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.VoltageDuration;
   items: {
@@ -341,7 +356,8 @@ export type ParamSchema =
   | IonChannelGlobalVariableModification
   | ModelSelectorSingle
   | SelectRecordableIonChannelVariable
-  | VoltageDuration;
+  | VoltageDuration
+  | StringSelectionEnhanced;
 
 export type TBlock = {
   title: string;
