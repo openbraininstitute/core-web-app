@@ -1,10 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
+import {
+  LAUNCH_PATHS,
+  resolveGradingLaunch,
+  signedParams,
+  startGradingNotebook,
+} from '@/features/grading/launch';
 import { log } from '@/utils/logger';
 
-import { LAUNCH_PATHS, resolveGradingLaunch, signedParams, startGradingNotebook } from './_lib';
-
-import type { LaunchErrorReason } from './_errors';
+import type { LaunchErrorReason } from '@/features/grading/errors';
 
 // Build a same-origin redirect URL, dropping any inbound query string before setting `params`.
 function buildUrl(request: NextRequest, path: string, params: Record<string, string>): URL {

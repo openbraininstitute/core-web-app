@@ -7,7 +7,7 @@ import {
   resolveGradingLaunch,
   type StartResult,
   startGradingNotebook,
-} from '../_lib';
+} from './launch';
 
 // Re-verifies the signed params, confirms the chosen project is one the caller actually belongs
 // to (blocks launching into an arbitrary project_id), then starts the notebook.

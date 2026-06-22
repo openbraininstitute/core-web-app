@@ -11,9 +11,9 @@ import { startNotebook } from '@/services/notebooks';
 import { log } from '@/utils/logger';
 
 import type { IVirtualLabExpandedResponse } from '@/api/virtual-lab-svc/queries/types';
-import type { LaunchErrorReason } from './_errors';
+import type { LaunchErrorReason } from './errors';
 
-export const DEFAULT_COMPUTE_CELL = 'aws';
+const DEFAULT_COMPUTE_CELL = 'aws';
 
 // Same-origin paths in the grading launch flow. Shared so a route move edits one place, and the
 // route handler and the picker page can't drift on where they redirect.
@@ -55,7 +55,7 @@ type VerificationResult =
 
 // Sign the raw `exp` string from the URL (not the re-stringified int) so a value like
 // "007" round-trips without breaking the signature.
-export function verifyLaunchParams(raw: RawParams, secret: string): VerificationResult {
+function verifyLaunchParams(raw: RawParams, secret: string): VerificationResult {
   const { token, exercise_id, virtual_lab_id, exp, sig } = raw;
 
   if (!token || !exercise_id || !virtual_lab_id || !exp || !sig) {
@@ -93,7 +93,7 @@ export function signedParams(p: VerifiedParams): Record<string, string> {
   };
 }
 
-export function notebookErrorReason(err: unknown): LaunchErrorReason {
+function notebookErrorReason(err: unknown): LaunchErrorReason {
   const code = (err as { cause?: { error_code?: string } } | null | undefined)?.cause?.error_code;
   switch (code) {
     case 'INSUFFICIENT_FUNDS_ERROR':
@@ -116,7 +116,7 @@ type AccessibleProjectsResolution =
   | { ok: true; virtualLab: IVirtualLabExpandedResponse; projects: AccessibleProject[] }
   | { ok: false; reason: LaunchErrorReason };
 
-export async function resolveAccessibleProjects(
+async function resolveAccessibleProjects(
   virtualLabId: string
 ): Promise<AccessibleProjectsResolution> {
   const [groupsResult, vlResult, projectsResult] = await Promise.all([

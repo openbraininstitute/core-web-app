@@ -1,4 +1,5 @@
-import { COPY, isLaunchErrorReason } from '../_errors';
+import { isLaunchErrorReason } from '@/features/grading/errors';
+import { messages } from '@/i18n/en/grading';
 
 import type { ServerSideComponentProp } from '@/types/common';
 
@@ -7,7 +8,7 @@ export default async function Page({
 }: ServerSideComponentProp<null, { reason?: string }>) {
   const { reason } = await searchParams;
   const key = isLaunchErrorReason(reason) ? reason : 'invalid';
-  const { title, body } = COPY[key];
+  const { title, body } = messages[key];
 
   return (
     <div className="flex max-w-md flex-col items-center justify-center space-y-4 px-6 text-center">

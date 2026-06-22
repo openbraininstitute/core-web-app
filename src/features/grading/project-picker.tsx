@@ -3,11 +3,12 @@
 import { Button, Select } from 'antd';
 import { useState } from 'react';
 
-import { COPY } from '../_errors';
+import { messages } from '@/i18n/en/grading';
+
 import { launchGradingNotebook } from './actions';
 
-import type { LaunchErrorReason } from '../_errors';
-import type { AccessibleProject, VerifiedParams } from '../_lib';
+import type { LaunchErrorReason } from './errors';
+import type { AccessibleProject, VerifiedParams } from './launch';
 
 interface Props {
   projects: AccessibleProject[];
@@ -68,8 +69,8 @@ export function ProjectPicker({ projects, virtualLabName, params }: Props) {
 
       {error && (
         <div className="space-y-1 text-center">
-          <p className="font-semibold text-red-600">{COPY[error].title}</p>
-          <p className="text-primary-7">{COPY[error].body}</p>
+          <p className="font-semibold text-red-600">{messages[error].title}</p>
+          <p className="text-primary-7">{messages[error].body}</p>
         </div>
       )}
     </div>

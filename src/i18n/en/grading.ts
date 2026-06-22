@@ -1,21 +1,6 @@
-// Client + server safe: pure error reasons + user-facing copy for the grading launch flow.
-// No server-only imports here so client components (the project picker) can import COPY.
+import type { LaunchErrorReason } from '@/features/grading/errors';
 
-export const LAUNCH_ERROR_REASONS = [
-  'invalid',
-  'expired',
-  'disabled',
-  'notebook-service-failed',
-  'insufficient-funds',
-  'accounting-error',
-  'jupyter-error',
-  'no-project-access',
-  'notebook-not-found',
-] as const;
-
-export type LaunchErrorReason = (typeof LAUNCH_ERROR_REASONS)[number];
-
-export const COPY: Record<LaunchErrorReason, { title: string; body: string }> = {
+export const messages: Record<LaunchErrorReason, { title: string; body: string }> = {
   invalid: {
     title: 'Invalid launch URL',
     body: 'This launch link is not valid. Please re-launch the exercise from Moodle.',
@@ -53,7 +38,3 @@ export const COPY: Record<LaunchErrorReason, { title: string; body: string }> = 
     body: "We couldn't find the notebook for this exercise. Please re-launch from Moodle or contact your instructor.",
   },
 };
-
-export function isLaunchErrorReason(value: string | undefined): value is LaunchErrorReason {
-  return typeof value === 'string' && (LAUNCH_ERROR_REASONS as readonly string[]).includes(value);
-}

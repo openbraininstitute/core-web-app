@@ -1,7 +1,12 @@
 import { redirect } from 'next/navigation';
 
-import { LAUNCH_PATHS, type RawParams, resolveGradingLaunch, signedParams } from '../_lib';
-import { ProjectPicker } from './project-picker';
+import {
+  LAUNCH_PATHS,
+  type RawParams,
+  resolveGradingLaunch,
+  signedParams,
+} from '@/features/grading/launch';
+import { ProjectPicker } from '@/features/grading/project-picker';
 
 import type { ServerSideComponentProp } from '@/types/common';
 
