@@ -1,6 +1,9 @@
+import { getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
+import { createExtracellularRecordingArrayWorkflow } from '@/features/scan-config/workflow/definitions/create-extracellular-recording-array';
 import {
   buildEmDenseMorphologyLoader,
   buildMemodelLoader,
@@ -8,7 +11,10 @@ import {
 import { EM_DENSE_RECONSTRUCTION_DATASET_TYPE } from '@/ui/segments/workflows/browse/prerequisite/em-dataset-cards.constants';
 import { EmSynapseMappingDatasetPrerequisiteCards } from '@/ui/segments/workflows/browse/prerequisite/em-synapse-mapping-dataset-cards';
 
-import { buildEmSynapseMappingConfigureBinding } from '../scan-config-binding';
+import {
+  buildEmSynapseMappingConfigureBinding,
+  createExtracellularRecordingArrayConfigureBinding,
+} from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
 
 import type { TBrowsePrerequisite } from '@/ui/segments/workflows/browse/browse-config';
@@ -22,6 +28,15 @@ const emSynapseMappingPrerequisite: TBrowsePrerequisite = {
   autoContinueOnSelect: true,
   presentation: { kind: 'custom', render: EmSynapseMappingDatasetPrerequisiteCards },
 };
+
+// Circuit scales offered as the source of an extracellular recording array build. Limited to
+// single-neuron up to microcircuit for now; larger scales are introduced after scaling is tested.
+const EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES = [
+  CircuitScaleDictionary.Single,
+  CircuitScaleDictionary.PairNeuron,
+  CircuitScaleDictionary.SmallMicrocircuit,
+  CircuitScaleDictionary.Microcircuit,
+];
 
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
@@ -109,6 +124,55 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
         },
       },
     },
+    disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.ScanConfig,
+    sourceType: ExtendedEntitiesTypeDict.Circuit,
+    targetType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+    label: 'Extracellular recording array (beta)',
+    breadcrumb: {
+      root: 'Extracellular recording array (beta) build',
+      steps: {
+        selection: 'Select a circuit',
+      },
+    },
+    scanConfig: {
+      definition: createExtracellularRecordingArrayWorkflow,
+      schemaName: SchemaNameDict.ExtracellularRecordingArrayScanConfig,
+      configureBinding: createExtracellularRecordingArrayConfigureBinding(),
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
+    // Source circuits are limited to single-neuron up to microcircuit scale. A workflow-local
+    // custom loader wraps the standard circuit query with a `scale__in` filter, so no new entity
+    // type is needed and the scale set can grow in one place when larger scales are introduced.
+    browseConfig: {
+      [ExtendedEntitiesTypeDict.Circuit]: {
+        loader: {
+          kind: 'custom',
+          build:
+            () =>
+            ({ filters, withFacets, context }) =>
+              getCircuits({
+                context,
+                withFacets,
+                filters: { ...filters, scale__in: EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES },
+              }),
+          facets: {
+            build:
+              () =>
+              ({ filters, context }) =>
+                getCircuits({
+                  context,
+                  withFacets: true,
+                  filters: { ...filters, scale__in: EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES },
+                }).then((response) => response?.facets),
+          },
+        },
+      },
+    },
+    order: 6,
     disabled: false,
   },
   {
