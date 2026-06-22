@@ -10,31 +10,33 @@ import { log } from '@/utils/logger';
 
 import type { LaunchErrorReason } from '@/features/grading/errors';
 
-// Build a same-origin redirect URL, dropping any inbound query string before setting `params`.
-function buildUrl(request: NextRequest, path: string, params: Record<string, string>): URL {
-  const url = new URL(path, request.nextUrl);
-  url.search = '';
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
-  }
-  return url;
+// Build a same-origin relative redirect target (path + query). Relative on purpose: under Amplify
+// Lambda `request.url` / `request.nextUrl` resolve to the function's internal binding
+// (`http://localhost:3000`), not the public host — an absolute URL built from them would send the
+// browser to localhost. A relative `Location` is resolved by the browser against the public
+// request URL, so it stays on whatever host the user actually hit.
+function buildPath(path: string, params: Record<string, string>): string {
+  const qs = new URLSearchParams(params).toString();
+  return qs ? `${path}?${qs}` : path;
 }
 
 // Shared CDNs/proxies must not cache the 302 — its Location header is per-user
-// (e.g. `https://jupyter.../user-A-pod`) and would otherwise be replayable.
-function redirectWithNoStore(url: string | URL, status: 302 | 303 | 307 | 308 = 302) {
-  const res = NextResponse.redirect(url, status);
-  res.headers.set('Cache-Control', 'no-store, private');
-  return res;
+// (e.g. `https://jupyter.../user-A-pod`) and would otherwise be replayable. The Location is set
+// directly rather than via `NextResponse.redirect`, which rejects relative URLs.
+function redirectWithNoStore(location: string, status: 302 | 303 | 307 | 308 = 302) {
+  return new NextResponse(null, {
+    status,
+    headers: { Location: location, 'Cache-Control': 'no-store, private' },
+  });
 }
 
-function errorRedirect(request: NextRequest, reason: LaunchErrorReason): NextResponse {
-  return redirectWithNoStore(buildUrl(request, LAUNCH_PATHS.error, { reason }));
+function errorRedirect(reason: LaunchErrorReason): NextResponse {
+  return redirectWithNoStore(buildPath(LAUNCH_PATHS.error, { reason }));
 }
 
 function loginRedirect(request: NextRequest): NextResponse {
   return redirectWithNoStore(
-    buildUrl(request, LAUNCH_PATHS.logIn, {
+    buildPath(LAUNCH_PATHS.logIn, {
       callbackUrl: request.nextUrl.pathname + request.nextUrl.search,
     })
   );
@@ -57,9 +59,7 @@ export async function GET(request: NextRequest) {
     sig: q.get('sig'),
   });
   if (!launch.ok) {
-    return launch.reason === 'needs-login'
-      ? loginRedirect(request)
-      : errorRedirect(request, launch.reason);
+    return launch.reason === 'needs-login' ? loginRedirect(request) : errorRedirect(launch.reason);
   }
 
   const { params, projects, cloud } = launch;
@@ -70,13 +70,13 @@ export async function GET(request: NextRequest) {
   });
 
   if (projects.length === 0) {
-    return errorRedirect(request, 'no-project-access');
+    return errorRedirect('no-project-access');
   }
 
   // Multiple accessible projects — let the user choose. No auto-redirect; hand off to the picker
   // page carrying the signed params so it can re-verify and launch via a server action.
   if (projects.length > 1) {
-    return redirectWithNoStore(buildUrl(request, LAUNCH_PATHS.select, signedParams(params)));
+    return redirectWithNoStore(buildPath(LAUNCH_PATHS.select, signedParams(params)));
   }
 
   // Exactly one accessible project — launch straight into it.
@@ -94,5 +94,5 @@ export async function GET(request: NextRequest) {
     compute_cell: cloud,
     token: params.token,
   });
-  return result.ok ? redirectWithNoStore(result.url) : errorRedirect(request, result.reason);
+  return result.ok ? redirectWithNoStore(result.url) : errorRedirect(result.reason);
 }
