@@ -179,7 +179,13 @@ export default function Chat({
   const hasVisibleContent = lastMessage?.parts.some(
     (p) => (p.type === 'text' && 'text' in p && p.text !== '') || isToolUIPart(p)
   );
-  const showThinking = status === 'submitted' || (status === 'streaming' && !hasVisibleContent);
+  const hasApprovalResponded = lastMessage?.parts.some(
+    (p) => isToolUIPart(p) && p.state === 'approval-responded'
+  );
+  // Don't show "Thinking" when the SDK auto-sends after tool approval
+  const showThinking =
+    (status === 'submitted' || (status === 'streaming' && !hasVisibleContent)) &&
+    !hasApprovalResponded;
 
   return (
     <div className={classNames(styles.chatContainer, className)}>

@@ -45,7 +45,8 @@ function findLastVisibleStepStart(parts: UIMessage['parts']): number {
     } else if (
       lastStepStart !== lastVisibleStepStart &&
       ((part.type === 'text' && 'text' in part && part.text !== '') ||
-        part.type === 'tool-invocation')
+        part.type === 'tool-invocation' ||
+        isToolUIPart(part))
     ) {
       // The current step has produced visible content — mark it as the boundary.
       lastVisibleStepStart = lastStepStart;

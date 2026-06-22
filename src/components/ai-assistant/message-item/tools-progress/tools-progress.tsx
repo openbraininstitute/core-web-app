@@ -12,7 +12,6 @@ import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
 import { useApprovalResponse } from './approval-context';
-import ApprovalDialog from './approval-dialog';
 import LoadingDots from './loading-dots/loading-dots';
 
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
@@ -28,7 +27,6 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
-  const [dialogOpen, setDialogOpen] = useState(false);
   const addToolApprovalResponse = useApprovalResponse();
 
   const toggleExpanded = (key: string) => {
@@ -70,27 +68,23 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
     if (addToolApprovalResponse && isApprovalRequested && 'approval' in part && part.approval) {
       addToolApprovalResponse({ id: part.approval.id, approved: true });
     }
-    setDialogOpen(false);
   };
 
-  const handleReject = (reason: string | undefined) => {
+  const handleReject = () => {
     if (addToolApprovalResponse && isApprovalRequested && 'approval' in part && part.approval) {
-      addToolApprovalResponse({ id: part.approval.id, approved: false, reason });
+      addToolApprovalResponse({ id: part.approval.id, approved: false });
     }
-    setDialogOpen(false);
   };
 
-  // Approval-requested card
+  // Approval-requested: inline card using the same layout as other states
   if (isApprovalRequested) {
     return (
       <div className={cn(styles.container, className)}>
-        <div className={cn(styles.card, styles.cardApproval)} key={key}>
-          <button
-            className={styles.header}
-            onClick={() => setDialogOpen(true)}
-            aria-label="Review approval"
-            type="button"
-          >
+        <div
+          className={cn(styles.card, styles.cardApproval, isExpanded && styles.cardExpanded)}
+          key={key}
+        >
+          <div className={styles.header}>
             <div className={cn(styles.iconWrapper, styles.iconWrapperApproval)}>
               <Icon />
             </div>
@@ -100,16 +94,44 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
                 <span>Approval needed</span>
               </div>
             </div>
-          </button>
+            <div className={styles.actions}>
+              <button type="button" className={styles.rejectButton} onClick={handleReject}>
+                Reject
+              </button>
+              <button type="button" className={styles.approveButton} onClick={handleApprove}>
+                Approve
+              </button>
+              <button
+                type="button"
+                className={styles.expandButton}
+                onClick={() => toggleExpanded(key)}
+                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                aria-expanded={isExpanded}
+              >
+                <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
+              </button>
+            </div>
+          </div>
+
+          {/* Expandable Details */}
+          <div
+            className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
+            aria-hidden={!isExpanded}
+            role="region"
+            aria-label={`${tool.name} details`}
+          >
+            <div className={styles.detailsInner}>
+              {part.input != null &&
+              typeof part.input === 'object' &&
+              Object.keys(part.input as Record<string, unknown>).length > 0 ? (
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Arguments</div>
+                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
-        <ApprovalDialog
-          open={dialogOpen}
-          toolName={tool.name}
-          args={part.input}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          onClose={() => setDialogOpen(false)}
-        />
       </div>
     );
   }
