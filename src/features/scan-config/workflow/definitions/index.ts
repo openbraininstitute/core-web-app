@@ -1,3 +1,6 @@
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
@@ -23,6 +26,15 @@ export function defineSimulateCircuitScanConfigWorkflow({
       campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
       className: 'px-4',
     },
+    taskTypeBindings: ({ entity }) => ({
+      obiOne:
+        entity && 'target_simulator' in entity && entity.target_simulator === 'Brian2'
+          ? ObiOneTaskTypeDict.CircuitSimulationBrian2
+          : ObiOneTaskTypeDict.CircuitSimulation,
+      configGeneration: TaskActivityType.CircuitSimulationConfigGeneration,
+      execution: TaskActivityType.CircuitSimulationExecution,
+      config: TaskConfigType.CircuitSimulationConfig,
+    }),
   });
 }
 

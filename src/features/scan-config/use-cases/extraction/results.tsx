@@ -2,11 +2,8 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
@@ -25,14 +22,22 @@ import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activit
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type Props = {
   campaignId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
+  /** obi-one + entitycore task types for this workflow (from its definition) */
+  taskTypeBindings: TWorkflowTaskTypeBindings;
 };
 
-export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdChanged }: Props) {
+export function ExtractionTab({
+  campaignId,
+  campaignOriginAction,
+  isCampaignIdChanged,
+  taskTypeBindings,
+}: Props) {
   const context = useWorkspace();
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] = useState<ITaskConfig<TTaskConfigMeta> | null>(null);
@@ -43,8 +48,8 @@ export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdCh
 
   const { mutateAsync: runExtraction, isPending: runExtractionPending } = useTaskLaunchMutation({
     context,
-    obiOneTaskType: ObiOneTaskTypeDict.CircuitExtraction,
-    executionActivityType: TaskActivityType.CircuitExtractionExecution,
+    obiOneTaskType: taskTypeBindings.obiOne,
+    executionActivityType: taskTypeBindings.execution,
     notificationKey: 'extraction-config-error',
     failureMessage: 'We ran into a problem launching your extraction. Please try again later.',
     logTopic: 'Extraction',
@@ -55,9 +60,9 @@ export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdCh
     useTaskRunner<TTaskConfigMeta>({
       context,
       campaignId,
-      configGenerationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
-      executionActivityType: TaskActivityType.CircuitExtractionExecution,
-      taskConfigType: TaskConfigType.CircuitExtractionConfig,
+      configGenerationActivityType: taskTypeBindings.configGeneration,
+      executionActivityType: taskTypeBindings.execution,
+      taskConfigType: taskTypeBindings.config,
       pauseExecutionPolling: runExtractionPending,
       loadExecutions: false,
     });
@@ -142,7 +147,7 @@ export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdCh
             selectionDisabled={runExtractionPending}
             fallbackColor="#004793"
             context={context}
-            executionActivityType={TaskActivityType.CircuitExtractionExecution}
+            executionActivityType={taskTypeBindings.execution}
             pauseStatusPolling={runExtractionPending}
             executionByConfigId={executionByConfigId}
             onSelectConfig={onActiveConfigChange}

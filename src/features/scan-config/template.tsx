@@ -145,27 +145,34 @@ function ScanConfigTemplateContent({
           projectId={projectId}
           campaignOriginAction={campaignOriginAction}
           isCampaignIdChanged={isCampaignIdChanged}
+          taskTypeBindings={taskTypeBindings}
         />
       </Suspense>
     ))
-    .with(ScanConfigActivity.Extract, () => (
-      <Suspense>
-        <ExtractionTab
-          isCampaignIdChanged={isCampaignIdChanged}
-          campaignOriginAction={campaignOriginAction}
-          campaignId={campaignId}
-        />
-      </Suspense>
-    ))
-    .with(ScanConfigActivity.Process, () => (
-      <Suspense>
-        <SkeletonizationTab
-          campaignId={campaignId}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-        />
-      </Suspense>
-    ))
+    .with(ScanConfigActivity.Extract, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <ExtractionTab
+            isCampaignIdChanged={isCampaignIdChanged}
+            campaignOriginAction={campaignOriginAction}
+            campaignId={campaignId}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
+    .with(ScanConfigActivity.Process, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <SkeletonizationTab
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
     .with(ScanConfigActivity.Build, () =>
       taskTypeBindings ? (
         <Suspense>
