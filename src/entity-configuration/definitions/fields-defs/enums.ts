@@ -106,6 +106,8 @@ export enum EntityCoreFields {
   GenerationParameters = 'generation_parameters',
   MeshType = 'mesh_type',
   HasSegmentedSpines = 'has_segmented_spines',
+  ElectrodeType = 'electrode_type',
+  RecordingArrayCircuit = 'circuit_id',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

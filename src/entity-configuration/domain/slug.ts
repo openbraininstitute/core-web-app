@@ -23,6 +23,7 @@ export const ModelEntitySlug = {
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
   SingleNeuronCircuit: 'single-neuron-circuit',
   EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
+  ExtracellularRecordingArray: 'extracellular-recording-array',
 } as const;
 
 const SimulationEntitySlug = {

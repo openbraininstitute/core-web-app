@@ -7,6 +7,7 @@ import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -67,6 +68,7 @@ export const ModelDataExtendedTypes = {
   Circuit,
   IonChannelModel,
   SynthesizedCellMorphology,
+  ExtracellularRecordingArray,
 } as const;
 
 export const SimulationDataExtendedTypes = {
