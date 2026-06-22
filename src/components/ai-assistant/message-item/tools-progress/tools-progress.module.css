@@ -379,3 +379,33 @@
 .errorText {
   color: #dc2626;
 }
+
+/* Approval states */
+.cardApproval {
+  border-color: rgba(251, 191, 36, 0.5);
+  background-color: #fffbeb;
+}
+
+.cardApproval:hover {
+  border-color: #f59e0b;
+}
+
+.iconWrapperApproval {
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+}
+
+.statusApproval {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.cardDenied {
+  border-color: color-mix(in srgb, var(--color-primary-6) 15%, var(--color-neutral-5));
+  background-color: color-mix(in srgb, var(--color-primary-6) 3%, var(--color-neutral-8));
+  opacity: 0.75;
+}
+
+.statusDenied {
+  color: #6b7280;
+}

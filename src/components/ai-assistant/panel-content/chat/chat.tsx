@@ -20,6 +20,7 @@ import ErrorPanel from '../../error';
 import FreeCreditsNotification from '../../free-credits-notification';
 import { MessageItem } from '../../message-item';
 import { ThinkingIndicator } from '../../message-item/thinking-indicator';
+import { ApprovalContext } from '../../message-item/tools-progress/approval-context';
 import { atomRateLimit } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
 import DiffBar from '../diff-bar';
@@ -50,8 +51,16 @@ export default function Chat({
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
 
-  const { messages, status, sendMessage, error, stop, isLoadingMessages, pendingUserMessage } =
-    useServiceAiAgentChat(threadId ?? '');
+  const {
+    messages,
+    status,
+    sendMessage,
+    error,
+    stop,
+    isLoadingMessages,
+    pendingUserMessage,
+    addToolApprovalResponse,
+  } = useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
@@ -106,6 +115,14 @@ export default function Chat({
     threadId,
     containerRef: refContainer,
   });
+
+  const hasUnresolvedApprovals = React.useMemo(
+    () =>
+      messages.some((msg) =>
+        msg.parts.some((p) => isToolUIPart(p) && p.state === 'approval-requested')
+      ),
+    [messages]
+  );
 
   // Clear active diff view when a new message is submitted
   React.useEffect(() => {
@@ -171,7 +188,7 @@ export default function Chat({
           {threadId && isLoadingMessages && !isEmptyThread ? (
             <TabTransitionLoader message="Loading conversation..." />
           ) : (
-            <>
+            <ApprovalContext.Provider value={addToolApprovalResponse}>
               {(!threadId || isEmptyThread) && <Welcome />}
               {messages.map((item, index) => (
                 <MessageItem
@@ -215,7 +232,7 @@ export default function Chat({
               )}
               {error && <ErrorPanel value={error} />}
               {healthError && <ErrorPanel value={healthError} />}
-            </>
+            </ApprovalContext.Provider>
           )}
           <div className={styles.bottom} />
         </div>
@@ -263,6 +280,7 @@ export default function Chat({
           messagesCount={messages.length}
           stop={stop}
           isUploading={!!pendingUserMessage}
+          hasUnresolvedApprovals={hasUnresolvedApprovals}
         />
       </div>
     </div>
