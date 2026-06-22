@@ -2,13 +2,9 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { log } from '@/utils/logger';
 
-import { resolveGradingLaunch, signedParams, startGradingNotebook } from './_lib';
+import { LAUNCH_PATHS, resolveGradingLaunch, signedParams, startGradingNotebook } from './_lib';
 
 import type { LaunchErrorReason } from './_errors';
-
-const ERROR_PATH = '/app/grading/launch/error';
-const SELECT_PATH = '/app/grading/launch/select';
-const LOG_IN_PATH = '/app/log-in';
 
 // Build a same-origin redirect URL, dropping any inbound query string before setting `params`.
 function buildUrl(request: NextRequest, path: string, params: Record<string, string>): URL {
@@ -29,12 +25,12 @@ function redirectWithNoStore(url: string | URL, status: 302 | 303 | 307 | 308 = 
 }
 
 function errorRedirect(request: NextRequest, reason: LaunchErrorReason): NextResponse {
-  return redirectWithNoStore(buildUrl(request, ERROR_PATH, { reason }));
+  return redirectWithNoStore(buildUrl(request, LAUNCH_PATHS.error, { reason }));
 }
 
 function loginRedirect(request: NextRequest): NextResponse {
   return redirectWithNoStore(
-    buildUrl(request, LOG_IN_PATH, {
+    buildUrl(request, LAUNCH_PATHS.logIn, {
       callbackUrl: request.nextUrl.pathname + request.nextUrl.search,
     })
   );
@@ -76,7 +72,7 @@ export async function GET(request: NextRequest) {
   // Multiple accessible projects — let the user choose. No auto-redirect; hand off to the picker
   // page carrying the signed params so it can re-verify and launch via a server action.
   if (projects.length > 1) {
-    return redirectWithNoStore(buildUrl(request, SELECT_PATH, signedParams(params)));
+    return redirectWithNoStore(buildUrl(request, LAUNCH_PATHS.select, signedParams(params)));
   }
 
   // Exactly one accessible project — launch straight into it.

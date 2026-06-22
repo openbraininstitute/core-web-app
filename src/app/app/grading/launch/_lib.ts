@@ -15,6 +15,15 @@ import type { LaunchErrorReason } from './_errors';
 
 export const DEFAULT_COMPUTE_CELL = 'aws';
 
+// Same-origin paths in the grading launch flow. Shared so a route move edits one place, and the
+// route handler and the picker page can't drift on where they redirect.
+export const LAUNCH_PATHS = {
+  launch: '/app/grading/launch',
+  select: '/app/grading/launch/select',
+  error: '/app/grading/launch/error',
+  logIn: '/app/log-in',
+} as const;
+
 export interface VerifiedParams {
   token: string;
   exercise_id: string;
@@ -30,7 +39,9 @@ export interface LaunchGradingInput extends VerifiedParams {
 
 export type StartResult = { ok: true; url: string } | { ok: false; reason: LaunchErrorReason };
 
-type RawParams = {
+// The inbound signed params before verification — also the shape the picker page's `searchParams`
+// arrive in, so it's the single input contract for `resolveGradingLaunch`.
+export type RawParams = {
   token?: string | null;
   exercise_id?: string | null;
   virtual_lab_id?: string | null;
