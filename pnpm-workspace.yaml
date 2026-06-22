@@ -11,5 +11,6 @@ minimumReleaseAgeStrict: true
 minimumReleaseAgeExclude:
   - '@openbraininstitute/*'
   - '@tolokoban/tgd'
+  - cnfast@0.0.8
 blockExoticSubdeps: true
 verifyDepsBeforeRun: error
