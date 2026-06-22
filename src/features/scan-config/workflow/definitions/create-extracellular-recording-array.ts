@@ -1,3 +1,6 @@
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
@@ -21,6 +24,16 @@ export const createExtracellularRecordingArrayWorkflow = defineScanConfigWorkflo
   },
   campaign: {
     resolve: async () => null,
+  },
+  // The scan generation runs the local-only `create_extracellular_recording_array` obi-one task;
+  // launching/executing the generated configs uses the launchable
+  // `extracellular_recording_weights_calculation` task, which is also the entitycore task family
+  // (there is no dedicated `create_extracellular_recording_array` entitycore task type).
+  taskTypeBindings: {
+    obiOne: ObiOneTaskTypeDict.ExtracellularRecordingWeightsCalculation,
+    configGeneration: TaskActivityType.ExtracellularRecordingWeightsCalculationConfigGeneration,
+    execution: TaskActivityType.ExtracellularRecordingWeightsCalculationExecution,
+    config: TaskConfigType.ExtracellularRecordingWeightsCalculationConfig,
   },
   editor: {
     className: 'px-4',

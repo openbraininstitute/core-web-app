@@ -34,6 +34,10 @@ export const TaskConfigType = {
   IonChannelSimulationConfig: 'ion_channel_simulation__config',
   EmSynapseMappingCampaign: 'em_synapse_mapping__campaign',
   EmSynapseMappingConfig: 'em_synapse_mapping__config',
+  ExtracellularRecordingWeightsCalculationCampaign:
+    'extracellular_recording_weights_calculation__campaign',
+  ExtracellularRecordingWeightsCalculationConfig:
+    'extracellular_recording_weights_calculation__config',
 } as const;
 
 export type TTaskConfigType = (typeof TaskConfigType)[keyof typeof TaskConfigType];
