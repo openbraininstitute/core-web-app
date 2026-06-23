@@ -84,7 +84,15 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
           className={cn(styles.card, styles.cardApproval, isExpanded && styles.cardExpanded)}
           key={key}
         >
-          <div className={styles.header}>
+          <div
+            className={styles.header}
+            onClick={() => toggleExpanded(key)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') toggleExpanded(key);
+            }}
+          >
             <div className={cn(styles.iconWrapper, styles.iconWrapperApproval)}>
               <Icon />
             </div>
@@ -95,20 +103,30 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
               </div>
             </div>
             <div className={styles.actions}>
-              <button type="button" className={styles.rejectButton} onClick={handleReject}>
-                Reject
-              </button>
-              <button type="button" className={styles.approveButton} onClick={handleApprove}>
-                Approve
+              <span className={styles.expandButton} aria-hidden="true">
+                <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
+              </span>
+              <button
+                type="button"
+                className={styles.rejectButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleReject();
+                }}
+                aria-label="Reject"
+              >
+                <RiCloseLine size={18} />
               </button>
               <button
                 type="button"
-                className={styles.expandButton}
-                onClick={() => toggleExpanded(key)}
-                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-                aria-expanded={isExpanded}
+                className={styles.approveButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleApprove();
+                }}
+                aria-label="Approve"
               >
-                <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
+                <CheckIcon style={{ width: 14, height: 10 }} />
               </button>
             </div>
           </div>
