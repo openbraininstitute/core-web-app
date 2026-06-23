@@ -486,6 +486,20 @@
 }
 
 /* Approval states */
+.cardApproved {
+  border-color: rgba(74, 224, 90, 0.4);
+  background-color: rgba(74, 224, 90, 0.04);
+}
+
+.cardApproved .toolName {
+  color: var(--color-secondary-5);
+}
+
+.iconWrapperApproved {
+  background-color: rgba(74, 224, 90, 0.1);
+  color: var(--color-secondary-5);
+}
+
 .cardApproval {
   border-color: rgba(245, 158, 11, 0.6);
   background-color: #fffdf5;

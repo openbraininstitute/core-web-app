@@ -154,21 +154,79 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
     );
   }
 
-  // Approval-responded card (resuming)
+  // Approval-responded card — show decision state while waiting for batch
   if (isApprovalResponded) {
+    const wasApproved = 'approval' in part && (part as any).approval?.approved === true;
+
     return (
       <div className={cn(styles.container, className)}>
-        <div className={cn(styles.card, styles.cardRunning)} key={key}>
-          <div className={styles.header}>
-            <div className={cn(styles.iconWrapper, styles.iconWrapperRunning)}>
-              <IconGear className={styles.spinningIcon} />
+        <div
+          className={cn(
+            styles.card,
+            wasApproved ? styles.cardRunning : styles.cardDenied,
+            isExpanded && styles.cardExpanded
+          )}
+          key={key}
+        >
+          <button
+            className={styles.header}
+            onClick={() => toggleExpanded(key)}
+            aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+            aria-expanded={isExpanded}
+            type="button"
+          >
+            <div
+              className={cn(
+                styles.iconWrapper,
+                wasApproved ? styles.iconWrapperRunning : undefined
+              )}
+            >
+              {wasApproved ? <IconGear className={styles.spinningIcon} /> : <Icon />}
             </div>
             <div className={styles.content}>
               <div className={styles.toolName}>{tool.name}</div>
-              <div className={cn(styles.status, styles.statusRunning)}>
-                <LoadingDots />
-                <span className={styles.statusText}>Resuming</span>
+              <div
+                className={cn(
+                  styles.status,
+                  wasApproved ? styles.statusRunning : styles.statusDenied
+                )}
+              >
+                {wasApproved ? (
+                  <>
+                    <LoadingDots />
+                    <span className={styles.statusText}>Resuming</span>
+                  </>
+                ) : (
+                  <>
+                    <RiCloseLine className={styles.checkIcon} />
+                    <span>Rejected</span>
+                  </>
+                )}
               </div>
+            </div>
+            <div className={styles.actions}>
+              <div className={styles.expandButton}>
+                <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
+              </div>
+            </div>
+          </button>
+
+          {/* Expandable Details */}
+          <div
+            className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
+            aria-hidden={!isExpanded}
+            role="region"
+            aria-label={`${tool.name} details`}
+          >
+            <div className={styles.detailsInner}>
+              {part.input != null &&
+              typeof part.input === 'object' &&
+              Object.keys(part.input as Record<string, unknown>).length > 0 ? (
+                <div className={styles.section}>
+                  <div className={styles.sectionTitle}>Arguments</div>
+                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
