@@ -218,7 +218,7 @@ export function useWorkspaceHierarchyRegistry() {
    * persists selection to backend without blocking ui
    */
   function syncHierarchySpeciesRemoteUserPreference(selection: BrainRegionHierarchySelection) {
-    const mode = selection.speciesSelectionMode ?? SpeciesSelectionMode.Focused;
+    const mode = selection.speciesSelectionMode ?? SpeciesSelectionMode.All;
     const isAllMode = mode === SpeciesSelectionMode.All;
     const payload = {
       hierarchy_id: isAllMode ? null : selection.hierarchyId,
@@ -552,6 +552,11 @@ export function useWorkspaceHierarchyRegistry() {
           );
           return;
         }
+      }
+
+      if (allowAllSpecies) {
+        applyAllSpeciesMode(browserStorageHierarchy?.perHierarchyMemory);
+        return;
       }
 
       if (defaultHierarchy) {
