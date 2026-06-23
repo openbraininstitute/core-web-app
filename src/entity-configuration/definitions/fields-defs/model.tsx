@@ -1,5 +1,5 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import { find, isNil, map, omit } from 'es-toolkit/compat';
+import { find, isNil, map, omit, pick } from 'es-toolkit/compat';
 
 import { hasAssets } from '@/api/entitycore/guards';
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
@@ -337,6 +337,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
               },
               value: true,
             },
+            // enable scale filtering in the extracellular recording array build circuit browse
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.Circuit,
+                section: [WorkspaceSection.ScanConfigBuildWorkflow],
+              },
+              value: true,
+            },
           ],
         },
         constraint: {
@@ -344,18 +352,24 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             {
               when: {
                 dataType: ExtendedEntitiesTypeDict.Circuit,
-                section: [WorkspaceSection.Data],
+                section: [WorkspaceSection.Data, WorkspaceSection.ScanConfigBuildWorkflow],
               },
               value: 'scale__in',
             },
           ],
         },
+        // in the build ExtracellularRecordingArrayCampaign circuit browse the workflow caps the scales (single → microcircuit),
+        // so the dropdown offers exactly those; everywhere else keeps the existing options (Single omitted)
         options: {
-          kind: FilterOptionsSourceKind.Static,
-          items: map(omit(CircuitScale, ['Single']), (item) => ({
-            label: item.label,
-            value: item.key,
-          })),
+          kind: FilterOptionsSourceKind.Resolver,
+          resolve: ({ context }) => {
+            const scales =
+              context.dataType === ExtendedEntitiesTypeDict.Circuit &&
+              context.section === WorkspaceSection.ScanConfigBuildWorkflow
+                ? pick(CircuitScale, ['Single', 'PairNeuron', 'SmallMicrocircuit', 'Microcircuit'])
+                : omit(CircuitScale, ['Single']);
+            return map(scales, (item) => ({ label: item.label, value: item.key }));
+          },
         },
       },
     },

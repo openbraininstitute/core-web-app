@@ -29,14 +29,31 @@ const emSynapseMappingPrerequisite: TBrowsePrerequisite = {
   presentation: { kind: 'custom', render: EmSynapseMappingDatasetPrerequisiteCards },
 };
 
-// Circuit scales offered as the source of an extracellular recording array build. Limited to
-// single-neuron up to microcircuit for now; larger scales are introduced after scaling is tested.
-const EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES = [
+// circuit scales offered as the source of an extracellular recording array build.
+// limited to single-neuron up to microcircuit for now (22/06/2026).
+const EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES: string[] = [
   CircuitScaleDictionary.Single,
   CircuitScaleDictionary.PairNeuron,
   CircuitScaleDictionary.SmallMicrocircuit,
   CircuitScaleDictionary.Microcircuit,
 ];
+
+/**
+ * resolves `scale__in` for the recording-array circuit browse: honour scales the user picked in the
+ * filter panel but keep them within the allowed set; otherwise fall back to the full allowed set
+ * keeps the workflow's scale ceiling while letting the user narrow within it
+ */
+function resolveRecordingArrayCircuitScales(filters: Record<string, unknown>): string[] {
+  const requested = filters.scale__in;
+  if (Array.isArray(requested)) {
+    const within = requested.filter(
+      (scale): scale is string =>
+        typeof scale === 'string' && EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES.includes(scale)
+    );
+    if (within.length > 0) return within;
+  }
+  return EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES;
+}
 
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
@@ -144,9 +161,9 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       configureBinding: createExtracellularRecordingArrayConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
-    // Source circuits are limited to single-neuron up to microcircuit scale. A workflow-local
-    // custom loader wraps the standard circuit query with a `scale__in` filter, so no new entity
-    // type is needed and the scale set can grow in one place when larger scales are introduced.
+    requireFilters: true,
+    // source circuits are limited to single-neuron up to microcircuit scale; a user scale filter is
+    // honoured but constrained to that allowed set (see resolveRecordingArrayCircuitScales)
     browseConfig: {
       [ExtendedEntitiesTypeDict.Circuit]: {
         loader: {
@@ -157,7 +174,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
               getCircuits({
                 context,
                 withFacets,
-                filters: { ...filters, scale__in: EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES },
+                filters: { ...filters, scale__in: resolveRecordingArrayCircuitScales(filters) },
               }),
           facets: {
             build:
@@ -166,7 +183,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
                 getCircuits({
                   context,
                   withFacets: true,
-                  filters: { ...filters, scale__in: EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES },
+                  filters: { ...filters, scale__in: resolveRecordingArrayCircuitScales(filters) },
                 }).then((response) => response?.facets),
           },
         },
