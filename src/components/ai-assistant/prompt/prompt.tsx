@@ -26,6 +26,7 @@ interface PromptProps {
   onAddFiles?: (files: FileList | File[]) => void;
   onRemoveAttachment?: (id: string) => void;
   onPaste?: (e: React.ClipboardEvent) => void;
+  disabledReason?: string;
 }
 
 export default function Prompt({
@@ -40,6 +41,7 @@ export default function Prompt({
   onAddFiles,
   onRemoveAttachment,
   onPaste,
+  disabledReason,
 }: PromptProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -92,7 +94,7 @@ export default function Prompt({
     if (evt.key === 'Enter' && !evt.shiftKey && !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
       evt.preventDefault();
       evt.stopPropagation();
-      if (!isStreaming) {
+      if (!isStreaming && !disabled) {
         handleSendClick();
       }
     }
@@ -167,10 +169,11 @@ export default function Prompt({
           <button
             type="button"
             onClick={handleSendClick}
-            aria-label="Send prompt"
+            aria-label={disabledReason ?? 'Send prompt'}
             disabled={(value.trim().length === 0 && attachments.length === 0) || disabled}
+            title={disabledReason}
           >
-            {disabled ? <div className={styles.spinner} /> : <SendIcon />}
+            {disabled && !disabledReason ? <div className={styles.spinner} /> : <SendIcon />}
           </button>
         )}
       </div>

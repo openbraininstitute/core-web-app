@@ -49,12 +49,15 @@ export default function Footer({
         onChange={setPrompt}
         onClick={handlePrompt}
         disabled={!threadId || isUploading || hasUnresolvedApprovals}
-        isStreaming={isStreaming(status) || !!isUploading || !!hasUnresolvedApprovals}
+        isStreaming={hasUnresolvedApprovals ? false : isStreaming(status) || !!isUploading}
         onCancel={stop}
         attachments={attachments}
         onAddFiles={addFiles}
         onRemoveAttachment={removeAttachment}
         onPaste={handlePaste}
+        disabledReason={
+          hasUnresolvedApprovals ? 'Approve or reject the pending tool call to continue' : undefined
+        }
       />
     </footer>
   );

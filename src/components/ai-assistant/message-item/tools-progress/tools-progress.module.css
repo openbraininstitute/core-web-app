@@ -157,7 +157,7 @@
     0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-[data-visible-tools] .card:not(.cardRunning) {
+[data-visible-tools] .card:not(.cardRunning):not(.cardApproval):not(.cardError):not(.cardDenied) {
   background-color: var(--color-neutral-9);
 }
 
@@ -487,8 +487,8 @@
 
 /* Approval states */
 .cardApproval {
-  border-color: rgba(251, 191, 36, 0.5);
-  background-color: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.6);
+  background-color: #fffdf5;
 }
 
 .cardApproval:hover {

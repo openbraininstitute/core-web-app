@@ -111,6 +111,10 @@
   background-color: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
 }
 
+.actions > button:not(.stopButton):not(.attachButton)[disabled] > * {
+  pointer-events: none;
+}
+
 .attachButton {
   border: none;
   background: transparent;
