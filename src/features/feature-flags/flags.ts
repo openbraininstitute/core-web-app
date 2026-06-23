@@ -1,4 +1,3 @@
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
