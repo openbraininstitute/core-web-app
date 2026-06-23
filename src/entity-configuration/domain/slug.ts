@@ -24,6 +24,7 @@ export const ModelEntitySlug = {
   SingleNeuronCircuit: 'single-neuron-circuit',
   EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
   ExtracellularRecordingArray: 'extracellular-recording-array',
+  ExtracellularRecordingArrayCampaign: 'extracellular-recording-array-campaign',
 } as const;
 
 const SimulationEntitySlug = {

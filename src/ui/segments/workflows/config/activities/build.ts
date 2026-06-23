@@ -147,7 +147,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.Circuit,
-    targetType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+    targetType: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
     label: 'Extracellular recording array (beta)',
     breadcrumb: {
       root: 'Extracellular recording array (beta) build',
