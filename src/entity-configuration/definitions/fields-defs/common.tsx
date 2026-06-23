@@ -8,7 +8,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DownloadIcon } from '@/components/icons';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { WorkspaceSection } from '@/constants';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -327,10 +327,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ...Object.values(BrowseExperimentalDataExtendedTypes).map(
                     (entity) => entity.extendedType
                   ),
-                  ...Object.values(ModelDataExtendedTypes).map((entity) => entity.extendedType),
+                  ...Object.values(ModelDataExtendedTypes)
+                    .filter(
+                      (e) => e.extendedType !== ExtendedEntitiesTypeDict.SingleNeuronSynaptome
+                    )
+                    .map((entity) => entity.extendedType),
                 ],
                 section: [WorkspaceSection.Data],
-                speciesSelectionMode: SpeciesSelectionMode.All,
               },
               value: true,
             },
@@ -343,7 +346,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ExtendedEntitiesTypeDict.Memodel,
                 ],
                 section: [WorkspaceSection.BuildWorkflow],
-                speciesSelectionMode: SpeciesSelectionMode.All,
               },
               value: true,
             },
@@ -388,12 +390,16 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ...Object.values(BrowseExperimentalDataExtendedTypes).map(
                     (entity) => entity.extendedType
                   ),
-                  ...Object.values(ModelDataExtendedTypes).map((entity) => entity.extendedType),
+                  ...Object.values(ModelDataExtendedTypes)
+                    .filter(
+                      (e) => e.extendedType !== ExtendedEntitiesTypeDict.SingleNeuronSynaptome
+                    )
+                    .map((entity) => entity.extendedType),
                 ],
                 section: [WorkspaceSection.Data],
                 speciesSelectionMode: SpeciesSelectionMode.All,
               },
-              value: true,
+              value: false,
             },
             {
               when: {
@@ -401,7 +407,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                 section: [WorkspaceSection.BuildWorkflow],
                 speciesSelectionMode: SpeciesSelectionMode.All,
               },
-              value: true,
+              value: false,
             },
             {
               when: {
