@@ -18,7 +18,6 @@ import {
   rows as listSimulationRows,
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { wholeBrainSimulationFlag } from '@/features/feature-flags/flags';
 
 import { migrateConfig } from './utils';
 
@@ -98,7 +97,6 @@ export const WholeBrainCircuitSimulation: EntityCoreTypeConfig<
   group: EntityTypeGroup.Simulations,
   title: 'Whole brain circuit (beta)',
   extendedType: ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
-  requiredFeatures: [wholeBrainSimulationFlag.key],
   discriminator: { key: 'scale', value: [SCALE] },
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.WholeBrainCircuitSimulation,

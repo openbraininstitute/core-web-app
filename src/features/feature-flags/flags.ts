@@ -1,4 +1,3 @@
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
@@ -20,15 +19,7 @@ export const extractionActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const wholeBrainSimulationFlag = defineFlag<boolean>({
-  key: 'whole-brain-simulation',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Whole brain simulations',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
-
-export const flags = [aiPanelStateFlag, extractionActivityFlag, wholeBrainSimulationFlag] as const;
+export const flags = [aiPanelStateFlag, extractionActivityFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 
