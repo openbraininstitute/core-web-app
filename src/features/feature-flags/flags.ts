@@ -1,3 +1,4 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
@@ -12,7 +13,7 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
 });
 
 export const extractionActivityFlag = defineFlag<boolean>({
-  key: 'extraction-activity',
+  key: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
   defaultValue: false,
   values: [true, false],
   description: 'Full extraction workflow',
@@ -27,7 +28,20 @@ export const brainRegionSimulationFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const flags = [aiPanelStateFlag, extractionActivityFlag, brainRegionSimulationFlag] as const;
+export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Extracellular recording array build',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const flags = [
+  aiPanelStateFlag,
+  extractionActivityFlag,
+  brainRegionSimulationFlag,
+  extracellularRecordingArrayBuildFlag,
+] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 

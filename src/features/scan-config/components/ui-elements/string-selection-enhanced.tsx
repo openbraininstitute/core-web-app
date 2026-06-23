@@ -25,11 +25,6 @@ type TOptionContent = {
   latexHtml?: string;
 };
 
-/**
- * Presentational content for one option — title, description and optional LaTeX formula. Shared by
- * the collapsed trigger (the selected option) and each row of the open list, so both render
- * identically. When `onExpandLatex` is provided, the formula shows an expand affordance.
- */
 function OptionContent({
   content,
   onExpandLatex,
@@ -75,12 +70,7 @@ export interface IStringSelectionEnhancedProps {
 }
 
 /**
- * Rich dropdown for the `string_selection_enhanced` schema UI element.
- *
- * Beyond a plain string select, each enum option can carry a custom `title_by_key`, a
- * `description_by_key` blurb and a `latex_by_key` formula. The collapsed trigger previews the
- * selected option; the open popover lists every option as a card (the selected one highlighted), and
- * formulas can be expanded into a modal for a larger view.
+ * rich dropdown for the `string_selection_enhanced` schema UI element
  *
  * @example schema
  * {
@@ -160,8 +150,6 @@ export function StringSelectionEnhanced({
             'max-h-100 w-(--radix-popover-trigger-width) overflow-y-auto rounded-2xl border border-gray-100 bg-white p-2 shadow-md'
           )}
         >
-          {/* role="option" rows (not <button>) so the per-option expand <button> in OptionContent
-              isn't nested inside another button (invalid DOM); selection is keyboard-accessible. */}
           <div role="listbox" className="flex flex-col gap-2">
             {paramSchema.enum.map((key) => {
               const content = optionContentByKey.get(key);
