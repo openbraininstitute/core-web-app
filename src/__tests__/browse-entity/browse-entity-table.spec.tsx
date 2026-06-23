@@ -224,7 +224,7 @@ describe('BrowseEntityScope table columns and filters', () => {
     expect(screen.getByTestId('data-table-container')).toBeInTheDocument();
   });
 
-  it('hides the species column and filter on data browse when a single species is focused', async () => {
+  it('keeps the species column and filter on data browse when a single species is focused', async () => {
     renderBrowseEntityTable(
       {},
       {
@@ -237,8 +237,8 @@ describe('BrowseEntityScope table columns and filters', () => {
       expect(screen.getByTestId('browse-entity-table-stub')).toBeInTheDocument();
     });
 
-    expectColumnVisibility(EntityCoreFields.SpeciesName, false);
-    expectFilterVisibility(EntityCoreFields.SpeciesName, false);
+    expectColumnVisibility(EntityCoreFields.SpeciesName, true);
+    expectFilterVisibility(EntityCoreFields.SpeciesName, true);
   });
 
   it('shows the species column for experimental data browse in all-species mode', async () => {
@@ -293,7 +293,7 @@ describe('BrowseEntityScope table columns and filters', () => {
     expectColumnVisibility(EntityCoreFields.BrainRegion, true);
   });
 
-  it('hides the species column on build workflow when a single species is focused', async () => {
+  it('keeps the species column on build workflow when a single species is focused', async () => {
     renderBrowseEntityTable(
       {
         dataType: ExtendedEntitiesTypeDict.IonChannelRecording,
@@ -309,11 +309,11 @@ describe('BrowseEntityScope table columns and filters', () => {
       expect(screen.getByTestId('browse-entity-table-stub')).toBeInTheDocument();
     });
 
-    expectColumnVisibility(EntityCoreFields.SpeciesName, false);
-    expectFilterVisibility(EntityCoreFields.SpeciesName, false);
+    expectColumnVisibility(EntityCoreFields.SpeciesName, true);
+    expectFilterVisibility(EntityCoreFields.SpeciesName, true);
   });
 
-  it('updates columns after switching from all species to a focused species', async () => {
+  it('keeps the species column after switching from all species to a focused species', async () => {
     const store = createStore();
     const { rerender } = renderBrowseEntityTable({}, { store });
 
@@ -328,12 +328,12 @@ describe('BrowseEntityScope table columns and filters', () => {
     });
 
     await waitFor(() => {
-      expectColumnVisibility(EntityCoreFields.SpeciesName, false);
+      expectColumnVisibility(EntityCoreFields.SpeciesName, true);
     });
-    expectFilterVisibility(EntityCoreFields.SpeciesName, false);
+    expectFilterVisibility(EntityCoreFields.SpeciesName, true);
   });
 
-  it('hides the species column immediately when focused mode is selected before workspace species loads', async () => {
+  it('keeps the species column when focused mode is selected before workspace species loads', async () => {
     const store = createStore();
     const { rerender } = renderBrowseEntityTable({}, { store });
 
@@ -348,9 +348,9 @@ describe('BrowseEntityScope table columns and filters', () => {
     });
 
     await waitFor(() => {
-      expectColumnVisibility(EntityCoreFields.SpeciesName, false);
+      expectColumnVisibility(EntityCoreFields.SpeciesName, true);
     });
-    expectFilterVisibility(EntityCoreFields.SpeciesName, false);
+    expectFilterVisibility(EntityCoreFields.SpeciesName, true);
   });
 });
 

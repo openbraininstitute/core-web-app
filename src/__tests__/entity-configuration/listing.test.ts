@@ -145,7 +145,7 @@ describe('field listing resolver', () => {
     expect(listing.constraint).toBe('subject__species__name__in');
   });
 
-  it('shows species for experimental and model data on data browse when all species is selected', () => {
+  it('shows species column for experimental and model data browse regardless of species selection mode', () => {
     const speciesField = fieldsDefinitionRegistry[EntityCoreFields.SpeciesName];
     const view = {
       title: 'Ion channel model',
@@ -179,14 +179,14 @@ describe('field listing resolver', () => {
     };
 
     expect(resolveFieldListing(speciesField, dataBrowseAllSpecies).columnAvailable).toBe(true);
-    expect(resolveFieldListing(speciesField, dataBrowseAllSpecies).filterAvailable).toBe(true);
-    expect(resolveFieldListing(speciesField, dataBrowseFocusedSpecies).columnAvailable).toBe(false);
+    expect(resolveFieldListing(speciesField, dataBrowseAllSpecies).filterAvailable).toBe(false);
+    expect(resolveFieldListing(speciesField, dataBrowseFocusedSpecies).columnAvailable).toBe(true);
     expect(resolveFieldListing(speciesField, simulateWorkflow).columnAvailable).toBe(false);
     expect(resolveFieldListing(speciesField, cellMorphologyAllSpecies).columnAvailable).toBe(true);
     expect(collectDefaultActiveColumns(view, dataBrowseAllSpecies)).toContain(
       EntityCoreFields.SpeciesName
     );
-    expect(collectDefaultActiveColumns(view, dataBrowseFocusedSpecies)).not.toContain(
+    expect(collectDefaultActiveColumns(view, dataBrowseFocusedSpecies)).toContain(
       EntityCoreFields.SpeciesName
     );
   });
@@ -354,7 +354,7 @@ describe('field listing resolver', () => {
     });
   });
 
-  it('does not expose species column when speciesSelectionMode is missing from context', () => {
+  it('exposes species column on data browse when speciesSelectionMode is missing from context', () => {
     const speciesField = fieldsDefinitionRegistry[EntityCoreFields.SpeciesName];
 
     expect(
@@ -363,10 +363,10 @@ describe('field listing resolver', () => {
         section: WorkspaceSection.Data,
         selectedSpecies: SPECIES_TAXONOMY_IDS.MUS_MUSCULUS,
       }).columnAvailable
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  it('hides species on build workflow when a single species is focused', () => {
+  it('keeps species column on build workflow when a single species is focused', () => {
     const speciesField = fieldsDefinitionRegistry[EntityCoreFields.SpeciesName];
 
     expect(
@@ -376,6 +376,6 @@ describe('field listing resolver', () => {
         speciesSelectionMode: SpeciesSelectionMode.Focused,
         selectedSpecies: SPECIES_TAXONOMY_IDS.MUS_MUSCULUS,
       }).columnAvailable
-    ).toBe(false);
+    ).toBe(true);
   });
 });

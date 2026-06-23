@@ -79,7 +79,7 @@ describe('data list snapshot sync', () => {
     });
     store.set(DataListSnapshotSyncAtomFamily({ dataKey, dataType }), { type: 'reset' });
 
-    expect(store.get(coreActiveColumnsAtom({ dataType, key: dataKey }))).not.toContain(
+    expect(store.get(coreActiveColumnsAtom({ dataType, key: dataKey }))).toContain(
       EntityCoreFields.SpeciesName
     );
   });
