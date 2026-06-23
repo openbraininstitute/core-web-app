@@ -1,8 +1,8 @@
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
 import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
+import { getSimulateCircuitSourceTypeByScale } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { WorkflowSchemaSelectionMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import {
@@ -24,6 +24,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { makePathParamUrlFromExtendedType } from '@/utils/url-builder';
 
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkflowSchemaSelection } from '@/features/scan-config/workflow/workflow-schema-selection';
 import type { WorkspaceContext } from '@/types/common';
@@ -320,22 +321,7 @@ export function resolveSimulateSourceTypeFromDataView(
   entity: { scale?: ICircuit['scale'] }
 ): TExtendedEntitiesTypeDict | null {
   if (extendedType === ExtendedEntitiesTypeDict.Circuit && entity.scale) {
-    if (entity.scale === CircuitScaleDictionary.SmallMicrocircuit) {
-      return ExtendedEntitiesTypeDict.SmallMicrocircuit;
-    }
-    if (entity.scale === CircuitScaleDictionary.PairNeuron) {
-      return ExtendedEntitiesTypeDict.PairedNeuronCircuit;
-    }
-    if (entity.scale === CircuitScaleDictionary.Single) {
-      return ExtendedEntitiesTypeDict.SingleNeuronCircuit;
-    }
-    if (entity.scale === CircuitScaleDictionary.Microcircuit) {
-      return ExtendedEntitiesTypeDict.Microcircuit;
-    }
-    if (entity.scale === CircuitScaleDictionary.Region) {
-      return ExtendedEntitiesTypeDict.BrainRegion;
-    }
-    return null;
+    return getSimulateCircuitSourceTypeByScale(entity.scale);
   }
 
   return extendedType;
