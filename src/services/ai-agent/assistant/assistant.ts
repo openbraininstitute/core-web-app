@@ -7,8 +7,8 @@ import React from 'react';
 import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
-import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { useAiAgentHealthCheck } from '../hooks/health';
@@ -18,13 +18,13 @@ import { MessageManager } from './manager/message';
 import { ThreadManager } from './manager/thread';
 import { Signal } from './signal';
 
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import type { AiAssistantHistory, AssistantContext, AssistantError } from './types';
 
 class AiAssistantClass {
   public readonly threadId = new Signal<string | undefined>(undefined);
 
-  public readonly initialMessages = new Signal<Message[]>([]);
+  public readonly initialMessages = new Signal<UIMessage[]>([]);
 
   public readonly isLoadingMessages = new Signal<boolean>(false);
 

@@ -2,10 +2,33 @@ import { get, set } from 'es-toolkit/compat';
 
 import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
 import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
+import {
+  CircuitScaleDictionary,
+  type TCircuitScaleDictionary,
+} from '@/api/entitycore/types/entities/circuit';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
+
+export const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
+  CircuitScaleDictionary.Microcircuit,
+  CircuitScaleDictionary.Region,
+  CircuitScaleDictionary.System,
+  CircuitScaleDictionary.WholeBrain,
+]);
+
+/** simulations launched via obi-one also expose task configuration/log stream entries. */
+export function shouldLaunchSimulationViaTaskSystem({
+  scale,
+  targetSimulator,
+}: {
+  scale: TCircuitScaleDictionary | null;
+  targetSimulator: string | null;
+}): boolean {
+  const isSupportedSimulator = targetSimulator === 'Brian2' || targetSimulator === 'LearningEngine';
+  return isSupportedSimulator || (scale !== null && TASK_LAUNCH_SCALES.has(scale));
+}
 
 // TODO Remove this after the data is migrated
 export function migrateConfig(config: any) {

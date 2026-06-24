@@ -1,0 +1,46 @@
+.largeCircuitPreview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #fff;
+
+  button.downloadButton {
+    width: auto;
+  }
+
+  > .spinner {
+    color: #000;
+    background-color: transparent;
+  }
+
+  > div.error {
+    color: #f30;
+    background: #fff;
+    padding: 2em;
+    border-radius: 1em;
+    max-width: 420px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    text-wrap: balance;
+
+    h2 {
+      font-size: 120%;
+      border-bottom: 1px solid currentColor;
+    }
+  }
+
+  details {
+    margin-top: 1em;
+
+    > ol {
+      all: initial;
+      font: inherit;
+      color: inherit;
+
+      > li {
+        margin-left: 2em;
+      }
+    }
+  }
+}

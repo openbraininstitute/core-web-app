@@ -20,8 +20,10 @@ import {
   injectHierarchyId,
   mergeHierarchyWithAtlas,
   normalizeBrainRegionName,
+  pickValidHierarchyId,
 } from '@/features/brain-region-hierarchy/helpers';
 import {
+  useAvailableHierarchySpeciesQuery,
   useHierarchyRuntimeMetadataQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
@@ -45,7 +47,7 @@ import type {
 } from '@/features/brain-region-hierarchy/types';
 
 export const VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT =
-  'species-brain-region-selection-snapshot-v06-02-2026';
+  'species-brain-region-selection-snapshot-v12-06-2026';
 
 /**
  * url parameter keys for brain region hierarchy
@@ -102,6 +104,15 @@ export function useBrainRegionUrlBoundaryContext() {
  */
 export const workspaceHierarchySpeciesAtom = atom<IWorkspaceSpecies | null>(null);
 
+/** shared across all {@link useWorkspaceHierarchyRegistry} consumers — init runs once per workspace. */
+export const hierarchyRegistrySyncSettledAtom = atom(false);
+
+/** workspace key while async init is in flight; null when idle. dedupes init across hook instances. */
+export const hierarchyRegistryInitWorkspaceKeyAtom = atom<string | null>(null);
+
+/** last applied URL override key (`all` or `hierarchyId:brainRegionId`) for sync boundaries. */
+export const hierarchyRegistryLastAppliedUrlOverrideAtom = atom<string | null>(null);
+
 const SPECIES_MODE_VALUES = [SpeciesSelectionMode.All, SpeciesSelectionMode.Focused] as const;
 
 /**
@@ -157,6 +168,7 @@ export function useHierarchyBrainRegionUrlState() {
 export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
   const { remoteUserPreferenceHierarchySpecies, loading: loadingRemote } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
+  const { remoteAvailableHierarchies } = useAvailableHierarchySpeciesQuery();
   const { urlOverride } = useBrainRegionUrlBoundaryContext();
   const [browserStorageHierarchy] = useLocalStorage<BrainRegionHierarchySelection | null>(
     VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
@@ -164,12 +176,19 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
   );
   const focusedUrlOverrideHierarchyId =
     urlOverride?.kind === SpeciesSelectionMode.Focused ? urlOverride.hierarchyId : undefined;
-  // Priority: URL override > Remote ID > browser storage selection > config default
-  const hierarchyId =
-    focusedUrlOverrideHierarchyId ||
-    remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
-    browserStorageHierarchy?.hierarchyId ||
-    APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
+  // Priority: URL override > Remote ID > browser storage selection > config default.
+  // Each candidate is validated against the available hierarchies so a stale
+  // persisted id (e.g. removed/renamed by a later deploy) falls back to the
+  // default instead of fetching a 404 and stranding consumers with empty options.
+  const hierarchyId = pickValidHierarchyId(
+    [
+      focusedUrlOverrideHierarchyId,
+      remoteUserPreferenceHierarchySpecies?.hierarchy_id,
+      browserStorageHierarchy?.hierarchyId,
+    ],
+    remoteAvailableHierarchies,
+    APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID
+  );
 
   const usedHierarchyId = config?.hId ?? hierarchyId;
 
@@ -195,11 +214,15 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
       refetchOnWindowFocus: false,
     });
 
-  const { data, isLoading, error } = useQuery(
-    queryOption(config?.hId ?? hierarchyId, !!usedHierarchyId && !loadingRemote)
+  const queryEnabled = !!usedHierarchyId && !loadingRemote;
+  const { data, isPending, error } = useQuery(
+    queryOption(config?.hId ?? hierarchyId, queryEnabled)
   );
 
-  if (isLoading || error || !data) {
+  const loadingRootHierarchy =
+    loadingRemote || (queryEnabled && isPending) || (!error && !data && !!usedHierarchyId);
+
+  if (error || !data) {
     return {
       select,
       queryOption,
@@ -209,11 +232,9 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
         options: [],
       },
       error,
-      loading: isLoading,
+      loading: loadingRootHierarchy,
     };
   }
-
-  const loadingRootHierarchy = isLoading || loadingRemote;
 
   return {
     select,

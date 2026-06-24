@@ -58,6 +58,7 @@ export enum ServiceSubtype {
   RegionSimulation = 'region-sim',
   SystemSimulation = 'system-sim',
   WholeBrainSimulation = 'whole-brain-sim',
+  EM_SYNAPSE_MAPPING = 'em-synapse-mapping',
   // } CircuitScale simulations
 }
 

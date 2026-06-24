@@ -18,7 +18,7 @@ import type { CSSProperties } from 'react';
 type Props = {
   configId: string;
   configName: string;
-  scanParams: Record<string, string | number>;
+  scanParams: Record<string, unknown>;
   execStatus?: TActivityStatus;
   statusLoading?: boolean;
   selected?: boolean;

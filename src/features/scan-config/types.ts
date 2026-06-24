@@ -1,21 +1,15 @@
-import { match } from 'ts-pattern';
+import { z } from 'zod';
 
-import {
-  EntityTypeDict,
-  type ICellMorphology,
-  type ICircuit,
-  type IMEModel,
-  type IonChannelModel,
-  type TEntityTypeDict,
-} from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 // biome-ignore lint/style/useImportType: biome hallucination
-import {
-  ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import type { atom } from 'jotai';
+import type {
+  ICellMorphology,
+  ICircuit,
+  IMEModel,
+  IonChannelModel,
+  TEntityTypeDict,
+} from '@/api/entitycore/types';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -25,18 +19,12 @@ import type { Prettify } from '@/utils/type';
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 type Primitive = null | boolean | number | string;
-interface Object {
-  [key: string]: Primitive | Primitive[] | Object;
+export interface ConfigObject {
+  [key: string]: ConfigValue | ConfigObject;
 }
 
-export type ConfigValue = Primitive | Primitive[] | Object;
-export type Config = Record<string, Object | string>;
-
-export interface AtomsMap {
-  [key: string]:
-    | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
-}
+export type ConfigValue = Primitive | Primitive[] | ConfigObject | ConfigValue[];
+export type Config = Record<string, ConfigValue>;
 
 export const SchemaMappingKeyDict = {
   Circuit: 'Circuit',
@@ -120,6 +108,8 @@ export type TabType = 'configuration' | 'simulations';
 export const SchemaNameDict = {
   // simulation
   CircuitSimulationScanConfig: 'CircuitSimulationScanConfig',
+  Brian2CircuitSimulationScanConfig: 'Brian2CircuitSimulationScanConfig',
+  LearningEngineCircuitSimulationScanConfig: 'LearningEngineCircuitSimulationScanConfig',
   MEModelSimulationScanConfig: 'MEModelSimulationScanConfig',
   MEModelWithSynapsesCircuitSimulationScanConfig: 'MEModelWithSynapsesCircuitSimulationScanConfig',
   IonChannelModelSimulationScanConfig: 'IonChannelModelSimulationScanConfig',
@@ -172,7 +162,7 @@ export interface ModelIdentifier extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
 }
 
-export interface ModelIdentifierMultiple extends TBlockElement {
+export interface TModelIdentifierMultiple extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
 }
 export interface FloatParameterSweep extends TBlockElement {
@@ -340,7 +330,7 @@ export type TBlockElement = {
 export type ParamSchema =
   | StringInput
   | ModelIdentifier
-  | ModelIdentifierMultiple
+  | TModelIdentifierMultiple
   | FloatParameterSweep
   | IntParameterSweep
   | Reference
@@ -405,6 +395,8 @@ export function isType(v: TRootElement | Type | TBlockElement): v is Type {
 export const ActivityCustomFileRenderer = {
   MiniDetailView: 'mini-detail-view',
   Default: 'default',
+  TaskConfigurationViewer: 'task-configuration-viewer',
+  TaskLogsViewer: 'task-logs-viewer',
 } as const;
 
 export type TActivityCustomFileRenderer =
@@ -420,6 +412,63 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
+export const NodeSchema = z.object({
+  morphology_file: z.string(),
+  morphology_name: z.string(),
+  position: z.tuple([z.number(), z.number(), z.number()]),
+  orientation: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+});
+
+export const NodesSchema = z.array(NodeSchema);
+
+export enum MorphoViewerTreeItemType {
+  Soma = 0,
+  Dendrite,
+  BasalDendrite,
+  ApicalDendrite,
+  Myelin,
+  Axon,
+  Selected,
+  Liaison,
+  Unknown,
+}
+
+const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
+
+export const SectionSchema = z.object({
+  id: z.string(),
+  parent_id: z.string().nullable(),
+  type: z.enum(MorphoViewerTreeItemType),
+  points: z.array(Point3DSchema),
+  radii: z.array(z.number()),
+});
+
+export const SectionsArraySchema = z.array(SectionSchema);
+export type Sections = z.infer<typeof SectionsArraySchema>;
+
+export type Node = z.infer<typeof NodeSchema>;
+export type Nodes = z.infer<typeof NodesSchema>;
+
+export type Cell = {
+  id: string;
+  center: [number, number, number];
+  orientation: [number, number, number, number];
+  somaRadius: number;
+  color: string;
+};
+
+export interface MorphoViewerTreeItem {
+  x: number;
+  y: number;
+  z: number;
+  radius: number;
+  type: MorphoViewerTreeItemType;
+  sectionId: string;
+  segmentId: string;
+  distanceFromSoma: number;
+  children?: MorphoViewerTreeItem[];
+}
+
 export type TSupportedEntitiesForScanConfiguration =
   | ICircuit
   | IMEModel
@@ -430,46 +479,9 @@ export type TSupportedEntitiesForScanConfiguration =
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
-  | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
+  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit
   | typeof ExtendedEntitiesTypeDict.IonChannelModel
   | typeof ExtendedEntitiesTypeDict.EMCellMesh
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
-  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
-
-export const getSupportedEntityTypesForScanConfiguration = ({
-  entity,
-}: {
-  entity?: TSupportedEntitiesForScanConfiguration | { type: TExtendedEntitiesTypeDict };
-}) => {
-  return match({ entity })
-    .with(
-      {
-        entity: {
-          type: EntityTypeDict.Circuit,
-          scale: CircuitScaleDictionary.Single,
-        },
-      },
-      () => ExtendedEntitiesTypeDict.MEModelWithSynapses
-    )
-    .with({ entity: { type: EntityTypeDict.Circuit } }, () => ExtendedEntitiesTypeDict.Circuit)
-    .with(
-      { entity: { type: EntityTypeDict.Memodel } },
-      () => ExtendedEntitiesTypeDict.MemodelCircuit
-    )
-    .with(
-      { entity: { type: EntityTypeDict.IonChannelModel } },
-      () => ExtendedEntitiesTypeDict.IonChannelModel
-    )
-    .with(
-      { entity: { type: EntityTypeDict.EMCellMesh } },
-      () => ExtendedEntitiesTypeDict.EMCellMesh
-    )
-    .with(
-      { entity: { type: EntityTypeDict.CellMorphology } },
-      () => ExtendedEntitiesTypeDict.UniversalCellMorphology
-    )
-    .otherwise(() => {
-      throw new Error('Not supported entity for scan configuration');
-    });
-};
+  | typeof ExtendedEntitiesTypeDict.WholeBrain;

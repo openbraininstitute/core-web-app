@@ -1,68 +1,60 @@
 'use client';
 
+import { cn } from '@/utils/css-class';
+
 function Placeholder({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-sm bg-gray-200 ${className}`} />;
+  return <div className={cn('animate-pulse rounded-sm bg-white/15', className)} />;
 }
 
-function TiersComparisonSkeleton() {
-  const skeletonTiers = [1, 2, 3];
-  const skeletonCategories = [1, 2, 3, 4];
-  const skeletonFeatures = [1, 2, 3];
+function PlanGridSkeleton() {
+  const planSlots = [0, 1, 2, 3] as const;
+  const featureRowIdsBySlot = [
+    ['f1-a', 'f1-b', 'f1-c'],
+    ['f2-a', 'f2-b', 'f2-c', 'f2-d'],
+    ['f0-a', 'f0-b', 'f0-c', 'f0-d', 'f0-e', 'f0-f'],
+    ['f3-a', 'f3-b', 'f3-c', 'f3-d'],
+  ] as const;
 
   return (
-    <div className="bg-primary-9 w-full p-6 text-white">
-      <div className="grid grid-cols-4 gap-6">
-        <div />
-        {skeletonTiers.map((tier) => (
-          <div key={tier} className="flex flex-col">
-            <Placeholder className="mb-2 h-8 w-32" />
-            <div className="mb-4 text-left">
-              <Placeholder className="mb-2 h-6 w-24" />
-              <Placeholder className="h-4 w-16" />
+    <div className="grid items-stretch gap-4 h-full p-4 sm:grid-cols-2 xl:grid-cols-4">
+      {planSlots.map((slot) => (
+        <div key={slot} className="flex h-full min-h-0 flex-col gap-y-4 self-stretch rounded-xl">
+          <div className="relative flex min-h-0 flex-1 flex-col rounded-xl border border-primary-7 bg-primary-9 p-6">
+            <div className="space-y-3">
+              <Placeholder className="h-7 w-28 rounded-full" />
+              <Placeholder className="h-9 w-full max-w-[200px] rounded-full" />
+              <Placeholder className="h-4 w-20 rounded-full" />
             </div>
-            <div className="mt-4 space-y-1 text-sm">
-              <Placeholder className="mb-1 h-4 w-full" />
-              <Placeholder className="mb-1 h-4 w-full" />
-              <Placeholder className="mb-1 h-4 w-full" />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {skeletonCategories.map((category) => (
-        <div key={category} className="mt-8">
-          <Placeholder className="mb-4 h-6 w-40" />
-
-          {skeletonFeatures.map((feature) => (
-            <div key={feature} className="grid grid-cols-4 gap-6 py-2">
-              <Placeholder className="h-5 w-full" />
-              {skeletonTiers.map((tier) => (
-                <div key={`${tier}-${feature}`} className="flex justify-center">
-                  <Placeholder className="h-6 w-6 rounded-full" />
+            <div className="mt-8 space-y-3">
+              {featureRowIdsBySlot[slot].map((rowId) => (
+                <div key={rowId} className="flex items-center gap-2">
+                  <Placeholder className="h-4 flex-1 rounded-full" />
+                  <Placeholder className="size-5 shrink-0 rounded-full" />
                 </div>
               ))}
             </div>
-          ))}
+            <div className="mt-8 space-y-3">
+              {featureRowIdsBySlot.toReversed()[slot].map((rowId) => (
+                <div key={rowId} className="flex items-center gap-2">
+                  <Placeholder className="h-4 flex-1 rounded-full" />
+                  <Placeholder className="size-5 shrink-0 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-auto flex min-h-18 shrink-0 items-end pb-6">
+            <Placeholder className="h-12 w-full rounded-full" />
+          </div>
         </div>
       ))}
-
-      <div className="mt-8 grid grid-cols-4 gap-6">
-        <div />
-        <div />
-        {[1, 2].map((tier) => (
-          <div key={`${tier}-action`} className="flex justify-center">
-            <Placeholder className="h-10 w-full rounded-full!" />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
 
 export function TiersListSkeleton() {
   return (
-    <div className="mx-auto max-w-4xl">
-      <TiersComparisonSkeleton />
+    <div id="tiers-list-container" className="mx-auto flex h-full w-full max-w-7xl flex-col">
+      <PlanGridSkeleton />
     </div>
   );
 }

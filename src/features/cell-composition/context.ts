@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { arrayToTree } from 'performant-array-to-tree';
 
+import { swrCacheConfig } from '@/api/cache-storage';
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -57,6 +58,7 @@ const useCellCompositionSummaryQuery = () => {
         entityType: EntityTypeDict.CellComposition,
         entityId: cellComposition?.at(0)?.id!,
         id: summaryAsset?.id!,
+        cache: swrCacheConfig('cell-composition-summary-asset'),
       }),
     enabled: !!cellComposition?.at(0)?.id! && !!summaryAsset?.id,
     refetchOnWindowFocus: false,

@@ -4,43 +4,42 @@ import { isMatching, P } from 'ts-pattern';
 import { tryCatch } from '@/api/utils';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { getSelfVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 
 import type {
-  Project,
+  IProject,
   RecentWorkspace,
   TVirtualLab,
   UserProfileResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
 export type TResolvedWorkspace = {
-  project: Project | null;
+  project: IProject | null;
   virtualLab: TVirtualLab | null;
   profile: UserProfileResponse | null;
 };
 
 export const resolveWorkspace = async () => {
   let virtualLabId: string | undefined;
-  let project: Project | null = null;
+  let project: IProject | null = null;
   let virtualLab: TVirtualLab | null = null;
   let recentWorkspace: RecentWorkspace['recent_workspace']['workspace'] | null = null;
 
   const [virtualLabResult, profileResult, recentWorkspaceResult] = await Promise.all([
-    tryCatch(listVirtualLabs({ include: [LabTypeEnum.MY_LAB] })),
+    tryCatch(getSelfVirtualLab()),
     tryCatch(getUserProfile()),
     tryCatch(getUserRecentWorkspace()),
   ]);
   const profile = profileResult.data?.profile ?? null;
   recentWorkspace = recentWorkspaceResult.data?.data?.recent_workspace.workspace ?? null;
-  virtualLab = virtualLabResult?.data?.data?.virtual_lab ?? null;
+  virtualLab = virtualLabResult?.data?.data ?? null;
 
   if (virtualLab) {
     virtualLabId = virtualLab.id;
     const { data: projectResult } = await tryCatch(
-      listProjects({ virtualLabId, page: 1, size: 1 })
+      listProjects({ virtualLabId, pagination: { page: 1, page_size: 1 } })
     );
-    const oneProject = head(projectResult?.data?.results);
+    const oneProject = head(projectResult?.data);
     if (oneProject) {
       project = oneProject;
     }

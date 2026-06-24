@@ -12,8 +12,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popconfirm } from 'antd';
 import { compact, get } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
-import NextLink from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 
 import { deleteCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
 import {
@@ -21,17 +21,14 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { config } from '@/config';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useFlags } from '@/features/feature-flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
-import Action from '@/ui/molecules/side-menu-action';
+import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import {
-  PanelQueryParam,
-  WorkflowSimulatePanels,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { buildSimulateConfigureUrlFromDataViewEntity } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -44,17 +41,20 @@ export default function ActionMenu({
   type,
   parentLink,
   isPublicEntity,
+  variant = ViewVariant.Light,
 }: {
   entity: EntityTypeValue;
   ctx: WorkspaceContext;
   type: TExtendedEntitiesTypeDict;
   parentLink: string;
   isPublicEntity: boolean;
+  variant?: TViewVariant;
 }) {
   const { replace: navigate } = useRouter();
   const queryClient = useQueryClient();
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
+  const flags = useFlags();
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
@@ -126,41 +126,66 @@ export default function ActionMenu({
       });
     },
   });
-
+  const downloadArchiveMutation = useMutation({
+    mutationFn: async () => {
+      if (entity.type === ExtendedEntitiesTypeDict.Circuit) setCircuit(entity as ICircuit);
+      else {
+        downloadArchive(entityType.type, [entity.id], ctx);
+      }
+    },
+  });
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
       ? entityType.isSimulatable
-      : 'scale' in entity && entityType.isSimulatable(entity.scale);
+      : (entityType.isSimulatable as (e: typeof entity) => boolean)(entity);
+
+  const simulateHref = useMemo(() => {
+    if (!isSimulatable) {
+      return null;
+    }
+
+    return buildSimulateConfigureUrlFromDataViewEntity({
+      workspace: ctx,
+      extendedType: type,
+      entityId: entity.id,
+      entity: 'scale' in entity ? { scale: entity.scale } : {},
+      flags,
+    });
+  }, [isSimulatable, ctx, type, entity, flags]);
 
   return (
-    <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
+    <div
+      className={cn(
+        'mt-5 flex flex-col gap-2 px-5 text-base font-bold',
+        variant === ViewVariant.Default ? 'text-white' : 'text-primary-9'
+      )}
+    >
       <Action
+        variant={variant}
+        kind={ActionKind.Button}
+        onClick={() => !copying && copy(entity.id)}
         icon={
           !copying ? (
-            <CopyOutlined onClick={() => copy(entity.id)} className="text-primary-8" />
+            <CopyOutlined />
           ) : (
-            <CheckOutlined className="text-teal-400" />
+            <CheckOutlined
+              className={cn({
+                'text-teal-600': variant === ViewVariant.Light,
+                'text-white!': variant === ViewVariant.Default,
+              })}
+            />
           )
         }
       >
         {copying ? 'Copied' : 'Copy ID'}
       </Action>
 
-      {isSimulatable && (
+      {simulateHref && (
         <Action
-          icon={
-            <NextLink
-              href={{
-                pathname: `${config.ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
-                query: {
-                  sessionId: crypto.randomUUID(),
-                  [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-                },
-              }}
-            >
-              <ExperimentOutlined className="text-primary-8" />
-            </NextLink>
-          }
+          variant={variant}
+          kind={ActionKind.Link}
+          href={simulateHref}
+          icon={<ExperimentOutlined />}
         >
           Simulate
         </Action>
@@ -168,18 +193,10 @@ export default function ActionMenu({
 
       {entityType.isDownloadable && (
         <Action
-          icon={
-            <DownloadOutlined
-              className="text-primary-8"
-              onClick={() => {
-                if (entity.type === ExtendedEntitiesTypeDict.Circuit)
-                  setCircuit(entity as ICircuit);
-                else {
-                  downloadArchive(entityType.type, [entity.id], ctx);
-                }
-              }}
-            />
-          }
+          variant={variant}
+          kind={ActionKind.Button}
+          onClick={downloadArchiveMutation.mutateAsync}
+          icon={downloadArchiveMutation.isPending ? <LoadingOutlined /> : <DownloadOutlined />}
         >
           Download
         </Action>
@@ -214,7 +231,11 @@ export default function ActionMenu({
           }}
         >
           <span className="cursor-pointer">
-            <Action icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}>
+            <Action
+              variant={variant}
+              kind={ActionKind.Button}
+              icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}
+            >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Action>
           </span>

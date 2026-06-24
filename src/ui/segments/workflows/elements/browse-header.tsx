@@ -25,61 +25,6 @@ interface WorkflowMenuProps {
   onNavigate?: (entityType: TExtendedEntitiesTypeDict | null) => void;
 }
 
-// const tabsConfigItems: Array<{
-//   key: WorkflowScopeKeys;
-//   title: string;
-// }> = [
-//   {
-//     key: WorkflowScope.Public,
-//     title: 'Public',
-//   },
-//   {
-//     key: WorkflowScope.Project,
-//     title: 'Project',
-//   },
-// ];
-
-// function WorkflowScopeTabs() {
-//   const breakpoint = useDefaultBreakpoint();
-//   const { activeTab, onChangeTab } = useTabs({
-//     tabsConfig: tabsConfigItems,
-//     clearOnDefault: false,
-//     defaultKey: WorkflowScope.Public,
-//     shallow: true,
-//     tabKey: 'scope',
-//   });
-
-//   const onTabClick = (value: string) => onChangeTab(value)();
-
-//   return (
-//     <PillTabs
-//       value={activeTab ?? WorkflowScope.Public}
-//       className="w-full"
-//       activationMode="manual"
-//       onValueChange={onTabClick}
-//     >
-//       <PillTabsList
-//         className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-2xl', {
-//           'h-12': breakpoint === 'xl',
-//         })}
-//       >
-//         {tabsConfigItems.map((tab) => (
-//           <PillTabsTrigger
-//             key={tab.key}
-//             value={tab.key}
-//             className={cn(
-//               'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
-//               { 'h-12': breakpoint === 'xl' }
-//             )}
-//           >
-//             {tab.title}
-//           </PillTabsTrigger>
-//         ))}
-//       </PillTabsList>
-//     </PillTabs>
-//   );
-// }
-
 export function ActivityAndTypeSelectors({
   activity,
   entityType,

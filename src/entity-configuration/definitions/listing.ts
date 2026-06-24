@@ -22,8 +22,33 @@ import type { WorkspaceContext } from '@/types/common';
 export interface IResolvedFieldPresentation {
   columnAvailable: boolean;
   filterAvailable: boolean;
+  hideInFilterPanel: boolean;
   constraint?: string | Record<string, string>;
   optionsSource?: TFilterOptionsSource;
+}
+
+/**
+ * determines whether a field is listed in the filter panel
+ *
+ * a field is listed in the filter panel if:
+ * - it is not hidden in the filter panel
+ * - it is available as a filter control
+ * - it is available as a column eye toggle
+ */
+export function isFieldListedInFilterPanel(presentation: IResolvedFieldPresentation): boolean {
+  if (presentation.hideInFilterPanel) return false;
+  return presentation.filterAvailable || presentation.columnAvailable;
+}
+
+/**
+ * determines whether a field is listed as a column eye toggle in the filter panel
+ *
+ * a field is listed as a column eye toggle in the filter panel if:
+ * - it is available as a column eye toggle
+ * - it is not hidden in the filter panel
+ */
+export function isColumnToggleInFilterPanel(presentation: IResolvedFieldPresentation): boolean {
+  return presentation.columnAvailable && !presentation.hideInFilterPanel;
 }
 
 /**
@@ -205,6 +230,7 @@ export function resolveFieldListing(
     return {
       columnAvailable: false,
       filterAvailable: false,
+      hideInFilterPanel: false,
     };
   }
 
@@ -217,6 +243,8 @@ export function resolveFieldListing(
       resolveContextualValue(field.presentation?.filter?.available, ctx) ??
       field.isFilterable ??
       false,
+    hideInFilterPanel:
+      resolveContextualValue(field.presentation?.column?.hideInFilterPanel, ctx) ?? false,
     constraint:
       resolveContextualValue(field.presentation?.filter?.constraint, ctx) ??
       field.perTypeConstraint?.[ctx.dataType] ??

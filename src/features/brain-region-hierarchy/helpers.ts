@@ -2,9 +2,12 @@ import isNil from 'es-toolkit/compat/isNil';
 import memoize from 'memoize-one';
 
 import {
+  type BrainRegionHierarchySelection,
   type IBrainRegionHierarchyExtended,
+  type IHierarchyWithSpecies,
   type IWorkspaceSpecies,
   SPECIES_DISPLAY_NAMES,
+  SpeciesSelectionMode,
 } from '@/features/brain-region-hierarchy/types';
 
 import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
@@ -258,4 +261,123 @@ export function normalizeBrainRegionName(name: string) {
     return name;
   }
   return first.toUpperCase() + name.slice(1);
+}
+
+/**
+ * pick the first candidate hierarchy id that still exists in `available`,
+ * falling back to `defaultId` (or, failing that, the first available id).
+ *
+ * while `available` is undefined/empty the list has not loaded yet, so we
+ * cannot validate and return the first truthy candidate unchanged — validation
+ * only kicks in once the available hierarchies are known. this is what protects
+ * the UI from a persisted selection (localStorage snapshot or remote preference)
+ * whose hierarchy was removed or renamed by a later deploy: instead of resolving
+ * to a dead id (empty species panel + 404 hierarchy fetch) we fall back to a
+ * valid default.
+ */
+export function pickValidHierarchyId(
+  candidates: ReadonlyArray<string | null | undefined>,
+  available: ReadonlyArray<{ id: string }> | undefined,
+  defaultId: string
+): string {
+  if (!available?.length) {
+    return candidates.find(Boolean) || defaultId;
+  }
+  const validIds = new Set(available.map((hierarchy) => hierarchy.id));
+  const firstValid = candidates.find((id): id is string => !!id && validIds.has(id));
+  if (firstValid) return firstValid;
+  return validIds.has(defaultId) ? defaultId : (available[0]?.id ?? defaultId);
+}
+
+export function resolveEffectiveHierarchyId({
+  urlHierarchyId,
+  remoteHierarchyId,
+  storageHierarchyId,
+  defaultHierarchyId,
+  availableHierarchies,
+}: {
+  urlHierarchyId?: string | null;
+  remoteHierarchyId?: string | null;
+  storageHierarchyId?: string | null;
+  defaultHierarchyId: string;
+  availableHierarchies?: ReadonlyArray<{ id: string }>;
+}): string {
+  return pickValidHierarchyId(
+    [urlHierarchyId, remoteHierarchyId, storageHierarchyId],
+    availableHierarchies,
+    defaultHierarchyId
+  );
+}
+
+export function createAllSpeciesSelection(
+  perHierarchyMemory?: BrainRegionHierarchySelection['perHierarchyMemory']
+): BrainRegionHierarchySelection {
+  return {
+    hierarchyId: '',
+    speciesName: '',
+    brainRegionId: '',
+    brainRegionName: '',
+    perHierarchyMemory,
+    speciesSelectionMode: SpeciesSelectionMode.All,
+  };
+}
+
+export function resolveDisplayWorkspaceSpecies({
+  isAllMode,
+  workspaceSpecies,
+  workspaceHierarchyId,
+  remoteAvailableHierarchies,
+}: {
+  isAllMode: boolean;
+  workspaceSpecies: IWorkspaceSpecies | null;
+  workspaceHierarchyId: string | undefined;
+  remoteAvailableHierarchies: IHierarchyWithSpecies[] | undefined;
+}): IWorkspaceSpecies | null {
+  if (isAllMode) {
+    return null;
+  }
+
+  if (workspaceSpecies?.displayName) {
+    return workspaceSpecies;
+  }
+
+  const hierarchyId = workspaceSpecies?.hierarchId ?? workspaceHierarchyId;
+  if (!hierarchyId || !remoteAvailableHierarchies) {
+    return null;
+  }
+
+  return (
+    remoteAvailableHierarchies.find((hierarchy) => hierarchy.id === hierarchyId)?.species ?? null
+  );
+}
+
+export function getHierarchyBannerLoading({
+  syncSettled,
+  hasPendingUrlOverride,
+  isBootstrapLoading,
+  isRootHierarchyLoading,
+  isAllMode,
+  displaySpecies,
+  hasAvailableHierarchies,
+}: {
+  syncSettled: boolean;
+  hasPendingUrlOverride: boolean;
+  isBootstrapLoading: boolean;
+  isRootHierarchyLoading: boolean;
+  isAllMode: boolean;
+  displaySpecies: IWorkspaceSpecies | null;
+  hasAvailableHierarchies: boolean;
+}): boolean {
+  return (
+    !syncSettled ||
+    hasPendingUrlOverride ||
+    isBootstrapLoading ||
+    isRootHierarchyLoading ||
+    // in focused mode the species pill keeps its skeleton until a species
+    // resolves, but only while one can still be expected, once the hierarchies
+    // list has settled empty (the request failed or returned nothing) there is
+    // nothing left to wait for, so we stop loading instead of stranding both
+    // the species and region pills in a permanent skeleton.
+    (!isAllMode && !displaySpecies?.displayName && hasAvailableHierarchies)
+  );
 }

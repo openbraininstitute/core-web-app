@@ -1,0 +1,126 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 6px 0;
+  font-size: 0.8125rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
+.headerRight .actions {
+  justify-content: flex-end;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  width: 100%;
+}
+
+.headerRight .label {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.label:disabled {
+  cursor: default;
+}
+
+.labelText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sortIcon {
+  flex: 0 0 auto;
+  color: var(--color-primary-9);
+}
+
+.sortIconWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.sortIndex {
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-primary-9);
+  margin-left: 1px;
+}
+
+.iconButton {
+  position: relative;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border: 0;
+  padding: 0;
+  line-height: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-9);
+  cursor: pointer;
+  border-radius: 9999px;
+  box-shadow:
+    0 2px 8px 0 rgba(0, 0, 0, 0.08),
+    -3px -3px 10px 0 rgba(255, 255, 255, 0.82);
+}
+
+.iconButton svg {
+  display: block;
+}
+
+.iconButton.active,
+.iconButton.active:hover {
+  color: var(--color-primary-9);
+}
+
+.columnMenu :global(.ant-dropdown-menu-item),
+.columnMenu :global(.ant-dropdown-menu-title-content) {
+  color: var(--color-primary-9);
+}
+
+.columnMenu :global(.ant-dropdown-menu-item-disabled),
+.columnMenu :global(.ant-dropdown-menu-item-disabled .ant-dropdown-menu-title-content) {
+  color: rgba(0, 39, 102, 0.4);
+}
+
+.activeDot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-green-main);
+  box-shadow: 0 0 0 1.5px #fff;
+  pointer-events: none;
+}

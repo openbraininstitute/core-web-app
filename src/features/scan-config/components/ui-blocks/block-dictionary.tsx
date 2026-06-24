@@ -1,6 +1,6 @@
 import { capitalize } from 'es-toolkit';
-import { get, lowerCase } from 'es-toolkit/compat';
-import { atom, useAtomValue } from 'jotai';
+import { get } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 
 import {
   getBlockUsabilityConfig,
@@ -8,11 +8,10 @@ import {
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import Block from '@/features/scan-config/components/ui-blocks/block';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
-import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
+import { isPlainObject } from '@/features/scan-config/components/utils';
+import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
-  type AtomsMap,
   type Config,
   type ConfigSchema,
   type ConfigValue,
@@ -36,13 +35,12 @@ type Props = {
   schema: ConfigSchema;
   blockDictionarySchema: IBlockDictionary;
   selectedRootElement: string;
-  atomsMap: AtomsMap;
-  setAtomsMap: (v: AtomsMap) => void;
   selectedEntry: string;
   setSelectedEntry: (entry: string) => void;
   campaignId: string;
   loading: boolean;
   config: Config;
+  setConfig: (newConfig: Config) => void;
   selectedBlockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   allEntries: Set<string>;
@@ -56,13 +54,12 @@ export default function BlockDictionary({
   schema,
   blockDictionarySchema,
   selectedRootElement,
-  atomsMap,
-  setAtomsMap,
   selectedEntry,
   setSelectedEntry,
   campaignId,
   loading,
   config,
+  setConfig,
   entity,
   allEntries,
   onNewBlockClick,
@@ -72,14 +69,18 @@ export default function BlockDictionary({
   const { aiConfig, isChatReady } = useAIConfig();
   const diffs = useAtomValue(configDiffsAtom);
   const showingDiffs = useShowingDiffs();
-  const previewAtom = useDiffPreviewAtom(selectedRootElement, selectedEntry);
+  const previewData = useDiffPreview(selectedRootElement, selectedEntry);
 
-  const selectedBlockLocal = isPlainObject(config[selectedRootElement])
-    ? config[selectedRootElement][selectedEntry]?.type
-    : undefined;
+  const selectedBlockLocal =
+    isPlainObject(config[selectedRootElement]) &&
+    isPlainObject(config[selectedRootElement][selectedEntry])
+      ? config[selectedRootElement][selectedEntry]?.type
+      : undefined;
 
   const selectedBlockAI =
-    aiConfig && isPlainObject(aiConfig[selectedRootElement])
+    aiConfig &&
+    isPlainObject(aiConfig[selectedRootElement]) &&
+    isPlainObject(aiConfig[selectedRootElement]?.[selectedEntry])
       ? aiConfig[selectedRootElement][selectedEntry]?.type
       : undefined;
 
@@ -99,11 +100,15 @@ export default function BlockDictionary({
       d.path[1] === selectedEntry
   );
 
-  if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
-    const liveAtom = atomsMap[selectedRootElement]?.[selectedEntry];
+  if (
+    selectedBlockSchema &&
+    isPlainObject(config[selectedRootElement]) &&
+    isPlainObject(config[selectedRootElement][selectedEntry])
+  ) {
+    const liveState = config[selectedRootElement]?.[selectedEntry];
     // Preview atom takes priority when showing diffs so the Block displays
     // the new/restored values instead of the current live values.
-    const stateAtom = previewAtom ?? liveAtom ?? null;
+    const state = previewData ?? liveState ?? {};
 
     return (
       <Block
@@ -113,7 +118,17 @@ export default function BlockDictionary({
         disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
         config={config}
         blockSchema={selectedBlockSchema}
-        stateAtom={stateAtom}
+        state={state}
+        setState={(newState: Record<string, ConfigValue>) => {
+          if (!isPlainObject(config[selectedRootElement])) return;
+          setConfig({
+            ...config,
+            [selectedRootElement]: {
+              ...config[selectedRootElement],
+              [selectedEntry]: newState,
+            },
+          });
+        }}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}
         rootElement={selectedRootElement}
@@ -197,11 +212,13 @@ export default function BlockDictionary({
                   setSelectedEntry(newEntry);
                   allEntries.add(newEntry);
 
-                  setAtomsMap({
-                    ...atomsMap,
+                  if (!isPlainObject(config) || !isPlainObject(config[selectedRootElement])) return;
+
+                  setConfig({
+                    ...config,
                     [selectedRootElement]: {
-                      ...atomsMap[selectedRootElement],
-                      [newEntry]: atom<Record<string, ConfigValue>>(initial),
+                      ...config[selectedRootElement],
+                      [newEntry]: initial,
                     },
                   });
                 }}

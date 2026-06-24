@@ -1,5 +1,5 @@
-import { logError } from '@/util/logger';
 import { assertType, isType } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 import { fetchJSON, isVoidType } from './util';
 
@@ -18,19 +18,19 @@ export async function serviceAiAgentThreadCreate({
     accessToken,
     method: 'POST',
     path: 'threads',
-    query: { title, virtual_lab_id: virtualLabId, project_id: projectId },
+    query: { title, vlabId: virtualLabId, projectId },
     typeGuard: isThreadCreateResponse,
   });
-  return { threadId: data.thread_id };
+  return { threadId: data.id };
 }
 
 interface ThreadCreateResponse {
-  thread_id: string;
+  id: string;
 }
 
 function isThreadCreateResponse(data: unknown): data is ThreadCreateResponse {
   return isType(data, {
-    thread_id: 'string',
+    id: 'string',
   });
 }
 
@@ -46,12 +46,9 @@ export async function serviceAiAgentThreadExists({
       method: 'GET',
       accessToken,
       path: `threads/${threadId}`,
-      params: {
-        thread_id: threadId,
-      },
       typeGuard: isThreadResponse,
     });
-    return data.thread_id === threadId;
+    return data.id === threadId;
   } catch (ex) {
     logError(`Unable to check existence of thread "${threadId}":`, ex);
     return false;
@@ -60,13 +57,9 @@ export async function serviceAiAgentThreadExists({
 
 export async function serviceAiAgentThreadMessages({
   accessToken,
-  virtualLabId,
-  projectId,
   threadId,
 }: {
   accessToken: string;
-  virtualLabId: string | null;
-  projectId: string | null;
   threadId: string;
 }): Promise<ThreadMessagesResponse> {
   const data = await fetchJSON({
@@ -74,11 +67,7 @@ export async function serviceAiAgentThreadMessages({
     accessToken,
     path: `threads/${threadId}/messages`,
     params: {
-      virtual_lab_id: virtualLabId,
-      project_id: projectId,
-      vercel_format: 'true',
-      sort: '-creation_date',
-      page_size: '1000',
+      pageSize: '200',
     },
     typeGuard: isThreadMessagesResponse,
   });
@@ -88,8 +77,9 @@ export async function serviceAiAgentThreadMessages({
 export interface ThreadMessagesResponse {
   results: Array<{
     id: string;
-    role: 'system' | 'user' | 'assistant' | 'data';
-    content: string;
+    role: 'system' | 'user' | 'assistant';
+    parts: unknown[];
+    createdAt: string;
   }>;
 }
 
@@ -100,14 +90,14 @@ function isThreadMessagesResponse(data: unknown): data is ThreadMessagesResponse
         'array',
         {
           id: 'string',
-          role: ['literal', 'system', 'user', 'assistant', 'data'],
-          content: 'string',
+          role: ['literal', 'system', 'user', 'assistant'],
+          parts: ['array', 'unknown'],
         },
       ],
     });
     return true;
   } catch (ex) {
-    logError('Unexpected return type when fetching list of threads:', data);
+    logError('Unexpected return type when fetching list of messages:', data);
     logError(ex);
     return false;
   }
@@ -119,26 +109,28 @@ export async function serviceAiAgentThreadList({
   projectId,
   pageSize = 10,
   cursor = null,
-  excludeEmptyThreads = true,
+  excludeEmpty = true,
+  sort = '-updatedAt',
 }: {
   accessToken: string;
   virtualLabId: string | null;
   projectId: string | null;
   pageSize?: number;
   cursor?: string | null;
-  excludeEmptyThreads?: boolean;
+  excludeEmpty?: boolean;
+  sort?: string;
 }): Promise<ThreadListResponse> {
   const data = await fetchJSON({
     method: 'GET',
     accessToken,
     path: 'threads',
     params: {
-      virtual_lab_id: virtualLabId,
-      project_id: projectId,
-      sort: '-update_date',
+      vlabId: virtualLabId,
+      projectId,
       cursor,
-      page_size: `${pageSize}`,
-      exclude_empty: `${excludeEmptyThreads}`,
+      pageSize: `${pageSize}`,
+      excludeEmpty: `${excludeEmpty}`,
+      sort,
     },
     typeGuard: isThreadListResponse,
   });
@@ -194,21 +186,21 @@ export async function serviceAiAgentThreadSuggestTitle({
     accessToken,
     path: `threads/${threadId}/generate_title`,
     query: {
-      first_user_message: title,
+      firstUserMessage: title,
     },
     typeGuard: isThreadSuggestTitleResponse,
   });
 }
 
 export interface ThreadSuggestTitleResponse {
-  thread_id: string;
+  id: string;
   title: string;
 }
 
 function isThreadSuggestTitleResponse(data: unknown): data is ThreadSuggestTitleResponse {
   try {
     assertType(data, {
-      thread_id: 'string',
+      id: 'string',
       title: 'string',
     });
     return true;
@@ -219,25 +211,25 @@ function isThreadSuggestTitleResponse(data: unknown): data is ThreadSuggestTitle
 }
 
 export interface ThreadResponse {
-  thread_id: string;
-  user_id: string;
-  vlab_id: string | null;
-  project_id: string | null;
+  id: string;
+  userId: string;
+  vlabId: string | null;
+  projectId: string | null;
   title: string;
-  creation_date: string;
-  update_date: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function isThreadResponse(data: unknown): data is ThreadResponse {
   try {
     assertType(data, {
-      thread_id: 'string',
-      user_id: 'string',
-      vlab_id: ['|', 'string', 'null'],
-      project_id: ['|', 'string', 'null'],
+      id: 'string',
+      userId: 'string',
+      vlabId: ['|', 'string', 'null'],
+      projectId: ['|', 'string', 'null'],
       title: 'string',
-      creation_date: 'string',
-      update_date: 'string',
+      createdAt: 'string',
+      updatedAt: 'string',
     });
     return true;
   } catch (ex) {
@@ -248,38 +240,36 @@ export function isThreadResponse(data: unknown): data is ThreadResponse {
 }
 
 export interface ThreadListResponse {
-  next_cursor?: string;
-  has_more: boolean;
-  page_size: number;
-  results: [
-    {
-      thread_id: string;
-      user_id: string;
-      vlab_id: string | null;
-      project_id: string | null;
-      title: string;
-      creation_date: string;
-      update_date: string;
-    },
-  ];
+  nextCursor?: string | null;
+  hasMore: boolean;
+  pageSize: number;
+  results: Array<{
+    id: string;
+    userId: string;
+    vlabId: string | null;
+    projectId: string | null;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
 }
 
 export function isThreadListResponse(data: unknown): data is ThreadListResponse {
   try {
     assertType(data, {
-      next_cursor: ['?', ['|', 'string', 'null']],
-      has_more: 'boolean',
-      page_size: 'number',
+      nextCursor: ['?', ['|', 'string', 'null']],
+      hasMore: 'boolean',
+      pageSize: 'number',
       results: [
         'array',
         {
-          thread_id: 'string',
-          user_id: 'string',
-          vlab_id: ['|', 'string', 'null'],
-          project_id: ['|', 'string', 'null'],
+          id: 'string',
+          userId: 'string',
+          vlabId: ['|', 'string', 'null'],
+          projectId: ['|', 'string', 'null'],
           title: 'string',
-          creation_date: 'string',
-          update_date: 'string',
+          createdAt: 'string',
+          updatedAt: 'string',
         },
       ],
     });
@@ -310,8 +300,8 @@ export async function serviceAiAgentThreadSearch({
     path: 'threads/search',
     params: {
       query,
-      virtual_lab_id: virtualLabId,
-      project_id: projectId,
+      vlabId: virtualLabId,
+      projectId,
       limit: `${limit}`,
     },
     typeGuard: isThreadSearchResponse,
@@ -320,9 +310,9 @@ export async function serviceAiAgentThreadSearch({
 }
 
 export interface ThreadSearchResponse {
-  result_list: Array<{
-    thread_id: string;
-    message_id: string;
+  resultList: Array<{
+    threadId: string;
+    messageId: string;
     title: string;
     content: string;
   }>;
@@ -331,11 +321,11 @@ export interface ThreadSearchResponse {
 function isThreadSearchResponse(data: unknown): data is ThreadSearchResponse {
   try {
     assertType(data, {
-      result_list: [
+      resultList: [
         'array',
         {
-          thread_id: 'string',
-          message_id: 'string',
+          threadId: 'string',
+          messageId: 'string',
           title: 'string',
           content: 'string',
         },

@@ -1,3 +1,6 @@
+import { RiArrowDownSLine } from '@remixicon/react';
+
+import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   Select,
   SelectContent,
@@ -5,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
+import { detailViewLabelClass } from '@/ui/segments/detail-view/variant-styles';
 import { isType } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
@@ -19,6 +23,7 @@ export interface SelectAnalysisProps {
   value: string;
   onChange(value: string): void;
   results: FlatValidationResult[];
+  variant?: TViewVariant;
 }
 
 export interface SelectAnalysisOption {
@@ -26,7 +31,13 @@ export interface SelectAnalysisOption {
   value: string;
 }
 
-export function SelectAnalysis({ className, value, onChange, results }: SelectAnalysisProps) {
+export function SelectAnalysis({
+  className,
+  value,
+  onChange,
+  results,
+  variant = ViewVariant.Light,
+}: SelectAnalysisProps) {
   const options: SelectAnalysisOption[] = [
     { label: 'All', value: 'all' },
     ...results.map((result) => {
@@ -39,11 +50,12 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
 
   return (
     <div className={classNames(className, styles.selectAnalysis)}>
-      <div className="text-neutral-3 ml-3 inline-block">SELECT ANALYSIS</div>
+      <div className={cn('ml-3 inline-block', detailViewLabelClass(variant))}>SELECT ANALYSIS</div>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
           size="default"
           className="min-w-70 h-11! text-lg! rounded-full bg-white border-gray-300 focus-visible:ring-0"
+          icon={<RiArrowDownSLine size={16} className="text-primary-9" />}
         >
           <SelectValue />
         </SelectTrigger>
@@ -53,7 +65,7 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
         >
           {options.map((option) => (
             <SelectItem
-              checkClassName="text-primary-8"
+              checkIconClassName="text-white"
               key={option.value}
               value={option.value}
               className={cn('cursor-pointer text-lg w-full [&_span:nth-child(2)]:w-full group')}

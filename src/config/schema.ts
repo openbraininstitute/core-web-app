@@ -20,6 +20,8 @@ const configFields = {
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
   AUTH_PROXY_URL: { schema: z.url().optional(), public: true },
 
+  GRADING_WEB_LAUNCH_HMAC_SECRET: { schema: z.string().optional(), public: false },
+
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),
     public: false,
@@ -120,7 +122,7 @@ const configFields = {
 } as const;
 
 const platformApiUrlFields = {
-  AI_AGENT_URL: '/agent',
+  AI_AGENT_URL: '/agent-ts/api',
   AUTH_MANAGER_URL: '/auth-manager/v1',
   CELL_API_URL: '/circuit',
   ENTITY_CORE_URL: '/entitycore',

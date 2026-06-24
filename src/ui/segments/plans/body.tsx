@@ -6,16 +6,22 @@ import type { PlanV2 } from '@/types/pricing/planv2';
 
 function FeatureIcon({ value }: { value: boolean }) {
   return value ? (
-    <RiCheckboxCircleFill className="size-4 text-green-600" />
+    <RiCheckboxCircleFill className="size-4 shrink-0 text-green-600" />
   ) : (
-    <RiCloseCircleLine className="size-4 text-gray-400" />
+    <RiCloseCircleLine className="size-4 shrink-0 text-neutral-400" />
   );
 }
 
-export default function PlanBody({ plan, dark }: { plan: PlanV2; dark?: boolean }) {
-  const textColor = dark ? 'text-white' : 'text-primary-9';
-  const mutedColor = dark ? 'text-primary-4' : 'text-gray-400';
-  const dividerColor = dark ? 'bg-primary-7' : 'bg-neutral-2';
+export default function PlanBody({
+  plan,
+  isCurrentTier,
+}: {
+  plan: PlanV2;
+  isCurrentTier?: boolean;
+}) {
+  const textColor = isCurrentTier ? 'text-white' : 'text-primary-9!';
+  const mutedColor = isCurrentTier ? 'text-primary-4' : 'text-primary-6!';
+  const dividerColor = isCurrentTier ? 'bg-white/60' : 'bg-primary-9!';
 
   return (
     <div className="relative mt-10">
@@ -31,7 +37,7 @@ export default function PlanBody({ plan, dark }: { plan: PlanV2; dark?: boolean 
         ))}
         {plan.ai_assistant_features.length > 0 && (
           <>
-            <div className={cn('my-3 h-px w-full', dividerColor)} />
+            <div className={cn('my-3 h-px w-full ', dividerColor)} />
             <div className="flex w-full flex-col">
               <div className={cn('mb-1 text-lg font-semibold tracking-wide uppercase', mutedColor)}>
                 AI Assistant

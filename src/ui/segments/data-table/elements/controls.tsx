@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
 import { useScope } from '@/ui/hooks/use-scope';
 import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
@@ -63,6 +63,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   workspace,
   allowDownload,
   allowDelete,
+  keepSelectionOnScopeChange = false,
 }: {
   clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
@@ -75,15 +76,23 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   // and does not means that the entity is downloadable or deletable
   allowDownload?: boolean;
   allowDelete?: boolean;
+  keepSelectionOnScopeChange?: boolean;
 }) {
   const { left, right } = useScrollNav('.ant-table-body');
   const { scope: currentScope } = useScope();
+  const prevScopeRef = useRef(currentScope);
 
+  // Clear row selection when workspace scope changes unless the parent opts in to keeping it
+  // (e.g. browse carts with parent-owned `selectedRows`).
   useEffect(() => {
-    if (clearSelectedRows) {
-      clearSelectedRows();
+    if (keepSelectionOnScopeChange || prevScopeRef.current === currentScope) {
+      prevScopeRef.current = currentScope;
+      return;
     }
-  }, [clearSelectedRows]);
+
+    prevScopeRef.current = currentScope;
+    clearSelectedRows?.();
+  }, [clearSelectedRows, currentScope, keepSelectionOnScopeChange]);
 
   if (!visible) return null;
 

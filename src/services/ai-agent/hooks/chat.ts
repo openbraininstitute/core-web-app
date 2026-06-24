@@ -1,12 +1,16 @@
 'use client';
 
-import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
+import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { DefaultChatTransport, type FileUIPart, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
+import { presignedUrlCache } from '@/components/ai-assistant/message-item/storage-image-part';
+import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
+import { isPlainObject } from '@/features/scan-config/components/utils';
+import { findConfigKeyInState } from '@/features/scan-config/helpers';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
@@ -14,11 +18,11 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
+import { uploadFilesAndCreateParts } from '../api/upload';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
-import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
-import type { Config } from '@/features/scan-config/components/components';
+import type { Config } from '@/features/scan-config/types';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 export const agentStateAtom = atom<Record<string, Config>>({});
@@ -30,7 +34,6 @@ export function useServiceAiAgentChat(threadId: string) {
   const assistantInitialMessages = AiAssistant.initialMessages.useValue();
   const isLoadingMessages = AiAssistant.isLoadingMessages.useValue();
   const accessToken = useAccessToken();
-  const activeTools = useAIActiveTools();
   const queryClient = useQueryClient();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
@@ -70,33 +73,47 @@ export function useServiceAiAgentChat(threadId: string) {
   }, [threadId]);
 
   const chat = useChat({
-    api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
-    initialMessages: assistantInitialMessages,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    experimental_prepareRequestBody: ({ messages }) => {
-      const lastMessage = messages.at(-1);
+    transport: new DefaultChatTransport({
+      api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
+      headers: () => ({
+        Authorization: `Bearer ${accessToken}`,
+      }),
+      body: () => ({
+        frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
+        sharedState: jotaiStore.get(agentStateAtom),
+      }),
+      prepareSendMessagesRequest: ({ messages, body }) => {
+        const lastMessage = messages.at(-1);
 
-      return {
-        content: (lastMessage?.content ?? '').trim(),
-        tool_selection: activeTools,
-        frontend_url: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
-        shared_state: jotaiStore.get(agentStateAtom),
-      };
-    },
-    fetch: async (url, options) => {
-      const resp = await fetch(url, options);
-      const newRateLimit: AiAgentRateLimitEndpoint = {
-        limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
-        remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
-        reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
-      };
-      setRateLimit(newRateLimit);
-      return resp;
-    },
+        return {
+          body: {
+            ...body,
+            parts: lastMessage?.parts ?? [],
+          },
+        };
+      },
+      fetch: async (url, options) => {
+        const resp = await fetch(url, options);
+        const newRateLimit: AiAgentRateLimitEndpoint = {
+          limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
+          remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
+          reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
+        };
+        setRateLimit(newRateLimit);
+        return resp;
+      },
+    }),
+    messages: assistantInitialMessages,
   });
+
+  // Sync loaded messages into the chat hook when they change
+  // (useChat's `messages` prop is only read on mount; subsequent updates need setMessages)
+  useEffect(() => {
+    if (assistantInitialMessages.length > 0) {
+      chat.setMessages(assistantInitialMessages);
+    }
+  }, [assistantInitialMessages, chat.setMessages]);
 
   useEffect(() => {
     const lastMessage = chat.messages[chat.messages.length - 1];
@@ -110,15 +127,11 @@ export function useServiceAiAgentChat(threadId: string) {
     // Find the most recent editstate tool result in the last message.
     const editstateResult = lastMessage.parts
       .toReversed()
-      .find(
-        (p) =>
-          p.type === 'tool-invocation' &&
-          p.toolInvocation.toolName === 'editstate' &&
-          p.toolInvocation.state === 'result'
-      ) as ToolInvocationUIPart | undefined;
+      .filter(isToolUIPart)
+      .find((p) => getToolName(p) === 'editstate' && p.state === 'output-available');
 
     // Derive a stable ID for the invocation we found (if any).
-    const invocationId = editstateResult?.toolInvocation?.toolCallId ?? null;
+    const invocationId = editstateResult?.toolCallId ?? null;
 
     // If the messages array matches the initial load exactly, mark the
     // latest invocation as processed so we don't re-handle it, but don't
@@ -136,19 +149,18 @@ export function useServiceAiAgentChat(threadId: string) {
     // Mark as processed before doing work to avoid double-firing.
     lastProcessedInvocationIdRef.current = invocationId;
 
-    // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-    if (!editstateResult?.toolInvocation?.result) return;
+    if (!editstateResult?.output) return;
 
     try {
-      // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-      const result = JSON.parse(editstateResult.toolInvocation.result);
-      const newConfig = result.state.smc_simulation_config ?? null;
+      const result = editstateResult.output as Record<string, any>;
+      const detectedKey = findConfigKeyInState(result.state);
+      const newConfig = detectedKey ? result.state[detectedKey] : null;
       // Use lastAppliedConfigRef for incremental flash diffs. Falls back
       // to the live agentStateAtom for the very first editstate call.
+      const currentState = jotaiStore.get(agentStateAtom) as Record<string, unknown>;
+      const activeKey = findConfigKeyInState(currentState);
       const oldConfig =
-        lastAppliedConfigRef.current ??
-        (jotaiStore.get(agentStateAtom) as Record<string, unknown>)?.smc_simulation_config ??
-        null;
+        lastAppliedConfigRef.current ?? (activeKey ? currentState[activeKey] : null);
 
       // Snapshot the config before the first editstate call in this message
       // so the diff bar can compute accumulated diffs without walking history.
@@ -168,11 +180,11 @@ export function useServiceAiAgentChat(threadId: string) {
       // Only flash when the very last part is the editstate result itself
       const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
       const isLastPartEditState =
-        lastPart?.type === 'tool-invocation' &&
-        lastPart.toolInvocation.toolName === 'editstate' &&
-        lastPart.toolInvocation.state === 'result';
+        isToolUIPart(lastPart) &&
+        getToolName(lastPart) === 'editstate' &&
+        lastPart.state === 'output-available';
 
-      if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
+      if (isLastPartEditState && newConfig && editstateResult.input) {
         configUpdateCounterRef.current += 1;
         setLastConfigUpdate({
           oldConfig: oldConfig as Record<string, unknown> | null,
@@ -181,11 +193,7 @@ export function useServiceAiAgentChat(threadId: string) {
         });
       }
     } catch {
-      logError(
-        'Failed to parse tool invocation result as JSON:',
-        // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-        editstateResult.toolInvocation.result
-      );
+      logError('Failed to parse tool invocation result as JSON:', editstateResult.output);
     }
   }, [
     chat.messages,
@@ -201,16 +209,68 @@ export function useServiceAiAgentChat(threadId: string) {
     setIsChatReady(chat.status === 'ready');
   }, [chat.status, setIsChatReady]);
 
-  const append = useCallback(
-    (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
+  const [pendingUserMessage, setPendingUserMessage] = useState<{
+    text: string;
+    files: { name: string; type: string; previewUrl: string; uploaded: boolean }[];
+  } | null>(null);
+
+  const sendMessage = useCallback(
+    async (text: string, files?: File[]) => {
       AiAssistant.isEmptyThread.set(false);
-      chat.append(message, chatRequestOptions);
+
+      let fileUIParts: FileUIPart[] | undefined;
+      if (files && files.length > 0 && accessToken && threadId) {
+        // Show a pending message immediately while files upload
+        const pendingFiles = files.map((f) => ({
+          name: f.name,
+          type: f.type,
+          previewUrl: f.type.startsWith('image/') ? URL.createObjectURL(f) : '',
+          uploaded: false,
+        }));
+        setPendingUserMessage({ text, files: pendingFiles });
+
+        try {
+          // Upload files in parallel but update state as each completes
+          const uploadPromises = files.map(async (file, idx) => {
+            const parts = await uploadFilesAndCreateParts([file], accessToken, threadId);
+            setPendingUserMessage((prev) => {
+              if (!prev) return prev;
+              const updated = [...prev.files];
+              updated[idx] = { ...updated[idx], uploaded: true };
+              return { ...prev, files: updated };
+            });
+            return parts[0];
+          });
+          const results = await Promise.all(uploadPromises);
+          fileUIParts = results.filter(Boolean);
+
+          // Seed the presigned URL cache with blob preview URLs so that
+          // StorageImagePart renders instantly without a network round-trip.
+          // This prevents the image from disappearing between the pending
+          // message being removed and the real message rendering.
+          fileUIParts.forEach((part, idx) => {
+            const blobUrl = pendingFiles[idx]?.previewUrl;
+            if (blobUrl && part.url.startsWith('storage://')) {
+              presignedUrlCache[part.url] = blobUrl;
+            }
+          });
+        } catch {
+          // If upload fails, send without files
+        }
+        setPendingUserMessage(null);
+      }
+
+      chat.sendMessage({
+        text,
+        ...(fileUIParts && fileUIParts.length > 0 ? { files: fileUIParts } : {}),
+      });
+
       if (chat.messages.length === 0) {
         try {
           serviceAiAgentThreadSuggestTitle({
             accessToken: accessToken ?? 'NO-TOKEN',
             threadId,
-            title: message.content,
+            title: text,
           }).then(() => {
             queryClient.invalidateQueries({
               queryKey: keyBuilderAI.history(virtualLabId, projectId),
@@ -224,7 +284,6 @@ export function useServiceAiAgentChat(threadId: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chat, accessToken, threadId, queryClient, virtualLabId, projectId]
   );
-
   const stop = useCallback(async () => {
     chat.stop();
     queryClient.invalidateQueries({
@@ -251,7 +310,6 @@ export function useServiceAiAgentChat(threadId: string) {
         {
           id: `temp-id-${crypto.randomUUID()}`,
           role: 'assistant',
-          content: '',
           parts: [],
         },
       ]);
@@ -262,10 +320,10 @@ export function useServiceAiAgentChat(threadId: string) {
     AiAssistant.chat.sync({
       status: chat.status,
       error: chat.error,
-      append,
+      sendMessage,
       stop,
     });
-  }, [chat.status, chat.error, append, stop]);
+  }, [chat.status, chat.error, sendMessage, stop]);
 
   useEffect(() => {
     if (chat.status === 'ready') {
@@ -276,18 +334,20 @@ export function useServiceAiAgentChat(threadId: string) {
   return {
     messages: chat.messages,
     isLoadingMessages,
-    append,
+    sendMessage,
     status: chat.status,
     error: chat.error,
     stop,
+    pendingUserMessage,
   };
 }
 
-export const configStateAtom = atom<Config | null>(null);
+export const configStateAtom = atom<Config>({});
 export const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: string, config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
+  const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
   const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
   useEffect(() => {
@@ -303,12 +363,16 @@ export function useAgentState(key: string, config?: Config) {
     );
 
     return () => {
-      if (!defaultConfig) return;
-      setAIAgentState({
-        smc_simulation_config: defaultConfig,
-      });
+      setAIAgentState({});
     };
   }, [defaultConfig, config, key, setAIAgentState]);
+
+  // Clear stale flash state on unmount so the next page doesn't flash
+  useEffect(() => {
+    return () => {
+      setLastConfigUpdate(null);
+    };
+  }, [setLastConfigUpdate]);
 }
 
 export function useAIConfig() {
@@ -316,12 +380,32 @@ export function useAIConfig() {
   const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
-  const aiCircuitId = (aiConfig as any)?.initialize?.circuit?.id_str;
-  const agentCircuitId = (aiAgentState as any)?.smc_simulation_config?.initialize?.circuit?.id_str;
-  const guardPassed = aiCircuitId === agentCircuitId;
+  const defaultConfig = {
+    aiConfig: null,
+    setAiConfig,
+    isChatReady,
+  };
+
+  const activeKey = findConfigKeyInState(aiAgentState as Record<string, unknown>);
+
+  if (
+    !isPlainObject(aiConfig?.initialize) ||
+    !activeKey ||
+    !isPlainObject((aiAgentState as any)?.[activeKey]?.initialize)
+  )
+    return defaultConfig;
+
+  // Circuit identity guard: only apply when both configs have a circuit object.
+  // Non-circuit workflows (ion channel, skeletonization, etc.) skip this check.
+  const aiCircuit = aiConfig.initialize?.circuit;
+  const agentCircuit = (aiAgentState as any)?.[activeKey]?.initialize?.circuit;
+
+  if (isPlainObject(aiCircuit) && isPlainObject(agentCircuit)) {
+    if (aiCircuit.id_str !== agentCircuit.id_str) return defaultConfig;
+  }
 
   return {
-    aiConfig: guardPassed ? aiConfig : null,
+    aiConfig,
     setAiConfig,
     isChatReady,
   };

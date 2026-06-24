@@ -8,14 +8,14 @@ import { cn } from '@/utils/css-class';
 
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
-export default function PlanCard({
+export function PlanCard({
   plan,
-  dark,
+  isCurrentTier,
   className,
   hideContactButton,
 }: {
   plan: PlanV2;
-  dark?: boolean;
+  isCurrentTier?: boolean;
   className?: string;
   hideContactButton?: boolean;
 }) {
@@ -25,7 +25,7 @@ export default function PlanCard({
     <div
       className={cn(
         'relative w-full rounded-xl border p-6',
-        dark ? 'border-primary-7 bg-primary-9 text-white' : 'border-neutral-2 bg-white',
+        isCurrentTier ? 'border-primary-7 bg-bg-white text-primary-9' : 'border-neutral-2 bg-white',
         className
       )}
     >
@@ -33,10 +33,10 @@ export default function PlanCard({
         plan={plan}
         billingInterval={billingInterval}
         setBillingInterval={setBillingInterval}
-        dark={dark}
+        isCurrentTier={isCurrentTier}
         hideContactButton={hideContactButton}
       />
-      <PlanBody plan={plan} dark={dark} />
+      <PlanBody plan={plan} isCurrentTier={isCurrentTier} />
     </div>
   );
 }

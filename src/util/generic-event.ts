@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 export interface GenericEventInterface<T> {
   addListener(listener: (arg: T) => void): void;

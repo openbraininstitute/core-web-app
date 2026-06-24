@@ -1,18 +1,21 @@
 'use client';
 
+import { RiFileLine } from '@remixicon/react';
+import { getToolName, isFileUIPart, isToolUIPart } from 'ai';
 import React from 'react';
 
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
-import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots';
 import { CollapsibleMessage } from './collapsible-message';
+import { ExpandableImage } from './expandable-image';
+import { StorageImagePart } from './storage-image-part';
 import ToolsProgress from './tools-progress';
 import { useMessageDiffs } from './use-message-diffs';
 
-import type { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './message-item.module.css';
 
@@ -33,8 +36,15 @@ function RawMessageItem({
 }: MessageItemProps) {
   const debug = useDebug();
 
-  if ((value.role === 'user' || value.role === 'assistant') && value.parts.length === 0) {
+  if (value.role === 'user' && value.parts.length === 0) {
     return null;
+  }
+
+  if (value.role === 'assistant') {
+    const hasVisibleParts = value.parts.some(
+      (p) => (p.type === 'text' && 'text' in p && p.text !== '') || isToolUIPart(p)
+    );
+    if (!hasVisibleParts) return null;
   }
 
   return (
@@ -73,8 +83,13 @@ function MessageChild({
   );
   const validStorageIds = useStableArray(memoizedStorageIds);
 
-  const { hasEditStateCalls, handlePreviewRestore, handleConfirmRestore, handleCancelRestore } =
-    useMessageDiffs({ message: value });
+  const {
+    hasEditStateCalls,
+    canRestore,
+    handlePreviewRestore,
+    handleConfirmRestore,
+    handleCancelRestore,
+  } = useMessageDiffs({ message: value });
 
   switch (value.role) {
     case 'user':
@@ -82,6 +97,40 @@ function MessageChild({
         <div className={styles.user}>
           <div className={styles.userContent}>
             <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
+            {value.parts.filter(isFileUIPart).map((part, idx) => {
+              if (part.mediaType === 'application/pdf') {
+                return (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`file-${idx}`}
+                    className={styles.pdfAttachment}
+                  >
+                    <span className={styles.pdfIcon}>
+                      <RiFileLine size={28} />
+                    </span>
+                    <span className={styles.pdfName}>{part.filename ?? 'document.pdf'}</span>
+                  </div>
+                );
+              }
+              if (part.mediaType?.startsWith('image/')) {
+                return part.url.startsWith('storage://') ? (
+                  <StorageImagePart
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`file-${idx}`}
+                    url={part.url}
+                    filename={part.filename}
+                  />
+                ) : (
+                  <ExpandableImage
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`file-${idx}`}
+                    src={part.url}
+                    alt={part.filename ?? 'Attached image'}
+                  />
+                );
+              }
+              return null;
+            })}
           </div>
         </div>
       );
@@ -103,10 +152,9 @@ function MessageChild({
             </GithubFlavorMarkdown>
           );
         }
-        if (part.type === 'tool-invocation') {
-          const { toolCallId } = part.toolInvocation;
+        if (isToolUIPart(part)) {
           return (
-            <div key={`tool-${toolCallId}`}>
+            <div key={`tool-${part.toolCallId}`}>
               <ToolsProgress part={part} />
             </div>
           );
@@ -122,7 +170,7 @@ function MessageChild({
             onPreviewRestore={handlePreviewRestore}
             onConfirmRestore={handleConfirmRestore}
             onCancelRestore={handleCancelRestore}
-            hasEditStateCalls={hasEditStateCalls}
+            hasEditStateCalls={hasEditStateCalls && canRestore}
           >
             {children}
           </CollapsibleMessage>
@@ -152,19 +200,12 @@ function debugToConsole(value: UIMessage) {
   // eslint-disable-next-line no-console
   console.log(value);
   for (const part of value.parts) {
-    if (part.type !== 'tool-invocation') continue;
+    if (!isToolUIPart(part)) continue;
 
-    const toolInvocation = part.toolInvocation as ToolInvocation & { result: string };
     // eslint-disable-next-line no-console
-    console.debug(`%c${toolInvocation.toolName}`, 'font-weight: bolder; font-size: 110%');
-    const { result } = toolInvocation;
-    try {
-      // eslint-disable-next-line no-console
-      console.debug(JSON.parse(result));
-    } catch (_ex) {
-      // eslint-disable-next-line no-console
-      console.error('Not a valid JSON:', result);
-    }
+    console.debug(`%c${getToolName(part)}`, 'font-weight: bolder; font-size: 110%');
+    // eslint-disable-next-line no-console
+    console.debug(part.output);
   }
 }
 
@@ -172,17 +213,4 @@ function useDebug(): boolean {
   const [debug, setDebug] = React.useState(false);
   React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
   return debug;
-}
-
-function formatDate(d: Date | string): string {
-  try {
-    const formatter = new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    });
-    const date = isString(d) ? new Date(d) : d;
-    return formatter.format(date);
-  } catch {
-    return '';
-  }
 }

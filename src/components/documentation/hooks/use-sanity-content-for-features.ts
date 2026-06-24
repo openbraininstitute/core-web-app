@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import query from '@/components/documentation/query/features-item-hooks.groq';
 import { useSanity } from '@/services/sanity';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 export function useSanityContentForFeatureItems() {
   return useSanity(query, isContentForFeatureItems) ?? [];

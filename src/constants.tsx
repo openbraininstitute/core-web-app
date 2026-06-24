@@ -3,12 +3,27 @@ export const AUTO_INIT_WORKSPACE = 'automatic-init-workspace';
 export const AUTO_ONBOARDING_TOURS = 'automatic-app-onboarding-tours';
 export const LAST_REGISTERED_WORKFLOW = 'last-registered-workflow';
 
+/**
+ * prefix marking a query param as cache-key-only: it is included in the React Query
+ * key (e.g. to bust the cache when a prerequisite changes) but stripped before the
+ * HTTP request so the backend never receives it
+ */
+export const INTERNAL_QUERY_CACHE_PREFIX = 'INTERNAL_QUERY_CACHE__';
+
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 5;
 export const DEFAULT_PAGE_SIZE = 30;
 export const DEFAULT_PAGE_MEDIUM_SIZE = 15;
 export const DEFAULT_PAGE_SMALL_SIZE = 10;
 export const DEFAULT_PAGE_XSMALL_SIZE = 5;
 export const DEFAULT_PAGE_NUMBER = 1;
+
+/** Shared visual variant for detail views, mini detail views and related viewers. */
+export const ViewVariant = {
+  Light: 'light',
+  Default: 'default',
+} as const;
+
+export type TViewVariant = (typeof ViewVariant)[keyof typeof ViewVariant];
 
 export const WorkspaceScope = {
   Combined: 'combined', // this is for both public and project

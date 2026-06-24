@@ -5,14 +5,17 @@ import { get } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { type ComponentProps, type ReactNode, useEffect } from 'react';
+import { type ComponentProps, type ReactNode, useEffect, useRef } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import ApiError from '@/api/error';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
-import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import {
+  speciesSelectionModeAtom,
+  workspaceHierarchySpeciesAtom,
+} from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   useQueryExtendedEntityType,
@@ -108,11 +111,46 @@ export function BrowseCircuit({
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
 
-  const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
+
+  // track stable species identity (`all` vs hierarchy id).
+  // used to detect user-driven species/mode
+  // changes without resetting listing state on the initial mount (after snapshot restore)
+  const prevSpeciesKeyRef = useRef<string | undefined>(undefined);
+
+  const {
+    sync: runStorageSync,
+    restore: runStorageRestore,
+    reset: resetDataListState,
+  } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
     section,
   });
+
+  // when species or "all species" mode changes, reset table filters/search/sort/page for this listing
+  // skips while `workspaceSpecies` is briefly null during a focused-mode hierarchy switch
+  useEffect(() => {
+    const speciesKey =
+      speciesSelectionMode === SpeciesSelectionMode.All
+        ? SpeciesSelectionMode.All
+        : workspaceSpecies?.hierarchId
+          ? workspaceSpecies.hierarchId
+          : undefined;
+
+    if (speciesKey === undefined) return;
+
+    if (prevSpeciesKeyRef.current === undefined) {
+      prevSpeciesKeyRef.current = speciesKey;
+      return;
+    }
+    if (prevSpeciesKeyRef.current === speciesKey) return;
+
+    prevSpeciesKeyRef.current = speciesKey;
+    resetDataListState();
+  }, [speciesSelectionMode, workspaceSpecies?.hierarchId, resetDataListState]);
 
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
@@ -170,8 +208,6 @@ export function BrowseCircuit({
     ...extraQueryParams,
     ...scopeFilter,
   };
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
-  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
   const shouldUseBrainRegion =
     !isAllSpeciesMode &&
     requireBrainRegion &&

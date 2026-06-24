@@ -43,6 +43,7 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
 
     // Store the download information with creation timestamp
     const ticketId = ticketStore.createTicket({
+      kind: 'entity-batch',
       entityType,
       virtualLabId: reqData.virtualLabId,
       projectId: reqData.projectId,

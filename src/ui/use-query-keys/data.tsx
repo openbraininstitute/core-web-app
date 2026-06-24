@@ -21,10 +21,11 @@ export const keyBuilder = {
     id,
     type,
     ...props
-  }: { id: string; context: WorkspaceContext; type?: TEntityTypeDict } & Record<string, any>) => [
-    'entity',
-    { context, id, type, ...props },
-  ],
+  }: {
+    id: string;
+    context: WorkspaceContext;
+    type?: TEntityTypeDict | TExtendedEntitiesTypeDict;
+  } & Record<string, any>) => ['entity', { context, id, type, ...props }],
   entities: ({
     context,
     filters,
@@ -332,6 +333,11 @@ export const keyBuilder = {
     id: string;
   } & Record<string, any>) => [`${prefix}-validation-results`, { context, id, ...props }],
   obiOneJsonSchema: (schemaName: string) => [`${prefix}-${schemaName}`, { schemaName }],
+  circuitNodes: (id: string) => [`${prefix}-${id}-circuit-nodes`],
+  circuitMorphology: (circuitId: string, path: string) => [
+    `${prefix}-${circuitId}-morphology`,
+    { path },
+  ],
   taskConfigs: ({
     context,
     filters,

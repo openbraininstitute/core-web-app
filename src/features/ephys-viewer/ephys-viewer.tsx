@@ -1,11 +1,15 @@
-import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
-import { Empty, Radio, type RadioChangeEvent, Spin } from 'antd';
+import { Empty, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
+import {
+  TraceViewMode,
+  TraceViewModeToggle,
+} from '@/features/ephys-viewer/components/trace-view-mode-toggle';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
@@ -14,35 +18,32 @@ import type { WorkspaceContext } from '@/types/common';
 
 import './styles/ephys-plugin-styles.css';
 
-enum VIEW {
-  OVERVIEW = 'overview',
-  DETAILED = 'detailed',
-}
-
 export default function EphysViewer({
   entity,
   assetId,
   ctx,
+  defaultToInteractiveDetails = true,
+  variant = ViewVariant.Light,
 }: {
   entity: IElectricalCellRecording | ISimulationResult;
   assetId?: string;
   ctx?: WorkspaceContext;
+  defaultToInteractiveDetails?: boolean;
+  variant?: TViewVariant;
 }) {
   const [trace, error] = useTrace({ entity, assetId, ctx });
 
-  const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
+  const [view, setView] = useState<TraceViewMode>(
+    defaultToInteractiveDetails ? TraceViewMode.DETAILED : TraceViewMode.OVERVIEW
+  );
   const [repetition, setRepetition] = useState<string>();
   const [cellId, setCellId] = useState<string>('All');
   const [protocol, setProtocol] = useState<string>('All');
 
-  const handleViewChange = (e: RadioChangeEvent) => {
-    setView(e.target.value as VIEW);
-  };
-
   const showRepetitionDetails = (protocolClosure: string, repetitionClosure: string) => () => {
     setProtocol(protocolClosure);
     setRepetition(repetitionClosure);
-    setView(VIEW.DETAILED);
+    setView(TraceViewMode.DETAILED);
   };
 
   if (error) {
@@ -57,17 +58,13 @@ export default function EphysViewer({
 
   return (
     <div className="@container flex flex-col gap-6">
-      <Radio.Group onChange={handleViewChange} value={view}>
-        <Radio.Button value={VIEW.OVERVIEW}>
-          <FileImageOutlined /> Overview
-        </Radio.Button>
+      <TraceViewModeToggle
+        value={view}
+        onChange={(e) => setView(e.target.value as TraceViewMode)}
+        variant={variant}
+      />
 
-        <Radio.Button value={VIEW.DETAILED}>
-          <LineChartOutlined /> Interactive Details
-        </Radio.Button>
-      </Radio.Group>
-
-      {view === VIEW.OVERVIEW && (
+      {view === TraceViewMode.OVERVIEW && (
         <ErrorBoundary
           FallbackComponent={SimpleErrorComponent}
           resetKeys={[trace, cellId, protocol]}
@@ -79,11 +76,12 @@ export default function EphysViewer({
             protocol={protocol}
             onRepetitionClick={showRepetitionDetails}
             onProtocolChange={setProtocol}
+            variant={variant}
           />
         </ErrorBoundary>
       )}
 
-      {view === VIEW.DETAILED && (
+      {view === TraceViewMode.DETAILED && (
         <ErrorBoundary
           FallbackComponent={SimpleErrorComponent}
           resetKeys={[trace, cellId, protocol, repetition]}
@@ -92,6 +90,7 @@ export default function EphysViewer({
             trace={trace}
             defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
             defaultRepetition={repetition}
+            variant={variant}
           />
         </ErrorBoundary>
       )}

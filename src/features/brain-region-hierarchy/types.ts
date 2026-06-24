@@ -10,6 +10,7 @@ export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
   'Hybrid human-mouse': 'Hybrid Human-Mouse',
   'Loligo pealeii': 'Longfin Squid',
   'Xenopus laevis': 'African Clawed Frog',
+  'Drosophila melanogaster': 'Fruit Fly',
 } as const;
 
 export const SPECIES_SUBTITLES: Record<string, string> = {
@@ -22,6 +23,7 @@ export const SPECIES_SUBTITLES: Record<string, string> = {
   'Hybrid human-mouse': 'Hybrid human-mouse',
   'Loligo pealeii': 'Loligo pealeii',
   'Xenopus laevis': 'Xenopus laevis',
+  'Drosophila melanogaster': 'Drosophila melanogaster',
 } as const;
 
 /**
@@ -37,6 +39,7 @@ export const SPECIES_TAXONOMY_IDS = {
   HYBRID_HUMAN_MOUSE: 'NA',
   LOLIGO_PEALEII: 'NCBITaxon:6619',
   XENOPUS_LAEVIS: 'NCBITaxon:8355',
+  DROSOPHILA_MELANOGASTER: 'NCBITaxon:7227',
 } as const;
 
 /**

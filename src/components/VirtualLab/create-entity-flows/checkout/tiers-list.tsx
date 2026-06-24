@@ -1,34 +1,33 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { RiRestartLine } from '@remixicon/react';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { noop } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { tryCatch } from '@/api/utils';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
-import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
-import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
-import {
-  flowAtom,
-  getAllTiers,
-  type TExtendedTier,
-} from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import { getSelfVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { ContactUs } from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
+import { DowngradeFree } from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
+import { flowAtom, getAllTiers, type TExtendedTier } from '@/features/payments/subscription';
 import { getPricingContent } from '@/services/sanity';
 import { Button } from '@/ui/molecules/button';
-import PlanCard from '@/ui/segments/plans/card';
+import { ErrorMinimal } from '@/ui/molecules/feedback-card';
+import { PlanCard } from '@/ui/segments/plans/card';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
+type TCurrentTier = 'FREE' | 'PRO' | 'PREMIUM';
 type Props = {
-  currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
+  currentTier?: TCurrentTier;
   subscriptionData: UserActiveSubscriptionResponse;
+  onExpandedChange: ((expanded: boolean) => void) | undefined;
 };
 
 const TiersStep = {
@@ -47,7 +46,7 @@ function TiersCards({
   onSelectFree,
   subscriptionData,
 }: {
-  currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
+  currentTier?: TCurrentTier;
   tiers: TExtendedTier[];
   plans: PlanV2[];
   onSelectPremiumTier: () => void;
@@ -57,13 +56,13 @@ function TiersCards({
   const [, updateFlowState] = useAtom(flowAtom);
 
   const { data: virtualLabData, isPending } = useQuery({
-    queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
-    queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
+    queryKey: keyBuilder.myLab(),
+    queryFn: async () => await getSelfVirtualLab(),
   });
 
   const onTierClick = (t: TExtendedTier) => () => {
     if (t.title === 'Pro' && t.app_id) {
-      if (!isPending && !virtualLabData?.data?.virtual_lab.email_verified) {
+      if (!isPending && !virtualLabData?.data?.email_verified) {
         updateFlowState((prev) => ({ ...prev, tier: t, step: 'email-verification' }));
       } else {
         updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
@@ -72,7 +71,7 @@ function TiersCards({
   };
 
   const fallbackOrder = ['Free', 'Pro', 'Enterprise', 'Education'];
-  const sortedPlans = [...plans].sort((a, b) => {
+  const sortedPlans = plans.toSorted((a, b) => {
     if (a.planOrder != null && b.planOrder != null) return a.planOrder - b.planOrder;
     if (a.planOrder != null) return -1;
     if (b.planOrder != null) return 1;
@@ -97,8 +96,10 @@ function TiersCards({
       plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'enterprise';
     const isEducation = plan.name.toLowerCase() === 'education';
 
-    if (isCurrentTier) return { label: 'Current plan', disabled: true, onClick: noop };
-    if (isFree && !currentTier) return { label: 'Current plan', disabled: true, onClick: noop };
+    if (isCurrentTier)
+      return { label: 'Current plan', disabled: true, isCurrentTier, onClick: noop };
+    if (isFree && !currentTier)
+      return { label: 'Current plan', disabled: true, isCurrentTier, onClick: noop };
 
     if (
       subscriptionData?.subscription.canceled_at ||
@@ -108,50 +109,73 @@ function TiersCards({
     }
     if (isCurrentTierPremium && isPro) return null;
 
-    if (isFree) return { label: 'Downgrade to Free', disabled: false, onClick: onSelectFree };
+    if (isFree)
+      return {
+        label: 'Downgrade to Free',
+        disabled: false,
+        isCurrentTier: false,
+        onClick: onSelectFree,
+      };
     if (isPro && tier)
-      return { label: 'Upgrade to Pro', disabled: false, onClick: onTierClick(tier) };
+      return {
+        label: 'Upgrade to Pro',
+        disabled: false,
+        isCurrentTier: false,
+        onClick: onTierClick(tier),
+      };
     if (isPremium || isEducation)
-      return { label: 'Contact Us', disabled: false, onClick: onSelectPremiumTier };
+      return {
+        label: 'Contact Us',
+        disabled: false,
+        isCurrentTier: false,
+        onClick: onSelectPremiumTier,
+      };
 
     return null;
   };
 
   return (
-    <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid items-stretch gap-4 pb-3 grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 mr-1">
       {sortedPlans.map((plan) => {
         const cta = getCta(plan);
         const isCurrentTier =
           currentTier?.toLowerCase() === plan.name.toLowerCase() ||
           (plan.name.toLowerCase() === 'free' && !currentTier);
-
+        const buttonVariant = cta?.isCurrentTier ? 'shadow' : cta?.disabled ? 'ghost' : 'outline';
         return (
-          <div key={plan.name} className="flex flex-col overflow-hidden rounded-xl gap-y-4">
+          <div
+            key={plan.name}
+            id={`plan-card-${plan.name}`}
+            className="flex h-full min-h-0 flex-col gap-y-4 self-stretch rounded-xl"
+          >
             <PlanCard
               plan={plan}
-              dark
               hideContactButton
-              className={isCurrentTier ? 'bg-primary-7 border-primary-5' : undefined}
+              isCurrentTier={isCurrentTier}
+              className={cn('min-h-0 flex-1', {
+                'bg-primary-7 border-primary-5 shadow-md': isCurrentTier,
+              })}
             />
-            {cta && (
-              <div className="px-6 pb-6">
+            <div className="mt-auto flex min-h-18 shrink-0 items-end pb-6">
+              {cta && (
                 <Button
                   rounded
                   type="button"
-                  variant={cta.disabled ? 'ghost' : 'outline'}
+                  variant={buttonVariant}
                   size="lg"
                   className={cn(
-                    'w-full border-primary-5 text-white',
-                    cta.disabled && 'pointer-events-none',
-                    !cta.disabled && 'bg-transparent hover:bg-primary-8'
+                    'w-full border-primary-9 text-primary-9 font-semibold',
+                    { 'pointer-events-none': cta.disabled },
+                    { 'bg-transparent hover:bg-primary-8 hover:text-white': !cta.disabled },
+                    { 'font-bold text-white': isCurrentTier }
                   )}
                   disabled={cta.disabled}
                   onClick={cta.onClick}
                 >
                   {cta.label}
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         );
       })}
@@ -159,84 +183,88 @@ function TiersCards({
   );
 }
 
-export default function TiersList({ currentTier, subscriptionData }: Props) {
-  const [loading, setLoading] = useState(true);
-  const [tiers, setTiers] = useState<{ data: Array<TExtendedTier> } | { error: unknown }>({
-    data: [],
-  });
-  const [plans, setPlans] = useState<PlanV2[]>([]);
+export function TiersList({ currentTier, subscriptionData, onExpandedChange }: Props) {
   const [currentStep, setCurrentStep] = useState<TTiersStep>(TiersStep.Listing);
 
-  const onSelectPremiumTier = () => setCurrentStep(TiersStep.ContactUs);
-  const onDowngradeFreeClick = () => setCurrentStep(TiersStep.Downgrade);
-  const onBackToListing = () => setCurrentStep(TiersStep.Listing);
+  const onSelectPremiumTier = () => {
+    onExpandedChange?.(false);
+    setCurrentStep(TiersStep.ContactUs);
+  };
+  const onDowngradeFreeClick = () => {
+    onExpandedChange?.(false);
+    setCurrentStep(TiersStep.Downgrade);
+  };
+  const onBackToListing = () => {
+    onExpandedChange?.(true);
+    setCurrentStep(TiersStep.Listing);
+  };
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const [tiersResult, plansData] = await Promise.all([
-        tryCatch(getAllTiers(), noop),
-        getPricingContent().catch(() => []),
-      ]);
+  const { plans, tiers, loading, error, refresh } = useQueries({
+    queries: [
+      {
+        queryKey: ['tiers-list'],
+        queryFn: getAllTiers,
+      },
+      {
+        queryKey: ['plans-list'],
+        queryFn: getPricingContent,
+      },
+    ],
+    combine(result) {
+      const [tiersResult, plansResult] = result;
+      return {
+        loading: tiersResult.isLoading || plansResult.isLoading,
+        error: tiersResult.error || plansResult.error,
+        tiers: tiersResult.data,
+        plans: plansResult.data,
+        refresh: () => {
+          tiersResult.refetch();
+          plansResult.refetch();
+        },
+      };
+    },
+  });
 
-      if (tiersResult.error) {
-        setTiers({ error: tiersResult.error });
-      } else {
-        setTiers({ data: tiersResult.data });
-      }
-      setPlans(plansData ?? []);
-      setLoading(false);
-    })();
-  }, []);
+  if (loading) {
+    return <TiersListSkeleton />;
+  }
 
-  if (loading) return <TiersListSkeleton />;
-  if ('error' in tiers)
+  if (error) {
     return (
-      <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h2 className="mb-2 text-2xl font-bold text-red-200">
-              Unable to load subscription tiers
-            </h2>
-            <p className="max-w-xl text-red-200/80">
-              We&lsquo;re having trouble loading the subscription tiers.
-              <br />
-              Please try refreshing the page or contact support if the issue persists.
-            </p>
-          </div>
-          <div className="mb-2 flex items-center gap-2 self-baseline">
-            <Button
-              rounded
-              type="button"
-              variant="ghost"
-              size="lg"
-              className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
-              onClick={() => window.location.reload()}
-            >
-              Refresh Page
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ErrorMinimal
+        title="Unable to load subscription tiers"
+        description="We&lsquo;re having trouble loading the subscription tiers. Please try refreshing the page or contact support if the issue persists."
+        primaryAction={
+          <GhostRoundedIconButton
+            label="Refresh"
+            icon={<RiRestartLine />}
+            onClick={() => refresh()}
+          />
+        }
+      />
     );
+  }
 
   return (
-    <div id="tiers-list-container" className="mx-auto flex h-full max-w-7xl flex-col">
+    <div
+      id="tiers-list-container"
+      className="mx-auto flex h-full max-w-7xl flex-col overflow-y-auto secondary-scrollbar"
+    >
       {match({ currentStep })
         .with({ currentStep: TiersStep.ContactUs }, () => (
-          <div className="h-full grow px-6 py-3">
+          <div className="h-full grow">
             <ContactUs onBack={onBackToListing} />
           </div>
         ))
         .with({ currentStep: TiersStep.Downgrade }, () => (
-          <div className="h-full grow px-6 py-3">
+          <div className="h-full grow">
             <DowngradeFree onBack={onBackToListing} />
           </div>
         ))
         .otherwise(() => (
           <TiersCards
-            tiers={'data' in tiers ? tiers.data : []}
-            plans={plans}
+            tiers={tiers ?? []}
+            plans={plans ?? []}
             currentTier={currentTier}
             onSelectPremiumTier={onSelectPremiumTier}
             onSelectFree={onDowngradeFreeClick}

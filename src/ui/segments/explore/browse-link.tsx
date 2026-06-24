@@ -8,6 +8,10 @@ import Link from 'next/link';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { config } from '@/config';
@@ -28,7 +32,6 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { ReactNode } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
@@ -161,18 +164,21 @@ function buildQuery({
   brainRegionId,
   scope,
   extendedType,
+  applyBrainRegionFilter,
 }: WorkspaceContext & {
   hierarchyId: string;
   brainRegionId: string;
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
+  applyBrainRegionFilter: boolean;
 }) {
-  const brainRegionQuery = brainRegionId
-    ? {
-        within_brain_region_brain_region_id: brainRegionId,
-        within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
-      }
-    : {};
+  const brainRegionQuery =
+    applyBrainRegionFilter && brainRegionId
+      ? {
+          within_brain_region_brain_region_id: brainRegionId,
+          within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+        }
+      : {};
   const query = {
     withFacets: false,
     context: {
@@ -221,29 +227,29 @@ export function BrowseLink({
   defaultBrainRegionId,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
-  const { type } = useParams<{ type: TExtendedEntitiesTypeDict }>();
+  const pathname = usePathname();
+  const { type } = useParams<{ type?: string }>();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
 
-  // determine if this entity type is the one currently displayed in the data table
-  const activeEntityType = snakeCase(type);
+  const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType;
 
-  // read the filtered count from the table's cached query
   const {
     count: tableCount,
     isLoading: tableCountLoading,
     isError: isTableCountError,
-    hasCachedData,
   } = useTableQueryCount({
     extendedType,
     scope,
     workspace: { virtualLabId, projectId },
     isActiveEntity,
   });
+
+  const scopesListingByBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
 
   // fallback count query: used when this entity type is NOT the active table entity
   const fallbackQuery = buildQuery({
@@ -253,6 +259,7 @@ export function BrowseLink({
     brainRegionId: currentBrainRegionId ?? '',
     scope,
     extendedType,
+    applyBrainRegionFilter: scopesListingByBrainRegion,
   });
 
   // root count query: always fetch results (unfiltered total)
@@ -263,7 +270,13 @@ export function BrowseLink({
     brainRegionId: defaultBrainRegionId ?? '',
     scope,
     extendedType,
+    applyBrainRegionFilter: scopesListingByBrainRegion,
   });
+
+  const brainRegionDependentFetch =
+    !scopesListingByBrainRegion || isAllMode || !!currentBrainRegionId;
+  const brainRegionDependentRootFetch =
+    !scopesListingByBrainRegion || isAllMode || !!defaultBrainRegionId;
 
   const {
     isLoading: loadingFallback,
@@ -272,8 +285,7 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: fallbackQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
-    // fetch for inactive entities and as bootstrap for active entities without cached table count yet
-    enabled: enabled && (isAllMode || !!currentBrainRegionId),
+    enabled: enabled && brainRegionDependentFetch && (!isActiveEntity || tableCount == null),
     staleTime: Infinity,
   });
 
@@ -284,15 +296,15 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: rootQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: rootQuery.query, entity }),
-    enabled: enabled && (isAllMode || !!defaultBrainRegionId),
+    enabled: enabled && brainRegionDependentRootFetch,
     staleTime: Infinity,
   });
 
-  // resolve current count: prioritize table query when active, fallback otherwise
-  const count = isActiveEntity && hasCachedData ? tableCount : fallbackData;
-  const loadingCurrent = isActiveEntity && hasCachedData ? tableCountLoading : loadingFallback;
-  const isCurrentError = isActiveEntity && hasCachedData ? isTableCountError : isFallbackError;
-  const isLoading = loadingCurrent && loadingRoot;
+  const resolvedCount = isActiveEntity ? (tableCount ?? fallbackData) : fallbackData;
+  const loadingCurrent = isActiveEntity ? tableCountLoading && tableCount == null : loadingFallback;
+  const count = resolvedCount;
+  const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
+  const isLoading = loadingCurrent && loadingRoot && resolvedCount == null;
 
   const countRenderer = match({
     isCurrentError,

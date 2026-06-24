@@ -1,17 +1,18 @@
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks/use-workspace-hierarchy';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+interface IBrainRegionSelectorProps {
+  value?: string;
+  onChange?: (value: string) => void;
+}
 
-export function BrainRegionSelector() {
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
-
+export function BrainRegionSelector({ value, onChange }: IBrainRegionSelectorProps) {
   return (
     <BrainRegionDropdownWithFormItem
       clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
       showIcon={false}
       charsPerLine={200}
-      defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
+      value={value}
+      onChange={onChange}
     />
   );
 }

@@ -61,7 +61,7 @@ export function DebugPanel({ className, morphology, synapses }: DebugPanelProps)
 function useDebugMode(): boolean {
   const [debugMode, setDebugMode] = React.useState(false);
   React.useEffect(() => {
-    const item = globalThis.localStorage.getItem('@bbp/morphoviewer:debug');
+    const item = globalThis.localStorage.getItem('@openbraininstitute/morphoviewer:debug');
     setDebugMode(!!item && item.length > 0);
   }, []);
   return debugMode;

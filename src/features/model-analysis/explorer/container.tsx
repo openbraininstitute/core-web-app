@@ -4,15 +4,27 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { useParams } from 'next/navigation';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { useAnalysis } from '@/features/model-analysis/explorer/use-analysis';
 import { useInputResistance } from '@/features/model-analysis/explorer/use-input-resistance';
 import { ViewerContainer } from '@/features/model-analysis/viewer/container/container';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  detailViewHeadingClass,
+  detailViewValueClass,
+} from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 
-export default function Analysis({ entity }: { entity: TRetrieveEntityOutput }) {
+export default function Analysis({
+  entity,
+  variant = ViewVariant.Light,
+}: {
+  entity: TRetrieveEntityOutput;
+  variant?: TViewVariant;
+}) {
   const workspace = useWorkspace();
   const { id } = useParams<{ id: string }>();
   const { data, error, isLoading } = useAnalysis({ workspace, id });
@@ -23,7 +35,7 @@ export default function Analysis({ entity }: { entity: TRetrieveEntityOutput }) 
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
-        <h2 className="text-primary-9 font-light">Loading analysis...</h2>
+        <h2 className={cn('font-light', detailViewValueClass(variant))}>Loading analysis...</h2>
       </div>
     );
   }
@@ -39,9 +51,19 @@ export default function Analysis({ entity }: { entity: TRetrieveEntityOutput }) 
   if (data?.data.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4">
-        <div className="text-primary-9 flex flex-col items-center justify-center text-2xl font-bold">
-          <h2>No analysis available</h2>
-          <p className="mt-4 max-w-2xl text-center text-sm font-light text-gray-500">
+        <div
+          className={cn(
+            'flex flex-col items-center justify-center text-2xl font-bold',
+            detailViewValueClass(variant)
+          )}
+        >
+          <h2 className={detailViewHeadingClass(variant, '2xl')}>No analysis available</h2>
+          <p
+            className={cn(
+              'mt-4 max-w-2xl text-center text-sm font-light',
+              variant === ViewVariant.Default ? 'text-primary-3' : 'text-gray-500'
+            )}
+          >
             It looks like you haven&apos;t run any analysis yet. To view your analysis here, please
             start a new analysis. Once completed, the results will appear on this page for further
             review and analysis.
@@ -51,5 +73,12 @@ export default function Analysis({ entity }: { entity: TRetrieveEntityOutput }) 
     );
   }
 
-  return <ViewerContainer entity={entity} rin={rin} validationResults={data?.data ?? []} />;
+  return (
+    <ViewerContainer
+      entity={entity}
+      rin={rin}
+      validationResults={data?.data ?? []}
+      variant={variant}
+    />
+  );
 }

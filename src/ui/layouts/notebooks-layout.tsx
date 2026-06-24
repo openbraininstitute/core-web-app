@@ -115,7 +115,7 @@ export function NotebooksLayout({ children, active }: Props) {
 
   const { data: virtualLabData, refetch } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
-    queryFn: () => getVirtualLab(virtualLabId),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: Boolean(virtualLabId),
   });
 
@@ -161,16 +161,12 @@ export function NotebooksLayout({ children, active }: Props) {
 
   async function handleRunNotebook() {
     setLoading(true);
-    if (virtualLabData == null || virtualLabData.data == null) {
+    if (virtualLabData == null || virtualLabData == null) {
       setLoading(false);
       throw new Error(`Could not fetch virtual lab data`);
     }
     try {
-      const retval = await startEmptyNotebook(
-        virtualLabId,
-        projectId,
-        virtualLabData.data.virtual_lab.compute_cell
-      );
+      const retval = await startEmptyNotebook(virtualLabId, projectId, virtualLabData.compute_cell);
       notification.success({
         message: `Notebook starting`,
         key: 'notebook-started-successfully',

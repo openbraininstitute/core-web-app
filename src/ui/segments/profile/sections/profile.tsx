@@ -2,7 +2,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { ProfileError } from '@/ui/segments/profile/sections/profile-form/elements';
+import { ErrorMinimal } from '@/ui/molecules/feedback-card';
 import { Profile } from '@/ui/segments/profile/sections/profile-form/form';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 
@@ -19,7 +19,12 @@ export function UserProfile() {
   }
 
   if (isError) {
-    return <ProfileError />;
+    return (
+      <ErrorMinimal
+        title="Profile error"
+        description="We were unable to fetch your profile information from our servers. Please refresh the page or try again later. if the issue persists, please contact support at support@openbraininstitute.org."
+      />
+    );
   }
 
   return <Profile data={data?.profile} />;

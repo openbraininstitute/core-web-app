@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -93,6 +93,11 @@
             "groups": [
               {
                 "type": false,
+                "source": [":NODE:"]
+              },
+              ":BLANK_LINE:",
+              {
+                "type": false,
                 "source": [":PACKAGE:"]
               },
               ":BLANK_LINE:",
@@ -120,6 +125,10 @@
                 ]
               },
               ":BLANK_LINE:",
+              {
+                "type": true,
+                "source": [":NODE:"]
+              },
               {
                 "type": true,
                 "source": [":PACKAGE:"]

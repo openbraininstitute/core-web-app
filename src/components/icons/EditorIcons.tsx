@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { SVGProps } from 'react';
+import type { SVGProps } from 'react';
 
 export function Undo(props: SVGProps<SVGSVGElement>) {
   return (
@@ -517,6 +517,7 @@ export function PendingInvite({
       fill="none"
       {...props}
     >
+      <title>Pending invitation</title>
       <rect width={31} height={31} x={0.5} y={0.5} stroke="#096DD9" rx={15.5} />
       <path
         fill={envelop ?? '#fff'}

@@ -1,16 +1,12 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { match } from 'ts-pattern';
 
-import { usePrevious } from '@/hooks/hooks';
-import { useDisableWorkspaceModalFullHeight } from '@/ui/hooks/use-disable-workspace-modal-full-height';
-import { useResetQueryParams } from '@/ui/hooks/use-reset-query-params';
-import { Modal } from '@/ui/molecules/modal';
-import { AccountSettings } from '@/ui/segments/profile';
-import { ProjectCreation } from '@/ui/segments/project/create';
-import { ProjectPreview } from '@/ui/segments/project/preview';
-import { VirtualLabConfiguration } from '@/ui/segments/virtual-lab-settings';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  WorkspaceManagerKindDict,
+  WorkspaceManagerSectionDict,
+} from '@/ui/segments/workspaces/space-manager/constants';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
   type TTriggerWorkspaceConfigurationClickEvent,
@@ -19,89 +15,156 @@ import {
   type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
 
+import { WorkspaceManagerModal } from './modal';
+
+type TProjectPreviewPayload = {
+  projectId?: string | null;
+  virtualLabId?: string | null;
+  data?: {
+    id?: string | null;
+    virtual_lab_id?: string | null;
+  } | null;
+};
+
+type TVirtualLabPayload = {
+  virtualLabId?: string | null;
+  data?: {
+    id?: string | null;
+  } | null;
+};
+
+const ProfileSectionDict = {
+  Invoices: 'invoices',
+  Profile: 'profile',
+  Subscription: 'subscription',
+} as const;
+type TProfileSection = (typeof ProfileSectionDict)[keyof typeof ProfileSectionDict];
+
+type TProfilePayload = {
+  section?: TProfileSection;
+};
+
+const NewProjectPayloadDict = {
+  FixedVirtualLab: 'fixed-virtual-lab',
+  SelectVirtualLab: 'select-virtual-lab',
+} as const;
+
+type TNewProjectPayload = (typeof NewProjectPayloadDict)[keyof typeof NewProjectPayloadDict];
+
+type NewProjectPayload = {
+  mode?: TNewProjectPayload;
+  virtualLabId?: string | null;
+};
+
 export function SpaceManagerContainer() {
-  const resetQueryParams = useResetQueryParams();
+  const { virtualLabId, projectId } = useWorkspace();
   const [contextConfig, updateContextConfig] = useState<{
     open: boolean;
     type: WorkspaceActionType;
-    payload: any;
+    payload: unknown;
   }>({
     open: false,
     type: null,
     payload: null,
   });
 
-  const previousContext = usePrevious(contextConfig);
-
   const onClose = () => {
-    resetQueryParams();
     updateContextConfig({ open: false, type: null, payload: null });
     makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
   };
 
-  useDisableWorkspaceModalFullHeight({
-    modalId: 'modal-dialog',
-    condition:
-      contextConfig.type === WorkspaceActions.NewProject ||
-      contextConfig.type === WorkspaceActions.ProjectPreview,
-    className:
-      contextConfig.type === WorkspaceActions.NewProject ||
-      contextConfig.type === WorkspaceActions.ProjectPreview
-        ? ['h-auto']
-        : ['h-max'],
-    classNameToRemove:
-      contextConfig.type === WorkspaceActions.NewProject ||
-      contextConfig.type === WorkspaceActions.ProjectPreview
-        ? ['h-full']
-        : [],
-  });
-
   useWorkspaceConfigurationClickEvent(
-    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<any>>) => {
+    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
       const incomingType = data.detail.type;
       const shouldOpen = data.detail.on;
       updateContextConfig({ open: shouldOpen, type: incomingType, payload: data.detail.data });
     }, [])
   );
 
-  const content = match({ type: contextConfig.type })
-    .with({ type: WorkspaceActions.NewProject }, () => <ProjectCreation onClose={onClose} />)
-    .with({ type: WorkspaceActions.ProfileSettings }, () => (
-      <AccountSettings onClose={onClose} data={contextConfig.payload} />
-    ))
-    .with({ type: WorkspaceActions.VirtualLabConfiguration }, () => (
-      <VirtualLabConfiguration onClose={onClose} payload={contextConfig.payload} />
-    ))
-    .with({ type: WorkspaceActions.ProjectPreview }, () => (
-      <ProjectPreview onClose={onClose} payload={contextConfig.payload} />
-    ))
-    .otherwise(() => null);
+  if (!virtualLabId || !projectId || !contextConfig.type) return null;
 
-  return (
-    <Modal
-      id="workspace-manager-modal"
-      maskClosable
-      open={contextConfig.open}
-      size="lg"
-      onClose={onClose}
-      width="calc(100vw - 25.1rem)" // this the width of the space-switcher in the left
-      className="bg-primary-9 top-3 right-3 h-full min-h-[400px] translate-0 transform-none! rounded-2xl"
-      animation="fade"
-      maxHeight="calc(100vh - 5.5rem + 58px)"
-      bodyClassName="flex flex-col h-full max-h-[calc(100vh-1rem)] min-h-0 overflow-hidden p-0"
-      position="right"
-      afterOpen={() => {
-        if (previousContext?.type !== contextConfig.type) {
-          resetQueryParams();
-        }
-      }}
-    >
-      <div
-        id="workspace-manager-modal-content"
-        className="h-full min-h-0 flex-1 overflow-hidden px-6 py-4 transition-opacity duration-200 ease-in-out"
-      >
-        {content}
-      </div>
-    </Modal>
-  );
+  const payload = contextConfig.payload;
+
+  if (contextConfig.type === WorkspaceActions.NewProject) {
+    const newProjectPayload = payload as NewProjectPayload | null;
+    const targetVirtualLabId =
+      newProjectPayload?.mode === NewProjectPayloadDict.FixedVirtualLab
+        ? (newProjectPayload.virtualLabId ?? virtualLabId)
+        : undefined;
+
+    return (
+      <WorkspaceManagerModal
+        key={contextConfig.type}
+        kind={WorkspaceManagerKindDict.Project}
+        open={contextConfig.open}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+        section={WorkspaceManagerSectionDict.New}
+        targetVirtualLabId={targetVirtualLabId}
+        virtualLabId={virtualLabId}
+      />
+    );
+  }
+
+  if (contextConfig.type === WorkspaceActions.ProfileSettings) {
+    const section = (payload as TProfilePayload | null)?.section ?? ProfileSectionDict.Profile;
+    return (
+      <WorkspaceManagerModal
+        key={contextConfig.type}
+        kind={WorkspaceManagerKindDict.Account}
+        open={contextConfig.open}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+        section={section}
+        virtualLabId={virtualLabId}
+      />
+    );
+  }
+
+  if (contextConfig.type === WorkspaceActions.VirtualLabConfiguration) {
+    const virtualLabPayload = payload as TVirtualLabPayload | null;
+    const targetVirtualLabId =
+      virtualLabPayload?.virtualLabId ?? virtualLabPayload?.data?.id ?? virtualLabId;
+    return (
+      <WorkspaceManagerModal
+        key={contextConfig.type}
+        kind={WorkspaceManagerKindDict.VirtualLab}
+        open={contextConfig.open}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+        section={WorkspaceManagerSectionDict.Overview}
+        targetVirtualLabId={targetVirtualLabId}
+        virtualLabId={virtualLabId}
+      />
+    );
+  }
+
+  if (contextConfig.type === WorkspaceActions.ProjectPreview) {
+    const projectPayload = payload as TProjectPreviewPayload | null;
+    const targetProjectId = projectPayload?.projectId ?? projectPayload?.data?.id;
+    const targetVirtualLabId = projectPayload?.virtualLabId ?? projectPayload?.data?.virtual_lab_id;
+    if (!targetProjectId || !targetVirtualLabId) return null;
+
+    return (
+      <WorkspaceManagerModal
+        key={contextConfig.type}
+        kind={WorkspaceManagerKindDict.Project}
+        open={contextConfig.open}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
+        section={WorkspaceManagerSectionDict.Overview}
+        targetProjectId={targetProjectId}
+        targetVirtualLabId={targetVirtualLabId}
+        virtualLabId={virtualLabId}
+      />
+    );
+  }
+
+  return null;
 }
+
+export { makeTriggerWorkspaceConfigurationClickEvent } from './event';

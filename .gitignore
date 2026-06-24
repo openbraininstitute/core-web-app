@@ -111,9 +111,6 @@ web_modules/
 # Optional REPL history
 .node_repl_history
 
-# Output of 'npm pack'
-*.tgz
-
 # Yarn Integrity file
 .yarn-integrity
 
@@ -209,6 +206,7 @@ notes.md
 *~
 
 .tool-versions
+tarball/
 
 # Playwright
 /test-results/
@@ -236,3 +234,7 @@ CLAUDE.md
 .mcp.json
 .kiro
 .amazonq
+.playwright-mcp
+.code-review
+.release-notes
+.env.test.secrets

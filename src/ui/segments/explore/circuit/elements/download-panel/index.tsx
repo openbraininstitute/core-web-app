@@ -1,10 +1,15 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import sum from 'es-toolkit/compat/sum';
+import { saveAs } from 'file-saver';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useHotkeys } from 'react-hotkeys-hook';
 
+import { DownloadIcon } from '@/components/icons';
+import ComponentsConfig from '@/ui/segments/explore/circuit/elements/download-panel/components-config';
 import ConnectivityMatrices from '@/ui/segments/explore/circuit/elements/download-panel/connectivity-matrices';
 import EntireCircuitExport from '@/ui/segments/explore/circuit/elements/download-panel/entire-circuit-export';
 import {
@@ -30,6 +35,12 @@ export function DownloadPanel() {
   };
 
   useHotkeys('Escape', onClose);
+
+  const onDownloadMetadata = () => {
+    if (!circuit) return;
+    const blob = new Blob([JSON.stringify(circuit, null, 2)], { type: 'application/json' });
+    saveAs(blob, `${kebabCase(circuit.name) || circuit.id}-metadata.json`);
+  };
 
   if (!circuit) return null;
   return (
@@ -63,19 +74,40 @@ export function DownloadPanel() {
           <button
             type="button"
             onClick={onClose}
-            className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"
+            className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white!"
             aria-label="Close"
           >
             <CloseOutlined />
           </button>
         </div>
         <EntireCircuitExport circuit={circuit} />
+        <div className="bg-primary-8 mx-8 mt-4 flex flex-row items-start justify-between gap-3 rounded-md p-8 shadow-xs">
+          <div className="w-3/4 hyphens-auto">
+            <div className="text-xl font-bold tracking-wide text-white uppercase">Metadata</div>
+            <p className="text-primary-2 text-sm leading-normal font-light hyphens-auto">
+              Stand-alone JSON file with the circuit&apos;s metadata.
+            </p>
+          </div>
+          <div className="text-primary-1 flex flex-row items-center gap-x-3 font-semibold">
+            <div>json</div>
+            <Button
+              type="link"
+              htmlType="button"
+              className="border-primary-6 flex items-center justify-center rounded-none border border-solid text-white! hover:text-white! [&_.ant-btn-icon]:text-white!"
+              aria-label="Download metadata"
+              title="Download metadata"
+              icon={<DownloadIcon className="text-white!" />}
+              onClick={onDownloadMetadata}
+            />
+          </div>
+        </div>
         <div className="border-primary-7 text-primary-4 mx-8 my-8 border-y border-solid py-4 text-xl font-bold tracking-wide uppercase">
           Download components only
         </div>
         <div className="flex w-full flex-col gap-y-12 px-8 pb-10">
           <ConnectivityMatrices key="connectivity-metrics-content" circuit={circuit} />
           <NetworkAndMorphologyConfig key="network-and-morphology-content" circuit={circuit} />
+          <ComponentsConfig key="components-content" circuit={circuit} />
         </div>
       </div>
     </div>

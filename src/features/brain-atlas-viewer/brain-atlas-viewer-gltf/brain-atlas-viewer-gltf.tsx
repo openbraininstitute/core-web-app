@@ -4,6 +4,7 @@ import React from 'react';
 import { Settings } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings/settings';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
+import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
@@ -16,6 +17,11 @@ export interface BrainAtlasViewerGltfProps {
   onLoading(loading: boolean): void;
 }
 
+const ATLAS_LABELS: Record<string, string> = {
+  [SPECIES_TAXONOMY_IDS.HOMO_SAPIENS]: 'Julich Human Brain Atlas',
+  [SPECIES_TAXONOMY_IDS.RATTUS_NORVEGICUS]: 'Waxholm Space Rat Brain Atlas',
+};
+
 export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerGltfProps) {
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
@@ -26,7 +32,11 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
     result: { workspaceHierarchyId },
   } = useBrainRegionRootHierarchyQuery();
   const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
-  const resolvedAtlasId = runtimeHierarchyById.get(workspaceHierarchyId)?.atlasId;
+  const hierarchyMeta = runtimeHierarchyById.get(workspaceHierarchyId);
+  const resolvedAtlasId = hierarchyMeta?.atlasId;
+  const atlasLabel = hierarchyMeta?.species.taxonomyId
+    ? ATLAS_LABELS[hierarchyMeta.species.taxonomyId]
+    : undefined;
   const painter = usePainter({
     loading: loading || !resolvedAtlasId,
     atlasId: resolvedAtlasId,
@@ -125,6 +135,7 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
         </button>
       </header>
       <Settings values={values} onChange={setValues} />
+      {atlasLabel && <span className={styles.atlasLabel}>{atlasLabel}</span>}
     </div>
   );
 }

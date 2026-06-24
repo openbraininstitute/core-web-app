@@ -15,7 +15,7 @@ import {
 
 import { config } from '@/config';
 import { GenericEvent } from '@/util/generic-event';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import { type CameraController, setCamera } from './camera';
 import { makeColor } from './hooks';

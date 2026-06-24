@@ -1,6 +1,7 @@
 import { Button } from 'antd';
-import Popover from '@/features/entities/neuron-simulation/experiment/elements/popover';
+
 import { Person } from '@/components/icons/EditorIcons';
+import Popover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 
 import type { Author } from '@/api/entitycore/types/entities/publication';
 
@@ -18,11 +19,11 @@ export function Authors({ authors, className, maxVisible = 3 }: Props) {
   return (
     <div className={`text-paper-author flex items-center gap-2 text-sm ${className || ''}`}>
       <div className="border-neutral-2 flex items-center justify-center rounded-full border p-1">
-        <Person className="text-primary-8" />
+        <Person className="text-white" />
       </div>
       <div className="flex items-center justify-center gap-2">
         {visibleAuthors.map((author, index) => (
-          <span key={author.given_name + author.family_name || index}>
+          <span key={author.given_name + author.family_name || index} className="text-white">
             {author.given_name} {author.family_name}
             {index < visibleAuthors.length - 1 && ', '}
           </span>
@@ -36,7 +37,7 @@ export function Authors({ authors, className, maxVisible = 3 }: Props) {
                 {authors.map((author, index) => (
                   <div
                     key={author.given_name + author.family_name || index}
-                    className="hover:bg-muted rounded px-2 py-1 text-sm"
+                    className="hover:bg-muted rounded px-2 py-1 text-sm text-white"
                   >
                     {author.given_name} {author.family_name}
                   </div>
@@ -46,7 +47,7 @@ export function Authors({ authors, className, maxVisible = 3 }: Props) {
           >
             <Button
               type="text"
-              className="text-paper-link hover:text-paper-hover h-auto p-0 font-normal underline"
+              className="h-auto p-0 font-normal text-white! underline hover:text-white!"
             >
               + {hiddenAuthors.length} more
             </Button>

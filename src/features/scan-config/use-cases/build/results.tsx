@@ -7,17 +7,18 @@ import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { WorkspaceSection } from '@/constants';
+import { ViewVariant, WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
 import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
+import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
-import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
@@ -27,14 +28,12 @@ import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config
 
 type Props = {
   campaignId: string;
-  virtualLabId: string;
-  projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
 };
 
-export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, projectId }: Props) {
-  const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
+export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged }: Props) {
+  const context = useWorkspace();
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] =
@@ -74,6 +73,13 @@ export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, proje
   }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
+  const activeExecutionJobId = activeConfigExecution?.execution_id ?? undefined;
+  const taskLogsViewerEnabled = !!resolvedActiveConfig && !!activeExecutionJobId;
+  const taskLogsShouldReadSnapshot =
+    !!activeConfigExecStatus &&
+    [ActivityStatus.CANCELLED, ActivityStatus.DONE, ActivityStatus.ERROR].includes(
+      activeConfigExecStatus
+    );
 
   const onActiveConfigChange = useCallback((config: ITaskConfig<TEmSynapseMappingCampaignMeta>) => {
     setActiveConfig(config);
@@ -182,11 +188,33 @@ export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, proje
               <MiniDetailViewRenderer
                 section={WorkspaceSection.Data}
                 record={selectedFile.entity as ICircuit}
-                dataType={ExtendedEntitiesTypeDict.MEModelWithSynapses}
-                theme={MiniDetailViewTheme.Light}
+                dataType={ExtendedEntitiesTypeDict.SingleNeuronCircuit}
+                theme={ViewVariant.Light}
                 enableAnimation={false}
               />
             </div>
+          )}
+          {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+            <TaskConfigurationViewer
+              jobId={activeExecutionJobId}
+              workspace={context}
+              configId={resolvedActiveConfig?.id}
+              enabled={taskLogsViewerEnabled}
+              skipStream
+              campaignOriginAction={campaignOriginAction}
+              isCampaignIdChanged={isCampaignIdChanged}
+            />
+          )}
+          {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+            <TaskLogsViewer
+              jobId={activeExecutionJobId}
+              workspace={context}
+              configId={resolvedActiveConfig?.id}
+              enabled={taskLogsViewerEnabled}
+              skipStream={taskLogsShouldReadSnapshot}
+              campaignOriginAction={campaignOriginAction}
+              isCampaignIdChanged={isCampaignIdChanged}
+            />
           )}
         </>
       }

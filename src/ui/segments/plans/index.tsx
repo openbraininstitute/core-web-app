@@ -11,14 +11,14 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/ui/molecules/carousel';
-import PlanCard from '@/ui/segments/plans/card';
+import { PlanCard } from '@/ui/segments/plans/card';
 
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
 export default function Plans({ plans }: { plans: PlanV2[] }) {
   const fallbackOrder = ['Free', 'Pro', 'Enterprise', 'Education'];
 
-  const sortedPlans = [...plans].sort((a, b) => {
+  const sortedPlans = plans.toSorted((a, b) => {
     if (a.planOrder != null && b.planOrder != null) {
       return a.planOrder - b.planOrder;
     }
@@ -128,8 +128,8 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
           </CarouselContent>
           {inView && (
             <>
-              <CarouselPrevious className="!fixed top-1/2 !left-2 -translate-y-1/2 md:!absolute md:!left-4" />
-              <CarouselNext className="!fixed top-1/2 !right-2 -translate-y-1/2 md:!absolute md:!right-4 [&>svg]:rotate-180" />
+              <CarouselPrevious className="fixed! top-1/2 left-2! -translate-y-1/2 md:absolute! md:left-4!" />
+              <CarouselNext className="fixed! top-1/2 right-2! -translate-y-1/2 md:absolute! md:right-4! [&>svg]:rotate-180" />
             </>
           )}
         </Carousel>

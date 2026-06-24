@@ -3,12 +3,14 @@ import DistinctColors from 'distinct-colors';
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
 import InteractivePlot, {
   currentUnitAtom,
   DEFAULT_CURRENT_UNIT,
 } from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import { ephysHeadingClass, ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
 import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 
@@ -19,6 +21,7 @@ interface TraceDetailsViewProps {
   defaultCellId?: string;
   defaultProtocol?: string;
   defaultRepetition?: string;
+  variant?: TViewVariant;
 }
 
 interface CellDetailsProps {
@@ -27,6 +30,7 @@ interface CellDetailsProps {
   showCellLabel?: boolean;
   defaultProtocol?: string;
   defaultRepetition?: string;
+  variant?: TViewVariant;
 }
 
 function CellDetails({
@@ -35,6 +39,7 @@ function CellDetails({
   showCellLabel,
   defaultProtocol,
   defaultRepetition,
+  variant = ViewVariant.Light,
 }: CellDetailsProps) {
   const [reset, setReset] = useState<boolean>(false);
 
@@ -138,6 +143,7 @@ function CellDetails({
     [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision]
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedSweeps is used to force a re-render of the plot
   useEffect(
     () => updatePlots(),
     [selectedProtocol, selectedRepetition, selectedSweeps, updatePlots]
@@ -145,13 +151,14 @@ function CellDetails({
 
   return (
     <div className="flex flex-col gap-10">
-      {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
+      {showCellLabel && <div className={ephysHeadingClass(variant)}>{cellId}</div>}
       <div className="flex flex-wrap gap-8">
         <OptionSelect
           label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
           options={dataSetOptions}
           value={selectedProtocol}
           onChange={handleProtocolChange}
+          variant={variant}
         />
         <OptionSelect
           label={{ title: 'Repetition', numberOfAvailable: Object.keys(repetitions).length }}
@@ -159,6 +166,7 @@ function CellDetails({
           value={selectedRepetition}
           onChange={handleRepetitionChange}
           hideWhenSingle
+          variant={variant}
         />
         <SweepSelector
           onPreviewSweep={handlePreviewSweep}
@@ -167,6 +175,7 @@ function CellDetails({
           previewItem={previewItem}
           setSelectedSweeps={setSelectedSweeps}
           sweepOptions={sweepOptions}
+          variant={variant}
         />
         {hasCurrentRecordings && (
           <Radio.Group
@@ -245,6 +254,7 @@ function TraceDetailsView({
   defaultCellId,
   defaultProtocol,
   defaultRepetition,
+  variant = ViewVariant.Light,
 }: TraceDetailsViewProps) {
   const cellIds = useMemo(() => trace.getCellIds(), [trace]);
   const [selectedCellId, setSelectedCellId] = useState<string>(
@@ -260,7 +270,9 @@ function TraceDetailsView({
     <div className="flex flex-col gap-10">
       {cellIds.length > 1 && (
         <div className="flex flex-col gap-2">
-          <div className="text-sm font-medium">Select cell ({cellIds.length} available)</div>
+          <div className={ephysSectionLabelClass(variant)}>
+            Select cell ({cellIds.length} available)
+          </div>
           <Select
             className="cell-select w-48"
             placeholder="Select a cell"
@@ -286,6 +298,7 @@ function TraceDetailsView({
             showCellLabel={cellIds.length > 1}
             defaultProtocol={defaultProtocol}
             defaultRepetition={defaultRepetition}
+            variant={variant}
           />
         ))}
       </div>

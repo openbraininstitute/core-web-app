@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
-import { WorkspaceSection } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import Breadcrumb from '@/ui/molecules/breadcrumb';
+import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
+import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -35,19 +36,25 @@ export function BackToListingOriginButton({
   virtualLabId,
   projectId,
   onClick,
-}: WorkspaceContext & { onClick: () => void }) {
+  variant = ViewVariant.Light,
+}: WorkspaceContext & { onClick: () => void; variant?: TViewVariant }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
 
+  const linkClass =
+    variant === ViewVariant.Default
+      ? 'capitalize text-[#adcdf2] hover:text-[#c5e8ff]'
+      : 'capitalize text-primary-9 hover:text-primary-8';
+
   return (
-    <Breadcrumb>
+    <Breadcrumb variant={variant} tone={ToneDict.Inactive}>
       <Link
         onClick={onClick}
         href={{
           pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
           query: query.toString(),
         }}
-        className="capitalize"
+        className={linkClass}
       >
         Data
       </Link>
@@ -60,19 +67,29 @@ export function BackToCategory({
   projectId,
   group,
   onClick,
-}: WorkspaceContext & { group: TEntityTypeGroup; onClick: () => void }) {
+  variant = ViewVariant.Light,
+}: WorkspaceContext & {
+  group: TEntityTypeGroup;
+  onClick: () => void;
+  variant?: TViewVariant;
+}) {
   const queryParams = useSearchParams();
   const groupDisplayName = getGroupDisplayName(group);
 
+  const linkClass =
+    variant === ViewVariant.Default
+      ? 'capitalize text-[#adcdf2] hover:text-[#c5e8ff]'
+      : 'capitalize text-primary-9 hover:text-primary-8';
+
   return (
-    <Breadcrumb>
+    <Breadcrumb variant={variant} tone={ToneDict.Inactive}>
       <Link
         onClick={onClick}
         href={{
           pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
           query: { ...Object.fromEntries(queryParams.entries()), group },
         }}
-        className="capitalize"
+        className={linkClass}
       >
         {groupDisplayName}
       </Link>
@@ -88,26 +105,34 @@ export function BackToEntityType({
   onClick,
   group,
   scope,
+  variant = ViewVariant.Light,
 }: WorkspaceContext & {
   type: TExtendedEntitiesTypeDict;
   title: string;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   onClick: () => void;
+  variant?: TViewVariant;
 }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
   query.set('group', group);
   query.set('scope', scope);
 
+  const linkClass =
+    variant === ViewVariant.Default
+      ? 'font-bold text-[#adcdf2] hover:text-[#c5e8ff]'
+      : 'font-bold text-primary-9 hover:text-primary-8';
+
   return (
-    <Breadcrumb showChevron={false} cls={{ label: 'font-bold' }}>
+    <Breadcrumb showChevron={false} variant={variant} tone={ToneDict.Active}>
       <Link
         onClick={onClick}
         href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}`,
+          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}`,
           query: query.toString(),
         }}
+        className={linkClass}
       >
         {title}
       </Link>
@@ -120,11 +145,13 @@ export function DataBreadcrumb({
   title,
   group,
   scope,
+  variant = ViewVariant.Light,
 }: {
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   title: string;
+  variant?: TViewVariant;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
@@ -152,20 +179,26 @@ export function DataBreadcrumb({
 
   if (section !== WorkspaceSection.Data) return null;
   return (
-    <div className="flex flex-nowrap gap-3 pt-3">
-      <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick }} />
-      <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick }} />
+    <div className="flex flex-nowrap gap-3">
+      <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick, variant }} />
+      <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick, variant }} />
       <BackToEntityType
-        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick }}
+        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick, variant }}
       />
     </div>
   );
 }
 
-export function ClosePage({ url }: { url: string }) {
+export function ClosePage({
+  url,
+  variant = ViewVariant.Light,
+}: {
+  url: string;
+  variant?: TViewVariant;
+}) {
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
   const section = routeSegments.at(0);
   if (section !== WorkspaceSection.Data) return null;
 
-  return <Close href={url} className="mt-3 mr-1" />;
+  return <Close href={url} className="mr-1" variant={variant} />;
 }

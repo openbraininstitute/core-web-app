@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useAtom } from 'jotai';
-import { signIn, useSession } from 'next-auth/react';
-import { Session } from 'next-auth';
-import { usePrevious } from './hooks';
+import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
+
 import sessionAtom from '@/state/session';
+
+import { usePrevious } from './hooks';
+
+import type { Session } from 'next-auth';
 
 export type SessionOrNull = Session | null;
 
@@ -41,6 +45,7 @@ export { getClientSession };
 
 export default function useSessionState() {
   const currentSession = useSession();
+  const pathname = usePathname();
   const [session, setSessionState] = useAtom(sessionAtom);
   const previousSession = usePrevious(currentSession);
 
@@ -74,8 +79,10 @@ export default function useSessionState() {
 
   useEffect(() => {
     if (currentSession?.data?.error !== 'RefreshAccessTokenError') return;
-
-    // automatically signIn when a refresh token expires
-    signIn('keycloak');
-  }, [currentSession]);
+    // Route through /app/log-in so the proxy detour runs on preview deployments;
+    // calling signIn() here would target the current host and bypass it.
+    if (pathname === '/app/log-in') return;
+    const target = `${window.location.pathname}${window.location.search}`;
+    window.location.href = `/app/log-in?callbackUrl=${encodeURIComponent(target)}`;
+  }, [currentSession, pathname]);
 }

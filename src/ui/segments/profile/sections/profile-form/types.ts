@@ -7,4 +7,5 @@ export interface TProfileFormData {
   locality: string;
   region: string;
   country: string;
+  sync_billing_address: boolean;
 }

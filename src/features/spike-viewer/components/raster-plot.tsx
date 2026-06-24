@@ -3,6 +3,7 @@
 import { Checkbox, Empty } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 
@@ -14,16 +15,22 @@ type RasterPlotProps = {
 
 export default function RasterPlot({ data }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setVisiblePopulations } = useRasterRenderer(containerRef, data);
+  const { setVisiblePopulations, setBaseSize } = useRasterRenderer(containerRef, data);
 
   const [selectedPopulations, setSelectedPopulations] = useState<Set<string>>(
     new Set(data.populations.map((p) => p.name))
   );
+  const [markerSize, setMarkerSize] = useState(4);
 
   // Sync visibility when selection changes
   useEffect(() => {
     setVisiblePopulations(selectedPopulations);
   }, [selectedPopulations, setVisiblePopulations]);
+
+  // Sync marker size when slider changes
+  useEffect(() => {
+    setBaseSize(markerSize);
+  }, [markerSize, setBaseSize]);
 
   const togglePopulation = (name: string, checked: boolean) => {
     setSelectedPopulations((prev) => {
@@ -70,9 +77,7 @@ export default function RasterPlot({ data }: RasterPlotProps) {
             </Checkbox>
           ))
         )}
-        <span className="ml-auto text-xs text-gray-400">
-          Drag to zoom · Shift+drag to pan · Double-click to reset
-        </span>
+        <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
       </div>
       <div ref={containerRef} className="min-h-0 flex-1" />
     </div>

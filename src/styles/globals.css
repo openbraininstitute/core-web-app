@@ -45,6 +45,7 @@
   --color-primary-7: #0050b3;
   --color-primary-8: #003a8c;
   --color-primary-9: #002766;
+  --color-primary-10: #001026;
   --color-primary-highlight: #b1f0ff;
 
   --color-secondary-0: #daffd7;
@@ -313,6 +314,36 @@
   }
 }
 
+@utility primary-scrollbar-dark {
+  @layer utilities {
+    &::-webkit-scrollbar {
+      /* @apply scrollbar-size; */
+      /* ! TOFIX */
+      width: 5px;
+      height: 5px;
+      margin-right: 5px;
+      border-radius: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+      @apply rounded-sm bg-[rgba(0_0_0_0.2)];
+    }
+
+    &::-webkit-scrollbar-thumb {
+      @apply bg-primary-9;
+      border-radius: 5px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      @apply bg-primary-8;
+    }
+
+    &::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+  }
+}
+
 @utility horizontal-thin-scrollbar {
   @layer utilities {
     scrollbar-width: thin;
@@ -401,7 +432,6 @@
 @layer utilities {
   html {
     font-size: 14px;
-    scroll-behavior: smooth;
   }
 
   body {
@@ -410,6 +440,12 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (min-width: 768px) {
+    html:has(.landing-features-snap) {
+      scroll-snap-type: y mandatory;
+    }
   }
 
   .ant-tabs-top > .ant-tabs-nav::before {
@@ -496,6 +532,31 @@ dialog {
 }
 
 /* Tutorial player: smooth crossfade between videos */
+:root {
+  --duration-exit: 150ms;
+  --duration-enter: 210ms;
+  --duration-move: 400ms;
+}
+
+@keyframes fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+::view-transition-old(.fade-out) {
+  animation: var(--duration-exit) ease-in fade reverse;
+}
+
+::view-transition-new(.fade-in) {
+  animation: var(--duration-enter) ease-out var(--duration-exit) both fade;
+}
+
 ::view-transition-old(tutorial-player),
 ::view-transition-new(tutorial-player) {
   animation-duration: 300ms;

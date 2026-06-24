@@ -32,6 +32,22 @@ export function useAnalysisNotebookTemplatePipeline({
   const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
+  const invalidateNotebookQueries = () =>
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const firstKeySegment = query.queryKey[0];
+
+        const matchesEntityCount =
+          firstKeySegment === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`;
+
+        const matchesExtendedEntity =
+          get(firstKeySegment as ExtendedEntityTypeQueryKey[0], 'context.extendedEntityType') ===
+          ExtendedEntitiesTypeDict.Notebook;
+
+        return matchesEntityCount || matchesExtendedEntity;
+      },
+    });
+
   const createNotebookAsync = useMutation({
     mutationFn: (values: TAnalysisNotebookTemplateForm) =>
       createAnalysisNotebookTemplate({
@@ -40,22 +56,10 @@ export function useAnalysisNotebookTemplatePipeline({
           name: values.setup.name,
           description: values.setup.description,
           scale: values.setup.scale,
+          exercise_id: values.setup.exercise_id?.trim() || undefined,
         },
       }),
-    onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`,
-        }),
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            get((query.queryKey as ExtendedEntityTypeQueryKey)[0], 'context.extendedEntityType') ===
-            ExtendedEntitiesTypeDict.Notebook,
-        }),
-        queryClient.invalidateQueries(),
-      ]);
-    },
+    onSettled: invalidateNotebookQueries,
   });
 
   const deleteNotebookAsync = useMutation({
@@ -102,6 +106,7 @@ export function useAnalysisNotebookTemplatePipeline({
         });
       }
     },
+    onSettled: invalidateNotebookQueries,
   });
 
   const createContributionAsync = useMutation({

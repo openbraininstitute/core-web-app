@@ -1,104 +1,11 @@
-import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
-import authFetch, { authFetchRetryOnError, authFetchWithoutRetry } from '@/auth-fetch';
+import authFetch, { authFetchWithoutRetry } from '@/auth-fetch';
 import { config } from '@/config';
-import {
+
+import type {
   ProjectBalance,
   ProjectBalanceResponse,
   ProjectJobReportsResponse,
 } from '@/types/accounting';
-
-import type { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-import type { Project, ProjectResponse } from '@/types/virtual-lab/projects';
-
-export async function getVirtualLabProjectDetails(
-  virtualLabId: string,
-  projectId: string
-): Promise<ProjectResponse> {
-  const response = await authFetchRetryOnError(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-
-  return response.json();
-}
-
-export async function getVirtualLabProjectUsers(
-  virtualLabId: string,
-  projectId: string
-): Promise<MembersResponse> {
-  const response = await authFetchRetryOnError(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/users`
-  );
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-  return response.json();
-}
-
-export async function getUsersProjects(): Promise<VlmResponse<VirtualLabAPIListData<Project>>> {
-  const response = await authFetchRetryOnError(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/projects`
-  );
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-
-  return response.json();
-}
-
-export async function patchProject(
-  formData: Partial<Project>,
-  virtualLabId: string,
-  projectId: string
-): Promise<
-  VlmResponse<{
-    project: Project;
-  }>
-> {
-  return authFetch(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    }
-  ).then(async (response) => {
-    if (!response.ok) {
-      const { details, message } = await response.json();
-
-      throw new Error(message, { cause: details });
-    }
-
-    return response.json();
-  });
-}
-
-export async function deleteProject(
-  virtualLabId: string,
-  projectId: string
-): Promise<
-  VlmResponse<{
-    project_id: string;
-    deleted: boolean;
-    deleted_at: string;
-  }>
-> {
-  const response = await authFetch(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`,
-    {
-      method: 'DELETE',
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
-  }
-
-  return response.json();
-}
 
 export async function getProjectAccountBalance({
   virtualLabId,
@@ -171,7 +78,7 @@ export async function assignProjectBudget({
   );
 
   if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
+    throw new Error(`Status: ${response.status}`, { cause: await response.json() });
   }
 
   return response.json();
@@ -196,7 +103,7 @@ export async function reverseProjectBudget({
   );
 
   if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
+    throw new Error(`Status: ${response.status}`, { cause: await response.json() });
   }
 
   return response.json();

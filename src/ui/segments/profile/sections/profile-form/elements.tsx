@@ -4,14 +4,14 @@ import { Select as ASelect, Input, type InputProps, type InputRef, type SelectPr
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import type { ForwardedRef, ReactNode } from 'react';
+import type { ForwardedRef } from 'react';
 
 export function ProfileError() {
   return (
     <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h2 className="mb-2 text-2xl font-bold text-red-200">Profile error</h2>
+          <h2 className="mb-2 text-2xl font-semibold text-red-200">Profile error</h2>
           <p className="max-w-xl text-red-200/80">
             We were unable to fetch your profile information from our servers. Please refresh the
             page or try again later. if the issue persists, please contact support at{' '}
@@ -30,12 +30,13 @@ export function Select({ options, value, onChange, className, ...props }: Select
   return (
     <ASelect
       className={cn(
-        'border-primary-8 min-w-36 border-0 border-b ring-0 focus:border-b-2! [&.ant-select-focused]:border-b-2',
-        'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:ring-0!',
+        'border-gray-100! rounded-lg min-w-36 border-2! [&.ant-select-focused]:border-2',
+        'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:ring-0! focus-within:border-gray-300!',
         '[&_.ant-select-selector]:border-0! focus:[&_.ant-select-selector]:ring-0!',
-        'placeholder:text-gray-400 hover:border-gray-400',
+        'placeholder:text-primary-9 hover:border-gray-200!',
         className
       )}
+      size="large"
       classNames={{ popup: { root: 'rounded-none shadow-md' } }}
       placeholder="select virtual lab"
       options={options}
@@ -46,43 +47,79 @@ export function Select({ options, value, onChange, className, ...props }: Select
   );
 }
 
+const EMPTY_READONLY_DISPLAY = '\u2014';
+
 export function XInput({
   placeholder,
   className,
+  plain,
+  value,
   ref,
   ...props
-}: InputProps & { ref?: ForwardedRef<InputRef> }) {
+}: InputProps & { ref?: ForwardedRef<InputRef>; plain?: boolean }) {
+  const resolvedValue =
+    plain && (value === undefined || value === null || value === '')
+      ? EMPTY_READONLY_DISPLAY
+      : value;
+
+  const plainClasses = cn(
+    'rounded-lg min-h-12 border-2! border-transparent! bg-transparent! p-0! font-bold tracking-wide text-primary-9! shadow-none!',
+    '[&_.ant-input]:m-0! [&_.ant-input]:px-0! [&_.ant-input]:py-0!',
+    'transition-[border-color,box-shadow] duration-200 ease-in-out',
+    'hover:border-transparent! hover:bg-transparent! hover:text-primary-9!',
+    'focus:border-transparent! focus:bg-transparent! focus:shadow-none! focus:text-primary-9! focus-within:border-transparent!',
+    '[&_.ant-input]:cursor-default',
+    '[&.ant-input-affix-wrapper-disabled]:border-transparent! [&.ant-input-affix-wrapper-disabled]:bg-transparent!',
+    '[&.ant-input-affix-wrapper-disabled]:text-primary-9! [&.ant-input-affix-wrapper-disabled]:opacity-100!',
+    '[&_.ant-input-disabled]:bg-transparent! [&_.ant-input-disabled]:text-primary-9! [&_.ant-input-disabled]:opacity-100!',
+    '[&.ant-input-outlined]:bg-transparent!'
+  );
+  const defaultClasses = classNames(
+    'rounded-lg min-h-12 border-2 border-gray-100! bg-transparent! px-3 py-2 font-bold tracking-wide text-primary-9! focus:ring-0',
+    'transition-[border-color,box-shadow] duration-200 ease-in-out',
+    'hover:bg-transparent! hover:text-primary-9! focus:bg-transparent! focus:text-primary-9! [&_.ant-input-outlined]:bg-transparent!',
+    'focus:border-pr placeholder:text-primary-9! hover:border-gray-200!',
+    ' focus-within:border-gray-300!',
+    '[&.ant-XInput-status-error]:border-1.5! [&.ant-XInput-status-error]:border-destructive!',
+    '[&.ant-input-status-error]:border-1.5! [&.ant-input-status-error]:border-destructive!'
+  );
   return (
     <Input
       ref={ref}
+      size="large"
       placeholder={placeholder}
-      className={classNames(
-        'border-transparent! rounded-none border-0 border-b border-b-primary-4! rounded-b-none! bg-transparent! px-1 font-bold tracking-wide text-white! focus:ring-0',
-        'hover:bg-transparent! hover:text-white! focus:bg-transparent! focus:text-white! [&_.ant-input-outlined]:bg-transparent!',
-        'focus:border-pr placeholder:text-white! hover:border-white focus:border-b-2',
-        'focus-within:border-b-2! focus-within:ring-0!',
-        '[&.ant-XInput-status-error]:border-0! [&.ant-XInput-status-error]:border-b-2! [&.ant-XInput-status-error]:border-red-300!',
-        '[&.ant-input-status-error]:border-0! [&.ant-input-status-error]:border-b-2! [&.ant-input-status-error]:border-red-500!',
-        className
-      )}
+      className={cn(plain ? plainClasses : defaultClasses, className)}
+      value={resolvedValue}
       {...props}
     />
   );
 }
 
-export function Label({ title }: { title: string }) {
-  return <span className="text-primary-4 text-sm font-light">{title}</span>;
+export function Label({
+  title,
+  className,
+  required,
+}: {
+  title: string;
+  className?: string;
+  required?: boolean;
+}) {
+  return (
+    <span className={cn('text-primary-4 text-sm font-light', className)}>
+      {title} {required && <sup className="text-base text-red-500">*</sup>}
+    </span>
+  );
 }
-
-export const label = (text: string, extra?: ReactNode) => (
-  <span className={cn('text-primary-4 text-sm font-light')}>
-    {text} {extra}
-  </span>
-);
 
 export function GitHubIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="white">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      fill="#24292e"
+    >
       <title>GitHub</title>
       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
     </svg>

@@ -1,24 +1,21 @@
 'use client';
 
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { use } from 'react';
+import { Spinner } from '@bprogress/next';
 
-import { getMEModel } from '@/api/entitycore/queries';
-import {
-  ExtendedEntitiesTypeDict,
-  type TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
-import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
-import { ScanConfiguration } from '@/features/scan-config';
+import {
+  type TLegacyWorkflowSessionSearchParams,
+  useLegacyWorkflowSessionFromSearchParams,
+} from '@/features/scan-config/workflow/legacy-session';
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
 import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+
+import { useEntity } from './hooks';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type {
@@ -32,59 +29,17 @@ export default function Page({
   params: pathParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { id: string },
-  {
+  TLegacyWorkflowSessionSearchParams & {
     step: ExperimentStepKeys;
-    sessionId: string;
     panel: WorkflowSimulatePanelKeys;
-    dataType: TExtendedEntitiesTypeDict;
     '3d': ThreeDVisualizerQueryParamKeys;
-    initialCampaignId: string;
   }
 >) {
-  const queryParams = use(searchParams);
-  const { initialCampaignId } = queryParams;
-  const { virtualLabId, projectId, id: modelId } = use(pathParams);
-  let sessionId = queryParams?.sessionId;
-  if (!sessionId) sessionId = crypto.randomUUID();
+  const sessionId = useLegacyWorkflowSessionFromSearchParams(searchParams);
+  const entity = useEntity(pathParams);
+  if (entity === undefined) return <Spinner />;
 
-  const { data: entity } = useSuspenseQuery({
-    queryKey: keyBuilder.meModel({ virtualLabId, projectId, entityId: modelId }),
-    queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
-  });
-
-  const { data: campaignData, isLoading: isCampaignLoading } = useQuery({
-    queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
-    queryFn: async () => {
-      if (!initialCampaignId) return null;
-      return await resolveSimulationByCampaignId({
-        id: initialCampaignId,
-        context: { virtualLabId, projectId },
-        populate: ['config'],
-      });
-    },
-    enabled: !!initialCampaignId,
-  });
-
-  if (
-    queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit &&
-    (!initialCampaignId || (!isCampaignLoading && campaignData?.config.form))
-  ) {
-    return (
-      <div className="border-neutral-2 ml-2 h-full rounded-2xl border">
-        <ScanConfiguration
-          entityId={entity.id}
-          entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-          initialConfig={campaignData?.config.form}
-          className="px-4"
-        />
-      </div>
-    );
-  }
-  if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
-    return null;
-  }
+  if (entity instanceof Error) throw entity;
 
   return (
     <WorkflowSimulateLayout>

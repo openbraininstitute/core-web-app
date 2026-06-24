@@ -1,7 +1,7 @@
 import { getClient } from '@/services/sanity/client';
 import tutorialQuery from '@/services/sanity/queries/help-tutorial';
-import { logError } from '@/util/logger';
 import { assertType, type TypeDef } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 import type { ContentForTutorialItem } from '@/types/help/type';
 

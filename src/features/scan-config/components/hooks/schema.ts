@@ -1,19 +1,19 @@
+'use client';
+
 import $RefParser from '@apidevtools/json-schema-ref-parser';
-import { useQuery } from '@tanstack/react-query';
+import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
-import { atom } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
-  type AtomsMap,
   type Config,
   type ConfigSchema,
   type ConfigValue,
@@ -23,19 +23,45 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { applyWorkflowSessionSelectionPatch } from '@/features/scan-config/workflow/workflow-session-selection';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { Nullish } from '@/utils/type';
 
+const OBI_ONE_JSON_SCHEMA_STALE_TIME_MS = Number.POSITIVE_INFINITY;
+
+function obiOneJsonSchemaQueryOptions(schemaName: SchemaName) {
+  return {
+    queryKey: keyBuilder.obiOneJsonSchema(schemaName),
+    queryFn: () => fetchSchema({ schemaName }),
+    staleTime: OBI_ONE_JSON_SCHEMA_STALE_TIME_MS,
+  } as const;
+}
+
+export async function fetchObiOneJsonSchema(opts: {
+  qc?: QueryClient;
+  schemaName: SchemaName;
+}): Promise<ConfigSchema> {
+  if (opts.qc) {
+    return opts.qc.fetchQuery(obiOneJsonSchemaQueryOptions(opts.schemaName));
+  }
+
+  return fetchSchema({ schemaName: opts.schemaName });
+}
+
 export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | undefined }) {
   const { data: schema, isLoading } = useQuery({
-    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
-    queryKey: keyBuilder.obiOneJsonSchema(schemaName!),
-    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
-    queryFn: () => fetchSchema({ schemaName: schemaName! }),
-    // keep data fresh indefinitely to prevent atom regeneration on window focus
-    staleTime: Infinity,
+    ...(schemaName
+      ? obiOneJsonSchemaQueryOptions(schemaName)
+      : {
+          queryKey: ['obi-one-json-schema', 'disabled'] as const,
+          queryFn: (): Promise<ConfigSchema> =>
+            Promise.reject(new Error('useObioneJsonSchema: schemaName is required')),
+          enabled: false,
+        }),
     refetchOnWindowFocus: false,
     enabled: !!schemaName,
   });
@@ -99,40 +125,13 @@ export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
   };
 }
 
-export function useDefaultConfig(
-  schemaName: SchemaName,
-  formModelType: 'CircuitFromId' = 'CircuitFromId'
-) {
+export function useDefaultConfig(schemaName: SchemaName) {
   const { schema } = useObioneJsonSchema({ schemaName });
 
-  if (!schema) return;
-
-  const map: {
-    [key: string]: ConfigValue | Record<string, ConfigValue>;
-  } = {};
-
-  Object.entries(schema.properties).forEach(([k, v]) => {
-    if (isType(v)) return;
-    if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
-      const initial: Record<string, ConfigValue> = {};
-
-      Object.entries(v.properties).forEach(([subkey, subValue]) => {
-        initial[subkey] = subValue.default ?? null;
-        if (!isType(subValue) && subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier) {
-          initial[subkey] = {
-            type: formModelType,
-            id_str: '',
-          };
-        }
-      });
-
-      map[k] = initial;
-    } else {
-      map[k] = {};
-    }
-  });
-
-  return map as Config;
+  return useMemo(() => {
+    if (!schema) return;
+    return buildInitialConfigState(schema, {}, { type: 'circuit' } as ICircuit);
+  }, [schema]);
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {
@@ -149,12 +148,12 @@ export function isRootBlockSingle(schema: ConfigSchema, key: string) {
   );
 }
 
-async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
+export async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
   const json = await res.json();
   const dereferenced = await $RefParser.dereference(json);
 
-  // @ts-expect-error
+  // @ts-expect-error: dereferenced is a JSONSchema6 object, but we know it has the components property
   const theSchema = dereferenced.components.schemas[schemaName] as ConfigSchema;
 
   return theSchema;
@@ -162,211 +161,264 @@ async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
 
 const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.Memodel]: 'MEModelFromID',
-  [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'MEModelWithSynapsesCircuitFromID',
+  [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: 'MEModelWithSynapsesCircuitFromID',
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
 };
 
-export function useAtomsMap({
-  schema,
-  initialConfig,
-  model,
-}: {
-  schema?: ConfigSchema;
-  initialConfig?: Config;
-  model: TSupportedEntitiesForScanConfiguration | Nullish;
-}) {
-  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
+function buildInitialConfigState(
+  schema: ConfigSchema,
+  initialConfig: Config | undefined,
+  model: TSupportedEntitiesForScanConfiguration | Nullish
+): Config {
+  if (!schema.properties) return {};
 
-  useEffect(() => {
-    if (!schema?.properties) return;
-    const expectedRootKeys = Object.entries(schema.properties)
-      .filter(([_, v]) => !isType(v))
-      .map(([k]) => k);
-    const hasInitializedMapForSchema =
-      Object.keys(atomsMap).length > 0 && expectedRootKeys.every((key) => key in atomsMap);
+  const state: Config = {};
 
-    // skip re-init when map is already complete, otherwise we wipe dictionary entry state
-    // (e.g. newly added "Ion Channel Model 0") and BlockDictionary falls back to type cards
-    if (hasInitializedMapForSchema) {
+  const safeInitialConfig = initialConfig ?? {};
+
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (isType(v)) {
+      state[k] = v.const;
       return;
     }
 
-    const map: {
-      [key: string]:
-        | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-        | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
-    } = {};
+    const safeInitialConfigforKey = safeInitialConfig[k] ?? {};
 
-    // Logic to build the atoms map based on initialConfig OR schema defaults
-    if (initialConfig) {
-      Object.entries(initialConfig)
-        .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
-        .forEach(([k, v]) => {
-          if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(v);
-        });
+    if (!isPlainObject(safeInitialConfigforKey)) return;
 
-      Object.entries(initialConfig)
-        .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
-        .forEach(([k, v]) => {
-          map[k] = {};
-          Object.entries(v).forEach(([subK, subV]) => {
-            if (!isPlainObject(subV) || isAtom(map[k])) return;
-            map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
-          });
-        });
+    const initialConfigforKey = { ...safeInitialConfigforKey };
 
-      // TODO: Consider implementing schema versioning
-      // Fill in any schema-defined root keys that initialConfig omitted, so the
-      // hasInitializedMapForSchema guard above passes on the next render. Without
-      // this, the effect re-fires every render and triggers Maximum update depth.
-      for (const [k, v] of Object.entries(schema.properties)) {
-        if (isType(v) || k in map) continue;
+    if (!isPlainObject(initialConfigforKey)) return;
+
+    if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
+      Object.entries(v.properties).forEach(([subkey, subValue]) => {
+        if (subkey in initialConfigforKey) return;
+
+        initialConfigforKey[subkey] = subValue.default ?? null;
+
         if (
-          v.ui_element === ScanConfigUIElementDict.BlockSingle ||
-          v.ui_element === ScanConfigUIElementDict.BlockUnion
+          model &&
+          !isType(subValue) &&
+          subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
         ) {
-          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>({});
-        } else {
-          map[k] = {};
+          const formModelType = match(model)
+            .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
+            .with(
+              { type: EntityTypeDict.Memodel },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+            )
+            .with(
+              {
+                type: EntityTypeDict.Circuit,
+                scale: CircuitScaleDictionary.Single,
+              },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.SingleNeuronCircuit]
+            )
+            .with(
+              { type: EntityTypeDict.Circuit },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
+            )
+            .with(
+              { type: EntityTypeDict.CellMorphology },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+            )
+            .otherwise(() => {
+              throw new Error(`Unsupported entity type: ${model.type}`);
+            });
+
+          initialConfigforKey[subkey] = {
+            type: formModelType,
+            id_str: model.id,
+          };
         }
-      }
-    } else {
-      Object.entries(schema.properties).forEach(([k, v]) => {
-        if (isType(v)) return;
-        if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
-          const initial: Record<string, ConfigValue | Array<ConfigValue>> = {};
+        if (
+          model &&
+          !isType(subValue) &&
+          subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
+        ) {
+          const formModelType = match(model)
+            .with(
+              { type: EntityTypeDict.CellMorphology },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+            )
+            .with(
+              { type: EntityTypeDict.Memodel },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+            )
+            .otherwise(() => {
+              throw new Error(`Unsupported entity type: ${model.type}`);
+            });
 
-          Object.entries(v.properties).forEach(([subkey, subValue]) => {
-            initial[subkey] = subValue.default ?? null;
-            if (
-              model &&
-              !isType(subValue) &&
-              subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
-            ) {
-              const formModelType = match(model)
-                .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
-                .with(
-                  { type: EntityTypeDict.Memodel },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
-                )
-                .with(
-                  {
-                    type: EntityTypeDict.Circuit,
-                    scale: CircuitScaleDictionary.Single,
-                  },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
-                )
-                .with(
-                  { type: EntityTypeDict.Circuit },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
-                )
-                .with(
-                  { type: EntityTypeDict.CellMorphology },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
-                )
-                .otherwise(() => {
-                  throw new Error(`Unsupported entity type: ${model.type}`);
-                });
-
-              initial[subkey] = {
+          if (formModelType) {
+            initialConfigforKey[subkey] = [
+              {
                 type: formModelType,
                 id_str: model.id,
-              };
-            }
-            if (
-              model &&
-              !isType(subValue) &&
-              subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
-            ) {
-              const formModelType = match(model)
-                .with(
-                  { type: EntityTypeDict.CellMorphology },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
-                )
-                .otherwise(() => {
-                  throw new Error(`Unsupported entity type: ${model.type}`);
-                });
-              initial[subkey] = [
-                {
-                  type: formModelType,
-                  id_str: model.id,
-                },
-              ];
-            }
-          });
-
-          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
-        } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
-          // Initialize as empty - user must select a variant first (like block_dictionary)
-          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>({});
-        } else {
-          map[k] = {};
+              },
+            ];
+          }
         }
       });
+
+      state[k] = initialConfigforKey;
+    } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
+      state[k] = initialConfigforKey;
+    } else {
+      const nestedState: Record<string, Record<string, ConfigValue>> = {};
+
+      Object.entries(initialConfigforKey).forEach(([subK, subV]) => {
+        if (!isPlainObject(subV)) return;
+        nestedState[subK] = subV;
+      });
+
+      state[k] = nestedState;
     }
+  });
 
-    setAtomsMap(map);
-  }, [schema, model, initialConfig, atomsMap]);
-
-  return [atomsMap, setAtomsMap] as const;
+  return state;
 }
 
-export function resetConfig(
-  schema: ConfigSchema,
-  newConfig: Config,
-  setAtomsMap: (newMap: AtomsMap) => void
-) {
-  const map: {
-    [key: string]:
-      | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
-  } = {};
-
-  // First, populate from newConfig
-  Object.entries(newConfig)
-    .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
-    .forEach(([k, v]) => {
-      if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(v);
-    });
-
-  Object.entries(newConfig)
-    .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
-    .forEach(([k, v]) => {
-      map[k] = {};
-      if (!v || !isPlainObject(v)) return;
-      Object.entries(v).forEach(([subK, subV]) => {
-        if (!isPlainObject(subV) || isAtom(map[k])) return;
-        map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
-      });
-    });
-
-  // Ensure ALL schema-defined root keys exist in the map, even if absent from newConfig.
-  // Without this, useAtomsMap's hasInitializedMapForSchema guard fails and re-initializes
-  // the entire map from defaults, wiping the restored data.
-  if (schema?.properties) {
-    for (const [k, v] of Object.entries(schema.properties)) {
-      if (isType(v) || k in map) continue;
-      if (
-        v.ui_element === ScanConfigUIElementDict.BlockSingle ||
-        v.ui_element === ScanConfigUIElementDict.BlockUnion
-      ) {
-        // Create atom with empty defaults for missing single/union blocks
-        const initial: Record<string, ConfigValue | Array<ConfigValue>> = {};
-        if ('properties' in v && v.properties) {
-          Object.entries(v.properties).forEach(([subkey, subValue]) => {
-            initial[subkey] = isType(subValue) ? null : (subValue.default ?? null);
-          });
-        }
-        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
-      } else {
-        // Dictionary or other block types — empty map
-        map[k] = {};
-      }
-    }
+/**
+ * determines whether browse {@link applyWorkflowSessionSelectionPatch session selection}
+ * should overwrite the initialize model field when building editor state
+ *
+ * @returns `true` only for fresh configure flows (no origin campaign). Returns `false`
+ *   when session/resolver inputs are missing, or when an origin campaign config is
+ *   already available
+ *
+ * @remarks
+ * resume and duplicate URLs pass `?origin=` and load `initialConfig` from the stored
+ * campaign form. Patching session selection on top would replace grouped model inputs
+ * (e.g. EM synapse mapping neuron sets) with a partial browse selection
+ */
+function shouldApplyWorkflowSessionSelection(opts: {
+  origin?: string;
+  initialConfig?: Config;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+}): boolean {
+  if (!opts.workflowSessionSelection || !opts.resolveFromIdType) {
+    return false;
   }
 
-  setAtomsMap(map);
+  if (opts.origin || opts.initialConfig) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * builds the scan-config editor state from schema defaults, optional origin form,
+ * entity model, and optional workflow browse session selection
+ *
+ * session selection is applied only when {@link shouldApplyWorkflowSessionSelection}
+ * returns `true`; otherwise the origin/initial form is returned unchanged
+ *
+ * @param schema: scan-config schema
+ * @param initialConfig: optional origin form
+ * @param model: entity model
+ * @param workflowSessionSelection: optional workflow browse session selection
+ * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
+ * @param origin: optional campaign id from `?origin=` when resuming or duplicating
+ * @returns the scan-config editor state
+ */
+function buildConfigState(
+  schema: ConfigSchema,
+  initialConfig: Config | undefined,
+  model: TSupportedEntitiesForScanConfiguration | Nullish,
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null,
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined,
+  origin?: string
+): Config {
+  const baseConfig = buildInitialConfigState(schema, initialConfig, model);
+
+  // new browse → configure: seed the initialize model field from sessionStorage
+  // duplicate/resume: keep origin campaign form; session selection is route-only
+  if (
+    !shouldApplyWorkflowSessionSelection({
+      origin,
+      initialConfig,
+      workflowSessionSelection,
+      resolveFromIdType,
+    })
+  ) {
+    return baseConfig;
+  }
+
+  if (!workflowSessionSelection || !resolveFromIdType) {
+    return baseConfig;
+  }
+
+  return applyWorkflowSessionSelectionPatch({
+    config: baseConfig,
+    schema,
+    sessionSelection: workflowSessionSelection,
+    resolveFromIdType,
+  });
+}
+
+/**
+ * hook for the scan-config form blob (`config` + `setConfig`).
+ *
+ * @param origin: campaign id from `?origin=` when resuming or duplicating
+ * when set, session selection is not merged into the form (see
+ * {@link shouldApplyWorkflowSessionSelection})
+ *
+ * @param schema: scan-config schema
+ * @param initialConfig: optional origin form
+ * @param model: entity model
+ * @param workflowSessionSelection: optional workflow browse session selection
+ * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
+ * @returns the scan-config form blob (`config` + `setConfig`)
+ */
+export function useConfig({
+  schema,
+  initialConfig,
+  model,
+  origin,
+  workflowSessionSelection,
+  resolveFromIdType,
+}: {
+  schema: ConfigSchema;
+  initialConfig?: Config;
+  model: TSupportedEntitiesForScanConfiguration | Nullish;
+  origin?: string;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+}) {
+  const [configState, setConfigState] = useState<Config>(() =>
+    buildConfigState(
+      schema,
+      initialConfig,
+      model,
+      workflowSessionSelection,
+      resolveFromIdType,
+      origin
+    )
+  );
+  const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
+
+  useEffect(() => {
+    if (appliedInitialConfigRef.current === initialConfig) {
+      return;
+    }
+
+    appliedInitialConfigRef.current = initialConfig;
+    setConfigState(
+      buildConfigState(
+        schema,
+        initialConfig,
+        model,
+        workflowSessionSelection,
+        resolveFromIdType,
+        origin
+      )
+    );
+  }, [initialConfig, model, origin, resolveFromIdType, schema, workflowSessionSelection]);
+
+  return [configState, setConfigState] as const;
 }
 
 export function useReferenceTypeDict(schema: ConfigSchema) {

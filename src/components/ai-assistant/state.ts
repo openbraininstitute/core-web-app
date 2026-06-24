@@ -1,36 +1,11 @@
-import { atom, useAtom, useAtomValue } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
-import React from 'react';
-
-import { useAITools } from '@/services/ai-agent/tools/tools';
+import { atom } from 'jotai';
 
 import type { AiAgentRateLimitEndpoint } from '@/services/ai-agent/hooks/rate-limit';
-
-const atomToolsInvertedSelection = atomWithStorage<string[]>(
-  'AIAssistant/tools-inverted-selection',
-  []
-);
 
 export const atomRateLimit = atom<AiAgentRateLimitEndpoint | null>(null);
 
 /**
- * Atom state for the tools selection.
+ * Shared prompt atom — the single source of truth for the chat input value.
+ * External components (e.g. "Edit with chat" button) can write to this directly.
  */
-export function useAIToolsInvertedSelection() {
-  return useAtom(atomToolsInvertedSelection);
-}
-
-/**
- * @returns List of currently active tools.
- */
-export function useAIActiveTools(): string[] {
-  const allTools = useAITools();
-  const invertedSelection = useAtomValue(atomToolsInvertedSelection);
-  return React.useMemo(() => {
-    if (!allTools) return [];
-
-    const allToolsIds = allTools.map((tool) => tool.id);
-    const activeTools = allToolsIds.filter((id) => !invertedSelection.includes(id));
-    return activeTools;
-  }, [allTools, invertedSelection]);
-}
+export const promptAtom = atom<string>('');

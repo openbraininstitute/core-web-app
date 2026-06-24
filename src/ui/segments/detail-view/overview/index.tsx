@@ -1,4 +1,4 @@
-import { includes } from 'es-toolkit/compat';
+import { includes, kebabCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
@@ -14,17 +14,19 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
+import { ViewVariant } from '@/constants';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
-import { circuitTypes } from '@/entity-configuration/domain/helpers';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
-  resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
@@ -33,6 +35,7 @@ import {
   type TResolvedSimulationByCampaign as TResolvedIonChannelModelSimulationByCampaign,
 } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
+import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { EmCellMeshMetadata } from '@/features/entities/em-cell-mesh';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
@@ -42,6 +45,7 @@ import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   BuildScanConfigTabs,
+  type Config,
   ExtractScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
@@ -53,6 +57,8 @@ import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
+import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
+import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -68,7 +74,14 @@ const LegacySimulationCampaigns = [
   ExtendedEntitiesTypeDict.MicrocircuitSimulation,
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
 ] as const;
+
+type TLegacySimulationCampaignConfig = {
+  campaign: { id: string };
+  simulation?: { entity_id?: string | null } | null;
+  config?: { form?: Config } | null;
+};
 
 export default async function Overview({
   entity,
@@ -139,14 +152,21 @@ export default async function Overview({
         notFound();
       }
 
+      const scanConfig = findScanConfigRegistryByTargetType(
+        ExtendedEntitiesTypeDict.CircuitExtractionCampaign
+      );
+      if (!scanConfig) {
+        notFound();
+      }
+
       return (
         <>
           <ScanConfiguration
             entityId={extractionConfig.circuitId}
-            entityType={extendedType}
+            scanConfig={scanConfig}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={extractionConfig.campaign.id}
+            origin={extractionConfig.campaign.id}
             initialConfig={extractionConfig.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -174,14 +194,21 @@ export default async function Overview({
         notFound();
       }
 
+      const scanConfig = findScanConfigRegistryByTargetType(
+        ExtendedEntitiesTypeDict.EmSynapseMappingCampaign
+      );
+      if (!scanConfig) {
+        notFound();
+      }
+
       return (
         <>
           <ScanConfiguration
             entityId={config.sourceEntityId}
-            entityType={ExtendedEntitiesTypeDict.CellMorphology}
+            scanConfig={scanConfig}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={config.campaign.id}
+            origin={config.campaign.id}
             initialConfig={config.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -198,23 +225,38 @@ export default async function Overview({
   }
 
   if (includes(LegacySimulationCampaigns, extendedType)) {
-    let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
+    const simulationEntityConfig = getEntityByExtendedType({ type: extendedType });
+    const resolveCampaign = simulationEntityConfig?.api?.query?.resolve;
+
+    if (!resolveCampaign) {
+      notFound();
+    }
+
+    let config: TLegacySimulationCampaignConfig;
 
     try {
-      config = await resolveSimulationByCampaignId({ id: entity.id, context: context });
+      config = (await resolveCampaign({
+        id: entity.id,
+        context: context,
+      })) as TLegacySimulationCampaignConfig;
     } catch {
       notFound();
     }
 
     if (!config.simulation?.entity_id) notFound();
 
+    const scanConfig = findScanConfigRegistryByTargetType(extendedType);
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <ScanConfiguration
         entityId={config.simulation.entity_id}
-        entityType={extendedType}
+        scanConfig={scanConfig}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        origin={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -222,7 +264,8 @@ export default async function Overview({
         defaultTab={{
           __activity: ScanConfigActivity.Simulate,
           id:
-            extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
+            extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
+            extendedType === ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation
               ? SimulateScanConfigTabs.simulations
               : ExtractScanConfigTabs.configuration,
         }}
@@ -245,13 +288,20 @@ export default async function Overview({
 
     if (!config.simulation?.entity_id) notFound();
 
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.IonChannelModelSimulation
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <ScanConfiguration
         entityId={config.simulation.entity_id}
-        entityType={ExtendedEntitiesTypeDict.IonChannelModel}
+        scanConfig={scanConfig}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        origin={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -278,14 +328,21 @@ export default async function Overview({
       notFound();
     }
 
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.CircuitExtractionCampaign
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <>
         <ScanConfiguration
           entityId={extractionConfig.circuitId}
-          entityType={extendedType}
+          scanConfig={scanConfig}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          origin={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{
@@ -330,14 +387,21 @@ export default async function Overview({
       notFound();
     }
 
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.SkeletonizationCampaign
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
     return (
       <>
         <ScanConfiguration
           entityId={extractionConfig.emCellMeshId}
-          entityType={extendedType}
+          scanConfig={scanConfig}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          origin={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{
@@ -351,54 +415,148 @@ export default async function Overview({
     );
   }
 
-  return (
-    <>
-      <div className="mb-5 grid grid-cols-3 gap-4 rounded-lg border border-gray-300 p-5">
-        {[...commonFields, ...fields].map(({ className, field }) => {
-          return <Field key={field} className={className} field={field} data={entity} />;
-        })}
+  const morphologyTypes = [
+    ExtendedEntitiesTypeDict.CellMorphology,
+    ExtendedEntitiesTypeDict.UniversalCellMorphology,
+    ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
+  ] as const;
+
+  const hasVisualization =
+    circuitTypes.includes(extendedType) ||
+    includes(morphologyTypes, extendedType) ||
+    extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ||
+    extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ||
+    extendedType === ExtendedEntitiesTypeDict.IonChannelModel;
+
+  const isSimulationPage =
+    getEntityByExtendedType({ type: extendedType })?.group === EntityTypeGroup.Simulations;
+  const fieldVariant = isSimulationPage ? ViewVariant.Light : ViewVariant.Default;
+  const metadataBorderClass = isSimulationPage ? 'border-gray-300' : 'border-white/20';
+  const summaryFields: TypeSummaryProps[] = isSimulationPage
+    ? [{ field: EntityCoreFields.Description, className: 'col-span-2' }, ...commonFields, ...fields]
+    : [...commonFields, ...fields];
+
+  const metadataGrid = (
+    <div
+      id={`metadata-grid-${kebabCase(extendedType)}-${entity.id}`}
+      data-testid="metadata-grid"
+      className={`mb-5 grid grid-cols-3 gap-4 rounded-lg border p-5 ${metadataBorderClass}`}
+    >
+      {summaryFields.map(({ className, field }) => {
+        return (
+          <Field
+            key={field}
+            className={className}
+            field={field}
+            data={entity}
+            variant={fieldVariant}
+          />
+        );
+      })}
+    </div>
+  );
+
+  const visualizations = hasVisualization ? (
+    <div
+      id={`visualizations-${kebabCase(extendedType)}-${entity.id}`}
+      data-testid="visualizations"
+      className={cn({ 'mb-8': !isSimulationPage })}
+    >
+      <div className="bg-white rounded-md">
+        {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
       </div>
-
-      {'subject' in entity && <SubjectDetails className="mb-8" entity={entity} />}
-
-      {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
-        singleNeuronSimulationPayload && (
-          <MEModelDetails
-            meModel={singleNeuronSimulationPayload.memodel}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-          />
-        )}
-      {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
-        singleNeuronSynaptomeSimulationPayload && (
-          <SynaptomeDetails
-            meModel={singleNeuronSynaptomeSimulationPayload.memodel}
-            synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-          />
-        )}
-      {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
-      {includes(
-        [
-          ExtendedEntitiesTypeDict.CellMorphology,
-          ExtendedEntitiesTypeDict.UniversalCellMorphology,
-          ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
-        ],
-        extendedType
-      ) && <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />}
+      {includes(morphologyTypes, extendedType) && (
+        <CellMorphologyViewer entity={entity as ICellMorphology} />
+      )}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
-        <EphysViewer entity={entity as IElectricalCellRecording} ctx={context} />
+        <EphysViewer
+          entity={entity as IElectricalCellRecording}
+          ctx={context}
+          defaultToInteractiveDetails={!isSimulationPage}
+          variant={fieldVariant}
+        />
       )}
       {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
-        <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />
+        <IonChannelRecordingViewer
+          resource={entity as IIonChannelRecording}
+          ctx={context}
+          variant={fieldVariant}
+        />
       )}
       {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
-        <IonChannelModelOverview icm={entity as IonChannelModel} ctx={context} />
+        <IonChannelModelOverview
+          icm={entity as IonChannelModel}
+          ctx={context}
+          variant={fieldVariant}
+        />
       )}
-      {extendedType === ExtendedEntitiesTypeDict.EMCellMesh && (
-        <EmCellMeshMetadata id={entity.id} ctx={context} />
-      )}
+    </div>
+  ) : null;
+
+  const subjectSection =
+    'subject' in entity ? (
+      <SubjectDetails className="mb-8" entity={entity} variant={fieldVariant} />
+    ) : null;
+
+  const meModelSection =
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
+    singleNeuronSimulationPayload ? (
+      <MEModelDetails
+        meModel={singleNeuronSimulationPayload.memodel}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        variant={fieldVariant}
+      />
+    ) : null;
+
+  const synaptomeSection =
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
+    singleNeuronSynaptomeSimulationPayload ? (
+      <SynaptomeDetails
+        meModel={singleNeuronSynaptomeSimulationPayload.memodel}
+        synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        variant={fieldVariant}
+      />
+    ) : null;
+
+  const emCellMeshSection =
+    extendedType === ExtendedEntitiesTypeDict.EMCellMesh ? (
+      <EmCellMeshMetadata id={entity.id} ctx={context} variant={fieldVariant} />
+    ) : null;
+
+  const morphometricsSection = includes(morphologyTypes, extendedType) ? (
+    <Morphometrics
+      className="mb-8"
+      morphology={entity as ICellMorphology}
+      context={context}
+      variant={fieldVariant}
+    />
+  ) : null;
+
+  if (isSimulationPage) {
+    return (
+      <>
+        {metadataGrid}
+        {subjectSection}
+        {meModelSection}
+        {synaptomeSection}
+        {visualizations}
+        {emCellMeshSection}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {visualizations}
+      {metadataGrid}
+      {subjectSection}
+      {meModelSection}
+      {synaptomeSection}
+      {emCellMeshSection}
+      {morphometricsSection}
     </>
   );
 }

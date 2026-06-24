@@ -2,6 +2,12 @@ import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 
 import { WorkspaceSection } from '@/constants';
+import { fetchObiOneJsonSchema } from '@/features/scan-config/components/hooks/schema';
+import {
+  parseWorkflowSchemaSelection,
+  type TWorkflowSchemaSelection,
+  WorkflowSchemaSelectionMode,
+} from '@/features/scan-config/workflow/workflow-schema-selection';
 
 import { ActivityRegistry } from './activities';
 import { EntityTypeCatalog } from './entity-types';
@@ -15,17 +21,29 @@ import {
   type TEntityGroupValue,
   type TEntityTypeMeta,
   type TGroupedWorkflows,
+  type TResolvedWorkflowInitialStage,
+  type TWorkflowBreadcrumbContext,
+  type TWorkflowBreadcrumbCrumb,
+  type TWorkflowBreadcrumbNode,
+  type TWorkflowBreadcrumbPhase,
+  type TWorkflowInitialStage,
   type TWorkflowListContext,
   type TWorkflowListSort,
+  WORKFLOW_BREADCRUMB_PHASE_ORDER,
+  WorkflowBreadcrumbPhaseDict,
+  WorkflowInitialStageDict,
+  WorkflowInitialStagePolicyDict,
   WorkflowListContextDict,
   WorkflowListSortDict,
 } from './types';
 
+import type { QueryClient } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceSection } from '@/constants';
 import type { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
 
-const featuresSatisfied = (
+export const featuresSatisfied = (
   required: readonly FlagKey[] | undefined,
   flags: FeatureFlags | undefined
 ): boolean => {
@@ -56,6 +74,12 @@ export function getEntityMeta(
   return EntityTypeCatalog[value] ?? null;
 }
 
+export function workflowHasMultipleSources(
+  workflow: IWorkflowDescriptor | null | undefined
+): boolean {
+  return Boolean(workflow?.hasMultipleSources);
+}
+
 function resolveWorkflow(
   workflow: IWorkflowDescriptor,
   flags: FeatureFlags | undefined
@@ -63,7 +87,7 @@ function resolveWorkflow(
   const entity = EntityTypeCatalog[workflow.sourceType] ?? {
     value: workflow.sourceType,
     group: EntityGroupDict.Cellular,
-    label: workflow.sourceType,
+    label: workflow.label ?? String(workflow.sourceType),
   };
   const entityFeaturesSatisfied = featuresSatisfied(entity.requiredFeatures, flags);
   const workflowFeaturesSatisfied = featuresSatisfied(workflow.requiredFeatures, flags);
@@ -147,6 +171,11 @@ export function getWorkflow(opts: {
   );
 }
 
+export {
+  findScanConfigRegistryByDefinition,
+  findScanConfigRegistryByTargetType,
+} from './scan-config-registry';
+
 export function getSourceType(opts: {
   activity: TActivityValue | string | null | undefined;
   targetType: TExtendedEntitiesTypeDict;
@@ -211,8 +240,7 @@ const sectionToActivity: Partial<Record<TWorkspaceSection, TActivityValue>> = {
  * be either the workflow's sourceType or its targetType), return the single
  * entity type that needs to be selected at the configuration step.
  *
- * Internally reads the first required `configurationInputs` entry, falling
- * back to the workflow's `sourceType` for back-compat.
+ * Falls back to `sourceType` when it differs from `targetType` (legacy browse-first).
  */
 export function getBaseModelType(opts: {
   section: TWorkspaceSection;
@@ -226,12 +254,160 @@ export function getBaseModelType(opts: {
     getWorkflow({ activity, sourceType: opts.type });
 
   if (!workflow) return undefined;
+  if (workflowHasMultipleSources(workflow)) return undefined;
   const inputs = workflow.configurationInputs ?? [];
   const required = inputs.find((i) => i.required !== false);
-  return required?.type ?? workflow.sourceType;
+  if (required?.type) return required.type;
+  return workflow.sourceType;
 }
 
 export function getWorkflowSegment(url: string): TActivityValue | null {
   const match = url.match(/\/workflows\/([^/]+)/);
   return match ? (match[1] as TActivityValue) : null;
+}
+
+function getWorkflowInitialStageFromSelection(
+  selection: TWorkflowSchemaSelection | null | undefined
+): TWorkflowInitialStage {
+  if (!selection || selection.selectionMode === WorkflowSchemaSelectionMode.None) {
+    return WorkflowInitialStageDict.Configure;
+  }
+
+  return WorkflowInitialStageDict.New;
+}
+
+export function getWorkflowInitialStage(opts: {
+  workflow: IWorkflowDescriptor | null | undefined;
+  selection?: TWorkflowSchemaSelection | null | undefined;
+}): TWorkflowInitialStage {
+  return resolveWorkflowRouteStage(opts);
+}
+
+export function resolveWorkflowRouteStage(opts: {
+  workflow: IWorkflowDescriptor | null | undefined;
+  selection?: TWorkflowSchemaSelection | null | undefined;
+}): TWorkflowInitialStage {
+  const { workflow, selection } = opts;
+
+  if (!workflow) {
+    return WorkflowInitialStageDict.Configure;
+  }
+
+  switch (workflow.initialStage) {
+    case WorkflowInitialStagePolicyDict.Configure:
+      return WorkflowInitialStageDict.Configure;
+    case WorkflowInitialStagePolicyDict.Browse:
+      return WorkflowInitialStageDict.New;
+    case WorkflowInitialStagePolicyDict.Schema:
+      return getWorkflowInitialStageFromSelection(selection);
+    default:
+      return WorkflowInitialStageDict.Configure;
+  }
+}
+
+export async function inferWorkflowStartingPageRemoteSchemaBased(opts: {
+  qc?: QueryClient;
+  activity: TActivityValue;
+  targetType: TExtendedEntitiesTypeDict;
+}): Promise<TResolvedWorkflowInitialStage> {
+  const workflow = getWorkflow({ activity: opts.activity, targetType: opts.targetType });
+
+  if (!workflow) {
+    return { stage: WorkflowInitialStageDict.Configure, workflow: null, schemaSelection: null };
+  }
+
+  let schemaSelection: TWorkflowSchemaSelection | null | undefined;
+
+  if (workflow.initialStage === WorkflowInitialStagePolicyDict.Schema) {
+    const schemaName = workflow.scanConfig?.schemaName;
+
+    if (!schemaName) {
+      return {
+        stage: WorkflowInitialStageDict.Configure,
+        workflow,
+        schemaSelection: null,
+      };
+    }
+
+    const schema = await fetchObiOneJsonSchema({ qc: opts.qc, schemaName });
+    schemaSelection = parseWorkflowSchemaSelection({ schema, schemaName });
+  }
+
+  return {
+    stage: resolveWorkflowRouteStage({ workflow, selection: schemaSelection }),
+    workflow,
+    schemaSelection: schemaSelection ?? null,
+  };
+}
+
+function renderBreadcrumbNode(
+  node: TWorkflowBreadcrumbNode,
+  context: TWorkflowBreadcrumbContext
+): ReactNode {
+  return typeof node === 'function' ? node(context) : node;
+}
+
+/**
+ * builds the `/new/{type}` breadcrumb from the workflow's own setup
+ * ({@link IWorkflowDescriptor.breadcrumb})
+ *
+ * it gives you the FULL trail, every screen you passed, in order, up to the one the app is on
+ * so a flow with a pre-step reads `root → Select dataset → Select entities` instead of forgetting the
+ * dataset once you picked it, it only shows the steps a workflow actually lists, so flows with no
+ * pre-step just stay two crumbs
+ */
+export function resolveWorkflowBreadcrumb(opts: {
+  workflow: IWorkflowDescriptor;
+  activity: TActivityValue;
+  phase: TWorkflowBreadcrumbPhase;
+  activeEntityType: TExtendedEntitiesTypeDict | null;
+}): { root: ReactNode; trail: TWorkflowBreadcrumbCrumb[] } {
+  const { workflow, activity, phase, activeEntityType } = opts;
+  const breadcrumb = workflow.breadcrumb;
+
+  if (!breadcrumb) {
+    return { root: null, trail: [] };
+  }
+
+  // does the type you're on need a pre-step first? we only keep the done pre-step crumb for types
+  // that really have one, some workflows mix types where only a few need it
+  const activeTypeHasPrerequisite = activeEntityType
+    ? Boolean(workflow.browseConfig?.[activeEntityType]?.prerequisite?.required)
+    : false;
+
+  const context: TWorkflowBreadcrumbContext = { workflow, activity, phase, activeEntityType };
+  const currentPhaseIndex = WORKFLOW_BREADCRUMB_PHASE_ORDER.indexOf(phase);
+
+  const trail = WORKFLOW_BREADCRUMB_PHASE_ORDER.flatMap<TWorkflowBreadcrumbCrumb>(
+    (stepPhase, index) => {
+      // stop at the screen you're on — don't show screens that come later
+      if (index > currentPhaseIndex) {
+        return [];
+      }
+
+      const node = breadcrumb.steps?.[stepPhase];
+      if (node === undefined) {
+        return [];
+      }
+
+      // drop the done pre-step crumb if the type you're on doesn't even use a pre-step
+      if (
+        stepPhase === WorkflowBreadcrumbPhaseDict.Prerequisite &&
+        phase !== WorkflowBreadcrumbPhaseDict.Prerequisite &&
+        !activeTypeHasPrerequisite
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          phase: stepPhase,
+          node: renderBreadcrumbNode(node, context),
+          isCurrent: stepPhase === phase,
+        },
+      ];
+    }
+  );
+
+  return { root: renderBreadcrumbNode(breadcrumb.root, context), trail };
 }

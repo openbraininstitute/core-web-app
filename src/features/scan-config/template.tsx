@@ -1,24 +1,26 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { useAtom } from 'jotai';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { useEntries } from '@/features/scan-config/components/hooks';
-import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import {
-  type TSchemaMappingConfiguration,
-  useAtomsMap,
-} from '@/features/scan-config/components/hooks/schema';
+  ScanConfigMainOverlayProvider,
+  useScanConfigMainOverlayOptional,
+} from '@/features/scan-config/bridge/main-overlay-context';
+import { useEntries } from '@/features/scan-config/components/hooks';
+import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
-  ACTIVITY_AI_CONFIG_MAP,
+  getConfigKeyForEntity,
+  ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import {
+  type Config,
   type ConfigSchema,
+  isType,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
@@ -34,12 +36,13 @@ import SimulationsTab from '@/features/scan-config/use-cases/simulations/results
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
-import { useAgentState } from '@/services/ai-agent';
-import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
-import type { Config } from '@/features/scan-config/components/components';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -48,7 +51,7 @@ type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   virtualLabId: string;
   projectId: string;
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
   readOnly?: boolean;
@@ -61,13 +64,23 @@ type Props = {
   aiEnabled: boolean;
   generatedEndpoint: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
-export function ScanConfigTemplate({
+export function ScanConfigTemplate(props: Props) {
+  return (
+    <ScanConfigMainOverlayProvider>
+      <ScanConfigTemplateContent {...props} />
+    </ScanConfigMainOverlayProvider>
+  );
+}
+
+function ScanConfigTemplateContent({
   entity,
   virtualLabId,
   projectId,
-  initialCampaignId,
+  origin,
   initialConfig,
   defaultTab = ScanConfigDefaultTab,
   readOnly,
@@ -80,38 +93,65 @@ export function ScanConfigTemplate({
   generatedEndpoint,
   entityType,
   campaignOriginAction,
+  workflowSessionSelection,
+  resolveSessionFromIdType,
 }: Props) {
+  const browseOverlayContext = useScanConfigMainOverlayOptional();
+  const browseOverlay = browseOverlayContext?.overlay;
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
-  const [selectedRootElement, setSelectedRootElement] = useAtom(selectedRootElementAtom);
-  const [editing, setEditing] = useAtom(editingAtom);
-  const [selectedEntry, setSelectedEntry] = useAtom(selectedEntryAtom);
+  const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
+  const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
+  const [editing, setEditing] = useState(true);
+  const [selectedEntry, setSelectedEntry] = useState('');
+
   const [loading, setLoading] = useState(false);
-  const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
+  const isDuplicate = campaignOriginAction === ScanConfigCampaignOriginActionDict.Duplicate;
+  const [campaignId, setCampaignId] = useState(isDuplicate ? '' : (origin ?? ''));
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   const allEntries = useEntries({ initialConfig, schema });
-  const [atomsMap, setAtomsMap] = useAtomsMap({
+  const [config, setConfig] = useConfig({
     schema,
     initialConfig,
     model: entity,
+    origin,
+    workflowSessionSelection,
+    resolveFromIdType: resolveSessionFromIdType,
   });
-  const config = useConfigAtom(schema, atomsMap);
+
+  const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
-  useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
+  useAgentState(
+    aiEnabled
+      ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined)
+      : '',
+    config
+  );
+  useAIConfig();
 
   const configurationTabId = ScanConfigTabs[activity].configuration;
   const isConfigurationTab = tab.id === configurationTabId;
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
-        <SimulationsTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+        <SimulationsTab
+          campaignId={campaignId}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+          campaignOriginAction={campaignOriginAction}
+          isCampaignIdChanged={isCampaignIdChanged}
+        />
       </Suspense>
     ))
     .with(ScanConfigActivity.Extract, () => (
       <Suspense>
-        <ExtractionTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+        <ExtractionTab
+          isCampaignIdChanged={isCampaignIdChanged}
+          campaignOriginAction={campaignOriginAction}
+          campaignId={campaignId}
+        />
       </Suspense>
     ))
     .with(ScanConfigActivity.Process, () => (
@@ -129,8 +169,6 @@ export function ScanConfigTemplate({
           isCampaignIdChanged={isCampaignIdChanged}
           campaignOriginAction={campaignOriginAction}
           campaignId={campaignId}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
         />
       </Suspense>
     ))
@@ -160,24 +198,30 @@ export function ScanConfigTemplate({
 
       <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
       <div id="template-content" className="flex-1 min-h-0">
+        {isConfigurationTab && browseOverlay ? (
+          <div id="scan-config-model-selection-overlay" className="h-[calc(100%-0.5rem)] min-h-0">
+            <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
+              {browseOverlay}
+            </Suspense>
+          </div>
+        ) : null}
         <div
           id="scan-config-content-columns"
           className={cn(
             'py-2',
             {
               'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden *:min-w-0':
-                isConfigurationTab,
+                isConfigurationTab && !browseOverlay,
             },
-            { hidden: !isConfigurationTab }
+            { hidden: !isConfigurationTab || Boolean(browseOverlay) }
           )}
         >
           <Left
             schema={schema}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
             selectedRootElement={selectedRootElement}
             setSelectedRootElement={setSelectedRootElement}
             config={config}
+            setConfig={setConfig}
             campaignId={campaignId}
             loading={loading}
             selectedEntry={selectedEntry}
@@ -196,6 +240,7 @@ export function ScanConfigTemplate({
             activity={activity}
             generatedEndpoint={generatedEndpoint}
             entityType={entityType}
+            aiEnabled={aiEnabled}
           />
           <div
             id="scan-config-controls-middle"
@@ -204,27 +249,26 @@ export function ScanConfigTemplate({
               'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
             )}
           >
-            {editing && (
+            {editing && selectedSchema !== undefined && (
               <Middle
-                key={selectedRootElement + selectedEntry}
+                key={`${schemaName}_${selectedRootElement}_${selectedEntry}`}
                 schemaName={schemaName}
                 schema={schema}
                 selectedRootElement={selectedRootElement}
                 editing={editing}
-                atomsMap={atomsMap}
-                setAtomsMap={setAtomsMap}
                 selectedEntry={selectedEntry}
                 setSelectedEntry={setSelectedEntry}
                 campaignId={campaignId}
                 loading={loading}
                 config={config}
+                setConfig={setConfig}
                 entity={entity}
                 allEntries={allEntries}
                 onNewBlockClick={() => {
                   setNewKey('');
                   setIsEditingKey(false);
                 }}
-                selectedSchema={schema.properties[selectedRootElement]}
+                selectedSchema={selectedSchema}
                 schemaMappingConfig={schemaMappingConfig}
                 entityType={entityType}
               />

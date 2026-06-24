@@ -2,13 +2,16 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { find, omit } from 'es-toolkit/compat';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useStore } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { updateBrainRegionPreference } from '@/api/virtual-lab-svc/queries/user';
 import { config } from '@/config';
 import {
   allowAllSpeciesAtom,
+  hierarchyRegistryInitWorkspaceKeyAtom,
+  hierarchyRegistryLastAppliedUrlOverrideAtom,
+  hierarchyRegistrySyncSettledAtom,
   selectedBrainRegionAtom,
   speciesSelectionModeAtom,
   useBrainRegionRootHierarchyQuery,
@@ -17,14 +20,21 @@ import {
   VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
   workspaceHierarchySpeciesAtom,
 } from '@/features/brain-region-hierarchy/context';
-import { getSpeciesDisplayName } from '@/features/brain-region-hierarchy/helpers';
+import {
+  createAllSpeciesSelection,
+  getHierarchyBannerLoading,
+  resolveDisplayWorkspaceSpecies,
+  resolveEffectiveHierarchyId,
+} from '@/features/brain-region-hierarchy/helpers';
 import {
   useAvailableHierarchySpeciesQuery,
+  useBrainRegionBootstrapQueries,
   useHierarchyRuntimeMetadataQuery,
-  useRemoteUserPreferenceHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { shouldClearAppliedUrlOverrideState } from '@/features/brain-region-hierarchy/url-boundary-state';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
@@ -68,13 +78,7 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
     const hierarchyId = brainRegion?.hierarchy_id;
     const species = hierarchies?.find((h) => h.id === hierarchyId)?.species;
     if (species) {
-      setWorkspaceSpecies({
-        name: species?.name,
-        displayName: getSpeciesDisplayName(species?.name),
-        id: species?.id,
-        taxonomyId: species?.taxonomyId,
-        hierarchId: hierarchyId || '',
-      });
+      setWorkspaceSpecies({ ...species, hierarchId: hierarchyId || '' });
     }
   }
 
@@ -130,9 +134,14 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
  * 4. Config defaults (fallback)
  */
 export function useWorkspaceHierarchyRegistry() {
-  // track initialization to prevent infinite loops
-  const isInitializedRef = useRef(false);
-  const lastAppliedUrlOverrideRef = useRef<string | null>(null);
+  const { virtualLabId, projectId } = useWorkspace();
+  const workspaceKey = `${virtualLabId}:${projectId}`;
+  const prevWorkspaceKeyRef = useRef(workspaceKey);
+  const store = useStore();
+  const [syncSettled, setSyncSettled] = useAtom(hierarchyRegistrySyncSettledAtom);
+  const [lastAppliedUrlOverride, setLastAppliedUrlOverride] = useAtom(
+    hierarchyRegistryLastAppliedUrlOverrideAtom
+  );
   const queryClient = useQueryClient();
 
   const {
@@ -144,16 +153,18 @@ export function useWorkspaceHierarchyRegistry() {
     workspaceSpecies,
   } = useLocalStoreHierarchySpeciesAndBrainRegion();
 
-  const { urlOverride } = useBrainRegionUrlBoundaryContext();
+  const { mode: urlBoundaryMode, urlOverride } = useBrainRegionUrlBoundaryContext();
   const allowAllSpecies = useAtomValue(allowAllSpeciesAtom);
   const [speciesSelectionMode, setSpeciesSelectionMode] = useAtom(speciesSelectionModeAtom);
-  const { remoteAvailableHierarchies, loading: isLoadingAvailableHierarchiesSpecies } =
-    useAvailableHierarchySpeciesQuery();
+  const {
+    isLoading: isBootstrapLoading,
+    remoteAvailableHierarchies,
+    remoteUserPreferenceHierarchySpecies,
+  } = useBrainRegionBootstrapQueries();
   const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
-  const { remoteUserPreferenceHierarchySpecies, loading: isLoadingRemotePreference } =
-    useRemoteUserPreferenceHierarchySpeciesQuery();
 
-  const { result: brainRegions } = usePrimaryHierarchyOfCurrentSpeciesQuery();
+  const { result: brainRegions, loading: isRootHierarchyLoading } =
+    usePrimaryHierarchyOfCurrentSpeciesQuery();
   const [browserStorageHierarchy, setBrowserStorageHierarchy] =
     useLocalStorage<BrainRegionHierarchySelection | null>(
       VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
@@ -162,6 +173,7 @@ export function useWorkspaceHierarchyRegistry() {
 
   const focusedUrlOverride = urlOverride?.kind === 'focused' ? urlOverride : null;
   const isAllUrlOverride = urlOverride?.kind === 'all';
+  const hasActiveUrlOverride = !!focusedUrlOverride || isAllUrlOverride;
 
   // get default hierarchy based on configured species
   const defaultHierarchy = remoteAvailableHierarchies?.find(
@@ -174,14 +186,27 @@ export function useWorkspaceHierarchyRegistry() {
       ? `${focusedUrlOverride.hierarchyId}:${focusedUrlOverride.brainRegionId}`
       : null;
 
-  const defaultingCurrentHierarchyId =
-    focusedUrlOverride?.hierarchyId ||
-    remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
-    browserStorageHierarchy?.hierarchyId ||
-    config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
+  useEffect(() => {
+    if (prevWorkspaceKeyRef.current === workspaceKey) {
+      return;
+    }
+
+    prevWorkspaceKeyRef.current = workspaceKey;
+    store.set(hierarchyRegistryInitWorkspaceKeyAtom, null);
+    setSyncSettled(false);
+    setLastAppliedUrlOverride(null);
+  }, [workspaceKey, store, setSyncSettled, setLastAppliedUrlOverride]);
+
+  const workspaceHierarchyId = resolveEffectiveHierarchyId({
+    urlHierarchyId: focusedUrlOverride?.hierarchyId,
+    remoteHierarchyId: remoteUserPreferenceHierarchySpecies?.hierarchy_id,
+    storageHierarchyId: browserStorageHierarchy?.hierarchyId,
+    defaultHierarchyId: config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
+    availableHierarchies: remoteAvailableHierarchies,
+  });
 
   const defaultBrainRegionId =
-    runtimeHierarchyById.get(defaultingCurrentHierarchyId)?.fallbackDefaultSelectedRegionId ??
+    runtimeHierarchyById.get(workspaceHierarchyId)?.fallbackDefaultSelectedRegionId ??
     config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
 
   const defaultBrainRegionObject =
@@ -227,6 +252,21 @@ export function useWorkspaceHierarchyRegistry() {
     syncHierarchySpeciesRemoteUserPreference(selection);
   }
 
+  function applyAllSpeciesMode(
+    perHierarchyMemory?: BrainRegionHierarchySelection['perHierarchyMemory'],
+    options?: { persistStorage?: boolean; urlOverrideKey?: string }
+  ) {
+    setSelectedBrainRegion(null);
+    setWorkspaceSpecies(null);
+    setSpeciesSelectionMode(SpeciesSelectionMode.All);
+    if (options?.persistStorage !== false) {
+      setBrowserStorageHierarchy(createAllSpeciesSelection(perHierarchyMemory));
+    }
+    if (options?.urlOverrideKey) {
+      setLastAppliedUrlOverride(options.urlOverrideKey);
+    }
+  }
+
   /**
    * change the selected species
    *
@@ -262,18 +302,8 @@ export function useWorkspaceHierarchyRegistry() {
     }
 
     if (hIdOrMode === SpeciesSelectionMode.All) {
-      // switch into "all species" mode: drop species and brain-region filters
-      setSelectedBrainRegion(null);
-      setWorkspaceSpecies(null);
-      setSpeciesSelectionMode(SpeciesSelectionMode.All);
-      syncExternalStores({
-        hierarchyId: '',
-        speciesName: '',
-        brainRegionId: '',
-        brainRegionName: '',
-        perHierarchyMemory: prevMemory,
-        speciesSelectionMode: SpeciesSelectionMode.All,
-      });
+      applyAllSpeciesMode(prevMemory, { persistStorage: false });
+      syncExternalStores(createAllSpeciesSelection(prevMemory));
       return;
     }
 
@@ -407,14 +437,24 @@ export function useWorkspaceHierarchyRegistry() {
    * initialize state from the active URL override, remote preference, localStorage,
    * or defaults once the current route boundary has settled.
    */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: applyAllSpeciesMode uses stable jotai setters
   useEffect(() => {
-    if (
-      isInitializedRef.current ||
-      isLoadingAvailableHierarchiesSpecies ||
-      isLoadingRemotePreference ||
-      remoteAvailableHierarchies?.length === 0
-    )
+    if (syncSettled || isBootstrapLoading) {
       return;
+    }
+
+    if (!remoteAvailableHierarchies?.length) {
+      if (!isBootstrapLoading) {
+        setSyncSettled(true);
+      }
+      return;
+    }
+
+    if (store.get(hierarchyRegistryInitWorkspaceKeyAtom) === workspaceKey) {
+      return;
+    }
+
+    store.set(hierarchyRegistryInitWorkspaceKeyAtom, workspaceKey);
 
     async function sync() {
       const hasFocusedUrlOverride = !!focusedUrlOverride;
@@ -427,19 +467,9 @@ export function useWorkspaceHierarchyRegistry() {
 
       // url override wins: `?s=all` on a page that allows it
       if (hasAllUrlOverride && allowAllSpecies) {
-        setSelectedBrainRegion(null);
-        setWorkspaceSpecies(null);
-        setSpeciesSelectionMode(SpeciesSelectionMode.All);
-        setBrowserStorageHierarchy({
-          hierarchyId: '',
-          speciesName: '',
-          brainRegionId: '',
-          brainRegionName: '',
-          perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
-          speciesSelectionMode: SpeciesSelectionMode.All,
+        applyAllSpeciesMode(browserStorageHierarchy?.perHierarchyMemory, {
+          urlOverrideKey: 'all',
         });
-        lastAppliedUrlOverrideRef.current = 'all';
-        isInitializedRef.current = true;
         return;
       }
 
@@ -464,27 +494,16 @@ export function useWorkspaceHierarchyRegistry() {
               speciesSelectionMode: SpeciesSelectionMode.Focused,
             });
           }
-          lastAppliedUrlOverrideRef.current = overrideKey;
-          isInitializedRef.current = true;
+          setLastAppliedUrlOverride(overrideKey);
           return;
         }
-        lastAppliedUrlOverrideRef.current = overrideKey;
+        setLastAppliedUrlOverride(overrideKey);
+        return;
       }
 
       // remote preference is "all": honor it if the page allows it
       if (remoteModeIsAll && allowAllSpecies) {
-        setSelectedBrainRegion(null);
-        setWorkspaceSpecies(null);
-        setSpeciesSelectionMode(SpeciesSelectionMode.All);
-        setBrowserStorageHierarchy({
-          hierarchyId: '',
-          speciesName: '',
-          brainRegionId: '',
-          brainRegionName: '',
-          perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
-          speciesSelectionMode: SpeciesSelectionMode.All,
-        });
-        isInitializedRef.current = true;
+        applyAllSpeciesMode(browserStorageHierarchy?.perHierarchyMemory);
         return;
       }
 
@@ -509,17 +528,15 @@ export function useWorkspaceHierarchyRegistry() {
             perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
             speciesSelectionMode: SpeciesSelectionMode.Focused,
           });
-          isInitializedRef.current = true;
           return;
         }
       }
 
       // local storage stored "all": honor it if the page allows it
       if (storageModeIsAll && allowAllSpecies) {
-        setSelectedBrainRegion(null);
-        setWorkspaceSpecies(null);
-        setSpeciesSelectionMode(SpeciesSelectionMode.All);
-        isInitializedRef.current = true;
+        applyAllSpeciesMode(browserStorageHierarchy?.perHierarchyMemory, {
+          persistStorage: false,
+        });
         return;
       }
 
@@ -533,7 +550,6 @@ export function useWorkspaceHierarchyRegistry() {
             hierarchy.id,
             browserStorageHierarchy.brainRegionId
           );
-          isInitializedRef.current = true;
           return;
         }
       }
@@ -553,15 +569,23 @@ export function useWorkspaceHierarchyRegistry() {
           speciesSelectionMode: SpeciesSelectionMode.Focused,
         });
       }
-
-      isInitializedRef.current = true;
     }
 
-    void sync();
+    void sync()
+      .catch(() => undefined)
+      .finally(() => {
+        if (store.get(hierarchyRegistryInitWorkspaceKeyAtom) !== workspaceKey) {
+          return;
+        }
+        store.set(hierarchyRegistryInitWorkspaceKeyAtom, null);
+        store.set(hierarchyRegistrySyncSettledAtom, true);
+      });
   }, [
+    workspaceKey,
+    store,
+    syncSettled,
     remoteAvailableHierarchies,
-    isLoadingAvailableHierarchiesSpecies,
-    isLoadingRemotePreference,
+    isBootstrapLoading,
     remoteUserPreferenceHierarchySpecies,
     focusedUrlOverride,
     isAllUrlOverride,
@@ -569,6 +593,8 @@ export function useWorkspaceHierarchyRegistry() {
     browserStorageHierarchy,
     defaultHierarchy,
     setBrowserStorageHierarchy,
+    setSyncSettled,
+    setLastAppliedUrlOverride,
     changeLocalStoreHierarchySpecies,
     runtimeHierarchyById,
     setSelectedBrainRegion,
@@ -580,15 +606,21 @@ export function useWorkspaceHierarchyRegistry() {
    * apply fresh URL overrides after initialization, e.g. on back/forward navigation
    * within a synced route.
    */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: applyAllSpeciesMode uses stable jotai setters
   useEffect(() => {
     if (
-      !isInitializedRef.current ||
-      isLoadingAvailableHierarchiesSpecies ||
+      !syncSettled ||
+      isBootstrapLoading ||
       remoteAvailableHierarchies?.length === 0 ||
       (!focusedUrlOverride && !isAllUrlOverride)
     ) {
-      if (!focusedUrlOverride && !isAllUrlOverride) {
-        lastAppliedUrlOverrideRef.current = null;
+      if (
+        shouldClearAppliedUrlOverrideState({
+          boundaryMode: urlBoundaryMode,
+          hasActiveUrlOverride,
+        })
+      ) {
+        setLastAppliedUrlOverride(null);
       }
       return;
     }
@@ -596,32 +628,23 @@ export function useWorkspaceHierarchyRegistry() {
     // handle `?s=all` url override
     if (isAllUrlOverride && allowAllSpecies) {
       const overrideKey = 'all';
-      if (lastAppliedUrlOverrideRef.current === overrideKey) return;
+      if (lastAppliedUrlOverride === overrideKey) return;
 
       if (speciesSelectionMode === SpeciesSelectionMode.All) {
-        lastAppliedUrlOverrideRef.current = overrideKey;
+        setLastAppliedUrlOverride(overrideKey);
         return;
       }
 
-      setSelectedBrainRegion(null);
-      setWorkspaceSpecies(null);
-      setSpeciesSelectionMode(SpeciesSelectionMode.All);
-      setBrowserStorageHierarchy({
-        hierarchyId: '',
-        speciesName: '',
-        brainRegionId: '',
-        brainRegionName: '',
-        perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
-        speciesSelectionMode: SpeciesSelectionMode.All,
+      applyAllSpeciesMode(browserStorageHierarchy?.perHierarchyMemory, {
+        urlOverrideKey: overrideKey,
       });
-      lastAppliedUrlOverrideRef.current = overrideKey;
       return;
     }
 
     if (!focusedUrlOverride) return;
 
     const overrideKey = `${focusedUrlOverride.hierarchyId}:${focusedUrlOverride.brainRegionId}`;
-    if (lastAppliedUrlOverrideRef.current === overrideKey) return;
+    if (lastAppliedUrlOverride === overrideKey) return;
 
     const matchesSelectedRegion =
       speciesSelectionMode === SpeciesSelectionMode.Focused &&
@@ -630,7 +653,7 @@ export function useWorkspaceHierarchyRegistry() {
         selectedBrainRegion?.id === focusedUrlOverride.brainRegionId);
 
     if (matchesSelectedRegion) {
-      lastAppliedUrlOverrideRef.current = overrideKey;
+      setLastAppliedUrlOverride(overrideKey);
       return;
     }
 
@@ -641,7 +664,7 @@ export function useWorkspaceHierarchyRegistry() {
         (h) => h.id === currentUrlOverride.hierarchyId
       );
       if (!hierarchy) {
-        lastAppliedUrlOverrideRef.current = overrideKey;
+        setLastAppliedUrlOverride(overrideKey);
         return;
       }
 
@@ -660,12 +683,15 @@ export function useWorkspaceHierarchyRegistry() {
           speciesSelectionMode: SpeciesSelectionMode.Focused,
         });
       }
-      lastAppliedUrlOverrideRef.current = overrideKey;
+      setLastAppliedUrlOverride(overrideKey);
     }
 
     void applyUrlOverride();
   }, [
-    isLoadingAvailableHierarchiesSpecies,
+    syncSettled,
+    lastAppliedUrlOverride,
+    setLastAppliedUrlOverride,
+    isBootstrapLoading,
     remoteAvailableHierarchies,
     focusedUrlOverride,
     isAllUrlOverride,
@@ -678,6 +704,8 @@ export function useWorkspaceHierarchyRegistry() {
     setSelectedBrainRegion,
     setWorkspaceSpecies,
     setSpeciesSelectionMode,
+    urlBoundaryMode,
+    hasActiveUrlOverride,
   ]);
 
   /**
@@ -685,7 +713,7 @@ export function useWorkspaceHierarchyRegistry() {
    */
   // biome-ignore lint/correctness/useExhaustiveDependencies: syncExternalStores is stable
   useEffect(() => {
-    if (!brainRegions || !isInitializedRef.current) return;
+    if (!brainRegions || !syncSettled) return;
     if (speciesSelectionMode === SpeciesSelectionMode.All) return; // no region selection when in "all" mode
     // skip while a species transition is mid-flight (workspaceSpecies temporarily
     // null). firing here would PATCH the preference with a stale fallback hierarchy.
@@ -728,6 +756,7 @@ export function useWorkspaceHierarchyRegistry() {
     });
   }, [
     brainRegions,
+    syncSettled,
     speciesSelectionMode,
     selectedBrainRegion,
     defaultBrainRegionObject,
@@ -743,7 +772,7 @@ export function useWorkspaceHierarchyRegistry() {
    * fall back to a focused selection instead of rendering a broken state.
    */
   useEffect(() => {
-    if (!isInitializedRef.current) return;
+    if (!syncSettled) return;
     if (allowAllSpecies) return;
     if (speciesSelectionMode !== SpeciesSelectionMode.All) return;
 
@@ -757,6 +786,7 @@ export function useWorkspaceHierarchyRegistry() {
 
     void changeBulkStoreHierarchySpecies(fallbackHierarchyId);
   }, [
+    syncSettled,
     allowAllSpecies,
     speciesSelectionMode,
     browserStorageHierarchy?.hierarchyId,
@@ -765,22 +795,33 @@ export function useWorkspaceHierarchyRegistry() {
     changeBulkStoreHierarchySpecies,
   ]);
 
-  // compute effective hierarchy ID
-  const workspaceHierarchyId =
-    focusedUrlOverride?.hierarchyId ||
-    remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
-    browserStorageHierarchy?.hierarchyId ||
-    config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
   const hasPendingUrlOverride =
-    !!currentUrlOverrideKey && lastAppliedUrlOverrideRef.current !== currentUrlOverrideKey;
+    !!currentUrlOverrideKey && lastAppliedUrlOverride !== currentUrlOverrideKey;
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
+  const displaySpecies = resolveDisplayWorkspaceSpecies({
+    isAllMode,
+    workspaceSpecies,
+    workspaceHierarchyId,
+    remoteAvailableHierarchies,
+  });
+  const isUiLoading = getHierarchyBannerLoading({
+    syncSettled,
+    hasPendingUrlOverride,
+    isBootstrapLoading,
+    isRootHierarchyLoading,
+    isAllMode,
+    displaySpecies,
+    hasAvailableHierarchies: !!remoteAvailableHierarchies?.length,
+  });
 
   return {
     workspaceSpecies,
     selectedBrainRegion,
     workspaceHierarchyId,
     remoteAvailableHierarchies,
-    isLoadingAvailableHierarchiesSpecies,
-    syncSettled: isInitializedRef.current,
+    displaySpecies,
+    isUiLoading,
+    syncSettled,
     hasPendingUrlOverride,
     speciesSelectionMode,
     changeBulkStoreHierarchySpecies,

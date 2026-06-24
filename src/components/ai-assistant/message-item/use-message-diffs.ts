@@ -1,8 +1,15 @@
 'use client';
 
+import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } from 'ai';
 import { useAtom, useSetAtom } from 'jotai';
+import { z } from 'zod';
 import React from 'react';
 
+import {
+  findConfigKeyInState,
+  type TAIConfigKey,
+  VALID_AI_CONFIG_KEYS,
+} from '@/features/scan-config/helpers';
 import { agentStateAtom, configStateAtom } from '@/services/ai-agent/hooks/chat';
 import {
   clearDiffStateAtom,
@@ -13,24 +20,26 @@ import {
 } from '@/state/config-highlights';
 import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
-import type { ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 import type { Config } from '@/features/scan-config/components/components';
 
 // ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
 /** Filter parts down to completed editstate tool invocations. */
-export function completedEditStateParts(parts: UIMessage['parts']): ToolInvocationUIPart[] {
+export function completedEditStateParts(
+  parts: UIMessage['parts']
+): (ToolUIPart | DynamicToolUIPart)[] {
   return parts.filter(
-    (p) =>
-      p.type === 'tool-invocation' &&
-      p.toolInvocation.toolName === 'editstate' &&
-      p.toolInvocation.state === 'result'
-  ) as ToolInvocationUIPart[];
+    (p) => isToolUIPart(p) && getToolName(p) === 'editstate' && p.state === 'output-available'
+  ) as (ToolUIPart | DynamicToolUIPart)[];
 }
 
-/** Strip the leading `smc_simulation_config` segment when present. */
+/** Strip the leading config key segment when present. */
 export function stripConfigPrefix(path: string[]): string[] {
-  return path[0] === 'smc_simulation_config' && path.length > 1 ? path.slice(1) : path;
+  if (path.length > 1 && VALID_AI_CONFIG_KEYS.includes(path[0] as TAIConfigKey)) {
+    return path.slice(1);
+  }
+  return path;
 }
 
 /** Strip config prefix from diffs and derive highlights in a single pass. */
@@ -71,9 +80,10 @@ export function findLastNewConfig(
 
   try {
     const last = calls[0];
-    if (last.toolInvocation.state === 'result') {
-      const result = JSON.parse(last.toolInvocation.result as string);
-      return result?.state?.smc_simulation_config || null;
+    if (last.state === 'output-available') {
+      const result = last.output as Record<string, any>;
+      const key = findConfigKeyInState(result?.state ?? {});
+      return key ? result.state[key] : null;
     }
   } catch (error) {
     console.error('Failed to get latest state:', error);
@@ -89,6 +99,7 @@ interface UseMessageDiffsArgs {
 
 export interface MessageDiffActions {
   hasEditStateCalls: boolean;
+  canRestore: boolean;
   handlePreviewRestore: () => void;
   handleConfirmRestore: () => void;
   handleCancelRestore: () => void;
@@ -107,15 +118,41 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
   // ── Derived data ─────────────────────────────────────────────────────────
 
   const hasEditStateCalls = React.useMemo(
-    () =>
-      message.parts.some(
-        (p) => p.type === 'tool-invocation' && p.toolInvocation.toolName === 'editstate'
-      ),
+    () => message.parts.some((p) => isToolUIPart(p) && getToolName(p) === 'editstate'),
     [message.parts]
   );
 
   /** The config from the *last* completed editstate call in this message. */
   const lastNewConfig = React.useMemo(() => findLastNewConfig(message.parts), [message.parts]);
+
+  /** Check if the message's editstate config key matches the currently active page key
+   *  AND the config belongs to the same entity as the current URL. */
+  const canRestore = React.useMemo(() => {
+    if (!hasEditStateCalls) return false;
+    const calls = completedEditStateParts(message.parts);
+    if (calls.length === 0) return false;
+    const lastCall = calls[calls.length - 1];
+    if (lastCall.state !== 'output-available' || !lastCall.output) return false;
+    const result = lastCall.output as Record<string, any>;
+    const messageKey = findConfigKeyInState(result?.state ?? {});
+    const activeKey = findConfigKeyInState(agentState as Record<string, unknown>);
+    if (messageKey === null || messageKey !== activeKey) return false;
+
+    // Check that the message config belongs to the same entity as the current page.
+    // The URL's last path segment is the entity ID on entity-specific pages.
+    // Only check if it looks like a UUID (entity-specific pages).
+    const urlSegments = globalThis.location?.pathname?.split('/').filter(Boolean) ?? [];
+    const urlEntityId = urlSegments[urlSegments.length - 1];
+    const isUuid = z.uuid().safeParse(urlEntityId).success;
+    if (isUuid && messageKey) {
+      const messageConfig = result.state[messageKey];
+      if (messageConfig && !JSON.stringify(messageConfig).includes(urlEntityId)) {
+        return false;
+      }
+    }
+
+    return true;
+  }, [hasEditStateCalls, message.parts, agentState]);
 
   /** Extract the config from the *last* completed editstate call (for restore). */
   const getLatestState = React.useCallback((): Config | null => {
@@ -128,8 +165,8 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
     const latestState = getLatestState();
     if (!latestState) return;
 
-    const currentLiveConfig =
-      (agentState as Record<string, unknown>)?.smc_simulation_config ?? null;
+    const activeKey = findConfigKeyInState(agentState as Record<string, unknown>);
+    const currentLiveConfig = activeKey ? (agentState as any)[activeKey] : null;
 
     let liveDiffs: DiffResult[] = [];
     if (currentLiveConfig && typeof currentLiveConfig === 'object') {
@@ -191,6 +228,7 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
 
   return {
     hasEditStateCalls,
+    canRestore,
     handlePreviewRestore,
     handleConfirmRestore,
     handleCancelRestore,

@@ -1,5 +1,4 @@
 import { isNil } from 'es-toolkit/compat';
-import { atom, useAtom } from 'jotai';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
@@ -26,7 +25,8 @@ export default function Block({
   schema,
   disabled,
   blockSchema,
-  stateAtom,
+  state,
+  setState,
   config,
   entity,
   hideTitle,
@@ -41,21 +41,21 @@ export default function Block({
   config: Config;
   blockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
+  state: Record<string, ConfigValue>;
+  setState: (newState: Record<string, ConfigValue>) => void;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   rootElement?: string;
   selectedEntry?: string;
   errorPathPrefix?: string;
 }) {
-  const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
   const { getFieldDiffClass } = useBlockDiff(rootElement, selectedEntry);
 
   if (!blockSchema) return null;
 
   return (
     <div
-      className="flex flex-col gap-2"
+      className="flex w-full min-w-0 max-w-full flex-col gap-2"
       data-scan-config-block={ScanConfigUIElementDict.BlockSingle}
     >
       {!hideTitle && (
@@ -108,7 +108,7 @@ export default function Block({
                 <div
                   key={k}
                   className={cn(
-                    'w-full flex',
+                    'flex w-full min-w-0 max-w-full',
                     isBooleanInput ? 'flex-row items-center' : 'flex-col'
                   )}
                   data-scan-config-block-element={blockElementSchema.ui_element}
@@ -127,11 +127,11 @@ export default function Block({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div>
-                        <div className="mb-1 flex items-center gap-1">
+                      <div className="w-full min-w-0 max-w-full">
+                        <div className="mb-1 w-full min-w-0 max-w-full">
                           <div
                             className={cn(
-                              'border rounded-lg flex-1 mr-1',
+                              'w-full min-w-0 max-w-full rounded-lg border',
                               fieldBorderClass,
                               !fieldBorderClass && 'border-transparent'
                             )}

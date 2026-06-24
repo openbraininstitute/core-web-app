@@ -1,5 +1,11 @@
 import { Select } from 'antd';
 
+import { type TViewVariant, ViewVariant } from '@/constants';
+import {
+  ephysControlLabelClass,
+  ephysControlSubLabelClass,
+} from '@/features/ephys-viewer/label-styles';
+
 import type { JSX } from 'react';
 
 interface OptionSelectProps {
@@ -11,6 +17,7 @@ interface OptionSelectProps {
   onChange: (value: string) => void;
   options: JSX.Element[] | null;
   hideWhenSingle?: boolean;
+  variant?: TViewVariant;
 }
 
 function OptionSelect({
@@ -19,15 +26,16 @@ function OptionSelect({
   onChange: handleChange,
   options,
   hideWhenSingle = false,
+  variant = ViewVariant.Light,
 }: OptionSelectProps) {
   if (hideWhenSingle && numberOfAvailable === 1) {
     return null;
   }
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-dark font-bold" htmlFor="optionSelect">
+      <label className={ephysControlLabelClass(variant)} htmlFor="optionSelect">
         {title}
-        <small className="text-sm font-light">
+        <small className={ephysControlSubLabelClass(variant)}>
           {numberOfAvailable > 1 && <>&nbsp;({numberOfAvailable} available)</>}
         </small>
       </label>

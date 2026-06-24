@@ -8,7 +8,7 @@ import { match, P } from 'ts-pattern';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { WorkspaceSection } from '@/constants';
+import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
@@ -38,16 +38,19 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
-import type { TMiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 type Props = {
   section?: TWorkspaceSection;
   dataType: TExtendedEntitiesTypeDict;
+  hideUseModelAction?: boolean;
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
   dataType,
+  hideUseModelAction,
+  workflowTargetType,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   const { mdv, setMdv } = useMiniDetailView();
@@ -80,6 +83,8 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       record={record}
       dataType={dataType}
       onClose={onClose}
+      hideUseModelAction={hideUseModelAction}
+      workflowTargetType={workflowTargetType}
     />
   );
 }
@@ -91,18 +96,21 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   onClose,
   theme = 'default',
   enableAnimation = true,
+  hideUseModelAction,
+  workflowTargetType,
 }: {
   section: TWorkspaceSection;
   record: T | null;
   dataType: TExtendedEntitiesTypeDict;
   onClose?: () => void;
-  theme?: TMiniDetailViewTheme;
+  theme?: TViewVariant;
   enableAnimation?: boolean;
+  hideUseModelAction?: boolean;
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 }) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
-
   const preview = match({ type: record.type })
     .with({ type: P.nullish }, () => null)
     .with(
@@ -245,11 +253,29 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           WorkspaceSection.ProcessWorkflow
         ),
       },
-      ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
+      ({ section }) => (
+        <WorkflowActions
+          record={record}
+          dataType={dataType}
+          section={section}
+          hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
+        />
+      )
     )
-    .with({ section: WorkspaceSection.BuildWorkflow }, () => (
-      <WorkflowBuildActions record={record} dataType={dataType} />
-    ))
+    .with(
+      {
+        section: P.union(WorkspaceSection.ScanConfigBuildWorkflow, WorkspaceSection.BuildWorkflow),
+      },
+      () => (
+        <WorkflowBuildActions
+          record={record}
+          dataType={dataType}
+          hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
+        />
+      )
+    )
     .otherwise(() => null);
 
   return (
@@ -299,9 +325,15 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-1.5 rounded-md p-2 hover:bg-white/20"
+                  className={cn('mt-1.5 rounded-full p-2 hover:bg-white/20', {
+                    'hover:bg-gray-100': theme === ViewVariant.Light,
+                  })}
                 >
-                  <CloseOutlined className="text-white" />
+                  <CloseOutlined
+                    className={cn('text-white', {
+                      'text-primary-9': theme === ViewVariant.Light,
+                    })}
+                  />
                 </button>
               )}
             </CardTitle>

@@ -2,9 +2,11 @@ import { kebabCase } from 'es-toolkit/compat';
 
 import { authApiClient } from '@/api/api-client';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { compactRecord } from '@/utils/dictionary';
 
+import type { CacheConfiguration } from '@/api/cache-storage';
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   AssetLabel,
@@ -64,6 +66,38 @@ export async function getAsset({
   });
 }
 
+/**
+ * Resolves the URL + headers needed to download a specific asset, without performing the request.
+ * Useful for handing the request off to environments outside the main `ApiClient` flow (e.g. a Web
+ * Worker that streams the response body into `CacheStorage`).
+ */
+export async function buildAssetDownloadRequest({
+  ctx,
+  entityType,
+  entityId,
+  id,
+  assetPath = '',
+}: {
+  ctx?: WorkspaceContext | null;
+  entityType: TEntityTypeDict;
+  entityId: string;
+  id: string;
+  assetPath?: string;
+}): Promise<{ url: string; headers: Record<string, string> }> {
+  const session = await getSession();
+  const url = new URL(
+    `${config.ENTITY_CORE_URL}/${kebabCase(entityType)}/${entityId}/assets/${id}/download`
+  );
+  if (assetPath) url.searchParams.append('asset_path', assetPath);
+
+  const headers: Record<string, string> = {};
+  if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
+  const ctxHeaders = getEntityCoreContext(ctx).headers;
+  if (ctxHeaders) Object.assign(headers, ctxHeaders);
+
+  return { url: url.toString(), headers };
+}
+
 export async function downloadAsset(params: {
   ctx?: WorkspaceContext | null;
   entityType: TEntityTypeDict;
@@ -73,6 +107,7 @@ export async function downloadAsset(params: {
   asRawResponse: true;
   retryOnError?: boolean;
   signal?: AbortSignal;
+  cache?: CacheConfiguration;
 }): Promise<Response>;
 
 export async function downloadAsset<T>(params: {
@@ -84,6 +119,7 @@ export async function downloadAsset<T>(params: {
   asRawResponse?: false;
   retryOnError?: boolean;
   signal?: AbortSignal;
+  cache?: CacheConfiguration;
 }): Promise<T>;
 
 /**
@@ -104,6 +140,7 @@ export async function downloadAsset<T>({
   retryOnError = false,
   assetPath = '',
   signal,
+  cache,
 }: {
   ctx?: WorkspaceContext | null;
   entityType: TEntityTypeDict;
@@ -113,6 +150,7 @@ export async function downloadAsset<T>({
   asRawResponse?: boolean;
   retryOnError?: boolean;
   signal?: AbortSignal;
+  cache?: CacheConfiguration;
 }): Promise<T | Response> {
   const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<T>(
@@ -122,7 +160,7 @@ export async function downloadAsset<T>({
       queryParams: compactRecord({ asset_path: assetPath }),
       signal,
     },
-    { asRawResponse, retryOnError }
+    { asRawResponse, retryOnError, cache }
   );
 }
 

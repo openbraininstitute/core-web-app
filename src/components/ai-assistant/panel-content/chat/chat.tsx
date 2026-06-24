@@ -1,3 +1,4 @@
+import { isToolUIPart } from 'ai';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
@@ -29,6 +30,7 @@ import Welcome from '../welcome';
 import { useAutoScroll } from './use-auto-scroll';
 import { useLastMessageDiffBar } from './use-last-message-diff-bar';
 
+import messageStyles from '../../message-item/message-item.module.css';
 import styles from './chat.module.css';
 
 export interface ChatProps {
@@ -48,9 +50,8 @@ export default function Chat({
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
 
-  const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
-    threadId ?? ''
-  );
+  const { messages, status, sendMessage, error, stop, isLoadingMessages, pendingUserMessage } =
+    useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
@@ -150,19 +151,16 @@ export default function Chat({
   }, [clearDiffBarData, setActiveDiffMessageId, clearDiffState]);
 
   // Scrolling + autoscroll control when new message.
-  const handlePrompt = (content: string) => {
+  const handlePrompt = (content: string, files?: File[]) => {
     setAutoScroll(true);
-    append({
-      role: 'user',
-      content,
-    });
+    sendMessage(content, files);
     scrollToBottom();
     requestAnimationFrame(scrollToBottom);
   };
 
   const lastMessage = messages[messages.length - 1];
   const hasVisibleContent = lastMessage?.parts.some(
-    (p) => (p.type === 'text' && p.text !== '') || p.type === 'tool-invocation'
+    (p) => (p.type === 'text' && 'text' in p && p.text !== '') || isToolUIPart(p)
   );
   const showThinking = status === 'submitted' || (status === 'streaming' && !hasVisibleContent);
 
@@ -184,7 +182,14 @@ export default function Chat({
                 />
               ))}
 
-              {showThinking && <ThinkingIndicator />}
+              {pendingUserMessage && (
+                <PendingUserMessage
+                  text={pendingUserMessage.text}
+                  files={pendingUserMessage.files}
+                />
+              )}
+
+              {showThinking && !pendingUserMessage && <ThinkingIndicator />}
               {status === 'ready' && messages.length > 0 && (
                 <div className={styles.footerButtons}></div>
               )}
@@ -194,11 +199,11 @@ export default function Chat({
                     onClick={handlePrompt}
                     suggestions={suggestions}
                     clearSuggestions={clearSuggestions}
-                    isLoading={isLoadingSuggestions || status !== 'ready'}
+                    isLoading={isLoadingSuggestions || status !== 'ready' || !!pendingUserMessage}
                   />
                 </div>
               )}
-              {threadId && !isEmptyThread && status === 'ready' && (
+              {threadId && !isEmptyThread && status === 'ready' && !pendingUserMessage && (
                 <div className={styles.suggestedQuestionsContainerInChat}>
                   <SuggestedQuestions
                     onClick={handlePrompt}
@@ -257,7 +262,59 @@ export default function Chat({
           onPrompt={handlePrompt}
           messagesCount={messages.length}
           stop={stop}
+          isUploading={!!pendingUserMessage}
         />
+      </div>
+    </div>
+  );
+}
+
+function PendingUserMessage({
+  text,
+  files,
+}: {
+  text: string;
+  files: { name: string; type: string; previewUrl: string; uploaded: boolean }[];
+}) {
+  return (
+    <div className={messageStyles.user}>
+      <div className={messageStyles.userContent}>
+        {text && <div>{text}</div>}
+        {files.map((file) => {
+          if (file.type.startsWith('image/') && file.previewUrl) {
+            // When uploaded, render the image exactly like MessageItem does
+            // (no wrapper div) to avoid layout shift on transition.
+            if (file.uploaded) {
+              return (
+                <img
+                  key={file.name}
+                  src={file.previewUrl}
+                  alt={file.name}
+                  className={messageStyles.userImage}
+                />
+              );
+            }
+            return (
+              <div key={file.name} className={styles.pendingFile}>
+                <img
+                  src={file.previewUrl}
+                  alt={file.name}
+                  className={messageStyles.userImage}
+                  style={{ opacity: 0.6 }}
+                />
+                <div className={styles.pendingFileOverlay}>
+                  <span className={styles.pendingFileSpinner} />
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div key={file.name} className={styles.pendingFilePill}>
+              {!file.uploaded && <span className={styles.pendingFileSpinner} />}
+              <span>{file.name}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

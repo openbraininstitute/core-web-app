@@ -3,6 +3,5 @@
  * virtual lab + project and redirects to `.../reports/obi-showcase/{slug}?section=...`.
  */
 export function buildPlatformLoginUrl(slug: string, section: string = 'description'): string {
-  const syncUrl = `/app/virtual-lab/sync?showcaseSlug=${encodeURIComponent(slug)}&showcaseSection=${encodeURIComponent(section)}`;
-  return `/app/log-in?callbackUrl=${encodeURIComponent(syncUrl)}`;
+  return `/app/virtual-lab/sync?showcaseSlug=${encodeURIComponent(slug)}&showcaseSection=${encodeURIComponent(section)}`;
 }

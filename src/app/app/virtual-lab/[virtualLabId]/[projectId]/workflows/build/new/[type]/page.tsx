@@ -1,55 +1,9 @@
 'use client';
 
-import { notFound } from 'next/navigation';
-import { use } from 'react';
-
 import { WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { getPrimaryConfigurationInput, getWorkflow } from '@/ui/segments/workflows/config';
-import { resolveExtendedTypeFromPathParamUrl } from '@/utils/url-builder';
+import { createWorkflowNewRoutePage } from '@/ui/segments/workflows/browse/listing';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { KebabCase } from '@/utils/type';
-
-export default function Page({
-  params,
-}: ServerSideComponentProp<
-  WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
-  { scope: TWorkspaceScope | null }
->) {
-  const { type } = use(params);
-  const { type: targetType } = resolveExtendedTypeFromPathParamUrl({ pathParam: type });
-
-  const workflow = getWorkflow({
-    activity: WorkflowActivityDictValue.build,
-    targetType,
-  });
-  const primaryInput = getPrimaryConfigurationInput({
-    activity: WorkflowActivityDictValue.build,
-    targetType,
-  });
-
-  const browseType = primaryInput?.type ?? workflow?.sourceType;
-  if (!workflow || !browseType) return notFound();
-
-  const extraQueryParams = primaryInput?.filters ?? workflow.filters ?? undefined;
-
-  return (
-    <BrowseEntityScope
-      requireMiniDetailView
-      section={WorkspaceSection.ScanConfigBuildWorkflow}
-      requireBrainRegion={false}
-      classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
-      dataType={browseType}
-      extraQueryParams={extraQueryParams}
-      mainTableProps={{
-        selectionType: undefined,
-      }}
-      miniViewProps={{
-        section: WorkspaceSection.ScanConfigBuildWorkflow,
-      }}
-    />
-  );
-}
+export default createWorkflowNewRoutePage(
+  WorkflowActivityDictValue.build,
+  WorkspaceSection.ScanConfigBuildWorkflow
+);

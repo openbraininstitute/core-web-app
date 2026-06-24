@@ -9,14 +9,18 @@ import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/reques
 
 export function useInputResistance({ entity }: { entity: TRetrieveEntityOutput }) {
   const { projectId, virtualLabId } = useWorkspace();
+  const queryKey = keyBuilder.meModel({ projectId, virtualLabId, entityId: entity.id });
   const { isLoading, error, data } = useQuery({
-    queryKey: keyBuilder.meModel({ projectId, virtualLabId, entityId: entity.id }),
+    queryKey,
     queryFn: async () => {
       const model = await getMEModel({ context: { projectId, virtualLabId }, id: entity.id });
-      return model.calibration_result?.rin;
+      if (!model) throw new Error('ME-Model not found!');
+
+      return model;
     },
+    retry: 2,
     enabled: entity.type === EntityTypeDict.Memodel,
   });
 
-  return { data, isLoading, error };
+  return { data: data?.calibration_result?.rin, isLoading, error };
 }

@@ -87,6 +87,9 @@ function CustomThumbnail({ providedData }: { providedData: { content: string; ty
           onLoad={() => setImageLoaded(true)}
           onError={() => setImageError(true)}
           onClick={handleShow}
+          onKeyDown={(event) => {
+            if (['Enter', ' '].includes(event.key)) handleShow();
+          }}
         />
       </div>
       <FullscreenDialog dialogRef={refDialog}>

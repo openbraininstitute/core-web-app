@@ -109,7 +109,7 @@ describe('Painter.setPointCloud', () => {
       },
     });
 
-    mock.module('@/util/logger', {
+    mock.module('@/utils/logger', {
       namedExports: {
         logError: (...args: unknown[]) => {
           logErrors.push(args);

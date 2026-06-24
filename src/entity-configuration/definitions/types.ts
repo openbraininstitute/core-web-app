@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { TViewVariant, TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -183,6 +183,8 @@ export type TFilterOptionsSource =
  */
 export interface IFieldColumnPresentation {
   available?: TContextualValue<boolean>;
+  /** When true, the column can appear in the table but is omitted from the filter panel (no filter UI, no eye toggle). */
+  hideInFilterPanel?: TContextualValue<boolean>;
 }
 
 /**
@@ -238,8 +240,8 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   order?: OrderShape;
   unit?: ReactNode;
   group?: StructuralDomain;
-  render?: (entity: T, i?: number) => ReactNode;
-  renderForDetailView?: (entity: T) => ReactNode;
+  render?: (entity: T, i?: number, variant?: TViewVariant) => ReactNode;
+  renderForDetailView?: (entity: T, variant?: TViewVariant) => ReactNode;
   vocabulary?: {
     plural: string;
     singular: string;

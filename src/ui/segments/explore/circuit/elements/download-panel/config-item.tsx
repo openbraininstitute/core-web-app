@@ -1,19 +1,20 @@
-import { kebabCase, get } from 'es-toolkit/compat';
-import { ReactNode } from 'react';
 import { Button } from 'antd';
+import { get, kebabCase } from 'es-toolkit/compat';
+import { saveAs } from 'file-saver';
 
-import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { useAppNotification } from '@/components/notification';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { DownloadIcon } from '@/components/icons';
-import { formatBytes } from '@/utils/format';
-import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+import { DownloadIcon } from '@/components/icons';
+import { useAppNotification } from '@/components/notification';
+import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import { classNames } from '@/util/utils';
+import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
 
-import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
+import type { ReactNode } from 'react';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { Nullable } from '@/utils/type';
 
 export type TConfigChild = {
@@ -55,14 +56,13 @@ function ConfigChild({
       disabled={shouldBeDisabled}
       className={classNames(
         'flex items-center justify-center rounded-none border border-solid',
-        'hover:text-primary-6!',
         shouldBeDisabled
           ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
-          : 'border-primary-6 text-white'
+          : 'border-primary-6 text-white! hover:text-white! [&_.ant-btn-icon]:text-white!'
       )}
       aria-label={`Download ${title}`}
       title={`Download ${title}`}
-      icon={<DownloadIcon className="text-current!" />}
+      icon={<DownloadIcon className={shouldBeDisabled ? 'text-current!' : 'text-white!'} />}
     />
   );
 
@@ -108,6 +108,13 @@ export type ConfigItemProps = {
   emptyMessage?: string | null;
   items: Array<TConfigChild>;
   className?: string;
+  // Presigned URLs point at S3 (cross-origin), so the browser ignores the
+  // `download` attribute and renders inline-friendly types (json, txt) in a
+  // new tab instead of saving them. When true, fetch the URL into a Blob and
+  // hand it to file-saver — Blob URLs are same-origin so `download` is
+  // honored. Leave false for large binaries (h5, etc.) to avoid buffering
+  // the whole file in memory.
+  forceDownload?: boolean;
   downloadConfig: {
     entityId: string | undefined;
     assetConfigId: string | undefined;
@@ -128,6 +135,7 @@ export function NetworkConfigItem({
   mimeType,
   items,
   className,
+  forceDownload = false,
   downloadConfig,
 }: ConfigItemProps) {
   const notify = useAppNotification();
@@ -144,7 +152,27 @@ export function NetworkConfigItem({
       })
     );
     if (data) {
-      window.open(data.url, '_blank', 'noopener,noreferrer');
+      if (forceDownload) {
+        const filename = path.split('/').filter(Boolean).pop() || path;
+        const { data: blob, error: fetchError } = await tryCatch(
+          fetch(data.url).then((r) => r.blob())
+        );
+        if (blob) saveAs(blob, filename);
+        if (fetchError) {
+          log('error', 'Error downloading file:', fetchError);
+          notify.error({
+            message: 'Download Error',
+            description: get(
+              fetchError,
+              'message',
+              'An error occurred while downloading the file.'
+            ),
+            placement: 'topRight',
+          });
+        }
+      } else {
+        window.open(data.url, '_blank', 'noopener,noreferrer');
+      }
     }
     if (error) {
       log('error', 'Error downloading entire circuit:', error);
@@ -158,8 +186,8 @@ export function NetworkConfigItem({
 
   return (
     <div className={classNames('w-full', className)}>
-      <div className="mb-6 flex flex-row justify-between">
-        <div className="flex flex-col">
+      <div className="mb-6 flex flex-row justify-between gap-x-6">
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex flex-row items-center text-xl font-bold tracking-wider text-white uppercase before:mr-2 before:block before:h-3 before:w-3 before:rounded-full before:bg-white before:content-['']">
             {name}
           </div>
