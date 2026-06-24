@@ -11,7 +11,7 @@ import {
   type TWorkflowSessionSelectionRef,
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
-import { getTargetType, getWorkflow } from '@/ui/segments/workflows/config/helpers';
+import { featuresSatisfied, getWorkflow } from '@/ui/segments/workflows/config/helpers';
 import {
   type TWorkflowInitialStage,
   WORKFLOW_SESSION_ID_SEARCH_PARAM,
@@ -26,6 +26,7 @@ import { makePathParamUrlFromExtendedType } from '@/utils/url-builder';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { FeatureFlags } from '@/features/feature-flags/flags';
 import type { TWorkflowSchemaSelection } from '@/features/scan-config/workflow/workflow-schema-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
@@ -333,29 +334,33 @@ export function buildSimulateConfigureUrlFromDataViewEntity({
   extendedType,
   entityId,
   entity,
+  flags,
 }: {
   workspace: WorkspaceContext;
   extendedType: TExtendedEntitiesTypeDict;
   entityId: string;
   entity: { scale?: ICircuit['scale'] };
+  flags?: FeatureFlags;
 }): string | null {
   const sourceType = resolveSimulateSourceTypeFromDataView(extendedType, entity);
   if (!sourceType) {
     return null;
   }
 
-  const targetType = getTargetType({
+  const workflow = getWorkflow({
     activity: WorkflowActivityDictValue.simulate,
     sourceType,
   });
 
-  if (!targetType) {
+  // Gate the simulate entry point on the resolved workflow's feature flags, so the button is
+  // hidden whenever the workflow requires a flag the user doesn't have (e.g. whole-brain sim).
+  if (!workflow || !featuresSatisfied(workflow.requiredFeatures, flags)) {
     return null;
   }
 
   return buildConfigureUrlForEntity({
     activity: WorkflowActivityDictValue.simulate,
-    targetType,
+    targetType: workflow.targetType,
     workspace,
     entityId,
     entityType: sourceType,
