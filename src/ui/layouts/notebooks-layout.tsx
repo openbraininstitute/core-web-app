@@ -26,7 +26,6 @@ import { createProject, listAllProjectIds } from '@/api/virtual-lab-svc/queries/
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getMissingStudentEmails, getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
-import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget } from '@/services/virtual-lab/projects';
@@ -126,9 +125,7 @@ export function NotebooksLayout({ children, active }: Props) {
     gcTime: 0,
   });
 
-  const vlabBalance = isNil(balance?.data?.balance)
-    ? undefined
-    : parseInt(balance?.data.balance, 10);
+  const vlabBalance = 100;
 
   const budgetPerStudent = vlabBalance && Math.floor(vlabBalance / students.length);
 
@@ -213,12 +210,14 @@ export function NotebooksLayout({ children, active }: Props) {
     [projectId, virtualLabId, notification.warning, course]
   );
 
-  if (!virtualLabData?.data || isNil(vlabBalance) || isNil(budgetPerStudent))
+  if (!virtualLabData || isNil(vlabBalance) || isNil(budgetPerStudent))
     return (
       <div className="h-full flex justify-center items-center text-4xl">
         <LoadingOutlined />
       </div>
     );
+
+  console.log('HERE HERE\n\n', vlabBalance, budgetPerStudent, isNil(budgetPerStudent));
 
   return (
     <div>
@@ -518,267 +517,11 @@ const CsvUploadValidator = ({
               ${Math.floor((credits + vlabBalance) / students.length)} credits`}
             </div>
           )}
-
-          <PaymentFlow
-            credits={credits}
-            vlabId={vlabId}
-            onCancel={onCancel}
-            onSuccess={onSuccess}
-            balance={vlabBalance}
-          />
         </div>
       )}
     </div>
   );
 };
-
-function PaymentFlow({
-  credits,
-  vlabId,
-  onCancel,
-  onSuccess,
-  balance,
-}: {
-  credits: number;
-  vlabId: string;
-  onCancel: () => void;
-  onSuccess: () => void;
-  balance: number;
-}) {
-  const [
-    { data: setupIntent, isPending: loadingIntent },
-    { data: stripeData, isPending: loadingStripeInstance },
-  ] = useQueries({
-    queries: [
-      {
-        queryKey: externalKeyBuilder.stripeSetupIntent({ virtualLabId: vlabId }),
-        queryFn: getSetupIntent,
-        staleTime: 0,
-        gcTime: 0,
-      },
-      {
-        queryKey: externalKeyBuilder.stripeInstance(),
-        queryFn: getStripe,
-      },
-    ],
-  });
-
-  const loadingStripe = loadingIntent || loadingStripeInstance;
-
-  if (loadingStripe) {
-    return (
-      <div className="flex h-full grow items-center justify-center">
-        <Spin size="large" indicator={<LoadingOutlined className="text-white" />} />
-      </div>
-    );
-  }
-  if (!stripeData || !setupIntent?.data) {
-    return null;
-  }
-
-  return (
-    <Elements stripe={stripeData} options={buildStripeFormOptions(setupIntent.data?.client_secret)}>
-      <PaymentForm
-        credits={credits}
-        vlabId={vlabId}
-        onCancel={onCancel}
-        onSuccess={onSuccess}
-        balance={balance}
-      />
-    </Elements>
-  );
-}
-
-function PaymentForm({
-  credits,
-  vlabId,
-  onCancel,
-  onSuccess,
-  balance: previousBalance,
-}: {
-  credits: number;
-  vlabId: string;
-  onCancel: () => void;
-  onSuccess: () => void;
-  balance: number;
-}) {
-  const [stripeElementsReady, setElementsReady] = useState(false);
-  const onReady = () => setElementsReady(true);
-  const { success: successNotify, error: errorNotify } = useAppNotification();
-  const [formLoading, startTransition] = useTransition();
-  const elements = useElements();
-  const stripe = useStripe();
-  const formLoaded = stripe && elements;
-  const disableForm = !formLoaded || formLoading || credits === 0;
-
-  const queryClient = useQueryClient();
-
-  const onSubmit = async () => {
-    if (!stripe || !elements) {
-      return null;
-    }
-
-    const addCredits = async () => {
-      const { setupIntent, error } = await stripe.confirmSetup({
-        elements,
-        redirect: 'if_required',
-        confirmParams: {
-          return_url: window.location.href,
-        },
-      });
-      if (error) {
-        errorNotify({
-          message:
-            error.message ||
-            "We couldn't process your payment. Please check your card details and try again.",
-          placement: 'topRight',
-          key: 'subscription-payment-error',
-        });
-
-        throw new Error(error.message);
-      }
-      if (setupIntent?.status === 'succeeded' && setupIntent.payment_method && credits > 0) {
-        const amountInCents = parseFloat(Number(credits * CONVERSION_RATE * 100).toFixed(2));
-        return await createStandalonePayment({
-          amount: amountInCents,
-          currency: 'chf',
-          virtual_lab_id: vlabId,
-          payment_method_id:
-            typeof setupIntent.payment_method === 'string'
-              ? setupIntent.payment_method
-              : setupIntent.payment_method?.id,
-        });
-      }
-      errorNotify({
-        message:
-          "Your payment couldn't be completed. Please try again or use a different payment method.",
-        placement: 'topRight',
-        key: 'subscription-payment-error',
-      });
-      throw new Error('Payment setup was not completed successfully');
-    };
-
-    startTransition(async () => {
-      const { data, error } = await tryCatch(addCredits(), () => {
-        elements.getElement('payment')?.clear();
-      });
-
-      if (error || !data) {
-        let message =
-          'There was a problem processing your payment. Please try again or contact support if the issue persists.';
-        if (isObject(error.cause) && 'error_code' in error.cause) {
-          if (error.cause.error_code === 'ENTITY_ALREADY_EXISTS') {
-            message = 'This payment has already been processed';
-          }
-          if (error.cause.error_code === 'ENTITY_NOT_CREATED') {
-            message =
-              "We couldn't process your payment at this time. Please try again or contact our support team for help.";
-          }
-          if (error.cause.error_code === 'ENTITY_NOT_FOUND') {
-            message =
-              "We couldn't find your payment details. Please try again or contact support if the issue persists.";
-          }
-        }
-        errorNotify({
-          message,
-          placement: 'topRight',
-          key: 'subscription-payment-error',
-        });
-        return;
-      }
-
-      const maxAttempts = 10;
-      const intervalMs = 500;
-      let attempt = 0;
-      let balanceUpdated = false;
-
-      // Poll the backend accounting endpoint
-      while (attempt < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, intervalMs));
-        const updatedAccountingData = await queryClient.fetchQuery({
-          queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
-          queryFn: () =>
-            getVirtualLabAccountBalance({
-              virtualLabId: vlabId,
-              includeProjects: false,
-            }),
-          staleTime: 0,
-          gcTime: 0,
-        });
-
-        const balance = updatedAccountingData?.data?.balance;
-
-        const newBalance = isNil(balance) ? 0 : parseInt(balance, 10);
-
-        if (newBalance > previousBalance) {
-          balanceUpdated = true;
-          break;
-        }
-
-        attempt++;
-      }
-
-      if (balanceUpdated) {
-        successNotify({
-          message: `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
-          placement: 'topRight',
-          key: 'credits-purchase-success',
-        });
-
-        onSuccess();
-      } else
-        errorNotify({
-          message: 'There was an error crediting your balance. Please contact support.',
-          placement: 'topRight',
-          key: 'credits-purchase-error',
-        });
-    });
-  };
-
-  return (
-    <div>
-      <div className="bg-[#0a3a76] text-white text-lg p-4 rounded-md">
-        Pay {`${(credits * CONVERSION_RATE).toFixed(2)} CHF`}
-      </div>
-
-      <PaymentElement onReady={onReady} />
-
-      {stripeElementsReady && (
-        <div className="ml-auto flex items-center justify-end gap-4 mt-5">
-          <UiButton
-            rounded
-            type="button"
-            size="lg"
-            className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
-            onClick={onCancel}
-          >
-            Cancel
-          </UiButton>
-          <UiButton
-            rounded
-            type="button"
-            variant="default"
-            size="lg"
-            className={cn(
-              'border-primary-4! w-max border shadow-2xl',
-              'hover:bg-primary-8/40',
-              'hover:shadow-[1px_2px_4px_0px_#00000099]',
-              'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
-            )}
-            disabled={disableForm}
-            onClick={onSubmit}
-          >
-            <div className="flex w-24 items-center justify-center">
-              Pay
-              {formLoading && <LoadingOutlined spin className="ml-2 text-white" />}
-            </div>
-          </UiButton>
-        </div>
-      )}
-    </div>
-  );
-}
 
 async function _syncNotebook({
   notebook,
