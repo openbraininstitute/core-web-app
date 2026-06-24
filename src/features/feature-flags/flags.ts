@@ -19,7 +19,15 @@ export const extractionActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const flags = [aiPanelStateFlag, extractionActivityFlag] as const;
+export const brainRegionSimulationFlag = defineFlag<boolean>({
+  key: 'brain-region-simulation',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Brain region simulations',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const flags = [aiPanelStateFlag, extractionActivityFlag, brainRegionSimulationFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 

@@ -23,6 +23,7 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { type TViewVariant, ViewVariant, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useFlags } from '@/features/feature-flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
@@ -53,6 +54,7 @@ export default function ActionMenu({
   const queryClient = useQueryClient();
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
+  const flags = useFlags();
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
@@ -147,8 +149,9 @@ export default function ActionMenu({
       extendedType: type,
       entityId: entity.id,
       entity: 'scale' in entity ? { scale: entity.scale } : {},
+      flags,
     });
-  }, [isSimulatable, ctx, type, entity]);
+  }, [isSimulatable, ctx, type, entity, flags]);
 
   return (
     <div
