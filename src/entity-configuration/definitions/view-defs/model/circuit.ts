@@ -20,6 +20,7 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.CircuitBuildCategory,
+    EntityCoreFields.CircuitTargetSimulator,
     EntityCoreFields.ArtifactPublishedIn,
     EntityCoreFields.ArtifactExperimentDate,
   ],
