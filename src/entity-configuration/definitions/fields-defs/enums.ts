@@ -82,6 +82,7 @@ export enum EntityCoreFields {
   TaskActivityStatus = 'task_activity_status',
   CircuitName = 'circuit_name',
   CircuitBuildCategory = 'build_category',
+  CircuitTargetSimulator = 'target_simulator',
   CircuitScale = 'scale',
   CircuitRootCircuit = 'root_circuit_id',
   ArtifactPublishedIn = 'published_in',

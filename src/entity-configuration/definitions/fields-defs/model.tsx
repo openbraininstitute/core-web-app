@@ -2,7 +2,11 @@ import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
 import { find, isNil, map, omit } from 'es-toolkit/compat';
 
 import { hasAssets } from '@/api/entitycore/guards';
-import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
+import {
+  CircuitBuildCategory,
+  CircuitScale,
+  CircuitTargetSimulator,
+} from '@/api/entitycore/types/entities/circuit';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
@@ -281,6 +285,37 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     vocabulary: {
       plural: 'Build categories',
       singular: 'Build category',
+    },
+    style: { align: 'left' },
+  },
+  [EntityCoreFields.CircuitTargetSimulator]: {
+    className: 'text-left',
+    title: 'Target simulator',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: map(CircuitTargetSimulator, (item) => ({
+      label: item.label,
+      value: item.key,
+    })),
+    isFilterable: true,
+    isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
+        property: 'order_by',
+        value: 'target_simulator',
+      },
+    ],
+    render: (r) => {
+      const targetSimulator = (r as ICircuit).target_simulator;
+      return renderEmptyOrValue(
+        targetSimulator ? find(CircuitTargetSimulator, { key: targetSimulator })?.label : undefined
+      );
+    },
+    defaultConstraint: 'target_simulator__in',
+    vocabulary: {
+      plural: 'Target simulators',
+      singular: 'Target simulator',
     },
     style: { align: 'left' },
   },
