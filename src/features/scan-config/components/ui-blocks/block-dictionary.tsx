@@ -155,7 +155,7 @@ export default function BlockDictionary({
 
   return (
     <div
-      className="flex flex-col items-center gap-5"
+      className="flex flex-col items-center gap-2"
       data-scan-config-block={blockDictionarySchema.ui_element}
     >
       {blockDictionarySchema.additionalProperties.oneOf.map((o) => {

@@ -146,6 +146,7 @@ export default function Block({
                               schemaMappingConfig={schemaMappingConfig}
                               state={state}
                               setState={setState}
+                              selectedEntry={selectedEntry}
                               errorPathPrefix={
                                 errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
                               }

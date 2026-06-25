@@ -492,3 +492,100 @@ export function useReferenceTypeDict(schema: ConfigSchema) {
 
   return referenceTypeDict;
 }
+
+/**
+ * builds a lookup from a reference type name to the block variant types it accepts
+ *
+ * every reference type declares which block variants it accepts via `allowed_block_types`, e.g.:
+ *   { title: "VirtualNeuronSetReference",  allowed_block_types: ["VirtualPopulationNeuronSet", ..., "AllVirtualNeurons"] }
+ *   { title: "BiophysicalNeuronSetReference", allowed_block_types: ["BiophysicalPopulationNeuronSet", ...] }
+ *
+ * these definitions are scattered through the schema (inside reference fields' `anyOf`), so this
+ * walks the schema once and merges them into a single map keyed by reference type:
+ *   { "VirtualNeuronSetReference": Set(["VirtualPopulationNeuronSet", ...]), ... }
+ *
+ * this is the schema's source of truth for "which neuron-set variants does a reference accept",
+ * which is what lets a combined (virtual) field show only virtual sets, etc.
+ */
+// keyed on the schema object identity (stable — react-query holds it with staleTime Infinity), so
+// the recursive walk runs once per schema instead of once per `Reference` instance on a form.
+const allowedByReferenceTypeCache = new WeakMap<object, Record<string, Set<string>>>();
+
+function collectAllowedBlockTypesByReferenceType(
+  schema: ConfigSchema
+): Record<string, Set<string>> {
+  if (!schema) return {};
+
+  const cached = allowedByReferenceTypeCache.get(schema);
+  if (cached) return cached;
+
+  const registry: Record<string, Set<string>> = {};
+
+  const visit = (node: unknown) => {
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (!isPlainObject(node)) return;
+
+    if (typeof node.title === 'string' && Array.isArray(node.allowed_block_types)) {
+      const set = registry[node.title] ?? new Set<string>();
+      for (const t of node.allowed_block_types) {
+        if (typeof t === 'string') set.add(t);
+      }
+      registry[node.title] = set;
+    }
+
+    for (const value of Object.values(node)) visit(value);
+  };
+
+  visit(schema.properties);
+  allowedByReferenceTypeCache.set(schema, registry);
+  return registry;
+}
+
+export function useAllowedBlockTypesByReferenceType(schema: ConfigSchema) {
+  return useMemo(() => collectAllowedBlockTypesByReferenceType(schema), [schema]);
+}
+
+/**
+ * builds a lookup from a block variant type (a dictionary entry's `type` const) to the `configKey`
+ * of the dictionary that defines it, e.g.:
+ *   { "VirtualPopulationNeuronSet": "neuron_sets", "SingleTimestamp": "timestamps", ... }
+ *
+ * each block dictionary lists its variants under `additionalProperties.oneOf`, and every variant
+ * declares its discriminator via `properties.type.const`. this lets a reference resolve to its
+ * dictionary from the block variants it accepts — needed because all neuron-set variants share the
+ * single `neuron_sets` dictionary (registered under one "NeuronSetReference") while the fields
+ * declare the narrower variant reference types.
+ */
+const blockTypeToConfigKeyCache = new WeakMap<object, Record<string, string>>();
+
+function collectBlockTypeToConfigKey(schema: ConfigSchema): Record<string, string> {
+  if (!schema) return {};
+
+  const cached = blockTypeToConfigKeyCache.get(schema);
+  if (cached) return cached;
+
+  const map: Record<string, string> = {};
+  for (const [configKey, prop] of Object.entries(schema.properties)) {
+    const dict = prop as { ui_element?: string; additionalProperties?: { oneOf?: unknown[] } };
+    if (dict.ui_element !== ScanConfigUIElementDict.BlockDictionary) continue;
+
+    const variants = dict.additionalProperties?.oneOf;
+    if (!Array.isArray(variants)) continue;
+
+    for (const variant of variants) {
+      const constType = (variant as { properties?: { type?: { const?: unknown } } })?.properties
+        ?.type?.const;
+      if (typeof constType === 'string') map[constType] = configKey;
+    }
+  }
+
+  blockTypeToConfigKeyCache.set(schema, map);
+  return map;
+}
+
+export function useBlockTypeToConfigKey(schema: ConfigSchema) {
+  return useMemo(() => collectBlockTypeToConfigKey(schema), [schema]);
+}

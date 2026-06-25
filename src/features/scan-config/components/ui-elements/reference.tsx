@@ -5,45 +5,62 @@ import {
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
 
-import { useReferenceTypeDict } from '../hooks/schema';
+import {
+  useAllowedBlockTypesByReferenceType,
+  useBlockTypeToConfigKey,
+  useReferenceTypeDict,
+} from '../hooks/schema';
 
-import type { Config } from '@/features/scan-config/components/components';
-import type { ConfigSchema } from '@/features/scan-config/types';
+import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
 const DEFAULT_SENTINEL = '__default_as_null__';
-const ALLOWED_BLOCK_TYPES = 'allowed_block_types';
 
 /**
- * collects the set of block variant type names that are allowed by this reference field
+ * dropdown for picking another block as a reference (the `reference` ui_element)
  *
- * each reference field has an `anyOf` array where each item (except `{ type: "null" }`)
- * is a reference type schema that may carry an `allowed_block_types` list, e.g.:
+ * it resolves its options from the field's `reference_types` in two steps, both schema-driven:
  *
- *   { title: "BiophysicalNeuronSetReference", allowed_block_types: ["BiophysicalIDNeuronSet", "BiophysicalPopulationNeuronSet"] }
- *   { title: "PointNeuronSetReference",       allowed_block_types: ["PointIDNeuronSet", "PointPopulationNeuronSet"] }
+ * 1. which dictionaries can this field point at? a field reaches a dictionary either because
+ *    that dictionary registers the reference type (`block_dictionary.reference_types`), or because
+ *    the variants the reference type accepts live in it. The two are unioned.
+ * 2. which entries are offered? each `reference_type` maps (via the schema's `allowed_block_types`)
+ *    to the block variant `type`s it accepts; an entry is shown only if its `type` is in that set.
+ *    if the reference types declare no `allowed_block_types`, no per-type filtering is applied.
  *
- * we collect all allowed block types into a single set so the dropdown can filter entries
- * if no `allowed_block_types` are found (older schema), returns null to skip filtering
+ * `reference_types` are reference-class names (e.g. `BiophysicalNeuronSetReference`), not entry
+ * `type`s (e.g. `BiophysicalPopulationNeuronSet`); `allowed_block_types` is the bridge between them
+ *
+ * @param schema           the full scan-config schema (source of the reference/variant lookups)
+ * @param referenceSchema  the field's own schema; only `reference_types` is read
+ * @param config           the current config; dictionary entries become the dropdown options
+ * @param value            the currently selected block name, or `null` for the default option
+ * @param onChange         called with `(block_name, block_dict_name)` — both `null` for default
+ * @param disabled         disables the select
+ * @param omit             block names to hide (e.g. a combined set excluding itself)
+ * @returns the select, or `null` when the field is hidden (no reference type has a default label)
+ *
+ * @example
+ * // combined (Virtual): reference_types = ["VirtualNeuronSetReference"]
+ * //   → allowed variants = Virtual* + VirtualCombinedNeuronSet + AllVirtualNeurons
+ * //   → dropdown lists ONLY virtual neuron sets; biophysical/point ones are filtered out.
+ *
+ * @example
+ * // combined (Any): reference_types = ["BiophysicalNeuronSetReference",
+ * //                                    "VirtualNeuronSetReference", "PointNeuronSetReference"]
+ * //   → allowed variants = the union of all three (incl. each *CombinedNeuronSet)
+ * //   → lists every neuron set EXCEPT plain `PredefinedNeuronSet`/`CombinedNeuronSet`
+ * //     (not in any list) and itself (passed via `omit`).
+ *
+ * @example
+ * // timestamps field: reference_types = ["TimestampsReference"]
+ * //   → allowed variants = ["SingleTimestamp", "RegularTimestamps"]
+ * //   → lists entries from the `timestamps` dictionary only.
+ *
+ * @example
+ * // distribution field: reference_types = ["AllDistributionsReference"]
+ * //   → that reference type carries NO `allowed_block_types`
+ * //   → no per-type filter; every entry in the `distributions` dictionary is listed.
  */
-function collectAllowedBlockTypes(referenceSchema: ReferenceSchema): Set<string> | null {
-  const anyOfItems = referenceSchema.anyOf;
-  if (!anyOfItems || !Array.isArray(anyOfItems)) return null;
-
-  const allowed = new Set<string>();
-  let hasAny = false;
-
-  for (const item of anyOfItems) {
-    if (ALLOWED_BLOCK_TYPES in item && Array.isArray(item.allowed_block_types)) {
-      hasAny = true;
-      for (const blockType of item.allowed_block_types) {
-        allowed.add(blockType);
-      }
-    }
-  }
-
-  return hasAny ? allowed : null;
-}
-
 export default function Reference({
   value,
   onChange,
@@ -51,6 +68,7 @@ export default function Reference({
   schema,
   referenceSchema,
   config,
+  omit = [],
 }: {
   schema: ConfigSchema;
   referenceSchema: ReferenceSchema;
@@ -58,18 +76,38 @@ export default function Reference({
   value: string | null;
   onChange: (block_name: string | null, block_dict_name: string | null) => void;
   disabled: boolean;
+  /** block names to exclude from the dropdown (e.g. a combined set excluding itself) */
+  omit?: string[];
 }) {
   const referenceTypeDict = useReferenceTypeDict(schema);
+  const allowedByReferenceType = useAllowedBlockTypesByReferenceType(schema);
+  const blockTypeToConfigKey = useBlockTypeToConfigKey(schema);
 
-  // collect all matching dictionaries across all accepted reference types
-  const matchingDicts: { configKey: string; singularName: string }[] = [];
+  // the block variant types this field accepts, derived from its `reference_types`: each declared
+  // reference type maps (via the schema) to the set of variants it accepts. this is what narrows a
+  // combined (virtual) field to virtual sets, etc. if no reference type carries `allowed_block_types`
+  // (e.g. AllDistributionsReference), the set stays empty and no per-type filtering is applied.
+  const allowedBlockTypes = new Set<string>();
   for (const refType of referenceSchema.reference_types) {
-    const entries = referenceTypeDict[refType] ?? [];
-    for (const entry of entries) {
-      if (!matchingDicts.some((d) => d.configKey === entry.configKey)) {
-        matchingDicts.push(entry);
-      }
-    }
+    for (const t of allowedByReferenceType[refType] ?? []) allowedBlockTypes.add(t);
+  }
+
+  // resolve which dictionaries (config keys) this field can reference. a Set dedups for free.
+  const matchingConfigKeys = new Set<string>();
+
+  // a dictionary registers the reference types it answers to (`block_dictionary.reference_types`).
+  for (const refType of referenceSchema.reference_types) {
+    for (const entry of referenceTypeDict[refType] ?? []) matchingConfigKeys.add(entry.configKey);
+  }
+
+  // also resolve from the accepted block variants — each maps to the dictionary that defines it.
+  // this is how a field reaches `neuron_sets`: it declares "VirtualNeuronSetReference" etc., which
+  // the dictionary doesn't register directly (it registers the single "NeuronSetReference"), but the
+  // variants those reference types accept all live in `neuron_sets`. unioned with the above so a
+  // field that accepts both (e.g. neuron sets and timestamps) resolves to every dictionary it can.
+  for (const blockType of allowedBlockTypes) {
+    const configKey = blockTypeToConfigKey[blockType];
+    if (configKey) matchingConfigKeys.add(configKey);
   }
 
   // check visibility: at least one reference type must have a default label
@@ -79,25 +117,21 @@ export default function Reference({
 
   if (!schema || !hasDefaultLabel) return null;
 
-  // collect the set of allowed block variant types from the anyOf schemas
-  // e.g. for targeted_neuron_set: {"BiophysicalIDNeuronSet", "BiophysicalPopulationNeuronSet", "PointIDNeuronSet", "PointPopulationNeuronSet"}
-  // if null, the schema doesn't provide allowed_block_types — skip filtering (backward compat)
-  const allowedBlockTypes = collectAllowedBlockTypes(referenceSchema);
-
   // build dropdown options from all matching dictionaries
   const options: Array<{ label: string; value: string }> = [];
   // use the first configKey as the default for onChange (backward compat)
-  const primaryConfigKey = matchingDicts[0]?.configKey ?? '';
+  const primaryConfigKey = matchingConfigKeys.values().next().value ?? '';
 
-  for (const dict of matchingDicts) {
-    const entries = config[dict.configKey] ?? {};
+  for (const configKey of matchingConfigKeys) {
+    const entries = config[configKey] ?? {};
     for (const [k, v] of Object.entries(entries)) {
       if (options.some((o) => o.value === k)) continue;
+      if (omit.includes(k)) continue;
 
-      // if the schema provides allowed_block_types, filter entries by their block variant type
-      if (allowedBlockTypes && typeof v === 'object' && v !== null && 'type' in v) {
-        const entryType = v.type as string;
-        if (!allowedBlockTypes.has(entryType)) continue;
+      // narrow to the variants this field's `reference_types` accept (e.g. virtual-only). only
+      // applies when those reference types declare accepted variants; otherwise show all entries.
+      if (allowedBlockTypes.size > 0 && typeof v === 'object' && v !== null && 'type' in v) {
+        if (!allowedBlockTypes.has(v.type as string)) continue;
       }
 
       options.push({ label: k, value: k });
@@ -116,7 +150,7 @@ export default function Reference({
   });
 
   // if the ai suggested a value that is not in the options, add it
-  if (typeof value === 'string' && !options.map((o) => o.value).includes(value)) {
+  if (typeof value === 'string' && !options.some((o) => o.value === value)) {
     options.push({
       label: value,
       value: value,
@@ -125,10 +159,10 @@ export default function Reference({
 
   // when user selects a value, find which dictionary it belongs to
   const findConfigKeyForValue = (selectedValue: string): string => {
-    for (const dict of matchingDicts) {
-      const entries = config[dict.configKey];
+    for (const configKey of matchingConfigKeys) {
+      const entries = config[configKey];
       if (entries && typeof entries === 'object' && selectedValue in entries) {
-        return dict.configKey;
+        return configKey;
       }
     }
     return primaryConfigKey;

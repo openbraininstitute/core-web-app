@@ -17,6 +17,10 @@ import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids'
 import NeuronPropertyFilter, {
   type INeuronPropertyFilter,
 } from '@/features/scan-config/components/ui-elements/neuron-property-filter';
+import {
+  NeuronSetCombination,
+  type NeuronSetCombinationEntry,
+} from '@/features/scan-config/components/ui-elements/neuron-set-combination';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
@@ -52,6 +56,7 @@ export function UIElementRender({
   entity,
   schemaMappingConfig,
   errorPathPrefix,
+  selectedEntry,
 }: {
   k: string;
   disabled: boolean;
@@ -63,6 +68,8 @@ export function UIElementRender({
   setState: (newState: Record<string, ConfigValue>) => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
+  /** name of the dictionary entry being edited; used to exclude self-references */
+  selectedEntry?: string;
 }) {
   const value = state[k];
   return match({ entity, paramSchema })
@@ -140,6 +147,9 @@ export function UIElementRender({
           referenceSchema={paramSchema}
           value={defaultV}
           disabled={disabled}
+          // a block can't reference itself; exclude the current entry. This only affects
+          // references that resolve to the entry's own dictionary (a no-op otherwise).
+          omit={selectedEntry ? [selectedEntry] : []}
           onChange={(block_name: string | null, block_dict_name: string | null) => {
             if (block_name === null) {
               setState({ ...state, [k]: null });
@@ -462,6 +472,29 @@ export function UIElementRender({
 
               setState({ ...state, [k]: getNewValue() as ConfigValue });
             }}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.NeuronSetCombination },
+      },
+      ({ paramSchema }) => {
+        const v = (Array.isArray(state[k])
+          ? state[k]
+          : []) as unknown as NeuronSetCombinationEntry[];
+        return (
+          <NeuronSetCombination
+            paramSchema={paramSchema}
+            value={v}
+            config={config}
+            schema={schema}
+            disabled={disabled}
+            selfName={selectedEntry}
+            onChange={(newValue: NeuronSetCombinationEntry[]) =>
+              setState({ ...state, [k]: newValue as unknown as ConfigValue })
+            }
           />
         );
       }
