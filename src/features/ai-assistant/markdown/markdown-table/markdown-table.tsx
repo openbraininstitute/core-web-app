@@ -8,8 +8,8 @@ import {
 } from '@ant-design/icons';
 import React from 'react';
 
-import { MINIMAL_PANEL_SIZE, usePanelWidth } from '@/components/ai-assistant/hooks';
-import FullscreenDialog from '@/components/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
+import { MINIMAL_PANEL_SIZE, usePanelWidth } from '@/features/ai-assistant/hooks';
+import FullscreenDialog from '@/features/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
 
 import styles from './markdown-table.module.css';
 

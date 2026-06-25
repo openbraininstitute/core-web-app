@@ -3,14 +3,14 @@
 import { FullscreenOutlined } from '@ant-design/icons';
 import React from 'react';
 
-import FullscreenDialog from '@/components/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
+import FullscreenDialog from '@/features/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
 import { isString } from '@/util/type-guards';
 
 import ToolSkeleton from '../skeleton/tool-skeleton';
 
 import type { ToolResult } from '../../types';
 
-import dialogStyles from '@/components/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog.module.css';
+import dialogStyles from '@/features/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog.module.css';
 import styles from './tool-thumbnail-generation-morphology-getone.module.css';
 
 export interface ToolThumbnailGenerationProps {

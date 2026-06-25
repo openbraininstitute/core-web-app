@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from 'motion/react';
 
-import AiAssistant from '@/components/ai-assistant';
 import IconPlus from '@/components/icons/Plus';
+import AiAssistant from '@/features/ai-assistant';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';

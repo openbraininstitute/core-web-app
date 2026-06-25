@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { IconGear } from '@/components/ai-assistant/icons/gear';
 import { LoadingNeuronSpinner } from '@/components/neuron-viewer';
+import { IconGear } from '@/features/ai-assistant/icons/gear';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
 import DebouncedSwitch from './debounced-switch';

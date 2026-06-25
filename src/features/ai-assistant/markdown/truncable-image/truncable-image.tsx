@@ -5,11 +5,11 @@
 import { FullscreenOutlined } from '@ant-design/icons';
 import React from 'react';
 
-import FullscreenDialog from '@/components/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
-import ToolSkeleton from '@/components/ai-assistant/message-item/plots/renderers/skeleton/tool-skeleton';
+import FullscreenDialog from '@/features/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
+import ToolSkeleton from '@/features/ai-assistant/message-item/plots/renderers/skeleton/tool-skeleton';
 import { logError } from '@/utils/logger';
 
-import dialogStyles from '@/components/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog.module.css';
+import dialogStyles from '@/features/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog.module.css';
 import styles from './truncable-image.module.css';
 
 export interface TruncableImageProps {

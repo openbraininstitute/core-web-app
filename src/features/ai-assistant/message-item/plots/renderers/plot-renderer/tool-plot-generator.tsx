@@ -4,7 +4,7 @@ import { FullscreenOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import React from 'react';
 
-import FullscreenDialog from '@/components/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
+import FullscreenDialog from '@/features/ai-assistant/message-item/plots/fullscreen-dialog/fullscreen-dialog';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 import { logError } from '@/utils/logger';

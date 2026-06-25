@@ -1,5 +1,5 @@
-import PlotErrorMessage from '@/components/ai-assistant/message-item/plots/plot-error-message';
-import PlotInChat from '@/components/ai-assistant/message-item/plots/plot-in-chat';
+import PlotErrorMessage from '@/features/ai-assistant/message-item/plots/plot-error-message';
+import PlotInChat from '@/features/ai-assistant/message-item/plots/plot-in-chat';
 
 import TruncableImage from '../truncable-image';
 

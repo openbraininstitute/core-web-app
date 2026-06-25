@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useIsDragging, usePanelWidth } from '@/components/ai-assistant/hooks';
+import { useIsDragging, usePanelWidth } from '@/features/ai-assistant/hooks';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { isString } from '@/util/type-guards';
 
