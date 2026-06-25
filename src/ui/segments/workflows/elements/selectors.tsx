@@ -48,7 +48,7 @@ export function EntityTypeSelectScrollable({
         <SelectValue placeholder={<span className="text-base font-light!">Select a type</span>} />
       </SelectTrigger>
       <SelectContent
-        className="max-h-96 rounded-lg border-white bg-white shadow-xl"
+        className="z-9999 max-h-96 rounded-lg border-white bg-white shadow-xl"
         side="bottom"
         sideOffset={3}
       >
@@ -104,7 +104,7 @@ export function CategorySelectScrollable({
         />
       </SelectTrigger>
       <SelectContent
-        className="max-h-96 rounded-lg border-white bg-white shadow-xl"
+        className="z-9999 max-h-96 rounded-lg border-white bg-white shadow-xl"
         side="bottom"
         sideOffset={3}
       >
