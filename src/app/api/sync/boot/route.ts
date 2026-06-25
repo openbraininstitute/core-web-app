@@ -1,3 +1,4 @@
+import { ApiError } from '@/api/error';
 import { tryCatch } from '@/api/utils';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { updateUserOnboardingProfile } from '@/api/virtual-lab-svc/queries/user';
@@ -130,8 +131,7 @@ async function processVirtualLab(body: BootstrapBody, state: BootstrapState): Pr
       };
     }
     log('error', '[ERROR][ProcessVirtualLab]', error);
-    const cause = (error as Error & { cause?: Record<string, string> })?.cause;
-    if (cause?.error_code === 'ENTITY_ALREADY_EXISTS') {
+    if (error instanceof ApiError && error.cause?.code === 'ENTITY_ALREADY_EXISTS') {
       return {
         status: WorkspaceBootstrapStepStatus.Retryable,
         message: 'The name is already taken. Please choose a different name for your Virtual Lab.',

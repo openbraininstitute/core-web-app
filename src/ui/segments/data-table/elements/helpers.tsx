@@ -8,6 +8,7 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import {
   collectDefaultActiveColumns,
   collectListingFieldKeys,
+  isFieldListedInFilterPanel,
   resolveFieldListing,
 } from '@/entity-configuration/definitions/listing';
 import {
@@ -36,10 +37,9 @@ export const makeTypeDefaultFilters = ({ dataType, section, scope }: TDefaultLis
   const view = getViewDefinitionByExtendedType(dataType);
 
   return collectListingFieldKeys(view, context)
-    .filter((field) => {
-      const presentation = resolveFieldListing(getFieldDefinition(field), context);
-      return presentation.filterAvailable || presentation.columnAvailable;
-    })
+    .filter((field) =>
+      isFieldListedInFilterPanel(resolveFieldListing(getFieldDefinition(field), context))
+    )
     .map((field) => columnKeyToFilter(field, context));
 };
 

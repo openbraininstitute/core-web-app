@@ -1,5 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { wholeBrainSimulationFlag } from '@/features/feature-flags/flags';
+import { brainRegionSimulationFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { simulateIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/simulate-ion-channel';
 import { simulateMEModelWithSynapsesCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-me-model-with-synapses-circuit';
@@ -204,6 +204,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
         filters: simulatableCircuitFilters,
       },
     ],
+    requiredFeatures: [brainRegionSimulationFlag.key],
     disabled: false,
     order: 9,
   },
@@ -251,7 +252,6 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
       configureBinding: wholeBrainCircuitSimulationConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.WholeBrain }],
-    requiredFeatures: [wholeBrainSimulationFlag.key],
     order: 10,
     disabled: false,
   },

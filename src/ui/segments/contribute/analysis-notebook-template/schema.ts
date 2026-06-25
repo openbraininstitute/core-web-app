@@ -19,6 +19,7 @@ export const AnalysisNotebookTemplateSchema = z.object({
       .string({ message: 'Description is required' })
       .nonempty({ message: 'Description is required' }),
     scale: ScaleEnum,
+    exercise_id: z.string().trim().optional(),
   }),
 
   assets: AnalysisNotebookTemplateAssetsSchema,

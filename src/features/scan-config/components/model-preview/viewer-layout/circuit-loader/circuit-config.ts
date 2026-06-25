@@ -65,7 +65,7 @@ function assertICircuitSonataConfiguration(
               [
                 'partial',
                 {
-                  type: ['literal', 'biophysical', 'virtual'],
+                  type: 'string',
                   biophysical_neuron_models_dir: 'string',
                   morphologies_dir: 'string',
                   alternate_morphologies: ['map', 'string'],

@@ -4,6 +4,7 @@ import React from 'react';
 
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import {
+  isColumnToggleInFilterPanel,
   resolveFieldListing,
   resolveFilterOptions,
 } from '@/entity-configuration/definitions/listing';
@@ -73,9 +74,9 @@ export function useFilterItems(
             label: fieldTitleSentenceCase(item?.title ?? ''),
             type: filter.type,
             toggleFunc:
-              showDisplayTrigger && presentation.columnAvailable
+              showDisplayTrigger && isColumnToggleInFilterPanel(presentation)
                 ? () => onToggleActive?.(filter.field)
-                : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
+                : undefined,
           };
         })
         .filter(

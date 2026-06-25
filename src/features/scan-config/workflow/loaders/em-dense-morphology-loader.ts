@@ -64,6 +64,10 @@ function buildDatasetDerivedLoader(hydrate: DerivedHydrate) {
 
 export const buildEmDenseMorphologyLoader = buildDatasetDerivedLoader(
   async (morphologyIds, context, scopeFilters) => {
+    if (morphologyIds.length === 0) {
+      return [];
+    }
+
     const morphologies = await getCellMorphologies({
       context,
       withFacets: false,
@@ -84,6 +88,10 @@ export const buildEmDenseMorphologyLoader = buildDatasetDerivedLoader(
 
 export const buildMemodelLoader = buildDatasetDerivedLoader(
   async (morphologyIds, context, scopeFilters) => {
+    if (morphologyIds.length === 0) {
+      return [];
+    }
+
     const memodels = await getMEModels({
       context,
       withFacets: false,
