@@ -136,6 +136,8 @@ export function SpeciesAtlasPreview({
 
   return (
     <div
+      id="species-atlas-preview"
+      data-testid="species-atlas-preview"
       ref={containerRef}
       className="relative aspect-4/3 w-full overflow-hidden rounded-xl bg-primary-9"
     >

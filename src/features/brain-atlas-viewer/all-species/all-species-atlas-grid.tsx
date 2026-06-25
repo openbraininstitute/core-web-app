@@ -50,7 +50,7 @@ export function AllSpeciesAtlasGrid() {
   }
 
   return (
-    <div className="mr-1.5 p-1">
+    <div id="all-species-atlas-grid" data-testid="all-species-atlas-grid" className="mr-1.5 p-1">
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {orderedHierarchies.map((hierarchy) => (
           <li key={hierarchy.id}>

@@ -47,6 +47,8 @@ export function AllSpeciesAtlasCard({ hierarchy }: AllSpeciesAtlasCardProps) {
 
   return (
     <article
+      data-testid="all-species-atlas-card"
+      id={`all-species-atlas-card-${species.id}`}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       className={cn(

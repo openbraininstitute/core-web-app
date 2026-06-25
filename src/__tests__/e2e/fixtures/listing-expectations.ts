@@ -18,9 +18,9 @@ import {
   makeTypeDefaultFilters,
 } from '@/ui/segments/data-table/elements/helpers';
 import {
-  ExperimentalEntitiesTileTypes,
-  ModelEntitiesTileTypes,
-  SimulationEntitiesTileTypes,
+  BrowseExperimentalDataExtendedTypes,
+  ModelDataExtendedTypes,
+  SimulationDataExtendedTypes,
 } from '@/ui/segments/explore/helpers';
 import { fieldTitleSentenceCase } from '@/util/utils';
 
@@ -89,11 +89,11 @@ function fieldFilterLabel(field: EntityCoreFields): string {
 }
 
 export const DATA_BROWSER_ENTITIES: DataBrowserEntity[] = [
-  ...Object.values(ExperimentalEntitiesTileTypes).map((config) =>
+  ...Object.values(BrowseExperimentalDataExtendedTypes).map((config) =>
     toDataEntity('Experimental', config)
   ),
-  ...Object.values(ModelEntitiesTileTypes).map((config) => toDataEntity('Model', config)),
-  ...Object.values(SimulationEntitiesTileTypes).map((config) =>
+  ...Object.values(ModelDataExtendedTypes).map((config) => toDataEntity('Model', config)),
+  ...Object.values(SimulationDataExtendedTypes).map((config) =>
     toDataEntity('Simulations', config)
   ),
 ];
