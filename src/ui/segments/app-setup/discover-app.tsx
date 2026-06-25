@@ -118,7 +118,11 @@ export function OnboardingDiscoverCard({
   skipTour,
 }: CardComponentProps) {
   return (
-    <Card id="onboarding-card" className="w-max max-w-xs gap-0 rounded-3xl border-0 bg-white p-0">
+    <Card
+      id="onboarding-card"
+      data-testid="onboarding-card"
+      className="w-max max-w-xs gap-0 rounded-3xl border-0 bg-white p-0"
+    >
       <div className="flex w-full items-start justify-between px-6 pt-4 pb-0">
         <h1 className="text-primary-9 mb-2 text-lg font-bold">{step?.title}</h1>
         <div className="flex w-max min-w-max flex-nowrap items-center justify-center gap-1">

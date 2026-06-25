@@ -28,6 +28,9 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
     <button
       type="button"
       id={node.id.toString()}
+      data-testid={`brain-region-tree-node-${node.id}`}
+      data-brain-region-id={node.id}
+      data-brain-region-label={nodeName}
       title={nodeName}
       aria-label={nodeName}
       tabIndex={0}

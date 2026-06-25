@@ -215,6 +215,8 @@ tarball/
 /playwright/.cache/
 
 playwright/.auth
+/.auth/
+/.e2e-state.json
 
 playwright/.auth
 
@@ -238,3 +240,10 @@ CLAUDE.md
 .code-review
 .release-notes
 .env.test.secrets
+
+# E2E test artifacts
+.auth/
+.e2e-state.json
+.e2e-runs/
+.env.test.secrets
+.cursor/

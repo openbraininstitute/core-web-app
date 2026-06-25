@@ -132,7 +132,7 @@ export function EntityLinkCount() {
     .otherwise(() => null);
 
   return (
-    <div id="data-type-items-container" data-testid="data-type-items-container" className="py-2">
+    <div className="py-2">
       <div id="data-type-tabs-container" data-testid="data-type-tabs-container" className="w-full">
         <PillTabs
           id="data-type-selector"
