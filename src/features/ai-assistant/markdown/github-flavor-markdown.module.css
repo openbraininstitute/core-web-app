@@ -1,0 +1,5 @@
+.githubFlavorMarkdown {
+  :global(span.katex-html) {
+    display: none;
+  }
+}
