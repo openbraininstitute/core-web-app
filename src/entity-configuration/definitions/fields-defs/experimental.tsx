@@ -906,6 +906,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return EmptyValue;
     },
     defaultConstraint: 'release_version__in',
+    vocabulary: {
+      plural: 'versions',
+      singular: 'version',
+    },
   },
   [EntityCoreFields.EmDenseReconstructionDatasetName]: {
     className: 'text-left',
