@@ -4,14 +4,17 @@ import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
+import { IcRound3dRotation } from '@/components/icons/IcRound3dRotation';
 import { Loader } from '@/components/loader';
 import {
+  AtlasKindDict,
   hasMountedSpeciesAtlasPreview,
   markSpeciesAtlasPreviewMounted,
   type SpeciesAtlasPreviewSource,
 } from '@/features/brain-atlas-viewer/all-species/helpers';
 import { MiniBrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/mini-brain-atlas-viewer-gltf';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
+import { cn } from '@/utils/css-class';
 
 type SpeciesAtlasPreviewProps = {
   hierarchyId: string;
@@ -39,7 +42,7 @@ function SpeciesAtlasGltfPreview({
   speciesName,
 }: {
   hierarchyId: string;
-  preview: Extract<SpeciesAtlasPreviewSource, { kind: 'atlas' }>;
+  preview: Extract<SpeciesAtlasPreviewSource, { kind: typeof AtlasKindDict.Atlas }>;
   regionName?: string;
   speciesName: string;
 }) {
@@ -81,7 +84,7 @@ function AtlasPreviewContent({
   regionName,
   speciesName,
 }: SpeciesAtlasPreviewProps) {
-  if (preview.kind === 'image') {
+  if (preview.kind === AtlasKindDict.Image) {
     return <SpeciesAtlasImage src={preview.imageSrc} alt={speciesName} />;
   }
 
@@ -136,6 +139,19 @@ export function SpeciesAtlasPreview({
       ref={containerRef}
       className="relative aspect-4/3 w-full overflow-hidden rounded-xl bg-primary-9"
     >
+      {preview.kind === AtlasKindDict.Atlas && (
+        <div
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full',
+            'bg-[radial-gradient(circle_at_32%_28%,#ffffff_0%,#f5f7fa_42%,#d8dee8_100%)]',
+            'shadow-[0_3px_8px_rgba(0,12,30,0.35),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-4px_8px_rgba(0,12,30,0.14)]',
+            'ring-1 ring-white/70'
+          )}
+        >
+          <IcRound3dRotation className="size-4.5 text-primary-9" />
+        </div>
+      )}
       {isVisible ? (
         <AtlasPreviewContent
           hierarchyId={hierarchyId}

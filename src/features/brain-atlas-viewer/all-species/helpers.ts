@@ -6,9 +6,16 @@ export type SpeciesRuntimeHierarchy = IHierarchyWithSpecies & {
   atlasId?: string;
 };
 
+export const AtlasKindDict = {
+  Atlas: 'atlas',
+  Image: 'image',
+} as const;
+
+export type AtlasKind = (typeof AtlasKindDict)[keyof typeof AtlasKindDict];
+
 export type SpeciesAtlasPreviewSource =
-  | { kind: 'atlas'; atlasId: string; fallbackImageSrc?: string }
-  | { kind: 'image'; imageSrc: string };
+  | { kind: typeof AtlasKindDict.Atlas; atlasId: string; fallbackImageSrc?: string }
+  | { kind: typeof AtlasKindDict.Image; imageSrc: string };
 
 export function resolveSpeciesAtlasPreview(
   hierarchy: SpeciesRuntimeHierarchy
@@ -17,7 +24,7 @@ export function resolveSpeciesAtlasPreview(
 
   if (hierarchy.atlasId) {
     return {
-      kind: 'atlas',
+      kind: AtlasKindDict.Atlas,
       atlasId: hierarchy.atlasId,
       fallbackImageSrc,
     };
@@ -25,7 +32,7 @@ export function resolveSpeciesAtlasPreview(
 
   if (fallbackImageSrc) {
     return {
-      kind: 'image',
+      kind: AtlasKindDict.Image,
       imageSrc: fallbackImageSrc,
     };
   }
