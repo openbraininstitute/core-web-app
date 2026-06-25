@@ -6,9 +6,9 @@ export const viewDefForUniversalCellMorphology = {
   columns: [
     EntityCoreFields.Preview,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.MType,
     EntityCoreFields.Name,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.GenerationType,
     EntityCoreFields.ProtocolDesign,
     EntityCoreFields.Contributions,

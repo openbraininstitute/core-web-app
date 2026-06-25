@@ -11,11 +11,11 @@ export const viewDefForIonChannelRecording: ViewDefinitionConfig = {
   columns: [
     EntityCoreFields.Preview,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.IonChannel,
     EntityCoreFields.Temperature,
     EntityCoreFields.CellLine,
     EntityCoreFields.Name,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],
