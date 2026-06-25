@@ -9,7 +9,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { HierarchySquare } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
-import { ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks';
+import { ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/constants';
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/components/brain-region-skeleton';
 import { SpeciesSelector } from '@/features/brain-region-hierarchy/components/species-selector';
@@ -144,6 +144,7 @@ export function FocusedModeContent({
         {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
         <div
           data-label="brain-region-switcher"
+          data-testid="brain-region-switcher"
           className="flex items-center gap-1 h-full select-none w-full min-w-0"
           tabIndex={0}
           role="button"

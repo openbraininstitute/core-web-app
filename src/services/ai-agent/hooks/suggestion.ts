@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { useSnapshot } from '@/components/ai-assistant/suggested-questions/snapshot';
+import { useSnapshot } from '@/features/ai-assistant/chat/suggested-questions/snapshot';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 

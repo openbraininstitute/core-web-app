@@ -1,7 +1,6 @@
 'use client';
 
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
-import { kebabCase } from 'es-toolkit/compat';
 
 import { AllSpeciesDisplayName } from '@/features/brain-region-hierarchy/context';
 import {
@@ -81,7 +80,11 @@ export function SpeciesSelector({
   const triggerLabel = isAllMode ? AllSpeciesDisplayName : displaySpecies?.displayName;
 
   return (
-    <span id="species-selector" className={cn('flex w-full min-w-0 items-center py-2', className)}>
+    <span
+      id="species-selector"
+      data-testid="species-selector"
+      className={cn('flex w-full min-w-0 items-center py-2', className)}
+    >
       <Select value={currentValue} onValueChange={onSpeciesChange} disabled={disabled}>
         <SelectTrigger
           size="sm"
@@ -147,7 +150,8 @@ export function SpeciesSelector({
           {options.map((species) => (
             <SelectItem
               id={`species-selector-option__${species.hierarchId}`}
-              data-testid={`species-selector-option__${kebabCase(species.name)}`}
+              data-testid={`species-selector-option__${species.hierarchId}`}
+              data-hierarchy-id={species.hierarchId}
               key={species.hierarchId}
               value={species.hierarchId}
               className={cn('cursor-pointer py-2.5 px-3', '[&_.select-icon-wrapper]:top-4')}

@@ -82,6 +82,8 @@ export function PerTypePublications({
             '[&_.ant-pagination-item-link]:text-white',
             '[&_.ant-pagination-item]:rounded-full!',
             '[&_.ant-pagination-item-active]:bg-primary-9',
+            '[&_.ant-pagination-item]:hover:bg-primary-8/50!',
+            '[&_.ant-pagination-item:hover_a]:text-white!',
             '[&_.ant-pagination-item-active]:text-white',
             '[&_.ant-pagination-item-active]:border-primary-9',
             '[&_.ant-pagination-item-active]:border-primary-9',

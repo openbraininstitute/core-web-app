@@ -52,6 +52,7 @@ function SweepSelector({
     };
 
     return (
+      // biome-ignore lint/a11y/noStaticElementInteractions: label is associated with input
       <div
         key={label}
         className={classNames(
@@ -63,9 +64,9 @@ function SweepSelector({
         onMouseEnter={() => handlePreviewSweep(value)}
         onMouseLeave={() => handlePreviewSweep(undefined)}
       >
-        <label // eslint-disable-line jsx-a11y/label-has-associated-control
+        <label
           className={classNames(
-            'flex h-[32px] w-[32px] cursor-pointer items-center rounded border-1 hover:opacity-75',
+            'flex h-[32px] w-[32px] cursor-pointer items-center rounded border hover:opacity-85',
             isSelected && styles.selected
           )}
           style={{

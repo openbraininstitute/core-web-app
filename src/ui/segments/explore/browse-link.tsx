@@ -84,6 +84,7 @@ export function BrowseLinkContent({
           rounded
           key={`counter-${extendedType}`}
           id={`counter-${extendedType}`}
+          data-testid={`entity-link-counter-${extendedType}`}
           variant="outline"
           size="lg"
           className="group w-full shrink grow border-none text-base"
@@ -105,7 +106,10 @@ export function BrowseLinkContent({
               )}
             >
               {isLoading ? (
-                <div className="flex items-center justify-center gap-1">
+                <div
+                  data-testid={`entity-link-counter-loading-${extendedType}`}
+                  className="flex items-center justify-center gap-1"
+                >
                   <Skeleton className="h-3 w-5 rounded-full" />
                   <span className="text-neutral-2 font-light">of</span>
                   <Skeleton className="h-3 w-5 rounded-full" />
@@ -227,23 +231,21 @@ export function BrowseLink({
   defaultBrainRegionId,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
-  const { type } = useParams<{ type: TExtendedEntitiesTypeDict }>();
+  const pathname = usePathname();
+  const { type } = useParams<{ type?: string }>();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
 
-  // determine if this entity type is the one currently displayed in the data table
-  const activeEntityType = snakeCase(type);
+  const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType;
 
-  // read the filtered count from the table's cached query
   const {
     count: tableCount,
     isLoading: tableCountLoading,
     isError: isTableCountError,
-    hasCachedData,
   } = useTableQueryCount({
     extendedType,
     scope,
@@ -287,8 +289,7 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: fallbackQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
-    // fetch for inactive entities and as bootstrap for active entities without cached table count yet
-    enabled: enabled && brainRegionDependentFetch,
+    enabled: enabled && brainRegionDependentFetch && (!isActiveEntity || tableCount == null),
     staleTime: Infinity,
   });
 
@@ -303,11 +304,11 @@ export function BrowseLink({
     staleTime: Infinity,
   });
 
-  // resolve current count: prioritize table query when active, fallback otherwise
-  const count = isActiveEntity && hasCachedData ? tableCount : fallbackData;
-  const loadingCurrent = isActiveEntity && hasCachedData ? tableCountLoading : loadingFallback;
-  const isCurrentError = isActiveEntity && hasCachedData ? isTableCountError : isFallbackError;
-  const isLoading = loadingCurrent && loadingRoot;
+  const resolvedCount = isActiveEntity ? (tableCount ?? fallbackData) : fallbackData;
+  const loadingCurrent = isActiveEntity ? tableCountLoading && tableCount == null : loadingFallback;
+  const count = resolvedCount;
+  const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
+  const isLoading = loadingCurrent && loadingRoot && resolvedCount == null;
 
   const countRenderer = match({
     isCurrentError,
@@ -338,18 +339,20 @@ export function BrowseLink({
     .with({ enabled: true }, () => (
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">
-          {loadingCurrent ? (
-            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
-          ) : (
-            (count ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          {count ?? (
+            <Skeleton
+              data-testid={`entity-link-counter-loading-current-${extendedType}`}
+              className="inline-block h-3 w-5 rounded-full align-middle"
+            />
           )}
         </span>
         <span className="font-light">of</span>
         <span className="font-bold">
-          {loadingRoot ? (
-            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
-          ) : (
-            (root ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          {root ?? (
+            <Skeleton
+              data-testid={`entity-link-counter-loading-root-${extendedType}`}
+              className="inline-block h-3 w-5 rounded-full align-middle"
+            />
           )}
         </span>
       </span>

@@ -51,7 +51,6 @@ export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
                 circuit={circuitLoader.circuit}
                 loadCell={circuitLoader.loadCell}
                 onLoadProgress={setProgress}
-                highlightedCellIds={[]}
                 gizmo
                 scalebar
               />

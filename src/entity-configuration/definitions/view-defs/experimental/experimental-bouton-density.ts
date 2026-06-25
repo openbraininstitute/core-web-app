@@ -10,11 +10,11 @@ export const viewDefForExperimentalBoutonDensity: ViewDefinitionConfig = {
   name: EntitySlug.ExperimentalBoutonDensity,
   columns: [
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.MType,
     EntityCoreFields.MeanSTD,
     EntityCoreFields.Sem,
     EntityCoreFields.NumberOfMeasurements,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.Contributions,
   ],
   summaryViewFields: [

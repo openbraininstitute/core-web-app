@@ -1,5 +1,7 @@
 'use client';
 
+import { kebabCase } from 'es-toolkit/compat';
+
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
@@ -19,11 +21,15 @@ export function Visualization({ circuit }: Props) {
   });
 
   return (
-    <div className="mt-5">
+    <div
+      id={`visualization-${kebabCase(circuit.type)}-${circuit.id}`}
+      data-testid="visualization"
+      className="mt-5"
+    >
       <ProgressiveEntityImage
         asset={visAsset}
         entityId={circuit.id}
-        alt="hii"
+        alt="circuit visualization"
         height={300}
         width="100%"
         maxHeight="auto"

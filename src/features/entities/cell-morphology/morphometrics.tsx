@@ -1,8 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Divider } from 'antd';
-import { startCase } from 'es-toolkit/compat';
+import { kebabCase, startCase } from 'es-toolkit/compat';
 
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
 import { type TViewVariant, ViewVariant } from '@/constants';
@@ -76,6 +75,8 @@ export function Morphometrics({
 
   return (
     <div
+      id={`morphometrics-${kebabCase(morphology.type)}-${morphology.id}`}
+      data-testid="morphometrics"
       className={cn(
         'flex max-w-(--breakpoint-2xl) flex-col gap-5 pl-2 rounded-lg border p-5 border-white/20 mb-2',
         className

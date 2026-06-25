@@ -2,7 +2,7 @@
 
 import { isNil, noop } from 'es-toolkit/compat';
 import { type Atom, atom, useSetAtom } from 'jotai';
-import { atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
+import { atomWithDefault, atomWithReset, atomWithStorage, RESET } from 'jotai/utils';
 import { atomFamily } from 'jotai-family';
 import { createContext, use, useCallback, useEffect, useMemo } from 'react';
 import superjson from 'superjson';
@@ -15,8 +15,13 @@ import {
   WorkspaceSection,
 } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { buildFieldListingContext } from '@/entity-configuration/definitions/listing';
 import { SortOrder } from '@/entity-configuration/definitions/types';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import {
+  speciesSelectionModeAtom,
+  workspaceHierarchySpeciesAtom,
+} from '@/features/brain-region-hierarchy/context';
 import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
   extractPartsFromDataKey,
@@ -26,12 +31,28 @@ import {
 } from '@/ui/segments/data-table/elements/helpers';
 import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
 
+import type { Getter } from 'jotai';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   TCoreFilter,
   TSortState,
   TSortStateList,
 } from '@/entity-configuration/definitions/types';
+
+function readFieldListingContext(
+  get: Getter,
+  listing: {
+    dataType: TExtendedEntitiesTypeDict;
+    section?: TWorkspaceSection;
+    scope?: TWorkspaceScope;
+  }
+) {
+  return buildFieldListingContext({
+    ...listing,
+    speciesSelectionMode: get(speciesSelectionModeAtom),
+    workspaceSpecies: get(workspaceHierarchySpeciesAtom),
+  });
+}
 
 type DataAtomBinding = {
   key: string;
@@ -51,18 +72,19 @@ export const activeColumnsAtom = atomFamily(
 
 export const coreActiveColumnsAtom = atomFamily(
   ({ dataType, key }: { key: string; dataType: TExtendedEntitiesTypeDict }) =>
-    atomWithDefault<Promise<string[]> | string[]>(async () => {
+    atomWithDefault<Promise<string[]> | string[]>((get) => {
       const { section, scope } = extractPartsFromDataKey(key);
-      return ['index', ...makeTypeDefaultActiveColumns({ dataType, section, scope })];
+      const listingContext = readFieldListingContext(get, { dataType, section, scope });
+      return ['index', ...makeTypeDefaultActiveColumns(listingContext)];
     }),
   (a, b) => a.key === b.key
 );
 
 export const coreFiltersAtom = atomFamily(
   ({ dataType, key }: { key: string; dataType: TExtendedEntitiesTypeDict }) => {
-    const childAtom = atomWithDefault<Array<TCoreFilter>>(() => {
+    const childAtom = atomWithDefault<Array<TCoreFilter>>((get) => {
       const { section, scope } = extractPartsFromDataKey(key);
-      return makeTypeDefaultFilters({ dataType, section, scope });
+      return makeTypeDefaultFilters(readFieldListingContext(get, { dataType, section, scope }));
     });
     childAtom.debugLabel = `filter-atom/${key}`;
     return childAtom;
@@ -115,11 +137,12 @@ export const DataListStateSnapshotStorageAtomFamily = atomFamily(
   ({ dataKey, dataType }: { dataKey: string; dataType: TExtendedEntitiesTypeDict }) => {
     const resolvedStorage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
     const { section, scope } = extractPartsFromDataKey(dataKey);
-    const initialValue = makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
     const childAtom = atomWithStorage(
       dataKey,
-      initialValue,
-      createSuperJsonStorage<typeof initialValue>(resolvedStorage),
+      makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope }),
+      createSuperJsonStorage<ReturnType<typeof makeDataListStateSnapshotAtomsInitialValue>>(
+        resolvedStorage
+      ),
       { getOnInit: true }
     );
     childAtom.debugLabel = `list-params-storage-${dataKey}`;
@@ -168,18 +191,22 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
         const view = get(circuitRepresentationViewAtom);
         return { filters, page, search, sort, view };
       },
-      (_get, set, action: TDataListStoreParamsSyncAction) => {
+      (get, set, action: TDataListStoreParamsSyncAction) => {
         const readStorage = (): TDataLisStateSnapshot => {
           const { section, scope } = extractPartsFromDataKey(dataKey);
+          const listingContext = readFieldListingContext(get, { dataType, section, scope });
+          const fallback = makeDataListStateSnapshotAtomsInitialValue(listingContext);
           if (typeof window === 'undefined') {
-            return makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
+            return fallback;
           }
           const raw = sessionStorage.getItem(dataKey);
-          if (!raw) return makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
+          if (!raw) {
+            return fallback;
+          }
           try {
             return superjson.parse<TDataLisStateSnapshot>(raw);
           } catch {
-            return makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
+            return fallback;
           }
         };
 
@@ -205,16 +232,14 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
           })
           .with({ type: DataListStateSnapshotSyncAction.RESET }, () => {
             const { section, scope } = extractPartsFromDataKey(dataKey);
-            const defaultListParams = makeDataListStateSnapshotAtomsInitialValue({
-              dataType,
-              section,
-              scope,
-            });
+            const listingContext = readFieldListingContext(get, { dataType, section, scope });
+            const defaultListParams = makeDataListStateSnapshotAtomsInitialValue(listingContext);
             set(coreFiltersAtom({ key: dataKey, dataType }), defaultListParams.Filters);
             set(corePageNumberAtom(dataKey), defaultListParams.Page);
             set(coreSearchStringAtom(dataKey), defaultListParams.Search);
             set(coreSortStateAtom({ key: dataKey }), defaultListParams.Sort);
             set(circuitRepresentationViewAtom, defaultListParams.View);
+            set(coreActiveColumnsAtom({ dataType, key: dataKey }), RESET);
             if (typeof window !== 'undefined') {
               sessionStorage.removeItem(dataKey);
             }

@@ -8,7 +8,10 @@ import { useAppNotification } from '@/components/notification';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
+import {
+  CreditsAction,
+  CreditsTransferModal,
+} from '@/ui/segments/project/credits/credits-transfer-modal';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import { isLowCreditsError } from './error-detection';
@@ -167,7 +170,13 @@ export function useLowCredits(options: UseLowCreditsOptions = {}): UseLowCredits
   );
 
   const creditsModal = useMemo(
-    () => <CreditsTransferModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />,
+    () => (
+      <CreditsTransferModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        action={CreditsAction.Selection.key}
+      />
+    ),
     [isModalOpen]
   );
 

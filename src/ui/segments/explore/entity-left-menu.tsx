@@ -40,13 +40,21 @@ export function EntityLeftMenu({ dataKey }: Props) {
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div
+      className="flex h-full flex-col"
+      data-testid="data-entity-left-menu"
+      id="data-entity-left-menu"
+    >
       <RegionBanner
         view={view}
         onSwitchView={onSwitchView}
-        classNames={{ container: 'px-4 pb-1', selector: 'shadow-sm bg-white' }}
+        classNames={{ container: 'px-1 w-full pb-1', selector: 'shadow-sm bg-white' }}
       />
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+      <div
+        data-testid="data-entity-left-menu-content"
+        id="data-entity-left-menu-content"
+        className="relative min-h-0 flex-1 overflow-hidden"
+      >
         {!isAllMode && (
           <motion.div
             key="brain-region-hierarchy"

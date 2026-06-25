@@ -30,6 +30,8 @@ const FREE_ACCESS_PAGES = [
   '/gallery/*',
   '/app/version',
   '/app/log-in',
+  '/app/grading/launch',
+  '/app/grading/launch/error',
 
   '/api/newsletter',
   '/api/auth*',

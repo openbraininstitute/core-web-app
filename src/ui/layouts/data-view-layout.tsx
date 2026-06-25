@@ -16,6 +16,8 @@ import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
+import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config';
+import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { PropsWithChildren } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -63,9 +65,13 @@ export async function DataViewLayout({
 
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
 
-  const useClassicLayout = entityType.group === EntityTypeGroup.Simulations;
+  const rendersFullPageWorkflowUi =
+    Boolean(findScanConfigRegistryByTargetType(type)) ||
+    type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
+  const useClassicLayout =
+    entityType.group === EntityTypeGroup.Simulations || rendersFullPageWorkflowUi;
   const contentVariant = useClassicLayout ? ViewVariant.Light : ViewVariant.Default;
   /**
    * Breadcrumb, side nav, and close button sit on a white header/rail.

@@ -305,7 +305,23 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     presentation: {
       column: {
         available: {
-          default: true,
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: [
+                  ExtendedEntitiesTypeDict.Circuit,
+                  ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+                  ExtendedEntitiesTypeDict.SmallMicrocircuit,
+                  ExtendedEntitiesTypeDict.Microcircuit,
+                  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+                  ExtendedEntitiesTypeDict.BrainRegion,
+                  ExtendedEntitiesTypeDict.WholeBrain,
+                ],
+              },
+              value: true,
+            },
+          ],
         },
       },
       filter: {

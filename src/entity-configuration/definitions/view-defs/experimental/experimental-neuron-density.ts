@@ -10,12 +10,12 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
   name: EntitySlug.ExperimentalNeuronDensity,
   columns: [
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.MType,
     EntityCoreFields.EType,
     EntityCoreFields.NeuronDensity,
     EntityCoreFields.NumberOfMeasurements,
     EntityCoreFields.Name,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.SubjectAge,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,

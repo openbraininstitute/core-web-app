@@ -13,15 +13,11 @@ import type {
 
 // --- mock the boundaries the region banner depends on ------------------------
 // The data hook is mocked so we can drive the banner into each state directly;
-// the 3D-viewer hooks module pulls webgl libraries we don't need; notifications
-// need a provider we don't want to stand up.
+// notifications need a provider we don't want to stand up.
 const registry = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
 
 vi.mock('@/features/brain-region-hierarchy/hooks', () => ({
   useWorkspaceHierarchyRegistry: () => registry.value,
-}));
-vi.mock('@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks', () => ({
-  ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY: '3d-mesh-error',
 }));
 vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({ destroy: vi.fn(), open: vi.fn(), close: vi.fn() }),

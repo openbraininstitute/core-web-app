@@ -11,9 +11,9 @@ export const ViewDefForSynthesizedCellMorphology: ViewDefinitionConfig = {
   columns: [
     EntityCoreFields.Preview,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.MType,
     EntityCoreFields.Name,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],

@@ -10,11 +10,40 @@ import {
   type TFieldApiWhen,
   type TFilterOptionsSource,
 } from '@/entity-configuration/definitions/types';
+import {
+  SpeciesSelectionMode,
+  type TSpeciesSelectionMode,
+} from '@/features/brain-region-hierarchy/types';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import type { IWorkspaceSpecies } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
+
+export function buildFieldListingContext({
+  dataType,
+  section,
+  scope,
+  speciesSelectionMode,
+  workspaceSpecies,
+}: {
+  dataType: TFieldApiContext['dataType'];
+  section?: TWorkspaceSection;
+  scope?: TWorkspaceScope;
+  speciesSelectionMode?: TSpeciesSelectionMode;
+  workspaceSpecies?: IWorkspaceSpecies | null;
+}): TFieldApiContext {
+  return {
+    dataType,
+    section,
+    scope,
+    selectedSpecies:
+      speciesSelectionMode === SpeciesSelectionMode.All ? undefined : workspaceSpecies?.taxonomyId,
+    speciesSelectionMode,
+  };
+}
 
 /**
  * resolved field presentation state for one runtime context.
@@ -22,8 +51,33 @@ import type { WorkspaceContext } from '@/types/common';
 export interface IResolvedFieldPresentation {
   columnAvailable: boolean;
   filterAvailable: boolean;
+  hideInFilterPanel: boolean;
   constraint?: string | Record<string, string>;
   optionsSource?: TFilterOptionsSource;
+}
+
+/**
+ * determines whether a field is listed in the filter panel
+ *
+ * a field is listed in the filter panel if:
+ * - it is not hidden in the filter panel
+ * - it is available as a filter control
+ * - it is available as a column eye toggle
+ */
+export function isFieldListedInFilterPanel(presentation: IResolvedFieldPresentation): boolean {
+  if (presentation.hideInFilterPanel) return false;
+  return presentation.filterAvailable || presentation.columnAvailable;
+}
+
+/**
+ * determines whether a field is listed as a column eye toggle in the filter panel
+ *
+ * a field is listed as a column eye toggle in the filter panel if:
+ * - it is available as a column eye toggle
+ * - it is not hidden in the filter panel
+ */
+export function isColumnToggleInFilterPanel(presentation: IResolvedFieldPresentation): boolean {
+  return presentation.columnAvailable && !presentation.hideInFilterPanel;
 }
 
 /**
@@ -74,7 +128,9 @@ export function matchesFieldApiWhen(
   return (
     matchesContextValue(when.dataType, ctx.dataType) &&
     matchesContextValue(when.section, ctx.section) &&
-    matchesContextValue(when.scope, ctx.scope)
+    matchesContextValue(when.scope, ctx.scope) &&
+    matchesContextValue(when.selectedSpecies, ctx.selectedSpecies) &&
+    matchesContextValue(when.speciesSelectionMode, ctx.speciesSelectionMode)
   );
 }
 
@@ -205,6 +261,7 @@ export function resolveFieldListing(
     return {
       columnAvailable: false,
       filterAvailable: false,
+      hideInFilterPanel: false,
     };
   }
 
@@ -217,6 +274,8 @@ export function resolveFieldListing(
       resolveContextualValue(field.presentation?.filter?.available, ctx) ??
       field.isFilterable ??
       false,
+    hideInFilterPanel:
+      resolveContextualValue(field.presentation?.column?.hideInFilterPanel, ctx) ?? false,
     constraint:
       resolveContextualValue(field.presentation?.filter?.constraint, ctx) ??
       field.perTypeConstraint?.[ctx.dataType] ??

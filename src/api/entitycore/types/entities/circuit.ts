@@ -4,6 +4,7 @@ import type {
   EntityCoreIdentifiableNamed,
   EntityCoreOwnership,
   EntityCoreType,
+  ISubject,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -98,7 +99,9 @@ export interface ICircuit
     Timestamps,
     EntityCoreOwnership,
     EntityCoreType,
-    EntityCoreBaseAsset {}
+    EntityCoreBaseAsset {
+  subject?: ISubject;
+}
 
 type CircuitScaleFilter = {
   scale: string | null;

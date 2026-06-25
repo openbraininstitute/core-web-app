@@ -1,7 +1,7 @@
-import { DataTypeGroup, ViewDefinitionConfig } from '../types';
-import { EntityCoreFields } from '../../fields-defs/enums';
-
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import { EntityCoreFields } from '../../fields-defs/enums';
+import { DataTypeGroup, type ViewDefinitionConfig } from '../types';
 
 export const ViewDefForEmodel: ViewDefinitionConfig = {
   title: 'E-model',
@@ -11,6 +11,7 @@ export const ViewDefForEmodel: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.EModelResponse,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.MType,
     EntityCoreFields.EType,
     EntityCoreFields.EModelExemplarMorphology,

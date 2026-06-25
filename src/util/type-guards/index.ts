@@ -40,10 +40,18 @@ export function assertNumber(data: unknown, name = 'data'): asserts data is numb
   }
 }
 
+export function assertArrayNumber(data: unknown, name = 'data'): asserts data is number[] {
+  assertType(data, ['array', 'number'], name);
+}
+
 export function assertString(data: unknown, name = 'data'): asserts data is string {
   if (!isString(data)) {
     throw Error(`${name} was expected to be a string but we got ${typeof data}!`);
   }
+}
+
+export function assertArrayString(data: unknown, name = 'data'): asserts data is string[] {
+  assertType(data, ['array', 'string'], name);
 }
 
 export function assertObject(
@@ -55,7 +63,7 @@ export function assertObject(
   }
 }
 
-function assertArray(data: unknown, name = 'data'): asserts data is unknown[] {
+export function assertArray(data: unknown, name = 'data'): asserts data is unknown[] {
   if (!Array.isArray(data)) {
     throw Error(`${name} was expected to be an Array but we got ${typeof data}!`);
   }

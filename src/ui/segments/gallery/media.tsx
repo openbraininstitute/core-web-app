@@ -26,6 +26,7 @@ export default function Media({ item, isLoaded, onLoad, onOpenModal }: MediaProp
     <div className="flex flex-col">
       <button
         type="button"
+        data-testid="gallery-media-item"
         onClick={onOpenModal}
         aria-label={title || 'Gallery media'}
         className="border-neutral-2 relative mb-3 aspect-square w-full cursor-pointer overflow-hidden rounded-lg border border-solid"

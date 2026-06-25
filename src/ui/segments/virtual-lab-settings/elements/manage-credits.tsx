@@ -266,6 +266,7 @@ export function TransferCredits({
     root?: string;
     content?: string;
     body?: string;
+    footer?: string;
   };
 }) {
   const queryClient = useQueryClient();
@@ -505,15 +506,15 @@ export function TransferCredits({
 
   return (
     <div
-      id="transfer-credits"
-      data-testid="transfer-credits"
+      id="transfer-credits__root"
+      data-testid="transfer-credits__root"
       className={cn(
         'flex h-full min-h-0 w-full flex-1 flex-col gap-3.5 rounded-2xl bg-white px-4 pt-0',
         classnames?.root
       )}
     >
       <div
-        id="transfer-credits-content"
+        id="transfer-credits__content"
         className={cn(
           'mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3.5',
           classnames?.content
@@ -536,6 +537,8 @@ export function TransferCredits({
         )}
 
         <div
+          id="transfer-credits__body"
+          data-testid="transfer-credits__body"
           className={cn(
             'mr-1 flex flex-col gap-8 rounded-2xl border border-gray-100 p-4',
             classnames?.body
@@ -635,7 +638,7 @@ export function TransferCredits({
             </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-end gap-3">
+          <div className={cn('mt-5 flex items-center justify-end gap-3', classnames?.footer)}>
             <GhostRoundedIconButton
               label="Cancel"
               classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
@@ -647,9 +650,10 @@ export function TransferCredits({
               label="Transfer credits"
               icon={isPending ? <LoadingOutlined spin /> : <RiArrowRightSLine />}
               classNames={{
-                root: 'bg-primary-9 text-white hover:bg-primary-8 group',
-                label: 'text-white pr-3',
-                iconWrapper: 'bg-primary-9 text-white group-hover:bg-primary-8 [&_svg]:size-5!',
+                root: 'bg-primary-9 text-white hover:bg-primary-8 group disabled:bg-neutral-2! disabled:text-neutral-4! disabled:opacity-100!',
+                label: 'text-white pr-3 group-disabled:text-neutral-4!',
+                iconWrapper:
+                  'bg-primary-9 text-white group-hover:bg-primary-8 group-disabled:bg-neutral-2! group-disabled:text-neutral-4! [&_svg]:size-5!',
               }}
               disabled={isPending || !Number(amount)}
               onClick={() => transferCreditsAsync()}

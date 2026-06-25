@@ -1,5 +1,4 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { emSynapseMappingActivityFlag } from '@/features/feature-flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
 import {
@@ -111,7 +110,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       },
     },
     disabled: false,
-    requiredFeatures: [emSynapseMappingActivityFlag.key],
   },
   {
     ...WorkflowBrowseDefaults,

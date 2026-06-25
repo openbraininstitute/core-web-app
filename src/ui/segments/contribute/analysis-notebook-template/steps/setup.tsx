@@ -77,6 +77,14 @@ export function Setup() {
           options={SCALE_OPTIONS}
         />
       </Form.Item>
+
+      <Form.Item name={['setup', 'exercise_id']} label={renderLabel('Exercise ID', 'main')}>
+        <Input
+          className="h-12 rounded-full placeholder:text-sm"
+          size="large"
+          placeholder="Optional — exercise ID this notebook grades"
+        />
+      </Form.Item>
     </div>
   );
 }

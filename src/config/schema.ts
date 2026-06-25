@@ -20,6 +20,8 @@ const configFields = {
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
   AUTH_PROXY_URL: { schema: z.url().optional(), public: true },
 
+  GRADING_WEB_LAUNCH_HMAC_SECRET: { schema: z.string().optional(), public: false },
+
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),
     public: false,
@@ -32,8 +34,6 @@ const configFields = {
     schema: z.string().nonempty().optional(),
     public: false,
   },
-
-  GITHUB_TOKEN: { schema: z.string().optional(), public: false },
 
   GITHUB_FEEDBACK_TOKEN: { schema: z.string().optional(), public: false },
   GITHUB_FEEDBACK_PROJECT_ID: { schema: z.string().optional(), public: false },

@@ -56,14 +56,13 @@ function ConfigChild({
       disabled={shouldBeDisabled}
       className={classNames(
         'flex items-center justify-center rounded-none border border-solid',
-        'hover:text-primary-6!',
         shouldBeDisabled
           ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
-          : 'border-primary-6 text-white'
+          : 'border-primary-6 text-white! hover:text-white! [&_.ant-btn-icon]:text-white!'
       )}
       aria-label={`Download ${title}`}
       title={`Download ${title}`}
-      icon={<DownloadIcon className="text-current!" />}
+      icon={<DownloadIcon className={shouldBeDisabled ? 'text-current!' : 'text-white!'} />}
     />
   );
 
