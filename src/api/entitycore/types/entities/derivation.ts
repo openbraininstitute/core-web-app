@@ -57,7 +57,7 @@ export type TDerivationType =
 
 /**
  * Short, circuit-overview labels for the "Derivation type" column/filter (issue #517).
- * Any derivation type not listed here falls back to its generic `DerivationType[...].label`
+ * Any derivation type not listed here falls back to its raw key
  * (see {@link getCircuitDerivationLabel}), so future derivation types still render sensibly.
  */
 export const CircuitDerivationShortLabel: Partial<Record<TDerivationType, string>> = {
@@ -81,6 +81,22 @@ export const getCircuitDerivationColumnLabels = (
       .map((d) => CircuitDerivationShortLabel[d.derivation_type])
       .filter((label): label is string => Boolean(label))
   );
+
+/** Short label for a single circuit derivation type (falls back to the raw key). */
+export function getCircuitDerivationLabel(key: TDerivationType): string {
+  return CircuitDerivationShortLabel[key] ?? key;
+}
+
+/**
+ * Circuit→circuit derivation types that represent a circuit being *derived from* another
+ * circuit, excluding `circuit_extraction` (handled separately as the parent/subcircuits
+ * hierarchy). Used to build the "Derived from" / "Derived circuits" related-artifact tabs.
+ * Order here is the render order of the grouped sections.
+ */
+export const CIRCUIT_DERIVED_DERIVATION_TYPES: readonly TDerivationType[] = [
+  DerivationTypeDictionary.CircuitRewiring,
+  DerivationTypeDictionary.CircuitCustomization,
+];
 
 export interface IDerivationBase extends EntityCoreIdentifiable, EntityCoreType {}
 
