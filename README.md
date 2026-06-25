@@ -265,7 +265,6 @@ When `API_ORIGIN` is set, missing service URLs default to
 | Variable | Purpose |
 | --- | --- |
 | `AUTH_PROXY_URL` | Preview-only auth proxy. Validation rejects it outside `DEPLOYMENT_ENV=preview`. |
-| `GITHUB_TOKEN` | Optional GitHub API access. |
 | `GITHUB_FEEDBACK_TOKEN` | Optional token for feedback issue/project creation. |
 | `GITHUB_FEEDBACK_PROJECT_ID` | Optional GitHub feedback project ID. |
 | `MAILCHIMP_API_KEY` | Optional Mailchimp API key. |

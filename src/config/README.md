@@ -238,7 +238,6 @@ Properties with `public: false` are only available via `serverConfig` (imported 
 - `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
 - `NEXTAUTH_SECRET`
 - `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `MAILCHIMP_API_SERVER` (optional)
-- `GITHUB_TOKEN` (optional)
 
 ### Client & Server Properties
 
