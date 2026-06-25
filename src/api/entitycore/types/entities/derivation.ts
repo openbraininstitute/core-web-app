@@ -1,3 +1,5 @@
+import { find } from 'es-toolkit/compat';
+
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { EntityCoreIdentifiable, EntityCoreType } from '@/api/entitycore/types/shared/global';
 import type {
@@ -52,6 +54,30 @@ export const DerivationTypeDictionary = Object.fromEntries(
 
 export type TDerivationType =
   (typeof DerivationTypeDictionary)[keyof typeof DerivationTypeDictionary];
+
+/**
+ * Short, circuit-overview labels for the "Derivation type" column/filter (issue #517).
+ * Any derivation type not listed here falls back to its generic `DerivationType[...].label`
+ * (see {@link getCircuitDerivationLabel}), so future derivation types still render sensibly.
+ */
+export const CircuitDerivationShortLabel: Partial<Record<TDerivationType, string>> = {
+  [DerivationTypeDictionary.CircuitExtraction]: 'Extracted',
+  [DerivationTypeDictionary.CircuitRewiring]: 'Rewired',
+  [DerivationTypeDictionary.CircuitCustomization]: 'Customized',
+};
+
+/** Options offered in the static "Derivation type" dropdown filter, derived from the short labels. */
+export const CircuitDerivationFilterOptions: Array<{ value: TDerivationType; label: string }> =
+  Object.entries(CircuitDerivationShortLabel).map(([value, label]) => ({
+    value: value as TDerivationType,
+    label: label as string,
+  }));
+
+/** Display label for a derivation type: short circuit label when known, else the generic label. */
+export const getCircuitDerivationLabel = (derivationType: TDerivationType): string =>
+  CircuitDerivationShortLabel[derivationType] ??
+  find(DerivationType, { key: derivationType })?.label ??
+  derivationType;
 
 export interface IDerivationBase extends EntityCoreIdentifiable, EntityCoreType {}
 

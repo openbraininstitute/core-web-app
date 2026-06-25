@@ -1,3 +1,5 @@
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -99,6 +101,19 @@ interface CircuitBase {
   target_simulator: TCircuitTargetSimulator | null;
 }
 
+/** Opt-in derivation lists exposed by the circuit API via the `expand` query param. */
+export type ExpandCircuitParam = 'generated_derivations' | 'used_derivations';
+
+/**
+ * A derivation where the circuit is the `generated` (derived) entity — i.e. "how it was derived".
+ * Populated only when the list/detail request opts in via `?expand=generated_derivations`.
+ */
+export interface ICircuitGeneratedDerivation {
+  used: { id: string; type?: TEntityTypeDict | null; name?: string };
+  derivation_type: TDerivationType;
+  label?: string | null;
+}
+
 export interface ICircuit
   extends EntityCoreIdentifiableNamed,
     EntityAuthorization,
@@ -108,6 +123,11 @@ export interface ICircuit
     EntityCoreType,
     EntityCoreBaseAsset {
   subject?: ISubject;
+  /**
+   * Derivations where this circuit is the generated entity. `null`/absent unless the request
+   * expanded `generated_derivations`; `[]` when expanded but the circuit is not derived.
+   */
+  generated_derivations?: Array<ICircuitGeneratedDerivation> | null;
 }
 
 type CircuitScaleFilter = {
@@ -124,6 +144,9 @@ export interface ICircuitFilter
     IlikeSearchFilter {
   has_electrical_cell_models?: boolean;
   target_simulator__in?: Array<string>;
+  // Filter by how the circuit was derived (it is the `generated` entity of the derivation).
+  generated_derivation__derivation_type?: TDerivationType;
+  generated_derivation__derivation_type__in?: Array<TDerivationType>;
 }
 
 export type SonataCircuitNetworkEdgeConfigItem = {

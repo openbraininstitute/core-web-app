@@ -1,5 +1,5 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import { find, isNil, map, omit, pick } from 'es-toolkit/compat';
+import { find, isNil, map, omit, pick, uniq } from 'es-toolkit/compat';
 
 import { hasAssets } from '@/api/entitycore/guards';
 import {
@@ -7,6 +7,10 @@ import {
   CircuitScale,
   CircuitTargetSimulator,
 } from '@/api/entitycore/types/entities/circuit';
+import {
+  CircuitDerivationFilterOptions,
+  getCircuitDerivationLabel,
+} from '@/api/entitycore/types/entities/derivation';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ElectrodeTypeDict } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -325,6 +329,35 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     vocabulary: {
       plural: 'Target simulators',
       singular: 'Target simulator',
+    },
+    style: { align: 'left' },
+  },
+  [EntityCoreFields.CircuitDerivationType]: {
+    className: 'text-left',
+    title: 'Derivation type',
+    // Static dropdown of the known circuit derivation types (issue #517). The backend exposes this
+    // as a plain enum filter (not a facet), so the options are sourced statically. Adding a future
+    // type = one entry in CircuitDerivationFilterOptions.
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: CircuitDerivationFilterOptions,
+    isFilterable: true,
+    isDisplayable: true,
+    // Not sortable: the backend exposes no order_by for derivation type.
+    defaultConstraint: 'generated_derivation__derivation_type__in',
+    render: (r) => {
+      // `generated_derivations` is loaded only on the flat list (expand=generated_derivations);
+      // hierarchy/enriched rows omit it, so guard like CircuitSubCircuit does.
+      const derivations =
+        'generated_derivations' in r ? (r as ICircuit).generated_derivations : null;
+      if (!derivations?.length) {
+        return EmptyValue;
+      }
+      // A circuit normally has a single derivation; if several, list the types comma-separated.
+      return uniq(derivations.map((d) => getCircuitDerivationLabel(d.derivation_type))).join(', ');
+    },
+    vocabulary: {
+      plural: 'Derivation types',
+      singular: 'Derivation type',
     },
     style: { align: 'left' },
   },

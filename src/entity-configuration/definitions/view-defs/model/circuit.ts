@@ -21,6 +21,7 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.CircuitBuildCategory,
     EntityCoreFields.CircuitTargetSimulator,
+    EntityCoreFields.CircuitDerivationType,
     EntityCoreFields.ArtifactPublishedIn,
     EntityCoreFields.ArtifactExperimentDate,
   ],

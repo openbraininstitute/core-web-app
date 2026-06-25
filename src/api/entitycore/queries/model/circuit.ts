@@ -1,7 +1,11 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import type {
+  ExpandCircuitParam,
+  ICircuit,
+  ICircuitFilter,
+} from '@/api/entitycore/types/entities/circuit';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -24,16 +28,19 @@ const baseUri = '/circuit';
 export async function getCircuits({
   withFacets,
   filters,
+  expand,
   context,
 }: {
   withFacets?: boolean;
   filters?: Partial<ICircuitFilter>;
+  expand?: ExpandCircuitParam;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICircuit>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
+      expand,
       with_facets: withFacets,
     }),
     headers: {
