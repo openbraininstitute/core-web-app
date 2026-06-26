@@ -68,7 +68,7 @@ export default function CoursePage() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-primary-9">No Course</h2>
+          <h2 className="text-xl font-bold text-primary-9">No course</h2>
           <p className="mt-2 text-gray-600">This virtual lab does not have a course associated</p>
         </div>
       </div>
@@ -99,16 +99,82 @@ export default function CoursePage() {
 
   const seats = seatsQuery.data?.seats || [];
   const enrolments = enrolmentsQuery.data?.enrolments || [];
+  const course = labQuery.data?.course;
 
   return (
     <div className="p-6">
-      <h1 className="mb-8 text-2xl font-bold text-primary-9">Course Management</h1>
+      <h1 className="mb-8 text-2xl font-bold text-primary-9">Course management</h1>
+
+      {/* Course Info Section */}
+      {course && (
+        <div className="mb-8 rounded-lg border border-gray-200 bg-gray-50 p-6">
+          <div className="mb-4 flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-primary-9">{labQuery.data?.name}</h2>
+            {(() => {
+              const now = new Date();
+              const endDate = new Date(course.end_date);
+              const startDate = new Date(course.start_date);
+              const isPast = now > endDate;
+              const isActive = now >= startDate && now <= endDate;
+
+              return (
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                    isPast
+                      ? 'bg-red-100 text-red-800'
+                      : isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  {isPast ? 'Course ended' : isActive ? 'Course active' : 'Course upcoming'}
+                </span>
+              );
+            })()}
+          </div>
+          <div className="grid grid-cols-3 gap-6">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Start date</p>
+              <p className="mt-1 text-base text-gray-900">
+                {new Date(course.start_date).toLocaleDateString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Period 1 end date</p>
+              <p className="mt-1 text-base text-gray-900">
+                {new Date(course.last_drop_date).toLocaleDateString()}
+              </p>
+              {(() => {
+                const now = new Date();
+                const period1EndDate = new Date(course.last_drop_date);
+                const isPeriod1Past = now > period1EndDate;
+
+                return (
+                  <span
+                    className={`mt-2 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                      isPeriod1Past ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                    }`}
+                  >
+                    {isPeriod1Past ? 'Ended' : 'Active'}
+                  </span>
+                );
+              })()}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">End date</p>
+              <p className="mt-1 text-base text-gray-900">
+                {new Date(course.end_date).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Seats Section */}
       <div className="mb-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-primary-8">Seats</h2>
-          <Button onClick={() => setIsModalOpen(true)}>Assign Seats</Button>
+          <Button onClick={() => setIsModalOpen(true)}>Assign seats</Button>
         </div>
         {(() => {
           const assignedSeats = seats.filter((seat) => seat.enrolment_id).length;
@@ -134,7 +200,7 @@ export default function CoursePage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Student Email
+                    Student email
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Student ID
