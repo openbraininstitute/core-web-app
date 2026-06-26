@@ -1,0 +1,437 @@
+/* ToolPayload — generic JSON renderer styles */
+
+/* === Toggle === */
+.toggle {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 4px;
+  border: 1px solid var(--color-neutral-6, #e7e7e7);
+  overflow: hidden;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.toggleBtn {
+  padding: 2px 7px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-neutral-2, #888);
+  transition:
+    background-color 150ms,
+    color 150ms;
+  line-height: 1.5;
+}
+
+.toggleBtn:hover {
+  background-color: var(--color-neutral-7, #f0f0f0);
+}
+
+.toggleBtnActive {
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary-6, #003a8c) 10%,
+    var(--color-neutral-8, #f7f7f7)
+  );
+  color: var(--color-primary-5, #003a8c);
+}
+
+/* === Section header === */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-neutral-6, #e7e7e7);
+}
+
+/* First section header — no top border */
+.sectionHeaderFirst {
+  padding-top: 0;
+  border-top: none;
+}
+
+.sectionLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--color-primary-5, #003a8c);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* === Payload content wrapper === */
+.payloadContent {
+  max-height: 15rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.payloadContentRaw {
+  border-radius: 6px;
+  border: 1px solid var(--color-neutral-6, #e7e7e7);
+  background-color: var(--color-neutral-9, #ffffff);
+  padding: 8px 10px;
+}
+
+/* === Table layout for key-value pairs === */
+.defList {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.defRow {
+  display: flex;
+  align-items: baseline;
+  min-height: 24px;
+  gap: 8px;
+}
+
+.defKey {
+  flex: 0 0 auto;
+  min-width: 80px;
+  max-width: 45%;
+  font-size: 0.75rem;
+  color: var(--color-neutral-2, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.defValue {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--color-neutral-1, #444);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Full-width block entries (arrays, nested objects with arrays) */
+.defBlock {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.defBlockLabel {
+  font-size: 0.7rem;
+  color: var(--color-neutral-2, #888);
+  display: inline;
+  margin-right: 4px;
+}
+
+.defBlockCount {
+  font-size: 0.65rem;
+  color: var(--color-neutral-3, #bbb);
+  font-style: italic;
+}
+
+/* === Chips === */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  background-color: var(--color-neutral-7, #f0f0f0);
+  color: var(--color-neutral-1, #444);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+.chipMuted {
+  color: var(--color-neutral-3, #bbb);
+  font-style: italic;
+  font-family: inherit;
+  background: none;
+  padding: 0;
+}
+
+/* Boolean pill */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.pillOn {
+  background-color: color-mix(in srgb, var(--color-secondary-5, #062) 10%, transparent);
+  color: var(--color-secondary-5, #062);
+}
+
+.pillOff {
+  background-color: var(--color-neutral-7, #f0f0f0);
+  color: var(--color-neutral-2, #888);
+}
+
+/* Number */
+.bytes {
+  color: var(--color-neutral-1, #444);
+  white-space: nowrap;
+}
+
+/* URL link */
+.urlLink {
+  color: var(--color-primary-5, #003a8c);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-primary-5, #003a8c) 30%, transparent);
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem;
+}
+
+.urlLink:hover {
+  text-decoration-color: var(--color-primary-5, #003a8c);
+}
+
+/* Date */
+.dateText {
+  color: var(--color-neutral-1, #444);
+  white-space: nowrap;
+}
+
+/* Long string truncated */
+.longString {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Array of primitives — inline chips */
+.chipList {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  align-items: center;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* === Array of objects === */
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  padding-left: 12px;
+  margin-left: 4px;
+  border-left: 2px solid var(--color-neutral-6, #e7e7e7);
+}
+
+.cardListHeader {
+  font-size: 0.625rem;
+  color: var(--color-neutral-3, #bbb);
+  margin-bottom: 2px;
+  font-style: italic;
+}
+
+.itemCard {
+  padding: 2px 0;
+  background: none;
+  border-radius: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--color-neutral-1, #444);
+  border-bottom: 1px solid var(--color-neutral-7, #f0f0f0);
+}
+
+.itemCard:last-of-type {
+  border-bottom: none;
+}
+
+.itemCardTitle {
+  margin-right: 6px;
+  font-style: italic;
+}
+
+.itemCardSummary {
+  display: inline;
+  color: var(--color-neutral-2, #888);
+}
+
+.itemCardSummaryField {
+  display: inline;
+  margin-right: 6px;
+}
+
+.itemCardSummaryLabel {
+  font-weight: 500;
+  margin-right: 2px;
+}
+
+.expandableCount {
+  font-style: italic;
+}
+
+/* Show more — just a quiet text link */
+.showMoreItems {
+  border: none;
+  background: none;
+  color: var(--color-neutral-3, #bbb);
+  font-size: 0.625rem;
+  cursor: pointer;
+  padding: 3px 0;
+  text-align: center;
+  width: 100%;
+}
+
+.showMoreItems:hover {
+  color: var(--color-neutral-1, #444);
+}
+
+/* === Nested objects === */
+.nestedGroup {
+  border-left: 2px solid var(--color-neutral-6, #e7e7e7);
+  padding-left: 8px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.collapsedObj {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.expandBtn {
+  border: none;
+  background: none;
+  color: var(--color-primary-5, #003a8c);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.expandBtn:hover {
+  opacity: 1;
+}
+
+/* Copy button */
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--color-neutral-3, #bbb);
+  border-radius: 2px;
+  padding: 0;
+  flex-shrink: 0;
+  font-size: 0.55rem;
+  transition: color 150ms;
+}
+
+.copyBtn:hover {
+  color: var(--color-primary-5, #003a8c);
+}
+
+.copyBtnDone {
+  color: var(--color-secondary-5, #062);
+}
+
+/* Empty */
+.emptyPlaceholder {
+  font-size: 0.7rem;
+  color: var(--color-neutral-3, #bbb);
+  font-style: italic;
+}
+
+/* === Raw mode === */
+.rawContainer {
+  position: relative;
+}
+
+.rawPre {
+  margin: 0;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--color-neutral-1, #444);
+  white-space: pre;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.rawCopyBtn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--color-neutral-6, #e7e7e7);
+  background-color: var(--color-neutral-8, #f7f7f7);
+  cursor: pointer;
+  color: var(--color-neutral-2, #888);
+  border-radius: 3px;
+  padding: 0;
+  font-size: 0.6rem;
+  transition:
+    color 150ms,
+    background-color 150ms;
+}
+
+.rawCopyBtn:hover {
+  color: var(--color-primary-5, #003a8c);
+  background-color: var(--color-neutral-7, #f0f0f0);
+}
+
+/* Syntax coloring */
+.jsonKey {
+  color: var(--color-primary-5, #003a8c);
+}
+.jsonString {
+  color: var(--color-secondary-5, #062);
+}
+.jsonNumber {
+  color: #b5651d;
+}
+.jsonBool {
+  color: #8b5cf6;
+}
+.jsonNull {
+  color: var(--color-neutral-3, #bbb);
+}
+.jsonPunct {
+  color: var(--color-neutral-2, #888);
+}
+
+/* Sort chip */
+.sortChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sortArrow {
+  font-weight: 700;
+}

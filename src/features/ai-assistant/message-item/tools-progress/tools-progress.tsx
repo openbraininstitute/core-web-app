@@ -12,6 +12,7 @@ import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
+import { ToolPayload, useViewMode } from './tool-payload';
 
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
@@ -37,6 +38,7 @@ export default function ToolsProgress({
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
+  const [viewMode] = useViewMode();
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -152,8 +154,13 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+                  <ToolPayload
+                    value={part.input}
+                    label="Arguments"
+                    mode={viewMode}
+                    showToggle
+                    isFirst
+                  />
                 </div>
               ) : null}
             </div>
@@ -232,8 +239,13 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+                  <ToolPayload
+                    value={part.input}
+                    label="Arguments"
+                    mode={viewMode}
+                    showToggle
+                    isFirst
+                  />
                 </div>
               ) : null}
             </div>
@@ -284,8 +296,13 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+                  <ToolPayload
+                    value={part.input}
+                    label="Arguments"
+                    mode={viewMode}
+                    showToggle
+                    isFirst
+                  />
                 </div>
               ) : null}
             </div>
@@ -378,15 +395,19 @@ export default function ToolsProgress({
             typeof part.input === 'object' &&
             Object.keys(part.input as Record<string, unknown>).length > 0 ? (
               <div className={styles.section}>
-                <div className={styles.sectionTitle}>Arguments</div>
-                <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+                <ToolPayload
+                  value={part.input}
+                  label="Arguments"
+                  mode={viewMode}
+                  showToggle
+                  isFirst
+                />
               </div>
             ) : null}
 
             {part.state === 'output-available' && part.output != null ? (
               <div className={styles.section}>
-                <div className={styles.sectionTitle}>Result</div>
-                <pre className={styles.codeBlock}>{formatInputOutputs(part.output)}</pre>
+                <ToolPayload value={part.output} label="Result" mode={viewMode} />
               </div>
             ) : null}
 
@@ -426,17 +447,4 @@ function getToolsState(
     state: part.state,
     key,
   };
-}
-
-function formatInputOutputs(r: unknown): string {
-  try {
-    if (typeof r === 'string') {
-      // try parse stringified JSON first
-      return JSON.stringify(JSON.parse(r), null, 2);
-    }
-    return JSON.stringify(r, null, 2);
-  } catch {
-    // fallback to plain string
-    return String(r);
-  }
 }
