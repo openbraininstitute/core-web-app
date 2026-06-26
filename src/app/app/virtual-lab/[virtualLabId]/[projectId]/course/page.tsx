@@ -8,6 +8,7 @@ import { fetchEnrolments, fetchSeats } from '@/api/virtual-lab-svc/queries/cours
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AssignSeatsModal } from '@/ui/segments/project/course-assign-seats-modal';
 
 export default function CoursePage() {
@@ -140,7 +141,32 @@ export default function CoursePage() {
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600">Period 1 end date</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-gray-600">Period 1 end date</p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="inline-flex h-4 w-4  items-center justify-center rounded-full border border-gray-300 text-xs font-semibold text-gray-500 hover:text-gray-700">
+                      i
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <div className="space-y-2">
+                      <p className="font-semibold">Period 1 deadline</p>
+                      <ul className="list-inside space-y-1">
+                        <li>• New assignments are only possible before Period 1 ends.</li>
+                        <li>
+                          • Vacated seats can be reassigned only if:
+                          <div className="pl-4">
+                            <div>– The seat has never been vacated before</div>
+                            <div>– The student had spent fewer than 50 credits</div>
+                            <div>– Period 1 has not ended</div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <p className="mt-1 text-base text-gray-900">
                 {new Date(course.last_drop_date).toLocaleDateString()}
               </p>
