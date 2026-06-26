@@ -10,6 +10,7 @@ import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AssignSeatsModal } from '@/ui/segments/project/course-assign-seats-modal';
+import { SeatRecoverability } from '@/ui/segments/project/seat-recoverability';
 
 export default function CoursePage() {
   const params = useParams();
@@ -43,6 +44,7 @@ export default function CoursePage() {
     queryFn: () => fetchEnrolments(courseId as string),
     enabled: !!courseId,
   });
+
   if (labQuery.isPending) {
     return (
       <div className="p-6">
@@ -102,6 +104,8 @@ export default function CoursePage() {
   const enrolments = enrolmentsQuery.data?.enrolments || [];
   const course = labQuery.data?.course;
 
+  console.log(course);
+
   return (
     <div className="p-6">
       <h1 className="mb-8 text-2xl font-bold text-primary-9">Course management</h1>
@@ -145,7 +149,7 @@ export default function CoursePage() {
                 <p className="text-sm font-medium text-gray-600">Period 1 end date</p>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="inline-flex h-4 w-4  items-center justify-center rounded-full border border-gray-300 text-xs font-semibold text-gray-500 hover:text-gray-700">
+                    <div className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-gray-300 text-xs font-semibold text-gray-500 hover:text-gray-700">
                       i
                     </div>
                   </TooltipTrigger>
@@ -243,6 +247,9 @@ export default function CoursePage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Created
                   </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Seat recoverable (reason)
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -279,6 +286,9 @@ export default function CoursePage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {new Date(enrolment.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {course && <SeatRecoverability enrolment={enrolment} course={course} />}
                     </td>
                   </tr>
                 ))}

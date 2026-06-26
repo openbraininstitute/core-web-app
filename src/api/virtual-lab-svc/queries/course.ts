@@ -27,6 +27,17 @@ export interface Enrolment {
   seat?: Seat;
 }
 
+export interface Course {
+  id: string;
+  virtual_lab_id: string;
+  template_project_id: string;
+  institution_id: string;
+  start_date: string;
+  end_date: string;
+  last_drop_date: string;
+  credits_per_seat?: number;
+}
+
 export interface SeatsResponse {
   seats: Seat[];
 }
