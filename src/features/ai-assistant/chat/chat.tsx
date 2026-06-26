@@ -20,7 +20,6 @@ import ErrorPanel from '../error';
 import FreeCreditsNotification from '../free-credits-notification';
 import { MessageItem } from '../message-item';
 import { ThinkingIndicator } from '../message-item/thinking-indicator';
-import { ApprovalContext } from '../message-item/tools-progress/approval-context';
 import { atomRateLimit } from '../state';
 import DiffBar from './diff-bar';
 import Footer from './footer';
@@ -194,7 +193,7 @@ export default function Chat({
           {threadId && isLoadingMessages && !isEmptyThread ? (
             <TabTransitionLoader message="Loading conversation..." />
           ) : (
-            <ApprovalContext.Provider value={addToolApprovalResponse}>
+            <>
               {(!threadId || isEmptyThread) && <Welcome />}
               {messages.map((item, index) => (
                 <MessageItem
@@ -202,6 +201,7 @@ export default function Chat({
                   value={item}
                   status={status}
                   isLastMessage={index === messages.length - 1}
+                  addToolApprovalResponse={addToolApprovalResponse}
                 />
               ))}
 
@@ -238,7 +238,7 @@ export default function Chat({
               )}
               {error && <ErrorPanel value={error} />}
               {healthError && <ErrorPanel value={healthError} />}
-            </ApprovalContext.Provider>
+            </>
           )}
           <div className={styles.bottom} />
         </div>

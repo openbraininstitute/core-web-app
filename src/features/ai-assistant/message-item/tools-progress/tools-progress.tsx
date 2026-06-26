@@ -11,23 +11,32 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
-import { useApprovalResponse } from './approval-context';
 import LoadingDots from './loading-dots/loading-dots';
 
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-progress.module.css';
 
+export type ApprovalResponseFn = (params: {
+  id: string;
+  approved: boolean;
+  reason?: string;
+}) => void | PromiseLike<void>;
+
 interface ToolsProgressProps {
   className?: string;
   part: ToolUIPart | DynamicToolUIPart;
+  addToolApprovalResponse?: ApprovalResponseFn | null;
 }
 
-export default function ToolsProgress({ className, part }: ToolsProgressProps) {
+export default function ToolsProgress({
+  className,
+  part,
+  addToolApprovalResponse,
+}: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
-  const addToolApprovalResponse = useApprovalResponse();
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
