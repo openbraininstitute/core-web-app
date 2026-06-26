@@ -102,8 +102,13 @@ export interface IProjectExpandedResponse extends IProject, IProjectExtra {
 }
 
 export type Course = {
+  id: string;
+  virtual_lab_id: string;
   template_project_id: string;
-  is_initialized: boolean;
+  institution_id: string;
+  start_date: string;
+  end_date: string;
+  last_drop_date: string;
 };
 
 export type TVirtualLab = {

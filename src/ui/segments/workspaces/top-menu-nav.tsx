@@ -1,9 +1,14 @@
+'use client';
+
 import { MenuOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import {
   CourseIcon,
   ExploreIcon,
@@ -25,6 +30,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 
@@ -152,7 +159,42 @@ export function TopMenuNavigation() {
   const activeSection = getActiveSection(pathname);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
-  const hashedLinks = links.map((link) => ({
+  const { data: virtualLabData } = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
+    enabled: Boolean(virtualLabId),
+  });
+
+  const { data: userGroups } = useQuery({
+    queryKey: userKeyBuilder.groups(),
+    queryFn: () => getUserGroups(),
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
+  });
+
+  const hasCourse = virtualLabData?.course;
+  const isVlabAdmin = useMemo(
+    () =>
+      !!userGroups?.data?.groups.find(
+        (group) => group.role === 'admin' && group.virtual_lab_id === virtualLabId
+      ),
+    [userGroups, virtualLabId]
+  );
+
+  const filteredLinks = useMemo(
+    () =>
+      links.filter((link) => {
+        if (link.id === 'workspace-course') {
+          return hasCourse && isVlabAdmin;
+        }
+        return true;
+      }),
+    [hasCourse, isVlabAdmin]
+  );
+
+  const hashedLinks = filteredLinks.map((link) => ({
     ...link,
     baseUrl: link.url,
     url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
