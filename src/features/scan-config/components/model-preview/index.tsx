@@ -30,7 +30,9 @@ export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfig
       },
       () => <CircuitPreview circuit={model as ICircuit} enableVisualization />
     )
-    .with({ type: EntityTypeDict.Circuit }, () => <CircuitPreview circuit={model as ICircuit} />)
+    .with({ type: EntityTypeDict.Circuit }, () => (
+      <CircuitPreview circuit={model as ICircuit} enableVisualization largeCircuit />
+    ))
     .otherwise(() => null);
 }
 

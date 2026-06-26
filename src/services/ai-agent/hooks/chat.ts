@@ -12,8 +12,8 @@ import {
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { presignedUrlCache } from '@/components/ai-assistant/message-item/storage-image-part';
-import { atomRateLimit } from '@/components/ai-assistant/state';
+import { presignedUrlCache } from '@/features/ai-assistant/message-item/storage-image-part';
+import { atomRateLimit } from '@/features/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { findConfigKeyInState } from '@/features/scan-config/helpers';

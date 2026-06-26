@@ -63,17 +63,15 @@ export const { APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID, MOUSE_ATLAS__ID } = confi
 export const brainRegionSidebarAtom = atom(false);
 export const selectedBrainRegionAtom = atom<BrainRegionHierarchyBase | null>(null);
 
-/**
- * capability flag: indicates whether the "All" species option is allowed
- * on the current route. Defaults to true; the 3D viewer page opts out by
- * setting this to false while it is mounted.
- */
+/** capability flag: whether the "All" species option is shown in the selector. */
 export const allowAllSpeciesAtom = atom<boolean>(true);
 export const AllSpeciesDisplayName = 'All';
 /**
  * current species selection mode:
  * - 'focused': a specific species is selected and brain-region filtering applies
  * - 'all': no species filter (and therefore no brain-region filter)
+ *
+ * defaults to focused until bootstrap resolves stored preference or first-visit default.
  */
 export const speciesSelectionModeAtom = atom<TSpeciesSelectionMode>(SpeciesSelectionMode.Focused);
 
@@ -122,17 +120,15 @@ const SPECIES_MODE_VALUES = [SpeciesSelectionMode.All, SpeciesSelectionMode.Focu
  * - `brainRegionId` (mapped to `URL_PARAMS.BRAIN_REGION_ID`)
  * - `hierarchyId` (mapped to `URL_PARAMS.HIERARCHY_ID`)
  * - `speciesMode` (mapped to `URL_PARAMS.SPECIES`, values: 'all' | 'focused').
- *   defaults to 'focused' with `clearOnDefault` so the URL stays clean unless
- *   the user explicitly opts into 'all'.
+ *   absent from the URL when no explicit species-mode override is present;
+ *   `?s=all` is written only after the user (or bootstrap) selects all species.
  */
 export function useHierarchyBrainRegionUrlState() {
   const [urlState, setUrlState] = useQueryStates(
     {
       brainRegionId: parseAsString.withDefault(''),
       hierarchyId: parseAsString.withDefault(''),
-      speciesMode: parseAsStringLiteral(SPECIES_MODE_VALUES).withDefault(
-        SpeciesSelectionMode.Focused
-      ),
+      speciesMode: parseAsStringLiteral(SPECIES_MODE_VALUES),
     },
     {
       urlKeys: {

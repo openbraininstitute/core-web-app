@@ -32,24 +32,18 @@ import type { Nullable } from '@/utils/type';
 
 type TDefaultListingContext = TFieldApiContext;
 
-export const makeTypeDefaultFilters = ({ dataType, section, scope }: TDefaultListingContext) => {
-  const context = { dataType, section, scope };
-  const view = getViewDefinitionByExtendedType(dataType);
+export const makeTypeDefaultFilters = (listing: TDefaultListingContext) => {
+  const view = getViewDefinitionByExtendedType(listing.dataType);
 
-  return collectListingFieldKeys(view, context)
+  return collectListingFieldKeys(view, listing)
     .filter((field) =>
-      isFieldListedInFilterPanel(resolveFieldListing(getFieldDefinition(field), context))
+      isFieldListedInFilterPanel(resolveFieldListing(getFieldDefinition(field), listing))
     )
-    .map((field) => columnKeyToFilter(field, context));
+    .map((field) => columnKeyToFilter(field, listing));
 };
 
-export const makeTypeDefaultActiveColumns = ({
-  dataType,
-  section,
-  scope,
-}: TDefaultListingContext) => {
-  const context = { dataType, section, scope };
-  return collectDefaultActiveColumns(getViewDefinitionByExtendedType(dataType), context);
+export const makeTypeDefaultActiveColumns = (listing: TDefaultListingContext) => {
+  return collectDefaultActiveColumns(getViewDefinitionByExtendedType(listing.dataType), listing);
 };
 
 type TDataListStateSnapshot = {
@@ -60,15 +54,9 @@ type TDataListStateSnapshot = {
   View: TCircuitRepresentationView;
 };
 
-export const makeDataListStateSnapshotAtomsInitialValue = ({
-  dataType,
-  section,
-  scope,
-}: {
-  dataType: TExtendedEntitiesTypeDict;
-  section?: TWorkspaceSection;
-  scope?: TWorkspaceScope;
-}): TDataListStateSnapshot => ({
+export const makeDataListStateSnapshotAtomsInitialValue = (
+  listing: TDefaultListingContext
+): TDataListStateSnapshot => ({
   Sort: [
     {
       field: EntityCoreFields.RegistrationDate,
@@ -78,7 +66,7 @@ export const makeDataListStateSnapshotAtomsInitialValue = ({
   ],
   Search: '',
   Page: DEFAULT_PAGE_NUMBER,
-  Filters: makeTypeDefaultFilters({ dataType, section, scope }),
+  Filters: makeTypeDefaultFilters(listing),
   View: CircuitRepresentationView.Hierarchy,
 });
 

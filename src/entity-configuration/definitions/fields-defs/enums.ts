@@ -105,6 +105,7 @@ export enum EntityCoreFields {
   LevelOfDetail = 'level_of_detail',
   GenerationParameters = 'generation_parameters',
   MeshType = 'mesh_type',
+  HasSegmentedSpines = 'has_segmented_spines',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

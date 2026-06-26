@@ -1,13 +1,12 @@
 'use client';
 
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
-import { kebabCase } from 'es-toolkit/compat';
 
 import { AllSpeciesDisplayName } from '@/features/brain-region-hierarchy/context';
+import { orderHierarchiesBySpeciesDisplayNames } from '@/features/brain-region-hierarchy/helpers';
 import {
   type IHierarchyWithSpecies,
   type IWorkspaceSpecies,
-  SPECIES_DISPLAY_NAMES,
   SPECIES_SUBTITLES,
   SpeciesSelectionMode,
 } from '@/features/brain-region-hierarchy/types';
@@ -63,25 +62,22 @@ export function SpeciesSelector({
     return null;
   }
 
-  const speciesOrder = Object.keys(SPECIES_DISPLAY_NAMES);
   const selectedHierarchyId = displaySpecies?.hierarchId ?? workspaceHierarchyId;
 
-  const options = remoteAvailableHierarchies
-    .map((h) => ({
-      ...h.species,
-      hierarchId: h.id,
-    }))
-    .sort((a, b) => {
-      const indexA = speciesOrder.indexOf(a.name);
-      const indexB = speciesOrder.indexOf(b.name);
-      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
-    });
+  const options = orderHierarchiesBySpeciesDisplayNames(remoteAvailableHierarchies).map((h) => ({
+    ...h.species,
+    hierarchId: h.id,
+  }));
 
   const currentValue = isAllMode ? SpeciesSelectionMode.All : selectedHierarchyId || '';
   const triggerLabel = isAllMode ? AllSpeciesDisplayName : displaySpecies?.displayName;
 
   return (
-    <span id="species-selector" className={cn('flex w-full min-w-0 items-center py-2', className)}>
+    <span
+      id="species-selector"
+      data-testid="species-selector"
+      className={cn('flex w-full min-w-0 items-center py-2', className)}
+    >
       <Select value={currentValue} onValueChange={onSpeciesChange} disabled={disabled}>
         <SelectTrigger
           size="sm"
@@ -147,7 +143,8 @@ export function SpeciesSelector({
           {options.map((species) => (
             <SelectItem
               id={`species-selector-option__${species.hierarchId}`}
-              data-testid={`species-selector-option__${kebabCase(species.name)}`}
+              data-testid={`species-selector-option__${species.hierarchId}`}
+              data-hierarchy-id={species.hierarchId}
               key={species.hierarchId}
               value={species.hierarchId}
               className={cn('cursor-pointer py-2.5 px-3', '[&_.select-icon-wrapper]:top-4')}

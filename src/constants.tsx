@@ -60,3 +60,8 @@ export const WorkspaceSection = {
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];
+
+// use in data page to select the data group (models, experimental, simulations, notebooks, extractions, processing)
+export const DATA_GROUP_QUERY_PARAM = 'group';
+// use in data page to select the workspace scope (public, project)
+export const SCOPE_QUERY_PARAMS = 'scope';

@@ -188,6 +188,8 @@ export function BrowseEntityScope({
     virtualLabId,
     projectId,
   });
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
@@ -202,8 +204,6 @@ export function BrowseEntityScope({
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
 
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
-  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
   const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   // track stable species identity (`all` vs hierarchy id).

@@ -1,0 +1,90 @@
+.wrapper {
+  position: relative;
+  margin: 0.6em 0;
+  border: 1px solid #d9d9d9;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--color-neutral-9, #fff);
+}
+
+/* Override the CodeBlock's own border/radius/margin — outer wrapper controls these */
+.codeBlock {
+  border: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ── Header bar — matches the table header color scheme ── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 6px;
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-8));
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.languageLabel {
+  font-size: 0.55rem !important;
+  padding: 1px 6px !important;
+  border-color: #d9d9d9 !important;
+  color: var(--color-primary-5, #003a8c) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+.copyBtn {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  border-radius: 4px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  padding: 0 !important;
+  transition: background 0.15s;
+}
+
+.copyBtn:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+.copyIcon {
+  color: var(--color-neutral-2, #444) !important;
+  width: 13px !important;
+  height: 13px !important;
+}
+
+/* ── Scroll shadow indicators ── */
+
+.shadowLeft,
+.shadowRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.shadowLeft {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.shadowRight {
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.shadowLeft[data-visible="true"],
+.shadowRight[data-visible="true"] {
+  opacity: 1;
+}

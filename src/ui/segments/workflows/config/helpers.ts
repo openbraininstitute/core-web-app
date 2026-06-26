@@ -43,7 +43,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { TWorkspaceSection } from '@/constants';
 import type { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
 
-const featuresSatisfied = (
+export const featuresSatisfied = (
   required: readonly FlagKey[] | undefined,
   flags: FeatureFlags | undefined
 ): boolean => {

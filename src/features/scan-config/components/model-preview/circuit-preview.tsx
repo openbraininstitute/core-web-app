@@ -10,6 +10,7 @@ import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import CircuitViz from '../circuit-viz';
+import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
@@ -20,12 +21,14 @@ interface CircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
   enableVisualization?: boolean;
+  largeCircuit?: boolean;
 }
 
 export function CircuitPreview({
   className,
   circuit,
   enableVisualization = false,
+  largeCircuit = false,
 }: CircuitPreviewProps) {
   const [mode, setMode] = useState<'image' | 'viz'>('image');
   const [showTable, setShowTable] = useState(false);
@@ -78,7 +81,10 @@ export function CircuitPreview({
       </div>
       <div ref={containerRef} className="flex-1 relative min-h-0 rounded-2xl overflow-hidden">
         {activeMode === 'image' && <CircuitImage className={className} circuit={circuit} />}
-        {activeMode === 'viz' && <CircuitViz key={circuit.id} id={circuit.id} />}
+        {activeMode === 'viz' && !largeCircuit && <CircuitViz key={circuit.id} id={circuit.id} />}
+        {activeMode === 'viz' && largeCircuit && (
+          <LargeCircuitPreview key={circuit.id} circuit={circuit} />
+        )}
         {showTable && tableHeight !== null && containerHeight > 0 && (
           <div
             className="absolute left-0 right-0 bottom-0 z-20 flex flex-col border-t border-neutral-200 bg-white"

@@ -144,6 +144,7 @@ export function FocusedModeContent({
         {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
         <div
           data-label="brain-region-switcher"
+          data-testid="brain-region-switcher"
           className="flex items-center gap-1 h-full select-none w-full min-w-0"
           tabIndex={0}
           role="button"

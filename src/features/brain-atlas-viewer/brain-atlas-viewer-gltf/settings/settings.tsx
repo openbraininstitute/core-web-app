@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { IconGear } from '@/components/ai-assistant/icons/gear';
+import { IconGear } from '@/features/ai-assistant/icons/gear';
 import { Button } from '@/ui/molecules/button';
 import { classNames } from '@/util/utils';
 

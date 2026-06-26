@@ -218,7 +218,7 @@ export function useWorkspaceHierarchyRegistry() {
    * persists selection to backend without blocking ui
    */
   function syncHierarchySpeciesRemoteUserPreference(selection: BrainRegionHierarchySelection) {
-    const mode = selection.speciesSelectionMode ?? SpeciesSelectionMode.Focused;
+    const mode = selection.speciesSelectionMode ?? SpeciesSelectionMode.All;
     const isAllMode = mode === SpeciesSelectionMode.All;
     const payload = {
       hierarchy_id: isAllMode ? null : selection.hierarchyId,
@@ -554,6 +554,11 @@ export function useWorkspaceHierarchyRegistry() {
         }
       }
 
+      if (allowAllSpecies) {
+        applyAllSpeciesMode(browserStorageHierarchy?.perHierarchyMemory);
+        return;
+      }
+
       if (defaultHierarchy) {
         setSpeciesSelectionMode(SpeciesSelectionMode.Focused);
         const result = await changeLocalStoreHierarchySpecies(defaultHierarchy.id);
@@ -768,8 +773,8 @@ export function useWorkspaceHierarchyRegistry() {
   ]);
 
   /**
-   * when the current page does not allow the "all species" mode (the 3D viewer),
-   * fall back to a focused selection instead of rendering a broken state.
+   * defensive fallback: if "all species" is active where it is not allowed,
+   * restore a focused selection instead of leaving the UI in a broken state.
    */
   useEffect(() => {
     if (!syncSettled) return;

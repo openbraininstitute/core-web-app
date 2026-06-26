@@ -23,8 +23,34 @@ import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/s
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
-export const ExperimentalEntitiesTileTypes = {
-  ReconstructionMorphology: CellMorphology,
+export const ExploreDataTypeTabs = {
+  Experimental: 'experimental',
+  Models: 'models',
+  Simulations: 'simulations',
+} as const;
+
+export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
+
+export const DataSectionDataTypeTabsConfig: Array<{
+  key: TExploreDataTypeTabs;
+  title: string;
+}> = [
+  {
+    key: ExploreDataTypeTabs.Experimental,
+    title: 'Experimental',
+  },
+  {
+    key: ExploreDataTypeTabs.Models,
+    title: 'Model',
+  },
+  {
+    key: ExploreDataTypeTabs.Simulations,
+    title: 'Simulations',
+  },
+];
+
+export const BrowseExperimentalDataExtendedTypes = {
+  CellMorphology,
   ElectricalCellRecording,
   IonChannelRecording,
   NeuronDensity,
@@ -33,7 +59,7 @@ export const ExperimentalEntitiesTileTypes = {
   EmCellMesh,
 } as const;
 
-export const ModelEntitiesTileTypes = {
+export const ModelDataExtendedTypes = {
   SingleNeuronSynaptome,
   SingleNeuronCircuit,
   Emodel,
@@ -43,7 +69,7 @@ export const ModelEntitiesTileTypes = {
   SynthesizedCellMorphology,
 } as const;
 
-export const SimulationEntitiesTileTypes = {
+export const SimulationDataExtendedTypes = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
   MEModelCircuitSimulation,

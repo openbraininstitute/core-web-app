@@ -47,7 +47,7 @@ function Node<TNode extends TTreeNode>({
 
   const NodeContent = customNodeRender || DefaultNode;
 
-  const handleToggle = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const handleToggle = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     e.preventDefault();
     e.stopPropagation();
     onToggle(node);

@@ -18,6 +18,7 @@ import {
   rows as listSimulationRows,
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { brainRegionSimulationFlag } from '@/features/feature-flags/flags';
 
 import { migrateConfig } from './utils';
 
@@ -97,6 +98,7 @@ export const RegionCircuitSimulation: EntityCoreTypeConfig<
   group: EntityTypeGroup.Simulations,
   title: 'Region circuit (beta)',
   extendedType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  requiredFeatures: [brainRegionSimulationFlag.key],
   discriminator: { key: 'scale', value: [SCALE] },
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.RegionCircuitSimulation,
