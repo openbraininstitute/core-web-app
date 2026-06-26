@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 import {
+  CourseIcon,
   ExploreIcon,
   HelpIcon,
   Home,
@@ -97,6 +98,18 @@ const links: LinkItem[] = [
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
       `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+  },
+  {
+    id: 'workspace-course',
+    key: 'course',
+    title: 'Course',
+    url: 'course',
+    icon: <CourseIcon className="group-hover:text-primary-3 !size-5" />,
+    allowText: true,
+    className: 'px-6 gap-2',
+    hasAction: true,
+    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/course`,
   },
   {
     id: 'workspace-reports',
