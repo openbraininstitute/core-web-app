@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getEmDenseReconstructionDataset } from '@/api/entitycore/queries/general/em-dense-reconstruction-dataset';
 import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 /**
@@ -25,5 +26,5 @@ export function DatasetNameCell({ datasetId }: { datasetId?: string }) {
   });
 
   if (!datasetId) return <>{EmptyValue}</>;
-  return <>{isLoading ? '…' : (data?.name ?? EmptyValue)}</>;
+  return isLoading ? <Skeleton className="h-4 w-24" /> : (data?.name ?? EmptyValue);
 }
