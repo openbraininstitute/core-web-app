@@ -187,11 +187,13 @@ export function TopMenuNavigation() {
     () =>
       links.filter((link) => {
         if (link.id === 'workspace-course') {
-          return hasCourse && isVlabAdmin;
+          return (
+            hasCourse && isVlabAdmin && projectId === virtualLabData?.course?.template_project_id
+          );
         }
         return true;
       }),
-    [hasCourse, isVlabAdmin]
+    [hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
   );
 
   const hashedLinks = filteredLinks.map((link) => ({
