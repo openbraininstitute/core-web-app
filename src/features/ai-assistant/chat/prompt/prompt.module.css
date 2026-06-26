@@ -3,10 +3,9 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  border-radius: 1em;
+  border-radius: 0.9em;
   color: #000;
   padding: 0.35em;
-  padding-left: 0.6em;
   margin: 0;
   border: 1px solid color-mix(in srgb, var(--color-primary-9) 30%, var(--color-neutral-5));
   background-color: #fff;
@@ -49,12 +48,6 @@
   row-gap: 2px;
 }
 
-.expanded .textarea {
-  /* Ensure textarea ignores column sizing from the toolbar row */
-  min-width: 0;
-  max-width: 100%;
-}
-
 /* ===== Textarea ===== */
 .textarea {
   grid-area: text;
@@ -69,12 +62,19 @@
   font-size: 15px;
   line-height: 21px;
   padding: 0 2px;
-  max-height: 160px;
+  max-height: 100px;
   overflow-y: auto;
   overflow-wrap: break-word;
   word-break: break-word;
   scrollbar-width: thin;
   /* No height transition — so the line being typed is never clipped */
+}
+
+.expanded .textarea {
+  /* Ensure textarea ignores column sizing from the toolbar row */
+  min-width: 0;
+  max-width: calc(100% - 0.2em);
+  margin: 0.1em;
 }
 
 .textarea::-webkit-scrollbar {
@@ -105,6 +105,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-left: -0.2em;
 }
 
 /* ===== Right actions (send / stop) ===== */
@@ -123,16 +124,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border-radius: 6px;
-  color: var(--color-neutral-5);
+  color: var(--color-neutral-3);
   transition: color 0.15s ease;
 }
 
 .attachButton:hover {
-  color: var(--color-neutral-3);
+  color: var(--color-neutral-1);
 }
 
 .attachButton:disabled {

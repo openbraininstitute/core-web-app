@@ -15,8 +15,8 @@ import type { FileAttachment } from '../../hooks/use-file-attachments';
 import styles from './prompt.module.css';
 
 // Horizontal space reserved for attach + send + gaps in compact mode:
-//   attach(28) + gap(2) + gap(2) + send(34) = 66
-const RESERVED = 66;
+//   attach(30) + gap(2) + gap(2) + send(40) = 74
+const RESERVED = 74;
 const DURATION = 220;
 
 interface PromptProps {
@@ -63,7 +63,7 @@ export default function Prompt({
     if (!ta) return;
     // Reset to 1px (not auto) to get accurate scrollHeight without layout thrash
     ta.style.height = '1px';
-    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+    ta.style.height = `${Math.min(ta.scrollHeight, 100)}px`;
   }, []);
 
   // --- Measure: decide compact vs expanded ---
@@ -256,7 +256,7 @@ export default function Prompt({
                 aria-label="Attach file"
                 title="Attach file"
               >
-                <RiAttachment2 size={20} />
+                <RiAttachment2 size={22} />
               </button>
             </>
           )}
