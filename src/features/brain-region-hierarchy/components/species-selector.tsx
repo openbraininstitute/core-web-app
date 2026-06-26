@@ -3,10 +3,10 @@
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
 
 import { AllSpeciesDisplayName } from '@/features/brain-region-hierarchy/context';
+import { orderHierarchiesBySpeciesDisplayNames } from '@/features/brain-region-hierarchy/helpers';
 import {
   type IHierarchyWithSpecies,
   type IWorkspaceSpecies,
-  SPECIES_DISPLAY_NAMES,
   SPECIES_SUBTITLES,
   SpeciesSelectionMode,
 } from '@/features/brain-region-hierarchy/types';
@@ -62,19 +62,12 @@ export function SpeciesSelector({
     return null;
   }
 
-  const speciesOrder = Object.keys(SPECIES_DISPLAY_NAMES);
   const selectedHierarchyId = displaySpecies?.hierarchId ?? workspaceHierarchyId;
 
-  const options = remoteAvailableHierarchies
-    .map((h) => ({
-      ...h.species,
-      hierarchId: h.id,
-    }))
-    .sort((a, b) => {
-      const indexA = speciesOrder.indexOf(a.name);
-      const indexB = speciesOrder.indexOf(b.name);
-      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
-    });
+  const options = orderHierarchiesBySpeciesDisplayNames(remoteAvailableHierarchies).map((h) => ({
+    ...h.species,
+    hierarchId: h.id,
+  }));
 
   const currentValue = isAllMode ? SpeciesSelectionMode.All : selectedHierarchyId || '';
   const triggerLabel = isAllMode ? AllSpeciesDisplayName : displaySpecies?.displayName;

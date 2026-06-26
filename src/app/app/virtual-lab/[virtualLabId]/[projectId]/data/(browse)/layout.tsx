@@ -2,7 +2,6 @@
 
 import { use } from 'react';
 
-import { SyncAllowAllSpeciesForDataBrowseRoute } from '@/features/brain-region-hierarchy/components/sync-allow-all-species';
 import { DataInnerLayout } from '@/ui/layouts/explore-inner-layout';
 import { DataLayout } from '@/ui/layouts/explore-layout';
 import { dataTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
@@ -26,7 +25,6 @@ export default function Page({
 
   return (
     <DataLayout>
-      <SyncAllowAllSpeciesForDataBrowseRoute />
       <DataHeader />
       <DataInnerLayout>
         <ExploreDefaultContent dataKey={dataKey}>{children}</ExploreDefaultContent>

@@ -23,6 +23,32 @@ import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/s
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
+export const ExploreDataTypeTabs = {
+  Experimental: 'experimental',
+  Models: 'models',
+  Simulations: 'simulations',
+} as const;
+
+export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
+
+export const DataSectionDataTypeTabsConfig: Array<{
+  key: TExploreDataTypeTabs;
+  title: string;
+}> = [
+  {
+    key: ExploreDataTypeTabs.Experimental,
+    title: 'Experimental',
+  },
+  {
+    key: ExploreDataTypeTabs.Models,
+    title: 'Model',
+  },
+  {
+    key: ExploreDataTypeTabs.Simulations,
+    title: 'Simulations',
+  },
+];
+
 export const BrowseExperimentalDataExtendedTypes = {
   CellMorphology,
   ElectricalCellRecording,

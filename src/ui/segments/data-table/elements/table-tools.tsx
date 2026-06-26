@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 
+import { SCOPE_QUERY_PARAMS } from '@/constants';
 import { PortalRegionBanner } from '@/features/brain-region-hierarchy/components/region-banner';
 import { EntityTypeSelector } from '@/ui/segments/data-table/elements/entity-selector';
 import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
@@ -30,7 +31,7 @@ function buildToolbarGridLayout(options: {
   const leftAreas: ToolbarLeftArea[] = [];
 
   if (options.showScope) {
-    leftAreas.push('scope');
+    leftAreas.push(SCOPE_QUERY_PARAMS);
   }
   if (options.showSpeciesSearch) {
     leftAreas.push('species-search');
