@@ -13,6 +13,7 @@ import {
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
+import MorphologySectionTypeSelection from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import NeuronPropertyFilter, {
   type INeuronPropertyFilter,
@@ -398,6 +399,22 @@ export function UIElementRender({
           disabled={disabled}
           paramSchema={paramSchema}
           onChange={(newValue: string) => setState({ ...state, [k]: newValue })}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.MorphologySectionTypeSelection },
+      },
+      ({ paramSchema }) => (
+        <MorphologySectionTypeSelection
+          schema={schema}
+          entityId={entity?.id}
+          property={paramSchema.property}
+          propertyGroup={paramSchema.property_group}
+          value={value}
+          disabled={disabled}
+          onChange={(newValue) => setState({ ...state, [k]: newValue })}
         />
       )
     )
