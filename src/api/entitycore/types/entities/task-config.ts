@@ -8,6 +8,7 @@ import type {
   EntityCoreOwnership,
   EntityCoreType,
   IContributor,
+  IEntityLifecycleStatus,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -65,7 +66,7 @@ export interface ITaskConfig<T extends Record<string, unknown>>
     Timestamps,
     EntityAuthorization,
     EntityCoreOwnership,
-    EntityCoreType {
+    EntityCoreType, IEntityLifecycleStatus {
   contributions?: Array<IContributor> | null;
 }
 
