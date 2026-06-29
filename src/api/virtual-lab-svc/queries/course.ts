@@ -39,7 +39,12 @@ export interface Course {
 }
 
 export interface SeatsResponse {
-  seats: Seat[];
+  data: Seat[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+  };
 }
 
 export interface EnrolmentsResponse {

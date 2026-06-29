@@ -106,7 +106,7 @@ export default function CoursePage() {
     );
   }
 
-  const seats = seatsQuery.data?.seats || [];
+  const seats = seatsQuery.data?.data || [];
   const enrolments = enrolmentsQuery.data?.enrolments || [];
   const course = labQuery.data?.course;
 
