@@ -209,7 +209,13 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           controls={
             <div className="w-full">
               <Pagination
-                {...{ dataKey, dataType, section, resultPagination, className: paginationClassName }}
+                {...{
+                  dataKey,
+                  dataType,
+                  section,
+                  resultPagination,
+                  className: paginationClassName,
+                }}
               />
             </div>
           }

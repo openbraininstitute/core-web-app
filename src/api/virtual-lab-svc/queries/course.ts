@@ -67,6 +67,16 @@ export interface AssignSeatsResponse {
   results: AssignmentResult[];
 }
 
+export interface DropResult {
+  seat_id: string;
+  drop_successful: boolean;
+  error?: string;
+}
+
+export interface DropSeatsResponse {
+  results: DropResult[];
+}
+
 export async function fetchSeats(courseId: string): Promise<SeatsResponse> {
   const api = await virtualLabRootApi();
   return api.get<SeatsResponse>(`/seats/courses/${courseId}`);
@@ -84,6 +94,17 @@ export async function assignSeats(
   const api = await virtualLabRootApi();
   return api.post<AssignSeatsResponse>(`/seats/courses/${courseId}/assign`, {
     body: { students },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+}
+
+export async function dropSeats(courseId: string, seatIds: string[]): Promise<DropSeatsResponse> {
+  const api = await virtualLabRootApi();
+  return api.post<DropSeatsResponse>(`/seats/courses/${courseId}/drop`, {
+    body: { seat_ids: seatIds },
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',

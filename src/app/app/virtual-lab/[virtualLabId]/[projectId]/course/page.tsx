@@ -10,6 +10,7 @@ import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AssignSeatsModal } from '@/ui/segments/project/course-assign-seats-modal';
+import { DropSeatButton } from '@/ui/segments/project/drop-seat-button';
 import { SeatRecoverability } from '@/ui/segments/project/seat-recoverability';
 
 export default function CoursePage() {
@@ -19,6 +20,11 @@ export default function CoursePage() {
   const queryClient = useQueryClient();
 
   const handleAssignSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
+    queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
+  };
+
+  const handleDropSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
     queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
   };
@@ -103,8 +109,6 @@ export default function CoursePage() {
   const seats = seatsQuery.data?.seats || [];
   const enrolments = enrolmentsQuery.data?.enrolments || [];
   const course = labQuery.data?.course;
-
-  console.log(course);
 
   return (
     <div className="p-6">
@@ -250,6 +254,7 @@ export default function CoursePage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Seat recoverable (reason)
                   </th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -289,6 +294,16 @@ export default function CoursePage() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {course && <SeatRecoverability enrolment={enrolment} course={course} />}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {enrolment.seat && course && (
+                        <DropSeatButton
+                          enrolment={enrolment}
+                          courseId={courseId}
+                          course={course}
+                          onSuccess={handleDropSuccess}
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}
