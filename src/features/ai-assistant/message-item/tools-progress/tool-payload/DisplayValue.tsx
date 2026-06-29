@@ -2,19 +2,24 @@
  * DisplayValue — recursive, schema-agnostic renderer for Display mode.
  * Key-value pairs render as tight rows. Arrays of objects get full-width blocks.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { highlightCode } from '@/ui/molecules/code-blocks';
 import { cn } from '@/utils/css-class';
 
 import {
   detectType,
   formatBytes,
+  guessCodeLanguage,
   humanizeKey,
+  isCodeKey,
   isLikelyBytes,
   pickTitle,
   truncateMiddle,
   truncateUrl,
 } from './format';
+
+import type { BundledLanguage } from 'shiki';
 
 import styles from './tool-payload.module.css';
 
@@ -28,7 +33,6 @@ interface DisplayValueProps {
 
 const MAX_AUTO_EXPAND_DEPTH = 3;
 const DEFAULT_VISIBLE_ITEMS = 5;
-const MAX_SUMMARY_FIELDS = 3;
 
 export default function DisplayValue({
   value,
@@ -155,6 +159,25 @@ function ArrayValue({
   const allPrimitive = value.every((item) => item === null || typeof item !== 'object');
 
   if (allPrimitive) {
+    // For numeric arrays or short arrays, render as a compact inline string
+    const allNumeric = value.every((item) => typeof item === 'number');
+    if (allNumeric || value.length > 5) {
+      const maxShow = 20;
+      const formatted = value
+        .slice(0, maxShow)
+        .map((v) =>
+          typeof v === 'number' ? (Number.isInteger(v) ? String(v) : v.toFixed(2)) : String(v)
+        );
+      const displayed = formatted.join(', ');
+      const suffix = value.length > maxShow ? `, … (${value.length})` : '';
+      return (
+        <span className={styles.vectorChip} title={`[${value.join(', ')}]`}>
+          [{displayed}
+          {suffix}]
+        </span>
+      );
+    }
+    // Short non-numeric arrays: individual chips
     return (
       <div className={styles.chipList}>
         {value.map((item, i) => (
@@ -187,6 +210,8 @@ function ArrayValue({
 }
 
 function ArrayItemCard({ item, index, depth }: { item: unknown; index: number; depth: number }) {
+  const [expanded, setExpanded] = useState(false);
+
   if (typeof item !== 'object' || item === null) {
     return (
       <div className={styles.itemCard}>
@@ -199,55 +224,124 @@ function ArrayItemCard({ item, index, depth }: { item: unknown; index: number; d
   const titleField = pickTitle(obj);
   const title = titleField ? titleField.value : `Item ${index + 1}`;
 
-  const summaryEntries = Object.entries(obj)
-    .filter(([k]) => k !== titleField?.key)
-    .slice(0, MAX_SUMMARY_FIELDS);
+  if (!expanded) {
+    return (
+      <div
+        className={styles.itemCard}
+        onClick={() => setExpanded(true)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setExpanded(true);
+        }}
+      >
+        <span className={styles.itemCardTitle}>{truncateMiddle(title, 30, 10)}</span>
+        <span className={styles.expandHint}>›</span>
+      </div>
+    );
+  }
+
+  // Expanded: show first-level key-value pairs (no deeper nesting)
+  const allEntries = Object.entries(obj);
 
   return (
-    <div className={styles.itemCard}>
-      <span className={styles.itemCardTitle}>
-        {titleField?.key === 'id' ? truncateMiddle(title, 10, 8) : title}
-      </span>
-      <span className={styles.itemCardSummary}>
-        {summaryEntries.map(([k, v]) => {
-          if (Array.isArray(v)) {
-            return (
-              <span key={k} className={styles.itemCardSummaryField}>
-                <span className={styles.itemCardSummaryLabel}>{humanizeKey(k)}:</span>
-                <span className={styles.expandableCount}>{v.length}</span>
-              </span>
-            );
-          }
-          return (
-            <span key={k} className={styles.itemCardSummaryField}>
-              <span className={styles.itemCardSummaryLabel}>{humanizeKey(k)}:</span>
-              <InlineSummaryValue value={v} keyName={k} />
+    <div className={styles.itemCardExpanded}>
+      <div
+        className={styles.itemCardExpandedHeader}
+        onClick={() => setExpanded(false)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') setExpanded(false);
+        }}
+      >
+        <span className={styles.itemCardTitle}>{truncateMiddle(title, 30, 10)}</span>
+        <span className={styles.expandHintOpen}>‹</span>
+      </div>
+      <div className={styles.itemCardExpandedBody}>
+        {allEntries.map(([k, v]) => (
+          <div key={k} className={styles.itemCardExpandedRow}>
+            <span className={styles.itemCardExpandedKey}>{humanizeKey(k)}</span>
+            <span className={styles.itemCardExpandedValue}>
+              <InlineExpandedValue value={v} keyName={k} />
             </span>
-          );
-        })}
-      </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function InlineSummaryValue({ value, keyName }: { value: unknown; keyName?: string }) {
+/** Render values in expanded items — nested objects/arrays collapsed by default */
+function InlineExpandedValue({ value, keyName }: { value: unknown; keyName?: string }) {
   const type = detectType(value);
   switch (type) {
     case 'null':
       return <span className={styles.chipMuted}>—</span>;
     case 'boolean':
-      return <span>{(value as boolean) ? 'Yes' : 'No'}</span>;
+      return <BooleanValue value={value as boolean} />;
     case 'number':
       if (keyName && isLikelyBytes(keyName, value as number))
         return <span>{formatBytes(value as number)}</span>;
       return <span>{String(value)}</span>;
     case 'uuid':
-      return <span>{truncateMiddle(value as string, 6, 4)}</span>;
+      return <UuidValue value={value as string} />;
     case 'url':
-      return <span>{truncateUrl(value as string, 30)}</span>;
+      return <UrlValue value={value as string} />;
+    case 'iso-date':
+      return <DateValue value={value as string} />;
+    case 'array':
+      if ((value as unknown[]).length === 0) return <span className={styles.chipMuted}>—</span>;
+      return (
+        <CollapsibleNested
+          label={`${(value as unknown[]).length} items`}
+          value={value}
+          keyName={keyName}
+        />
+      );
+    case 'object':
+      if (Object.keys(value as object).length === 0)
+        return <span className={styles.chipMuted}>—</span>;
+      return (
+        <CollapsibleNested
+          label={`${Object.keys(value as object).length} fields`}
+          value={value}
+          keyName={keyName}
+        />
+      );
     default:
-      return <span>{truncateMiddle(String(value), 20, 10)}</span>;
+      return <span>{truncateMiddle(String(value), 40, 10)}</span>;
   }
+}
+
+/** A collapsed-by-default nested value that expands on click */
+function CollapsibleNested({
+  label,
+  value,
+  keyName,
+}: {
+  label: string;
+  value: unknown;
+  keyName?: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!expanded) {
+    return (
+      <button type="button" className={styles.collapsibleBtn} onClick={() => setExpanded(true)}>
+        {label} ›
+      </button>
+    );
+  }
+
+  return (
+    <div>
+      <button type="button" className={styles.collapsibleBtn} onClick={() => setExpanded(false)}>
+        {label} ‹
+      </button>
+      <DisplayValue value={value} keyName={keyName} depth={2} />
+    </div>
+  );
 }
 
 /* === Objects === */
@@ -269,12 +363,15 @@ function ObjectValue({ value, depth }: { value: Record<string, unknown>; depth: 
     );
   }
 
-  // Split entries: inline (primitives, short strings) vs block (arrays of objects, nested objects with arrays)
+  // Split entries: inline (primitives, short strings) vs block (arrays of objects) vs code
   const inlineEntries: [string, unknown][] = [];
   const blockEntries: [string, unknown][] = [];
+  const codeEntries: [string, string][] = [];
 
   for (const [k, v] of entries) {
-    if (Array.isArray(v) && v.length > 0 && typeof v[0] === 'object' && v[0] !== null) {
+    if (isCodeKey(k) && typeof v === 'string' && v.length > 0) {
+      codeEntries.push([k, v]);
+    } else if (Array.isArray(v) && v.length > 0 && typeof v[0] === 'object' && v[0] !== null) {
       blockEntries.push([k, v]);
     } else {
       inlineEntries.push([k, v]);
@@ -297,6 +394,12 @@ function ObjectValue({ value, depth }: { value: Record<string, unknown>; depth: 
           ))}
         </div>
       )}
+      {codeEntries.map(([k, v]) => (
+        <div key={k} className={styles.defBlock}>
+          <span className={styles.defBlockLabel}>{humanizeKey(k)}</span>
+          <CodeValue code={v} language={guessCodeLanguage(k)} />
+        </div>
+      ))}
       {blockEntries.map(([k, v]) => {
         const arr = v as unknown[];
         return (
@@ -339,5 +442,44 @@ function CopyButton({ text }: { text: string }) {
     >
       {copied ? '✓' : '⎘'}
     </button>
+  );
+}
+
+/* === Code block renderer === */
+
+function CodeValue({ code, language }: { code: string; language: string }) {
+  const [html, setHtml] = useState<string>('');
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    highlightCode(code, language as BundledLanguage, false)
+      .then((highlighted) => {
+        if (mounted.current) setHtml(highlighted);
+      })
+      .catch(() => {
+        // Fallback: no highlighting
+        if (mounted.current) setHtml('');
+      });
+    return () => {
+      mounted.current = false;
+    };
+  }, [code, language]);
+
+  if (!html) {
+    // Fallback while loading or on error
+    return (
+      <pre className={styles.codeBlock}>
+        <code>{code}</code>
+      </pre>
+    );
+  }
+
+  return (
+    <div
+      className={styles.codeBlockHighlighted}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: shiki output
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }

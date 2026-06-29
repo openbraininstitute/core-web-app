@@ -59,10 +59,11 @@ export default function ToolsProgress({
 
   const { tool, state, key } = toolsState;
   const Icon = tool.icon;
-  const isExpanded = expandedToolKeys.has(key);
+  // Approval-requested cards are expanded by default
+  const isApprovalRequested = state === 'approval-requested';
+  const isExpanded = expandedToolKeys.has(key) || isApprovalRequested;
 
   // Approval states
-  const isApprovalRequested = state === 'approval-requested';
   const isApprovalResponded = state === 'approval-responded';
   const isOutputDenied = state === 'output-denied';
 
@@ -114,9 +115,6 @@ export default function ToolsProgress({
               </div>
             </div>
             <div className={styles.actions}>
-              <span className={styles.expandButton} aria-hidden="true">
-                <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
-              </span>
               <button
                 type="button"
                 className={styles.rejectButton}
@@ -281,6 +279,16 @@ export default function ToolsProgress({
               <div className={styles.expandButton}>
                 <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
               </div>
+
+              <Link
+                href={tool.docURL(virtualLabId, projectId)}
+                target="documentation"
+                aria-label="Tool information"
+                className={cn(styles.helpButton)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <HelpIconI className={styles.helpIcon} />
+              </Link>
             </div>
           </button>
 

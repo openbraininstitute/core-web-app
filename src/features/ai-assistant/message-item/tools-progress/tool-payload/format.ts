@@ -5,6 +5,9 @@
 
 const ACRONYMS = new Set(['id', 'url', 'uri', 'api', 'uuid', 'ip', 'html', 'css', 'json', 'xml']);
 
+/** Keys whose string values should render as code blocks */
+const CODE_KEYS = new Set(['code', 'command', 'stdout', 'stderr', 'script', 'shell', 'query']);
+
 /**
  * Convert snake_case, camelCase, kebab-case, or dotted.path keys
  * to sentence-case labels.
@@ -151,4 +154,22 @@ export function pickTitle(obj: Record<string, unknown>): { key: string; value: s
     }
   }
   return null;
+}
+
+/**
+ * Whether a key name indicates its value should be rendered as a code block.
+ */
+export function isCodeKey(key: string): boolean {
+  return CODE_KEYS.has(key.toLowerCase());
+}
+
+/**
+ * Guess the language for a code value based on its key name.
+ */
+export function guessCodeLanguage(key: string): string {
+  const k = key.toLowerCase();
+  if (k === 'code') return 'python';
+  if (k === 'command' || k === 'shell' || k === 'script') return 'bash';
+  if (k === 'query') return 'sql';
+  return 'text';
 }
