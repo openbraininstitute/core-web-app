@@ -3,7 +3,9 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { authFetch } from '@/auth-fetch';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
+import { useConfig } from '@/config';
 import { Button } from '@/ui/molecules/button';
 
 interface ClaimError {
@@ -30,6 +32,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default function CourseEnrolmentPage() {
+  const config = useConfig();
   const searchParams = useSearchParams();
   const enrolmentId = searchParams.get('enrolment_id');
   const [error, setError] = useState<ClaimError | null>(null);
@@ -48,7 +51,7 @@ export default function CourseEnrolmentPage() {
       }
 
       try {
-        const response = await fetch('/api/courses/claim', {
+        const response = await authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/claim`, {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
@@ -104,7 +107,7 @@ export default function CourseEnrolmentPage() {
     };
 
     claim();
-  }, [enrolmentId]);
+  }, [enrolmentId, config.VIRTUAL_LAB_API_URL]);
 
   if (loading) {
     return (
@@ -118,7 +121,24 @@ export default function CourseEnrolmentPage() {
 
   if (error) {
     return (
-      <ErrorComponent error={new Error(error.display)} customError={error.display} showButtons />
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="mx-auto w-full max-w-md text-center">
+          <ErrorComponent
+            error={new Error(error.display)}
+            customError={error.display}
+            showButtons={false}
+          />
+          <div className="mt-6">
+            <Button
+              onClick={() => {
+                window.location.href = '/app/virtual-lab/sync';
+              }}
+            >
+              Go to home
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
