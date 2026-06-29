@@ -301,7 +301,19 @@ export default function CoursePage() {
       <div className="mb-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-primary-8">Seats</h2>
-          <Button onClick={() => setIsModalOpen(true)}>Assign seats</Button>
+          {(() => {
+            const availableSeats = seats.filter((seat) => !seat.enrolment_id).length;
+            const hasAvailableSeats = availableSeats > 0;
+            return (
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                disabled={!hasAvailableSeats}
+                className={!hasAvailableSeats ? 'bg-gray-300 text-gray-500 hover:bg-gray-300' : ''}
+              >
+                Assign seats
+              </Button>
+            );
+          })()}
         </div>
         {(() => {
           const assignedSeats = seats.filter((seat) => seat.enrolment_id).length;
@@ -336,7 +348,7 @@ export default function CoursePage() {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Seat recoverable (reason)
                   </th>
-                  <th className="px-4 py-3" />
+                  <th className="w-32 px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -388,7 +400,7 @@ export default function CoursePage() {
                     <td className="px-4 py-3 text-sm">
                       {course && <SeatRecoverability course={course} enrolment={enrolment} />}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="w-32 px-4 py-3 text-sm">
                       {course && (
                         <DropSeatButton
                           course={course}
