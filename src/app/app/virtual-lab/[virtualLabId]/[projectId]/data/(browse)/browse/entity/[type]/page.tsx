@@ -33,6 +33,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.IonChannelModel,
   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
   ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
+  ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
   ExtendedEntitiesTypeDict.EMCellMesh,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,

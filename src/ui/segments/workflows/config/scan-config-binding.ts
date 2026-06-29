@@ -33,6 +33,8 @@ export const ScanConfigGeneratedApiPath = {
   CircuitExtraction: 'circuit-extraction-scan-config-generate-grid',
   Skeletonization: 'skeletonization-scan-config-generate-grid',
   EMSynapseMapping: 'em-synapse-mapping-scan-config-generate-grid',
+  CreateExtracellularRecordingArray:
+    'create-extracellular-recording-array-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -194,6 +196,18 @@ export function buildEmSynapseMappingConfigureBinding(): TScanConfigConfigureBin
     },
     generatedApiPath: ScanConfigGeneratedApiPath.EMSynapseMapping,
     mergeBrowseSelectionIntoSingleGroup: true,
+  };
+}
+
+export function createExtracellularRecordingArrayConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Circuit,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Circuit,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.Circuit]: ScanConfigFromIdType.CircuitFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray,
+    schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }
 

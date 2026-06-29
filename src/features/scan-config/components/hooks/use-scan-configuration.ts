@@ -33,6 +33,11 @@ import {
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import {
+  resolveWorkflowTaskTypeBindings,
+  type TWorkflowTaskTypeBindings,
+  type TWorkflowTaskTypeBindingsInput,
+} from '@/features/scan-config/workflow/types';
 import { resolvePrimaryEntityIdFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import {
   buildGeneratedApiUrl,
@@ -59,6 +64,7 @@ export type TUseScanConfigurationParams = {
   scanConfig: TScanConfigRegistryConfig;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
 };
 
 export type TScanConfigurationReadyState = {
@@ -79,6 +85,7 @@ export type TScanConfigurationReadyState = {
   aiEnabled: boolean;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
 /**
@@ -106,6 +113,7 @@ export function useScanConfiguration({
   scanConfig,
   workflowSessionSelection,
   resolveSessionFromIdType,
+  taskTypeBindings,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
   const registryResolved = useMemo(() => resolveScanConfigFromRegistry(scanConfig), [scanConfig]);
 
@@ -259,6 +267,7 @@ export function useScanConfiguration({
         aiEnabled,
         workflowSessionSelection,
         resolveSessionFromIdType,
+        taskTypeBindings: resolveWorkflowTaskTypeBindings(taskTypeBindings, { entity }),
       },
     };
   }, [
@@ -276,6 +285,7 @@ export function useScanConfiguration({
     resolved,
     schema,
     schemaMappingConfig,
+    taskTypeBindings,
     virtualLabId,
     workflowSessionSelection,
   ]);

@@ -17,6 +17,7 @@ import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids'
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
+import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import { VoltageDuration } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -354,6 +355,19 @@ export function UIElementRender({
           />
         );
       }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.StringSelectionEnhanced },
+      },
+      ({ paramSchema }) => (
+        <StringSelectionEnhanced
+          value={typeof value === 'string' ? value : null}
+          disabled={disabled}
+          paramSchema={paramSchema}
+          onChange={(newValue: string) => setState({ ...state, [k]: newValue })}
+        />
+      )
     )
     .with(
       {

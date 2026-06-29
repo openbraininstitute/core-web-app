@@ -42,6 +42,7 @@ import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
@@ -66,6 +67,7 @@ type Props = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
 export function ScanConfigTemplate(props: Props) {
@@ -95,6 +97,7 @@ function ScanConfigTemplateContent({
   campaignOriginAction,
   workflowSessionSelection,
   resolveSessionFromIdType,
+  taskTypeBindings,
 }: Props) {
   const browseOverlayContext = useScanConfigMainOverlayOptional();
   const browseOverlay = browseOverlayContext?.overlay;
@@ -142,36 +145,46 @@ function ScanConfigTemplateContent({
           projectId={projectId}
           campaignOriginAction={campaignOriginAction}
           isCampaignIdChanged={isCampaignIdChanged}
+          taskTypeBindings={taskTypeBindings}
         />
       </Suspense>
     ))
-    .with(ScanConfigActivity.Extract, () => (
-      <Suspense>
-        <ExtractionTab
-          isCampaignIdChanged={isCampaignIdChanged}
-          campaignOriginAction={campaignOriginAction}
-          campaignId={campaignId}
-        />
-      </Suspense>
-    ))
-    .with(ScanConfigActivity.Process, () => (
-      <Suspense>
-        <SkeletonizationTab
-          campaignId={campaignId}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-        />
-      </Suspense>
-    ))
-    .with(ScanConfigActivity.Build, () => (
-      <Suspense>
-        <BuildTab
-          isCampaignIdChanged={isCampaignIdChanged}
-          campaignOriginAction={campaignOriginAction}
-          campaignId={campaignId}
-        />
-      </Suspense>
-    ))
+    .with(ScanConfigActivity.Extract, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <ExtractionTab
+            isCampaignIdChanged={isCampaignIdChanged}
+            campaignOriginAction={campaignOriginAction}
+            campaignId={campaignId}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
+    .with(ScanConfigActivity.Process, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <SkeletonizationTab
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
+    .with(ScanConfigActivity.Build, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <BuildTab
+            isCampaignIdChanged={isCampaignIdChanged}
+            campaignOriginAction={campaignOriginAction}
+            campaignId={campaignId}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
     .otherwise(() => {
       throw new Error(`${activity} is not supported yet`);
     });

@@ -44,6 +44,7 @@ import { log } from '@/utils/logger';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -51,6 +52,11 @@ type SimulationTabProps = {
   projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
+  /**
+   * obi-one + entitycore task types for this workflow, resolved from its definition. For circuit
+   * simulations the `obiOne` launch type is resolved from the circuit's `target_simulator`.
+   */
+  taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
 export default function SimulationsTab({
@@ -59,6 +65,7 @@ export default function SimulationsTab({
   projectId,
   campaignOriginAction,
   isCampaignIdChanged,
+  taskTypeBindings,
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
@@ -250,10 +257,13 @@ export default function SimulationsTab({
     let nSubmissions = 0;
     let lowFundsError = false;
 
+    // Prefer the workflow definition's resolved binding; fall back to deriving from the model's
+    // `target_simulator` so simulate workflows without an explicit binding keep working.
     const taskType =
-      model && 'target_simulator' in model && model.target_simulator === 'Brian2'
+      taskTypeBindings?.obiOne ??
+      (model && 'target_simulator' in model && model.target_simulator === 'Brian2'
         ? ObiOneTaskTypeDict.CircuitSimulationBrian2
-        : ObiOneTaskTypeDict.CircuitSimulation;
+        : ObiOneTaskTypeDict.CircuitSimulation);
 
     for (const simId of simIds) {
       try {

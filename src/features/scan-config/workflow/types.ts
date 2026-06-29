@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
+import type { TTaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import type { TTaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TObiOneTaskType } from '@/api/one/types/task';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type {
   Config,
@@ -10,6 +13,7 @@ import type {
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { TScanConfigRegistryConfig } from '@/ui/segments/workflows/config/scan-config-binding';
+import type { Nullish } from '@/utils/type';
 
 export type TCampaignWithFormConfig = {
   config?: {
@@ -44,6 +48,39 @@ export type TScanConfigCampaignSource = {
   resolve: TCampaignResolver;
 };
 
+export type TWorkflowTaskTypeBindings = {
+  /** obi-one task type submitted to `/declared/task/launch` for executions */
+  obiOne: TObiOneTaskType;
+  /** entitycore activity type for the generate-grid config-generation step */
+  configGeneration: TTaskActivityType;
+  /** entitycore activity type for execution runs */
+  execution: TTaskActivityType;
+  /** entitycore task-config type for the generated configs */
+  config: TTaskConfigType;
+};
+
+/**
+ * entity-based resolver form of {@link TWorkflowTaskTypeBindings}: lets a workflow compute its bindings from the
+ * resolved source entity (e.g. simulate picks the obi-one type from a circuit's `target_simulator`)
+ */
+export type TWorkflowTaskTypeBindingsResolver = (args: {
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
+}) => TWorkflowTaskTypeBindings;
+
+/** a workflow declares its task bindings as a static object or a resolver. */
+export type TWorkflowTaskTypeBindingsInput =
+  | TWorkflowTaskTypeBindings
+  | TWorkflowTaskTypeBindingsResolver;
+
+/** resolves a workflow's `taskTypeBindings` (static or resolver fn) against the source entity */
+export function resolveWorkflowTaskTypeBindings(
+  input: TWorkflowTaskTypeBindingsInput | undefined,
+  args: { entity: TSupportedEntitiesForScanConfiguration | Nullish }
+): TWorkflowTaskTypeBindings | undefined {
+  if (!input) return undefined;
+  return typeof input === 'function' ? input(args) : input;
+}
+
 export type TScanConfigEditorOptions = {
   defaultTab?: TScanConfigTabs;
   campaignOriginAction?: TScanConfigCampaignOriginActionDict;
@@ -58,6 +95,8 @@ export type TScanConfigWorkflowDefinition = {
   entity: TScanConfigEntitySource;
   campaign: TScanConfigCampaignSource;
   editor?: TScanConfigEditorOptions;
+  /** obi-one + entitycore task identifiers used by the workflow's results tab (launch + polling) */
+  taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
 };
 
 export type TResolvedScanConfigEntity = {

@@ -13,6 +13,7 @@ import type { IIonChannelModelingCampaign } from '@/api/entitycore/types/entitie
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
+import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
@@ -63,4 +64,5 @@ export type EntityCoreObjectTypes =
   | ICircuitSimulationCampaign
   | IonChannelModel
   | IIonChannelModelingCampaign
-  | IEMCellMesh;
+  | IEMCellMesh
+  | ISimulatableExtracellularRecordingArray;

@@ -11,6 +11,8 @@ import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
+import { ExtracellularRecordingArrayCampaign } from '@/entity-configuration/domain/model/extracellular-recording-array-campaign';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
@@ -68,6 +70,8 @@ export const EntityCoreModelConfiguration = {
   IonChannelModel,
   IonChannelModelingCampaign,
   EmSynapseMappingCampaign,
+  ExtracellularRecordingArray,
+  ExtracellularRecordingArrayCampaign,
   SingleNeuronCircuit,
   SynthesizedCellMorphology,
 } as const;

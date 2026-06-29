@@ -2,11 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
@@ -20,24 +16,33 @@ import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TEmSynapseMappingCampaignMeta } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
+
+/** Campaign metadata shape shared by build workflows (only `scan_parameters` is read here). */
+type TBuildCampaignMeta = { scan_parameters?: Record<string, unknown> };
 
 type Props = {
   campaignId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
+  /** obi-one + entitycore task types for this build workflow (from its definition) */
+  taskTypeBindings: TWorkflowTaskTypeBindings;
 };
 
-export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged }: Props) {
+export function BuildTab({
+  campaignOriginAction,
+  campaignId,
+  isCampaignIdChanged,
+  taskTypeBindings,
+}: Props) {
   const context = useWorkspace();
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
-  const [activeConfig, setActiveConfig] =
-    useState<ITaskConfig<TEmSynapseMappingCampaignMeta> | null>(null);
+  const [activeConfig, setActiveConfig] = useState<ITaskConfig<TBuildCampaignMeta> | null>(null);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
     new Map()
@@ -45,20 +50,20 @@ export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged
 
   const { mutateAsync: runBuild, isPending: runBuildPending } = useTaskLaunchMutation({
     context,
-    obiOneTaskType: ObiOneTaskTypeDict.EmSynapseMapping,
-    executionActivityType: TaskActivityType.EmSynapseMappingExecution,
+    obiOneTaskType: taskTypeBindings.obiOne,
+    executionActivityType: taskTypeBindings.execution,
     notificationKey: 'build-config-error',
     failureMessage: 'We ran into a problem launching your build. Please try again later.',
     logTopic: 'Build',
   });
 
   const { configGenerationLoading, configsResponse, configsLoading } =
-    useTaskRunner<TEmSynapseMappingCampaignMeta>({
+    useTaskRunner<TBuildCampaignMeta>({
       context,
       campaignId,
-      configGenerationActivityType: TaskActivityType.EmSynapseMappingConfigGeneration,
-      executionActivityType: TaskActivityType.EmSynapseMappingExecution,
-      taskConfigType: TaskConfigType.EmSynapseMappingConfig,
+      configGenerationActivityType: taskTypeBindings.configGeneration,
+      executionActivityType: taskTypeBindings.execution,
+      taskConfigType: taskTypeBindings.config,
       pauseExecutionPolling: runBuildPending,
       loadExecutions: false,
     });
@@ -81,7 +86,7 @@ export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged
       activeConfigExecStatus
     );
 
-  const onActiveConfigChange = useCallback((config: ITaskConfig<TEmSynapseMappingCampaignMeta>) => {
+  const onActiveConfigChange = useCallback((config: ITaskConfig<TBuildCampaignMeta>) => {
     setActiveConfig(config);
   }, []);
 
@@ -143,7 +148,7 @@ export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged
             selectionDisabled={runBuildPending}
             fallbackColor="#389E0D"
             context={context}
-            executionActivityType={TaskActivityType.EmSynapseMappingExecution}
+            executionActivityType={taskTypeBindings.execution}
             pauseStatusPolling={runBuildPending}
             executionByConfigId={executionByConfigId}
             onSelectConfig={onActiveConfigChange}
@@ -187,8 +192,8 @@ export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged
             <div className="h-full">
               <MiniDetailViewRenderer
                 section={WorkspaceSection.Data}
-                record={selectedFile.entity as ICircuit}
-                dataType={ExtendedEntitiesTypeDict.SingleNeuronCircuit}
+                record={selectedFile.entity as EntityCoreObjectTypes}
+                dataType={selectedFile.entity.type}
                 theme={ViewVariant.Light}
                 enableAnimation={false}
               />
@@ -196,11 +201,11 @@ export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged
           )}
           {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
             <TaskConfigurationViewer
+              skipStream
               jobId={activeExecutionJobId}
               workspace={context}
               configId={resolvedActiveConfig?.id}
               enabled={taskLogsViewerEnabled}
-              skipStream
               campaignOriginAction={campaignOriginAction}
               isCampaignIdChanged={isCampaignIdChanged}
             />
