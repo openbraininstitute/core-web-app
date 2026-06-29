@@ -3,12 +3,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 
+import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
 import {
   createAnalysisNotebookTemplate,
   uploadNotebookTemplateFile,
 } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
-import { deleteNotebook } from '@/api/entitycore/queries/notebook';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -38,11 +38,12 @@ export function useAnalysisNotebookTemplatePipeline({
         const firstKeySegment = query.queryKey[0];
 
         const matchesEntityCount =
-          firstKeySegment === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`;
+          firstKeySegment ===
+          `data-entity-count-${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}`;
 
         const matchesExtendedEntity =
           get(firstKeySegment as ExtendedEntityTypeQueryKey[0], 'context.extendedEntityType') ===
-          ExtendedEntitiesTypeDict.Notebook;
+          ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
 
         return matchesEntityCount || matchesExtendedEntity;
       },
@@ -64,7 +65,7 @@ export function useAnalysisNotebookTemplatePipeline({
 
   const deleteNotebookAsync = useMutation({
     mutationFn: (entityId: string) =>
-      deleteNotebook({
+      deleteAnalysisNotebookTemplate({
         id: entityId,
         context: { projectId, virtualLabId },
       }),

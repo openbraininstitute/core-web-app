@@ -1,4 +1,4 @@
-import { getAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
+import { getAnalysisNotebookResult } from '@/api/entitycore/queries/analysis-notebook-result';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
@@ -11,15 +11,15 @@ import {
 import type { NotebookJsonMetadata } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
 
-export async function* getNotebookFiles(entityIds: string[], ctx?: WorkspaceContext) {
+export async function* getNotebookResultFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<NotebookJsonMetadata>();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeDict.AnalysisNotebookTemplate);
+    yield await createTemplateFileEntry(EntityTypeDict.AnalysisNotebookResult);
   } catch {}
 
   for (const entityId of entityIds) {
-    const notebook = await getAnalysisNotebookTemplate({
+    const result = await getAnalysisNotebookResult({
       id: entityId,
       context: ctx,
     });
@@ -30,15 +30,15 @@ export async function* getNotebookFiles(entityIds: string[], ctx?: WorkspaceCont
     const idxExtra = { idx, data_path: dataPath };
 
     metadata.add({
-      csv: { ...idxExtra, ...getMetadataCsvEntryBase(notebook) },
-      json: { ...idxExtra, ...notebook },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(result) },
+      json: { ...idxExtra, ...result },
     });
 
-    for await (const asset of notebook.assets) {
+    for await (const asset of result.assets) {
       const path = `${dataPath}/${asset.path}`;
       try {
         yield await createAssetFileEntry({
-          entity: notebook,
+          entity: result,
           asset,
           path,
           ctx,

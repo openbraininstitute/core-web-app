@@ -4,19 +4,22 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
-export const viewDefForNotebook: ViewDefinitionConfig = {
-  title: 'Notebook',
-  name: EntitySlug.Notebook,
+export const viewDefForNotebookResult: ViewDefinitionConfig = {
+  title: 'Result',
+  name: EntitySlug.AnalysisNotebookResult,
   columns: [
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
-    EntityCoreFields.NotebookScale,
-    EntityCoreFields.NotebookActions,
   ],
+  miniDetailView: [
+    { field: EntityCoreFields.Contributions },
+    { field: EntityCoreFields.RegistrationDate },
+  ],
+  summaryViewFields: [],
 };
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
-  [ExtendedEntitiesTypeDict.Notebook]: viewDefForNotebook,
+  [ExtendedEntitiesTypeDict.AnalysisNotebookResult]: viewDefForNotebookResult,
 };

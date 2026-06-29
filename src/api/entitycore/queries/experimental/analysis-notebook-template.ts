@@ -2,7 +2,7 @@ import z from 'zod';
 
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -34,7 +34,7 @@ export async function createAnalysisNotebookTemplate({
   payload: TAnalysisNotebookTemplateCreate;
 }) {
   const api = await entityCoreApi();
-  return await api.post<INotebook>(baseUri, {
+  return await api.post<IAnalysisNotebookTemplate>(baseUri, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

@@ -98,7 +98,6 @@ export enum EntityCoreFields {
   IonChannel = 'ion_channel',
   ICMThumbnail = 'icm_thumbnail',
   NotebookScale = 'notebook_scale',
-  NotebookActions = 'notebook_actions',
   DenseReconstructionCellId = 'dense_reconstruction_cell_id',
   GenerationType = 'generation_type',
   ProtocolDesign = 'protocol_design',

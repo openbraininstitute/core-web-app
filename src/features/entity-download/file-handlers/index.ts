@@ -1,5 +1,6 @@
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
 
+import { getNotebookResultFiles } from './analysis-notebook-result';
 import { getCellMorphologyFiles } from './cell-morphology';
 import { getCircuitFiles } from './circuit';
 import { getCircuitSimulationFiles } from './circuit-simulation';
@@ -40,7 +41,8 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.Memodel]: getMEmodelFiles,
   [EntityTypeDict.SingleNeuronSynaptome]: getSingleNeuronSynaptomeFiles,
   [EntityTypeDict.IonChannelModel]: getIonChannelModelFiles,
-  [EntityTypeDict.Notebook]: getNotebookFiles,
+  [EntityTypeDict.AnalysisNotebookTemplate]: getNotebookFiles,
+  [EntityTypeDict.AnalysisNotebookResult]: getNotebookResultFiles,
   [EntityTypeDict.Circuit]: getCircuitFiles,
   // Simulation data
   [EntityTypeDict.SingleNeuronSimulation]: getSingleNeuronSimulationFiles,

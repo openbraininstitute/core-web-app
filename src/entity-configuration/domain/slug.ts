@@ -55,7 +55,8 @@ export const EntitySlug = {
   ...SimulationEntitySlug,
   ...ExtractionEntitySlug,
   ...ProcessingEntitySlug,
-  Notebook: 'notebook',
+  AnalysisNotebookTemplate: 'template',
+  AnalysisNotebookResult: 'results',
 } as const;
 
 export type EntitySlugValue = (typeof EntitySlug)[keyof typeof EntitySlug];
