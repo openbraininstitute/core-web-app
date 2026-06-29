@@ -20,6 +20,18 @@ export type EntityCoreType = {
   type: TEntityTypeDict;
 };
 
+
+const EntityLifecycleStatus = {
+  Draft: 'draft',
+  Active: 'active',
+  Disqualified: 'disqualified',
+} as const;
+type TEntityLifecycleStatus = (typeof EntityLifecycleStatus)[keyof typeof EntityLifecycleStatus];
+
+export interface IEntityLifecycleStatus {
+  lifecycle_status: TEntityLifecycleStatus;
+}
+
 export type EntityCoreOwnership = {
   created_by: IPerson | null;
   updated_by: IPerson | null;
