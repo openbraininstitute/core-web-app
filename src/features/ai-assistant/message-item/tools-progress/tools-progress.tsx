@@ -12,7 +12,6 @@ import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
-import { ToolPayload, useViewMode } from './tool-payload';
 
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
@@ -38,7 +37,6 @@ export default function ToolsProgress({
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
-  const [viewMode] = useViewMode();
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -59,11 +57,10 @@ export default function ToolsProgress({
 
   const { tool, state, key } = toolsState;
   const Icon = tool.icon;
-  // Approval-requested cards are expanded by default
-  const isApprovalRequested = state === 'approval-requested';
-  const isExpanded = expandedToolKeys.has(key) || isApprovalRequested;
+  const isExpanded = expandedToolKeys.has(key);
 
   // Approval states
+  const isApprovalRequested = state === 'approval-requested';
   const isApprovalResponded = state === 'approval-responded';
   const isOutputDenied = state === 'output-denied';
 
@@ -115,6 +112,9 @@ export default function ToolsProgress({
               </div>
             </div>
             <div className={styles.actions}>
+              <span className={styles.expandButton} aria-hidden="true">
+                <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
+              </span>
               <button
                 type="button"
                 className={styles.rejectButton}
@@ -152,13 +152,8 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <ToolPayload
-                    value={part.input}
-                    label="Arguments"
-                    mode={viewMode}
-                    showToggle
-                    isFirst
-                  />
+                  <div className={styles.sectionTitle}>Arguments</div>
+                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
                 </div>
               ) : null}
             </div>
@@ -237,13 +232,8 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <ToolPayload
-                    value={part.input}
-                    label="Arguments"
-                    mode={viewMode}
-                    showToggle
-                    isFirst
-                  />
+                  <div className={styles.sectionTitle}>Arguments</div>
+                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
                 </div>
               ) : null}
             </div>
@@ -279,16 +269,6 @@ export default function ToolsProgress({
               <div className={styles.expandButton}>
                 <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
               </div>
-
-              <Link
-                href={tool.docURL(virtualLabId, projectId)}
-                target="documentation"
-                aria-label="Tool information"
-                className={cn(styles.helpButton)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <HelpIconI className={styles.helpIcon} />
-              </Link>
             </div>
           </button>
 
@@ -304,13 +284,8 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <ToolPayload
-                    value={part.input}
-                    label="Arguments"
-                    mode={viewMode}
-                    showToggle
-                    isFirst
-                  />
+                  <div className={styles.sectionTitle}>Arguments</div>
+                  <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
                 </div>
               ) : null}
             </div>
@@ -403,19 +378,15 @@ export default function ToolsProgress({
             typeof part.input === 'object' &&
             Object.keys(part.input as Record<string, unknown>).length > 0 ? (
               <div className={styles.section}>
-                <ToolPayload
-                  value={part.input}
-                  label="Arguments"
-                  mode={viewMode}
-                  showToggle
-                  isFirst
-                />
+                <div className={styles.sectionTitle}>Arguments</div>
+                <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
               </div>
             ) : null}
 
             {part.state === 'output-available' && part.output != null ? (
               <div className={styles.section}>
-                <ToolPayload value={part.output} label="Result" mode={viewMode} />
+                <div className={styles.sectionTitle}>Result</div>
+                <pre className={styles.codeBlock}>{formatInputOutputs(part.output)}</pre>
               </div>
             ) : null}
 
@@ -455,4 +426,17 @@ function getToolsState(
     state: part.state,
     key,
   };
+}
+
+function formatInputOutputs(r: unknown): string {
+  try {
+    if (typeof r === 'string') {
+      // try parse stringified JSON first
+      return JSON.stringify(JSON.parse(r), null, 2);
+    }
+    return JSON.stringify(r, null, 2);
+  } catch {
+    // fallback to plain string
+    return String(r);
+  }
 }
