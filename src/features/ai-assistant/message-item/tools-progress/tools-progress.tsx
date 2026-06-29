@@ -118,30 +118,7 @@ export default function ToolsProgress({
                 <span>Approval needed</span>
               </div>
             </div>
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.rejectButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleReject();
-                }}
-                aria-label="Reject"
-              >
-                <RiCloseLine size={18} />
-              </button>
-              <button
-                type="button"
-                className={styles.approveButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleApprove();
-                }}
-                aria-label="Approve"
-              >
-                <CheckIcon style={{ width: 14, height: 10 }} />
-              </button>
-            </div>
+            <div className={styles.actions}></div>
           </div>
 
           {/* Expandable Details — always open for approval */}
@@ -164,6 +141,18 @@ export default function ToolsProgress({
                 </div>
               ) : null}
             </div>
+          </div>
+
+          {/* Approval action bar */}
+          <div className={styles.approvalBar}>
+            <button type="button" className={styles.approvalBarReject} onClick={handleReject}>
+              <RiCloseLine size={14} />
+              <span>Reject</span>
+            </button>
+            <button type="button" className={styles.approvalBarApprove} onClick={handleApprove}>
+              <CheckIcon style={{ width: 12, height: 9 }} />
+              <span>Run tool</span>
+            </button>
           </div>
         </div>
       </div>
