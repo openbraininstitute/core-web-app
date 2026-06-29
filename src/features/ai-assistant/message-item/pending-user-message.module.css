@@ -1,0 +1,38 @@
+.pendingFile {
+  position: relative;
+  display: inline-block;
+}
+
+.pendingFileOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.pendingFileSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pendingSpin 0.8s linear infinite;
+}
+
+.pendingPdfSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pendingSpin 0.8s linear infinite;
+}
+
+@keyframes pendingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
