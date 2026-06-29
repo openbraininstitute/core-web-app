@@ -6,6 +6,7 @@ export const ObiOneTaskTypeDict = {
   MorphologySkeletonization: 'morphology_skeletonization',
   IonChannelModelSimulationExecution: 'ion_channel_model_simulation_execution',
   EmSynapseMapping: 'em_synapse_mapping',
+  ExtracellularRecordingWeightsCalculation: 'extracellular_recording_weights_calculation',
 } as const;
 
 export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];

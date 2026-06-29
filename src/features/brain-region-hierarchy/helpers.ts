@@ -7,6 +7,7 @@ import {
   type IHierarchyWithSpecies,
   type IWorkspaceSpecies,
   SPECIES_DISPLAY_NAMES,
+  SPECIES_IMAGE_MAP,
   SpeciesSelectionMode,
 } from '@/features/brain-region-hierarchy/types';
 
@@ -231,6 +232,25 @@ export function injectHierarchyId(
  */
 export function getSpeciesDisplayName(scientificName: string): string {
   return SPECIES_DISPLAY_NAMES[scientificName] ?? scientificName;
+}
+
+export function orderHierarchiesBySpeciesDisplayNames<T extends IHierarchyWithSpecies>(
+  hierarchies: ReadonlyArray<T>
+): T[] {
+  const hierarchiesBySpeciesName = new Map(
+    hierarchies.map((hierarchy) => [hierarchy.species.name, hierarchy])
+  );
+
+  return Object.keys(SPECIES_DISPLAY_NAMES)
+    .map((speciesName) => hierarchiesBySpeciesName.get(speciesName))
+    .filter((hierarchy): hierarchy is T => hierarchy !== undefined);
+}
+
+export function hasSpeciesAtlasPreview(hierarchy: {
+  atlasId?: string;
+  species: Pick<IWorkspaceSpecies, 'taxonomyId'>;
+}): boolean {
+  return !!hierarchy.atlasId || !!SPECIES_IMAGE_MAP[hierarchy.species.taxonomyId];
 }
 
 /**

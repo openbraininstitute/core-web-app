@@ -1,10 +1,7 @@
-import type { E2EProject, E2EState } from './e2e-state';
-import type {
-  DeleteResult,
-  ProjectSummary,
-  VirtualLabManagerApi,
-  VirtualLabSummary,
-} from './virtual-lab-manager-api';
+import { parseE2EProjectTimestamp, STALE_E2E_PROJECT_AGE_MS } from './e2e-state';
+
+import type { E2EProject } from './e2e-state';
+import type { DeleteResult, ProjectSummary, VirtualLabManagerApi } from './virtual-lab-manager-api';
 
 export type CleanupLogger = {
   info(message: string): void;
@@ -51,7 +48,10 @@ async function deleteWithRetry<T extends DeleteResult>({
   throw lastError;
 }
 
-export async function deleteVirtualLabWorkspace({
+// Deletes the given projects from a virtual lab, leaving the lab itself intact.
+// The shared virtual lab is persistent across CI runs, so cleanup only ever
+// removes the per-run projects, never the lab.
+export async function deleteProjects({
   api,
   virtualLabId,
   projects,
@@ -83,68 +83,32 @@ export async function deleteVirtualLabWorkspace({
       );
     }
   }
-
-  try {
-    const result = await deleteWithRetry({
-      label: `delete virtual lab ${virtualLabId}`,
-      logger,
-      operation: () => api.deleteVirtualLab(virtualLabId),
-    });
-    if (!result.ok) {
-      logger.warn(
-        `failed to delete virtual lab ${virtualLabId} (${result.status}). ${result.body}`
-      );
-    } else {
-      logger.info(`deleted virtual lab ${virtualLabId}.`);
-    }
-  } catch (error) {
-    logger.warn(`error deleting virtual lab ${virtualLabId}: ${error}.`);
-  }
 }
 
-export async function deleteVirtualLabState({
+// Best-effort sweep of e2e projects abandoned by crashed or cancelled runs. Only
+// projects matching our name prefix whose embedded timestamp is older than
+// STALE_E2E_PROJECT_AGE_MS are removed, so live runs (and foreign projects) are
+// never touched. Keeps the shared lab from accumulating projects without bound
+// now that the lab is never recreated.
+export async function pruneStaleProjects({
   api,
-  state,
+  virtualLabId,
   logger,
+  now = Date.now(),
 }: {
   api: VirtualLabManagerApi;
-  state: E2EState;
+  virtualLabId: string;
   logger: CleanupLogger;
+  now?: number;
 }): Promise<void> {
-  await deleteVirtualLabWorkspace({
-    api,
-    virtualLabId: state.virtualLabId,
-    projects: state.projects,
-    logger,
+  const projects = await api.listProjects(virtualLabId);
+  const stale = projects.filter((project) => {
+    const createdAt = parseE2EProjectTimestamp(project.name);
+    return createdAt !== null && now - createdAt > STALE_E2E_PROJECT_AGE_MS;
   });
-}
 
-export async function deleteAllUserVirtualLabs({
-  api,
-  logger,
-}: {
-  api: VirtualLabManagerApi;
-  logger: CleanupLogger;
-}): Promise<void> {
-  const virtualLabs = await api.listVirtualLabs();
-  for (const lab of virtualLabs) {
-    let projects: ProjectSummary[] = [];
-    try {
-      projects = await api.listProjects(lab.id);
-    } catch (error) {
-      logger.warn(`error listing projects for virtual lab ${lab.id}: ${error}.`);
-    }
+  if (stale.length === 0) return;
 
-    logger.info(`deleting pre-existing virtual lab ${formatLab(lab)}.`);
-    await deleteVirtualLabWorkspace({
-      api,
-      virtualLabId: lab.id,
-      projects,
-      logger,
-    });
-  }
-}
-
-function formatLab(lab: VirtualLabSummary): string {
-  return lab.name === lab.id ? lab.id : `${lab.name} (${lab.id})`;
+  logger.info(`pruning ${stale.length} stale e2e project(s) from virtual lab ${virtualLabId}.`);
+  await deleteProjects({ api, virtualLabId, projects: stale, logger });
 }

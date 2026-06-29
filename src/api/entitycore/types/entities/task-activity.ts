@@ -38,6 +38,10 @@ export const TaskActivityType = {
   IonChannelSimulationExecution: 'ion_channel_simulation__execution',
   EmSynapseMappingConfigGeneration: 'em_synapse_mapping__config_generation',
   EmSynapseMappingExecution: 'em_synapse_mapping__execution',
+  ExtracellularRecordingWeightsCalculationConfigGeneration:
+    'extracellular_recording_weights_calculation__config_generation',
+  ExtracellularRecordingWeightsCalculationExecution:
+    'extracellular_recording_weights_calculation__execution',
 } as const;
 
 export type TTaskActivityType = (typeof TaskActivityType)[keyof typeof TaskActivityType];

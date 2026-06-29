@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 
+import type React from 'react';
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   IHierarchyWithSpecies,
@@ -66,6 +67,13 @@ function setRegistry(overrides: Record<string, unknown> = {}) {
     remoteAvailableHierarchies: available,
     ...overrides,
   };
+}
+
+function renderWithSpeciesMode(ui: React.ReactElement, mode = SpeciesSelectionMode.Focused) {
+  const store = createStore();
+  store.set(speciesSelectionModeAtom, mode);
+
+  return render(<Provider store={store}>{ui}</Provider>);
 }
 
 describe('RegionBanner (brain region view)', () => {
@@ -228,7 +236,7 @@ describe('PortalRegionBanner', () => {
   });
 
   it('renders the tree panel in a portal when opened', () => {
-    render(
+    renderWithSpeciesMode(
       <PortalRegionBanner initialOpen portalContainer={document.body}>
         <div data-testid="tree-panel">tree</div>
       </PortalRegionBanner>
@@ -262,7 +270,7 @@ describe('PortalRegionBanner', () => {
     const customContainer = document.createElement('div');
     document.body.appendChild(customContainer);
 
-    render(
+    renderWithSpeciesMode(
       <PortalRegionBanner initialOpen portalContainer={customContainer}>
         <div data-testid="tree-panel">tree</div>
       </PortalRegionBanner>
@@ -273,7 +281,7 @@ describe('PortalRegionBanner', () => {
   });
 
   it('closes the open tree panel when Escape is pressed', () => {
-    render(
+    renderWithSpeciesMode(
       <PortalRegionBanner initialOpen portalContainer={document.body}>
         <div data-testid="tree-panel">tree</div>
       </PortalRegionBanner>

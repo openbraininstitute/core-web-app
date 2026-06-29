@@ -3,10 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
@@ -27,15 +24,24 @@ import { InOutFiles } from './in-out-files';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type Props = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
+  /** obi-one + entitycore task types for this workflow (from its definition) */
+  taskTypeBindings: TWorkflowTaskTypeBindings;
 };
 
-export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Props) {
+export function SkeletonizationTab({
+  campaignId,
+  virtualLabId,
+  projectId,
+  taskTypeBindings,
+}: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
@@ -50,8 +56,8 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
     useTaskLaunchMutation({
       context,
-      obiOneTaskType: ObiOneTaskTypeDict.Skeletonization,
-      executionActivityType: TaskActivityType.SkeletonizationExecution,
+      obiOneTaskType: taskTypeBindings.obiOne,
+      executionActivityType: taskTypeBindings.execution,
       notificationKey: 'skeletonization-config-error',
       failureMessage: textMessages[ScanConfigActivity.Process].GenericFailed,
       logTopic: 'Skeletonization',
@@ -62,9 +68,9 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     useTaskRunner<TSkeletonizationTaskConfigMeta>({
       context,
       campaignId,
-      configGenerationActivityType: TaskActivityType.SkeletonizationConfigGeneration,
-      executionActivityType: TaskActivityType.SkeletonizationExecution,
-      taskConfigType: TaskConfigType.SkeletonizationConfig,
+      configGenerationActivityType: taskTypeBindings.configGeneration,
+      executionActivityType: taskTypeBindings.execution,
+      taskConfigType: taskTypeBindings.config,
       pauseExecutionPolling: runSkeletonizationPending,
       loadExecutions: false,
     });
@@ -159,7 +165,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
               selectionDisabled={runSkeletonizationPending}
               fallbackColor="#8c8c8c"
               context={context}
-              executionActivityType={TaskActivityType.SkeletonizationExecution}
+              executionActivityType={taskTypeBindings.execution}
               pauseStatusPolling={runSkeletonizationPending}
               executionByConfigId={executionByConfigId}
               onSelectConfig={onActiveConfigChange}
@@ -216,7 +222,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
         onClose={() => setShowCostModal(false)}
         onConfirm={onCostConfirm}
         items={costModalItems}
-        taskType={ObiOneTaskTypeDict.Skeletonization}
+        taskType={taskTypeBindings.obiOne}
         workflowLabel="skeletonizations"
         context={context}
       />

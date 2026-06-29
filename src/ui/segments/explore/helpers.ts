@@ -7,6 +7,7 @@ import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -22,6 +23,32 @@ import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
+
+export const ExploreDataTypeTabs = {
+  Experimental: 'experimental',
+  Models: 'models',
+  Simulations: 'simulations',
+} as const;
+
+export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
+
+export const DataSectionDataTypeTabsConfig: Array<{
+  key: TExploreDataTypeTabs;
+  title: string;
+}> = [
+  {
+    key: ExploreDataTypeTabs.Experimental,
+    title: 'Experimental',
+  },
+  {
+    key: ExploreDataTypeTabs.Models,
+    title: 'Model',
+  },
+  {
+    key: ExploreDataTypeTabs.Simulations,
+    title: 'Simulations',
+  },
+];
 
 export const BrowseExperimentalDataExtendedTypes = {
   CellMorphology,
@@ -41,6 +68,7 @@ export const ModelDataExtendedTypes = {
   Circuit,
   IonChannelModel,
   SynthesizedCellMorphology,
+  ExtracellularRecordingArray,
 } as const;
 
 export const SimulationDataExtendedTypes = {

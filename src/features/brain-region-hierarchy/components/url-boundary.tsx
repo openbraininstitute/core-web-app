@@ -33,7 +33,7 @@ type NextBrainRegionUrlStateInput = {
   speciesSelectionMode: TSpeciesSelectionMode;
   urlHierarchyId: string;
   urlBrainRegionId: string;
-  urlSpeciesMode: TSpeciesSelectionMode;
+  urlSpeciesMode: TSpeciesSelectionMode | null;
   selectedBrainRegionId?: string | null;
   selectedHierarchyId?: string | null;
   workspaceHierarchyId?: string | null;
@@ -110,7 +110,8 @@ function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
   const hasBrainParams =
     !!urlState.hierarchyId ||
     !!urlState.brainRegionId ||
-    urlState.speciesMode !== SpeciesSelectionMode.Focused;
+    urlState.speciesMode === SpeciesSelectionMode.Focused ||
+    urlState.speciesMode === SpeciesSelectionMode.All;
 
   useEffect(() => {
     if (mode !== BrainRegionUrlBoundaryMode.Strip || !hasBrainParams) return;
@@ -161,7 +162,11 @@ export function BrainRegionUrlBoundary({ mode, children }: Props) {
     let urlOverride: BrainRegionUrlOverride | null = null;
 
     if (mode === BrainRegionUrlBoundaryMode.Sync) {
-      if (urlState.speciesMode === SpeciesSelectionMode.All) {
+      if (
+        urlState.speciesMode === SpeciesSelectionMode.All &&
+        !urlState.hierarchyId &&
+        !urlState.brainRegionId
+      ) {
         urlOverride = { kind: 'all' };
       } else if (urlState.hierarchyId) {
         urlOverride = {
