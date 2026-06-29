@@ -11,8 +11,8 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
-import { CodePreview } from './code-preview';
 import LoadingDots from './loading-dots/loading-dots';
+import { ToolPayload, useViewMode } from './tool-payload';
 
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
@@ -38,6 +38,7 @@ export default function ToolsProgress({
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
+  const [viewMode] = useViewMode();
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -118,7 +119,17 @@ export default function ToolsProgress({
                 <span>Approval needed</span>
               </div>
             </div>
-            <div className={styles.actions}></div>
+            <div className={styles.actions}>
+              <Link
+                href={tool.docURL(virtualLabId, projectId)}
+                target="documentation"
+                aria-label="Tool information"
+                className={cn(styles.helpButton)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <HelpIconI className={styles.helpIcon} />
+              </Link>
+            </div>
           </div>
 
           {/* Expandable Details — always open for approval */}
@@ -136,8 +147,13 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <FormattedPayload value={part.input} codeBlockClass={styles.codeBlock} />
+                  <ToolPayload
+                    value={part.input}
+                    label="Arguments"
+                    mode={viewMode}
+                    showToggle
+                    isFirst
+                  />
                 </div>
               ) : null}
             </div>
@@ -213,6 +229,16 @@ export default function ToolsProgress({
               <div className={styles.expandButton}>
                 <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
               </div>
+
+              <Link
+                href={tool.docURL(virtualLabId, projectId)}
+                target="documentation"
+                aria-label="Tool information"
+                className={cn(styles.helpButton)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <HelpIconI className={styles.helpIcon} />
+              </Link>
             </div>
           </button>
 
@@ -228,8 +254,13 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <FormattedPayload value={part.input} codeBlockClass={styles.codeBlock} />
+                  <ToolPayload
+                    value={part.input}
+                    label="Arguments"
+                    mode={viewMode}
+                    showToggle
+                    isFirst
+                  />
                 </div>
               ) : null}
             </div>
@@ -265,6 +296,16 @@ export default function ToolsProgress({
               <div className={styles.expandButton}>
                 <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
               </div>
+
+              <Link
+                href={tool.docURL(virtualLabId, projectId)}
+                target="documentation"
+                aria-label="Tool information"
+                className={cn(styles.helpButton)}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <HelpIconI className={styles.helpIcon} />
+              </Link>
             </div>
           </button>
 
@@ -280,8 +321,13 @@ export default function ToolsProgress({
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <FormattedPayload value={part.input} codeBlockClass={styles.codeBlock} />
+                  <ToolPayload
+                    value={part.input}
+                    label="Arguments"
+                    mode={viewMode}
+                    showToggle
+                    isFirst
+                  />
                 </div>
               ) : null}
             </div>
@@ -374,15 +420,19 @@ export default function ToolsProgress({
             typeof part.input === 'object' &&
             Object.keys(part.input as Record<string, unknown>).length > 0 ? (
               <div className={styles.section}>
-                <div className={styles.sectionTitle}>Arguments</div>
-                <FormattedPayload value={part.input} codeBlockClass={styles.codeBlock} />
+                <ToolPayload
+                  value={part.input}
+                  label="Arguments"
+                  mode={viewMode}
+                  showToggle
+                  isFirst
+                />
               </div>
             ) : null}
 
             {part.state === 'output-available' && part.output != null ? (
               <div className={styles.section}>
-                <div className={styles.sectionTitle}>Result</div>
-                <FormattedPayload value={part.output} codeBlockClass={styles.codeBlock} />
+                <ToolPayload value={part.output} label="Result" mode={viewMode} />
               </div>
             ) : null}
 
@@ -422,93 +472,4 @@ function getToolsState(
     state: part.state,
     key,
   };
-}
-
-function formatInputOutputs(r: unknown): string {
-  try {
-    if (typeof r === 'string') {
-      // try parse stringified JSON first
-      return JSON.stringify(JSON.parse(r), null, 2);
-    }
-    return JSON.stringify(r, null, 2);
-  } catch {
-    // fallback to plain string
-    return String(r);
-  }
-}
-
-/** Keys whose values should render as syntax-highlighted code */
-const CODE_KEYS = new Set(['code', 'command', 'script', 'shell', 'query']);
-/** Keys that are output streams — render as code only if non-empty */
-const OUTPUT_KEYS = new Set(['stdout', 'stderr']);
-
-/** Guess language from key name */
-function guessLanguage(key: string): string {
-  const k = key.toLowerCase();
-  if (k === 'code') return 'python';
-  if (k === 'command' || k === 'shell' || k === 'script') return 'bash';
-  if (k === 'query') return 'sql';
-  return 'text';
-}
-
-/** Check if an input/output object contains code-like fields */
-function hasCodeFields(obj: unknown): boolean {
-  if (typeof obj !== 'object' || obj === null) return false;
-  const keys = Object.keys(obj as Record<string, unknown>);
-  return keys.some((k) => CODE_KEYS.has(k.toLowerCase()) || OUTPUT_KEYS.has(k.toLowerCase()));
-}
-
-/**
- * Renders tool input/output — if it has code-like fields (code, command, stdout, stderr),
- * renders them with syntax highlighting. Otherwise falls back to JSON.
- */
-function FormattedPayload({ value, codeBlockClass }: { value: unknown; codeBlockClass: string }) {
-  if (typeof value !== 'object' || value === null || !hasCodeFields(value)) {
-    return <pre className={codeBlockClass}>{formatInputOutputs(value)}</pre>;
-  }
-
-  const obj = value as Record<string, unknown>;
-  const entries = Object.entries(obj);
-
-  return (
-    <div>
-      {entries.map(([key, val]) => {
-        const k = key.toLowerCase();
-        const strVal = typeof val === 'string' ? val : '';
-
-        // Skip empty values entirely
-        if (typeof val === 'string' && val.trim() === '') return null;
-
-        // Code input fields — render with label + highlighted block
-        if (CODE_KEYS.has(k) && strVal) {
-          return (
-            <div key={key} style={{ marginBottom: '0.5rem' }}>
-              <div className={styles.fieldLabel}>{key}</div>
-              <CodePreview code={strVal} language={guessLanguage(key)} />
-            </div>
-          );
-        }
-
-        // Output streams — render as code block (plain text highlighting)
-        if (OUTPUT_KEYS.has(k) && strVal) {
-          return (
-            <div key={key} style={{ marginBottom: '0.5rem' }}>
-              <div className={styles.fieldLabel}>{key}</div>
-              <CodePreview code={strVal} language="text" />
-            </div>
-          );
-        }
-
-        // Simple scalar fields (status, etc.) — inline
-        return (
-          <div key={key} className={styles.fieldRow}>
-            <span className={styles.fieldLabel}>{key}</span>
-            <span className={styles.fieldValue}>
-              {typeof val === 'string' ? val : JSON.stringify(val)}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
 }

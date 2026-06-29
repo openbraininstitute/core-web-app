@@ -85,6 +85,8 @@
 
 .cardRunning .details {
   background-color: #f8faff;
+  --tp-accent: #2563eb;
+  --tp-border: rgba(147, 197, 253, 0.5);
 }
 
 .cardRunning .detailsOpen {
@@ -135,6 +137,8 @@
 
 .cardError .details {
   background-color: #fffbfb;
+  --tp-accent: #dc2626;
+  --tp-border: rgba(252, 165, 165, 0.5);
 }
 
 .cardError .detailsOpen {
@@ -386,6 +390,8 @@
 .details {
   overflow: hidden;
   background-color: color-mix(in srgb, var(--color-primary-6) 2%, var(--color-neutral-9));
+  --tp-accent: var(--color-primary-5);
+  --tp-border: color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   transition:
     max-height 300ms cubic-bezier(0.4, 0, 0.2, 1),
     padding 300ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -538,9 +544,20 @@
   color: #78350f;
 }
 
+.cardApproval .helpButton {
+  color: #92400e;
+}
+
+.cardApproval .helpButton:hover {
+  background-color: rgba(251, 191, 36, 0.15);
+  color: #78350f;
+}
+
 /* Override details section for approval state */
 .cardApproval .details {
   background-color: #fffef5;
+  --tp-accent: #b45309;
+  --tp-border: rgba(251, 191, 36, 0.4);
 }
 
 .cardApproval .detailsOpen {
@@ -588,8 +605,19 @@
   color: #7f1d1d;
 }
 
+.cardDenied .helpButton {
+  color: #991b1b;
+}
+
+.cardDenied .helpButton:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #7f1d1d;
+}
+
 .cardDenied .details {
   background-color: #fffbfb;
+  --tp-accent: #dc2626;
+  --tp-border: rgba(252, 165, 165, 0.5);
 }
 
 .cardDenied .detailsOpen {
@@ -659,28 +687,6 @@
   color: #4ae05a;
 }
 
-/* Field-level labels for code-aware rendering */
-.fieldRow {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-  font-size: 0.75rem;
-}
-
-.fieldLabel {
-  font-size: 0.625rem;
-  font-weight: 500;
-  color: var(--color-neutral-2, #888);
-  text-transform: capitalize;
-  margin-bottom: 0.2rem;
-}
-
-.fieldValue {
-  color: var(--color-neutral-1, #444);
-  font-size: 0.75rem;
-}
-
 /* Approval action bar — bottom of card */
 .approvalBar {
   display: flex;
@@ -711,7 +717,7 @@
 }
 
 .approvalBarReject:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(239, 68, 68, 0.15);
   border-color: #ef4444;
 }
 
