@@ -59,10 +59,10 @@ jobs:
           path: test-artifacts/unit-coverage-summary.json
           if-no-files-found: warn
 
-  # provisions exactly one virtual lab/project for the whole E2E workflow
-  # matrix jobs authenticate separately but reuse this same provisioned state
-  # TODO: we may either use different users per os/browser
-  # or use the same user but each os/browser uses separate project
+  # reuses the single shared virtual lab (the test user may own only one) and
+  # provisions one isolated project for this whole E2E workflow run. matrix jobs
+  # authenticate separately but reuse this same provisioned project, so PRs
+  # running concurrently against the same user never clobber each other's lab.
   e2e-provision:
     name: E2E provision
     runs-on: ubuntu-latest
@@ -77,8 +77,9 @@ jobs:
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
       E2E_TEST_USERNAME: ${{ secrets.E2E_TEST_USERNAME }}
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-      # keep the provisioned lab alive after auth-setup. the final e2e-cleanup
-      # job is responsible for deleting it after all browser matrix legs finish
+      # keep the provisioned project alive after auth-setup. the final e2e-cleanup
+      # job deletes this run's project after all browser matrix legs finish (the
+      # shared virtual lab itself is persistent and is never deleted)
       E2E_DISABLE_AUTH_SETUP_TEARDOWN: "true"
       # store provision output in test-artifacts so we can upload a sanitized
       # state artifact for the parallel matrix jobs
@@ -109,7 +110,7 @@ jobs:
       - name: Install Chrome for auth setup
         run: pnpm exec playwright install --with-deps chrome
 
-      - name: Authenticate and provision virtual lab
+      - name: Authenticate and provision project in shared virtual lab
         run: pnpm exec playwright test --project=auth-setup --reporter=list
 
       - name: Prepare provisioned E2E state artifact
@@ -137,7 +138,7 @@ jobs:
 
   # runs the public/private E2E suites across the browser/OS matrix. each matrix
   # leg logs in with the same test user, then reuses the single provisioned
-  # virtual lab/project from e2e-provision
+  # project (inside the shared virtual lab) from e2e-provision
   e2e-tests:
     name: E2E tests (${{ matrix.os }} / ${{ matrix.browser-label }})
     needs:
@@ -187,7 +188,7 @@ jobs:
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
       # the matrix still runs auth-setup as a project dependency so each browser
       # gets a fresh storageState file. auth-only mode stops setup from creating
-      # another virtual lab, because the user may own only one
+      # another project, reusing the one provisioned by e2e-provision instead
       E2E_AUTH_ONLY: "true"
       E2E_DISABLE_AUTH_SETUP_TEARDOWN: "true"
       E2E_STATE_PATH: test-artifacts/e2e-state/state.json
@@ -328,9 +329,9 @@ jobs:
             playwright-report/
           if-no-files-found: warn
 
-  # always attempts to delete the single E2E virtual lab after the browser matrix
-  # finishes. it logs in again for a fresh token instead of relying on an
-  # uploaded auth state
+  # always attempts to delete this run's E2E project after the browser matrix
+  # finishes (the shared virtual lab is persistent and is left in place). it logs
+  # in again for a fresh token instead of relying on an uploaded auth state
   e2e-cleanup:
     name: E2E cleanup
     needs:
@@ -347,9 +348,9 @@ jobs:
       KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
       E2E_TEST_USERNAME: ${{ secrets.E2E_TEST_USERNAME }}
       E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-      # cleanup-only mode authenticates for a fresh token, deletes the
-      # provisioned virtual lab from the downloaded state, and exits before
-      # creating a replacement lab
+      # cleanup-only mode authenticates for a fresh token, deletes this run's
+      # provisioned project from the downloaded state, and exits without touching
+      # the shared virtual lab
       E2E_CLEANUP_ONLY: "true"
       E2E_DISABLE_AUTH_SETUP_TEARDOWN: "true"
       E2E_AUTH_STATE_PATH: test-artifacts/e2e-cleanup-auth/user.json
@@ -386,7 +387,7 @@ jobs:
       - name: Install Chrome for cleanup
         run: pnpm exec playwright install --with-deps chrome
 
-      - name: Delete E2E virtual lab
+      - name: Delete E2E project
         run: pnpm exec playwright test --project=auth-setup --reporter=list
 
   # aggregates unit + e2e results into a single report, posts it to the run
