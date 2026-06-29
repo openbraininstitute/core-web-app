@@ -7,6 +7,7 @@ import { SessionProvider } from 'next-auth/react';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { ProgressBarProvider } from '@/app/app/progress-provider';
+import { ActivateEnrolmentsOnLoad } from '@/components/activate-enrolments';
 import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { type FeatureFlags, FlagsProvider } from '@/features/feature-flags';
@@ -36,6 +37,7 @@ export function Providers({ children, session, flags }: ProvidersProps) {
                   <JotaiDevTools />
                   <ThemeProvider>
                     <SessionProvider session={session} refetchInterval={2 * 60}>
+                      <ActivateEnrolmentsOnLoad />
                       <SessionStateProvider>
                         <FlagsProvider flags={flags}>
                           <ProgressBarProvider>{children}</ProgressBarProvider>
