@@ -69,7 +69,7 @@ export interface AssignSeatsResponse {
 
 export interface DropResult {
   seat_id: string;
-  drop_successful: boolean;
+  is_dropped: boolean;
   error?: string;
 }
 

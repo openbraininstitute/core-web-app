@@ -27,7 +27,7 @@ export function DropSeatButton({ course, courseId, enrolment, onSuccess }: DropS
       }
       const response = await dropSeats(courseId, [enrolment.seat.id]);
       const result = response.results[0];
-      if (!result.drop_successful) {
+      if (!result.is_dropped) {
         throw new Error('Failed to drop seat. Please try again.');
       }
       return response;
