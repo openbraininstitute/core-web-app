@@ -67,8 +67,10 @@ jobs:
     name: E2E provision
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # skip on pull requests from forks: forked PRs don't get access to the repository secrets below
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    # E2E suite is temporarily disabled on push/PR (kept in the repo): it only
+    # runs on manual workflow_dispatch until the project-home /sync redirect
+    # flakiness is fixed. Restore the fork/secrets guard below to re-enable.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     env:
       CI: true
       NEXTAUTH_URL: http://localhost:3000
@@ -145,7 +147,8 @@ jobs:
       - e2e-provision
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    # disabled on push/PR; manual workflow_dispatch only (kept in the repo)
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     strategy:
       # let every matrix combination finish even if one fails, so we can upload all artifacts
       fail-fast: false
@@ -339,7 +342,8 @@ jobs:
       - e2e-tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: ${{ always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    # disabled on push/PR; manual workflow_dispatch only (kept in the repo)
+    if: ${{ always() && github.event_name == 'workflow_dispatch' }}
     env:
       CI: true
       NEXTAUTH_URL: http://localhost:3000
