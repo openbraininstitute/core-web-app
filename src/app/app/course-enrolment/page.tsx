@@ -85,7 +85,17 @@ export default function CourseEnrolmentPage() {
         const courseHasStarted = courseStartDate && now >= courseStartDate;
 
         if (courseHasStarted && data.project_id) {
-          // Course already started - redirect to project
+          // Course already started - activate then redirect to project
+          try {
+            await authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/activate-enrolments`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+          } catch (error) {
+            console.error('Failed to activate enrolments', error);
+          }
           window.location.href = `/app/virtual-lab/${data.virtual_lab_id}/${data.project_id}`;
         } else {
           // Course hasn't started yet - show success message
