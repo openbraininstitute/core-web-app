@@ -20,6 +20,10 @@ interface DropSeatButtonProps {
 export function DropSeatButton({ course, courseId, enrolment, onSuccess }: DropSeatButtonProps) {
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const hasNoSeat = !enrolment.seat?.id;
+  const isAlreadyDropped = enrolment.is_dropped;
+  const isDisabled = hasNoSeat || isAlreadyDropped;
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (!enrolment.seat?.id) {
@@ -44,8 +48,8 @@ export function DropSeatButton({ course, courseId, enrolment, onSuccess }: DropS
         variant="destructive"
         size="sm"
         onClick={() => setShowConfirm(true)}
-        disabled={mutation.isPending || enrolment.is_dropped}
-        className={mutation.isPending || enrolment.is_dropped ? 'bg-gray-300' : ''}
+        disabled={mutation.isPending || isDisabled}
+        className={mutation.isPending || isDisabled ? 'bg-gray-300' : ''}
       >
         {mutation.isPending ? 'Dropping...' : 'Drop'}
       </Button>

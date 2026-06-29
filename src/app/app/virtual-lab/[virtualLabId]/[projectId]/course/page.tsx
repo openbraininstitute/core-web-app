@@ -13,10 +13,15 @@ import { AssignSeatsModal } from '@/ui/segments/project/course-assign-seats-moda
 import { DropSeatButton } from '@/ui/segments/project/drop-seat-button';
 import { SeatRecoverability } from '@/ui/segments/project/seat-recoverability';
 
+type SortField = 'email' | 'student_id' | 'status' | 'activated' | 'dropped' | 'created' | 'seat';
+type SortOrder = 'asc' | 'desc';
+
 export default function CoursePage() {
   const params = useParams();
   const virtualLabId = params.virtualLabId as string;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('email');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const queryClient = useQueryClient();
 
   const handleAssignSuccess = () => {
@@ -27,6 +32,50 @@ export default function CoursePage() {
   const handleDropSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
     queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const SortableHeader = ({ field, label }: { field: SortField; label: string }) => {
+    const isActive = sortField === field;
+
+    return (
+      <th
+        className="cursor-pointer select-none px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-100"
+        onClick={() => handleSort(field)}
+      >
+        <div className="inline-flex items-center gap-2">
+          <span className={isActive ? 'text-gray-900' : 'text-gray-700'}>{label}</span>
+          <svg
+            className={`size-4 transition-transform ${isActive ? (sortOrder === 'asc' ? 'text-primary-9' : 'rotate-180 text-primary-9') : 'text-gray-400'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <title>
+              {isActive
+                ? sortOrder === 'asc'
+                  ? 'Sort ascending'
+                  : 'Sort descending'
+                : 'Sortable column'}
+            </title>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16V4m0 0L3 8m4-4l4 4"
+            />
+          </svg>
+        </div>
+      </th>
+    );
   };
 
   // Fetch virtual lab to get course ID
@@ -107,8 +156,52 @@ export default function CoursePage() {
   }
 
   const seats = seatsQuery.data?.data || [];
-  const enrolments = enrolmentsQuery.data?.enrolments || [];
+  let enrolments = enrolmentsQuery.data?.enrolments || [];
   const course = labQuery.data?.course;
+
+  // Sort enrolments
+  enrolments = [...enrolments].sort((a, b) => {
+    let aVal: string | number | Date;
+    let bVal: string | number | Date;
+
+    switch (sortField) {
+      case 'email':
+        aVal = a.contact_email;
+        bVal = b.contact_email;
+        break;
+      case 'student_id':
+        aVal = a.student_id;
+        bVal = b.student_id;
+        break;
+      case 'status':
+        aVal = a.claimed_by ? 'claimed' : 'unclaimed';
+        bVal = b.claimed_by ? 'claimed' : 'unclaimed';
+        break;
+      case 'activated':
+        aVal = a.activated_at ? new Date(a.activated_at) : new Date(0);
+        bVal = b.activated_at ? new Date(b.activated_at) : new Date(0);
+        break;
+      case 'dropped':
+        aVal = a.is_dropped ? 1 : 0;
+        bVal = b.is_dropped ? 1 : 0;
+        break;
+      case 'created':
+        aVal = new Date(a.created_at);
+        bVal = new Date(b.created_at);
+        break;
+      case 'seat':
+        aVal = a.seat?.id ? 1 : 0;
+        bVal = b.seat?.id ? 1 : 0;
+        break;
+      default:
+        aVal = '';
+        bVal = '';
+    }
+
+    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   return (
     <div className="p-6">
@@ -233,24 +326,13 @@ export default function CoursePage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Student email
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Student ID
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Activated
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Dropped
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Created
-                  </th>
+                  <SortableHeader field="email" label="Student email" />
+                  <SortableHeader field="student_id" label="Student ID" />
+                  <SortableHeader field="status" label="Status" />
+                  <SortableHeader field="activated" label="Activated" />
+                  <SortableHeader field="dropped" label="Dropped" />
+                  <SortableHeader field="created" label="Created" />
+                  <SortableHeader field="seat" label="Occupies seat" />
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Seat recoverable (reason)
                   </th>
@@ -293,14 +375,25 @@ export default function CoursePage() {
                       {new Date(enrolment.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {course && <SeatRecoverability enrolment={enrolment} course={course} />}
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          enrolment.seat?.id
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {enrolment.seat?.id ? 'Yes' : 'No'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {enrolment.seat && course && (
+                      {course && <SeatRecoverability course={course} enrolment={enrolment} />}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {course && (
                         <DropSeatButton
-                          enrolment={enrolment}
-                          courseId={courseId}
                           course={course}
+                          courseId={courseId}
+                          enrolment={enrolment}
                           onSuccess={handleDropSuccess}
                         />
                       )}
