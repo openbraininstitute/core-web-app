@@ -194,7 +194,14 @@ export function NotebookActionMenu({
               )
             }
           >
-            {runningTarget === target.key ? 'Starting...' : target.label}
+            <div className="flex flex-col items-start">
+              {target.hideInProduction && (
+                <small className="text-gray-500 text-xs font-light mb-0 leading-2.5">
+                  Hidden in production
+                </small>
+              )}
+              {runningTarget === target.key ? 'Starting...' : target.label}
+            </div>
           </Action>
         ))
       ) : (

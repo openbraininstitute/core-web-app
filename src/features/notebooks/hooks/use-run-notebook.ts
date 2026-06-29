@@ -9,6 +9,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
+import { getAsset } from '@/api/entitycore/selectors/assets';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
@@ -30,6 +32,7 @@ export type NotebookRunTarget = {
   cloud?: string;
   /** brand/run icon — AWS uses Amazon, Azure uses Microsoft */
   Icon: RemixiconComponentType;
+  hideInProduction?: boolean;
 };
 
 const DEV_DEPLOYMENTS = ['local', 'preview', 'development'];
@@ -38,10 +41,23 @@ const DEFAULT_RUN_TARGET: NotebookRunTarget = {
   key: 'default',
   label: 'Run notebook',
   Icon: RiPlayFill,
+  hideInProduction: false,
 };
 const DEV_RUN_TARGETS: NotebookRunTarget[] = [
-  { key: 'aws-dev', label: 'Run on AWS (dev)', cloud: 'aws', Icon: RiAmazonLine },
-  { key: 'azure-dev', label: 'Run on Azure (dev)', cloud: 'azure', Icon: RiMicrosoftLine },
+  {
+    key: 'aws-dev',
+    label: 'Run on AWS (dev)',
+    cloud: 'aws',
+    Icon: RiAmazonLine,
+    hideInProduction: true,
+  },
+  {
+    key: 'azure-dev',
+    label: 'Run on Azure (dev)',
+    cloud: 'azure',
+    Icon: RiMicrosoftLine,
+    hideInProduction: true,
+  },
 ];
 
 /**
@@ -85,7 +101,11 @@ export function useRunNotebook({
 
   async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET) {
     if (runningTarget) return;
-    const asset = assets.find((a) => a.label === 'jupyter_notebook');
+    const asset = getAsset({
+      assets,
+      label: AssetLabel.jupyter_notebook,
+    }).getOneOrNull();
+
     if (!asset || !virtualLabData) return;
 
     const cloud = target.cloud ?? virtualLabData.compute_cell;

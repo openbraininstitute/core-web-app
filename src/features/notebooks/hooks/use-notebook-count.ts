@@ -49,7 +49,7 @@ function useActiveTableTotal({
 }
 
 /**
- * Resolves the sidebar count for a notebook type as `{ filtered } of { total }`:
+ * resolves the sidebar count for a notebook type as `{ filtered } of { total }`:
  * - `total`: unfiltered count for the type within the current scope.
  * - `filtered`: the active table's live count (reflects search); falls back to `total` when this
  *   type isn't the active listing.
@@ -78,7 +78,7 @@ export function useNotebookCount({
       return (response as EntityCoreResponse<unknown> | undefined)?.pagination?.total_items;
     },
     enabled: Boolean(entity),
-    staleTime: 60_000,
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 
   const liveCount = useActiveTableTotal({ extendedType, scope, enabled: isActive });

@@ -30,7 +30,7 @@ export function useNotebookContent({
   const query = useQuery({
     queryKey: ['notebook-content', entityType, entityId, asset?.id],
     enabled: Boolean(asset),
-    staleTime: 60_000, //
+    staleTime: 60 * 60 * 1000, // 1 hour
     queryFn: async (): Promise<Ipynb> => {
       if (!asset) throw new Error('Notebook has no jupyter_notebook asset');
       const response = await downloadAsset({

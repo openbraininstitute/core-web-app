@@ -23,7 +23,6 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 
-// Same circular shadowed icon button + tooltip as the Data mini-detail actions (`DataActions`).
 function MiniActionIcon({
   label,
   theme,
