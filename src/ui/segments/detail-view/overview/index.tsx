@@ -13,6 +13,8 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { ViewVariant } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -421,8 +423,17 @@ export default async function Overview({
     ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
   ] as const;
 
+  // Only treat a circuit as having a visualization when the image asset actually exists,
+  // so a missing image skips the block entirely (no red error box, no leftover margin).
+  const circuitVisualizationAsset = circuitTypes.includes(extendedType)
+    ? getAssetElement({
+        assets: (entity as ICircuit).assets,
+        filter: (i) => i.label === AssetLabel.circuit_visualization,
+      })
+    : undefined;
+
   const hasVisualization =
-    circuitTypes.includes(extendedType) ||
+    (circuitTypes.includes(extendedType) && Boolean(circuitVisualizationAsset)) ||
     includes(morphologyTypes, extendedType) ||
     extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ||
     extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ||

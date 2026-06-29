@@ -20,6 +20,9 @@ export function Visualization({ circuit }: Props) {
     },
   });
 
+  // Only render the circuit image when its asset exists; otherwise show nothing.
+  if (!visAsset) return null;
+
   return (
     <div
       id={`visualization-${kebabCase(circuit.type)}-${circuit.id}`}
