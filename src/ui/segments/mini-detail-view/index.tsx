@@ -12,6 +12,8 @@ import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import { NotebookActions } from '@/features/notebooks/components/mini-detail-actions';
+import { NotebookCellsPreview } from '@/features/notebooks/renderer/notebook-viewer';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import {
@@ -34,6 +36,7 @@ import type {
   ISingleNeuronSynaptome,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -239,11 +242,28 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
         );
       }
     )
+    .with(
+      {
+        type: P.union(
+          ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+          ExtendedEntitiesTypeDict.AnalysisNotebookResult
+        ),
+      },
+      () => (
+        <NotebookCellsPreview
+          key={record.id}
+          record={record as unknown as IAnalysisNotebookTemplate}
+        />
+      )
+    )
     .otherwise(() => null);
 
   const actions = match({ section })
     .with({ section: WorkspaceSection.Data }, () => (
       <DataActions record={record} dataType={dataType} theme={theme} />
+    ))
+    .with({ section: WorkspaceSection.Notebooks }, () => (
+      <NotebookActions record={record} dataType={dataType} theme={theme} />
     ))
     .with(
       {

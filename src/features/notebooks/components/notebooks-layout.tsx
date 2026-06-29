@@ -1,47 +1,53 @@
 'use client';
+
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'motion/react';
 import Image from 'next/image';
-import NextLink from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
+import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import { NotebookLeftMenu } from '@/features/notebooks/components/notebook-left-menu';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useScope } from '@/ui/hooks/use-scope';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { ContributionModal } from '@/ui/segments/contribute/modal';
+import {
+  makeSelectEntityClickEvent,
+  useMiniDetailView,
+  useSelectEntityClickEvent,
+} from '@/ui/segments/mini-detail-view/event';
+import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
-import { useWorkspace } from '../hooks/use-workspace';
-
 type Props = {
   children: ReactNode;
-  active: 'public' | 'private';
 };
 
-export function NotebooksLayout({ children, active }: Props) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export function NotebooksLayout({ children }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
-
-  useEffect(() => {
-    if (searchParams.get('upload') === 'true') {
-      router.replace('private');
-      makeSelectContributionEntityClickEvent({
-        display: true,
-        entityType: ExtendedEntitiesTypeDict.Notebook,
-        sessionId: crypto.randomUUID(),
-      });
-    }
-  }, [searchParams, router]);
+  const { scope, changeScope } = useScope({ defaultScope: WorkspaceScope.Public });
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
   const breakpoint = useDefaultBreakpoint();
+  const { mdv, setMdv } = useMiniDetailView();
+
+  useSelectEntityClickEvent((ev) => {
+    setMdv(ev.detail.display);
+  });
+
+  const onScopeChange = (value: string) => {
+    makeSelectEntityClickEvent({ display: false, data: null });
+    setMdv(false);
+    changeScope(value as TWorkspaceScope);
+  };
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -50,20 +56,16 @@ export function NotebooksLayout({ children, active }: Props) {
   });
 
   const handleUploadData = () => {
-    if (active === 'public') {
-      router.push('private?upload=true');
-    } else {
-      makeSelectContributionEntityClickEvent({
-        display: true,
-        entityType: ExtendedEntitiesTypeDict.Notebook,
-        sessionId: crypto.randomUUID(),
-      });
-    }
+    makeSelectContributionEntityClickEvent({
+      display: true,
+      entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+      sessionId: crypto.randomUUID(),
+    });
   };
 
   async function handleRunNotebook() {
     setLoading(true);
-    if (virtualLabData == null || virtualLabData == null) {
+    if (virtualLabData == null) {
       setLoading(false);
       throw new Error(`Could not fetch virtual lab data`);
     }
@@ -95,28 +97,14 @@ export function NotebooksLayout({ children, active }: Props) {
   }
 
   return (
-    <div>
-      <div className="mb-5 ml-5 flex items-center justify-between">
-        <div className="flex">
-          <NextLink
-            href="public"
-            className={cn(
-              'flex h-[40px] min-w-[150px] items-center justify-center rounded-l-full px-4 py-2',
-              active === 'public' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
-            )}
-          >
-            Public
-          </NextLink>
-
-          <NextLink
-            href="private"
-            className={cn(
-              'flex h-[40px] min-w-[150px] items-center justify-center rounded-r-full px-4 py-2',
-              active === 'private' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
-            )}
-          >
-            Project
-          </NextLink>
+    <div
+      id="notebooks-layout"
+      data-testid="notebooks-layout"
+      className="bg-background grid h-full w-full grid-cols-[22rem_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden [grid-template-areas:'header_header''main_main'] pr-1"
+    >
+      <div className="flex w-full items-center justify-between gap-4 pl-3 [grid-area:header]">
+        <div className="flex min-w-0 max-w-1/2 items-center gap-2">
+          <TabsSelector activeTab={scope} onValueChange={onScopeChange} />
         </div>
 
         <div className="flex items-center gap-4">
@@ -155,13 +143,32 @@ export function NotebooksLayout({ children, active }: Props) {
         </div>
       </div>
 
-      <div
-        id="notebooks-layout"
+      <motion.div
+        id="notebooks-inner-layout"
         data-testid="notebooks-layout"
-        className="bg-background border-neutral-2 ml-5 h-[calc(100vh-11rem)] rounded-2xl border p-5"
+        className="bg-background border-neutral-2 mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]"
+        initial={{
+          gridTemplateColumns: '22rem 1fr',
+          gridTemplateAreas: "'aside body'",
+        }}
+        animate={{
+          gridTemplateColumns: mdv ? '3fr 2fr' : '22rem 1fr',
+          gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",
+        }}
+        transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }}
+        style={{ willChange: 'grid-template-columns, grid-template-areas' }}
       >
+        <aside
+          className={cn(
+            'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full overflow-y-auto px-1 [grid-area:aside]',
+            { hidden: mdv }
+          )}
+        >
+          <NotebookLeftMenu />
+        </aside>
+
         {children}
-      </div>
+      </motion.div>
 
       <ContributionModal />
     </div>

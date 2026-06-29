@@ -509,7 +509,7 @@ export function BrowseEntityScope({
             classNames?.miniView
           )}
         >
-          <MiniDetailView {...miniViewProps} dataType={dataType} />
+          <MiniDetailView section={section} {...miniViewProps} dataType={dataType} />
         </div>
       )}
       <DownloadPanel />
