@@ -65,7 +65,8 @@ export default function Overview({ circuit, variant = ViewVariant.Light }: Props
                 data-testid={`${key}-overview`}
                 className={cn(
                   'flex w-full flex-col items-center gap-2',
-                  variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
+                  variant === ViewVariant.Default && detailViewInsetPanelClass(variant),
+                  items.length > 0 && 'rounded-lg bg-white'
                 )}
               >
                 {items.length === 0 ? (
