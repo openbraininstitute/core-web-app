@@ -168,6 +168,11 @@ export class Painter {
       return;
     }
 
+    // Snapshot the context generation so we can detect a teardown/remount
+    // (start() deletes the context and bumps contextVersion) that happens while a
+    // mesh load is in flight. Mirrors setPointCloud's contextVersion guard.
+    const contextVersion = this.contextVersion;
+
     this.loadingMesh = true;
     this.isAddingRegions = true;
     this.nextRegionsToAdd = null;
@@ -195,11 +200,24 @@ export class Painter {
           regionId: region.id,
           queryClient: this.queryClient,
         });
-        const meshBounds = await this.addMesh(data, region);
+        // Context was torn down / replaced while fetching. Abort silently and do
+        // NOT reset isAddingRegions/loadingMesh — a newer start()/setRegions owns
+        // that state now (cf. setPointCloud's guarded finally).
+        if (contextVersion !== this.contextVersion) return;
+
+        const meshBounds = await this.addMesh(data, region, contextVersion);
+        // addMesh swallows its own errors and resolves null, so re-check here
+        // before falling through to the cleanup tail.
+        if (contextVersion !== this.contextVersion) return;
+
         if (shouldAutoFitCamera && meshBounds) {
           mergedBounds = this.mergeBounds(mergedBounds, meshBounds);
         }
       } catch (ex) {
+        // A stale request must never surface a popup on whatever tab the user has
+        // navigated to. Only genuine failures on the current context dispatch.
+        if (contextVersion !== this.contextVersion) return;
+
         logError(`Unable to load mesh for region "${region.name}":`, ex);
         this.eventError.dispatch(
           <>
@@ -322,11 +340,16 @@ export class Painter {
     context.paint();
   }
 
-  private async addMesh(data: ArrayBuffer | null, region: VisibleRegion) {
+  private async addMesh(data: ArrayBuffer | null, region: VisibleRegion, contextVersion: number) {
     const { context, group, regionPainters } = this;
     if (!context || !group || !data || regionPainters.has(region.id)) return null;
     try {
       const asset = await TgdDataGlb.parse(data);
+      // start() ran during parse(): the captured `context` is now a deleted
+      // TgdContext. Bail before touching it so we never throw
+      // "[TgdContext] This context has been deleted:" (the popup's real cause).
+      if (contextVersion !== this.contextVersion) return null;
+
       const geometry = new TgdGeometryGltf({ data: asset });
       const meshBounds = this.extractBoundsFromGltf(asset);
       const painterXRay = new TgdPainterXRay(context, {
@@ -340,6 +363,15 @@ export class Painter {
       context.paint();
       return meshBounds;
     } catch (ex) {
+      // Defensive backup mirroring setPointCloud: if a stale/deleted context still
+      // produced an error, only log it — never show the user-facing popup.
+      if (
+        contextVersion !== this.contextVersion ||
+        (ex instanceof Error && ex.message.includes('[TgdContext] This context has been deleted:'))
+      ) {
+        logError(`Unable to load mesh for region ${region.name} (stale context):`, ex);
+        return null;
+      }
       logError(`Unable to load mesh for region ${region.name}!`, ex);
       this.eventError.dispatch(`Unable to load mesh for region "${region.name}"!`);
       return null;
