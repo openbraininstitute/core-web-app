@@ -31,6 +31,7 @@ export const EntityTypeDict = {
   CircuitExtractionConfig: 'circuit_extraction_config',
   EmSynapseMappingCampaign: 'em_synapse_mapping_campaign',
   EmSynapseMappingConfig: 'em_synapse_mapping_config',
+  SimulatableExtracellularRecordingArray: 'simulatable_extracellular_recording_array',
   TaskConfig: 'task_config',
 } as const;
 

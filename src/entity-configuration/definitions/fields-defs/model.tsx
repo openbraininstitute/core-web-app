@@ -1,9 +1,10 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import { find, isNil, map, omit } from 'es-toolkit/compat';
+import { find, isNil, map, omit, pick } from 'es-toolkit/compat';
 
 import { hasAssets } from '@/api/entitycore/guards';
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { ElectrodeTypeDict } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import {
@@ -33,6 +34,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 
@@ -335,6 +337,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
               },
               value: true,
             },
+            // enable scale filtering in the extracellular recording array build circuit browse
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.Circuit,
+                section: [WorkspaceSection.ScanConfigBuildWorkflow],
+              },
+              value: true,
+            },
           ],
         },
         constraint: {
@@ -342,18 +352,24 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             {
               when: {
                 dataType: ExtendedEntitiesTypeDict.Circuit,
-                section: [WorkspaceSection.Data],
+                section: [WorkspaceSection.Data, WorkspaceSection.ScanConfigBuildWorkflow],
               },
               value: 'scale__in',
             },
           ],
         },
+        // in the build ExtracellularRecordingArrayCampaign circuit browse the workflow caps the scales (single → microcircuit),
+        // so the dropdown offers exactly those; everywhere else keeps the existing options (Single omitted)
         options: {
-          kind: FilterOptionsSourceKind.Static,
-          items: map(omit(CircuitScale, ['Single']), (item) => ({
-            label: item.label,
-            value: item.key,
-          })),
+          kind: FilterOptionsSourceKind.Resolver,
+          resolve: ({ context }) => {
+            const scales =
+              context.dataType === ExtendedEntitiesTypeDict.Circuit &&
+              context.section === WorkspaceSection.ScanConfigBuildWorkflow
+                ? pick(CircuitScale, ['Single', 'PairNeuron', 'SmallMicrocircuit', 'Microcircuit'])
+                : omit(CircuitScale, ['Single']);
+            return map(scales, (item) => ({ label: item.label, value: item.key }));
+          },
         },
       },
     },
@@ -521,5 +537,86 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         return `${r[EntityCoreFields.TemperatureCelsius]} °C`;
       return EmptyValue;
     },
+  },
+  [EntityCoreFields.ElectrodeType]: {
+    className: 'text-left',
+    title: 'Electrode type',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    isSortable: true,
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: { dataType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray },
+              value: true,
+            },
+          ],
+        },
+      },
+      filter: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+                section: [WorkspaceSection.Data],
+              },
+              value: true,
+            },
+          ],
+        },
+        constraint: {
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+                section: [WorkspaceSection.Data],
+              },
+              value: 'electrode_type',
+            },
+          ],
+        },
+        options: {
+          kind: FilterOptionsSourceKind.Static,
+          items: map(ElectrodeTypeDict, (item) => ({
+            label: item.label,
+            value: item.key,
+          })),
+        },
+      },
+    },
+    render: (r) =>
+      renderEmptyOrValue(
+        find(ElectrodeTypeDict, {
+          key: (r as ISimulatableExtracellularRecordingArray).electrode_type,
+        })?.label
+      ),
+    vocabulary: {
+      plural: 'Electrode types',
+      singular: 'Electrode type',
+    },
+    style: { align: 'left' },
+  },
+  [EntityCoreFields.RecordingArrayCircuit]: {
+    className: 'text-left',
+    title: 'Circuit',
+    filter: null,
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: { dataType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray },
+              value: true,
+            },
+          ],
+        },
+      },
+    },
+    render: (r) => renderEmptyOrValue((r as ISimulatableExtracellularRecordingArray).circuit_id),
   },
 };

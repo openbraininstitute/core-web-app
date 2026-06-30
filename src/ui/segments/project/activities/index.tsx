@@ -12,7 +12,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { Header } from '@/ui/segments/project/activities/elements/header';
-import { Scales, StatusMap } from '@/ui/segments/project/activities/elements/helpers';
+import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityValues } from '@/ui/segments/workflows/config';
 import { renderDateAndHour } from '@/util/date';
@@ -42,18 +42,30 @@ export function ProjectActivities({
   const projectId = targetProjectId || context.projectId;
 
   const [page, setPage] = useState(1);
+
+  // Category -> Type selection, mirroring the workflows browse view:
+  // `activity` is the Category (Build / Simulate / Extract / Process data) and
+  // `entityType` is the Type (the target entity the activity produces).
+  const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build as TActivityValue);
   const [entityType, setEntityType] = useState<TExtendedEntitiesTypeDict>(
     ExtendedEntitiesTypeDict.Memodel
   );
 
-  const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build as TActivityValue);
-  const entity = getEntityByExtendedType({
-    type: get(Scales, [entityType, activity], null),
-  });
+  const entity = getEntityByExtendedType({ type: entityType });
 
   if (!entity?.extendedType) {
     throw new Error(`No entity found for type: ${entityType}`);
   }
+
+  const onActivityChange = (next: TActivityValue | null) => {
+    if (next) setActivity(next);
+    setPage(1);
+  };
+
+  const onEntityTypeChange = (next: TExtendedEntitiesTypeDict | null) => {
+    if (next) setEntityType(next);
+    setPage(1);
+  };
 
   const tableSlotRef = useRef<HTMLDivElement>(null);
   const [tableBodyScrollY, setTableBodyScrollY] = useState<number>();
@@ -162,9 +174,10 @@ export function ProjectActivities({
       )}
     >
       <Header
-        onScaleChange={setEntityType}
-        onTypeChange={setActivity}
-        onPageChange={setPage}
+        activity={activity}
+        entityType={entityType}
+        onActivityChange={onActivityChange}
+        onEntityTypeChange={onEntityTypeChange}
         showTitle={showTitle}
       />
       <div className="flex-1 overflow-hidden flex flex-col mt-5">

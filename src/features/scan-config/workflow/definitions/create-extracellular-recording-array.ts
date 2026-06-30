@@ -1,29 +1,29 @@
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import { ExtracellularRecordingArrayCampaign } from '@/entity-configuration/domain/model/extracellular-recording-array-campaign';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
-export const buildEmSynapseMappingWorkflow = defineScanConfigWorkflow({
-  id: 'build-em-synapse-mapping',
+export const createExtracellularRecordingArrayWorkflow = defineScanConfigWorkflow({
+  id: 'create-extracellular-recording-array',
   activity: ScanConfigActivity.Build,
   entity: {
     mode: ScanConfigEntitySourceMode.Session,
   },
   campaign: {
     resolve: async ({ id, context }) => {
-      // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
-      return await EmSynapseMappingCampaign.api.query.resolve!({ id, context });
+      // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+      return await ExtracellularRecordingArrayCampaign.api.query.resolve!({ id, context });
     },
   },
   taskTypeBindings: {
-    obiOne: ObiOneTaskTypeDict.EmSynapseMapping,
-    configGeneration: TaskActivityType.EmSynapseMappingConfigGeneration,
-    execution: TaskActivityType.EmSynapseMappingExecution,
-    config: TaskConfigType.EmSynapseMappingConfig,
+    obiOne: ObiOneTaskTypeDict.ExtracellularRecordingWeightsCalculation,
+    configGeneration: TaskActivityType.ExtracellularRecordingWeightsCalculationConfigGeneration,
+    execution: TaskActivityType.ExtracellularRecordingWeightsCalculationExecution,
+    config: TaskConfigType.ExtracellularRecordingWeightsCalculationConfig,
   },
   editor: {
     className: 'px-4',

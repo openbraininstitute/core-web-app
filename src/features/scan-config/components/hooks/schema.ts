@@ -238,6 +238,7 @@ function buildInitialConfigState(
           subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
         ) {
           const formModelType = match(model)
+            .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
             .with(
               { type: EntityTypeDict.CellMorphology },
               () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]

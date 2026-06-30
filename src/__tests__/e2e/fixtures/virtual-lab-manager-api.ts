@@ -68,6 +68,23 @@ export class VirtualLabManagerApi {
     return response.id;
   }
 
+  /**
+   * Returns the shared virtual lab, creating it only if the user has none. The
+   * test user may own a single virtual lab, so concurrent CI runs must reuse the
+   * existing one rather than deleting and recreating it. Prefers an exact name
+   * match, otherwise reuses whatever single lab the user already owns.
+   */
+  async ensureVirtualLab(input: VirtualLabCreateInput): Promise<{ id: string; created: boolean }> {
+    const existing = await this.listVirtualLabs();
+    const match = existing.find((lab) => lab.name === input.name) ?? existing[0];
+    if (match) {
+      return { id: match.id, created: false };
+    }
+
+    const id = await this.createVirtualLab(input);
+    return { id, created: true };
+  }
+
   async createProject(virtualLabId: string, input: ProjectCreationBody): Promise<string> {
     const response = await this.requestJson<CreatedResource>(
       `/virtual-labs/${encodeURIComponent(virtualLabId)}/projects`,

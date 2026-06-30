@@ -23,6 +23,7 @@ export const ExtendedEntitiesTypeDict = {
   UniversalCellMorphology: 'universal_cell_morphology',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   SkeletonizationCampaign: 'skeletonization_campaign',
+  ExtracellularRecordingArrayCampaign: 'extracellular_recording_array_campaign',
   RegionCircuitSimulation: 'region_circuit_simulation',
   WholeBrainCircuitSimulation: 'whole_brain_circuit_simulation',
 } as const;
