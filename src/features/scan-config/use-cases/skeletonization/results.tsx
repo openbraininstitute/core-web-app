@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ViewVariant, WorkspaceSection } from '@/constants';
-import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
+import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
@@ -48,7 +48,6 @@ export function SkeletonizationTab({
   const [activeConfig, setActiveConfig] =
     useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  const [showCostModal, setShowCostModal] = useState(false);
   const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
     new Map()
   );
@@ -139,10 +138,13 @@ export function SkeletonizationTab({
     [configsResponse?.configList, resolvedSelectedConfigIds]
   );
 
-  const onCostConfirm = (confirmedIds: string[]) => {
-    setShowCostModal(false);
-    onRun(confirmedIds);
-  };
+  const { openModal, modal: costConfirmationModal } = useCostConfirmation({
+    items: costModalItems,
+    taskType: taskTypeBindings.obiOne,
+    workflowLabel: 'skeletonizations',
+    context,
+    onConfirm: onRun,
+  });
 
   const launchBtnLabelPrefix = resolvedSelectedConfigIds.length
     ? `(${resolvedSelectedConfigIds.length})`
@@ -180,7 +182,7 @@ export function SkeletonizationTab({
               countLabel={launchBtnLabelPrefix}
               pending={runSkeletonizationPending}
               disabled={runSkeletonizationPending || resolvedSelectedConfigIds.length === 0}
-              onClick={() => setShowCostModal(true)}
+              onClick={openModal}
             />
           </div>
         }
@@ -217,15 +219,7 @@ export function SkeletonizationTab({
           </>
         }
       />
-      <CostConfirmationModal
-        open={showCostModal}
-        onClose={() => setShowCostModal(false)}
-        onConfirm={onCostConfirm}
-        items={costModalItems}
-        taskType={taskTypeBindings.obiOne}
-        workflowLabel="skeletonizations"
-        context={context}
-      />
+      {costConfirmationModal}
     </>
   );
 }
