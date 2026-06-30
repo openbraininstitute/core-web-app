@@ -31,6 +31,17 @@ interface MeshBounds {
   max: [number, number, number];
 }
 
+/**
+ * The exact error `@tolokoban/tgd` throws when a painter/texture is built against
+ * a TgdContext that has already been deleted — i.e. an async mesh/point-cloud load
+ * that resolved after the canvas was torn down. Matching it lets us log such
+ * failures without surfacing a user-facing popup. Kept in one place so the single
+ * point of coupling to the framework's message lives here.
+ */
+function isDeletedContextError(ex: unknown): boolean {
+  return ex instanceof Error && ex.message.includes('[TgdContext] This context has been deleted:');
+}
+
 let globalId = 1;
 export class Painter {
   public readonly AtlasID: string;
@@ -299,10 +310,7 @@ export class Painter {
         return;
       }
 
-      if (
-        ex instanceof Error &&
-        ex.message.includes('[TgdContext] This context has been deleted:')
-      ) {
+      if (isDeletedContextError(ex)) {
         logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
         return;
       }
@@ -365,10 +373,7 @@ export class Painter {
     } catch (ex) {
       // Defensive backup mirroring setPointCloud: if a stale/deleted context still
       // produced an error, only log it — never show the user-facing popup.
-      if (
-        contextVersion !== this.contextVersion ||
-        (ex instanceof Error && ex.message.includes('[TgdContext] This context has been deleted:'))
-      ) {
+      if (contextVersion !== this.contextVersion || isDeletedContextError(ex)) {
         logError(`Unable to load mesh for region ${region.name} (stale context):`, ex);
         return null;
       }

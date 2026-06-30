@@ -120,6 +120,23 @@ async function waitForParse() {
   }
 }
 
+/**
+ * Arrange a started painter that is mid-mesh-load: it has dispatched listeners
+ * wired up and a `setRegions` call in flight, suspended on the GLB `parse`.
+ * Callers `await waitForParse()` then drive the teardown/resolve they're testing.
+ */
+function startMeshLoad() {
+  const painter = new Painter('atlas-2', {} as never);
+  const dispatched: unknown[] = [];
+  painter.eventError.addListener((message) => dispatched.push(message));
+
+  painter.start({} as HTMLCanvasElement);
+
+  // Mesh load starts; it suspends on the network fetch, then on `TgdDataGlb.parse`.
+  const pending = painter.setRegions([region], 'access-token');
+  return { painter, dispatched, pending };
+}
+
 describe('Painter.setRegions — context teardown race (issue #490)', () => {
   beforeEach(() => {
     h.resolveParse = null;
@@ -129,14 +146,7 @@ describe('Painter.setRegions — context teardown race (issue #490)', () => {
   });
 
   it('does not use a deleted context or show a popup when a mesh load resolves after a restart', async () => {
-    const painter = new Painter('atlas-2', {} as never);
-    const dispatched: unknown[] = [];
-    painter.eventError.addListener((message) => dispatched.push(message));
-
-    painter.start({} as HTMLCanvasElement);
-
-    // Mesh load starts; it suspends on the network fetch, then on `TgdDataGlb.parse`.
-    const pending = painter.setRegions([region], 'access-token');
+    const { painter, dispatched, pending } = startMeshLoad();
     await waitForParse();
     expect(h.resolveParse).not.toBeNull();
 
@@ -155,13 +165,7 @@ describe('Painter.setRegions — context teardown race (issue #490)', () => {
   });
 
   it('still surfaces a popup when a mesh genuinely fails on the current live context', async () => {
-    const painter = new Painter('atlas-2', {} as never);
-    const dispatched: unknown[] = [];
-    painter.eventError.addListener((message) => dispatched.push(message));
-
-    painter.start({} as HTMLCanvasElement);
-
-    const pending = painter.setRegions([region], 'access-token');
+    const { dispatched, pending } = startMeshLoad();
     await waitForParse();
 
     // No teardown: the context stays live and the GLB simply fails to parse
