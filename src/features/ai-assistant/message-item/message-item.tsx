@@ -16,6 +16,7 @@ import ToolsProgress from './tools-progress';
 import { useMessageDiffs } from './use-message-diffs';
 
 import type { UIMessage } from '@ai-sdk/react';
+import type { ApprovalResponseFn } from './tools-progress/tools-progress';
 
 import styles from './message-item.module.css';
 
@@ -24,6 +25,7 @@ interface MessageItemProps {
   value: UIMessage;
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage?: boolean;
+  addToolApprovalResponse?: ApprovalResponseFn | null;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
@@ -33,6 +35,7 @@ function RawMessageItem({
   value,
   status = 'ready',
   isLastMessage = false,
+  addToolApprovalResponse,
 }: MessageItemProps) {
   const debug = useDebug();
 
@@ -49,7 +52,13 @@ function RawMessageItem({
 
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
+      <MessageChild
+        value={value}
+        debug={debug}
+        status={status}
+        isLastMessage={isLastMessage}
+        addToolApprovalResponse={addToolApprovalResponse}
+      />
     </div>
   );
 }
@@ -69,11 +78,13 @@ function MessageChild({
   debug,
   status,
   isLastMessage,
+  addToolApprovalResponse,
 }: {
   value: UIMessage;
   debug: boolean;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage: boolean;
+  addToolApprovalResponse?: ApprovalResponseFn | null;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
@@ -160,7 +171,7 @@ function MessageChild({
         if (isToolUIPart(part)) {
           return (
             <div key={`tool-${part.toolCallId}`}>
-              <ToolsProgress part={part} />
+              <ToolsProgress part={part} addToolApprovalResponse={addToolApprovalResponse} />
             </div>
           );
         }

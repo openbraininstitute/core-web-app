@@ -31,6 +31,7 @@ interface PromptProps {
   onAddFiles?: (files: FileList | File[]) => void;
   onRemoveAttachment?: (id: string) => void;
   onPaste?: (e: React.ClipboardEvent) => void;
+  disabledReason?: string;
 }
 
 export default function Prompt({
@@ -45,6 +46,7 @@ export default function Prompt({
   onAddFiles,
   onRemoveAttachment,
   onPaste,
+  disabledReason,
 }: PromptProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -190,7 +192,7 @@ export default function Prompt({
     if (evt.key === 'Enter' && !evt.shiftKey && !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
       evt.preventDefault();
       evt.stopPropagation();
-      if (!isStreaming) {
+      if (!isStreaming && !disabled) {
         handleSendClick();
       }
     }
