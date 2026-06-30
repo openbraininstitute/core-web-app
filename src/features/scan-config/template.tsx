@@ -168,6 +168,8 @@ function ScanConfigTemplateContent({
             campaignId={campaignId}
             virtualLabId={virtualLabId}
             projectId={projectId}
+            campaignOriginAction={campaignOriginAction}
+            isCampaignIdChanged={isCampaignIdChanged}
             taskTypeBindings={taskTypeBindings}
           />
         </Suspense>
