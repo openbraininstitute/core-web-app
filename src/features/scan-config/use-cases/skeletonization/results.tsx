@@ -15,6 +15,7 @@ import {
   ScanConfigActivity,
   type TActivityCustomFile,
 } from '@/features/scan-config/types';
+import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
@@ -26,12 +27,15 @@ import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morph
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type Props = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
+  campaignOriginAction: TScanConfigCampaignOriginActionDict;
+  isCampaignIdChanged: boolean;
   /** obi-one + entitycore task types for this workflow (from its definition) */
   taskTypeBindings: TWorkflowTaskTypeBindings;
 };
@@ -40,6 +44,8 @@ export function SkeletonizationTab({
   campaignId,
   virtualLabId,
   projectId,
+  campaignOriginAction,
+  isCampaignIdChanged,
   taskTypeBindings,
 }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
@@ -84,6 +90,13 @@ export function SkeletonizationTab({
   }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
+  const activeExecutionJobId = activeConfigExecution?.execution_id ?? undefined;
+  const taskLogsViewerEnabled = !!resolvedActiveConfig && !!activeExecutionJobId;
+  const taskLogsShouldReadSnapshot =
+    !!activeConfigExecStatus &&
+    [ActivityStatus.CANCELLED, ActivityStatus.DONE, ActivityStatus.ERROR].includes(
+      activeConfigExecStatus
+    );
 
   const onActiveConfigChange = useCallback(
     (config: ITaskConfig<TSkeletonizationTaskConfigMeta>) => {
@@ -215,6 +228,28 @@ export function SkeletonizationTab({
                   enableAnimation={false}
                 />
               </div>
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+              <TaskConfigurationViewer
+                skipStream
+                jobId={activeExecutionJobId}
+                workspace={context}
+                configId={resolvedActiveConfig?.id}
+                enabled={taskLogsViewerEnabled}
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+              <TaskLogsViewer
+                jobId={activeExecutionJobId}
+                workspace={context}
+                configId={resolvedActiveConfig?.id}
+                enabled={taskLogsViewerEnabled}
+                skipStream={taskLogsShouldReadSnapshot}
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
             )}
           </>
         }

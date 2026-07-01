@@ -11,6 +11,12 @@ import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  makeLogStreamFileDescriptors,
+  makeTaskConfigurationFile,
+  makeTaskLogsFile,
+  prependLogStreamFile,
+} from '@/features/task-logs-stream/descriptor';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
@@ -33,13 +39,28 @@ export function InOutFiles({
   onSelect,
   context,
 }: Props) {
+  const logStreamFiles = useMemo(
+    () =>
+      makeLogStreamFileDescriptors({
+        configId: config.id,
+        executionId: execution?.execution_id,
+      }),
+    [config.id, execution?.execution_id]
+  );
+
   const inputFiles: TActivityCustomFile[] = useMemo(() => {
-    return config.assets.map((asset) => ({
+    const files: TActivityCustomFile[] = config.assets.map((asset) => ({
       entity: config,
       asset,
       renderer: ActivityCustomFileRenderer.Default,
     }));
-  }, [config]);
+    return prependLogStreamFile({
+      file: logStreamFiles.input
+        ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
+        : null,
+      files,
+    });
+  }, [config, logStreamFiles.input]);
 
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
@@ -59,7 +80,7 @@ export function InOutFiles({
   });
 
   const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    return (morphologies ?? [])
+    const files = (morphologies ?? [])
       .map((morphology) => {
         const swcAsset = morphology.assets.find((a) => a.content_type === 'application/swc');
         if (!swcAsset) return null;
@@ -71,7 +92,14 @@ export function InOutFiles({
         } as TActivityCustomFile;
       })
       .filter((file): file is TActivityCustomFile => file !== null);
-  }, [morphologies]);
+    return prependLogStreamFile({
+      file:
+        logStreamFiles.output && execution
+          ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+          : null,
+      files,
+    });
+  }, [morphologies, execution, logStreamFiles.output]);
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,
@@ -85,13 +113,16 @@ export function InOutFiles({
     <IoLayout
       inputTitle="Input files"
       outputTitle="Output files"
-      showOutput={outputAvailable}
+      showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFiles.length === 0}
-      outputIsEmpty={!morphologies?.length && !isLoading}
+      outputIsEmpty={outputFiles.length === 0 && !isLoading}
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
-          selected={file.asset.id === selectedFile?.asset.id}
-          key={file.asset?.id}
+          id={file.id ?? file.asset.id}
+          selected={
+            file.id ? file.id === selectedFile?.id : file.asset.id === selectedFile?.asset.id
+          }
+          key={file.id ?? file.asset?.id}
           file={file}
           onSelect={onSelect}
           name={file.name}
@@ -99,10 +130,17 @@ export function InOutFiles({
       ))}
       outputItems={outputFiles.map((file) => (
         <TaskIOFileItem
-          selected={file.entity.id === selectedFile?.entity.id}
-          key={file.entity.id}
+          id={file.id ?? file.entity.id}
+          selected={
+            file.id ? file.id === selectedFile?.id : file.entity.id === selectedFile?.entity.id
+          }
+          key={file.id ?? file.entity.id}
           file={file}
-          name="Skeletonized morphology"
+          name={
+            file.renderer === ActivityCustomFileRenderer.TaskLogsViewer
+              ? file.name
+              : 'Skeletonized morphology'
+          }
           onSelect={onSelect}
         />
       ))}
