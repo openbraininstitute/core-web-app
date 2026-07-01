@@ -20,7 +20,6 @@ export type EntityCoreType = {
   type: TEntityTypeDict;
 };
 
-
 const EntityLifecycleStatus = {
   Draft: 'draft',
   Active: 'active',

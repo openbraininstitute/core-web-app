@@ -1,7 +1,7 @@
-import { SVGProps } from 'react';
+import type { SVGProps } from 'react';
 
 /** Download icon: downwards arrow above a vertical line */
-export default function DownloadIcon({ className }: { className?: string }) {
+export default function IconDownload({ className }: { className?: string }) {
   return (
     <svg
       width="11"
@@ -11,6 +11,7 @@ export default function DownloadIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
+      <title>Download</title>
       <path
         d="M9.18862 6.23614C9.40363 6.01722 9.40363 5.66286 9.18862 5.44394C8.97413 5.22554 8.62558 5.22554 8.41109 5.44394L6.05008 7.84789V0.560165C6.05008 0.250945 5.80362 0 5.49992 0C5.19623 0 4.94977 0.250945 4.94977 0.560165V7.84789L2.58876 5.44394C2.37426 5.22554 2.02572 5.22554 1.81122 5.44394C1.59622 5.66286 1.59622 6.01722 1.81122 6.23614L5.11112 9.59605C5.21424 9.70105 5.35396 9.75985 5.49988 9.75985C5.64581 9.75985 5.78554 9.70106 5.88865 9.59605L9.18862 6.23614Z"
         fill="currentColor"
@@ -27,6 +28,7 @@ export default function DownloadIcon({ className }: { className?: string }) {
 export function DownloadIconWhiteWithCorners(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
+      <title>Dowmload</title>
       <g
         id="Vector"
         // eslint-disable-next-line react/jsx-props-no-spreading

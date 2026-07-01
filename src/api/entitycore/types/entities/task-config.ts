@@ -66,7 +66,8 @@ export interface ITaskConfig<T extends Record<string, unknown>>
     Timestamps,
     EntityAuthorization,
     EntityCoreOwnership,
-    EntityCoreType, IEntityLifecycleStatus {
+    EntityCoreType,
+    IEntityLifecycleStatus {
   contributions?: Array<IContributor> | null;
 }
 

@@ -61,7 +61,9 @@ export async function DataViewLayout({
     })
   );
 
-  if (error || !entity) notFound();
+  if (error || !entity) {
+    notFound();
+  }
 
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
