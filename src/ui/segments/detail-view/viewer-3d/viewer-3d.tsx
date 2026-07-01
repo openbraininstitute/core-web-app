@@ -16,14 +16,14 @@ export default function Viewer3D({
   extendedType,
   entity,
 }: {
-  entity?: TRetrieveEntityOutput;
+  entity: TRetrieveEntityOutput;
   extendedType: TExtendedEntitiesTypeDict;
 }) {
   const isType = useTypeChecker(extendedType);
   const context = useWorkspace();
 
   if (isType('EMCellMesh')) {
-    return <MeshViewer meshId={entity?.id} />;
+    return <MeshViewer meshId={entity.id} />;
   }
   if (isType('CellMorphology', 'ComputationallySynthesizedCellMorphology')) {
     return <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />;

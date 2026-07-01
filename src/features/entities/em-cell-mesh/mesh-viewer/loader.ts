@@ -91,34 +91,40 @@ export function useLoaders(): {
         }
       } catch (error) {
         logError(`Unable to load block ${blockId} for mesh #${meshId}:`, error);
-        return null;
       }
+      return null;
 
-      const url = resolveBlockURL(meshId, blockId);
-      try {
-        logDebug('Loading fake:', url);
-        const resp = await fetch(url);
-        if (!resp.ok) {
-          logError(`Unable to get info file: ${url}!\nError #${resp.status}: ${resp.statusText}`);
-          return null;
-        }
-        return {
-          type: 'glb',
-          data: await resp.arrayBuffer(),
-        };
-      } catch (error) {
-        logError(`Unable to load block ${blockId} for mesh #${meshId}:`, error);
-        return null;
-      }
+      // Uncomment the following block if we need a default mesh for testing.
+
+      // const url = resolveBlockURL(meshId, blockId);
+      // try {
+      //   logDebug('Loading fake:', url);
+      //   const resp = await fetch(url);
+      //   if (!resp.ok) {
+      //     logError(`Unable to get info file: ${url}!\nError #${resp.status}: ${resp.statusText}`);
+      //     return null;
+      //   }
+      //   return {
+      //     type: 'glb',
+      //     data: await resp.arrayBuffer(),
+      //   };
+      // } catch (error) {
+      //   logError(`Unable to load block ${blockId} for mesh #${meshId}:`, error);
+      //   return null;
+      // }
     },
   };
 }
 
-const BASE_URL = 'https://openbraininstitute.github.io/morphoviewer/assets/octree/1';
+// Uncomment the following block if we need a default mesh for testing.
 
-function resolveBlockURL(_meshId: string, blockId: string) {
-  return `${BASE_URL}/${blockId}.glb`;
-}
+// const BASE_URL = 'https://openbraininstitute.github.io/morphoviewer/assets/octree/1';
+
+// Uncomment the following block if we need a default mesh for testing.
+
+// function resolveBlockURL(_meshId: string, blockId: string) {
+//   return `${BASE_URL}/${blockId}.glb`;
+// }
 
 interface BBox {
   min: [number, number, number];

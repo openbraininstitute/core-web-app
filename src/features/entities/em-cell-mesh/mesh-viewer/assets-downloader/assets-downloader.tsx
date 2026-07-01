@@ -23,6 +23,8 @@ export interface AssetsDownloaderProps {
   entityId: string;
 }
 
+const ENTITY_TYPE = 'em_cell_mesh';
+
 export default function AssetsDownloader({ entityId, className }: AssetsDownloaderProps) {
   const notif = useAppNotification();
   const ctx = useWorkspace();
@@ -49,7 +51,7 @@ export default function AssetsDownloader({ entityId, className }: AssetsDownload
         const resp = await downloadAsset({
           ctx,
           entityId,
-          entityType: 'em_cell_mesh',
+          entityType: ENTITY_TYPE,
           id: asset.id,
           assetPath: name,
           asRawResponse: true,
@@ -161,7 +163,7 @@ function useListHandler(
       const response = await listDirectoryOfAssets({
         ctx,
         entityId,
-        entityType: 'em_cell_mesh',
+        entityType: ENTITY_TYPE,
         id: asset.id,
       });
       setList(response.files);
