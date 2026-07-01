@@ -105,7 +105,7 @@ export function TaskConfigSelectionCard({
             <RightOutlined className="ml-2 text-sm text-gray-500" />
           </div>
         </div>
-        <ScanParams scanParams={scanParams} color={color} />
+        <ScanParams configId={configId} scanParams={scanParams} color={color} />
       </div>
     </button>
   );

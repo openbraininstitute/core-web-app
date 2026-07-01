@@ -19,6 +19,7 @@ import { classNames } from '@/util/utils';
 import ErrorPanel from '../error';
 import FreeCreditsNotification from '../free-credits-notification';
 import { MessageItem } from '../message-item';
+import { PendingUserMessage } from '../message-item/pending-user-message';
 import { ThinkingIndicator } from '../message-item/thinking-indicator';
 import { atomRateLimit } from '../state';
 import DiffBar from './diff-bar';
@@ -30,7 +31,6 @@ import { useAutoScroll } from './use-auto-scroll';
 import { useLastMessageDiffBar } from './use-last-message-diff-bar';
 import Welcome from './welcome';
 
-import messageStyles from '../message-item/message-item.module.css';
 import styles from './chat.module.css';
 
 export interface ChatProps {
@@ -288,57 +288,6 @@ export default function Chat({
           isUploading={!!pendingUserMessage}
           hasUnresolvedApprovals={hasUnresolvedApprovals}
         />
-      </div>
-    </div>
-  );
-}
-
-function PendingUserMessage({
-  text,
-  files,
-}: {
-  text: string;
-  files: { name: string; type: string; previewUrl: string; uploaded: boolean }[];
-}) {
-  return (
-    <div className={messageStyles.user}>
-      <div className={messageStyles.userContent}>
-        {text && <div>{text}</div>}
-        {files.map((file) => {
-          if (file.type.startsWith('image/') && file.previewUrl) {
-            // When uploaded, render the image exactly like MessageItem does
-            // (no wrapper div) to avoid layout shift on transition.
-            if (file.uploaded) {
-              return (
-                <img
-                  key={file.name}
-                  src={file.previewUrl}
-                  alt={file.name}
-                  className={messageStyles.userImage}
-                />
-              );
-            }
-            return (
-              <div key={file.name} className={styles.pendingFile}>
-                <img
-                  src={file.previewUrl}
-                  alt={file.name}
-                  className={messageStyles.userImage}
-                  style={{ opacity: 0.6 }}
-                />
-                <div className={styles.pendingFileOverlay}>
-                  <span className={styles.pendingFileSpinner} />
-                </div>
-              </div>
-            );
-          }
-          return (
-            <div key={file.name} className={styles.pendingFilePill}>
-              {!file.uploaded && <span className={styles.pendingFileSpinner} />}
-              <span>{file.name}</span>
-            </div>
-          );
-        })}
       </div>
     </div>
   );

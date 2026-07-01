@@ -2,12 +2,14 @@ import { test as setup } from '@playwright/test';
 
 import {
   assertProjectLimit,
+  buildE2EProjectName,
   E2E_STATE_PATH,
   readE2EState,
+  SHARED_VIRTUAL_LAB_NAME,
   writeE2EState,
 } from '../fixtures/e2e-state';
 import { validateEnv } from '../fixtures/env-validation';
-import { deleteAllUserVirtualLabs, deleteVirtualLabState } from '../fixtures/virtual-lab-cleanup';
+import { deleteProjects, pruneStaleProjects } from '../fixtures/virtual-lab-cleanup';
 import { VirtualLabManagerApi } from '../fixtures/virtual-lab-manager-api';
 import {
   AUTH_STATE_PATH,
@@ -17,11 +19,10 @@ import {
   removeFileIfExists,
 } from './setup-utils';
 
-const skipPreExistingVirtualLabCleanup =
-  process.env.E2E_SKIP_PRE_EXISTING_VIRTUAL_LAB_CLEANUP === 'true';
-// CI reuses this setup test in three modes: provision creates the single shared
-// virtual lab, auth-only gives each matrix leg fresh browser storage, and
-// cleanup-only logs in again for a fresh token before deleting the shared lab.
+// CI reuses this setup test in three modes: provision reuses (or first-creates)
+// the single shared virtual lab and adds an isolated project for this run,
+// auth-only gives each matrix leg fresh browser storage, and cleanup-only logs
+// in again for a fresh token before deleting only this run's project.
 const authOnly = process.env.E2E_AUTH_ONLY === 'true';
 const cleanupOnly = process.env.E2E_CLEANUP_ONLY === 'true';
 const setupLogger = createCleanupLogger('auth-setup');
@@ -132,52 +133,73 @@ setup('authenticate and provision virtual lab', async ({ page, context }) => {
     return;
   }
 
-  await setup.step('teardown pre-existing virtual labs', async () => {
-    if (fileExists(E2E_STATE_PATH)) {
+  // cleanup-only: delete just this run's project(s) from the shared lab. The lab
+  // is persistent and is intentionally left in place for other PRs.
+  if (cleanupOnly) {
+    await setup.step("delete this run's e2e project", async () => {
+      if (!fileExists(E2E_STATE_PATH)) {
+        setupLogger.warn('no provisioned e2e state found - nothing to clean up.');
+        return;
+      }
+
       try {
-        await deleteVirtualLabState({
+        const state = readE2EState();
+        await deleteProjects({
           api,
-          state: readE2EState(),
+          virtualLabId: state.virtualLabId,
+          projects: state.projects,
           logger: setupLogger,
         });
       } catch (error) {
-        setupLogger.warn(`failed to delete workspace from local e2e state: ${error}.`);
+        setupLogger.warn(`failed to delete project from local e2e state: ${error}.`);
       }
-    }
 
-    if (skipPreExistingVirtualLabCleanup) {
-      setupLogger.info(
-        'skipping pre-existing virtual lab cleanup because this run is part of an isolated parallel matrix.'
-      );
-    } else {
-      await deleteAllUserVirtualLabs({ api, logger: setupLogger });
-    }
+      removeFileIfExists(E2E_STATE_PATH);
+    });
 
-    removeFileIfExists(E2E_STATE_PATH);
-  });
-
-  if (cleanupOnly) {
     setupLogger.info('cleanup-only mode completed.');
     return;
   }
 
+  // provision: reuse the single shared lab (creating it only if the user has
+  // none), then add an isolated project for this run so concurrent PRs never
+  // collide on the same workspace.
   let virtualLabId: string | undefined;
-  await setup.step('create single virtual lab', async () => {
-    const timestamp = Date.now();
-    virtualLabId = await api.createVirtualLab({
-      name: `e2e-test-lab-${timestamp}`,
-      description: 'E2E test lab',
+  await setup.step('ensure shared virtual lab', async () => {
+    const { id, created } = await api.ensureVirtualLab({
+      name: SHARED_VIRTUAL_LAB_NAME,
+      description: 'Shared E2E test lab',
       entity: 'E2E Test Organization',
     });
+    virtualLabId = id;
+    setupLogger.info(
+      created ? `created shared virtual lab ${id}.` : `reusing shared virtual lab ${id}.`
+    );
+  });
+
+  // best-effort: remove projects left behind by crashed/cancelled runs so the
+  // shared lab doesn't accumulate projects without bound.
+  await setup.step('prune stale e2e projects', async () => {
+    try {
+      await pruneStaleProjects({
+        api,
+        virtualLabId: requireSetupValue(virtualLabId, 'virtual lab id'),
+        logger: setupLogger,
+      });
+    } catch (error) {
+      setupLogger.warn(`failed to prune stale e2e projects: ${error}.`);
+    }
   });
 
   let projectId: string | undefined;
   let projectName: string | undefined;
-  await setup.step('create primary project within project limit', async () => {
-    assertProjectLimit([], 1);
-    const timestamp = Date.now();
-    projectName = `e2e-test-project-${timestamp}`;
-    projectId = await api.createProject(requireSetupValue(virtualLabId, 'virtual lab id'), {
+  await setup.step('create isolated project for this run', async () => {
+    const labId = requireSetupValue(virtualLabId, 'virtual lab id');
+    // guard against the shared lab being full before adding another project
+    const existingProjects = await api.listProjects(labId);
+    assertProjectLimit(existingProjects, 1);
+    projectName = buildE2EProjectName();
+    projectId = await api.createProject(labId, {
       name: projectName,
       description: 'E2E test project',
     });

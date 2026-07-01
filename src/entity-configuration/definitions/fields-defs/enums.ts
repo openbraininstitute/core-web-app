@@ -106,6 +106,10 @@ export enum EntityCoreFields {
   GenerationParameters = 'generation_parameters',
   MeshType = 'mesh_type',
   HasSegmentedSpines = 'has_segmented_spines',
+  ElectrodeType = 'electrode_type',
+  RecordingArrayCircuit = 'circuit_id',
+  ReleaseVersion = 'release_version',
+  EmDenseReconstructionDatasetName = 'em_dense_reconstruction_dataset_name',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

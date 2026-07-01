@@ -1,3 +1,6 @@
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
@@ -17,5 +20,11 @@ export const processEmCellMeshWorkflow = defineScanConfigWorkflow({
   },
   editor: {
     className: 'px-4',
+  },
+  taskTypeBindings: {
+    obiOne: ObiOneTaskTypeDict.Skeletonization,
+    configGeneration: TaskActivityType.SkeletonizationConfigGeneration,
+    execution: TaskActivityType.SkeletonizationExecution,
+    config: TaskConfigType.SkeletonizationConfig,
   },
 });

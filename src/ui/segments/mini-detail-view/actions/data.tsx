@@ -6,10 +6,13 @@ import { useAtom } from 'jotai';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { config } from '@/config';
 import { type TViewVariant, ViewVariant } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -35,6 +38,18 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   const { virtualLabId, projectId } = useWorkspace();
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
+
+  const effectiveDataType =
+    record.type === EntityTypeDict.Circuit &&
+    (record as ICircuit).scale === CircuitScaleDictionary.Single
+      ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
+      : (dataType ?? record.type);
+
+  // some entities (e.g. extracellular recording arrays) have no full detail page yet — their domain
+  // config declares no `detailViewSections`; hide the "View details" action for those so the mini
+  // panel is the only view
+  const hasDetailView =
+    (getEntityByExtendedType({ type: effectiveDataType })?.detailViewSections?.length ?? 0) > 0;
 
   const { isPending: pendingDownload, mutateAsync: downloadAsync } = useMutation({
     mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
@@ -142,24 +157,26 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         </TooltipContent>
       </Tooltip>
 
-      <Button
-        rounded
-        asChild
-        title="Go to details page"
-        variant="default"
-        className={cn(
-          'hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-          { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
-        )}
-      >
-        <Link
-          href={{
-            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(dataType)}/${record.id}`,
-          }}
+      {hasDetailView && (
+        <Button
+          rounded
+          asChild
+          title="Go to details page"
+          variant="default"
+          className={cn(
+            'hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+            { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+          )}
         >
-          View details
-        </Link>
-      </Button>
+          <Link
+            href={{
+              pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(effectiveDataType)}/${record.id}`,
+            }}
+          >
+            View details
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }

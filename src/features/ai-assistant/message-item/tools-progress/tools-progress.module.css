@@ -687,6 +687,28 @@
   color: #4ae05a;
 }
 
+/* Field-level labels for code-aware rendering */
+.fieldRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.fieldLabel {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--color-neutral-2, #888);
+  text-transform: capitalize;
+  margin-bottom: 0.2rem;
+}
+
+.fieldValue {
+  color: var(--color-neutral-1, #444);
+  font-size: 0.75rem;
+}
+
 /* Approval action bar — bottom of card */
 .approvalBar {
   display: flex;

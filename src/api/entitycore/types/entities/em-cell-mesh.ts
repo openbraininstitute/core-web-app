@@ -79,6 +79,7 @@ export interface IEmCellMeshQueryFilters
     IlikeSearchFilter,
     OwnershipFilter {
   release_version?: number | null;
+  release_version__in?: Array<number> | null;
   dense_reconstruction_cell_id?: number | null;
   level_of_detail?: number | null;
   mesh_type?: TEMCellMeshType | null;

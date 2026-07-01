@@ -119,17 +119,7 @@ export default function ToolsProgress({
                 <span>Approval needed</span>
               </div>
             </div>
-            <div className={styles.actions}>
-              <Link
-                href={tool.docURL(virtualLabId, projectId)}
-                target="documentation"
-                aria-label="Tool information"
-                className={cn(styles.helpButton)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <HelpIconI className={styles.helpIcon} />
-              </Link>
-            </div>
+            <div className={styles.actions}></div>
           </div>
 
           {/* Expandable Details — always open for approval */}
@@ -229,16 +219,6 @@ export default function ToolsProgress({
               <div className={styles.expandButton}>
                 <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
               </div>
-
-              <Link
-                href={tool.docURL(virtualLabId, projectId)}
-                target="documentation"
-                aria-label="Tool information"
-                className={cn(styles.helpButton)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <HelpIconI className={styles.helpIcon} />
-              </Link>
             </div>
           </button>
 
@@ -296,16 +276,6 @@ export default function ToolsProgress({
               <div className={styles.expandButton}>
                 <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
               </div>
-
-              <Link
-                href={tool.docURL(virtualLabId, projectId)}
-                target="documentation"
-                aria-label="Tool information"
-                className={cn(styles.helpButton)}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <HelpIconI className={styles.helpIcon} />
-              </Link>
             </div>
           </button>
 

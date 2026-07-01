@@ -2,6 +2,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { ViewDefForBrainRegion } from '@/entity-configuration/definitions/view-defs/model/brain-region';
 import { ViewDefForCircuit } from '@/entity-configuration/definitions/view-defs/model/circuit';
 import { ViewDefForEmodel } from '@/entity-configuration/definitions/view-defs/model/emodel';
+import { ViewDefForExtracellularRecordingArray } from '@/entity-configuration/definitions/view-defs/model/extracellular-recording-array';
 import { ViewDefForIonChannelModel } from '@/entity-configuration/definitions/view-defs/model/ion-channel-model';
 import { ViewDefForMemodel } from '@/entity-configuration/definitions/view-defs/model/memodel';
 import { ViewDefForMicrocircuit } from '@/entity-configuration/definitions/view-defs/model/microcircuit';
@@ -28,4 +29,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.IonChannelModel]: ViewDefForIonChannelModel,
   [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: ViewDefForSingleNeuronCircuit,
   [ExtendedEntitiesTypeDict.SynthesizedCellMorphology]: ViewDefForSynthesizedCellMorphology,
+  [ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray]:
+    ViewDefForExtracellularRecordingArray,
 };

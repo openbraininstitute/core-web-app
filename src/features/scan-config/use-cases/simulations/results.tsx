@@ -26,6 +26,7 @@ import {
   useEnsureOfflineTokenConsent,
 } from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
+import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
@@ -44,6 +45,7 @@ import { log } from '@/utils/logger';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -51,6 +53,11 @@ type SimulationTabProps = {
   projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
+  /**
+   * obi-one + entitycore task types for this workflow, resolved from its definition. For circuit
+   * simulations the `obiOne` launch type is resolved from the circuit's `target_simulator`.
+   */
+  taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
 export default function SimulationsTab({
@@ -59,6 +66,7 @@ export default function SimulationsTab({
   projectId,
   campaignOriginAction,
   isCampaignIdChanged,
+  taskTypeBindings,
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
@@ -73,7 +81,7 @@ export default function SimulationsTab({
     enabled: Boolean(campaignId),
   });
 
-  const { entity: model } = useModelQuery({
+  const { entity: model, entityType } = useModelQuery({
     context,
     id: simulations[0]?.entity_id,
   });
@@ -250,10 +258,13 @@ export default function SimulationsTab({
     let nSubmissions = 0;
     let lowFundsError = false;
 
+    // Prefer the workflow definition's resolved binding; fall back to deriving from the model's
+    // `target_simulator` so simulate workflows without an explicit binding keep working.
     const taskType =
-      model && 'target_simulator' in model && model.target_simulator === 'Brian2'
+      taskTypeBindings?.obiOne ??
+      (model && 'target_simulator' in model && model.target_simulator === 'Brian2'
         ? ObiOneTaskTypeDict.CircuitSimulationBrian2
-        : ObiOneTaskTypeDict.CircuitSimulation;
+        : ObiOneTaskTypeDict.CircuitSimulation);
 
     for (const simId of simIds) {
       try {
@@ -343,6 +354,49 @@ export default function SimulationsTab({
     }
   };
 
+  // Resolve the obi-one task type used to estimate cost. Prefer the workflow definition's resolved
+  // binding so the estimate matches what `run` actually launches; otherwise fall back to deriving
+  // from the model (ion-channel has its own estimable type; circuit scale is resolved server-side).
+  const simTaskType = useMemo(() => {
+    if (taskTypeBindings?.obiOne) {
+      return taskTypeBindings.obiOne;
+    }
+    if (entityType === EntityTypeDict.IonChannelModel) {
+      return ObiOneTaskTypeDict.IonChannelModelSimulationExecution;
+    }
+    if (model && 'target_simulator' in model && model.target_simulator === 'Brian2') {
+      return ObiOneTaskTypeDict.CircuitSimulationBrian2;
+    }
+    return ObiOneTaskTypeDict.CircuitSimulation;
+  }, [taskTypeBindings, entityType, model]);
+
+  const costModalItems = useMemo(
+    () =>
+      simulations
+        .filter((s) => selectedSimulationIds.includes(s.id))
+        .map((s) => ({ id: s.id, name: s.name })),
+    [simulations, selectedSimulationIds]
+  );
+
+  const { openModal, modal: costConfirmationModal } = useCostConfirmation({
+    items: costModalItems,
+    taskType: simTaskType,
+    workflowLabel: 'simulations',
+    context,
+    onConfirm: run,
+  });
+
+  // Me-model ("Single neuron beta") campaigns have no backend cost estimator, so they skip the
+  // confirmation modal and launch directly. All other scan-config sim campaigns show the modal.
+  const isMemodelCampaign = entityType === EntityTypeDict.Memodel;
+  const onLaunch = (simIds: string[]) => {
+    if (isMemodelCampaign) {
+      run(simIds);
+      return;
+    }
+    openModal();
+  };
+
   const onToggleSelectAll = (checked: boolean) => {
     setSelectedSimulationIds(checked ? selectableSimulationIds : []);
   };
@@ -370,7 +424,7 @@ export default function SimulationsTab({
         onActiveSimulationChange={onActiveSimulationChange}
         onSelectedForSimChange={onSelectedForSimChange}
         onSimulationStatusLoad={onSimulationStatusLoad}
-        onRun={run}
+        onRun={onLaunch}
         middle={
           <div className="h-full bg-background! w-full">
             {loading ? (
@@ -436,6 +490,8 @@ export default function SimulationsTab({
         onCancel={cancelOfflineTokenConsent}
         onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
       />
+
+      {costConfirmationModal}
 
       {creditsModal}
     </>

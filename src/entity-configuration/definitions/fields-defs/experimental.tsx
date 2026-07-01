@@ -31,6 +31,7 @@ import getMeasurements, {
   renderMorphologyMeasurement,
 } from '@/entity-configuration/definitions/renderer';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
+import { DatasetNameCell } from '@/features/entities/em-cell-mesh/dataset-name-cell';
 import { ensureString, isNumber, isString } from '@/util/type-guards';
 import { ensureArray } from '@/utils/array';
 
@@ -881,5 +882,53 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return EmptyValue;
     },
     defaultConstraint: 'mesh_type',
+  },
+  [EntityCoreFields.ReleaseVersion]: {
+    className: 'text-left',
+    title: 'Version',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    // Backend facets are ordered alphanumerically; sort the version options numerically here.
+    sortFacetOptions: 'numeric',
+    isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.EMCellMesh],
+        property: 'order_by',
+        value: 'release_version',
+      },
+    ],
+    render: (r) => {
+      const entity = r as IEMCellMesh;
+      if ('release_version' in entity)
+        return renderEmptyOrValue(renderAsString(entity.release_version));
+      return EmptyValue;
+    },
+    defaultConstraint: 'release_version__in',
+    vocabulary: {
+      plural: 'versions',
+      singular: 'version',
+    },
+  },
+  [EntityCoreFields.EmDenseReconstructionDatasetName]: {
+    className: 'text-left',
+    title: 'Dataset',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.EMCellMesh],
+        property: 'order_by',
+        value: 'em_dense_reconstruction_dataset__name',
+      },
+    ],
+    render: (r) => {
+      const entity = r as IEMCellMesh;
+      return <DatasetNameCell datasetId={entity.em_dense_reconstruction_dataset?.id} />;
+    },
+    defaultConstraint: 'em_dense_reconstruction_dataset__name__ilike',
   },
 };
