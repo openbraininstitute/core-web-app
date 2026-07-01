@@ -6,6 +6,8 @@ import { useAtom } from 'jotai';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { config } from '@/config';
@@ -37,12 +39,17 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
 
+  const effectiveDataType =
+    record.type === EntityTypeDict.Circuit &&
+    (record as ICircuit).scale === CircuitScaleDictionary.Single
+      ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
+      : (dataType ?? record.type);
+
   // some entities (e.g. extracellular recording arrays) have no full detail page yet — their domain
   // config declares no `detailViewSections`; hide the "View details" action for those so the mini
   // panel is the only view
   const hasDetailView =
-    (getEntityByExtendedType({ type: dataType ?? record.type })?.detailViewSections?.length ?? 0) >
-    0;
+    (getEntityByExtendedType({ type: effectiveDataType })?.detailViewSections?.length ?? 0) > 0;
 
   const { isPending: pendingDownload, mutateAsync: downloadAsync } = useMutation({
     mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
@@ -163,7 +170,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         >
           <Link
             href={{
-              pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(dataType)}/${record.id}`,
+              pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(effectiveDataType)}/${record.id}`,
             }}
           >
             View details
