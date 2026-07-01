@@ -42,7 +42,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
   padding-top: 8px;
   border-top: 1px solid var(--tp-border, var(--color-neutral-6, #e7e7e7));
 }
@@ -66,6 +66,27 @@
   max-height: 15rem;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.payloadContent::-webkit-scrollbar {
+  width: 4px;
+  background: transparent;
+}
+
+.payloadContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.payloadContent::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-5, #d0d0d0);
+  border-radius: 2px;
+  background-clip: padding-box;
+}
+
+.payloadContent::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-neutral-3, #bbb);
 }
 
 .payloadContentRaw {
