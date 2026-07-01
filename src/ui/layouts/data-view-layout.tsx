@@ -93,7 +93,7 @@ export async function DataViewLayout({
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     if (useClassicLayout) {
       return (
-        <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3">
+        <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3 pt-3">
           <div className="flex w-full items-center justify-between">
             {breadcrumbs}
             {closePage}

@@ -12,6 +12,8 @@ import { useTaskCostEstimates } from './use-task-cost-estimates';
 
 import type { CostConfirmationModalProps } from './types';
 
+export { useCostConfirmation } from './use-cost-confirmation';
+
 const ITEMS_PER_PAGE = 10;
 
 export function CostConfirmationModal({
@@ -144,6 +146,20 @@ export function CostConfirmationModal({
                   </span>
                 </div>
               ))}
+
+              {/* Pad the last/partial page with invisible filler rows so every page keeps
+                  the same height and the centered modal does not jump when paginating. */}
+              {hasPagination &&
+                Array.from({ length: ITEMS_PER_PAGE - currentPageItems.length }).map((_, i) => (
+                  <div
+                    // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder fillers
+                    key={`filler-${i}`}
+                    aria-hidden
+                    className="flex items-center justify-between border-b border-transparent py-3"
+                  >
+                    <span className="text-lg invisible font-bold">placeholder</span>
+                  </div>
+                ))}
             </div>
 
             {hasPagination && (

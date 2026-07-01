@@ -731,12 +731,7 @@ export function Output({
   return (
     <>
       {creditsModal}
-      <div
-        className={cn('grid w-full grid-cols-[20rem_25rem_1fr] gap-8', {
-          'h-[calc(100vh-13rem)]': readonly,
-          'h-[calc(100vh-11rem)]': !readonly,
-        })}
-      >
+      <div className={cn('grid w-full grid-cols-[20rem_25rem_1fr] gap-8 h-[calc(100vh-11rem)]')}>
         <div className="bg-background flex shrink-0 flex-col gap-3 overflow-y-auto">
           {(isLoading || isFetching) && !hasBuilds ? (
             <Card key="build-0" className="p-4">

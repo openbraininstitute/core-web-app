@@ -529,7 +529,10 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
 
   const tableSelectionType = selectionConfig?.tableSelectionType;
   const showEntityTypeSelector = configurationInputs.length > 1;
-  const trackSelectionsByEntityType = showEntityTypeSelector && Boolean(tableSelectionType);
+  // track table row selections whenever the schema enables a checkbox table, regardless of
+  // how many configuration inputs exist. single-input multi-select (e.g. EM mesh skeletonization)
+  // still needs its picks wired into `selectionsByType` to enable the "Use selection" footer.
+  const trackTableSelections = Boolean(tableSelectionType);
   const baseExtraQueryParams = activeInput?.filters ?? workflow.filters;
   const extraQueryParams =
     baseExtraQueryParams || prerequisiteCacheKeyParam
@@ -557,7 +560,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         mainTableProps={{
           selectionType: tableSelectionType,
           ...(isMultiEntityBrowse ? { keepSelectionOnScopeChange: true } : {}),
-          ...(trackSelectionsByEntityType
+          ...(trackTableSelections
             ? {
                 selectedRows: activeSelectedRows,
                 onRowsSelected: handleRowsSelected,

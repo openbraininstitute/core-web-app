@@ -20,6 +20,7 @@ import { classNames } from '@/util/utils';
 import ErrorPanel from '../error';
 import FreeCreditsNotification from '../free-credits-notification';
 import { MessageItem } from '../message-item';
+import { PendingUserMessage } from '../message-item/pending-user-message';
 import { ThinkingIndicator } from '../message-item/thinking-indicator';
 import { atomRateLimit } from '../state';
 import DiffBar from './diff-bar';
@@ -31,7 +32,6 @@ import { useAutoScroll } from './use-auto-scroll';
 import { useLastMessageDiffBar } from './use-last-message-diff-bar';
 import Welcome from './welcome';
 
-import messageStyles from '../message-item/message-item.module.css';
 import styles from './chat.module.css';
 
 export interface ChatProps {
@@ -51,8 +51,16 @@ export default function Chat({
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
 
-  const { messages, status, sendMessage, error, stop, isLoadingMessages, pendingUserMessage } =
-    useServiceAiAgentChat(threadId ?? '');
+  const {
+    messages,
+    status,
+    sendMessage,
+    error,
+    stop,
+    isLoadingMessages,
+    pendingUserMessage,
+    addToolApprovalResponse,
+  } = useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
@@ -107,6 +115,14 @@ export default function Chat({
     threadId,
     containerRef: refContainer,
   });
+
+  const hasUnresolvedApprovals = React.useMemo(
+    () =>
+      messages.some((msg) =>
+        msg.parts.some((p) => isToolUIPart(p) && p.state === 'approval-requested')
+      ),
+    [messages]
+  );
 
   // Clear active diff view when a new message is submitted
   React.useEffect(() => {
@@ -190,7 +206,13 @@ export default function Chat({
   const hasVisibleContent = lastMessage?.parts.some(
     (p) => (p.type === 'text' && 'text' in p && p.text !== '') || isToolUIPart(p)
   );
-  const showThinking = status === 'submitted' || (status === 'streaming' && !hasVisibleContent);
+  const hasApprovalResponded = lastMessage?.parts.some(
+    (p) => isToolUIPart(p) && p.state === 'approval-responded'
+  );
+  // Don't show "Thinking" when the SDK auto-sends after tool approval
+  const showThinking =
+    (status === 'submitted' || (status === 'streaming' && !hasVisibleContent)) &&
+    !hasApprovalResponded;
 
   return (
     <div className={classNames(styles.chatContainer, className)}>
@@ -207,6 +229,7 @@ export default function Chat({
                   value={item}
                   status={status}
                   isLastMessage={index === messages.length - 1}
+                  addToolApprovalResponse={addToolApprovalResponse}
                 />
               ))}
 
@@ -291,6 +314,7 @@ export default function Chat({
           messagesCount={messages.length}
           stop={stop}
           isUploading={!!pendingUserMessage}
+          hasUnresolvedApprovals={hasUnresolvedApprovals}
         />
       </div>
     </div>

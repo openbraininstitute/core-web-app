@@ -15,6 +15,7 @@ interface FooterProps {
   stop(): void;
   isLoadingSuggestions?: boolean;
   isUploading?: boolean;
+  hasUnresolvedApprovals?: boolean;
 }
 
 const isStreaming = (status: FooterProps['status']) =>
@@ -27,6 +28,7 @@ export default function Footer({
   stop,
   threadId,
   isUploading,
+  hasUnresolvedApprovals,
 }: FooterProps) {
   const [prompt, setPrompt] = useAtom(promptAtom);
   const { attachments, addFiles, removeAttachment, clearAttachments, handlePaste } =
@@ -46,13 +48,16 @@ export default function Footer({
         value={prompt}
         onChange={setPrompt}
         onClick={handlePrompt}
-        disabled={!threadId || isUploading}
-        isStreaming={isStreaming(status) || !!isUploading}
+        disabled={!threadId || isUploading || hasUnresolvedApprovals}
+        isStreaming={hasUnresolvedApprovals ? false : isStreaming(status) || !!isUploading}
         onCancel={stop}
         attachments={attachments}
         onAddFiles={addFiles}
         onRemoveAttachment={removeAttachment}
         onPaste={handlePaste}
+        disabledReason={
+          hasUnresolvedApprovals ? 'Approve or reject the pending tool call to continue' : undefined
+        }
       />
     </footer>
   );

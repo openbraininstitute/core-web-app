@@ -16,6 +16,7 @@ import ToolsProgress from './tools-progress';
 import { useMessageDiffs } from './use-message-diffs';
 
 import type { UIMessage } from '@ai-sdk/react';
+import type { ApprovalResponseFn } from './tools-progress/tools-progress';
 
 import styles from './message-item.module.css';
 
@@ -24,6 +25,7 @@ interface MessageItemProps {
   value: UIMessage;
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage?: boolean;
+  addToolApprovalResponse?: ApprovalResponseFn | null;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
@@ -33,6 +35,7 @@ function RawMessageItem({
   value,
   status = 'ready',
   isLastMessage = false,
+  addToolApprovalResponse,
 }: MessageItemProps) {
   const debug = useDebug();
 
@@ -49,7 +52,13 @@ function RawMessageItem({
 
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
+      <MessageChild
+        value={value}
+        debug={debug}
+        status={status}
+        isLastMessage={isLastMessage}
+        addToolApprovalResponse={addToolApprovalResponse}
+      />
     </div>
   );
 }
@@ -69,11 +78,13 @@ function MessageChild({
   debug,
   status,
   isLastMessage,
+  addToolApprovalResponse,
 }: {
   value: UIMessage;
   debug: boolean;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage: boolean;
+  addToolApprovalResponse?: ApprovalResponseFn | null;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
@@ -96,41 +107,46 @@ function MessageChild({
       return (
         <div className={styles.user}>
           <div className={styles.userContent}>
-            <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
+            {value.parts.filter(isFileUIPart).some((p) => p.mediaType?.startsWith('image/')) && (
+              <div className={styles.userImageRow}>
+                {value.parts.filter(isFileUIPart).map((part, idx) => {
+                  if (!part.mediaType?.startsWith('image/')) return null;
+                  return part.url.startsWith('storage://') ? (
+                    <StorageImagePart
+                      // biome-ignore lint/suspicious/noArrayIndexKey: stable order from message parts
+                      key={`img-${idx}`}
+                      url={part.url}
+                      filename={part.filename}
+                    />
+                  ) : (
+                    <ExpandableImage
+                      // biome-ignore lint/suspicious/noArrayIndexKey: stable order from message parts
+                      key={`img-${idx}`}
+                      src={part.url}
+                      alt={part.filename ?? 'Attached image'}
+                    />
+                  );
+                })}
+              </div>
+            )}
             {value.parts.filter(isFileUIPart).map((part, idx) => {
               if (part.mediaType === 'application/pdf') {
                 return (
                   <div
-                    // eslint-disable-next-line react/no-array-index-key
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable order from message parts
                     key={`file-${idx}`}
                     className={styles.pdfAttachment}
                   >
                     <span className={styles.pdfIcon}>
-                      <RiFileLine size={28} />
+                      <RiFileLine size={20} />
                     </span>
                     <span className={styles.pdfName}>{part.filename ?? 'document.pdf'}</span>
                   </div>
                 );
               }
-              if (part.mediaType?.startsWith('image/')) {
-                return part.url.startsWith('storage://') ? (
-                  <StorageImagePart
-                    // eslint-disable-next-line react/no-array-index-key
-                    key={`file-${idx}`}
-                    url={part.url}
-                    filename={part.filename}
-                  />
-                ) : (
-                  <ExpandableImage
-                    // eslint-disable-next-line react/no-array-index-key
-                    key={`file-${idx}`}
-                    src={part.url}
-                    alt={part.filename ?? 'Attached image'}
-                  />
-                );
-              }
               return null;
             })}
+            <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
         </div>
       );
@@ -155,7 +171,7 @@ function MessageChild({
         if (isToolUIPart(part)) {
           return (
             <div key={`tool-${part.toolCallId}`}>
-              <ToolsProgress part={part} />
+              <ToolsProgress part={part} addToolApprovalResponse={addToolApprovalResponse} />
             </div>
           );
         }

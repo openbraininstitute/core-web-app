@@ -1,6 +1,7 @@
 import { Input, Select } from 'antd';
 import { map } from 'es-toolkit/compat';
 
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CheckList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist';
 import { defaultList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
@@ -76,6 +77,12 @@ export function createFilterItemComponent(
           count,
           value: label,
         }));
+
+        // Honor a field's opt-in facet ordering (e.g. numeric for release versions).
+        // Without it, options render in the backend's order (alphanumeric for scalars).
+        if (getFieldDefinition(filter.field)?.sortFacetOptions === 'numeric') {
+          facetItems.sort((a, b) => Number(a.value) - Number(b.value));
+        }
 
         return (
           <CheckList

@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ViewVariant, WorkspaceSection } from '@/constants';
-import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
+import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
@@ -15,6 +15,7 @@ import {
   ScanConfigActivity,
   type TActivityCustomFile,
 } from '@/features/scan-config/types';
+import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
@@ -26,12 +27,15 @@ import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morph
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type Props = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
+  campaignOriginAction: TScanConfigCampaignOriginActionDict;
+  isCampaignIdChanged: boolean;
   /** obi-one + entitycore task types for this workflow (from its definition) */
   taskTypeBindings: TWorkflowTaskTypeBindings;
 };
@@ -40,6 +44,8 @@ export function SkeletonizationTab({
   campaignId,
   virtualLabId,
   projectId,
+  campaignOriginAction,
+  isCampaignIdChanged,
   taskTypeBindings,
 }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
@@ -48,7 +54,6 @@ export function SkeletonizationTab({
   const [activeConfig, setActiveConfig] =
     useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  const [showCostModal, setShowCostModal] = useState(false);
   const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
     new Map()
   );
@@ -85,6 +90,13 @@ export function SkeletonizationTab({
   }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
+  const activeExecutionJobId = activeConfigExecution?.execution_id ?? undefined;
+  const taskLogsViewerEnabled = !!resolvedActiveConfig && !!activeExecutionJobId;
+  const taskLogsShouldReadSnapshot =
+    !!activeConfigExecStatus &&
+    [ActivityStatus.CANCELLED, ActivityStatus.DONE, ActivityStatus.ERROR].includes(
+      activeConfigExecStatus
+    );
 
   const onActiveConfigChange = useCallback(
     (config: ITaskConfig<TSkeletonizationTaskConfigMeta>) => {
@@ -139,10 +151,13 @@ export function SkeletonizationTab({
     [configsResponse?.configList, resolvedSelectedConfigIds]
   );
 
-  const onCostConfirm = (confirmedIds: string[]) => {
-    setShowCostModal(false);
-    onRun(confirmedIds);
-  };
+  const { openModal, modal: costConfirmationModal } = useCostConfirmation({
+    items: costModalItems,
+    taskType: taskTypeBindings.obiOne,
+    workflowLabel: 'skeletonizations',
+    context,
+    onConfirm: onRun,
+  });
 
   const launchBtnLabelPrefix = resolvedSelectedConfigIds.length
     ? `(${resolvedSelectedConfigIds.length})`
@@ -180,7 +195,7 @@ export function SkeletonizationTab({
               countLabel={launchBtnLabelPrefix}
               pending={runSkeletonizationPending}
               disabled={runSkeletonizationPending || resolvedSelectedConfigIds.length === 0}
-              onClick={() => setShowCostModal(true)}
+              onClick={openModal}
             />
           </div>
         }
@@ -214,18 +229,32 @@ export function SkeletonizationTab({
                 />
               </div>
             )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+              <TaskConfigurationViewer
+                skipStream
+                jobId={activeExecutionJobId}
+                workspace={context}
+                configId={resolvedActiveConfig?.id}
+                enabled={taskLogsViewerEnabled}
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+              <TaskLogsViewer
+                jobId={activeExecutionJobId}
+                workspace={context}
+                configId={resolvedActiveConfig?.id}
+                enabled={taskLogsViewerEnabled}
+                skipStream={taskLogsShouldReadSnapshot}
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
+            )}
           </>
         }
       />
-      <CostConfirmationModal
-        open={showCostModal}
-        onClose={() => setShowCostModal(false)}
-        onConfirm={onCostConfirm}
-        items={costModalItems}
-        taskType={taskTypeBindings.obiOne}
-        workflowLabel="skeletonizations"
-        context={context}
-      />
+      {costConfirmationModal}
     </>
   );
 }
