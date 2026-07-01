@@ -3,6 +3,7 @@ import { atom } from 'jotai';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { AssetContentType } from '@/api/entitycore/types/shared/global';
+import { NWB_ASSET_CACHE_CONFIG } from '@/features/ephys-viewer/constants';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types';
@@ -33,6 +34,7 @@ export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
         entityId: entity.id,
         id: asset.id,
         ctx,
+        cache: NWB_ASSET_CACHE_CONFIG,
       });
     }),
   {
