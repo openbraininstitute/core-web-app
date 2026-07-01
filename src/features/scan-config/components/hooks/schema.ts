@@ -73,7 +73,9 @@ export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | 
 export type TSchemaMappingConfiguration = {
   usability: Record<string, boolean> | null;
   properties:
-    | (Record<string, any> & { NodePropertyUniqueValuesByPopulation: NodeProperties })
+    | (Record<string, any> & {
+        NodePropertyUniqueValuesByPopulation?: NodeProperties;
+      })
     | null;
 };
 
@@ -88,12 +90,40 @@ const nodePropertyUniqueValuesSchema = z.record(
 type NodeProperties = z.infer<typeof nodePropertyUniqueValuesSchema>;
 
 export const usabilitySchema = z.record(z.string(), z.boolean());
+
+/** obi-one `/declared/mapped-circuit-properties/{id}` — Circuit entity (combined neuron sets). */
+const circuitMappedPropertiesSchema = z.object({
+  NodePropertyUniqueValuesByPopulation: nodePropertyUniqueValuesSchema,
+  NodeSet: z.array(z.string()).optional(),
+  BiophysicalNeuronalPopulation: z.array(z.string()).optional(),
+  PointNeuronalPopulation: z.array(z.string()).optional(),
+  VirtualNeuronalPopulation: z.array(z.string()).optional(),
+  NonVirtualNeuronalPopulation: z.array(z.string()).optional(),
+  NeuronalPopulation: z.array(z.string()).optional(),
+});
+
+/** obi-one `/declared/mapped-circuit-properties/{id}` — MEModel entity (single neuron beta). */
+const memodelMappedPropertiesSchema = z.object({
+  MechanismVariablesByIonChannel: z.record(z.string(), z.unknown()),
+});
+
+/**
+ * Validates mapped-circuit-properties from obi-one.
+ *
+ * Circuit and MEModel entities return different property sets from the same endpoint;
+ * both shapes must be accepted so neuron property filters and ion-channel manipulations work.
+ */
 export const configSchema = z
   .object({
-    NodePropertyUniqueValuesByPopulation: nodePropertyUniqueValuesSchema,
     usability: usabilitySchema,
   })
+  .merge(circuitMappedPropertiesSchema.partial())
+  .merge(memodelMappedPropertiesSchema.partial())
   .catchall(z.unknown());
+
+export function parseSchemaMappingConfiguration(resp: unknown) {
+  return configSchema.parse(resp);
+}
 
 export function useSchemaMappingConfiguration({
   entityId,
@@ -117,7 +147,7 @@ export function useSchemaMappingConfiguration({
         },
       });
 
-      const validatedData = configSchema.parse(resp);
+      const validatedData = parseSchemaMappingConfiguration(resp);
 
       return validatedData;
     },

@@ -437,7 +437,7 @@ export function UIElementRender({
         const selectedPopulation = getDropdownValue();
 
         const properties =
-          schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation[
+          schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation?.[
             selectedPopulation
           ] ?? {};
 
