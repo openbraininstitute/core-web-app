@@ -303,7 +303,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     order: [
       {
-        types: [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
+        types: [
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.WholeBrain,
+        ],
         property: 'order_by',
         value: 'target_simulator',
       },
