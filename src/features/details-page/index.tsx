@@ -10,6 +10,7 @@ import Overview from '@/ui/segments/detail-view/overview';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
 import RelatedPublications from '@/ui/segments/detail-view/related-publications';
 import Results from '@/ui/segments/detail-view/results';
+import Viewer3D from '@/ui/segments/detail-view/viewer-3d';
 
 import type { TEntityByExtendedTypeConfig } from '@/entity-configuration/domain/helpers';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
@@ -38,6 +39,9 @@ export function detailPageSectionRenderer({
           isWorkflow={isWorkflow}
         />
       );
+    })
+    .with({ section: DetailViewSectionsDict.MeshViewer }, () => {
+      return <Viewer3D entity={entity} extendedType={entityType.extendedType} />;
     })
     .with({ section: DetailViewSectionsDict.Analysis }, () => {
       return <Analysis entity={entity} extendedType={entityType.extendedType} />;

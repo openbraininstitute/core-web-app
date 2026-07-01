@@ -65,7 +65,7 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
     extension: 'application/swc',
   },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.CellMorphology],
-  detailViewSections: [DetailViewSectionsDict.Overview],
+  detailViewSections: [DetailViewSectionsDict.Overview, DetailViewSectionsDict.MeshViewer],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

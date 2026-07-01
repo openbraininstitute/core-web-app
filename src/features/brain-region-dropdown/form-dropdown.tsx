@@ -259,9 +259,8 @@ export function BrainRegionDropdownWithFormItem({
       defaultBrainRegion={
         value
           ? brainRegionHierarchy?.options.find(({ value: _value }) => value === _value)?.data
-          : brainRegionHierarchy?.options.find(
-              ({ value: _value }) => initialDefault?.id === _value
-            )?.data
+          : brainRegionHierarchy?.options.find(({ value: _value }) => initialDefault?.id === _value)
+              ?.data
       }
       onSelectBrainRegion={handleSelectBrainRegion}
       charsPerLine={charsPerLine}

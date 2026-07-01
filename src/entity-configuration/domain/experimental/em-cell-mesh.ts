@@ -25,7 +25,7 @@ export const EmCellMesh: EntityCoreTypeConfig<IEMCellMesh> = {
     },
   },
   asset: {},
-  detailViewSections: [DetailViewSectionsDict.Overview],
+  detailViewSections: [DetailViewSectionsDict.Overview, DetailViewSectionsDict.MeshViewer],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

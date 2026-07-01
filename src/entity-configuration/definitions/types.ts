@@ -270,6 +270,7 @@ export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
 
 export const DetailViewSectionsDict = {
   Overview: 'overview',
+  MeshViewer: 'mesh-viewer',
   Results: 'results',
   Analysis: 'analysis',
   RelatedPublications: 'related-publications',
