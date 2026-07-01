@@ -1,9 +1,10 @@
-import { Empty, Spin } from 'antd';
+import { Empty } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { type TViewVariant, ViewVariant } from '@/constants';
+import EphysViewerSkeleton from '@/features/ephys-viewer/components/ephys-viewer-skeleton';
 import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import {
@@ -53,7 +54,7 @@ export default function EphysViewer({
   }
 
   if (!trace) {
-    return <Spin />;
+    return <EphysViewerSkeleton view={view} variant={variant} />;
   }
 
   return (

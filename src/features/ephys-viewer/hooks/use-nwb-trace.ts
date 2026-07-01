@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { NWB_ASSET_CACHE_CONFIG } from '@/features/ephys-viewer/constants';
 import NWBTrace from '@/features/ephys-viewer/nwb-trace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
@@ -48,6 +49,7 @@ export default function useTrace({
         entityId: entity.id,
         id: asset.id,
         ctx,
+        cache: NWB_ASSET_CACHE_CONFIG,
       }),
   });
 
