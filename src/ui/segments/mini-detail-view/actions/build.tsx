@@ -1,6 +1,9 @@
 import { kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 
+import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/types';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
 import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
@@ -12,8 +15,8 @@ import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
@@ -36,6 +39,18 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
   });
   const configureSegment = kebabCase(workflow?.targetType ?? record.type);
 
+  const effectiveDataType =
+    record.type === EntityTypeDict.Circuit &&
+    (record as ICircuit).scale === CircuitScaleDictionary.Single
+      ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
+      : (record.type as TExtendedEntitiesTypeDict);
+
+  const detailUrl = resolveExploreDetailsPageUrl({
+    ctx: { virtualLabId, projectId },
+    entityId: record.id,
+    dataType: effectiveDataType,
+  });
+
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Button
@@ -45,11 +60,7 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
         variant="default"
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
-        <Link
-          href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
-        >
-          View details
-        </Link>
+        <Link href={detailUrl}>View details</Link>
       </Button>
       {!hideUseModelAction &&
         (workflowTargetType ? (
