@@ -30,6 +30,7 @@ import {
   type VoltageDurationState,
 } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import {
   type Config,
   type ConfigSchema,
@@ -423,23 +424,11 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.NeuronPropertyFilter },
       },
       ({ paramSchema }) => {
-        const getDropdownValue = (): string => {
-          const dropdownValueKey = paramSchema.population_source_dropdown_key;
-          const selectedPopulation = state[dropdownValueKey];
-
-          if (Array.isArray(selectedPopulation) && typeof selectedPopulation[0] === 'string') {
-            return selectedPopulation[0] ?? '';
-          }
-          if (typeof selectedPopulation === 'string') return selectedPopulation;
-          return '';
-        };
-
-        const selectedPopulation = getDropdownValue();
-
-        const properties =
-          schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation?.[
-            selectedPopulation
-          ] ?? {};
+        const { population: selectedPopulation, properties } = resolveNeuronFilterProperties(
+          paramSchema,
+          state,
+          schemaMappingConfig
+        );
 
         const getValue = () => {
           if (Object.keys(properties).length === 0) return [];
@@ -458,6 +447,7 @@ export function UIElementRender({
         return (
           <NeuronPropertyFilter
             properties={properties}
+            population={selectedPopulation}
             value={getValue() as unknown as INeuronPropertyFilter[]}
             onChange={(newValue: INeuronPropertyFilter[]) => {
               const getNewValue = () => {

@@ -1,6 +1,7 @@
 import { isNil } from 'es-toolkit/compat';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
   type Config,
@@ -8,7 +9,6 @@ import {
   type ConfigValue,
   isType,
   ScanConfigUIElementDict,
-  type SchemaName,
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -173,9 +173,27 @@ export default function Block({
                     </TooltipContent>
                   </Tooltip>
 
-                  {blockSchema.required?.includes(k) && isNil(value) && (
-                    <span className="text-red-500">Required</span>
-                  )}
+                  {(() => {
+                    if (
+                      blockElementSchema.ui_element === ScanConfigUIElementDict.NeuronPropertyFilter
+                    ) {
+                      const { population, properties } = resolveNeuronFilterProperties(
+                        blockElementSchema,
+                        state,
+                        schemaMappingConfig
+                      );
+                      // A population is chosen but exposes no filterable properties:
+                      // a data condition, not a missing input, so say so instead of "Required".
+                      if (population && Object.keys(properties).length === 0) {
+                        return <span className="text-red-500">No properties available</span>;
+                      }
+                    }
+
+                    return (
+                      blockSchema.required?.includes(k) &&
+                      isNil(value) && <span className="text-red-500">Required</span>
+                    );
+                  })()}
                 </div>
               );
             })}

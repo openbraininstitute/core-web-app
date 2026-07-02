@@ -6,7 +6,7 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import { Button } from 'antd';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -17,14 +17,30 @@ export interface INeuronPropertyFilter {
 export default function NeuronPropertyFilter({
   value,
   properties,
+  population,
   onChange,
 }: {
   value: INeuronPropertyFilter[];
   properties: Record<string, string[]>;
+  population: string;
   onChange: (newValue: INeuronPropertyFilter[]) => void;
 }) {
-  if (Object.keys(properties).length === 0)
-    return <div className="text-gray-500">Select a population</div>;
+  // properties differ between populations; any previously selected filter is
+  // invalid once the population changes and must be reset. Tracking the previous
+  // value in a ref (rather than the render body) ensures we only reset on an
+  // actual change and never wipe a filter restored from a saved config on mount.
+  const prevPopulation = useRef(population);
+  useEffect(() => {
+    if (prevPopulation.current !== population) {
+      prevPopulation.current = population;
+      onChange([]);
+    }
+  }, [population, onChange]);
+
+  // no properties to filter on: the status line (rendered by the block) already
+  // explains why ("Select a population" / "No properties available"), so render
+  // nothing here to avoid a duplicate, conflicting message.
+  if (Object.keys(properties).length === 0) return null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -49,7 +65,7 @@ export default function NeuronPropertyFilter({
                 index={idx + 1}
                 propertyName={p}
                 key={p}
-                values={properties[p]}
+                values={properties[p] ?? []}
                 selected={f.filter_dict[p]}
                 onValuesChange={(selected) => handleValuesChange(p, selected)}
                 onDelete={() => {
@@ -78,7 +94,7 @@ export default function NeuronPropertyFilter({
       })}
 
       <Button
-        className="p-2 rounded-full text-primary-8 font-semibold bg-transparent self-end p-5"
+        className="p-5 rounded-full text-primary-8 font-semibold bg-transparent self-end"
         onClick={() => {
           onChange([...value, { filter_dict: {} }]);
         }}
@@ -159,6 +175,10 @@ function PropertyValueSelector({
 }) {
   const [expanded, setExpanded] = useState(true);
 
+  // some populations expose empty-string values (e.g. an unset model_template);
+  // drop them so they don't render as blank, unclickable pills.
+  const displayValues = values.filter((val) => val.trim() !== '');
+
   const toggle = (val: string) => {
     if (selected.includes(val)) {
       onValuesChange(selected.filter((s) => s !== val));
@@ -193,7 +213,8 @@ function PropertyValueSelector({
       </div>
       {expanded && (
         <div className="flex flex-wrap gap-2 mt-1 text-sm border-gray-300 border-1 rounded-md p-3 bg-white">
-          {values.map((val) => {
+          {displayValues.length === 0 && <span className="text-gray-400">No values available</span>}
+          {displayValues.map((val) => {
             const isSelected = selected.includes(val);
             return (
               <button
