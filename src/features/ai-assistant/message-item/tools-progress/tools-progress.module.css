@@ -519,13 +519,13 @@
 }
 
 .tabButton:hover {
-  color: var(--color-neutral-1, #444);
+  color: var(--tp-accent, var(--color-neutral-1, #444));
 }
 
 .tabButtonActive {
-  color: var(--color-primary-8, #1a1a2e);
-  font-weight: 600;
-  border-bottom-color: var(--color-primary-8, #1a1a2e);
+  color: var(--tp-accent, var(--color-primary-8, #1a1a2e));
+  font-weight: 700;
+  border-bottom-color: var(--tp-accent, var(--color-primary-8, #1a1a2e));
 }
 
 /* Approval states */
