@@ -5,6 +5,7 @@ import { DM_Serif_Text, Gabarito, Titillium_Web } from 'next/font/google';
 import { type ReactNode, Suspense } from 'react';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
+import { AppToaster } from '@/components/notification';
 import { ConfigProvider, getClientEnvInjectionConfig } from '@/config';
 
 import '@/styles/globals.css';
@@ -50,6 +51,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       <body>
         <ConfigProvider config={config}>
           <Suspense fallback={null}>{children}</Suspense>
+          <AppToaster />
           <MatomoAnalyticsConsent />
         </ConfigProvider>
       </body>
