@@ -40,6 +40,16 @@ export function resolveSpeciesAtlasPreview(
   return null;
 }
 
+export function getSpeciesAtlasPlaceholderImageSrc(
+  preview: SpeciesAtlasPreviewSource
+): string | undefined {
+  if (preview.kind === AtlasKindDict.Image) {
+    return preview.imageSrc;
+  }
+
+  return preview.fallbackImageSrc;
+}
+
 const mountedPreviewHierarchyIds = new Set<string>();
 
 export function hasMountedSpeciesAtlasPreview(hierarchyId: string) {

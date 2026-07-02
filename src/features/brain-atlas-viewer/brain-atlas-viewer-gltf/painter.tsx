@@ -85,6 +85,10 @@ export class Painter {
     this.AtlasID = atlasId;
   }
 
+  get isLoading() {
+    return this._loadingMesh || this._loadingPointCloud;
+  }
+
   get uniforms() {
     return this._uniforms;
   }

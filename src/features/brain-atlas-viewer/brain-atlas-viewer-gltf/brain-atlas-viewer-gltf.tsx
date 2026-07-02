@@ -8,7 +8,12 @@ import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
-import { useAtlasViewerSettingsValues, usePainter, useVisibleRegions } from './hooks';
+import {
+  useAtlasViewerSettingsValues,
+  usePainter,
+  usePainterLoadingListener,
+  useVisibleRegions,
+} from './hooks';
 
 import styles from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/brain-atlas-viewer-gltf.module.css';
 
@@ -71,12 +76,13 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
   // const [values, setValues] = useAtlasViewerSettingsValues(painter);
   const { region, regions } = useVisibleRegions();
 
+  usePainterLoadingListener(painter, onLoading);
+
   React.useEffect(() => {
     const handleCameraChange = () => {
       setShowResetCamera(true);
     };
     painter?.eventCameraChange.addListener(handleCameraChange);
-    painter?.eventLoading.addListener(onLoading);
 
     if (accessToken && painter) {
       painter.setRegions(regions, accessToken);
@@ -89,9 +95,8 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
 
     return () => {
       painter?.eventCameraChange.removeListener(handleCameraChange);
-      painter?.eventLoading.removeListener(onLoading);
     };
-  }, [painter, region, regions, accessToken, onLoading]);
+  }, [painter, region, regions, accessToken]);
 
   React.useEffect(() => {
     const element = containerRef.current;

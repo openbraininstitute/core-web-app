@@ -1,13 +1,14 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { IcRound3dRotation } from '@/components/icons/IcRound3dRotation';
 import { Loader } from '@/components/loader';
 import {
   AtlasKindDict,
+  getSpeciesAtlasPlaceholderImageSrc,
   hasMountedSpeciesAtlasPreview,
   markSpeciesAtlasPreviewMounted,
   type SpeciesAtlasPreviewSource,
@@ -23,15 +24,80 @@ type SpeciesAtlasPreviewProps = {
   speciesName: string;
 };
 
-function SpeciesAtlasImage({ src, alt }: { src: string; alt: string }) {
+const IMAGE_SIZES = '(max-width: 768px) 100vw, 33vw';
+
+const CONTENT_REVEAL =
+  'transition-opacity duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none motion-reduce:duration-0';
+
+function syncCachedImageLoaded(
+  image: HTMLImageElement | null,
+  setLoaded: (loaded: boolean) => void
+) {
+  if (image?.complete && image.naturalWidth > 0) {
+    setLoaded(true);
+  }
+}
+
+function SpeciesAtlasImageContent({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  useLayoutEffect(() => {
+    syncCachedImageLoaded(imageRef.current, setLoaded);
+  }, []);
+
   return (
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      className="object-contain p-6"
-      sizes="(max-width: 768px) 100vw, 33vw"
-    />
+    <>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader className="text-neutral-3" />
+        </div>
+      )}
+      <Image
+        ref={imageRef}
+        src={src}
+        alt={alt}
+        fill
+        onLoad={() => setLoaded(true)}
+        className={cn(
+          'object-contain p-6',
+          CONTENT_REVEAL,
+          loaded ? 'opacity-100 motion-reduce:opacity-100' : 'opacity-0'
+        )}
+        sizes={IMAGE_SIZES}
+      />
+    </>
+  );
+}
+
+function SpeciesAtlasImage({ src, alt }: { src: string; alt: string }) {
+  return <SpeciesAtlasImageContent key={src} src={src} alt={alt} />;
+}
+
+function SpeciesAtlasPlaceholder({
+  imageSrc,
+  alt,
+  className,
+}: {
+  imageSrc?: string;
+  alt: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn('absolute inset-0', className)}>
+      {imageSrc && (
+        <Image
+          src={imageSrc}
+          alt={alt}
+          fill
+          className="object-contain p-6 opacity-30"
+          sizes={IMAGE_SIZES}
+        />
+      )}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <Loader className="text-neutral-3" />
+      </div>
+    </div>
   );
 }
 
@@ -50,6 +116,7 @@ function SpeciesAtlasGltfPreview({
     result: { root },
     loading,
   } = useBrainRegionRootHierarchyQuery({ hId: hierarchyId });
+  const [meshLoading, setMeshLoading] = useState(true);
 
   const fallback = preview.fallbackImageSrc ? (
     <SpeciesAtlasImage src={preview.fallbackImageSrc} alt={speciesName} />
@@ -60,20 +127,35 @@ function SpeciesAtlasGltfPreview({
   );
 
   if (loading || !root) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader className="text-neutral-3" />
-      </div>
-    );
+    return <SpeciesAtlasPlaceholder imageSrc={preview.fallbackImageSrc} alt={speciesName} />;
   }
 
   return (
     <ErrorBoundary fallback={fallback}>
-      <MiniBrainAtlasViewerGltf
-        atlasId={preview.atlasId}
-        regionId={root.id}
-        regionName={regionName}
-      />
+      <div className="relative h-full w-full">
+        <div
+          className={cn(
+            'h-full w-full',
+            CONTENT_REVEAL,
+            meshLoading ? 'opacity-0' : 'opacity-100 motion-reduce:opacity-100'
+          )}
+        >
+          <MiniBrainAtlasViewerGltf
+            atlasId={preview.atlasId}
+            regionId={root.id}
+            regionName={regionName}
+            onLoading={setMeshLoading}
+          />
+        </div>
+        <SpeciesAtlasPlaceholder
+          imageSrc={preview.fallbackImageSrc}
+          alt={speciesName}
+          className={cn(
+            CONTENT_REVEAL,
+            meshLoading ? 'opacity-100' : 'pointer-events-none opacity-0 motion-reduce:opacity-0'
+          )}
+        />
+      </div>
     </ErrorBoundary>
   );
 }
@@ -145,13 +227,13 @@ export function SpeciesAtlasPreview({
         <div
           aria-hidden
           className={cn(
-            'pointer-events-none absolute top-3 right-3 z-10 flex size-8 items-center justify-center rounded-full',
+            'pointer-events-none absolute top-3 right-3 z-10 flex size-8 lg:size-6 xl:size-8 items-center justify-center rounded-full',
             'bg-[radial-gradient(circle_at_32%_28%,#ffffff_0%,#f5f7fa_42%,#d8dee8_100%)]',
             'shadow-[0_3px_8px_rgba(0,12,30,0.35),inset_0_1px_0_rgba(255,255,255,0.95),inset_0_-4px_8px_rgba(0,12,30,0.14)]',
             'ring-1 ring-white/70'
           )}
         >
-          <IcRound3dRotation className="size-4.5 text-primary-9" />
+          <IcRound3dRotation className="size-4.5 lg:size-4 xl:size-4.5 text-primary-9" />
         </div>
       )}
       {isVisible ? (
@@ -162,9 +244,10 @@ export function SpeciesAtlasPreview({
           speciesName={speciesName}
         />
       ) : (
-        <div className="flex h-full items-center justify-center">
-          <Loader className="text-neutral-3" />
-        </div>
+        <SpeciesAtlasPlaceholder
+          imageSrc={getSpeciesAtlasPlaceholderImageSrc(preview)}
+          alt={speciesName}
+        />
       )}
     </div>
   );
