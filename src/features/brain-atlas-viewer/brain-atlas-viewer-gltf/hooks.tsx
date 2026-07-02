@@ -56,6 +56,23 @@ export function usePainter({
   return refPainter.current;
 }
 
+/** Subscribes `onLoading` to the painter's mesh/point-cloud loading events. */
+export function usePainterLoadingListener(
+  painter: Painter | null,
+  onLoading?: (loading: boolean) => void
+) {
+  React.useEffect(() => {
+    if (!painter || !onLoading) return;
+
+    onLoading(painter.isLoading);
+    painter.eventLoading.addListener(onLoading);
+
+    return () => {
+      painter.eventLoading.removeListener(onLoading);
+    };
+  }, [painter, onLoading]);
+}
+
 export function useVisibleRegions(): {
   region: IBrainRegionHierarchy | undefined;
   regions: VisibleRegion[];
