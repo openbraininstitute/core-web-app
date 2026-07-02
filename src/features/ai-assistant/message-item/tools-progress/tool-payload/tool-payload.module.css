@@ -65,7 +65,6 @@
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-gutter: stable;
 }
 
 .payloadContent::-webkit-scrollbar {
@@ -80,7 +79,6 @@
 .payloadContent::-webkit-scrollbar-thumb {
   background-color: var(--color-neutral-5, #d0d0d0);
   border-radius: 2px;
-  background-clip: padding-box;
 }
 
 .payloadContent::-webkit-scrollbar-thumb:hover {
@@ -112,13 +110,17 @@
 
 .defKey {
   flex: 0 0 auto;
-  min-width: 90px;
+  min-width: 80px;
   max-width: 45%;
   font-size: 0.75rem;
   color: var(--color-neutral-2, #666);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.nestedGroup .defKey {
+  min-width: 64px;
 }
 
 .defValue {
@@ -134,6 +136,11 @@
 /* Full-width block entries */
 .defBlock {
   width: 100%;
+  margin-top: 6px;
+}
+
+.defBlock:first-child {
+  margin-top: 0;
 }
 
 .defBlockLabel {
@@ -259,8 +266,8 @@
   flex-direction: column;
   gap: 0;
   width: 100%;
-  padding-left: 10px;
-  margin-left: 2px;
+  padding-left: 12px;
+  margin-left: 0;
   border-left: 1px solid var(--tp-border, var(--color-neutral-6, #e7e7e7));
 }
 
@@ -380,9 +387,9 @@
 }
 
 .itemCardExpandedBody {
-  padding-left: 10px;
+  padding-left: 12px;
   border-left: 1px solid var(--tp-border, var(--color-neutral-6, #e7e7e7));
-  margin-left: 2px;
+  margin-left: 0;
 }
 
 .itemCardExpandedRow {
@@ -394,7 +401,7 @@
 
 .itemCardExpandedKey {
   flex: 0 0 auto;
-  min-width: 60px;
+  min-width: 64px;
   max-width: 40%;
   font-size: 0.675rem;
   color: var(--color-neutral-2, #888);
@@ -432,8 +439,8 @@
 /* === Nested objects === */
 .nestedGroup {
   border-left: 1px solid var(--tp-border, var(--color-neutral-6, #e7e7e7));
-  padding-left: 10px;
-  margin-left: 2px;
+  padding-left: 12px;
+  margin-left: 0;
   overflow: hidden;
   width: 100%;
 }
@@ -588,7 +595,7 @@
 /* === Code blocks === */
 .codeBlock {
   margin: 2px 0 0;
-  padding: 8px 10px;
+  padding: 6px 0 6px 6px;
   border-radius: 6px;
   background-color: color-mix(
     in srgb,
@@ -597,30 +604,37 @@
   );
   border: 1px solid var(--tp-border, var(--color-neutral-6, #e7e7e7));
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.7rem;
-  line-height: 1.5;
+  font-size: 0.75rem;
+  line-height: 1.6;
   white-space: pre-wrap;
-  word-break: break-all;
+  overflow-wrap: break-word;
+  word-break: normal;
   overflow-x: hidden;
   max-height: 10rem;
   overflow-y: auto;
+  scrollbar-width: thin;
   color: var(--color-neutral-1, #444);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .codeBlockHighlighted {
   margin: 2px 0 0;
   border-radius: 6px;
   border: 1px solid var(--tp-border, var(--color-neutral-6, #e7e7e7));
-  overflow: hidden;
   max-height: 10rem;
+  overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: thin;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .codeBlockHighlighted pre {
   margin: 0 !important;
-  padding: 8px 10px !important;
-  font-size: 0.7rem !important;
-  line-height: 1.5 !important;
+  padding: 6px 0 6px 6px !important;
+  font-size: 0.75rem !important;
+  line-height: 1.6 !important;
   background-color: color-mix(
     in srgb,
     var(--tp-accent, var(--color-primary-6, #003a8c)) 1%,
@@ -630,7 +644,8 @@
 
 .codeBlockHighlighted code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-  font-size: 0.7rem !important;
+  font-size: 0.75rem !important;
   white-space: pre-wrap !important;
-  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
 }

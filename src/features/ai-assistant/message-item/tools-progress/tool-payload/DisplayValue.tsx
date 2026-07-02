@@ -363,7 +363,7 @@ function ObjectValue({ value, depth }: { value: Record<string, unknown>; depth: 
     );
   }
 
-  // Split entries: inline (primitives, short strings) vs block (arrays of objects) vs code
+  // Split entries: inline (primitives, short strings) vs block (arrays of objects, nested objects) vs code
   const inlineEntries: [string, unknown][] = [];
   const blockEntries: [string, unknown][] = [];
   const codeEntries: [string, string][] = [];
@@ -372,6 +372,13 @@ function ObjectValue({ value, depth }: { value: Record<string, unknown>; depth: 
     if (isCodeKey(k) && typeof v === 'string' && v.length > 0) {
       codeEntries.push([k, v]);
     } else if (Array.isArray(v) && v.length > 0 && typeof v[0] === 'object' && v[0] !== null) {
+      blockEntries.push([k, v]);
+    } else if (
+      v !== null &&
+      typeof v === 'object' &&
+      !Array.isArray(v) &&
+      Object.keys(v).length > 0
+    ) {
       blockEntries.push([k, v]);
     } else if (typeof v === 'string' && v.trim() === '') {
       // Skip empty strings entirely
@@ -403,12 +410,14 @@ function ObjectValue({ value, depth }: { value: Record<string, unknown>; depth: 
         </div>
       ))}
       {blockEntries.map(([k, v]) => {
-        const arr = v as unknown[];
+        const isArray = Array.isArray(v);
+        const count = isArray ? (v as unknown[]).length : Object.keys(v as object).length;
+        const countLabel = isArray ? `${count} items` : `${count} fields`;
         return (
           <div key={k} className={styles.defBlock}>
             <span className={styles.defBlockLabel}>{humanizeKey(k)}</span>
-            <span className={styles.defBlockCount}>· {arr.length} items</span>
-            <DisplayValue value={v} keyName={k} depth={depth + 1} hideArrayHeader />
+            <span className={styles.defBlockCount}>· {countLabel}</span>
+            <DisplayValue value={v} keyName={k} depth={depth + 1} hideArrayHeader={isArray} />
           </div>
         );
       })}
@@ -449,13 +458,195 @@ function CopyButton({ text }: { text: string }) {
 
 /* === Code block renderer === */
 
+/**
+ * Format shell/python commands for readability by inserting line breaks
+ * at logical operator boundaries (&&, ||, |, ;) that are not inside quotes.
+ */
+function formatCodeForDisplay(code: string, language: string): string {
+  if (language !== 'bash' && language !== 'python') return code;
+
+  // For python code passed via -c flag, format the inline code
+  if (language === 'bash') {
+    return formatShellCommand(code);
+  }
+
+  // For direct python code blocks, add breaks at statement boundaries
+  if (language === 'python') {
+    return formatPythonCode(code);
+  }
+
+  return code;
+}
+
+/**
+ * Format shell commands: break at &&, ||, | and ; boundaries
+ * that are outside of quoted strings.
+ */
+function formatShellCommand(cmd: string): string {
+  // If the command is short enough, don't reformat
+  if (cmd.length < 60) return cmd;
+
+  const result: string[] = [];
+  let i = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let current = '';
+
+  while (i < cmd.length) {
+    const ch = cmd[i];
+
+    // Track quote state (ignore escaped quotes)
+    if (ch === "'" && !inDoubleQuote && (i === 0 || cmd[i - 1] !== '\\')) {
+      inSingleQuote = !inSingleQuote;
+      current += ch;
+      i++;
+      continue;
+    }
+    if (ch === '"' && !inSingleQuote && (i === 0 || cmd[i - 1] !== '\\')) {
+      inDoubleQuote = !inDoubleQuote;
+      current += ch;
+      i++;
+      continue;
+    }
+
+    // Only split when outside quotes
+    if (!inSingleQuote && !inDoubleQuote) {
+      // Check for && or ||
+      if ((cmd[i] === '&' && cmd[i + 1] === '&') || (cmd[i] === '|' && cmd[i + 1] === '|')) {
+        const op = cmd.slice(i, i + 2);
+        result.push(current.trimEnd());
+        current = `  ${op} `;
+        i += 2;
+        // Skip whitespace after operator
+        while (i < cmd.length && cmd[i] === ' ') i++;
+        continue;
+      }
+      // Check for pipe (single |, not ||)
+      if (cmd[i] === '|' && cmd[i + 1] !== '|') {
+        result.push(current.trimEnd());
+        current = '  | ';
+        i++;
+        while (i < cmd.length && cmd[i] === ' ') i++;
+        continue;
+      }
+      // Check for semicolons (statement separator in shell, but NOT inside python -c strings)
+      if (cmd[i] === ';' && !isInsidePythonFlag(cmd, i)) {
+        current += ch;
+        result.push(current.trimEnd());
+        current = '';
+        i++;
+        while (i < cmd.length && cmd[i] === ' ') i++;
+        continue;
+      }
+    }
+
+    current += ch;
+    i++;
+  }
+
+  if (current.trim()) {
+    result.push(current);
+  }
+
+  return result.join('\n');
+}
+
+/**
+ * Check if a position is inside a `python -c "..."` string argument.
+ * This prevents splitting on semicolons that are Python statement separators.
+ */
+function isInsidePythonFlag(cmd: string, pos: number): boolean {
+  // Look backwards for an unmatched quote that follows -c
+  const before = cmd.slice(0, pos);
+  const cFlagMatch = before.match(/-c\s+["']/);
+  if (!cFlagMatch) return false;
+
+  // Count unmatched quotes between the -c flag and current position
+  const quoteChar = before[cFlagMatch.index! + cFlagMatch[0].length - 1];
+  const afterFlag = before.slice(cFlagMatch.index! + cFlagMatch[0].length);
+  let escaped = false;
+  let open = true;
+  for (const ch of afterFlag) {
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (ch === quoteChar) {
+      open = !open;
+    }
+  }
+  return open; // If still open, we're inside the quoted python string
+}
+
+/**
+ * Format Python code: break at top-level statement boundaries (`;`)
+ * when the code is a single-line multi-statement string.
+ */
+function formatPythonCode(code: string): string {
+  // Only format if it's a single line with semicolons (common in -c invocations)
+  if (code.includes('\n') || !code.includes(';')) return code;
+  if (code.length < 60) return code;
+
+  const statements: string[] = [];
+  let current = '';
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+
+  for (let i = 0; i < code.length; i++) {
+    const ch = code[i];
+
+    if (ch === '\\' && (inSingleQuote || inDoubleQuote)) {
+      current += ch + (code[i + 1] || '');
+      i++;
+      continue;
+    }
+    if (ch === "'" && !inDoubleQuote) {
+      inSingleQuote = !inSingleQuote;
+    } else if (ch === '"' && !inSingleQuote) {
+      inDoubleQuote = !inDoubleQuote;
+    }
+
+    if (!inSingleQuote && !inDoubleQuote) {
+      if (ch === '(') parenDepth++;
+      else if (ch === ')') parenDepth--;
+      else if (ch === '[') bracketDepth++;
+      else if (ch === ']') bracketDepth--;
+      else if (ch === '{') braceDepth++;
+      else if (ch === '}') braceDepth--;
+
+      // Split on semicolons only at top level
+      if (ch === ';' && parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+        statements.push(current.trim());
+        current = '';
+        continue;
+      }
+    }
+
+    current += ch;
+  }
+
+  if (current.trim()) {
+    statements.push(current.trim());
+  }
+
+  return statements.join('\n');
+}
+
 function CodeValue({ code, language }: { code: string; language: string }) {
   const [html, setHtml] = useState<string>('');
   const mounted = useRef(false);
+  const formatted = useMemo(() => formatCodeForDisplay(code, language), [code, language]);
 
   useEffect(() => {
     mounted.current = true;
-    highlightCode(code, language as BundledLanguage, false)
+    highlightCode(formatted, language as BundledLanguage, false)
       .then((highlighted) => {
         if (mounted.current) setHtml(highlighted);
       })
@@ -466,13 +657,13 @@ function CodeValue({ code, language }: { code: string; language: string }) {
     return () => {
       mounted.current = false;
     };
-  }, [code, language]);
+  }, [formatted, language]);
 
   if (!html) {
     // Fallback while loading or on error
     return (
       <pre className={styles.codeBlock}>
-        <code>{code}</code>
+        <code>{formatted}</code>
       </pre>
     );
   }

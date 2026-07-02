@@ -131,26 +131,6 @@ export function MarkdownTable({ children, ...props }: React.TableHTMLAttributes<
       </div>
 
       <FullscreenDialog dialogRef={dialogRef}>
-        <div className={styles.fullscreenToolbar} role="toolbar" aria-label="Table actions">
-          <button
-            type="button"
-            className={styles.fullscreenToolbarBtn}
-            onClick={handleDownloadCsv}
-            aria-label="Download as CSV"
-            title="Download as CSV"
-          >
-            <DownloadOutlined />
-          </button>
-          <button
-            type="button"
-            className={styles.fullscreenToolbarBtn}
-            onClick={handleCopy}
-            aria-label="Copy to clipboard"
-            title="Copy to clipboard"
-          >
-            {isCopied ? <CheckOutlined /> : <CopyOutlined />}
-          </button>
-        </div>
         <div className={styles.fullscreenTableWrapper}>
           <table {...props} className={styles.tableWide}>
             {children}
