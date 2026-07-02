@@ -3,7 +3,7 @@ import Link from 'next/link';
 import SocialMediaLinks from '@/ui/segments/landing/components/social-media-links/social-media-links';
 import { classNames } from '@/util/utils';
 
-import NewsLetterSubscription from './newsletter-subscription/newsletter-subscription';
+import NewsLetterSubscription from './newsletter-subscription';
 
 import type { ContentForSocialMediaLink } from '@/services/sanity/api/get-social-media';
 
