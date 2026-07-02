@@ -9,32 +9,30 @@
 /* === Toggle === */
 .viewToggle {
   border: none;
-  background-color: color-mix(
-    in srgb,
-    var(--tp-accent, var(--color-primary-6, #003a8c)) 8%,
-    var(--color-neutral-9, #ffffff)
-  );
+  background: none;
   cursor: pointer;
-  font-size: 0.575rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: normal;
   color: var(--tp-accent, var(--color-primary-5, #003a8c));
-  padding: 3px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  opacity: 0.6;
+  padding: 0 0 0.4375rem;
+  margin-bottom: -1px;
+  text-transform: none;
+  opacity: 0.55;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   transition:
     opacity 150ms,
-    background-color 150ms;
+    color 150ms;
 }
 
 .viewToggle:hover {
   opacity: 1;
-  background-color: color-mix(
-    in srgb,
-    var(--tp-accent, var(--color-primary-6, #003a8c)) 11%,
-    var(--color-neutral-9, #ffffff)
-  );
+}
+
+.viewToggleIcon {
+  flex-shrink: 0;
 }
 
 /* === Section header === */
@@ -101,21 +99,23 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  gap: 0;
 }
 
 .defRow {
   display: flex;
   align-items: baseline;
-  min-height: 24px;
-  gap: 8px;
+  min-height: 26px;
+  gap: 12px;
+  padding: 3px 0;
 }
 
 .defKey {
   flex: 0 0 auto;
-  min-width: 80px;
+  min-width: 90px;
   max-width: 45%;
   font-size: 0.75rem;
-  color: var(--color-neutral-2, #888);
+  color: var(--color-neutral-2, #666);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -125,7 +125,7 @@
   flex: 1;
   min-width: 0;
   font-size: 0.75rem;
-  color: var(--color-neutral-1, #444);
+  color: var(--color-neutral-1, #333);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

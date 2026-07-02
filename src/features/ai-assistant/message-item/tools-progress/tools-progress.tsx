@@ -13,6 +13,7 @@ import { cn } from '@/utils/css-class';
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 import { ToolPayload, useViewMode } from './tool-payload';
+import { ViewToggle } from './tool-payload/ViewToggle';
 
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
@@ -38,6 +39,7 @@ export default function ToolsProgress({
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'arguments' | 'result'>('arguments');
   const [viewMode] = useViewMode();
 
   const toggleExpanded = (key: string) => {
@@ -133,17 +135,21 @@ export default function ToolsProgress({
             aria-label={`${tool.name} details`}
           >
             <div className={styles.detailsInner}>
+              <DetailsTabBar
+                activeTab="arguments"
+                setActiveTab={() => {}}
+                hasArguments={
+                  part.input != null &&
+                  typeof part.input === 'object' &&
+                  Object.keys(part.input as Record<string, unknown>).length > 0
+                }
+                hasResult={false}
+              />
               {part.input != null &&
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <ToolPayload
-                    value={part.input}
-                    label="Arguments"
-                    mode={viewMode}
-                    showToggle
-                    isFirst
-                  />
+                  <ToolPayload value={part.input} mode={viewMode} isFirst />
                 </div>
               ) : null}
             </div>
@@ -230,17 +236,21 @@ export default function ToolsProgress({
             aria-label={`${tool.name} details`}
           >
             <div className={styles.detailsInner}>
+              <DetailsTabBar
+                activeTab="arguments"
+                setActiveTab={() => {}}
+                hasArguments={
+                  part.input != null &&
+                  typeof part.input === 'object' &&
+                  Object.keys(part.input as Record<string, unknown>).length > 0
+                }
+                hasResult={false}
+              />
               {part.input != null &&
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <ToolPayload
-                    value={part.input}
-                    label="Arguments"
-                    mode={viewMode}
-                    showToggle
-                    isFirst
-                  />
+                  <ToolPayload value={part.input} mode={viewMode} isFirst />
                 </div>
               ) : null}
             </div>
@@ -287,17 +297,21 @@ export default function ToolsProgress({
             aria-label={`${tool.name} details`}
           >
             <div className={styles.detailsInner}>
+              <DetailsTabBar
+                activeTab="arguments"
+                setActiveTab={() => {}}
+                hasArguments={
+                  part.input != null &&
+                  typeof part.input === 'object' &&
+                  Object.keys(part.input as Record<string, unknown>).length > 0
+                }
+                hasResult={false}
+              />
               {part.input != null &&
               typeof part.input === 'object' &&
               Object.keys(part.input as Record<string, unknown>).length > 0 ? (
                 <div className={styles.section}>
-                  <ToolPayload
-                    value={part.input}
-                    label="Arguments"
-                    mode={viewMode}
-                    showToggle
-                    isFirst
-                  />
+                  <ToolPayload value={part.input} mode={viewMode} isFirst />
                 </div>
               ) : null}
             </div>
@@ -386,29 +400,39 @@ export default function ToolsProgress({
           aria-label={`${tool.name} details`}
         >
           <div className={styles.detailsInner}>
-            {part.input != null &&
+            {/* Tab bar */}
+            <DetailsTabBar
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              hasArguments={
+                part.input != null &&
+                typeof part.input === 'object' &&
+                Object.keys(part.input as Record<string, unknown>).length > 0
+              }
+              hasResult={
+                (part.state === 'output-available' && part.output != null) ||
+                (part.state === 'output-error' && 'errorText' in part)
+              }
+            />
+
+            {/* Tab content */}
+            {activeTab === 'arguments' &&
+            part.input != null &&
             typeof part.input === 'object' &&
             Object.keys(part.input as Record<string, unknown>).length > 0 ? (
               <div className={styles.section}>
-                <ToolPayload
-                  value={part.input}
-                  label="Arguments"
-                  mode={viewMode}
-                  showToggle
-                  isFirst
-                />
+                <ToolPayload value={part.input} mode={viewMode} isFirst />
               </div>
             ) : null}
 
-            {part.state === 'output-available' && part.output != null ? (
+            {activeTab === 'result' && part.state === 'output-available' && part.output != null ? (
               <div className={styles.section}>
-                <ToolPayload value={part.output} label="Result" mode={viewMode} />
+                <ToolPayload value={part.output} mode={viewMode} isFirst />
               </div>
             ) : null}
 
-            {part.state === 'output-error' && 'errorText' in part ? (
+            {activeTab === 'result' && part.state === 'output-error' && 'errorText' in part ? (
               <div className={styles.section}>
-                <div className={styles.sectionTitle}>Error</div>
                 <pre className={cn(styles.codeBlock, styles.errorText)}>
                   {(part as unknown as { errorText: string }).errorText}
                 </pre>
@@ -426,6 +450,43 @@ type ToolsStates = {
   state: (ToolUIPart | DynamicToolUIPart)['state'];
   key: string;
 };
+
+/* === Tab bar for details panel === */
+
+interface DetailsTabBarProps {
+  activeTab: 'arguments' | 'result';
+  setActiveTab: (tab: 'arguments' | 'result') => void;
+  hasArguments: boolean;
+  hasResult: boolean;
+}
+
+function DetailsTabBar({ activeTab, setActiveTab, hasArguments, hasResult }: DetailsTabBarProps) {
+  return (
+    <div className={styles.tabBar}>
+      <div className={styles.tabButtons}>
+        {hasArguments && (
+          <button
+            type="button"
+            className={cn(styles.tabButton, activeTab === 'arguments' && styles.tabButtonActive)}
+            onClick={() => setActiveTab('arguments')}
+          >
+            Arguments
+          </button>
+        )}
+        {hasResult && (
+          <button
+            type="button"
+            className={cn(styles.tabButton, activeTab === 'result' && styles.tabButtonActive)}
+            onClick={() => setActiveTab('result')}
+          >
+            Result
+          </button>
+        )}
+      </div>
+      <ViewToggle />
+    </div>
+  );
+}
 
 function getToolsState(
   part: ToolUIPart | DynamicToolUIPart,

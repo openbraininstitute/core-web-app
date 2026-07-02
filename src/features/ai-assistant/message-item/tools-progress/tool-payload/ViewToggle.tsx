@@ -2,6 +2,7 @@
  * ViewToggle — a small, unobtrusive toggle to switch between Display and JSON views.
  * Renders as a simple text link that flips state on click.
  */
+import { RiCodeSSlashLine, RiListCheck } from '@remixicon/react';
 import { useCallback } from 'react';
 
 import { useViewMode } from './use-view-mode';
@@ -24,7 +25,17 @@ export function ViewToggle() {
       onClick={handleToggle}
       aria-label={mode === 'display' ? 'Switch to JSON view' : 'Switch to Display view'}
     >
-      {mode === 'display' ? '{ } JSON' : '◉ Display'}
+      {mode === 'display' ? (
+        <>
+          <RiCodeSSlashLine size={12} className={styles.viewToggleIcon} />
+          <span>JSON</span>
+        </>
+      ) : (
+        <>
+          <RiListCheck size={12} className={styles.viewToggleIcon} />
+          <span>Display</span>
+        </>
+      )}
     </button>
   );
 }
