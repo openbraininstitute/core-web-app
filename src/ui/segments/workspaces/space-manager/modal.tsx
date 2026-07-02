@@ -3,6 +3,7 @@
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, ViewTransition } from 'react';
 import { match } from 'ts-pattern';
 
@@ -39,6 +40,7 @@ import {
 } from '@/ui/segments/workspaces/space-manager/sections/virtual-lab';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+import { getPreservedProjectSection } from '@/utils/get-section';
 
 import type { CSSProperties } from 'react';
 
@@ -415,6 +417,11 @@ export function WorkspaceManagerModal({
       setUserRecentWorkspace({ workspace }),
   });
 
+  // when switching workspace, keep the user on the same parent page
+  // (data / workflows / notebooks / reports) instead of the project home
+  const pathname = usePathname();
+  const parentSection = getPreservedProjectSection(pathname);
+
   const mainContent = match(kind)
     .with(WorkspaceManagerKindDict.Account, () => (
       <AccountContent
@@ -470,7 +477,7 @@ export function WorkspaceManagerModal({
         >
           <Link
             className="text-inherit flex w-full items-center justify-between gap-2"
-            href={`/app/virtual-lab/${x.targetVirtualLabId}/${x.targetProjectId}`}
+            href={`${config.ROOT_ROUTE}/${x.targetVirtualLabId}/${x.targetProjectId}${parentSection ? `/${parentSection}` : ''}`}
             data-testid="workspace-manager-go-to-project-link"
             id="workspace-manager-go-to-project-link"
             onClick={() =>

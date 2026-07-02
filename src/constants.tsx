@@ -61,6 +61,16 @@ export const WorkspaceSection = {
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];
 
+/** Top-level project pages shown in workspace navigation (Data, Workflows, etc.). */
+export const WorkspaceMainPages = {
+  Data: WorkspaceSection.Data,
+  Workflows: WorkspaceSection.GeneralWorkflow,
+  Notebooks: WorkspaceSection.Notebooks,
+  Reports: 'reports',
+} as const;
+
+export type TWorkspaceMainPages = (typeof WorkspaceMainPages)[keyof typeof WorkspaceMainPages];
+
 // use in data page to select the data group (models, experimental, simulations, notebooks, extractions, processing)
 export const DATA_GROUP_QUERY_PARAM = 'group';
 // use in data page to select the workspace scope (public, project)
