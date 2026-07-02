@@ -8,7 +8,7 @@ import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
-import { logError } from '@/utils/logger';
+import { logError, logWarn } from '@/utils/logger';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { useAiAgentHealthCheck } from '../hooks/health';
@@ -168,9 +168,17 @@ class AiAssistantClass {
   }
 
   private readonly handleInit = debounce(() => {
-    this.threadmanager.init(this.context).then(({ isEmpty }) => {
-      this.isEmptyThread.set(isEmpty);
-    });
+    this.threadmanager
+      .init(this.context)
+      .then(({ isEmpty }) => {
+        this.isEmptyThread.set(isEmpty);
+      })
+      .catch((err: unknown) => {
+        logWarn('AI assistant thread init failed (handled):', err);
+        this.healthError.set(
+          err instanceof Error ? err.message : 'Failed to initialize AI assistant.'
+        );
+      });
   }, 50);
 }
 

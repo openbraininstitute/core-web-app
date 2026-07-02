@@ -10,6 +10,8 @@ import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
+  ProjectHomeGetStartedQuery,
+  type TProjectHomeData,
   type TTutorial,
   TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
@@ -52,6 +54,12 @@ export default async function Layout({
     queryKey: keyBuilderExternal.quickAccessList(),
     queryFn: () =>
       client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery(), {}, { next: { revalidate: 0 } }),
+  });
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderExternal.projectHomeGetStarted(),
+    queryFn: () =>
+      client.fetch<TProjectHomeData>(ProjectHomeGetStartedQuery, {}, { next: { revalidate: 0 } }),
   });
 
   return (

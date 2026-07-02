@@ -23,22 +23,26 @@ export class ThreadManager {
   };
 
   readonly createThread = async () => {
-    const { context } = this;
+    const context = this.context;
     if (!context) throw new Error('ThreadManager has not been initialized yet!');
 
-    const lastThread = await serviceAiAgentThreadList({
-      ...context,
-      pageSize: 1,
-      excludeEmpty: false,
-    });
+    try {
+      const lastThread = await serviceAiAgentThreadList({
+        ...context,
+        pageSize: 1,
+        excludeEmpty: false,
+      });
 
-    if (lastThread.results.length > 0) {
-      const thread = lastThread.results[0];
+      if (lastThread.results.length > 0) {
+        const thread = lastThread.results[0];
 
-      // Compare up to milliseconds — if createdAt === updatedAt, the thread has no messages
-      if (new Date(thread.createdAt).getTime() === new Date(thread.updatedAt).getTime()) {
-        return { threadId: thread.id, isEmpty: true };
+        // Compare up to milliseconds — if createdAt === updatedAt, the thread has no messages
+        if (new Date(thread.createdAt).getTime() === new Date(thread.updatedAt).getTime()) {
+          return { threadId: thread.id, isEmpty: true };
+        }
       }
+    } catch {
+      // Thread listing failed — fall through to create a new thread directly.
     }
 
     const params = {
