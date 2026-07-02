@@ -4,15 +4,17 @@ import { CheckCircleFilled, DownloadOutlined, LoadingOutlined } from '@ant-desig
 import { useAtomValue } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useCallback, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { useAppNotification } from '@/components/notification';
+
+import { notify } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
-import type { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 
 const DownloadStateDict = {
   idle: 'idle',
@@ -32,7 +34,6 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
 }: RenderButtonProps<T> & { children?: ReactNode; workspace?: WorkspaceContext }) {
   const session = useAtomValue(sessionAtom);
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
-  const notify = useAppNotification();
   const entityCount = selectedRows.length;
   const isSingular = entityCount === 1;
 
@@ -43,7 +44,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
     if (!entity) {
       setDownloadState(DownloadStateDict.error);
       notify.error({
-        message: 'Download failed',
+        title: 'Download failed',
         description: `Cannot find entity configuration for type: ${dataType}`,
       });
       return;
@@ -66,7 +67,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
       setDownloadState(DownloadStateDict.error);
       setTimeout(() => setDownloadState(DownloadStateDict.idle), 2000);
     }
-  }, [selectedRows, dataType, clearSelectedRows, notify.error, workspace]);
+  }, [selectedRows, dataType, clearSelectedRows, workspace]);
 
   const getButtonLabel = (): string => {
     if (isSingular) {

@@ -7,7 +7,7 @@ import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import React from 'react';
 
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/constants';
 import { Painter } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/painter';
 import {
@@ -27,7 +27,6 @@ export function usePainter({
   atlasId?: string;
   loading: boolean;
 }): Painter | null {
-  const notifier = useAppNotification();
   const queryClient = useQueryClient();
   const refPainter = React.useRef<Painter | null>(null);
   const refAtlasId = React.useRef<string>(atlasId);
@@ -44,8 +43,9 @@ export function usePainter({
     refPainter.current = new Painter(atlasId, queryClient);
     refAtlasId.current = atlasId;
     refPainter.current.eventError.addListener((message) => {
-      notifier.warning({
-        message,
+      notify.warning({
+        title: 'Atlas viewer',
+        description: message,
         key: ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY,
         duration: 2,
       });

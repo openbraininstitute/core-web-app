@@ -7,7 +7,6 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
-import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -59,7 +58,6 @@ type Props = {
 
 export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const pathname = usePathname();
-  const notify = useAppNotification();
   const searchParams = useSearchParams();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
@@ -174,7 +172,6 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       simulationType,
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
       () => updatePanelSelection(),
-      notify,
       notifyLowCredits
     );
 

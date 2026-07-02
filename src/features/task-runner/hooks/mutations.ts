@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { useRunWithOfflineTokenConsent } from '@/features/offline-auth-management';
 import { errorRegistry } from '@/features/scan-config/error-registry';
 import { getErrorMessage } from '@/utils/error';
@@ -62,7 +62,6 @@ export function useTaskLaunchMutation({
   requiresConsent = false,
 }: TTaskLaunchMutationOptions) {
   const queryClient = useQueryClient();
-  const notification = useAppNotification();
   const { runWithConsent } = useRunWithOfflineTokenConsent();
   const logTopicLower = logTopic.toLowerCase();
 
@@ -73,13 +72,23 @@ export function useTaskLaunchMutation({
         const code = error.cause?.code;
         const apiMessage = error.cause?.message ?? failureMessage;
         const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
-        notification.error({ message, duration: 5, key: notificationKey });
+        notify.error({
+          title: 'Task launch failed',
+          description: message,
+          duration: 5,
+          key: notificationKey,
+        });
         return;
       }
 
-      notification.error({ message: failureMessage, duration: 5, key: notificationKey });
+      notify.error({
+        title: 'Task launch failed',
+        description: failureMessage,
+        duration: 5,
+        key: notificationKey,
+      });
     },
-    [failureMessage, logTopicLower, notification, notificationKey]
+    [failureMessage, logTopicLower, notificationKey]
   );
 
   return useMutation({

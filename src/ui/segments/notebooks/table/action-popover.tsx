@@ -17,7 +17,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import { downloadArchive } from '@/services/entity-download';
@@ -35,7 +35,6 @@ interface ActionPopoverProps {
 
 export function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
-  const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({
     subject: 'run the notebook',
@@ -62,10 +61,9 @@ export function ActionPopover({ notebook, index }: ActionPopoverProps) {
           return query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`;
         },
       });
-      notification.success({
-        message: 'Deleted successfully',
+      notify.success({
+        title: 'Deleted successfully',
         description: 'The notebook has been successfully deleted.',
-        placement: 'topRight',
       });
     },
     onError: (error: Error) => {
@@ -74,10 +72,9 @@ export function ActionPopover({ notebook, index }: ActionPopoverProps) {
       if (description.toLowerCase().includes('foreign keys integrity violation')) {
         description = 'This notebook is referenced by another record and cannot be deleted.';
       }
-      notification.error({
-        message: 'Deletion failed',
+      notify.error({
+        title: 'Deletion failed',
         description,
-        placement: 'topRight',
         duration: 5,
       });
     },
@@ -105,10 +102,10 @@ export function ActionPopover({ notebook, index }: ActionPopoverProps) {
         cloud,
         podNum
       );
-      notification.success({
-        message: `Notebook starting`,
+      notify.success({
+        title: 'Notebook starting',
+        description: 'Your notebook is starting in a new tab.',
         key: 'notebook-started-successfully',
-        placement: 'topRight',
       });
       window.open(retval.url, '_blank');
     } catch (error) {
@@ -116,16 +113,16 @@ export function ActionPopover({ notebook, index }: ActionPopoverProps) {
         return;
       }
       if (error instanceof Error && 'cause' in error) {
-        notification.error({
-          message: (error.cause as { error_code: string; hint: string }).hint,
+        notify.error({
+          title: 'Failed to start notebook',
+          description: (error.cause as { error_code: string; hint: string }).hint,
           key: 'notebook-error',
-          placement: 'topRight',
         });
       } else {
-        notification.error({
-          message: `Failed to start notebook, unknown error: ${error}`,
+        notify.error({
+          title: 'Failed to start notebook',
+          description: `Unknown error: ${error}`,
           key: 'notebook-unknown-error',
-          placement: 'topRight',
         });
       }
     } finally {

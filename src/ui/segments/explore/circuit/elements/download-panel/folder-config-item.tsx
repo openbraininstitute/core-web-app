@@ -8,7 +8,7 @@ import {
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 import { DownloadIcon } from '@/components/icons';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { classNames } from '@/util/utils';
 import { formatBytes } from '@/utils/format';
@@ -31,7 +31,6 @@ type FolderRowProps = {
 };
 
 function FolderRow({ entry, archiveBaseName, mimeType, downloadConfig }: FolderRowProps) {
-  const notify = useAppNotification();
   const disabled = entry.fileCount === 0;
 
   const onClick = async () => {
@@ -54,9 +53,8 @@ function FolderRow({ entry, archiveBaseName, mimeType, downloadConfig }: FolderR
     if (error) {
       log('error', 'Error downloading folder archive:', error);
       notify.error({
-        message: 'Download Error',
+        title: 'Download Error',
         description: get(error, 'message', 'An error occurred while preparing the folder archive.'),
-        placement: 'topRight',
       });
     }
   };

@@ -2,7 +2,6 @@
 
 import { useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueryClient } from '@tanstack/react-query';
-import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import {
@@ -19,7 +18,7 @@ import {
   BillingQuoteRequestFlowDict,
   type TBillingAddress,
 } from '@/api/virtual-lab-svc/queries/types';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { CreditsAmountInput, useCreditConversionQuery } from '@/features/credits';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
@@ -42,7 +41,6 @@ import type { User } from 'next-auth';
 const MAX_CONVERSIONS_PER_TRANSACTION = 10;
 
 const notificationConfig = {
-  placement: NotificationPlacements[2],
   key: 'standalone-payment-error',
 };
 
@@ -59,7 +57,6 @@ export function StandalonePaymentForm({
   const elements = useElements();
   const stripe = useStripe();
   const { data: session } = useSession();
-  const { success: successNotify, error: errorNotify } = useAppNotification();
   const createStandalonePayment = useCreateStandalonePaymentMutation();
   const [billingAddress, setBillingAddress] = useState<TBillingAddress | null>(null);
   const [credits, setCredits] = useState<number | undefined>(undefined);
@@ -188,8 +185,8 @@ export function StandalonePaymentForm({
         await onSetupIntentRefreshNeeded();
       }
 
-      errorNotify({
-        message: messages.paymentProcessingErrorTitle,
+      notify.error({
+        title: messages.paymentProcessingErrorTitle,
         description: getStripeSetupErrorDescription(error),
         ...notificationConfig,
       });
@@ -208,8 +205,9 @@ export function StandalonePaymentForm({
         },
         {
           onSuccess: (res) => {
-            successNotify({
-              message: messages.paymentSuccess
+            notify.success({
+              title: 'Payment successful',
+              description: messages.paymentSuccess
                 .replace('$$credits', credits.toString())
                 .replace('$$price', formatMinorCurrency(res.data.amount_total, res.data.currency)),
               ...notificationConfig,
@@ -235,8 +233,8 @@ export function StandalonePaymentForm({
       setIsPaying(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
-      errorNotify({
-        message: messages.paymentProcessingErrorTitle,
+      notify.error({
+        title: messages.paymentProcessingErrorTitle,
         description: getBackendPaymentErrorDescription(code, 'standalone'),
         ...notificationConfig,
       });

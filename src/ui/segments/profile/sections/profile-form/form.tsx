@@ -14,7 +14,6 @@ import { match, P } from 'ts-pattern';
 
 import { getCountries } from '@/api/virtual-lab-svc/queries/config';
 import { checkUserProfileEmailAvailability } from '@/api/virtual-lab-svc/queries/user';
-import { useAppNotification } from '@/components/notification';
 import { Button } from '@/ui/molecules/button';
 import { CustomFormError, createZodFieldValidator } from '@/ui/segments/contribute/shared/helpers';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
@@ -58,7 +57,6 @@ function getIdentityProviderDisplay(identityProvider?: string): {
 export function Profile({ data }: ProfileProps) {
   const { data: session } = useSession();
   const initialValues = useInitialValues(data);
-  const { error: errorNotify, success: successNotify } = useAppNotification();
   const [form] = Form.useForm<TUpdateUserProfileRequest>();
   const emailAvailabilityCacheRef = useRef(new Map<string, boolean>());
   const [isEmailAvailabilityChecking, setIsEmailAvailabilityChecking] = useState(false);
@@ -66,7 +64,7 @@ export function Profile({ data }: ProfileProps) {
   const isValid = ProfileFormSchema.safeParse(formValues ?? initialValues).success;
   const [hasEmailError, setEmailError] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const { mutateAsync, isPending } = useSubmitCallback(errorNotify, successNotify);
+  const { mutateAsync, isPending } = useSubmitCallback();
 
   const { data: countries = [], isLoading: isCountriesLoading } = useQuery({
     queryKey: keyBuilder.countries(),

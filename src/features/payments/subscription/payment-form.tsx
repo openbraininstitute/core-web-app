@@ -2,7 +2,6 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Elements, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { Spin } from 'antd';
-import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import { useSession } from 'next-auth/react';
@@ -12,7 +11,7 @@ import {
   BillingQuoteRequestFlowDict,
   SubscriptionStatus,
 } from '@/api/virtual-lab-svc/queries/types';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
 import PricingToggleCards from '@/features/payments/subscription/pricing-toggle-cards';
@@ -53,7 +52,6 @@ type Props = {
 };
 
 const notificationConfig = {
-  placement: NotificationPlacements[2],
   key: 'subscription-payment-error',
 };
 
@@ -70,7 +68,6 @@ function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
   const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
   const [cachedPaymentMethodId, setCachedPaymentMethodId] = useState<string | null>(null);
   const cachedPaymentMethodIdRef = useRef<string | null>(null);
-  const { success: successNotify, error: errorNotify } = useAppNotification();
   const createSubscription = useCreateSubscriptionMutation();
 
   const quotePayload = useMemo(
@@ -172,8 +169,8 @@ function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
         await onSetupIntentRefreshNeeded();
       }
 
-      errorNotify({
-        message: messages.paymentProcessingErrorTitle,
+      notify.error({
+        title: messages.paymentProcessingErrorTitle,
         description: getStripeSetupErrorDescription(error),
         ...notificationConfig,
       });
@@ -196,8 +193,8 @@ function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
         });
       }
       if (data?.subscription.status === SubscriptionStatus.ACTIVE) {
-        successNotify({
-          message: messages.subscriptionPaymentSuccess,
+        notify.success({
+          title: messages.subscriptionPaymentSuccess,
           description: messages.subscriptionPaymentSuccessDescription,
           ...notificationConfig,
         });
@@ -206,8 +203,8 @@ function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
       setSubscribing(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
-      errorNotify({
-        message: messages.paymentProcessingErrorTitle,
+      notify.error({
+        title: messages.paymentProcessingErrorTitle,
         description: getBackendPaymentErrorDescription(code, 'subscription'),
         ...notificationConfig,
       });

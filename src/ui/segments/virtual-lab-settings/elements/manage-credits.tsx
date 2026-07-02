@@ -11,7 +11,7 @@ import { type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useSta
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { CoinsIcon } from '@/components/icons/buttons';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -275,7 +275,6 @@ export function TransferCredits({
   const [swapSpinTurns, setSwapSpinTurns] = useState(0);
   const [isLabToProject, setIsLabToProject] = useState<boolean>(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
-  const notify = useAppNotification();
   const amountInputRef = useRef<HTMLInputElement>(null);
   const swapTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const { projectId } = useWorkspace();
@@ -341,7 +340,7 @@ export function TransferCredits({
         });
       }
       notify.success({
-        message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
+        title: 'Credits transfer',
         description: (
           <div className="flex items-center gap-2">
             {isLabToProject && (
@@ -359,7 +358,6 @@ export function TransferCredits({
             )}
           </div>
         ),
-        placement: 'topRight',
         key: 'transfer-credits-success',
       });
       setAmount('');
@@ -375,13 +373,12 @@ export function TransferCredits({
         DEFAULT: 'There was an error transferring credits. Please try again.',
       };
       notify.error({
-        message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
+        title: 'Credits transfer failed',
         description: (
           <div className="flex flex-col items-start gap-2">
             <span>{description[codeError]}</span>
           </div>
         ),
-        placement: 'topRight',
         key: 'transfer-credits-error',
       });
     },

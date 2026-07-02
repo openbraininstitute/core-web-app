@@ -20,7 +20,7 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { type TViewVariant, ViewVariant, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useFlags } from '@/features/feature-flags';
@@ -53,25 +53,22 @@ export default function ActionMenu({
   const { replace: navigate } = useRouter();
   const queryClient = useQueryClient();
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
   const flags = useFlags();
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
   const [, copy, , copying] = useCopyToClipboard({
     onSuccess: () => {
-      notifySuccess({
-        message: 'ID Copied',
+      notify.success({
+        title: 'ID copied',
         description: 'The entity ID has been copied to your clipboard.',
         duration: 3,
-        placement: 'topRight',
       });
     },
     onError: () => {
-      notifyError({
-        message: 'Copy Failed',
+      notify.error({
+        title: 'Copy failed',
         description: 'Could not copy to clipboard. Please copy the ID manually.',
-        placement: 'topRight',
       });
     },
   });
@@ -105,10 +102,9 @@ export default function ActionMenu({
           return identifierKey === key;
         },
       });
-      notifySuccess({
-        message: 'Deleted successfully',
+      notify.success({
+        title: 'Deleted successfully',
         description: 'The item has been successfully deleted.',
-        placement: 'topRight',
       });
       navigate(parentLink);
     },
@@ -118,10 +114,9 @@ export default function ActionMenu({
       if (errorMessage.toLowerCase().includes('foreign keys integrity violation')) {
         description = 'This entity is referenced by another record and cannot be deleted.';
       }
-      notifyError({
-        message: 'Deletion failed',
+      notify.error({
+        title: 'Deletion failed',
         description,
-        placement: 'topRight',
         duration: 5,
       });
     },

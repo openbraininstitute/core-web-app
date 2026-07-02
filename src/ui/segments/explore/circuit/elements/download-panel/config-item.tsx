@@ -5,7 +5,7 @@ import { saveAs } from 'file-saver';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 import { DownloadIcon } from '@/components/icons';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { classNames } from '@/util/utils';
@@ -138,7 +138,6 @@ export function NetworkConfigItem({
   forceDownload = false,
   downloadConfig,
 }: ConfigItemProps) {
-  const notify = useAppNotification();
   const onDownload = async ({ path }: { path: string }) => {
     const { entityId, assetConfigId, context } = downloadConfig;
     const { data, error } = await tryCatch(
@@ -161,13 +160,12 @@ export function NetworkConfigItem({
         if (fetchError) {
           log('error', 'Error downloading file:', fetchError);
           notify.error({
-            message: 'Download Error',
+            title: 'Download Error',
             description: get(
               fetchError,
               'message',
               'An error occurred while downloading the file.'
             ),
-            placement: 'topRight',
           });
         }
       } else {
@@ -177,9 +175,8 @@ export function NetworkConfigItem({
     if (error) {
       log('error', 'Error downloading entire circuit:', error);
       notify.error({
-        message: 'Download Error',
+        title: 'Download Error',
         description: get(error, 'message', 'An error occurred while downloading the circuit.'),
-        placement: 'topRight',
       });
     }
   };

@@ -15,7 +15,7 @@ import {
   DataType,
   MessageType,
 } from '@/api/small-scale-simulator/ion-channel/build';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { resolveIonChannelModelingCampaignBuilds } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { useLowCredits } from '@/features/low-credits';
 import { getStatusColor } from '@/features/task-runner/activity-execution/color-map';
@@ -342,7 +342,6 @@ export function Output({
 }) {
   const queryClient = useQueryClient();
   const context = useWorkspace();
-  const notification = useAppNotification();
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({
     context,
     subject: 'build the ion channel model',
@@ -399,7 +398,11 @@ export function Output({
             return messageGenerator(createAsyncIterableStream<string>(stream));
           } catch (error) {
             if (!reportLowCredits(error)) {
-              notification.error({ message: message.GenericFailed, duration: null });
+              notify.error({
+                title: 'Ion channel build failed',
+                description: message.GenericFailed,
+                duration: null,
+              });
             }
 
             throw error;

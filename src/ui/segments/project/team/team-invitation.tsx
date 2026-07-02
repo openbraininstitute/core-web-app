@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import z from 'zod';
 
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { roleOptions } from '@/ui/segments/project/team/role-modifier';
@@ -92,7 +92,6 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
   const listScrollRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
     { email: '', role: 'member' },
   ]);
@@ -154,8 +153,8 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
         })
         .filter(Boolean);
       if (failedInvites.length && sentInvites.length !== failedInvites.length) {
-        notifyError({
-          message: `Some invitations were sent successfully, but a few may not have been delivered:`,
+        notify.error({
+          title: 'Some invitations were not delivered',
           description: (
             <ul className="text-primary-8">
               {failedInvites.map((invite) => (
@@ -165,19 +164,18 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
               ))}
             </ul>
           ),
-          placement: 'topRight',
           key: 'send-invites-partial',
         });
       } else if (failedInvites.length === sentInvites.length) {
-        notifyError({
-          message: 'Failed to send invitations. Please try again.',
-          placement: 'topRight',
+        notify.error({
+          title: 'Invitations failed',
+          description: 'Failed to send invitations. Please try again.',
           key: 'send-invites-error',
         });
       } else {
-        notifySuccess({
-          message: `${sentInvites.length} invitation(s) sent successfully!`,
-          placement: 'topRight',
+        notify.success({
+          title: 'Invitations sent',
+          description: `${sentInvites.length} invitation(s) sent successfully!`,
           key: 'send-invites-success',
         });
         setInviteList([{ email: '', role: 'member' }]);
@@ -185,9 +183,9 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
       }
     },
     onError: () => {
-      notifyError({
-        message: 'Failed to send invitations. Please try again.',
-        placement: 'topRight',
+      notify.error({
+        title: 'Invitations failed',
+        description: 'Failed to send invitations. Please try again.',
         key: 'send-invites-error',
       });
     },

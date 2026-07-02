@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 
 import { getVirtualLab, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/virtual-lab';
 import { Button } from '@/ui/molecules/button';
@@ -38,7 +38,6 @@ type Props = {
 
 function VirtualLabOverviewForm({ virtualLab, virtualLabId }: Props) {
   const queryClient = useQueryClient();
-  const { error: errorNotify, success: successNotify } = useAppNotification();
   const { isVirtualLabOwner } = useWorkspaceMembership({ virtualLabId });
   const [form] = Form.useForm<TVirtualLabFormValues>();
   const [isEditing, setIsEditing] = useState(false);
@@ -64,10 +63,9 @@ function VirtualLabOverviewForm({ virtualLab, virtualLabId }: Props) {
         updatePayload: { name: values.name.trim() },
       }),
     onSuccess: async () => {
-      successNotify({
-        message: messages.RenameVirtualLabSucceedTitle,
+      notify.success({
+        title: messages.RenameVirtualLabSucceedTitle,
         description: messages.RenameVirtualLabSucceedDescription,
-        placement: 'topRight',
         key: 'virtual-lab-overview-update-success',
       });
       await Promise.all([
@@ -82,10 +80,9 @@ function VirtualLabOverviewForm({ virtualLab, virtualLabId }: Props) {
       setIsEditing(false);
     },
     onError: () => {
-      errorNotify({
-        message: messages.RenameVirtualLabFailedTitle,
+      notify.error({
+        title: messages.RenameVirtualLabFailedTitle,
         description: messages.RenameVirtualLabFailedDescription,
-        placement: 'topRight',
         key: 'virtual-lab-overview-update-error',
       });
     },

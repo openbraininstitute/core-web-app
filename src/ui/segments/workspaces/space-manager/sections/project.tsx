@@ -26,7 +26,7 @@ import {
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Badge } from '@/ui/molecules/badge';
@@ -426,7 +426,6 @@ function ProjectInviteMembers({
   targetProjectId: string;
 }) {
   const queryClient = useQueryClient();
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [inviteList, setInviteList] = useState<Array<ProjectInvitePayload>>([
     { email: '', role: 'member' },
   ]);
@@ -482,8 +481,8 @@ function ProjectInviteMembers({
         .map((result, idx) => (result.status === 'rejected' ? requestedInvites[idx] : null))
         .filter(Boolean);
       if (failedInvites.length && requestedInvites.length !== failedInvites.length) {
-        notifyError({
-          message: `Some invitations were sent successfully, but a few may not have been delivered:`,
+        notify.error({
+          title: 'Some invitations were not delivered',
           description: (
             <ul className="text-primary-8">
               {failedInvites.map((invite) => (
@@ -494,19 +493,18 @@ function ProjectInviteMembers({
               ))}
             </ul>
           ),
-          placement: 'topRight',
           key: 'send-invites-partial',
         });
       } else if (failedInvites.length === requestedInvites.length) {
-        notifyError({
-          message: 'Failed to send invitations. Please try again.',
-          placement: 'topRight',
+        notify.error({
+          title: 'Invitations failed',
+          description: 'Failed to send invitations. Please try again.',
           key: 'send-invites-error',
         });
       } else {
-        notifySuccess({
-          message: `${requestedInvites.length} invitation(s) sent successfully!`,
-          placement: 'topRight',
+        notify.success({
+          title: 'Invitations sent',
+          description: `${requestedInvites.length} invitation(s) sent successfully!`,
           key: 'send-invites-success',
         });
         setInviteList([{ email: '', role: 'member' }]);
@@ -515,9 +513,9 @@ function ProjectInviteMembers({
     },
     onError: (error) => {
       log('error', 'error when inviting people to project', error);
-      notifyError({
-        message: 'Failed to send invitations. Please try again.',
-        placement: 'topRight',
+      notify.error({
+        title: 'Invitations failed',
+        description: 'Failed to send invitations. Please try again.',
         key: 'send-invites-error',
       });
     },
@@ -681,7 +679,6 @@ function CancelProjectInvitation({
   targetProjectId: string;
 }) {
   const queryClient = useQueryClient();
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
 
   const mutateInvite = useMutation({
     mutationKey: [`${targetVirtualLabId}/${targetProjectId}/delete-item/${user.email}`],
@@ -702,10 +699,10 @@ function CancelProjectInvitation({
       return { row };
     },
     onError: (_e, _v, ctx) => {
-      notifyError({
-        message:
+      notify.error({
+        title: 'Cancel invite failed',
+        description:
           'Failed to cancel invite. Please try again or contact support if the issue persists.',
-        placement: 'topRight',
         key: 'user-cancel-invite',
       });
       if (ctx?.row) {
@@ -713,14 +710,14 @@ function CancelProjectInvitation({
       }
     },
     async onSuccess() {
-      notifySuccess({
-        message: (
+      notify.success({
+        title: 'Invite cancelled',
+        description: (
           <>
             Invite for <strong className="text-primary-8">{user.email}</strong> cancelled
             successfully
           </>
         ),
-        placement: 'topRight',
         key: 'user-cancel-invite',
       });
     },
@@ -771,7 +768,6 @@ function ProjectRoleModifier({
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, setRole] = useState(user.role);
 
   const invalidate = async () =>
@@ -793,26 +789,24 @@ function ProjectRoleModifier({
     onError(error) {
       const code = get(error, 'cause.error_code');
       if (code === 'NOT_ALLOWED_OP') {
-        notifyError({
-          message: 'Update user role',
+        notify.error({
+          title: 'Update user role',
           description: get(error, 'cause.message', 'Failed to update user role. Please try again.'),
-          placement: 'topRight',
           key: 'user-role-update',
         });
       } else {
-        notifyError({
-          message: 'Update user role',
+        notify.error({
+          title: 'Update user role',
           description: 'Failed to update user role. Please try again.',
-          placement: 'topRight',
           key: 'user-role-update',
         });
       }
       setRole(user.role);
     },
     async onSuccess(_, variables) {
-      notifySuccess({
-        message: `User "${user.name}" role updated to ${get(find(projectRoleOptions, { value: variables }), 'label')} successfully`,
-        placement: 'topRight',
+      notify.success({
+        title: 'User role updated',
+        description: `User "${user.name}" role updated to ${get(find(projectRoleOptions, { value: variables }), 'label')} successfully`,
         key: 'user-role-update',
       });
     },
@@ -838,15 +832,15 @@ function ProjectRoleModifier({
     },
     onError: (error, _v, ctx) => {
       if (get(error, 'cause.error_code') === 'FORBIDDEN_OPERATION') {
-        notifyError({
-          message: 'You are not authorized to remove this user from the project.',
-          placement: 'topRight',
+        notify.error({
+          title: 'Not authorized',
+          description: 'You are not authorized to remove this user from the project.',
           key: 'user-remove-from-project',
         });
       } else {
-        notifyError({
-          message: 'Failed to remove user from project. Please try again.',
-          placement: 'topRight',
+        notify.error({
+          title: 'Remove user failed',
+          description: 'Failed to remove user from project. Please try again.',
           key: 'user-remove-from-project',
         });
       }
@@ -855,9 +849,9 @@ function ProjectRoleModifier({
       }
     },
     async onSuccess() {
-      notifySuccess({
-        message: `User "${user.name}" removed from project successfully`,
-        placement: 'topRight',
+      notify.success({
+        title: 'User removed',
+        description: `User "${user.name}" removed from project successfully`,
         key: 'user-remove-from-project',
       });
     },

@@ -21,7 +21,16 @@ vi.mock('@/features/brain-region-hierarchy/hooks', () => ({
   useWorkspaceHierarchyRegistry: () => registry.value,
 }));
 vi.mock('@/components/notification', () => ({
-  useAppNotification: () => ({ destroy: vi.fn(), open: vi.fn(), close: vi.fn() }),
+  notify: {
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+    action: vi.fn(),
+    show: vi.fn(),
+    dismiss: vi.fn(),
+    clear: vi.fn(),
+  },
 }));
 
 import {

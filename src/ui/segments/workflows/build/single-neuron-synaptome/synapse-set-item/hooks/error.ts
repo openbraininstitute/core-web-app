@@ -1,13 +1,11 @@
 import findIndex from 'es-toolkit/compat/findIndex';
 
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { messages } from '@/i18n/en/synaptome';
 
 import type { SessionValue } from '../types';
 
 export function useErrorHandler(configId: string | undefined, sessionValue: SessionValue) {
-  const notification = useAppNotification();
-
   return async (response?: Error) => {
     const index =
       findIndex(
@@ -15,22 +13,22 @@ export function useErrorHandler(configId: string | undefined, sessionValue: Sess
         ([key]) => key === configId
       ) + 1;
     if (!response) {
-      notification.error({
-        message: messages.GenerationSynapsesFailed.replace('$$', index.toString()),
-        placement: 'topRight',
+      notify.error({
+        title: 'Synapse generation failed',
+        description: messages.GenerationSynapsesFailed.replace('$$', index.toString()),
       });
       return;
     }
 
     try {
-      notification.error({
-        message: 'Failed to generate synapses, The error occurred in the server',
-        placement: 'topRight',
+      notify.error({
+        title: 'Synapse generation failed',
+        description: 'Failed to generate synapses. The error occurred on the server.',
       });
     } catch {
-      notification.error({
-        message: messages.GenerationSynapsesFailed.replace('$$', index.toString()),
-        placement: 'topRight',
+      notify.error({
+        title: 'Synapse generation failed',
+        description: messages.GenerationSynapsesFailed.replace('$$', index.toString()),
       });
     }
   };

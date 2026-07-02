@@ -3,15 +3,13 @@
 import { Select } from 'antd';
 import { useEffect, useState, useTransition } from 'react';
 
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { resetFlags, setFlag } from '@/features/feature-flags';
 import { flags } from '@/features/feature-flags/flags';
 import { useFlags } from '@/features/feature-flags/provider';
 import { Button } from '@/ui/molecules/button';
 
 export function ExperimentalFeatures() {
-  const { error: errorNotify } = useAppNotification();
-
   const flagValues = useFlags();
 
   const [optimisticFlags, setOptimisticFlags] = useState<Record<string, unknown>>({});
@@ -40,7 +38,10 @@ export function ExperimentalFeatures() {
           delete next[key];
           return next;
         });
-        errorNotify({ message: 'Failed to update feature flag', placement: 'topRight' });
+        notify.error({
+          title: 'Failed to update feature flag',
+          description: 'The feature flag could not be updated. Please try again.',
+        });
       } finally {
         setUpdatingFlags((prev) => {
           const next = new Set(prev);

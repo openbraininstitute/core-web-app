@@ -12,7 +12,7 @@ import {
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import { messages } from '@/i18n/en/synaptome';
@@ -35,19 +35,15 @@ export function useBuildSynaptome(sessionId: string): {
   const { push: navigate } = useRouter();
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
-  const notification = useAppNotification();
   const { reportError: reportLowCredits, creditsModal } = useLowCredits({
     subject: 'build the synaptome',
   });
   const mutate = useMutation({
     mutationFn: () => buildSynaptome(virtualLabId, projectId, sessionValue),
     onSuccess: (data) => {
-      notification.success({
-        message: messages.CreationModelSucceed,
-        onClick: () => {
-          notification.destroy('model-saved');
-        },
-        placement: 'topRight',
+      notify.success({
+        title: 'Synaptome model created',
+        description: messages.CreationModelSucceed,
         key: 'model-saved',
         duration: 3,
       });
@@ -59,10 +55,10 @@ export function useBuildSynaptome(sessionId: string): {
     },
     onError: (error) => {
       if (reportLowCredits(error)) return;
-      notification.error({
-        message: messages.CreationModelFailed,
+      notify.error({
+        title: 'Synaptome model creation failed',
+        description: messages.CreationModelFailed,
         duration: 5,
-        placement: 'topRight',
         key: 'synaptome-config',
       });
     },

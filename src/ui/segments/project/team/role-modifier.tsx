@@ -12,7 +12,7 @@ import {
   removeUserFromProject,
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -55,7 +55,6 @@ export function RoleModifier({
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const { virtualLabId, projectId } = useWorkspace();
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, updateRole] = useState(user.role);
 
   const sessionUserId = session?.user.id;
@@ -107,10 +106,10 @@ export function RoleModifier({
       return { row };
     },
     onError: (_e, _v, ctx) => {
-      notifyError({
-        message:
+      notify.error({
+        title: 'Cancel invite failed',
+        description:
           'Failed to cancel invite. Please try again or contact support if the issue persists.',
-        placement: 'topRight',
         key: 'user-cancel-invite',
       });
       if (ctx?.row) {
@@ -118,13 +117,13 @@ export function RoleModifier({
       }
     },
     async onSuccess() {
-      notifySuccess({
-        message: (
+      notify.success({
+        title: 'Invite cancelled',
+        description: (
           <div className="text-primary-9">
             Invite for <strong> {user.email}</strong> cancelled successfully
           </div>
         ),
-        placement: 'topRight',
         key: 'user-cancel-invite',
       });
     },
@@ -147,18 +146,18 @@ export function RoleModifier({
       return { role: _role };
     },
     onError() {
-      notifyError({
-        message:
+      notify.error({
+        title: 'Update user role failed',
+        description:
           'Failed to update user role. Please try again or contact support if the issue persists.',
-        placement: 'topRight',
         key: 'user-role-update',
       });
       updateRole(user.role);
     },
     async onSuccess(_, variables) {
-      notifySuccess({
-        message: `User "${user.name}" role updated to ${get(find(roleOptions, { value: variables }), 'label')} successfully`,
-        placement: 'topRight',
+      notify.success({
+        title: 'User role updated',
+        description: `User "${user.name}" role updated to ${get(find(roleOptions, { value: variables }), 'label')} successfully`,
         key: 'user-role-update',
       });
     },
@@ -189,17 +188,17 @@ export function RoleModifier({
     },
     onError: (error, _v, ctx) => {
       if (get(error, 'cause.error_code') === 'FORBIDDEN_OPERATION') {
-        notifyError({
-          message: 'You are not authorized to remove this user from the project.',
-          placement: 'topRight',
+        notify.error({
+          title: 'Not authorized',
+          description: 'You are not authorized to remove this user from the project.',
           key: 'user-remove-from-project',
         });
         return;
       }
-      notifyError({
-        message:
+      notify.error({
+        title: 'Remove user failed',
+        description:
           'Failed to remove user from project. Please try again or contact support if the issue persists.',
-        placement: 'topRight',
         key: 'user-remove-from-project',
       });
       if (ctx?.row) {
@@ -207,9 +206,9 @@ export function RoleModifier({
       }
     },
     async onSuccess() {
-      notifySuccess({
-        message: `User "${user.name}" removed from project successfully`,
-        placement: 'topRight',
+      notify.success({
+        title: 'User removed',
+        description: `User "${user.name}" removed from project successfully`,
         key: 'user-remove-from-project',
       });
     },

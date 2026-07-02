@@ -7,7 +7,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { DownloadIcon } from '@/components/icons';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
@@ -21,7 +21,6 @@ type Props = {
 
 export default function EntireCircuitExport({ circuit }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const notify = useAppNotification();
   const assets = circuit?.assets;
   const configAsset = getAssetElement({
     assets,
@@ -45,9 +44,8 @@ export default function EntireCircuitExport({ circuit }: Props) {
     if (error) {
       log('error', 'Error downloading entire circuit:', error);
       notify.error({
-        message: 'Download Error',
+        title: 'Download Error',
         description: get(error, 'message', 'An error occurred while downloading the circuit.'),
-        placement: 'topRight',
       });
     }
   };

@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { HierarchySquare } from '@/components/icons/buttons';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/constants';
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/components/brain-region-skeleton';
@@ -58,7 +58,6 @@ type TPortalRegionBannerProps = {
 };
 
 export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerProps) {
-  const notifier = useAppNotification();
   const {
     changeBulkStoreHierarchySpecies,
     displaySpecies,
@@ -74,7 +73,7 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
 
   const handleSpeciesChange = (hIdOrMode: string) => {
     changeBulkStoreHierarchySpecies(hIdOrMode);
-    notifier.destroy(ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY);
+    notify.dismiss(ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY);
   };
 
   return (

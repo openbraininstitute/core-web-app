@@ -20,7 +20,7 @@ import {
   sendDisplaySynapses3DEvent,
   sendRemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
@@ -79,7 +79,6 @@ export function SynapticInputItem({
 }: Props) {
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = React.useState(false);
   const breakpoint = useDefaultBreakpoint();
-  const { error: notifyError } = useAppNotification();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const [visualizeLoading, setLoadingVisualize] = useState(false);
   const [synapsesPlacement, setSynapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
@@ -92,9 +91,9 @@ export function SynapticInputItem({
   const color = placementConfig?.color;
 
   const onVisualizationError = () => {
-    notifyError({
-      message: `There was an error when visualizing synaptic input ${index + 1}.`,
-      placement: 'topRight',
+    notify.error({
+      title: 'Visualization error',
+      description: `There was an error when visualizing synaptic input ${index + 1}.`,
     });
   };
 

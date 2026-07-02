@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import {
   resolveSpeciesAtlasPreview,
   type SpeciesRuntimeHierarchy,
@@ -24,13 +24,12 @@ export function AllSpeciesAtlasCard({ hierarchy }: AllSpeciesAtlasCardProps) {
   const { species } = hierarchy;
   const preview = resolveSpeciesAtlasPreview(hierarchy);
   const { changeBulkStoreHierarchySpecies } = useWorkspaceHierarchyRegistry();
-  const notifier = useAppNotification();
 
   if (!preview) return null;
 
   const handleSelectSpecies = () => {
     changeBulkStoreHierarchySpecies(hierarchy.id);
-    notifier.destroy(ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY);
+    notify.dismiss(ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY);
   };
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {

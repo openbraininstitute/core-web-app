@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -73,7 +73,6 @@ export function useLowCredits(options: UseLowCreditsOptions = {}): UseLowCredits
   const context = options.context ?? workspace;
   const { virtualLabId, projectId } = context;
 
-  const notification = useAppNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
@@ -107,9 +106,9 @@ export function useLowCredits(options: UseLowCreditsOptions = {}): UseLowCredits
         ? `mailto:${adminEmail}?subject=${encodeURIComponent(LOW_CREDITS_EMAIL_SUBJECT)}`
         : undefined;
 
-      notification.error({
+      notify.error({
         key: NOTIFICATION_KEY,
-        message: copy.title,
+        title: copy.title,
         description: (
           <div className="flex flex-col items-start gap-2">
             <p>{isVirtualLabAdmin ? copy.adminDescription : copy.nonAdminDescription}</p>
@@ -118,7 +117,7 @@ export function useLowCredits(options: UseLowCreditsOptions = {}): UseLowCredits
                 type="button"
                 name="low-credits-action-button"
                 onClick={() => {
-                  notification.destroy(NOTIFICATION_KEY);
+                  notify.dismiss(NOTIFICATION_KEY);
                   openCreditsModal();
                 }}
                 className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 hover:underline"
@@ -137,18 +136,10 @@ export function useLowCredits(options: UseLowCreditsOptions = {}): UseLowCredits
             )}
           </div>
         ),
-        placement: 'topRight',
         duration: 5,
       });
     },
-    [
-      adminEmail,
-      isVirtualLabAdmin,
-      notification,
-      openCreditsModal,
-      options.messages,
-      options.subject,
-    ]
+    [adminEmail, isVirtualLabAdmin, openCreditsModal, options.messages, options.subject]
   );
 
   const reportError = useCallback(

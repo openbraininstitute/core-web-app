@@ -4,7 +4,7 @@ import { type RefObject, useCallback, useEffect, useRef } from 'react';
 import { useNeuronViewerActions } from '@/components/neuron-viewer/hooks/actions-hook';
 import { useNeuronViewerEvents } from '@/components/neuron-viewer/hooks/events-hook';
 import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import { useMorphology } from '@/hooks/use-morphology';
 import {
@@ -73,7 +73,6 @@ export function NeuronViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<NeuronViewerRenderer | null>(null);
   const setSecNames = useSetAtom(neuronSectionNamesAtomFamily(sessionId));
-  const { error: notifyError } = useAppNotification();
 
   const setSectionsAndSegments = useCallback(
     (morphology: Morphology) => {
@@ -150,7 +149,10 @@ export function NeuronViewer({
   }, [useLabels, loading, recordLocations, sessionId, injectionSessionAtom.inject_to]);
 
   if (error) {
-    notifyError({ message: `Morphology initialization error: ${error}`, placement: 'topRight' });
+    notify.error({
+      title: 'Morphology initialization error',
+      description: `${error}`,
+    });
     return;
   }
 

@@ -27,6 +27,7 @@ import {
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
+import { notify } from '@/components/notification';
 import { config } from '@/config';
 import {
   SingleNeuronSimulation,
@@ -45,7 +46,6 @@ import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import { isType } from '@/util/type-guards';
 import { readNdjsonResponse as readNewlineDelimitedJsonResponse } from '@/utils/response';
 
-import type { NotificationInstance } from 'antd/es/notification/interface';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
@@ -211,7 +211,6 @@ export const launchSimulationAtom = atom<
     TSimulationType,
     number,
     () => void,
-    NotificationInstance,
     () => void,
   ],
   void
@@ -234,7 +233,6 @@ export const launchSimulationAtom = atom<
     simulationType: TSimulationType,
     duration: number,
     onChangePanel: () => void,
-    notify: NotificationInstance,
     reportLowCredits: () => void
   ) => {
     if (simulationType === 'single-neuron-simulation') {
@@ -303,11 +301,10 @@ export const launchSimulationAtom = atom<
         });
 
         notify.error({
-          message: `Simulation ${overviewConfiguration.name}`,
+          title: `Simulation ${overviewConfiguration.name}`,
           description: errorMessage,
-          placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
-          duration: 1000,
+          duration: null,
         });
         return;
       }
@@ -337,9 +334,8 @@ export const launchSimulationAtom = atom<
         }
 
         notify.error({
-          message: `Simulation ${overviewConfiguration.name}`,
+          title: `Simulation ${overviewConfiguration.name}`,
           description: errorMessage,
-          placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
         });
 
@@ -354,7 +350,6 @@ export const launchSimulationAtom = atom<
           set,
           virtualLabId,
           projectId,
-          notify,
           overviewConfiguration,
           sessionId,
           simulationStatusAtom,
@@ -390,9 +385,8 @@ export const launchSimulationAtom = atom<
         description: hasCause(error) ? `${error.cause}` : messages.RunningSimulationDefaultError,
       });
       notify.error({
-        message: `Simulation ${overviewConfiguration.name}`,
+        title: `Simulation ${overviewConfiguration.name}`,
         description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
-        placement: 'topRight',
         key: `simulation-failed-${sessionId}`,
       });
     }
@@ -406,7 +400,6 @@ function makeMessageParser(
   set: Setter,
   virtualLabId: string,
   projectId: string,
-  notify: NotificationInstance,
   overviewConfiguration: { name: string; description?: string | undefined },
   sessionId: string,
   simulationStatusAtom: ReturnType<typeof simulationStatusAtomFamily>,
@@ -465,9 +458,8 @@ function makeMessageParser(
       })
       .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, () => {
         notify.error({
-          message: `Simulation ${overviewConfiguration.name}`,
+          title: `Simulation ${overviewConfiguration.name}`,
           description: messages.SteamingSimulationResultDefaultError,
-          placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
         });
         set(simulationStatusAtom, {
@@ -481,9 +473,8 @@ function makeMessageParser(
       .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, async () => {
         set(simulationStatusAtom, { status: SimulationStatus.EXECUTED });
         notify.success({
-          message: `Simulation ${overviewConfiguration.name}`,
+          title: `Simulation ${overviewConfiguration.name}`,
           description: messages.ExecutionSimulationSucceed,
-          placement: 'topRight',
           key: `simulation-success-${sessionId}`,
         });
         const description = overviewConfiguration.description ?? '';
@@ -511,35 +502,28 @@ function makeMessageParser(
             description: messages.CreationSimulationFailed,
           });
           notify.error({
-            message: `Simulation ${overviewConfiguration.name}`,
+            title: `Simulation ${overviewConfiguration.name}`,
             description: messages.CreationSimulationFailed,
-            placement: 'topRight',
             key: `simulation-failed-${sessionId}`,
           });
         }
         if (data) {
           notify.success({
-            message: (
-              <>
-                Simulation <strong>{overviewConfiguration.name}</strong>
-              </>
-            ),
+            title: `Simulation ${overviewConfiguration.name}`,
             description: (
               <div className="flex flex-col gap-2">
                 <p>{messages.CreationSimulationSucceed}</p>
                 <Link
                   href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
                   className="text-primary-8 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-success-${sessionId}`)}
+                  onClick={() => notify.dismiss(`simulation-success-${sessionId}`)}
                 >
                   View Simulation
                 </Link>
               </div>
             ),
-            placement: 'topRight',
             duration: 0,
             key: `simulation-success-${sessionId}`,
-            onClick: () => notify.destroy(`simulation-success-${sessionId}`),
           });
         }
         set(simulationStatusAtom, { status: SimulationStatus.SAVED });

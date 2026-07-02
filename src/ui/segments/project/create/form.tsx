@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { checkProjectExists, createProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Label, XInput } from '@/ui/segments/profile/sections/profile-form/elements';
@@ -33,7 +33,6 @@ export function CreationForm({
   const { virtualLabId } = useWorkspace();
   const selectedVirtualLabId = fixedVirtualLabId ?? virtualLabId;
 
-  const { success: notifySuccess, error: notifyError } = useAppNotification();
   const queryClient = useQueryClient();
 
   const { push: navigate } = useRouter();
@@ -80,10 +79,9 @@ export function CreationForm({
         DEFAULT: 'Project creation failed. Please check your details and try again.',
       };
       if (error) {
-        notifyError({
-          message: 'Error creating project',
+        notify.error({
+          title: 'Error creating project',
           description: description[code],
-          placement: 'topRight',
           key: 'create-project-error',
         });
       }
@@ -95,9 +93,9 @@ export function CreationForm({
           prjId: data.id,
         });
       }
-      notifySuccess({
-        message: `Your Project ${variables.name} has been created successfully and is now ready to use.`,
-        placement: 'topRight',
+      notify.success({
+        title: 'Project created',
+        description: `Your Project ${variables.name} has been created successfully and is now ready to use.`,
       });
     },
     onSettled: async (result) => {

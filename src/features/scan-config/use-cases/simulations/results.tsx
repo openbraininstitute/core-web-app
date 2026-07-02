@@ -10,7 +10,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import {
   listAllChildren as listAllSimulationChildren,
   listExecutionsBySimulationId,
@@ -68,7 +68,6 @@ export default function SimulationsTab({
   isCampaignIdChanged,
   taskTypeBindings,
 }: SimulationTabProps) {
-  const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const { data: simulations = [], isLoading: simulationsLoading } = useQuery({
@@ -247,8 +246,9 @@ export default function SimulationsTab({
     const consentResult = await ensureOfflineTokenConsent();
     if (!consentResult.ok) {
       if (consentResult.reason !== 'cancelled') {
-        notification.error({
-          message: 'Unexpected error occurred, please try again later',
+        notify.error({
+          title: 'Unexpected error',
+          description: 'Unexpected error occurred, please try again later.',
           duration: 10,
         });
       }
@@ -289,13 +289,15 @@ export default function SimulationsTab({
     if (lowFundsError) {
       notifyLowCredits();
     } else if (nSubmissions !== simIds.length) {
-      notification.error({
-        message: 'We ran into a problem submitting your simulation(s). Please try again later.',
+      notify.error({
+        title: 'Simulation submission failed',
+        description: 'We ran into a problem submitting your simulation(s). Please try again later.',
         duration: 10,
       });
     } else {
-      notification.success({
-        message: 'Simulation(s) submitted successfully.',
+      notify.success({
+        title: 'Simulation(s) submitted',
+        description: 'Your simulation(s) were submitted successfully.',
         duration: 10,
       });
     }
@@ -331,8 +333,9 @@ export default function SimulationsTab({
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
               if (!simulation) return;
-              notification.success({
-                message: `Simulation ${simulation?.name} done`,
+              notify.success({
+                title: `Simulation ${simulation?.name} done`,
+                description: 'The simulation finished successfully.',
               });
             })
             .otherwise(() => null);
@@ -345,10 +348,18 @@ export default function SimulationsTab({
 
       if (error instanceof ApiError) {
         const message = getErrorMessage(error.cause?.code, errorRegistry, defaultMsg);
-        return notification.error({ message, duration: 20 });
+        return notify.error({
+          title: 'Simulation failed',
+          description: message,
+          duration: 20,
+        });
       }
 
-      notification.error({ message: defaultMsg, duration: 20 });
+      notify.error({
+        title: 'Simulation failed',
+        description: defaultMsg,
+        duration: 20,
+      });
     } finally {
       setSimRequestInProgress(false);
     }

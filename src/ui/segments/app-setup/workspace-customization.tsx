@@ -16,7 +16,7 @@ import z from 'zod';
 import { checkProjectExists, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { config } from '@/config';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
@@ -146,7 +146,6 @@ export function WorkspaceCustomization({
   projectName,
 }: Props) {
   const breakpoint = useDefaultBreakpoint();
-  const { error: notifyError } = useAppNotification();
   const { replace } = useRouter();
   const [isTransitioning, startTransition] = useTransition();
   const [editableField, setEditableField] = useState<{
@@ -188,12 +187,11 @@ export function WorkspaceCustomization({
       });
     },
     onError(error, variables) {
-      notifyError({
-        message: <h2 className="text-primary-9">{variables.vlabName}</h2>,
+      notify.error({
+        title: `Failed to rename "${variables.vlabName}"`,
         description: (
           <p className="text-primary-9">{error.message ?? 'Failed to update virtual lab name'}</p>
         ),
-        placement: 'topRight',
         key: 'virtual-lab-name-update-error',
       });
     },
@@ -204,8 +202,8 @@ export function WorkspaceCustomization({
       await updateProject({ virtualLabId, projectId, payload: { name: projName } });
     },
     onError(error, variables) {
-      notifyError({
-        message: <h2 className="text-primary-9">{variables.projName}</h2>,
+      notify.error({
+        title: `Failed to rename "${variables.projName}"`,
         description: (
           <p className="text-primary-9">{error.message ?? 'Failed to update project name'}</p>
         ),

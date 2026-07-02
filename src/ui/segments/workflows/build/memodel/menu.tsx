@@ -19,7 +19,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { checkSingleNeuronCompatibility } from '@/api/small-scale-simulator';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import { messages } from '@/i18n/en/me-model';
@@ -46,7 +46,6 @@ type TCreateSingleNeuronContext = z.infer<typeof CreateSingleNeuronContextSchema
 
 export function Menu({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
-  const notification = useAppNotification();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -126,12 +125,9 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const mutate = useMutation({
     mutationFn: buildMeModel,
     onSuccess: (data) => {
-      notification.success({
-        message: messages.CreationModelSucceed,
-        onClick: () => {
-          notification.destroy('model-saved');
-        },
-        placement: 'topRight',
+      notify.success({
+        title: 'ME-model created',
+        description: messages.CreationModelSucceed,
         key: 'model-saved',
         duration: 3,
       });
@@ -145,10 +141,9 @@ export function Menu({ sessionId }: { sessionId: string }) {
       log('error', 'Build me-model failed:', err);
       if (reportLowCredits(err)) return;
 
-      notification.error({
-        message: 'ME-model creation failed',
+      notify.error({
+        title: 'ME-model creation failed',
         description: messages.DefaultErrorMsg,
-        placement: 'topRight',
         duration: 10,
       });
     },

@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { get } from 'es-toolkit/compat';
 
 import { cancelSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { messages } from '@/i18n/en/payment';
 import { Button } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/user';
@@ -17,7 +17,6 @@ type Props = {
 };
 
 export function DowngradeFree({ onBack }: Props) {
-  const { error: errorNotify, success: successNotify } = useAppNotification();
   const queryClient = useQueryClient();
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ['cancel-subscription'],
@@ -35,10 +34,9 @@ export function DowngradeFree({ onBack }: Props) {
         errorCode,
         messages.subscriptionDowngradeErrorDescription
       );
-      errorNotify({
-        message,
+      notify.error({
+        title: message,
         description,
-        placement: 'topRight',
         key: 'subscription-downgrade-error',
       });
     },
@@ -48,10 +46,9 @@ export function DowngradeFree({ onBack }: Props) {
           '$$date',
           format(new Date(res.subscription.current_period_end), 'MMM dd, yyyy')
         );
-        successNotify({
-          message: messages.subscriptionDowngradeSuccessTitle,
+        notify.success({
+          title: messages.subscriptionDowngradeSuccessTitle,
           description,
-          placement: 'topRight',
           key: 'subscription-downgrade-success',
         });
       }

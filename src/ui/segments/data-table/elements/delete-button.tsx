@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import pMap from 'p-map';
 import { type ReactNode, useMemo } from 'react';
 
-import { useAppNotification } from '@/components/notification';
+import { type NotifyType, notify } from '@/components/notification';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useScope } from '@/ui/hooks/use-scope';
@@ -16,7 +16,6 @@ import { Button } from '@/ui/molecules/button';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { cn } from '@/utils/css-class';
 
-import type { IconType } from 'antd/es/notification/interface';
 import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
@@ -61,7 +60,7 @@ type DeletionResult = {
 function buildBulkDeleteNotification(result: DeletionResult): {
   message: string;
   description: ReactNode;
-  type: IconType;
+  type: NotifyType;
 } {
   const success = result.success.length;
   const fk = result.errors.foreignKeyViolation?.length ?? 0;
@@ -131,7 +130,6 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   children?: ReactNode;
   workspace?: WorkspaceContext;
 }) {
-  const notify = useAppNotification();
   const queryClient = useQueryClient();
   const { scope: currentScope } = useScope();
 
@@ -216,11 +214,10 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
         ),
       });
 
-      notify.open({
-        message: message?.message,
+      notify.show({
+        title: message.message,
         description: message?.description,
         type: message.type,
-        placement: 'topRight',
       });
 
       if (clearSelectedRows) clearSelectedRows();

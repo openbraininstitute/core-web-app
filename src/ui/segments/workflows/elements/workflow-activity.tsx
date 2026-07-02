@@ -17,7 +17,7 @@ import {
 } from '@/api/entitycore/types';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
@@ -105,7 +105,6 @@ export function WorkflowActivity() {
   const { push: navigate } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const notification = useAppNotification();
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
 
@@ -347,15 +346,15 @@ export function WorkflowActivity() {
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/ion-channel-model/${modelId}`
         );
       } else {
-        notification.info({
-          message: 'No ion channel model found',
+        notify.info({
+          title: 'No ion channel model found',
           description: 'This campaign has not produced any ion channel model yet.',
         });
       }
     } finally {
       setIsResolvingResults(false);
     }
-  }, [selectedRow, navigate, virtualLabId, projectId, notification]);
+  }, [selectedRow, navigate, virtualLabId, projectId]);
 
   const resultsLink = useMemo(() => {
     if (!entityType || !selectedRow) {

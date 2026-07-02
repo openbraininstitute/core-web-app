@@ -8,7 +8,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
@@ -39,7 +39,6 @@ export function NotebooksLayout({ children, active }: Props) {
       });
     }
   }, [searchParams, router]);
-  const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
   const breakpoint = useDefaultBreakpoint();
 
@@ -69,24 +68,24 @@ export function NotebooksLayout({ children, active }: Props) {
     }
     try {
       const retval = await startEmptyNotebook(virtualLabId, projectId, virtualLabData.compute_cell);
-      notification.success({
-        message: `Notebook starting`,
+      notify.success({
+        title: 'Notebook starting',
+        description: 'Your notebook is starting in a new tab.',
         key: 'notebook-started-successfully',
-        placement: 'topRight',
       });
       window.open(retval.url, '_blank');
     } catch (error) {
       if (error instanceof Error && 'cause' in error) {
-        notification.error({
-          message: (error.cause as { error_code: string; hint: string }).hint,
+        notify.error({
+          title: 'Failed to start notebook',
+          description: (error.cause as { error_code: string; hint: string }).hint,
           key: 'notebook-error',
-          placement: 'topRight',
         });
       } else {
-        notification.error({
-          message: `Failed to start notebook`,
+        notify.error({
+          title: 'Failed to start notebook',
+          description: 'An unknown error occurred. Please try again.',
           key: 'notebook-unknown-error',
-          placement: 'topRight',
         });
       }
     } finally {

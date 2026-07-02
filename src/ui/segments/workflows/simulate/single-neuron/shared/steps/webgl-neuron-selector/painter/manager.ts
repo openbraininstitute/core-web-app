@@ -10,7 +10,7 @@ import {
 } from '@tolokoban/tgd';
 import React from 'react';
 
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import GenericEvent from '@/util/generic-event';
 
 import { useVisibleSynapses } from '../hooks';
@@ -460,17 +460,17 @@ export function usePainterController(
   disableClick: boolean,
   sessionId: string
 ) {
-  const notifier = useAppNotification();
   React.useEffect(() => {
     const action = () => {
-      notifier.error({
-        message: `You cannot add recordings nor move injection while a simulation is running!`,
+      notify.error({
+        title: 'Simulation in progress',
+        description: 'You cannot add recordings nor move injection while a simulation is running.',
         key: `ForbiddenClick[${painter.id}]`,
       });
     };
     painter.eventForbiddenClick.addListener(action);
     return () => painter.eventForbiddenClick.removeListener(action);
-  }, [notifier, painter]);
+  }, [painter]);
 
   React.useEffect(() => {
     if (painter) {

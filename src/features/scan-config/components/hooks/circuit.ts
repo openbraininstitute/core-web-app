@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
@@ -11,7 +11,6 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export function useCircuitImageURL(circuitId: string) {
   const context = useWorkspace();
-  const { error: notifyError } = useAppNotification();
   const {
     entity: circuit,
     error: circuitError,
@@ -56,9 +55,9 @@ export function useCircuitImageURL(circuitId: string) {
   const error = circuitError || assetError;
 
   if ((!data && !isLoading) || error) {
-    notifyError({
-      message: `No image found for circuit "${circuit?.name}" (${circuitId})!`,
-      placement: 'topRight',
+    notify.error({
+      title: 'Circuit image not found',
+      description: `No image found for circuit "${circuit?.name}" (${circuitId}).`,
       key: `circuit-image-error-${circuitId}`,
     });
     return { data: undefined, isLoading: false, error };

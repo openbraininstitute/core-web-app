@@ -3,35 +3,35 @@
 'use client';
 
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { kebabCase, uniqBy } from 'es-toolkit/compat';
 import { useMutation } from '@tanstack/react-query';
+import { kebabCase, uniqBy } from 'es-toolkit/compat';
 import { RESET } from 'jotai/utils';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-import type { ZodError } from 'zod';
-
-import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
+import { notify } from '@/components/notification';
+import { messages } from '@/i18n/en/simulation';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { WorkflowSimulatePanels } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { SimulationStatus } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { exportSimulationResultsAsZip } from '@/util/simulation-plotly-to-csv';
-import { useAppMessage, useAppNotification } from '@/components/notification';
 import {
   ExperimentalSetupConfigurationSchema,
-  OverviewConfigurationSchema,
   NeuronLocationArraySchema,
+  OverviewConfigurationSchema,
   SimulationType,
   StimulationConfigurationSchema,
   SynapseConfigurationArraySchema,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { browserHistoryReplace } from '@/utils/browser';
-import { messages } from '@/i18n/en/simulation';
-import { Button } from '@/ui/molecules/button';
+import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
+import { exportSimulationResultsAsZip } from '@/util/simulation-plotly-to-csv';
 import { classNames } from '@/util/utils';
+import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
+
+import type { ZodError } from 'zod';
 
 import styles from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/results-menu.module.css';
 
@@ -43,8 +43,6 @@ type Props = {
 export function Menu({ sessionId, type }: Props) {
   const pathname = usePathname();
   const queryParams = useSearchParams();
-  const notification = useAppNotification();
-  const message = useAppMessage();
   const breakpoint = useDefaultBreakpoint();
 
   const {
@@ -84,16 +82,16 @@ export function Menu({ sessionId, type }: Props) {
         result: simulationResults!,
       }),
     onSuccess: () => {
-      notification.success({
-        message: messages.DownloadSuccessful,
-        placement: 'topRight',
+      notify.success({
+        title: 'Download successful',
+        description: messages.DownloadSuccessful,
         key: 'download-simulation-zip',
       });
     },
     onError: () => {
-      notification.error({
-        message: messages.DownloadFailed,
-        placement: 'topRight',
+      notify.error({
+        title: 'Download failed',
+        description: messages.DownloadFailed,
         key: 'download-simulation-zip',
       });
     },
@@ -106,18 +104,13 @@ export function Menu({ sessionId, type }: Props) {
     updateSimulationStatus(RESET);
     updateSimulationResult(RESET);
 
-    message.open({
-      content: (
-        <div className="flex flex-col items-start justify-start">
-          <p>{messages.ReconfigureSimulation}</p>
-          <p>{messages.ReconfigureSimulationDescription}</p>
-        </div>
-      ),
-      type: 'info',
+    notify.info({
+      title: messages.ReconfigureSimulation,
+      description: messages.ReconfigureSimulationDescription,
       key: 'reconfigure-simulation',
     });
 
-    notification.destroy(`simulation-success-${sessionId}`);
+    notify.dismiss(`simulation-success-${sessionId}`);
     const params = new URLSearchParams(queryParams);
     params.delete('record');
     params.delete('step');

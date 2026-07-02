@@ -6,14 +6,13 @@ import React from 'react';
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import IconDownload from '@/components/icons/DownloadIcon';
 import { IconSpinner } from '@/components/icons/spinner';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { classNames } from '@/util/utils';
 import { logError } from '@/utils/logger';
 
 import { fetchAsset } from '../assets';
 
-import type { NotificationInstance } from 'antd/es/notification/interface';
 import type { DirectoryItem, IAsset } from '@/api/entitycore/types/shared/global';
 
 import styles from './assets-downloader.module.css';
@@ -26,7 +25,6 @@ export interface AssetsDownloaderProps {
 const ENTITY_TYPE = 'em_cell_mesh';
 
 export default function AssetsDownloader({ entityId, className }: AssetsDownloaderProps) {
-  const notif = useAppNotification();
   const ctx = useWorkspace();
   const [step, setStep] = React.useState(0);
   const [asset, setAsset] = React.useState<IAsset | null>(null);
@@ -35,8 +33,8 @@ export default function AssetsDownloader({ entityId, className }: AssetsDownload
   );
   const listCount = list ? Object.keys(list).length : 0;
   const [progress, setProgress] = React.useState(0);
-  const handleFindAsset = useFindAssetHandler(setStep, setAsset, ctx, entityId, notif);
-  const handleList = useListHandler(asset, setStep, setList, ctx, entityId, notif);
+  const handleFindAsset = useFindAssetHandler(setStep, setAsset, ctx, entityId);
+  const handleList = useListHandler(asset, setStep, setList, ctx, entityId);
   const handleDownloadList = async () => {
     if (!list || !asset) {
       setStep(0);
@@ -59,8 +57,8 @@ export default function AssetsDownloader({ entityId, className }: AssetsDownload
         zip.file(name, await resp.arrayBuffer());
       } catch (error) {
         logError(`Unable to download "${name}"!`, error);
-        notif.error({
-          message: 'error',
+        notify.error({
+          title: 'Download failed',
           description: `Unable to download "${name}"!`,
         });
       } finally {
@@ -73,8 +71,8 @@ export default function AssetsDownloader({ entityId, className }: AssetsDownload
       compressionOptions: { level: 1 },
     });
     saveAs(blob, 'lods.zip');
-    notif.success({
-      message: 'Success',
+    notify.success({
+      title: 'Download complete',
       description: `Downloaded ${listCount} files!`,
     });
     setStep(0);
@@ -148,8 +146,7 @@ function useListHandler(
   setStep: React.Dispatch<React.SetStateAction<number>>,
   setList: React.Dispatch<React.SetStateAction<Record<string, DirectoryItem> | null | undefined>>,
   ctx: { virtualLabId: string; projectId: string },
-  entityId: string,
-  notif: NotificationInstance
+  entityId: string
 ) {
   return async () => {
     if (!asset) {
@@ -170,8 +167,8 @@ function useListHandler(
       setStep(4);
     } catch (error) {
       logError(`Unable to load assets for entity "${entityId}"!`, error);
-      notif.error({
-        message: 'Error',
+      notify.error({
+        title: 'Asset error',
         description: 'Failed to fetch asset',
       });
       setStep(0);
@@ -183,8 +180,7 @@ function useFindAssetHandler(
   setStep: React.Dispatch<React.SetStateAction<number>>,
   setAsset: React.Dispatch<React.SetStateAction<IAsset | null>>,
   ctx: { virtualLabId: string; projectId: string },
-  entityId: string,
-  notif: NotificationInstance
+  entityId: string
 ) {
   return async () => {
     setStep(1);
@@ -199,8 +195,8 @@ function useFindAssetHandler(
       setStep(2);
     } catch (error) {
       logError(`Unable to load assets for entity "${entityId}"!`, error);
-      notif.error({
-        message: 'Error',
+      notify.error({
+        title: 'Asset error',
         description: 'Failed to fetch asset',
       });
       setStep(0);

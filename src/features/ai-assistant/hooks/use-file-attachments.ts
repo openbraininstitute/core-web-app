@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
@@ -31,7 +31,6 @@ export interface FileAttachment {
 export function useFileAttachments() {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const attachmentsRef = useRef<FileAttachment[]>([]);
-  const { error: notifyError } = useAppNotification();
 
   // Keep ref in sync for cleanup
   useEffect(() => {
@@ -49,42 +48,39 @@ export function useFileAttachments() {
     };
   }, []);
 
-  const addFiles = useCallback(
-    (files: FileList | File[]) => {
-      const fileArray = Array.from(files);
-      const valid: FileAttachment[] = [];
+  const addFiles = useCallback((files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const valid: FileAttachment[] = [];
 
-      for (const file of fileArray) {
-        if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
-          notifyError({
-            message: 'Invalid file type',
-            description: `Accepted: ${ACCEPTED_FILE_TYPES_DESCRIPTION}.`,
-          });
-          continue;
-        }
-
-        if (file.size > MAX_FILE_SIZE_BYTES) {
-          notifyError({
-            message: 'File too large',
-            description: `Files must be ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB or smaller.`,
-          });
-          continue;
-        }
-
-        const isImage = ACCEPTED_IMAGE_TYPES.includes(file.type);
-        valid.push({
-          id: crypto.randomUUID(),
-          file,
-          previewUrl: isImage ? URL.createObjectURL(file) : '',
+    for (const file of fileArray) {
+      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+        notify.error({
+          title: 'Invalid file type',
+          description: `Accepted: ${ACCEPTED_FILE_TYPES_DESCRIPTION}.`,
         });
+        continue;
       }
 
-      if (valid.length > 0) {
-        setAttachments((prev) => [...prev, ...valid]);
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        notify.error({
+          title: 'File too large',
+          description: `Files must be ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB or smaller.`,
+        });
+        continue;
       }
-    },
-    [notifyError]
-  );
+
+      const isImage = ACCEPTED_IMAGE_TYPES.includes(file.type);
+      valid.push({
+        id: crypto.randomUUID(),
+        file,
+        previewUrl: isImage ? URL.createObjectURL(file) : '',
+      });
+    }
+
+    if (valid.length > 0) {
+      setAttachments((prev) => [...prev, ...valid]);
+    }
+  }, []);
 
   const removeAttachment = useCallback((id: string) => {
     setAttachments((prev) => {

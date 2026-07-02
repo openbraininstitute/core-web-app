@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import debounce from 'es-toolkit/compat/debounce';
 import React from 'react';
 
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
@@ -185,7 +185,6 @@ class AiAssistantClass {
 export const AiAssistant = new AiAssistantClass();
 
 export function useAiAssistant() {
-  const { error } = useAppNotification();
   const queryClient = useQueryClient();
   const accessToken = useAccessToken() ?? 'NO-TOKEN';
   const virtualLabId = useParamVirtualLabId();
@@ -204,11 +203,11 @@ export function useAiAssistant() {
 
       const { message, reason } = err;
       logError('Error in AI Assistant!', message, reason);
-      error({ message });
+      notify.error({ title: 'AI Assistant error', description: message });
     };
     AiAssistant.error.event.addListener(handleError);
     return () => AiAssistant.error.event.removeListener(handleError);
-  }, [error]);
+  }, []);
 
   React.useEffect(() => {
     AiAssistant.init({ accessToken, virtualLabId, projectId });

@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useTabs } from '@/components/detail-view-tabs';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/virtual-lab';
@@ -67,7 +67,6 @@ function EditableName({
     checking: boolean;
   }>(() => ({ isValid: true, message: null, errors: [], checking: false }));
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
   const queryClient = useQueryClient();
   const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId });
 
@@ -134,18 +133,16 @@ function EditableName({
       } else {
         setCurrentName(initialName);
       }
-      notifyError({
-        message: messages.RenameVirtualLabFailedTitle,
+      notify.error({
+        title: messages.RenameVirtualLabFailedTitle,
         description: messages.RenameVirtualLabFailedDescription,
-        placement: 'topRight',
         key: 'virtual-lab-name-update-error',
       });
     },
     onSuccess: () => {
-      notifySuccess({
-        message: messages.RenameVirtualLabSucceedTitle,
+      notify.success({
+        title: messages.RenameVirtualLabSucceedTitle,
         description: messages.RenameVirtualLabSucceedDescription,
-        placement: 'topRight',
         key: 'virtual-lab-name-update-success',
       });
     },

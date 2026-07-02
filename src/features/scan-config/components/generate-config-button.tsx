@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { get, isEqual, isString, pick } from 'es-toolkit/compat';
 
 import { authFetch } from '@/auth-fetch';
-import { useAppNotification } from '@/components/notification';
+import { notify } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
@@ -60,7 +60,6 @@ export default function GenerateConfigButton({
   // schema validation can't catch; either kind blocks generation
   const fieldErrors = useFieldErrors();
   const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
-  const notification = useAppNotification();
   const queryClient = useQueryClient();
   const {
     guard,
@@ -135,8 +134,8 @@ export default function GenerateConfigButton({
               if (reportLowCredits(message)) return;
 
               const detailStr = typeof message?.detail === 'string' ? message.detail : '';
-              notification.error({
-                message: get(messages, `${activity}.CoordinateCountFailed`),
+              notify.error({
+                title: get(messages, `${activity}.CoordinateCountFailed`),
                 description: detailStr || (message?.detail ?? 'Unknown error'),
               });
               return;
@@ -159,17 +158,18 @@ export default function GenerateConfigButton({
 
               const details =
                 res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
-              notification.error({
-                message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
-                description: details,
+              notify.error({
+                title: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
+                description: details || 'An unexpected error occurred. Please try again.',
               });
               return;
             }
 
             const returnedCampaignId = (await res.json()) as string;
             if (returnedCampaignId === '') {
-              notification.error({
-                message: get(messages, `${activity}.ScanConfigGenerateGridCampaignIdFailed`),
+              notify.error({
+                title: get(messages, `${activity}.ScanConfigGenerateGridCampaignIdFailed`),
+                description: 'The server did not return a campaign id. Please try again.',
               });
               return;
             }
@@ -198,7 +198,10 @@ export default function GenerateConfigButton({
             setCampaignId(returnedCampaignId);
             onTabChange();
           } catch (e) {
-            notification.error({ message: assertErrorMessage(e) });
+            notify.error({
+              title: 'Campaign generation failed',
+              description: assertErrorMessage(e),
+            });
             return;
           } finally {
             setLoading(false);
