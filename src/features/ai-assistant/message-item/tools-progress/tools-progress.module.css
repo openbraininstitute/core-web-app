@@ -9,7 +9,7 @@
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
-  background-color: color-mix(in srgb, var(--color-primary-6) 4%, var(--color-neutral-9));
+  background-color: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-9));
   transition:
     box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
     border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -29,13 +29,17 @@
 }
 
 .header:hover {
-  background-color: rgba(0, 0, 0, 0.02);
-  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--color-primary-6) 5%, transparent);
+  border-radius: 8px 8px 0 0;
 }
 
 .cardRunning {
   border-color: rgba(191, 219, 254, 0.5);
   background-color: #eff6ff;
+}
+
+.cardRunning .header {
+  background-color: rgba(59, 130, 246, 0.06);
 }
 
 .cardRunning:hover {
@@ -45,6 +49,10 @@
 .cardError {
   border-color: rgba(252, 165, 165, 0.5);
   background-color: #fef2f2;
+}
+
+.cardError .header {
+  background-color: rgba(239, 68, 68, 0.05);
 }
 
 .cardError:hover {
@@ -175,6 +183,7 @@
   border: none;
   cursor: pointer;
   text-align: left;
+  border-radius: 8px 8px 0 0;
 }
 
 .iconWrapper {
@@ -389,7 +398,7 @@
 
 .details {
   overflow: hidden;
-  background-color: color-mix(in srgb, var(--color-primary-6) 2%, var(--color-neutral-9));
+  background-color: var(--color-neutral-9);
   --tp-accent: var(--color-primary-5);
   --tp-border: color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   transition:
@@ -509,8 +518,10 @@
   padding: 0 0 0.375rem;
   margin-bottom: -1px;
   border-bottom: 2px solid transparent;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--color-neutral-3, #aaa);
   cursor: pointer;
   transition:
@@ -546,6 +557,10 @@
 .cardApproval {
   border-color: rgba(245, 158, 11, 0.6);
   background-color: #fffdf5;
+}
+
+.cardApproval .header {
+  background-color: rgba(251, 191, 36, 0.08);
 }
 
 .cardApproval:hover {
@@ -614,6 +629,10 @@
 .cardDenied {
   border-color: rgba(252, 165, 165, 0.5);
   background-color: #fef2f2;
+}
+
+.cardDenied .header {
+  background-color: rgba(239, 68, 68, 0.05);
 }
 
 .cardDenied:hover {
@@ -752,7 +771,7 @@
   gap: 0.5rem;
   padding: 0.625rem 0.75rem;
   border-top: 1px solid rgba(251, 191, 36, 0.3);
-  background-color: rgba(251, 191, 36, 0.04);
+  background-color: rgba(251, 191, 36, 0.08);
   border-radius: 0 0 8px 8px;
 }
 
