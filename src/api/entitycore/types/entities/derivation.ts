@@ -86,6 +86,57 @@ export interface IBasicEntityRead extends EntityCoreIdentifiable {
   type?: TEntityTypeDict | null;
 }
 
+/** `NestedEntityRead`, the nested entity ref on an entity's derivation lists (adds an optional name). */
+export interface INestedEntityRead extends IBasicEntityRead {
+  name?: string | null;
+}
+
+/** A derivation where THIS entity is the generated (derived) side — "how it was derived". */
+export interface IGeneratedFromDerivation {
+  used: INestedEntityRead;
+  derivation_type: TDerivationType;
+  label?: string | null;
+}
+
+/** A derivation where THIS entity is the used (source) side — "what was derived from it". */
+export interface IUsedByDerivation {
+  generated: INestedEntityRead;
+  derivation_type: TDerivationType;
+  label?: string | null;
+}
+
+/**
+ * Derivation lists exposed by every entity read (entitycore #647), opt-in via the `expand` param.
+ * `null`/absent unless expanded; `[]` when expanded but the entity has none in that direction.
+ */
+export interface EntityDerivations {
+  generated_from_derivations?: Array<IGeneratedFromDerivation> | null;
+  used_by_derivations?: Array<IUsedByDerivation> | null;
+}
+
+/** Opt-in derivation lists any entity read can request via `?expand=...` (repeatable). */
+export type EntityExpandParam = 'generated_from_derivations' | 'used_by_derivations';
+
+/**
+ * Derivation filters available on every entity list endpoint (entitycore #647).
+ * `generated_derivation__*` = this entity is the generated (derived) side;
+ * `used_derivation__*` = this entity is the used (source) side.
+ */
+export interface EntityDerivationFilter {
+  generated_derivation__derivation_type?: TDerivationType;
+  generated_derivation__derivation_type__in?: Array<TDerivationType>;
+  generated_derivation__used_id?: string;
+  generated_derivation__used_id__in?: Array<string>;
+  generated_derivation__generated_id?: string;
+  generated_derivation__generated_id__in?: Array<string>;
+  used_derivation__derivation_type?: TDerivationType;
+  used_derivation__derivation_type__in?: Array<TDerivationType>;
+  used_derivation__used_id?: string;
+  used_derivation__used_id__in?: Array<string>;
+  used_derivation__generated_id?: string;
+  used_derivation__generated_id__in?: Array<string>;
+}
+
 /**
  * `DerivationRead`, a derivation read response, exposing the linked entities.
  * - `used`: the source entity (e.g. the EM dense reconstruction dataset).

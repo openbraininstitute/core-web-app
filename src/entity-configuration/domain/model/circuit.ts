@@ -56,7 +56,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
           filters: mergedFilters,
           // Needed for the "Derivation type" column (issue #517): load each circuit's
           // incoming derivations so the column can show how the circuit was derived.
-          expand: 'generated_derivations',
+          expand: 'generated_from_derivations',
         });
       },
       one: getCircuit,

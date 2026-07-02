@@ -345,10 +345,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     // Not sortable: the backend exposes no order_by for derivation type.
     defaultConstraint: 'generated_derivation__derivation_type__in',
     render: (r) => {
-      // `generated_derivations` is loaded only on the flat list (expand=generated_derivations);
+      // `generated_from_derivations` is loaded only on the flat list (expand=generated_from_derivations);
       // hierarchy/enriched rows omit it, so guard like CircuitSubCircuit does.
       const derivations =
-        'generated_derivations' in r ? (r as ICircuit).generated_derivations : null;
+        'generated_from_derivations' in r ? (r as ICircuit).generated_from_derivations : null;
       if (!derivations?.length) {
         return EmptyValue;
       }
