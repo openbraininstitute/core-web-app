@@ -75,7 +75,14 @@ export type TCircuitScaleDictionary =
 export type TCircuitBuildCategoryDictionary =
   (typeof CircuitBuildCategory)[keyof typeof CircuitBuildCategory]['key'];
 
-export type TCircuitTargetSimulator = 'NEURON' | 'Brian2' | 'LearningEngine';
+export const CircuitTargetSimulator = {
+  Neuron: { key: 'NEURON', label: 'NEURON' },
+  Brian2: { key: 'Brian2', label: 'Brian2' },
+  LearningEngine: { key: 'LearningEngine', label: 'LearningEngine' },
+} as const;
+
+export type TCircuitTargetSimulator =
+  (typeof CircuitTargetSimulator)[keyof typeof CircuitTargetSimulator]['key'];
 
 interface CircuitBase {
   description: string;
@@ -116,6 +123,7 @@ export interface ICircuitFilter
     CircuitScaleFilter,
     IlikeSearchFilter {
   has_electrical_cell_models?: boolean;
+  target_simulator__in?: Array<string>;
 }
 
 export type SonataCircuitNetworkEdgeConfigItem = {
