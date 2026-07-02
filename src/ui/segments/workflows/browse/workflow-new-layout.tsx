@@ -44,7 +44,7 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
             id="workflow-new-inner-layout"
             className={cn(
               'grid gap-2 [grid-area:main]',
-              'h-full max-h-[calc(100%-3rem)] px-3 py-2'
+              'h-full max-h-[calc(100%-3.5rem)] px-3 py-2'
             )}
             initial={gridTemplate}
             animate={gridTemplate}

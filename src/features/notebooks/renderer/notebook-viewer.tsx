@@ -96,8 +96,18 @@ export function NotebookCellsPreview({
           <LoadingOutlined className="text-xl" />
         </div>
       ) : (
-        // cap the preview so opening the drawer doesn't render an entire notebook
-        <NotebookRenderer ipynb={{ ...data, cells: data.cells.slice(0, PREVIEW_CELL_COUNT) }} />
+        // cap the preview so opening the drawer doesn't render an entire notebook,
+        // and drop cell outputs so the preview shows source only
+        <NotebookRenderer
+          ipynb={{
+            ...data,
+            cells: data.cells.slice(0, PREVIEW_CELL_COUNT).map((cell) => ({
+              ...cell,
+              outputs: [],
+              execution_count: null,
+            })),
+          }}
+        />
       )}
     </div>
   );

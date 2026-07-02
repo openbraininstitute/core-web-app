@@ -28,7 +28,7 @@ export function useNotebookContent({
   }).getOneOrNull();
 
   const query = useQuery({
-    queryKey: ['notebook-content', entityType, entityId, asset?.id],
+    queryKey: ['notebook-content', entityType, { entityId, notebookAssetId: asset?.id }],
     enabled: Boolean(asset),
     staleTime: 60 * 60 * 1000, // 1 hour
     queryFn: async (): Promise<Ipynb> => {

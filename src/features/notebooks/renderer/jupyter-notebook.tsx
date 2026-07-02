@@ -5,6 +5,7 @@ import { Notebook } from '@jupyter-kit/react';
 
 import '@jupyter-kit/theme-default/default.css';
 import '@jupyter-kit/theme-default/syntax/github-light.css';
+import './notebook-renderer.css';
 
 import type { Ipynb } from '@jupyter-kit/core';
 
