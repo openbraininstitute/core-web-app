@@ -47,6 +47,9 @@ function resolveHref(link: string, baseRoute: string): string {
   return `${baseRoute}${link}`;
 }
 
+const ctaClassName =
+  'flex w-full shrink-0 flex-row items-center justify-between rounded-[60px] border-2 border-white/20 bg-[#002766] px-6 py-2.5 text-xl font-semibold text-white no-underline shadow-[-8px_-8px_12px_0_rgba(255,255,255,0.92),6px_8px_12px_0_rgba(0,0,0,0.12)] transition-opacity hover:opacity-90';
+
 export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
   const { virtualLabId, projectId } = useWorkspace();
   const baseRoute = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
@@ -62,26 +65,37 @@ export function GetStartedCard({ card }: { card: TProjectHomeGetStartedCard }) {
         <CardMedia card={card} />
       </div>
 
-      <Link
-        href={resolveHref(card.link, baseRoute)}
-        className="flex w-full shrink-0 flex-row items-center justify-between rounded-[60px] border-2 border-white/20 bg-[#002766] px-6 py-2.5 text-xl font-semibold text-white no-underline shadow-[-8px_-8px_12px_0_rgba(255,255,255,0.92),6px_8px_12px_0_rgba(0,0,0,0.12)] transition-opacity hover:opacity-90"
-      >
-        {card.label}
-        <RiArrowRightLine className="size-4 shrink-0" />
-      </Link>
+      {card.link != null ? (
+        <Link href={resolveHref(card.link, baseRoute)} className={ctaClassName}>
+          {card.label}
+          <RiArrowRightLine className="size-4 shrink-0" />
+        </Link>
+      ) : (
+        <span className={ctaClassName}>
+          {card.label}
+          <RiArrowRightLine className="size-4 shrink-0" />
+        </span>
+      )}
 
       {card.resources && card.resources.length > 0 && (
         <ul className="flex shrink-0 flex-col">
           {card.resources.map((resource, idx) => (
             <li key={resource._key}>
               {idx > 0 && <div className="bg-neutral-300 my-0 h-px" />}
-              <Link
-                href={resource.link}
-                className="text-primary-8 flex items-center justify-between py-2.5 text-sm font-normal no-underline transition-colors hover:opacity-80"
-              >
-                <span>{resource.label}</span>
-                <RiArrowRightLine className="size-4 shrink-0" />
-              </Link>
+              {resource.link != null ? (
+                <Link
+                  href={resource.link}
+                  className="text-primary-8 flex items-center justify-between py-2.5 text-sm font-normal no-underline transition-colors hover:opacity-80"
+                >
+                  <span>{resource.label}</span>
+                  <RiArrowRightLine className="size-4 shrink-0" />
+                </Link>
+              ) : (
+                <span className="text-primary-8 flex items-center justify-between py-2.5 text-sm font-normal">
+                  <span>{resource.label}</span>
+                  <RiArrowRightLine className="size-4 shrink-0" />
+                </span>
+              )}
             </li>
           ))}
         </ul>
