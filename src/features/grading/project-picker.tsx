@@ -42,7 +42,7 @@ export function ProjectPicker({ projects, virtualLabName, params }: Props) {
         <p className="text-primary-7">
           You have access to several projects in{' '}
           <span className="font-semibold">{virtualLabName}</span>. Pick the one to launch this
-          exercise in.
+          notebook in.
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export function ProjectPicker({ projects, virtualLabName, params }: Props) {
         disabled={!projectId}
         onClick={onLaunch}
       >
-        Launch exercise
+        Launch notebook
       </Button>
 
       {error && (

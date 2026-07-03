@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams;
   const launch = await resolveGradingLaunch({
     token: q.get('token'),
-    exercise_id: q.get('exercise_id'),
+    assignment_id: q.get('assignment_id'),
     virtual_lab_id: q.get('virtual_lab_id'),
     exp: q.get('exp'),
     sig: q.get('sig'),
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
   const { params, projects, cloud } = launch;
   log('info', '[grading-launch] launch URL verified', {
-    exercise_id: params.exercise_id,
+    assignment_id: params.assignment_id,
     virtual_lab_id: params.virtual_lab_id,
     exp: params.exp,
   });
@@ -84,11 +84,11 @@ export async function GET(request: NextRequest) {
   log('info', '[grading-launch] workspace resolved', {
     virtual_lab_id: params.virtual_lab_id,
     project_id: projectId,
-    exercise_id: params.exercise_id,
+    assignment_id: params.assignment_id,
   });
 
   const result = await startGradingNotebook({
-    exercise_id: params.exercise_id,
+    assignment_id: params.assignment_id,
     virtual_lab_id: params.virtual_lab_id,
     project_id: projectId,
     compute_cell: cloud,

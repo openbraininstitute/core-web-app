@@ -78,11 +78,11 @@ export function Setup() {
         />
       </Form.Item>
 
-      <Form.Item name={['setup', 'exercise_id']} label={renderLabel('Exercise ID', 'main')}>
+      <Form.Item name={['setup', 'assignment_id']} label={renderLabel('Assignment ID', 'main')}>
         <Input
           className="h-12 rounded-full placeholder:text-sm"
           size="large"
-          placeholder="Optional — exercise ID this notebook grades"
+          placeholder="Optional — assignment ID this notebook grades"
         />
       </Form.Item>
     </div>
