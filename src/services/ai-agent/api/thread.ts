@@ -1,4 +1,4 @@
-import { assertType, isObject, isString } from '@/util/type-guards';
+import { assertType, isType } from '@/util/type-guards';
 import { logError } from '@/utils/logger';
 
 import { fetchJSON, isVoidType } from './util';
@@ -21,22 +21,17 @@ export async function serviceAiAgentThreadCreate({
     query: { title, vlabId: virtualLabId, projectId },
     typeGuard: isThreadCreateResponse,
   });
-  return { threadId: data.thread_id };
+  return { threadId: data.id };
 }
 
 interface ThreadCreateResponse {
-  thread_id: string;
-  title: string;
-  user_id: string;
-  creation_date: string;
-  update_date: string;
-  vlab_id: string | null;
-  project_id: string | null;
+  id: string;
 }
 
 function isThreadCreateResponse(data: unknown): data is ThreadCreateResponse {
-  if (!isObject(data)) return false;
-  return isString(data.thread_id);
+  return isType(data, {
+    id: 'string',
+  });
 }
 
 export async function serviceAiAgentThreadExists({

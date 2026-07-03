@@ -14,7 +14,6 @@ import {
   clearDiffStateAtom,
   messageSubmittedCounterAtom,
 } from '@/state/config-highlights';
-import { pendingAssistantQuestionAtom } from '@/ui/segments/project/get-started/sections/use-assistant-question';
 import { classNames } from '@/util/utils';
 
 import ErrorPanel from '../error';
@@ -22,7 +21,7 @@ import FreeCreditsNotification from '../free-credits-notification';
 import { MessageItem } from '../message-item';
 import { PendingUserMessage } from '../message-item/pending-user-message';
 import { ThinkingIndicator } from '../message-item/thinking-indicator';
-import { atomRateLimit } from '../state';
+import { atomRateLimit, pendingAssistantQuestionAtom } from '../state';
 import DiffBar from './diff-bar';
 import Footer from './footer';
 import { OverlayScrollbar } from './overlay-scrollbar';
@@ -64,10 +63,10 @@ export default function Chat({
   const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally only re-run when refetchSuggestions identity changes to register the latest callback references
   React.useEffect(() => {
     onRefetchSuggestions?.(refetchSuggestions);
     onClearSuggestions?.(clearSuggestions);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refetchSuggestions]);
 
   const accessToken = useAccessToken();
@@ -141,7 +140,6 @@ export default function Chat({
   ]);
 
   // Clear active diff view when switching conversations
-  // biome-ignore lint/correctness/useExhaustiveDependencies: threadId is a reactive trigger only; not used inside the effect body
   React.useEffect(() => {
     setActiveDiffMessageId(null);
     clearDiffBarData();
