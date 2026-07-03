@@ -7,11 +7,58 @@ import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { NotebookDetail } from '@/features/notebooks/components/notebook-detail';
 import { resolveExtendedTypeFromPathParamUrl } from '@/utils/url-builder';
 
+import type { Metadata } from 'next';
 import type { IAnalysisNotebookResult } from '@/api/entitycore/types/entities/analysis-notebook-result';
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
+
+export async function generateMetadata({
+  params,
+}: ServerSideComponentProp<
+  WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict>; id: string; section: string },
+  null
+>): Promise<Metadata> {
+  const { virtualLabId, projectId, type, id, section } = await params;
+
+  const entityConfig = getEntityByExtendedType({
+    type: resolveExtendedTypeFromPathParamUrl({ pathParam: type }).type,
+  });
+  if (
+    !entityConfig ||
+    entityConfig.group !== EntityTypeGroup.Notebooks ||
+    !entityConfig.detailViewSections?.includes(section as never)
+  ) {
+    return {
+      title: 'Notebook | Open Brain Institute',
+    };
+  }
+
+  const { data: entity } = await tryCatch(
+    retrieveEntity({
+      type: entityConfig.extendedType,
+      id,
+      ctx: { virtualLabId, projectId },
+    })
+  );
+
+  const entityName = entity?.name ?? entityConfig.title;
+  const title = `${entityName} - ${entityConfig.title} | Open Brain Institute`;
+  const description =
+    entity?.description ??
+    `View ${entityConfig.title.toLowerCase()} details on the Open Brain Institute.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+    },
+  };
+}
 
 export default async function NotebookViewSectionPage({
   params,
