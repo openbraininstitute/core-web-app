@@ -16,11 +16,14 @@ export function useNotebookContent({
   entityId,
   assets,
   ctx,
+  enabled = true,
 }: {
   entityType: TEntityTypeDict;
   entityId: string;
   assets: IAsset[];
   ctx?: WorkspaceContext | null;
+  /** gate the download — used to lazily fetch only when a row is in view */
+  enabled?: boolean;
 }) {
   const asset = getAsset({
     assets,
@@ -29,7 +32,7 @@ export function useNotebookContent({
 
   const query = useQuery({
     queryKey: ['notebook-content', entityType, { entityId, notebookAssetId: asset?.id }],
-    enabled: Boolean(asset),
+    enabled: enabled && Boolean(asset),
     staleTime: 60 * 60 * 1000, // 1 hour
     queryFn: async (): Promise<Ipynb> => {
       if (!asset) throw new Error('Notebook has no jupyter_notebook asset');

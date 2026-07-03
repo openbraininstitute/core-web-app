@@ -164,6 +164,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isFilterable: false,
     isDisplayable: false,
+    // hidden by default, but shown as a column for analysis notebook results,
+    // which surface the last-update date instead of the registration date
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: { dataType: ExtendedEntitiesTypeDict.AnalysisNotebookResult },
+              value: true,
+            },
+          ],
+        },
+      },
+    },
   },
   [EntityCoreFields.Description]: {
     title: 'Description',
@@ -187,9 +202,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Contributors',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>
-      transformAgentToNames(
-        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
-        false
+      renderEmptyOrValue(
+        transformAgentToNames(
+          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
+            .contributions,
+          false
+        )
       ),
     renderForDetailView: (r) =>
       renderContributors(
@@ -232,9 +250,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Institutional Contributors',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>
-      transformAgentToNames(
-        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
-        false
+      renderEmptyOrValue(
+        transformAgentToNames(
+          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
+            .contributions,
+          false
+        )
       ),
     renderForDetailView: (r) =>
       renderContributors(

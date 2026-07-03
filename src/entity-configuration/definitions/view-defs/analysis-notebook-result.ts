@@ -8,14 +8,15 @@ export const viewDefForNotebookResult: ViewDefinitionConfig = {
   title: 'Result',
   name: EntitySlug.AnalysisNotebookResult,
   columns: [
+    EntityCoreFields.NotebookImagePreview,
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.Contributions,
-    EntityCoreFields.RegistrationDate,
+    EntityCoreFields.UpdateDate,
   ],
   miniDetailView: [
     { field: EntityCoreFields.Contributions },
-    { field: EntityCoreFields.RegistrationDate },
+    { field: EntityCoreFields.UpdateDate },
   ],
   summaryViewFields: [],
 };

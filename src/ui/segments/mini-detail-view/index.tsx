@@ -13,7 +13,10 @@ import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { NotebookActions } from '@/features/notebooks/components/mini-detail-actions';
-import { NotebookCellsPreview } from '@/features/notebooks/renderer/notebook-viewer';
+import {
+  NotebookCellsPreview,
+  NotebookGalleryPreview,
+} from '@/features/notebooks/renderer/notebook-viewer';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import {
@@ -27,7 +30,9 @@ import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/pr
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { cn } from '@/utils/css-class';
 
-import { DataActions, WorkflowActions, WorkflowBuildActions } from './actions';
+import { WorkflowBuildActions } from './actions/build';
+import { DataActions } from './actions/data';
+import { WorkflowActions } from './actions/simulate-extract-process';
 
 import type {
   EntityCoreObjectTypes,
@@ -244,10 +249,18 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
     )
     .with(
       {
-        type: P.union(
-          ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
-          ExtendedEntitiesTypeDict.AnalysisNotebookResult
-        ),
+        type: ExtendedEntitiesTypeDict.AnalysisNotebookResult,
+      },
+      () => (
+        <NotebookGalleryPreview
+          key={record.id}
+          record={record as unknown as IAnalysisNotebookTemplate}
+        />
+      )
+    )
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
       },
       () => (
         <NotebookCellsPreview

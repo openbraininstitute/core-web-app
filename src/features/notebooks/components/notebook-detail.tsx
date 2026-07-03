@@ -15,12 +15,6 @@ type NotebookDetailEntity = {
   assets: IAsset[];
 };
 
-/**
- * Metadata panel laid out on a 3-column grid:
- *
- *   description (2 cols)              | scale
- *   contributors | institutional     | registration / last-update date
- */
 export function NotebookDetail({
   entity,
   extendedType,

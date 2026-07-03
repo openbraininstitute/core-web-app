@@ -13,6 +13,7 @@ export enum CoreFieldFilterTypeEnum {
 export enum EntityCoreFields {
   ID = 'id',
   Preview = 'preview',
+  NotebookImagePreview = 'notebook_image_preview',
   Download = 'download',
   Name = 'name',
   Description = 'description',
