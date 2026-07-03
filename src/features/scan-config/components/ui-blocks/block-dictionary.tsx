@@ -17,7 +17,6 @@ import {
   type ConfigValue,
   type IBlockDictionary,
   ScanConfigUIElementDict,
-  type SchemaName,
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -31,7 +30,6 @@ import { cn } from '@/utils/css-class';
 import type { Nullish } from '@/utils/type';
 
 type Props = {
-  schemaName: SchemaName;
   schema: ConfigSchema;
   blockDictionarySchema: IBlockDictionary;
   selectedRootElement: string;
@@ -50,7 +48,6 @@ type Props = {
 };
 
 export default function BlockDictionary({
-  schemaName,
   schema,
   blockDictionarySchema,
   selectedRootElement,
@@ -112,7 +109,6 @@ export default function BlockDictionary({
 
     return (
       <Block
-        schemaName={schemaName}
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
         disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
@@ -121,6 +117,7 @@ export default function BlockDictionary({
         state={state}
         setState={(newState: Record<string, ConfigValue>) => {
           if (!isPlainObject(config[selectedRootElement])) return;
+
           setConfig({
             ...config,
             [selectedRootElement]: {
@@ -158,7 +155,7 @@ export default function BlockDictionary({
 
   return (
     <div
-      className="flex flex-col items-center gap-5"
+      className="flex flex-col items-center gap-2"
       data-scan-config-block={blockDictionarySchema.ui_element}
     >
       {blockDictionarySchema.additionalProperties.oneOf.map((o) => {

@@ -5,6 +5,7 @@ import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
+import { z } from 'zod';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -71,10 +72,58 @@ export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | 
 
 export type TSchemaMappingConfiguration = {
   usability: Record<string, boolean> | null;
-  properties: Record<string, any> | null;
+  properties:
+    | (Record<string, any> & {
+        NodePropertyUniqueValuesByPopulation?: NodeProperties;
+      })
+    | null;
 };
 
 const SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS = 60 * 60 * 1000;
+
+const stringArraySchema = z.array(z.string());
+const nodePropertyUniqueValuesSchema = z.record(
+  z.string(),
+  z.record(z.string(), stringArraySchema)
+);
+
+type NodeProperties = z.infer<typeof nodePropertyUniqueValuesSchema>;
+
+export const usabilitySchema = z.record(z.string(), z.boolean());
+
+/** obi-one `/declared/mapped-circuit-properties/{id}` — Circuit entity (combined neuron sets). */
+const circuitMappedPropertiesSchema = z.object({
+  NodePropertyUniqueValuesByPopulation: nodePropertyUniqueValuesSchema,
+  NodeSet: z.array(z.string()).optional(),
+  BiophysicalNeuronalPopulation: z.array(z.string()).optional(),
+  PointNeuronalPopulation: z.array(z.string()).optional(),
+  VirtualNeuronalPopulation: z.array(z.string()).optional(),
+  NonVirtualNeuronalPopulation: z.array(z.string()).optional(),
+  NeuronalPopulation: z.array(z.string()).optional(),
+});
+
+/** obi-one `/declared/mapped-circuit-properties/{id}` — MEModel entity (single neuron beta). */
+const memodelMappedPropertiesSchema = z.object({
+  MechanismVariablesByIonChannel: z.record(z.string(), z.unknown()),
+});
+
+/**
+ * Validates mapped-circuit-properties from obi-one.
+ *
+ * Circuit and MEModel entities return different property sets from the same endpoint;
+ * both shapes must be accepted so neuron property filters and ion-channel manipulations work.
+ */
+export const configSchema = z
+  .object({
+    usability: usabilitySchema,
+  })
+  .merge(circuitMappedPropertiesSchema.partial())
+  .merge(memodelMappedPropertiesSchema.partial())
+  .catchall(z.unknown());
+
+export function parseSchemaMappingConfiguration(resp: unknown) {
+  return configSchema.parse(resp);
+}
 
 export function useSchemaMappingConfiguration({
   entityId,
@@ -91,25 +140,25 @@ export function useSchemaMappingConfiguration({
     queryKey: ['schema-mapping-configuration', { workspace, entityId, endpoint }],
     queryFn: async () => {
       const api = await obioneApi();
-      return api.get<{
-        usability: {
-          [key: string]: boolean;
-        } | null;
-        [key: string]: any;
-      }>(`/declared${endpoint}`.replace('{circuit_id}', entityId ?? ''), {
+
+      const resp = await api.get(`/declared${endpoint}`.replace('{circuit_id}', entityId ?? ''), {
         headers: {
           ...getEntityCoreContext(workspace).headers,
         },
       });
+
+      const validatedData = parseSchemaMappingConfiguration(resp);
+
+      return validatedData;
     },
     enabled: !!endpoint && isSchemaLoaded,
     refetchOnWindowFocus: false,
     staleTime: SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS,
-    select: (resp) => {
+    select: (validatedData) => {
       return {
-        properties: omit(resp, ['usability']),
-        usability: pick(resp, ['usability']).usability,
-      };
+        properties: omit(validatedData, ['usability']),
+        usability: validatedData.usability,
+      } as TSchemaMappingConfiguration;
     },
   });
 }
@@ -422,13 +471,34 @@ export function useConfig({
   return [configState, setConfigState] as const;
 }
 
+/**
+ * builds a lookup map from reference type names to the block dictionaries that hold them
+ *
+ * a block dictionary declares which reference types it supports via `reference_types` (a list)
+ * for example, the `neuron_sets` dictionary might declare:
+ *   reference_types: ["BiophysicalNeuronSetReference", "VirtualNeuronSetReference", "PointNeuronSetReference"]
+ *
+ * this produces a map like:
+ *   {
+ *     "BiophysicalNeuronSetReference": [{ configKey: "neuron_sets", singularName: "Neuron Set" }],
+ *     "VirtualNeuronSetReference":     [{ configKey: "neuron_sets", singularName: "Neuron Set" }],
+ *     "PointNeuronSetReference":       [{ configKey: "neuron_sets", singularName: "Neuron Set" }],
+ *     "TimestampsReference":           [{ configKey: "timestamps",  singularName: "Timestamps" }],
+ *     ...
+ *   }
+ *
+ * the value is an array because multiple dictionaries could support the same reference type
+ *
+ * this map is consumed by the Reference dropdown component to find which dictionaries
+ * to pull options from, given a field's accepted `reference_types`
+ */
 export function useReferenceTypeDict(schema: ConfigSchema) {
   const referenceTypeDict: Record<
     string,
-    {
+    Array<{
       configKey: string;
       singularName: string;
-    }
+    }>
   > = {};
 
   if (!schema) return referenceTypeDict;
@@ -437,13 +507,115 @@ export function useReferenceTypeDict(schema: ConfigSchema) {
     const v = schema.properties[k];
 
     if (v.ui_element === ScanConfigUIElementDict.BlockDictionary) {
-      const refType = v.reference_type;
-      referenceTypeDict[refType] = {
-        configKey: k,
-        singularName: v.singular_name,
-      };
+      const refTypes = v.reference_types;
+      for (const refType of refTypes) {
+        if (!referenceTypeDict[refType]) {
+          referenceTypeDict[refType] = [];
+        }
+        referenceTypeDict[refType].push({
+          configKey: k,
+          singularName: v.singular_name,
+        });
+      }
     }
   });
 
   return referenceTypeDict;
+}
+
+/**
+ * builds a lookup from a reference type name to the block variant types it accepts
+ *
+ * every reference type declares which block variants it accepts via `allowed_block_types`, e.g.:
+ *   { title: "VirtualNeuronSetReference",  allowed_block_types: ["VirtualPopulationNeuronSet", ..., "AllVirtualNeurons"] }
+ *   { title: "BiophysicalNeuronSetReference", allowed_block_types: ["BiophysicalPopulationNeuronSet", ...] }
+ *
+ * these definitions are scattered through the schema (inside reference fields' `anyOf`), so this
+ * walks the schema once and merges them into a single map keyed by reference type:
+ *   { "VirtualNeuronSetReference": Set(["VirtualPopulationNeuronSet", ...]), ... }
+ *
+ * this is the schema's source of truth for "which neuron-set variants does a reference accept",
+ * which is what lets a combined (virtual) field show only virtual sets, etc.
+ */
+// keyed on the schema object identity (stable — react-query holds it with staleTime Infinity), so
+// the recursive walk runs once per schema instead of once per `Reference` instance on a form.
+const allowedByReferenceTypeCache = new WeakMap<object, Record<string, Set<string>>>();
+
+function collectAllowedBlockTypesByReferenceType(
+  schema: ConfigSchema
+): Record<string, Set<string>> {
+  if (!schema) return {};
+
+  const cached = allowedByReferenceTypeCache.get(schema);
+  if (cached) return cached;
+
+  const registry: Record<string, Set<string>> = {};
+
+  const visit = (node: unknown) => {
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (!isPlainObject(node)) return;
+
+    if (typeof node.title === 'string' && Array.isArray(node.allowed_block_types)) {
+      const set = registry[node.title] ?? new Set<string>();
+      for (const t of node.allowed_block_types) {
+        if (typeof t === 'string') set.add(t);
+      }
+      registry[node.title] = set;
+    }
+
+    for (const value of Object.values(node)) visit(value);
+  };
+
+  visit(schema.properties);
+  allowedByReferenceTypeCache.set(schema, registry);
+  return registry;
+}
+
+export function useAllowedBlockTypesByReferenceType(schema: ConfigSchema) {
+  return useMemo(() => collectAllowedBlockTypesByReferenceType(schema), [schema]);
+}
+
+/**
+ * builds a lookup from a block variant type (a dictionary entry's `type` const) to the `configKey`
+ * of the dictionary that defines it, e.g.:
+ *   { "VirtualPopulationNeuronSet": "neuron_sets", "SingleTimestamp": "timestamps", ... }
+ *
+ * each block dictionary lists its variants under `additionalProperties.oneOf`, and every variant
+ * declares its discriminator via `properties.type.const`. this lets a reference resolve to its
+ * dictionary from the block variants it accepts — needed because all neuron-set variants share the
+ * single `neuron_sets` dictionary (registered under one "NeuronSetReference") while the fields
+ * declare the narrower variant reference types.
+ */
+const blockTypeToConfigKeyCache = new WeakMap<object, Record<string, string>>();
+
+function collectBlockTypeToConfigKey(schema: ConfigSchema): Record<string, string> {
+  if (!schema) return {};
+
+  const cached = blockTypeToConfigKeyCache.get(schema);
+  if (cached) return cached;
+
+  const map: Record<string, string> = {};
+  for (const [configKey, prop] of Object.entries(schema.properties)) {
+    const dict = prop as { ui_element?: string; additionalProperties?: { oneOf?: unknown[] } };
+    if (dict.ui_element !== ScanConfigUIElementDict.BlockDictionary) continue;
+
+    const variants = dict.additionalProperties?.oneOf;
+    if (!Array.isArray(variants)) continue;
+
+    for (const variant of variants) {
+      const constType = (variant as { properties?: { type?: { const?: unknown } } })?.properties
+        ?.type?.const;
+      if (typeof constType === 'string') map[constType] = configKey;
+    }
+  }
+
+  blockTypeToConfigKeyCache.set(schema, map);
+  return map;
+}
+
+export function useBlockTypeToConfigKey(schema: ConfigSchema) {
+  return useMemo(() => collectBlockTypeToConfigKey(schema), [schema]);
 }

@@ -14,26 +14,35 @@ import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/m
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
+import NeuronPropertyFilter, {
+  type INeuronPropertyFilter,
+} from '@/features/scan-config/components/ui-elements/neuron-property-filter';
+import {
+  NeuronSetCombination,
+  type NeuronSetCombinationEntry,
+} from '@/features/scan-config/components/ui-elements/neuron-set-combination';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
 import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
-import { VoltageDuration } from '@/features/scan-config/components/ui-elements/voltage-duration';
+import {
+  VoltageDuration,
+  type VoltageDurationState,
+} from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import {
   type Config,
   type ConfigSchema,
   type ConfigValue,
   type ParamSchema,
   ScanConfigUIElementDict,
-  type SchemaName,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { isObject } from '@/util/type-guards';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { VoltageDurationState } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import type { Nullish } from '@/utils/type';
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
@@ -41,7 +50,6 @@ export function UIElementRender({
   k,
   disabled,
   paramSchema,
-  value,
   state,
   config,
   schema,
@@ -49,20 +57,22 @@ export function UIElementRender({
   entity,
   schemaMappingConfig,
   errorPathPrefix,
+  selectedEntry,
 }: {
   k: string;
   disabled: boolean;
   paramSchema: ParamSchema;
-  value: ConfigValue;
   config: Config;
-  schemaName: SchemaName;
   schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
   setState: (newState: Record<string, ConfigValue>) => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
+  /** name of the dictionary entry being edited; used to exclude self-references */
+  selectedEntry?: string;
 }) {
+  const value = state[k];
   return match({ entity, paramSchema })
     .with(
       {
@@ -138,6 +148,9 @@ export function UIElementRender({
           referenceSchema={paramSchema}
           value={defaultV}
           disabled={disabled}
+          // a block can't reference itself; exclude the current entry. This only affects
+          // references that resolve to the entry's own dictionary (a no-op otherwise).
+          omit={selectedEntry ? [selectedEntry] : []}
           onChange={(block_name: string | null, block_dict_name: string | null) => {
             if (block_name === null) {
               setState({ ...state, [k]: null });
@@ -192,25 +205,44 @@ export function UIElementRender({
         entity: P.nonNullable,
       },
       ({ paramSchema }) => {
-        const getValue = (): string[] => {
-          if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
-            //@ts-expect-error: TS can't infer the type, this is guaranteed to be a string[]
-            return value;
-          }
-          if (typeof value === 'string') return [value];
-          return [];
-        };
+        // detect if the field supports multiple values by checking for anyOf with an array type
+        const isMultiple = 'anyOf' in paramSchema;
+
+        if (isMultiple) {
+          const getValue = (): Array<string> => {
+            if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+              return value as string[];
+            }
+            if (typeof value === 'string') return [value];
+            return [];
+          };
+
+          return (
+            <EntityPropertyDropdown
+              multiple
+              disabled={disabled}
+              schemaMappingConfig={schemaMappingConfig}
+              value={getValue()}
+              onChange={(newV: string | Array<string>) => setState({ ...state, [k]: newV })}
+              property={paramSchema.property}
+            />
+          );
+        }
+
+        // single-value mode (e.g. population field with type: "string")
+        const singleValue = typeof value === 'string' ? value : undefined;
 
         return (
           <EntityPropertyDropdown
-            schemaMappingConfig={schemaMappingConfig}
+            multiple={false}
             disabled={disabled}
-            value={getValue()}
-            onChange={(newV: string[]) =>
+            schemaMappingConfig={schemaMappingConfig}
+            value={singleValue ?? ''}
+            onChange={(newV: string | string[]) =>
               setState({
                 ...state,
                 // NOTE: this is requested by James for IT'IS collaboration
-                node_set: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
+                [k]: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
               })
             }
             property={paramSchema.property}
@@ -298,7 +330,7 @@ export function UIElementRender({
         const q = get(paramSchema, 'entity_query') as
           | {
               type: TEntityTypeDict;
-              filters: Record<string, any>;
+              filters: Record<string, unknown>;
             }
           | undefined;
         if (q) {
@@ -383,6 +415,76 @@ export function UIElementRender({
               setState({ ...state, [k]: newValue as unknown as ConfigValue })
             }
             disabled={disabled}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.NeuronPropertyFilter },
+      },
+      ({ paramSchema }) => {
+        const { population: selectedPopulation, properties } = resolveNeuronFilterProperties(
+          paramSchema,
+          state,
+          schemaMappingConfig
+        );
+
+        const getValue = () => {
+          if (Object.keys(properties).length === 0) return [];
+
+          if (Array.isArray(value) && value.length > 0) {
+            return value;
+          }
+
+          if (isPlainObject(value)) {
+            return [value];
+          }
+
+          return [{ filter_dict: [] }];
+        };
+
+        return (
+          <NeuronPropertyFilter
+            properties={properties}
+            population={selectedPopulation}
+            value={getValue() as unknown as INeuronPropertyFilter[]}
+            onChange={(newValue: INeuronPropertyFilter[]) => {
+              const getNewValue = () => {
+                if (
+                  newValue.length === 0 ||
+                  (newValue.length === 1 && Object.keys(newValue[0].filter_dict).length === 0)
+                )
+                  return null;
+                if (newValue.length === 1) return newValue[0];
+                return newValue;
+              };
+
+              setState({ ...state, [k]: getNewValue() as ConfigValue });
+            }}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.NeuronSetCombination },
+      },
+      ({ paramSchema }) => {
+        const v = (Array.isArray(state[k])
+          ? state[k]
+          : []) as unknown as NeuronSetCombinationEntry[];
+        return (
+          <NeuronSetCombination
+            paramSchema={paramSchema}
+            value={v}
+            config={config}
+            schema={schema}
+            disabled={disabled}
+            selfName={selectedEntry}
+            onChange={(newValue: NeuronSetCombinationEntry[]) =>
+              setState({ ...state, [k]: newValue as unknown as ConfigValue })
+            }
           />
         );
       }

@@ -3,7 +3,14 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
-import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-config/types';
+import {
+  type ConfigValue,
+  type NeuronPropertyFilter,
+  ScanConfigActivity,
+  type TScanConfigActivity,
+} from '@/features/scan-config/types';
+
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
 export {
   buildActivityStatusMap,
@@ -137,4 +144,31 @@ export function getFromIdRefTypeBadgeLabel(ref: TFromIdRef): string {
   }
 
   return ref.type.replace(/_/g, ' ').toUpperCase();
+}
+
+/**
+ * resolves the unique neuron properties available for a NeuronPropertyFilter
+ * field, based on the population currently selected in its source dropdown.
+ *
+ * returns the selected population id and its property map (empty when either no
+ * population is selected or the selected population exposes no properties).
+ */
+export function resolveNeuronFilterProperties(
+  paramSchema: NeuronPropertyFilter,
+  state: Record<string, ConfigValue>,
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined
+): { population: string; properties: Record<string, string[]> } {
+  const selected = state[paramSchema.population_source_dropdown_key];
+
+  const population =
+    Array.isArray(selected) && typeof selected[0] === 'string'
+      ? (selected[0] ?? '')
+      : typeof selected === 'string'
+        ? selected
+        : '';
+
+  const properties =
+    schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation?.[population] ?? {};
+
+  return { population, properties };
 }

@@ -20,6 +20,22 @@ function isNamedTupleParam(value: unknown): value is TNamedTupleParam {
 }
 
 /**
+ * a `NeuronPropertyFilter` scan param (e.g. `neuron_sets.<name>.property_filter`):
+ * a dict of neuron properties to matched values, e.g. `{ region: ['S1FL'], morph_class: ['PYR'] }`.
+ */
+type TPropertyFilterParam = { filter_dict: Record<string, string[]> };
+
+function isPropertyFilterParam(value: unknown): value is TPropertyFilterParam {
+  return (
+    isPlainObject(value) &&
+    isPlainObject(value.filter_dict) &&
+    Object.values(value.filter_dict).every(
+      (values) => Array.isArray(values) && values.every((entry) => typeof entry === 'string')
+    )
+  );
+}
+
+/**
  * collects the FromID refs from a scan param value, covering every `model_identifier`
  * shape a grid point can carry:
  * - a single FromID ref (e.g. EM mesh skeletonization: one mesh per grid point)
@@ -81,6 +97,9 @@ export function ScanParams({
     >
       {Object.entries(scanParams).map(([paramKey, paramValue]) => {
         const refs = refsFromValue(paramValue);
+        const filterEntries = isPropertyFilterParam(paramValue)
+          ? Object.entries(paramValue.filter_dict)
+          : [];
 
         return (
           <div
@@ -100,12 +119,11 @@ export function ScanParams({
               <div className="flex w-full min-w-0 flex-wrap gap-1">
                 {refs.map((ref) => (
                   <Badge
-                    rounded
                     id={ref.id_str}
                     key={ref.id_str}
                     variant="outline"
                     title={ref.id_str}
-                    className="max-w-full font-bold bg-white"
+                    className="max-w-full px-3 font-bold bg-white"
                     style={{ color }}
                   >
                     <span className="truncate select-none">
@@ -114,12 +132,34 @@ export function ScanParams({
                   </Badge>
                 ))}
               </div>
+            ) : filterEntries.length > 0 ? (
+              <div className="flex w-full min-w-0 flex-wrap gap-1">
+                {filterEntries.map(([property, values]) => (
+                  <Badge
+                    id={`${paramKey}-${property}`}
+                    key={property}
+                    variant="outline"
+                    title={`${property}: ${values.join(', ')}`}
+                    className="max-w-full px-3 font-bold bg-white"
+                    style={{ color }}
+                  >
+                    <span className="truncate select-none">
+                      {property}: {values.join(', ')}
+                    </span>
+                  </Badge>
+                ))}
+              </div>
             ) : (
-              <div
-                className="truncate font-bold text-ellipsis transition-colors duration-300 text-left"
-                style={{ color }}
-              >
-                {String(paramValue)}
+              <div className="flex w-full min-w-0 flex-wrap gap-1">
+                <Badge
+                  id={`${paramKey}-value`}
+                  variant="outline"
+                  title={String(paramValue)}
+                  className="max-w-full px-3 font-bold bg-white"
+                  style={{ color }}
+                >
+                  <span className="truncate select-none">{String(paramValue)}</span>
+                </Badge>
               </div>
             )}
           </div>

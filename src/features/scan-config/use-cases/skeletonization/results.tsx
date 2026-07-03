@@ -216,10 +216,10 @@ export function SkeletonizationTab({
         right={
           <>
             {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
-              <FileViewer file={selectedFile} className="h-full" context={context} />
+              <FileViewer file={selectedFile} className="h-full w-full" context={context} />
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
-              <div className="h-full">
+              <div className="h-full w-full">
                 <MiniDetailViewRenderer
                   section={WorkspaceSection.Data}
                   record={selectedFile.entity as ICellMorphology}

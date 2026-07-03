@@ -152,6 +152,8 @@ export const ScanConfigUIElementDict = {
   VoltageDuration: 'voltage_duration',
   ModelIdentifierMultiple: 'model_identifier_multiple',
   StringSelectionEnhanced: 'string_selection_enhanced',
+  NeuronPropertyFilter: 'neuron_property_filter',
+  NeuronSetCombination: 'neuron_set_combination',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -215,13 +217,23 @@ export interface IntParameterSweep extends TBlockElement {
 
 export interface Reference extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.Reference;
-  reference_type: string;
+  reference_types: Array<string>;
+  anyOf?: Array<
+    | {
+        title?: string;
+        allowed_block_types?: Array<string>;
+        properties?: { type?: { const?: string } };
+        [key: string]: unknown;
+      }
+    | { type: 'null' }
+  >;
 }
 
 export interface EntityPropertyDropdown extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.EntityPropertyDropdown;
   entity_type: string;
   property: string;
+  property_filter_key?: string;
 }
 export interface ModelSelectorSingle extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelSelectorSingle;
@@ -324,6 +336,16 @@ export interface VoltageDuration extends TBlockElement {
   };
 }
 
+export interface NeuronPropertyFilter extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter;
+  population_source_dropdown_key: string;
+}
+
+export interface NeuronSetCombination extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.NeuronSetCombination;
+  reference_types: Array<string>;
+}
+
 export interface IBlockUnion extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.BlockUnion;
   /** the property name used to block between variants (defaults to 'type') */
@@ -358,7 +380,9 @@ export type ParamSchema =
   | ModelSelectorSingle
   | SelectRecordableIonChannelVariable
   | VoltageDuration
-  | StringSelectionEnhanced;
+  | StringSelectionEnhanced
+  | NeuronPropertyFilter
+  | NeuronSetCombination;
 
 export type TBlock = {
   title: string;
@@ -381,10 +405,10 @@ export interface IBlockSingle extends TRootElement, TBlock {
 
 export interface IBlockDictionary extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.BlockDictionary;
-  reference_type: string;
+  reference_types: Array<string>;
   singular_name: string;
   additionalProperties: {
-    oneOf: TBlock[];
+    oneOf: Array<TBlock>;
   };
 }
 
