@@ -74,11 +74,17 @@ export function NotebookActionMenu({
       }),
   });
 
-  const downloadMutation = useMutation({
-    mutationFn: async () => {
-      downloadArchive(entity.type, [entity.id], ctx);
-    },
-  });
+  const [pendingDownload, setPendingDownload] = useState(false);
+
+  const handleDownload = async () => {
+    setPendingDownload(true);
+    try {
+      await downloadArchive(entity.type, [entity.id], ctx);
+    } catch {
+      // download errors are surfaced by the download service
+    }
+    setPendingDownload(false);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: () =>
@@ -162,8 +168,8 @@ export function NotebookActionMenu({
       <Action
         variant={variant}
         kind={ActionKind.Button}
-        onClick={downloadMutation.mutateAsync}
-        icon={downloadMutation.isPending ? <LoadingOutlined /> : <DownloadOutlined />}
+        onClick={handleDownload}
+        icon={pendingDownload ? <LoadingOutlined /> : <DownloadOutlined />}
       >
         Download
       </Action>
