@@ -1,9 +1,7 @@
 'use client';
 
-import { CloseOutlined, RightOutlined } from '@ant-design/icons';
+import { CloseOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState, ViewTransition } from 'react';
 import { match } from 'ts-pattern';
 
@@ -21,6 +19,7 @@ import {
   WorkspaceManagerSectionDict,
 } from '@/ui/segments/workspaces/space-manager/constants';
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { GoToProjectLink } from '@/ui/segments/workspaces/space-manager/go-to-project-link';
 import {
   handleWorkspacePanelMenuItemSelect,
   handleWorkspacePanelSectionSelect,
@@ -40,7 +39,6 @@ import {
 } from '@/ui/segments/workspaces/space-manager/sections/virtual-lab';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-import { getPreservedProjectSection } from '@/utils/get-section';
 
 import type { CSSProperties } from 'react';
 
@@ -417,11 +415,6 @@ export function WorkspaceManagerModal({
       setUserRecentWorkspace({ workspace }),
   });
 
-  // when switching workspace, keep the user on the same parent page
-  // (data / workflows / notebooks / reports) instead of the project home
-  const pathname = usePathname();
-  const parentSection = getPreservedProjectSection(pathname);
-
   const mainContent = match(kind)
     .with(WorkspaceManagerKindDict.Account, () => (
       <AccountContent
@@ -465,31 +458,16 @@ export function WorkspaceManagerModal({
         x.activeSection !== WorkspaceManagerSectionDict.New &&
         Boolean(x.targetProjectId && x.targetVirtualLabId),
       (x) => (
-        <Button
-          asChild
-          variant="default"
-          rounded
-          size="responsive"
-          className={cn(
-            'bg-primary-9 mt-4 flex h-11 w-full shrink-0',
-            'justify-between px-5 text-base shadow-none hover:bg-primary-9/90'
-          )}
-        >
-          <Link
-            className="text-inherit flex w-full items-center justify-between gap-2"
-            href={`${config.ROOT_ROUTE}/${x.targetVirtualLabId}/${x.targetProjectId}${parentSection ? `/${parentSection}` : ''}`}
-            data-testid="workspace-manager-go-to-project-link"
-            id="workspace-manager-go-to-project-link"
-            onClick={() =>
-              mutateRecentWorkspace.mutate({
-                virtualLabId: x.targetVirtualLabId,
-                projectId: x.targetProjectId,
-              })
-            }
-          >
-            Go to project <RightOutlined />
-          </Link>
-        </Button>
+        <GoToProjectLink
+          targetVirtualLabId={x.targetVirtualLabId}
+          targetProjectId={x.targetProjectId}
+          onNavigate={() =>
+            mutateRecentWorkspace.mutate({
+              virtualLabId: x.targetVirtualLabId,
+              projectId: x.targetProjectId,
+            })
+          }
+        />
       )
     )
     .otherwise(() => null);

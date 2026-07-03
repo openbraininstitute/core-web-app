@@ -7,7 +7,11 @@ import { split, trimStart } from 'es-toolkit/compat';
  * @returns string[] – array of segments after projectId (or empty array if invalid)
  */
 export function getRouteSegmentsAfterWorkspace(fullPath: string, ROOT_PATH: string): string[] {
-  const withoutRoot = trimStart(fullPath.replace(ROOT_PATH, ''), '/');
+  if (!fullPath.startsWith(ROOT_PATH)) {
+    return [];
+  }
+
+  const withoutRoot = trimStart(fullPath.slice(ROOT_PATH.length), '/');
   const segments = split(withoutRoot, '/').filter((seg) => seg.length > 0);
 
   if (segments.length < 3) {
