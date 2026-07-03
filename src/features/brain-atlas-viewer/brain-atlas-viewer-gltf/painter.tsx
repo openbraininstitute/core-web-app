@@ -19,6 +19,7 @@ import { logError } from '@/utils/logger';
 
 import { type CameraController, setCamera } from './camera';
 import { makeColor } from './hooks';
+import { RegionMeshNotAvailableError } from './services/errors';
 import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
 
 import type { QueryClient } from '@tanstack/react-query';
@@ -40,6 +41,15 @@ interface MeshBounds {
  */
 function isDeletedContextError(ex: unknown): boolean {
   return ex instanceof Error && ex.message.includes('[TgdContext] This context has been deleted:');
+}
+
+/**
+ * A region that exists in the hierarchy tree but has no 3D mesh in the current
+ * atlas (e.g. non-volumetric grouping regions like "grooves"). This is expected
+ * and benign, so we log it without surfacing a user-facing popup.
+ */
+function isMeshNotAvailableError(ex: unknown): boolean {
+  return ex instanceof RegionMeshNotAvailableError;
 }
 
 let globalId = 1;
@@ -228,6 +238,14 @@ export class Painter {
         // A stale request must never surface a popup on whatever tab the user has
         // navigated to. Only genuine failures on the current context dispatch.
         if (contextVersion !== this.contextVersion) return;
+
+        // The region simply has no mesh in this atlas (a selectable-but-non-volumetric
+        // region, e.g. "grooves"). Expected and benign — log it, skip the popup, and
+        // keep loading the remaining regions.
+        if (isMeshNotAvailableError(ex)) {
+          logError(`No 3D mesh available for region "${region.name}":`, ex);
+          continue;
+        }
 
         logError(`Unable to load mesh for region "${region.name}":`, ex);
         this.eventError.dispatch(

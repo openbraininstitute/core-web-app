@@ -102,6 +102,10 @@ vi.mock('@/utils/logger', () => ({
 
 // Imported after the mocks are registered (vitest hoists vi.mock above this).
 import { Painter } from './painter';
+// `errors` is intentionally NOT mocked, so the real class is shared with painter.ts
+// and `instanceof` works; `getCachedBrainRegionMeshArrayBuffer` comes from the mock above.
+import { RegionMeshNotAvailableError } from './services/errors';
+import { getCachedBrainRegionMeshArrayBuffer } from './services/services';
 
 import type { VisibleRegion } from './types';
 
@@ -174,6 +178,32 @@ describe('Painter.setRegions — context teardown race (issue #490)', () => {
     await pending;
 
     expect(dispatched).toEqual(['Unable to load mesh for region "Cerebrum"!']);
+    expect(h.logError).toHaveBeenCalled();
+  });
+
+  it('logs but does not show a popup when a region has no mesh in the atlas', async () => {
+    // "grooves" case: the region is selectable in the hierarchy tree but has no
+    // brain-atlas-region mesh entity, so the fetch rejects before any GLB parse.
+    vi.mocked(getCachedBrainRegionMeshArrayBuffer).mockRejectedValueOnce(
+      new RegionMeshNotAvailableError(region.id, 'atlas-2', 'no mesh')
+    );
+
+    const { dispatched, pending } = startMeshLoad();
+    await pending;
+
+    expect(dispatched).toEqual([]);
+    expect(h.logError).toHaveBeenCalled();
+  });
+
+  it('still surfaces a popup when the fetch fails with a non-mesh-availability error', async () => {
+    // A genuine transient failure (not the typed no-mesh error) must NOT be
+    // swallowed by the suppression branch — the user still sees the popup.
+    vi.mocked(getCachedBrainRegionMeshArrayBuffer).mockRejectedValueOnce(new Error('network down'));
+
+    const { dispatched, pending } = startMeshLoad();
+    await pending;
+
+    expect(dispatched).toHaveLength(1);
     expect(h.logError).toHaveBeenCalled();
   });
 });
