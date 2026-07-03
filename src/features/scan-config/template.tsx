@@ -1,7 +1,8 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { Suspense, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { Suspense, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -37,6 +38,7 @@ import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletoniza
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { clearDiffStateAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -125,6 +127,18 @@ function ScanConfigTemplateContent({
   const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
+
+  const clearDiffState = useSetAtom(clearDiffStateAtom);
+  const previousSchemaName = usePrevious(schemaName);
+  useEffect(() => {
+    // reset the global sidebar expansion/highlight state back to its idle default ("Info")
+    clearDiffState();
+    // guard the no-remount case (shared configure route, schema unchanged between workflows)
+    if (previousSchemaName !== undefined && previousSchemaName !== schemaName) {
+      setTab(defaultTab);
+      setSelectedRootElement(firstRoot ?? '');
+    }
+  }, [schemaName, clearDiffState, previousSchemaName, defaultTab, firstRoot]);
 
   useAgentState(
     aiEnabled
