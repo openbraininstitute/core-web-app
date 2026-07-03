@@ -81,7 +81,7 @@ export interface TAnalysisNotebookTemplateBase {
   description?: string | null;
   specifications?: TAnalysisNotebookTemplateSpecifications | null;
   scale: TAnalysisScaleDictionary;
-  exercise_id?: string | null;
+  assignment_id?: string | null;
 }
 
 export type NotebookFilter = Partial<
@@ -91,8 +91,8 @@ export type NotebookFilter = Partial<
     PaginationFilter &
     SharedFilter &
     IlikeSearchFilter & {
-      exercise_id?: string | null;
-      exercise_id__in?: string[] | null;
+      assignment_id?: string | null;
+      assignment_id__in?: string[] | null;
     }
 >;
 
@@ -105,5 +105,5 @@ export interface INotebook
     EntityCoreOwnership,
     TAnalysisNotebookTemplateBase {
   description: string;
-  exercise_id?: string | null;
+  assignment_id?: string | null;
 }

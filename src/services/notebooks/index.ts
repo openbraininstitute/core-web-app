@@ -29,7 +29,7 @@ export interface NotebookStartInNumberedPodRequest {
 
 export interface NotebookGradingLaunch {
   token: string;
-  exercise_id: string;
+  assignment_id: string;
 }
 
 export interface EmptyNotebookStartRequest {
@@ -57,7 +57,7 @@ export interface EmptyNotebookStartRequest {
  * @param cloud : notebook service accepts 'cell_a', 'aws', 'cell_b', 'azure'
  * @param podNum : a user can have multiple pods, but normally simply 0
  * @param grading : optional grading-launch context. When set, the notebook service writes the
- *   per-exercise launch file in the spawned pod so the in-pod `obi-notebook` module can
+ *   per-assignment launch file in the spawned pod so the in-pod `obi-notebook` module can
  *   call /params and /grade against grading-service.
  */
 export async function startNotebook(

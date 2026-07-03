@@ -56,7 +56,7 @@ export function useAnalysisNotebookTemplatePipeline({
           name: values.setup.name,
           description: values.setup.description,
           scale: values.setup.scale,
-          exercise_id: values.setup.exercise_id?.trim() || undefined,
+          assignment_id: values.setup.assignment_id?.trim() || undefined,
         },
       }),
     onSettled: invalidateNotebookQueries,

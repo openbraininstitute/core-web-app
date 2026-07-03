@@ -18,7 +18,7 @@ const AnalysisNotebookTemplateSchema = z.object({
       message: 'Experimental analysis notebook template description is required',
     }),
   scale: z.string().optional(),
-  exercise_id: z.string().optional(),
+  assignment_id: z.string().optional(),
 });
 
 export type TAnalysisNotebookTemplateCreate = z.infer<typeof AnalysisNotebookTemplateSchema>;
