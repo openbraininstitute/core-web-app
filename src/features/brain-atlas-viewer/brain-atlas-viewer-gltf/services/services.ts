@@ -8,6 +8,8 @@ import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
 import { ensureBrainRegionAtlasData } from '@/features/brain-atlas-viewer/queries';
 import { log } from '@/utils/logger';
 
+import { RegionMeshNotAvailableError } from './errors';
+
 import type { QueryClient } from '@tanstack/react-query';
 
 const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
@@ -51,7 +53,11 @@ async function getBrainRegionMeshArrayBufferQuery({
   const atlas = await getAtlas({ atlasId, queryClient });
   const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
   if (!entity) {
-    throw new Error(`Unable to find region "${regionId}" in current Atlas ${atlasId}!`);
+    throw new RegionMeshNotAvailableError(
+      regionId,
+      atlasId,
+      `Unable to find region "${regionId}" in current Atlas ${atlasId}!`
+    );
   }
 
   const contentType = AssetContentType.gltf_binary;
@@ -60,7 +66,9 @@ async function getBrainRegionMeshArrayBufferQuery({
     (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
   );
   if (!asset) {
-    throw new Error(
+    throw new RegionMeshNotAvailableError(
+      regionId,
+      atlasId,
       `Unable to find entity "brain_atlas_region_mesh" of type "${contentType}" for entity "${entity.id}" (region "${regionId}")!`
     );
   }
