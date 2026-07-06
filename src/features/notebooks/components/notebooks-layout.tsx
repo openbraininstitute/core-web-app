@@ -2,71 +2,105 @@
 
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Image from 'next/image';
-import { type ReactNode, useState } from 'react';
+import NextLink from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
+import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
+import {
+  createContribution,
+  getContributions,
+} from '@/api/entitycore/queries/general/contribution';
+import { type EntityCoreObjectTypes, EntityTypeDict, isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
-import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
-import { NotebookLeftMenu } from '@/features/notebooks/components/notebook-left-menu';
 import { startEmptyNotebook } from '@/services/notebooks';
+import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useScope } from '@/ui/hooks/use-scope';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
+import useWorkspace from '@/ui/hooks/use-workspace';
+import { Button as UiButton } from '@/ui/molecules/button';
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { ContributionModal } from '@/ui/segments/contribute/modal';
-import {
-  makeSelectEntityClickEvent,
-  useMiniDetailView,
-  useSelectEntityClickEvent,
-} from '@/ui/segments/mini-detail-view/event';
-import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
-type Props = {
-  children: ReactNode;
-};
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
+import type { WorkspaceContext } from '@/types/common';
 
-function handleUploadData() {
-  makeSelectContributionEntityClickEvent({
-    display: true,
-    entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
-    sessionId: crypto.randomUUID(),
+export async function createNotebook({
+  payload,
+  context,
+}: {
+  payload: IAnalysisNotebookTemplate;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IAnalysisNotebookTemplate>('/analysis-notebook-template', {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
   });
 }
 
-export function NotebooksLayout({ children }: Props) {
+type Props = {
+  children: ReactNode;
+  active: 'public' | 'private';
+};
+
+export function NotebooksLayout({ children, active }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { virtualLabId, projectId } = useWorkspace();
-  const { scope, changeScope } = useScope({ defaultScope: WorkspaceScope.Public });
+
+  useEffect(() => {
+    if (searchParams.get('upload') === 'true') {
+      router.replace('private');
+      makeSelectContributionEntityClickEvent({
+        display: true,
+        entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+        sessionId: crypto.randomUUID(),
+      });
+    }
+  }, [searchParams, router]);
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
-  const [isGridAnimating, setIsGridAnimating] = useState(false);
   const breakpoint = useDefaultBreakpoint();
-  const { mdv, setMdv } = useMiniDetailView();
 
-  useSelectEntityClickEvent((ev) => {
-    setMdv(ev.detail.display);
-  });
-
-  const onScopeChange = (value: string) => {
-    makeSelectEntityClickEvent({ display: false, data: null });
-    setMdv(false);
-    changeScope(value as TWorkspaceScope);
-  };
-
-  const { data: virtualLabData } = useQuery({
+  const { data: virtualLabData, isPending } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: Boolean(virtualLabId),
   });
 
+  useQuery({
+    queryKey: keyBuilder.accounting({ virtualLabId }),
+    queryFn: () => getVirtualLabAccountBalance({ virtualLabId, includeProjects: false }),
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const handleUploadData = () => {
+    if (active === 'public') {
+      router.push('private?upload=true');
+    } else {
+      makeSelectContributionEntityClickEvent({
+        display: true,
+        entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+        sessionId: crypto.randomUUID(),
+      });
+    }
+  };
+
   async function handleRunNotebook() {
     setLoading(true);
-    if (virtualLabData == null) {
+    if (virtualLabData == null || virtualLabData == null) {
       setLoading(false);
       throw new Error(`Could not fetch virtual lab data`);
     }
@@ -92,24 +126,66 @@ export function NotebooksLayout({ children }: Props) {
           placement: 'topRight',
         });
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
-  return (
-    <LazyMotion features={domAnimation}>
-      <div
-        id="notebooks-layout"
-        data-testid="notebooks-layout"
-        className="bg-background grid h-full w-full grid-cols-[22rem_1fr] grid-rows-[auto_1fr] gap-2 overflow-hidden [grid-template-areas:'header_header''main_main'] pr-1"
-      >
-        <div className="flex w-full items-center justify-between gap-4 pl-3 [grid-area:header]">
-          <div className="flex min-w-0 max-w-1/2 items-center gap-2">
-            <TabsSelector activeTab={scope} onValueChange={onScopeChange} />
-          </div>
+  const course = virtualLabData?.course;
 
-          <div className="flex items-center gap-4">
-            <Button
+  const onNotebookCreateSuccess = useCallback(
+    async (notebook: EntityCoreObjectTypes) => {
+      if (!isNotebook(notebook) || course?.template_project_id !== projectId) {
+        return;
+      }
+      try {
+        const projectIds = (await listAllProjectIds(virtualLabId)).filter((id) => id !== projectId);
+        await syncNotebook({ notebook, virtualLabId, projectId, targetProjectIds: projectIds });
+      } catch {
+        notification.warning({
+          message: `Couldn't sync notebook to student projects`,
+          key: 'notebook-sync-warning',
+          placement: 'topRight',
+        });
+      }
+    },
+    [projectId, virtualLabId, notification.warning, course]
+  );
+
+  if (isPending)
+    return (
+      <div className="h-full flex justify-center items-center text-4xl">
+        <LoadingOutlined />
+      </div>
+    );
+
+  return (
+    <div>
+      <div className="mb-5 ml-5 flex items-center justify-between">
+        <div className="flex">
+          <NextLink
+            href="public"
+            className={cn(
+              'flex h-[40px] min-w-[150px] items-center justify-center rounded-l-full px-4 py-2',
+              active === 'public' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
+            )}
+          >
+            Public
+          </NextLink>
+
+          <NextLink
+            href="private"
+            className={cn(
+              'flex h-[40px] min-w-[150px] items-center justify-center rounded-r-full px-4 py-2',
+              active === 'private' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
+            )}
+          >
+            Project
+          </NextLink>
+        </div>
+        <div className="flex gap-3">
+          {active === 'private' && (
+            <UiButton
               rounded
               variant="success"
               size={breakpoint === 'xl' ? 'lg' : 'md'}
@@ -127,58 +203,120 @@ export function NotebooksLayout({ children }: Props) {
                 <span>Upload notebook</span>
                 <PlusOutlined className="ml-auto text-sm" />
               </div>
-            </Button>
+            </UiButton>
+          )}
 
-            <button
-              disabled={loading}
-              type="button"
-              className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
-              onClick={handleRunNotebook}
-            >
-              <div>Open JupyterHub</div>
-              {!loading && (
-                <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
-              )}
-              {loading && <LoadingOutlined className="text-[#F37726]" />}
-            </button>
-          </div>
-        </div>
-
-        <m.div
-          id="notebooks-inner-layout"
-          data-testid="notebooks-layout"
-          className="bg-background border-neutral-2 mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]"
-          initial={{
-            gridTemplateColumns: '22rem 1fr',
-            gridTemplateAreas: "'aside body'",
-          }}
-          animate={{
-            gridTemplateColumns: mdv ? '3fr 2fr' : '22rem 1fr',
-            gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",
-          }}
-          transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }}
-          style={
-            isGridAnimating
-              ? { willChange: 'grid-template-columns, grid-template-areas' }
-              : undefined
-          }
-          onAnimationStart={() => setIsGridAnimating(true)}
-          onAnimationComplete={() => setIsGridAnimating(false)}
-        >
-          <aside
-            className={cn(
-              'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full overflow-y-auto px-1 [grid-area:aside]',
-              { hidden: mdv }
-            )}
+          <button
+            disabled={loading}
+            type="button"
+            className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
+            onClick={handleRunNotebook}
           >
-            <NotebookLeftMenu />
-          </aside>
-
-          {children}
-        </m.div>
-
-        <ContributionModal />
+            <div>Open JupyterHub</div>
+            {!loading && (
+              <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+            )}
+            {loading && <LoadingOutlined className="text-[#F37726]" />}
+          </button>
+        </div>
       </div>
-    </LazyMotion>
+
+      <div
+        id="notebooks-layout"
+        className="bg-background border-neutral-2 ml-5 h-[calc(100vh-11rem)] rounded-2xl border p-5"
+      >
+        {children}
+      </div>
+
+      <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
+    </div>
   );
+}
+
+async function _syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+  targetProjectId,
+}: {
+  notebook: IAnalysisNotebookTemplate;
+  virtualLabId: string;
+  projectId: string;
+  targetProjectId: string;
+}) {
+  const createdNotebook = await createNotebook({
+    payload: notebook,
+    context: { virtualLabId, projectId: targetProjectId },
+  });
+
+  const contributions = await getContributions({
+    context: { virtualLabId, projectId },
+    filters: { entity__id: notebook.id },
+  });
+
+  const sourceAssets = await Promise.all(
+    notebook.assets.map(async (asset) => {
+      const arrayBuffer = (await downloadAsset({
+        ctx: {
+          virtualLabId,
+          projectId,
+        },
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
+        entityId: notebook.id,
+        id: asset.id,
+        asRawResponse: false,
+      })) as ArrayBuffer;
+
+      return {
+        ctx: { virtualLabId, projectId: targetProjectId },
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
+        entityId: createdNotebook.id,
+        fileName: asset.path.split('/').pop() ?? asset.id,
+        payload: arrayBuffer,
+        mimeType: asset.content_type,
+        label: asset.label,
+      };
+    })
+  );
+
+  // Upload assets to new notebook
+
+  await Promise.all(
+    sourceAssets.map((asset) => {
+      return createAsset(asset);
+    })
+  );
+
+  // Upload contributions to new notebook
+
+  await Promise.all(
+    contributions.data.map((contributor) =>
+      createContribution({
+        context: { virtualLabId, projectId: targetProjectId },
+        contributor: {
+          agent_id: contributor.agent.id,
+          entity_id: createdNotebook.id,
+          role_id: contributor.role.id,
+        },
+      })
+    )
+  );
+}
+
+async function syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+  targetProjectIds,
+}: {
+  notebook: IAnalysisNotebookTemplate;
+  virtualLabId: string;
+  projectId: string;
+  targetProjectIds: string[];
+}) {
+  const promises = targetProjectIds.map((id) => {
+    return _syncNotebook({ notebook, virtualLabId, projectId, targetProjectId: id });
+  });
+
+  return await Promise.all(promises);
 }
