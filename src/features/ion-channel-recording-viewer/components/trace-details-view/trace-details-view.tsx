@@ -25,7 +25,9 @@ export function TraceDetailsView({
   variant = ViewVariant.Light,
 }: TraceDetailsViewProps) {
   const protocolsNames = trace.protocols.map(({ name }) => name);
-  const [protocolName, setProtocolName] = React.useState<string>(protocolsNames[0] ?? '');
+  const defaultProtocolName =
+    protocolsNames.find((name) => name.toLowerCase() === 'activation') ?? protocolsNames[0] ?? '';
+  const [protocolName, setProtocolName] = React.useState<string>(defaultProtocolName);
   const protocol = React.useMemo(
     () => trace.protocols.find((p) => p.name === protocolName),
     [protocolName, trace.protocols]
