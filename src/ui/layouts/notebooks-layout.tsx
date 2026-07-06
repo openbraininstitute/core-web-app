@@ -29,18 +29,18 @@ import { cn } from '@/utils/css-class';
 
 import { useWorkspace } from '../hooks/use-workspace';
 
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function createNotebook({
   payload,
   context,
 }: {
-  payload: INotebook;
+  payload: IAnalysisNotebookTemplate;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.post<INotebook>('/analysis-notebook-template', {
+  return await api.post<IAnalysisNotebookTemplate>('/analysis-notebook-template', {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -65,7 +65,7 @@ export function NotebooksLayout({ children, active }: Props) {
       router.replace('private');
       makeSelectContributionEntityClickEvent({
         display: true,
-        entityType: ExtendedEntitiesTypeDict.Notebook,
+        entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
         sessionId: crypto.randomUUID(),
       });
     }
@@ -93,7 +93,7 @@ export function NotebooksLayout({ children, active }: Props) {
     } else {
       makeSelectContributionEntityClickEvent({
         display: true,
-        entityType: ExtendedEntitiesTypeDict.Notebook,
+        entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
         sessionId: crypto.randomUUID(),
       });
     }
@@ -240,7 +240,7 @@ async function _syncNotebook({
   projectId,
   targetProjectId,
 }: {
-  notebook: INotebook;
+  notebook: IAnalysisNotebookTemplate;
   virtualLabId: string;
   projectId: string;
   targetProjectId: string;
@@ -262,7 +262,7 @@ async function _syncNotebook({
           virtualLabId,
           projectId,
         },
-        entityType: EntityTypeDict.Notebook,
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
         entityId: notebook.id,
         id: asset.id,
         asRawResponse: false,
@@ -270,7 +270,7 @@ async function _syncNotebook({
 
       return {
         ctx: { virtualLabId, projectId: targetProjectId },
-        entityType: EntityTypeDict.Notebook,
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
         entityId: createdNotebook.id,
         fileName: asset.path.split('/').pop() ?? asset.id,
         payload: arrayBuffer,
@@ -310,7 +310,7 @@ async function syncNotebook({
   projectId,
   targetProjectIds,
 }: {
-  notebook: INotebook;
+  notebook: IAnalysisNotebookTemplate;
   virtualLabId: string;
   projectId: string;
   targetProjectIds: string[];
