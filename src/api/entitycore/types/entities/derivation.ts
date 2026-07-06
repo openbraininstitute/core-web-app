@@ -1,4 +1,4 @@
-import { find } from 'es-toolkit/compat';
+import { uniq } from 'es-toolkit/compat';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { EntityCoreIdentifiable, EntityCoreType } from '@/api/entitycore/types/shared/global';
@@ -73,11 +73,14 @@ export const CircuitDerivationFilterOptions: Array<{ value: TDerivationType; lab
     label: label as string,
   }));
 
-/** Display label for a derivation type: short circuit label when known, else the generic label. */
-export const getCircuitDerivationLabel = (derivationType: TDerivationType): string =>
-  CircuitDerivationShortLabel[derivationType] ??
-  find(DerivationType, { key: derivationType })?.label ??
-  derivationType;
+export const getCircuitDerivationColumnLabels = (
+  derivations: ReadonlyArray<{ derivation_type: TDerivationType }>
+): string[] =>
+  uniq(
+    derivations
+      .map((d) => CircuitDerivationShortLabel[d.derivation_type])
+      .filter((label): label is string => Boolean(label))
+  );
 
 export interface IDerivationBase extends EntityCoreIdentifiable, EntityCoreType {}
 

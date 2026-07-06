@@ -1,5 +1,5 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import { find, isNil, map, omit, pick, uniq } from 'es-toolkit/compat';
+import { find, isNil, map, omit, pick } from 'es-toolkit/compat';
 
 import { hasAssets } from '@/api/entitycore/guards';
 import {
@@ -9,7 +9,7 @@ import {
 } from '@/api/entitycore/types/entities/circuit';
 import {
   CircuitDerivationFilterOptions,
-  getCircuitDerivationLabel,
+  getCircuitDerivationColumnLabels,
 } from '@/api/entitycore/types/entities/derivation';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ElectrodeTypeDict } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
@@ -349,11 +349,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       // hierarchy/enriched rows omit it, so guard like CircuitSubCircuit does.
       const derivations =
         'generated_from_derivations' in r ? (r as ICircuit).generated_from_derivations : null;
-      if (!derivations?.length) {
-        return EmptyValue;
-      }
-      // A circuit normally has a single derivation; if several, list the types comma-separated.
-      return uniq(derivations.map((d) => getCircuitDerivationLabel(d.derivation_type))).join(', ');
+      const labels = derivations ? getCircuitDerivationColumnLabels(derivations) : [];
+      return labels.length ? labels.join(', ') : EmptyValue;
     },
     vocabulary: {
       plural: 'Derivation types',
