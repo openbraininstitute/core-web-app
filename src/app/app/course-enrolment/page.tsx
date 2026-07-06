@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { authFetch } from '@/auth-fetch';
@@ -33,6 +33,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 export default function CourseEnrolmentPage() {
   const config = useConfig();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const enrolmentId = searchParams.get('enrolment_id');
   const [error, setError] = useState<ClaimError | null>(null);
@@ -96,11 +97,11 @@ export default function CourseEnrolmentPage() {
           } catch (error) {
             console.error('Failed to activate enrolments', error);
           }
-          window.location.href = `/app/virtual-lab/${data.virtual_lab_id}/${data.project_id}`;
+          router.push(`/app/virtual-lab/${data.course.virtual_lab_id}/${data.project_id}`);
         } else {
           // Course hasn't started yet - show success message
           setSuccess({
-            virtual_lab_id: data.virtual_lab_id,
+            virtual_lab_id: data.course.virtual_lab_id,
             project_id: data.project_id,
             course_name: data.course?.virtual_lab_name || 'Course',
             start_date: data.course?.start_date,
@@ -117,7 +118,7 @@ export default function CourseEnrolmentPage() {
     };
 
     claim();
-  }, [enrolmentId, config.VIRTUAL_LAB_API_URL]);
+  }, [enrolmentId, config.VIRTUAL_LAB_API_URL, router]);
 
   if (loading) {
     return (
@@ -141,7 +142,7 @@ export default function CourseEnrolmentPage() {
           <div className="mt-6">
             <Button
               onClick={() => {
-                window.location.href = '/app/virtual-lab/sync';
+                router.push('/app/virtual-lab/sync');
               }}
             >
               Go to home
@@ -188,7 +189,7 @@ export default function CourseEnrolmentPage() {
           )}
           <Button
             onClick={() => {
-              window.location.href = '/app/virtual-lab/sync';
+              router.push('/app/virtual-lab/sync');
             }}
           >
             Go to home
