@@ -1,6 +1,7 @@
 import {
   RiCloseLine,
   RiEqualizerLine,
+  RiFullscreenExitLine,
   RiFullscreenLine,
   RiMoonFill,
   RiMoonLine,
@@ -13,6 +14,7 @@ import { Switch } from 'antd';
 import { useState } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 export interface ViewerControlsMenuProps {
@@ -26,6 +28,9 @@ export interface ViewerControlsMenuProps {
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
+  /** portal target for the popover (fullscreen element); null → document.body */
+  container?: HTMLElement | null;
+  isFullscreen?: boolean;
   className?: string;
 }
 
@@ -43,32 +48,55 @@ export function ViewerControlsMenu({
   onToggleAxons,
   hasSavedConfig,
   onResetConfig,
+  container,
+  isFullscreen = false,
   className,
 }: ViewerControlsMenuProps) {
   const [open, setOpen] = useState(false);
+  const settingsLabel = open ? 'Close settings' : 'Viewer settings';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        aria-label={open ? 'Close settings' : 'Viewer settings'}
-        className={cn(
-          'inline-flex size-8 items-center justify-center rounded-full bg-white',
-          'text-primary-9 shadow-md ring-1 ring-black/5 focus-visible:outline-none',
-          'transition-colors hover:bg-neutral-100',
-          className
-        )}
-      >
-        {open ? <RiCloseLine className="size-4" /> : <RiEqualizerLine className="size-4" />}
-      </PopoverTrigger>
+      <Tooltip open={open ? false : undefined}>
+        <TooltipTrigger asChild>
+          <PopoverTrigger
+            aria-label={settingsLabel}
+            className={cn(
+              'inline-flex size-8 items-center justify-center rounded-full bg-white',
+              'text-primary-9 shadow-md ring-1 ring-black/5 focus-visible:outline-none',
+              'transition-colors hover:bg-neutral-100',
+              className
+            )}
+          >
+            {open ? <RiCloseLine className="size-4" /> : <RiEqualizerLine className="size-4" />}
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent
+          align="center"
+          side="bottom"
+          sideOffset={0}
+          arrowClassName="bg-gray-200"
+          className="text-primary-9 bg-gray-200"
+        >
+          {settingsLabel}
+        </TooltipContent>
+      </Tooltip>
       <PopoverContent
+        container={container}
         side="right"
         align="start"
         sideOffset={8}
         className="w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl"
       >
         <MenuButton
-          icon={<RiFullscreenLine className="size-4" />}
-          label="Full screen"
+          icon={
+            isFullscreen ? (
+              <RiFullscreenExitLine className="size-4" />
+            ) : (
+              <RiFullscreenLine className="size-4" />
+            )
+          }
+          label={isFullscreen ? 'Exit full screen' : 'Full screen'}
           onClick={onFullscreen}
         />
         <MenuButton

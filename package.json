@@ -68,7 +68,7 @@
     "@tanstack/react-query": "^5.100.9",
     "@tanstack/react-query-devtools": "^5.100.9",
     "@tanstack/react-virtual": "^3.13.24",
-    "@tolokoban/tgd": "2.0.78",
+    "@tolokoban/tgd": "2.2.0",
     "ag-grid-community": "^35.3.0",
     "ag-grid-react": "^35.3.0",
     "ai": "^6.0.202",

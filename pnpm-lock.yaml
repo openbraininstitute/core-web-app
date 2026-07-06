@@ -129,8 +129,8 @@ importers:
         specifier: ^3.13.24
         version: 3.13.24(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@tolokoban/tgd':
-        specifier: 2.0.78
-        version: 2.0.78
+        specifier: 2.2.0
+        version: 2.2.0
       ag-grid-community:
         specifier: ^35.3.0
         version: 35.3.0
@@ -2725,7 +2725,7 @@ packages:
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
   '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz':
-    resolution: {integrity: sha512-yM3HHyhG/bOyP5mXvBECsL//aNqqB4bClisdyvRDdeemSsSmoU/5gajUSzpW67mVltCmj6K25U1Mfwx0I/3hHg==, tarball: file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz}
+    resolution: {integrity: sha512-k6vsdU3m3vK7AS08Ub5bMELX1fuSRcbXmTAggBxKxr4b/hPOylps1taBTfu3n5AyTTpXfLvoRPMzKTjlSBEu/g==, tarball: file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz}
     version: 0.30.0
     peerDependencies:
       react: ^19.2.5
@@ -4993,9 +4993,6 @@ packages:
         optional: true
       '@types/react-dom':
         optional: true
-
-  '@tolokoban/tgd@2.0.78':
-    resolution: {integrity: sha512-nEpIwkOO/bEEk0Fetpjc8iAaBYsRf9wZQgUMQLvrjCSv9VnG8bzOh4WKeRcSufkgUw7+Sqoe2kV3MVXB+lFL+w==}
 
   '@tolokoban/tgd@2.2.0':
     resolution: {integrity: sha512-SminZtYAn5GZxfaEMRPW1SVl29HFzAlYeChWWq4/Rm81UzhjCY8s5F7PcbZuNl13TD7wREld3Y+Ea+WZf+W13Q==}
@@ -15349,15 +15346,6 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
-
-  '@tolokoban/tgd@2.0.78':
-    dependencies:
-      '@loaders.gl/core': 4.4.1
-      '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
-      '@loaders.gl/gltf': 4.4.1(@loaders.gl/core@4.4.1)
-      gl-matrix: 3.4.4
-    transitivePeerDependencies:
-      - '@75lb/nature'
 
   '@tolokoban/tgd@2.2.0':
     dependencies:

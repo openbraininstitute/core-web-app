@@ -77,7 +77,7 @@ export function ColorByDropdown({
         )}
       >
         <span className={cn(!theme && 'text-neutral-400')} style={mutedStyle}>
-          By
+          Colour by
         </span>
         <span>{label}</span>
         {value ? (

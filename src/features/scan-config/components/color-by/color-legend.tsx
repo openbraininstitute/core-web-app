@@ -70,7 +70,7 @@ export function ColorLegend({
       id="color-mapping-panel"
       data-testid="color-mapping-panel"
       className={cn(
-        'w-48 rounded-xl p-2 pr-0.5 text-xs backdrop-blur-sm',
+        'min-w-0 max-w-full rounded-xl p-2 pr-0.5 text-xs backdrop-blur-sm',
         !theme && 'ring-1 ring-gray-50 bg-white/5',
         className
       )}
@@ -80,10 +80,10 @@ export function ColorLegend({
         <ul
           id="color-mapping-list"
           data-testid="color-mapping-list"
-          className="max-h-56 space-y-1 overflow-y-auto secondary-scrollbar pr-1.5"
+          className="max-h-56 min-w-0 space-y-1 overflow-y-auto secondary-scrollbar pr-1.5"
         >
           {mapping.categorical.map((entry) => (
-            <li key={entry.value} className="flex items-center justify-between gap-2">
+            <li key={entry.value} className="flex min-w-0 items-center justify-between gap-2">
               <span
                 className={cn('min-w-0 flex-1 truncate', !theme && 'text-neutral-700')}
                 title={entry.value}

@@ -6,6 +6,10 @@ import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
+import {
+  type ViewerMode,
+  ViewerModeDict,
+} from '@/features/scan-config/components/color-by/mode-toggle';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -14,7 +18,6 @@ import { classNames } from '@/util/utils';
 import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ViewerMode } from '@/features/scan-config/components/color-by/mode-toggle';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
@@ -38,7 +41,7 @@ export function CircuitPreview({
   enableVisualization = false,
   largeCircuit = false,
 }: CircuitPreviewProps) {
-  const [mode, setMode] = useState<ViewerMode>('image');
+  const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
@@ -79,8 +82,10 @@ export function CircuitPreview({
 
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      {activeMode === 'image' && <CircuitImage className={className} circuit={circuit} />}
-      {activeMode === 'viz' && !largeCircuit && (
+      {activeMode === ViewerModeDict.Image && (
+        <CircuitImage className={className} circuit={circuit} />
+      )}
+      {activeMode === ViewerModeDict.Visualization && !largeCircuit && (
         <CircuitViz
           key={circuit.id}
           circuit={circuit}
@@ -92,7 +97,7 @@ export function CircuitPreview({
           resetSignal={resetSignal}
         />
       )}
-      {activeMode === 'viz' && largeCircuit && (
+      {activeMode === ViewerModeDict.Visualization && largeCircuit && (
         <LargeCircuitPreview
           key={circuit.id}
           circuit={circuit}
@@ -109,7 +114,7 @@ export function CircuitPreview({
           onModeChange={setMode}
           theme={theme}
           table={{ active: showTable, onToggle: handleToggleTable }}
-          viz={activeMode === 'viz' ? { menu, colorBy } : undefined}
+          viz={activeMode === ViewerModeDict.Visualization ? { menu, colorBy } : undefined}
         />
       )}
 
