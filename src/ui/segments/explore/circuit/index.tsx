@@ -384,7 +384,7 @@ export function BrowseCircuit({
         id="circuit-table-container"
         data-testid="circuit-table-container"
         className={cn(
-          'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
+          'h-full max-h-[calc(100vh-10.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
           classNames?.container
         )}
       >
@@ -435,7 +435,7 @@ export function BrowseCircuit({
       <div
         id="mini-detail-view-container"
         className={cn(
-          'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
+          'h-full max-h-[calc(100vh-10.8rem)] w-full min-w-0',
           '[grid-area:mini-view]',
           {
             hidden: !mdv,
