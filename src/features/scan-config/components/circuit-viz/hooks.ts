@@ -3,10 +3,11 @@ import React from 'react';
 
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
+import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
+import { NodesSchema } from '@/features/scan-config/types';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import { NodesSchema } from '../../types';
 import { sequentialCellLoader } from './sequential-loader';
 
 import type {
@@ -14,7 +15,12 @@ import type {
   MorphoViewerSmallCircuitCellData,
 } from '@/morpho-viewer';
 
-export function useCircuit(circuitId: string, showAxon: boolean) {
+export function useCircuit(
+  circuitId: string,
+  showAxon: boolean,
+  colorsByNode?: string[],
+  defaultColor: string = DEFAULT_NEURON_COLOR
+) {
   const { virtualLabId, projectId } = useWorkspace();
   const { data: nodes, error, isLoading } = useCircuitNodes(circuitId, virtualLabId, projectId);
   const circuit: MorphoViewerSmallCircuitCell[] = React.useMemo(() => {
@@ -24,12 +30,12 @@ export function useCircuit(circuitId: string, showAxon: boolean) {
         center: node.position,
         orientation: node.orientation,
         somaRadius: 8,
-        // For paired neuron, we will have the usual blue/orange colors
-        // that matches the preview image.
-        color: `hsl(${210 + (i * 360) / nodes.length}, 100%, 50%)`,
+        // Default color (stable blue, or background-adapted); overridden per node
+        // when coloring by a property.
+        color: colorsByNode?.[i] ?? defaultColor,
       })) ?? []
     );
-  }, [circuitId, showAxon, nodes]);
+  }, [circuitId, showAxon, nodes, colorsByNode, defaultColor]);
 
   const nodesById = React.useMemo(() => {
     if (!nodes) return new Map<string, NonNullable<typeof nodes>[number]>();

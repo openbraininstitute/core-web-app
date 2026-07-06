@@ -2,7 +2,7 @@
 import { saveAs } from 'file-saver';
 import React from 'react';
 
-import { LoadingNeuronSpinner } from '@/components/neuron-viewer';
+import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { MorphoViewerSomasOnly, useMorphoViewerDebugMode } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { isType } from '@/util/type-guards';
@@ -17,17 +17,35 @@ import styles from './large-circuit-preview.module.css';
 export interface LargeCircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
+  /** per-node colors aligned by node index; undefined → viewer default  */
+  colorsByNode?: string[];
+  backgroundColor: string;
+  /** scalebar pin/label color (adaptive mode); undefined → package default  */
+  scalebarColor?: string;
+  resetSignal: number;
 }
 
 interface CellInfo {
   morphologyId: string;
   position: [number, number, number];
+  color?: string;
 }
 
-export function LargeCircuitPreview({ className, circuit }: LargeCircuitPreviewProps) {
+export function LargeCircuitPreview({
+  className,
+  circuit,
+  colorsByNode,
+  backgroundColor,
+  scalebarColor,
+  resetSignal,
+}: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);
   const nodes = useCircuitNodes(circuit);
+  const scalebar = React.useMemo(
+    () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
+    [scalebarColor]
+  );
   const handleDownload = () => {
     const blob = new Blob([JSON.stringify(nodes)], { type: 'application/json' });
     saveAs(blob, `${circuit.id}.json`);
@@ -35,18 +53,19 @@ export function LargeCircuitPreview({ className, circuit }: LargeCircuitPreviewP
   const cellInfos = React.useMemo(() => {
     if (nodes instanceof Error || !nodes) return [];
 
-    return nodes.map((node) => {
+    return nodes.map((node, index) => {
       const cell: CellInfo = {
         morphologyId: node.morphologyId,
         position: node.position,
+        color: colorsByNode?.[index],
       };
       return cell;
     });
-  }, [nodes]);
+  }, [nodes, colorsByNode]);
 
   return (
-    <div className={cn(className, styles.largeCircuitPreview)}>
-      {!nodes && <LoadingNeuronSpinner className={styles.spinner} label="Circuit" />}
+    <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
+      {!nodes && <LoadingIndicator />}
       {nodes &&
         (nodes instanceof Error ? (
           <div className={styles.error}>
@@ -60,8 +79,10 @@ export function LargeCircuitPreview({ className, circuit }: LargeCircuitPreviewP
           <MorphoViewerSomasOnly
             somaRadius={somaRadius}
             gizmo
-            scalebar
+            scalebar={scalebar}
             cellInfos={cellInfos}
+            backgroundColor={backgroundColor}
+            resetCameraSignal={resetSignal}
             controls={[
               debugMode
                 ? [
@@ -74,11 +95,19 @@ export function LargeCircuitPreview({ className, circuit }: LargeCircuitPreviewP
                     </Button>,
                   ]
                 : [],
-              'reset-camera',
-              'fullscreen',
             ]}
           />
         ))}
+    </div>
+  );
+}
+
+function LoadingIndicator() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex justify-center">
+      <div className="rounded-full bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur">
+        Loading circuit…
+      </div>
     </div>
   );
 }
