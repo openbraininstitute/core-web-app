@@ -449,21 +449,21 @@ export class NodesSession {
     const handle = this.columnIndex.get(name);
     if (!handle) return { kind: ColumnKindDict.String, values: [] };
 
-    if (handle.kind === 'synthetic-node-id') {
+    if (handle.kind === ColumnKindDict.SyntheticNodeId) {
       const values = new Array<number>(this.rowCount);
       for (let i = 0; i < this.rowCount; i++) values[i] = i;
       return { kind: ColumnKindDict.Numeric, values };
     }
 
     const data = this.loadColumn(name);
-    if (handle.kind === 'categorical') {
+    if (handle.kind === ColumnKindDict.Categorical) {
       const arr = data as Uint32Array;
       const lib = handle.library;
       const values = new Array<string>(arr.length);
       for (let i = 0; i < arr.length; i++) values[i] = lib[arr[i]] ?? String(arr[i]);
       return { kind: ColumnKindDict.Categorical, values };
     }
-    if (handle.kind === 'numeric') {
+    if (handle.kind === ColumnKindDict.Numeric) {
       return {
         kind: ColumnKindDict.Numeric,
         values: Array.from(data as Float32Array | Float64Array),

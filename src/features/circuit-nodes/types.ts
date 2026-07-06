@@ -2,6 +2,7 @@ export const ColumnKindDict = {
   Numeric: 'numeric',
   Categorical: 'categorical',
   String: 'string',
+  SyntheticNodeId: 'synthetic-node-id',
 } as const;
 
 export type ColumnKind = (typeof ColumnKindDict)[keyof typeof ColumnKindDict];
