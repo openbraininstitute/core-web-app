@@ -23,7 +23,9 @@
     "typecheck:watch": "npx tsc --noEmit --watch",
     "knip": "knip",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui --project=public --project=private"
+    "test:e2e:ui": "playwright test --ui --project=public --project=private",
+    "sync-morphoviewer": "bash scripts/sync-morphoviewer.sh dev",
+    "sync-morphoviewer:vendor": "bash scripts/sync-morphoviewer.sh vendor"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.204",
