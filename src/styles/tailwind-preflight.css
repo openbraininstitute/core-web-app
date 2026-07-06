@@ -16,6 +16,7 @@ Based on https://unpkg.com/tailwindcss@3.2.3/src/css/preflight.css
   /* 2 */
   border-style: solid;
   /* 2 */
+  /* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS theme() helper */
   border-color: theme("borderColor.DEFAULT", currentColor);
   /* 2 */
 }
@@ -60,8 +61,10 @@ html {
     "Noto Color Emoji"
   );
   /* 4 */
+  /* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS theme() helper */
   font-feature-settings: theme("fontFamily.sans[1].fontFeatureSettings", normal);
   /* 5 */
+  overscroll-behavior-y: none;
 }
 
 /*
@@ -74,6 +77,7 @@ body {
   /* 1 */
   line-height: inherit;
   /* 2 */
+  overscroll-behavior-y: none;
 }
 
 /*

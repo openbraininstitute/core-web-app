@@ -166,6 +166,11 @@ const config = {
         permanent: false,
       },
       {
+        source: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id',
+        destination: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id/overview',
+        permanent: false,
+      },
+      {
         source: '/static/coming-soon/index.html',
         destination: '/',
         permanent: false,
