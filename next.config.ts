@@ -146,14 +146,23 @@ const config = {
         destination: `/app/virtual-lab/sync`,
         permanent: false,
       },
+      // notebooks: legacy URLs after the path-scope -> ?scope and slug -> extended-type restructure
       {
         source: '/app/virtual-lab/:vlabId/:projectId/notebooks',
-        destination: '/app/virtual-lab/:vlabId/:projectId/notebooks/public',
+        destination:
+          '/app/virtual-lab/:vlabId/:projectId/notebooks/browse/analysis-notebook-template',
         permanent: false,
       },
       {
-        source: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id',
-        destination: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id/overview',
+        source: '/app/virtual-lab/:vlabId/:projectId/notebooks/public',
+        destination:
+          '/app/virtual-lab/:vlabId/:projectId/notebooks/browse/analysis-notebook-template?scope=public',
+        permanent: false,
+      },
+      {
+        source: '/app/virtual-lab/:vlabId/:projectId/notebooks/private',
+        destination:
+          '/app/virtual-lab/:vlabId/:projectId/notebooks/browse/analysis-notebook-template?scope=project',
         permanent: false,
       },
       {

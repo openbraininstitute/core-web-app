@@ -1,10 +1,10 @@
 import { get, pick } from 'es-toolkit/compat';
 
+import { FieldsDefinition as NotebookFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/analysis-notebook-template';
 import { FieldsDefinition as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/common';
 import { FieldsDefinition as ExperimentFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experiment';
 import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
 import { FieldsDefinition as ModelFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/model';
-import { FieldsDefinition as NotebookFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/notebook';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';

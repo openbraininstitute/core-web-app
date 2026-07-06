@@ -84,7 +84,7 @@ export interface TAnalysisNotebookTemplateBase {
   assignment_id?: string | null;
 }
 
-export type NotebookFilter = Partial<
+export type TAnalysisNotebookTemplateFilter = Partial<
   IDFilter &
     TimestampsFilter &
     ContributionFilter &
@@ -96,7 +96,7 @@ export type NotebookFilter = Partial<
     }
 >;
 
-export interface INotebook
+export interface IAnalysisNotebookTemplate
   extends EntityCoreIdentifiableNamed,
     Timestamps,
     EntityCoreBaseAsset,

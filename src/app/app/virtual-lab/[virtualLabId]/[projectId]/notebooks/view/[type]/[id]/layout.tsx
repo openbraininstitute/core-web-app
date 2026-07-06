@@ -1,0 +1,24 @@
+import { NotebookViewLayout } from '@/features/notebooks/components/notebook-view-layout';
+
+import type { ReactNode } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { KebabCase } from '@/utils/type';
+
+export default async function Layout({
+  children,
+  params,
+}: ServerSideComponentProp<
+  WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict>; id: string },
+  null
+> & {
+  children: ReactNode;
+}) {
+  const { virtualLabId, projectId, type, id } = await params;
+
+  return (
+    <NotebookViewLayout context={{ virtualLabId, projectId }} type={type} id={id}>
+      {children}
+    </NotebookViewLayout>
+  );
+}

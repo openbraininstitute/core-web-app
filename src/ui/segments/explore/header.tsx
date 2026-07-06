@@ -56,7 +56,7 @@ export function DataHeader() {
   };
 
   return (
-    <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
+    <div className="flex w-full items-center justify-between gap-4 pl-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
         <DataScopeTabs />
       </div>

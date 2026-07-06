@@ -1,4 +1,4 @@
-import { getNotebook } from '@/api/entitycore/queries/notebook';
+import { getAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
@@ -15,11 +15,11 @@ export async function* getNotebookFiles(entityIds: string[], ctx?: WorkspaceCont
   const metadata = new Metadata<NotebookJsonMetadata>();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeDict.Notebook);
+    yield await createTemplateFileEntry(EntityTypeDict.AnalysisNotebookTemplate);
   } catch {}
 
   for (const entityId of entityIds) {
-    const notebook = await getNotebook({
+    const notebook = await getAnalysisNotebookTemplate({
       id: entityId,
       context: ctx,
     });

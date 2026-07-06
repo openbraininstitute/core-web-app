@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import { getNotebooks } from '@/api/entitycore/queries/notebook';
+import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
 import { tryCatch } from '@/api/utils';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
@@ -221,7 +221,7 @@ export async function startGradingNotebook(args: {
   const { assignment_id, virtual_lab_id, project_id, compute_cell, token } = args;
 
   const { data: notebooksResponse, error: notebooksError } = await tryCatch(
-    getNotebooks({
+    getAnalysisNotebookTemplates({
       filters: { assignment_id },
       context: { virtualLabId: virtual_lab_id, projectId: project_id },
     })

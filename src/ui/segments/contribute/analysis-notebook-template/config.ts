@@ -32,7 +32,7 @@ export function createAnalysisNotebookTemplateConfig(
   steps: Array<IContributionStep<TAnalysisNotebookTemplateForm>>
 ): IContributionFormConfig<TAnalysisNotebookTemplateForm, typeof AnalysisNotebookTemplateSchema> {
   return {
-    entityType: ExtendedEntitiesTypeDict.Notebook,
+    entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
     title: 'Analysis Notebook Template',
     formId: 'contribute-analysis-notebook-template-modal',
     schema: AnalysisNotebookTemplateSchema,

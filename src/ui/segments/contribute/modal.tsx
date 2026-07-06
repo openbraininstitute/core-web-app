@@ -100,7 +100,7 @@ function RenderEntityTypeContent({ type, sessionId: sId, onClose }: IRenderEntit
       <ExperimentalSynapsesPerConnection sessionId={sId} />
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
-    .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
+    .with({ type: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate }, () => (
       <AnalysisNotebookTemplate sessionId={sId} onClose={onClose} />
     ))
     .otherwise(() => null);

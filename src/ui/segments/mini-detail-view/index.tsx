@@ -12,6 +12,11 @@ import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import { NotebookActions } from '@/features/notebooks/components/mini-detail-actions';
+import {
+  NotebookCellsPreview,
+  NotebookGalleryPreview,
+} from '@/features/notebooks/renderer/notebook-viewer';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import {
@@ -25,7 +30,9 @@ import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/pr
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { cn } from '@/utils/css-class';
 
-import { DataActions, WorkflowActions, WorkflowBuildActions } from './actions';
+import { WorkflowBuildActions } from './actions/build';
+import { DataActions } from './actions/data';
+import { WorkflowActions } from './actions/simulate-extract-process';
 
 import type {
   EntityCoreObjectTypes,
@@ -34,6 +41,7 @@ import type {
   ISingleNeuronSynaptome,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -239,11 +247,36 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
         );
       }
     )
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.AnalysisNotebookResult,
+      },
+      () => (
+        <NotebookGalleryPreview
+          key={record.id}
+          record={record as unknown as IAnalysisNotebookTemplate}
+        />
+      )
+    )
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+      },
+      () => (
+        <NotebookCellsPreview
+          key={record.id}
+          record={record as unknown as IAnalysisNotebookTemplate}
+        />
+      )
+    )
     .otherwise(() => null);
 
   const actions = match({ section })
     .with({ section: WorkspaceSection.Data }, () => (
       <DataActions record={record} dataType={dataType} theme={theme} />
+    ))
+    .with({ section: WorkspaceSection.Notebooks }, () => (
+      <NotebookActions record={record} dataType={dataType} theme={theme} />
     ))
     .with(
       {

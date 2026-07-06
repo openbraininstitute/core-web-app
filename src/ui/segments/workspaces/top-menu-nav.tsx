@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   ExploreIcon,
   HelpIcon,
@@ -54,7 +55,7 @@ const links: LinkItem[] = [
     key: 'home',
     title: 'Home',
     url: '',
-    icon: <Home className="group-hover:text-primary-3 !size-5 -translate-y-0.5" />,
+    icon: <Home className="group-hover:text-primary-3 size-5! shrink-0 -translate-y-0.5" />,
     allowText: false,
     className: '',
     isActive: (pathname: string) => {
@@ -69,7 +70,7 @@ const links: LinkItem[] = [
     key: 'data',
     title: 'Data',
     url: 'data',
-    icon: <ExploreIcon className="group-hover:text-primary-3 !size-5" />,
+    icon: <ExploreIcon className="group-hover:text-primary-3 size-5! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
     hasAction: false,
@@ -79,7 +80,7 @@ const links: LinkItem[] = [
     key: 'workflows',
     title: 'Workflows',
     url: 'workflows',
-    icon: <WorkflowIcon className="group-hover:text-primary-3 !size-5" />,
+    icon: <WorkflowIcon className="group-hover:text-primary-3 size-5! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
     hasAction: true,
@@ -90,32 +91,31 @@ const links: LinkItem[] = [
     id: 'workspace-notebooks',
     key: 'notebooks',
     title: 'Notebooks',
-    url: 'notebooks',
-    icon: <NotebookIcon className="group-hover:text-primary-3 !size-5" />,
+    url: 'notebooks/browse/analysis-notebook-template',
+    icon: <NotebookIcon className="group-hover:text-primary-3 size-5! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
+    isActive: (pathname: string) => getActiveSection(pathname) === 'notebooks',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/browse/${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}`,
   },
   {
     id: 'workspace-reports',
     key: 'reports',
     title: 'Reports',
     url: 'reports',
-    icon: <ReportsIcon className="group-hover:text-primary-3 !size-[17px]" />,
+    icon: <ReportsIcon className="group-hover:text-primary-3 size-[17px]! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
-    hasAction: true,
-    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+    hasAction: false,
   },
   {
     id: 'workspace-help',
     key: 'help',
     title: 'Help',
     url: 'help',
-    icon: <HelpIcon className="group-hover:text-primary-3 !size-[17px]" />,
+    icon: <HelpIcon className="group-hover:text-primary-3 size-[17px]! shrink-0" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -125,7 +125,7 @@ const links: LinkItem[] = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbackStarIcon className="group-hover:text-primary-3 w-6 h-6" />,
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 size-6! shrink-0" />,
     allowText: false,
     className: '',
     hasAction: false,
