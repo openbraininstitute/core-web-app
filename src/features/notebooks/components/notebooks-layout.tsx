@@ -4,9 +4,17 @@ import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Image from 'next/image';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useCallback, useState } from 'react';
 
+import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
+import {
+  createContribution,
+  getContributions,
+} from '@/api/entitycore/queries/general/contribution';
+import { EntityTypeDict, isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
@@ -26,6 +34,10 @@ import {
 import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   children: ReactNode;
@@ -95,6 +107,27 @@ export function NotebooksLayout({ children }: Props) {
     }
     setLoading(false);
   }
+
+  const course = virtualLabData?.course;
+
+  const onNotebookCreateSuccess = useCallback(
+    async (notebook: EntityCoreObjectTypes) => {
+      if (!isNotebook(notebook) || course?.template_project_id !== projectId) {
+        return;
+      }
+      try {
+        const projectIds = (await listAllProjectIds(virtualLabId)).filter((id) => id !== projectId);
+        await syncNotebook({ notebook, virtualLabId, projectId, targetProjectIds: projectIds });
+      } catch {
+        notification.warning({
+          message: `Couldn't sync notebook to student projects`,
+          key: 'notebook-sync-warning',
+          placement: 'topRight',
+        });
+      }
+    },
+    [projectId, virtualLabId, notification.warning, course]
+  );
 
   return (
     <LazyMotion features={domAnimation}>
@@ -177,8 +210,114 @@ export function NotebooksLayout({ children }: Props) {
           {children}
         </m.div>
 
-        <ContributionModal />
+        <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
       </div>
     </LazyMotion>
   );
+}
+
+export async function createNotebook({
+  payload,
+  context,
+}: {
+  payload: IAnalysisNotebookTemplate;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IAnalysisNotebookTemplate>('/analysis-notebook-template', {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
+  });
+}
+
+async function _syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+  targetProjectId,
+}: {
+  notebook: IAnalysisNotebookTemplate;
+  virtualLabId: string;
+  projectId: string;
+  targetProjectId: string;
+}) {
+  const createdNotebook = await createNotebook({
+    payload: notebook,
+    context: { virtualLabId, projectId: targetProjectId },
+  });
+
+  const contributions = await getContributions({
+    context: { virtualLabId, projectId },
+    filters: { entity__id: notebook.id },
+  });
+
+  const sourceAssets = await Promise.all(
+    notebook.assets.map(async (asset) => {
+      const arrayBuffer = (await downloadAsset({
+        ctx: {
+          virtualLabId,
+          projectId,
+        },
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
+        entityId: notebook.id,
+        id: asset.id,
+        asRawResponse: false,
+      })) as ArrayBuffer;
+
+      return {
+        ctx: { virtualLabId, projectId: targetProjectId },
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
+        entityId: createdNotebook.id,
+        fileName: asset.path.split('/').pop() ?? asset.id,
+        payload: arrayBuffer,
+        mimeType: asset.content_type,
+        label: asset.label,
+      };
+    })
+  );
+
+  // Upload assets to new notebook
+
+  await Promise.all(
+    sourceAssets.map((asset) => {
+      return createAsset(asset);
+    })
+  );
+
+  // Upload contributions to new notebook
+
+  await Promise.all(
+    contributions.data.map((contributor) =>
+      createContribution({
+        context: { virtualLabId, projectId: targetProjectId },
+        contributor: {
+          agent_id: contributor.agent.id,
+          entity_id: createdNotebook.id,
+          role_id: contributor.role.id,
+        },
+      })
+    )
+  );
+}
+
+async function syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+  targetProjectIds,
+}: {
+  notebook: IAnalysisNotebookTemplate;
+  virtualLabId: string;
+  projectId: string;
+  targetProjectIds: string[];
+}) {
+  const promises = targetProjectIds.map((id) => {
+    return _syncNotebook({ notebook, virtualLabId, projectId, targetProjectId: id });
+  });
+
+  return await Promise.all(promises);
 }
