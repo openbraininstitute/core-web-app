@@ -11,9 +11,9 @@ export const viewDefForElectricalCellRecording: ViewDefinitionConfig = {
   columns: [
     EntityCoreFields.Preview,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.EType,
     EntityCoreFields.Name,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],

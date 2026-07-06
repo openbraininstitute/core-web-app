@@ -2,12 +2,18 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { DefaultChatTransport, type FileUIPart, getToolName, isToolUIPart } from 'ai';
+import {
+  DefaultChatTransport,
+  type FileUIPart,
+  getToolName,
+  isToolUIPart,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
+} from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { presignedUrlCache } from '@/components/ai-assistant/message-item/storage-image-part';
-import { atomRateLimit } from '@/components/ai-assistant/state';
+import { presignedUrlCache } from '@/features/ai-assistant/message-item/storage-image-part';
+import { atomRateLimit } from '@/features/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { findConfigKeyInState } from '@/features/scan-config/helpers';
@@ -74,6 +80,7 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const chat = useChat({
     id: threadId,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     transport: new DefaultChatTransport({
       api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
       headers: () => ({
@@ -85,6 +92,30 @@ export function useServiceAiAgentChat(threadId: string) {
       }),
       prepareSendMessagesRequest: ({ messages, body }) => {
         const lastMessage = messages.at(-1);
+
+        // If the last message is an assistant message with approval-responded parts,
+        // include approvalResponses instead of parts.
+        if (lastMessage?.role === 'assistant') {
+          const approvalResponses = lastMessage.parts
+            .filter(isToolUIPart)
+            .filter((p) => p.state === 'approval-responded' && p.approval)
+            .map((p) => ({
+              approvalId: (p as any).approval.id as string,
+              approved: (p as any).approval.approved as boolean,
+              ...(!(p as any).approval.approved && (p as any).approval.reason
+                ? { reason: (p as any).approval.reason as string }
+                : {}),
+            }));
+
+          if (approvalResponses.length > 0) {
+            return {
+              body: {
+                ...body,
+                approvalResponses,
+              },
+            };
+          }
+        }
 
         return {
           body: {
@@ -339,6 +370,7 @@ export function useServiceAiAgentChat(threadId: string) {
     error: chat.error,
     stop,
     pendingUserMessage,
+    addToolApprovalResponse: chat.addToolApprovalResponse,
   };
 }
 

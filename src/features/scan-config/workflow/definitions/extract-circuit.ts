@@ -1,3 +1,6 @@
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ExtractScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
@@ -23,5 +26,11 @@ export const extractCircuitWorkflow = defineScanConfigWorkflow({
       __activity: ScanConfigActivity.Extract,
       id: ExtractScanConfigTabs.configuration,
     },
+  },
+  taskTypeBindings: {
+    obiOne: ObiOneTaskTypeDict.CircuitExtraction,
+    configGeneration: TaskActivityType.CircuitExtractionConfigGeneration,
+    execution: TaskActivityType.CircuitExtractionExecution,
+    config: TaskConfigType.CircuitExtractionConfig,
   },
 });

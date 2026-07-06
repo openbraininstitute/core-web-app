@@ -107,7 +107,7 @@ function RenderEntityTypeContent({
       <ExperimentalSynapsesPerConnection sessionId={sId} />
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
-    .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
+    .with({ type: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate }, () => (
       <AnalysisNotebookTemplate
         sessionId={sId}
         onCreateSuccess={onCreateSuccess}

@@ -8,8 +8,9 @@ export const keyBuilder = {
   stripeInstance: () => [`${prefix}-stripe-instance`],
   obioneOpenapi: () => [`${prefix}-obione-open-api`],
   obioneOpenapiSchema: ({ form }: { form: string }) => [`${prefix}-obione-open-api`, { form }],
-  s3presignedUrl: (props: Record<string, any>) => [`${prefix}-presigned-url`, { ...props }],
+  s3presignedUrl: (props: Record<string, unknown>) => [`${prefix}-presigned-url`, { ...props }],
   quickAccessList: () => [`${prefix}-quick-access-list`],
   discoverTutorialsList: () => [`${prefix}-discover-tutorial-list`],
+  projectHomeGetStarted: () => [`${prefix}-project-home-get-started`],
   countries: () => [`${prefix}/countries`],
 };

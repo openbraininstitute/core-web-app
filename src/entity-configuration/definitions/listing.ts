@@ -10,11 +10,40 @@ import {
   type TFieldApiWhen,
   type TFilterOptionsSource,
 } from '@/entity-configuration/definitions/types';
+import {
+  SpeciesSelectionMode,
+  type TSpeciesSelectionMode,
+} from '@/features/brain-region-hierarchy/types';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import type { IWorkspaceSpecies } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
+
+export function buildFieldListingContext({
+  dataType,
+  section,
+  scope,
+  speciesSelectionMode,
+  workspaceSpecies,
+}: {
+  dataType: TFieldApiContext['dataType'];
+  section?: TWorkspaceSection;
+  scope?: TWorkspaceScope;
+  speciesSelectionMode?: TSpeciesSelectionMode;
+  workspaceSpecies?: IWorkspaceSpecies | null;
+}): TFieldApiContext {
+  return {
+    dataType,
+    section,
+    scope,
+    selectedSpecies:
+      speciesSelectionMode === SpeciesSelectionMode.All ? undefined : workspaceSpecies?.taxonomyId,
+    speciesSelectionMode,
+  };
+}
 
 /**
  * resolved field presentation state for one runtime context.
@@ -99,7 +128,9 @@ export function matchesFieldApiWhen(
   return (
     matchesContextValue(when.dataType, ctx.dataType) &&
     matchesContextValue(when.section, ctx.section) &&
-    matchesContextValue(when.scope, ctx.scope)
+    matchesContextValue(when.scope, ctx.scope) &&
+    matchesContextValue(when.selectedSpecies, ctx.selectedSpecies) &&
+    matchesContextValue(when.speciesSelectionMode, ctx.speciesSelectionMode)
   );
 }
 

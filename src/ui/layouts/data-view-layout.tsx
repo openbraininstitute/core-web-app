@@ -61,7 +61,9 @@ export async function DataViewLayout({
     })
   );
 
-  if (error || !entity) notFound();
+  if (error || !entity) {
+    notFound();
+  }
 
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
@@ -93,7 +95,7 @@ export async function DataViewLayout({
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     if (useClassicLayout) {
       return (
-        <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3">
+        <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3 pt-3">
           <div className="flex w-full items-center justify-between">
             {breadcrumbs}
             {closePage}

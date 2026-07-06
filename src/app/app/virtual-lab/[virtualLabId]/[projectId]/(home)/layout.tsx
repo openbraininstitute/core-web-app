@@ -10,6 +10,8 @@ import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
+  ProjectHomeGetStartedQuery,
+  type TProjectHomeData,
   type TTutorial,
   TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
@@ -54,13 +56,24 @@ export default async function Layout({
       client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery(), {}, { next: { revalidate: 0 } }),
   });
 
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderExternal.projectHomeGetStarted(),
+    queryFn: () =>
+      client.fetch<TProjectHomeData>(ProjectHomeGetStartedQuery, {}, { next: { revalidate: 0 } }),
+  });
+
   return (
     <ProjectInnerLayout>
-      <div id="project-left-menu" className="w-full pl-3 [grid-area:aside]">
+      <div
+        id="project-left-menu"
+        data-testid="project-left-menu"
+        className="w-full pl-3 [grid-area:aside]"
+      >
         <LeftMenu className="w-full" />
       </div>
       <div
         id="project-main-content"
+        data-testid="project-main-content"
         className="secondary-scrollbar w-full overflow-y-auto [grid-area:main]"
       >
         {children}

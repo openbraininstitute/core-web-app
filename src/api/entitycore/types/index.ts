@@ -13,11 +13,12 @@ import type { IIonChannelModelingCampaign } from '@/api/entitycore/types/entitie
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
+import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
-import type { INotebook } from './entities/notebook';
+import type { IAnalysisNotebookTemplate } from './entities/analysis-notebook-template';
 
 export * from '@/api/entitycore/types/entity-type';
 
@@ -65,9 +66,11 @@ export type EntityCoreObjectTypes =
   | IonChannelModel
   | IIonChannelModelingCampaign
   | IEMCellMesh
-  | INotebook;
+  | IAnalysisNotebookTemplate
+  | ISimulatableExtracellularRecordingArray;
 
-export function isNotebook(entity: EntityCoreObjectTypes): entity is INotebook {
+export function isNotebook(entity: EntityCoreObjectTypes): entity is IAnalysisNotebookTemplate {
   if (entity.type === 'analysis_notebook_template') return true;
   return false;
 }
+  

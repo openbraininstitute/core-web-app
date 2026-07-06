@@ -1,4 +1,4 @@
-import { RightOutlined } from '@ant-design/icons';
+import { RiArrowRightSLine } from '@remixicon/react';
 import { Checkbox } from 'antd';
 
 import {
@@ -100,12 +100,14 @@ export function TaskConfigSelectionCard({
               </span>
             )}
           </div>
-          <div className="ml-4 flex shrink-0">
+          <div className="ml-4 flex item-center justify-center gap-0.5 shrink-0">
             {statusLoading ? <StatusBadgeSkeleton /> : <StatusBadge status={execStatus} />}
-            <RightOutlined className="ml-2 text-sm text-gray-500" />
+            <div className="flex items-center justify-center">
+              <RiArrowRightSLine className="size-5 shrink-0 text-gray-500" />
+            </div>
           </div>
         </div>
-        <ScanParams scanParams={scanParams} color={color} />
+        <ScanParams configId={configId} scanParams={scanParams} color={color} />
       </div>
     </button>
   );

@@ -7,6 +7,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { isFromIdRef, type TFromIdRef } from '@/features/scan-config/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
+import { cn } from '@/utils/css-class';
 
 /**
  * a `model_identifier_multiple` scan param: one named tuple (e.g. EM synapse
@@ -18,27 +19,58 @@ function isNamedTupleParam(value: unknown): value is TNamedTupleParam {
   return isPlainObject(value) && Array.isArray(value.elements) && value.elements.every(isFromIdRef);
 }
 
-/** collects the FromID refs from a param value (single tuple or array of tuples). */
+/**
+ * a `NeuronPropertyFilter` scan param (e.g. `neuron_sets.<name>.property_filter`):
+ * a dict of neuron properties to matched values, e.g. `{ region: ['S1FL'], morph_class: ['PYR'] }`.
+ */
+type TPropertyFilterParam = { filter_dict: Record<string, string[]> };
+
+function isPropertyFilterParam(value: unknown): value is TPropertyFilterParam {
+  return (
+    isPlainObject(value) &&
+    isPlainObject(value.filter_dict) &&
+    Object.values(value.filter_dict).every(
+      (values) => Array.isArray(values) && values.every((entry) => typeof entry === 'string')
+    )
+  );
+}
+
+/**
+ * collects the FromID refs from a scan param value, covering every `model_identifier`
+ * shape a grid point can carry:
+ * - a single FromID ref (e.g. EM mesh skeletonization: one mesh per grid point)
+ * - a named tuple of refs (e.g. EM synapse mapping neuron set)
+ * - an array of either (flat multi-select or grouped scans)
+ */
 function refsFromValue(value: unknown): TFromIdRef[] {
+  if (isFromIdRef(value)) {
+    return [value];
+  }
   if (isNamedTupleParam(value)) {
     return [...value.elements];
   }
   if (Array.isArray(value)) {
-    return value.filter(isNamedTupleParam).flatMap((tuple) => [...tuple.elements]);
+    return value.flatMap((entry) => {
+      if (isFromIdRef(entry)) return [entry];
+      if (isNamedTupleParam(entry)) return [...entry.elements];
+      return [];
+    });
   }
   return [];
 }
 
 export function ScanParams({
   scanParams,
+  configId,
   color,
 }: {
   scanParams: Record<string, unknown>;
   color: string;
+  configId?: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
 
-  // flatten every neuron ref across all tuple-valued params into one batched fetch
+  // flatten every model ref across all model-valued params into one batched fetch
   const refs = useMemo(() => Object.values(scanParams).flatMap(refsFromValue), [scanParams]);
 
   const { entities } = useResolvedModelIdentifierEntities({
@@ -51,25 +83,47 @@ export function ScanParams({
     [entities]
   );
 
+  const isSingleParam = Object.keys(scanParams).length === 1;
+
   return (
-    <div className="grid w-full min-w-0 grid-cols-2 gap-x-4 gap-y-2">
-      {Object.entries(scanParams).map(([key, value]) => {
-        const neuronRefs = refsFromValue(value);
+    <div
+      id="scan-params"
+      data-testid="scan-params"
+      data-scan-config-selection-card-scan-params-config-id={configId}
+      className={cn(
+        'grid w-full min-w-0 gap-x-4 gap-y-2',
+        isSingleParam ? 'grid-cols-1' : 'grid-cols-2'
+      )}
+    >
+      {Object.entries(scanParams).map(([paramKey, paramValue]) => {
+        const refs = refsFromValue(paramValue);
+        const filterEntries = isPropertyFilterParam(paramValue)
+          ? Object.entries(paramValue.filter_dict)
+          : [];
 
         return (
-          <div key={key} className="flex min-w-0 w-full flex-col gap-1.5">
-            <div title={key} className="w-full text-left min-w-0 wrap-break-word text-gray-400">
-              {key.split('.').at(-1)}
+          <div
+            key={paramKey}
+            id={`scan-params-item-${paramKey}`}
+            data-testid={`scan-params-item-${paramKey}`}
+            data-scan-config-selection-card-scan-params-item-param-key={paramKey}
+            className="flex min-w-0 w-full flex-col gap-1.5"
+          >
+            <div
+              title={paramKey}
+              className="w-full text-left min-w-0 wrap-break-word text-gray-400"
+            >
+              {paramKey.split('.').at(-1)}
             </div>
-            {neuronRefs.length > 0 ? (
+            {refs.length > 0 ? (
               <div className="flex w-full min-w-0 flex-wrap gap-1">
-                {neuronRefs.map((ref) => (
+                {refs.map((ref) => (
                   <Badge
-                    rounded
+                    id={ref.id_str}
                     key={ref.id_str}
                     variant="outline"
                     title={ref.id_str}
-                    className="max-w-full font-bold bg-white"
+                    className="max-w-full px-3 font-bold bg-white"
                     style={{ color }}
                   >
                     <span className="truncate select-none">
@@ -78,12 +132,34 @@ export function ScanParams({
                   </Badge>
                 ))}
               </div>
+            ) : filterEntries.length > 0 ? (
+              <div className="flex w-full min-w-0 flex-wrap gap-1">
+                {filterEntries.map(([property, values]) => (
+                  <Badge
+                    id={`${paramKey}-${property}`}
+                    key={property}
+                    variant="outline"
+                    title={`${property}: ${values.join(', ')}`}
+                    className="max-w-full px-3 font-bold bg-white"
+                    style={{ color }}
+                  >
+                    <span className="truncate select-none">
+                      {property}: {values.join(', ')}
+                    </span>
+                  </Badge>
+                ))}
+              </div>
             ) : (
-              <div
-                className="truncate font-bold text-ellipsis transition-colors duration-300 text-left"
-                style={{ color }}
-              >
-                {String(value)}
+              <div className="flex w-full min-w-0 flex-wrap gap-1">
+                <Badge
+                  id={`${paramKey}-value`}
+                  variant="outline"
+                  title={String(paramValue)}
+                  className="max-w-full px-3 font-bold bg-white"
+                  style={{ color }}
+                >
+                  <span className="truncate select-none">{String(paramValue)}</span>
+                </Badge>
               </div>
             )}
           </div>

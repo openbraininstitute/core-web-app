@@ -34,7 +34,7 @@ export default function ImageViewer({ entityId, entityType, assetId }: Props) {
       />
     ))
     .with({ cachedUrl, isCaching }, ({ cachedUrl: _cachedUrl }) => (
-      <div className="relative flex h-96 w-full max-w-2xl items-center justify-center">
+      <div className="relative flex h-96 w-full max-w-2xl items-center justify-center rounded-lg bg-white">
         <Image
           fill
           objectFit="contains"

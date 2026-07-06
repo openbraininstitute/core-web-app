@@ -24,13 +24,15 @@ export const EntityTypeDict = {
   IonChannelModelingCampaign: 'ion_channel_modeling_campaign',
   IonChannelModelingConfig: 'ion_channel_modeling_config',
   ValidationResult: 'validation_result',
-  Notebook: 'analysis_notebook_template',
+  AnalysisNotebookTemplate: 'analysis_notebook_template',
+  AnalysisNotebookResult: 'analysis_notebook_result',
   EMCellMesh: 'em_cell_mesh',
   SkeletonizationCampaign: 'skeletonization_campaign',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   CircuitExtractionConfig: 'circuit_extraction_config',
   EmSynapseMappingCampaign: 'em_synapse_mapping_campaign',
   EmSynapseMappingConfig: 'em_synapse_mapping_config',
+  SimulatableExtracellularRecordingArray: 'simulatable_extracellular_recording_array',
   TaskConfig: 'task_config',
 } as const;
 

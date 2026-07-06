@@ -3,7 +3,7 @@
  * this is used to unify the ui with the extraction/skeletonization tasks that are already using the new task runner
  */
 
-import { RightOutlined } from '@ant-design/icons';
+import { RiArrowRightSLine } from '@remixicon/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
 import { useEffect } from 'react';
@@ -270,13 +270,15 @@ function SimulationListItem({
               </span>
             )}
           </div>
-          <div className="ml-4 flex shrink-0">
+          <div className="ml-4 flex item-center justify-center gap-0.5 shrink-0">
             {statusLoading ? (
               <StatusBadgeSkeleton />
             ) : (
               <StatusBadge status={execStatus} details={statusDetails} />
             )}
-            <RightOutlined className="ml-2 text-sm text-gray-500" />
+            <div className="flex items-center justify-center">
+              <RiArrowRightSLine className="size-5 shrink-0 text-gray-500" />
+            </div>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   ephysControlLabelClass,
   ephysControlSubLabelClass,
+  ephysSelectClass,
 } from '@/features/ephys-viewer/label-styles';
 
 import type { JSX } from 'react';
@@ -42,7 +43,7 @@ function OptionSelect({
 
       <Select
         id="optionSelect"
-        className="w-[180px]"
+        className={ephysSelectClass(variant, 'w-[180px]')}
         value={value}
         placeholder="Please select"
         onChange={handleChange}

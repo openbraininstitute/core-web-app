@@ -1,0 +1,230 @@
+.tableOuter {
+  position: relative;
+  margin: 0.6em 0;
+  border: 1px solid #d9d9d9;
+  border-radius: 5px;
+  background: var(--color-neutral-9, #fff);
+  overflow: hidden;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 4px;
+
+  /* Smooth scrolling on touch devices */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Hover toolbar (download + fullscreen) ── */
+
+.toolbar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.tableOuter:hover .toolbar {
+  opacity: 1;
+}
+
+.toolbarBtn {
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  font-size: 11px;
+  color: white;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+
+.toolbarBtn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* ── Fullscreen table wrapper ── */
+
+.fullscreenTableWrapper {
+  overflow: auto;
+  max-width: 90vw;
+  max-height: 85vh;
+  padding: 1rem;
+}
+
+.fullscreenTableWrapper table {
+  font-size: 0.875rem;
+}
+
+.fullscreenToolbar {
+  position: absolute;
+  top: 56px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.fullscreenToolbarBtn {
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+}
+
+.fullscreenToolbarBtn:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* Scroll shadow indicators — fixed on edges, fade in/out */
+.shadowLeft,
+.shadowRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.shadowLeft {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.15), transparent);
+  border-radius: 4px 0 0 4px;
+}
+
+.shadowRight {
+  right: 0;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.15), transparent);
+  border-radius: 0 4px 4px 0;
+}
+
+.shadowLeft[data-visible="true"],
+.shadowRight[data-visible="true"] {
+  opacity: 1;
+}
+
+/* ── Shared table base ── */
+
+.tableCompact,
+.tableWide {
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.tableCompact th,
+.tableCompact td,
+.tableWide th,
+.tableWide td {
+  padding: 5px 10px;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-7));
+}
+
+.tableCompact th,
+.tableWide th {
+  position: sticky;
+  top: 0;
+  color: var(--color-primary-5, #003a8c);
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-8));
+  padding: 6px 10px;
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: left;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.tableCompact th:first-child,
+.tableWide th:first-child {
+  border-top-left-radius: 4px;
+}
+
+.tableCompact th:last-child,
+.tableWide th:last-child {
+  border-top-right-radius: 4px;
+}
+
+.tableCompact td,
+.tableWide td {
+  color: var(--color-neutral-1, #444);
+}
+
+.tableCompact tr:last-child td,
+.tableWide tr:last-child td {
+  border-bottom: none;
+}
+
+.tableCompact tr:hover td,
+.tableWide tr:hover td {
+  background-color: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-9));
+}
+
+/* Alternating row colors */
+.tableCompact tbody tr:nth-child(even) td,
+.tableWide tbody tr:nth-child(even) td {
+  background-color: color-mix(in srgb, var(--color-primary-6) 3%, var(--color-neutral-9));
+}
+
+.tableCompact tbody tr:nth-child(even):hover td,
+.tableWide tbody tr:nth-child(even):hover td {
+  background-color: color-mix(in srgb, var(--color-primary-6) 7%, var(--color-neutral-9));
+}
+
+/* ── Compact mode: single line, truncated, scrollable ── */
+
+.tableCompact {
+  width: max-content;
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+.tableCompact td {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Wide mode: cells wrap with clamped height ── */
+
+.tableWide {
+  width: max-content;
+  min-width: 100%;
+}
+
+.tableWide td,
+.tableWide th {
+  white-space: normal;
+  word-break: break-word;
+  min-width: 80px;
+  max-width: 260px;
+}
+
+/* Cell content clamp wrapper */
+.cellClamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

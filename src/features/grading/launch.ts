@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import { getNotebooks } from '@/api/entitycore/queries/notebook';
+import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
 import { tryCatch } from '@/api/utils';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
@@ -26,7 +26,7 @@ export const LAUNCH_PATHS = {
 
 export interface VerifiedParams {
   token: string;
-  exercise_id: string;
+  assignment_id: string;
   virtual_lab_id: string;
   exp: string;
   sig: string;
@@ -43,7 +43,7 @@ export type StartResult = { ok: true; url: string } | { ok: false; reason: Launc
 // arrive in, so it's the single input contract for `resolveGradingLaunch`.
 export type RawParams = {
   token?: string | null;
-  exercise_id?: string | null;
+  assignment_id?: string | null;
   virtual_lab_id?: string | null;
   exp?: string | null;
   sig?: string | null;
@@ -54,11 +54,12 @@ type VerificationResult =
   | { ok: false; reason: 'invalid' | 'expired' };
 
 // Sign the raw `exp` string from the URL (not the re-stringified int) so a value like
-// "007" round-trips without breaking the signature.
-function verifyLaunchParams(raw: RawParams, secret: string): VerificationResult {
-  const { token, exercise_id, virtual_lab_id, exp, sig } = raw;
+// "007" round-trips without breaking the signature. Exported for unit testing — the HMAC contract
+// must stay byte-for-byte in sync with grading-service (`token|assignment_id|virtual_lab_id|exp`).
+export function verifyLaunchParams(raw: RawParams, secret: string): VerificationResult {
+  const { token, assignment_id, virtual_lab_id, exp, sig } = raw;
 
-  if (!token || !exercise_id || !virtual_lab_id || !exp || !sig) {
+  if (!token || !assignment_id || !virtual_lab_id || !exp || !sig) {
     return { ok: false, reason: 'invalid' };
   }
   if (!/^\d+$/.test(exp)) {
@@ -70,7 +71,7 @@ function verifyLaunchParams(raw: RawParams, secret: string): VerificationResult 
     return { ok: false, reason: 'expired' };
   }
 
-  const signingString = `${token}|${exercise_id}|${virtual_lab_id}|${exp}`;
+  const signingString = `${token}|${assignment_id}|${virtual_lab_id}|${exp}`;
   const expected = createHmac('sha256', secret).update(signingString, 'utf8').digest('hex');
   const a = Buffer.from(expected, 'utf8');
   const b = Buffer.from(sig, 'utf8');
@@ -78,7 +79,7 @@ function verifyLaunchParams(raw: RawParams, secret: string): VerificationResult 
     return { ok: false, reason: 'invalid' };
   }
 
-  return { ok: true, params: { token, exercise_id, virtual_lab_id, exp, sig } };
+  return { ok: true, params: { token, assignment_id, virtual_lab_id, exp, sig } };
 }
 
 // The 5 signed params as a plain string record, ready for `URLSearchParams` / redirect building.
@@ -86,7 +87,7 @@ function verifyLaunchParams(raw: RawParams, secret: string): VerificationResult 
 export function signedParams(p: VerifiedParams): Record<string, string> {
   return {
     token: p.token,
-    exercise_id: p.exercise_id,
+    assignment_id: p.assignment_id,
     virtual_lab_id: p.virtual_lab_id,
     exp: p.exp,
     sig: p.sig,
@@ -208,20 +209,20 @@ export async function resolveGradingLaunch(raw: RawParams): Promise<LaunchResolu
   };
 }
 
-// Looks up the analysis notebook for an exercise within a project, then starts it carrying the
+// Looks up the analysis notebook for an assignment within a project, then starts it carrying the
 // grading payload. Shared by the route's single-project auto-launch and the picker's action.
 export async function startGradingNotebook(args: {
-  exercise_id: string;
+  assignment_id: string;
   virtual_lab_id: string;
   project_id: string;
   compute_cell: string;
   token: string;
 }): Promise<StartResult> {
-  const { exercise_id, virtual_lab_id, project_id, compute_cell, token } = args;
+  const { assignment_id, virtual_lab_id, project_id, compute_cell, token } = args;
 
   const { data: notebooksResponse, error: notebooksError } = await tryCatch(
-    getNotebooks({
-      filters: { exercise_id },
+    getAnalysisNotebookTemplates({
+      filters: { assignment_id },
       context: { virtualLabId: virtual_lab_id, projectId: project_id },
     })
   );
@@ -231,8 +232,8 @@ export async function startGradingNotebook(args: {
   }
   const notebookId = notebooksResponse?.data?.[0]?.id;
   if (!notebookId) {
-    log('info', '[grading-launch] no analysis notebook for exercise_id', {
-      exercise_id,
+    log('info', '[grading-launch] no analysis notebook for assignment_id', {
+      assignment_id,
       virtual_lab_id,
       project_id,
     });
@@ -249,7 +250,7 @@ export async function startGradingNotebook(args: {
       0,
       {
         token,
-        exercise_id,
+        assignment_id,
       }
     );
     if (!retval?.url) {

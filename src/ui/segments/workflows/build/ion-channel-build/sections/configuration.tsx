@@ -367,7 +367,7 @@ export function Configuration({ sessionId, originalConfig, readonly }: Props) {
 
   if (isLoading) return null;
   return (
-    <div className={cn('flex h-[calc(100vh-11rem)] w-full', { 'h-[calc(100vh-13rem)]': readonly })}>
+    <div className={cn('flex h-[calc(100vh-11rem)] w-full')}>
       <div className="bg-background flex w-80 shrink-0 flex-col">
         <ConfigurationSidebar
           blockGroups={BlockGroups}

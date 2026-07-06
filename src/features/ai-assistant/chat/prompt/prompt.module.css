@@ -1,0 +1,238 @@
+/* ===== Outer container — unchanged look ===== */
+.prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 0.9em;
+  color: #000;
+  padding: 0.35em;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--color-primary-9) 30%, var(--color-neutral-5));
+  background-color: #fff;
+  width: 100%;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.prompt:focus-within {
+  border-color: color-mix(in srgb, var(--color-primary-9) 45%, var(--color-neutral-5));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary-9) 10%, transparent);
+}
+
+.dragOver {
+  border-color: var(--color-primary-6);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-6) 25%, transparent);
+  background-color: color-mix(in srgb, var(--color-primary-9) 5%, #fff);
+}
+
+/* ===== Main grid — the animated wrapper ===== */
+.main {
+  display: grid;
+  align-items: center;
+  column-gap: 2px;
+  row-gap: 0;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "left text right";
+  overflow: hidden;
+  cursor: text;
+  transition: height 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.expanded {
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "text text text"
+    "left .    right";
+  row-gap: 2px;
+}
+
+/* ===== Textarea ===== */
+.textarea {
+  grid-area: text;
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+  line-height: 21px;
+  padding: 0 2px;
+  max-height: 100px;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  scrollbar-width: thin;
+  /* No height transition — so the line being typed is never clipped */
+}
+
+.expanded .textarea {
+  /* Ensure textarea ignores column sizing from the toolbar row */
+  min-width: 0;
+  max-width: calc(100% - 0.2em);
+  margin: 0.1em;
+}
+
+.textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.textarea::-webkit-scrollbar-thumb {
+  background-color: var(--color-neutral-5);
+  border-radius: 4px;
+}
+
+.textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.textarea::placeholder {
+  color: var(--color-neutral-4);
+}
+
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== Left actions (attach button) ===== */
+.leftActions {
+  grid-area: left;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: -0.2em;
+}
+
+/* ===== Right actions (send / stop) ===== */
+.rightActions {
+  grid-area: right;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== Attach button ===== */
+.attachButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  color: var(--color-neutral-3);
+  transition: color 0.15s ease;
+}
+
+.attachButton:hover {
+  color: var(--color-neutral-1);
+}
+
+.attachButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== Send button ===== */
+.sendButton {
+  transition: background-color 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-neutral-8);
+  color: var(--color-neutral-3);
+  border-radius: 50%;
+  padding: 0.5em;
+  width: 2.5em;
+  height: 2.5em;
+}
+
+.sendButton:not([disabled]) {
+  background-color: var(--color-primary-8);
+  color: var(--color-neutral-9);
+}
+
+.sendButton:hover:not([disabled]) {
+  background-color: var(--color-primary-6);
+}
+
+.sendButton[disabled] {
+  cursor: default;
+  color: var(--color-neutral-9);
+  background-color: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
+}
+
+/* ===== Stop button ===== */
+.stopButton {
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5em;
+  height: 2.5em;
+  transition:
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.stopButton:hover {
+  background-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+  box-shadow: 0 0 1px color-mix(in srgb, var(--color-error) 20%, transparent);
+}
+
+/* ===== Hidden file input ===== */
+.hiddenFileInput {
+  display: none;
+}
+
+/* ===== Spinner ===== */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-neutral-4);
+  border-top-color: var(--color-primary-5);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Hidden mirror for measuring line count ===== */
+.mirror {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  visibility: hidden;
+  box-sizing: border-box;
+  padding: 0 2px;
+  font-size: 15px;
+  line-height: 21px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .main {
+    transition: none;
+  }
+}

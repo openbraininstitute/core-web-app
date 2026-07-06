@@ -1,0 +1,222 @@
+.messageItem {
+  --size-icon: 48px;
+}
+
+.user {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 4px;
+  color: var(--color-on-primary);
+  margin: 14px 0;
+}
+
+.timestamp {
+  color: #000b;
+}
+
+.userAvatar {
+  content: "";
+  flex: 0 0 auto;
+  padding: 8px;
+  border-radius: 16px 0 0 16px;
+  background-color: var(--color-primary-5);
+  font-size: 1em;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.userAvatar > svg {
+  width: 1em;
+  height: 1em;
+}
+
+.icon {
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+.userContent {
+  position: relative;
+  max-width: 85%;
+  padding: 10px 12px;
+  border-radius: 14px 14px 2px 14px;
+  background-color: var(--color-primary-5);
+  color: var(--color-on-primary);
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: stretch;
+  margin-left: auto;
+}
+
+.userContent > div {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.userImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.userImageRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.userImagePlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.7em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pdfAttachment {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.12);
+  max-width: 100%;
+}
+
+.pdfIcon {
+  flex-shrink: 0;
+  font-size: 1.2em;
+  display: flex;
+  align-items: center;
+  color: #fff;
+}
+
+.pdfName {
+  font-size: 0.85em;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assistant {
+  position: relative;
+  background-color: var(--color-neutral-9);
+  border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  border-left: none;
+  border-radius: 4px 14px 14px 14px;
+  padding: 0;
+  margin: 14px 0;
+  overflow: hidden;
+  isolation: isolate;
+  min-height: 44px;
+}
+
+.assistant::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background-color: var(--color-primary-8);
+  border-radius: 40px;
+  z-index: 1;
+}
+
+.markdown {
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.markdown ul {
+  list-style: disc;
+}
+
+.markdown ol {
+  list-style: decimal;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0.4em 0;
+  padding: 0 2em;
+}
+
+.markdown li {
+  padding: 0;
+  margin: 0;
+  padding-left: 1em;
+  color: inherit;
+  font: inherit;
+}
+
+.markdown h3 {
+  font-weight: bolder;
+  font-size: 120%;
+  margin: 0.4em 0;
+}
+
+.markdown a {
+  color: var(--color-secondary-5);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+button.debugButton {
+  background: orange;
+  color: #000;
+  font-weight: bold;
+  border-radius: 99vmax;
+  padding: 0.25em 1em;
+  cursor: pointer;
+  margin: 0.5em 0;
+}
+
+div.info {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1em;
+  color: #000;
+  font-size: 0.85em;
+  padding-right: 8px;
+}
+
+div.price {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5em;
+}
+
+div.price > svg {
+  font-size: 1em;
+}
+
+.backupPlotsWrapper {
+  padding: 0 12px 8px 12px;
+}

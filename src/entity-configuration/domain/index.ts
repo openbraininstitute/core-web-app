@@ -1,3 +1,5 @@
+import { AnalysisNotebookResult } from '@/entity-configuration/domain/analysis-notebook-result';
+import { AnalysisNotebookTemplate } from '@/entity-configuration/domain/analysis-notebook-template';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
@@ -11,6 +13,8 @@ import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
+import { ExtracellularRecordingArrayCampaign } from '@/entity-configuration/domain/model/extracellular-recording-array-campaign';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
@@ -22,7 +26,6 @@ import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/singl
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { WholeBrain } from '@/entity-configuration/domain/model/whole-brain';
-import { Notebook } from '@/entity-configuration/domain/notebook';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   SimulationCampaign,
@@ -68,6 +71,8 @@ export const EntityCoreModelConfiguration = {
   IonChannelModel,
   IonChannelModelingCampaign,
   EmSynapseMappingCampaign,
+  ExtracellularRecordingArray,
+  ExtracellularRecordingArrayCampaign,
   SingleNeuronCircuit,
   SynthesizedCellMorphology,
 } as const;
@@ -101,7 +106,8 @@ export const EntityCoreConfiguration = {
   ...EntityCoreSimulationConfiguration,
   ...EntityCoreExtractionConfiguration,
   ...EntityCoreProcessingConfiguration,
-  Notebook,
+  AnalysisNotebookTemplate,
+  AnalysisNotebookResult,
 } as const;
 
 export type TEntityCoreConfigurationItem =

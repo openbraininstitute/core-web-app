@@ -16,6 +16,7 @@ export const ViewDefForPairedNeuronCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
+    EntityCoreFields.CircuitTargetSimulator,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],

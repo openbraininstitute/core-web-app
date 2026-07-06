@@ -1,0 +1,15 @@
+/*
+ * Overrides for @jupyter-kit/theme-default, scoped to the `.jupyter-kit`
+ * wrapper set by NotebookRenderer.
+ *
+ * Analysis runs can emit tens of thousands of warning lines on stdout/stderr.
+ * Cap text-based outputs (streams, plain text, tracebacks) at a fixed height
+ * and scroll the rest, instead of rendering every line inline. Rich outputs
+ * (images, plots, dataframes) are left untouched.
+ */
+.jupyter-kit .jknb-root .output_wrapper .output .output_text pre,
+.jupyter-kit .jknb-root .output_wrapper .output .output_stream pre,
+.jupyter-kit .jknb-root .output_wrapper .output .output_error pre {
+  max-height: 24em;
+  overflow-y: auto;
+}

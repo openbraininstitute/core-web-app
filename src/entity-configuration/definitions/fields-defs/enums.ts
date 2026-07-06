@@ -13,6 +13,7 @@ export enum CoreFieldFilterTypeEnum {
 export enum EntityCoreFields {
   ID = 'id',
   Preview = 'preview',
+  NotebookImagePreview = 'notebook_image_preview',
   Download = 'download',
   Name = 'name',
   Description = 'description',
@@ -82,6 +83,7 @@ export enum EntityCoreFields {
   TaskActivityStatus = 'task_activity_status',
   CircuitName = 'circuit_name',
   CircuitBuildCategory = 'build_category',
+  CircuitTargetSimulator = 'target_simulator',
   CircuitScale = 'scale',
   CircuitRootCircuit = 'root_circuit_id',
   ArtifactPublishedIn = 'published_in',
@@ -97,7 +99,6 @@ export enum EntityCoreFields {
   IonChannel = 'ion_channel',
   ICMThumbnail = 'icm_thumbnail',
   NotebookScale = 'notebook_scale',
-  NotebookActions = 'notebook_actions',
   DenseReconstructionCellId = 'dense_reconstruction_cell_id',
   GenerationType = 'generation_type',
   ProtocolDesign = 'protocol_design',
@@ -105,6 +106,11 @@ export enum EntityCoreFields {
   LevelOfDetail = 'level_of_detail',
   GenerationParameters = 'generation_parameters',
   MeshType = 'mesh_type',
+  HasSegmentedSpines = 'has_segmented_spines',
+  ElectrodeType = 'electrode_type',
+  RecordingArrayCircuit = 'circuit_id',
+  ReleaseVersion = 'release_version',
+  EmDenseReconstructionDatasetName = 'em_dense_reconstruction_dataset_name',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

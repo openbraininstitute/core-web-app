@@ -7,19 +7,14 @@ import * as Sentry from '@sentry/nextjs';
 import { config } from './config';
 
 Sentry.init({
+  debug: config.DEPLOYMENT_ENV === 'staging',
   dsn: config.SENTRY_DSN,
-  integrations: [Sentry.replayIntegration()],
-  tracesSampleRate: 1,
   enableLogs: true,
-  replaysSessionSampleRate: config.DEPLOYMENT_ENV === 'production' ? 0.1 : 1,
+  integrations: [Sentry.replayIntegration()],
+  release: config.APP_VERSION,
   replaysOnErrorSampleRate: 1.0,
-  debug: !['staging', 'production', 'local'].includes(config.DEPLOYMENT_ENV),
-  beforeSend(event) {
-    if (['test', 'preview', 'local'].includes(config.DEPLOYMENT_ENV || '')) {
-      return null;
-    }
-    return event;
-  },
+  replaysSessionSampleRate: config.DEPLOYMENT_ENV === 'production' ? 0.1 : 1,
+  tracesSampleRate: 1,
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

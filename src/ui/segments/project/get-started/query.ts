@@ -86,3 +86,57 @@ export interface IQuickAccessList {
   title: string;
   list?: Array<TQuickAccessItem>;
 }
+
+export const ProjectHomeGetStartedQuery = defineQuery(
+  `*[_type == "projectHome"][0]{
+    "getStarted": getStarted[]{
+      _key,
+      title,
+      description,
+      label,
+      link,
+      thumbnailType,
+      video,
+      "image": image.asset->{"url": url, "width": metadata.dimensions.width, "height": metadata.dimensions.height},
+      "resources": resources[]{
+        _key,
+        label,
+        link
+      }
+    },
+    "obiAssistant": obiAssistant[]{
+      _key,
+      title,
+      question
+    }
+  }`
+);
+
+export type TProjectHomeResource = {
+  _key: string;
+  label: string;
+  link: string;
+};
+
+export type TProjectHomeGetStartedCard = {
+  _key: string;
+  title: string;
+  description: string;
+  label: string;
+  link: string;
+  thumbnailType: 'video' | 'image';
+  video?: string;
+  image?: { url: string; width: number; height: number };
+  resources: Array<TProjectHomeResource>;
+};
+
+export type TObiAssistantTopic = {
+  _key: string;
+  title: string;
+  question: string;
+};
+
+export type TProjectHomeData = {
+  getStarted: TProjectHomeGetStartedCard[] | null;
+  obiAssistant: TObiAssistantTopic[] | null;
+};

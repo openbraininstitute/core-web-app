@@ -1,0 +1,740 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 1px 0;
+  margin: 6px 0;
+}
+
+.card {
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  background-color: color-mix(in srgb, var(--color-primary-6) 4%, var(--color-neutral-9));
+  transition:
+    box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-visible-tools] .card {
+  animation: tp-card-entrance 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+[data-collapsing] .card {
+  animation: none;
+}
+
+.card:not(.cardRunning):not(.cardError):not(.cardApproval):not(.cardDenied):hover {
+  border-color: color-mix(in srgb, var(--color-primary-6) 40%, var(--color-neutral-5));
+}
+
+.header:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+}
+
+.cardRunning {
+  border-color: rgba(191, 219, 254, 0.5);
+  background-color: #eff6ff;
+}
+
+.cardRunning:hover {
+  border-color: #93c5fd;
+}
+
+.cardError {
+  border-color: rgba(252, 165, 165, 0.5);
+  background-color: #fef2f2;
+}
+
+.cardError:hover {
+  border-color: #f87171;
+}
+
+/* Running state - blue color scheme overrides */
+.cardRunning .toolName {
+  color: #1e40af;
+}
+
+.cardRunning .iconWrapper {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+}
+
+.cardRunning .chevron {
+  fill: #1e40af;
+}
+
+.cardRunning .expandButton {
+  color: #1e40af;
+}
+
+.cardRunning .expandButton:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #1e3a8a;
+}
+
+.cardRunning .helpButton {
+  color: #1e40af;
+}
+
+.cardRunning .helpButton:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #1e3a8a;
+}
+
+.cardRunning .details {
+  background-color: #f8faff;
+}
+
+.cardRunning .detailsOpen {
+  border-top-color: rgba(147, 197, 253, 0.5);
+}
+
+.cardRunning .sectionTitle {
+  color: #2563eb;
+}
+
+.cardRunning .codeBlock {
+  border-color: rgba(191, 219, 254, 0.5);
+  background-color: #ffffff;
+  color: #1e293b;
+}
+
+/* Error state - red color scheme overrides */
+.cardError .toolName {
+  color: #991b1b;
+}
+
+.cardError .iconWrapper {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.cardError .chevron {
+  fill: #991b1b;
+}
+
+.cardError .expandButton {
+  color: #991b1b;
+}
+
+.cardError .expandButton:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #7f1d1d;
+}
+
+.cardError .helpButton {
+  color: #991b1b;
+}
+
+.cardError .helpButton:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #7f1d1d;
+}
+
+.cardError .details {
+  background-color: #fffbfb;
+}
+
+.cardError .detailsOpen {
+  border-top-color: rgba(252, 165, 165, 0.5);
+}
+
+.cardError .sectionTitle {
+  color: #dc2626;
+}
+
+.cardError .codeBlock {
+  border-color: rgba(252, 165, 165, 0.4);
+  background-color: #ffffff;
+  color: #1e293b;
+}
+
+.cardExpanded {
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+[data-visible-tools] .card:not(.cardRunning):not(.cardApproval):not(.cardError):not(.cardDenied) {
+  background-color: var(--color-neutral-9);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.iconWrapper {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, transparent);
+  color: var(--color-primary-8);
+  transition:
+    background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.iconWrapperRunning {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+}
+
+.spinningIcon {
+  animation: tp-spin 1s linear infinite;
+}
+
+@keyframes tp-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.content {
+  min-width: 0;
+  flex: 1;
+}
+
+.toolName {
+  font-size: 0.875rem;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--color-primary-8);
+}
+
+.status {
+  margin-top: 0.125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.statusRunning {
+  color: #1d4ed8;
+}
+.statusComplete {
+  color: var(--color-secondary-5);
+}
+
+.statusError {
+  color: #dc2626;
+}
+
+.statusText {
+  margin-left: 0.25rem;
+}
+
+.checkIcon {
+  height: 0.875rem;
+  width: 0.875rem;
+  stroke-width: 3;
+  animation: tp-scale-up 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.restoreButton {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 150ms;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: var(--color-primary-6);
+}
+
+.restoreButton:hover {
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-7));
+  color: var(--color-primary-8);
+}
+
+.restoreButton:active {
+  transform: scale(0.95);
+}
+
+.restoreIcon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.diffButton {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 150ms;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: #6b7280;
+}
+
+.diffButton:hover {
+  transform: scale(1.1);
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.diffButton:active {
+  transform: scale(0.95);
+}
+
+.diffButtonActive {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.diffIcon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.blockCount {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.expandButton,
+.helpButton {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 150ms;
+  border: none;
+  cursor: pointer;
+}
+
+.expandButton {
+  color: var(--color-primary-6);
+  background: none;
+}
+
+.expandButton:hover {
+  background-color: color-mix(in srgb, var(--color-primary-6) 8%, transparent);
+  color: var(--color-primary-8);
+}
+
+.expandButton:active {
+  transform: scale(0.95);
+}
+
+.helpButton {
+  color: var(--color-primary-6);
+  text-decoration: none;
+}
+
+.helpButton:hover {
+  background-color: color-mix(in srgb, var(--color-primary-6) 8%, transparent);
+  color: var(--color-primary-8);
+}
+
+.helpButton:active {
+  transform: scale(0.95);
+}
+
+.helpIcon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.chevron {
+  height: 0.5rem;
+  width: 0.5rem;
+  transform: rotate(90deg);
+  transform-origin: center;
+  fill: var(--color-primary-6);
+  transition: transform 300ms ease-out;
+  display: block;
+}
+
+.chevronExpanded {
+  transform: rotate(270deg);
+}
+
+.details {
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--color-primary-6) 2%, var(--color-neutral-9));
+  transition:
+    max-height 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-top-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-top: 1px solid transparent;
+  opacity: 0;
+  max-height: 0;
+  padding: 0 0.75rem;
+}
+
+.detailsInner {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.detailsOpen {
+  border-top-color: color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  opacity: 1;
+  max-height: 640px;
+  padding: 0.75rem;
+}
+
+.detailsClosed {
+  border-top-color: transparent;
+  opacity: 0;
+  max-height: 0;
+  padding: 0 0.75rem;
+}
+
+.section {
+  margin-bottom: 0.75rem;
+  transform-origin: top left;
+  animation: none;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  margin-bottom: 0.375rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-primary-6);
+  text-transform: uppercase;
+}
+
+.codeBlock {
+  max-height: 15rem;
+  overflow: auto;
+  border-radius: 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary-6) 15%, var(--color-neutral-6));
+  background-color: #ffffff;
+  padding: 0.625rem 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.625;
+  color: #1e293b;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  white-space: pre;
+}
+
+@keyframes tp-card-entrance {
+  from {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes tp-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tp-scale-up {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.errorText {
+  color: #dc2626;
+}
+
+/* Approval states */
+.cardApproved {
+  border-color: rgba(74, 224, 90, 0.4);
+  background-color: rgba(74, 224, 90, 0.04);
+}
+
+.cardApproved .toolName {
+  color: var(--color-secondary-5);
+}
+
+.iconWrapperApproved {
+  background-color: rgba(74, 224, 90, 0.1);
+  color: var(--color-secondary-5);
+}
+
+.cardApproval {
+  border-color: rgba(245, 158, 11, 0.6);
+  background-color: #fffdf5;
+}
+
+.cardApproval:hover {
+  border-color: #f59e0b;
+}
+
+.iconWrapperApproval {
+  background-color: rgba(251, 191, 36, 0.1);
+  color: #d97706;
+}
+
+.statusApproval {
+  color: #d97706;
+  font-weight: 600;
+}
+
+/* Override tool name color in approval state */
+.cardApproval .toolName {
+  color: #92400e;
+}
+
+/* Override chevron color in approval state */
+.cardApproval .chevron {
+  fill: #92400e;
+}
+
+.cardApproval .expandButton {
+  color: #92400e;
+}
+
+.cardApproval .expandButton:hover {
+  background-color: rgba(251, 191, 36, 0.15);
+  color: #78350f;
+}
+
+/* Override details section for approval state */
+.cardApproval .details {
+  background-color: #fffef5;
+}
+
+.cardApproval .detailsOpen {
+  border-top-color: rgba(251, 191, 36, 0.4);
+}
+
+.cardApproval .sectionTitle {
+  color: #b45309;
+}
+
+.cardApproval .codeBlock {
+  border-color: rgba(251, 191, 36, 0.3);
+  background-color: #ffffff;
+  color: #1c1917;
+}
+
+.cardDenied {
+  border-color: rgba(252, 165, 165, 0.5);
+  background-color: #fef2f2;
+}
+
+.cardDenied:hover {
+  border-color: #f87171;
+}
+
+.cardDenied .toolName {
+  color: #991b1b;
+}
+
+.cardDenied .iconWrapper {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.cardDenied .chevron {
+  fill: #991b1b;
+}
+
+.cardDenied .expandButton {
+  color: #991b1b;
+}
+
+.cardDenied .expandButton:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #7f1d1d;
+}
+
+.cardDenied .details {
+  background-color: #fffbfb;
+}
+
+.cardDenied .detailsOpen {
+  border-top-color: rgba(252, 165, 165, 0.5);
+}
+
+.cardDenied .sectionTitle {
+  color: #dc2626;
+}
+
+.cardDenied .codeBlock {
+  border-color: rgba(252, 165, 165, 0.4);
+  background-color: #ffffff;
+  color: #1e293b;
+}
+
+.statusDenied {
+  color: #dc2626;
+}
+
+/* Approval action buttons */
+.rejectButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  border: 1px solid #ef4444;
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    color 150ms;
+}
+
+.rejectButton:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+.approveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-secondary-5);
+  background-color: rgba(74, 224, 90, 0.12);
+  color: var(--color-secondary-5);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    color 150ms;
+}
+
+.approveButton:hover {
+  background-color: rgba(74, 224, 90, 0.08);
+  border-color: #4ae05a;
+  color: #4ae05a;
+}
+
+/* Field-level labels for code-aware rendering */
+.fieldRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.fieldLabel {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--color-neutral-2, #888);
+  text-transform: capitalize;
+  margin-bottom: 0.2rem;
+}
+
+.fieldValue {
+  color: var(--color-neutral-1, #444);
+  font-size: 0.75rem;
+}
+
+/* Approval action bar — bottom of card */
+.approvalBar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-top: 1px solid rgba(251, 191, 36, 0.3);
+  background-color: rgba(251, 191, 36, 0.04);
+  border-radius: 0 0 8px 8px;
+}
+
+.approvalBarReject {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+
+.approvalBarReject:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+.approvalBarApprove {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(74, 224, 90, 0.6);
+  background-color: rgba(74, 224, 90, 0.18);
+  color: var(--color-secondary-5, #062);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+
+.approvalBarApprove:hover {
+  background-color: rgba(74, 224, 90, 0.25);
+  border-color: #4ae05a;
+}

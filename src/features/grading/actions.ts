@@ -31,11 +31,11 @@ export async function launchGradingNotebook(input: LaunchGradingInput): Promise<
   log('info', '[grading-launch] action: launching', {
     virtual_lab_id: params.virtual_lab_id,
     project_id: input.project_id,
-    exercise_id: params.exercise_id,
+    assignment_id: params.assignment_id,
   });
 
   return startGradingNotebook({
-    exercise_id: params.exercise_id,
+    assignment_id: params.assignment_id,
     virtual_lab_id: params.virtual_lab_id,
     project_id: input.project_id,
     compute_cell: cloud,

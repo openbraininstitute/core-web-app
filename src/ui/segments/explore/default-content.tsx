@@ -22,7 +22,7 @@ export function DefaultContent({ children, dataKey }: Props) {
         id="explore-left-menu"
         data-testid="explore-left-menu"
         className={cn(
-          'h-full max-h-[calc(100vh-11.8rem)] px-1 min-h-0 w-full overflow-hidden [grid-area:aside]',
+          'h-full max-h-[calc(100vh-10.8rem)] px-1 min-h-0 w-full overflow-hidden [grid-area:aside]',
           { hidden: mdv }
         )}
       >

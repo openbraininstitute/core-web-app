@@ -31,8 +31,8 @@ import {
 } from '@/ui/segments/project/get-started/query';
 import { cn } from '@/utils/css-class';
 
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   IVirtualLabExpandedResponse,
@@ -81,7 +81,7 @@ export function MainCardItem({
         );
       }
       if (group === QuickAccessGroupDict.Notebooks) {
-        const asset = (entity as INotebook).assets.find(
+        const asset = (entity as IAnalysisNotebookTemplate).assets.find(
           (n) => n.label === AssetLabel.jupyter_notebook
         );
         if (!asset) return null;
@@ -279,7 +279,7 @@ export function SingleCardItem({
         );
       }
       if (group === QuickAccessGroupDict.Notebooks) {
-        const asset = (entity as INotebook).assets.find(
+        const asset = (entity as IAnalysisNotebookTemplate).assets.find(
           (n) => n.label === AssetLabel.jupyter_notebook
         );
         if (!asset) return null;

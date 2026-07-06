@@ -10,7 +10,11 @@ import InteractivePlot, {
 } from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
-import { ephysHeadingClass, ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
+import {
+  ephysHeadingClass,
+  ephysSectionLabelClass,
+  ephysSelectClass,
+} from '@/features/ephys-viewer/label-styles';
 import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 
@@ -274,7 +278,7 @@ function TraceDetailsView({
             Select cell ({cellIds.length} available)
           </div>
           <Select
-            className="cell-select w-48"
+            className={ephysSelectClass(variant, 'cell-select w-48')}
             placeholder="Select a cell"
             value={selectedCellId}
             onChange={setSelectedCellId}

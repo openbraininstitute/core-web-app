@@ -8,6 +8,7 @@ import type {
   EntityCoreFields,
   EntityCoreFieldsValue,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { TSpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type CoreFilterValues = {
@@ -111,6 +112,10 @@ export type TFieldApiContext = {
   dataType: TExtendedEntitiesTypeDict;
   section?: TWorkspaceSection;
   scope?: TWorkspaceScope;
+  /** taxonomy id of the species selected in the hierarchy view, when focused on a single species */
+  selectedSpecies?: string;
+  /** hierarchy species selector mode for the current data browse context */
+  speciesSelectionMode?: TSpeciesSelectionMode;
 };
 
 export type TMatchable<T> = T | readonly T[];
@@ -127,6 +132,8 @@ export type TFieldApiWhen = {
   dataType?: TMatchable<TExtendedEntitiesTypeDict>;
   section?: TMatchable<TWorkspaceSection>;
   scope?: TMatchable<TWorkspaceScope>;
+  selectedSpecies?: TMatchable<string>;
+  speciesSelectionMode?: TMatchable<TSpeciesSelectionMode>;
 };
 
 /**
@@ -238,6 +245,13 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
    */
   isDisplayable?: boolean;
   order?: OrderShape;
+  /**
+   * Opt-in client-side ordering for this field's CheckList facet options.
+   * Facet options otherwise render in the order the backend returns them.
+   * `'numeric'` sorts them ascending by numeric value (e.g. release versions
+   * `1, 2, 10` instead of the backend's alphanumeric `1, 10, 2`).
+   */
+  sortFacetOptions?: 'numeric';
   unit?: ReactNode;
   group?: StructuralDomain;
   render?: (entity: T, i?: number, variant?: TViewVariant) => ReactNode;
@@ -256,6 +270,7 @@ export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
 
 export const DetailViewSectionsDict = {
   Overview: 'overview',
+  MeshViewer: 'mesh-viewer',
   Results: 'results',
   Analysis: 'analysis',
   RelatedPublications: 'related-publications',

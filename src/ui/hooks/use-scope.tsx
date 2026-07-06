@@ -1,9 +1,7 @@
 import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
 import { useTransition } from 'react';
 
-import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
-
-export const SCOPE_QUERY_PARAMS = 'scope';
+import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
 
 export function useScope(config?: { defaultScope?: TWorkspaceScope; clearOnDefault?: boolean }) {
   const [isPending, startTransition] = useTransition();

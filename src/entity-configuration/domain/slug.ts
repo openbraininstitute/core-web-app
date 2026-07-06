@@ -23,6 +23,8 @@ export const ModelEntitySlug = {
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
   SingleNeuronCircuit: 'single-neuron-circuit',
   EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
+  ExtracellularRecordingArray: 'extracellular-recording-array',
+  ExtracellularRecordingArrayCampaign: 'extracellular-recording-array-campaign',
 } as const;
 
 const SimulationEntitySlug = {
@@ -53,7 +55,8 @@ export const EntitySlug = {
   ...SimulationEntitySlug,
   ...ExtractionEntitySlug,
   ...ProcessingEntitySlug,
-  Notebook: 'notebook',
+  AnalysisNotebookTemplate: 'template',
+  AnalysisNotebookResult: 'results',
 } as const;
 
 export type EntitySlugValue = (typeof EntitySlug)[keyof typeof EntitySlug];

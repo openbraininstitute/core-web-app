@@ -188,6 +188,8 @@ export function BrowseEntityScope({
     virtualLabId,
     projectId,
   });
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
@@ -202,8 +204,6 @@ export function BrowseEntityScope({
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
 
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
-  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
   const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   // track stable species identity (`all` vs hierarchy id).
@@ -444,7 +444,7 @@ export function BrowseEntityScope({
         id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
         className={cn(
-          'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
+          'h-full max-h-[calc(100vh-10.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
           classNames?.container
         )}
       >
@@ -503,13 +503,13 @@ export function BrowseEntityScope({
         <div
           id="mini-detail-view-container"
           className={cn(
-            'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
+            'h-full max-h-[calc(100vh-10.8rem)] w-full min-w-0',
             '[grid-area:mini-view]',
             { hidden: !mdv },
             classNames?.miniView
           )}
         >
-          <MiniDetailView {...miniViewProps} dataType={dataType} />
+          <MiniDetailView section={section} {...miniViewProps} dataType={dataType} />
         </div>
       )}
       <DownloadPanel />

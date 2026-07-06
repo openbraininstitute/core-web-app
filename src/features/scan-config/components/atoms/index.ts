@@ -263,7 +263,7 @@ export function useModelQuery({
   const isLoading = entityLoading || modelLoading;
   const error = entityError || modelError;
 
-  return { entity, isLoading, error };
+  return { entity, entityType, isLoading, error };
 }
 
 export const jsonFileAtomFamily = readAtomFamilyWithExpiration(

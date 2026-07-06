@@ -23,7 +23,12 @@ import {
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import {
+  BrowseExperimentalDataExtendedTypes,
+  ModelDataExtendedTypes,
+} from '@/ui/segments/explore/helpers';
 import { ensureArray } from '@/utils/array';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -159,6 +164,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isFilterable: false,
     isDisplayable: false,
+    // hidden by default, but shown as a column for analysis notebook results,
+    // which surface the last-update date instead of the registration date
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: { dataType: ExtendedEntitiesTypeDict.AnalysisNotebookResult },
+              value: true,
+            },
+          ],
+        },
+      },
+    },
   },
   [EntityCoreFields.Description]: {
     title: 'Description',
@@ -182,9 +202,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Contributors',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>
-      transformAgentToNames(
-        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
-        false
+      renderEmptyOrValue(
+        transformAgentToNames(
+          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
+            .contributions,
+          false
+        )
       ),
     renderForDetailView: (r) =>
       renderContributors(
@@ -227,9 +250,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Institutional Contributors',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>
-      transformAgentToNames(
-        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
-        false
+      renderEmptyOrValue(
+        transformAgentToNames(
+          (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null })
+            .contributions,
+          false
+        )
       ),
     renderForDetailView: (r) =>
       renderContributors(
@@ -319,6 +345,34 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             {
               when: {
                 dataType: [
+                  ...Object.values(BrowseExperimentalDataExtendedTypes).map(
+                    (entity) => entity.extendedType
+                  ),
+                  ...Object.values(ModelDataExtendedTypes)
+                    .filter(
+                      (e) => e.extendedType !== ExtendedEntitiesTypeDict.SingleNeuronSynaptome
+                    )
+                    .map((entity) => entity.extendedType),
+                ],
+                section: [WorkspaceSection.Data],
+              },
+              value: true,
+            },
+            {
+              when: {
+                dataType: [
+                  ExtendedEntitiesTypeDict.IonChannelRecording,
+                  ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                  ExtendedEntitiesTypeDict.Emodel,
+                  ExtendedEntitiesTypeDict.Memodel,
+                ],
+                section: [WorkspaceSection.BuildWorkflow],
+              },
+              value: true,
+            },
+            {
+              when: {
+                dataType: [
                   ExtendedEntitiesTypeDict.Circuit,
                   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
                   ExtendedEntitiesTypeDict.MemodelCircuit,
@@ -327,7 +381,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ExtendedEntitiesTypeDict.Microcircuit,
                   ExtendedEntitiesTypeDict.BrainRegion,
                   ExtendedEntitiesTypeDict.EMCellMesh,
-                  ExtendedEntitiesTypeDict.IonChannelModel,
                   ExtendedEntitiesTypeDict.Memodel,
                 ],
                 section: [
@@ -355,6 +408,31 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             {
               when: {
                 dataType: [
+                  ...Object.values(BrowseExperimentalDataExtendedTypes).map(
+                    (entity) => entity.extendedType
+                  ),
+                  ...Object.values(ModelDataExtendedTypes)
+                    .filter(
+                      (e) => e.extendedType !== ExtendedEntitiesTypeDict.SingleNeuronSynaptome
+                    )
+                    .map((entity) => entity.extendedType),
+                ],
+                section: [WorkspaceSection.Data],
+                speciesSelectionMode: SpeciesSelectionMode.All,
+              },
+              value: false,
+            },
+            {
+              when: {
+                dataType: [ExtendedEntitiesTypeDict.IonChannelRecording],
+                section: [WorkspaceSection.BuildWorkflow],
+                speciesSelectionMode: SpeciesSelectionMode.All,
+              },
+              value: false,
+            },
+            {
+              when: {
+                dataType: [
                   ExtendedEntitiesTypeDict.Circuit,
                   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
                   ExtendedEntitiesTypeDict.MemodelCircuit,
@@ -363,7 +441,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ExtendedEntitiesTypeDict.Microcircuit,
                   ExtendedEntitiesTypeDict.BrainRegion,
                   ExtendedEntitiesTypeDict.EMCellMesh,
-                  ExtendedEntitiesTypeDict.IonChannelModel,
                   ExtendedEntitiesTypeDict.Memodel,
                 ],
                 section: [
@@ -462,6 +539,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     isFilterable: true,
     isDisplayable: true,
+    style: { width: 130 },
   },
   [EntityCoreFields.StrainName]: {
     title: 'Strain',

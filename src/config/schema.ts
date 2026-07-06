@@ -35,8 +35,6 @@ const configFields = {
     public: false,
   },
 
-  GITHUB_TOKEN: { schema: z.string().optional(), public: false },
-
   GITHUB_FEEDBACK_TOKEN: { schema: z.string().optional(), public: false },
   GITHUB_FEEDBACK_PROJECT_ID: { schema: z.string().optional(), public: false },
 

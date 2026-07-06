@@ -1,0 +1,170 @@
+.chatContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+
+.articles {
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 14px;
+
+  /*
+   * Force the scrollbar to behave as "floating" (overlay) on all platforms:
+   * - Firefox: scrollbar-width: none hides the native scrollbar entirely.
+   * - Chrome/Safari: ::-webkit-scrollbar { display: none } does the same.
+   * The element remains fully scrollable (wheel, trackpad, keyboard, touch).
+   * A custom OverlayScrollbar component renders a floating thumb on top.
+   * This eliminates the random padding caused by scrollbar-gutter: stable
+   * being ignored when the OS switches between overlay and classic scrollbars.
+   */
+  scrollbar-width: none; /* Firefox */
+}
+
+.articles::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.articlesWrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bottomBar {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer {
+  width: 100%;
+  padding: 0.4em;
+  padding-top: 0.2em;
+  background-color: var(--color-neutral-8);
+  box-shadow: 0 -2px 6px var(--color-neutral-8);
+  position: relative;
+  z-index: 2;
+  order: 2;
+}
+
+/*
+ * The diff bar slider sits ABOVE the footer in visual order (order: 1)
+ * but the footer's z-index: 2 covers it. The inner content uses translateY
+ * to slide up from behind the footer edge.
+ */
+.diffBarSlider {
+  order: 1;
+  overflow: hidden;
+  max-height: 0;
+  position: relative;
+  z-index: 1;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.diffBarSliderVisible {
+  max-height: 56px;
+}
+
+.diffBarInner {
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.diffBarSliderVisible .diffBarInner {
+  transform: translateY(0);
+}
+
+.bottom {
+  content: "";
+  height: 1em;
+}
+
+.notificationOverlay {
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  padding: 8px 1em;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.notificationOverlay > * {
+  pointer-events: auto;
+}
+
+button.actionButton {
+  font: inherit;
+  border: 2px solid #f0f0f0;
+  background: #fff;
+  border-radius: 999vmax;
+  box-shadow:
+    0 0.5em 1em #0004,
+    0 -0.5em 0.5em #fff;
+  line-height: 2;
+  padding: 0 1em;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+}
+
+.footerButtons {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  margin: 1em 0;
+}
+
+.suggestedQuestionsContainer {
+  margin-top: auto;
+}
+
+.suggestedQuestionsContainerInChat {
+  margin-top: auto;
+  padding-bottom: 1em;
+}
+
+.spinnerContainer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+}
+
+.spinnerContainer > * {
+  flex: 1 1 auto;
+}
+
+.creditBalanceIndicator {
+  font-size: 13px;
+  color: #8c8c8c;
+  padding: 0 1em 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--color-neutral-7);
+  border: none;
+}
+
+.messageItem {
+  margin: 14px 0;
+}

@@ -1,7 +1,8 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { Suspense, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { Suspense, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -37,11 +38,13 @@ import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletoniza
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { clearDiffStateAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
@@ -66,6 +69,7 @@ type Props = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
 export function ScanConfigTemplate(props: Props) {
@@ -95,6 +99,7 @@ function ScanConfigTemplateContent({
   campaignOriginAction,
   workflowSessionSelection,
   resolveSessionFromIdType,
+  taskTypeBindings,
 }: Props) {
   const browseOverlayContext = useScanConfigMainOverlayOptional();
   const browseOverlay = browseOverlayContext?.overlay;
@@ -123,6 +128,18 @@ function ScanConfigTemplateContent({
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
+  const clearDiffState = useSetAtom(clearDiffStateAtom);
+  const previousSchemaName = usePrevious(schemaName);
+  useEffect(() => {
+    // reset the global sidebar expansion/highlight state back to its idle default ("Info")
+    clearDiffState();
+    // guard the no-remount case (shared configure route, schema unchanged between workflows)
+    if (previousSchemaName !== undefined && previousSchemaName !== schemaName) {
+      setTab(defaultTab);
+      setSelectedRootElement(firstRoot ?? '');
+    }
+  }, [schemaName, clearDiffState, previousSchemaName, defaultTab, firstRoot]);
+
   useAgentState(
     aiEnabled
       ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined)
@@ -142,36 +159,48 @@ function ScanConfigTemplateContent({
           projectId={projectId}
           campaignOriginAction={campaignOriginAction}
           isCampaignIdChanged={isCampaignIdChanged}
+          taskTypeBindings={taskTypeBindings}
         />
       </Suspense>
     ))
-    .with(ScanConfigActivity.Extract, () => (
-      <Suspense>
-        <ExtractionTab
-          isCampaignIdChanged={isCampaignIdChanged}
-          campaignOriginAction={campaignOriginAction}
-          campaignId={campaignId}
-        />
-      </Suspense>
-    ))
-    .with(ScanConfigActivity.Process, () => (
-      <Suspense>
-        <SkeletonizationTab
-          campaignId={campaignId}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-        />
-      </Suspense>
-    ))
-    .with(ScanConfigActivity.Build, () => (
-      <Suspense>
-        <BuildTab
-          isCampaignIdChanged={isCampaignIdChanged}
-          campaignOriginAction={campaignOriginAction}
-          campaignId={campaignId}
-        />
-      </Suspense>
-    ))
+    .with(ScanConfigActivity.Extract, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <ExtractionTab
+            isCampaignIdChanged={isCampaignIdChanged}
+            campaignOriginAction={campaignOriginAction}
+            campaignId={campaignId}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
+    .with(ScanConfigActivity.Process, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <SkeletonizationTab
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            campaignOriginAction={campaignOriginAction}
+            isCampaignIdChanged={isCampaignIdChanged}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
+    .with(ScanConfigActivity.Build, () =>
+      taskTypeBindings ? (
+        <Suspense>
+          <BuildTab
+            isCampaignIdChanged={isCampaignIdChanged}
+            campaignOriginAction={campaignOriginAction}
+            campaignId={campaignId}
+            taskTypeBindings={taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
     .otherwise(() => {
       throw new Error(`${activity} is not supported yet`);
     });
@@ -252,7 +281,6 @@ function ScanConfigTemplateContent({
             {editing && selectedSchema !== undefined && (
               <Middle
                 key={`${schemaName}_${selectedRootElement}_${selectedEntry}`}
-                schemaName={schemaName}
                 schema={schema}
                 selectedRootElement={selectedRootElement}
                 editing={editing}

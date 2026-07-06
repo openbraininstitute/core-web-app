@@ -21,6 +21,7 @@ import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
+import { EmptyValue, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -219,6 +220,19 @@ export function WorkflowActivity() {
       key: 'creation_date',
       render: (_, record) => {
         return <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>;
+      },
+    },
+    {
+      title: 'Created by',
+      dataIndex: 'created_by',
+      key: 'created_by',
+      onHeaderCell: () => ({
+        id: 'activity-table-created-by-cell-selector',
+      }),
+      render: (_, record) => {
+        const createdBy =
+          'created_by' in record ? renderEmptyOrValue(record.created_by?.pref_label) : EmptyValue;
+        return <span className="text-primary-9">{createdBy}</span>;
       },
     },
     {
@@ -450,7 +464,7 @@ export function WorkflowActivity() {
           records: WorkflowTaskCampaignRow['rows'],
           originalRecord: WorkflowTaskCampaignRow
         ) => TaskViewConfig.render(originalRecord, records),
-        expandIconColumnIndex: 5,
+        expandIconColumnIndex: 6,
         expandIcon: TaskViewConfig.expandIcon,
         isRowExpandable: (): boolean => true,
         isTopLevel: true,
@@ -476,7 +490,7 @@ export function WorkflowActivity() {
           },
           records
         ),
-      expandIconColumnIndex: 5,
+      expandIconColumnIndex: 6,
       expandIcon: simulationCampaignExpandedViewConfig.expandIcon,
       isRowExpandable: (): boolean => true,
       isTopLevel: true,

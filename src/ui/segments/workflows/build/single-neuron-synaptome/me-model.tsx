@@ -1,12 +1,10 @@
 'use client';
 
-import { isNil, kebabCase } from 'es-toolkit/compat';
+import { isNil } from 'es-toolkit/compat';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { config } from '@/config';
 import { WorkspaceSection } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
@@ -14,6 +12,9 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { cn } from '@/utils/css-class';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+
+import type { IMEModel } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -70,7 +71,11 @@ export function MEModel({ sessionId }: Props) {
           selectionType: 'radio',
           onCellClick: (_, record) => {
             navigate(
-              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`
+              `${resolveExploreDetailsPageUrl({
+                ctx: { virtualLabId, projectId },
+                entityId: record.id,
+                dataType: ExtendedEntitiesTypeDict.Memodel,
+              })}/overview`
             );
           },
           onRowsSelected: (rows) => {

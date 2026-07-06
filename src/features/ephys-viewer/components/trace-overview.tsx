@@ -8,7 +8,11 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { CHART_LINE_COLOR } from '@/features/ephys-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import { ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
+import {
+  ephysHeadingClass,
+  ephysSectionLabelClass,
+  ephysSelectClass,
+} from '@/features/ephys-viewer/label-styles';
 import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
@@ -31,6 +35,7 @@ interface ImageSetComponentProps {
   repetitionMap: Map<string, string[]>;
   singleRecMultiCellMode: boolean;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
+  variant?: TViewVariant;
 }
 
 interface CellComponentProps {
@@ -40,6 +45,7 @@ interface CellComponentProps {
   singleRecMultiCellMode: boolean;
   showCellLabel?: boolean;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
+  variant?: TViewVariant;
 }
 
 interface TraceOverviewComponentProps {
@@ -156,6 +162,7 @@ function ImageSetComponent({
   repetitionMap,
   singleRecMultiCellMode,
   onRepetitionClick,
+  variant = ViewVariant.Light,
 }: ImageSetComponentProps) {
   const repetitions = repetitionMap.get(protocol) ?? [];
 
@@ -186,7 +193,9 @@ function ImageSetComponent({
         onClick={onRepetitionClick(protocol, repetition)}
         type="button"
       >
-        <span className="text-lg">{singleRecMultiCellMode ? cellId : repetition}</span>
+        <span className={cn('text-lg', variant === ViewVariant.Default && 'text-white')}>
+          {singleRecMultiCellMode ? cellId : repetition}
+        </span>
 
         <div
           className={
@@ -221,7 +230,7 @@ function ImageSetComponent({
 
   return (
     <div className="divide-neutral-2 flex flex-col gap-3 divide-y">
-      <div className="text-primary-9 flex items-baseline gap-2 text-lg font-bold">
+      <div className={ephysHeadingClass(variant, 'flex items-baseline gap-2 text-lg')}>
         {protocol}
         <small className="font-light">{`${repetitions.length} ${
           repetitions.length === 1 ? 'repetition' : 'repetitions'
@@ -240,6 +249,7 @@ function CellComponent({
   onRepetitionClick,
   singleRecMultiCellMode,
   showCellLabel,
+  variant = ViewVariant.Light,
 }: CellComponentProps) {
   const repetitionMap = useMemo(
     () =>
@@ -259,6 +269,7 @@ function CellComponent({
       repetitionMap={repetitionMap}
       onRepetitionClick={onRepetitionClick}
       singleRecMultiCellMode={singleRecMultiCellMode}
+      variant={variant}
     />
   ));
 
@@ -266,7 +277,7 @@ function CellComponent({
 
   return (
     <div className="flex flex-col gap-5">
-      {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
+      {showCellLabel && <div className={ephysHeadingClass(variant)}>{cellId}</div>}
       {content}
     </div>
   );
@@ -321,7 +332,7 @@ export default function TraceOverview({
         <div className={cn('flex flex-col gap-2', ephysSectionLabelClass(variant))}>
           Select cell ({cellIds.length} available)
           <Select
-            className="cell-select"
+            className={ephysSelectClass(variant, 'cell-select')}
             placeholder="Select a cell"
             value={cellId}
             onChange={onCellIdChange}
@@ -340,7 +351,7 @@ export default function TraceOverview({
         <div className={cn('flex flex-col gap-2', ephysSectionLabelClass(variant))}>
           Select Stimulus ({allProtocols.length} available)
           <Select
-            className="stimulus-select"
+            className={ephysSelectClass(variant, 'stimulus-select')}
             placeholder="Select a stimulus"
             value={protocol}
             onChange={onProtocolChange}
@@ -365,6 +376,7 @@ export default function TraceOverview({
             onRepetitionClick={onRepetitionClick}
             singleRecMultiCellMode={singleRecMultiCellMode}
             showCellLabel={cellIds.length > 1}
+            variant={variant}
           />
         ))}
       </div>

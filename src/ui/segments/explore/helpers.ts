@@ -7,6 +7,7 @@ import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -23,8 +24,34 @@ import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/s
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
 
-export const ExperimentalEntitiesTileTypes = {
-  ReconstructionMorphology: CellMorphology,
+export const ExploreDataTypeTabs = {
+  Experimental: 'experimental',
+  Models: 'models',
+  Simulations: 'simulations',
+} as const;
+
+export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
+
+export const DataSectionDataTypeTabsConfig: Array<{
+  key: TExploreDataTypeTabs;
+  title: string;
+}> = [
+  {
+    key: ExploreDataTypeTabs.Experimental,
+    title: 'Experimental',
+  },
+  {
+    key: ExploreDataTypeTabs.Models,
+    title: 'Model',
+  },
+  {
+    key: ExploreDataTypeTabs.Simulations,
+    title: 'Simulations',
+  },
+];
+
+export const BrowseExperimentalDataExtendedTypes = {
+  CellMorphology,
   ElectricalCellRecording,
   IonChannelRecording,
   NeuronDensity,
@@ -33,7 +60,7 @@ export const ExperimentalEntitiesTileTypes = {
   EmCellMesh,
 } as const;
 
-export const ModelEntitiesTileTypes = {
+export const ModelDataExtendedTypes = {
   SingleNeuronSynaptome,
   SingleNeuronCircuit,
   Emodel,
@@ -41,9 +68,10 @@ export const ModelEntitiesTileTypes = {
   Circuit,
   IonChannelModel,
   SynthesizedCellMorphology,
+  ExtracellularRecordingArray,
 } as const;
 
-export const SimulationEntitiesTileTypes = {
+export const SimulationDataExtendedTypes = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
   MEModelCircuitSimulation,

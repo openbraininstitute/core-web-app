@@ -16,6 +16,7 @@ export const ViewDefForSmallMicrocircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
+    EntityCoreFields.CircuitTargetSimulator,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],

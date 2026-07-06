@@ -2,12 +2,10 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { ViewVariant, WorkspaceSection } from '@/constants';
+import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
@@ -25,14 +23,22 @@ import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activit
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type Props = {
   campaignId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
+  /** obi-one + entitycore task types for this workflow (from its definition) */
+  taskTypeBindings: TWorkflowTaskTypeBindings;
 };
 
-export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdChanged }: Props) {
+export function ExtractionTab({
+  campaignId,
+  campaignOriginAction,
+  isCampaignIdChanged,
+  taskTypeBindings,
+}: Props) {
   const context = useWorkspace();
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] = useState<ITaskConfig<TTaskConfigMeta> | null>(null);
@@ -43,8 +49,8 @@ export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdCh
 
   const { mutateAsync: runExtraction, isPending: runExtractionPending } = useTaskLaunchMutation({
     context,
-    obiOneTaskType: ObiOneTaskTypeDict.CircuitExtraction,
-    executionActivityType: TaskActivityType.CircuitExtractionExecution,
+    obiOneTaskType: taskTypeBindings.obiOne,
+    executionActivityType: taskTypeBindings.execution,
     notificationKey: 'extraction-config-error',
     failureMessage: 'We ran into a problem launching your extraction. Please try again later.',
     logTopic: 'Extraction',
@@ -55,9 +61,9 @@ export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdCh
     useTaskRunner<TTaskConfigMeta>({
       context,
       campaignId,
-      configGenerationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
-      executionActivityType: TaskActivityType.CircuitExtractionExecution,
-      taskConfigType: TaskConfigType.CircuitExtractionConfig,
+      configGenerationActivityType: taskTypeBindings.configGeneration,
+      executionActivityType: taskTypeBindings.execution,
+      taskConfigType: taskTypeBindings.config,
       pauseExecutionPolling: runExtractionPending,
       loadExecutions: false,
     });
@@ -122,101 +128,120 @@ export function ExtractionTab({ campaignId, campaignOriginAction, isCampaignIdCh
     setSelectedConfigIds([]);
   };
 
+  const costModalItems = useMemo(
+    () =>
+      (configsResponse?.configList ?? [])
+        .filter((c) => resolvedSelectedConfigIds.includes(c.id))
+        .map((c) => ({ id: c.id, name: c.name })),
+    [configsResponse?.configList, resolvedSelectedConfigIds]
+  );
+
+  const { openModal, modal: costConfirmationModal } = useCostConfirmation({
+    items: costModalItems,
+    taskType: taskTypeBindings.obiOne,
+    workflowLabel: 'extractions',
+    context,
+    onConfirm: onRun,
+  });
+
   const launchBtnLabelPrefix = resolvedSelectedConfigIds.length
     ? `(${resolvedSelectedConfigIds.length})`
     : '';
   const loading = configGenerationLoading || configsLoading;
 
   return (
-    <ResultsLayout
-      campaignId={campaignId}
-      left={
-        <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
-          <TaskConfigSelectionList
-            campaignId={campaignId}
-            configs={configs}
-            selectableConfigIds={selectableConfigIds}
-            selectedConfigIds={resolvedSelectedConfigIds}
-            activeConfigId={resolvedActiveConfig?.id}
-            loading={loading}
-            selectionDisabled={runExtractionPending}
-            fallbackColor="#004793"
-            context={context}
-            executionActivityType={TaskActivityType.CircuitExtractionExecution}
-            pauseStatusPolling={runExtractionPending}
-            executionByConfigId={executionByConfigId}
-            onSelectConfig={onActiveConfigChange}
-            onCheckedChange={onSelectedForExtractionChange}
-            onToggleSelectAll={(checked) =>
-              setSelectedConfigIds(checked ? selectableConfigIds : [])
-            }
-            onExecutionLoad={onExecutionLoad}
-          />
-          <TaskLaunchButton
-            label="Launch extractions"
-            countLabel={launchBtnLabelPrefix}
-            pending={runExtractionPending}
-            disabled={runExtractionPending || resolvedSelectedConfigIds.length === 0}
-            onClick={() => onRun(resolvedSelectedConfigIds)}
-            className="rounded-full"
-          />
-        </div>
-      }
-      middle={
-        !!resolvedActiveConfig && (
-          <div className="h-full bg-background! w-full">
-            <InOutFiles
-              config={resolvedActiveConfig}
-              execStatus={activeConfigExecStatus}
-              execution={activeConfigExecution}
-              selectedFile={selectedFile}
+    <>
+      <ResultsLayout
+        campaignId={campaignId}
+        left={
+          <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
+            <TaskConfigSelectionList
+              campaignId={campaignId}
+              configs={configs}
+              selectableConfigIds={selectableConfigIds}
+              selectedConfigIds={resolvedSelectedConfigIds}
+              activeConfigId={resolvedActiveConfig?.id}
+              loading={loading}
+              selectionDisabled={runExtractionPending}
+              fallbackColor="#004793"
               context={context}
-              campaignOrigin={campaignOriginAction}
-              onSelect={setSelectedFile}
+              executionActivityType={taskTypeBindings.execution}
+              pauseStatusPolling={runExtractionPending}
+              executionByConfigId={executionByConfigId}
+              onSelectConfig={onActiveConfigChange}
+              onCheckedChange={onSelectedForExtractionChange}
+              onToggleSelectAll={(checked) =>
+                setSelectedConfigIds(checked ? selectableConfigIds : [])
+              }
+              onExecutionLoad={onExecutionLoad}
+            />
+            <TaskLaunchButton
+              label="Launch extractions"
+              countLabel={launchBtnLabelPrefix}
+              pending={runExtractionPending}
+              disabled={runExtractionPending || resolvedSelectedConfigIds.length === 0}
+              onClick={openModal}
+              className="rounded-full"
             />
           </div>
-        )
-      }
-      right={
-        <>
-          {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
-            <FileViewer file={selectedFile} className="h-full" context={context} />
-          )}
-          {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
-            <div className="h-full">
-              <MiniDetailViewRenderer
-                section={WorkspaceSection.Data}
-                record={selectedFile.entity as ICircuit}
-                dataType={ExtendedEntitiesTypeDict.Circuit}
-                theme={ViewVariant.Light}
-                enableAnimation={false}
+        }
+        middle={
+          !!resolvedActiveConfig && (
+            <div className="h-full bg-background! w-full">
+              <InOutFiles
+                config={resolvedActiveConfig}
+                execStatus={activeConfigExecStatus}
+                execution={activeConfigExecution}
+                selectedFile={selectedFile}
+                context={context}
+                campaignOrigin={campaignOriginAction}
+                onSelect={setSelectedFile}
               />
             </div>
-          )}
-          {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
-            <TaskConfigurationViewer
-              jobId={activeExecutionJobId}
-              workspace={context}
-              configId={resolvedActiveConfig?.id}
-              enabled={taskLogsViewerEnabled}
-              skipStream
-              campaignOriginAction={campaignOriginAction}
-              isCampaignIdChanged={isCampaignIdChanged}
-            />
-          )}
-          {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
-            <TaskLogsViewer
-              jobId={activeExecutionJobId}
-              workspace={context}
-              configId={resolvedActiveConfig?.id}
-              enabled={taskLogsViewerEnabled}
-              skipStream={taskLogsShouldReadSnapshot}
-              campaignOriginAction={campaignOriginAction}
-              isCampaignIdChanged={isCampaignIdChanged}
-            />
-          )}
-        </>
-      }
-    />
+          )
+        }
+        right={
+          <>
+            {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
+              <FileViewer file={selectedFile} className="h-full w-full" context={context} />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
+              <div className="h-full w-full">
+                <MiniDetailViewRenderer
+                  section={WorkspaceSection.Data}
+                  record={selectedFile.entity as ICircuit}
+                  dataType={ExtendedEntitiesTypeDict.Circuit}
+                  theme={ViewVariant.Light}
+                  enableAnimation={false}
+                />
+              </div>
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+              <TaskConfigurationViewer
+                jobId={activeExecutionJobId}
+                workspace={context}
+                configId={resolvedActiveConfig?.id}
+                enabled={taskLogsViewerEnabled}
+                skipStream
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+              <TaskLogsViewer
+                jobId={activeExecutionJobId}
+                workspace={context}
+                configId={resolvedActiveConfig?.id}
+                enabled={taskLogsViewerEnabled}
+                skipStream={taskLogsShouldReadSnapshot}
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
+            )}
+          </>
+        }
+      />
+      {costConfirmationModal}
+    </>
   );
 }

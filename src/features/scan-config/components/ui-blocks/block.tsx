@@ -1,6 +1,7 @@
 import { isNil } from 'es-toolkit/compat';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
   type Config,
@@ -8,7 +9,6 @@ import {
   type ConfigValue,
   isType,
   ScanConfigUIElementDict,
-  type SchemaName,
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -21,7 +21,6 @@ import type { TSchemaMappingConfiguration } from '@/features/scan-config/compone
 import type { Nullish } from '@/utils/type';
 
 export default function Block({
-  schemaName,
   schema,
   disabled,
   blockSchema,
@@ -35,7 +34,6 @@ export default function Block({
   selectedEntry,
   errorPathPrefix,
 }: {
-  schemaName: SchemaName;
   schema: ConfigSchema;
   disabled: boolean;
   config: Config;
@@ -94,7 +92,9 @@ export default function Block({
                 !isType(paramSchema) &&
                 !paramSchema.ui_hidden &&
                 (paramSchema.ui_element !== ScanConfigUIElementDict.Reference ||
-                  Boolean(schema.default_block_reference_labels?.[paramSchema.reference_type]))
+                  paramSchema.reference_types.some(
+                    (refType) => !!schema.default_block_reference_labels?.[refType]
+                  ))
             )
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;
@@ -140,14 +140,13 @@ export default function Block({
                               k={k}
                               disabled={disabled}
                               paramSchema={blockElementSchema}
-                              value={value}
                               config={config}
                               schema={schema}
-                              schemaName={schemaName}
                               entity={entity}
                               schemaMappingConfig={schemaMappingConfig}
                               state={state}
                               setState={setState}
+                              selectedEntry={selectedEntry}
                               errorPathPrefix={
                                 errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
                               }
@@ -174,9 +173,27 @@ export default function Block({
                     </TooltipContent>
                   </Tooltip>
 
-                  {blockSchema.required?.includes(k) && isNil(value) && (
-                    <span className="text-red-500">Required</span>
-                  )}
+                  {(() => {
+                    if (
+                      blockElementSchema.ui_element === ScanConfigUIElementDict.NeuronPropertyFilter
+                    ) {
+                      const { population, properties } = resolveNeuronFilterProperties(
+                        blockElementSchema,
+                        state,
+                        schemaMappingConfig
+                      );
+                      // A population is chosen but exposes no filterable properties:
+                      // a data condition, not a missing input, so say so instead of "Required".
+                      if (population && Object.keys(properties).length === 0) {
+                        return <span className="text-red-500">No properties available</span>;
+                      }
+                    }
+
+                    return (
+                      blockSchema.required?.includes(k) &&
+                      isNil(value) && <span className="text-red-500">Required</span>
+                    );
+                  })()}
                 </div>
               );
             })}

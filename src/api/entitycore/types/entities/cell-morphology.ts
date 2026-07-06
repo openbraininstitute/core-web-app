@@ -112,6 +112,7 @@ export interface ICellMorphology
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
   cell_morphology_protocol: NestedCellMorphologyProtocolRead;
+  has_segmented_spines?: boolean | null;
 }
 
 export interface ICellMorphologyExpanded extends ICellMorphology {

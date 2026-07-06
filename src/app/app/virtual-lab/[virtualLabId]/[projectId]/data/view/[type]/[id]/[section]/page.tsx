@@ -33,7 +33,9 @@ export default async function Page({
     })
   );
 
-  if (!entity || error) notFound();
+  if (!entity || error) {
+    notFound();
+  }
 
   const content = detailPageSectionRenderer({
     context,

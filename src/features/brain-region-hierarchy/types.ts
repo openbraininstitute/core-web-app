@@ -4,26 +4,26 @@ export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
   'Homo sapiens': 'Human',
   'Mus musculus': 'Mouse',
   'Rattus norvegicus': 'Rat',
+  'Drosophila melanogaster': 'Fruit Fly',
   'Aquarana catesbeiana': 'American Bullfrog',
   'Cricetulus griseus': 'Chinese Hamster',
   'Felis catus': 'Cat',
   'Hybrid human-mouse': 'Hybrid Human-Mouse',
   'Loligo pealeii': 'Longfin Squid',
   'Xenopus laevis': 'African Clawed Frog',
-  'Drosophila melanogaster': 'Fruit Fly',
 } as const;
 
 export const SPECIES_SUBTITLES: Record<string, string> = {
   'Homo sapiens': 'Homo sapiens',
   'Mus musculus': 'Mus musculus',
   'Rattus norvegicus': 'Rattus norvegicus',
+  'Drosophila melanogaster': 'Drosophila melanogaster',
   'Aquarana catesbeiana': 'Aquarana catesbeiana',
   'Cricetulus griseus': 'Cricetulus griseus',
   'Felis catus': 'Felis catus',
   'Hybrid human-mouse': 'Hybrid human-mouse',
   'Loligo pealeii': 'Loligo pealeii',
   'Xenopus laevis': 'Xenopus laevis',
-  'Drosophila melanogaster': 'Drosophila melanogaster',
 } as const;
 
 /**
@@ -33,13 +33,13 @@ export const SPECIES_TAXONOMY_IDS = {
   HOMO_SAPIENS: 'NCBITaxon:9606',
   MUS_MUSCULUS: 'NCBITaxon:10090',
   RATTUS_NORVEGICUS: 'NCBITaxon:10116',
+  DROSOPHILA_MELANOGASTER: 'NCBITaxon:7227',
   AQUARANA_CATESBEIANA: 'NCBITaxon:8400',
   CRICETULUS_GRISEUS: 'NCBITaxon:10029',
   FELIS_CATUS: 'NCBITaxon:9685',
   HYBRID_HUMAN_MOUSE: 'NA',
   LOLIGO_PEALEII: 'NCBITaxon:6619',
   XENOPUS_LAEVIS: 'NCBITaxon:8355',
-  DROSOPHILA_MELANOGASTER: 'NCBITaxon:7227',
 } as const;
 
 /**

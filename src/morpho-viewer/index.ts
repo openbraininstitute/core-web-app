@@ -13,6 +13,7 @@ export type {
   ColoringType,
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
+  MorphoViewerOctreeProps,
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
   MorphoViewerSynapsesGroup,

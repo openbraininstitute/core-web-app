@@ -4,7 +4,7 @@ import { RiChatAiLine } from '@remixicon/react';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 
-import { promptAtom } from '@/components/ai-assistant/state';
+import { promptAtom } from '@/features/ai-assistant/state';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 

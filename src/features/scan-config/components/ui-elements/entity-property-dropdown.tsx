@@ -1,5 +1,6 @@
 import { Select } from 'antd';
 import { get } from 'es-toolkit/compat';
+import { useEffect, useMemo } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -11,20 +12,31 @@ export default function EntityPropertyDropdown({
   property,
   disabled = false,
   schemaMappingConfig,
+  multiple = true,
 }: {
-  value: string[];
-  onChange: (v: string[]) => void;
+  value: string | Array<string>;
+  onChange: (v: string | Array<string>) => void;
   property: string;
   disabled?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  multiple?: boolean;
 }) {
-  const options = get(schemaMappingConfig?.properties, property, []) as string[];
+  const options = useMemo(
+    () => get(schemaMappingConfig?.properties, property, []) as Array<string>,
+    [schemaMappingConfig?.properties, property]
+  );
+
+  useEffect(() => {
+    if (options.length > 0 && value.length === 0) {
+      onChange([options[0]]);
+    }
+  }, [options, onChange, value]);
 
   return (
     <Select
-      data-scan-config-block-element={ScanConfigUIElementDict.EntityPropertyDropdown}
+      data-scan-config-block-element={`${ScanConfigUIElementDict.EntityPropertyDropdown}__${multiple ? 'multiple' : 'singular'}`}
       showSearch
-      mode="multiple"
+      mode={multiple ? 'multiple' : undefined}
       disabled={disabled}
       className="w-full"
       value={value}
