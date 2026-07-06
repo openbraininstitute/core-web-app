@@ -73,4 +73,3 @@ export function isNotebook(entity: EntityCoreObjectTypes): entity is IAnalysisNo
   if (entity.type === 'analysis_notebook_template') return true;
   return false;
 }
-  
