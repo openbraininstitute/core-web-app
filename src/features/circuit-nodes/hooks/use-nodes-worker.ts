@@ -151,11 +151,21 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     };
   }, [status, openResult]);
 
+  const getColumn = useMemo(() => {
+    return async (name: string) => {
+      const current = workerRef.current;
+      if (!current) throw new Error('Nodes worker not ready');
+      return current.proxy.getColumn(name);
+    };
+  }, []);
+
   return {
     rowCount: openResult?.rowCount ?? 0,
     filteredCount,
     columns: openResult?.columns,
     datasource,
+    getColumn,
+    status,
     isLoading: status === 'loading',
     progress,
     error,

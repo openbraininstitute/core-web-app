@@ -1,4 +1,10 @@
-export type ColumnKind = 'numeric' | 'categorical' | 'string';
+export const ColumnKindDict = {
+  Numeric: 'numeric',
+  Categorical: 'categorical',
+  String: 'string',
+} as const;
+
+export type ColumnKind = (typeof ColumnKindDict)[keyof typeof ColumnKindDict];
 
 export type ColumnMeta = {
   name: string;
