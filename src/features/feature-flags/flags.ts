@@ -28,20 +28,7 @@ export const brainRegionSimulationFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
-  defaultValue: false,
-  values: [true, false],
-  description: 'Extracellular recording array build',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
-
-export const flags = [
-  aiPanelStateFlag,
-  extractionActivityFlag,
-  brainRegionSimulationFlag,
-  extracellularRecordingArrayBuildFlag,
-] as const;
+export const flags = [aiPanelStateFlag, extractionActivityFlag, brainRegionSimulationFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 
