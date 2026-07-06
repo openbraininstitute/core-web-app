@@ -42,7 +42,7 @@
     "@lezer/javascript": "^1.5.4",
     "@monaco-editor/react": "^4.7.0",
     "@octokit/core": "^7.0.6",
-    "@openbraininstitute/morphoviewer": "github:openbraininstitute/morphoviewer#feat/color-by-node-property",
+    "@openbraininstitute/morphoviewer": "file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz",
     "@portabletext/react": "^6.2.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-checkbox": "^1.3.3",
