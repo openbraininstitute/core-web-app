@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { LoadingNeuronSpinner } from '@/components/neuron-viewer/';
-import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
+import { MorphoViewerSmallCircuit, type MorphoViewerSmallCircuitProps } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -19,6 +19,18 @@ export interface ViewerLayoutProps {
 export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
   const [progress, setProgress] = React.useState(0);
   const circuitLoader = useCircuitLoader(model);
+  const synapses: MorphoViewerSmallCircuitProps['synapses'] = React.useMemo(() => {
+    const { synapses } = circuitLoader;
+    const count = synapses.length;
+    return synapses.map((synapse, index) => {
+      const hue = 120 + (360 * index) / count;
+      const color = `hsl(${hue} 100% 50%)`;
+      return {
+        color,
+        coordinates: synapse.coordinates,
+      };
+    });
+  }, [circuitLoader, circuitLoader.synapses]);
   const loaded = circuitLoader.useLoaded();
   const ready = loaded && progress >= 1;
   const error = circuitLoader.useError();
@@ -49,6 +61,9 @@ export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
             {loaded && (
               <MorphoViewerSmallCircuit
                 circuit={circuitLoader.circuit}
+                synapses={synapses}
+                synapsesRadius={0.5}
+                synapsesMinRadiusInPixels={2}
                 loadCell={circuitLoader.loadCell}
                 onLoadProgress={setProgress}
                 gizmo

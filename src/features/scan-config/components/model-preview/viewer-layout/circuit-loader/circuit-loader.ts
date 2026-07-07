@@ -1,6 +1,13 @@
-import { Dataset, type Entity, File as H5File, ready } from 'h5wasm';
+import { Dataset, type Entity, Group, File as H5File, ready } from 'h5wasm';
 
 import { downloadAsset, getAssets, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
+import {
+  type MorphoViewerSmallCircuitCell,
+  type MorphoViewerSmallCircuitCellData,
+  MorphoViewerTreeItemType,
+  sdfCapsuleWithNormal,
+} from '@/morpho-viewer';
+import { center, distanceSquare, scale, subtract, type Vec3 } from '@/morpho-viewer/sdf/_common';
 import GenericEvent from '@/util/generic-event';
 import { assertType } from '@/util/type-guards';
 import { logError } from '@/utils/logger';
@@ -8,13 +15,10 @@ import { logError } from '@/utils/logger';
 import { CircuitConfig } from './circuit-config';
 import { Report } from './report';
 import { convertSwcToTree } from './swc';
+import { transform } from './transform';
 
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
-import type {
-  MorphoViewerSmallCircuitCell,
-  MorphoViewerSmallCircuitCellData,
-} from '@/morpho-viewer';
 
 export class CircuitLoader {
   public readonly report = new Report();
@@ -34,6 +38,10 @@ export class CircuitLoader {
   });
 
   private morphologiesDir = '';
+
+  private _synapses: { coordinates: Float32Array; populationName: string }[] = [];
+
+  private readonly cacheCells = new Map<string, Promise<MorphoViewerSmallCircuitCellData | null>>();
 
   constructor(
     private readonly model: TSupportedEntitiesForScanConfiguration,
@@ -55,6 +63,10 @@ export class CircuitLoader {
     return this._circuit;
   }
 
+  get synapses() {
+    return this._synapses;
+  }
+
   get loaded(): boolean {
     return this._loaded;
   }
@@ -66,17 +78,30 @@ export class CircuitLoader {
   }
 
   readonly loadCell = async (id: string): Promise<MorphoViewerSmallCircuitCellData | null> => {
+    const fromCache = this.cacheCells.get(id);
+    if (fromCache) return fromCache;
+
+    const cell = this.loadCellNow(id);
+    this.cacheCells.set(id, cell);
+    return cell;
+  };
+
+  private async loadCellNow(id: string) {
     try {
       const morphologyFilename = `${this.morphologiesDir}/${id}.swc`;
       const morphology = await this.loadText(morphologyFilename);
+      console.log(`Cell id: "${id}"`);
+      console.log('File name:', morphologyFilename);
+      console.log(morphology);
       const tree = convertSwcToTree(morphology);
-      return { type: 'tree', data: tree };
+      const cell: MorphoViewerSmallCircuitCellData = { type: 'tree', data: tree };
+      return cell;
     } catch (error) {
       const { report } = this;
       report.logFailure(error);
       return null;
     }
-  };
+  }
 
   private async initialize() {
     const { model, virtualLabId, projectId, report } = this;
@@ -104,6 +129,8 @@ export class CircuitLoader {
       const nodeSet = await this.loadNodeSet();
       const circuit = await this.getMorphoViewerSmallCircuitCells(nodeSet);
       this._circuit = circuit;
+      const synapses = await this.getAfferentSynapses();
+      this._synapses = synapses;
       this.loaded = true;
     } catch (error) {
       report.logFailure(error);
@@ -125,6 +152,165 @@ export class CircuitLoader {
         return;
       }
     }
+  }
+
+  /**
+   * Retrieve afferent synapses from the SONATA file and return an array
+   * with elements beging: a Float32Array of coordinates [x, y, z, ...] for each synapse.
+   *
+   * @see https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html?__cf_chl_f_tk=8LaFE6S6ks0.NQd7i94pJOFTxRY348hcHmlSApXEXlM-1783337207-1.0.1.1-tyiZ9zw5F15QapS7mvqX6n9W5epT6n7_Q5P0BREj_9Q#fields-for-edges
+   */
+  private async getAfferentSynapses(): Promise<
+    Array<{ coordinates: Float32Array; populationName: string }>
+  > {
+    const { report, circuitConfig } = this;
+    const { config } = circuitConfig;
+    if (config.networks.edges.length === 0) {
+      report.logTask('No edges found in circuit config.');
+      return [];
+    }
+    const results: Array<{ coordinates: Float32Array; populationName: string }> = [];
+    for (const edge of config.networks.edges) {
+      report.logTask(`Loading edges file "${edge.edges_file}"...`);
+      const edgesFile = await this.loadH5(edge.edges_file);
+      for (const populationName of Object.keys(edge.populations)) {
+        report.logTask(`Reading afferent synapse positions for population "${populationName}"...`);
+        if (!this.hasDataset(edgesFile, `edges/${populationName}/0/afferent_surface_x`)) {
+          report.logTask(`No afferent_surface dataset found!`);
+          continue;
+        }
+        const ds = (name: string) =>
+          this.getDataset(edgesFile, `edges/${populationName}/${name}`, assertArrayNumber);
+        const arrXs = ds('0/afferent_surface_x');
+        const arrXc = ds('0/afferent_center_x');
+        const arrYs = ds('0/afferent_surface_y');
+        const arrYc = ds('0/afferent_center_y');
+        const arrZs = ds('0/afferent_surface_z');
+        const arrZc = ds('0/afferent_center_z');
+        const arrId = ds('0/afferent_section_id');
+        const arrTarget = ds('target_node_id');
+        const coordinates = new Float32Array(arrXs.length * 3);
+        for (let i = 0; i < arrXs.length; i++) {
+          // Somas have always a section id equal to zero.
+          const isSoma = arrId[i] === 0;
+          if (!isSoma) continue;
+
+          const [x, y, z] = await this.stickSynapsesToSoma(
+            isSoma,
+            arrXs[i],
+            arrYs[i],
+            arrZs[i],
+            arrXc[i],
+            arrYc[i],
+            arrZc[i],
+            arrTarget[i]
+          );
+          coordinates[i * 3] = x;
+          coordinates[i * 3 + 1] = y;
+          coordinates[i * 3 + 2] = z;
+          console.log('🐞 [circuit-loader@211] x,y,z =', x, y, z); // @FIXME: Remove this line written on 2026-07-07 at 17:16
+        }
+        report.logTask(`Loaded ${arrXs.length} afferent synapses for "${populationName}".`);
+        results.push({ coordinates, populationName });
+      }
+    }
+    return results;
+  }
+
+  /**
+   *
+   * @param x
+   * @param y
+   * @param z
+   * @param type
+   * @returns
+   */
+  private async stickSynapsesToSoma(
+    isSoma: boolean,
+    xSurface: number,
+    ySurface: number,
+    zSurface: number,
+    xCenter: number,
+    yCenter: number,
+    zCenter: number,
+    cellIndex: number
+  ): Promise<[number, number, number]> {
+    if (!isSoma) return [xSurface, ySurface, zSurface];
+
+    const surface: Vec3 = [xSurface, ySurface, zSurface];
+    const sdf = await this.createSomaSDF(cellIndex);
+    const { distance, normal } = sdf(surface);
+    return subtract(surface, scale(normal, distance));
+  }
+
+  private async createSomaSDF(
+    cellIndex: number
+  ): Promise<(p: Vec3) => { distance: number; normal: Vec3 }> {
+    const cellDef = this.circuit[cellIndex];
+    if (!cellDef) {
+      throw new Error(`Cell #${cellIndex} has no morphology!`);
+    }
+
+    const morphologyId = cellDef.id;
+    const capsules: Array<
+      [
+        x0: number,
+        y0: number,
+        z0: number,
+        r0: number,
+        x1: number,
+        y1: number,
+        z1: number,
+        r1: number,
+      ]
+    > = [];
+    const cell = await this.loadCell(morphologyId);
+    const fringe =
+      cell?.data.roots.filter((item) => item.type === MorphoViewerTreeItemType.Soma) ?? [];
+    /**
+     * For some reasons, this value makes the projection work best.
+     * We need to investigate this further, but later.
+     */
+    const RADIUS_MULTIPLIER = 1; // 0.75;
+    while (fringe.length > 0) {
+      const item = fringe.pop();
+      if (!item || item.type !== MorphoViewerTreeItemType.Soma || !item.children) continue;
+
+      for (const child of item.children) {
+        if (child.type !== MorphoViewerTreeItemType.Soma) continue;
+
+        fringe.push(child);
+        capsules.push([
+          ...transform(item.x, item.y, item.z, cellDef),
+          item.radius * RADIUS_MULTIPLIER,
+          ...transform(child.x, child.y, child.z, cellDef),
+          child.radius * RADIUS_MULTIPLIER,
+        ]);
+      }
+    }
+    const sdf = (
+      p: Vec3,
+      capsule: [number, number, number, number, number, number, number, number]
+    ) => {
+      const [x0, y0, z0, r0, x1, y1, z1, r1] = capsule;
+      const a: Vec3 = [x0, y0, z0];
+      const b: Vec3 = [x1, y1, z1];
+      return sdfCapsuleWithNormal(p, a, b, r0, r1);
+    };
+    return capsules.length === 0
+      ? (_p: Vec3) => ({ distance: 0, normal: [0, 0, 0] })
+      : ([x, y, z]: Vec3) => {
+          const p: Vec3 = [x, y, z];
+          const [first, ...rest] = capsules;
+          let result = sdf(p, first);
+          for (const item of rest) {
+            const candidate = sdf(p, item);
+            if (candidate.distance < result.distance) {
+              result = candidate;
+            }
+          }
+          return result;
+        };
   }
 
   private async getMorphoViewerSmallCircuitCells(
@@ -203,6 +389,11 @@ export class CircuitLoader {
     });
   }
 
+  private hasDataset(file: H5File, path: string) {
+    const dataset = file.get(path);
+    return dataset instanceof Dataset;
+  }
+
   private getDataset<T>(
     file: H5File,
     path: string,
@@ -210,7 +401,9 @@ export class CircuitLoader {
   ): T {
     const dataset = file.get(path);
     if (!(dataset instanceof Dataset)) {
-      throw new Error(`Unable to find dataset at "${path}"!`);
+      throw new Error(
+        `Unable to find dataset at "${path}"!\nAvailable paths:\n${getAvailablePaths(file, path)}`
+      );
     }
 
     this.report.logTask(`Parsing Dataset "${path}"...`);
@@ -388,4 +581,25 @@ function lookforObviousNodeSet(names: string[], nodeSetsFile: SonataNodeSets): s
   if (signatures.size > 1) return null;
 
   return names[0];
+}
+
+function getAvailablePaths(file: H5File, path: string) {
+  let entity: Entity | null = file;
+  const validPath: string[] = [];
+  const parts = path.split('/');
+  for (const part of parts) {
+    if (!(entity instanceof Group)) break;
+
+    validPath.push(part);
+    entity = entity.get(part);
+    if (!entity) validPath.pop();
+  }
+  const prefix = validPath.join('/');
+  const group = file.get(prefix);
+  if (!(group instanceof Group)) return prefix;
+
+  return group
+    .keys()
+    .map((name) => `  - ${prefix}/${name}`)
+    .join('\n');
 }
