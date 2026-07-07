@@ -12,8 +12,11 @@ export type ColorMode = (typeof ColorModeDict)[keyof typeof ColorModeDict];
 export interface CategoricalLegendEntry {
   /** raw property value (as string) this swatch represents */
   value: string;
-  /** resolved color for this value */
+  /** display color: background-adapted, used for the swatch dot and the 3D view */
   color: string;
+  /** the untuned color the user edits/owns (override or base palette color); the
+   * color picker is seeded from this so committing a pick doesn't snap the handle */
+  rawColor: string;
   /** number of neurons carrying this value (for optional display) */
   count: number;
 }

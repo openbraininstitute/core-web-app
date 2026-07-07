@@ -184,11 +184,12 @@ function buildCategorical(
   };
   const colorByValue = new Map<string, string>();
   const categorical: CategoricalLegendEntry[] = ordered.map((value, index) => {
-    const override = overrides?.[value];
-    // overrides are user-set and rare, so tune them directly (not via the cache)
-    const color = override ? tune(override, background) : tuned(categoricalColor(index));
+    // rawColor is what the user owns/edits (their override or the base palette
+    // color); color is its background-adapted display used by the swatch + 3D.
+    const rawColor = overrides?.[value] ?? categoricalColor(index);
+    const color = tuned(rawColor);
     colorByValue.set(value, color);
-    return { value, color, count: counts.get(value) ?? 0 };
+    return { value, color, rawColor, count: counts.get(value) ?? 0 };
   });
   const fallback = defaultNeuronColor(background);
   const colorsByNode = values.map((v) => colorByValue.get(String(v)) ?? fallback);

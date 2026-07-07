@@ -171,6 +171,7 @@ export function CircuitViewerChrome({
                 mapping={colorBy.mapping}
                 onChangeCategoryColor={colorBy.onChangeCategoryColor}
                 theme={theme}
+                container={portalContainer}
               />
             </div>
           )}
