@@ -1,3 +1,5 @@
+import chroma from 'chroma-js';
+
 import { adaptColorToBackground } from './contrast';
 
 import type { ColumnKind } from '@/features/circuit-nodes/types';
@@ -76,8 +78,36 @@ export function viridisGradient(steps = 10): string[] {
   return Array.from({ length: steps }, (_, i) => viridisColor(i / (steps - 1)));
 }
 
+/** golden angle: rotating hue by this each step spreads colors evenly */
+const GOLDEN_ANGLE = 137.508;
+/** OKLCH lightness bands cycled through to separate colors sharing close hues */
+const GENERATED_LIGHTNESS = [0.72, 0.55, 0.85];
+/** OKLCH chroma for generated colors (moderate, stays legible on either bg) */
+const GENERATED_CHROMA = 0.14;
+
+/**
+ * cap on distinct colors: the viewer bakes one palette texture column per
+ * distinct color, so this keeps that texture well within WebGL's max size. 1024
+ * is far beyond human color discrimination, so cycling past it is imperceptible.
+ */
+export const MAX_DISTINCT_COLORS = 1024;
+
+/**
+ * stable color for the Nth category. The first entries reuse the curated
+ * colorblind-safe {@link CATEGORICAL_PALETTE}; beyond it we generate
+ * perceptually-spread colors by rotating hue (golden angle) across a few
+ * lightness bands, so large categorical properties get distinct colors instead
+ * of recycling the base palette. Distinct colors are bounded by
+ * {@link MAX_DISTINCT_COLORS}.
+ */
 export function categoricalColor(index: number): string {
-  return CATEGORICAL_PALETTE[index % CATEGORICAL_PALETTE.length];
+  const base = CATEGORICAL_PALETTE.length;
+  if (index < base) return CATEGORICAL_PALETTE[index];
+  // wrap generated colors so the viewer's palette texture stays bounded
+  const n = (index - base) % (MAX_DISTINCT_COLORS - base);
+  const hue = (n * GOLDEN_ANGLE) % 360;
+  const lightness = GENERATED_LIGHTNESS[n % GENERATED_LIGHTNESS.length];
+  return chroma.oklch(lightness, GENERATED_CHROMA, hue).hex();
 }
 
 interface BuildArgs {
@@ -142,9 +172,21 @@ function buildCategorical(
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   const ordered = [...counts.keys()].sort(compareValues);
+  // background-adapt each *palette* color at most once. Palette colors repeat
+  // every MAX_DISTINCT_COLORS, so this stays cheap even for huge cardinality.
+  const tuneCache = new Map<string, string>();
+  const tuned = (raw: string): string => {
+    const cached = tuneCache.get(raw);
+    if (cached) return cached;
+    const out = tune(raw, background);
+    tuneCache.set(raw, out);
+    return out;
+  };
   const colorByValue = new Map<string, string>();
   const categorical: CategoricalLegendEntry[] = ordered.map((value, index) => {
-    const color = tune(overrides?.[value] ?? categoricalColor(index), background);
+    const override = overrides?.[value];
+    // overrides are user-set and rare, so tune them directly (not via the cache)
+    const color = override ? tune(override, background) : tuned(categoricalColor(index));
     colorByValue.set(value, color);
     return { value, color, count: counts.get(value) ?? 0 };
   });

@@ -1,3 +1,4 @@
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { ColorPicker } from 'antd';
 import { useEffect, useState } from 'react';
 
@@ -77,51 +78,115 @@ export function ColorLegend({
       style={panelStyle}
     >
       {mapping.mode === ColorModeDict.Categorical && mapping.categorical && (
-        <ul
-          id="color-mapping-list"
-          data-testid="color-mapping-list"
-          className="max-h-56 min-w-0 space-y-1 overflow-y-auto secondary-scrollbar pr-1.5"
-        >
-          {mapping.categorical.map((entry) => (
-            <li key={entry.value} className="flex min-w-0 items-center justify-between gap-2">
+        <CategoricalList
+          entries={mapping.categorical}
+          editable={editable}
+          theme={theme}
+          openValue={openValue}
+          setOpenValue={setOpenValue}
+          onChangeCategoryColor={onChangeCategoryColor}
+        />
+      )}
+      {mapping.mode === ColorModeDict.Continuous && mapping.continuous && (
+        <ContinuousScale continuous={mapping.continuous} theme={theme} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * virtualized categorical key: only the visible rows are in the DOM, so a
+ * high-cardinality property (thousands of distinct values) renders instantly
+ * instead of freezing the tab. antd ColorPicker is mounted only for
+ * the row whose picker is open; every other row is a plain button
+ */
+function CategoricalList({
+  entries,
+  editable,
+  theme,
+  openValue,
+  setOpenValue,
+  onChangeCategoryColor,
+}: {
+  entries: NonNullable<ColorMapping['categorical']>;
+  editable: boolean;
+  theme?: ViewerTheme | null;
+  openValue: string | null;
+  setOpenValue: (value: string | null) => void;
+  onChangeCategoryColor: (value: string, color: string) => void;
+}) {
+  const [parent, setParent] = useState<HTMLDivElement | null>(null);
+  const virtualizer = useVirtualizer({
+    count: entries.length,
+    enabled: entries.length > 0 && !!parent,
+    getScrollElement: () => parent,
+    estimateSize: () => 26,
+    overscan: 8,
+  });
+
+  return (
+    <div
+      id="color-mapping-list"
+      data-testid="color-mapping-list"
+      ref={setParent}
+      className="max-h-56 min-w-0 overflow-y-auto secondary-scrollbar pr-1.5"
+    >
+      <div style={{ height: virtualizer.getTotalSize(), width: '100%', position: 'relative' }}>
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const entry = entries[virtualItem.index];
+          if (!entry) return null;
+
+          const open = openValue === entry.value;
+          const swatch = (
+            <button
+              type="button"
+              data-swatch-trigger
+              aria-label={`Change color for ${entry.value}`}
+              className="size-3 shrink-0 rounded-full ring-1 ring-black/10"
+              style={{ backgroundColor: entry.color }}
+              onClick={editable && !open ? () => setOpenValue(entry.value) : undefined}
+            />
+          );
+
+          return (
+            <div
+              key={entry.value}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${virtualItem.size}px`,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+              className="flex min-w-0 items-center justify-between gap-2 py-0.5"
+            >
               <span
                 className={cn('min-w-0 flex-1 truncate', !theme && 'text-neutral-700')}
                 title={entry.value}
               >
                 {entry.value}
               </span>
-              {editable ? (
+              {editable && open ? (
                 <ColorPicker
                   value={entry.color}
                   size="small"
                   placement="bottomRight"
                   arrow={false}
                   presets={PRESETS}
-                  open={openValue === entry.value}
+                  open
                   onOpenChange={(o) => setOpenValue(o ? entry.value : null)}
                   onChangeComplete={(c) => onChangeCategoryColor(entry.value, c.toHexString())}
                 >
-                  <button
-                    type="button"
-                    data-swatch-trigger
-                    aria-label={`Change color for ${entry.value}`}
-                    className="size-3 shrink-0 rounded-full ring-1 ring-black/10"
-                    style={{ backgroundColor: entry.color }}
-                  />
+                  {swatch}
                 </ColorPicker>
               ) : (
-                <span
-                  className="size-3 shrink-0 rounded-full ring-1 ring-black/10"
-                  style={{ backgroundColor: entry.color }}
-                />
+                swatch
               )}
-            </li>
-          ))}
-        </ul>
-      )}
-      {mapping.mode === ColorModeDict.Continuous && mapping.continuous && (
-        <ContinuousScale continuous={mapping.continuous} theme={theme} />
-      )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
