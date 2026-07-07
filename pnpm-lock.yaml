@@ -2725,7 +2725,7 @@ packages:
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
   '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz':
-    resolution: {integrity: sha512-k6vsdU3m3vK7AS08Ub5bMELX1fuSRcbXmTAggBxKxr4b/hPOylps1taBTfu3n5AyTTpXfLvoRPMzKTjlSBEu/g==, tarball: file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz}
+    resolution: {integrity: sha512-j9i0vP9uQYyb35zySSNDm3JrMJBtHrfuWUJQuNRRhowXLb/9014cNManq8TubmEDb94MMmrwDz5c/dCgdK7BkA==, tarball: file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz}
     version: 0.30.0
     peerDependencies:
       react: ^19.2.5
