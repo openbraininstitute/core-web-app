@@ -106,6 +106,5 @@ export interface IAnalysisNotebookTemplate
     TAnalysisNotebookTemplateBase {
   description: string;
   scale: 'subcellular' | 'cellular' | 'circuit' | 'system';
-  exercise_id?: string | null;
   assignment_id?: string | null;
 }
