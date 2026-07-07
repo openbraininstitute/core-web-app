@@ -6,6 +6,7 @@ import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Image from 'next/image';
 import { type ReactNode, useCallback, useState } from 'react';
 
+import { createNotebook } from '@/api/entitycore/queries/analysis-notebook-template';
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import {
   createContribution,
@@ -13,7 +14,6 @@ import {
 } from '@/api/entitycore/queries/general/contribution';
 import { EntityTypeDict, isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
@@ -37,7 +37,6 @@ import { cn } from '@/utils/css-class';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   children: ReactNode;
@@ -216,24 +215,6 @@ export function NotebooksLayout({ children }: Props) {
       </div>
     </LazyMotion>
   );
-}
-
-export async function createNotebook({
-  payload,
-  context,
-}: {
-  payload: IAnalysisNotebookTemplate;
-  context?: WorkspaceContext | null;
-}) {
-  const api = await entityCoreApi();
-  return await api.post<IAnalysisNotebookTemplate>('/analysis-notebook-template', {
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
-    },
-    body: payload,
-  });
 }
 
 async function _syncNotebook({
