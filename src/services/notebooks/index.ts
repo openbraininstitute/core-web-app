@@ -1,6 +1,15 @@
+import { createNotebook } from '@/api/entitycore/queries/analysis-notebook-template';
+import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
+import {
+  createContribution,
+  getContributions,
+} from '@/api/entitycore/queries/general/contribution';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import authFetch, { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { assertApiResponse } from '@/util/utils';
+
+import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 
 export type NotebookStartResponse = {
   message: string;
@@ -212,4 +221,92 @@ export async function startEmptyNotebook(
   }
 
   return assertApiResponse(res);
+}
+
+async function _syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+  targetProjectId,
+}: {
+  notebook: IAnalysisNotebookTemplate;
+  virtualLabId: string;
+  projectId: string;
+  targetProjectId: string;
+}) {
+  const createdNotebook = await createNotebook({
+    payload: notebook,
+    context: { virtualLabId, projectId: targetProjectId },
+  });
+
+  const contributions = await getContributions({
+    context: { virtualLabId, projectId },
+    filters: { entity__id: notebook.id },
+  });
+
+  const sourceAssets = await Promise.all(
+    notebook.assets.map(async (asset) => {
+      const arrayBuffer = (await downloadAsset({
+        ctx: {
+          virtualLabId,
+          projectId,
+        },
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
+        entityId: notebook.id,
+        id: asset.id,
+        asRawResponse: false,
+      })) as ArrayBuffer;
+
+      return {
+        ctx: { virtualLabId, projectId: targetProjectId },
+        entityType: EntityTypeDict.AnalysisNotebookTemplate,
+        entityId: createdNotebook.id,
+        fileName: asset.path.split('/').pop() ?? asset.id,
+        payload: arrayBuffer,
+        mimeType: asset.content_type,
+        label: asset.label,
+      };
+    })
+  );
+
+  // Upload assets to new notebook
+
+  await Promise.all(
+    sourceAssets.map((asset) => {
+      return createAsset(asset);
+    })
+  );
+
+  // Upload contributions to new notebook
+
+  await Promise.all(
+    contributions.data.map((contributor) =>
+      createContribution({
+        context: { virtualLabId, projectId: targetProjectId },
+        contributor: {
+          agent_id: contributor.agent.id,
+          entity_id: createdNotebook.id,
+          role_id: contributor.role.id,
+        },
+      })
+    )
+  );
+}
+
+export async function syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+  targetProjectIds,
+}: {
+  notebook: IAnalysisNotebookTemplate;
+  virtualLabId: string;
+  projectId: string;
+  targetProjectIds: string[];
+}) {
+  const promises = targetProjectIds.map((id) => {
+    return _syncNotebook({ notebook, virtualLabId, projectId, targetProjectId: id });
+  });
+
+  return await Promise.all(promises);
 }
