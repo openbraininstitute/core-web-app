@@ -1,3 +1,5 @@
+import { ExtendedEntitiesTypeDict } from './extended-entity-type';
+
 import type { ISingleNeuronSimulation } from 'src/api/entitycore/types/entities/single-neuron-simulation';
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
 import type {
@@ -70,6 +72,5 @@ export type EntityCoreObjectTypes =
   | ISimulatableExtracellularRecordingArray;
 
 export function isNotebook(entity: EntityCoreObjectTypes): entity is IAnalysisNotebookTemplate {
-  if (entity.type === 'analysis_notebook_template') return true;
-  return false;
+  return entity.type === ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
 }
