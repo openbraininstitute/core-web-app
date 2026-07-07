@@ -11,6 +11,8 @@ export {
   tgdFullscreenToggle,
 } from '@openbraininstitute/morphoviewer';
 
+export * from './sdf';
+
 export type {
   ColoringType,
   MorphoViewerElectrodeInjection,
@@ -20,6 +22,7 @@ export type {
   MorphoViewerOverlayTransformEvent,
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
+  MorphoViewerSmallCircuitProps,
   MorphoViewerSnapshotOptions,
   MorphoViewerSynapsesGroup,
   MorphoViewerTree,

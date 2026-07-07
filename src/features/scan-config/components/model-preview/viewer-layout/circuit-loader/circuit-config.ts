@@ -22,6 +22,9 @@ export class CircuitConfig {
         }
       }
     }
+    for (const edge of this.config.networks.edges) {
+      edge.edges_file = this.resolvePath(edge.edges_file);
+    }
     this.config.node_sets_file = this.resolvePath(this.config.node_sets_file);
   }
 

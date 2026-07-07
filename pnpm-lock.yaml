@@ -203,6 +203,9 @@ importers:
       fuse.js:
         specifier: ^7.3.0
         version: 7.3.0
+      gl-matrix:
+        specifier: ^3.4.4
+        version: 3.4.4
       h5wasm:
         specifier: ^0.10.3
         version: 0.10.3
