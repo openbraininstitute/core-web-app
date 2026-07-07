@@ -87,12 +87,18 @@ function MessageChild({
   addToolApprovalResponse?: ApprovalResponseFn | null;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
-  const deferredParts = React.useDeferredValue(value.parts);
   const memoizedStorageIds = React.useMemo(
-    () => extractStorageIdsFromMessage(deferredParts),
-    [deferredParts]
+    () => extractStorageIdsFromMessage(value.parts),
+    [value.parts]
   );
   const validStorageIds = useStableArray(memoizedStorageIds);
+
+  const onLinkClicked = React.useCallback(
+    (external: boolean) => {
+      if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+    },
+    [setPanelWidth]
+  );
 
   const {
     hasEditStateCalls,
@@ -151,16 +157,14 @@ function MessageChild({
         </div>
       );
     case 'assistant': {
-      const children = deferredParts.map((part, index) => {
+      const children = value.parts.map((part, index) => {
         if (part.type === 'text' && part.text !== '') {
           return (
             <GithubFlavorMarkdown
               // eslint-disable-next-line react/no-array-index-key
               key={`text-${index}`}
               className={styles.markdown}
-              onLinkClicked={(external) => {
-                if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-              }}
+              onLinkClicked={onLinkClicked}
               validStorageIds={validStorageIds}
               isStreaming={isLastMessage && status === 'streaming'}
             >
