@@ -33,6 +33,10 @@ export interface ColorByControls {
   mapping: ColorMapping | null;
   /** while true (property changing / loading) the key is temporarily hidden */
   legendLoading: boolean;
+  /** true when the property list failed to load (worker/download error) */
+  propertiesError: boolean;
+  /** retry loading the property list after an error */
+  onRetryProperties: () => void;
   /** override the color of a single categorical value */
   onChangeCategoryColor: (value: string, color: string) => void;
 }
@@ -55,7 +59,7 @@ export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons
       ? CANVAS_DARK
       : CANVAS_LIGHT
     : undefined;
-  const { mapping, loading, columns } = useNodeColorMapping(
+  const { mapping, loading, columns, status, retry } = useNodeColorMapping(
     circuit,
     property,
     overridesForProperty,
@@ -99,12 +103,14 @@ export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons
       selectedProperty: property,
       onSelectProperty: (p) => update({ colorByProperty: p }),
       properties,
-      propertiesLoading: !columns,
+      propertiesLoading: !columns && status !== 'error',
       mapping,
       legendLoading: loading,
+      propertiesError: status === 'error',
+      onRetryProperties: retry,
       onChangeCategoryColor,
     }),
-    [property, properties, columns, mapping, loading, update, onChangeCategoryColor]
+    [property, properties, columns, status, retry, mapping, loading, update, onChangeCategoryColor]
   );
 
   const menu: ViewerControlsMenuProps = useMemo(

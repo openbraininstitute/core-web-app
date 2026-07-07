@@ -234,7 +234,6 @@ function buildContinuous(
   const continuous: ContinuousLegend = { min, max, gradient };
   return { mode: 'continuous', property, colorsByNode, continuous };
 }
-
 /** numeric-aware comparison so "2" sorts before "10" */
 function compareValues(a: string, b: string): number {
   const na = Number(a);

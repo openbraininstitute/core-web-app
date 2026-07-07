@@ -19,6 +19,10 @@ interface Result {
   columns: ReturnType<typeof useNodesWorker>['columns'];
   loading: boolean;
   error: Error | null;
+  /** worker session status: "error" means the property list couldn't be read */
+  status: ReturnType<typeof useNodesWorker>['status'];
+  /** re-open the worker session (retry a failed download/parse) */
+  retry: () => void;
 }
 
 /** the raw column fetched for the currently selected property */
@@ -48,7 +52,7 @@ export function useNodeColorMapping(
 
   // open the SONATA H5 as soon as the circuit is known (not only after a property
   // is picked) so the dropdown can list the real node columns from source.
-  const { getColumn, columns, status, isLoading, error } = useNodesWorker({
+  const { getColumn, columns, status, isLoading, error, retry } = useNodesWorker({
     enabled: !!circuit,
     circuitId: circuit?.id ?? '',
     circuitAssetId: config?.circuitAssetId ?? '',
@@ -97,5 +101,7 @@ export function useNodeColorMapping(
     columns,
     loading: !!property && (isLoading || (status === 'ready' && !column && !buildError)),
     error: error ?? buildError,
+    status,
+    retry,
   };
 }

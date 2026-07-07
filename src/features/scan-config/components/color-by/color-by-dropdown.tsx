@@ -19,6 +19,10 @@ interface ColorByDropdownProps {
   properties: ColorByProperty[];
   /** true while the column list is still being read from source. */
   loading?: boolean;
+  /** true when the column list failed to load (worker/download error). */
+  error?: boolean;
+  /** retry loading the column list after an error. */
+  onRetry?: () => void;
   /** background-derived theme (adaptive mode); null → fixed light styling. */
   theme?: ViewerTheme | null;
   /** portal target for the popover (fullscreen element); null → document.body. */
@@ -32,6 +36,8 @@ export function ColorByDropdown({
   onChange,
   properties,
   loading,
+  error,
+  onRetry,
   theme,
   container,
   className,
@@ -156,10 +162,30 @@ export function ColorByDropdown({
                 onClick={() => select(p.name)}
               />
             ))}
-            {loading && properties.length === 0 && (
-              <li className="px-2 py-1.5 text-sm" style={mutedStyle}>
-                Loading properties…
+            {error && properties.length === 0 ? (
+              <li className="px-2 py-1.5 text-sm">
+                <div style={mutedStyle}>Couldn&apos;t load properties.</div>
+                {onRetry && (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    className={cn(
+                      'mt-1 inline-flex items-center gap-1 font-medium hover:underline',
+                      !theme && 'text-primary-9'
+                    )}
+                  >
+                    <RiRefreshLine className="size-3.5" />
+                    Retry
+                  </button>
+                )}
               </li>
+            ) : (
+              loading &&
+              properties.length === 0 && (
+                <li className="px-2 py-1.5 text-sm" style={mutedStyle}>
+                  Loading properties…
+                </li>
+              )
             )}
           </ul>
         </div>

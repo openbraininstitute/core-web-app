@@ -1,6 +1,6 @@
+import { LoadingOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { IconGear } from '@/features/ai-assistant/icons/gear';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
@@ -49,7 +49,7 @@ const CircuitViz = ({
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
   };
-  // Reloading cells (axon toggle / recolor) restarts the sequential loader.
+  // reloading cells (axon toggle/recolor) restarts the sequential loader
   const prevAxonRef = useRef(showAxons);
   useEffect(() => {
     if (prevAxonRef.current !== showAxons) {
@@ -81,7 +81,7 @@ const CircuitViz = ({
       {loading && (
         <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex justify-center">
           <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur">
-            <IconGear />
+            <LoadingOutlined spin />
             <span>Loading</span>
             {progress > 0 && <strong>{(100 * progress).toFixed(0)}%</strong>}
           </div>

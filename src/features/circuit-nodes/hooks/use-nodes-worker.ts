@@ -1,18 +1,16 @@
-import * as Comlink from 'comlink';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import {
+  IDLE_SESSION_STATE,
+  type NodesSessionState,
+  nodesWorkerRegistry,
+} from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IDatasource } from 'ag-grid-community';
-import type {
-  ColumnMeta,
-  DownloadProgress,
-  NodePopulation,
-  OpenResponse,
-} from '@/features/circuit-nodes/types';
-import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
+import type { ColumnMeta, NodePopulation } from '@/features/circuit-nodes/types';
 
 type Args = {
   enabled: boolean;
@@ -21,115 +19,61 @@ type Args = {
   population: NodePopulation | undefined;
 };
 
-type WorkerHandle = {
-  worker: Worker;
-  proxy: Comlink.Remote<NodesWorkerApi>;
-  populationKey: string;
-};
-
-type Status = 'idle' | 'loading' | 'ready' | 'error';
-
+/**
+ * read a circuit's SONATA node population through a shared worker session
+ * the session is keyed by circuit/asset/population and
+ * reused across every consumer of the same key, so the table and the colour-by
+ * dropdown download the file once, not twice, so consumers always see fresh data
+ */
 export function useNodesWorker({ enabled, circuitId, circuitAssetId, population }: Args) {
   const ctx = useWorkspace();
-  const workerRef = useRef<WorkerHandle | null>(null);
-  const generationRef = useRef(0);
-
-  const [status, setStatus] = useState<Status>('idle');
-  const [openResult, setOpenResult] = useState<OpenResponse | null>(null);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [progress, setProgress] = useState<DownloadProgress | null>(null);
+  const [state, setState] = useState<NodesSessionState>(IDLE_SESSION_STATE);
+
+  const key =
+    enabled && population && circuitAssetId && circuitId
+      ? `${circuitId}-${circuitAssetId}-${population.name}`
+      : null;
 
   useEffect(() => {
-    if (!enabled || !population || !circuitAssetId || !circuitId) {
-      teardownWorker(workerRef);
-      setStatus('idle');
-      setOpenResult(null);
-      setFilteredCount(null);
-      setError(null);
-      setProgress(null);
+    if (!key || !population) {
+      setState(IDLE_SESSION_STATE);
       return;
     }
 
-    const generation = ++generationRef.current;
-    let cancelled = false;
+    const populationName = population.name;
+    const populationFile = population.file;
+    const buildRequest = async () => {
+      const { url, headers } = await buildAssetDownloadRequest({
+        ctx,
+        entityType: EntityTypeDict.Circuit,
+        entityId: circuitId,
+        id: circuitAssetId,
+        assetPath: populationFile,
+      });
+      return { url, headers };
+    };
 
-    setStatus('loading');
-    setError(null);
-    setProgress(null);
-
-    (async () => {
-      try {
-        teardownWorker(workerRef);
-        if (cancelled) return;
-
-        const { url, headers } = await buildAssetDownloadRequest({
-          ctx,
-          entityType: EntityTypeDict.Circuit,
-          entityId: circuitId,
-          id: circuitAssetId,
-          assetPath: population.file,
-        });
-        if (cancelled) return;
-
-        const worker = new Worker(new URL('../worker/nodes.worker.ts', import.meta.url), {
-          type: 'module',
-        });
-        const proxy = Comlink.wrap<NodesWorkerApi>(worker);
-        workerRef.current = { worker, proxy, populationKey: population.name };
-
-        const fileKey = `${circuitId}-${circuitAssetId}-${population.name}`;
-        const result = await proxy.open(
-          {
-            populationKey: population.name,
-            fileKey,
-            url,
-            headers,
-          },
-          Comlink.proxy((next: DownloadProgress) => {
-            if (cancelled || generationRef.current !== generation) return;
-            setProgress(next);
-          })
-        );
-        if (cancelled || generationRef.current !== generation) return;
-
-        setOpenResult(result);
-        setFilteredCount(null);
-        setProgress(null);
-        setStatus('ready');
-      } catch (e) {
-        if (cancelled || generationRef.current !== generation) return;
-        teardownWorker(workerRef);
-        setError(e instanceof Error ? e : new Error(String(e)));
-        setStatus('error');
-        setOpenResult(null);
-        setProgress(null);
-      }
-    })();
+    nodesWorkerRegistry.acquire(key, { populationKey: populationName, buildRequest });
+    const sync = () => setState(nodesWorkerRegistry.getState(key));
+    const unsubscribe = nodesWorkerRegistry.subscribe(key, sync);
+    sync();
+    setFilteredCount(null);
 
     return () => {
-      cancelled = true;
+      unsubscribe();
+      nodesWorkerRegistry.release(key);
     };
-  }, [enabled, circuitId, circuitAssetId, population, ctx]);
-
-  useEffect(() => {
-    return () => teardownWorker(workerRef);
-  }, []);
+  }, [key, ctx, circuitId, circuitAssetId, population]);
 
   const datasource = useMemo<IDatasource | null>(() => {
-    if (status !== 'ready' || !openResult) return null;
-    const proxyRef = workerRef;
-    const columns = openResult.columns;
+    if (!key || state.status !== 'ready' || !state.columns) return null;
+    const columns = state.columns;
     return {
-      rowCount: openResult.rowCount,
+      rowCount: state.rowCount,
       getRows(params) {
-        const current = proxyRef.current;
-        if (!current) {
-          params.failCallback();
-          return;
-        }
-        current.proxy
-          .getRows({
+        nodesWorkerRegistry
+          .getRows(key, {
             start: params.startRow,
             end: params.endRow,
             sort: (params.sortModel ?? []).map((s) => ({
@@ -149,26 +93,30 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
           .catch(() => params.failCallback());
       },
     };
-  }, [status, openResult]);
+  }, [key, state.status, state.columns, state.rowCount]);
 
   const getColumn = useMemo(() => {
     return async (name: string) => {
-      const current = workerRef.current;
-      if (!current) throw new Error('Nodes worker not ready');
-      return current.proxy.getColumn(name);
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getColumn(key, name);
     };
-  }, []);
+  }, [key]);
+
+  const retry = useCallback(() => {
+    if (key) nodesWorkerRegistry.retry(key);
+  }, [key]);
 
   return {
-    rowCount: openResult?.rowCount ?? 0,
+    rowCount: state.rowCount,
     filteredCount,
-    columns: openResult?.columns,
+    columns: state.columns,
     datasource,
     getColumn,
-    status,
-    isLoading: status === 'loading',
-    progress,
-    error,
+    status: state.status,
+    isLoading: state.status === 'loading',
+    progress: state.progress,
+    error: state.error,
+    retry,
   };
 }
 
@@ -178,20 +126,4 @@ function visibleColumnsFromContext(context: unknown, allColumns: ColumnMeta[]): 
     if (Array.isArray(v) && v.every((x) => typeof x === 'string')) return v as string[];
   }
   return allColumns.map((c) => c.name);
-}
-
-function teardownWorker(ref: { current: WorkerHandle | null }) {
-  const current = ref.current;
-  if (!current) return;
-  try {
-    current.proxy[Comlink.releaseProxy]();
-  } catch {
-    /* ignore */
-  }
-  try {
-    current.worker.terminate();
-  } catch {
-    /* ignore */
-  }
-  ref.current = null;
 }

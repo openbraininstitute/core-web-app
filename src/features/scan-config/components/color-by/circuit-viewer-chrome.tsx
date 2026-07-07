@@ -133,6 +133,8 @@ export function CircuitViewerChrome({
               onChange={colorBy.onSelectProperty}
               properties={colorBy.properties}
               loading={colorBy.propertiesLoading}
+              error={colorBy.propertiesError}
+              onRetry={colorBy.onRetryProperties}
               theme={theme}
               container={portalContainer}
             />

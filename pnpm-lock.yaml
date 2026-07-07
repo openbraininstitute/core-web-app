@@ -2725,7 +2725,7 @@ packages:
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
   '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz':
-    resolution: {integrity: sha512-j9i0vP9uQYyb35zySSNDm3JrMJBtHrfuWUJQuNRRhowXLb/9014cNManq8TubmEDb94MMmrwDz5c/dCgdK7BkA==, tarball: file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz}
+    resolution: {integrity: sha512-cQXtuzxJXvYPXVoi8lyWfoM2jJ7HkyzvTkGdICTCvKWtFY1pMefn3nj/YM4kS8k5JhpotiFpb8BosF5gpPrHZw==, tarball: file:vendor/openbraininstitute-morphoviewer-0.30.0.tgz}
     version: 0.30.0
     peerDependencies:
       react: ^19.2.5
@@ -7423,7 +7423,6 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
-    bundledDependencies: []
 
   jsonify@0.0.1:
     resolution: {integrity: sha512-2/Ki0GcmuqSrgFyelQq9M05y7PS0mEwuIzrf3f1fPqkVDVRvZrPZtVSMHxdgo8Aq0sxAOb/cr2aqqA3LeWHVPg==}

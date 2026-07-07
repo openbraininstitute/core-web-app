@@ -1,4 +1,6 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: The list is not suppose to change */
+
+import { LoadingOutlined } from '@ant-design/icons';
 import { saveAs } from 'file-saver';
 import React from 'react';
 
@@ -105,8 +107,9 @@ export function LargeCircuitPreview({
 function LoadingIndicator() {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex justify-center">
-      <div className="rounded-full bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur">
-        Loading circuit…
+      <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur">
+        <LoadingOutlined spin />
+        <span>Loading circuit…</span>
       </div>
     </div>
   );

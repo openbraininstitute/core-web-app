@@ -30,8 +30,8 @@ export function useCircuit(
         center: node.position,
         orientation: node.orientation,
         somaRadius: 8,
-        // Default color (stable blue, or background-adapted); overridden per node
-        // when coloring by a property.
+        // default color (blue, or background-adapted), overridden per node
+        // when coloring by a property
         color: colorsByNode?.[i] ?? defaultColor,
       })) ?? []
     );
