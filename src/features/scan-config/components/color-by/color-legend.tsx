@@ -70,7 +70,7 @@ export function ColorLegend({
       id="color-mapping-panel"
       data-testid="color-mapping-panel"
       className={cn(
-        'min-w-0 max-w-full rounded-xl p-2 pr-0.5 text-xs backdrop-blur-sm',
+        'min-w-0 max-w-full rounded-xl p-2 pr-0.5 text-xs backdrop-blur-3xl',
         !theme && 'ring-1 ring-gray-50 bg-white/5',
         className
       )}

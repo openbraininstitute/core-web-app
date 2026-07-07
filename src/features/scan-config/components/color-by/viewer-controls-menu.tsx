@@ -11,7 +11,7 @@ import {
   RiSunLine,
 } from '@remixicon/react';
 import { Switch } from 'antd';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -53,13 +53,41 @@ export function ViewerControlsMenu({
   className,
 }: ViewerControlsMenuProps) {
   const [open, setOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const settingsLabel = open ? 'Close settings' : 'Viewer settings';
+
+  useEffect(() => {
+    if (!open) return;
+    // capture phase so a click on the WebGL canvas (which may stop propagation)
+    // still closes the menu.
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (contentRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    window.addEventListener('pointerdown', onPointerDown, true);
+    return () => window.removeEventListener('pointerdown', onPointerDown, true);
+  }, [open]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setOpen(false);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const handleFullscreen = () => {
+    setOpen(false);
+    onFullscreen();
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <Tooltip open={open ? false : undefined}>
         <TooltipTrigger asChild>
           <PopoverTrigger
+            ref={triggerRef}
             aria-label={settingsLabel}
             className={cn(
               'inline-flex size-8 items-center justify-center rounded-full bg-white',
@@ -88,37 +116,39 @@ export function ViewerControlsMenu({
         sideOffset={8}
         className="w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl"
       >
-        <MenuButton
-          icon={
-            isFullscreen ? (
-              <RiFullscreenExitLine className="size-4" />
-            ) : (
-              <RiFullscreenLine className="size-4" />
-            )
-          }
-          label={isFullscreen ? 'Exit full screen' : 'Full screen'}
-          onClick={onFullscreen}
-        />
-        <MenuButton
-          icon={<RiRefreshLine className="size-4" />}
-          label="Reset view"
-          onClick={onResetView}
-        />
-        {onToggleAxons && (
-          <MenuRow label="Axons">
-            <Switch size="small" checked={!!showAxons} onChange={onToggleAxons} />
-          </MenuRow>
-        )}
-        <MenuRow label="Background">
-          <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />
-        </MenuRow>
-        {hasSavedConfig && (
+        <div ref={contentRef}>
           <MenuButton
-            icon={<RiResetLeftLine className="size-4" />}
-            label="Reset saved view"
-            onClick={onResetConfig}
+            icon={
+              isFullscreen ? (
+                <RiFullscreenExitLine className="size-4" />
+              ) : (
+                <RiFullscreenLine className="size-4" />
+              )
+            }
+            label={isFullscreen ? 'Exit full screen' : 'Full screen'}
+            onClick={handleFullscreen}
           />
-        )}
+          <MenuButton
+            icon={<RiRefreshLine className="size-4" />}
+            label="Reset view"
+            onClick={onResetView}
+          />
+          {onToggleAxons && (
+            <MenuRow label="Axons">
+              <Switch size="small" checked={!!showAxons} onChange={onToggleAxons} />
+            </MenuRow>
+          )}
+          <MenuRow label="Background">
+            <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />
+          </MenuRow>
+          {hasSavedConfig && (
+            <MenuButton
+              icon={<RiResetLeftLine className="size-4" />}
+              label="Reset saved view"
+              onClick={onResetConfig}
+            />
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   );

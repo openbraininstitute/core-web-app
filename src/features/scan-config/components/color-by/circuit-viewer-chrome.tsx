@@ -148,7 +148,7 @@ export function CircuitViewerChrome({
                 style={panelStyle}
                 className={cn(
                   styles.legendToggle,
-                  'inline-flex size-8 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
+                  'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
                   theme
                     ? 'hover:brightness-110'
                     : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'

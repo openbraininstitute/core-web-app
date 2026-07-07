@@ -17,7 +17,7 @@ const LIGHT_THEME: ViewerTheme = {
   isDark: false,
   foreground: 'rgb(64,64,64)',
   mutedForeground: 'rgb(115,115,115)',
-  panelBackground: 'rgba(255,255,255,0.55)',
+  panelBackground: 'rgba(255,255,255,0.85)',
   panelRing: 'rgba(0,0,0,0.05)',
 };
 
@@ -25,7 +25,7 @@ const DARK_THEME: ViewerTheme = {
   isDark: true,
   foreground: 'rgba(255,255,255,0.92)',
   mutedForeground: 'rgba(255,255,255,0.6)',
-  panelBackground: 'rgba(20,20,25,0.45)',
+  panelBackground: 'rgba(20,20,25,0.65)',
   panelRing: 'rgba(255,255,255,0.14)',
 };
 
