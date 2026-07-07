@@ -223,20 +223,3 @@ export async function updateVirtualLab({
     }
   );
 }
-
-export async function getMissingStudentEmails({
-  virtualLabId,
-  emails,
-}: {
-  virtualLabId: string;
-  emails: string[];
-}) {
-  const api = await virtualLabRootApi();
-  return await api.post<string[]>(`/virtual-labs/${virtualLabId}/missing-student-emails`, {
-    headers: {
-      'Content-Type': 'application/json',
-      accept: 'application/json',
-    },
-    body: { emails },
-  });
-}

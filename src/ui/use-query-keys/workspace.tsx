@@ -137,8 +137,4 @@ export const keyBuilder = {
     pageSize?: number;
     category: TExtendedEntitiesTypeDict;
   }) => [`${prefix}/bookmark-categories`, { virtualLabId, projectId, category, page, pageSize }],
-  missingEmails: ({ virtualLabId, emails }: { virtualLabId: string; emails: string[] }) => [
-    `${prefix}/missing-emails`,
-    { virtualLabId, emails },
-  ],
 };
