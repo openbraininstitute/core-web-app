@@ -39,12 +39,34 @@ export function ColorByDropdown({
   const [open, setOpen] = useState(false);
   const [refreshSpin, setRefreshSpin] = useState(false);
   const prevValue = useRef(value);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const label = value ? labelForProperty(value) : 'None';
 
   useEffect(() => {
     if (prevValue.current !== value && value !== null) setRefreshSpin(true);
     prevValue.current = value;
   }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    // capture phase so a click on the WebGL canvas (which may stop propagation)
+    // still closes the dropdown.
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (contentRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    window.addEventListener('pointerdown', onPointerDown, true);
+    return () => window.removeEventListener('pointerdown', onPointerDown, true);
+  }, [open]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setOpen(false);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
 
   const select = (property: string | null) => {
     onChange(property);
@@ -63,6 +85,7 @@ export function ColorByDropdown({
   return (
     <Popover data-testid="color-by-dropdown" open={open} onOpenChange={setOpen}>
       <PopoverTrigger
+        ref={triggerRef}
         id="color-by-dropdown-trigger"
         data-testid="color-by-dropdown-trigger"
         style={panelStyle}
@@ -107,37 +130,39 @@ export function ColorByDropdown({
         style={panelStyle}
         className={cn(
           'w-52 rounded-xl border-gray-100 p-1 shadow-xl backdrop-blur-xl',
-          !theme && 'bg-white/5'
+          !theme && 'bg-white ring-1 ring-black/5'
         )}
       >
-        <ul
-          id="color-by-dropdown-list"
-          data-testid="color-by-dropdown-list"
-          className="max-h-72 overflow-y-auto"
-        >
-          <Option
-            id="color-by-dropdown-option-none"
-            label="None (blue)"
-            selected={value === null}
-            themed={!!theme}
-            onClick={() => select(null)}
-          />
-          {properties.map((p) => (
+        <div ref={contentRef}>
+          <ul
+            id="color-by-dropdown-list"
+            data-testid="color-by-dropdown-list"
+            className="max-h-72 overflow-y-auto"
+          >
             <Option
-              id={`color-by-dropdown-option-${p.name}`}
-              key={p.name}
-              label={p.label}
-              selected={value === p.name}
-              themed={!!theme}
-              onClick={() => select(p.name)}
+              id="color-by-dropdown-option-none"
+              label="None (blue)"
+              selected={value === null}
+              theme={theme}
+              onClick={() => select(null)}
             />
-          ))}
-          {loading && properties.length === 0 && (
-            <li className="px-2 py-1.5 text-sm" style={mutedStyle}>
-              Loading properties…
-            </li>
-          )}
-        </ul>
+            {properties.map((p) => (
+              <Option
+                id={`color-by-dropdown-option-${p.name}`}
+                key={p.name}
+                label={p.label}
+                selected={value === p.name}
+                theme={theme}
+                onClick={() => select(p.name)}
+              />
+            ))}
+            {loading && properties.length === 0 && (
+              <li className="px-2 py-1.5 text-sm" style={mutedStyle}>
+                Loading properties…
+              </li>
+            )}
+          </ul>
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -146,28 +171,34 @@ export function ColorByDropdown({
 function Option({
   label,
   selected,
-  themed,
+  theme,
   onClick,
 }: {
   label: string;
   selected: boolean;
-  themed: boolean;
+  theme?: ViewerTheme | null;
   onClick: () => void;
 } & React.ComponentPropsWithoutRef<'button'>) {
+  const hoverClass = theme
+    ? theme.isDark
+      ? 'hover:bg-white/15'
+      : 'hover:bg-black/6'
+    : 'hover:bg-neutral-100';
+
   return (
     <li>
       <button
         type="button"
         onClick={onClick}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-sm',
-          themed ? 'hover:bg-white/10' : 'hover:bg-neutral-100',
+          'flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-sm transition-colors',
+          hoverClass,
           selected && 'font-semibold',
-          !themed && (selected ? 'text-primary-9' : 'text-neutral-700')
+          !theme && (selected ? 'text-primary-9' : 'text-neutral-700')
         )}
       >
         {label}
-        {selected && <RiCheckLine className={cn('size-4', !themed && 'text-primary-9')} />}
+        {selected && <RiCheckLine className={cn('size-4', !theme && 'text-primary-9')} />}
       </button>
     </li>
   );
