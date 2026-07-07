@@ -45,6 +45,7 @@ import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import type { TWorkspaceSection } from '@/constants';
 
 type Props = {
@@ -52,6 +53,8 @@ type Props = {
   dataType: TExtendedEntitiesTypeDict;
   hideUseModelAction?: boolean;
   workflowTargetType?: TExtendedEntitiesTypeDict;
+  isPrivate?: boolean;
+  virtualLabData?: TVirtualLab;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
@@ -59,6 +62,8 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
   dataType,
   hideUseModelAction,
   workflowTargetType,
+  isPrivate = true,
+  virtualLabData,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   const { mdv, setMdv } = useMiniDetailView();
@@ -93,6 +98,8 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       onClose={onClose}
       hideUseModelAction={hideUseModelAction}
       workflowTargetType={workflowTargetType}
+      isPrivate={isPrivate}
+      virtualLabData={virtualLabData}
     />
   );
 }
@@ -106,6 +113,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   enableAnimation = true,
   hideUseModelAction,
   workflowTargetType,
+  isPrivate = true,
+  virtualLabData,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -115,6 +124,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   enableAnimation?: boolean;
   hideUseModelAction?: boolean;
   workflowTargetType?: TExtendedEntitiesTypeDict;
+  isPrivate?: boolean;
+  virtualLabData?: TVirtualLab;
 }) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
@@ -276,7 +287,13 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
       <DataActions record={record} dataType={dataType} theme={theme} />
     ))
     .with({ section: WorkspaceSection.Notebooks }, () => (
-      <NotebookActions record={record} dataType={dataType} theme={theme} />
+      <NotebookActions
+        record={record}
+        dataType={dataType}
+        theme={theme}
+        isPrivate={isPrivate}
+        virtualLabData={virtualLabData}
+      />
     ))
     .with(
       {

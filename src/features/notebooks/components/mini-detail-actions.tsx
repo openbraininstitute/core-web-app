@@ -1,12 +1,16 @@
-import { EyeOutlined, LoadingOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EyeOutlined, LoadingOutlined } from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine, RiPlayFill } from '@remixicon/react';
-import { Modal } from 'antd';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Modal, Popconfirm } from 'antd';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 
+import { deleteAnalysisNotebookResult } from '@/api/entitycore/queries/analysis-notebook-result';
+import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIcon } from '@/components/icons/buttons';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
@@ -15,12 +19,14 @@ import { downloadArchive } from '@/services/entity-download';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 function MiniActionIcon({
   label,
@@ -66,12 +72,19 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
   record,
   dataType,
   theme = ViewVariant.Default,
+  isPrivate = true,
+  virtualLabData,
 }: {
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
   theme?: TViewVariant;
+  isPrivate?: boolean;
+  virtualLabData?: TVirtualLab;
 }) {
+  const notification = useAppNotification();
+  const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
+  const { setMdv } = useMiniDetailView();
   const [, copy, , copying] = useCopyToClipboard();
   const [readmeOpen, setReadmeOpen] = useState(false);
 
@@ -97,6 +110,47 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     }
     setPendingDownload(false);
   };
+
+  const canDelete =
+    isPrivate &&
+    (!virtualLabData?.course || virtualLabData.course.template_project_id === projectId);
+
+  const deleteMutation = useMutation({
+    mutationFn: () =>
+      (isTemplate ? deleteAnalysisNotebookTemplate : deleteAnalysisNotebookResult)({
+        id: record.id,
+        context: { virtualLabId, projectId },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        predicate(query) {
+          const first = query.queryKey[0] as
+            | { context?: { extendedEntityType?: string } }
+            | undefined;
+          return first?.context?.extendedEntityType === record.type;
+        },
+      });
+      setMdv(false);
+      notification.success({
+        message: 'Deleted successfully',
+        description: `The ${isTemplate ? 'notebook' : 'result'} has been successfully deleted.`,
+        placement: 'topRight',
+      });
+    },
+    onError: (error: Error) => {
+      const cause = error.cause as { message?: string } | undefined;
+      let description = cause?.message ?? 'Unknown error';
+      if (description.toLowerCase().includes('foreign keys integrity violation')) {
+        description = 'This item is referenced by another record and cannot be deleted.';
+      }
+      notification.error({
+        message: 'Deletion failed',
+        description,
+        placement: 'topRight',
+        duration: 5,
+      });
+    },
+  });
 
   return (
     <LazyMotion features={domAnimation}>
@@ -166,6 +220,54 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               <RiPlayFill className="text-xl" />
             )}
           </MiniActionIcon>
+        )}
+
+        {canDelete && (
+          <Popconfirm
+            autoAdjustOverflow
+            destroyOnHidden
+            placement="topRight"
+            title={
+              <div className="text-primary-8 text-lg font-bold">
+                Delete the {isTemplate ? 'notebook' : 'result'}
+              </div>
+            }
+            description={
+              <div>
+                <div className="text-primary-8 text-sm font-bold">
+                  Are you sure you want to delete this {isTemplate ? 'notebook' : 'result'}?
+                </div>
+                <small className="text-primary-6 font-light">This action cannot be undone.</small>
+              </div>
+            }
+            okText="Yes"
+            cancelText="No"
+            arrow={{ pointAtCenter: false }}
+            onConfirm={() => deleteMutation.mutateAsync()}
+            classNames={{
+              body: cn(
+                'max-w-70',
+                '[&_.ant-popconfirm-buttons_button]:px-4',
+                '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
+                '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
+              ),
+            }}
+          >
+            <Button
+              rounded
+              title="Delete"
+              className={cn(
+                'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+              )}
+            >
+              {deleteMutation.isPending ? (
+                <LoadingOutlined spin className="text-primary-3" />
+              ) : (
+                <DeleteOutlined className="text-xl" />
+              )}
+            </Button>
+          </Popconfirm>
         )}
 
         <Button
