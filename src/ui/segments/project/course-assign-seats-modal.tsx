@@ -1,8 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { type ChangeEvent, useState } from 'react';
 
 import { assignSeats, type Enrolment, type Student } from '@/api/virtual-lab-svc/queries/course';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { InformationIcon } from '@/components/icons';
+import { useAppNotification } from '@/components/notification';
+import { syncTemplateNotebooksToStudents } from '@/services/notebooks/sync-template-notebooks';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 
@@ -12,6 +16,7 @@ interface AssignSeatsModalProps {
   enrolments: Enrolment[];
   onClose: () => void;
   onSuccess: () => void;
+  virtualLabId?: string;
 }
 
 interface AssignmentResult {
@@ -32,7 +37,11 @@ export function AssignSeatsModal({
   enrolments,
   onClose,
   onSuccess,
+  virtualLabId: propVirtualLabId,
 }: AssignSeatsModalProps) {
+  const params = useParams();
+  const virtualLabId = propVirtualLabId || (params.virtualLabId as string);
+  const notification = useAppNotification();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
@@ -49,9 +58,37 @@ export function AssignSeatsModal({
 
   const assignMutation = useMutation({
     mutationFn: async (students: Student[]) => assignSeats(courseId, students),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setResults(data.results || []);
       onSuccess();
+
+      const successfulAssignments = (data.results || []).filter((r) => r.assignment_successful);
+      if (successfulAssignments.length > 0) {
+        try {
+          const virtualLabData = await getVirtualLab({ id: virtualLabId });
+          const templateProjectId = virtualLabData?.course?.template_project_id;
+
+          if (templateProjectId) {
+            const studentProjectIds = successfulAssignments
+              .map((r) => r.project_id)
+              .filter(Boolean) as string[];
+
+            if (studentProjectIds.length > 0) {
+              await syncTemplateNotebooksToStudents({
+                templateProjectId,
+                studentProjectIds,
+                context: { virtualLabId, projectId: templateProjectId },
+              });
+            }
+          }
+        } catch {
+          notification.warning({
+            message: `Seats assigned but couldn't sync template notebooks`,
+            key: 'notebook-sync-warning',
+            placement: 'topRight',
+          });
+        }
+      }
     },
     onError: (err: unknown) => {
       const errorMessage = (err as Error)?.message || 'Failed to assign seats';
