@@ -1,33 +1,30 @@
-import { useParams, useRouter } from 'next/navigation';
 import { snakeCase } from 'es-toolkit/compat';
-import { ReactNode, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
+import { useParams, useRouter } from 'next/navigation';
+import { type ReactNode, useMemo } from 'react';
 
-import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
-import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { getCircuitDerivationLabel } from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { WorkspaceScope } from '@/constants';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { KebabCase } from '@/utils/type';
-import type {
-  HierarchyOutputNode,
-  ICircuitEnriched,
-} from '@/ui/segments/explore/circuit/helpers';
-import type { DerivedGroup } from '@/ui/segments/explore/circuit/use-hierarchy';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { VirtualLabInfo } from '@/types/virtual-lab/common';
+import type { HierarchyOutputNode, ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
+import type { DerivedGroup } from '@/ui/segments/explore/circuit/use-hierarchy';
+import type { KebabCase } from '@/utils/type';
 
 type Props = {
   groups: DerivedGroup[];
@@ -113,8 +110,8 @@ function DerivedGroupSection({
       return (
         <div className="my-5 flex flex-col items-start gap-5">
           <div className="ml-2 flex flex-row items-center gap-2">
-            <ArrowReturnRight className="text-neutral-4 text-3xl" />
-            <div className="text-neutral-4 text-lg font-semibold uppercase">Derived circuits</div>
+            <ArrowReturnRight className="text-neutral-3 text-3xl" />
+            <div className="text-neutral-3 text-lg font-semibold uppercase">Derived circuits</div>
           </div>
           <div className="w-full">
             <div className="ml-4">
@@ -142,8 +139,8 @@ function DerivedGroupSection({
   return (
     <div className="flex flex-col gap-2">
       <div className="ml-2 flex flex-row items-center gap-2">
-        <ArrowReturnRight className="text-neutral-4 text-3xl" />
-        <div className="text-neutral-4 text-lg font-semibold uppercase">
+        <ArrowReturnRight className="text-neutral-2 text-3xl" />
+        <div className="text-neutral-2 text-lg font-semibold uppercase">
           {getCircuitDerivationLabel(derivationType)}
         </div>
       </div>

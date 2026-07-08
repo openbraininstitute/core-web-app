@@ -1,18 +1,18 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
+import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { getCircuitDerivationLabel } from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { BaseTable } from '@/ui/segments/data-table/table';
 import { WorkspaceScope } from '@/constants';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
@@ -61,8 +61,8 @@ export function DerivedFrom({ groups }: Props) {
       {groups.map(({ derivationType, circuit }) => (
         <div key={derivationType} className="flex flex-col gap-2">
           <div className="ml-2 flex flex-row items-center gap-2">
-            <ArrowReturnRight className="text-neutral-4 text-3xl" />
-            <div className="text-neutral-4 text-lg font-semibold uppercase">
+            <ArrowReturnRight className="text-neutral-3 text-3xl" />
+            <div className="text-neutral-3 text-lg font-semibold uppercase">
               {getCircuitDerivationLabel(derivationType)}
             </div>
           </div>
