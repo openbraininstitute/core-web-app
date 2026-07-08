@@ -1,3 +1,5 @@
+import { uniq } from 'es-toolkit/compat';
+
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { EntityCoreIdentifiable, EntityCoreType } from '@/api/entitycore/types/shared/global';
 import type {
@@ -53,11 +55,89 @@ export const DerivationTypeDictionary = Object.fromEntries(
 export type TDerivationType =
   (typeof DerivationTypeDictionary)[keyof typeof DerivationTypeDictionary];
 
+/**
+ * Short, circuit-overview labels for the "Derivation type" column/filter (issue #517).
+ * Any derivation type not listed here falls back to its generic `DerivationType[...].label`
+ * (see {@link getCircuitDerivationLabel}), so future derivation types still render sensibly.
+ */
+export const CircuitDerivationShortLabel: Partial<Record<TDerivationType, string>> = {
+  [DerivationTypeDictionary.CircuitExtraction]: 'Extracted',
+  [DerivationTypeDictionary.CircuitRewiring]: 'Rewired',
+  [DerivationTypeDictionary.CircuitCustomization]: 'Customized',
+};
+
+/** Options offered in the static "Derivation type" dropdown filter, derived from the short labels. */
+export const CircuitDerivationFilterOptions: Array<{ value: TDerivationType; label: string }> =
+  Object.entries(CircuitDerivationShortLabel).map(([value, label]) => ({
+    value: value as TDerivationType,
+    label: label as string,
+  }));
+
+export const getCircuitDerivationColumnLabels = (
+  derivations: ReadonlyArray<{ derivation_type: TDerivationType }>
+): string[] =>
+  uniq(
+    derivations
+      .map((d) => CircuitDerivationShortLabel[d.derivation_type])
+      .filter((label): label is string => Boolean(label))
+  );
+
 export interface IDerivationBase extends EntityCoreIdentifiable, EntityCoreType {}
 
 /** `BasicEntityRead`, the minimal entity ref carried by a derivation (`id` + optional `type`). */
 export interface IBasicEntityRead extends EntityCoreIdentifiable {
   type?: TEntityTypeDict | null;
+}
+
+/** `NestedEntityRead`, the nested entity ref on an entity's derivation lists (adds an optional name). */
+export interface INestedEntityRead extends IBasicEntityRead {
+  name?: string | null;
+}
+
+/** A derivation where THIS entity is the generated (derived) side — "how it was derived". */
+export interface IGeneratedFromDerivation {
+  used: INestedEntityRead;
+  derivation_type: TDerivationType;
+  label?: string | null;
+}
+
+/** A derivation where THIS entity is the used (source) side — "what was derived from it". */
+export interface IUsedByDerivation {
+  generated: INestedEntityRead;
+  derivation_type: TDerivationType;
+  label?: string | null;
+}
+
+/**
+ * Derivation lists exposed by every entity read (entitycore #647), opt-in via the `expand` param.
+ * `null`/absent unless expanded; `[]` when expanded but the entity has none in that direction.
+ */
+export interface EntityDerivations {
+  generated_from_derivations?: Array<IGeneratedFromDerivation> | null;
+  used_by_derivations?: Array<IUsedByDerivation> | null;
+}
+
+/** Opt-in derivation lists any entity read can request via `?expand=...` (repeatable). */
+export type EntityExpandParam = 'generated_from_derivations' | 'used_by_derivations';
+
+/**
+ * Derivation filters available on every entity list endpoint (entitycore #647).
+ * `generated_derivation__*` = this entity is the generated (derived) side;
+ * `used_derivation__*` = this entity is the used (source) side.
+ */
+export interface EntityDerivationFilter {
+  generated_derivation__derivation_type?: TDerivationType;
+  generated_derivation__derivation_type__in?: Array<TDerivationType>;
+  generated_derivation__used_id?: string;
+  generated_derivation__used_id__in?: Array<string>;
+  generated_derivation__generated_id?: string;
+  generated_derivation__generated_id__in?: Array<string>;
+  used_derivation__derivation_type?: TDerivationType;
+  used_derivation__derivation_type__in?: Array<TDerivationType>;
+  used_derivation__used_id?: string;
+  used_derivation__used_id__in?: Array<string>;
+  used_derivation__generated_id?: string;
+  used_derivation__generated_id__in?: Array<string>;
 }
 
 /**
