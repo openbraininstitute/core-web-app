@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   BACKGROUND_ADAPTIVE,
@@ -13,6 +13,7 @@ import { useNodeColorMapping } from './use-node-color-mapping';
 import { useViewerConfig } from './use-viewer-config';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from './contrast';
 import type { ColorByProperty, ColorMapping } from './types';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
@@ -20,6 +21,8 @@ import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 interface Options {
   /** whether this viewer exposes an axons toggle (morphology viewer only) */
   supportsAxons?: boolean;
+  /** SONATA population whose H5 columns drive colour-by and the nodes table */
+  population?: NodePopulation;
 }
 
 /** props the chrome needs to render the color-by dropdown + key */
@@ -48,7 +51,10 @@ export interface ColorByControls {
  * index for the viewer. owned by the preview host, which passes `colorsByNode`
  * and the config down to the actual viewers.
  */
-export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons }: Options = {}) {
+export function useCircuitColorBy(
+  circuit: ICircuit | undefined,
+  { supportsAxons, population }: Options = {}
+) {
   const circuitId = circuit?.id ?? '';
   const { config, hasSavedConfig, update, reset } = useViewerConfig(circuitId);
   const property = config.colorByProperty;
@@ -59,8 +65,17 @@ export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons
       ? CANVAS_DARK
       : CANVAS_LIGHT
     : undefined;
+
+  const prevPopulationRef = useRef(population?.name);
+  useEffect(() => {
+    if (prevPopulationRef.current === population?.name) return;
+    prevPopulationRef.current = population?.name;
+    if (property) update({ colorByProperty: null });
+  }, [population?.name, property, update]);
+
   const { mapping, loading, columns, status, retry } = useNodeColorMapping(
     circuit,
+    population,
     property,
     overridesForProperty,
     adaptiveBackground
@@ -74,6 +89,8 @@ export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [resetSignal, setResetSignal] = useState(0);
+  const [captureSignal, setCaptureSignal] = useState(0);
+  const captureImage = useCallback(() => setCaptureSignal((s) => s + 1), []);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -117,6 +134,7 @@ export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons
     () => ({
       onFullscreen: toggleFullscreen,
       onResetView: () => setResetSignal((s) => s + 1),
+      onCaptureImage: captureImage,
       backgroundDark,
       onBackgroundDarkChange: (dark) =>
         update({ backgroundColor: dark ? CANVAS_DARK : CANVAS_LIGHT }),
@@ -127,6 +145,7 @@ export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons
     }),
     [
       toggleFullscreen,
+      captureImage,
       backgroundDark,
       config.showAxons,
       supportsAxons,
@@ -145,6 +164,8 @@ export function useCircuitColorBy(circuit: ICircuit | undefined, { supportsAxons
     /** chrome theme derived from the background, or null when adaptive mode is off */
     theme,
     resetSignal,
+    /** bump to trigger a PNG capture of the circuit (viewer excludes the gizmo) */
+    captureSignal,
     colorBy,
     menu,
   };

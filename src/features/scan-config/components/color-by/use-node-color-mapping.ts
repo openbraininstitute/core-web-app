@@ -9,11 +9,6 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ColumnKind, NodePopulation } from '@/features/circuit-nodes/types';
 import type { ColorMapping } from './types';
 
-function pickDefaultPopulation(populations: NodePopulation[]): NodePopulation | undefined {
-  if (populations.length === 0) return undefined;
-  return populations.find((p) => p.type === 'biophysical') ?? populations[0];
-}
-
 interface Result {
   mapping: ColorMapping | null;
   columns: ReturnType<typeof useNodesWorker>['columns'];
@@ -40,20 +35,17 @@ interface LoadedColumn {
  */
 export function useNodeColorMapping(
   circuit: ICircuit | undefined,
+  population: NodePopulation | undefined,
   property: string | null,
   overrides?: Record<string, string>,
   background?: string
 ): Result {
   const { config } = useCircuitConfig(circuit);
-  const population = useMemo(
-    () => (config ? pickDefaultPopulation(config.nodes) : undefined),
-    [config]
-  );
 
   // open the SONATA H5 as soon as the circuit is known (not only after a property
   // is picked) so the dropdown can list the real node columns from source.
   const { getColumn, columns, status, isLoading, error, retry } = useNodesWorker({
-    enabled: !!circuit,
+    enabled: !!circuit && !!population,
     circuitId: circuit?.id ?? '',
     circuitAssetId: config?.circuitAssetId ?? '',
     population,

@@ -1,7 +1,10 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
+import {
+  downloadCircuitImage,
+  VERTICAL_SCALEBAR,
+} from '@/features/scan-config/components/shared/3d-viewer';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
 import { useCircuit } from './hooks';
@@ -23,6 +26,8 @@ interface CircuitVizProps {
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
   scalebarColor?: string;
   resetSignal: number;
+  /** bump to capture a PNG of the circuit (viewer excludes the gizmo) */
+  captureSignal: number;
 }
 
 const CircuitViz = ({
@@ -33,6 +38,7 @@ const CircuitViz = ({
   backgroundColor,
   scalebarColor,
   resetSignal,
+  captureSignal,
 }: CircuitVizProps) => {
   const [progress, setProgress] = useState(0);
   const { circuit, isLoading, error, loadCell } = useCircuit(
@@ -70,6 +76,8 @@ const CircuitViz = ({
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           resetCameraSignal={resetSignal}
+          captureSignal={captureSignal}
+          onCapture={(image) => downloadCircuitImage(image, circuitEntity.name)}
           circuit={circuit}
           onCellHover={handleCellHover}
           highlightedCellIds={[highlightedCellId]}
@@ -79,10 +87,10 @@ const CircuitViz = ({
         />
       )}
       {loading && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex justify-center">
+        <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
           <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur">
             <LoadingOutlined spin />
-            <span>Loading</span>
+            <span>Loading visualization…</span>
             {progress > 0 && <strong>{(100 * progress).toFixed(0)}%</strong>}
           </div>
         </div>

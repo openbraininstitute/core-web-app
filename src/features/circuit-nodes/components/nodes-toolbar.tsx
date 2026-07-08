@@ -1,5 +1,6 @@
 import { RiArrowDownSLine } from '@remixicon/react';
 
+import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import {
   Select,
   SelectContent,
@@ -63,25 +64,11 @@ export function NodesToolbar({
 
       <div className={cn(styles.toolbarGroup, styles.toolbarGroupGrow)}>
         <span className={styles.toolbarLabel}>Population</span>
-        <Select
+        <PopulationSelect
+          populations={populations}
           value={populationName}
-          onValueChange={onPopulationChange}
-          disabled={populations.length === 0}
-        >
-          <SelectTrigger
-            className={cn(triggerCls, styles.populationSelect, 'w-full min-w-0')}
-            icon={<RiArrowDownSLine className="text-primary-9 size-4 opacity-100" />}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className={contentCls}>
-            {populations.map((p) => (
-              <SelectItem key={p.name} value={p.name} className={itemCls}>
-                {`${p.name} (${p.type})`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={onPopulationChange}
+        />
       </div>
     </div>
   );

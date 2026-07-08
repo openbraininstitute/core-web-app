@@ -1,9 +1,11 @@
 import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
+import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
+import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import {
@@ -48,10 +50,32 @@ export function CircuitPreview({
 
   const activeMode: ViewerMode = enableVisualization ? mode : 'image';
 
-  const { containerRef, config, colorsByNode, defaultColor, theme, resetSignal, colorBy, menu } =
-    useCircuitColorBy(enableVisualization ? circuit : undefined, {
-      supportsAxons: !largeCircuit,
-    });
+  const { config: circuitConfig } = useCircuitConfig(circuit);
+  const [populationName, setPopulationName] = useState<string | undefined>();
+
+  const population = useMemo(
+    () => (circuitConfig ? resolvePopulation(circuitConfig.nodes, populationName) : undefined),
+    [circuitConfig, populationName]
+  );
+
+  const handlePopulationChange = useCallback((name: string) => {
+    setPopulationName(name);
+  }, []);
+
+  const {
+    containerRef,
+    config,
+    colorsByNode,
+    defaultColor,
+    theme,
+    resetSignal,
+    captureSignal,
+    colorBy,
+    menu,
+  } = useCircuitColorBy(enableVisualization ? circuit : undefined, {
+    supportsAxons: !largeCircuit,
+    population,
+  });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -95,6 +119,7 @@ export function CircuitPreview({
           backgroundColor={config.backgroundColor}
           scalebarColor={theme?.foreground}
           resetSignal={resetSignal}
+          captureSignal={captureSignal}
         />
       )}
       {activeMode === ViewerModeDict.Visualization && largeCircuit && (
@@ -105,6 +130,7 @@ export function CircuitPreview({
           backgroundColor={config.backgroundColor}
           scalebarColor={theme?.foreground}
           resetSignal={resetSignal}
+          captureSignal={captureSignal}
         />
       )}
 
@@ -136,7 +162,11 @@ export function CircuitPreview({
           >
             <RiCloseLine className="size-4" />
           </button>
-          <CircuitNodesTable circuit={circuit} />
+          <CircuitNodesTable
+            circuit={circuit}
+            populationName={populationName}
+            onPopulationChange={handlePopulationChange}
+          />
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import {
+  RiCameraLine,
   RiCloseLine,
   RiEqualizerLine,
   RiFullscreenExitLine,
@@ -13,6 +14,8 @@ import {
 import { Switch } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
+import { AxonIcon } from '@/components/icons/Axon';
+import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -20,6 +23,8 @@ import { cn } from '@/utils/css-class';
 export interface ViewerControlsMenuProps {
   onFullscreen: () => void;
   onResetView: () => void;
+  /** capture a PNG of the circuit canvas (excludes gizmo, scalebar, chrome) */
+  onCaptureImage: () => void;
   backgroundDark: boolean;
   onBackgroundDarkChange: (dark: boolean) => void;
   /** axons toggle — omit for viewers that have no axons (point cloud) */
@@ -42,6 +47,7 @@ export interface ViewerControlsMenuProps {
 export function ViewerControlsMenu({
   onFullscreen,
   onResetView,
+  onCaptureImage,
   backgroundDark,
   onBackgroundDarkChange,
   showAxons,
@@ -82,6 +88,11 @@ export function ViewerControlsMenu({
     onFullscreen();
   };
 
+  const handleCaptureImage = () => {
+    setOpen(false);
+    onCaptureImage();
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <Tooltip open={open ? false : undefined}>
@@ -96,7 +107,11 @@ export function ViewerControlsMenu({
               className
             )}
           >
-            {open ? <RiCloseLine className="size-4" /> : <RiEqualizerLine className="size-4" />}
+            {open ? (
+              <RiCloseLine className="size-4 shrink-0" />
+            ) : (
+              <RiEqualizerLine className="size-4 shrink-0" />
+            )}
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent
@@ -120,30 +135,35 @@ export function ViewerControlsMenu({
           <MenuButton
             icon={
               isFullscreen ? (
-                <RiFullscreenExitLine className="size-4" />
+                <RiFullscreenExitLine className="size-4 shrink-0" />
               ) : (
-                <RiFullscreenLine className="size-4" />
+                <RiFullscreenLine className="size-4 shrink-0" />
               )
             }
             label={isFullscreen ? 'Exit full screen' : 'Full screen'}
             onClick={handleFullscreen}
           />
           <MenuButton
-            icon={<RiRefreshLine className="size-4" />}
+            icon={<RiRefreshLine className="size-4 shrink-0" />}
             label="Reset view"
             onClick={onResetView}
           />
+          <MenuButton
+            icon={<RiCameraLine className="size-4 shrink-0" />}
+            label="Capture image"
+            onClick={handleCaptureImage}
+          />
           {onToggleAxons && (
-            <MenuRow label="Axons">
+            <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
               <Switch size="small" checked={!!showAxons} onChange={onToggleAxons} />
             </MenuRow>
           )}
-          <MenuRow label="Background">
+          <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
             <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />
           </MenuRow>
           {hasSavedConfig && (
             <MenuButton
-              icon={<RiResetLeftLine className="size-4" />}
+              icon={<RiResetLeftLine className="size-4 shrink-0" />}
               label="Reset saved view"
               onClick={onResetConfig}
             />
@@ -166,13 +186,25 @@ function BackgroundToggle({
       <BackgroundButton
         active={!dark}
         label="Light background"
-        icon={dark ? <RiSunLine className="size-4" /> : <RiSunFill className="size-4" />}
+        icon={
+          dark ? (
+            <RiSunLine className="size-4 shrink-0" />
+          ) : (
+            <RiSunFill className="size-4 shrink-0" />
+          )
+        }
         onClick={() => onChange(false)}
       />
       <BackgroundButton
         active={dark}
         label="Dark background"
-        icon={dark ? <RiMoonFill className="size-4" /> : <RiMoonLine className="size-4" />}
+        icon={
+          dark ? (
+            <RiMoonFill className="size-4 shrink-0" />
+          ) : (
+            <RiMoonLine className="size-4 shrink-0" />
+          )
+        }
         onClick={() => onChange(true)}
       />
     </div>
@@ -207,6 +239,10 @@ function BackgroundButton({
   );
 }
 
+/** icons inherit currentColor; parent row hover shifts them to primary-8 */
+const menuItemIconClass =
+  'inline-flex size-4 shrink-0 items-center justify-center text-neutral-700 transition-colors group-hover:text-primary-8';
+
 function MenuButton({
   icon,
   label,
@@ -220,18 +256,30 @@ function MenuButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+      className="group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-neutral-100"
     >
-      {icon}
+      <span className={menuItemIconClass}>{icon}</span>
       {label}
     </button>
   );
 }
 
-function MenuRow({ label, children }: { label: string; children: React.ReactNode }) {
+function MenuRow({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-700">
-      <span>{label}</span>
+    <div className="group flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
+      <span className="flex items-center gap-2">
+        {/* reserve the icon column so labels align with the icon'd menu buttons */}
+        <span className={menuItemIconClass}>{icon}</span>
+        {label}
+      </span>
       {children}
     </div>
   );

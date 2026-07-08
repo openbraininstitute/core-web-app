@@ -47,7 +47,7 @@ export function ColorByDropdown({
   const prevValue = useRef(value);
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const label = value ? labelForProperty(value) : 'None';
+  const label = value ? labelForProperty(value) : 'All';
 
   useEffect(() => {
     if (prevValue.current !== value && value !== null) setRefreshSpin(true);
@@ -147,7 +147,7 @@ export function ColorByDropdown({
           >
             <Option
               id="color-by-dropdown-option-none"
-              label="None (blue)"
+              label="All (blue)"
               selected={value === null}
               theme={theme}
               onClick={() => select(null)}
