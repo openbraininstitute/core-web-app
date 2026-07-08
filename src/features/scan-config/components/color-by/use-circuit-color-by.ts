@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+
+import { useMorphoViewerSignals } from '@/morpho-viewer';
 
 import {
   BACKGROUND_ADAPTIVE,
@@ -88,9 +90,10 @@ export function useCircuitColorBy(
   const defaultColor = useMemo(() => defaultNeuronColor(adaptiveBackground), [adaptiveBackground]);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [resetSignal, setResetSignal] = useState(0);
-  const [captureSignal, setCaptureSignal] = useState(0);
-  const captureImage = useCallback(() => setCaptureSignal((s) => s + 1), []);
+  // one signal bus per viewer instance: dispatch to trigger camera reset /
+  // snapshot, and let the viewer components listen for the captured image.
+  const signals = useMorphoViewerSignals();
+  const captureImage = useCallback(() => signals.snapshot.dispatch(undefined), [signals]);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -133,7 +136,7 @@ export function useCircuitColorBy(
   const menu: ViewerControlsMenuProps = useMemo(
     () => ({
       onFullscreen: toggleFullscreen,
-      onResetView: () => setResetSignal((s) => s + 1),
+      onResetView: () => signals.cameraReset.dispatch(),
       onCaptureImage: captureImage,
       backgroundDark,
       onBackgroundDarkChange: (dark) =>
@@ -144,6 +147,7 @@ export function useCircuitColorBy(
       onResetConfig: reset,
     }),
     [
+      signals,
       toggleFullscreen,
       captureImage,
       backgroundDark,
@@ -163,9 +167,8 @@ export function useCircuitColorBy(
     defaultColor,
     /** chrome theme derived from the background, or null when adaptive mode is off */
     theme,
-    resetSignal,
-    /** bump to trigger a PNG capture of the circuit (viewer excludes the gizmo) */
-    captureSignal,
+    /** signal bus passed to the viewer to trigger camera reset / snapshot */
+    signals,
     colorBy,
     menu,
   };

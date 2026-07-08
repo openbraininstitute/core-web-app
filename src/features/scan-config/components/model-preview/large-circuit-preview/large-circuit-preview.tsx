@@ -16,6 +16,7 @@ import { cn } from '@/utils/css-class';
 import { useCircuitNodes, useSomaRadius } from './hooks';
 
 import type { ICircuit } from '@/api/entitycore/types';
+import type { MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
 
@@ -27,9 +28,8 @@ export interface LargeCircuitPreviewProps {
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default  */
   scalebarColor?: string;
-  resetSignal: number;
-  /** bump to capture a PNG of the circuit (viewer excludes the gizmo) */
-  captureSignal: number;
+  /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
+  signals: MorphoViewerSignals;
 }
 
 interface CellInfo {
@@ -44,8 +44,7 @@ export function LargeCircuitPreview({
   colorsByNode,
   backgroundColor,
   scalebarColor,
-  resetSignal,
-  captureSignal,
+  signals,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);
@@ -54,6 +53,13 @@ export function LargeCircuitPreview({
     () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
     [scalebarColor]
   );
+  // download the viewer's captured image (watermarked) when it's ready
+  React.useEffect(() => {
+    const onSnapshot = (image: HTMLImageElement) =>
+      downloadCircuitImage(image, circuit.name, backgroundColor);
+    signals.snapshotReady.addListener(onSnapshot);
+    return () => signals.snapshotReady.removeListener(onSnapshot);
+  }, [signals, circuit.name, backgroundColor]);
   const handleDownload = () => {
     const blob = new Blob([JSON.stringify(nodes)], { type: 'application/json' });
     saveAs(blob, `${circuit.id}.json`);
@@ -90,9 +96,7 @@ export function LargeCircuitPreview({
             scalebar={scalebar}
             cellInfos={cellInfos}
             backgroundColor={backgroundColor}
-            resetCameraSignal={resetSignal}
-            captureSignal={captureSignal}
-            onCapture={(image) => downloadCircuitImage(image, circuit.name, backgroundColor)}
+            signals={signals}
             controls={[
               debugMode
                 ? [

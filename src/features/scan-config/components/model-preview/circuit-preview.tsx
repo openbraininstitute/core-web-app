@@ -62,20 +62,11 @@ export function CircuitPreview({
     setPopulationName(name);
   }, []);
 
-  const {
-    containerRef,
-    config,
-    colorsByNode,
-    defaultColor,
-    theme,
-    resetSignal,
-    captureSignal,
-    colorBy,
-    menu,
-  } = useCircuitColorBy(enableVisualization ? circuit : undefined, {
-    supportsAxons: !largeCircuit,
-    population,
-  });
+  const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
+    useCircuitColorBy(enableVisualization ? circuit : undefined, {
+      supportsAxons: !largeCircuit,
+      population,
+    });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -118,8 +109,7 @@ export function CircuitPreview({
           showAxons={config.showAxons}
           backgroundColor={config.backgroundColor}
           scalebarColor={theme?.foreground}
-          resetSignal={resetSignal}
-          captureSignal={captureSignal}
+          signals={signals}
         />
       )}
       {activeMode === ViewerModeDict.Visualization && largeCircuit && (
@@ -129,8 +119,7 @@ export function CircuitPreview({
           colorsByNode={colorsByNode}
           backgroundColor={config.backgroundColor}
           scalebarColor={theme?.foreground}
-          resetSignal={resetSignal}
-          captureSignal={captureSignal}
+          signals={signals}
         />
       )}
 

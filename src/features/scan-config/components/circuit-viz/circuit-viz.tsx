@@ -12,6 +12,7 @@ import { sequentialCellLoader } from './sequential-loader';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
+import type { MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './circuit-viz.module.css';
 
@@ -25,9 +26,8 @@ interface CircuitVizProps {
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
   scalebarColor?: string;
-  resetSignal: number;
-  /** bump to capture a PNG of the circuit (viewer excludes the gizmo) */
-  captureSignal: number;
+  /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
+  signals: MorphoViewerSignals;
 }
 
 const CircuitViz = ({
@@ -37,8 +37,7 @@ const CircuitViz = ({
   showAxons,
   backgroundColor,
   scalebarColor,
-  resetSignal,
-  captureSignal,
+  signals,
 }: CircuitVizProps) => {
   const [progress, setProgress] = useState(0);
   const { circuit, isLoading, error, loadCell } = useCircuit(
@@ -55,6 +54,13 @@ const CircuitViz = ({
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
   };
+  // download the viewer's captured image (watermarked) when it's ready
+  useEffect(() => {
+    const onSnapshot = (image: HTMLImageElement) =>
+      downloadCircuitImage(image, circuitEntity.name, backgroundColor);
+    signals.snapshotReady.addListener(onSnapshot);
+    return () => signals.snapshotReady.removeListener(onSnapshot);
+  }, [signals, circuitEntity.name, backgroundColor]);
   // reloading cells (axon toggle/recolor) restarts the sequential loader
   const prevAxonRef = useRef(showAxons);
   useEffect(() => {
@@ -75,9 +81,7 @@ const CircuitViz = ({
           gizmo
           scalebar={scalebar}
           backgroundColor={backgroundColor}
-          resetCameraSignal={resetSignal}
-          captureSignal={captureSignal}
-          onCapture={(image) => downloadCircuitImage(image, circuitEntity.name, backgroundColor)}
+          signals={signals}
           circuit={circuit}
           onCellHover={handleCellHover}
           highlightedCellIds={[highlightedCellId]}
