@@ -134,27 +134,28 @@ export function NotebooksLayout({ children }: Props) {
           </div>
 
           <div className="flex items-center gap-4">
-            {scope === WorkspaceScope.Project && (
-              <Button
-                rounded
-                variant="success"
-                size={breakpoint === 'xl' ? 'lg' : 'md'}
-                type="button"
-                onClick={handleUploadData}
-                className={cn(
-                  'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
-                  'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
-                  'transition-all duration-300 ease-out',
-                  'hover:scale-[1.02] active:scale-[0.98]',
-                  'disabled:cursor-not-allowed disabled:opacity-70'
-                )}
-              >
-                <div className="flex items-center justify-between gap-5">
-                  <span>Upload notebook</span>
-                  <PlusOutlined className="ml-auto text-sm" />
-                </div>
-              </Button>
-            )}
+            {scope === WorkspaceScope.Project &&
+              (!course || course.template_project_id === projectId) && (
+                <Button
+                  rounded
+                  variant="success"
+                  size={breakpoint === 'xl' ? 'lg' : 'md'}
+                  type="button"
+                  onClick={handleUploadData}
+                  className={cn(
+                    'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+                    'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+                    'transition-all duration-300 ease-out',
+                    'hover:scale-[1.02] active:scale-[0.98]',
+                    'disabled:cursor-not-allowed disabled:opacity-70'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-5">
+                    <span>Upload notebook</span>
+                    <PlusOutlined className="ml-auto text-sm" />
+                  </div>
+                </Button>
+              )}
 
             <button
               disabled={loading}
