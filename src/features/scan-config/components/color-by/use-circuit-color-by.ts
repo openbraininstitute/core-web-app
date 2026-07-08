@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { downloadCircuitImage } from '@/features/scan-config/components/shared/3d-viewer';
 import { useMorphoViewerSignals } from '@/morpho-viewer';
 
 import {
@@ -93,7 +94,10 @@ export function useCircuitColorBy(
   // one signal bus per viewer instance: dispatch to trigger camera reset /
   // snapshot, and let the viewer components listen for the captured image.
   const signals = useMorphoViewerSignals();
-  const captureImage = useCallback(() => signals.snapshot.dispatch(undefined), [signals]);
+  const captureImage = useCallback(async () => {
+    const image = await signals.snapshot.dispatch(undefined).catch(() => null);
+    if (image) downloadCircuitImage(image, circuit?.name ?? '', config.backgroundColor);
+  }, [signals, circuit?.name, config.backgroundColor]);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;

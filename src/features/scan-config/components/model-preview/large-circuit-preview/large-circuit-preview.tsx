@@ -3,10 +3,7 @@
 import { saveAs } from 'file-saver';
 import React from 'react';
 
-import {
-  downloadCircuitImage,
-  VERTICAL_SCALEBAR,
-} from '@/features/scan-config/components/shared/3d-viewer';
+import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSomasOnly, useMorphoViewerDebugMode } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
@@ -53,13 +50,6 @@ export function LargeCircuitPreview({
     () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
     [scalebarColor]
   );
-  // download the viewer's captured image (watermarked) when it's ready
-  React.useEffect(() => {
-    const onSnapshot = (image: HTMLImageElement) =>
-      downloadCircuitImage(image, circuit.name, backgroundColor);
-    signals.snapshotReady.addListener(onSnapshot);
-    return () => signals.snapshotReady.removeListener(onSnapshot);
-  }, [signals, circuit.name, backgroundColor]);
   const handleDownload = () => {
     const blob = new Blob([JSON.stringify(nodes)], { type: 'application/json' });
     saveAs(blob, `${circuit.id}.json`);

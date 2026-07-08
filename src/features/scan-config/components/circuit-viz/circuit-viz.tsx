@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  downloadCircuitImage,
-  VERTICAL_SCALEBAR,
-} from '@/features/scan-config/components/shared/3d-viewer';
+import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
@@ -54,13 +51,6 @@ const CircuitViz = ({
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
   };
-  // download the viewer's captured image (watermarked) when it's ready
-  useEffect(() => {
-    const onSnapshot = (image: HTMLImageElement) =>
-      downloadCircuitImage(image, circuitEntity.name, backgroundColor);
-    signals.snapshotReady.addListener(onSnapshot);
-    return () => signals.snapshotReady.removeListener(onSnapshot);
-  }, [signals, circuitEntity.name, backgroundColor]);
   // reloading cells (axon toggle/recolor) restarts the sequential loader
   const prevAxonRef = useRef(showAxons);
   useEffect(() => {
