@@ -4,6 +4,8 @@ import {
   ScalebarWhen,
 } from '@openbraininstitute/morphoviewer/dist/components/types';
 
+import { backgroundIsDark } from '@/features/scan-config/components/color-by/contrast';
+
 import type { ScalebarConfig } from '@openbraininstitute/morphoviewer/dist/components/types';
 
 /** Scalebar defaults for circuit viewers: right pins + labels always visible. */
@@ -17,11 +19,22 @@ export const VERTICAL_SCALEBAR: ScalebarConfig = {
 
 const WATERMARK_TITLE = 'Open Brain Institute';
 const WATERMARK_URL = 'www.openbraininstitute.org';
-const WATERMARK_COLOR = '#003a8c';
+/** primary-8 on light canvas backgrounds */
+const WATERMARK_COLOR_LIGHT = '#003a8c';
+const WATERMARK_COLOR_DARK = '#ffffff';
 
 const FONT_STACK = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
-function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+function watermarkColor(backgroundColor: string): string {
+  return backgroundIsDark(backgroundColor) ? WATERMARK_COLOR_DARK : WATERMARK_COLOR_LIGHT;
+}
+
+function drawWatermark(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  color: string
+): void {
   const titleSize = Math.max(12, Math.round(height * 0.026));
   const urlSize = Math.max(10, Math.round(titleSize * 0.74));
   const margin = Math.round(titleSize);
@@ -31,7 +44,7 @@ function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: num
   ctx.save();
   ctx.textAlign = 'right';
   ctx.textBaseline = 'bottom';
-  ctx.fillStyle = WATERMARK_COLOR;
+  ctx.fillStyle = color;
 
   const drawLine = (text: string, y: number, size: number, weight: number) => {
     ctx.font = `${weight} ${size}px ${FONT_STACK}`;
@@ -59,7 +72,11 @@ function triggerDownload(url: string, filename: string): void {
  * watermark can be composited on top; object URLs we create are revoked after
  * the download starts.
  */
-export function downloadCircuitImage(image: HTMLImageElement, name: string): void {
+export function downloadCircuitImage(
+  image: HTMLImageElement,
+  name: string,
+  backgroundColor: string
+): void {
   const filename = `${(name || 'circuit').replace(/[^\w.-]+/g, '_')}.png`;
   const width = image.naturalWidth || image.width;
   const height = image.naturalHeight || image.height;
@@ -74,7 +91,7 @@ export function downloadCircuitImage(image: HTMLImageElement, name: string): voi
   ctx.canvas.width = width;
   ctx.canvas.height = height;
   ctx.drawImage(image, 0, 0, width, height);
-  drawWatermark(ctx, width, height);
+  drawWatermark(ctx, width, height, watermarkColor(backgroundColor));
   URL.revokeObjectURL(image.src);
 
   ctx.canvas.toBlob((blob) => {

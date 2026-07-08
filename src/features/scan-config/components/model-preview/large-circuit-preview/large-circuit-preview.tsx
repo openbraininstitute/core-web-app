@@ -1,6 +1,5 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: The list is not suppose to change */
 
-import { LoadingOutlined } from '@ant-design/icons';
 import { saveAs } from 'file-saver';
 import React from 'react';
 
@@ -8,6 +7,7 @@ import {
   downloadCircuitImage,
   VERTICAL_SCALEBAR,
 } from '@/features/scan-config/components/shared/3d-viewer';
+import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSomasOnly, useMorphoViewerDebugMode } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { isType } from '@/util/type-guards';
@@ -73,7 +73,7 @@ export function LargeCircuitPreview({
 
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
-      {!nodes && <LoadingIndicator />}
+      {!nodes && <VisualizationLoadingIndicator />}
       {nodes &&
         (nodes instanceof Error ? (
           <div className={styles.error}>
@@ -92,7 +92,7 @@ export function LargeCircuitPreview({
             backgroundColor={backgroundColor}
             resetCameraSignal={resetSignal}
             captureSignal={captureSignal}
-            onCapture={(image) => downloadCircuitImage(image, circuit.name)}
+            onCapture={(image) => downloadCircuitImage(image, circuit.name, backgroundColor)}
             controls={[
               debugMode
                 ? [
@@ -108,17 +108,6 @@ export function LargeCircuitPreview({
             ]}
           />
         ))}
-    </div>
-  );
-}
-
-function LoadingIndicator() {
-  return (
-    <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
-      <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur">
-        <LoadingOutlined spin />
-        <span>Loading visualization…</span>
-      </div>
     </div>
   );
 }

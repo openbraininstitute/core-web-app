@@ -1,10 +1,10 @@
-import { LoadingOutlined } from '@ant-design/icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   downloadCircuitImage,
   VERTICAL_SCALEBAR,
 } from '@/features/scan-config/components/shared/3d-viewer';
+import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
 import { useCircuit } from './hooks';
@@ -77,7 +77,7 @@ const CircuitViz = ({
           backgroundColor={backgroundColor}
           resetCameraSignal={resetSignal}
           captureSignal={captureSignal}
-          onCapture={(image) => downloadCircuitImage(image, circuitEntity.name)}
+          onCapture={(image) => downloadCircuitImage(image, circuitEntity.name, backgroundColor)}
           circuit={circuit}
           onCellHover={handleCellHover}
           highlightedCellIds={[highlightedCellId]}
@@ -86,15 +86,7 @@ const CircuitViz = ({
           onLoadProgress={setProgress}
         />
       )}
-      {loading && (
-        <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center">
-          <div className="flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur">
-            <LoadingOutlined spin />
-            <span>Loading visualization…</span>
-            {progress > 0 && <strong>{(100 * progress).toFixed(0)}%</strong>}
-          </div>
-        </div>
-      )}
+      {loading && <VisualizationLoadingIndicator progress={progress} />}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center">
           <details className="text-red-500">
