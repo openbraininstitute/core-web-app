@@ -1,9 +1,11 @@
 'use client';
 
 import {
+  CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
   LeftOutlined,
+  LoadingOutlined as LoadingIcon,
   PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons';
@@ -147,38 +149,75 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
     (c) => !contributionsToRemove.some((r) => r.id === c.id)
   );
 
+  const [progressSteps, setProgressSteps] = useState<
+    Array<{ key: string; label: string; status: 'idle' | 'pending' | 'success' | 'error' }>
+  >([]);
+
   const submitMutation = useMutation({
     mutationFn: async () => {
-      await Promise.all(
-        assetsToRemove.map((a) =>
-          deleteAsset({ entityType: record.type, entityId: record.id, id: a.id, ctx })
-        )
-      );
-
-      for (const [, { file, config }] of newAssetFiles) {
-        await uploadNotebookTemplateFile({
-          context: ctx,
-          entityId: record.id,
-          file,
-          contentType: config.contentType,
-          assetLabel: config.assetLabel,
+      const steps: typeof progressSteps = [];
+      if (assetsToRemove.length > 0)
+        steps.push({ key: 'remove-assets', label: 'Removing assets', status: 'idle' });
+      if (newAssetFiles.size > 0)
+        steps.push({ key: 'upload-assets', label: 'Uploading assets', status: 'idle' });
+      if (contributionsToRemove.length > 0)
+        steps.push({
+          key: 'remove-contributions',
+          label: 'Removing contributions',
+          status: 'idle',
         });
+      if (newContributions.filter((c) => c.agent_id && c.role_id).length > 0)
+        steps.push({ key: 'add-contributions', label: 'Adding contributions', status: 'idle' });
+      setProgressSteps(steps);
+
+      const markStep = (key: string, status: 'pending' | 'success' | 'error') =>
+        setProgressSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status } : s)));
+
+      if (assetsToRemove.length > 0) {
+        markStep('remove-assets', 'pending');
+        await Promise.all(
+          assetsToRemove.map((a) =>
+            deleteAsset({ entityType: record.type, entityId: record.id, id: a.id, ctx })
+          )
+        );
+        markStep('remove-assets', 'success');
       }
 
-      await Promise.all(
-        contributionsToRemove.map((c) => deleteContribution({ id: c.id, context: ctx }))
-      );
+      if (newAssetFiles.size > 0) {
+        markStep('upload-assets', 'pending');
+        for (const [, { file, config }] of newAssetFiles) {
+          await uploadNotebookTemplateFile({
+            context: ctx,
+            entityId: record.id,
+            file,
+            contentType: config.contentType,
+            assetLabel: config.assetLabel,
+          });
+        }
+        markStep('upload-assets', 'success');
+      }
 
-      await Promise.all(
-        newContributions
-          .filter((c) => c.agent_id && c.role_id)
-          .map((c) =>
+      if (contributionsToRemove.length > 0) {
+        markStep('remove-contributions', 'pending');
+        await Promise.all(
+          contributionsToRemove.map((c) => deleteContribution({ id: c.id, context: ctx }))
+        );
+        markStep('remove-contributions', 'success');
+      }
+
+      const validNewContributions = newContributions.filter((c) => c.agent_id && c.role_id);
+      if (validNewContributions.length > 0) {
+        markStep('add-contributions', 'pending');
+        await Promise.all(
+          validNewContributions.map((c) =>
             createContribution({
               context: ctx,
               contributor: { agent_id: c.agent_id, role_id: c.role_id, entity_id: record.id },
             })
           )
-      );
+        );
+        markStep('add-contributions', 'success');
+      }
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
@@ -211,6 +250,7 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
     setNewAssetFiles(new Map());
     setContributionsToRemove([]);
     setNewContributions([]);
+    setProgressSteps([]);
     onClose();
   }
 
@@ -283,7 +323,13 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
 
         {/* Step content */}
         <div className="border-neutral-2 secondary-scrollbar h-full max-h-full min-h-0 flex-1 overflow-auto rounded-md border p-6">
-          {activeStep === 'setup' && (
+          {submitMutation.isPending && progressSteps.length > 0 && (
+            <div className="flex h-full flex-col items-center justify-center gap-6">
+              <ProgressWheel steps={progressSteps} />
+            </div>
+          )}
+
+          {!submitMutation.isPending && activeStep === 'setup' && (
             <div>
               <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
               <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
@@ -292,7 +338,7 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
             </div>
           )}
 
-          {activeStep === 'assets' && (
+          {!submitMutation.isPending && activeStep === 'assets' && (
             <AssetsStep
               assetsLoading={assetsLoading}
               visibleAssets={visibleAssets}
@@ -315,7 +361,7 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
             />
           )}
 
-          {activeStep === 'contribution' && (
+          {!submitMutation.isPending && activeStep === 'contribution' && (
             <ContributionsStep
               contributionsLoading={contributionsLoading}
               visibleContributions={visibleContributions}
@@ -550,6 +596,67 @@ function ContributionsStep({
         </Button>
       </div>
     </div>
+  );
+}
+
+function ProgressWheel({
+  steps,
+}: {
+  steps: Array<{ key: string; label: string; status: 'idle' | 'pending' | 'success' | 'error' }>;
+}) {
+  const completed = steps.filter((s) => s.status === 'success').length;
+  const progress = steps.length > 0 ? (completed / steps.length) * 100 : 0;
+  const radius = 56;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress / 100);
+
+  return (
+    <>
+      <div className="relative">
+        <svg
+          className="h-48 w-48 -rotate-90 transform"
+          viewBox="0 0 128 128"
+          role="img"
+          aria-label="Upload progress"
+        >
+          <circle cx="64" cy="64" r={radius} stroke="#e5e7eb" strokeWidth="4" fill="none" />
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            stroke="#003a8c"
+            strokeWidth="8"
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-300 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-primary-8 text-2xl font-bold select-none">
+            {Math.round(progress)}%
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-col items-start gap-2">
+        {steps.map((step) => (
+          <div key={step.key} className="flex items-center gap-2">
+            {step.status === 'pending' && <LoadingIcon className="text-primary-6 animate-spin" />}
+            {step.status === 'success' && <CheckOutlined className="text-teal-600" />}
+            {step.status === 'idle' && <div className="bg-primary-8 ml-1 size-3 rounded-full" />}
+            <span
+              className={cn('select-none text-sm', {
+                'text-primary-6': step.status === 'pending',
+                'font-bold text-teal-600': step.status === 'success',
+              })}
+            >
+              {step.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
