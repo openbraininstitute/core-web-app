@@ -45,6 +45,11 @@ export function useServiceAiAgentChat(threadId: string) {
   const projectId = useParamProjectId();
   const setRateLimit = useSetAtom(atomRateLimit);
 
+  // Keep a ref to the latest token so the transport headers function
+  // always sends the freshest token without needing to recreate the Chat instance.
+  const accessTokenRef = useRef(accessToken);
+  accessTokenRef.current = accessToken;
+
   const [, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
   const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
@@ -84,7 +89,7 @@ export function useServiceAiAgentChat(threadId: string) {
     transport: new DefaultChatTransport({
       api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
       headers: () => ({
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessTokenRef.current}`,
       }),
       body: () => ({
         frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
