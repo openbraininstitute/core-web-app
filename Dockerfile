@@ -10,7 +10,6 @@ RUN corepack enable && corepack prepare pnpm@11 --activate
 
 # Install dependencies based on the preferred package manager
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
-COPY vendor ./vendor
 RUN pnpm install --frozen-lockfile
 
 
