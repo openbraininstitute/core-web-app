@@ -7,8 +7,17 @@ import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 
 import { deleteAnalysisNotebookResult } from '@/api/entitycore/queries/analysis-notebook-result';
-import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
+import {
+  deleteAnalysisNotebookTemplate,
+  getAnalysisNotebookTemplates,
+} from '@/api/entitycore/queries/analysis-notebook-template';
+import { deleteAsset, getAssets } from '@/api/entitycore/queries/assets';
+import {
+  deleteContribution,
+  getContributions,
+} from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
@@ -115,12 +124,69 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     isPrivate &&
     (!virtualLabData?.course || virtualLabData.course.template_project_id === projectId);
 
+  const notebookName = 'name' in record ? (record.name as string) : '';
+  const isCourseTemplateProject =
+    !!virtualLabData?.course && virtualLabData.course.template_project_id === projectId;
+
   const deleteMutation = useMutation({
-    mutationFn: () =>
-      (isTemplate ? deleteAnalysisNotebookTemplate : deleteAnalysisNotebookResult)({
+    mutationFn: async () => {
+      const deleteAssetsAndContributions = async (
+        entityId: string,
+        ctx: { virtualLabId: string; projectId: string }
+      ) => {
+        const [assetsRes, contributionsRes] = await Promise.all([
+          getAssets({ entityType: record.type, entityId, ctx }),
+          getContributions({ context: ctx, filters: { entity__id: entityId } }),
+        ]);
+        await Promise.all([
+          ...assetsRes.data.map((a) =>
+            deleteAsset({ entityType: record.type, entityId, id: a.id, ctx })
+          ),
+          ...contributionsRes.data.map((c) => deleteContribution({ id: c.id, context: ctx })),
+        ]);
+      };
+
+      if (isTemplate && isCourseTemplateProject) {
+        // Delete matching notebooks in all other projects of this vlab
+        const allProjectIds = await listAllProjectIds(virtualLabId);
+        const otherProjectIds = allProjectIds.filter((id) => id !== projectId);
+
+        await Promise.allSettled(
+          otherProjectIds.map(async (pid) => {
+            const ctx = { virtualLabId, projectId: pid };
+            const res = await getAnalysisNotebookTemplates({
+              filters: { search: notebookName },
+              context: ctx,
+            });
+            const matches = res.data.filter((nb) => nb.name === notebookName);
+            await Promise.all(
+              matches.map(async (nb) => {
+                await deleteAssetsAndContributions(nb.id, ctx);
+                await deleteAnalysisNotebookTemplate({ id: nb.id, context: ctx });
+              })
+            );
+          })
+        ).then((results) => {
+          for (const r of results) {
+            if (r.status === 'rejected') {
+              // biome-ignore lint/suspicious/noConsole: intentional error logging for silent failures
+              console.error('[NotebookActions] failed to delete in other project', r.reason);
+            }
+          }
+        });
+      }
+
+      // Delete assets/contributions only for templates
+      if (isTemplate) {
+        await deleteAssetsAndContributions(record.id, { virtualLabId, projectId });
+      }
+
+      // Delete the entity itself
+      await (isTemplate ? deleteAnalysisNotebookTemplate : deleteAnalysisNotebookResult)({
         id: record.id,
         context: { virtualLabId, projectId },
-      }),
+      });
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         predicate(query) {
@@ -138,14 +204,9 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
       });
     },
     onError: (error: Error) => {
-      const cause = error.cause as { message?: string } | undefined;
-      let description = cause?.message ?? 'Unknown error';
-      if (description.toLowerCase().includes('foreign keys integrity violation')) {
-        description = 'This item is referenced by another record and cannot be deleted.';
-      }
       notification.error({
         message: 'Deletion failed',
-        description,
+        description: error.message || 'Unknown error',
         placement: 'topRight',
         duration: 5,
       });
@@ -237,6 +298,11 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
                 <div className="text-primary-8 text-sm font-bold">
                   Are you sure you want to delete this {isTemplate ? 'notebook' : 'result'}?
                 </div>
+                {isTemplate && isCourseTemplateProject && (
+                  <div className="text-primary-8 mt-1 text-sm">
+                    The corresponding notebook in all projects will also be deleted.
+                  </div>
+                )}
                 <small className="text-primary-6 font-light">This action cannot be undone.</small>
               </div>
             }
