@@ -1,0 +1,643 @@
+'use client';
+
+import {
+  CloseOutlined,
+  DeleteOutlined,
+  LeftOutlined,
+  PlusOutlined,
+  RightOutlined,
+} from '@ant-design/icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { capitalize } from 'es-toolkit/compat';
+import { useMemo, useState } from 'react';
+
+import { deleteAsset, getAssets } from '@/api/entitycore/queries/assets';
+import { uploadNotebookTemplateFile } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
+import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
+import {
+  createContribution,
+  deleteContribution,
+  getContributions,
+} from '@/api/entitycore/queries/general/contribution';
+import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
+import { getPersons } from '@/api/entitycore/queries/general/person-agent';
+import { getRoles } from '@/api/entitycore/queries/general/role';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { useAppNotification } from '@/components/notification';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
+import { Button } from '@/ui/molecules/button';
+import { Card } from '@/ui/molecules/card';
+import { Modal } from '@/ui/molecules/modal';
+import { SelectPopover } from '@/ui/molecules/select-popover';
+import { AssetUpload } from '@/ui/segments/contribute/shared/components/asset-upload';
+import { AgentType } from '@/ui/segments/contribute/shared/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { Agent, IAsset, IContributor } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { IRole } from '@/api/entitycore/types/shared/role';
+import type { TAgentType } from '@/ui/segments/contribute/shared/types';
+
+interface UpdateNotebookModalProps {
+  open: boolean;
+  onClose: () => void;
+  record: EntityCoreObjectTypes;
+}
+
+const ASSET_FILE_CONFIGS = [
+  {
+    key: 'notebook' as const,
+    label: 'Jupyter Notebook',
+    accept: ['.ipynb', '.IPYNB'],
+    acceptLabel: 'ipynb',
+    contentType: AssetContentType.ipynb,
+    assetLabel: AssetLabel.jupyter_notebook,
+    validate: (file: File): string | null => {
+      if (!file.name.endsWith('.ipynb')) return 'File must have .ipynb extension';
+      return null;
+    },
+  },
+  {
+    key: 'requirements' as const,
+    label: 'Requirements File',
+    accept: ['.txt', '.TXT'],
+    acceptLabel: 'txt',
+    contentType: AssetContentType.text,
+    assetLabel: AssetLabel.requirements,
+    validate: (file: File): string | null => {
+      if (file.name !== 'requirements.txt') return 'File must be named requirements.txt';
+      return null;
+    },
+  },
+  {
+    key: 'zip' as const,
+    label: 'Supporting Files',
+    accept: ['.zip', '.ZIP'],
+    acceptLabel: 'zip',
+    contentType: AssetContentType.zip,
+    assetLabel: AssetLabel.notebook_required_files,
+    validate: (file: File): string | null => {
+      if (!file.name.endsWith('.zip')) return 'File must have .zip extension';
+      return null;
+    },
+  },
+] as const;
+
+const QUERY_FN_MAPPING = {
+  [AgentType.Person.key]: getPersons,
+  [AgentType.Organization.key]: getOrganizations,
+  [AgentType.Consortium.key]: getConsortia,
+} as const;
+
+const AGENT_TYPE_OPTIONS = Object.entries(AgentType).map(([, value]) => ({
+  label: value.label,
+  value: value.key,
+}));
+
+type PendingContribution = {
+  agent_type: TAgentType;
+  agent_id: string;
+  role_id: string;
+};
+
+const STEPS = [
+  { key: 'setup', label: 'Setup' },
+  { key: 'assets', label: 'Assets' },
+  { key: 'contribution', label: 'Contribution' },
+] as const;
+
+type StepKey = (typeof STEPS)[number]['key'];
+
+export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookModalProps) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const notification = useAppNotification();
+  const queryClient = useQueryClient();
+  const ctx = { virtualLabId, projectId };
+
+  const [activeStep, setActiveStep] = useState<StepKey>('setup');
+  const [assetsToRemove, setAssetsToRemove] = useState<IAsset[]>([]);
+  const [newAssetFiles, setNewAssetFiles] = useState<
+    Map<string, { file: File; config: (typeof ASSET_FILE_CONFIGS)[number] }>
+  >(new Map());
+  const [contributionsToRemove, setContributionsToRemove] = useState<IContributor[]>([]);
+  const [newContributions, setNewContributions] = useState<PendingContribution[]>([]);
+
+  const name = 'name' in record ? (record.name as string) : '';
+
+  const { data: existingAssets, isLoading: assetsLoading } = useQuery({
+    queryKey: ['update-notebook-assets', record.id],
+    queryFn: () => getAssets({ entityType: record.type, entityId: record.id, ctx }),
+    enabled: open,
+  });
+
+  const { data: existingContributions, isLoading: contributionsLoading } = useQuery({
+    queryKey: ['update-notebook-contributions', record.id],
+    queryFn: () => getContributions({ context: ctx, filters: { entity__id: record.id } }),
+    enabled: open,
+  });
+
+  const visibleAssets = (existingAssets?.data ?? []).filter(
+    (a) => !assetsToRemove.some((r) => r.id === a.id)
+  );
+
+  const visibleContributions = (existingContributions?.data ?? []).filter(
+    (c) => !contributionsToRemove.some((r) => r.id === c.id)
+  );
+
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      await Promise.all(
+        assetsToRemove.map((a) =>
+          deleteAsset({ entityType: record.type, entityId: record.id, id: a.id, ctx })
+        )
+      );
+
+      for (const [, { file, config }] of newAssetFiles) {
+        await uploadNotebookTemplateFile({
+          context: ctx,
+          entityId: record.id,
+          file,
+          contentType: config.contentType,
+          assetLabel: config.assetLabel,
+        });
+      }
+
+      await Promise.all(
+        contributionsToRemove.map((c) => deleteContribution({ id: c.id, context: ctx }))
+      );
+
+      await Promise.all(
+        newContributions
+          .filter((c) => c.agent_id && c.role_id)
+          .map((c) =>
+            createContribution({
+              context: ctx,
+              contributor: { agent_id: c.agent_id, role_id: c.role_id, entity_id: record.id },
+            })
+          )
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        predicate: (query) => {
+          const first = query.queryKey[0] as
+            | { context?: { extendedEntityType?: string } }
+            | undefined;
+          return first?.context?.extendedEntityType === record.type;
+        },
+      });
+      await queryClient.invalidateQueries({ queryKey: ['update-notebook-assets', record.id] });
+      await queryClient.invalidateQueries({
+        queryKey: ['update-notebook-contributions', record.id],
+      });
+      notification.success({ message: 'Notebook updated successfully', placement: 'topRight' });
+      handleClose();
+    },
+    onError: (error: Error) => {
+      notification.error({
+        message: 'Update failed',
+        description: error.message || 'Unknown error',
+        placement: 'topRight',
+      });
+    },
+  });
+
+  function handleClose() {
+    setActiveStep('setup');
+    setAssetsToRemove([]);
+    setNewAssetFiles(new Map());
+    setContributionsToRemove([]);
+    setNewContributions([]);
+    onClose();
+  }
+
+  const activeStepIndex = STEPS.findIndex((s) => s.key === activeStep);
+  const isFirstStep = activeStepIndex === 0;
+  const isLastStep = activeStepIndex === STEPS.length - 1;
+
+  const hasChanges =
+    assetsToRemove.length > 0 ||
+    newAssetFiles.size > 0 ||
+    contributionsToRemove.length > 0 ||
+    newContributions.length > 0;
+
+  const hasNotebookAsset =
+    visibleAssets.some((a) => a.label === AssetLabel.jupyter_notebook) ||
+    newAssetFiles.has('notebook');
+
+  const hasAtLeastOneContribution =
+    visibleContributions.length > 0 || newContributions.some((c) => c.agent_id && c.role_id);
+
+  const canSubmit = hasChanges && hasNotebookAsset && hasAtLeastOneContribution;
+
+  return (
+    <Modal
+      open={open}
+      position="center"
+      className="h-full max-h-[calc(100vh-6rem)] min-h-100 w-200 rounded-2xl"
+      bodyClassName="flex flex-col h-[calc(100%-48px)] min-h-0 max-h-full overflow-hidden p-0 relative"
+      overlayClassName="bg-primary-9/80 backdrop-blur-sm!"
+      headerClassName={cn('w-full rounded-t-2xl pb-2', '[&_#modal-title]:w-full')}
+      onClose={handleClose}
+      closable={false}
+      title={
+        <div className="flex w-full items-center justify-between gap-2">
+          <h3 className="text-primary-9 text-2xl font-bold">Update Notebook</h3>
+          <Button
+            variant="icon"
+            className="text-primary-9 hover:text-primary-6 hover:bg-background ml-auto size-8 bg-white text-lg"
+            onClick={handleClose}
+          >
+            <CloseOutlined />
+          </Button>
+        </div>
+      }
+    >
+      <div className="relative mx-auto flex h-full w-full flex-col px-6 py-2">
+        {/* Step navigation */}
+        <div className="mb-2 shrink-0">
+          <nav className="flex items-center gap-1">
+            {STEPS.map((step, index) => (
+              <div key={step.key} className="flex items-center gap-1">
+                <Button
+                  borderless
+                  rounded
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none',
+                    { 'text-primary-6 font-bold': activeStep === step.key }
+                  )}
+                  onClick={() => setActiveStep(step.key)}
+                >
+                  {step.label}
+                </Button>
+                {index < STEPS.length - 1 && <RightOutlined className="text-primary-9 size-2" />}
+              </div>
+            ))}
+          </nav>
+        </div>
+
+        {/* Step content */}
+        <div className="border-neutral-2 secondary-scrollbar h-full max-h-full min-h-0 flex-1 overflow-auto rounded-md border p-6">
+          {activeStep === 'setup' && (
+            <div>
+              <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
+              <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
+                {name}
+              </div>
+            </div>
+          )}
+
+          {activeStep === 'assets' && (
+            <AssetsStep
+              assetsLoading={assetsLoading}
+              visibleAssets={visibleAssets}
+              newAssetFiles={newAssetFiles}
+              onRemoveAsset={(asset) => setAssetsToRemove((prev) => [...prev, asset])}
+              onAddAssetFile={(key, file, config) => {
+                setNewAssetFiles((prev) => {
+                  const next = new Map(prev);
+                  next.set(key, { file, config });
+                  return next;
+                });
+              }}
+              onRemoveNewAsset={(key) => {
+                setNewAssetFiles((prev) => {
+                  const next = new Map(prev);
+                  next.delete(key);
+                  return next;
+                });
+              }}
+            />
+          )}
+
+          {activeStep === 'contribution' && (
+            <ContributionsStep
+              contributionsLoading={contributionsLoading}
+              visibleContributions={visibleContributions}
+              newContributions={newContributions}
+              onRemoveContribution={(contrib) =>
+                setContributionsToRemove((prev) => [...prev, contrib])
+              }
+              onAddNewContribution={() =>
+                setNewContributions((prev) => [
+                  ...prev,
+                  { agent_type: '' as TAgentType, agent_id: '', role_id: '' },
+                ])
+              }
+              onUpdateNewContribution={(idx, updated) =>
+                setNewContributions((prev) => prev.map((c, i) => (i === idx ? updated : c)))
+              }
+              onRemoveNewContribution={(idx) =>
+                setNewContributions((prev) => prev.filter((_, i) => i !== idx))
+              }
+            />
+          )}
+        </div>
+
+        {/* Footer navigation */}
+        <div className="mt-auto flex w-full shrink-0 items-center justify-between gap-2 py-3">
+          <Button
+            rounded
+            variant="outline"
+            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
+            size="lg"
+            type="button"
+            onClick={() => setActiveStep(STEPS[activeStepIndex - 1].key)}
+            disabled={isFirstStep}
+          >
+            <LeftOutlined />
+          </Button>
+
+          <Button
+            type="button"
+            variant="success"
+            rounded
+            size="lg"
+            disabled={!canSubmit || submitMutation.isPending}
+            onClick={() => submitMutation.mutateAsync()}
+            className={cn('px-10 font-bold', {
+              'bg-neutral-3! text-neutral-5! border-neutral-3!':
+                !canSubmit || submitMutation.isPending,
+            })}
+          >
+            {submitMutation.isPending ? 'Saving...' : 'Confirm'}
+          </Button>
+
+          <Button
+            rounded
+            variant="outline"
+            type="button"
+            size="lg"
+            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
+            onClick={() => setActiveStep(STEPS[activeStepIndex + 1].key)}
+            disabled={isLastStep}
+          >
+            <RightOutlined />
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function AssetsStep({
+  assetsLoading,
+  visibleAssets,
+  newAssetFiles,
+  onRemoveAsset,
+  onAddAssetFile,
+  onRemoveNewAsset,
+}: {
+  assetsLoading: boolean;
+  visibleAssets: IAsset[];
+  newAssetFiles: Map<string, { file: File; config: (typeof ASSET_FILE_CONFIGS)[number] }>;
+  onRemoveAsset: (asset: IAsset) => void;
+  onAddAssetFile: (key: string, file: File, config: (typeof ASSET_FILE_CONFIGS)[number]) => void;
+  onRemoveNewAsset: (key: string) => void;
+}) {
+  if (assetsLoading) return <p className="text-sm text-gray-500">Loading assets...</p>;
+
+  return (
+    <div>
+      {visibleAssets.length > 0 && (
+        <div className="mb-4 flex flex-col gap-2">
+          {visibleAssets.map((asset) => (
+            <div
+              key={asset.id}
+              className="border-neutral-2 flex items-center justify-between rounded-lg border p-3"
+            >
+              <div>
+                <span className="text-primary-8 text-sm font-medium">{asset.path}</span>
+                <span className="text-primary-5 ml-2 text-xs">{asset.label}</span>
+              </div>
+              <Button
+                type="button"
+                variant="icon"
+                size="sm"
+                className="hover:text-destructive text-primary-5"
+                onClick={() => onRemoveAsset(asset)}
+              >
+                <DeleteOutlined />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ASSET_FILE_CONFIGS.map((config) => {
+        const hasExisting = visibleAssets.some((a) => a.label === config.assetLabel);
+        const hasNew = newAssetFiles.has(config.key);
+        if (hasExisting) return null;
+
+        return (
+          <div key={config.key} className="mb-4">
+            <span className="text-primary-8 mb-1 block text-sm font-medium">
+              {config.label}
+              {hasNew && <span className="text-green-600 ml-2 text-xs">(new file staged)</span>}
+            </span>
+            {hasNew ? (
+              <div className="border-neutral-2 flex items-center justify-between rounded-lg border p-3">
+                <span className="text-sm">{newAssetFiles.get(config.key)?.file.name}</span>
+                <Button
+                  type="button"
+                  variant="icon"
+                  size="sm"
+                  className="hover:text-destructive text-primary-5"
+                  onClick={() => onRemoveNewAsset(config.key)}
+                >
+                  <DeleteOutlined />
+                </Button>
+              </div>
+            ) : (
+              <AssetUpload
+                maxFiles={1}
+                multiple={false}
+                accept={[...config.accept]}
+                acceptLabel={config.acceptLabel}
+                onValidateFile={config.validate}
+                onFilesChange={(files) => {
+                  const file = files[0]?.file instanceof File ? (files[0].file as File) : undefined;
+                  if (file) onAddAssetFile(config.key, file, config);
+                }}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ContributionsStep({
+  contributionsLoading,
+  visibleContributions,
+  newContributions,
+  onRemoveContribution,
+  onAddNewContribution,
+  onUpdateNewContribution,
+  onRemoveNewContribution,
+}: {
+  contributionsLoading: boolean;
+  visibleContributions: IContributor[];
+  newContributions: PendingContribution[];
+  onRemoveContribution: (contrib: IContributor) => void;
+  onAddNewContribution: () => void;
+  onUpdateNewContribution: (idx: number, value: PendingContribution) => void;
+  onRemoveNewContribution: (idx: number) => void;
+}) {
+  if (contributionsLoading)
+    return <p className="text-sm text-gray-500">Loading contributions...</p>;
+
+  return (
+    <div>
+      {visibleContributions.length > 0 && (
+        <div className="mb-4 flex flex-col gap-2">
+          {visibleContributions.map((contrib) => (
+            <div
+              key={contrib.id}
+              className="border-neutral-2 flex items-center justify-between rounded-lg border p-3"
+            >
+              <div>
+                <span className="text-primary-8 text-sm font-medium">
+                  {contrib.agent.pref_label}
+                </span>
+                <span className="text-primary-5 ml-2 text-xs">{capitalize(contrib.role.name)}</span>
+              </div>
+              <Button
+                type="button"
+                variant="icon"
+                size="sm"
+                className="hover:text-destructive text-primary-5"
+                onClick={() => onRemoveContribution(contrib)}
+              >
+                <DeleteOutlined />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {newContributions.map((contrib, idx) => (
+        <NewContributionRow
+          key={idx}
+          value={contrib}
+          onChange={(updated) => onUpdateNewContribution(idx, updated)}
+          onRemove={() => onRemoveNewContribution(idx)}
+        />
+      ))}
+
+      <div className="mt-3 flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          rounded
+          size="lg"
+          onClick={onAddNewContribution}
+          className={cn(
+            'text-primary-6 bg-background hover:bg-neutral-1',
+            'hover:border-primary-7 hover:text-primary-7 w-max',
+            'not-disabled:bg-primary-9 not-disabled:text-white!',
+            'not-disabled:hover:bg-primary-8'
+          )}
+        >
+          <span>Add contribution</span>
+          <PlusOutlined />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function NewContributionRow({
+  value,
+  onChange,
+  onRemove,
+}: {
+  value: PendingContribution;
+  onChange: (v: PendingContribution) => void;
+  onRemove: () => void;
+}) {
+  const AgentRoleDropdown = useMemo(
+    () =>
+      AsyncSelectFormItem<PaginationFilter, IRole>({
+        id: 'update-agent-role-selector',
+        dataKey: keyBuilder.roles({ roleType: 'contributor' }),
+        queryFn: getRoles,
+        getOptionLabel: (l) => capitalize(l.name),
+        getOptionValue: (l) => l.id,
+        placeholder: 'Select a role...',
+        searchPlaceholder: 'Search role...',
+        clsx: { trigger: 'rounded-full h-10', content: 'z-[99999]' },
+        searchable: false,
+      }),
+    []
+  );
+
+  const AgentDropdown = useMemo(() => {
+    if (!value.agent_type) return null;
+    const queryFn = QUERY_FN_MAPPING[value.agent_type as keyof typeof QUERY_FN_MAPPING];
+    if (!queryFn) return null;
+    return AsyncSelectFormItem<PaginationFilter, Agent>({
+      id: `update-agent-${value.agent_type}-selector`,
+      dataKey: keyBuilder.agents({ agentType: value.agent_type }),
+      queryFn,
+      getOptionLabel: (l) => l.pref_label,
+      getOptionValue: (l) => l.id,
+      placeholder: 'Select...',
+      searchPlaceholder: 'Search...',
+      clsx: { trigger: 'rounded-full h-10', content: 'z-[99999]' },
+      searchable: true,
+      searchField: 'pref_label__ilike',
+    });
+  }, [value.agent_type]);
+
+  return (
+    <Card className="relative mb-2 gap-0 p-4 shadow-sm!" borderless>
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <span className="text-xs font-medium text-primary-6">Type</span>
+          <SelectPopover
+            options={AGENT_TYPE_OPTIONS}
+            placeholder="Select type..."
+            searchable={false}
+            selectedValue={value.agent_type || undefined}
+            onSelect={(opt) =>
+              onChange({ ...value, agent_type: opt?.value as TAgentType, agent_id: '' })
+            }
+            clsx={{ trigger: 'rounded-full h-10 w-full', content: 'z-[99999]' }}
+          />
+        </div>
+        <div className="flex-1">
+          <span className="text-xs font-medium text-primary-6">Role</span>
+          <AgentRoleDropdown
+            value={value.role_id || undefined}
+            onChange={(v: string | undefined) => onChange({ ...value, role_id: v ?? '' })}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="icon"
+          size="sm"
+          className="hover:text-destructive text-primary-5 mt-4"
+          onClick={onRemove}
+        >
+          <DeleteOutlined />
+        </Button>
+      </div>
+      {value.agent_type && AgentDropdown && (
+        <div className="mt-2">
+          <span className="text-xs font-medium text-primary-6">Name</span>
+          <AgentDropdown
+            value={value.agent_id || undefined}
+            onChange={(v: string | undefined) => onChange({ ...value, agent_id: v ?? '' })}
+          />
+        </div>
+      )}
+    </Card>
+  );
+}

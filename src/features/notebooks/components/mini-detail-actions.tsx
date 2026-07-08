@@ -1,4 +1,4 @@
-import { DeleteOutlined, EyeOutlined, LoadingOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined, LoadingOutlined } from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine, RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Popconfirm } from 'antd';
@@ -31,6 +31,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
+
+import { UpdateNotebookModal } from './update-notebook-modal';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -96,6 +98,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
   const { setMdv } = useMiniDetailView();
   const [, copy, , copying] = useCopyToClipboard();
   const [readmeOpen, setReadmeOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
 
   const isTemplate = dataType === ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
   const typeParam = dataType ? resolveConcreteEntityPathParam(dataType) : '';
@@ -284,6 +287,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
         )}
 
         {canDelete && (
+          <MiniActionIcon label="Update" theme={theme} onClick={() => setUpdateOpen(true)}>
+            <EditOutlined className="text-xl" />
+          </MiniActionIcon>
+        )}
+
+        {canDelete && (
           <Popconfirm
             autoAdjustOverflow
             destroyOnHidden
@@ -335,6 +344,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
             </Button>
           </Popconfirm>
         )}
+
+        <UpdateNotebookModal
+          open={updateOpen}
+          onClose={() => setUpdateOpen(false)}
+          record={record}
+        />
 
         <Button
           rounded
