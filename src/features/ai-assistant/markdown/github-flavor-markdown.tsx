@@ -1,9 +1,9 @@
+import { math } from '@streamdown/math';
 import Link from 'next/link';
 import React, { type AnchorHTMLAttributes, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeKatex from 'rehype-katex';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
+import { Streamdown } from 'streamdown';
+import 'katex/dist/katex.min.css';
+import 'streamdown/styles.css';
 
 import { classNames } from '@/util/utils';
 
@@ -12,6 +12,22 @@ import { MarkdownTable, MarkdownTd } from './markdown-table/markdown-table';
 import StorageImage from './storage-image/storage-image';
 
 import styles from './github-flavor-markdown.module.css';
+
+// Module-level constants — stable references, zero re-render cost
+const STREAMDOWN_PLUGINS = { math };
+
+// Animation config: short fadeIn tuned for the backend's ~10ms word-level stream.
+// stagger: 0 disables inter-word delay since the backend IS the stagger.
+const STREAMDOWN_ANIMATION = {
+  animation: 'fadeIn' as const,
+  duration: 150,
+  easing: 'ease-out',
+  stagger: 0,
+};
+
+function ParagraphDiv({ children }: { children?: React.ReactNode }) {
+  return <div>{children}</div>;
+}
 
 interface GithubFlavorMarkdownProps {
   className?: string;
@@ -23,7 +39,8 @@ interface GithubFlavorMarkdownProps {
 
 export const GithubFlavorMarkdown = React.memo(
   RawGithubFlavorMarkdown,
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) =>
+    prevProps.children === nextProps.children && prevProps.isStreaming === nextProps.isStreaming
 );
 
 function RawGithubFlavorMarkdown({
@@ -35,7 +52,7 @@ function RawGithubFlavorMarkdown({
 }: GithubFlavorMarkdownProps) {
   const LinkComponent = useMemo(
     () => makeLink(onLinkClicked, isStreaming),
-    [onLinkClicked, validStorageIds, isStreaming]
+    [onLinkClicked, isStreaming]
   );
   const ImageComponent = useMemo(
     () => (props: any) => (
@@ -43,22 +60,29 @@ function RawGithubFlavorMarkdown({
     ),
     [validStorageIds, isStreaming]
   );
+
+  const components = useMemo(
+    () => ({
+      a: LinkComponent,
+      img: ImageComponent,
+      p: ParagraphDiv,
+      pre: Highlighter,
+      table: MarkdownTable,
+      td: MarkdownTd,
+    }),
+    [LinkComponent, ImageComponent]
+  );
+
   return (
     <div className={classNames(className, styles.githubFlavorMarkdown)}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
-        components={{
-          a: LinkComponent,
-          img: ImageComponent,
-          p: ({ children }) => <div>{children}</div>,
-          pre: Highlighter,
-          table: MarkdownTable,
-          td: MarkdownTd,
-        }}
+      <Streamdown
+        plugins={STREAMDOWN_PLUGINS}
+        components={components}
+        isAnimating={isStreaming}
+        animated={STREAMDOWN_ANIMATION}
       >
         {children}
-      </ReactMarkdown>
+      </Streamdown>
     </div>
   );
 }
