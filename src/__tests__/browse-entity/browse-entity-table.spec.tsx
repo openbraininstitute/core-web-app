@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -44,6 +45,10 @@ const mouseSpecies: IWorkspaceSpecies = {
 
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'virtual-lab', projectId: 'project' }),
+}));
+
+vi.mock('@/api/virtual-lab-svc/queries/virtual-lab', () => ({
+  getVirtualLab: vi.fn().mockResolvedValue({ id: 'virtual-lab', name: 'Test Lab' }),
 }));
 
 vi.mock('@/ui/hooks/use-scope', () => ({
@@ -151,36 +156,46 @@ function renderBrowseEntityTable(
   store.set(speciesSelectionModeAtom, speciesSelectionMode);
   store.set(workspaceHierarchySpeciesAtom, workspaceSpecies);
 
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
   const view = render(
-    <Provider store={store}>
-      <BrowseEntityScope
-        dataType={ExtendedEntitiesTypeDict.IonChannelModel}
-        section={WorkspaceSection.Data}
-        requireMiniDetailView={false}
-        allowQuery
-        {...props}
-      />
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <BrowseEntityScope
+          dataType={ExtendedEntitiesTypeDict.IonChannelModel}
+          section={WorkspaceSection.Data}
+          requireMiniDetailView={false}
+          allowQuery
+          {...props}
+        />
+      </Provider>
+    </QueryClientProvider>
   );
 
-  return { store, ...view };
+  return { store, queryClient, ...view };
 }
 
 function rerenderBrowseEntityTable(
   rerender: (ui: React.ReactElement) => void,
   store: ReturnType<typeof createStore>,
-  props: Partial<BrowseEntityProps> = {}
+  props: Partial<BrowseEntityProps> = {},
+  queryClient?: QueryClient
 ) {
+  const client = queryClient ?? new QueryClient({ defaultOptions: { queries: { retry: false } } });
   rerender(
-    <Provider store={store}>
-      <BrowseEntityScope
-        dataType={ExtendedEntitiesTypeDict.IonChannelModel}
-        section={WorkspaceSection.Data}
-        requireMiniDetailView={false}
-        allowQuery
-        {...props}
-      />
-    </Provider>
+    <QueryClientProvider client={client}>
+      <Provider store={store}>
+        <BrowseEntityScope
+          dataType={ExtendedEntitiesTypeDict.IonChannelModel}
+          section={WorkspaceSection.Data}
+          requireMiniDetailView={false}
+          allowQuery
+          {...props}
+        />
+      </Provider>
+    </QueryClientProvider>
   );
 }
 
