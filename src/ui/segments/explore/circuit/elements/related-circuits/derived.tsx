@@ -139,8 +139,8 @@ function DerivedGroupSection({
   return (
     <div className="flex flex-col gap-2">
       <div className="ml-2 flex flex-row items-center gap-2">
-        <ArrowReturnRight className="text-neutral-2 text-3xl" />
-        <div className="text-neutral-2 text-lg font-semibold uppercase">
+        <ArrowReturnRight className="text-neutral-3 text-3xl" />
+        <div className="text-neutral-3 text-lg font-semibold uppercase">
           {getCircuitDerivationLabel(derivationType)}
         </div>
       </div>
