@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { chunk, flatMap, get, isArray, keyBy, mergeWith, uniqBy } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import pMap from 'p-map';
@@ -11,7 +11,10 @@ import {
   getCircuitHierarchyByDerivation,
   getCircuits,
 } from '@/api/entitycore/queries/model/circuit';
-import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
+import {
+  CIRCUIT_DERIVED_DERIVATION_TYPES,
+  DerivationTypeDictionary,
+} from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
@@ -133,6 +136,32 @@ export function useFullRawHierarchy({
   return { circuitHierarchy, isLoadingFullHierarchy };
 }
 
+/**
+ * Builds the react-query options for one circuit derivation hierarchy tree. Shared by
+ * `useHierarchyDerivationTree` (single type) and `useHierarchyAllLevels` (`useQueries` over
+ * many types), so the queryKey/queryFn live in exactly one place.
+ */
+function buildDerivationTreeQueryOptions({
+  virtualLabId,
+  projectId,
+  view,
+  derivationType,
+}: WorkspaceContext & {
+  view: TCircuitRepresentationView | null;
+  derivationType: TDerivationType;
+}) {
+  return {
+    queryKey: keyBuilder.circuitsByDerivationTree({ virtualLabId, projectId, derivationType }),
+    queryFn: (): Promise<HierarchyTreeResponse> =>
+      getCircuitHierarchyByDerivation({
+        context: { virtualLabId, projectId },
+        derivation_type: derivationType,
+      }),
+    enabled: view === CircuitRepresentationView.Hierarchy,
+    staleTime: Infinity,
+  };
+}
+
 export function useHierarchyDerivationTree({
   view,
   derivationType,
@@ -142,20 +171,9 @@ export function useHierarchyDerivationTree({
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const { data: hierarchyByDerivation, isLoading: loadingDerivation } =
-    useQuery<HierarchyTreeResponse>({
-      queryKey: keyBuilder.circuitsByDerivationTree({
-        virtualLabId,
-        projectId,
-        derivationType,
-      }),
-      queryFn: () =>
-        getCircuitHierarchyByDerivation({
-          context: { virtualLabId, projectId },
-          derivation_type: derivationType,
-        }),
-      enabled: view === CircuitRepresentationView.Hierarchy,
-      staleTime: Infinity,
-    });
+    useQuery<HierarchyTreeResponse>(
+      buildDerivationTreeQueryOptions({ virtualLabId, projectId, view, derivationType })
+    );
 
   return {
     hierarchyByDerivation,
@@ -302,9 +320,20 @@ export function useHierarchy({
   };
 }
 
+/** A single derivation source (parent) for the "Derived from" tab, with its derivation type. */
+export interface DerivedFromGroup {
+  derivationType: TDerivationType;
+  circuit: ICircuit;
+}
+
+/** A group of derived circuits (subtree) for the "Derived circuits" tab, with its derivation type. */
+export interface DerivedGroup {
+  derivationType: TDerivationType;
+  circuits: HierarchyOutputNode[];
+}
+
 export function useHierarchyAllLevels({ entityId }: WorkspaceContext & { entityId: string }) {
-  let extractionParentCircuitAsParent: ICircuit | undefined;
-  let rewiringParentCircuitAsDerivedFrom: ICircuit | undefined;
+  const { virtualLabId, projectId } = useWorkspace();
   const { circuitHierarchy, isLoadingFullHierarchy } = useFullRawHierarchy({
     view: CircuitRepresentationView.Hierarchy,
   });
@@ -316,44 +345,76 @@ export function useHierarchyAllLevels({ entityId }: WorkspaceContext & { entityI
     derivationType: DerivationTypeDictionary.CircuitExtraction,
   });
 
-  const {
-    hierarchyByDerivation: hierarchyByRewiringDerivation,
-    loadingDerivation: loadingRewiringDerivation,
-  } = useHierarchyDerivationTree({
-    view: CircuitRepresentationView.Hierarchy,
-    derivationType: DerivationTypeDictionary.CircuitRewiring,
+  const { derivedTrees, isLoadingDerived } = useQueries({
+    queries: CIRCUIT_DERIVED_DERIVATION_TYPES.map((derivationType) =>
+      buildDerivationTreeQueryOptions({
+        virtualLabId,
+        projectId,
+        view: CircuitRepresentationView.Hierarchy,
+        derivationType,
+      })
+    ),
+    combine: (
+      results
+    ): {
+      derivedTrees: Array<{ derivationType: TDerivationType; tree: HierarchyTreeResponse | undefined }>;
+      isLoadingDerived: boolean;
+    } => ({
+      derivedTrees: results.map((result, index) => ({
+        derivationType: CIRCUIT_DERIVED_DERIVATION_TYPES[index],
+        tree: result.data,
+      })),
+      isLoadingDerived: results.some((result) => result.isLoading),
+    }),
   });
 
-  if (circuitHierarchy && hierarchyByExtractionDerivation && hierarchyByRewiringDerivation) {
+  const allDerivedReady = derivedTrees.every(({ tree }) => Boolean(tree));
+
+  if (circuitHierarchy && hierarchyByExtractionDerivation && allDerivedReady) {
     const fullById = keyBy(circuitHierarchy.data, 'id');
     const extractionParent = findParentInTree(hierarchyByExtractionDerivation.data, entityId);
-    const rewiringParent = findParentInTree(hierarchyByRewiringDerivation.data, entityId);
     const extractionNode = findNodeInTree(hierarchyByExtractionDerivation.data, entityId);
-    const rewiringNode = findNodeInTree(hierarchyByRewiringDerivation.data, entityId);
-    const extractionTreeAsSubcircuits = extractionNode
+    const subCircuits = extractionNode
       ? filterAndEnrichTree([extractionNode], new Set(collectIdsFromNode(extractionNode)), fullById)
       : [];
+    const parent: ICircuit | undefined = extractionParent
+      ? get(fullById, extractionParent.id)
+      : undefined;
 
-    const rewiringTreeAsDerivedCircuits = rewiringNode
-      ? filterAndEnrichTree([rewiringNode], new Set(collectIdsFromNode(rewiringNode)), fullById)
-      : [];
+    const derivedFrom: DerivedFromGroup[] = [];
+    const derived: DerivedGroup[] = [];
 
-    if (extractionParent) extractionParentCircuitAsParent = get(fullById, extractionParent.id);
-    if (rewiringParent) rewiringParentCircuitAsDerivedFrom = get(fullById, rewiringParent.id);
+    for (const { derivationType, tree } of derivedTrees) {
+      if (!tree) continue;
+
+      const parentNode = findParentInTree(tree.data, entityId);
+      if (parentNode) {
+        const sourceCircuit: ICircuit | undefined = get(fullById, parentNode.id);
+        if (sourceCircuit) derivedFrom.push({ derivationType, circuit: sourceCircuit });
+      }
+
+      const node = findNodeInTree(tree.data, entityId);
+      const circuits = node
+        ? filterAndEnrichTree([node], new Set(collectIdsFromNode(node)), fullById)
+        : [];
+      if (circuits.at(0)?.sub_circuits?.length) {
+        derived.push({ derivationType, circuits });
+      }
+    }
 
     return {
-      subCircuits: extractionTreeAsSubcircuits,
-      derived: rewiringTreeAsDerivedCircuits,
-      parent: extractionParentCircuitAsParent,
-      derivedFrom: rewiringParentCircuitAsDerivedFrom,
+      subCircuits,
+      derived,
+      parent,
+      derivedFrom,
     };
   }
 
   return {
     subCircuits: [],
-    derived: [],
-    parent: extractionParentCircuitAsParent,
-    derivedFrom: rewiringParentCircuitAsDerivedFrom,
-    isLoading: isLoadingFullHierarchy || loadingExtractionDerivation || loadingRewiringDerivation,
+    derived: [] as DerivedGroup[],
+    parent: undefined as ICircuit | undefined,
+    derivedFrom: [] as DerivedFromGroup[],
+    isLoading: isLoadingFullHierarchy || loadingExtractionDerivation || isLoadingDerived,
   };
 }

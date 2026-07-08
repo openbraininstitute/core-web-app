@@ -43,20 +43,20 @@ export function RelatedCircuits({ circuit, variant = ViewVariant.Light }: Props)
   return (
     <div className={cn({ 'mt-5': variant !== ViewVariant.Default })}>
       <Tabs defaultMessage="No related circuits found" variant={variant}>
-        <Tab label="Parent circuit" visible={Boolean(circuit.root_circuit_id)}>
-          <Parent data={parent} />
-        </Tab>
         <Tab label="Root circuit" visible={Boolean(circuit.root_circuit_id)}>
           <Root circuit={circuit} />
         </Tab>
-        <Tab label="Derived from" visible={Boolean(derivedFrom)}>
-          <DerivedFrom data={derivedFrom} />
+        <Tab label="Parent circuit" visible={Boolean(circuit.root_circuit_id)}>
+          <Parent data={parent} />
         </Tab>
         <Tab label="Subcircuits" visible={Boolean(subCircuits?.at(0)?.sub_circuits?.length)}>
           <Subcircuits data={subCircuits} />
         </Tab>
-        <Tab label="Derived circuits" visible={Boolean(derived?.at(0)?.sub_circuits?.length)}>
-          <Derived data={derived} />
+        <Tab label="Derived from" visible={derivedFrom.length > 0}>
+          <DerivedFrom groups={derivedFrom} />
+        </Tab>
+        <Tab label="Derived circuits" visible={derived.length > 0}>
+          <Derived groups={derived} />
         </Tab>
       </Tabs>
     </div>

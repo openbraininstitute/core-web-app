@@ -1,24 +1,24 @@
-import { useRouter } from 'next/navigation';
-import { ReactNode, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
+import { useRouter } from 'next/navigation';
+import { type ReactNode, useMemo } from 'react';
 
-import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
-import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { WorkspaceScope } from '@/constants';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { HierarchyOutputNode, ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { VirtualLabInfo } from '@/types/virtual-lab/common';
+import type { HierarchyOutputNode, ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 
 type Props = {
   data: HierarchyOutputNode[] | undefined;
@@ -82,8 +82,8 @@ export function Subcircuits({ data }: Props) {
       return (
         <div className="my-5 flex flex-col items-start gap-5">
           <div className="ml-2 flex flex-row items-center gap-2">
-            <ArrowReturnRight className="text-neutral-4 text-3xl" />
-            <div className="text-neutral-4 text-lg font-semibold uppercase">subcircuits</div>
+            <ArrowReturnRight className="text-neutral-3 text-3xl" />
+            <div className="text-neutral-3 text-lg font-semibold uppercase">subcircuits</div>
           </div>
           <div className="w-full">
             <div className="ml-4">
