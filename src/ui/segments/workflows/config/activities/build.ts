@@ -36,7 +36,6 @@ const EXTRACELLULAR_RECORDING_ARRAY_CIRCUIT_SCALES: string[] = [
   CircuitScaleDictionary.Single,
   CircuitScaleDictionary.PairNeuron,
   CircuitScaleDictionary.SmallMicrocircuit,
-  CircuitScaleDictionary.Microcircuit,
 ];
 
 /**

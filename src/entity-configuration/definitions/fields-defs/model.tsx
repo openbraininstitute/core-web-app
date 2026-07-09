@@ -438,7 +438,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             const scales =
               context.dataType === ExtendedEntitiesTypeDict.Circuit &&
               context.section === WorkspaceSection.ScanConfigBuildWorkflow
-                ? pick(CircuitScale, ['Single', 'PairNeuron', 'SmallMicrocircuit', 'Microcircuit'])
+                ? pick(CircuitScale, ['Single', 'PairNeuron', 'SmallMicrocircuit'])
                 : omit(CircuitScale, ['Single']);
             return map(scales, (item) => ({ label: item.label, value: item.key }));
           },
