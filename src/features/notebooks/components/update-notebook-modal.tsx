@@ -178,9 +178,9 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
         try {
           await fn();
           markStep(key, 'success');
-        } catch (e) {
+        } catch (_) {
           markStep(key, 'error');
-          throw new Error(`Failed while: ${label}`, { cause: e });
+          throw new Error(`Failed while: ${label}`);
         }
       };
 
