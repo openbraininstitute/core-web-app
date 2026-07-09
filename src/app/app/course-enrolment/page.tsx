@@ -20,17 +20,6 @@ interface ClaimSuccessData {
   start_date?: string;
 }
 
-const ERROR_MESSAGES: Record<string, string> = {
-  'Enrolment not found': 'The enrolment could not be found. Please check your link.',
-  'This enrolment has been dropped': 'This enrolment has been dropped and cannot be claimed.',
-  'This enrolment has already been claimed':
-    'This enrolment has already been claimed by another user.',
-  'Cannot claim enrolment: course is in':
-    'The course is no longer active and cannot accept new claims.',
-  'Cannot claim enrolment: course has ended':
-    'The course has ended and enrolments can no longer be claimed.',
-};
-
 export default function CourseEnrolmentPage() {
   const config = useConfig();
   const router = useRouter();
@@ -62,17 +51,9 @@ export default function CourseEnrolmentPage() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          const errorMsg = errorData.message || 'Failed to claim enrolment';
+          const displayMsg = errorData.message || 'Failed to claim enrolment';
 
-          let displayMsg = errorMsg;
-          for (const [key, value] of Object.entries(ERROR_MESSAGES)) {
-            if (errorMsg.includes(key)) {
-              displayMsg = value;
-              break;
-            }
-          }
-
-          setError({ message: errorMsg, display: displayMsg });
+          setError({ message: displayMsg, display: displayMsg });
           setLoading(false);
           return;
         }
