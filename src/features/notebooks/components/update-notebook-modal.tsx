@@ -475,28 +475,30 @@ export function UpdateNotebookModal({
     >
       <div className="relative mx-auto flex h-full w-full flex-col px-6 py-2">
         {/* Step navigation */}
-        <div className="mb-2 shrink-0">
-          <nav className="flex items-center gap-1">
-            {STEPS.map((step, index) => (
-              <div key={step.key} className="flex items-center gap-1">
-                <Button
-                  borderless
-                  rounded
-                  type="button"
-                  variant="outline"
-                  className={cn(
-                    'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none',
-                    { 'text-primary-6 font-bold': activeStep === step.key }
-                  )}
-                  onClick={() => setActiveStep(step.key)}
-                >
-                  {step.label}
-                </Button>
-                {index < STEPS.length - 1 && <RightOutlined className="text-primary-9 size-2" />}
-              </div>
-            ))}
-          </nav>
-        </div>
+        {!submitMutation.isPending && !submitMutation.isError && !syncProgress && (
+          <div className="mb-2 shrink-0">
+            <nav className="flex items-center gap-1">
+              {STEPS.map((step, index) => (
+                <div key={step.key} className="flex items-center gap-1">
+                  <Button
+                    borderless
+                    rounded
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none',
+                      { 'text-primary-6 font-bold': activeStep === step.key }
+                    )}
+                    onClick={() => setActiveStep(step.key)}
+                  >
+                    {step.label}
+                  </Button>
+                  {index < STEPS.length - 1 && <RightOutlined className="text-primary-9 size-2" />}
+                </div>
+              ))}
+            </nav>
+          </div>
+        )}
 
         {/* Step content */}
         <div className="border-neutral-2 secondary-scrollbar h-full max-h-full min-h-0 flex-1 overflow-auto rounded-md border p-6">
