@@ -24,7 +24,12 @@ export async function syncTemplateNotebooksToStudents({
   const allNotebooks = await fetchAllPaginatedData({
     fn: (page, pageSize) =>
       getAnalysisNotebookTemplates({
-        filters: { page, page_size: pageSize },
+        filters: {
+          page,
+          page_size: pageSize,
+          authorized_project_id: templateProjectId,
+          authorized_public: false,
+        },
         context: { ...context, projectId: templateProjectId },
       }),
     pageSize: 100,
