@@ -1,15 +1,22 @@
-import { RiTableLine } from '@remixicon/react';
-import { Image as AntdImage, Segmented } from 'antd';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { RiCloseLine } from '@remixicon/react';
+import { Image as AntdImage } from 'antd';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
+import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
+import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
+import {
+  type ViewerMode,
+  ViewerModeDict,
+} from '@/features/scan-config/components/color-by/mode-toggle';
+import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
-import { cn } from '@/utils/css-class';
 
-import CircuitViz from '../circuit-viz';
 import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -24,19 +31,42 @@ interface CircuitPreviewProps {
   largeCircuit?: boolean;
 }
 
+/**
+ * Hosts the circuit preview and owns all viewer chrome (mode toggle, settings,
+ * color-by dropdown/key, nodes table). The color-by state lives here so the mode
+ * toggle can also be shown over the image, and the actual viewers stay pure
+ * renderers of `colorsByNode` + config.
+ */
 export function CircuitPreview({
   className,
   circuit,
   enableVisualization = false,
   largeCircuit = false,
 }: CircuitPreviewProps) {
-  const [mode, setMode] = useState<'image' | 'viz'>('image');
+  const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const activeMode = enableVisualization ? mode : 'image';
+  const activeMode: ViewerMode = enableVisualization ? mode : 'image';
+
+  const { config: circuitConfig } = useCircuitConfig(circuit);
+  const [populationName, setPopulationName] = useState<string | undefined>();
+
+  const population = useMemo(
+    () => (circuitConfig ? resolvePopulation(circuitConfig.nodes, populationName) : undefined),
+    [circuitConfig, populationName]
+  );
+
+  const handlePopulationChange = useCallback((name: string) => {
+    setPopulationName(name);
+  }, []);
+
+  const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
+    useCircuitColorBy(enableVisualization ? circuit : undefined, {
+      supportsAxons: !largeCircuit,
+      population,
+    });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -46,7 +76,7 @@ export function CircuitPreview({
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [containerRef]);
 
   function handleToggleTable() {
     setShowTable((prev) => {
@@ -66,39 +96,68 @@ export function CircuitPreview({
     : MIN_TABLE_HEIGHT;
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-end items-center gap-2 mb-3">
-        <TableToggleButton pressed={showTable} onClick={handleToggleTable} />
-        {enableVisualization && (
-          <Segmented
-            options={[
-              { label: 'Image View', value: 'image' },
-              { label: 'Visualization', value: 'viz' },
-            ]}
-            onChange={(v) => setMode(v as 'image' | 'viz')}
+    <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
+      {activeMode === ViewerModeDict.Image && (
+        <CircuitImage className={className} circuit={circuit} />
+      )}
+      {activeMode === ViewerModeDict.Visualization && !largeCircuit && (
+        <CircuitViz
+          key={circuit.id}
+          circuit={circuit}
+          colorsByNode={colorsByNode}
+          defaultColor={defaultColor}
+          showAxons={config.showAxons}
+          backgroundColor={config.backgroundColor}
+          scalebarColor={theme?.foreground}
+          signals={signals}
+        />
+      )}
+      {activeMode === ViewerModeDict.Visualization && largeCircuit && (
+        <LargeCircuitPreview
+          key={circuit.id}
+          circuit={circuit}
+          colorsByNode={colorsByNode}
+          backgroundColor={config.backgroundColor}
+          scalebarColor={theme?.foreground}
+          signals={signals}
+        />
+      )}
+
+      {enableVisualization && (
+        <CircuitViewerChrome
+          mode={activeMode}
+          onModeChange={setMode}
+          theme={theme}
+          table={{ active: showTable, onToggle: handleToggleTable }}
+          viz={activeMode === ViewerModeDict.Visualization ? { menu, colorBy } : undefined}
+        />
+      )}
+
+      {showTable && tableHeight !== null && containerHeight > 0 && (
+        <div
+          className="absolute left-0 right-0 bottom-0 z-30 flex flex-col border-t border-neutral-200 bg-white"
+          style={{ height: clampedHeight }}
+        >
+          <TableResizeHandle
+            containerRef={containerRef}
+            minHeight={MIN_TABLE_HEIGHT}
+            onResize={setTableHeight}
           />
-        )}
-      </div>
-      <div ref={containerRef} className="flex-1 relative min-h-0 rounded-2xl overflow-hidden">
-        {activeMode === 'image' && <CircuitImage className={className} circuit={circuit} />}
-        {activeMode === 'viz' && !largeCircuit && <CircuitViz key={circuit.id} id={circuit.id} />}
-        {activeMode === 'viz' && largeCircuit && (
-          <LargeCircuitPreview key={circuit.id} circuit={circuit} />
-        )}
-        {showTable && tableHeight !== null && containerHeight > 0 && (
-          <div
-            className="absolute left-0 right-0 bottom-0 z-20 flex flex-col border-t border-neutral-200 bg-white"
-            style={{ height: clampedHeight }}
+          <button
+            type="button"
+            aria-label="Close nodes table"
+            onClick={() => setShowTable(false)}
+            className="absolute right-2 top-2 z-10 inline-flex size-7 items-center justify-center rounded-full bg-white text-neutral-500 shadow-sm ring-1 ring-black/5 hover:bg-neutral-100"
           >
-            <TableResizeHandle
-              containerRef={containerRef}
-              minHeight={MIN_TABLE_HEIGHT}
-              onResize={setTableHeight}
-            />
-            <CircuitNodesTable circuit={circuit} />
-          </div>
-        )}
-      </div>
+            <RiCloseLine className="size-4" />
+          </button>
+          <CircuitNodesTable
+            circuit={circuit}
+            populationName={populationName}
+            onPopulationChange={handlePopulationChange}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -148,27 +207,6 @@ function TableResizeHandle({
     >
       <div className="h-1 w-14 rounded-full bg-neutral-400 transition-all group-hover:w-16 group-hover:bg-neutral-600" />
     </div>
-  );
-}
-
-function TableToggleButton({ pressed, onClick }: { pressed: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={pressed}
-      className={cn(
-        'inline-flex items-center gap-2 h-auto rounded-full bg-white px-5 py-1',
-        'text-primary-9 text-sm font-bold',
-        'focus-visible:outline-none',
-        pressed
-          ? 'shadow-[inset_4px_4px_10px_0_#00000014,inset_-4px_-4px_10px_0_#ffffffd1]'
-          : 'shadow-[6px_6px_14px_0_#0000000f,-8px_-8px_20px_0_#ffffffd1]'
-      )}
-    >
-      <RiTableLine className="size-4" />
-      Table
-    </button>
   );
 }
 

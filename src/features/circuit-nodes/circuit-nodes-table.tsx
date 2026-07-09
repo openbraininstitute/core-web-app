@@ -7,38 +7,43 @@ import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/com
 import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { cn } from '@/utils/css-class';
 import { formatBytes } from '@/utils/format';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
+import type { ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
 type Props = {
   circuit: ICircuit;
   className?: string;
+  /** when set with `onPopulationChange`, population is controlled by the parent */
+  populationName?: string;
+  onPopulationChange?: (name: string) => void;
 };
 
-function pickDefaultPopulation(populations: NodePopulation[]): NodePopulation | undefined {
-  if (populations.length === 0) return undefined;
-  return populations.find((p) => p.type === 'biophysical') ?? populations[0];
-}
-
-export default function CircuitNodesTable({ circuit, className }: Props) {
+export default function CircuitNodesTable({
+  circuit,
+  className,
+  populationName: controlledPopulationName,
+  onPopulationChange,
+}: Props) {
   const { config, isLoading: configLoading, error: configError } = useCircuitConfig(circuit);
 
   const [view, setView] = useState<ViewMode>('nodes');
-  const [selectedPopulationName, setSelectedPopulationName] = useState<string | undefined>();
+  const [internalPopulationName, setInternalPopulationName] = useState<string | undefined>();
 
-  const population = useMemo(() => {
-    if (!config) return undefined;
-    const current = config.nodes.find((p) => p.name === selectedPopulationName);
-    return current ?? pickDefaultPopulation(config.nodes);
-  }, [config, selectedPopulationName]);
+  const isControlled = onPopulationChange !== undefined;
+  const selectedPopulationName = isControlled ? controlledPopulationName : internalPopulationName;
+  const setSelectedPopulationName = isControlled ? onPopulationChange : setInternalPopulationName;
 
-  const populationName = population?.name;
+  const population = useMemo(
+    () => (config ? resolvePopulation(config.nodes, selectedPopulationName) : undefined),
+    [config, selectedPopulationName]
+  );
 
   const enabled = view === 'nodes';
 
@@ -74,7 +79,7 @@ export default function CircuitNodesTable({ circuit, className }: Props) {
         view={view}
         onViewChange={setView}
         populations={config?.nodes ?? []}
-        populationName={populationName}
+        populationName={population?.name}
         onPopulationChange={setSelectedPopulationName}
       />
       <div className={styles.body}>

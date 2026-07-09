@@ -57,8 +57,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: ^0.28.0
-        version: 0.28.0(react@19.2.6)
+        specifier: 0.30.0
+        version: 0.30.0(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -132,8 +132,8 @@ importers:
         specifier: ^3.13.24
         version: 3.13.24(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@tolokoban/tgd':
-        specifier: 2.0.78
-        version: 2.0.78
+        specifier: 2.2.0
+        version: 2.2.0
       ag-grid-community:
         specifier: ^35.3.0
         version: 35.3.0
@@ -357,6 +357,9 @@ importers:
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@types/chroma-js':
+        specifier: ^3.1.2
+        version: 3.1.2
       '@types/file-saver':
         specifier: ^2.0.7
         version: 2.0.7
@@ -2739,8 +2742,8 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@0.28.0':
-    resolution: {integrity: sha512-XeKT9izQ+feQCuNxyUYg/s9W+cSu0AH7YHRS9Xsq0S3G5YW7KQu8cfgrhQGUO5cCLOIxMNEAWpLyJGIglomaDw==}
+  '@openbraininstitute/morphoviewer@0.30.0':
+    resolution: {integrity: sha512-6F+j9mEs26XaHskteNJfBrAtsLzUz7ZM6K7LLGkam6cLy5q5Cx/857QikPf1sbxZpRzRjL7HRW5uNsc+y2N1NA==}
     peerDependencies:
       react: ^19.2.5
 
@@ -5013,11 +5016,8 @@ packages:
       '@types/react-dom':
         optional: true
 
-  '@tolokoban/tgd@2.0.147':
-    resolution: {integrity: sha512-gK47cNFtFVl2dbl3jQ9wkw6DtrQbypbVLZmgGzHN6S0oy8Y7Xl5UlPIVHOIM+oVK4Zp/x98U4OhNpOEBpNDlIQ==}
-
-  '@tolokoban/tgd@2.0.78':
-    resolution: {integrity: sha512-nEpIwkOO/bEEk0Fetpjc8iAaBYsRf9wZQgUMQLvrjCSv9VnG8bzOh4WKeRcSufkgUw7+Sqoe2kV3MVXB+lFL+w==}
+  '@tolokoban/tgd@2.2.0':
+    resolution: {integrity: sha512-SminZtYAn5GZxfaEMRPW1SVl29HFzAlYeChWWq4/Rm81UzhjCY8s5F7PcbZuNl13TD7wREld3Y+Ea+WZf+W13Q==}
 
   '@turf/area@7.3.5':
     resolution: {integrity: sha512-sSn80wPT7XfBIDN3vurCPxhk9W4U8ozS/XImSqeLN8qveTICOxzZkhsGDMp0CuncaN+plWut4a2TdNM7mzZB6Q==}
@@ -5060,6 +5060,9 @@ packages:
 
   '@types/chroma-js@2.4.5':
     resolution: {integrity: sha512-6ISjhzJViaPCy2q2e6PgK+8HcHQDQ0V2LDiKmYAh+jJlLqDa6HbwDh0wOevHY0kHHUx0iZwjSRbVD47WOUx5EQ==}
+
+  '@types/chroma-js@3.1.2':
+    resolution: {integrity: sha512-YBTQqArPN8A0niHXCwrO1z5x++a+6l0mLBykncUpr23oIPW7L4h39s6gokdK/bDrPmSh8+TjMmrhBPnyiaWPmQ==}
 
   '@types/command-line-args@5.2.3':
     resolution: {integrity: sha512-uv0aG6R0Y8WHZLTamZwtfsDLVRnOa+n+n5rEvFWL5Na5gZ8V2Teab/duDPFzIIIhs9qizDpcavCusCLJZu62Kw==}
@@ -7700,7 +7703,6 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
-    bundledDependencies: []
 
   jsonify@0.0.1:
     resolution: {integrity: sha512-2/Ki0GcmuqSrgFyelQq9M05y7PS0mEwuIzrf3f1fPqkVDVRvZrPZtVSMHxdgo8Aq0sxAOb/cr2aqqA3LeWHVPg==}
@@ -13167,9 +13169,9 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@0.28.0(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@0.30.0(react@19.2.6)':
     dependencies:
-      '@tolokoban/tgd': 2.0.147
+      '@tolokoban/tgd': 2.2.0
       fflate: 0.8.3
       react: 19.2.6
       tslib: 2.8.1
@@ -15713,16 +15715,7 @@ snapshots:
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
 
-  '@tolokoban/tgd@2.0.147':
-    dependencies:
-      '@loaders.gl/core': 4.4.1
-      '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
-      '@loaders.gl/gltf': 4.4.1(@loaders.gl/core@4.4.1)
-      gl-matrix: 3.4.4
-    transitivePeerDependencies:
-      - '@75lb/nature'
-
-  '@tolokoban/tgd@2.0.78':
+  '@tolokoban/tgd@2.2.0':
     dependencies:
       '@loaders.gl/core': 4.4.1
       '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
@@ -15799,6 +15792,8 @@ snapshots:
       assertion-error: 2.0.1
 
   '@types/chroma-js@2.4.5': {}
+
+  '@types/chroma-js@3.1.2': {}
 
   '@types/command-line-args@5.2.3': {}
 

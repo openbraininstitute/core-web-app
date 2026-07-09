@@ -1,29 +1,67 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { LoadingNeuronSpinner } from '@/components/neuron-viewer';
-import { IconGear } from '@/features/ai-assistant/icons/gear';
+import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
+import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
-import DebouncedSwitch from './debounced-switch';
 import { useCircuit } from './hooks';
 import { sequentialCellLoader } from './sequential-loader';
 
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
+import type { MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './circuit-viz.module.css';
 
-const CircuitViz = ({ id }: { id: string }) => {
+interface CircuitVizProps {
+  circuit: ICircuit;
+  /** per-node colors aligned by node index; undefined → viewer default (blue). */
+  colorsByNode?: string[];
+  /** default color for nodes with no property color (adapts to bg in adaptive mode). */
+  defaultColor?: string;
+  showAxons: boolean;
+  backgroundColor: string;
+  /** scalebar pin/label color (adaptive mode); undefined → package default. */
+  scalebarColor?: string;
+  /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
+  signals: MorphoViewerSignals;
+}
+
+const CircuitViz = ({
+  circuit: circuitEntity,
+  colorsByNode,
+  defaultColor,
+  showAxons,
+  backgroundColor,
+  scalebarColor,
+  signals,
+}: CircuitVizProps) => {
   const [progress, setProgress] = useState(0);
-  const [showAxon, setShowAxon] = useState(false);
-  const { circuit, isLoading, error, loadCell } = useCircuit(id, showAxon);
+  const { circuit, isLoading, error, loadCell } = useCircuit(
+    circuitEntity.id,
+    showAxons,
+    colorsByNode,
+    defaultColor
+  );
+  const scalebar = useMemo(
+    () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
+    [scalebarColor]
+  );
   const [highlightedCellId, setHighlightedCellId] = useState('');
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
   };
-  const reset = () => {
-    sequentialCellLoader.clear();
-    setProgress(0);
-  };
+  // reloading cells (axon toggle/recolor) restarts the sequential loader
+  const prevAxonRef = useRef(showAxons);
+  useEffect(() => {
+    if (prevAxonRef.current !== showAxons) {
+      prevAxonRef.current = showAxons;
+      sequentialCellLoader.clear();
+      setProgress(0);
+    }
+  }, [showAxons]);
+
+  const loading = !error && (isLoading || progress < 1);
 
   return (
     <div className="h-full w-full relative">
@@ -31,52 +69,26 @@ const CircuitViz = ({ id }: { id: string }) => {
         <MorphoViewerSmallCircuit
           className={styles.morphoViewer}
           gizmo
-          scalebar
-          backgroundColor="white"
+          scalebar={scalebar}
+          backgroundColor={backgroundColor}
+          signals={signals}
           circuit={circuit}
           onCellHover={handleCellHover}
           highlightedCellIds={[highlightedCellId]}
           loadCell={loadCell}
-          controls={[
-            [
-              <div key="show-axon" className={styles.showAxons}>
-                Show Axons{' '}
-                <DebouncedSwitch
-                  value={showAxon}
-                  onChange={(v) => {
-                    reset();
-                    setShowAxon(v);
-                  }}
-                  onClick={reset}
-                />
-              </div>,
-              progress > 0 && progress < 1 && (
-                <div className={styles.progress}>
-                  <IconGear />
-                  <div>Loading</div>
-                  <strong>{(100 * progress).toFixed(0)}%</strong>
-                </div>
-              ),
-            ],
-            'reset-camera',
-            'fullscreen',
-          ]}
+          controls={[]}
           onLoadProgress={setProgress}
         />
       )}
-      {(isLoading || progress === 0 || error) && (
-        <div className="w-full h-full flex justify-center items-center">
-          {(isLoading || progress === 0) && (
-            <LoadingNeuronSpinner className={styles.spinner} label="Circuit" />
-          )}
-          {!!error && (
-            <details className="text-red-500">
-              <summary>
-                <strong>Couldn't load the visualization</strong>
-              </summary>
-              <div>{error.message}</div>
-            </details>
-          )}
+      {loading && <VisualizationLoadingIndicator progress={progress} />}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <details className="text-red-500">
+            <summary>
+              <strong>Couldn't load the visualization</strong>
+            </summary>
+            <div>{error.message}</div>
+          </details>
         </div>
       )}
     </div>

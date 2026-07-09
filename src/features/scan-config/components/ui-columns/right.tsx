@@ -91,7 +91,7 @@ export function Right({
     );
   }
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 py-1 h-full">
+    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
       {activity === ScanConfigActivity.Simulate &&
         entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
           <IonChannelModelRecordingRender
