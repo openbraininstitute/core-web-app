@@ -125,6 +125,7 @@ jobs:
   monitor:
     needs: deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -205,7 +206,7 @@ jobs:
 
             let status = 'PENDING';
             const startTime = Date.now();
-            const maxWaitTime = 10 * 60 * 1000; // 10 minutes
+            const maxWaitTime = 20 * 60 * 1000; // 20 minutes
 
             while (true) {
               const job = getJobStatus();
@@ -225,7 +226,7 @@ jobs:
 
               if (Date.now() - startTime > maxWaitTime) {
                 await updateComment('FAILED', process.env.PREVIEW_URL, durationStr);
-                core.setFailed('Build timeout after 10 minutes');
+                core.setFailed('Build timeout after 20 minutes');
                 break;
               }
 
