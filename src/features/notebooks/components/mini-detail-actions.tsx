@@ -347,8 +347,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
 
         <UpdateNotebookModal
           open={updateOpen}
-          onClose={() => setUpdateOpen(false)}
+          onClose={() => {
+            setUpdateOpen(false);
+            setMdv(false);
+          }}
           record={record}
+          virtualLabData={virtualLabData}
         />
 
         <Button

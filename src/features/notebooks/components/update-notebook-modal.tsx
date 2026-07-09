@@ -8,12 +8,14 @@ import {
   LoadingOutlined as LoadingIcon,
   PlusOutlined,
   RightOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { capitalize } from 'es-toolkit/compat';
 import { useMemo, useState } from 'react';
 
-import { deleteAsset, getAssets } from '@/api/entitycore/queries/assets';
+import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
+import { deleteAsset, downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
 import { uploadNotebookTemplateFile } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
 import {
@@ -25,6 +27,7 @@ import { getOrganizations } from '@/api/entitycore/queries/general/organization-
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getRoles } from '@/api/entitycore/queries/general/role';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
@@ -41,12 +44,125 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { Agent, IAsset, IContributor } from '@/api/entitycore/types/shared/global';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { IRole } from '@/api/entitycore/types/shared/role';
+import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
 
 interface UpdateNotebookModalProps {
   open: boolean;
   onClose: () => void;
   record: EntityCoreObjectTypes;
+  virtualLabData?: TVirtualLab;
+}
+
+type WorkspaceContext = { virtualLabId: string; projectId: string };
+
+/**
+ * Syncs a template notebook's assets and contributions to all child project notebooks.
+ * For assets: wipes child assets and re-uploads from template (guarantees content match).
+ * For contributions: diffs by agent+role (delete extra, create missing).
+ */
+async function syncChildProjects({
+  virtualLabId,
+  templateProjectId,
+  templateEntityId,
+  entityType,
+  notebookName,
+}: {
+  virtualLabId: string;
+  templateProjectId: string;
+  templateEntityId: string;
+  entityType: EntityCoreObjectTypes['type'];
+  notebookName: string;
+}) {
+  const templateCtx: WorkspaceContext = { virtualLabId, projectId: templateProjectId };
+
+  // Get template's current state (source of truth)
+  const [templateAssets, templateContribs] = await Promise.all([
+    getAssets({ entityType, entityId: templateEntityId, ctx: templateCtx }),
+    getContributions({ context: templateCtx, filters: { entity__id: templateEntityId } }),
+  ]);
+
+  // Download all template asset files
+  const templateFiles = await Promise.all(
+    templateAssets.data.map(async (asset) => {
+      const response = await downloadAsset({
+        ctx: templateCtx,
+        entityType,
+        entityId: templateEntityId,
+        id: asset.id,
+        asRawResponse: true,
+      });
+      const blob = await response.blob();
+      const file = new File([blob], asset.path, { type: asset.content_type });
+      return { file, contentType: asset.content_type as AssetContentType, label: asset.label };
+    })
+  );
+
+  const allProjectIds = await listAllProjectIds(virtualLabId);
+  const childProjectIds = allProjectIds.filter((id) => id !== templateProjectId);
+
+  const results = await Promise.allSettled(
+    childProjectIds.map(async (pid) => {
+      const childCtx: WorkspaceContext = { virtualLabId, projectId: pid };
+      const res = await getAnalysisNotebookTemplates({
+        filters: { search: notebookName },
+        context: childCtx,
+      });
+      const match = res.data.find((nb) => nb.name === notebookName);
+      if (!match) return;
+
+      // Assets: wipe and re-upload
+      const childAssets = await getAssets({ entityType, entityId: match.id, ctx: childCtx });
+      await Promise.all(
+        childAssets.data.map((a) =>
+          deleteAsset({ entityType, entityId: match.id, id: a.id, ctx: childCtx })
+        )
+      );
+      for (const { file, contentType, label } of templateFiles) {
+        await uploadNotebookTemplateFile({
+          context: childCtx,
+          entityId: match.id,
+          file,
+          contentType,
+          assetLabel: label,
+        });
+      }
+
+      // Contributions: diff
+      const childContribs = await getContributions({
+        context: childCtx,
+        filters: { entity__id: match.id },
+      });
+
+      // Delete contributions in child that don't exist in template
+      const toDelete = childContribs.data.filter(
+        (cc) =>
+          !templateContribs.data.some(
+            (tc) => tc.agent.id === cc.agent.id && tc.role.id === cc.role.id
+          )
+      );
+      await Promise.all(toDelete.map((c) => deleteContribution({ id: c.id, context: childCtx })));
+
+      // Create contributions in child that exist in template but not in child
+      const toCreate = templateContribs.data.filter(
+        (tc) =>
+          !childContribs.data.some((cc) => cc.agent.id === tc.agent.id && cc.role.id === tc.role.id)
+      );
+      await Promise.all(
+        toCreate.map((tc) =>
+          createContribution({
+            context: childCtx,
+            contributor: { agent_id: tc.agent.id, role_id: tc.role.id, entity_id: match.id },
+          })
+        )
+      );
+    })
+  );
+
+  const failures = results.filter((r) => r.status === 'rejected');
+  if (failures.length > 0) {
+    throw new Error(`Failed to sync ${failures.length} child project(s)`);
+  }
 }
 
 const ASSET_FILE_CONFIGS = [
@@ -113,7 +229,12 @@ const STEPS = [
 
 type StepKey = (typeof STEPS)[number]['key'];
 
-export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookModalProps) {
+export function UpdateNotebookModal({
+  open,
+  onClose,
+  record,
+  virtualLabData,
+}: UpdateNotebookModalProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
   const queryClient = useQueryClient();
@@ -150,11 +271,15 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
   );
 
   const [progressSteps, setProgressSteps] = useState<
-    Array<{ key: string; label: string; status: 'idle' | 'pending' | 'success' | 'error' }>
+    Array<{
+      key: string;
+      label: string;
+      status: 'idle' | 'pending' | 'success' | 'error' | 'warning';
+    }>
   >([]);
 
   const submitMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<{ propagationWarning: boolean }> => {
       const steps: typeof progressSteps = [];
       if (assetsToRemove.length > 0)
         steps.push({ key: 'remove-assets', label: 'Removing assets', status: 'idle' });
@@ -168,9 +293,15 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
         });
       if (newContributions.filter((c) => c.agent_id && c.role_id).length > 0)
         steps.push({ key: 'add-contributions', label: 'Adding contributions', status: 'idle' });
+
+      const isCourseTemplate =
+        !!virtualLabData?.course && virtualLabData.course.template_project_id === projectId;
+      if (isCourseTemplate)
+        steps.push({ key: 'propagate', label: 'Propagating to child projects', status: 'idle' });
+
       setProgressSteps(steps);
 
-      const markStep = (key: string, status: 'pending' | 'success' | 'error') =>
+      const markStep = (key: string, status: 'pending' | 'success' | 'error' | 'warning') =>
         setProgressSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status } : s)));
 
       const runStep = async (key: string, label: string, fn: () => Promise<unknown>) => {
@@ -229,8 +360,28 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
           )
         );
       }
+
+      // Propagate changes to child projects if this is a course template project
+      if (isCourseTemplate) {
+        markStep('propagate', 'pending');
+        try {
+          await syncChildProjects({
+            virtualLabId,
+            templateProjectId: projectId,
+            templateEntityId: record.id,
+            entityType: record.type,
+            notebookName: name,
+          });
+          markStep('propagate', 'success');
+        } catch (_) {
+          markStep('propagate', 'warning');
+          return { propagationWarning: true };
+        }
+      }
+
+      return { propagationWarning: false };
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await queryClient.invalidateQueries({
         predicate: (query) => {
           const first = query.queryKey[0] as
@@ -243,8 +394,11 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
       await queryClient.invalidateQueries({
         queryKey: ['update-notebook-contributions', record.id],
       });
-      notification.success({ message: 'Notebook updated successfully', placement: 'topRight' });
-      handleClose();
+
+      if (!result.propagationWarning) {
+        notification.success({ message: 'Notebook updated successfully', placement: 'topRight' });
+        handleClose();
+      }
     },
   });
 
@@ -328,52 +482,68 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
 
         {/* Step content */}
         <div className="border-neutral-2 secondary-scrollbar h-full max-h-full min-h-0 flex-1 overflow-auto rounded-md border p-6">
-          {(submitMutation.isPending || submitMutation.isError) && progressSteps.length > 0 && (
-            <div className="flex h-full flex-col items-center justify-center gap-6">
-              <ProgressWheel steps={progressSteps} />
-              {submitMutation.isError && (
-                <p className="text-red-600 text-center text-sm">
-                  Error while {progressSteps.find((s) => s.status === 'error')?.label.toLowerCase()}
-                  . Please try again later or contact support if the issue persists.
-                </p>
-              )}
-            </div>
-          )}
-
-          {!submitMutation.isPending && !submitMutation.isError && activeStep === 'setup' && (
-            <div>
-              <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
-              <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
-                {name}
+          {(submitMutation.isPending ||
+            submitMutation.isError ||
+            progressSteps.some((s) => s.status === 'warning')) &&
+            progressSteps.length > 0 && (
+              <div className="flex h-full flex-col items-center justify-center gap-6">
+                <ProgressWheel steps={progressSteps} />
+                {submitMutation.isError && (
+                  <p className="text-red-600 text-center text-sm">
+                    Error while{' '}
+                    {progressSteps.find((s) => s.status === 'error')?.label.toLowerCase()}. Please
+                    try again later or contact support if the issue persists.
+                  </p>
+                )}
+                {progressSteps.some((s) => s.status === 'warning') && !submitMutation.isError && (
+                  <p className="text-orange-600 text-center text-sm">
+                    Failed to propagate to all child projects. Try to re-sync later.
+                  </p>
+                )}
               </div>
-            </div>
-          )}
-
-          {!submitMutation.isPending && !submitMutation.isError && activeStep === 'assets' && (
-            <AssetsStep
-              assetsLoading={assetsLoading}
-              visibleAssets={visibleAssets}
-              newAssetFiles={newAssetFiles}
-              onRemoveAsset={(asset) => setAssetsToRemove((prev) => [...prev, asset])}
-              onAddAssetFile={(key, file, config) => {
-                setNewAssetFiles((prev) => {
-                  const next = new Map(prev);
-                  next.set(key, { file, config });
-                  return next;
-                });
-              }}
-              onRemoveNewAsset={(key) => {
-                setNewAssetFiles((prev) => {
-                  const next = new Map(prev);
-                  next.delete(key);
-                  return next;
-                });
-              }}
-            />
-          )}
+            )}
 
           {!submitMutation.isPending &&
             !submitMutation.isError &&
+            !progressSteps.some((s) => s.status === 'warning') &&
+            activeStep === 'setup' && (
+              <div>
+                <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
+                <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
+                  {name}
+                </div>
+              </div>
+            )}
+
+          {!submitMutation.isPending &&
+            !submitMutation.isError &&
+            !progressSteps.some((s) => s.status === 'warning') &&
+            activeStep === 'assets' && (
+              <AssetsStep
+                assetsLoading={assetsLoading}
+                visibleAssets={visibleAssets}
+                newAssetFiles={newAssetFiles}
+                onRemoveAsset={(asset) => setAssetsToRemove((prev) => [...prev, asset])}
+                onAddAssetFile={(key, file, config) => {
+                  setNewAssetFiles((prev) => {
+                    const next = new Map(prev);
+                    next.set(key, { file, config });
+                    return next;
+                  });
+                }}
+                onRemoveNewAsset={(key) => {
+                  setNewAssetFiles((prev) => {
+                    const next = new Map(prev);
+                    next.delete(key);
+                    return next;
+                  });
+                }}
+              />
+            )}
+
+          {!submitMutation.isPending &&
+            !submitMutation.isError &&
+            !progressSteps.some((s) => s.status === 'warning') &&
             activeStep === 'contribution' && (
               <ContributionsStep
                 contributionsLoading={contributionsLoading}
@@ -400,7 +570,7 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
 
         {/* Footer navigation */}
         <div className="mt-auto flex w-full shrink-0 items-center justify-between gap-2 py-3">
-          {submitMutation.isError ? (
+          {submitMutation.isError || progressSteps.some((s) => s.status === 'warning') ? (
             <Button
               type="button"
               variant="outline"
@@ -630,10 +800,15 @@ function ContributionsStep({
 function ProgressWheel({
   steps,
 }: {
-  steps: Array<{ key: string; label: string; status: 'idle' | 'pending' | 'success' | 'error' }>;
+  steps: Array<{
+    key: string;
+    label: string;
+    status: 'idle' | 'pending' | 'success' | 'error' | 'warning';
+  }>;
 }) {
-  const completed = steps.filter((s) => s.status === 'success').length;
+  const completed = steps.filter((s) => s.status === 'success' || s.status === 'warning').length;
   const hasError = steps.some((s) => s.status === 'error');
+  const hasWarning = steps.some((s) => s.status === 'warning');
   const progress = steps.length > 0 ? (completed / steps.length) * 100 : 0;
   const radius = 56;
   const circumference = 2 * Math.PI * radius;
@@ -653,7 +828,7 @@ function ProgressWheel({
             cx="64"
             cy="64"
             r={radius}
-            stroke={hasError ? '#dc2626' : '#003a8c'}
+            stroke={hasError ? '#dc2626' : hasWarning ? '#ea580c' : '#003a8c'}
             strokeWidth="8"
             fill="none"
             strokeLinecap="round"
@@ -666,7 +841,8 @@ function ProgressWheel({
           <span
             className={cn('text-2xl font-bold select-none', {
               'text-red-600': hasError,
-              'text-primary-8': !hasError,
+              'text-orange-600': hasWarning && !hasError,
+              'text-primary-8': !hasError && !hasWarning,
             })}
           >
             {Math.round(progress)}%
@@ -679,12 +855,14 @@ function ProgressWheel({
             {step.status === 'pending' && <LoadingIcon className="text-primary-6 animate-spin" />}
             {step.status === 'success' && <CheckOutlined className="text-teal-600" />}
             {step.status === 'error' && <CloseOutlined className="text-red-600" />}
+            {step.status === 'warning' && <WarningOutlined className="text-orange-600" />}
             {step.status === 'idle' && <div className="bg-primary-8 ml-1 size-3 rounded-full" />}
             <span
               className={cn('select-none text-sm', {
                 'text-primary-6': step.status === 'pending',
                 'font-bold text-teal-600': step.status === 'success',
                 'font-bold text-red-600': step.status === 'error',
+                'font-bold text-orange-600': step.status === 'warning',
               })}
             >
               {step.label}
