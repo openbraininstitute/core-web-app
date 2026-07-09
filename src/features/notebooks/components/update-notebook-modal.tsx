@@ -67,12 +67,14 @@ async function syncChildProjects({
   templateEntityId,
   entityType,
   notebookName,
+  onProgress,
 }: {
   virtualLabId: string;
   templateProjectId: string;
   templateEntityId: string;
   entityType: EntityCoreObjectTypes['type'];
   notebookName: string;
+  onProgress?: (completed: number, total: number) => void;
 }) {
   const templateCtx: WorkspaceContext = { virtualLabId, projectId: templateProjectId };
 
@@ -100,16 +102,25 @@ async function syncChildProjects({
 
   const allProjectIds = await listAllProjectIds(virtualLabId);
   const childProjectIds = allProjectIds.filter((id) => id !== templateProjectId);
+  const total = childProjectIds.length;
+  let completed = 0;
+  let failures = 0;
 
-  const results = await Promise.allSettled(
-    childProjectIds.map(async (pid) => {
+  onProgress?.(0, total);
+
+  for (const pid of childProjectIds) {
+    try {
       const childCtx: WorkspaceContext = { virtualLabId, projectId: pid };
       const res = await getAnalysisNotebookTemplates({
         filters: { search: notebookName },
         context: childCtx,
       });
       const match = res.data.find((nb) => nb.name === notebookName);
-      if (!match) return;
+      if (!match) {
+        completed++;
+        onProgress?.(completed, total);
+        continue;
+      }
 
       // Assets: wipe and re-upload
       const childAssets = await getAssets({ entityType, entityId: match.id, ctx: childCtx });
@@ -134,7 +145,6 @@ async function syncChildProjects({
         filters: { entity__id: match.id },
       });
 
-      // Delete contributions in child that don't exist in template
       const toDelete = childContribs.data.filter(
         (cc) =>
           !templateContribs.data.some(
@@ -143,7 +153,6 @@ async function syncChildProjects({
       );
       await Promise.all(toDelete.map((c) => deleteContribution({ id: c.id, context: childCtx })));
 
-      // Create contributions in child that exist in template but not in child
       const toCreate = templateContribs.data.filter(
         (tc) =>
           !childContribs.data.some((cc) => cc.agent.id === tc.agent.id && cc.role.id === tc.role.id)
@@ -156,12 +165,15 @@ async function syncChildProjects({
           })
         )
       );
-    })
-  );
+    } catch (_) {
+      failures++;
+    }
+    completed++;
+    onProgress?.(completed, total);
+  }
 
-  const failures = results.filter((r) => r.status === 'rejected');
-  if (failures.length > 0) {
-    throw new Error(`Failed to sync ${failures.length} child project(s)`);
+  if (failures > 0) {
+    throw new Error(`Failed to sync ${failures} child project(s)`);
   }
 }
 
@@ -278,8 +290,17 @@ export function UpdateNotebookModal({
     }>
   >([]);
 
+  // Sync phase state (separate progress wheel)
+  const [syncProgress, setSyncProgress] = useState<{ completed: number; total: number } | null>(
+    null
+  );
+  const [syncWarning, setSyncWarning] = useState(false);
+
+  const isCourseTemplate =
+    !!virtualLabData?.course && virtualLabData.course.template_project_id === projectId;
+
   const submitMutation = useMutation({
-    mutationFn: async (): Promise<{ propagationWarning: boolean }> => {
+    mutationFn: async () => {
       const steps: typeof progressSteps = [];
       if (assetsToRemove.length > 0)
         steps.push({ key: 'remove-assets', label: 'Removing assets', status: 'idle' });
@@ -293,11 +314,6 @@ export function UpdateNotebookModal({
         });
       if (newContributions.filter((c) => c.agent_id && c.role_id).length > 0)
         steps.push({ key: 'add-contributions', label: 'Adding contributions', status: 'idle' });
-
-      const isCourseTemplate =
-        !!virtualLabData?.course && virtualLabData.course.template_project_id === projectId;
-      if (isCourseTemplate)
-        steps.push({ key: 'propagate', label: 'Propagating to child projects', status: 'idle' });
 
       setProgressSteps(steps);
 
@@ -360,28 +376,8 @@ export function UpdateNotebookModal({
           )
         );
       }
-
-      // Propagate changes to child projects if this is a course template project
-      if (isCourseTemplate) {
-        markStep('propagate', 'pending');
-        try {
-          await syncChildProjects({
-            virtualLabId,
-            templateProjectId: projectId,
-            templateEntityId: record.id,
-            entityType: record.type,
-            notebookName: name,
-          });
-          markStep('propagate', 'success');
-        } catch (_) {
-          markStep('propagate', 'warning');
-          return { propagationWarning: true };
-        }
-      }
-
-      return { propagationWarning: false };
     },
-    onSuccess: async (result) => {
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
         predicate: (query) => {
           const first = query.queryKey[0] as
@@ -394,9 +390,29 @@ export function UpdateNotebookModal({
       await queryClient.invalidateQueries({
         queryKey: ['update-notebook-contributions', record.id],
       });
+      notification.success({ message: 'Notebook updated successfully', placement: 'topRight' });
 
-      if (!result.propagationWarning) {
-        notification.success({ message: 'Notebook updated successfully', placement: 'topRight' });
+      // Start sync phase if course template
+      if (isCourseTemplate) {
+        setSyncProgress({ completed: 0, total: 0 });
+        try {
+          await syncChildProjects({
+            virtualLabId,
+            templateProjectId: projectId,
+            templateEntityId: record.id,
+            entityType: record.type,
+            notebookName: name,
+            onProgress: (completed, total) => setSyncProgress({ completed, total }),
+          });
+          notification.success({
+            message: 'Child projects synced successfully',
+            placement: 'topRight',
+          });
+          handleClose();
+        } catch (_) {
+          setSyncWarning(true);
+        }
+      } else {
         handleClose();
       }
     },
@@ -409,6 +425,8 @@ export function UpdateNotebookModal({
     setContributionsToRemove([]);
     setNewContributions([]);
     setProgressSteps([]);
+    setSyncProgress(null);
+    setSyncWarning(false);
     submitMutation.reset();
     onClose();
   }
@@ -482,9 +500,25 @@ export function UpdateNotebookModal({
 
         {/* Step content */}
         <div className="border-neutral-2 secondary-scrollbar h-full max-h-full min-h-0 flex-1 overflow-auto rounded-md border p-6">
-          {(submitMutation.isPending ||
-            submitMutation.isError ||
-            progressSteps.some((s) => s.status === 'warning')) &&
+          {/* Sync phase progress */}
+          {syncProgress && (
+            <div className="flex h-full flex-col items-center justify-center gap-6">
+              <SyncProgressWheel
+                completed={syncProgress.completed}
+                total={syncProgress.total}
+                warning={syncWarning}
+              />
+              {syncWarning && (
+                <p className="text-orange-600 text-center text-sm">
+                  Failed to propagate to all child projects. Try to re-sync later.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Upload phase progress */}
+          {!syncProgress &&
+            (submitMutation.isPending || submitMutation.isError) &&
             progressSteps.length > 0 && (
               <div className="flex h-full flex-col items-center justify-center gap-6">
                 <ProgressWheel steps={progressSteps} />
@@ -495,17 +529,12 @@ export function UpdateNotebookModal({
                     try again later or contact support if the issue persists.
                   </p>
                 )}
-                {progressSteps.some((s) => s.status === 'warning') && !submitMutation.isError && (
-                  <p className="text-orange-600 text-center text-sm">
-                    Failed to propagate to all child projects. Try to re-sync later.
-                  </p>
-                )}
               </div>
             )}
 
-          {!submitMutation.isPending &&
+          {!syncProgress &&
+            !submitMutation.isPending &&
             !submitMutation.isError &&
-            !progressSteps.some((s) => s.status === 'warning') &&
             activeStep === 'setup' && (
               <div>
                 <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
@@ -515,9 +544,9 @@ export function UpdateNotebookModal({
               </div>
             )}
 
-          {!submitMutation.isPending &&
+          {!syncProgress &&
+            !submitMutation.isPending &&
             !submitMutation.isError &&
-            !progressSteps.some((s) => s.status === 'warning') &&
             activeStep === 'assets' && (
               <AssetsStep
                 assetsLoading={assetsLoading}
@@ -541,9 +570,9 @@ export function UpdateNotebookModal({
               />
             )}
 
-          {!submitMutation.isPending &&
+          {!syncProgress &&
+            !submitMutation.isPending &&
             !submitMutation.isError &&
-            !progressSteps.some((s) => s.status === 'warning') &&
             activeStep === 'contribution' && (
               <ContributionsStep
                 contributionsLoading={contributionsLoading}
@@ -570,7 +599,7 @@ export function UpdateNotebookModal({
 
         {/* Footer navigation */}
         <div className="mt-auto flex w-full shrink-0 items-center justify-between gap-2 py-3">
-          {submitMutation.isError || progressSteps.some((s) => s.status === 'warning') ? (
+          {submitMutation.isError || syncWarning ? (
             <Button
               type="button"
               variant="outline"
@@ -581,7 +610,7 @@ export function UpdateNotebookModal({
             >
               Close
             </Button>
-          ) : (
+          ) : !syncProgress ? (
             <>
               <Button
                 rounded
@@ -622,7 +651,7 @@ export function UpdateNotebookModal({
                 <RightOutlined />
               </Button>
             </>
-          )}
+          ) : null}
         </div>
       </div>
     </Modal>
@@ -870,6 +899,66 @@ function ProgressWheel({
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+function SyncProgressWheel({
+  completed,
+  total,
+  warning,
+}: {
+  completed: number;
+  total: number;
+  warning: boolean;
+}) {
+  const progress = total > 0 ? (completed / total) * 100 : 0;
+  const radius = 56;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference * (1 - progress / 100);
+
+  return (
+    <>
+      <div className="relative">
+        <svg
+          className="h-48 w-48 -rotate-90 transform"
+          viewBox="0 0 128 128"
+          role="img"
+          aria-label="Sync progress"
+        >
+          <circle cx="64" cy="64" r={radius} stroke="#e5e7eb" strokeWidth="4" fill="none" />
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            stroke={warning ? '#ea580c' : '#003a8c'}
+            strokeWidth="8"
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-300 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span
+            className={cn('text-2xl font-bold select-none', {
+              'text-orange-600': warning,
+              'text-primary-8': !warning,
+            })}
+          >
+            {Math.round(progress)}%
+          </span>
+        </div>
+      </div>
+      <p
+        className={cn('text-center text-sm select-none', {
+          'text-orange-600': warning,
+          'text-primary-6': !warning,
+        })}
+      >
+        Syncing child projects ({completed}/{total})
+      </p>
     </>
   );
 }
