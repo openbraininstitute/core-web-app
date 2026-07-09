@@ -1,5 +1,6 @@
 import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
 import { syncNotebook } from '@/services/notebooks';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -20,24 +21,19 @@ export async function syncTemplateNotebooksToStudents({
 }) {
   if (studentProjectIds.length === 0) return;
 
-  const allNotebooks = [];
-  let page = 1;
-  const pageSize = 100;
-  let hasMore = true;
-
-  while (hasMore) {
-    const response = await getAnalysisNotebookTemplates({
-      filters: { page, page_size: pageSize },
-      context: { ...context, projectId: templateProjectId },
-    });
-
-    const notebooks = response.data || [];
-    allNotebooks.push(...notebooks);
-
-    const pagination = response.pagination;
-    hasMore = pagination && page * pageSize < pagination.total_items;
-    page++;
-  }
+  const allNotebooks = await fetchAllPaginatedData({
+    fn: (page, pageSize) =>
+      getAnalysisNotebookTemplates({
+        filters: {
+          page,
+          page_size: pageSize,
+          authorized_project_id: templateProjectId,
+          authorized_public: false,
+        },
+        context: { ...context, projectId: templateProjectId },
+      }),
+    pageSize: 100,
+  });
 
   if (allNotebooks.length === 0) return;
 

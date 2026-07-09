@@ -93,6 +93,8 @@ export type TAnalysisNotebookTemplateFilter = Partial<
     IlikeSearchFilter & {
       assignment_id?: string | null;
       assignment_id__in?: string[] | null;
+      authorized_project_id?: string | null;
+      authorized_public?: boolean | null;
     }
 >;
 
