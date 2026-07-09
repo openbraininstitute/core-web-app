@@ -1,6 +1,7 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type {
   IProject,
@@ -123,30 +124,12 @@ export async function listProjects({
 }
 
 export async function listAllProjectIds(virtualLabId: string) {
-  let allProjectIds: string[] = [];
-  let page = 1;
-  let hasMore = true;
-
-  while (hasMore) {
-    const response = await listProjects({
-      virtualLabId,
-      pagination: { page: page, page_size: 100 },
-    });
-    if (!response.data) throw new Error(`Fetching projects failed`);
-
-    allProjectIds = [...allProjectIds, ...(response.data.map((r) => r.id) ?? [])];
-
-    const { total_items, page_size } = response.pagination;
-    const totalPages = Math.ceil(total_items / page_size);
-
-    if (page >= totalPages) {
-      hasMore = false;
-    } else {
-      page++;
-    }
-  }
-
-  return allProjectIds;
+  const projects = await fetchAllPaginatedData<IProject>({
+    fn: (page, pageSize) =>
+      listProjects({ virtualLabId, pagination: { page, page_size: pageSize } }),
+    pageSize: 100,
+  });
+  return projects.map((p) => p.id);
 }
 
 /**
