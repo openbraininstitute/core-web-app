@@ -275,7 +275,7 @@ export function SyncNotebookModal({
         onProgress: (completed, total) => setSyncProgress({ completed, total }),
       });
       notification.success({
-        message: 'Child projects synced successfully',
+        message: 'Notebook synced to student projects',
         placement: 'topRight',
       });
       handleClose();
@@ -309,7 +309,7 @@ export function SyncNotebookModal({
       closable={false}
       title={
         <div className="flex w-full items-center justify-between gap-2">
-          <h3 className="text-primary-9 text-2xl font-bold">Sync Child Projects</h3>
+          <h3 className="text-primary-9 text-2xl font-bold">Sync Notebook</h3>
           {syncWarning && (
             <Button
               variant="icon"
@@ -322,6 +322,7 @@ export function SyncNotebookModal({
         </div>
       }
     >
+      {name && <p className="text-primary-8 text-center text-sm font-medium">{name}</p>}
       {syncProgress && (
         <SyncProgressWheel
           completed={syncProgress.completed}
@@ -331,7 +332,7 @@ export function SyncNotebookModal({
       )}
       {syncWarning && (
         <p className="text-orange-600 text-center text-sm">
-          Failed to propagate to all child projects. Try to re-sync later.
+          Failed to sync notebook to all student projects. Try again later.
         </p>
       )}
       {syncWarning && (
