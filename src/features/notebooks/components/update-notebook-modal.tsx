@@ -173,50 +173,61 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
       const markStep = (key: string, status: 'pending' | 'success' | 'error') =>
         setProgressSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status } : s)));
 
+      const runStep = async (key: string, label: string, fn: () => Promise<unknown>) => {
+        markStep(key, 'pending');
+        try {
+          await fn();
+          markStep(key, 'success');
+        } catch (e) {
+          markStep(key, 'error');
+          throw new Error(`Failed while: ${label}`, { cause: e });
+        }
+      };
+
       if (assetsToRemove.length > 0) {
-        markStep('remove-assets', 'pending');
-        await Promise.all(
-          assetsToRemove.map((a) =>
-            deleteAsset({ entityType: record.type, entityId: record.id, id: a.id, ctx })
+        await runStep('remove-assets', 'Removing assets', () =>
+          Promise.all(
+            assetsToRemove.map((a) =>
+              deleteAsset({ entityType: record.type, entityId: record.id, id: a.id, ctx })
+            )
           )
         );
-        markStep('remove-assets', 'success');
       }
 
       if (newAssetFiles.size > 0) {
-        markStep('upload-assets', 'pending');
-        for (const [, { file, config }] of newAssetFiles) {
-          await uploadNotebookTemplateFile({
-            context: ctx,
-            entityId: record.id,
-            file,
-            contentType: config.contentType,
-            assetLabel: config.assetLabel,
-          });
-        }
-        markStep('upload-assets', 'success');
+        await runStep('upload-assets', 'Uploading assets', async () => {
+          for (const [, { file, config }] of newAssetFiles) {
+            await uploadNotebookTemplateFile({
+              context: ctx,
+              entityId: record.id,
+              file,
+              contentType: config.contentType,
+              assetLabel: config.assetLabel,
+            });
+          }
+        });
       }
 
       if (contributionsToRemove.length > 0) {
-        markStep('remove-contributions', 'pending');
-        await Promise.all(
-          contributionsToRemove.map((c) => deleteContribution({ id: c.id, context: ctx }))
+        await runStep('remove-contributions', 'Removing contributions', () =>
+          Promise.all(
+            contributionsToRemove.map((c) => deleteContribution({ id: c.id, context: ctx }))
+          )
         );
-        markStep('remove-contributions', 'success');
       }
 
       const validNewContributions = newContributions.filter((c) => c.agent_id && c.role_id);
       if (validNewContributions.length > 0) {
-        markStep('add-contributions', 'pending');
-        await Promise.all(
-          validNewContributions.map((c) =>
-            createContribution({
-              context: ctx,
-              contributor: { agent_id: c.agent_id, role_id: c.role_id, entity_id: record.id },
-            })
+        await runStep('add-contributions', 'Adding contributions', () =>
+          Promise.all(
+            validNewContributions.map((c) =>
+              createContribution({
+                context: ctx,
+                contributor: { agent_id: c.agent_id, role_id: c.role_id, entity_id: record.id },
+              })
+            )
           )
         );
-        markStep('add-contributions', 'success');
       }
     },
     onSuccess: async () => {
