@@ -148,6 +148,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
           getAssets({ entityType: record.type, entityId, ctx }),
           getContributions({ context: ctx, filters: { entity__id: entityId } }),
         ]);
+
         await Promise.all([
           ...assetsRes.data.map((a) =>
             deleteAsset({ entityType: record.type, entityId, id: a.id, ctx })
@@ -157,11 +158,11 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
       };
 
       if (isTemplate && isCourseTemplateProject) {
-        // Delete matching notebooks in all other projects of this vlab
+        // Delete matching notebooks in all child projects first
         const allProjectIds = await listAllProjectIds(virtualLabId);
         const otherProjectIds = allProjectIds.filter((id) => id !== projectId);
 
-        await Promise.allSettled(
+        const results = await Promise.allSettled(
           otherProjectIds.map(async (pid) => {
             const ctx = { virtualLabId, projectId: pid };
             const res = await getAnalysisNotebookTemplates({
@@ -176,14 +177,14 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               })
             );
           })
-        ).then((results) => {
-          for (const r of results) {
-            if (r.status === 'rejected') {
-              // biome-ignore lint/suspicious/noConsole: intentional error logging for silent failures
-              console.error('[NotebookActions] failed to delete in other project', r.reason);
-            }
-          }
-        });
+        );
+
+        const failures = results.filter((r) => r.status === 'rejected');
+        if (failures.length > 0) {
+          throw new Error(
+            `Failed to delete notebook in ${failures.length} child project(s). Parent notebook was not deleted.`
+          );
+        }
       }
 
       // Delete assets/contributions only for templates
