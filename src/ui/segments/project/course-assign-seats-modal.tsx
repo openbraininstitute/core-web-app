@@ -19,18 +19,6 @@ interface AssignSeatsModalProps {
   virtualLabId?: string;
 }
 
-interface AssignmentResult {
-  student_id: string;
-  email: string;
-  assignment_successful: boolean;
-  seat_id?: string;
-  enrolment_id?: string | null;
-  project_id?: string | null;
-  credit_transferred_amount?: number;
-  email_sent?: boolean;
-  error?: string;
-}
-
 export function AssignSeatsModal({
   open,
   courseId,
@@ -46,20 +34,18 @@ export function AssignSeatsModal({
   const [error, setError] = useState<string>('');
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [existingStudents, setExistingStudents] = useState<Student[]>([]);
-  const [results, setResults] = useState<AssignmentResult[]>([]);
 
   const resetState = () => {
     setFile(null);
     setFilteredStudents([]);
     setExistingStudents([]);
     setError('');
-    setResults([]);
+    assignMutation.reset();
   };
 
   const assignMutation = useMutation({
     mutationFn: async (students: Student[]) => assignSeats(courseId, students),
     onSuccess: async (data) => {
-      setResults(data.results || []);
       onSuccess();
 
       const successfulAssignments = (data.results || []).filter((r) => r.assignment_successful);
@@ -96,6 +82,8 @@ export function AssignSeatsModal({
     },
   });
 
+  const results = assignMutation.data?.results || [];
+
   const parseCSV = (content: string): Student[] => {
     const lines = content
       .trim()
@@ -129,7 +117,7 @@ export function AssignSeatsModal({
       setError('');
       setFilteredStudents([]);
       setExistingStudents([]);
-      setResults([]);
+      assignMutation.reset();
 
       try {
         const content = await selectedFile.text();
