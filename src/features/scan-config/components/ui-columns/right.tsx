@@ -108,6 +108,9 @@ export function Right({
         entity) ||
         (activity === ScanConfigActivity.Extract &&
           entity &&
+          entityType === ExtendedEntitiesTypeDict.Circuit) ||
+        (activity === ScanConfigActivity.Build &&
+          entity &&
           entityType === ExtendedEntitiesTypeDict.Circuit)) && (
         <div className="rounded-lg h-full" id="scan-config-right-model-preview">
           <ModelPreview model={entity} />
