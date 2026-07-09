@@ -515,7 +515,7 @@ export function UpdateNotebookModal({
             onProgress: (completed, total) => setSyncProgress({ completed, total }),
           });
           notification.success({
-            message: 'Child projects synced successfully',
+            message: 'Notebook synced to student projects',
             placement: 'topRight',
           });
           handleClose();
@@ -622,7 +622,7 @@ export function UpdateNotebookModal({
               />
               {syncWarning && (
                 <p className="text-orange-600 text-center text-sm">
-                  Failed to propagate to all child projects. Try to re-sync later.
+                  Failed to sync notebook to all student projects. Try again later.
                 </p>
               )}
             </div>
@@ -1069,7 +1069,7 @@ function SyncProgressWheel({
           'text-primary-6': !warning,
         })}
       >
-        Syncing child projects ({completed}/{total})
+        Syncing to student projects ({completed}/{total})
       </p>
     </>
   );
