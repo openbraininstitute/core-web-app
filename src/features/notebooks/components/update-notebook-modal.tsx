@@ -255,6 +255,7 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
     setContributionsToRemove([]);
     setNewContributions([]);
     setProgressSteps([]);
+    submitMutation.reset();
     onClose();
   }
 
