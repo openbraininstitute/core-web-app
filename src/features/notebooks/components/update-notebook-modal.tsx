@@ -14,7 +14,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { capitalize } from 'es-toolkit/compat';
 import { useEffect, useMemo, useState } from 'react';
 
-import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
+import {
+  createNotebook,
+  getAnalysisNotebookTemplate,
+  getAnalysisNotebookTemplates,
+} from '@/api/entitycore/queries/analysis-notebook-template';
 import { deleteAsset, downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
 import { uploadNotebookTemplateFile } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
@@ -79,7 +83,8 @@ async function syncChildProjects({
   const templateCtx: WorkspaceContext = { virtualLabId, projectId: templateProjectId };
 
   // Get template's current state (source of truth)
-  const [templateAssets, templateContribs] = await Promise.all([
+  const [templateEntity, templateAssets, templateContribs] = await Promise.all([
+    getAnalysisNotebookTemplate({ id: templateEntityId, context: templateCtx }),
     getAssets({ entityType, entityId: templateEntityId, ctx: templateCtx }),
     getContributions({ context: templateCtx, filters: { entity__id: templateEntityId } }),
   ]);
@@ -116,23 +121,21 @@ async function syncChildProjects({
         context: childCtx,
       });
       const match = res.data.find((nb) => nb.name === notebookName);
-      if (!match) {
-        completed++;
-        onProgress?.(completed, total);
-        continue;
-      }
+      const targetId = match
+        ? match.id
+        : (await createNotebook({ payload: templateEntity, context: childCtx })).id;
 
       // Assets: wipe and re-upload
-      const childAssets = await getAssets({ entityType, entityId: match.id, ctx: childCtx });
+      const childAssets = await getAssets({ entityType, entityId: targetId, ctx: childCtx });
       await Promise.all(
         childAssets.data.map((a) =>
-          deleteAsset({ entityType, entityId: match.id, id: a.id, ctx: childCtx })
+          deleteAsset({ entityType, entityId: targetId, id: a.id, ctx: childCtx })
         )
       );
       for (const { file, contentType, label } of templateFiles) {
         await uploadNotebookTemplateFile({
           context: childCtx,
-          entityId: match.id,
+          entityId: targetId,
           file,
           contentType,
           assetLabel: label,
@@ -142,7 +145,7 @@ async function syncChildProjects({
       // Contributions: diff
       const childContribs = await getContributions({
         context: childCtx,
-        filters: { entity__id: match.id },
+        filters: { entity__id: targetId },
       });
 
       const toDelete = childContribs.data.filter(
@@ -161,7 +164,7 @@ async function syncChildProjects({
         toCreate.map((tc) =>
           createContribution({
             context: childCtx,
-            contributor: { agent_id: tc.agent.id, role_id: tc.role.id, entity_id: match.id },
+            contributor: { agent_id: tc.agent.id, role_id: tc.role.id, entity_id: targetId },
           })
         )
       );
