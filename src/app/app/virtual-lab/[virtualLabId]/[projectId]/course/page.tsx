@@ -304,15 +304,31 @@ export default function CoursePage() {
           {(() => {
             const availableSeats = seats.filter((seat) => !seat.enrolment_id).length;
             const hasAvailableSeats = availableSeats > 0;
-            return (
+            const isPeriod1Ended = course ? new Date() > new Date(course.last_drop_date) : false;
+            const isButtonDisabled = !hasAvailableSeats || isPeriod1Ended;
+            const button = (
               <Button
                 onClick={() => setIsModalOpen(true)}
-                disabled={!hasAvailableSeats}
-                className={!hasAvailableSeats ? 'bg-gray-300 text-gray-500 hover:bg-gray-300' : ''}
+                disabled={isButtonDisabled}
+                className={isButtonDisabled ? 'bg-gray-300 text-gray-500 hover:bg-gray-300' : ''}
               >
                 Assign seats
               </Button>
             );
+            if (isPeriod1Ended && course) {
+              const period1Date = new Date(course.last_drop_date).toLocaleDateString();
+              return (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>{button}</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Seats can only be assigned before the end of Period 1 ({period1Date})
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+            return button;
           })()}
         </div>
         {(() => {
