@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { TaskConfigSelectionCard } from '@/features/scan-config/components/shared/task-config-selection-card';
 import { TASK_STATUS_QUERY_KEY_HEAD } from '@/features/task-runner';
 import { useTaskConfigExecution } from '@/features/task-runner/hooks/queries';
+import { useBalanceRefreshOnTaskCompletion } from '@/features/task-runner/hooks/use-balance-refresh';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -160,6 +161,10 @@ function TaskConfigSelectionCardWithStatus<TMeta extends Record<string, unknown>
     pausePolling: pauseStatusPolling,
     fallbackExecution,
   });
+
+  // Live polled status only (not the fallback): fallbackExecution is initial paint fed
+  // back from this same query via onExecutionLoad.
+  useBalanceRefreshOnTaskCompletion({ status: execution?.status, context });
 
   useEffect(() => {
     if (execution !== undefined) {
