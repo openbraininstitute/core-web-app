@@ -246,13 +246,6 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
       notification.success({ message: 'Notebook updated successfully', placement: 'topRight' });
       handleClose();
     },
-    onError: (error: Error) => {
-      notification.error({
-        message: 'Update failed',
-        description: error.message || 'Unknown error',
-        placement: 'topRight',
-      });
-    },
   });
 
   function handleClose() {
@@ -334,13 +327,19 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
 
         {/* Step content */}
         <div className="border-neutral-2 secondary-scrollbar h-full max-h-full min-h-0 flex-1 overflow-auto rounded-md border p-6">
-          {submitMutation.isPending && progressSteps.length > 0 && (
+          {(submitMutation.isPending || submitMutation.isError) && progressSteps.length > 0 && (
             <div className="flex h-full flex-col items-center justify-center gap-6">
               <ProgressWheel steps={progressSteps} />
+              {submitMutation.isError && (
+                <p className="text-red-600 text-center text-sm">
+                  Error while {progressSteps.find((s) => s.status === 'error')?.label.toLowerCase()}
+                  . Please try again later or contact support if the issue persists.
+                </p>
+              )}
             </div>
           )}
 
-          {!submitMutation.isPending && activeStep === 'setup' && (
+          {!submitMutation.isPending && !submitMutation.isError && activeStep === 'setup' && (
             <div>
               <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
               <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
@@ -349,7 +348,7 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
             </div>
           )}
 
-          {!submitMutation.isPending && activeStep === 'assets' && (
+          {!submitMutation.isPending && !submitMutation.isError && activeStep === 'assets' && (
             <AssetsStep
               assetsLoading={assetsLoading}
               visibleAssets={visibleAssets}
@@ -372,70 +371,87 @@ export function UpdateNotebookModal({ open, onClose, record }: UpdateNotebookMod
             />
           )}
 
-          {!submitMutation.isPending && activeStep === 'contribution' && (
-            <ContributionsStep
-              contributionsLoading={contributionsLoading}
-              visibleContributions={visibleContributions}
-              newContributions={newContributions}
-              onRemoveContribution={(contrib) =>
-                setContributionsToRemove((prev) => [...prev, contrib])
-              }
-              onAddNewContribution={() =>
-                setNewContributions((prev) => [
-                  ...prev,
-                  { agent_type: '' as TAgentType, agent_id: '', role_id: '' },
-                ])
-              }
-              onUpdateNewContribution={(idx, updated) =>
-                setNewContributions((prev) => prev.map((c, i) => (i === idx ? updated : c)))
-              }
-              onRemoveNewContribution={(idx) =>
-                setNewContributions((prev) => prev.filter((_, i) => i !== idx))
-              }
-            />
-          )}
+          {!submitMutation.isPending &&
+            !submitMutation.isError &&
+            activeStep === 'contribution' && (
+              <ContributionsStep
+                contributionsLoading={contributionsLoading}
+                visibleContributions={visibleContributions}
+                newContributions={newContributions}
+                onRemoveContribution={(contrib) =>
+                  setContributionsToRemove((prev) => [...prev, contrib])
+                }
+                onAddNewContribution={() =>
+                  setNewContributions((prev) => [
+                    ...prev,
+                    { agent_type: '' as TAgentType, agent_id: '', role_id: '' },
+                  ])
+                }
+                onUpdateNewContribution={(idx, updated) =>
+                  setNewContributions((prev) => prev.map((c, i) => (i === idx ? updated : c)))
+                }
+                onRemoveNewContribution={(idx) =>
+                  setNewContributions((prev) => prev.filter((_, i) => i !== idx))
+                }
+              />
+            )}
         </div>
 
         {/* Footer navigation */}
         <div className="mt-auto flex w-full shrink-0 items-center justify-between gap-2 py-3">
-          <Button
-            rounded
-            variant="outline"
-            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
-            size="lg"
-            type="button"
-            onClick={() => setActiveStep(STEPS[activeStepIndex - 1].key)}
-            disabled={isFirstStep}
-          >
-            <LeftOutlined />
-          </Button>
+          {submitMutation.isError ? (
+            <Button
+              type="button"
+              variant="outline"
+              rounded
+              size="lg"
+              className="text-primary-9 border-primary-9 mx-auto px-10 font-bold"
+              onClick={handleClose}
+            >
+              Close
+            </Button>
+          ) : (
+            <>
+              <Button
+                rounded
+                variant="outline"
+                className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
+                size="lg"
+                type="button"
+                onClick={() => setActiveStep(STEPS[activeStepIndex - 1].key)}
+                disabled={isFirstStep}
+              >
+                <LeftOutlined />
+              </Button>
 
-          <Button
-            type="button"
-            variant="success"
-            rounded
-            size="lg"
-            disabled={!canSubmit || submitMutation.isPending}
-            onClick={() => submitMutation.mutateAsync()}
-            className={cn('px-10 font-bold', {
-              'bg-neutral-3! text-neutral-5! border-neutral-3!':
-                !canSubmit || submitMutation.isPending,
-            })}
-          >
-            {submitMutation.isPending ? 'Saving...' : 'Confirm'}
-          </Button>
+              <Button
+                type="button"
+                variant="success"
+                rounded
+                size="lg"
+                disabled={!canSubmit || submitMutation.isPending}
+                onClick={() => submitMutation.mutateAsync()}
+                className={cn('px-10 font-bold', {
+                  'bg-neutral-3! text-neutral-5! border-neutral-3!':
+                    !canSubmit || submitMutation.isPending,
+                })}
+              >
+                {submitMutation.isPending ? 'Saving...' : 'Confirm'}
+              </Button>
 
-          <Button
-            rounded
-            variant="outline"
-            type="button"
-            size="lg"
-            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
-            onClick={() => setActiveStep(STEPS[activeStepIndex + 1].key)}
-            disabled={isLastStep}
-          >
-            <RightOutlined />
-          </Button>
+              <Button
+                rounded
+                variant="outline"
+                type="button"
+                size="lg"
+                className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
+                onClick={() => setActiveStep(STEPS[activeStepIndex + 1].key)}
+                disabled={isLastStep}
+              >
+                <RightOutlined />
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </Modal>
@@ -616,6 +632,7 @@ function ProgressWheel({
   steps: Array<{ key: string; label: string; status: 'idle' | 'pending' | 'success' | 'error' }>;
 }) {
   const completed = steps.filter((s) => s.status === 'success').length;
+  const hasError = steps.some((s) => s.status === 'error');
   const progress = steps.length > 0 ? (completed / steps.length) * 100 : 0;
   const radius = 56;
   const circumference = 2 * Math.PI * radius;
@@ -635,7 +652,7 @@ function ProgressWheel({
             cx="64"
             cy="64"
             r={radius}
-            stroke="#003a8c"
+            stroke={hasError ? '#dc2626' : '#003a8c'}
             strokeWidth="8"
             fill="none"
             strokeLinecap="round"
@@ -645,7 +662,12 @@ function ProgressWheel({
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-primary-8 text-2xl font-bold select-none">
+          <span
+            className={cn('text-2xl font-bold select-none', {
+              'text-red-600': hasError,
+              'text-primary-8': !hasError,
+            })}
+          >
             {Math.round(progress)}%
           </span>
         </div>
@@ -655,11 +677,13 @@ function ProgressWheel({
           <div key={step.key} className="flex items-center gap-2">
             {step.status === 'pending' && <LoadingIcon className="text-primary-6 animate-spin" />}
             {step.status === 'success' && <CheckOutlined className="text-teal-600" />}
+            {step.status === 'error' && <CloseOutlined className="text-red-600" />}
             {step.status === 'idle' && <div className="bg-primary-8 ml-1 size-3 rounded-full" />}
             <span
               className={cn('select-none text-sm', {
                 'text-primary-6': step.status === 'pending',
                 'font-bold text-teal-600': step.status === 'success',
+                'font-bold text-red-600': step.status === 'error',
               })}
             >
               {step.label}
