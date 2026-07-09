@@ -1,4 +1,10 @@
-import { DeleteOutlined, EditOutlined, EyeOutlined, LoadingOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  LoadingOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine, RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Popconfirm } from 'antd';
@@ -32,7 +38,7 @@ import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
-import { UpdateNotebookModal } from './update-notebook-modal';
+import { SyncNotebookModal, UpdateNotebookModal } from './update-notebook-modal';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -99,6 +105,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
   const [, copy, , copying] = useCopyToClipboard();
   const [readmeOpen, setReadmeOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
 
   const isTemplate = dataType === ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
   const typeParam = dataType ? resolveConcreteEntityPathParam(dataType) : '';
@@ -354,6 +361,29 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
           record={record}
           virtualLabData={virtualLabData}
         />
+
+        {isTemplate && isCourseTemplateProject && (
+          <>
+            <Button
+              rounded
+              title="Sync to child projects"
+              className={cn(
+                'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+              )}
+              onClick={() => setSyncOpen(true)}
+            >
+              <SyncOutlined className="text-xl" />
+            </Button>
+            <SyncNotebookModal
+              open={syncOpen}
+              onClose={() => setSyncOpen(false)}
+              record={record}
+              virtualLabId={virtualLabId}
+              projectId={projectId}
+            />
+          </>
+        )}
 
         <Button
           rounded

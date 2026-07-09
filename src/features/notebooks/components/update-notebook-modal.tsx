@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { capitalize } from 'es-toolkit/compat';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
 import { deleteAsset, downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
@@ -240,6 +240,115 @@ const STEPS = [
 ] as const;
 
 type StepKey = (typeof STEPS)[number]['key'];
+
+export function SyncNotebookModal({
+  open,
+  onClose,
+  record,
+  virtualLabId,
+  projectId,
+}: {
+  open: boolean;
+  onClose: () => void;
+  record: EntityCoreObjectTypes;
+  virtualLabId: string;
+  projectId: string;
+}) {
+  const notification = useAppNotification();
+  const [syncProgress, setSyncProgress] = useState<{ completed: number; total: number } | null>(
+    null
+  );
+  const [syncWarning, setSyncWarning] = useState(false);
+
+  const name = 'name' in record ? (record.name as string) : '';
+
+  const startSync = async () => {
+    setSyncProgress({ completed: 0, total: 0 });
+    setSyncWarning(false);
+    try {
+      await syncChildProjects({
+        virtualLabId,
+        templateProjectId: projectId,
+        templateEntityId: record.id,
+        entityType: record.type,
+        notebookName: name,
+        onProgress: (completed, total) => setSyncProgress({ completed, total }),
+      });
+      notification.success({
+        message: 'Child projects synced successfully',
+        placement: 'topRight',
+      });
+      handleClose();
+    } catch (_) {
+      setSyncWarning(true);
+    }
+  };
+
+  function handleClose() {
+    setSyncProgress(null);
+    setSyncWarning(false);
+    onClose();
+  }
+
+  // Start sync when modal opens
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally trigger only on open
+  useEffect(() => {
+    if (open) {
+      startSync();
+    }
+  }, [open]);
+
+  return (
+    <Modal
+      open={open}
+      position="center"
+      className="h-auto w-120 rounded-2xl"
+      bodyClassName="flex flex-col items-center justify-center gap-6 p-8"
+      overlayClassName="bg-primary-9/80 backdrop-blur-sm!"
+      onClose={handleClose}
+      closable={false}
+      title={
+        <div className="flex w-full items-center justify-between gap-2">
+          <h3 className="text-primary-9 text-2xl font-bold">Sync Child Projects</h3>
+          {syncWarning && (
+            <Button
+              variant="icon"
+              className="text-primary-9 hover:text-primary-6 hover:bg-background ml-auto size-8 bg-white text-lg"
+              onClick={handleClose}
+            >
+              <CloseOutlined />
+            </Button>
+          )}
+        </div>
+      }
+    >
+      {syncProgress && (
+        <SyncProgressWheel
+          completed={syncProgress.completed}
+          total={syncProgress.total}
+          warning={syncWarning}
+        />
+      )}
+      {syncWarning && (
+        <p className="text-orange-600 text-center text-sm">
+          Failed to propagate to all child projects. Try to re-sync later.
+        </p>
+      )}
+      {syncWarning && (
+        <Button
+          type="button"
+          variant="outline"
+          rounded
+          size="lg"
+          className="text-primary-9 border-primary-9 px-10 font-bold"
+          onClick={handleClose}
+        >
+          Close
+        </Button>
+      )}
+    </Modal>
+  );
+}
 
 export function UpdateNotebookModal({
   open,
