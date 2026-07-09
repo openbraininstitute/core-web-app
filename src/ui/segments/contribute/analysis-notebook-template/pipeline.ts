@@ -132,6 +132,7 @@ export function useAnalysisNotebookTemplatePipeline({
             })
           )
       ),
+    onSettled: invalidateNotebookQueries,
   });
 
   return {
