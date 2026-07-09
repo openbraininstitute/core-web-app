@@ -6,6 +6,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { config } from '@/config';
 import { ViewVariant, WorkspaceScope } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
@@ -50,6 +51,8 @@ export async function NotebookViewLayout({
   );
   if (error || !fetched) notFound();
   const entity = fetched as IAnalysisNotebookTemplate | IAnalysisNotebookResult;
+  const virtualLabData = await getVirtualLab({ id: virtualLabId }).catch(() => null);
+  const isCourse = !virtualLabData || !!virtualLabData.course;
 
   const isTemplate =
     entityConfig.extendedType === ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
@@ -111,6 +114,7 @@ export async function NotebookViewLayout({
             isPrivate={!entity.authorized_public}
             parentLink={parentLink}
             variant={ViewVariant.Light}
+            hideDelete={isCourse}
           />
         </div>
 
