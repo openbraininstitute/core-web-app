@@ -6,7 +6,6 @@ import {
 } from '@/api/entitycore/types/entities/em-cell-mesh';
 import {
   ContributionArraySchema,
-  createFileSchema,
   LicenseIdSchema,
   SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
@@ -51,9 +50,21 @@ export const MTypeClassIdSchema = z.uuid().nonempty({
 
 export const EM_CELL_MESH_FILE_TYPES = [
   { type: 'obj', extension: 'obj', mimeType: 'application/obj' },
+  { type: 'glb', extension: 'glb', mimeType: 'model/gltf-binary' },
 ] as const;
 
-export const EMCellMeshAssetsSchema = createFileSchema(['obj']);
+function getEMCellMeshFileType(file: File) {
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  return EM_CELL_MESH_FILE_TYPES.find(
+    (f) => f.extension === ext || file.type.toLowerCase() === f.mimeType.toLowerCase()
+  );
+}
+
+export const EMCellMeshAssetsSchema = z.object({
+  mesh: z.instanceof(File).refine((file) => Boolean(getEMCellMeshFileType(file)), {
+    error: 'File must be a .obj or .glb file',
+  }),
+});
 
 export const EMCellMeshSchema = z.object({
   setup: SetupSchema,
@@ -67,9 +78,5 @@ export const EMCellMeshSchema = z.object({
 export type TEMCellMeshForm = z.infer<typeof EMCellMeshSchema>;
 
 export function getEMCellMeshMimeType(file: File): string | undefined {
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  const fileType = EM_CELL_MESH_FILE_TYPES.find(
-    (f) => f.extension === ext || file.type === f.mimeType
-  );
-  return fileType?.mimeType;
+  return getEMCellMeshFileType(file)?.mimeType;
 }
