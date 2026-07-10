@@ -10,6 +10,7 @@ Sentry.init({
   debug: config.DEPLOYMENT_ENV === 'staging',
   dsn: config.SENTRY_DSN,
   enableLogs: true,
+  environment: config.DEPLOYMENT_ENV,
   integrations: [Sentry.replayIntegration()],
   release: config.APP_VERSION,
   replaysOnErrorSampleRate: 1.0,
