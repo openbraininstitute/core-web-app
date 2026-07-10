@@ -96,6 +96,8 @@ export function buildColDefs<Row>(
       colDef.floatingFilterComponent = GridFloatingFilter;
       colDef.floatingFilterComponentParams = { columnId: c.id };
       colDef.suppressHeaderMenuButton = true;
+      // our custom pill already opens the popup — hide AG Grid's default funnel button
+      colDef.suppressFloatingFilterButton = true;
     }
 
     return colDef;

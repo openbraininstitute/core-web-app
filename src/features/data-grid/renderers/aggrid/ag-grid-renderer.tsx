@@ -205,8 +205,8 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         suppressDragLeaveHidesColumns
         maintainColumnOrder
         animateRows={false}
-        headerHeight={44}
-        floatingFiltersHeight={38}
+        headerHeight={46}
+        floatingFiltersHeight={48}
         getRowHeight={getRowHeight}
         isFullWidthRow={(p) => isDetailRow(p.rowNode.data)}
         fullWidthCellRenderer={AgDetailCell}
