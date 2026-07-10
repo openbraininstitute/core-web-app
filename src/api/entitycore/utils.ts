@@ -28,7 +28,9 @@ export const getEntityCoreContext = (
 };
 
 export async function entityCoreApi(url?: string) {
-  const api = await authApiClient(url ?? appConfig.ENTITY_CORE_URL);
+  const baseUrl = url ?? appConfig.ENTITY_CORE_URL;
+  if (!baseUrl) throw new Error('ENTITY_CORE_URL not configured');
+  const api = await authApiClient(baseUrl);
   return api;
 }
 

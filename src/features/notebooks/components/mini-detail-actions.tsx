@@ -1,4 +1,10 @@
-import { DeleteOutlined, EyeOutlined, LoadingOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  LoadingOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine, RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Popconfirm } from 'antd';
@@ -7,8 +13,17 @@ import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 
 import { deleteAnalysisNotebookResult } from '@/api/entitycore/queries/analysis-notebook-result';
-import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
+import {
+  deleteAnalysisNotebookTemplate,
+  getAnalysisNotebookTemplates,
+} from '@/api/entitycore/queries/analysis-notebook-template';
+import { deleteAsset, getAssets } from '@/api/entitycore/queries/assets';
+import {
+  deleteContribution,
+  getContributions,
+} from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
@@ -22,6 +37,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
+
+import { SyncNotebookModal, UpdateNotebookModal } from './update-notebook-modal';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -87,6 +104,8 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
   const { setMdv } = useMiniDetailView();
   const [, copy, , copying] = useCopyToClipboard();
   const [readmeOpen, setReadmeOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
 
   const isTemplate = dataType === ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
   const typeParam = dataType ? resolveConcreteEntityPathParam(dataType) : '';
@@ -115,12 +134,70 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     isPrivate &&
     (!virtualLabData?.course || virtualLabData.course.template_project_id === projectId);
 
+  const notebookName = 'name' in record ? (record.name as string) : '';
+  const isCourseTemplateProject =
+    !!virtualLabData?.course && virtualLabData.course.template_project_id === projectId;
+
   const deleteMutation = useMutation({
-    mutationFn: () =>
-      (isTemplate ? deleteAnalysisNotebookTemplate : deleteAnalysisNotebookResult)({
+    mutationFn: async () => {
+      const deleteAssetsAndContributions = async (
+        entityId: string,
+        ctx: { virtualLabId: string; projectId: string }
+      ) => {
+        const [assetsRes, contributionsRes] = await Promise.all([
+          getAssets({ entityType: record.type, entityId, ctx }),
+          getContributions({ context: ctx, filters: { entity__id: entityId } }),
+        ]);
+
+        await Promise.all([
+          ...assetsRes.data.map((a) =>
+            deleteAsset({ entityType: record.type, entityId, id: a.id, ctx })
+          ),
+          ...contributionsRes.data.map((c) => deleteContribution({ id: c.id, context: ctx })),
+        ]);
+      };
+
+      if (isTemplate && isCourseTemplateProject) {
+        // Delete matching notebooks in all child projects first
+        const allProjectIds = await listAllProjectIds(virtualLabId);
+        const otherProjectIds = allProjectIds.filter((id) => id !== projectId);
+
+        const results = await Promise.allSettled(
+          otherProjectIds.map(async (pid) => {
+            const ctx = { virtualLabId, projectId: pid };
+            const res = await getAnalysisNotebookTemplates({
+              filters: { search: notebookName },
+              context: ctx,
+            });
+            const matches = res.data.filter((nb) => nb.name === notebookName);
+            await Promise.all(
+              matches.map(async (nb) => {
+                await deleteAssetsAndContributions(nb.id, ctx);
+                await deleteAnalysisNotebookTemplate({ id: nb.id, context: ctx });
+              })
+            );
+          })
+        );
+
+        const failures = results.filter((r) => r.status === 'rejected');
+        if (failures.length > 0) {
+          throw new Error(
+            `Failed to delete notebook in ${failures.length} child project(s). Parent notebook was not deleted.`
+          );
+        }
+      }
+
+      // Delete assets/contributions only for templates
+      if (isTemplate) {
+        await deleteAssetsAndContributions(record.id, { virtualLabId, projectId });
+      }
+
+      // Delete the entity itself
+      await (isTemplate ? deleteAnalysisNotebookTemplate : deleteAnalysisNotebookResult)({
         id: record.id,
         context: { virtualLabId, projectId },
-      }),
+      });
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         predicate(query) {
@@ -138,14 +215,9 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
       });
     },
     onError: (error: Error) => {
-      const cause = error.cause as { message?: string } | undefined;
-      let description = cause?.message ?? 'Unknown error';
-      if (description.toLowerCase().includes('foreign keys integrity violation')) {
-        description = 'This item is referenced by another record and cannot be deleted.';
-      }
       notification.error({
         message: 'Deletion failed',
-        description,
+        description: error.message || 'Unknown error',
         placement: 'topRight',
         duration: 5,
       });
@@ -223,6 +295,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
         )}
 
         {canDelete && (
+          <MiniActionIcon label="Update" theme={theme} onClick={() => setUpdateOpen(true)}>
+            <EditOutlined className="text-xl" />
+          </MiniActionIcon>
+        )}
+
+        {canDelete && (
           <Popconfirm
             autoAdjustOverflow
             destroyOnHidden
@@ -237,6 +315,11 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
                 <div className="text-primary-8 text-sm font-bold">
                   Are you sure you want to delete this {isTemplate ? 'notebook' : 'result'}?
                 </div>
+                {isTemplate && isCourseTemplateProject && (
+                  <div className="text-primary-8 mt-1 text-sm">
+                    The corresponding notebook in all projects will also be deleted.
+                  </div>
+                )}
                 <small className="text-primary-6 font-light">This action cannot be undone.</small>
               </div>
             }
@@ -268,6 +351,67 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               )}
             </Button>
           </Popconfirm>
+        )}
+
+        <UpdateNotebookModal
+          open={updateOpen}
+          onClose={() => {
+            setUpdateOpen(false);
+            setMdv(false);
+          }}
+          record={record}
+          virtualLabData={virtualLabData}
+        />
+
+        {isTemplate && isCourseTemplateProject && (
+          <>
+            <Popconfirm
+              autoAdjustOverflow
+              destroyOnHidden
+              placement="topRight"
+              title={
+                <div className="text-primary-8 text-lg font-bold">Sync notebook to students</div>
+              }
+              description={
+                <div>
+                  <div className="text-primary-8 text-sm font-bold">
+                    Are you sure you want to sync this notebook to all student projects?
+                  </div>
+                  <small className="text-primary-6 font-light">This action cannot be undone.</small>
+                </div>
+              }
+              okText="Yes"
+              cancelText="No"
+              arrow={{ pointAtCenter: false }}
+              onConfirm={() => setSyncOpen(true)}
+              classNames={{
+                body: cn(
+                  'max-w-70',
+                  '[&_.ant-popconfirm-buttons_button]:px-4',
+                  '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
+                  '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
+                ),
+              }}
+            >
+              <Button
+                rounded
+                title="Sync notebook to students"
+                className={cn(
+                  'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                  { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+                )}
+              >
+                <SyncOutlined className="text-xl" />
+              </Button>
+            </Popconfirm>
+            <SyncNotebookModal
+              open={syncOpen}
+              onClose={() => setSyncOpen(false)}
+              record={record}
+              virtualLabId={virtualLabId}
+              projectId={projectId}
+            />
+          </>
         )}
 
         <Button

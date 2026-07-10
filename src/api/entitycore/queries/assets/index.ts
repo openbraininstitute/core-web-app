@@ -1,7 +1,6 @@
 import { kebabCase } from 'es-toolkit/compat';
 
-import { authApiClient } from '@/api/api-client';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { compactRecord } from '@/utils/dictionary';
@@ -34,7 +33,7 @@ export async function getAssets({
   entityId: string;
   ctx?: WorkspaceContext;
 }): Promise<EntityCoreResponse<IAsset>> {
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IAsset>>(`/${kebabCase(entityType)}/${entityId}/assets`, {
     ...getEntityCoreContext(ctx),
   });
@@ -60,7 +59,7 @@ export async function getAsset({
   entityId: string;
   id: string;
 }) {
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.get<IAsset>(`/${entityType}/${entityId}/assets/${id}`, {
     ...getEntityCoreContext(ctx),
   });
@@ -152,7 +151,7 @@ export async function downloadAsset<T>({
   signal?: AbortSignal;
   cache?: CacheConfiguration;
 }): Promise<T | Response> {
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.get<T>(
     `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,
     {
@@ -208,7 +207,7 @@ export async function createJsonAsset({
   if (meta) formData.append('meta', JSON.stringify(meta));
   if (label) formData.append('label', label);
 
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
     headers: {
       ...getEntityCoreContext(ctx).headers,
@@ -242,7 +241,7 @@ export async function listDirectoryOfAssets({
   id: string;
   retryOnError?: boolean;
 }): Promise<DirectoryListContent> {
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.get<DirectoryListContent>(
     `/${kebabCase(entityType)}/${entityId}/assets/${id}/list`,
     {
@@ -254,6 +253,26 @@ export async function listDirectoryOfAssets({
     },
     { retryOnError }
   );
+}
+
+/**
+ * Deletes a specific asset by its id from the EntityCoreAPI.
+ */
+export async function deleteAsset({
+  ctx,
+  entityType,
+  entityId,
+  id,
+}: {
+  ctx?: WorkspaceContext;
+  entityType: EntityCoreDataType;
+  entityId: string;
+  id: string;
+}): Promise<void> {
+  const api = await entityCoreApi();
+  await api.delete<void>(`/${kebabCase(entityType)}/${entityId}/assets/${id}`, {
+    ...getEntityCoreContext(ctx),
+  });
 }
 
 export async function createAsset({
@@ -283,7 +302,7 @@ export async function createAsset({
   if (label) formData.append('label', label);
   if (meta) formData.append('meta', JSON.stringify(meta));
 
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
     headers: {
       ...getEntityCoreContext(ctx).headers,
