@@ -58,9 +58,23 @@ export interface ColumnModel<Row = unknown> {
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */
   cellRenderer?: string;
   cellRendererParams?: Record<string, unknown>;
-  /** contextual column visibility availability (default: true) */
+  /**
+   * Whether the column exists at all in the current context (default: true). A
+   * column that resolves to `false` is dropped entirely — not offered by the
+   * column chooser. Contextual, so a column can appear only in certain
+   * sections/scopes/species/etc.
+   */
   available?: ContextualValue<boolean>;
-  /** start hidden (still offered by the column chooser) */
-  hiddenByDefault?: boolean;
+  /**
+   * Position weight ("where") — columns are ordered by ascending resolved value,
+   * ties keeping declaration order. Contextual, so a column can move position by
+   * context. Columns without an explicit order keep their declaration slot.
+   */
+  order?: ContextualValue<number>;
+  /**
+   * Start hidden — present in the grid and offered by the column chooser, but not
+   * shown until the user enables it. Contextual (default: false).
+   */
+  hiddenByDefault?: ContextualValue<boolean>;
   filter?: ColumnFilter;
 }

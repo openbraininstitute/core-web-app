@@ -1,6 +1,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useSyncExternalStore } from 'react';
 
+import { buildGridQuery } from '../core';
+
 import type { Facets, GridController, GridDataSource, GridState } from '../core';
 
 export interface UseDataGridArgs<Row> {
@@ -39,7 +41,11 @@ export function useDataGrid<Row>(args: UseDataGridArgs<Row>): UseDataGridResult<
     controller.store.getSnapshot
   );
 
-  const query = controller.buildQuery(params);
+  // Derive the query from the REACTIVE `state` value, not via
+  // `controller.buildQuery()`: that method reads the store invisibly, so the React
+  // Compiler memoizes its result against the stable `controller` reference and the
+  // query (and with it every refetch) freezes at page 1.
+  const query = buildGridQuery(state, params);
 
   const result = useQuery({
     queryKey: [...queryKey, query],

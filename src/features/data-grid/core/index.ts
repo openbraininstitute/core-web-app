@@ -1,12 +1,18 @@
+export {
+  byContext,
+  matchesRule,
+  mergeContextual,
+  resolveContextual,
+  whenMatches,
+} from './domain/contextual';
 export { isEmptyFilterValue } from './domain/filter-model';
-export { resolveContextual } from './domain/grid-context';
 export { mergeColumnDef } from './domain/merge-column';
 export {
   defaultHiddenColumnIds,
   isSelectionEnabled,
   resolveColumns,
 } from './domain/resolve-schema';
-export { createInitialState, GridController } from './grid-controller';
+export { buildGridQuery, createInitialState, GridController } from './grid-controller';
 export {
   createDefaultOperatorRegistry,
   DEFAULT_OPERATORS,
@@ -24,8 +30,14 @@ export type {
   FilterOptionsSource,
   WidthSpec,
 } from './domain/column-model';
+export type {
+  ContextRule,
+  ContextualSpec,
+  Matchable,
+  WhenClause,
+} from './domain/contextual';
 export type { FilterEntry, FilterModel, FilterValue, FilterValueKind } from './domain/filter-model';
-export type { ContextualValue, GridContext } from './domain/grid-context';
+export type { ContextualValue, GridContext, GridContextValue } from './domain/grid-context';
 export type { ColumnOverride } from './domain/merge-column';
 export type { FacetBucket, Facets, GridPage, GridQuery } from './domain/query';
 export type { ResolvedColumn } from './domain/resolve-schema';

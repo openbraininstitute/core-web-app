@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { byContext } from './contextual';
 import { mergeColumnDef } from './merge-column';
-import { isSelectionEnabled, resolveColumns } from './resolve-schema';
+import { defaultHiddenColumnIds, isSelectionEnabled, resolveColumns } from './resolve-schema';
 
 import type { GridContext } from './grid-context';
 import type { GridSchema } from './schema';
@@ -46,6 +47,67 @@ describe('resolveColumns', () => {
     const cols = resolveColumns(schema, ctx({ scope: 'public', section: 'other' }));
     expect(cols.map((c) => c.id)).toEqual(['name', 'guarded']);
     expect(cols.find((c) => c.id === 'guarded')?.filterAvailable).toBe(false);
+  });
+
+  it('preserves declaration order when no column declares an order', () => {
+    expect(resolveColumns(schema, ctx()).map((c) => c.id)).toEqual([
+      'name',
+      'projectOnly',
+      'guarded',
+    ]);
+  });
+
+  it('orders by contextual `order` ("where"), ties keep declaration order', () => {
+    const ordered: GridSchema<Row> = {
+      id: 't',
+      getRowId: (r) => r.id,
+      columns: [
+        { id: 'a', header: 'A', order: 3 },
+        { id: 'b', header: 'B', order: 1 },
+        { id: 'c', header: 'C' }, // no order → declaration slot (index 2)
+        {
+          id: 'd',
+          header: 'D',
+          // moves to the front only in the build section
+          order: byContext<number>({
+            default: 5,
+            rules: [{ when: { section: 'build' }, value: 0 }],
+          }),
+        },
+      ],
+    };
+    expect(resolveColumns(ordered, ctx({ section: 'data' })).map((c) => c.id)).toEqual([
+      'b',
+      'c',
+      'a',
+      'd',
+    ]);
+    expect(resolveColumns(ordered, ctx({ section: 'build' })).map((c) => c.id)).toEqual([
+      'd',
+      'b',
+      'c',
+      'a',
+    ]);
+  });
+
+  it('resolves contextual default-hidden columns', () => {
+    const withHidden: GridSchema<Row> = {
+      id: 't',
+      getRowId: (r) => r.id,
+      columns: [
+        { id: 'always', header: 'Always' },
+        {
+          id: 'peek',
+          header: 'Peek',
+          hiddenByDefault: byContext<boolean>({
+            default: true,
+            rules: [{ when: { scope: 'project' }, value: false }],
+          }),
+        },
+      ],
+    };
+    expect(defaultHiddenColumnIds(withHidden, ctx({ scope: 'public' }))).toEqual(['peek']);
+    expect(defaultHiddenColumnIds(withHidden, ctx({ scope: 'project' }))).toEqual([]);
   });
 });
 

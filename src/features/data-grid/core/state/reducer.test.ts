@@ -17,7 +17,7 @@ const schema: GridSchema<{ id: string }> = {
 };
 
 function initial(): GridState {
-  return createInitialState(schema, 20);
+  return createInitialState(schema, { dataType: 'test' }, 20);
 }
 
 describe('createInitialState', () => {

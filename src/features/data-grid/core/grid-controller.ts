@@ -1,4 +1,4 @@
-import { defaultHiddenColumnIds, resolveColumns } from './domain/resolve-schema';
+import { resolveColumns } from './domain/resolve-schema';
 import { GridStateStore } from './state/grid-state-store';
 
 import type { GridContext } from './domain/grid-context';
@@ -23,17 +23,41 @@ export interface GridControllerOptions<Row> {
   defaultPageSize: number;
 }
 
+/**
+ * Pure derivation of the transport-agnostic request from a state snapshot.
+ * Kept as a standalone function (not only a controller method) so React code can
+ * express the real data flow — `query` derives from the reactive `state` — which
+ * matters under the React Compiler: a method call like `controller.buildQuery()`
+ * reads the store invisibly and gets memoized against the stable `controller`
+ * reference, freezing the query at its first value.
+ */
+export function buildGridQuery(state: GridState, params?: Record<string, unknown>): GridQuery {
+  return {
+    page: state.page,
+    pageSize: state.pageSize,
+    sort: state.sort,
+    filters: state.filters,
+    quickFilter: state.quickFilter || undefined,
+    params,
+  };
+}
+
 export function createInitialState<Row>(
   schema: GridSchema<Row>,
+  context: GridContext,
   defaultPageSize: number
 ): GridState {
+  // Default column order & visibility come from the CONTEXT-RESOLVED columns, so
+  // contextual `order`/`available`/`hiddenByDefault` are honoured before any
+  // persisted user layout is merged on top.
+  const resolved = resolveColumns(schema, context);
   return {
     filters: {},
     sort: schema.defaultSort ? [...schema.defaultSort] : [],
     page: 1,
     pageSize: defaultPageSize,
-    columnOrder: schema.columns.map((c) => c.id),
-    hiddenColumns: defaultHiddenColumnIds(schema),
+    columnOrder: resolved.map((c) => c.id),
+    hiddenColumns: resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id),
     columnWidths: {},
     selection: [],
     expanded: [],
@@ -60,7 +84,7 @@ export class GridController<Row> {
     this.context = options.context;
     this.defaultPageSize = options.defaultPageSize;
 
-    const initial = createInitialState(options.schema, options.defaultPageSize);
+    const initial = createInitialState(options.schema, options.context, options.defaultPageSize);
     const { instanceKey, persistence } = options;
 
     let hydrated = initial;
@@ -86,24 +110,20 @@ export class GridController<Row> {
     return resolveColumns(this.schema, this.context);
   }
 
-  /** Build the transport-agnostic request from current state + host params. */
+  /**
+   * Build the transport-agnostic request from current state + host params.
+   * Non-React callers only — React code must use {@link buildGridQuery} with the
+   * state from `useSyncExternalStore` (see its doc for the React Compiler pitfall).
+   */
   buildQuery(params?: Record<string, unknown>): GridQuery {
-    const s = this.store.getSnapshot();
-    return {
-      page: s.page,
-      pageSize: s.pageSize,
-      sort: s.sort,
-      filters: s.filters,
-      quickFilter: s.quickFilter || undefined,
-      params,
-    };
+    return buildGridQuery(this.store.getSnapshot(), params);
   }
 
   /** Reset to initial defaults (used on species/scope change). */
   resetState(): void {
     this.store.dispatch({
       type: 'reset',
-      state: createInitialState(this.schema, this.defaultPageSize),
+      state: createInitialState(this.schema, this.context, this.defaultPageSize),
     });
   }
 

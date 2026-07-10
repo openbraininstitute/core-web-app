@@ -1,3 +1,5 @@
+import { mergeContextual } from './contextual';
+
 import type { ColumnFilter, ColumnModel, WidthSpec } from './column-model';
 
 /**
@@ -15,8 +17,11 @@ export type ColumnOverride<Row> = Omit<Partial<ColumnModel<Row>>, 'filter' | 'wi
  * Deep-merge a base column definition with per-use overrides. Nested `width`,
  * `filter` and `cellRendererParams` are merged (not clobbered) so a schema can tweak
  * a single facet (e.g. just `width.flex`, or swap a filter's operators) without
- * re-stating the whole column. This is what makes the shared column catalog both
- * reusable and customizable.
+ * re-stating the whole column. The contextual facets (`available`, `order`,
+ * `hiddenByDefault`) COMPOSE via {@link mergeContextual}: a catalog factory can ship
+ * a default rule set that a specific schema layers extra rules onto (its rules win),
+ * rather than replacing it wholesale. This is what makes the shared column catalog
+ * both reusable and customizable.
  */
 export function mergeColumnDef<Row>(
   base: ColumnModel<Row>,
@@ -29,6 +34,9 @@ export function mergeColumnDef<Row>(
     ...overrides,
     filter: base.filter,
     width: base.width,
+    available: mergeContextual(base.available, overrides.available),
+    order: mergeContextual(base.order, overrides.order),
+    hiddenByDefault: mergeContextual(base.hiddenByDefault, overrides.hiddenByDefault),
   };
 
   if (base.width || overrides.width) {

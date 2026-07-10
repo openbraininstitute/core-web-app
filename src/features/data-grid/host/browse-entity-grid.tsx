@@ -3,7 +3,7 @@
 import { WarningOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import { useAtomValue } from 'jotai';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
@@ -108,6 +108,11 @@ export function BrowseEntityGrid({
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
   const cellRenderers = useMemo(() => buildCellRenderers(definition), [definition]);
 
+  const handleRowClick = useCallback(
+    (row: EntityCoreIdentifiableNamed) => makeSelectEntityClickEvent({ display: true, data: row }),
+    []
+  );
+
   const speciesKey = isAllSpeciesMode ? 'all' : workspaceSpecies?.hierarchId;
   const controller = useMemo(
     () =>
@@ -121,6 +126,11 @@ export function BrowseEntityGrid({
     [definition, dataKey, dataType, section, scope, speciesKey]
   );
   useEffect(() => () => controller.dispose(), [controller]);
+
+  const handleSearch = useCallback(
+    (text: string) => controller.store.dispatch({ type: 'setQuickFilter', text }),
+    [controller]
+  );
 
   const extraOrderBy = extraQueryParams?.order_by;
   const dataSource = useMemo(
@@ -241,14 +251,10 @@ export function BrowseEntityGrid({
           detail={detail}
           className="h-full"
           gridClassName={classNames?.tableClassNames?.container}
-          onRowClick={(row) => makeSelectEntityClickEvent({ display: true, data: row })}
+          onRowClick={handleRowClick}
           toolbarSlots={{
             left: toolbarLeft,
-            search: allowSearch ? (
-              <GridSearch
-                onSearch={(text) => controller.store.dispatch({ type: 'setQuickFilter', text })}
-              />
-            ) : undefined,
+            search: allowSearch ? <GridSearch onSearch={handleSearch} /> : undefined,
             right: requireEntityTypeSelector?.enabled ? (
               <EntityTypeSelector
                 options={requireEntityTypeSelector.options}
