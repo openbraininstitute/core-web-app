@@ -1,4 +1,4 @@
-import { themeQuartz } from 'ag-grid-community';
+import { themeMaterial } from 'ag-grid-community';
 
 /**
  * AG Grid v35 Theming API — an elegant, Airbnb-flavoured look driven by the app's
@@ -10,7 +10,7 @@ import { themeQuartz } from 'ag-grid-community';
  * hairline border (so it reads as a floating card, not a raw menu). Filter inputs
  * get rounded corners, a calm resting border and a branded focus ring.
  */
-export const dataGridTheme = themeQuartz.withParams({
+export const dataGridTheme = themeMaterial.withParams({
   // palette
   accentColor: 'var(--color-primary-6, #1668dc)',
   foregroundColor: 'var(--color-primary-9, #101828)',
@@ -19,7 +19,7 @@ export const dataGridTheme = themeQuartz.withParams({
 
   // typography
   fontFamily: 'inherit',
-  fontSize: 13,
+  fontSize: 16,
 
   // chrome — hairline borders only, no vertical rules
   borderColor: 'color-mix(in srgb, var(--color-primary-9, #101828) 8%, transparent)',
@@ -71,7 +71,11 @@ export const dataGridTheme = themeQuartz.withParams({
     color: 'color-mix(in srgb, var(--color-primary-9, #101828) 14%, transparent)',
   },
   inputBorderRadius: 8,
-  inputFocusBorder: { style: 'solid', width: 1, color: 'var(--color-primary-6, #1668dc)' },
+  inputFocusBorder: {
+    style: 'solid',
+    width: 1,
+    color: 'var(--color-primary-6, #1668dc)',
+  },
   focusShadow: '0 0 0 3px color-mix(in srgb, var(--color-primary-6, #1668dc) 16%, transparent)',
   checkboxCheckedBackgroundColor: 'var(--color-primary-6, #1668dc)',
 });

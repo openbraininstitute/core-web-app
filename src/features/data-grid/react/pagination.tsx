@@ -1,5 +1,12 @@
 import { Pagination } from 'antd';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
 import type { GridController } from '../core';
@@ -15,8 +22,9 @@ export interface GridPaginationProps<Row> {
 }
 
 /**
- * Renderer-agnostic server pagination: reads page/total, dispatches `setPage` /
- * `setPageSize`. The size changer offers the schema's `pageSizeOptions`.
+ * Renderer-agnostic server pagination, centered on the page: fully-rounded page
+ * buttons (antd Pagination) with the page-size selector supplied by the app's
+ * `ui/molecules` Select (rounded-xl), not antd's built-in size changer.
  */
 export function GridPagination<Row>({
   controller,
@@ -26,37 +34,53 @@ export function GridPagination<Row>({
   className,
 }: GridPaginationProps<Row>) {
   if (total <= 0) return null;
+  const options = controller.schema.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
+
   return (
-    <div className="flex items-center justify-end border-t border-gray-100 px-2 py-2.5">
+    <div
+      className={cn(
+        'flex items-center justify-center gap-3 border-t border-gray-100 px-2 py-2.5',
+        className
+      )}
+    >
       <Pagination
         className={cn(
           'flex items-center gap-1',
-          // items: soft rounded, quiet border, hover lift
-          '[&_.ant-pagination-item]:rounded-lg [&_.ant-pagination-item]:border-transparent [&_.ant-pagination-item]:transition-colors',
+          // fully-rounded page items + quiet hover
+          '[&_.ant-pagination-item]:rounded-full [&_.ant-pagination-item]:border-transparent [&_.ant-pagination-item]:transition-colors',
           '[&_.ant-pagination-item>a]:text-primary-8 [&_.ant-pagination-item:hover]:bg-gray-100',
-          // active: filled dark pill
+          // active: filled dark circle
           '[&_.ant-pagination-item-active]:border-transparent [&_.ant-pagination-item-active]:bg-primary-8',
           '[&_.ant-pagination-item-active:hover]:bg-primary-9 [&_.ant-pagination-item-active>a]:font-semibold [&_.ant-pagination-item-active>a]:text-white',
-          // prev / next arrows
-          '[&_.ant-pagination-prev_.ant-pagination-item-link]:rounded-lg [&_.ant-pagination-next_.ant-pagination-item-link]:rounded-lg',
-          '[&_.ant-pagination-prev:hover_.ant-pagination-item-link]:bg-gray-100 [&_.ant-pagination-next:hover_.ant-pagination-item-link]:bg-gray-100',
-          // page-size selector
-          '[&_.ant-select-selector]:rounded-lg!',
-          className
+          // fully-rounded prev / next
+          '[&_.ant-pagination-prev_.ant-pagination-item-link]:rounded-full [&_.ant-pagination-next_.ant-pagination-item-link]:rounded-full',
+          '[&_.ant-pagination-prev:hover_.ant-pagination-item-link]:bg-gray-100 [&_.ant-pagination-next:hover_.ant-pagination-item-link]:bg-gray-100'
         )}
         current={page}
         pageSize={pageSize}
         total={total}
-        showSizeChanger
-        pageSizeOptions={controller.schema.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS}
-        onChange={(nextPage, nextPageSize) => {
-          if (nextPageSize !== pageSize) {
-            controller.store.dispatch({ type: 'setPageSize', pageSize: nextPageSize });
-          } else {
-            controller.store.dispatch({ type: 'setPage', page: nextPage });
-          }
-        }}
+        showSizeChanger={false}
+        onChange={(nextPage) => controller.store.dispatch({ type: 'setPage', page: nextPage })}
       />
+
+      <Select
+        value={String(pageSize)}
+        onValueChange={(v) =>
+          controller.store.dispatch({ type: 'setPageSize', pageSize: Number(v) })
+        }
+      >
+        <SelectTrigger size="sm" className="rounded-xl text-sm">
+          {/* render the label explicitly — Radix can't derive it until the menu opens once */}
+          <SelectValue>{pageSize} / page</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((size) => (
+            <SelectItem key={size} value={String(size)}>
+              {size} / page
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

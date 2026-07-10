@@ -66,7 +66,7 @@ function joinLabels(values: Array<Nullable<string>>): string {
 
 export function previewColumn<Row>(o?: ColumnOverride<Row>): ColumnModel<Row> {
   return mergeColumnDef<Row>(
-    { id: 'preview', header: 'Preview', width: { width: 92, resizable: false } },
+    { id: 'preview', header: 'Preview', width: { width: 92, minWidth: 72, resizable: true } },
     o
   );
 }

@@ -20,6 +20,12 @@ export interface DetailSpec<Row = unknown> {
 export interface SelectionSpec {
   /** contextual enablement (default: false — selection is opt-in) */
   enabled: ContextualValue<boolean>;
+  /** single vs multi-row checkboxes (default: 'multiRow') */
+  mode?: 'single' | 'multiRow';
+  /** show the header "select all (current page)" checkbox (default: true, multiRow only) */
+  headerCheckbox?: boolean;
+  /** checkbox column width in px (default: 48) */
+  columnWidth?: number;
 }
 
 /**

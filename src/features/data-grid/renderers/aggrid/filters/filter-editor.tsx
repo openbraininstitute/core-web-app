@@ -1,30 +1,41 @@
-import { useGridFilter } from 'ag-grid-react';
-import { Checkbox, DatePicker, Input, InputNumber, Radio, Select } from 'antd';
-import dayjs from 'dayjs';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { CheckListDescription } from '@/features/listing-filter-panel/checklist/option';
 import { useDebouncedCallback } from '@/hooks/hooks';
+import { Checkbox } from '@/ui/molecules/checkbox';
+import { Input } from '@/ui/molecules/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
 import { isEmptyFilterValue } from '../../../core';
 import { useGridState } from '../use-grid-state';
 import { useSetOptions } from './use-set-options';
 
-import type { CustomFilterProps } from 'ag-grid-react';
 import type { FilterOptionsSource, FilterValue } from '../../../core';
 import type { AgGridContext } from '../ag-context';
 
-const { RangePicker } = DatePicker;
 const COMMIT_DEBOUNCE_MS = 250;
 
-export interface GridFilterParams {
+/** rounded-xl input styling shared by every editor control */
+const INPUT_CLASS = 'h-9 rounded-xl text-sm';
+
+export interface FilterEditorProps {
+  ctx: AgGridContext;
   columnId: string;
+  columnName: string;
   /** key for facet-option lookup (not the serialization field) */
   facetKey: string;
   operatorIds: string[];
   optionsSource?: FilterOptionsSource;
   description?: string;
+  /** close the popover (Apply / done) */
+  onClose: () => void;
 }
 
 function emptyForUiKind(kind: string): FilterValue {
@@ -44,25 +55,35 @@ function emptyForUiKind(kind: string): FilterValue {
   }
 }
 
-/**
- * One cohesive filter popup per column: an operator selector (when a column
- * supports more than one operator) plus the editor for the active operator's UI
- * kind. Filtering is server-side, so `doesFilterPass` always passes and changes are
- * dispatched to the headless store (which refetches). `onModelChange` is used only
- * to toggle AG Grid's "filter active" affordance.
- */
-export function GridFilter(props: CustomFilterProps) {
-  const hidePopupRef = useRef<(() => void) | null>(null);
-  useGridFilter({
-    doesFilterPass: () => true,
-    afterGuiAttached: (p) => {
-      hidePopupRef.current = p?.hidePopup ?? null;
-    },
-  });
+function toNumber(v: string): number | null {
+  if (v.trim() === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
 
-  const ctx = props.context as AgGridContext;
-  const { columnId, facetKey, operatorIds, optionsSource, description } =
-    props as CustomFilterProps & GridFilterParams;
+/** a `type=date` input expects `yyyy-mm-dd`; we store ISO strings */
+function toDateInputValue(iso: string | null): string {
+  return iso ? new Date(iso).toISOString().slice(0, 10) : '';
+}
+function fromDateInputValue(v: string): string | null {
+  return v ? new Date(v).toISOString() : null;
+}
+
+/**
+ * The filter editor rendered inside the header's Radix popover. Built entirely from
+ * `ui/molecules` primitives (rounded-xl), it drives the headless store directly —
+ * no AG Grid filter model — so styling and positioning are fully ours.
+ */
+export function FilterEditor({
+  ctx,
+  columnId,
+  columnName,
+  facetKey,
+  operatorIds,
+  optionsSource,
+  description,
+  onClose,
+}: FilterEditorProps) {
   const state = useGridState(ctx.controller);
   const current = state.filters[columnId];
 
@@ -74,14 +95,12 @@ export function GridFilter(props: CustomFilterProps) {
   const commit = (v: FilterValue | null) => {
     if (v === null || isEmptyFilterValue(v)) {
       ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
-      props.onModelChange(null);
     } else {
       ctx.controller.store.dispatch({
         type: 'setFilter',
         columnId,
         entry: { columnId, operator, value: v },
       });
-      props.onModelChange({ active: true });
     }
   };
   const debouncedCommit = useDebouncedCallback(commit, [columnId, operator], COMMIT_DEBOUNCE_MS);
@@ -90,34 +109,34 @@ export function GridFilter(props: CustomFilterProps) {
     debouncedCommit.cancel();
     setOperator(op);
     ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
-    props.onModelChange(null);
   };
 
-  const columnName = props.column.getColDef().headerName ?? '';
-
   return (
-    <div className="flex w-72 flex-col gap-3 p-3.5">
+    <div className="flex w-full flex-col gap-3">
       <div className="flex flex-col gap-0.5">
         <span className="text-[13px] font-semibold text-primary-8">{columnName || 'Filter'}</span>
         {description ? <span className="text-xs text-gray-400">{description}</span> : null}
       </div>
+
       {operatorIds.length > 1 && (
-        <Select
-          size="small"
-          value={operator}
-          onChange={onOperatorChange}
-          options={operatorIds.map((id) => ({
-            value: id,
-            label: ctx.operators.get(id).label,
-          }))}
-        />
+        <Select value={operator} onValueChange={onOperatorChange}>
+          <SelectTrigger className="h-9 w-full rounded-xl text-sm">
+            <SelectValue>{ctx.operators.get(operator).label}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {operatorIds.map((id) => (
+              <SelectItem key={id} value={id}>
+                {ctx.operators.get(id).label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {uiKind === 'text' && (
         <Input
-          size="small"
           autoFocus
-          allowClear
+          className={INPUT_CLASS}
           placeholder="Filter…"
           defaultValue={value.kind === 'text' ? value.text : ''}
           onChange={(e) => debouncedCommit({ kind: 'text', text: e.target.value })}
@@ -125,40 +144,41 @@ export function GridFilter(props: CustomFilterProps) {
       )}
 
       {uiKind === 'number' && (
-        <InputNumber
-          size="small"
-          className="w-full"
-          value={value.kind === 'number' ? value.value : null}
-          onChange={(v) =>
-            debouncedCommit({ kind: 'number', value: typeof v === 'number' ? v : null })
-          }
+        <Input
+          type="number"
+          className={INPUT_CLASS}
+          placeholder="Value"
+          defaultValue={value.kind === 'number' && value.value != null ? String(value.value) : ''}
+          onChange={(e) => debouncedCommit({ kind: 'number', value: toNumber(e.target.value) })}
         />
       )}
 
       {uiKind === 'range' && (
-        <div className="flex items-center gap-1">
-          <InputNumber
-            size="small"
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            className={INPUT_CLASS}
             placeholder="Min"
-            value={value.kind === 'range' ? value.min : null}
-            onChange={(v) =>
+            defaultValue={value.kind === 'range' && value.min != null ? String(value.min) : ''}
+            onChange={(e) =>
               debouncedCommit({
                 kind: 'range',
-                min: typeof v === 'number' ? v : null,
+                min: toNumber(e.target.value),
                 max: value.kind === 'range' ? value.max : null,
               })
             }
           />
-          <span className="text-gray-400">–</span>
-          <InputNumber
-            size="small"
+          <span className="text-gray-300">–</span>
+          <Input
+            type="number"
+            className={INPUT_CLASS}
             placeholder="Max"
-            value={value.kind === 'range' ? value.max : null}
-            onChange={(v) =>
+            defaultValue={value.kind === 'range' && value.max != null ? String(value.max) : ''}
+            onChange={(e) =>
               debouncedCommit({
                 kind: 'range',
                 min: value.kind === 'range' ? value.min : null,
-                max: typeof v === 'number' ? v : null,
+                max: toNumber(e.target.value),
               })
             }
           />
@@ -166,45 +186,57 @@ export function GridFilter(props: CustomFilterProps) {
       )}
 
       {uiKind === 'dateRange' && (
-        <RangePicker
-          size="small"
-          value={
-            value.kind === 'dateRange' && (value.from || value.to)
-              ? [value.from ? dayjs(value.from) : null, value.to ? dayjs(value.to) : null]
-              : null
-          }
-          onChange={(d) =>
-            commit({
-              kind: 'dateRange',
-              from: d?.[0] ? d[0].toISOString() : null,
-              to: d?.[1] ? d[1].toISOString() : null,
-            })
-          }
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            className={INPUT_CLASS}
+            value={value.kind === 'dateRange' ? toDateInputValue(value.from) : ''}
+            onChange={(e) =>
+              commit({
+                kind: 'dateRange',
+                from: fromDateInputValue(e.target.value),
+                to: value.kind === 'dateRange' ? value.to : null,
+              })
+            }
+          />
+          <span className="text-gray-300">–</span>
+          <Input
+            type="date"
+            className={INPUT_CLASS}
+            value={value.kind === 'dateRange' ? toDateInputValue(value.to) : ''}
+            onChange={(e) =>
+              commit({
+                kind: 'dateRange',
+                from: value.kind === 'dateRange' ? value.from : null,
+                to: fromDateInputValue(e.target.value),
+              })
+            }
+          />
+        </div>
       )}
 
-      {uiKind === 'boolean' && (
-        <Radio.Group
-          size="small"
-          value={
-            value.kind === 'boolean'
-              ? value.value == null
-                ? 'any'
-                : value.value
-                  ? 'yes'
-                  : 'no'
-              : 'any'
-          }
-          onChange={(e) => {
-            const v = e.target.value as 'any' | 'yes' | 'no';
-            commit(v === 'any' ? null : { kind: 'boolean', value: v === 'yes' });
-          }}
-        >
-          <Radio value="any">Any</Radio>
-          <Radio value="yes">Yes</Radio>
-          <Radio value="no">No</Radio>
-        </Radio.Group>
-      )}
+      {uiKind === 'boolean' &&
+        (() => {
+          const boolValue =
+            value.kind === 'boolean' && value.value != null ? (value.value ? 'yes' : 'no') : 'any';
+          return (
+            <Select
+              value={boolValue}
+              onValueChange={(v) =>
+                commit(v === 'any' ? null : { kind: 'boolean', value: v === 'yes' })
+              }
+            >
+              <SelectTrigger className="h-9 w-full rounded-xl text-sm">
+                <SelectValue>{{ any: 'Any', yes: 'Yes', no: 'No' }[boolValue]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any</SelectItem>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+              </SelectContent>
+            </Select>
+          );
+        })()}
 
       {uiKind === 'set' && (
         <SetEditor
@@ -229,8 +261,8 @@ export function GridFilter(props: CustomFilterProps) {
         </button>
         <button
           type="button"
-          className="rounded-lg bg-primary-8 px-3.5 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-9"
-          onClick={() => hidePopupRef.current?.()}
+          className="rounded-xl bg-primary-8 px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-9"
+          onClick={onClose}
         >
           Apply
         </button>
@@ -271,8 +303,7 @@ function SetEditor({
   return (
     <div className="flex max-h-72 w-full flex-col gap-2">
       <Input
-        size="small"
-        allowClear
+        className={INPUT_CLASS}
         placeholder="Search…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -308,7 +339,7 @@ function SetEditor({
               >
                 <Checkbox
                   checked={selectedSet.has(o.value)}
-                  onChange={(e) => toggle(o.value, e.target.checked)}
+                  onCheckedChange={(checked) => toggle(o.value, checked === true)}
                 />
                 <span className="flex-1 truncate text-primary-8">{o.label}</span>
                 {o.count != null && (

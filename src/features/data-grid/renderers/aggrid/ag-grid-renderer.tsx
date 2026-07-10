@@ -79,6 +79,14 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     [controller, operators, facets, cellRenderers, detail]
   );
 
+  // AG Grid does not re-render header components when the `context` object changes,
+  // so the header (and its filter popover) would read a stale, facet-less context.
+  // Refresh headers whenever facets arrive so set-filter options are live.
+  useEffect(() => {
+    const api = apiRef.current;
+    if (facets && api && !api.isDestroyed()) api.refreshHeader();
+  }, [facets]);
+
   // Interleave synthetic full-width detail rows after expanded data rows.
   const displayRows = useMemo<Array<DisplayRow<Row>>>(
     () => interleaveDetailRows(rows, detail ? state.expanded : [], getRowId),
@@ -99,18 +107,40 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     [controller]
   );
 
-  const rowSelection = useMemo<RowSelectionOptions<DisplayRow<Row>> | undefined>(
+  const selectionSpec = controller.schema.selection;
+  const rowSelection = useMemo<RowSelectionOptions<DisplayRow<Row>> | undefined>(() => {
+    if (!selectionEnabled) return undefined;
+    if (selectionSpec?.mode === 'single') {
+      return {
+        mode: 'singleRow',
+        checkboxes: (p) => !isDetailRow(p.data),
+        enableClickSelection: false,
+      };
+    }
+    return {
+      mode: 'multiRow',
+      checkboxes: (p) => !isDetailRow(p.data),
+      headerCheckbox: selectionSpec?.headerCheckbox ?? true,
+      selectAll: 'currentPage',
+      enableClickSelection: false,
+    };
+  }, [selectionEnabled, selectionSpec?.mode, selectionSpec?.headerCheckbox]);
+
+  // the checkbox column is pinned first, fixed width and non-movable — a clean,
+  // high-quality selection affordance (AG Grid inserts it before all data columns).
+  const selectionColumnDef = useMemo(
     () =>
       selectionEnabled
         ? {
-            mode: 'multiRow',
-            checkboxes: (p) => !isDetailRow(p.data),
-            headerCheckbox: true,
-            selectAll: 'currentPage',
-            enableClickSelection: false,
+            width: selectionSpec?.columnWidth ?? 48,
+            maxWidth: selectionSpec?.columnWidth ?? 48,
+            pinned: 'left' as const,
+            resizable: false,
+            suppressMovable: true,
+            lockPosition: 'left' as const,
           }
         : undefined,
-    [selectionEnabled]
+    [selectionEnabled, selectionSpec?.columnWidth]
   );
 
   // grid → store. Selection is cross-page: merge this page's checkboxes with the
@@ -205,12 +235,12 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         suppressDragLeaveHidesColumns
         maintainColumnOrder
         animateRows={false}
-        headerHeight={46}
-        floatingFiltersHeight={48}
+        headerHeight={48}
         getRowHeight={getRowHeight}
         isFullWidthRow={(p) => isDetailRow(p.rowNode.data)}
         fullWidthCellRenderer={AgDetailCell}
         rowSelection={rowSelection}
+        selectionColumnDef={selectionColumnDef}
         onSelectionChanged={selectionEnabled ? onSelectionChanged : undefined}
         onGridReady={(e: GridReadyEvent<DisplayRow<Row>>) => {
           apiRef.current = e.api;

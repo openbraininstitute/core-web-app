@@ -1,67 +1,126 @@
-import { RiArrowDownSLine, RiArrowUpSLine, RiExpandUpDownLine } from '@remixicon/react';
+import {
+  RiArrowDownSLine,
+  RiArrowUpSLine,
+  RiExpandUpDownLine,
+  RiFilter3Fill,
+} from '@remixicon/react';
+import { useState } from 'react';
 
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
+import { FilterEditor } from './filters/filter-editor';
+import { summarizeFilter } from './filters/summary';
 import { useGridState } from './use-grid-state';
 
 import type { CustomHeaderProps } from 'ag-grid-react';
 import type { MouseEvent } from 'react';
+import type { FilterOptionsSource } from '../../core';
 import type { AgGridContext } from './ag-context';
 
 interface HeaderParams {
   columnId: string;
   unit?: string;
   sortable?: boolean;
+  /** filter configuration, present when the column is filterable in this context */
+  filter?: {
+    facetKey: string;
+    operatorIds: string[];
+    optionsSource?: FilterOptionsSource;
+    description?: string;
+  };
 }
 
 /**
- * Custom header. Sorting is server-side, so AG Grid's own sort is disabled
- * (`sortable: false` on the colDef) and clicks here dispatch `toggleSort` to the
- * store. The indicator reflects the store, not AG Grid. Shift-click adds a
- * secondary sort.
- *
- * Sort affordance (sortable columns only): unsorted shows a muted
- * up/down chevron; ascending an up chevron; descending a down chevron.
+ * Custom header. Sorting is server-side (AG Grid's own sort disabled): clicking the
+ * label dispatches `toggleSort`; the icon reflects the store (unsorted → up/down
+ * chevron, asc → up, desc → down, plus a multi-sort rank badge). Filtering lives in
+ * a compact round icon-button that opens the app's Radix popover anchored to it —
+ * no AG floating-filter row, so the grid saves vertical space.
  */
 export function AgHeader(props: CustomHeaderProps) {
   const ctx = props.context as AgGridContext;
-  const { columnId, unit, sortable } = props as CustomHeaderProps & HeaderParams;
+  const { columnId, unit, sortable, filter } = props as CustomHeaderProps & HeaderParams;
   const state = useGridState(ctx.controller);
+  const [open, setOpen] = useState(false);
+
   const entry = state.sort.find((s) => s.columnId === columnId);
   const rank = entry ? state.sort.findIndex((s) => s.columnId === columnId) : -1;
 
-  const onClick = (e: MouseEvent) => {
+  const filterEntry = state.filters[columnId];
+  const filterActive = Boolean(filterEntry && summarizeFilter(filterEntry));
+
+  const onSortClick = (e: MouseEvent) => {
     if (!sortable) return;
     ctx.controller.store.dispatch({ type: 'toggleSort', columnId, allowMulti: e.shiftKey });
   };
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'group flex h-full w-full items-center gap-1.5 text-left',
-        sortable ? 'cursor-pointer' : 'cursor-default'
-      )}
-    >
-      <span className="truncate font-semibold text-primary-8">{props.displayName}</span>
-      {unit ? <span className="text-xs font-normal text-gray-400">[{unit}]</span> : null}
-      {sortable && (
-        <span className="ml-auto flex shrink-0 items-center gap-0.5">
-          {entry?.direction === 'asc' ? (
-            <RiArrowUpSLine size={16} className="text-primary-6" />
-          ) : entry?.direction === 'desc' ? (
-            <RiArrowDownSLine size={16} className="text-primary-6" />
-          ) : (
-            <RiExpandUpDownLine
-              size={14}
-              className="text-gray-300 transition-colors group-hover:text-gray-400"
+    <div className="flex h-full w-full items-center gap-1">
+      <button
+        type="button"
+        onClick={onSortClick}
+        className={cn(
+          'group flex h-full min-w-0 flex-1 items-center gap-1.5 text-left',
+          sortable ? 'cursor-pointer' : 'cursor-default'
+        )}
+      >
+        <span className="truncate font-semibold text-primary-8">{props.displayName}</span>
+        {unit ? <span className="text-xs font-normal text-gray-400">[{unit}]</span> : null}
+        {sortable && (
+          <span className="flex shrink-0 items-center gap-0.5">
+            {entry?.direction === 'asc' ? (
+              <RiArrowUpSLine size={16} className="text-primary-6" />
+            ) : entry?.direction === 'desc' ? (
+              <RiArrowDownSLine size={16} className="text-primary-6" />
+            ) : (
+              <RiExpandUpDownLine
+                size={14}
+                className="text-gray-300 transition-colors group-hover:text-gray-400"
+              />
+            )}
+            {rank > 0 && (
+              <span className="text-[10px] font-semibold text-primary-5">{rank + 1}</span>
+            )}
+          </span>
+        )}
+      </button>
+
+      {filter && (
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Filter ${props.displayName}`}
+              className={cn(
+                'flex size-7 shrink-0 items-center justify-center rounded-full transition-colors',
+                filterActive
+                  ? 'bg-primary-6 text-white shadow-sm hover:bg-primary-7'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-primary-7'
+              )}
+            >
+              <RiFilter3Fill size={14} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            side="bottom"
+            sideOffset={6}
+            className="w-72 rounded-2xl border-gray-100 bg-white p-4 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]"
+          >
+            <FilterEditor
+              ctx={ctx}
+              columnId={columnId}
+              columnName={props.displayName ?? ''}
+              facetKey={filter.facetKey}
+              operatorIds={filter.operatorIds}
+              optionsSource={filter.optionsSource}
+              description={filter.description}
+              onClose={() => setOpen(false)}
             />
-          )}
-          {/* multi-sort rank badge (2nd+ sort key) */}
-          {rank > 0 && <span className="text-[10px] font-semibold text-primary-5">{rank + 1}</span>}
-        </span>
+          </PopoverContent>
+        </Popover>
       )}
-    </button>
+    </div>
   );
 }

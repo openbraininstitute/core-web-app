@@ -1,9 +1,8 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
-import { Input } from 'antd';
 import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
@@ -23,9 +22,9 @@ import {
   createEntitycorePagedDataSource,
 } from '@/features/data-grid/bindings/entitycore';
 import { createDefaultOperatorRegistry, GridController } from '@/features/data-grid/core';
+import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { createDefaultPersistence, DataGrid } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
-import { useDebouncedCallback } from '@/hooks/hooks';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
@@ -254,7 +253,7 @@ export function BrowseEntityGrid({
           onRowClick={handleRowClick}
           toolbarSlots={{
             left: toolbarLeft,
-            search: allowSearch ? <GridSearch onSearch={handleSearch} /> : undefined,
+            search: allowSearch ? <GridSearch onSearch={handleSearch} openOnMount /> : undefined,
             right: requireEntityTypeSelector?.enabled ? (
               <EntityTypeSelector
                 options={requireEntityTypeSelector.options}
@@ -263,6 +262,18 @@ export function BrowseEntityGrid({
               />
             ) : undefined,
           }}
+          renderBulkActions={({ selectedIds, clearSelection }) => (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-medium text-primary-8">{selectedIds.length} selected</span>
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="rounded-full px-2 py-0.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              >
+                Clear
+              </button>
+            </div>
+          )}
           renderCount={({ total, loading }) => (
             <span className="text-xs text-gray-600">
               {loading ? 'Loading…' : `${total.toLocaleString()} results`}
@@ -317,24 +328,6 @@ function renderListingError(error: unknown, entityTitle?: string): ReactNode {
       content={content}
       icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
       cls={{ content: 'max-w-3xl' }}
-    />
-  );
-}
-
-function GridSearch({ onSearch }: { onSearch: (text: string) => void }) {
-  const [text, setText] = useState('');
-  const commit = useDebouncedCallback((t: string) => onSearch(t), [onSearch], 300);
-  return (
-    <Input
-      size="small"
-      allowClear
-      placeholder="Search…"
-      value={text}
-      onChange={(e) => {
-        setText(e.target.value);
-        commit(e.target.value);
-      }}
-      className="w-56"
     />
   );
 }

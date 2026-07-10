@@ -1,8 +1,6 @@
 import { AgCellHost } from './cell-host';
 import { isDetailRow } from './detail-rows';
 import { AgExpandCell } from './expand-cell';
-import { GridFilter } from './filters/grid-filter';
-import { GridFloatingFilter } from './filters/grid-floating-filter';
 import { AgHeader } from './header';
 
 import type { ColDef } from 'ag-grid-community';
@@ -50,13 +48,31 @@ export function buildColDefs<Row>(
     const getValue = c.getValue;
     const userWidth = columnWidths[c.id];
 
+    // the whole filter UI now lives in the custom header (round icon-button +
+    // popover), so there is no AG floating-filter row — the header just needs the
+    // column's filter config to render it.
+    const filterParams =
+      c.filterAvailable && c.filter
+        ? {
+            facetKey: c.filter.facetKey ?? c.filter.field ?? field,
+            operatorIds: c.filter.operators,
+            optionsSource: c.filter.options,
+            description: c.filter.description,
+          }
+        : undefined;
+
     const colDef: ColDef<Row> = {
       colId: c.id,
       headerName: c.header,
       hide: hidden.has(c.id),
       sortable: false,
       headerComponent: AgHeader,
-      headerComponentParams: { columnId: c.id, unit: c.unit, sortable: !!c.sortable },
+      headerComponentParams: {
+        columnId: c.id,
+        unit: c.unit,
+        sortable: !!c.sortable,
+        filter: filterParams,
+      },
       width: userWidth ?? c.width?.width,
       minWidth: c.width?.minWidth,
       // a user-resized width must win over any flex sizing
@@ -83,21 +99,8 @@ export function buildColDefs<Row>(
       colDef.cellRendererParams = { rendererKey: c.cellRenderer, ...c.cellRendererParams };
     }
 
-    if (c.filterAvailable && c.filter) {
-      colDef.filter = GridFilter;
-      colDef.filterParams = {
-        columnId: c.id,
-        facetKey: c.filter.facetKey ?? c.filter.field ?? field,
-        operatorIds: c.filter.operators,
-        optionsSource: c.filter.options,
-        description: c.filter.description,
-      };
-      colDef.floatingFilter = true;
-      colDef.floatingFilterComponent = GridFloatingFilter;
-      colDef.floatingFilterComponentParams = { columnId: c.id };
+    if (filterParams) {
       colDef.suppressHeaderMenuButton = true;
-      // our custom pill already opens the popup — hide AG Grid's default funnel button
-      colDef.suppressFloatingFilterButton = true;
     }
 
     return colDef;
