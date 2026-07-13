@@ -1,9 +1,9 @@
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
+import { SectionsArraySchema } from '@/features/scan-config/types';
 import { type MorphoViewerSmallCircuitCellData, MorphoViewerTreeItemType } from '@/morpho-viewer';
 import { logError } from '@/utils/logger';
 
-import { SectionsArraySchema } from '../../types';
 import { buildMorphoTree } from './circuit-viz';
 
 class SequentialLoader<Input, Output> {

@@ -212,7 +212,12 @@ function PropertyValueSelector({
         )}
       </div>
       {expanded && (
-        <div className="flex flex-wrap gap-2 mt-1 text-sm border-gray-300 border-1 rounded-md p-3 bg-white">
+        <div
+          className={cn(
+            'flex flex-wrap gap-2 mt-1 text-sm rounded-md p-3 bg-white',
+            selected.length === 0 ? 'border-2 border-yellow-400' : 'border border-gray-300'
+          )}
+        >
           {displayValues.length === 0 && <span className="text-gray-400">No values available</span>}
           {displayValues.map((val) => {
             const isSelected = selected.includes(val);

@@ -1,4 +1,8 @@
 import type {
+  EntityDerivationFilter,
+  EntityDerivations,
+} from '@/api/entitycore/types/entities/derivation';
+import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
   EntityCoreIdentifiableNamed,
@@ -106,7 +110,8 @@ export interface ICircuit
     Timestamps,
     EntityCoreOwnership,
     EntityCoreType,
-    EntityCoreBaseAsset {
+    EntityCoreBaseAsset,
+    EntityDerivations {
   subject?: ISubject;
 }
 
@@ -121,7 +126,9 @@ export interface ICircuitFilter
     SharedFilter,
     PaginationFilter,
     CircuitScaleFilter,
-    IlikeSearchFilter {
+    IlikeSearchFilter,
+    // `generated_derivation__derivation_type[__in]` drives the "Derivation type" column filter.
+    EntityDerivationFilter {
   has_electrical_cell_models?: boolean;
   target_simulator__in?: Array<string>;
 }

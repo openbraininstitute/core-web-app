@@ -8,7 +8,7 @@ import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
-import { logError } from '@/utils/logger';
+import { logError, logWarn } from '@/utils/logger';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { useAiAgentHealthCheck } from '../hooks/health';
@@ -51,6 +51,11 @@ class AiAssistantClass {
   private readonly historyManager = new HistoryManager(this);
 
   private readonly messageManager = new MessageManager(this);
+
+  /** Tracks the virtualLabId/projectId that were used for the last successful thread init. */
+  private lastInitLabId: string | null = null;
+
+  private lastInitProjectId: string | null = null;
 
   setQueryClient(queryClient: ReturnType<typeof useQueryClient>) {
     this.messageManager.queryClient = queryClient;
@@ -168,9 +173,32 @@ class AiAssistantClass {
   }
 
   private readonly handleInit = debounce(() => {
-    this.threadmanager.init(this.context).then(({ isEmpty }) => {
-      this.isEmptyThread.set(isEmpty);
-    });
+    const { virtualLabId, projectId } = this.context;
+
+    // Skip re-initialization when only the access token changed
+    // (e.g. session refresh) and a thread is already loaded.
+    if (
+      this.threadId.get() &&
+      this.lastInitLabId === virtualLabId &&
+      this.lastInitProjectId === projectId
+    ) {
+      return;
+    }
+
+    this.lastInitLabId = virtualLabId;
+    this.lastInitProjectId = projectId;
+
+    this.threadmanager
+      .init(this.context)
+      .then(({ isEmpty }) => {
+        this.isEmptyThread.set(isEmpty);
+      })
+      .catch((err: unknown) => {
+        logWarn('AI assistant thread init failed (handled):', err);
+        this.healthError.set(
+          err instanceof Error ? err.message : 'Failed to initialize AI assistant.'
+        );
+      });
   }, 50);
 }
 

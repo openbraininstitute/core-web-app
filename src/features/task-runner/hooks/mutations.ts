@@ -12,6 +12,7 @@ import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
 import { TASK_ACTIVITIES_QUERY_KEY_HEAD, TASK_RUNNER_QUERY_KEY_HEAD } from '../constants';
+import { invalidateProjectBalance } from './use-balance-refresh';
 
 import type { QueryClient } from '@tanstack/react-query';
 import type { TTaskActivityType } from '@/api/entitycore/types/entities/task-activity';
@@ -89,6 +90,7 @@ export function useTaskLaunchMutation({
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
       const runLaunches = async () => {
+        let launched = false;
         for (const configId of configIds) {
           try {
             const executionId = await runTask({
@@ -96,6 +98,7 @@ export function useTaskLaunchMutation({
               task_type: obiOneTaskType,
               config_id: configId,
             });
+            launched = true;
             log('info', `${logTopic} for ${configId} launched successfully, execution ID`, {
               executionId,
             });
@@ -104,11 +107,15 @@ export function useTaskLaunchMutation({
           }
         }
 
-        await invalidateTaskExecutionActivities({
-          queryClient,
-          context,
-          executionActivityType,
-        });
+        await Promise.all([
+          invalidateTaskExecutionActivities({
+            queryClient,
+            context,
+            executionActivityType,
+          }),
+          // Launching reserves credits, so also refetch the balance — unless nothing launched.
+          launched ? invalidateProjectBalance({ queryClient, context }) : undefined,
+        ]);
       };
 
       if (requiresConsent) {

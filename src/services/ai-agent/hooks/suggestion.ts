@@ -22,17 +22,22 @@ export function useServiceAiAgentSuggestionFromUserJourney(
 
   const requestIdRef = React.useRef(0);
 
+  // Keep a ref to the latest token so the effect doesn't re-run on token refresh,
+  // but still uses the freshest token when it does fetch.
+  const accessTokenRef = React.useRef(accessToken);
+  accessTokenRef.current = accessToken;
+
   React.useEffect(() => {
     if (status === 'submitted' || status === 'streaming') {
       setSuggestions([]);
       return;
     }
-    if (status === 'ready' && accessToken && virtualLabId && projectId && threadId) {
+    if (status === 'ready' && accessTokenRef.current && virtualLabId && projectId && threadId) {
       const currentRequestId = ++requestIdRef.current;
 
       setIsLoading(true);
       setSuggestions([]);
-      serviceAiAgentSuggestionFromUserJourney(accessToken, {
+      serviceAiAgentSuggestionFromUserJourney(accessTokenRef.current, {
         threadId,
         virtualLabId,
         projectId,
@@ -54,6 +59,6 @@ export function useServiceAiAgentSuggestionFromUserJourney(
           }
         });
     }
-  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, status, fetchTrigger]);
+  }, [snapshot.frontendUrl, threadId, projectId, virtualLabId, status, fetchTrigger]);
   return [suggestions, () => setSuggestions([]), isLoading, () => setFetchTrigger((n) => n + 1)];
 }

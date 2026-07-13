@@ -91,7 +91,7 @@ export function Right({
     );
   }
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 py-1 h-full">
+    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
       {activity === ScanConfigActivity.Simulate &&
         entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
           <IonChannelModelRecordingRender
@@ -107,6 +107,9 @@ export function Right({
           entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) &&
         entity) ||
         (activity === ScanConfigActivity.Extract &&
+          entity &&
+          entityType === ExtendedEntitiesTypeDict.Circuit) ||
+        (activity === ScanConfigActivity.Build &&
           entity &&
           entityType === ExtendedEntitiesTypeDict.Circuit)) && (
         <div className="rounded-lg h-full" id="scan-config-right-model-preview">
