@@ -88,7 +88,7 @@ export async function deleteAnalysisNotebookTemplate({
   });
 }
 
-export async function createNotebook({
+export async function createAnalysisNotebookTemplate({
   payload,
   context,
 }: {
