@@ -4,21 +4,24 @@ import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Image from 'next/image';
-import { type ReactNode, useCallback, useState } from 'react';
+import { type ReactNode, useCallback, useRef, useState } from 'react';
 
 import { isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import { NotebookLeftMenu } from '@/features/notebooks/components/notebook-left-menu';
-import { startEmptyNotebook, syncNotebook } from '@/services/notebooks';
+import { SyncNotebookModal } from '@/features/notebooks/components/update-notebook-modal';
+import { startEmptyNotebook } from '@/services/notebooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
+import {
+  makeSelectContributionEntityClickEvent,
+  useContributionEntityClickEvent,
+} from '@/ui/segments/contribute/event';
 import { ContributionModal } from '@/ui/segments/contribute/modal';
 import {
   makeSelectEntityClickEvent,
@@ -102,23 +105,22 @@ export function NotebooksLayout({ children }: Props) {
 
   const course = virtualLabData?.course;
 
+  const [syncRecord, setSyncRecord] = useState<EntityCoreObjectTypes | null>(null);
+  const pendingSyncRef = useRef<EntityCoreObjectTypes | null>(null);
+
+  useContributionEntityClickEvent(({ detail }) => {
+    if (!detail.display && pendingSyncRef.current) {
+      setSyncRecord(pendingSyncRef.current);
+      pendingSyncRef.current = null;
+    }
+  });
+
   const onNotebookCreateSuccess = useCallback(
     async (notebook: EntityCoreObjectTypes) => {
-      if (!isNotebook(notebook) || course?.template_project_id !== projectId) {
-        return;
-      }
-      try {
-        const projectIds = (await listAllProjectIds(virtualLabId)).filter((id) => id !== projectId);
-        await syncNotebook({ notebook, virtualLabId, projectId, targetProjectIds: projectIds });
-      } catch {
-        notification.warning({
-          message: `Couldn't sync notebook to student projects`,
-          key: 'notebook-sync-warning',
-          placement: 'topRight',
-        });
-      }
+      if (!isNotebook(notebook) || course?.template_project_id !== projectId) return;
+      pendingSyncRef.current = notebook;
     },
-    [projectId, virtualLabId, notification.warning, course]
+    [projectId, course]
   );
 
   return (
@@ -206,6 +208,15 @@ export function NotebooksLayout({ children }: Props) {
         </m.div>
 
         <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
+        {syncRecord && (
+          <SyncNotebookModal
+            open
+            onClose={() => setSyncRecord(null)}
+            record={syncRecord}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
+        )}
       </div>
     </LazyMotion>
   );
