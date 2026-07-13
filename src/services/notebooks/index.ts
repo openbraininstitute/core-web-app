@@ -1,4 +1,7 @@
-import { createNotebook } from '@/api/entitycore/queries/analysis-notebook-template';
+import {
+  createAnalysisNotebookTemplate,
+  createNotebook,
+} from '@/api/entitycore/queries/analysis-notebook-template';
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import {
   createContribution,
@@ -234,7 +237,7 @@ async function _syncNotebook({
   projectId: string;
   targetProjectId: string;
 }) {
-  const createdNotebook = await createNotebook({
+  const createdNotebook = await createAnalysisNotebookTemplate({
     payload: notebook,
     context: { virtualLabId, projectId: targetProjectId },
   });

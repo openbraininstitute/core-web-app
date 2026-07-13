@@ -15,7 +15,7 @@ import { capitalize } from 'es-toolkit/compat';
 import { useEffect, useMemo, useState } from 'react';
 
 import {
-  createNotebook,
+  createAnalysisNotebookTemplate,
   getAnalysisNotebookTemplate,
   getAnalysisNotebookTemplates,
 } from '@/api/entitycore/queries/analysis-notebook-template';
@@ -123,7 +123,7 @@ async function syncChildProjects({
       const match = res.data.find((nb) => nb.name === notebookName);
       const targetId = match
         ? match.id
-        : (await createNotebook({ payload: templateEntity, context: childCtx })).id;
+        : (await createAnalysisNotebookTemplate({ payload: templateEntity, context: childCtx })).id;
 
       // Assets: wipe and re-upload
       const childAssets = await getAssets({ entityType, entityId: targetId, ctx: childCtx });
