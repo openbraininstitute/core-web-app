@@ -94,9 +94,9 @@ function FormContent<
       const values = form.getFieldsValue(true) as TFormValues;
       const entity = await createEntity({ values });
       setCreatedEntityId(entity.id);
-      onCreateSuccess?.(entity);
+      await onCreateSuccess?.(entity);
     } catch (error) {
-      console.error('Final validation failed', error);
+      console.error('On Create Success failed', error);
     }
   };
 
