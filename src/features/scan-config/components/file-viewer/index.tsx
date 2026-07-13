@@ -11,6 +11,7 @@ import { cn } from '@/utils/css-class';
 
 import { jsonFileAtomFamily } from '../atoms';
 import { CodeFileViewer } from './code-viewer';
+import { ImageFileViewer } from './image-viewer';
 
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
@@ -23,6 +24,16 @@ type FileViewerProps = {
   className?: string;
 };
 
+const IMAGE_CONTENT_TYPES = new Set([
+  AssetContentType.png,
+  AssetContentType.jpeg,
+  AssetContentType.webp,
+]);
+
+function isImageFile(file: TActivityCustomFile): boolean {
+  return IMAGE_CONTENT_TYPES.has(file.asset.content_type);
+}
+
 export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
   const [displayFile, setDisplayFile] = useState<TActivityCustomFile | undefined>(file);
 
@@ -31,6 +42,8 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
   const isJson =
     displayFile?.asset.content_type === AssetContentType.json ||
     file?.enforcedRenderType === AssetContentType.json;
+  const isImage = !!displayFile && isImageFile(displayFile);
+  const edgeToEdge = isJson || isImage;
 
   const viewerContent = match(displayFile)
     .with(undefined, () => null)
@@ -42,6 +55,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
       ),
       (f) => <JsonFileViewer file={f} context={context} />
     )
+    .with(P.when(isImageFile), (f) => <ImageFileViewer file={f} context={context} />)
     .with({ asset: { content_type: AssetContentType.nwb } }, (f) => (
       <NwbFileViewer file={f} context={context} />
     ))
@@ -61,10 +75,10 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
   return (
     <div
       className={cn('text-primary-9 relative rounded-2xl bg-white p-6 w-full', className, {
-        'p-0': isJson,
+        'p-0': edgeToEdge,
       })}
     >
-      <div className={cn('relative h-full overflow-auto p-6', { 'p-0': isJson })}>
+      <div className={cn('relative h-full overflow-auto p-6', { 'p-0': edgeToEdge })}>
         <Suspense>{viewerContent}</Suspense>
         {loading && !isFilePreloading && (
           <div className="absolute inset-0 z-10 flex h-full cursor-progress items-center justify-center rounded-2xl backdrop-blur-xs">
