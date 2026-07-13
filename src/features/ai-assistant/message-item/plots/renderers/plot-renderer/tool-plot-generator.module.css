@@ -63,9 +63,9 @@
   display: inline !important;
 }
 
-/* Position the modebar below the fullscreen button, right-aligned */
+/* Position the modebar at the top-right, below the title/spacer area */
 .plotContainer :global(.modebar-container) {
-  top: 8px !important;
+  top: 2px !important;
   right: 2px !important;
 }
 

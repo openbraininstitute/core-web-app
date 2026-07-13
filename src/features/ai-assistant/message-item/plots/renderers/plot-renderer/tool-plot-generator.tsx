@@ -413,11 +413,17 @@ function CustomPlot({
   }
 
   const layout = (props.layout ?? {}) as Record<string, unknown>;
-  const title = (layout.title as Record<string, unknown>)?.text ?? (layout.title as string) ?? '';
-  const titleFont = ((layout.title as Record<string, unknown>)?.font ?? {}) as Record<
-    string,
-    unknown
-  >;
+  const rawTitle = layout.title;
+  const title: string =
+    typeof rawTitle === 'string'
+      ? rawTitle
+      : typeof rawTitle === 'object' && rawTitle !== null
+        ? String((rawTitle as Record<string, unknown>).text ?? '')
+        : '';
+  const titleFont =
+    typeof rawTitle === 'object' && rawTitle !== null
+      ? (((rawTitle as Record<string, unknown>).font ?? {}) as Record<string, unknown>)
+      : ({} as Record<string, unknown>);
 
   const subplotCount = countAxes(layout);
   const isGrid = subplotCount >= 4;
@@ -467,13 +473,15 @@ function CustomPlot({
         >
           <FullscreenOutlined />
         </button>
-        {title && (
+        {title ? (
           <PlotTitle
             title={title as string}
             titleFont={titleFont}
-            symmetricPadding="28px"
+            symmetricPadding="20px"
             compact
           />
+        ) : (
+          <div style={{ height: '20px', flexShrink: 0 }} />
         )}
         {!plotReady && <ToolSkeleton />}
         <div
@@ -552,10 +560,13 @@ function PlotTitle({
     fontSize = Math.min(baseFontSize, 24);
   }
 
+  // Safety: ensure title is always a primitive string
+  const safeTitle = typeof title === 'string' ? title : String(title ?? '');
+
   return (
     <div
       className={compact ? 'px-2 py-0.5 text-center font-bold' : 'px-4 py-2 text-center font-bold'}
-      title={title}
+      title={safeTitle}
       style={{
         fontSize,
         fontFamily: titleFont.family || 'Arial, sans-serif',
@@ -569,7 +580,7 @@ function PlotTitle({
         whiteSpace: 'nowrap',
       }}
     >
-      {title}
+      {safeTitle}
     </div>
   );
 }

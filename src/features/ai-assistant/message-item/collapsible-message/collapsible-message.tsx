@@ -97,27 +97,38 @@ export function CollapsibleMessage({
   const isExpandedRef = React.useRef(isExpanded);
   isExpandedRef.current = isExpanded;
 
-  React.useEffect(() => {
+  // Synchronously detect new step boundary and compute animating indices during render
+  // to avoid a blank frame where items move to collapsed before the animation wrapper appears.
+  // We track whether we need to schedule the timeout via a ref so the effect can pick it up.
+  const pendingAnimationRef = React.useRef(false);
+
+  if (
+    status === 'streaming' &&
+    lastStepStartIndex > previousStepStartRef.current &&
+    !isExpandedRef.current
+  ) {
     const previous = previousStepStartRef.current;
-    previousStepStartRef.current = lastStepStartIndex;
-
-    if (status !== 'streaming' || lastStepStartIndex <= previous) return undefined;
-
-    // When the reasoning box is expanded, items are already visible inside it,
-    // so skip the slide-out animation to avoid a jarring jump when they reappear
-    // in the collapsible content after the animation ends.
-    if (isExpandedRef.current) return undefined;
-
     const toAnimate = new Set<number>();
     for (let i = Math.max(0, previous); i < lastStepStartIndex; i++) {
       toAnimate.add(i);
     }
-    if (toAnimate.size === 0) return undefined;
+    if (toAnimate.size > 0 && animatingIndices.size === 0) {
+      // setState during render is fine in React 18+ when the value differs
+      setAnimatingIndices(toAnimate);
+      pendingAnimationRef.current = true;
+    }
+    previousStepStartRef.current = lastStepStartIndex;
+  } else if (lastStepStartIndex !== previousStepStartRef.current) {
+    previousStepStartRef.current = lastStepStartIndex;
+  }
 
-    setAnimatingIndices(toAnimate);
+  // Schedule cleanup timeout after animation completes
+  React.useEffect(() => {
+    if (!pendingAnimationRef.current) return undefined;
+    pendingAnimationRef.current = false;
     const timer = setTimeout(() => setAnimatingIndices(new Set()), COLLAPSE_ANIMATION_MS);
     return () => clearTimeout(timer);
-  }, [lastStepStartIndex, status]);
+  }, [animatingIndices]);
 
   // ── Restore confirmation ─────────────────────────────────────────────────
   const [isConfirmingRestore, setIsConfirmingRestore] = React.useState(false);

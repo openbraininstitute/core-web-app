@@ -12,6 +12,27 @@ import { ToolSkeletonStandalone } from './renderers/skeleton/tool-skeleton';
 
 const ANIMATION_DURATION = 500;
 
+class PlotErrorBoundary extends React.Component<
+  { children: React.ReactNode; isBackup?: boolean },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; isBackup?: boolean }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <PlotErrorMessage isBackup={this.props.isBackup} />;
+    }
+    return this.props.children;
+  }
+}
+
 export default function PlotInChat({
   storageId,
   isBackup,
@@ -49,15 +70,21 @@ export default function PlotInChat({
   if (!isString(content)) return null;
 
   if (type === 'image') {
-    return <ToolThumbnailGeneration result={{ storage_id: storageId }} data={data} />;
+    return (
+      <PlotErrorBoundary isBackup={isBackup}>
+        <ToolThumbnailGeneration result={{ storage_id: storageId }} data={data} />
+      </PlotErrorBoundary>
+    );
   }
 
   return (
-    <ToolPlotGenerator
-      result={{ storage_id: storageId }}
-      data={data}
-      plotRenderKey={plotRenderKey}
-      isAnimating={isAnimating}
-    />
+    <PlotErrorBoundary isBackup={isBackup}>
+      <ToolPlotGenerator
+        result={{ storage_id: storageId }}
+        data={data}
+        plotRenderKey={plotRenderKey}
+        isAnimating={isAnimating}
+      />
+    </PlotErrorBoundary>
   );
 }
