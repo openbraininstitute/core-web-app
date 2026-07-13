@@ -28,7 +28,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 11
+          version: 11.7.0 # Pin temporarily while this is fixed: https://github.com/pnpm/pnpm/issues/11663
 
       - name: Set-up Node
         uses: actions/setup-node@v6
@@ -54,7 +54,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: 11
+          version: 11.7.0
 
       - name: Set-up Node
         uses: actions/setup-node@v6
