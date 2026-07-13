@@ -24,6 +24,8 @@ import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 interface Options {
   /** whether this viewer exposes an axons toggle (morphology viewer only) */
   supportsAxons?: boolean;
+  /** whether electrode overlays are available for this preview */
+  supportsElectrodes?: boolean;
   /** SONATA population whose H5 columns drive colour-by and the nodes table */
   population?: NodePopulation;
 }
@@ -56,7 +58,7 @@ export interface ColorByControls {
  */
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
-  { supportsAxons, population }: Options = {}
+  { supportsAxons, supportsElectrodes, population }: Options = {}
 ) {
   const circuitId = circuit?.id ?? '';
   const { config, hasSavedConfig, update, reset } = useViewerConfig(circuitId);
@@ -147,6 +149,18 @@ export function useCircuitColorBy(
         update({ backgroundColor: dark ? CANVAS_DARK : CANVAS_LIGHT }),
       showAxons: supportsAxons ? config.showAxons : undefined,
       onToggleAxons: supportsAxons ? (value) => update({ showAxons: value }) : undefined,
+      neuronOpacity: config.neuronOpacity,
+      onNeuronOpacityChange: (value) => update({ neuronOpacity: value }),
+      showGroundGrid: config.showGroundGrid,
+      onToggleGroundGrid: (value) => update({ showGroundGrid: value }),
+      showElectrodes: supportsElectrodes ? config.showElectrodes : undefined,
+      onToggleElectrodes: supportsElectrodes
+        ? (value) => update({ showElectrodes: value })
+        : undefined,
+      electrodeRadius: supportsElectrodes ? config.electrodeRadius : undefined,
+      onElectrodeRadiusChange: supportsElectrodes
+        ? (value) => update({ electrodeRadius: value })
+        : undefined,
       hasSavedConfig,
       onResetConfig: reset,
     }),
@@ -156,7 +170,12 @@ export function useCircuitColorBy(
       captureImage,
       backgroundDark,
       config.showAxons,
+      config.neuronOpacity,
+      config.showGroundGrid,
+      config.showElectrodes,
+      config.electrodeRadius,
       supportsAxons,
+      supportsElectrodes,
       hasSavedConfig,
       update,
       reset,

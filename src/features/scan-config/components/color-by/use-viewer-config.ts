@@ -17,6 +17,10 @@ export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   colorByProperty: null,
   backgroundColor: CANVAS_LIGHT,
   showAxons: false,
+  neuronOpacity: 0.2,
+  showGroundGrid: false,
+  showElectrodes: true,
+  electrodeRadius: 25,
   colorOverrides: {},
 };
 

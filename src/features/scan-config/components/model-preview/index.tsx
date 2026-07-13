@@ -6,11 +6,16 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
-import ViewerLayout from './viewer-layout';
+import type { Config, TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
-import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
-
-export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfiguration }) {
+export function ModelPreview({
+  model,
+  config,
+}: {
+  model: TSupportedEntitiesForScanConfiguration;
+  /** Live scan-config (used for electrode_locations overlays). */
+  config?: Config;
+}) {
   return match(model)
     .with({ type: EntityTypeDict.Memodel }, () => (
       <NeuronVisualizer
@@ -20,18 +25,24 @@ export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfig
         disableSynapses
       />
     ))
-    .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (
-      <ViewerLayout model={model} />
-    ))
     .with(
       {
         type: EntityTypeDict.Circuit,
-        scale: P.union(CircuitScaleDictionary.PairNeuron, CircuitScaleDictionary.SmallMicrocircuit),
+        scale: P.union(
+          CircuitScaleDictionary.Single,
+          CircuitScaleDictionary.PairNeuron,
+          CircuitScaleDictionary.SmallMicrocircuit
+        ),
       },
-      () => <CircuitPreview circuit={model as ICircuit} enableVisualization />
+      () => <CircuitPreview circuit={model as ICircuit} config={config} enableVisualization />
     )
     .with({ type: EntityTypeDict.Circuit }, () => (
-      <CircuitPreview circuit={model as ICircuit} enableVisualization largeCircuit />
+      <CircuitPreview
+        circuit={model as ICircuit}
+        config={config}
+        enableVisualization
+        largeCircuit
+      />
     ))
     .otherwise(() => null);
 }

@@ -13,6 +13,7 @@ import { cn } from '@/utils/css-class';
 import { useCircuitNodes, useSomaRadius } from './hooks';
 
 import type { ICircuit } from '@/api/entitycore/types';
+import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
@@ -27,6 +28,14 @@ export interface LargeCircuitPreviewProps {
   scalebarColor?: string;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
+  /** World-coordinate electrode (or other) point overlays. */
+  overlays?: CircuitOverlayGroup[];
+  /** Soma paint opacity (0–1). */
+  neuronOpacity?: number;
+  /** Show horizontal floor/ground grid. */
+  showGroundGrid?: boolean;
+  /** Electrode marker radius (world units). */
+  electrodeRadius?: number;
 }
 
 interface CellInfo {
@@ -42,6 +51,10 @@ export function LargeCircuitPreview({
   backgroundColor,
   scalebarColor,
   signals,
+  overlays,
+  neuronOpacity,
+  showGroundGrid = false,
+  electrodeRadius = 25,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);
@@ -67,6 +80,11 @@ export function LargeCircuitPreview({
     });
   }, [nodes, colorsByNode]);
 
+  const morphoOverlays = React.useMemo(
+    () => overlays?.map(({ color, coordinates }) => ({ color, coordinates })),
+    [overlays]
+  );
+
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
       {!nodes && <VisualizationLoadingIndicator />}
@@ -87,6 +105,11 @@ export function LargeCircuitPreview({
             cellInfos={cellInfos}
             backgroundColor={backgroundColor}
             signals={signals}
+            overlays={morphoOverlays}
+            overlaysRadius={electrodeRadius}
+            overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
+            neuronOpacity={neuronOpacity}
+            groundGrid={showGroundGrid}
             controls={[
               debugMode
                 ? [

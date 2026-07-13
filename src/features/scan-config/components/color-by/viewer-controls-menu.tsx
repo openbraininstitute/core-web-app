@@ -11,7 +11,7 @@ import {
   RiSunFill,
   RiSunLine,
 } from '@remixicon/react';
-import { Switch } from 'antd';
+import { Slider, Switch } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 import { AxonIcon } from '@/components/icons/Axon';
@@ -30,6 +30,18 @@ export interface ViewerControlsMenuProps {
   /** axons toggle — omit for viewers that have no axons (point cloud) */
   showAxons?: boolean;
   onToggleAxons?: (value: boolean) => void;
+  /** neuron / soma opacity (0–1); omit to hide the control */
+  neuronOpacity?: number;
+  onNeuronOpacityChange?: (value: number) => void;
+  /** horizontal floor/ground grid under the circuit */
+  showGroundGrid?: boolean;
+  onToggleGroundGrid?: (value: boolean) => void;
+  /** electrode location overlays — omit when none are available */
+  showElectrodes?: boolean;
+  onToggleElectrodes?: (value: boolean) => void;
+  /** electrode marker radius (world units); omit when electrodes unavailable */
+  electrodeRadius?: number;
+  onElectrodeRadiusChange?: (value: number) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
@@ -52,6 +64,14 @@ export function ViewerControlsMenu({
   onBackgroundDarkChange,
   showAxons,
   onToggleAxons,
+  neuronOpacity,
+  onNeuronOpacityChange,
+  showGroundGrid,
+  onToggleGroundGrid,
+  showElectrodes,
+  onToggleElectrodes,
+  electrodeRadius,
+  onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
   container,
@@ -157,6 +177,51 @@ export function ViewerControlsMenu({
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
               <Switch size="small" checked={!!showAxons} onChange={onToggleAxons} />
             </MenuRow>
+          )}
+          {onToggleElectrodes && (
+            <MenuRow label="Electrodes" icon={<ElectrodesIcon className="size-4 shrink-0" />}>
+              <Switch size="small" checked={!!showElectrodes} onChange={onToggleElectrodes} />
+            </MenuRow>
+          )}
+          {onElectrodeRadiusChange && electrodeRadius !== undefined && showElectrodes !== false && (
+            <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
+              <div className="flex items-center justify-between gap-2">
+                <span>Electrode size</span>
+                <span className="tabular-nums text-neutral-500">{electrodeRadius}</span>
+              </div>
+              <Slider
+                min={5}
+                max={80}
+                step={5}
+                value={electrodeRadius}
+                onChange={onElectrodeRadiusChange}
+                tooltip={{ formatter: null }}
+                disabled={showElectrodes === false}
+              />
+            </div>
+          )}
+          {onToggleGroundGrid && (
+            <MenuRow label="Ground grid" icon={<GridIcon className="size-4 shrink-0" />}>
+              <Switch size="small" checked={!!showGroundGrid} onChange={onToggleGroundGrid} />
+            </MenuRow>
+          )}
+          {onNeuronOpacityChange && neuronOpacity !== undefined && (
+            <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
+              <div className="flex items-center justify-between gap-2">
+                <span>Neuron opacity</span>
+                <span className="tabular-nums text-neutral-500">
+                  {Math.round(neuronOpacity * 100)}%
+                </span>
+              </div>
+              <Slider
+                min={5}
+                max={100}
+                step={5}
+                value={Math.round(neuronOpacity * 100)}
+                onChange={(pct) => onNeuronOpacityChange(pct / 100)}
+                tooltip={{ formatter: null }}
+              />
+            </div>
           )}
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
             <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />
@@ -282,5 +347,35 @@ function MenuRow({
       </span>
       {children}
     </div>
+  );
+}
+
+function GridIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      className={className}
+      aria-hidden
+    >
+      <title>Ground grid</title>
+      <rect x="2" y="2" width="12" height="12" rx="1" />
+      <path d="M2 6.5h12M2 9.5h12M6.5 2v12M9.5 2v12" />
+    </svg>
+  );
+}
+
+function ElectrodesIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className={className} aria-hidden>
+      <title>Electrodes</title>
+      <circle cx="4" cy="5" r="1.5" />
+      <circle cx="8" cy="8" r="1.5" />
+      <circle cx="12" cy="4" r="1.5" />
+      <circle cx="6" cy="12" r="1.5" />
+      <circle cx="11" cy="11" r="1.5" />
+    </svg>
   );
 }

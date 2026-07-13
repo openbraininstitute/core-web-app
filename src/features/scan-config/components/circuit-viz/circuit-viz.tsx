@@ -8,6 +8,7 @@ import { useCircuit } from './hooks';
 import { sequentialCellLoader } from './sequential-loader';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
 import type { MorphoViewerSignals } from '@/morpho-viewer';
 
@@ -25,6 +26,14 @@ interface CircuitVizProps {
   scalebarColor?: string;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
+  /** World-coordinate electrode (or other) point overlays. */
+  overlays?: CircuitOverlayGroup[];
+  /** Neuron paint opacity (0–1). */
+  neuronOpacity?: number;
+  /** Show horizontal floor/ground grid. */
+  showGroundGrid?: boolean;
+  /** Electrode marker radius (world units). */
+  electrodeRadius?: number;
 }
 
 const CircuitViz = ({
@@ -35,6 +44,10 @@ const CircuitViz = ({
   backgroundColor,
   scalebarColor,
   signals,
+  overlays,
+  neuronOpacity,
+  showGroundGrid = false,
+  electrodeRadius = 25,
 }: CircuitVizProps) => {
   const [progress, setProgress] = useState(0);
   const { circuit, isLoading, error, loadCell } = useCircuit(
@@ -63,6 +76,12 @@ const CircuitViz = ({
 
   const loading = !error && (isLoading || progress < 1);
 
+  // morphoviewer overlays omit the local `name` field; strip before passing.
+  const morphoOverlays = useMemo(
+    () => overlays?.map(({ color, coordinates }) => ({ color, coordinates })),
+    [overlays]
+  );
+
   return (
     <div className="h-full w-full relative">
       {circuit && circuit.length > 0 && (
@@ -78,6 +97,11 @@ const CircuitViz = ({
           loadCell={loadCell}
           controls={[]}
           onLoadProgress={setProgress}
+          overlays={morphoOverlays}
+          overlaysRadius={electrodeRadius}
+          overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
+          neuronOpacity={neuronOpacity}
+          groundGrid={showGroundGrid}
         />
       )}
       {loading && <VisualizationLoadingIndicator progress={progress} />}

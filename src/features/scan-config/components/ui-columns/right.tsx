@@ -113,7 +113,7 @@ export function Right({
           entity &&
           entityType === ExtendedEntitiesTypeDict.Circuit)) && (
         <div className="rounded-lg h-full" id="scan-config-right-model-preview">
-          <ModelPreview model={entity} />
+          <ModelPreview model={entity} config={config} />
         </div>
       )}
     </div>

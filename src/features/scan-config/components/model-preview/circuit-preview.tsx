@@ -14,12 +14,14 @@ import {
 } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
+import { useElectrodeLocationsOverlay } from '@/features/scan-config/components/model-preview/use-electrode-locations-overlay';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
 import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from '@/features/scan-config/types';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
@@ -29,6 +31,8 @@ interface CircuitPreviewProps {
   circuit: ICircuit;
   enableVisualization?: boolean;
   largeCircuit?: boolean;
+  /** Live scan-config; when it contains `electrode_locations`, overlays are fetched. */
+  config?: Config;
 }
 
 /**
@@ -42,6 +46,7 @@ export function CircuitPreview({
   circuit,
   enableVisualization = false,
   largeCircuit = false,
+  config: scanConfig,
 }: CircuitPreviewProps) {
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
@@ -62,11 +67,18 @@ export function CircuitPreview({
     setPopulationName(name);
   }, []);
 
+  const { overlays, available: electrodesAvailable } = useElectrodeLocationsOverlay({
+    config: scanConfig,
+  });
+
   const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
       supportsAxons: !largeCircuit,
+      supportsElectrodes: electrodesAvailable,
       population,
     });
+
+  const visibleOverlays = config.showElectrodes ? overlays : undefined;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -110,6 +122,10 @@ export function CircuitPreview({
           backgroundColor={config.backgroundColor}
           scalebarColor={theme?.foreground}
           signals={signals}
+          overlays={visibleOverlays}
+          neuronOpacity={config.neuronOpacity}
+          showGroundGrid={config.showGroundGrid}
+          electrodeRadius={config.electrodeRadius}
         />
       )}
       {activeMode === ViewerModeDict.Visualization && largeCircuit && (
@@ -120,6 +136,10 @@ export function CircuitPreview({
           backgroundColor={config.backgroundColor}
           scalebarColor={theme?.foreground}
           signals={signals}
+          overlays={visibleOverlays}
+          neuronOpacity={config.neuronOpacity}
+          showGroundGrid={config.showGroundGrid}
+          electrodeRadius={config.electrodeRadius}
         />
       )}
 
