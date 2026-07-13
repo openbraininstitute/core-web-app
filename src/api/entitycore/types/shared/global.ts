@@ -262,6 +262,9 @@ export enum AssetLabel {
   task_config = 'task_config',
   skeletonization_config = 'skeletonization_config',
   lod_mesh_block = 'lod_mesh_block',
+  electrode_array_weight_matrix = 'electrode_array_weight_matrix',
+  electrode_array_image = 'electrode_array_image',
+  electrode_locations = 'electrode_locations',
 }
 
 export enum AssetContentType {
