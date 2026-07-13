@@ -9,7 +9,17 @@ function isBlockReference(value: unknown): value is { block_name: string } {
   return isPlainObject(value) && typeof value.block_name === 'string';
 }
 
-export type RewriteBlockReferencesMode = { type: 'clear' } | { type: 'rename'; to: string };
+export const RewriteBlockReferencesModeDict = {
+  Clear: 'clear',
+  Rename: 'rename',
+} as const;
+
+export type TRewriteBlockReferencesModeDict =
+  (typeof RewriteBlockReferencesModeDict)[keyof typeof RewriteBlockReferencesModeDict];
+
+export type RewriteBlockReferencesMode =
+  | { type: typeof RewriteBlockReferencesModeDict.Clear }
+  | { type: typeof RewriteBlockReferencesModeDict.Rename; to: string };
 
 /**
  * Walk a config subtree and rewrite every BlockReference whose `block_name`
@@ -34,7 +44,7 @@ export function rewriteBlockReferences(
     for (let i = 0; i < node.length; i += 1) {
       const item = node[i];
       if (isBlockReference(item) && item.block_name === matchName) {
-        if (mode.type === 'clear') {
+        if (mode.type === RewriteBlockReferencesModeDict.Clear) {
           node[i] = null;
         } else {
           item.block_name = mode.to;
@@ -51,7 +61,7 @@ export function rewriteBlockReferences(
   for (const key of Object.keys(node)) {
     const value = node[key];
     if (isBlockReference(value) && value.block_name === matchName) {
-      if (mode.type === 'clear') {
+      if (mode.type === RewriteBlockReferencesModeDict.Clear) {
         delete node[key];
       } else {
         value.block_name = mode.to;

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { rewriteBlockReferences } from '@/features/scan-config/components/rewrite-block-references';
+import {
+  RewriteBlockReferencesModeDict,
+  rewriteBlockReferences,
+} from '@/features/scan-config/components/rewrite-block-references';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
 /** Schema BlockReference shape used by `base_neuron_set` / `combined_with`. */
@@ -38,7 +41,7 @@ describe('rewriteBlockReferences', () => {
         other: 'keep',
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(entry).toEqual({
         type: 'VirtualCombinedNeuronSet',
@@ -57,7 +60,7 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(entry.combined_with).toEqual([
         [null, 'union'],
@@ -77,7 +80,7 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(entry.combined_with).toEqual([
         [null, 'union'],
@@ -96,7 +99,7 @@ describe('rewriteBlockReferences', () => {
         label: 'Set A',
       };
 
-      rewriteBlockReferences(entry, 'Set A', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Set A', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(entry).toEqual({
         type: 'Recording',
@@ -114,7 +117,9 @@ describe('rewriteBlockReferences', () => {
         [{ block_name: 'Set A', block_dict_name: 'neuron_sets' }, 'union'],
       ];
 
-      rewriteBlockReferences({ combined_with }, 'Set A', { type: 'clear' });
+      rewriteBlockReferences({ combined_with }, 'Set A', {
+        type: RewriteBlockReferencesModeDict.Clear,
+      });
 
       expect(combined_with.length).toBe(1);
       expect(0 in combined_with).toBe(true);
@@ -128,7 +133,10 @@ describe('rewriteBlockReferences', () => {
         neuron_set: { block_name: 'Old', block_dict_name: 'neuron_sets' },
       };
 
-      rewriteBlockReferences(entry, 'Old', { type: 'rename', to: 'New' });
+      rewriteBlockReferences(entry, 'Old', {
+        type: RewriteBlockReferencesModeDict.Rename,
+        to: 'New',
+      });
 
       expect(entry.neuron_set.block_name).toBe('New');
       expect(entry.neuron_set.block_dict_name).toBe('neuron_sets');
@@ -143,7 +151,10 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Old', { type: 'rename', to: 'New' });
+      rewriteBlockReferences(entry, 'Old', {
+        type: RewriteBlockReferencesModeDict.Rename,
+        to: 'New',
+      });
 
       expect(entry.base_neuron_set.block_name).toBe('New');
       expect(entry.combined_with).toEqual([
@@ -170,7 +181,7 @@ describe('rewriteBlockReferences', () => {
 
       for (const section of Object.values(config)) {
         for (const entry of Object.values(section)) {
-          rewriteBlockReferences(entry, 'Gone', { type: 'clear' });
+          rewriteBlockReferences(entry, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
         }
       }
 
@@ -179,11 +190,21 @@ describe('rewriteBlockReferences', () => {
     });
 
     it('is a no-op for null, primitives, and empty structures', () => {
-      expect(() => rewriteBlockReferences(null, 'X', { type: 'clear' })).not.toThrow();
-      expect(() => rewriteBlockReferences('Set A', 'Set A', { type: 'clear' })).not.toThrow();
-      expect(() => rewriteBlockReferences(42, 'Set A', { type: 'clear' })).not.toThrow();
-      expect(() => rewriteBlockReferences({}, 'Set A', { type: 'clear' })).not.toThrow();
-      expect(() => rewriteBlockReferences([], 'Set A', { type: 'clear' })).not.toThrow();
+      expect(() =>
+        rewriteBlockReferences(null, 'X', { type: RewriteBlockReferencesModeDict.Clear })
+      ).not.toThrow();
+      expect(() =>
+        rewriteBlockReferences('Set A', 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+      ).not.toThrow();
+      expect(() =>
+        rewriteBlockReferences(42, 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+      ).not.toThrow();
+      expect(() =>
+        rewriteBlockReferences({}, 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+      ).not.toThrow();
+      expect(() =>
+        rewriteBlockReferences([], 'Set A', { type: RewriteBlockReferencesModeDict.Clear })
+      ).not.toThrow();
     });
   });
 
@@ -199,7 +220,7 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Deleted Set', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Deleted Set', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(entry.base_neuron_set).toEqual(blockRef('Layer 5'));
       expect(entry.combined_with).toEqual([
@@ -217,7 +238,7 @@ describe('rewriteBlockReferences', () => {
           combined_with: [[blockRef('Gone'), 'union']],
         };
 
-        rewriteBlockReferences(entry, 'Gone', { type: 'clear' });
+        rewriteBlockReferences(entry, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
 
         expect(entry.combined_with).toEqual([[null, 'union']]);
         expect(entry.base_neuron_set).toEqual(blockRef('Keep'));
@@ -248,7 +269,7 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Gone Virtual', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Gone Virtual', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(entry.combined_with[0]).toEqual([null, 'union']);
       expect(entry.combined_with[1]).toEqual([
@@ -268,7 +289,7 @@ describe('rewriteBlockReferences', () => {
         combined_with: [[blockRef('Keep'), 'union']],
       };
 
-      rewriteBlockReferences(entry, 'Gone Base', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Gone Base', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect('base_neuron_set' in entry).toBe(false);
       expect(entry.combined_with).toEqual([[blockRef('Keep'), 'union']]);
@@ -284,7 +305,10 @@ describe('rewriteBlockReferences', () => {
         ],
       };
 
-      rewriteBlockReferences(entry, 'Old Name', { type: 'rename', to: 'New Name' });
+      rewriteBlockReferences(entry, 'Old Name', {
+        type: RewriteBlockReferencesModeDict.Rename,
+        to: 'New Name',
+      });
 
       expect(entry.base_neuron_set.block_name).toBe('New Name');
       expect(entry.combined_with).toEqual([
@@ -358,7 +382,7 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteConfigEntries(config, 'Gone', { type: 'clear' });
+      rewriteConfigEntries(config, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(config.neuron_sets.Combined.combined_with).toEqual([[null, 'union']]);
       expect('neuron_set' in config.recordings.Soma).toBe(false);
@@ -404,7 +428,10 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteConfigEntries(config, 'Old', { type: 'rename', to: 'New' });
+      rewriteConfigEntries(config, 'Old', {
+        type: RewriteBlockReferencesModeDict.Rename,
+        to: 'New',
+      });
 
       expect(config.neuron_sets.Combined.base_neuron_set.block_name).toBe('New');
       expect(config.neuron_sets.Combined.combined_with).toEqual([[blockRef('New'), 'diff']]);
@@ -431,8 +458,8 @@ describe('rewriteBlockReferences', () => {
         },
       };
 
-      rewriteBlockReferences(entry, 'L5_PC', { type: 'clear' });
-      rewriteBlockReferences(idEntry, 'ids', { type: 'clear' });
+      rewriteBlockReferences(entry, 'L5_PC', { type: RewriteBlockReferencesModeDict.Clear });
+      rewriteBlockReferences(idEntry, 'ids', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect(entry.property_filter.filter_dict.mtype).toEqual(['L5_PC']);
       expect(idEntry.neuron_ids).toEqual({
@@ -449,7 +476,7 @@ describe('rewriteBlockReferences', () => {
         combined_with: [[{ block_name: 'Gone' }, 'union']],
       };
 
-      rewriteBlockReferences(entry, 'Gone', { type: 'clear' });
+      rewriteBlockReferences(entry, 'Gone', { type: RewriteBlockReferencesModeDict.Clear });
 
       expect('base_neuron_set' in entry).toBe(false);
       expect(entry.combined_with).toEqual([[null, 'union']]);

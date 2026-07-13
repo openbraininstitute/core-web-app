@@ -17,7 +17,7 @@ import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { rewriteBlockReferences } from './rewrite-block-references';
+import { RewriteBlockReferencesModeDict, rewriteBlockReferences } from './rewrite-block-references';
 import { isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
@@ -177,7 +177,10 @@ export default function BlockDictionaryEntries({
 
       // Rename refs in section entries (incl. nested combination tuples)
       Object.values(configV).forEach((entryV) => {
-        rewriteBlockReferences(entryV, selectedEntry, { type: 'rename', to: newKey });
+        rewriteBlockReferences(entryV, selectedEntry, {
+          type: RewriteBlockReferencesModeDict.Rename,
+          to: newKey,
+        });
       });
     });
 
@@ -372,7 +375,9 @@ export default function BlockDictionaryEntries({
 
                                       // Clear refs in section entries (incl. nested combination tuples)
                                       Object.values(configV).forEach((entryV) => {
-                                        rewriteBlockReferences(entryV, subkey, { type: 'clear' });
+                                        rewriteBlockReferences(entryV, subkey, {
+                                          type: RewriteBlockReferencesModeDict.Clear,
+                                        });
                                       });
                                     });
 
