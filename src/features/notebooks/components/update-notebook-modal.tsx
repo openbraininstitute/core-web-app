@@ -293,13 +293,7 @@ export function SyncNotebookModal({
     onClose();
   }
 
-  // Start sync when modal opens
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally trigger only on open
-  useEffect(() => {
-    if (open) {
-      startSync();
-    }
-  }, [open]);
+  const isSyncing = syncProgress !== null;
 
   return (
     <Modal
@@ -310,23 +304,44 @@ export function SyncNotebookModal({
       overlayClassName="bg-primary-9/80 backdrop-blur-sm!"
       onClose={handleClose}
       closable={false}
-      title={
-        <div className="flex w-full items-center justify-between gap-2">
-          <h3 className="text-primary-9 text-2xl font-bold">Sync Notebook</h3>
-          {syncWarning && (
-            <Button
-              variant="icon"
-              className="text-primary-9 hover:text-primary-6 hover:bg-background ml-auto size-8 bg-white text-lg"
-              onClick={handleClose}
-            >
-              <CloseOutlined />
-            </Button>
-          )}
-        </div>
-      }
+      title={<h3 className="text-primary-9 text-2xl font-bold">Sync Notebook</h3>}
     >
       {name && <p className="text-primary-8 text-center text-sm font-medium">{name}</p>}
-      {syncProgress && (
+
+      {/* Confirmation view before sync starts */}
+      {!isSyncing && !syncWarning && (
+        <>
+          <p className="text-primary-8 text-center text-sm">
+            This will upload a copy of the notebook, assets, and contributions to all student
+            projects.
+          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              rounded
+              size="lg"
+              className="text-primary-9 border-primary-9 px-10 font-bold"
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="success"
+              rounded
+              size="lg"
+              className="px-10 font-bold"
+              onClick={startSync}
+            >
+              Confirm
+            </Button>
+          </div>
+        </>
+      )}
+
+      {/* Progress view */}
+      {isSyncing && (
         <SyncProgressWheel
           completed={syncProgress.completed}
           total={syncProgress.total}

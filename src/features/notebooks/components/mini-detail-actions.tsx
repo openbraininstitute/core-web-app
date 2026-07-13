@@ -365,45 +365,17 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
 
         {isTemplate && isCourseTemplateProject && (
           <>
-            <Popconfirm
-              autoAdjustOverflow
-              destroyOnHidden
-              placement="topRight"
-              title={
-                <div className="text-primary-8 text-lg font-bold">Sync notebook to students</div>
-              }
-              description={
-                <div>
-                  <div className="text-primary-8 text-sm font-bold">
-                    Are you sure you want to sync this notebook to all student projects?
-                  </div>
-                  <small className="text-primary-6 font-light">This action cannot be undone.</small>
-                </div>
-              }
-              okText="Yes"
-              cancelText="No"
-              arrow={{ pointAtCenter: false }}
-              onConfirm={() => setSyncOpen(true)}
-              classNames={{
-                body: cn(
-                  'max-w-70',
-                  '[&_.ant-popconfirm-buttons_button]:px-4',
-                  '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
-                  '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
-                ),
-              }}
+            <Button
+              rounded
+              title="Sync notebook to students"
+              className={cn(
+                'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+              )}
+              onClick={() => setSyncOpen(true)}
             >
-              <Button
-                rounded
-                title="Sync notebook to students"
-                className={cn(
-                  'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-                  { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
-                )}
-              >
-                <SyncOutlined className="text-xl" />
-              </Button>
-            </Popconfirm>
+              <SyncOutlined className="text-xl" />
+            </Button>
             <SyncNotebookModal
               open={syncOpen}
               onClose={() => setSyncOpen(false)}
