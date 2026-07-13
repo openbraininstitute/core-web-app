@@ -60,11 +60,20 @@ export function AssignSeatsModal({
               .filter(Boolean) as string[];
 
             if (studentProjectIds.length > 0) {
-              await syncTemplateNotebooksToStudents({
+              const failures = await syncTemplateNotebooksToStudents({
                 templateProjectId,
                 studentProjectIds,
                 context: { virtualLabId, projectId: templateProjectId },
               });
+
+              if (failures.length > 0) {
+                const names = failures.map((f) => f.name).join(', ');
+                notification.warning({
+                  message: `Failed to sync ${failures.length} notebook(s): ${names}. You can re-sync manually from the notebooks section.`,
+                  key: 'notebook-sync-warning',
+                  placement: 'topRight',
+                });
+              }
             }
           }
         } catch {

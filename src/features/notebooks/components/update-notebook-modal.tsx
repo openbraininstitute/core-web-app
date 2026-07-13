@@ -14,12 +14,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { capitalize } from 'es-toolkit/compat';
 import { useMemo, useState } from 'react';
 
-import {
-  createAnalysisNotebookTemplate,
-  getAnalysisNotebookTemplate,
-  getAnalysisNotebookTemplates,
-} from '@/api/entitycore/queries/analysis-notebook-template';
-import { deleteAsset, downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
+import { deleteAsset, getAssets } from '@/api/entitycore/queries/assets';
 import { uploadNotebookTemplateFile } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
 import {
@@ -33,6 +28,7 @@ import { getRoles } from '@/api/entitycore/queries/general/role';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { fetchEnrolments } from '@/api/virtual-lab-svc/queries/course';
 import { useAppNotification } from '@/components/notification';
+import { syncNotebookToProjects } from '@/services/notebooks/sync-template-notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
@@ -58,12 +54,8 @@ interface UpdateNotebookModalProps {
   virtualLabData?: TVirtualLab;
 }
 
-type WorkspaceContext = { virtualLabId: string; projectId: string };
-
 /**
- * Syncs a template notebook's assets and contributions to all child project notebooks.
- * For assets: wipes child assets and re-uploads from template (guarantees content match).
- * For contributions: diffs by agent+role (delete extra, create missing).
+ * Syncs a template notebook to all enrolled student projects.
  */
 async function syncChildProjects({
   virtualLabId,
@@ -82,106 +74,20 @@ async function syncChildProjects({
   courseId: string;
   onProgress?: (completed: number, total: number) => void;
 }) {
-  const templateCtx: WorkspaceContext = { virtualLabId, projectId: templateProjectId };
-
-  // Get template's current state (source of truth)
-  const [templateEntity, templateAssets, templateContribs] = await Promise.all([
-    getAnalysisNotebookTemplate({ id: templateEntityId, context: templateCtx }),
-    getAssets({ entityType, entityId: templateEntityId, ctx: templateCtx }),
-    getContributions({ context: templateCtx, filters: { entity__id: templateEntityId } }),
-  ]);
-
-  // Download all template asset files
-  const templateFiles = await Promise.all(
-    templateAssets.data.map(async (asset) => {
-      const response = await downloadAsset({
-        ctx: templateCtx,
-        entityType,
-        entityId: templateEntityId,
-        id: asset.id,
-        asRawResponse: true,
-      });
-      const blob = await response.blob();
-      const file = new File([blob], asset.path, { type: asset.content_type });
-      return { file, contentType: asset.content_type as AssetContentType, label: asset.label };
-    })
-  );
-
   const { enrolments } = await fetchEnrolments(courseId);
-  const childProjectIds = enrolments
+  const targetProjectIds = enrolments
     .map((e) => e.project_id)
     .filter((id) => id !== templateProjectId);
-  const total = childProjectIds.length;
-  let completed = 0;
-  let failures = 0;
 
-  onProgress?.(0, total);
-
-  for (const pid of childProjectIds) {
-    try {
-      const childCtx: WorkspaceContext = { virtualLabId, projectId: pid };
-      const res = await getAnalysisNotebookTemplates({
-        filters: { search: notebookName },
-        context: childCtx,
-      });
-      const match = res.data.find((nb) => nb.name === notebookName);
-      const targetId = match
-        ? match.id
-        : (await createAnalysisNotebookTemplate({ payload: templateEntity, context: childCtx })).id;
-
-      // Assets: wipe and re-upload
-      const childAssets = await getAssets({ entityType, entityId: targetId, ctx: childCtx });
-      await Promise.all(
-        childAssets.data.map((a) =>
-          deleteAsset({ entityType, entityId: targetId, id: a.id, ctx: childCtx })
-        )
-      );
-      for (const { file, contentType, label } of templateFiles) {
-        await uploadNotebookTemplateFile({
-          context: childCtx,
-          entityId: targetId,
-          file,
-          contentType,
-          assetLabel: label,
-        });
-      }
-
-      // Contributions: diff
-      const childContribs = await getContributions({
-        context: childCtx,
-        filters: { entity__id: targetId },
-      });
-
-      const toDelete = childContribs.data.filter(
-        (cc) =>
-          !templateContribs.data.some(
-            (tc) => tc.agent.id === cc.agent.id && tc.role.id === cc.role.id
-          )
-      );
-      await Promise.all(toDelete.map((c) => deleteContribution({ id: c.id, context: childCtx })));
-
-      const toCreate = templateContribs.data.filter(
-        (tc) =>
-          !childContribs.data.some((cc) => cc.agent.id === tc.agent.id && cc.role.id === tc.role.id)
-      );
-      await Promise.all(
-        toCreate.map((tc) =>
-          createContribution({
-            context: childCtx,
-            contributor: { agent_id: tc.agent.id, role_id: tc.role.id, entity_id: targetId },
-          })
-        )
-      );
-    } catch (_) {
-      failures++;
-    }
-    completed++;
-    onProgress?.(completed, total);
-  }
-
-  if (failures > 0) {
-    throw new Error(`Failed to sync ${failures} child project(s)`);
-  }
+  await syncNotebookToProjects({
+    virtualLabId,
+    templateProjectId,
+    templateEntityId,
+    entityType,
+    notebookName,
+    targetProjectIds,
+    onProgress,
+  });
 }
 
 const ASSET_FILE_CONFIGS = [
