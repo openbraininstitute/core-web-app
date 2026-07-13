@@ -17,6 +17,7 @@ import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import { RewriteBlockReferencesModeDict, rewriteBlockReferences } from './rewrite-block-references';
 import { isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
@@ -174,16 +175,11 @@ export default function BlockDictionaryEntries({
     Object.entries(newConfig).forEach(([configK, configV]) => {
       if (configK === 'initialize' || !isPlainObject(configV)) return;
 
-      // Evaluate items within sections (e.g., stimuli, recordings)
+      // Rename refs in section entries (incl. nested combination tuples)
       Object.values(configV).forEach((entryV) => {
-        if (!isPlainObject(entryV)) return;
-
-        // Evaluate fields within the specific object
-        Object.values(entryV).forEach((field) => {
-          if (!isPlainObject(field) || field.block_name !== selectedEntry) return;
-
-          // Update the block_name reference
-          field.block_name = newKey;
+        rewriteBlockReferences(entryV, selectedEntry, {
+          type: RewriteBlockReferencesModeDict.Rename,
+          to: newKey,
         });
       });
     });
@@ -377,19 +373,10 @@ export default function BlockDictionaryEntries({
                                       if (configK === 'initialize' || !isPlainObject(configV))
                                         return;
 
+                                      // Clear refs in section entries (incl. nested combination tuples)
                                       Object.values(configV).forEach((entryV) => {
-                                        if (!isPlainObject(entryV)) return;
-
-                                        Object.entries(entryV).forEach(([fieldK, field]) => {
-                                          if (
-                                            !isPlainObject(field) ||
-                                            typeof field.block_name !== 'string' ||
-                                            field.block_name !== subkey
-                                          ) {
-                                            return;
-                                          }
-
-                                          delete entryV[fieldK];
+                                        rewriteBlockReferences(entryV, subkey, {
+                                          type: RewriteBlockReferencesModeDict.Clear,
                                         });
                                       });
                                     });
