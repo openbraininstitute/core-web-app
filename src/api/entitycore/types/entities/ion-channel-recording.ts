@@ -45,6 +45,10 @@ export const RecordingTypeDictionary = Object.fromEntries(
   [K in keyof typeof RecordingType]: (typeof RecordingType)[K]['key'];
 };
 
+interface ValidationResultNestedFilter {
+  validation_result__passed: boolean;
+}
+
 export type IonChannelRecordingFilter = Partial<
   IDFilter &
     TimestampsFilter &
@@ -53,7 +57,8 @@ export type IonChannelRecordingFilter = Partial<
     PaginationFilter &
     SharedFilter &
     IRecordingFilter &
-    IlikeSearchFilter
+    IlikeSearchFilter &
+    ValidationResultNestedFilter
 >;
 
 interface IIonChannelRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
