@@ -363,7 +363,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
           virtualLabData={virtualLabData}
         />
 
-        {isTemplate && isCourseTemplateProject && (
+        {isTemplate && isCourseTemplateProject && virtualLabData?.course && (
           <>
             <Button
               rounded
@@ -382,6 +382,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               record={record}
               virtualLabId={virtualLabId}
               projectId={projectId}
+              courseId={virtualLabData.course.id}
             />
           </>
         )}

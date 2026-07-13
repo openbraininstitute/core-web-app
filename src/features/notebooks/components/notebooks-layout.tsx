@@ -208,13 +208,14 @@ export function NotebooksLayout({ children }: Props) {
         </m.div>
 
         <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
-        {syncRecord && (
+        {syncRecord && course && (
           <SyncNotebookModal
             open
             onClose={() => setSyncRecord(null)}
             record={syncRecord}
             virtualLabId={virtualLabId}
             projectId={projectId}
+            courseId={course.id}
           />
         )}
       </div>

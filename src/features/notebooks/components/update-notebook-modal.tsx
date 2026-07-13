@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { capitalize } from 'es-toolkit/compat';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   createAnalysisNotebookTemplate,
@@ -31,7 +31,7 @@ import { getOrganizations } from '@/api/entitycore/queries/general/organization-
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getRoles } from '@/api/entitycore/queries/general/role';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
+import { fetchEnrolments } from '@/api/virtual-lab-svc/queries/course';
 import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
@@ -71,6 +71,7 @@ async function syncChildProjects({
   templateEntityId,
   entityType,
   notebookName,
+  courseId,
   onProgress,
 }: {
   virtualLabId: string;
@@ -78,6 +79,7 @@ async function syncChildProjects({
   templateEntityId: string;
   entityType: EntityCoreObjectTypes['type'];
   notebookName: string;
+  courseId: string;
   onProgress?: (completed: number, total: number) => void;
 }) {
   const templateCtx: WorkspaceContext = { virtualLabId, projectId: templateProjectId };
@@ -105,8 +107,10 @@ async function syncChildProjects({
     })
   );
 
-  const allProjectIds = await listAllProjectIds(virtualLabId);
-  const childProjectIds = allProjectIds.filter((id) => id !== templateProjectId);
+  const { enrolments } = await fetchEnrolments(courseId);
+  const childProjectIds = enrolments
+    .map((e) => e.project_id)
+    .filter((id) => id !== templateProjectId);
   const total = childProjectIds.length;
   let completed = 0;
   let failures = 0;
@@ -250,12 +254,14 @@ export function SyncNotebookModal({
   record,
   virtualLabId,
   projectId,
+  courseId,
 }: {
   open: boolean;
   onClose: () => void;
   record: EntityCoreObjectTypes;
   virtualLabId: string;
   projectId: string;
+  courseId: string;
 }) {
   const notification = useAppNotification();
   const [syncProgress, setSyncProgress] = useState<{ completed: number; total: number } | null>(
@@ -275,6 +281,7 @@ export function SyncNotebookModal({
         templateEntityId: record.id,
         entityType: record.type,
         notebookName: name,
+        courseId,
         onProgress: (completed, total) => setSyncProgress({ completed, total }),
       });
       notification.success({
@@ -521,7 +528,7 @@ export function UpdateNotebookModal({
       notification.success({ message: 'Notebook updated successfully', placement: 'topRight' });
 
       // Start sync phase if course template
-      if (isCourseTemplate) {
+      if (isCourseTemplate && virtualLabData?.course) {
         setSyncProgress({ completed: 0, total: 0 });
         try {
           await syncChildProjects({
@@ -530,6 +537,7 @@ export function UpdateNotebookModal({
             templateEntityId: record.id,
             entityType: record.type,
             notebookName: name,
+            courseId: virtualLabData.course.id,
             onProgress: (completed, total) => setSyncProgress({ completed, total }),
           });
           notification.success({
@@ -927,7 +935,7 @@ function ContributionsStep({
 
       {newContributions.map((contrib, idx) => (
         <NewContributionRow
-          key={idx}
+          key={`${contrib.agent_type}-${contrib.agent_id}-${contrib.role_id}`}
           value={contrib}
           onChange={(updated) => onUpdateNewContribution(idx, updated)}
           onRemove={() => onRemoveNewContribution(idx)}
