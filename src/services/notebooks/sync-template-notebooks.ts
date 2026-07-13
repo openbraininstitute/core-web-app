@@ -147,10 +147,12 @@ export async function syncTemplateNotebooksToStudents({
   templateProjectId,
   studentProjectIds,
   context,
+  onProgress,
 }: {
   templateProjectId: string;
   studentProjectIds: string[];
   context: WorkspaceContext;
+  onProgress?: (completed: number, total: number) => void;
 }): Promise<NotebookSyncFailure[]> {
   if (studentProjectIds.length === 0) return [];
 
@@ -169,6 +171,10 @@ export async function syncTemplateNotebooksToStudents({
   });
 
   const failures: NotebookSyncFailure[] = [];
+  const total = allNotebooks.length;
+  let completed = 0;
+
+  onProgress?.(0, total);
 
   for (const notebook of allNotebooks) {
     try {
@@ -183,6 +189,8 @@ export async function syncTemplateNotebooksToStudents({
     } catch (error) {
       failures.push({ id: notebook.id, name: notebook.name, error });
     }
+    completed++;
+    onProgress?.(completed, total);
   }
 
   return failures;

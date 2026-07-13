@@ -5,7 +5,7 @@ import { type ChangeEvent, useState } from 'react';
 import { assignSeats, type Enrolment, type Student } from '@/api/virtual-lab-svc/queries/course';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { InformationIcon } from '@/components/icons';
-import { useAppNotification } from '@/components/notification';
+import { SyncProgressWheel } from '@/features/notebooks/components/sync-progress-wheel';
 import { syncTemplateNotebooksToStudents } from '@/services/notebooks/sync-template-notebooks';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
@@ -29,17 +29,22 @@ export function AssignSeatsModal({
 }: AssignSeatsModalProps) {
   const params = useParams();
   const virtualLabId = propVirtualLabId || (params.virtualLabId as string);
-  const notification = useAppNotification();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [existingStudents, setExistingStudents] = useState<Student[]>([]);
+  const [syncProgress, setSyncProgress] = useState<{ completed: number; total: number } | null>(
+    null
+  );
+  const [syncWarning, setSyncWarning] = useState<string | null>(null);
 
   const resetState = () => {
     setFile(null);
     setFilteredStudents([]);
     setExistingStudents([]);
     setError('');
+    setSyncProgress(null);
+    setSyncWarning(null);
     assignMutation.reset();
   };
 
@@ -60,28 +65,28 @@ export function AssignSeatsModal({
               .filter(Boolean) as string[];
 
             if (studentProjectIds.length > 0) {
+              setSyncProgress({ completed: 0, total: 0 });
               const failures = await syncTemplateNotebooksToStudents({
                 templateProjectId,
                 studentProjectIds,
                 context: { virtualLabId, projectId: templateProjectId },
+                onProgress: (completed, total) => setSyncProgress({ completed, total }),
               });
 
               if (failures.length > 0) {
                 const names = failures.map((f) => f.name).join(', ');
-                notification.warning({
-                  message: `Failed to sync ${failures.length} notebook(s): ${names}. You can re-sync manually from the notebooks section.`,
-                  key: 'notebook-sync-warning',
-                  placement: 'topRight',
-                });
+                setSyncWarning(
+                  `Failed to sync ${failures.length} notebook(s): ${names}. You can re-sync manually from the notebooks section.`
+                );
+              } else {
+                setSyncProgress(null);
               }
             }
           }
         } catch {
-          notification.warning({
-            message: `Seats assigned but couldn't sync template notebooks`,
-            key: 'notebook-sync-warning',
-            placement: 'topRight',
-          });
+          setSyncWarning(
+            "Couldn't sync template notebooks. You can re-sync manually from the notebooks section."
+          );
         }
       }
     },
@@ -185,7 +190,7 @@ export function AssignSeatsModal({
           <h2 className="text-lg font-bold text-primary-9">Assign Seats</h2>
         </div>
 
-        {results.length > 0 ? (
+        {!syncProgress && !syncWarning && results.length > 0 && (
           <>
             {successCount > 0 && (
               <div className="mb-4 rounded-lg bg-green-50 p-4">
@@ -221,14 +226,10 @@ export function AssignSeatsModal({
                 </ul>
               </div>
             )}
-
-            <div className="flex gap-3">
-              <Button onClick={handleClose} className="flex-1">
-                OK
-              </Button>
-            </div>
           </>
-        ) : (
+        )}
+
+        {!syncProgress && !syncWarning && results.length === 0 && (
           <>
             <div className="mb-6 flex items-start gap-2 rounded-lg bg-blue-50 p-4">
               <InformationIcon iconColor="#1e40af" className="mt-0.5 h-5 w-5 flex-shrink-0" />
@@ -309,6 +310,34 @@ export function AssignSeatsModal({
               </Button>
             </div>
           </>
+        )}
+
+        {(syncProgress || syncWarning) && (
+          <div className="mt-4 flex flex-col items-center gap-3 p-6">
+            <SyncProgressWheel
+              completed={syncProgress?.completed ?? 0}
+              total={syncProgress?.total ?? 0}
+              warning={!!syncWarning}
+              label={`Syncing notebooks (${syncProgress?.completed ?? 0}/${syncProgress?.total ?? 0})`}
+            />
+          </div>
+        )}
+
+        {syncWarning && (
+          <div className="mt-4 flex flex-col items-center gap-3 rounded-lg bg-yellow-50 p-6">
+            <p className="text-center text-sm font-medium text-yellow-800">
+              Seats were assigned successfully, but notebook sync failed.
+            </p>
+            <p className="text-center text-xs text-yellow-700">{syncWarning}</p>
+          </div>
+        )}
+
+        {((!syncProgress && results.length > 0) || syncWarning) && (
+          <div className="mt-4 flex gap-3">
+            <Button onClick={handleClose} className="flex-1">
+              OK
+            </Button>
+          </div>
         )}
       </div>
     </Modal>
