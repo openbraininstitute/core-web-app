@@ -19,6 +19,60 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 type SortField = 'email' | 'student_id' | 'status' | 'activated' | 'dropped' | 'created' | 'seat';
 type SortOrder = 'asc' | 'desc';
 
+function SortableHeader({
+  field,
+  label,
+  sortField,
+  sortOrder,
+  onSort,
+}: {
+  field: SortField;
+  label: string;
+  sortField: SortField;
+  sortOrder: SortOrder;
+  onSort: (field: SortField) => void;
+}) {
+  const isActive = sortField === field;
+
+  return (
+    <th
+      className="cursor-pointer select-none px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-100"
+      tabIndex={0}
+      onClick={() => onSort(field)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSort(field);
+        }
+      }}
+    >
+      <div className="inline-flex items-center gap-2">
+        <span className={isActive ? 'text-gray-900' : 'text-gray-700'}>{label}</span>
+        <svg
+          className={`size-4 transition-transform ${isActive ? (sortOrder === 'asc' ? 'text-primary-9' : 'rotate-180 text-primary-9') : 'text-gray-400'}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <title>
+            {isActive
+              ? sortOrder === 'asc'
+                ? 'Sort ascending'
+                : 'Sort descending'
+              : 'Sortable column'}
+          </title>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16V4m0 0L3 8m4-4l4 4"
+          />
+        </svg>
+      </div>
+    </th>
+  );
+}
+
 export default function CoursePage() {
   const params = useParams();
   const virtualLabId = params.virtualLabId as string;
@@ -41,41 +95,6 @@ export default function CoursePage() {
       setSortField(field);
       setSortOrder('asc');
     }
-  };
-
-  const SortableHeader = ({ field, label }: { field: SortField; label: string }) => {
-    const isActive = sortField === field;
-
-    return (
-      <th
-        className="cursor-pointer select-none px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-100"
-        onClick={() => handleSort(field)}
-      >
-        <div className="inline-flex items-center gap-2">
-          <span className={isActive ? 'text-gray-900' : 'text-gray-700'}>{label}</span>
-          <svg
-            className={`size-4 transition-transform ${isActive ? (sortOrder === 'asc' ? 'text-primary-9' : 'rotate-180 text-primary-9') : 'text-gray-400'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <title>
-              {isActive
-                ? sortOrder === 'asc'
-                  ? 'Sort ascending'
-                  : 'Sort descending'
-                : 'Sortable column'}
-            </title>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16V4m0 0L3 8m4-4l4 4"
-            />
-          </svg>
-        </div>
-      </th>
-    );
   };
 
   // Fetch virtual lab to get course ID
@@ -363,13 +382,55 @@ export default function CoursePage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <SortableHeader field="email" label="Student email" />
-                  <SortableHeader field="student_id" label="Student ID" />
-                  <SortableHeader field="status" label="Status" />
-                  <SortableHeader field="activated" label="Activated" />
-                  <SortableHeader field="dropped" label="Dropped" />
-                  <SortableHeader field="created" label="Created" />
-                  <SortableHeader field="seat" label="Occupies seat" />
+                  <SortableHeader
+                    field="email"
+                    label="Student email"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="student_id"
+                    label="Student ID"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="status"
+                    label="Status"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="activated"
+                    label="Activated"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="dropped"
+                    label="Dropped"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="created"
+                    label="Created"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="seat"
+                    label="Occupies seat"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Seat recoverable (reason)
                   </th>
