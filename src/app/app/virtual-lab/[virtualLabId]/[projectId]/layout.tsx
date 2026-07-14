@@ -7,6 +7,7 @@ import {
   getUserGroups,
   getWorkspaceHierarchySpeciesPreference,
 } from '@/api/virtual-lab-svc/queries/user';
+import { ActivateEnrolmentsOnLoad } from '@/components/activate-enrolments';
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
@@ -78,6 +79,7 @@ export default async function Layout({ children }: Props) {
         </div>
         <SpaceManagerContainer />
         <AiContainer />
+        <ActivateEnrolmentsOnLoad />
       </ProjectRootLayout>
     </div>
   );
