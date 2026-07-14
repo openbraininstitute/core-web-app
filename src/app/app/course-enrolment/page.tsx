@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { authFetch } from '@/auth-fetch';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
@@ -31,7 +31,12 @@ export default function CourseEnrolmentPage() {
   const [success, setSuccess] = useState<ClaimSuccessData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const claimed = useRef(false);
+
   useEffect(() => {
+    if (claimed.current) return;
+    claimed.current = true;
+
     const claim = async () => {
       if (!enrolmentId) {
         setError({
