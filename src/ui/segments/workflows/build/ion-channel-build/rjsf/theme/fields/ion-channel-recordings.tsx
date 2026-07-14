@@ -246,6 +246,7 @@ function RecordingsArrayFieldContent({
             requireMiniDetailView={false}
             dataType={ExtendedEntitiesTypeDict.IonChannelRecording}
             scope={WorkspaceScope.BuildIonChannelModel}
+            extraQueryParams={{ validation_result__passed: true }}
             mainTableProps={{
               selectionType: isSingleMode ? 'radio' : 'checkbox',
               onRowsSelected: (rows: EntityCoreIdentifiableNamed[]) => {
