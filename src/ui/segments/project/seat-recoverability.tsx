@@ -77,7 +77,7 @@ export function SeatRecoverability({ course, enrolment }: SeatRecoverabilityProp
     return (
       <div className="flex items-center gap-2">
         <span className="font-semibold text-red-800">No</span>
-        <span className="text-xs text-gray-600">(Project has spent more than 50 credits)</span>
+        <span className="text-xs text-gray-600">(Project has spent more than credits)</span>
       </div>
     );
   }

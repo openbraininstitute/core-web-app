@@ -35,7 +35,7 @@ export interface Course {
   start_date: string;
   end_date: string;
   last_drop_date: string;
-  credits_per_seat?: number;
+  credits_per_seat: number;
 }
 
 export interface SeatsResponse {
