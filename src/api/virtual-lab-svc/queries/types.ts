@@ -1,6 +1,7 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TUserRole } from '../validation';
+import type { Course } from './course';
 
 interface VlmResponse<T> {
   message: string;
@@ -100,16 +101,6 @@ export interface IProject {
 export interface IProjectExpandedResponse extends IProject, IProjectExtra {
   virtual_lab: TVirtualLab | null;
 }
-
-export type Course = {
-  id: string;
-  virtual_lab_id: string;
-  template_project_id: string;
-  institution_id: string;
-  start_date: string;
-  end_date: string;
-  last_drop_date: string;
-};
 
 export type TVirtualLab = {
   id: string;
