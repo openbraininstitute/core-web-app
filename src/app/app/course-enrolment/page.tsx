@@ -85,7 +85,7 @@ export default function CourseEnrolmentPage() {
           } catch (_) {
             // Activation failure is non-blocking; user is redirected regardless.
           }
-          router.push(`/app/virtual-lab/${data.course?.virtual_lab_id}/${data.project_id}`);
+          router.push(`${config.ROOT_ROUTE}/${data.course?.virtual_lab_id}/${data.project_id}`);
         } else {
           // Course hasn't started yet - show success message
           setSuccess({
@@ -106,7 +106,7 @@ export default function CourseEnrolmentPage() {
     };
 
     claim();
-  }, [enrolmentId, config.VIRTUAL_LAB_API_URL, router]);
+  }, [enrolmentId, config.VIRTUAL_LAB_API_URL, config.ROOT_ROUTE, router]);
 
   if (loading) {
     return (
@@ -130,7 +130,7 @@ export default function CourseEnrolmentPage() {
           <div className="mt-6">
             <Button
               onClick={() => {
-                router.push('/app/virtual-lab/sync');
+                router.push(`${config.ROOT_ROUTE}/sync`);
               }}
             >
               Go to home
@@ -177,7 +177,7 @@ export default function CourseEnrolmentPage() {
           )}
           <Button
             onClick={() => {
-              router.push('/app/virtual-lab/sync');
+              router.push(`${config.ROOT_ROUTE}/sync`);
             }}
           >
             Go to home
