@@ -136,11 +136,26 @@ export function AssignSeatsModal({
       try {
         const content = await selectedFile.text();
         const students = parseCSV(content);
-        const uniqueInFile = Array.from(new Map(students.map((s) => [s.student_id, s])).values());
+        const byId = new Map<string, Student>();
+        const byEmail = new Map<string, Student>();
+        const duplicates: string[] = [];
 
-        if (uniqueInFile.length < students.length) {
+        for (const s of students) {
+          if (byId.has(s.student_id)) {
+            duplicates.push(`duplicate student_id: ${s.student_id}`);
+          } else if (byEmail.has(s.email)) {
+            duplicates.push(`duplicate email: ${s.email}`);
+          } else {
+            byId.set(s.student_id, s);
+            byEmail.set(s.email, s);
+          }
+        }
+
+        const uniqueInFile = Array.from(byId.values());
+
+        if (duplicates.length > 0) {
           setError(
-            `Duplicate student IDs detected in file. ${students.length - uniqueInFile.length} duplicate(s) will be ignored.`
+            `${duplicates.length} duplicate(s) detected in file (by student_id or email) and will be ignored.`
           );
         }
 
