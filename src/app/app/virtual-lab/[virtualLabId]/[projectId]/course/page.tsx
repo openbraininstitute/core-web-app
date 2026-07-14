@@ -99,7 +99,7 @@ export default function CoursePage() {
 
   // Fetch virtual lab to get course ID
   const labQuery = useQuery({
-    queryKey: ['virtualLab', virtualLabId],
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: !!virtualLabId,
   });
@@ -107,19 +107,21 @@ export default function CoursePage() {
   const courseId = labQuery.data?.course?.id;
 
   const handleCourseDataChange = () => {
-    queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
-    queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
+    queryClient.invalidateQueries({ queryKey: keyBuilder.seats({ courseId: courseId as string }) });
+    queryClient.invalidateQueries({
+      queryKey: keyBuilder.enrolments({ courseId: courseId as string }),
+    });
   };
 
   // Fetch seats and enrolments using the course ID
   const seatsQuery = useQuery({
-    queryKey: ['seats', courseId],
+    queryKey: keyBuilder.seats({ courseId: courseId as string }),
     queryFn: () => fetchSeats(courseId as string),
     enabled: !!courseId,
   });
 
   const enrolmentsQuery = useQuery({
-    queryKey: ['enrolments', courseId],
+    queryKey: keyBuilder.enrolments({ courseId: courseId as string }),
     queryFn: () => fetchEnrolments(courseId as string),
     enabled: !!courseId,
   });
