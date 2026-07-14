@@ -32,6 +32,16 @@ export function useAutoScroll({
     }
   }, [containerRef]);
 
+  const smoothScrollToBottom = React.useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight - container.clientHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [containerRef]);
+
   // useLayoutEffect: scroll before paint on loading→loaded (no flash).
   // Scroll on every messages update — AI SDK v6 produces a new array ref on each streamed chunk.
   // biome-ignore lint/correctness/useExhaustiveDependencies: messages triggers scroll on each streamed chunk
@@ -39,19 +49,19 @@ export function useAutoScroll({
     if (isLoadingMessages) return;
 
     if (isAutoScrollRef.current) {
-      scrollToBottom();
+      smoothScrollToBottom();
     }
-  }, [messages, isLoadingMessages, scrollToBottom]);
+  }, [messages, isLoadingMessages, smoothScrollToBottom]);
 
   const prevStatusRef = React.useRef(status);
   React.useEffect(() => {
     if (status === 'streaming' && prevStatusRef.current !== 'streaming') {
       if (isAutoScrollRef.current) {
-        requestAnimationFrame(scrollToBottom);
+        requestAnimationFrame(smoothScrollToBottom);
       }
     }
     prevStatusRef.current = status;
-  }, [status, scrollToBottom]);
+  }, [status, smoothScrollToBottom]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: threadId resets scroll on conversation switch
   React.useEffect(() => {
