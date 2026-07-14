@@ -8,6 +8,8 @@ import { ErrorComponent } from '@/components/GenericErrorFallback';
 import { useConfig } from '@/config';
 import { Button } from '@/ui/molecules/button';
 
+import type { ClaimResponse } from '@/api/virtual-lab-svc/queries/course';
+
 interface ClaimError {
   message: string;
   display: string;
@@ -58,7 +60,7 @@ export default function CourseEnrolmentPage() {
           return;
         }
 
-        const responseData = await response.json();
+        const responseData: ClaimResponse = await response.json();
         const data = responseData.data;
 
         // Check if course has started
@@ -75,15 +77,15 @@ export default function CourseEnrolmentPage() {
                 'content-type': 'application/json',
               },
             });
-          } catch (error) {
-            console.error('Failed to activate enrolments', error);
+          } catch (_) {
+            // Activation failure is non-blocking; user is redirected regardless.
           }
-          router.push(`/app/virtual-lab/${data.course.virtual_lab_id}/${data.project_id}`);
+          router.push(`/app/virtual-lab/${data.course?.virtual_lab_id}/${data.project_id}`);
         } else {
           // Course hasn't started yet - show success message
           setSuccess({
-            virtual_lab_id: data.course.virtual_lab_id,
-            project_id: data.project_id,
+            virtual_lab_id: data.course?.virtual_lab_id ?? '',
+            project_id: data.project_id ?? '',
             course_name: data.course?.virtual_lab_name || 'Course',
             start_date: data.course?.start_date,
           });

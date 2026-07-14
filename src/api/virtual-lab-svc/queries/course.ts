@@ -82,6 +82,19 @@ export interface DropSeatsResponse {
   results: DropResult[];
 }
 
+export interface ClaimResponseCourse extends Course {
+  virtual_lab_name?: string;
+}
+
+export interface ClaimResponseData {
+  course?: ClaimResponseCourse;
+  project_id?: string;
+}
+
+export interface ClaimResponse {
+  data: ClaimResponseData;
+}
+
 export async function fetchSeats(courseId: string): Promise<SeatsResponse> {
   const api = await virtualLabRootApi();
   return api.get<SeatsResponse>(`/seats/courses/${courseId}`);
