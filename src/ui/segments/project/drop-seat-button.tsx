@@ -68,7 +68,10 @@ export function DropSeatButton({ course, courseId, enrolment, onSuccess }: DropS
           <div className="flex justify-end gap-3">
             <Button
               variant="outline"
-              onClick={() => setShowConfirm(false)}
+              onClick={() => {
+                mutation.reset();
+                setShowConfirm(false);
+              }}
               disabled={mutation.isPending}
             >
               Cancel
