@@ -34,16 +34,6 @@ export default function CoursePage() {
 
   const { isVirtualLabAdmin } = makeRoles(userGroupsQuery.data, virtualLabId, undefined);
 
-  const handleAssignSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
-    queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
-  };
-
-  const handleDropSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
-    queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
-  };
-
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -96,6 +86,11 @@ export default function CoursePage() {
   });
 
   const courseId = labQuery.data?.course?.id;
+
+  const handleCourseDataChange = () => {
+    queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
+    queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
+  };
 
   // Fetch seats and enrolments using the course ID
   const seatsQuery = useQuery({
@@ -436,7 +431,7 @@ export default function CoursePage() {
                           course={course}
                           courseId={courseId}
                           enrolment={enrolment}
-                          onSuccess={handleDropSuccess}
+                          onSuccess={handleCourseDataChange}
                         />
                       )}
                     </td>
@@ -453,7 +448,7 @@ export default function CoursePage() {
         courseId={courseId}
         enrolments={enrolments}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={handleAssignSuccess}
+        onSuccess={handleCourseDataChange}
       />
     </div>
   );
