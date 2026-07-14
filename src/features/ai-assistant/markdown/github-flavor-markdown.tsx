@@ -16,11 +16,11 @@ import styles from './github-flavor-markdown.module.css';
 // Module-level constants — stable references, zero re-render cost
 const STREAMDOWN_PLUGINS = { math };
 
-// Animation config: short fadeIn tuned for the backend's ~10ms word-level stream.
-// stagger: 0 disables inter-word delay since the backend IS the stagger.
+// Animation config: smooth fadeIn tuned for 100ms throttled updates.
+// Longer duration masks the batching completely — words glide in rather than pop.
 const STREAMDOWN_ANIMATION = {
   animation: 'fadeIn' as const,
-  duration: 150,
+  duration: 250,
   easing: 'ease-out',
   stagger: 0,
 };

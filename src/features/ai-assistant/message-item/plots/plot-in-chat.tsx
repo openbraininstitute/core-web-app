@@ -64,15 +64,19 @@ export default function PlotInChat({
     return <PlotErrorMessage isBackup={isBackup} />;
   }
 
-  if (isLoading || !data) return <ToolSkeletonStandalone />;
+  // Show skeleton while loading. Once data arrives, render the plot content —
+  // the content fades in via CSS animation on the image/.plot-container element.
+  const isReady = !isLoading && !!data;
+  const { content, type } = data ?? {};
 
-  const { content, type } = data;
-  if (!isString(content)) return null;
+  if (isReady && !isString(content)) return null;
+
+  if (!isReady) return <ToolSkeletonStandalone />;
 
   if (type === 'image') {
     return (
       <PlotErrorBoundary isBackup={isBackup}>
-        <ToolThumbnailGeneration result={{ storage_id: storageId }} data={data} />
+        <ToolThumbnailGeneration result={{ storage_id: storageId }} data={data!} />
       </PlotErrorBoundary>
     );
   }
@@ -81,7 +85,7 @@ export default function PlotInChat({
     <PlotErrorBoundary isBackup={isBackup}>
       <ToolPlotGenerator
         result={{ storage_id: storageId }}
-        data={data}
+        data={data!}
         plotRenderKey={plotRenderKey}
         isAnimating={isAnimating}
       />
