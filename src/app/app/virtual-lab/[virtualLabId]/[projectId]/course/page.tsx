@@ -1,17 +1,20 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { redirect, useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { fetchEnrolments, fetchSeats } from '@/api/virtual-lab-svc/queries/course';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AssignSeatsModal } from '@/ui/segments/project/course-assign-seats-modal';
 import { DropSeatButton } from '@/ui/segments/project/drop-seat-button';
 import { SeatRecoverability } from '@/ui/segments/project/seat-recoverability';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 type SortField = 'email' | 'student_id' | 'status' | 'activated' | 'dropped' | 'created' | 'seat';
 type SortOrder = 'asc' | 'desc';
@@ -23,6 +26,13 @@ export default function CoursePage() {
   const [sortField, setSortField] = useState<SortField>('email');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const queryClient = useQueryClient();
+
+  const userGroupsQuery = useQuery({
+    queryKey: keyBuilder.membership(),
+    queryFn: getUserGroups,
+  });
+
+  const { isVirtualLabAdmin } = makeRoles(userGroupsQuery.data, virtualLabId, undefined);
 
   const handleAssignSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
@@ -99,6 +109,10 @@ export default function CoursePage() {
     queryFn: () => fetchEnrolments(courseId as string),
     enabled: !!courseId,
   });
+
+  if (!userGroupsQuery.isError && !isVirtualLabAdmin) {
+    redirect('/app/virtual-lab/forbidden');
+  }
 
   if (labQuery.isPending) {
     return (
