@@ -103,7 +103,7 @@ export function CollapsibleMessage({
   const pendingAnimationRef = React.useRef(false);
 
   if (
-    status === 'streaming' &&
+    (status === 'streaming' || status === 'submitted') &&
     lastStepStartIndex > previousStepStartRef.current &&
     !isExpandedRef.current
   ) {

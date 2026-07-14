@@ -37,11 +37,18 @@ interface GithubFlavorMarkdownProps {
   isStreaming?: boolean;
 }
 
-export const GithubFlavorMarkdown = React.memo(
-  RawGithubFlavorMarkdown,
-  (prevProps, nextProps) =>
-    prevProps.children === nextProps.children && prevProps.isStreaming === nextProps.isStreaming
-);
+export const GithubFlavorMarkdown = React.memo(RawGithubFlavorMarkdown, (prevProps, nextProps) => {
+  if (prevProps.children !== nextProps.children) return false; // text changed → re-render
+  if (prevProps.isStreaming !== nextProps.isStreaming) {
+    // isStreaming changed but text didn't. Only allow re-render when going true→false
+    // (to finalize the stream and hide the caret). Block false→true transitions
+    // that happen when status briefly goes 'streaming' after tool approval — there's
+    // nothing to animate if the text is identical.
+    if (prevProps.isStreaming && !nextProps.isStreaming) return false; // true→false: allow
+    return true; // false→true with same text: block (prevents flash)
+  }
+  return true; // nothing changed → skip
+});
 
 function RawGithubFlavorMarkdown({
   className,
@@ -50,15 +57,23 @@ function RawGithubFlavorMarkdown({
   validStorageIds,
   isStreaming,
 }: GithubFlavorMarkdownProps) {
-  const LinkComponent = useMemo(
-    () => makeLink(onLinkClicked, isStreaming),
-    [onLinkClicked, isStreaming]
-  );
+  // Use a ref for isStreaming so that ImageComponent and LinkComponent keep stable
+  // references across the streaming→ready transition. This prevents Streamdown from
+  // re-rendering all content (and re-triggering fadeIn animations on plots/images)
+  // when streaming ends.
+  const isStreamingRef = React.useRef(isStreaming);
+  isStreamingRef.current = isStreaming;
+
+  const LinkComponent = useMemo(() => makeLink(onLinkClicked, isStreamingRef), [onLinkClicked]);
   const ImageComponent = useMemo(
     () => (props: any) => (
-      <StorageImage {...props} validStorageIds={validStorageIds} isStreaming={isStreaming} />
+      <StorageImage
+        {...props}
+        validStorageIds={validStorageIds}
+        isStreaming={isStreamingRef.current}
+      />
     ),
-    [validStorageIds, isStreaming]
+    [validStorageIds]
   );
 
   const components = useMemo(
@@ -89,12 +104,12 @@ function RawGithubFlavorMarkdown({
 
 function makeLink(
   onLinkClicked: (external: boolean, href: string) => void | boolean,
-  isStreaming?: boolean
+  isStreamingRef: React.RefObject<boolean | undefined>
 ) {
   function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
     if (!href) return null;
 
-    if (href.includes('/storage/') && isStreaming) return null;
+    if (href.includes('/storage/') && isStreamingRef.current) return null;
 
     const info = resolveLinkTarget(href);
     return (
