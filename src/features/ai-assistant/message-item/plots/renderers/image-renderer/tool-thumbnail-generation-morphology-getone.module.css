@@ -2,7 +2,7 @@
   width: 600px;
   max-width: 100%;
   aspect-ratio: 4 / 3;
-  border: 1px solid #d9d9d9;
+  border: 1px solid color-mix(in srgb, var(--color-primary-9) 12%, transparent);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -10,6 +10,18 @@
   align-items: center;
   justify-content: center;
   margin: 4px 0;
+  animation: plotFadeIn 300ms ease both;
+}
+
+@keyframes plotFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .image {

@@ -17,10 +17,22 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  border: 1px solid #d9d9d9;
+  border: 1px solid color-mix(in srgb, var(--color-primary-9) 12%, transparent);
   border-radius: 8px;
   overflow: hidden;
   margin: 4px 0;
+  animation: plotFadeIn 300ms ease both;
+}
+
+@keyframes plotFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .fullscreenButton {

@@ -1,5 +1,4 @@
 import { isToolUIPart } from 'ai';
-import React from 'react';
 
 import { classNames } from '@/util/utils';
 
@@ -55,11 +54,9 @@ export interface BackupPlotsWrapperProps {
 }
 
 export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlotsWrapperProps) {
-  const deferredParts = React.useDeferredValue(message.parts);
+  const backupPlotsData = message.parts.filter((part) => isToolUIPart(part));
 
-  const backupPlotsData = deferredParts.filter((part) => isToolUIPart(part));
-
-  const textParts = deferredParts.filter((p) => p.type === 'text');
+  const textParts = message.parts.filter((p) => p.type === 'text');
   const lastTextPart = textParts.length > 0 ? textParts[textParts.length - 1].text : undefined;
 
   const storageIds = extractStorageIdsFromMessage(backupPlotsData);
@@ -69,7 +66,10 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
     );
   });
 
-  const shouldShowPlots = !isLastMessage || status === 'ready';
+  const hasUnresolvedApproval = message.parts.some(
+    (p) => isToolUIPart(p) && p.state === 'approval-requested'
+  );
+  const shouldShowPlots = (!isLastMessage || status === 'ready') && !hasUnresolvedApproval;
   const plotsWithContent =
     shouldShowPlots && urlLinksWithoutImageLink.length > 0 ? (
       <BackupPlots storageIds={urlLinksWithoutImageLink} />
