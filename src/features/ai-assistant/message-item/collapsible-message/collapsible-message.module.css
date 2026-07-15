@@ -317,7 +317,8 @@
 
 /* Prevent Streamdown's [data-sd-animate] fadeIn from re-triggering when
    content is re-rendered inside the slide-out wrapper, which causes a
-   brief flicker (transparent → opaque → fade out). */
+   brief flicker (transparent → opaque → fade out).
+   !important is necessary to override Streamdown's inline style animations. */
 .slideToCollapsible [data-sd-animate] {
   animation: none !important;
   opacity: 1 !important;
@@ -325,14 +326,6 @@
 
 .contentWrapper {
   padding: 6px 12px;
-}
-
-/* Streamdown applies mt-6 on headings, and its own [&>*:first-child]:mt-0 wrapper
-   rule doesn't win the specificity battle against the directly-applied mt-6 utility.
-   This ensures the first visible element in the content area doesn't create a large
-   gap below the reasoning/collapsible header. */
-.contentWrapper > *:first-child > *:first-child > *:first-child {
-  margin-top: 0 !important;
 }
 
 /* ── Keyframes ── */
@@ -349,11 +342,9 @@
 @keyframes slideInFromTop {
   0% {
     opacity: 0;
-    transform: translateY(-12px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -386,13 +377,15 @@
     opacity: 1;
     transform: translateY(0);
     max-height: 500px;
-    margin: 0;
+    margin-top: 0;
+    margin-bottom: 0;
   }
   100% {
     opacity: 0;
     transform: translateY(-12px);
     max-height: 0;
-    margin: 0;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 }
 
