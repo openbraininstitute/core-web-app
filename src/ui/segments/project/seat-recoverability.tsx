@@ -79,7 +79,7 @@ export function SeatRecoverability({ course, enrolment }: SeatRecoverabilityProp
       <div className="flex items-center gap-2">
         <span className="font-semibold text-red-800">No</span>
         <span className="text-xs text-gray-600">
-          {`Project has spent more than ${RECOVERABLE_SEAT_MAX_SPEND} credits`})
+          {`(Project has spent more than ${RECOVERABLE_SEAT_MAX_SPEND} credits)`})
         </span>
       </div>
     );
