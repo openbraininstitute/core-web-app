@@ -53,7 +53,9 @@ export default function AiAssistant({
     clearSuggestionsRef.current?.();
     refetchSuggestionsRef.current?.();
     if (status !== 'ready') {
-      await assistant.chat.stop();
+      // Fire-and-forget: we don't need to wait for the old thread's
+      // persistence to complete before switching to a new thread.
+      assistant.chat.stop();
     }
     if (!isEmptyThread) {
       assistant.threadId.set(undefined);

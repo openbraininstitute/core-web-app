@@ -13,6 +13,7 @@ interface FooterProps {
   onPrompt(prompt: string, files?: File[]): void;
   messagesCount: number;
   stop(): void;
+  isStopping?: boolean;
   isLoadingSuggestions?: boolean;
   isUploading?: boolean;
   hasUnresolvedApprovals?: boolean;
@@ -26,6 +27,7 @@ export default function Footer({
   status,
   onPrompt,
   stop,
+  isStopping,
   threadId,
   isUploading,
   hasUnresolvedApprovals,
@@ -50,6 +52,7 @@ export default function Footer({
         onClick={handlePrompt}
         disabled={!threadId || isUploading || hasUnresolvedApprovals}
         isStreaming={hasUnresolvedApprovals ? false : isStreaming(status) || !!isUploading}
+        isStopping={isStopping}
         onCancel={stop}
         attachments={attachments}
         onAddFiles={addFiles}

@@ -26,6 +26,7 @@ interface PromptProps {
   onClick(value: string): void;
   disabled?: boolean;
   isStreaming?: boolean;
+  isStopping?: boolean;
   onCancel?(): void;
   attachments?: FileAttachment[];
   onAddFiles?: (files: FileList | File[]) => void;
@@ -41,6 +42,7 @@ export default function Prompt({
   onClick,
   disabled,
   isStreaming,
+  isStopping,
   onCancel,
   attachments = [],
   onAddFiles,
@@ -192,7 +194,7 @@ export default function Prompt({
     if (evt.key === 'Enter' && !evt.shiftKey && !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
       evt.preventDefault();
       evt.stopPropagation();
-      if (!isStreaming && !disabled) {
+      if (!isStreaming && !isStopping && !disabled) {
         handleSendClick();
       }
     }
@@ -265,17 +267,18 @@ export default function Prompt({
         </div>
 
         <div className={styles.rightActions}>
-          {isStreaming ? (
+          {isStreaming || isStopping ? (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onCancel?.();
               }}
-              aria-label="Cancel"
+              aria-label={isStopping ? 'Stopping' : 'Cancel'}
               className={styles.stopButton}
+              disabled={isStopping}
             >
-              <StopIcon />
+              {isStopping ? <div className={styles.spinner} /> : <StopIcon />}
             </button>
           ) : (
             <button

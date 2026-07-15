@@ -79,6 +79,7 @@ export function useServiceAiAgentChat(threadId: string) {
       lastProcessedInvocationIdRef.current = null;
       lastAppliedConfigRef.current = null;
       capturedPreMessageConfigRef.current = false;
+      setIsStopping(false);
       prevThreadIdRef.current = threadId;
     }
   }, [threadId]);
@@ -320,8 +321,29 @@ export function useServiceAiAgentChat(threadId: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chat, accessToken, threadId, queryClient, virtualLabId, projectId]
   );
+  const [isStopping, setIsStopping] = useState(false);
+
   const stop = useCallback(async () => {
+    // Immediately close the client-side SSE stream for instant UI feedback.
     chat.stop();
+    setIsStopping(true);
+
+    try {
+      // Block until the backend confirms it has cancelled the agent and
+      // persisted all messages to the DB.
+      const res = await fetch(serviceAiAgentUrl(['qa/stop', threadId]), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessTokenRef.current}` },
+      });
+      if (!res.ok) throw new Error(`Stop endpoint returned ${res.status}`);
+    } catch (err) {
+      // Fallback: if the endpoint fails (network error, backend down),
+      // wait 2s to give the backend time to finish persisting.
+      logError('Stop sync failed, using fallback delay', err);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+
+    // NOW refetch — DB is guaranteed up-to-date (or we waited the fallback).
     queryClient.invalidateQueries({
       queryKey: keyBuilderAI.messages(threadId, virtualLabId, projectId),
     });
@@ -332,14 +354,14 @@ export function useServiceAiAgentChat(threadId: string) {
       threadId
     );
 
-    // If the messages where not saved in the DB yet, we keep the local state.
+    // If the messages were not saved in the DB yet, we keep the local state.
     if (messages.length >= oldMessages.length) {
       chat.setMessages([
         ...oldMessages.slice(0, oldMessages.length - 1),
         ...messages.slice(oldMessages.length - 1),
       ]);
     }
-    // We add a dummy AI message to sync up with backend, in case messages where not yet saved in DB.
+    // We add a dummy AI message to sync up with backend, in case messages were not yet saved in DB.
     else if (oldMessages.length > 0 && oldMessages[oldMessages.length - 1]?.role === 'user') {
       chat.setMessages([
         ...oldMessages,
@@ -350,6 +372,8 @@ export function useServiceAiAgentChat(threadId: string) {
         },
       ]);
     }
+
+    setIsStopping(false);
   }, [chat, queryClient, accessToken, virtualLabId, projectId, threadId]);
 
   useEffect(() => {
@@ -374,6 +398,7 @@ export function useServiceAiAgentChat(threadId: string) {
     status: chat.status,
     error: chat.error,
     stop,
+    isStopping,
     pendingUserMessage,
     addToolApprovalResponse: chat.addToolApprovalResponse,
   };

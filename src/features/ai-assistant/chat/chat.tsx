@@ -56,6 +56,7 @@ export default function Chat({
     sendMessage,
     error,
     stop,
+    isStopping,
     isLoadingMessages,
     pendingUserMessage,
     addToolApprovalResponse,
@@ -311,6 +312,7 @@ export default function Chat({
           onPrompt={handlePrompt}
           messagesCount={messages.length}
           stop={stop}
+          isStopping={isStopping}
           isUploading={!!pendingUserMessage}
           hasUnresolvedApprovals={hasUnresolvedApprovals}
         />
