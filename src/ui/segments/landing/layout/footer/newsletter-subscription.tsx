@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
 import { Form } from 'antd';
@@ -113,7 +111,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
       await subscribeNewsletterHandler({
         email: formValues.email,
         name: 'Subscriber',
-        tags: ['footer'],
+        tags: ['newsletter'],
       });
       setStatus('success');
       form.resetFields();
@@ -133,18 +131,21 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
       <div
         className={classNames(
           className,
-          formClassName,
-          'max-w-[max(300px,32%)] items-center justify-around gap-0 max-[1000px]:max-w-none'
+          'relative m-0 mb-10! flex max-w-[max(300px,32%)] flex-col items-center justify-center gap-4 border border-neutral-3 !p-5 text-primary-8 lg:mb-0! max-[1000px]:max-w-none'
         )}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="m-0 h-12 w-12">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          className="m-0 h-12 w-12 shrink-0"
+        >
           <title>check-circle</title>
           <path
             fill="#0a0"
             d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z"
           />
         </svg>
-        <h2 className={classNames(titleClassName, 'text-center leading-loose')}>
+        <h2 className={classNames(titleClassName, 'text-center leading-snug')}>
           You’re all set! Some great news will be coming your way soon!
         </h2>
       </div>

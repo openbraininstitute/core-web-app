@@ -1,5 +1,6 @@
-import { captureException } from '@sentry/nextjs';
 import { createHash } from 'crypto';
+
+import { captureException } from '@sentry/nextjs';
 import { z } from 'zod';
 
 import { serverConfig as config } from '@/config/server';
@@ -15,6 +16,9 @@ const newsletterFormSchema = z.object({
 
 const ErrorMessageMap = {
   'Invalid Resource': 'Please provide a valid email address.',
+  'Forgotten Email Not Subscribed':
+    'This email was permanently removed from our list and cannot be re-subscribed here. Please use a different email address.',
+  'Member Exists': 'This email is already subscribed to our newsletter.',
   default: 'Adding new email to newsletter audience failed',
 };
 
@@ -44,6 +48,7 @@ export async function POST(req: Request) {
 
   try {
     const { email, name, tags } = (await req.json()) as RequestBody;
+
     formValidation = await newsletterFormSchema.parseAsync({ email, name, tags });
   } catch (error) {
     if (error instanceof z.ZodError) {
