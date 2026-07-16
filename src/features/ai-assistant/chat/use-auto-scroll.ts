@@ -32,16 +32,6 @@ export function useAutoScroll({
     }
   }, [containerRef]);
 
-  const smoothScrollToBottom = React.useCallback(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.scrollTo({
-        top: container.scrollHeight - container.clientHeight,
-        behavior: 'smooth',
-      });
-    }
-  }, [containerRef]);
-
   // useLayoutEffect: scroll before paint on loading→loaded (no flash).
   // Scroll on every messages update — AI SDK v6 produces a new array ref on each streamed chunk.
   // biome-ignore lint/correctness/useExhaustiveDependencies: messages triggers scroll on each streamed chunk
@@ -49,19 +39,39 @@ export function useAutoScroll({
     if (isLoadingMessages) return;
 
     if (isAutoScrollRef.current) {
-      smoothScrollToBottom();
+      scrollToBottom();
+      // Schedule a follow-up scroll to catch layout changes from CSS animations
+      // (e.g. grid-based grow animations on image/plot containers).
+      requestAnimationFrame(scrollToBottom);
     }
-  }, [messages, isLoadingMessages, smoothScrollToBottom]);
+  }, [messages, isLoadingMessages, scrollToBottom]);
 
   const prevStatusRef = React.useRef(status);
   React.useEffect(() => {
     if (status === 'streaming' && prevStatusRef.current !== 'streaming') {
       if (isAutoScrollRef.current) {
-        requestAnimationFrame(smoothScrollToBottom);
+        requestAnimationFrame(scrollToBottom);
       }
     }
     prevStatusRef.current = status;
-  }, [status, smoothScrollToBottom]);
+  }, [status, scrollToBottom]);
+
+  // During streaming, poll scroll position to keep up with CSS height animations
+  // (grid-template-rows transitions) that don't trigger React re-renders.
+  React.useEffect(() => {
+    if (status !== 'streaming' && status !== 'submitted') return;
+    if (!isAutoScrollRef.current) return;
+
+    let rafId: number;
+    const poll = () => {
+      if (isAutoScrollRef.current) {
+        scrollToBottom();
+      }
+      rafId = requestAnimationFrame(poll);
+    };
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
+  }, [status, scrollToBottom]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: threadId resets scroll on conversation switch
   React.useEffect(() => {

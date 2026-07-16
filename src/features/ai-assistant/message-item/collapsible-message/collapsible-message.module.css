@@ -306,13 +306,22 @@
   padding: 4px 12px;
 }
 
-/* When items are wrapped in slideToCollapsible, overflow:hidden creates a new BFC
-   that prevents child margins from collapsing with adjacent siblings. Use clip
-   instead of hidden to contain the visual overflow during animation without
-   establishing a BFC, preserving normal margin collapse behavior. */
+/* When items are wrapped in slideToCollapsible, the outer wrapper stays a
+   regular block to preserve margin collapsing with adjacent siblings.
+   The inner grid element handles the actual height collapse. */
 .slideToCollapsible {
-  animation: slideUpToCollapsible 350ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   overflow: clip;
+}
+
+.slideToCollapsibleInner {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: slideUpToCollapsible 300ms cubic-bezier(0.4, 0, 0.2, 1) 150ms forwards;
+}
+
+.slideToCollapsibleInner > * {
+  overflow: clip;
+  min-height: 0;
 }
 
 /* Prevent Streamdown's [data-sd-animate] fadeIn from re-triggering when
@@ -348,61 +357,16 @@
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes expandContent {
-  from {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    max-height: 2000px;
-    transform: translateY(0);
-  }
-}
-
 @keyframes slideUpToCollapsible {
   0% {
+    grid-template-rows: 1fr;
     opacity: 1;
-    transform: translateY(0);
-    max-height: 500px;
-    margin-top: 0;
-    margin-bottom: 0;
+  }
+  40% {
+    opacity: 0;
   }
   100% {
+    grid-template-rows: 0fr;
     opacity: 0;
-    transform: translateY(-12px);
-    max-height: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-}
-
-@keyframes fadeOutCollapse {
-  0% {
-    opacity: 1;
-    max-height: 5000px;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 0.5;
-  }
-  100% {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-4px);
-    margin-top: 0;
-    margin-bottom: 0;
   }
 }

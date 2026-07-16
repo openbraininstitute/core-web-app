@@ -17,28 +17,46 @@ export interface ToolThumbnailGenerationProps {
   className?: string;
   result: ToolResult | null;
   data?: { content: string; type: string };
+  isStreaming?: boolean;
 }
 
 export default function ToolThumbnailGeneration({
   className,
   result,
   data: providedData,
+  isStreaming,
 }: ToolThumbnailGenerationProps) {
   if (!result) return null;
 
   return (
     <>
       {typeof result.storage_id === 'string' && providedData && (
-        <CustomThumbnail providedData={providedData} />
+        <CustomThumbnail providedData={providedData} isStreaming={isStreaming} />
       )}
     </>
   );
 }
 
-function CustomThumbnail({ providedData }: { providedData: { content: string; type: string } }) {
+function CustomThumbnail({
+  providedData,
+  isStreaming,
+}: {
+  providedData: { content: string; type: string };
+  isStreaming?: boolean;
+}) {
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
+  // Ensure the scaleIn animation completes before revealing the image.
+  const [animationDone, setAnimationDone] = React.useState(!isStreaming);
+
+  React.useEffect(() => {
+    if (!isStreaming || animationDone) return;
+    const timer = setTimeout(() => setAnimationDone(true), 500);
+    return () => clearTimeout(timer);
+  }, [isStreaming, animationDone]);
+
+  const showImage = imageLoaded && animationDone;
 
   const { content, type } = providedData;
   if (type !== 'image' || !isString(content)) return null;
@@ -65,7 +83,7 @@ function CustomThumbnail({ providedData }: { providedData: { content: string; ty
   return (
     <>
       <div className={styles.container}>
-        {imageLoaded && (
+        {showImage && (
           <button
             type="button"
             onClick={handleShow}
@@ -75,13 +93,13 @@ function CustomThumbnail({ providedData }: { providedData: { content: string; ty
             <FullscreenOutlined />
           </button>
         )}
-        {!imageLoaded && <ToolSkeleton />}
+        {!showImage && <ToolSkeleton />}
         <img
           className={styles.image}
           src={content}
           alt="Morphology thumbnail"
           style={{
-            display: imageLoaded ? 'block' : 'none',
+            display: showImage ? 'block' : 'none',
             cursor: 'pointer',
           }}
           onLoad={() => setImageLoaded(true)}

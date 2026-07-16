@@ -36,9 +36,11 @@ class PlotErrorBoundary extends React.Component<
 export default function PlotInChat({
   storageId,
   isBackup,
+  isStreaming,
 }: {
   storageId: string;
   isBackup?: boolean;
+  isStreaming?: boolean;
 }) {
   const { panelWidth } = usePanelWidth();
   const isDragging = useIsDragging();
@@ -71,12 +73,16 @@ export default function PlotInChat({
 
   if (isReady && !isString(content)) return null;
 
-  if (!isReady) return <ToolSkeletonStandalone />;
+  if (!isReady) return <ToolSkeletonStandalone isStreaming={isStreaming} />;
 
   if (type === 'image') {
     return (
       <PlotErrorBoundary isBackup={isBackup}>
-        <ToolThumbnailGeneration result={{ storage_id: storageId }} data={data!} />
+        <ToolThumbnailGeneration
+          result={{ storage_id: storageId }}
+          data={data!}
+          isStreaming={isStreaming}
+        />
       </PlotErrorBoundary>
     );
   }
@@ -88,6 +94,7 @@ export default function PlotInChat({
         data={data!}
         plotRenderKey={plotRenderKey}
         isAnimating={isAnimating}
+        isStreaming={isStreaming}
       />
     </PlotErrorBoundary>
   );

@@ -2,7 +2,7 @@ import { isToolUIPart } from 'ai';
 
 import { classNames } from '@/util/utils';
 
-import { PlotInChat } from '.';
+import PlotInChat from './plot-in-chat';
 
 import type { UIMessage } from '@ai-sdk/react';
 

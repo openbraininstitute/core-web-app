@@ -399,38 +399,41 @@
 }
 
 .details {
+  display: grid;
+  grid-template-rows: 0fr;
   overflow: hidden;
   background-color: var(--color-neutral-9);
   --tp-accent: var(--color-primary-5);
   --tp-border: color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   transition:
-    max-height 300ms cubic-bezier(0.4, 0, 0.2, 1),
-    padding 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1),
     border-top-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
     opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
   border-top: 1px solid transparent;
   opacity: 0;
-  max-height: 0;
-  padding: 0 0.75rem;
 }
 
 .detailsInner {
-  padding-top: 0;
-  padding-bottom: 0;
+  overflow: hidden;
+  min-height: 0;
+  padding: 0 0.75rem;
+  transition: padding 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .detailsOpen {
+  grid-template-rows: 1fr;
   border-top-color: color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   opacity: 1;
-  max-height: 640px;
+}
+
+.detailsOpen > .detailsInner {
   padding: 0.5rem 0.75rem 0.5rem;
 }
 
 .detailsClosed {
+  grid-template-rows: 0fr;
   border-top-color: transparent;
   opacity: 0;
-  max-height: 0;
-  padding: 0 0.75rem;
 }
 
 .section {

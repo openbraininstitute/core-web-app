@@ -25,3 +25,27 @@
   overflow: hidden;
   margin: 4px 0;
 }
+
+/* Wrap the standaloneWrapper in a grid cell for smooth height animation */
+.standaloneStreamingOuter {
+  display: grid;
+  grid-template-rows: 0fr;
+  animation: gridGrow 500ms ease-out forwards;
+  overflow: hidden;
+}
+
+.standaloneStreamingOuter > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@keyframes gridGrow {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}

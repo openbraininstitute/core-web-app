@@ -85,7 +85,7 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const chat = useChat({
     id: threadId,
-    throttle: 100,
+    experimental_throttle: 100,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     transport: new DefaultChatTransport({
       api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),

@@ -16,7 +16,7 @@ import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './collapsible-message.module.css';
 
-const COLLAPSE_ANIMATION_MS = 350;
+const COLLAPSE_ANIMATION_MS = 450;
 
 interface CollapsibleMessageProps {
   message: UIMessage;
@@ -175,7 +175,7 @@ export function CollapsibleMessage({
           className={styles.slideToCollapsible}
           data-collapsing="true"
         >
-          {child}
+          <div className={styles.slideToCollapsibleInner}>{child}</div>
         </div>
       );
     } else if (index < lastStepStartIndex) {

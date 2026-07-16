@@ -23,6 +23,7 @@ export interface ToolPlotGeneratorProps {
   data?: { content: string; type: string };
   plotRenderKey?: number | string;
   isAnimating?: boolean;
+  isStreaming?: boolean;
 }
 
 export default function ToolPlotGenerator({
@@ -31,6 +32,7 @@ export default function ToolPlotGenerator({
   data: providedData,
   plotRenderKey,
   isAnimating,
+  isStreaming,
 }: ToolPlotGeneratorProps) {
   if (!result) return null;
 
@@ -44,6 +46,7 @@ export default function ToolPlotGenerator({
         providedData={providedData}
         plotRenderKey={plotRenderKey}
         isAnimating={isAnimating}
+        isStreaming={isStreaming}
       />
     )
   );
@@ -378,17 +381,29 @@ function CustomPlot({
   providedData,
   plotRenderKey,
   isAnimating,
+  isStreaming,
 }: {
   className?: string;
   providedData: { content: string; type: string };
   plotRenderKey?: number | string;
   isAnimating?: boolean;
+  isStreaming?: boolean;
 }) {
   const { content, type } = providedData;
   const [plotReady, setPlotReady] = React.useState(false);
   const [fullscreenPlotReady, setFullscreenPlotReady] = React.useState(false);
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+  // Ensure the scaleIn animation on the skeleton completes before revealing the plot.
+  const [animationDone, setAnimationDone] = React.useState(!isStreaming);
+
+  React.useEffect(() => {
+    if (!isStreaming || animationDone) return;
+    const timer = setTimeout(() => setAnimationDone(true), 500);
+    return () => clearTimeout(timer);
+  }, [isStreaming, animationDone]);
+
+  const showPlot = plotReady && animationDone;
 
   // Ref, not state — using state caused an infinite resize loop at the 500px boundary
   // (layout change ↔ width oscillation ↔ ResizeObserver ↔ re-render).
@@ -483,38 +498,40 @@ function CustomPlot({
         ) : (
           <div style={{ height: '20px', flexShrink: 0 }} />
         )}
-        {!plotReady && <ToolSkeleton />}
-        <div
-          key={plotRenderKey}
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden',
-            visibility: plotReady ? 'visible' : 'hidden',
-          }}
-          onDoubleClick={handleShow}
-        >
-          <Plot
-            className={classNames(className, styles.toolPlotGenerator)}
+        {!showPlot && <ToolSkeleton />}
+        {animationDone && (
+          <div
+            key={plotRenderKey}
             style={{
-              width: '100%',
-              minWidth: '250px',
-              height: '100%',
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              visibility: plotReady ? 'visible' : 'hidden',
             }}
-            data={inlineData}
-            layout={finalInlineLayout}
-            frames={props?.frames}
-            config={{
-              displaylogo: false,
-              responsive: true,
-              modeBarButtons: [['resetScale2d', 'zoom2d', 'pan2d', 'toImage']],
-            }}
-            useResizeHandler
-            onInitialized={() => setPlotReady(true)}
-            onUpdate={() => setPlotReady(true)}
             onDoubleClick={handleShow}
-          />
-        </div>
+          >
+            <Plot
+              className={classNames(className, styles.toolPlotGenerator)}
+              style={{
+                width: '100%',
+                minWidth: '250px',
+                height: '100%',
+              }}
+              data={inlineData}
+              layout={finalInlineLayout}
+              frames={props?.frames}
+              config={{
+                displaylogo: false,
+                responsive: true,
+                modeBarButtons: [['resetScale2d', 'zoom2d', 'pan2d', 'toImage']],
+              }}
+              useResizeHandler
+              onInitialized={() => setPlotReady(true)}
+              onUpdate={() => setPlotReady(true)}
+              onDoubleClick={handleShow}
+            />
+          </div>
+        )}
       </div>
       <FullscreenDialog dialogRef={refDialog}>
         {title && <PlotTitle title={title as string} titleFont={titleFont} isFullscreen />}
