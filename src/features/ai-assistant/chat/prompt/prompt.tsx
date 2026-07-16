@@ -284,11 +284,12 @@ export default function Prompt({
                 e.stopPropagation();
                 handleSendClick();
               }}
-              aria-label="Send prompt"
+              aria-label={disabledReason ?? 'Send prompt'}
               className={styles.sendButton}
               disabled={(value.trim().length === 0 && attachments.length === 0) || disabled}
+              title={disabledReason}
             >
-              {disabled ? <div className={styles.spinner} /> : <SendIcon />}
+              {disabled && !disabledReason ? <div className={styles.spinner} /> : <SendIcon />}
             </button>
           )}
         </div>
