@@ -1,16 +1,26 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get, includes } from 'es-toolkit/compat';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { hasAssets } from '@/api/entitycore/guards';
+import { getEntity } from '@/api/entitycore/queries/general/entity';
+import { getAsset } from '@/api/entitycore/selectors/assets';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
-import { useModelQuery } from '@/features/scan-config/components/atoms';
+import {
+  AssetContentType,
+  AssetLabel,
+  type EntityCoreBaseAsset,
+  type IAsset,
+} from '@/api/entitycore/types/shared/global';
+import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import {
+  getEntityTypeTagLabel,
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
@@ -24,12 +34,19 @@ import {
 import { MAX_VISUALIZATION_ASSET_REFETCH_RETRIES } from '@/features/task-runner';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TEmSynapseMappingCampaignMeta } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
+type TBuildCampaignMeta = { scan_parameters?: Record<string, unknown> };
+
+type BuiltEntity = EntityCoreObjectTypes & Partial<EntityCoreBaseAsset> & { name?: string };
+
+type BuiltEntityWithAssets = BuiltEntity & EntityCoreBaseAsset;
 
 type Props = {
-  config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
+  config: ITaskConfig<TBuildCampaignMeta>;
   execStatus?: TActivityStatus;
   execution?: ITaskActivity;
   selectedFile?: TActivityCustomFile;
@@ -37,6 +54,86 @@ type Props = {
   context: { virtualLabId: string; projectId: string };
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
+
+/** Build outputs that list individual assets in addition to the entity mini-detail. */
+const ENTITY_TYPES_WITH_ASSET_OUTPUTS = new Set<string>([
+  EntityTypeDict.SimulatableExtracellularRecordingArray,
+]);
+
+function isCircuitType(type: string | null | undefined): boolean {
+  return type === EntityTypeDict.Circuit;
+}
+
+function shouldListAssetsAsOutputs(type: string | null | undefined): boolean {
+  return !!type && ENTITY_TYPES_WITH_ASSET_OUTPUTS.has(type);
+}
+
+function findAssetByLabel(assets: readonly IAsset[], label: AssetLabel): IAsset | null {
+  return getAsset({ assets, label }).getOneOrNull();
+}
+
+function makeEntityMiniDetailFile(entity: BuiltEntityWithAssets): TActivityCustomFile {
+  return {
+    id: entity.id,
+    entity,
+    asset: entity.assets[0],
+    name: entity.name,
+    renderer: ActivityCustomFileRenderer.MiniDetailView,
+  };
+}
+
+function makeAssetOutputFiles(entity: BuiltEntityWithAssets): TActivityCustomFile[] {
+  return entity.assets.map((asset) => ({
+    id: asset.id,
+    entity,
+    asset,
+    name: asset.path,
+    renderer: ActivityCustomFileRenderer.Default,
+  }));
+}
+
+function makeBuiltOutputFiles(entity: BuiltEntity | null | undefined): TActivityCustomFile[] {
+  if (!entity || !hasAssets(entity) || !entity.assets[0]) return [];
+
+  if (shouldListAssetsAsOutputs(entity.type)) {
+    return [makeEntityMiniDetailFile(entity), ...makeAssetOutputFiles(entity)];
+  }
+
+  return [makeEntityMiniDetailFile(entity)];
+}
+
+function isSingleNeuronCircuit(entity: TActivityCustomFile['entity']): boolean {
+  if (!isCircuitType(entity.type) || !('scale' in entity)) return false;
+  return (entity as ICircuit).scale === CircuitScaleDictionary.Single;
+}
+
+function getOutputEntityLabel(file: TActivityCustomFile): string | null {
+  if (file.renderer !== ActivityCustomFileRenderer.MiniDetailView) return null;
+
+  // EM synapse-mapping outputs a single-scale circuit, labeled Synaptome (beta)
+  const entityType = isSingleNeuronCircuit(file.entity)
+    ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
+    : (file.entity.type as TExtendedEntitiesTypeDict);
+
+  return getEntityTypeTagLabel(entityType);
+}
+
+function shouldPollForCircuitVisualization(query: {
+  state: {
+    error: Error | null;
+    data: BuiltEntity | undefined;
+    dataUpdateCount: number;
+  };
+}): boolean {
+  if (query.state.error) return false;
+  if (!hasAssets(query.state.data)) return true;
+
+  const hasVisAsset = !!findAssetByLabel(query.state.data.assets, AssetLabel.circuit_visualization);
+  const hasReachedMaxRetries =
+    query.state.dataUpdateCount >= MAX_VISUALIZATION_ASSET_REFETCH_RETRIES;
+
+  return !(hasVisAsset || hasReachedMaxRetries);
+}
 
 export function InOutFiles({
   config,
@@ -48,97 +145,95 @@ export function InOutFiles({
   campaignOrigin,
 }: Props) {
   const queryClient = useQueryClient();
-  const { entity: circuit } = useModelQuery({ id: execution?.generated.at(0)?.id, context });
-  const configAsset = config.assets.find((o) => o.label === AssetLabel.task_config);
-  const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
-  const circuitConfigAsset = circuitAssets?.find(
-    (o: IAsset) => o.label === AssetLabel.sonata_circuit
-  );
-  const logStreamFiles = useMemo(
-    () =>
-      makeLogStreamFileDescriptors({
-        configId: config.id,
-        executionId: execution?.execution_id,
-      }),
-    [config.id, execution?.execution_id]
-  );
+  const generated = execution?.generated?.[0];
+  const generatedId = generated?.id;
+  const generatedTypeHint = generated?.type as TExtendedEntitiesTypeDict | undefined;
 
-  const inputFiles: TActivityCustomFile[] = useMemo(() => {
-    const files: TActivityCustomFile[] = [];
-    if (configAsset) {
-      files.push({
-        id: configAsset.id,
-        entity: config,
-        asset: configAsset,
-        renderer: ActivityCustomFileRenderer.Default,
-      });
-    }
-    if (circuit && circuitConfigAsset) {
-      files.push({
-        id: circuitConfigAsset.id,
-        entity: circuit,
-        asset: circuitConfigAsset,
-        assetPath: 'circuit_config.json',
-        enforcedRenderType: AssetContentType.json,
-        renderer: ActivityCustomFileRenderer.Default,
-      });
-    }
-    return prependLogStreamFile({
-      file: logStreamFiles.input
-        ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
-        : null,
-      files,
+  const { data: resolvedGeneratedType } = useQuery({
+    queryKey: keyBuilder.entity({ id: generatedId ?? '', context }),
+    // biome-ignore lint/style/noNonNullAssertion: enabled only when generatedId is present
+    queryFn: () => getEntity({ id: generatedId!, context }),
+    select: (entity) => entity.type as TExtendedEntitiesTypeDict,
+    enabled: !!generatedId && !generatedTypeHint,
+  });
+
+  const generatedType = generatedTypeHint ?? resolvedGeneratedType;
+  const isCircuitBuild = isCircuitType(generatedType);
+  const shouldPollVisualization =
+    isCircuitBuild && campaignOrigin !== ScanConfigCampaignOriginActionDict.View;
+
+  const { data: builtEntity, isLoading } = useQuery({
+    queryKey: keyBuilder.entity({
+      id: generatedId ?? '',
+      context,
+      type: generatedType,
+    }),
+    queryFn: () =>
+      retrieveEntity({
+        // biome-ignore lint/style/noNonNullAssertion: enabled only when both are present
+        type: generatedType!,
+        // biome-ignore lint/style/noNonNullAssertion: enabled only when both are present
+        id: generatedId!,
+        ctx: context,
+      }) as Promise<BuiltEntity>,
+    enabled: !!generatedId && !!generatedType,
+    refetchInterval(query) {
+      if (!shouldPollVisualization) return false;
+      return shouldPollForCircuitVisualization(query) ? 2_000 : false;
+    },
+  });
+
+  const configAsset = findAssetByLabel(config.assets, AssetLabel.task_config);
+  const circuitConfigAsset =
+    isCircuitBuild && hasAssets(builtEntity)
+      ? findAssetByLabel(builtEntity.assets, AssetLabel.sonata_circuit)
+      : null;
+
+  const logStreamFiles = makeLogStreamFileDescriptors({
+    configId: config.id,
+    executionId: execution?.execution_id,
+  });
+
+  const inputFiles: TActivityCustomFile[] = [];
+  if (configAsset) {
+    inputFiles.push({
+      id: configAsset.id,
+      entity: config,
+      asset: configAsset,
+      renderer: ActivityCustomFileRenderer.Default,
     });
-  }, [config, circuit, configAsset, circuitConfigAsset, logStreamFiles.input]);
+  }
+  if (builtEntity && circuitConfigAsset) {
+    inputFiles.push({
+      id: circuitConfigAsset.id,
+      entity: builtEntity,
+      asset: circuitConfigAsset,
+      assetPath: 'circuit_config.json',
+      enforcedRenderType: AssetContentType.json,
+      renderer: ActivityCustomFileRenderer.Default,
+    });
+  }
+  const inputFilesWithLogs = prependLogStreamFile({
+    file: logStreamFiles.input
+      ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
+      : null,
+    files: inputFiles,
+  });
 
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
 
-  const builtCircuitId = execution?.generated?.[0]?.id;
-  const { data: builtCircuit, isLoading } = useQuery({
-    queryKey: keyBuilder.oneCircuit({
-      virtualLabId: context.virtualLabId,
-      projectId: context.projectId,
-      entityId: builtCircuitId ?? '',
-    }),
-    // biome-ignore lint/style/noNonNullAssertion: the function is enabled only when builtCircuitId is present
-    queryFn: () => getCircuit({ id: builtCircuitId!, context }),
-    enabled: !!builtCircuitId,
-    refetchInterval(query) {
-      if (campaignOrigin === ScanConfigCampaignOriginActionDict.View) return false;
-
-      const data = query.state.data;
-      const hasVisAsset = data?.assets?.some(
-        (asset) => asset.label === AssetLabel.circuit_visualization
-      );
-      const hasReachedMaxRetries =
-        query.state.dataUpdateCount >= MAX_VISUALIZATION_ASSET_REFETCH_RETRIES;
-      return hasVisAsset || hasReachedMaxRetries ? false : 2_000;
-    },
+  const builtOutputFiles = makeBuiltOutputFiles(builtEntity);
+  const outputFiles = prependLogStreamFile({
+    file:
+      logStreamFiles.output && execution
+        ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+        : null,
+    files: builtOutputFiles,
   });
 
-  const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    const files: TActivityCustomFile[] = [];
-    if (builtCircuit) {
-      files.push({
-        id: builtCircuit.id,
-        entity: builtCircuit,
-        asset: builtCircuit.assets[0],
-        name: builtCircuit.name,
-        renderer: ActivityCustomFileRenderer.MiniDetailView,
-      });
-    }
-    return prependLogStreamFile({
-      file:
-        logStreamFiles.output && execution
-          ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
-          : null,
-      files,
-    });
-  }, [builtCircuit, execution, logStreamFiles.output]);
-
   useEffect(() => {
-    if (!outputAvailable || !builtCircuit) return;
+    if (!outputAvailable || !builtEntity || !isCircuitBuild) return;
 
     queryClient.invalidateQueries({
       predicate: (query) =>
@@ -149,12 +244,12 @@ export function InOutFiles({
         get(query.queryKey[0], 'context.extendedEntityType') ===
         ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     });
-  }, [outputAvailable, builtCircuit, queryClient]);
+  }, [outputAvailable, builtEntity, isCircuitBuild, queryClient]);
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,
     selectedFile,
-    inputFiles,
+    inputFiles: inputFilesWithLogs,
     outputFiles,
     onSelect,
   });
@@ -162,9 +257,9 @@ export function InOutFiles({
   return (
     <IoLayout
       showOutput={outputAvailable || logStreamFiles.showOutput}
-      inputIsEmpty={inputFiles.length === 0}
-      outputIsEmpty={!builtCircuit && !isLoading && !logStreamFiles.output}
-      inputItems={inputFiles.map((file) => (
+      inputIsEmpty={inputFilesWithLogs.length === 0}
+      outputIsEmpty={builtOutputFiles.length === 0 && !isLoading && !logStreamFiles.output}
+      inputItems={inputFilesWithLogs.map((file) => (
         <TaskIOFileItem
           id={file.asset.id}
           selected={file.asset.id === selectedFile?.id}
@@ -175,17 +270,11 @@ export function InOutFiles({
         />
       ))}
       outputItems={outputFiles.map((file) => {
-        const isBuiltCircuit = file.renderer === ActivityCustomFileRenderer.MiniDetailView;
+        const label = getOutputEntityLabel(file);
         return (
           <TaskIOFileItem
             id={file.id}
-            label={
-              isBuiltCircuit ? (
-                <small className="uppercase">
-                  Synaptome <span className="lowercase">(beta)</span>
-                </small>
-              ) : null
-            }
+            label={label ? <small className="uppercase">{label}</small> : null}
             selected={file.id === selectedFile?.id}
             key={file.id}
             file={file}

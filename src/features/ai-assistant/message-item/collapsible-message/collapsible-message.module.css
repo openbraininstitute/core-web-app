@@ -57,15 +57,15 @@
 }
 
 .thinkingButton[data-collapsed="false"] {
-  background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
+  background: color-mix(in srgb, var(--color-primary-6) 14%, var(--color-neutral-7));
 }
 
 .thinkingButton[data-collapsed="true"]:hover {
-  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-6));
+  background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
 }
 
 .thinkingButton[data-collapsed="false"]:hover {
-  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-5));
+  background: color-mix(in srgb, var(--color-primary-6) 18%, var(--color-neutral-7));
 }
 
 /* Suppress parent hover when hovering the restore/confirm buttons */
@@ -74,7 +74,7 @@
 }
 
 .thinkingButton[data-collapsed="false"]:has(.restoreBtn:hover, .confirmBtn:hover) {
-  background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
+  background: color-mix(in srgb, var(--color-primary-6) 14%, var(--color-neutral-7));
 }
 
 .thinkingButton:active {

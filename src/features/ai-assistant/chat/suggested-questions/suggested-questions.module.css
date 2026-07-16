@@ -21,7 +21,10 @@
   background: color-mix(in srgb, var(--color-primary-9) 3%, white);
   border: 1px solid color-mix(in srgb, var(--color-primary-9) 12%, transparent);
   color: color-mix(in srgb, var(--color-primary-9) 75%, #595959);
-  transition: all 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
   text-align: left;
   display: flex;
   align-items: center;
@@ -29,6 +32,16 @@
   cursor: pointer;
   font-size: 0.875rem;
   flex-shrink: 0;
+}
+
+.suggestions > button.disabled {
+  color: color-mix(in srgb, var(--color-primary-9) 30%, transparent);
+  cursor: default;
+  transition: none;
+}
+
+.suggestions > button.disabled > svg {
+  color: color-mix(in srgb, var(--color-primary-9) 20%, transparent);
 }
 
 .suggestions > button > svg {
@@ -44,19 +57,29 @@
   overflow-wrap: break-word;
 }
 
-.suggestions > button:hover {
+.suggestions > button:hover:not(.disabled) {
   border-color: color-mix(in srgb, var(--color-primary-6) 50%, transparent);
   background: color-mix(in srgb, var(--color-primary-9) 6%, white);
   color: var(--color-primary-9);
 }
 
-.suggestions > button:hover > svg {
+.suggestions > button:hover:not(.disabled) > svg {
   transform: translateX(2px);
   color: color-mix(in srgb, var(--color-primary-9) 70%, transparent);
 }
 
 .container {
   position: relative;
+}
+
+.refreshingOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 6px;
+  background: linear-gradient(90deg, transparent 25%, rgba(0, 0, 0, 0.03) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
 }
 
 .skeleton {

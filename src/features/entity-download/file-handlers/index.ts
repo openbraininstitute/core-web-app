@@ -14,6 +14,7 @@ import { getIonChannelModelFiles } from './ion-channel-model';
 import { getIonChannelRecordingFiles } from './ion-channel-recording';
 import { getMEmodelFiles } from './memodel';
 import { getNotebookFiles } from './notebook';
+import { getSimulatableExtracellularRecordingArrayFiles } from './simulatable-extracellular-recording-array';
 import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
 import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
@@ -44,6 +45,8 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.AnalysisNotebookTemplate]: getNotebookFiles,
   [EntityTypeDict.AnalysisNotebookResult]: getNotebookResultFiles,
   [EntityTypeDict.Circuit]: getCircuitFiles,
+  [EntityTypeDict.SimulatableExtracellularRecordingArray]:
+    getSimulatableExtracellularRecordingArrayFiles,
   // Simulation data
   [EntityTypeDict.SingleNeuronSimulation]: getSingleNeuronSimulationFiles,
   [EntityTypeDict.SingleNeuronSynaptomeSimulation]: getSingleNeuronSynaptomeSimulationFiles,
