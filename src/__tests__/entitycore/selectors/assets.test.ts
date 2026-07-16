@@ -1,12 +1,12 @@
-const assert: typeof import('node:assert/strict') = require('node:assert/strict');
-const test: typeof import('node:test') = require('node:test');
-const assetSelectors: typeof import('./assets') = require('./assets.ts');
+import { describe, expect, it } from 'vitest';
 
-const { describe, it } = test;
-const { AssetMatchAmbiguousError, AssetMatchNotFoundError, AssetSelectorCriteriaError, getAsset } =
-  assetSelectors;
-
-type AssetSelectorAssetLike = import('./assets').AssetSelectorAssetLike;
+import {
+  AssetMatchAmbiguousError,
+  AssetMatchNotFoundError,
+  type AssetSelectorAssetLike,
+  AssetSelectorCriteriaError,
+  getAsset,
+} from '@/api/entitycore/selectors/assets';
 
 const TestAssetLabel = {
   campaignSummary: 'campaign_summary',
@@ -57,7 +57,7 @@ describe('getAsset()', () => {
       contentType: TestAssetContentType.png,
     }).getOneOrThrow();
 
-    assert.equal(asset.id, 'asset-2');
+    expect(asset.id).toBe('asset-2');
   });
 
   it('returns all assets that match a label', () => {
@@ -66,10 +66,7 @@ describe('getAsset()', () => {
       label: TestAssetLabel.campaignSummary,
     }).getAllOrThrow();
 
-    assert.deepEqual(
-      matchingAssets.map((asset) => asset.id),
-      ['asset-1', 'asset-2']
-    );
+    expect(matchingAssets.map((asset) => asset.id)).toEqual(['asset-1', 'asset-2']);
   });
 
   it('returns all assets that match a content type', () => {
@@ -78,10 +75,7 @@ describe('getAsset()', () => {
       contentType: TestAssetContentType.json,
     }).getAllOrThrow();
 
-    assert.deepEqual(
-      matchingAssets.map((asset) => asset.id),
-      ['asset-1', 'asset-3']
-    );
+    expect(matchingAssets.map((asset) => asset.id)).toEqual(['asset-1', 'asset-3']);
   });
 
   it('returns null when no assets match and a nullable single lookup is requested', () => {
@@ -91,7 +85,7 @@ describe('getAsset()', () => {
       contentType: TestAssetContentType.png,
     }).getOneOrNull();
 
-    assert.equal(asset, null);
+    expect(asset).toBeNull();
   });
 
   it('returns null when no assets match and a nullable collection lookup is requested', () => {
@@ -101,56 +95,48 @@ describe('getAsset()', () => {
       contentType: TestAssetContentType.png,
     }).getAllOrNull();
 
-    assert.equal(matchingAssets, null);
+    expect(matchingAssets).toBeNull();
   });
 
   it('throws when no assets match and a required single lookup is requested', () => {
-    assert.throws(
-      () =>
-        getAsset({
-          assets,
-          label: TestAssetLabel.generationConfig,
-          contentType: TestAssetContentType.png,
-        }).getOneOrThrow(),
-      AssetMatchNotFoundError
-    );
+    expect(() =>
+      getAsset({
+        assets,
+        label: TestAssetLabel.generationConfig,
+        contentType: TestAssetContentType.png,
+      }).getOneOrThrow()
+    ).toThrow(AssetMatchNotFoundError);
   });
 
   it('throws when no assets match and a required collection lookup is requested', () => {
-    assert.throws(
-      () =>
-        getAsset({
-          assets,
-          label: TestAssetLabel.generationConfig,
-          contentType: TestAssetContentType.png,
-        }).getAllOrThrow(),
-      AssetMatchNotFoundError
-    );
+    expect(() =>
+      getAsset({
+        assets,
+        label: TestAssetLabel.generationConfig,
+        contentType: TestAssetContentType.png,
+      }).getAllOrThrow()
+    ).toThrow(AssetMatchNotFoundError);
   });
 
   it('throws when a single lookup is ambiguous', () => {
-    assert.throws(
-      () =>
-        getAsset({
-          assets,
-          label: TestAssetLabel.campaignSummary,
-        }).getOneOrThrow(),
-      AssetMatchAmbiguousError
-    );
+    expect(() =>
+      getAsset({
+        assets,
+        label: TestAssetLabel.campaignSummary,
+      }).getOneOrThrow()
+    ).toThrow(AssetMatchAmbiguousError);
   });
 
   it('throws when a nullable single lookup is ambiguous', () => {
-    assert.throws(
-      () =>
-        getAsset({
-          assets,
-          contentType: TestAssetContentType.json,
-        }).getOneOrNull(),
-      AssetMatchAmbiguousError
-    );
+    expect(() =>
+      getAsset({
+        assets,
+        contentType: TestAssetContentType.json,
+      }).getOneOrNull()
+    ).toThrow(AssetMatchAmbiguousError);
   });
 
   it('throws when called without any constraints', () => {
-    assert.throws(() => getAsset({ assets }), AssetSelectorCriteriaError);
+    expect(() => getAsset({ assets })).toThrow(AssetSelectorCriteriaError);
   });
 });

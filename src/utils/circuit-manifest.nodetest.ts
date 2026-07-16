@@ -1,5 +1,5 @@
 // Block-scoped so the `require`-based bindings don't collide with other
-// global-script *.nodetest.ts files (e.g. assets.nodetest.ts). Uses `require`
+// global-script *.nodetest.ts files. Uses `require`
 // (not ESM import) because node --experimental-strip-types runs this as
 // CommonJS and resolves the explicit `.ts` extension.
 {
