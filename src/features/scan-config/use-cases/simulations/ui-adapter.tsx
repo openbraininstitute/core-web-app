@@ -31,7 +31,7 @@ import {
   TASK_STATUS_POLL_INTERVAL_MS,
   TASK_STATUS_QUERY_KEY_HEAD,
 } from '@/features/task-runner/constants';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { useBalanceRefreshOnTaskCompletion } from '@/features/task-runner/hooks/use-balance-refresh';
 import { cn } from '@/utils/css-class';
 
 import type { CSSProperties, ReactNode } from 'react';
@@ -191,22 +191,14 @@ function SimulationListItem({
   const statusLoading = isLoading && !execStatus;
   const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED];
 
+  useBalanceRefreshOnTaskCompletion({ status: execStatus, context });
+
   useEffect(() => {
     if (execStatus) {
       queryClient.invalidateQueries({
         queryKey: [TASK_STATUS_QUERY_KEY_HEAD, { campaignId, context }],
       });
       onStatusLoad(simulation.id, execStatus);
-      if (execStatus === ActivityStatus.DONE || execStatus === ActivityStatus.ERROR) {
-        queryClient.invalidateQueries({
-          queryKey: keyBuilder.accounting({
-            virtualLabId: context.virtualLabId,
-          }),
-        });
-        queryClient.invalidateQueries({
-          queryKey: keyBuilder.wallet({ ...context }),
-        });
-      }
     }
   }, [execStatus, onStatusLoad, simulation.id, campaignId, context, queryClient.invalidateQueries]);
 

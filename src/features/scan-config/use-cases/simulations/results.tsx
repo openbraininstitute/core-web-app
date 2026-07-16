@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -36,6 +36,8 @@ import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
+import { isTerminalActivityStatus } from '@/features/task-runner';
+import { invalidateProjectBalance } from '@/features/task-runner/hooks/use-balance-refresh';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
@@ -69,6 +71,7 @@ export default function SimulationsTab({
   taskTypeBindings,
 }: SimulationTabProps) {
   const notification = useAppNotification();
+  const queryClient = useQueryClient();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const { data: simulations = [], isLoading: simulationsLoading } = useQuery({
@@ -165,10 +168,7 @@ export default function SimulationsTab({
     : undefined;
   const taskLogsViewerEnabled = !!activeSimulation && !!activeJobId;
   const taskLogsShouldReadSnapshot =
-    !!activeSimulationExecStatus &&
-    [ActivityStatus.CANCELLED, ActivityStatus.DONE, ActivityStatus.ERROR].includes(
-      activeSimulationExecStatus
-    );
+    !!activeSimulationExecStatus && isTerminalActivityStatus(activeSimulationExecStatus);
 
   const onActiveSimulationChange = useCallback((simulation: ISimulation) => {
     setActiveSimulation(simulation);
@@ -284,6 +284,10 @@ export default function SimulationsTab({
         }
       }
     }
+    if (nSubmissions > 0) {
+      // Launching reserves credits, so refetch the balance.
+      invalidateProjectBalance({ queryClient, context });
+    }
     setSelectedSimulationIds([]);
     setSimRequestInProgress(false);
     if (lowFundsError) {
@@ -299,8 +303,6 @@ export default function SimulationsTab({
         duration: 10,
       });
     }
-
-    setSelectedSimulationIds([]);
   };
 
   // TODO Refactor
@@ -315,6 +317,8 @@ export default function SimulationsTab({
         ctx: { virtualLabId, projectId },
         simulationIds: simIds,
         onInit: () => {
+          // Earliest signal the batch was accepted — credits are reserved from here.
+          invalidateProjectBalance({ queryClient, context });
           simIds.forEach((simId) => {
             setSimulationStatus(simId, ActivityStatus.PENDING);
           });

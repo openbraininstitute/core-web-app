@@ -4,6 +4,7 @@ import { fetchToFS, unlinkFromFS } from '@/features/circuit-nodes/worker/fetch-a
 import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
 
 import type {
+  ColumnKind,
   DownloadProgress,
   GetRowsRequest,
   GetRowsResponse,
@@ -36,6 +37,11 @@ const api = {
   async getRows(req: GetRowsRequest): Promise<GetRowsResponse> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     return session.getRows(req);
+  },
+
+  async getColumn(name: string): Promise<{ kind: ColumnKind; values: (string | number)[] }> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    return session.getColumnValues(name);
   },
 
   async close(): Promise<void> {

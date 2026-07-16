@@ -7,6 +7,10 @@ import {
   CircuitScale,
   CircuitTargetSimulator,
 } from '@/api/entitycore/types/entities/circuit';
+import {
+  CircuitDerivationFilterOptions,
+  getCircuitDerivationColumnLabels,
+} from '@/api/entitycore/types/entities/derivation';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ElectrodeTypeDict } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -15,6 +19,7 @@ import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { ReferenceCell } from '@/entity-configuration/definitions/reference-cell';
 import {
   EmptyPreview,
   EmptyValue,
@@ -328,6 +333,32 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     style: { align: 'left' },
   },
+  [EntityCoreFields.CircuitDerivationType]: {
+    className: 'text-left',
+    title: 'Derivation type',
+    // Static dropdown of the known circuit derivation types (issue #517). The backend exposes this
+    // as a plain enum filter (not a facet), so the options are sourced statically. Adding a future
+    // type = one entry in CircuitDerivationFilterOptions.
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: CircuitDerivationFilterOptions,
+    isFilterable: true,
+    isDisplayable: true,
+    // Not sortable: the backend exposes no order_by for derivation type.
+    defaultConstraint: 'generated_derivation__derivation_type__in',
+    render: (r) => {
+      // `generated_from_derivations` is loaded only on the flat list (expand=generated_from_derivations);
+      // hierarchy/enriched rows omit it, so guard like CircuitSubCircuit does.
+      const derivations =
+        'generated_from_derivations' in r ? (r as ICircuit).generated_from_derivations : null;
+      const labels = derivations ? getCircuitDerivationColumnLabels(derivations) : [];
+      return labels.length ? labels.join(', ') : EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Derivation types',
+      singular: 'Derivation type',
+    },
+    style: { align: 'left' },
+  },
   [EntityCoreFields.CircuitScale]: {
     className: 'text-left',
     title: 'Scale',
@@ -408,7 +439,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             const scales =
               context.dataType === ExtendedEntitiesTypeDict.Circuit &&
               context.section === WorkspaceSection.ScanConfigBuildWorkflow
-                ? pick(CircuitScale, ['Single', 'PairNeuron', 'SmallMicrocircuit', 'Microcircuit'])
+                ? pick(CircuitScale, ['Single', 'PairNeuron', 'SmallMicrocircuit'])
                 : omit(CircuitScale, ['Single']);
             return map(scales, (item) => ({ label: item.label, value: item.key }));
           },
@@ -659,6 +690,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         },
       },
     },
-    render: (r) => renderEmptyOrValue((r as ISimulatableExtracellularRecordingArray).circuit_id),
+    render: (r) => {
+      const circuitId = (r as ISimulatableExtracellularRecordingArray).circuit_id;
+      if (!circuitId) return EmptyValue;
+      return <ReferenceCell entityId={circuitId} entityType={ExtendedEntitiesTypeDict.Circuit} />;
+    },
   },
 };

@@ -60,6 +60,11 @@ export function useServiceAiAgentSuggestionFromUserJourney(
     setSuggestions((prev) => (prev.length === 0 ? pickRandomDefaults(3) : prev));
   }, []);
 
+  // Keep a ref to the latest token so the effect doesn't re-run on token refresh,
+  // but still uses the freshest token when it does fetch.
+  const accessTokenRef = React.useRef(accessToken);
+  accessTokenRef.current = accessToken;
+
   React.useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -79,7 +84,8 @@ export function useServiceAiAgentSuggestionFromUserJourney(
       return;
     }
 
-    if (status !== 'ready' || !accessToken || !virtualLabId || !projectId || !threadId) return;
+    if (status !== 'ready' || !accessTokenRef.current || !virtualLabId || !projectId || !threadId)
+      return;
 
     // In active conversation, ignore URL changes — only react to other dep changes
     const urlChanged = snapshot.frontendUrl !== prevFrontendUrlRef.current;
@@ -93,7 +99,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
       const currentRequestId = ++requestIdRef.current;
       setIsRefreshing(true);
 
-      serviceAiAgentSuggestionFromUserJourney(accessToken, {
+      serviceAiAgentSuggestionFromUserJourney(accessTokenRef.current!, {
         threadId,
         virtualLabId,
         projectId,
@@ -123,7 +129,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, status, fetchTrigger]);
+  }, [snapshot.frontendUrl, threadId, projectId, virtualLabId, status, fetchTrigger]);
 
   const clearSuggestions = React.useCallback(() => setSuggestions([]), []);
   const refetch = React.useCallback(() => {

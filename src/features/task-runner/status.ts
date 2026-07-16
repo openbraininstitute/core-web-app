@@ -1,5 +1,18 @@
+import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
+
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { TActivityStatus } from '@/api/entitycore/types/shared/activity';
+
+const TERMINAL_ACTIVITY_STATUSES: readonly TActivityStatus[] = [
+  ActivityStatus.DONE,
+  ActivityStatus.ERROR,
+  ActivityStatus.CANCELLED,
+];
+
+/** Terminal = the run is finished and its status will not change anymore. */
+export function isTerminalActivityStatus(status: TActivityStatus): boolean {
+  return TERMINAL_ACTIVITY_STATUSES.includes(status);
+}
 
 function getExecutionsForEntity(executions: ITaskActivity[], entityId: string): ITaskActivity[] {
   return executions

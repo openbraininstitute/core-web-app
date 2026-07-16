@@ -1,34 +1,56 @@
-import { useParams, useRouter } from 'next/navigation';
 import { snakeCase } from 'es-toolkit/compat';
-import { ReactNode, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
+import { useParams, useRouter } from 'next/navigation';
+import { type ReactNode, useMemo } from 'react';
 
-import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
-import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { getCircuitDerivationLabel } from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
-import { HierarchyOutputNode } from '@/ui/segments/explore/circuit/helpers';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { WorkspaceScope } from '@/constants';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { KebabCase } from '@/utils/type';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { VirtualLabInfo } from '@/types/virtual-lab/common';
+import type { HierarchyOutputNode, ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
+import type { DerivedGroup } from '@/ui/segments/explore/circuit/use-hierarchy';
+import type { KebabCase } from '@/utils/type';
 
 type Props = {
-  data: HierarchyOutputNode[] | undefined;
+  groups: DerivedGroup[];
 };
 
-export function Derived({ data }: Props) {
+export function Derived({ groups }: Props) {
+  return (
+    <div className="flex flex-col gap-5">
+      {groups.map(({ derivationType, circuits }) => (
+        <DerivedGroupSection
+          key={derivationType}
+          derivationType={derivationType}
+          circuits={circuits}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DerivedGroupSection({
+  derivationType,
+  circuits,
+}: {
+  derivationType: TDerivationType;
+  circuits: HierarchyOutputNode[];
+}) {
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
@@ -88,8 +110,8 @@ export function Derived({ data }: Props) {
       return (
         <div className="my-5 flex flex-col items-start gap-5">
           <div className="ml-2 flex flex-row items-center gap-2">
-            <ArrowReturnRight className="text-neutral-4 text-3xl" />
-            <div className="text-neutral-4 text-lg font-semibold uppercase">Derived circuits</div>
+            <ArrowReturnRight className="text-neutral-3 text-3xl" />
+            <div className="text-neutral-3 text-lg font-semibold uppercase">Derived circuits</div>
           </div>
           <div className="w-full">
             <div className="ml-4">
@@ -115,15 +137,22 @@ export function Derived({ data }: Props) {
   const { expandableConfig } = useExpandableTable<ICircuit, VirtualLabInfo>(expandableOptions);
 
   return (
-    <BaseTable
-      loading={false}
-      wrapperClassname="[&_.ant-table-body]:max-h-full!"
-      columns={columns}
-      dataType={ExtendedEntitiesTypeDict.Circuit}
-      dataSource={data}
-      onCellClick={onCellClick}
-      expandableConfig={expandableConfig}
-      rowKey={(record: ICircuit) => `derived-hierarchy-${record.id}`}
-    />
+    <div className="flex flex-col gap-2">
+      <div className="ml-2 flex flex-row items-center gap-2">
+        <ArrowReturnRight className="text-neutral-3 text-3xl" />
+        <div className="text-neutral-3 text-lg font-semibold uppercase">
+          {getCircuitDerivationLabel(derivationType)}
+        </div>
+      </div>
+      <BaseTable
+        loading={false}
+        wrapperClassname="[&_.ant-table-body]:max-h-full!"
+        columns={columns}
+        dataType={ExtendedEntitiesTypeDict.Circuit}
+        dataSource={circuits}
+        onCellClick={onCellClick}
+        expandableConfig={expandableConfig}
+      />
+    </div>
   );
 }

@@ -1,8 +1,10 @@
+import { MorphoViewerSignals } from '@openbraininstitute/morphoviewer';
 import dynamic from 'next/dynamic';
 import React from 'react';
 
 export {
   MorphologyCanvas,
+  MorphoViewerSignals,
   MorphoViewerTreeItemType,
   morphoViewerConvertMorphologyIntoTree,
   TgdColor,
@@ -16,6 +18,7 @@ export type {
   MorphoViewerOctreeProps,
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
+  MorphoViewerSnapshotOptions,
   MorphoViewerSynapsesGroup,
   MorphoViewerTree,
   MorphoViewerTreeItem,
@@ -40,6 +43,13 @@ export const MorphoViewerSomasOnly = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSomasOnly),
   { ssr: false }
 );
+
+/** stable per-component signal bus for driving a viewer (camera reset, snapshot) */
+export function useMorphoViewerSignals(): MorphoViewerSignals {
+  const ref = React.useRef<MorphoViewerSignals | null>(null);
+  if (!ref.current) ref.current = new MorphoViewerSignals();
+  return ref.current;
+}
 
 export function useMorphoViewerDebugMode(): boolean {
   const [debugMode, setDebugMode] = React.useState(false);

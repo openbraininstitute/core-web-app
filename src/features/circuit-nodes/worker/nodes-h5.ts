@@ -1,15 +1,16 @@
 import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
-import type {
-  ColumnFilter,
-  ColumnKind,
-  ColumnMeta,
-  GetRowsRequest,
-  GetRowsResponse,
-  NumberFilter,
-  SortItem,
-  TextFilter,
+import {
+  type ColumnFilter,
+  type ColumnKind,
+  ColumnKindDict,
+  type ColumnMeta,
+  type GetRowsRequest,
+  type GetRowsResponse,
+  type NumberFilter,
+  type SortItem,
+  type TextFilter,
 } from '@/features/circuit-nodes/types';
 
 const SYNTHETIC_NODE_ID = 'node_id';
@@ -438,6 +439,37 @@ export class NodesSession {
       }
     }
     return out;
+  }
+
+  /**
+   * read a whole column in node-index order.
+   * used to color the 3D viewers by a node property (values align 1:1 with the circuit's node index).
+   */
+  getColumnValues(name: string): { kind: ColumnKind; values: (string | number)[] } {
+    const handle = this.columnIndex.get(name);
+    if (!handle) return { kind: ColumnKindDict.String, values: [] };
+
+    if (handle.kind === ColumnKindDict.SyntheticNodeId) {
+      const values = new Array<number>(this.rowCount);
+      for (let i = 0; i < this.rowCount; i++) values[i] = i;
+      return { kind: ColumnKindDict.Numeric, values };
+    }
+
+    const data = this.loadColumn(name);
+    if (handle.kind === ColumnKindDict.Categorical) {
+      const arr = data as Uint32Array;
+      const lib = handle.library;
+      const values = new Array<string>(arr.length);
+      for (let i = 0; i < arr.length; i++) values[i] = lib[arr[i]] ?? String(arr[i]);
+      return { kind: ColumnKindDict.Categorical, values };
+    }
+    if (handle.kind === ColumnKindDict.Numeric) {
+      return {
+        kind: ColumnKindDict.Numeric,
+        values: Array.from(data as Float32Array | Float64Array),
+      };
+    }
+    return { kind: ColumnKindDict.String, values: [...(data as string[])] };
   }
 }
 
