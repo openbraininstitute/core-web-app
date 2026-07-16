@@ -164,26 +164,29 @@ export function CollapsibleMessage({
 
   const collapsedChildren: React.ReactNode[] = [];
   const visibleChildren: React.ReactNode[] = [];
+  const animatingChildren: React.ReactNode[] = [];
 
   children.forEach((child, index) => {
     if (child === null || child === undefined) return;
 
     if (animatingIndices.has(index)) {
-      visibleChildren.push(
-        <div
-          key={`animating-${index}`}
-          className={styles.slideToCollapsible}
-          data-collapsing="true"
-        >
-          <div className={styles.slideToCollapsibleInner}>{child}</div>
-        </div>
-      );
+      animatingChildren.push(<React.Fragment key={`animating-${index}`}>{child}</React.Fragment>);
     } else if (index < lastStepStartIndex) {
       collapsedChildren.push(<div key={`collapsed-${index}`}>{child}</div>);
     } else {
       visibleChildren.push(child);
     }
   });
+
+  // Wrap all animating items in a single collapse wrapper so margins between
+  // them still collapse naturally (no per-item BFC isolation).
+  if (animatingChildren.length > 0) {
+    visibleChildren.unshift(
+      <div key="animating-group" className={styles.slideToCollapsible} data-collapsing="true">
+        <div className={styles.slideToCollapsibleInner}>{animatingChildren}</div>
+      </div>
+    );
+  }
 
   const toggleExpanded = () => {
     const next = !isExpanded;
