@@ -305,7 +305,11 @@ export function CollapsibleMessage({
           </div>
         </div>
       )}
-      <div className={styles.contentWrapper} data-visible-tools="true">
+      <div
+        className={styles.contentWrapper}
+        data-visible-tools="true"
+        data-instant={mountedAsReady.current}
+      >
         {visibleChildren}
       </div>
     </>

@@ -32,6 +32,7 @@
   grid-template-rows: 0fr;
   animation: gridGrow 500ms ease-out forwards;
   overflow: hidden;
+  will-change: grid-template-rows, opacity;
 }
 
 .standaloneStreamingOuter > * {

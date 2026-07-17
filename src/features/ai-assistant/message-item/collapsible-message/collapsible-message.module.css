@@ -1,6 +1,7 @@
 .thinkingContainerWrapper {
   display: grid;
   grid-template-rows: 0fr;
+  will-change: grid-template-rows;
   animation: expandRow 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
@@ -316,12 +317,15 @@
 .slideToCollapsible {
   display: grid;
   grid-template-rows: 1fr;
+  overflow: clip;
+  will-change: grid-template-rows, opacity;
   animation: slideUpToCollapsible 300ms cubic-bezier(0.4, 0, 0.2, 1) 150ms forwards;
 }
 
 .slideToCollapsibleInner {
   overflow: clip;
   min-height: 0;
+  animation: slideInnerUp 300ms cubic-bezier(0.4, 0, 0.2, 1) 150ms forwards;
 }
 
 /* Prevent Streamdown's [data-sd-animate] fadeIn from re-triggering when
@@ -360,11 +364,20 @@
     grid-template-rows: 1fr;
     opacity: 1;
   }
-  40% {
+  60% {
     opacity: 0;
   }
   100% {
     grid-template-rows: 0fr;
     opacity: 0;
+  }
+}
+
+@keyframes slideInnerUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-70px);
   }
 }

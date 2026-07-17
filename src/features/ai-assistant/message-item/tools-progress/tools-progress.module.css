@@ -1,8 +1,32 @@
 .container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 1fr;
   padding: 1px 0;
   margin: 6px 0;
+}
+
+/* Smooth height entrance when a tool card appears during streaming.
+   The grid grows from 0fr to 1fr, progressively taking layout space. */
+[data-visible-tools] .container {
+  grid-template-rows: 0fr;
+  animation: tp-container-grow 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+[data-visible-tools] .container > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Skip grow animation for messages loaded from history */
+[data-instant="true"] .container {
+  animation: none;
+  grid-template-rows: 1fr;
+}
+
+/* Skip the grow animation when items are collapsing into the reasoning box */
+[data-collapsing] .container {
+  animation: none;
+  grid-template-rows: 1fr;
 }
 
 .card {
@@ -21,6 +45,10 @@
 }
 
 [data-collapsing] .card {
+  animation: none;
+}
+
+[data-instant="true"] .card {
   animation: none;
 }
 
@@ -830,4 +858,13 @@
 .approvalBarApprove:hover {
   background-color: rgba(74, 224, 90, 0.25);
   border-color: #4ae05a;
+}
+
+@keyframes tp-container-grow {
+  0% {
+    grid-template-rows: 0fr;
+  }
+  100% {
+    grid-template-rows: 1fr;
+  }
 }
