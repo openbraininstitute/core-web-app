@@ -460,7 +460,7 @@
 
 .detailsClosed {
   grid-template-rows: 0fr;
-  border-top-color: transparent;
+  border-top: none;
   opacity: 0;
 }
 
