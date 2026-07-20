@@ -64,6 +64,7 @@ import {
   useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
+import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
@@ -199,7 +200,7 @@ export function BrowseEntityScope({
 
   // Fetch virtual lab data for delete button logic
   const { data: virtualLabData } = useQuery({
-    queryKey: ['virtualLab', virtualLabId],
+    queryKey: workspaceKeyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: !!virtualLabId,
     staleTime: 1000 * 60 * 5, // 5 minutes

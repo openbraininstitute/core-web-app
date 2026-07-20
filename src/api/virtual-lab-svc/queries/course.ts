@@ -35,7 +35,7 @@ export interface Course {
   start_date: string;
   end_date: string;
   last_drop_date: string;
-  credits_per_seat?: number;
+  credits_per_seat: number;
 }
 
 export interface SeatsResponse {
@@ -80,6 +80,19 @@ export interface DropResult {
 
 export interface DropSeatsResponse {
   results: DropResult[];
+}
+
+export interface ClaimResponseCourse extends Course {
+  virtual_lab_name?: string;
+}
+
+export interface ClaimResponseData {
+  course?: ClaimResponseCourse;
+  project_id?: string;
+}
+
+export interface ClaimResponse {
+  data: ClaimResponseData;
 }
 
 export async function fetchSeats(courseId: string): Promise<SeatsResponse> {

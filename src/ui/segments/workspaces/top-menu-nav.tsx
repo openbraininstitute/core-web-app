@@ -168,10 +168,7 @@ export function TopMenuNavigation() {
   const { data: userGroups } = useQuery({
     queryKey: userKeyBuilder.groups(),
     queryFn: () => getUserGroups(),
-    gcTime: 0,
-    staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: 'always',
+    staleTime: 1000 * 60 * 5,
   });
 
   const hasCourse = virtualLabData?.course;

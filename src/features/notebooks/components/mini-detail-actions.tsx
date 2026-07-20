@@ -44,6 +44,7 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 
 function MiniActionIcon({
   label,
@@ -132,7 +133,8 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
 
   const canDelete =
     isPrivate &&
-    (!virtualLabData?.course || virtualLabData.course.template_project_id === projectId);
+    !!virtualLabData &&
+    (!virtualLabData.course || virtualLabData.course.template_project_id === projectId);
 
   const notebookName = 'name' in record ? (record.name as string) : '';
   const isCourseTemplateProject =
@@ -201,10 +203,10 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         predicate(query) {
-          const first = query.queryKey[0] as
-            | { context?: { extendedEntityType?: string } }
-            | undefined;
-          return first?.context?.extendedEntityType === record.type;
+          return (
+            (query.queryKey as ExtendedEntityTypeQueryKey)[0]?.context?.extendedEntityType ===
+            record.type
+          );
         },
       });
       setMdv(false);

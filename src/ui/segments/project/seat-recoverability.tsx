@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 
+import { RECOVERABLE_SEAT_MAX_SPEND } from '@/constants';
 import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -70,14 +71,16 @@ export function SeatRecoverability({ course, enrolment }: SeatRecoverabilityProp
     return <Skeleton className="h-4 w-24" />;
   }
 
-  const creditThreshold = (course.credits_per_seat ?? 50) - 50;
+  const creditThreshold = course.credits_per_seat - RECOVERABLE_SEAT_MAX_SPEND;
   const hasSpentMoreThanThreshold = typeof balance === 'number' && balance < creditThreshold;
 
   if (hasSpentMoreThanThreshold) {
     return (
       <div className="flex items-center gap-2">
         <span className="font-semibold text-red-800">No</span>
-        <span className="text-xs text-gray-600">(Project has spent more than 50 credits)</span>
+        <span className="text-xs text-gray-600">
+          {`(Project has spent more than ${RECOVERABLE_SEAT_MAX_SPEND} credits)`})
+        </span>
       </div>
     );
   }

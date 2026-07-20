@@ -1,12 +1,14 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { authFetch } from '@/auth-fetch';
 import { ErrorComponent } from '@/components/GenericErrorFallback';
 import { useConfig } from '@/config';
 import { Button } from '@/ui/molecules/button';
+
+import type { ClaimResponse } from '@/api/virtual-lab-svc/queries/course';
 
 interface ClaimError {
   message: string;
@@ -29,7 +31,12 @@ export default function CourseEnrolmentPage() {
   const [success, setSuccess] = useState<ClaimSuccessData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const claimed = useRef(false);
+
   useEffect(() => {
+    if (claimed.current) return;
+    claimed.current = true;
+
     const claim = async () => {
       if (!enrolmentId) {
         setError({
@@ -58,7 +65,7 @@ export default function CourseEnrolmentPage() {
           return;
         }
 
-        const responseData = await response.json();
+        const responseData: ClaimResponse = await response.json();
         const data = responseData.data;
 
         // Check if course has started
@@ -75,15 +82,15 @@ export default function CourseEnrolmentPage() {
                 'content-type': 'application/json',
               },
             });
-          } catch (error) {
-            console.error('Failed to activate enrolments', error);
+          } catch (_) {
+            // Activation failure is non-blocking; user is redirected regardless.
           }
-          router.push(`/app/virtual-lab/${data.course.virtual_lab_id}/${data.project_id}`);
+          router.push(`${config.ROOT_ROUTE}/${data.course?.virtual_lab_id}/${data.project_id}`);
         } else {
           // Course hasn't started yet - show success message
           setSuccess({
-            virtual_lab_id: data.course.virtual_lab_id,
-            project_id: data.project_id,
+            virtual_lab_id: data.course?.virtual_lab_id ?? '',
+            project_id: data.project_id ?? '',
             course_name: data.course?.virtual_lab_name || 'Course',
             start_date: data.course?.start_date,
           });
@@ -99,7 +106,7 @@ export default function CourseEnrolmentPage() {
     };
 
     claim();
-  }, [enrolmentId, config.VIRTUAL_LAB_API_URL, router]);
+  }, [enrolmentId, config.VIRTUAL_LAB_API_URL, config.ROOT_ROUTE, router]);
 
   if (loading) {
     return (
@@ -123,7 +130,7 @@ export default function CourseEnrolmentPage() {
           <div className="mt-6">
             <Button
               onClick={() => {
-                router.push('/app/virtual-lab/sync');
+                router.push(`${config.ROOT_ROUTE}/sync`);
               }}
             >
               Go to home
@@ -170,7 +177,7 @@ export default function CourseEnrolmentPage() {
           )}
           <Button
             onClick={() => {
-              router.push('/app/virtual-lab/sync');
+              router.push(`${config.ROOT_ROUTE}/sync`);
             }}
           >
             Go to home

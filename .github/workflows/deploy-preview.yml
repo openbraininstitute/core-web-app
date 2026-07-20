@@ -206,7 +206,7 @@ jobs:
 
             let status = 'PENDING';
             const startTime = Date.now();
-            const maxWaitTime = 20 * 60 * 1000; // 20 minutes
+            const maxWaitTime = 15 * 60 * 1000; // 15 minutes
 
             while (true) {
               const job = getJobStatus();
@@ -226,7 +226,7 @@ jobs:
 
               if (Date.now() - startTime > maxWaitTime) {
                 await updateComment('FAILED', process.env.PREVIEW_URL, durationStr);
-                core.setFailed('Build timeout after 20 minutes');
+                core.setFailed('Build timeout after 15 minutes');
                 break;
               }
 

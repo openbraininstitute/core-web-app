@@ -1,7 +1,7 @@
 'use client';
 
+import { useRouter } from '@bprogress/next';
 import { Form } from 'antd';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/ui/molecules/button';
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';

@@ -1,20 +1,77 @@
 'use client';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { redirect, useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { fetchEnrolments, fetchSeats } from '@/api/virtual-lab-svc/queries/course';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AssignSeatsModal } from '@/ui/segments/project/course-assign-seats-modal';
 import { DropSeatButton } from '@/ui/segments/project/drop-seat-button';
 import { SeatRecoverability } from '@/ui/segments/project/seat-recoverability';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 type SortField = 'email' | 'student_id' | 'status' | 'activated' | 'dropped' | 'created' | 'seat';
 type SortOrder = 'asc' | 'desc';
+
+function SortableHeader({
+  field,
+  label,
+  sortField,
+  sortOrder,
+  onSort,
+}: {
+  field: SortField;
+  label: string;
+  sortField: SortField;
+  sortOrder: SortOrder;
+  onSort: (field: SortField) => void;
+}) {
+  const isActive = sortField === field;
+
+  return (
+    <th
+      className="cursor-pointer select-none px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-100"
+      tabIndex={0}
+      onClick={() => onSort(field)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSort(field);
+        }
+      }}
+    >
+      <div className="inline-flex items-center gap-2">
+        <span className={isActive ? 'text-gray-900' : 'text-gray-700'}>{label}</span>
+        <svg
+          className={`size-4 transition-transform ${isActive ? (sortOrder === 'asc' ? 'text-primary-9' : 'rotate-180 text-primary-9') : 'text-gray-400'}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <title>
+            {isActive
+              ? sortOrder === 'asc'
+                ? 'Sort ascending'
+                : 'Sort descending'
+              : 'Sortable column'}
+          </title>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16V4m0 0L3 8m4-4l4 4"
+          />
+        </svg>
+      </div>
+    </th>
+  );
+}
 
 export default function CoursePage() {
   const params = useParams();
@@ -24,15 +81,12 @@ export default function CoursePage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const queryClient = useQueryClient();
 
-  const handleAssignSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
-    queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
-  };
+  const userGroupsQuery = useQuery({
+    queryKey: keyBuilder.membership(),
+    queryFn: getUserGroups,
+  });
 
-  const handleDropSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ['seats', courseId] });
-    queryClient.invalidateQueries({ queryKey: ['enrolments', courseId] });
-  };
+  const { isVirtualLabAdmin } = makeRoles(userGroupsQuery.data, virtualLabId, undefined);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -43,62 +97,38 @@ export default function CoursePage() {
     }
   };
 
-  const SortableHeader = ({ field, label }: { field: SortField; label: string }) => {
-    const isActive = sortField === field;
-
-    return (
-      <th
-        className="cursor-pointer select-none px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-100"
-        onClick={() => handleSort(field)}
-      >
-        <div className="inline-flex items-center gap-2">
-          <span className={isActive ? 'text-gray-900' : 'text-gray-700'}>{label}</span>
-          <svg
-            className={`size-4 transition-transform ${isActive ? (sortOrder === 'asc' ? 'text-primary-9' : 'rotate-180 text-primary-9') : 'text-gray-400'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <title>
-              {isActive
-                ? sortOrder === 'asc'
-                  ? 'Sort ascending'
-                  : 'Sort descending'
-                : 'Sortable column'}
-            </title>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16V4m0 0L3 8m4-4l4 4"
-            />
-          </svg>
-        </div>
-      </th>
-    );
-  };
-
   // Fetch virtual lab to get course ID
   const labQuery = useQuery({
-    queryKey: ['virtualLab', virtualLabId],
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: !!virtualLabId,
   });
 
   const courseId = labQuery.data?.course?.id;
 
+  const handleCourseDataChange = () => {
+    queryClient.invalidateQueries({ queryKey: keyBuilder.seats({ courseId: courseId as string }) });
+    queryClient.invalidateQueries({
+      queryKey: keyBuilder.enrolments({ courseId: courseId as string }),
+    });
+  };
+
   // Fetch seats and enrolments using the course ID
   const seatsQuery = useQuery({
-    queryKey: ['seats', courseId],
+    queryKey: keyBuilder.seats({ courseId: courseId as string }),
     queryFn: () => fetchSeats(courseId as string),
     enabled: !!courseId,
   });
 
   const enrolmentsQuery = useQuery({
-    queryKey: ['enrolments', courseId],
+    queryKey: keyBuilder.enrolments({ courseId: courseId as string }),
     queryFn: () => fetchEnrolments(courseId as string),
     enabled: !!courseId,
   });
+
+  if (!userGroupsQuery.isError && !isVirtualLabAdmin) {
+    redirect('/app/virtual-lab/forbidden');
+  }
 
   if (labQuery.isPending) {
     return (
@@ -354,13 +384,55 @@ export default function CoursePage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <SortableHeader field="email" label="Student email" />
-                  <SortableHeader field="student_id" label="Student ID" />
-                  <SortableHeader field="status" label="Status" />
-                  <SortableHeader field="activated" label="Activated" />
-                  <SortableHeader field="dropped" label="Dropped" />
-                  <SortableHeader field="created" label="Created" />
-                  <SortableHeader field="seat" label="Occupies seat" />
+                  <SortableHeader
+                    field="email"
+                    label="Student email"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="student_id"
+                    label="Student ID"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="status"
+                    label="Status"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="activated"
+                    label="Activated"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="dropped"
+                    label="Dropped"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="created"
+                    label="Created"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    field="seat"
+                    label="Occupies seat"
+                    sortField={sortField}
+                    sortOrder={sortOrder}
+                    onSort={handleSort}
+                  />
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Seat recoverable (reason)
                   </th>
@@ -422,7 +494,7 @@ export default function CoursePage() {
                           course={course}
                           courseId={courseId}
                           enrolment={enrolment}
-                          onSuccess={handleDropSuccess}
+                          onSuccess={handleCourseDataChange}
                         />
                       )}
                     </td>
@@ -439,7 +511,7 @@ export default function CoursePage() {
         courseId={courseId}
         enrolments={enrolments}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={handleAssignSuccess}
+        onSuccess={handleCourseDataChange}
       />
     </div>
   );

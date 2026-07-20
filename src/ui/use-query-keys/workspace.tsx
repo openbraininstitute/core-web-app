@@ -137,4 +137,6 @@ export const keyBuilder = {
     pageSize?: number;
     category: TExtendedEntitiesTypeDict;
   }) => [`${prefix}/bookmark-categories`, { virtualLabId, projectId, category, page, pageSize }],
+  seats: ({ courseId }: { courseId: string }) => [`${prefix}/course-seats`, { courseId }],
+  enrolments: ({ courseId }: { courseId: string }) => [`${prefix}/course-enrolments`, { courseId }],
 };
