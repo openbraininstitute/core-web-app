@@ -68,8 +68,6 @@ export interface ViewerConfig {
    * remain readable over the circuit.
    */
   neuronOpacity: number;
-  /** Horizontal floor/ground grid under the circuit. Default off. */
-  showGroundGrid: boolean;
   /** Show electrode location overlays when present. Default on. */
   showElectrodes: boolean;
   /**

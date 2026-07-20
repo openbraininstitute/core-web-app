@@ -33,9 +33,6 @@ export interface ViewerControlsMenuProps {
   /** neuron / soma opacity (0–1); omit to hide the control */
   neuronOpacity?: number;
   onNeuronOpacityChange?: (value: number) => void;
-  /** horizontal floor/ground grid under the circuit */
-  showGroundGrid?: boolean;
-  onToggleGroundGrid?: (value: boolean) => void;
   /** electrode location overlays — omit when none are available */
   showElectrodes?: boolean;
   onToggleElectrodes?: (value: boolean) => void;
@@ -66,8 +63,6 @@ export function ViewerControlsMenu({
   onToggleAxons,
   neuronOpacity,
   onNeuronOpacityChange,
-  showGroundGrid,
-  onToggleGroundGrid,
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
@@ -183,6 +178,11 @@ export function ViewerControlsMenu({
               <Switch size="small" checked={!!showElectrodes} onChange={onToggleElectrodes} />
             </MenuRow>
           )}
+          {onToggleElectrodes && showElectrodes !== false && (
+            <p className="px-2 pb-1 text-[11px] leading-snug text-neutral-500">
+              Drag to move · Right-drag to rotate
+            </p>
+          )}
           {onElectrodeRadiusChange && electrodeRadius !== undefined && showElectrodes !== false && (
             <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
               <div className="flex items-center justify-between gap-2">
@@ -199,11 +199,6 @@ export function ViewerControlsMenu({
                 disabled={showElectrodes === false}
               />
             </div>
-          )}
-          {onToggleGroundGrid && (
-            <MenuRow label="Ground grid" icon={<GridIcon className="size-4 shrink-0" />}>
-              <Switch size="small" checked={!!showGroundGrid} onChange={onToggleGroundGrid} />
-            </MenuRow>
           )}
           {onNeuronOpacityChange && neuronOpacity !== undefined && (
             <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
@@ -347,23 +342,6 @@ function MenuRow({
       </span>
       {children}
     </div>
-  );
-}
-
-function GridIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.25"
-      className={className}
-      aria-hidden
-    >
-      <title>Ground grid</title>
-      <rect x="2" y="2" width="12" height="12" rx="1" />
-      <path d="M2 6.5h12M2 9.5h12M6.5 2v12M9.5 2v12" />
-    </svg>
   );
 }
 

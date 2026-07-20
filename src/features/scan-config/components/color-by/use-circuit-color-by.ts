@@ -151,8 +151,6 @@ export function useCircuitColorBy(
       onToggleAxons: supportsAxons ? (value) => update({ showAxons: value }) : undefined,
       neuronOpacity: config.neuronOpacity,
       onNeuronOpacityChange: (value) => update({ neuronOpacity: value }),
-      showGroundGrid: config.showGroundGrid,
-      onToggleGroundGrid: (value) => update({ showGroundGrid: value }),
       showElectrodes: supportsElectrodes ? config.showElectrodes : undefined,
       onToggleElectrodes: supportsElectrodes
         ? (value) => update({ showElectrodes: value })
@@ -171,7 +169,6 @@ export function useCircuitColorBy(
       backgroundDark,
       config.showAxons,
       config.neuronOpacity,
-      config.showGroundGrid,
       config.showElectrodes,
       config.electrodeRadius,
       supportsAxons,

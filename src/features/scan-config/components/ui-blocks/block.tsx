@@ -113,7 +113,7 @@ export default function Block({
                   )}
                   data-scan-config-block-element={blockElementSchema.ui_element}
                 >
-                  <div className="flex gap-3 w-full items-center mb-2">
+                  <div className="flex gap-0.5 w-full items-center mb-2">
                     <div
                       className="text-primary-9 text-base font-semibold uppercase"
                       title={blockElementSchema.description}
