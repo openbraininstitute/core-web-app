@@ -42,6 +42,7 @@ type Props = {
   selectedEntry: string;
   selectedRootElement: string;
   config: Config;
+  setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
 };
 
 export function Right({
@@ -51,6 +52,7 @@ export function Right({
   selectedEntry,
   selectedRootElement,
   config,
+  setConfig,
 }: Props) {
   const {
     preview: entityPreview,
@@ -113,7 +115,13 @@ export function Right({
           entity &&
           entityType === ExtendedEntitiesTypeDict.Circuit)) && (
         <div className="rounded-lg h-full" id="scan-config-right-model-preview">
-          <ModelPreview model={entity} config={config} />
+          <ModelPreview
+            model={entity}
+            config={config}
+            setConfig={setConfig}
+            selectedRootElement={selectedRootElement}
+            selectedEntry={selectedEntry}
+          />
         </div>
       )}
     </div>

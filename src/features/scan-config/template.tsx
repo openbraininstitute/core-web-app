@@ -310,6 +310,7 @@ function ScanConfigTemplateContent({
               selectedEntry={selectedEntry}
               selectedRootElement={selectedRootElement}
               config={config}
+              setConfig={setConfig}
             />
           </div>
         </div>

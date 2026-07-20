@@ -1,5 +1,7 @@
+import { useSetAtom } from 'jotai';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
@@ -10,7 +12,7 @@ import { sequentialCellLoader } from './sequential-loader';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
-import type { MorphoViewerSignals } from '@/morpho-viewer';
+import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './circuit-viz.module.css';
 
@@ -26,13 +28,29 @@ interface CircuitVizProps {
   scalebarColor?: string;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
-  /** World-coordinate electrode (or other) point overlays. */
+  /**
+   * World-coordinate electrode overlays from {@link useElectrodeLocationsOverlay}.
+   * Passed through to morphoviewer as point clouds (not Three.js helpers).
+   */
   overlays?: CircuitOverlayGroup[];
-  /** Neuron paint opacity (0–1). */
+  /**
+   * Enable left-drag (translate) / right-drag or Alt/Shift (rotate) on overlays.
+   * Why gated: only when `setConfig` exists so 3D edits can write the form.
+   */
+  overlaysInteractive?: boolean;
+  /**
+   * Fired by morphoviewer on gesture end with absolute origin + rotation.
+   * Host applies via {@link applyElectrodeOverlayTransform}.
+   */
+  onOverlayTransform?: (event: MorphoViewerOverlayTransformEvent) => void;
+  /** Form-selected electrode block name → highlight in the 3D view. */
+  highlightedOverlayId?: string | null;
+  /**
+   * Neuron paint opacity (0–1). Default low (~0.2) so electrodes stay readable;
+   * electrode markers themselves stay fully opaque regardless of this value.
+   */
   neuronOpacity?: number;
-  /** Show horizontal floor/ground grid. */
-  showGroundGrid?: boolean;
-  /** Electrode marker radius (world units). */
+  /** Electrode marker radius in world units (morphoviewer `overlaysRadius`). */
   electrodeRadius?: number;
 }
 
@@ -45,8 +63,10 @@ const CircuitViz = ({
   scalebarColor,
   signals,
   overlays,
+  overlaysInteractive = false,
+  onOverlayTransform,
+  highlightedOverlayId = null,
   neuronOpacity,
-  showGroundGrid = false,
   electrodeRadius = 25,
 }: CircuitVizProps) => {
   const [progress, setProgress] = useState(0);
@@ -56,6 +76,21 @@ const CircuitViz = ({
     colorsByNode,
     defaultColor
   );
+  const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
+  // Publish circuit centre so Add-electrode can seed origin_* in-view.
+  useEffect(() => {
+    if (!circuit?.length) return;
+    let sx = 0;
+    let sy = 0;
+    let sz = 0;
+    for (const cell of circuit) {
+      sx += cell.center[0];
+      sy += cell.center[1];
+      sz += cell.center[2];
+    }
+    const n = circuit.length;
+    setCircuitSceneAnchor([sx / n, sy / n, sz / n]);
+  }, [circuit, setCircuitSceneAnchor]);
   const scalebar = useMemo(
     () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
     [scalebarColor]
@@ -76,9 +111,17 @@ const CircuitViz = ({
 
   const loading = !error && (isLoading || progress < 1);
 
-  // morphoviewer overlays omit the local `name` field; strip before passing.
+  // Pass interactive metadata through; morphoviewer ignores unknown fields safely.
   const morphoOverlays = useMemo(
-    () => overlays?.map(({ color, coordinates }) => ({ color, coordinates })),
+    () =>
+      overlays?.map(({ color, coordinates, id, kind, origin, rotation }) => ({
+        color,
+        coordinates,
+        id,
+        kind,
+        origin,
+        rotation,
+      })),
     [overlays]
   );
 
@@ -100,8 +143,10 @@ const CircuitViz = ({
           overlays={morphoOverlays}
           overlaysRadius={electrodeRadius}
           overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
+          overlaysInteractive={overlaysInteractive}
+          onOverlayTransform={onOverlayTransform}
+          highlightedOverlayId={highlightedOverlayId}
           neuronOpacity={neuronOpacity}
-          groundGrid={showGroundGrid}
         />
       )}
       {loading && <VisualizationLoadingIndicator progress={progress} />}

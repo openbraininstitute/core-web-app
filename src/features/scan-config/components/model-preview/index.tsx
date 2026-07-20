@@ -11,10 +11,19 @@ import type { Config, TSupportedEntitiesForScanConfiguration } from '@/features/
 export function ModelPreview({
   model,
   config,
+  setConfig,
+  selectedRootElement,
+  selectedEntry,
 }: {
   model: TSupportedEntitiesForScanConfiguration;
   /** Live scan-config (used for electrode_locations overlays). */
   config?: Config;
+  /** When set, electrode drag/rotate in the 3D view writes back to the form. */
+  setConfig?: (newConfig: Config | ((prev: Config) => Config)) => void;
+  /** Schema root currently selected in the form (e.g. `electrode_locations`). */
+  selectedRootElement?: string;
+  /** Dictionary entry name currently selected (overlay id when electrodes). */
+  selectedEntry?: string;
 }) {
   return match(model)
     .with({ type: EntityTypeDict.Memodel }, () => (
@@ -34,12 +43,24 @@ export function ModelPreview({
           CircuitScaleDictionary.SmallMicrocircuit
         ),
       },
-      () => <CircuitPreview circuit={model as ICircuit} config={config} enableVisualization />
+      () => (
+        <CircuitPreview
+          circuit={model as ICircuit}
+          config={config}
+          setConfig={setConfig}
+          selectedRootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          enableVisualization
+        />
+      )
     )
     .with({ type: EntityTypeDict.Circuit }, () => (
       <CircuitPreview
         circuit={model as ICircuit}
         config={config}
+        setConfig={setConfig}
+        selectedRootElement={selectedRootElement}
+        selectedEntry={selectedEntry}
         enableVisualization
         largeCircuit
       />
