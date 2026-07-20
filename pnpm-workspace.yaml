@@ -14,4 +14,4 @@ minimumReleaseAgeExclude:
 blockExoticSubdeps: true
 verifyDepsBeforeRun: error
 overrides:
-  '@openbraininstitute/morphoviewer': file:vendor/openbraininstitute-morphoviewer-0.33.4.tgz
+  '@openbraininstitute/morphoviewer': file:vendor/openbraininstitute-morphoviewer-0.31.0.tgz

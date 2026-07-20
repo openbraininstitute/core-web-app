@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@openbraininstitute/morphoviewer': file:vendor/openbraininstitute-morphoviewer-0.33.4.tgz
+  '@openbraininstitute/morphoviewer': file:vendor/openbraininstitute-morphoviewer-0.31.0.tgz
 
 importers:
 
@@ -60,8 +60,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: file:vendor/openbraininstitute-morphoviewer-0.33.4.tgz
-        version: file:vendor/openbraininstitute-morphoviewer-0.33.4.tgz(react@19.2.6)
+        specifier: file:vendor/openbraininstitute-morphoviewer-0.31.0.tgz
+        version: file:vendor/openbraininstitute-morphoviewer-0.31.0.tgz(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -2745,9 +2745,9 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.33.4.tgz':
-    resolution: {integrity: sha512-lQPmSDNwgGQHH0BTKswvMuG1DcVebVT7pCAvrWGCuWWT10/kYadIKaaCJYoAXkmXo4KhNv15OjqSVYnnZGd7MA==, tarball: file:vendor/openbraininstitute-morphoviewer-0.33.4.tgz}
-    version: 0.33.4
+  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.31.0.tgz':
+    resolution: {integrity: sha512-zEHmJz5cCx6eMzcGdLGLv4f8fyt5ST6ou8oH/kWyt+opAbbmVtE+jtqaAYK/1i1G/AQNqDCVJh1iv5p/T7la/w==, tarball: file:vendor/openbraininstitute-morphoviewer-0.31.0.tgz}
+    version: 0.31.0
     peerDependencies:
       react: ^19.2.5
 
@@ -5022,6 +5022,9 @@ packages:
 
   '@tolokoban/tgd@2.2.0':
     resolution: {integrity: sha512-SminZtYAn5GZxfaEMRPW1SVl29HFzAlYeChWWq4/Rm81UzhjCY8s5F7PcbZuNl13TD7wREld3Y+Ea+WZf+W13Q==}
+
+  '@tolokoban/tgd@2.4.0':
+    resolution: {integrity: sha512-K/hDSvKmoqZ1LIamFhIfdHWNrkcpkLH7pJptJKkPOPnbmdpEBEOtsI+aiZMUVMEgKKGmOaM30eJvVNBRLEFSDA==}
 
   '@turf/area@7.3.5':
     resolution: {integrity: sha512-sSn80wPT7XfBIDN3vurCPxhk9W4U8ozS/XImSqeLN8qveTICOxzZkhsGDMp0CuncaN+plWut4a2TdNM7mzZB6Q==}
@@ -13174,9 +13177,9 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.33.4.tgz(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.31.0.tgz(react@19.2.6)':
     dependencies:
-      '@tolokoban/tgd': 2.2.0
+      '@tolokoban/tgd': 2.4.0
       fflate: 0.8.3
       react: 19.2.6
       tslib: 2.8.1
@@ -15721,6 +15724,15 @@ snapshots:
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
 
   '@tolokoban/tgd@2.2.0':
+    dependencies:
+      '@loaders.gl/core': 4.4.1
+      '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
+      '@loaders.gl/gltf': 4.4.1(@loaders.gl/core@4.4.1)
+      gl-matrix: 3.4.4
+    transitivePeerDependencies:
+      - '@75lb/nature'
+
+  '@tolokoban/tgd@2.4.0':
     dependencies:
       '@loaders.gl/core': 4.4.1
       '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
