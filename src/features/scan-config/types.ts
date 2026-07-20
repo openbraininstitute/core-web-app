@@ -154,6 +154,7 @@ export const ScanConfigUIElementDict = {
   StringSelectionEnhanced: 'string_selection_enhanced',
   NeuronPropertyFilter: 'neuron_property_filter',
   NeuronSetCombination: 'neuron_set_combination',
+  MorphologySectionTypeSelection: 'morphology_section_type_selection',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -280,6 +281,13 @@ export interface SelectRecordableIonChannelVariable extends TBlockElement {
 export interface NeuronIds extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronIds;
 }
+
+export interface MorphologySectionTypeSelection extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.MorphologySectionTypeSelection;
+  property: string;
+  /** key into `schema.property_endpoints` resolving the discovery endpoint (`MorphologySource`) */
+  property_group: string;
+}
 export interface IonChannelRangeVariableModification extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ionChannelVariableModificationBySectionList;
   description: string;
@@ -379,6 +387,7 @@ export type ParamSchema =
   | IonChannelGlobalVariableModification
   | ModelSelectorSingle
   | SelectRecordableIonChannelVariable
+  | MorphologySectionTypeSelection
   | VoltageDuration
   | StringSelectionEnhanced
   | NeuronPropertyFilter
