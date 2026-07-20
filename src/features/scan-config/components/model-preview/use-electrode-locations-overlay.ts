@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -21,14 +21,22 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   type CircuitOverlayGroup,
   ELECTRODE_LOCATIONS_CONFIG_KEY,
+  electrodeDictionaryToPlaceholderOverlays,
   electrodeSummaryToOverlays,
   hasElectrodeLocationsDictionary,
+  mergeElectrodeOverlays,
 } from './electrode-locations-overlay';
 
 import type { Config } from '@/features/scan-config/types';
 
-const DEBOUNCE_MS = 350;
+/** Debounce before POSTing `block_dictionary_summary` on live form edits. */
+const DEBOUNCE_MS = 80;
 
+/**
+ * Debounce any value by `delayMs` (used to coalesce rapid origin/rotation edits).
+ *
+ * Why: each keystroke / drag-end would otherwise spam Obi-One summary.
+ */
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -53,6 +61,11 @@ interface Options {
   arrayEntity?: ArrayEntity | null;
 }
 
+/**
+ * Find the `electrode_locations` asset on an entity, if any.
+ *
+ * Why: read-only preview of a stored array entity when the form has no live dict.
+ */
 function findElectrodeLocationsAsset(assets: IAsset[] | undefined): IAsset | undefined {
   return getAssetElement({
     assets,
@@ -63,9 +76,23 @@ function findElectrodeLocationsAsset(assets: IAsset[] | undefined): IAsset | und
 /**
  * Live + stored electrode overlays for the circuit viewer.
  *
- * Discovery is hardcoded to the `electrode_locations` config key (no schema
- * metadata). Live edits POST `block_dictionary_summary` via React Query with a
- * debounced payload; stored arrays fall back to the `electrode_locations` asset.
+ * How:
+ * 1. If `config.electrode_locations` is a non-empty dict → debounce → POST
+ *    `block_dictionary_summary` → {@link electrodeSummaryToOverlays}.
+ * 2. In parallel, build placeholders from the live form so markers appear
+ *    immediately ({@link electrodeDictionaryToPlaceholderOverlays}).
+ * 3. {@link mergeElectrodeOverlays} prefers API geometry per id.
+ * 4. Else fall back to downloading the entity’s `electrode_locations` asset.
+ *
+ * Why `keepPreviousData`: after a 3D move the query key changes; without it the
+ * UI briefly drops to unrotated placeholders (rotation-0 flash).
+ *
+ * @param options.config - Scan-config with optional `electrode_locations`
+ * @param options.arrayEntity - Optional stored array entity for asset fallback
+ * @returns Overlay groups plus availability / loading / error for the chrome
+ *
+ * @example
+ * const { overlays, available } = useElectrodeLocationsOverlay({ config: scanConfig });
  */
 export function useElectrodeLocationsOverlay({ config, arrayEntity }: Options = {}): {
   overlays: CircuitOverlayGroup[];
@@ -108,6 +135,9 @@ export function useElectrodeLocationsOverlay({ config, arrayEntity }: Options = 
     enabled: !!debouncedPayload && !!ctx.virtualLabId && !!ctx.projectId,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    // Keep the last summary while origin/rotation refetch so the probe does not
+    // flash to an unrotated placeholder between drag-end and the new response.
+    placeholderData: keepPreviousData,
   });
 
   const asset = findElectrodeLocationsAsset(arrayEntity?.assets);
@@ -138,13 +168,23 @@ export function useElectrodeLocationsOverlay({ config, arrayEntity }: Options = 
   });
 
   const summary = hasLive ? liveQuery.data : assetQuery.data;
-  const overlays = useMemo(() => electrodeSummaryToOverlays(summary), [summary]);
+  const apiOverlays = useMemo(() => electrodeSummaryToOverlays(summary), [summary]);
+  const placeholderOverlays = useMemo(() => {
+    if (!hasLive || !liveDictionary || typeof liveDictionary !== 'object') return [];
+    return electrodeDictionaryToPlaceholderOverlays(liveDictionary as Record<string, unknown>);
+  }, [hasLive, liveDictionary]);
+  const overlays = useMemo(
+    () => mergeElectrodeOverlays(placeholderOverlays, apiOverlays),
+    [placeholderOverlays, apiOverlays]
+  );
 
   return {
     overlays,
     /** True when live config or a stored asset can supply electrode locations. */
     available: hasLive || Boolean(asset),
-    isLoading: hasLive ? liveQuery.isLoading : assetQuery.isLoading,
+    isLoading: hasLive
+      ? liveQuery.isLoading && placeholderOverlays.length === 0
+      : assetQuery.isLoading,
     error: (hasLive ? liveQuery.error : assetQuery.error) as Error | null,
   };
 }
