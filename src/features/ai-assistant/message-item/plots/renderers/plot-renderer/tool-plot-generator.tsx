@@ -24,6 +24,7 @@ export interface ToolPlotGeneratorProps {
   plotRenderKey?: number | string;
   isAnimating?: boolean;
   isStreaming?: boolean;
+  skipSkeleton?: boolean;
 }
 
 export default function ToolPlotGenerator({
@@ -33,6 +34,7 @@ export default function ToolPlotGenerator({
   plotRenderKey,
   isAnimating,
   isStreaming,
+  skipSkeleton,
 }: ToolPlotGeneratorProps) {
   if (!result) return null;
 
@@ -47,6 +49,7 @@ export default function ToolPlotGenerator({
         plotRenderKey={plotRenderKey}
         isAnimating={isAnimating}
         isStreaming={isStreaming}
+        skipSkeleton={skipSkeleton}
       />
     )
   );
@@ -382,26 +385,32 @@ function CustomPlot({
   plotRenderKey,
   isAnimating,
   isStreaming,
+  skipSkeleton,
 }: {
   className?: string;
   providedData: { content: string; type: string };
   plotRenderKey?: number | string;
   isAnimating?: boolean;
   isStreaming?: boolean;
+  skipSkeleton?: boolean;
 }) {
   const { content, type } = providedData;
   const [plotReady, setPlotReady] = React.useState(false);
   const [fullscreenPlotReady, setFullscreenPlotReady] = React.useState(false);
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
-  // Ensure the scaleIn animation on the skeleton completes before revealing the plot.
-  const [animationDone, setAnimationDone] = React.useState(!isStreaming);
 
+  // Freeze the animation decision at mount time — no re-trigger if isStreaming flips.
+  const shouldAnimateRef = React.useRef(!!isStreaming);
+  const [animationDone, setAnimationDone] = React.useState(!shouldAnimateRef.current);
+
+  // Single-fire timer: runs once on mount if animating. Empty deps = no re-trigger.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional single-fire on mount
   React.useEffect(() => {
-    if (!isStreaming || animationDone) return;
+    if (!shouldAnimateRef.current) return;
     const timer = setTimeout(() => setAnimationDone(true), 500);
     return () => clearTimeout(timer);
-  }, [isStreaming, animationDone]);
+  }, []);
 
   const showPlot = plotReady && animationDone;
 
@@ -470,69 +479,71 @@ function CustomPlot({
     refDialog.current?.showModal();
   };
 
+  const plotEl = (
+    <div
+      ref={containerRef}
+      className={classNames('h-full', styles.plotContainer)}
+      style={{
+        ...(isAnimating ? { contain: 'strict' } : undefined),
+        ...(aspectRatio ? { aspectRatio } : {}),
+        // While waiting for Plotly to initialize, match the skeleton's base color
+        // so there's no visible color shift during the transition.
+        ...(!showPlot ? { backgroundColor: '#f8f9fb' } : undefined),
+      }}
+    >
+      <button
+        type="button"
+        onClick={handleShow}
+        className={styles.fullscreenButton}
+        aria-label="View fullscreen"
+      >
+        <FullscreenOutlined />
+      </button>
+      {showPlot && title ? (
+        <PlotTitle title={title as string} titleFont={titleFont} symmetricPadding="20px" compact />
+      ) : showPlot ? (
+        <div style={{ height: '20px', flexShrink: 0 }} />
+      ) : null}
+      {!showPlot && !skipSkeleton && <ToolSkeleton />}
+      {animationDone && (
+        <div
+          key={plotRenderKey}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+            visibility: plotReady ? 'visible' : 'hidden',
+          }}
+          onDoubleClick={handleShow}
+        >
+          <Plot
+            className={classNames(className, styles.toolPlotGenerator)}
+            style={{
+              width: '100%',
+              minWidth: '250px',
+              height: '100%',
+            }}
+            data={inlineData}
+            layout={finalInlineLayout}
+            frames={props?.frames}
+            config={{
+              displaylogo: false,
+              responsive: true,
+              modeBarButtons: [['resetScale2d', 'zoom2d', 'pan2d', 'toImage']],
+            }}
+            useResizeHandler
+            onInitialized={() => setPlotReady(true)}
+            onUpdate={() => setPlotReady(true)}
+            onDoubleClick={handleShow}
+          />
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
-      <div
-        ref={containerRef}
-        className={classNames('h-full', styles.plotContainer)}
-        style={{
-          ...(isAnimating ? { contain: 'strict' } : undefined),
-          ...(aspectRatio ? { aspectRatio } : {}),
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleShow}
-          className={styles.fullscreenButton}
-          aria-label="View fullscreen"
-        >
-          <FullscreenOutlined />
-        </button>
-        {title ? (
-          <PlotTitle
-            title={title as string}
-            titleFont={titleFont}
-            symmetricPadding="20px"
-            compact
-          />
-        ) : (
-          <div style={{ height: '20px', flexShrink: 0 }} />
-        )}
-        {!showPlot && <ToolSkeleton />}
-        {animationDone && (
-          <div
-            key={plotRenderKey}
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflow: 'hidden',
-              visibility: plotReady ? 'visible' : 'hidden',
-            }}
-            onDoubleClick={handleShow}
-          >
-            <Plot
-              className={classNames(className, styles.toolPlotGenerator)}
-              style={{
-                width: '100%',
-                minWidth: '250px',
-                height: '100%',
-              }}
-              data={inlineData}
-              layout={finalInlineLayout}
-              frames={props?.frames}
-              config={{
-                displaylogo: false,
-                responsive: true,
-                modeBarButtons: [['resetScale2d', 'zoom2d', 'pan2d', 'toImage']],
-              }}
-              useResizeHandler
-              onInitialized={() => setPlotReady(true)}
-              onUpdate={() => setPlotReady(true)}
-              onDoubleClick={handleShow}
-            />
-          </div>
-        )}
-      </div>
+      {shouldAnimateRef.current ? <div className={styles.streamingReveal}>{plotEl}</div> : plotEl}
       <FullscreenDialog dialogRef={refDialog}>
         {title && <PlotTitle title={title as string} titleFont={titleFont} isFullscreen />}
         <Plot

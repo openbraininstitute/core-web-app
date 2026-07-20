@@ -18,6 +18,7 @@ export interface ToolThumbnailGenerationProps {
   result: ToolResult | null;
   data?: { content: string; type: string };
   isStreaming?: boolean;
+  skipSkeleton?: boolean;
 }
 
 export default function ToolThumbnailGeneration({
@@ -25,13 +26,18 @@ export default function ToolThumbnailGeneration({
   result,
   data: providedData,
   isStreaming,
+  skipSkeleton,
 }: ToolThumbnailGenerationProps) {
   if (!result) return null;
 
   return (
     <>
       {typeof result.storage_id === 'string' && providedData && (
-        <CustomThumbnail providedData={providedData} isStreaming={isStreaming} />
+        <CustomThumbnail
+          providedData={providedData}
+          isStreaming={isStreaming}
+          skipSkeleton={skipSkeleton}
+        />
       )}
     </>
   );
@@ -40,21 +46,27 @@ export default function ToolThumbnailGeneration({
 function CustomThumbnail({
   providedData,
   isStreaming,
+  skipSkeleton,
 }: {
   providedData: { content: string; type: string };
   isStreaming?: boolean;
+  skipSkeleton?: boolean;
 }) {
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
-  const [imageLoaded, setImageLoaded] = React.useState(false);
+  const [imageLoaded, setImageLoaded] = React.useState(!!skipSkeleton);
   const [imageError, setImageError] = React.useState(false);
-  // Ensure the scaleIn animation completes before revealing the image.
-  const [animationDone, setAnimationDone] = React.useState(!isStreaming);
 
+  // Freeze the animation decision at mount time — no re-trigger if isStreaming flips.
+  const shouldAnimateRef = React.useRef(!!isStreaming);
+  const [animationDone, setAnimationDone] = React.useState(!shouldAnimateRef.current);
+
+  // Single-fire timer: runs once on mount if animating. Empty deps = no re-trigger.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional single-fire on mount
   React.useEffect(() => {
-    if (!isStreaming || animationDone) return;
+    if (!shouldAnimateRef.current) return;
     const timer = setTimeout(() => setAnimationDone(true), 500);
     return () => clearTimeout(timer);
-  }, [isStreaming, animationDone]);
+  }, []);
 
   const showImage = imageLoaded && animationDone;
 
@@ -80,36 +92,44 @@ function CustomThumbnail({
     );
   }
 
+  const containerEl = (
+    <div className={styles.container}>
+      {showImage && (
+        <button
+          type="button"
+          onClick={handleShow}
+          className={styles.fullscreenButton}
+          aria-label="View fullscreen"
+        >
+          <FullscreenOutlined />
+        </button>
+      )}
+      {!showImage && !skipSkeleton && <ToolSkeleton />}
+      <img
+        className={styles.image}
+        src={content}
+        alt="Morphology thumbnail"
+        style={{
+          display: showImage ? 'block' : 'none',
+          cursor: 'pointer',
+        }}
+        onLoad={() => setImageLoaded(true)}
+        onError={() => setImageError(true)}
+        onClick={handleShow}
+        onKeyDown={(event) => {
+          if (['Enter', ' '].includes(event.key)) handleShow();
+        }}
+      />
+    </div>
+  );
+
   return (
     <>
-      <div className={styles.container}>
-        {showImage && (
-          <button
-            type="button"
-            onClick={handleShow}
-            className={styles.fullscreenButton}
-            aria-label="View fullscreen"
-          >
-            <FullscreenOutlined />
-          </button>
-        )}
-        {!showImage && <ToolSkeleton />}
-        <img
-          className={styles.image}
-          src={content}
-          alt="Morphology thumbnail"
-          style={{
-            display: showImage ? 'block' : 'none',
-            cursor: 'pointer',
-          }}
-          onLoad={() => setImageLoaded(true)}
-          onError={() => setImageError(true)}
-          onClick={handleShow}
-          onKeyDown={(event) => {
-            if (['Enter', ' '].includes(event.key)) handleShow();
-          }}
-        />
-      </div>
+      {shouldAnimateRef.current ? (
+        <div className={styles.streamingReveal}>{containerEl}</div>
+      ) : (
+        containerEl
+      )}
       <FullscreenDialog dialogRef={refDialog}>
         <img src={content} alt="Morphology thumbnail" className={dialogStyles.fullscreenImage} />
       </FullscreenDialog>

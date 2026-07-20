@@ -12,18 +12,18 @@
   margin: 4px 0;
 }
 
-/* Wrap the container in a grid cell for smooth height animation */
-.containerStreamingOuter {
-  display: grid;
-  grid-template-rows: 0fr;
-  animation: gridGrow 500ms ease-out forwards;
+/* Smooth height reveal wrapper — animates max-height from 0 to a known cap */
+.streamingReveal {
+  max-height: 0;
+  opacity: 0;
   overflow: hidden;
-  will-change: grid-template-rows, opacity;
+  animation: revealHeight 500ms ease-out forwards;
+  margin: 4px 0;
 }
 
-.containerStreamingOuter > * {
-  overflow: hidden;
-  min-height: 0;
+/* Remove inner margin when wrapped — the outer handles spacing */
+.streamingReveal > .container {
+  margin: 0;
 }
 
 .image {
@@ -45,13 +45,13 @@
   }
 }
 
-@keyframes gridGrow {
+@keyframes revealHeight {
   from {
-    grid-template-rows: 0fr;
+    max-height: 0;
     opacity: 0;
   }
   to {
-    grid-template-rows: 1fr;
+    max-height: 460px;
     opacity: 1;
   }
 }

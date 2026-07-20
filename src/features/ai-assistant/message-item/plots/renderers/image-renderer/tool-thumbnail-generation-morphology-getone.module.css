@@ -10,6 +10,34 @@
   align-items: center;
   justify-content: center;
   margin: 4px 0;
+  /* Match skeleton base color to prevent grey→white flash on transition.
+     The image's plotContentFadeIn will cover this smoothly. */
+  background-color: #f8f9fb;
+}
+
+/* Smooth height reveal wrapper — animates max-height from 0 to a known cap */
+.streamingReveal {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  animation: revealHeight 500ms ease-out forwards;
+  margin: 4px 0;
+}
+
+/* Remove inner margin when wrapped — the outer handles spacing */
+.streamingReveal > .container {
+  margin: 0;
+}
+
+@keyframes revealHeight {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 460px;
+    opacity: 1;
+  }
 }
 
 .image {

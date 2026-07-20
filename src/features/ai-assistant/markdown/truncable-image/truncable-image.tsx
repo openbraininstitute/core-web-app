@@ -21,8 +21,12 @@ export default function TruncableImage({ src, isStreaming }: TruncableImageProps
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
-  // Ensure the scaleIn animation completes before revealing the image.
-  const [animationDone, setAnimationDone] = React.useState(!isStreaming);
+
+  // Freeze the animation decision at mount time. If the component mounts during
+  // streaming it animates; if Streamdown remounts it later (same stream), the fresh
+  // instance captures the current isStreaming value — no double-trigger risk.
+  const shouldAnimateRef = React.useRef(!!isStreaming);
+  const [animationDone, setAnimationDone] = React.useState(!shouldAnimateRef.current);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: the pattern seems correct here.
   React.useEffect(() => {
@@ -30,11 +34,13 @@ export default function TruncableImage({ src, isStreaming }: TruncableImageProps
     setImageError(false);
   }, [src]);
 
+  // Single-fire timer: runs once on mount if animating. Empty deps = no re-trigger.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional single-fire on mount
   React.useEffect(() => {
-    if (!isStreaming || animationDone) return;
+    if (!shouldAnimateRef.current) return;
     const timer = setTimeout(() => setAnimationDone(true), 500);
     return () => clearTimeout(timer);
-  }, [isStreaming, animationDone]);
+  }, []);
 
   const showImage = imageLoaded && animationDone;
 
@@ -101,8 +107,8 @@ export default function TruncableImage({ src, isStreaming }: TruncableImageProps
 
   return (
     <>
-      {isStreaming ? (
-        <div className={styles.containerStreamingOuter}>{containerEl}</div>
+      {shouldAnimateRef.current ? (
+        <div className={styles.streamingReveal}>{containerEl}</div>
       ) : (
         containerEl
       )}

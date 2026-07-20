@@ -2,6 +2,32 @@
   width: 100%;
 }
 
+/* Smooth height reveal wrapper — animates max-height from 0 to a known cap.
+   Uses 600px to accommodate dense subplot grids (aspect-ratio: 1/1 at 600px width). */
+.streamingReveal {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  animation: revealHeight 500ms ease-out forwards;
+  margin: 4px 0;
+}
+
+/* Remove inner margin when wrapped — the outer handles spacing */
+.streamingReveal > .plotContainer {
+  margin: 0;
+}
+
+@keyframes revealHeight {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 600px;
+    opacity: 1;
+  }
+}
+
 /* Force Plotly internals to fill the available height */
 .toolPlotGenerator :global(.plot-container),
 .toolPlotGenerator :global(.svg-container) {

@@ -24,29 +24,33 @@
   border-radius: 8px;
   overflow: hidden;
   margin: 4px 0;
+  /* Use skeleton base color so there's no color shift when transitioning to renderers */
+  background-color: #f8f9fb;
 }
 
-/* Wrap the standaloneWrapper in a grid cell for smooth height animation */
+/* Smooth height reveal wrapper — animates max-height from 0 to a known cap */
 .standaloneStreamingOuter {
-  display: grid;
-  grid-template-rows: 0fr;
-  animation: gridGrow 500ms ease-out forwards;
+  max-height: 0;
+  opacity: 0;
   overflow: hidden;
-  will-change: grid-template-rows, opacity;
+  animation: revealHeight 500ms ease-out forwards;
+  /* Margin here ensures consistent spacing with siblings, since overflow:hidden
+     traps the child's margin inside and prevents it from affecting layout. */
+  margin: 4px 0;
 }
 
-.standaloneStreamingOuter > * {
-  overflow: hidden;
-  min-height: 0;
+/* Remove inner margin when wrapped — the outer handles spacing */
+.standaloneStreamingOuter > .standaloneWrapper {
+  margin: 0;
 }
 
-@keyframes gridGrow {
+@keyframes revealHeight {
   from {
-    grid-template-rows: 0fr;
+    max-height: 0;
     opacity: 0;
   }
   to {
-    grid-template-rows: 1fr;
+    max-height: 460px;
     opacity: 1;
   }
 }

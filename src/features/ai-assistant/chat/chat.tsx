@@ -279,17 +279,21 @@ export default function Chat({
                   />
                 </div>
               )}
-              {threadId && !isEmptyThread && status === 'ready' && !pendingUserMessage && (
-                <div className={styles.suggestedQuestionsContainerInChat}>
-                  <SuggestedQuestions
-                    onClick={handlePrompt}
-                    suggestions={suggestions}
-                    clearSuggestions={clearSuggestions}
-                    isLoading={status !== 'ready'}
-                    isRefreshing={isRefreshing}
-                  />
-                </div>
-              )}
+              {threadId &&
+                !isEmptyThread &&
+                status === 'ready' &&
+                !pendingUserMessage &&
+                !isRefreshing && (
+                  <div className={styles.suggestedQuestionsContainerInChat}>
+                    <SuggestedQuestions
+                      onClick={handlePrompt}
+                      suggestions={suggestions}
+                      clearSuggestions={clearSuggestions}
+                      isLoading={status !== 'ready'}
+                      isRefreshing={isRefreshing}
+                    />
+                  </div>
+                )}
               {error && <ErrorPanel value={error} />}
               {healthError && <ErrorPanel value={healthError} />}
             </>

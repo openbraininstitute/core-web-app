@@ -33,6 +33,38 @@ class PlotErrorBoundary extends React.Component<
   }
 }
 
+/**
+ * Preloads an image URL using an off-screen Image object.
+ * Returns true once the image is in the browser's cache.
+ */
+function useImagePreload(url: string | undefined): boolean {
+  const [loaded, setLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!url) {
+      setLoaded(false);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => setLoaded(true);
+    img.onerror = () => setLoaded(true); // treat error as "done" — let renderer handle it
+    img.src = url;
+
+    // If already cached, onload fires synchronously in some browsers
+    if (img.complete) {
+      setLoaded(true);
+    }
+
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [url]);
+
+  return loaded;
+}
+
 export default function PlotInChat({
   storageId,
   isBackup,
@@ -62,18 +94,45 @@ export default function PlotInChat({
 
   const { data, isError, isLoading } = usePlotFile(storageId);
 
+  // Freeze the streaming decision at mount time. If this component was created during
+  // streaming, we want to animate even if streaming ends before data arrives.
+  const wasStreamingAtMountRef = React.useRef(!!isStreaming);
+
+  // Track whether we ever showed the skeleton. If we did, the reveal animation
+  // already ran at the skeleton level — the renderer should NOT re-animate.
+  const didShowSkeletonRef = React.useRef(false);
+  if (isLoading) {
+    didShowSkeletonRef.current = true;
+  }
+
+  // For images: preload the actual image so we can keep showing the skeleton
+  // until the image is fully cached. This eliminates the grey flash between
+  // "skeleton unmounts" and "image loads in renderer".
+  const isImageType = data?.type === 'image';
+  const imageUrl = isImageType && isString(data?.content) ? data.content : undefined;
+  const imagePreloaded = useImagePreload(imageUrl);
+
   if (isError) {
     return <PlotErrorMessage isBackup={isBackup} />;
   }
 
-  // Show skeleton while loading. Once data arrives, render the plot content —
-  // the content fades in via CSS animation on the image/.plot-container element.
   const isReady = !isLoading && !!data;
   const { content, type } = data ?? {};
 
   if (isReady && !isString(content)) return null;
 
-  if (!isReady) return <ToolSkeletonStandalone isStreaming={isStreaming} />;
+  // Use the mount-time streaming state for the skeleton reveal.
+  const skeletonIsStreaming = wasStreamingAtMountRef.current;
+
+  // For images: keep showing skeleton until the image is actually preloaded.
+  // For plots (JSON): data is in memory, so switch immediately.
+  const showSkeleton = !isReady || (isImageType && !imagePreloaded);
+
+  if (showSkeleton) return <ToolSkeletonStandalone isStreaming={skeletonIsStreaming} />;
+
+  // If skeleton already handled the height reveal, don't pass isStreaming to renderers
+  // (prevents double grow-in animation).
+  const rendererIsStreaming = didShowSkeletonRef.current ? false : skeletonIsStreaming;
 
   if (type === 'image') {
     return (
@@ -81,7 +140,8 @@ export default function PlotInChat({
         <ToolThumbnailGeneration
           result={{ storage_id: storageId }}
           data={data!}
-          isStreaming={isStreaming}
+          isStreaming={rendererIsStreaming}
+          skipSkeleton={didShowSkeletonRef.current}
         />
       </PlotErrorBoundary>
     );
@@ -94,7 +154,7 @@ export default function PlotInChat({
         data={data!}
         plotRenderKey={plotRenderKey}
         isAnimating={isAnimating}
-        isStreaming={isStreaming}
+        isStreaming={rendererIsStreaming}
       />
     </PlotErrorBoundary>
   );
