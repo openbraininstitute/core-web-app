@@ -2,7 +2,7 @@
 
 import { Form } from 'antd';
 
-import { resolveOBJFile } from '@/api/one/em-cell-mesh';
+import { resolveMeshFile } from '@/api/one/em-cell-mesh';
 import { tryCatch } from '@/api/utils';
 import { messages } from '@/i18n/en/upload';
 import { AssetUpload } from '@/ui/segments/contribute/shared/components/asset-upload';
@@ -32,24 +32,24 @@ function HiddenSentinel({ value }: { value?: unknown; onChange?: (val: unknown) 
 export function EMAssetUpload({
   maxFiles = 1,
   maxSize = 500 * 1024 * 1024,
-  accept = ['application/obj', '.obj'],
+  accept = ['application/obj', '.obj', 'model/gltf-binary', '.glb'],
   multiple = true,
   className,
   onFilesChange,
 }: IAssetUploadProps) {
   const form = Form.useFormInstance();
 
-  const validateOBJFile = async (file: File): Promise<string | null> => {
-    const { data: resolution, error } = await tryCatch(resolveOBJFile(file));
+  const validateMeshFile = async (file: File): Promise<string | null> => {
+    const { data: resolution, error } = await tryCatch(resolveMeshFile(file));
     if (error || !resolution?.isValid) {
-      return messages.ResolveOBJFileFailed.replace('$$', file.name);
+      return messages.ResolveMeshFileFailed.replace('$$', file.name);
     }
     return null;
   };
 
   return (
     <>
-      <Form.Item name={['assets', 'obj']} noStyle>
+      <Form.Item name={['assets', 'mesh']} noStyle>
         <HiddenSentinel />
       </Form.Item>
 
@@ -59,14 +59,14 @@ export function EMAssetUpload({
         accept={accept}
         multiple={multiple}
         className={className}
-        acceptLabel="obj"
-        onValidateFile={validateOBJFile}
+        acceptLabel="obj, glb"
+        onValidateFile={validateMeshFile}
         onFilesChange={(files) => {
           const file = files[0]?.file instanceof File ? (files[0].file as File) : undefined;
 
           // Defer form update out of the current render/state-update cycle.
           setTimeout(() => {
-            form.setFieldsValue({ assets: { obj: file } });
+            form.setFieldsValue({ assets: { mesh: file } });
           }, 0);
 
           onFilesChange?.(files);

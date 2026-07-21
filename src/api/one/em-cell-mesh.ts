@@ -1,11 +1,11 @@
 import { obioneApi } from '@/api/one/utils';
 
-export type OBJResolution = {
+export type MeshResolution = {
   isValid: boolean;
   buffer: ArrayBuffer;
 };
 
-export async function resolveOBJFile(file: File): Promise<OBJResolution> {
+export async function resolveMeshFile(file: File): Promise<MeshResolution> {
   const api = await obioneApi();
   const formData = new FormData();
   formData.append('file', file, file.name);
