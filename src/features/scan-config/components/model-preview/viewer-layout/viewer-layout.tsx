@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { LoadingNeuronSpinner } from '@/components/neuron-viewer/';
+import { LoadingNeuronSpinner } from '@/components/neuron-viewer';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -16,6 +16,10 @@ export interface ViewerLayoutProps {
   model: TSupportedEntitiesForScanConfiguration;
 }
 
+/**
+ * Single-scale circuit preview: loads morphology from the SONATA asset
+ * (production path). Electrode overlays are intentionally not wired here yet.
+ */
 export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
   const [progress, setProgress] = React.useState(0);
   const circuitLoader = useCircuitLoader(model);

@@ -6,6 +6,8 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
+import ViewerLayout from './viewer-layout';
+
 import type { Config, TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 export function ModelPreview({
@@ -25,25 +27,42 @@ export function ModelPreview({
   /** Dictionary entry name currently selected (overlay id when electrodes). */
   selectedEntry?: string;
 }) {
-  return match(model)
-    .with({ type: EntityTypeDict.Memodel }, () => (
-      <NeuronVisualizer
-        memodelId={model.id}
-        sessionId={model.id}
-        disableElectrodes
-        disableSynapses
-      />
-    ))
-    .with(
-      {
-        type: EntityTypeDict.Circuit,
-        scale: P.union(
-          CircuitScaleDictionary.Single,
-          CircuitScaleDictionary.PairNeuron,
-          CircuitScaleDictionary.SmallMicrocircuit
-        ),
-      },
-      () => (
+  return (
+    match(model)
+      .with({ type: EntityTypeDict.Memodel }, () => (
+        <NeuronVisualizer
+          memodelId={model.id}
+          sessionId={model.id}
+          disableElectrodes
+          disableSynapses
+        />
+      ))
+      // Single-scale circuits load from the SONATA asset (ViewerLayout), not the
+      // OBI-One /circuit/viz nodes API used by CircuitPreview — that API fails for singles.
+      // Electrode overlays are not enabled on this path yet.
+      .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (
+        <ViewerLayout model={model} />
+      ))
+      .with(
+        {
+          type: EntityTypeDict.Circuit,
+          scale: P.union(
+            CircuitScaleDictionary.PairNeuron,
+            CircuitScaleDictionary.SmallMicrocircuit
+          ),
+        },
+        () => (
+          <CircuitPreview
+            circuit={model as ICircuit}
+            config={config}
+            setConfig={setConfig}
+            selectedRootElement={selectedRootElement}
+            selectedEntry={selectedEntry}
+            enableVisualization
+          />
+        )
+      )
+      .with({ type: EntityTypeDict.Circuit }, () => (
         <CircuitPreview
           circuit={model as ICircuit}
           config={config}
@@ -51,21 +70,11 @@ export function ModelPreview({
           selectedRootElement={selectedRootElement}
           selectedEntry={selectedEntry}
           enableVisualization
+          largeCircuit
         />
-      )
-    )
-    .with({ type: EntityTypeDict.Circuit }, () => (
-      <CircuitPreview
-        circuit={model as ICircuit}
-        config={config}
-        setConfig={setConfig}
-        selectedRootElement={selectedRootElement}
-        selectedEntry={selectedEntry}
-        enableVisualization
-        largeCircuit
-      />
-    ))
-    .otherwise(() => null);
+      ))
+      .otherwise(() => null)
+  );
 }
 
 export default memo(ModelPreview);
