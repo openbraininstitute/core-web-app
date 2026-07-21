@@ -2,9 +2,15 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchNeuronalManipulationProperties } from '@/api/one/neuronal-manipulation-properties';
+import {
+  fetchNeuronalManipulationProperties,
+  type TNeuronalManipulationPropertiesResponse,
+} from '@/api/one/neuronal-manipulation-properties';
+import {
+  type MechanismVariablesRoot,
+  RootSelector,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 
-import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import type { WorkspaceContext } from '@/types/common';
 
 const STALE_TIME_MS = 60 * 60 * 1000; // 1 hour
@@ -20,6 +26,18 @@ export type TUseNeuronalManipulationPropertiesParams = {
   /** extra gate */
   enabled?: boolean;
 };
+
+/**
+ * picks the mechanism-variables map from the neuronal-manipulation-properties
+ * response. prefers PascalCase (`MechanismVariablesByIonChannel`); falls back to
+ * legacy snake_case for older backends.
+ */
+export function selectMechanismVariablesRoot(
+  resp: TNeuronalManipulationPropertiesResponse
+): MechanismVariablesRoot {
+  const root = resp[RootSelector] ?? resp.mechanism_variables_by_ion_channel ?? undefined;
+  return (root as MechanismVariablesRoot | undefined) ?? {};
+}
 
 /**
  * loads the mechanism variables available for a circuit neuronal manipulation,
@@ -46,7 +64,6 @@ export function useNeuronalManipulationProperties({
     enabled: enabled && !!entityId && !!endpoint,
     refetchOnWindowFocus: false,
     staleTime: STALE_TIME_MS,
-    select: (resp): MechanismVariablesRoot =>
-      (resp.mechanism_variables_by_ion_channel as MechanismVariablesRoot | undefined) ?? {},
+    select: selectMechanismVariablesRoot,
   });
 }

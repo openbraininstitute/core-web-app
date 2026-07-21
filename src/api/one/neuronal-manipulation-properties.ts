@@ -6,14 +6,18 @@ import type { WorkspaceContext } from '@/types/common';
 /**
  * `POST /declared/neuronal-manipulation-properties`.
  *
- * the mechanism-variables payload is keyed `mechanism_variables_by_ion_channel`
- * (snake_case) — note this differs from the schema's `property` selector
- * (`MechanismVariablesByIonChannel`) callers should read this field directly
+ * the mechanism-variables payload is keyed `MechanismVariablesByIonChannel`
+ * (same as the schema `property` selector / `RootSelector`). Older backends
+ * may still emit snake_case; callers should prefer PascalCase and fall back.
  */
 export type TNeuronalManipulationPropertiesResponse = {
   entity_type?: string;
   population?: string;
+  populations?: string[] | null;
+  MechanismVariablesByIonChannel?: Record<string, unknown>;
+  /** @deprecated prefer `MechanismVariablesByIonChannel` */
   mechanism_variables_by_ion_channel?: Record<string, unknown>;
+  warnings?: unknown;
 };
 
 export type TFetchNeuronalManipulationPropertiesParams = {
