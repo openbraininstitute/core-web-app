@@ -6,8 +6,6 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
-import ViewerLayout from './viewer-layout';
-
 import type { Config, TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 export function ModelPreview({
@@ -37,28 +35,27 @@ export function ModelPreview({
           disableSynapses
         />
       ))
-      // Single-scale circuits load from the SONATA asset (ViewerLayout), not the
-      // OBI-One /circuit/viz nodes API used by CircuitPreview — that API fails for singles.
-      // Electrode overlays are not enabled on this path yet.
-      .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (
-        <ViewerLayout model={model} />
-      ))
+      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit.
+      // Loader strategy is selected inside CircuitViz by scale (SONATA vs OBI-One).
+      // Electrodes stay off for single until that path is validated end-to-end.
       .with(
         {
           type: EntityTypeDict.Circuit,
           scale: P.union(
+            CircuitScaleDictionary.Single,
             CircuitScaleDictionary.PairNeuron,
             CircuitScaleDictionary.SmallMicrocircuit
           ),
         },
-        () => (
+        (circuit) => (
           <CircuitPreview
-            circuit={model as ICircuit}
+            circuit={circuit as ICircuit}
             config={config}
             setConfig={setConfig}
             selectedRootElement={selectedRootElement}
             selectedEntry={selectedEntry}
             enableVisualization
+            enableElectrodes={circuit.scale !== CircuitScaleDictionary.Single}
           />
         )
       )

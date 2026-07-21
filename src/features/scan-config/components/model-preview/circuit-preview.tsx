@@ -6,7 +6,10 @@ import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
-import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import CircuitViz, {
+  loaderSupportsAxonToggle,
+  resolveSmallCircuitLoaderKind,
+} from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import {
   type ViewerMode,
@@ -37,6 +40,11 @@ interface CircuitPreviewProps {
   circuit: ICircuit;
   enableVisualization?: boolean;
   largeCircuit?: boolean;
+  /**
+   * When false, skip electrode overlay chrome/sync (e.g. single-scale until
+   * that path is validated). Default true — still gated by overlay availability.
+   */
+  enableElectrodes?: boolean;
   /** Live scan-config; when it contains `electrode_locations`, overlays are fetched. */
   config?: Config;
   /** When set, electrode drag/rotate in 3D writes origin/rotation back into the form. */
@@ -64,6 +72,7 @@ export function CircuitPreview({
   circuit,
   enableVisualization = false,
   largeCircuit = false,
+  enableElectrodes = true,
   config: scanConfig,
   setConfig,
   selectedRootElement,
@@ -88,36 +97,43 @@ export function CircuitPreview({
     setPopulationName(name);
   }, []);
 
+  const supportsAxons =
+    !largeCircuit && loaderSupportsAxonToggle(resolveSmallCircuitLoaderKind(circuit.scale));
+
   const { overlays, available: electrodesAvailable } = useElectrodeLocationsOverlay({
-    config: scanConfig,
+    config: enableElectrodes ? scanConfig : undefined,
   });
 
   const handleOverlayTransform = useCallback(
     (event: MorphoViewerOverlayTransformEvent) => {
-      if (!setConfig) return;
+      if (!setConfig || !enableElectrodes) return;
       // 3D already updates optimistically during the gesture; write the form
       // only on drop so React/config churn does not lag the drag.
       if (event.phase !== 'end') return;
       setConfig((prev) => applyElectrodeOverlayTransform(prev, event));
     },
-    [setConfig]
+    [setConfig, enableElectrodes]
   );
 
   const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
-      supportsAxons: !largeCircuit,
-      supportsElectrodes: electrodesAvailable,
+      supportsAxons,
+      supportsElectrodes: enableElectrodes && electrodesAvailable,
       population,
     });
 
-  const visibleOverlays = config.showElectrodes ? overlays : undefined;
+  const visibleOverlays = enableElectrodes && config.showElectrodes ? overlays : undefined;
   const highlightedOverlayId =
-    selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY && selectedEntry ? selectedEntry : null;
+    enableElectrodes && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY && selectedEntry
+      ? selectedEntry
+      : null;
   const styledOverlays = useMemo(
     () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId),
     [visibleOverlays, highlightedOverlayId]
   );
-  const overlaysInteractive = Boolean(setConfig && styledOverlays && styledOverlays.length > 0);
+  const overlaysInteractive = Boolean(
+    enableElectrodes && setConfig && styledOverlays && styledOverlays.length > 0
+  );
 
   // Selecting an electrode in the form turns overlays on so it can be seen.
   useEffect(() => {
