@@ -7,9 +7,12 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { config } from '@/config';
 import { resolveWorkspace } from '@/ui/segments/app-setup/helpers';
+import { logError } from '@/utils/logger';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
+import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
@@ -49,11 +52,30 @@ export default async function EntityDetail({
   const queryParams = await searchParams;
   const workspaceFromQuery = resolveWorkspaceFromSearchParams(queryParams);
 
-  const { data: entity, error: entityError } = await tryCatch(() =>
-    getEntity({ id, context: workspaceFromQuery })
-  );
+  // Avoid the user's project headers — they can hide public entities owned elsewhere.
+  // Fall back to the public project context if an unscoped lookup fails.
+  const publicContext: WorkspaceContext = {
+    virtualLabId: config.ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID,
+    projectId: config.ENTITY_CORE_PUBLIC_PROJECT_ID,
+  };
 
-  if (!entity || entityError) notFound();
+  let entity: IEntity | null = null;
+  const unscoped = await tryCatch(getEntity({ id }));
+  if (unscoped.data) {
+    entity = unscoped.data;
+  } else {
+    const pub = await tryCatch(getEntity({ id, context: publicContext }));
+    entity = pub.data;
+    if (!entity) {
+      const err = (pub.error ?? unscoped.error) as {
+        cause?: { status?: number; code?: string; message?: string };
+      } | null;
+      logError(
+        `Entity redirect lookup failed id=${id} status=${err?.cause?.status} code=${err?.cause?.code} message=${err?.cause?.message}`
+      );
+      notFound();
+    }
+  }
 
   let entityType: TExtendedEntitiesTypeDict = entity.type;
 
@@ -79,7 +101,16 @@ export default async function EntityDetail({
   }
 
   if (redirectCtx) {
-    entityType = await retrieveCircuit({ id, type: entity.type, context: redirectCtx });
+    // Resolve circuit scale with the same unscoped → public-project fallback.
+    const unscopedType = await tryCatch(retrieveCircuit({ id, type: entity.type }));
+    if (unscopedType.data) {
+      entityType = unscopedType.data;
+    } else {
+      const publicType = await tryCatch(
+        retrieveCircuit({ id, type: entity.type, context: publicContext })
+      );
+      entityType = publicType.data ?? entity.type;
+    }
 
     const redirectUrl = resolveExploreDetailsPageUrl({
       ctx: redirectCtx,
