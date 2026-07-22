@@ -11,7 +11,10 @@ import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import { CircuitViewerChrome } from '@/features/circuit-viewer/color-by/circuit-viewer-chrome';
 import { type ViewerMode, ViewerModeDict } from '@/features/circuit-viewer/color-by/mode-toggle';
 import { useCircuitColorBy } from '@/features/circuit-viewer/color-by/use-circuit-color-by';
-import { useCircuitImageURL } from '@/features/circuit-viewer/hooks/use-circuit-image-url';
+import {
+  circuitImageAsset,
+  useCircuitImageURL,
+} from '@/features/circuit-viewer/hooks/use-circuit-image-url';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
@@ -47,7 +50,16 @@ export function CircuitPreview({
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
 
-  const activeMode: ViewerMode = enableVisualization ? mode : 'image';
+  // Circuits that were never rendered (synaptome beta, most large circuits) have
+  // no preview image, and image mode would only ever show a broken-image
+  // placeholder. Force 3D and drop the toggle rather than offer a dead option.
+  const hasImage = !!circuitImageAsset(circuit);
+  const canToggleMode = enableVisualization && hasImage;
+  const activeMode: ViewerMode = enableVisualization
+    ? hasImage
+      ? mode
+      : ViewerModeDict.Visualization
+    : ViewerModeDict.Image;
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [populationName, setPopulationName] = useState<string | undefined>();
@@ -124,8 +136,8 @@ export function CircuitPreview({
 
       {enableVisualization && (
         <CircuitViewerChrome
-          mode={activeMode}
-          onModeChange={setMode}
+          mode={canToggleMode ? activeMode : undefined}
+          onModeChange={canToggleMode ? setMode : undefined}
           theme={theme}
           table={{ active: showTable, onToggle: handleToggleTable }}
           viz={activeMode === ViewerModeDict.Visualization ? { menu, colorBy } : undefined}
@@ -210,7 +222,7 @@ function TableResizeHandle({
 }
 
 export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
-  const { data, isLoading, error } = useCircuitImageURL(circuit?.id);
+  const { data, isLoading, error } = useCircuitImageURL(circuit);
   const [loaded, setLoaded] = useState(false);
 
   useLayoutEffect(() => {

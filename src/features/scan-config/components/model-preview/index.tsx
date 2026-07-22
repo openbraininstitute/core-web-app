@@ -6,8 +6,6 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { CircuitPreview } from '@/features/circuit-viewer';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
-import ViewerLayout from './viewer-layout';
-
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfiguration }) {
@@ -20,13 +18,14 @@ export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfig
         disableSynapses
       />
     ))
-    .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (
-      <ViewerLayout model={model} />
-    ))
     .with(
       {
         type: EntityTypeDict.Circuit,
-        scale: P.union(CircuitScaleDictionary.PairNeuron, CircuitScaleDictionary.SmallMicrocircuit),
+        scale: P.union(
+          CircuitScaleDictionary.Single,
+          CircuitScaleDictionary.PairNeuron,
+          CircuitScaleDictionary.SmallMicrocircuit
+        ),
       },
       () => <CircuitPreview circuit={model as ICircuit} enableVisualization />
     )

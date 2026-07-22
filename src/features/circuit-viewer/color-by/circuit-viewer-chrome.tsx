@@ -18,8 +18,9 @@ import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 import styles from './chrome-animations.module.css';
 
 export interface CircuitViewerChromeProps {
-  mode: ViewerMode;
-  onModeChange: (mode: ViewerMode) => void;
+  /** image/3D toggle; omit either half to hide it (circuits with no preview image) */
+  mode?: ViewerMode;
+  onModeChange?: (mode: ViewerMode) => void;
   /** background-derived theme (adaptive mode), or null for the fixed default */
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
@@ -92,7 +93,7 @@ export function CircuitViewerChrome({
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        <ModeToggle mode={mode} onChange={onModeChange} />
+        {mode && onModeChange && <ModeToggle mode={mode} onChange={onModeChange} />}
         {table && (
           <ChromeButton
             label={table.active ? 'Hide nodes table' : 'Show nodes table'}
