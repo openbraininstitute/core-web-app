@@ -85,6 +85,19 @@ function buildWorkflowResourceHref({
   return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${pathParam}/${sessionId}?${params}`;
 }
 
+function buildEntityResourceHref({
+  entityId,
+  virtualLabId,
+  projectId,
+}: {
+  entityId: string;
+  virtualLabId: string;
+  projectId: string;
+}): string {
+  const params = new URLSearchParams({ virtualLabId, projectId });
+  return `/app/entity/${entityId}?${params}`;
+}
+
 function resolveResourceHref({
   resource,
   entityId,
@@ -99,14 +112,14 @@ function resolveResourceHref({
   switch (resource.entityType) {
     case ProjectHomeResourceEntityTypeDict.Data:
     case ProjectHomeResourceEntityTypeDict.Notebook:
-      return `/app/entity/${entityId}`;
+      return buildEntityResourceHref({ entityId, virtualLabId, projectId });
     case ProjectHomeResourceEntityTypeDict.Workflow: {
       const targetType = resource.targetType?.trim();
       if (!targetType) return null;
       return buildWorkflowResourceHref({ entityId, targetType, virtualLabId, projectId });
     }
     default:
-      return `/app/entity/${entityId}`;
+      return buildEntityResourceHref({ entityId, virtualLabId, projectId });
   }
 }
 

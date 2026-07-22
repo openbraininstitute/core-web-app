@@ -11,7 +11,7 @@ import { resolveWorkspace } from '@/ui/segments/app-setup/helpers';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { WorkspaceContext } from '@/types/common';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 async function retrieveCircuit({
   id,
@@ -31,32 +31,55 @@ async function retrieveCircuit({
   return type;
 }
 
-export default async function EntityDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+function resolveWorkspaceFromSearchParams(searchParams: {
+  virtualLabId?: string;
+  projectId?: string;
+}): WorkspaceContext | null {
+  const virtualLabId = searchParams.virtualLabId?.trim();
+  const projectId = searchParams.projectId?.trim();
+  if (!virtualLabId || !projectId) return null;
+  return { virtualLabId, projectId };
+}
 
-  const { data: entity, error: entityError } = await tryCatch(() => getEntity({ id }));
+export default async function EntityDetail({
+  params,
+  searchParams,
+}: ServerSideComponentProp<{ id: string }, { virtualLabId?: string; projectId?: string }>) {
+  const { id } = await params;
+  const queryParams = await searchParams;
+  const workspaceFromQuery = resolveWorkspaceFromSearchParams(queryParams);
+
+  const { data: entity, error: entityError } = await tryCatch(() =>
+    getEntity({ id, context: workspaceFromQuery })
+  );
 
   if (!entity || entityError) notFound();
 
   let entityType: TExtendedEntitiesTypeDict = entity.type;
 
-  // For public entities use the most recent workspace
-  if (entity.authorized_public) {
+  // Prefer workspace from the referring page (e.g. project home get-started links).
+  // Fall back to the user's resolved/recent workspace for bare /app/entity/:id URLs.
+  let redirectCtx = workspaceFromQuery;
+
+  if (!redirectCtx && entity.authorized_public) {
     const { data: workspace, error: workspaceError } = await tryCatch(resolveWorkspace());
     if (!workspace || workspaceError || !workspace.virtualLab || !workspace.project) notFound();
 
-    const redirectCtx = {
+    redirectCtx = {
       virtualLabId: workspace.virtualLab.id,
       projectId: workspace.project.id,
     };
 
     if (workspace.recentWorkspace) {
-      redirectCtx.virtualLabId = workspace.recentWorkspace.virtual_lab_id;
-      redirectCtx.projectId = workspace.recentWorkspace.project_id;
+      redirectCtx = {
+        virtualLabId: workspace.recentWorkspace.virtual_lab_id,
+        projectId: workspace.recentWorkspace.project_id,
+      };
     }
-    // NOTE: circuit with scale "single" needs to be redirected to SingleNeuronCircuit
-    // as it has a different details page
-    entityType = await retrieveCircuit({ id, type: entity.type });
+  }
+
+  if (redirectCtx) {
+    entityType = await retrieveCircuit({ id, type: entity.type, context: redirectCtx });
 
     const redirectUrl = resolveExploreDetailsPageUrl({
       ctx: redirectCtx,
