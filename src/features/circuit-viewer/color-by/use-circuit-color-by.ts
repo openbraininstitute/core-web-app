@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { downloadCircuitImage } from '@/features/scan-config/components/shared/3d-viewer';
+import { downloadCircuitImage } from '@/features/circuit-viewer/shared/3d-viewer';
 import { useMorphoViewerSignals } from '@/morpho-viewer';
 
 import {

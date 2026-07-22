@@ -1,3 +1,5 @@
+'use client';
+
 import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
@@ -6,17 +8,14 @@ import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
-import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
-import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
-import {
-  type ViewerMode,
-  ViewerModeDict,
-} from '@/features/scan-config/components/color-by/mode-toggle';
-import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
-import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
+import { CircuitViewerChrome } from '@/features/circuit-viewer/color-by/circuit-viewer-chrome';
+import { type ViewerMode, ViewerModeDict } from '@/features/circuit-viewer/color-by/mode-toggle';
+import { useCircuitColorBy } from '@/features/circuit-viewer/color-by/use-circuit-color-by';
+import { useCircuitImageURL } from '@/features/circuit-viewer/hooks/use-circuit-image-url';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
+import CircuitViz from './circuit-viz';
 import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';

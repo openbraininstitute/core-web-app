@@ -3,8 +3,8 @@ import React from 'react';
 
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
-import { NodesSchema } from '@/features/scan-config/types';
+import { DEFAULT_NEURON_COLOR } from '@/features/circuit-viewer/color-by/palette';
+import { NodesSchema } from '@/features/circuit-viewer/types';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 

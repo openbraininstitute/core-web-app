@@ -1,14 +1,16 @@
+'use client';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
-import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
+import { VERTICAL_SCALEBAR } from '@/features/circuit-viewer/shared/3d-viewer';
+import { VisualizationLoadingIndicator } from '@/features/circuit-viewer/shared/visualization-loading-indicator';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
 import { useCircuit } from './hooks';
 import { sequentialCellLoader } from './sequential-loader';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
+import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/circuit-viewer/types';
 import type { MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './circuit-viz.module.css';

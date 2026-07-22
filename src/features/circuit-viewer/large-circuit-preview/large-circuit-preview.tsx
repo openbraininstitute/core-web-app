@@ -3,8 +3,8 @@
 import { saveAs } from 'file-saver';
 import React from 'react';
 
-import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
-import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
+import { VERTICAL_SCALEBAR } from '@/features/circuit-viewer/shared/3d-viewer';
+import { VisualizationLoadingIndicator } from '@/features/circuit-viewer/shared/visualization-loading-indicator';
 import { MorphoViewerSomasOnly, useMorphoViewerDebugMode } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { isType } from '@/util/type-guards';

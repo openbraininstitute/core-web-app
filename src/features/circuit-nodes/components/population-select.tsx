@@ -10,7 +10,7 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
+import type { ViewerTheme } from '@/features/circuit-viewer';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 

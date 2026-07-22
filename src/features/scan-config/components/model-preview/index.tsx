@@ -3,7 +3,7 @@ import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
+import { CircuitPreview } from '@/features/circuit-viewer';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 import ViewerLayout from './viewer-layout';

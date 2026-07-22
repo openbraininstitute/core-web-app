@@ -4,7 +4,7 @@ import {
   ScalebarWhen,
 } from '@openbraininstitute/morphoviewer/dist/components/types';
 
-import { backgroundIsDark } from '@/features/scan-config/components/color-by/contrast';
+import { backgroundIsDark } from '@/features/circuit-viewer/color-by/contrast';
 
 import type { ScalebarConfig } from '@openbraininstitute/morphoviewer/dist/components/types';
 

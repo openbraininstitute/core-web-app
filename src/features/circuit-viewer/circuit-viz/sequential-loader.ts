@@ -1,6 +1,6 @@
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { SectionsArraySchema } from '@/features/scan-config/types';
+import { SectionsArraySchema } from '@/features/circuit-viewer/types';
 import { type MorphoViewerSmallCircuitCellData, MorphoViewerTreeItemType } from '@/morpho-viewer';
 import { logError } from '@/utils/logger';
 
