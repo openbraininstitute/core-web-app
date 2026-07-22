@@ -101,7 +101,8 @@ export const ProjectHomeGetStartedQuery = defineQuery(
       "resources": resources[]{
         _key,
         label,
-        link
+        stagingLink,
+        productionLink
       }
     },
     "obiAssistant": obiAssistant[]{
@@ -115,7 +116,8 @@ export const ProjectHomeGetStartedQuery = defineQuery(
 export type TProjectHomeResource = {
   _key: string;
   label: string;
-  link: string;
+  stagingLink: string | null;
+  productionLink: string | null;
 };
 
 export type TProjectHomeGetStartedCard = {
