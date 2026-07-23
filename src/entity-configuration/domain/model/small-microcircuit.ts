@@ -14,7 +14,7 @@ export const circuitScaleFilter = {
 
 export const SmallMicrocircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Small microcircuit (beta)',
+  title: 'Small microcircuit',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.SmallMicrocircuit,

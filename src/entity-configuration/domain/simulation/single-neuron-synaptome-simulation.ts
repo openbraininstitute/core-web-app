@@ -50,8 +50,8 @@ export async function resolveSingleNeuronSynaptomeSimulation(
 export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuronSynaptomeSimulation> =
   {
     group: EntityTypeGroup.Simulations,
-    title: 'Synaptome',
-    alternateTitle: 'synaptome simulation',
+    title: 'Synaptome (legacy)',
+    alternateTitle: 'synaptome simulation (legacy)',
     extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     type: EntityTypeDict.SingleNeuronSynaptomeSimulation,
     slug: EntitySlug.SingleNeuronSynaptomeSimulation,

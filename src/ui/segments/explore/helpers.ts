@@ -60,28 +60,32 @@ export const BrowseExperimentalDataExtendedTypes = {
   EmCellMesh,
 } as const;
 
+/**
+ * Key order is the render order of the Data nav — there is no sort in the render path.
+ * The superseded single-neuron/synaptome entries ("(legacy)") are listed last.
+ */
 export const ModelDataExtendedTypes = {
-  SingleNeuronSynaptome,
-  SingleNeuronCircuit,
-  Emodel,
-  MEmodel,
-  Circuit,
   IonChannelModel,
   SynthesizedCellMorphology,
+  Emodel,
+  MEmodel,
+  SingleNeuronCircuit,
+  Circuit,
   ExtracellularRecordingArray,
+  SingleNeuronSynaptome,
 } as const;
 
 export const SimulationDataExtendedTypes = {
-  SingleNeuronSimulation,
-  SingleNeuronSynaptomeSimulation,
+  IonChannelModelSimulation,
   MEModelCircuitSimulation,
   SingeNeuronCircuitSimulation,
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
   MicrocircuitSimulation,
-  IonChannelModelSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
+  SingleNeuronSimulation,
+  SingleNeuronSynaptomeSimulation,
 } as const;
 
 export function getEntityTypeFromUrlOnEntityScope(url: string) {

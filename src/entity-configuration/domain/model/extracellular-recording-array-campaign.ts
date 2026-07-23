@@ -128,7 +128,7 @@ export const ExtracellularRecordingArrayCampaign: EntityCoreTypeConfig<
   TResolvedExtracellularRecordingArrayByCampaigns
 > = {
   group: EntityTypeGroup.Models,
-  title: 'Extracellular recording array (beta)',
+  title: 'Extracellular recording array',
   extendedType: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
   requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
   type: EntityTypeDict.TaskConfig,

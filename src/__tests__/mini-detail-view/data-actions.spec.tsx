@@ -51,7 +51,7 @@ describe('DataActions "View details" link (mini-detail-view, section: Data)', ()
     );
   });
 
-  it('routes a single-neuron-scale circuit (em-circuit build output) to the Synaptome (beta) page, not circuit', () => {
+  it('routes a single-neuron-scale circuit (em-circuit build output) to the Synaptome page, not circuit', () => {
     renderDataActions({ record: makeSingleNeuronScaleCircuit() });
 
     expect(screen.getByRole('button', { name: 'View details' })).toHaveAttribute(

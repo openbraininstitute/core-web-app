@@ -67,26 +67,10 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.DirectConfigure,
-    sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    order: 2,
-    disabled: false,
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.DirectConfigure,
     sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
     targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
-    order: 3,
+    order: 2,
     disabled: false,
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.Disabled,
-    sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
-    targetType: ExtendedEntitiesTypeDict.MemodelCircuit,
-    order: 4,
-    disabled: true,
   },
   {
     ...WorkflowBrowseDefaults,
@@ -94,9 +78,9 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     hasMultipleSources: true,
-    label: 'Electron microscopy circuit (beta)',
+    label: 'Electron microscopy circuit',
     breadcrumb: {
-      root: 'Electron microscopy circuit (beta) build',
+      root: 'Electron microscopy circuit build',
       steps: {
         prerequisite: 'Select electron microscopy dense reconstruction dataset',
         selection: 'Select entities',
@@ -109,7 +93,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     requireFilters: false,
     requireSpecies: false,
-    order: 5,
+    order: 3,
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -148,9 +132,9 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
-    label: 'Extracellular recording array (beta)',
+    label: 'Extracellular recording array',
     breadcrumb: {
-      root: 'Extracellular recording array (beta) build',
+      root: 'Extracellular recording array build',
       steps: {
         selection: 'Select a circuit',
       },
@@ -189,9 +173,25 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
         },
       },
     },
-    order: 6,
+    order: 4,
     disabled: false,
     requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.DirectConfigure,
+    sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+    targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+    order: 5,
+    disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.Disabled,
+    sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
+    targetType: ExtendedEntitiesTypeDict.MemodelCircuit,
+    order: 6,
+    disabled: true,
   },
   {
     ...WorkflowBrowseDefaults,

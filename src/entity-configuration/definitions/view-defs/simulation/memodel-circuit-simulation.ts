@@ -6,7 +6,7 @@ import {
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
-  title: 'Single neuron simulation (beta)',
+  title: 'Single neuron simulation',
   group: DataTypeGroup.SimulationData,
   name: EntitySlug.MEModelCircuitSimulation,
   curated: false,

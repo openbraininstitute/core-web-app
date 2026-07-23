@@ -4,7 +4,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewDefForWholeBrain: ViewDefinitionConfig = {
-  title: 'Whole brain (beta)',
+  title: 'Whole brain',
   name: EntitySlug.WholeBrain,
   curated: false,
   columns: [

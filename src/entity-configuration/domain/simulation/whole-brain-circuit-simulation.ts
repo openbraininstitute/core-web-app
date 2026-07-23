@@ -95,7 +95,7 @@ export const WholeBrainCircuitSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Whole brain circuit (beta)',
+  title: 'Whole brain circuit',
   extendedType: ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   discriminator: { key: 'scale', value: [SCALE] },
   type: EntityTypeDict.SimulationCampaign,

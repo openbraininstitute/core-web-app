@@ -2,6 +2,7 @@ import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 
 import { WorkspaceSection } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { fetchObiOneJsonSchema } from '@/features/scan-config/components/hooks/schema';
 import {
   parseWorkflowSchemaSelection,
@@ -78,6 +79,21 @@ export function workflowHasMultipleSources(
   workflow: IWorkflowDescriptor | null | undefined
 ): boolean {
   return Boolean(workflow?.hasMultipleSources);
+}
+
+/**
+ * Display label for an entity type on workflow-facing surfaces (e.g. the quick-access cards).
+ *
+ * Reads the workflow entity catalog first so these surfaces match the workflow menus and type
+ * filters rather than the Data nav: `Memodel` reads "Single neuron" here while Data keeps its
+ * own "ME-model" title. Falls back to the entity-configuration title for types the catalog
+ * does not cover.
+ */
+export function getWorkflowEntityLabel(
+  value: TExtendedEntitiesTypeDict | null | undefined
+): string | null {
+  if (!value) return null;
+  return getEntityMeta(value)?.label ?? getEntityByExtendedType({ type: value })?.title ?? null;
 }
 
 function resolveWorkflow(

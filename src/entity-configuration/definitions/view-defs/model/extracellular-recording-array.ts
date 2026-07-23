@@ -4,7 +4,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewDefForExtracellularRecordingArray: ViewDefinitionConfig = {
-  title: 'Extracellular recording array (beta)',
+  title: 'Extracellular recording array',
   name: EntitySlug.ExtracellularRecordingArray,
   curated: false,
   columns: [
