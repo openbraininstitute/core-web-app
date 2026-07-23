@@ -6,6 +6,7 @@ import { cn } from '@/utils/css-class';
 
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
+import { ElectrodeInteractionHelp } from './electrode-interaction-help';
 import { ModeToggle } from './mode-toggle';
 import { useFullscreenElement } from './use-fullscreen-element';
 import { ViewerControlsMenu } from './viewer-controls-menu';
@@ -114,6 +115,9 @@ export function CircuitViewerChrome({
               container={portalContainer}
               isFullscreen={isFullscreen}
             />
+            {viz.menu.onToggleElectrodes && viz.menu.showElectrodes !== false && (
+              <ElectrodeInteractionHelp container={portalContainer} />
+            )}
           </>
         )}
       </div>

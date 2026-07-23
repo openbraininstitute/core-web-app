@@ -47,7 +47,7 @@ export function ModelPreview({
   electrodeOverlaysEnabled?: boolean;
 }) {
   const flagEnabled = useFlag(electrodeOverlaysFlag.key);
-  const featureEnabled = electrodeOverlaysEnabled ?? flagEnabled;
+  const featureEnabled = electrodeOverlaysEnabled ?? !!flagEnabled;
 
   return (
     match(model)

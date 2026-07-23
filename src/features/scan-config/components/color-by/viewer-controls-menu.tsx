@@ -178,11 +178,6 @@ export function ViewerControlsMenu({
               <Switch size="small" checked={!!showElectrodes} onChange={onToggleElectrodes} />
             </MenuRow>
           )}
-          {onToggleElectrodes && showElectrodes !== false && (
-            <p className="px-2 pb-1 text-[11px] leading-snug text-neutral-500">
-              Drag to move · Right-drag to rotate
-            </p>
-          )}
           {onElectrodeRadiusChange && electrodeRadius !== undefined && showElectrodes !== false && (
             <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
               <div className="flex items-center justify-between gap-2">
