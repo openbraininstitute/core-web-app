@@ -2,6 +2,8 @@ import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
+import { getAsset } from '@/api/entitycore/selectors/assets';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
@@ -34,6 +36,15 @@ import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
+
+function circuitHasDesignerImage(circuit: ICircuit): boolean {
+  return (
+    getAsset({
+      assets: circuit.assets ?? [],
+      label: AssetLabel.simulation_designer_image,
+    }).getAllOrNull() !== null
+  );
+}
 
 interface CircuitPreviewProps {
   className?: string;
@@ -90,7 +101,14 @@ export function CircuitPreview({
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
 
-  const activeMode: ViewerMode = enableVisualization ? mode : 'image';
+  const hasDesignerImage = circuitHasDesignerImage(circuit);
+  // Synaptome (beta) / some circuits have no designer image — stay in 3D and
+  // hide the mode toggle so image mode cannot toast "No image found".
+  const activeMode: ViewerMode = !enableVisualization
+    ? ViewerModeDict.Image
+    : !hasDesignerImage
+      ? ViewerModeDict.Visualization
+      : mode;
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [populationName, setPopulationName] = useState<string | undefined>();
@@ -218,8 +236,8 @@ export function CircuitPreview({
 
       {enableVisualization && (
         <CircuitViewerChrome
-          mode={activeMode}
-          onModeChange={setMode}
+          mode={hasDesignerImage ? activeMode : undefined}
+          onModeChange={hasDesignerImage ? setMode : undefined}
           theme={theme}
           table={{ active: showTable, onToggle: handleToggleTable }}
           viz={activeMode === ViewerModeDict.Visualization ? { menu, colorBy } : undefined}
