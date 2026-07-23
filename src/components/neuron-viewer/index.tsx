@@ -56,6 +56,7 @@ type Props = {
   }) => React.ReactNode;
 };
 
+// TODO: Consider merging this into a unified neuron / circuit visualization component
 export function NeuronViewer({
   children,
   meModelId,
