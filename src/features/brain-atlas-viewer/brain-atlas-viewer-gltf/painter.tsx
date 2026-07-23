@@ -262,12 +262,16 @@ export class Painter {
         }
       }
       if (shouldAutoFitCamera && mergedBounds && this.cameraController) {
-        // Framing is cosmetic: if it fails, the meshes are already in the scene,
-        // so log and carry on rather than leaving the canvas hidden behind the
-        // loading placeholder forever.
+        // Framing is cosmetic — the meshes are already in the scene — but it still
+        // needs its own catch: the guarded finally below releases the loading flags,
+        // yet a throw here would skip the queue drain that follows it and surface as
+        // an unhandled rejection at the fire-and-forget call sites.
+        // Count the attempt either way. A fit that throws will throw again on the
+        // same bounds, so retrying it on every selection change only repeats the
+        // failure and its log.
+        this.hasFittedCamera = true;
         try {
           this.cameraController.fitToBounds(mergedBounds.min, mergedBounds.max);
-          this.hasFittedCamera = true;
         } catch (ex) {
           logError('Unable to fit the camera to the mesh bounds:', ex);
         }

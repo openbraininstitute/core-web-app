@@ -80,13 +80,17 @@ vi.mock('@tolokoban/tgd', () => {
   };
 });
 
+// `satisfies CameraController` is the point of the annotation: this stub is why the
+// missing `resetZoom` was invisible to the suite, so make it fail to compile the day
+// the real interface changes shape.
 vi.mock('./camera', () => ({
-  setCamera: () => ({
-    resetCamera: () => undefined,
-    fitToBounds: () => {
-      if (h.fitToBoundsError) throw h.fitToBoundsError;
-    },
-  }),
+  setCamera: () =>
+    ({
+      resetCamera: () => undefined,
+      fitToBounds: () => {
+        if (h.fitToBoundsError) throw h.fitToBoundsError;
+      },
+    }) satisfies CameraController,
 }));
 
 vi.mock('./hooks', () => ({
@@ -114,6 +118,7 @@ import { Painter } from './painter';
 import { RegionMeshNotAvailableError } from './services/errors';
 import { getCachedBrainRegionMeshArrayBuffer } from './services/services';
 
+import type { CameraController } from './camera';
 import type { VisibleRegion } from './types';
 
 const region: VisibleRegion = {
@@ -132,6 +137,17 @@ async function waitForParse() {
 }
 
 /**
+ * Wait for the suspended GLB `parse`, settle it with `asset`, then release the
+ * handles so a following `setRegions` cycle can suspend on its own parse.
+ */
+async function settleParseWith(asset: unknown) {
+  await waitForParse();
+  h.resolveParse?.(asset);
+  h.resolveParse = null;
+  h.rejectParse = null;
+}
+
+/**
  * Arrange a started painter that is mid-mesh-load: it has dispatched listeners
  * wired up and a `setRegions` call in flight, suspended on the GLB `parse`.
  * Callers `await waitForParse()` then drive the teardown/resolve they're testing.
@@ -139,23 +155,27 @@ async function waitForParse() {
 function startMeshLoad() {
   const painter = new Painter('atlas-2', {} as never);
   const dispatched: unknown[] = [];
+  const loading: boolean[] = [];
   painter.eventError.addListener((message) => dispatched.push(message));
+  painter.eventLoading.addListener((value) => loading.push(value));
 
   painter.start({} as HTMLCanvasElement);
 
   // Mesh load starts; it suspends on the network fetch, then on `TgdDataGlb.parse`.
   const pending = painter.setRegions([region], 'access-token');
-  return { painter, dispatched, pending };
+  return { painter, dispatched, loading, pending };
 }
 
-describe('Painter.setRegions — context teardown race (issue #490)', () => {
-  beforeEach(() => {
-    h.resolveParse = null;
-    h.rejectParse = null;
-    h.xrayContexts.length = 0;
-    h.logError.mockClear();
-  });
+beforeEach(() => {
+  h.resolveParse = null;
+  h.rejectParse = null;
+  h.xrayContexts.length = 0;
+  h.logError.mockClear();
+  h.fitToBoundsError = null;
+  vi.mocked(getCachedBrainRegionMeshArrayBuffer).mockClear();
+});
 
+describe('Painter.setRegions — context teardown race (issue #490)', () => {
   it('does not use a deleted context or show a popup when a mesh load resolves after a restart', async () => {
     const { painter, dispatched, pending } = startMeshLoad();
     await waitForParse();
@@ -227,29 +247,14 @@ const assetWithBounds = {
 };
 
 describe('Painter.setRegions — camera auto-fit failure', () => {
-  beforeEach(() => {
-    h.resolveParse = null;
-    h.rejectParse = null;
-    h.xrayContexts.length = 0;
-    h.logError.mockClear();
-    h.fitToBoundsError = null;
-    vi.mocked(getCachedBrainRegionMeshArrayBuffer).mockClear();
-  });
-
   it('clears the loading flag and stays usable when the camera fails to fit the bounds', async () => {
     // Framing runs after every mesh is already in the scene, so a throw there must
     // not strand the viewer: the card keeps its canvas hidden behind the loading
     // placeholder for as long as `eventLoading` never reports false.
     h.fitToBoundsError = new Error('resetZoom is not a function');
 
-    const painter = new Painter('atlas-2', {} as never);
-    const loading: boolean[] = [];
-    painter.eventLoading.addListener((value) => loading.push(value));
-    painter.start({} as HTMLCanvasElement);
-
-    const pending = painter.setRegions([region], 'access-token');
-    await waitForParse();
-    h.resolveParse?.(assetWithBounds);
+    const { painter, loading, pending } = startMeshLoad();
+    await settleParseWith(assetWithBounds);
     await pending;
 
     expect(loading.at(-1)).toBe(false);
@@ -258,11 +263,9 @@ describe('Painter.setRegions — camera auto-fit failure', () => {
 
     // `isAddingRegions` must have been released too, otherwise the next call is
     // parked in the one-slot queue forever and the viewer can never recover.
-    h.resolveParse = null;
     vi.mocked(getCachedBrainRegionMeshArrayBuffer).mockClear();
     const next = painter.setRegions([{ ...region, id: 'cerebellum' }], 'access-token');
-    await waitForParse();
-    h.resolveParse?.(assetWithBounds);
+    await settleParseWith(assetWithBounds);
     await next;
 
     expect(getCachedBrainRegionMeshArrayBuffer).toHaveBeenCalledTimes(1);
