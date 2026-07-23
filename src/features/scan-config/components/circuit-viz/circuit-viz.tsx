@@ -56,8 +56,8 @@ interface CircuitVizProps {
   /** Form-selected electrode block name → highlight in the 3D view. */
   highlightedOverlayId?: string | null;
   /**
-   * Neuron paint opacity (0–1). Default low (~0.2) so electrodes stay readable;
-   * electrode markers themselves stay fully opaque regardless of this value.
+   * Neuron paint opacity (0–1). Host defaults: 1 generally, 0.2 for the
+   * extracellular recording array campaign. Electrode markers stay opaque.
    */
   neuronOpacity?: number;
   /** Electrode marker radius in world units (morphoviewer `overlaysRadius`). */
@@ -124,7 +124,7 @@ function CircuitVizView({
   onOverlayTransform,
   highlightedOverlayId = null,
   neuronOpacity,
-  electrodeRadius = 25,
+  electrodeRadius = 10,
   source,
   clearSequentialOnAxonToggle = false,
   errorActions,

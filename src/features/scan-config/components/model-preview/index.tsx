@@ -14,6 +14,7 @@ export function ModelPreview({
   setConfig,
   selectedRootElement,
   selectedEntry,
+  defaultNeuronOpacity,
 }: {
   model: TSupportedEntitiesForScanConfiguration;
   /** Live scan-config (used for electrode_locations overlays). */
@@ -24,6 +25,11 @@ export function ModelPreview({
   selectedRootElement?: string;
   /** Dictionary entry name currently selected (overlay id when electrodes). */
   selectedEntry?: string;
+  /**
+   * Initial neuron opacity for the circuit viewer. Host-owned (scan-config,
+   * details, …). Omit for 100%; pass e.g. 0.2 when electrodes should dominate.
+   */
+  defaultNeuronOpacity?: number;
 }) {
   return (
     match(model)
@@ -56,6 +62,7 @@ export function ModelPreview({
             selectedEntry={selectedEntry}
             enableVisualization
             enableElectrodes={circuit.scale !== CircuitScaleDictionary.Single}
+            defaultNeuronOpacity={defaultNeuronOpacity}
           />
         )
       )
@@ -68,6 +75,7 @@ export function ModelPreview({
           selectedEntry={selectedEntry}
           enableVisualization
           largeCircuit
+          defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
       .otherwise(() => null)

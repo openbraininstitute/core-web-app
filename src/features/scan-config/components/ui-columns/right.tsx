@@ -6,10 +6,12 @@ import { useEffect } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ViewVariant, WorkspaceSection } from '@/constants';
+import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
   usePreviewRecord,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
+import { ELECTRODE_FOCUSED_NEURON_OPACITY } from '@/features/scan-config/components/color-by/use-viewer-config';
 import {
   ScanConfigActivity,
   type TScanConfigActivity,
@@ -17,6 +19,7 @@ import {
 } from '@/features/scan-config/types';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { ScanConfigGeneratedApiPath } from '@/ui/segments/workflows/config/scan-config-binding';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { Config } from '@/features/scan-config/types';
@@ -64,6 +67,14 @@ export function Right({
   const searchParams = useSearchParams();
   const sessionId = params?.id;
   const origin = searchParams.get('origin') ?? '';
+
+  const workflowField = useScanConfigWorkflowEditorField();
+  // Host decides opacity — viewer stays reusable. Electrode campaign starts dim.
+  const defaultNeuronOpacity =
+    workflowField?.configureBinding?.generatedApiPath ===
+    ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray
+      ? ELECTRODE_FOCUSED_NEURON_OPACITY
+      : undefined;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: clear stale preview when route session or entity changes
   useEffect(() => {
@@ -121,6 +132,7 @@ export function Right({
             setConfig={setConfig}
             selectedRootElement={selectedRootElement}
             selectedEntry={selectedEntry}
+            defaultNeuronOpacity={defaultNeuronOpacity}
           />
         </div>
       )}

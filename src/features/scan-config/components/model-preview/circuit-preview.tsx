@@ -45,6 +45,12 @@ interface CircuitPreviewProps {
    * that path is validated). Default true — still gated by overlay availability.
    */
   enableElectrodes?: boolean;
+  /**
+   * Initial neuron opacity (0–1). Host-owned so the viewer stays reusable
+   * (scan-config, data details, …). Omit for full opacity; pass
+   * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when electrodes should dominate.
+   */
+  defaultNeuronOpacity?: number;
   /** Live scan-config; when it contains `electrode_locations`, overlays are fetched. */
   config?: Config;
   /** When set, electrode drag/rotate in 3D writes origin/rotation back into the form. */
@@ -73,6 +79,7 @@ export function CircuitPreview({
   enableVisualization = false,
   largeCircuit = false,
   enableElectrodes = true,
+  defaultNeuronOpacity,
   config: scanConfig,
   setConfig,
   selectedRootElement,
@@ -119,6 +126,7 @@ export function CircuitPreview({
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
       supportsAxons,
       supportsElectrodes: enableElectrodes && electrodesAvailable,
+      defaultNeuronOpacity,
       population,
     });
 
