@@ -129,6 +129,9 @@ const ctaClassName =
 const resourceLinkClassName =
   'text-primary-8 flex w-full cursor-pointer items-center justify-between py-2.5 text-left text-sm font-normal no-underline transition-colors hover:opacity-80';
 
+const resourceDisabledClassName =
+  'text-primary-8 flex w-full items-center justify-between py-2.5 text-left text-sm font-normal opacity-60';
+
 function ResourceItem({
   resource,
   virtualLabId,
@@ -143,7 +146,7 @@ function ResourceItem({
 
   if (!entityId) {
     return (
-      <span className={resourceLinkClassName}>
+      <span className={resourceDisabledClassName}>
         <span>{resource.label}</span>
         <RiArrowRightLine className="size-4 shrink-0" />
       </span>
@@ -154,7 +157,7 @@ function ResourceItem({
     const targetType = resource.targetType?.trim();
     if (!targetType) {
       return (
-        <span className={resourceLinkClassName}>
+        <span className={resourceDisabledClassName}>
           <span>{resource.label}</span>
           <RiArrowRightLine className="size-4 shrink-0" />
         </span>
@@ -185,7 +188,7 @@ function ResourceItem({
   const href = resolveResourceHref({ resource, entityId, virtualLabId, projectId });
   if (!href) {
     return (
-      <span className={resourceLinkClassName}>
+      <span className={resourceDisabledClassName}>
         <span>{resource.label}</span>
         <RiArrowRightLine className="size-4 shrink-0" />
       </span>
