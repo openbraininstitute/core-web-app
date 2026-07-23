@@ -28,7 +28,7 @@ export function CircuitDetailViewer({ circuit }: { circuit: ICircuit }) {
   return (
     // Overview sits on `bg-primary-9 text-white`; pin dark text so the viewer's
     // white chrome (nodes table, menus) stays readable.
-    <div className="mb-8 h-[min(450px,55vh)] min-h-65 w-full overflow-hidden rounded-2xl border border-neutral-2 bg-white text-primary-9">
+    <div className="mb-8 h-[min(740px,80vh)] min-h-90 w-full overflow-hidden rounded-2xl border border-neutral-2 bg-white text-primary-9">
       <ErrorBoundary
         FallbackComponent={withErrorConfig({
           cls: { container: 'bg-white' },

@@ -31,6 +31,8 @@ type Props = {
   populations: NodePopulation[];
   populationName: string | undefined;
   onPopulationChange: (name: string) => void;
+  /** Portal mount for selects (fullscreen-safe). */
+  portalContainer?: HTMLElement | null;
 };
 
 export function NodesToolbar({
@@ -39,6 +41,7 @@ export function NodesToolbar({
   populations,
   populationName,
   onPopulationChange,
+  portalContainer,
 }: Props) {
   return (
     <div className={styles.toolbar}>
@@ -51,7 +54,7 @@ export function NodesToolbar({
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className={contentCls}>
+          <SelectContent className={contentCls} container={portalContainer}>
             <SelectItem value="nodes" className={itemCls}>
               Nodes
             </SelectItem>
@@ -68,6 +71,7 @@ export function NodesToolbar({
           populations={populations}
           value={populationName}
           onChange={onPopulationChange}
+          portalContainer={portalContainer}
         />
       </div>
     </div>

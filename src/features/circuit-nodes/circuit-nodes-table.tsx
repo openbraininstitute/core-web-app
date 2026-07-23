@@ -23,6 +23,8 @@ type Props = {
   /** when set with `onPopulationChange`, population is controlled by the parent */
   populationName?: string;
   onPopulationChange?: (name: string) => void;
+  /** Portal mount for toolbar menus (fullscreen-safe). */
+  portalContainer?: HTMLElement | null;
 };
 
 export default function CircuitNodesTable({
@@ -30,6 +32,7 @@ export default function CircuitNodesTable({
   className,
   populationName: controlledPopulationName,
   onPopulationChange,
+  portalContainer,
 }: Props) {
   const { config, isLoading: configLoading, error: configError } = useCircuitConfig(circuit);
 
@@ -81,6 +84,7 @@ export default function CircuitNodesTable({
         populations={config?.nodes ?? []}
         populationName={population?.name}
         onPopulationChange={setSelectedPopulationName}
+        portalContainer={portalContainer}
       />
       <div className={styles.body}>
         {renderBody({

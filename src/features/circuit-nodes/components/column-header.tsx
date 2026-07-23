@@ -162,6 +162,7 @@ export function ColumnHeader(props: Props) {
       trigger={['click']}
       placement="bottomRight"
       overlayClassName={styles.columnMenu}
+      getPopupContainer={() => (document.fullscreenElement as HTMLElement | null) ?? document.body}
     >
       <button type="button" className={styles.iconButton} aria-label="Column menu">
         <RiMore2Fill size={14} />

@@ -18,6 +18,7 @@ import {
   ViewerModeDict,
 } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
+import { useFullscreenElement } from '@/features/scan-config/components/color-by/use-fullscreen-element';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
 import {
@@ -109,6 +110,8 @@ export function CircuitPreview({
     : !hasDesignerImage
       ? ViewerModeDict.Visualization
       : mode;
+
+  const portalContainer = useFullscreenElement();
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [populationName, setPopulationName] = useState<string | undefined>();
@@ -266,6 +269,7 @@ export function CircuitPreview({
             circuit={circuit}
             populationName={populationName}
             onPopulationChange={handlePopulationChange}
+            portalContainer={portalContainer}
           />
         </div>
       )}
