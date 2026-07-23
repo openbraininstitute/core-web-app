@@ -4,9 +4,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
-import { ElectrodeInteractionHelp } from './electrode-interaction-help';
 import { ModeToggle } from './mode-toggle';
 import { useFullscreenElement } from './use-fullscreen-element';
 import { ViewerControlsMenu } from './viewer-controls-menu';
