@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ViewVariant, WorkspaceSection } from '@/constants';
+import { useFlag } from '@/features/feature-flags';
+import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
   usePreviewRecord,
@@ -69,12 +71,14 @@ export function Right({
   const origin = searchParams.get('origin') ?? '';
 
   const workflowField = useScanConfigWorkflowEditorField();
-  // Host decides opacity — viewer stays reusable. Electrode campaign starts dim.
-  const defaultNeuronOpacity =
+  const electrodeOverlaysEnabled = useFlag(electrodeOverlaysFlag.key);
+  // Host decides opacity — viewer stays reusable. Dim only when overlays are on
+  // and this is the extracellular recording array campaign.
+  const isElectrodeCampaign =
     workflowField?.configureBinding?.generatedApiPath ===
-    ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray
-      ? ELECTRODE_FOCUSED_NEURON_OPACITY
-      : undefined;
+    ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray;
+  const defaultNeuronOpacity =
+    electrodeOverlaysEnabled && isElectrodeCampaign ? ELECTRODE_FOCUSED_NEURON_OPACITY : undefined;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: clear stale preview when route session or entity changes
   useEffect(() => {

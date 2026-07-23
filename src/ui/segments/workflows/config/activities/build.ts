@@ -1,6 +1,7 @@
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { extracellularRecordingArrayBuildFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
 import { createExtracellularRecordingArrayWorkflow } from '@/features/scan-config/workflow/definitions/create-extracellular-recording-array';
@@ -190,6 +191,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     order: 6,
     disabled: false,
+    requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
   },
   {
     ...WorkflowBrowseDefaults,

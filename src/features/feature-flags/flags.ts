@@ -36,11 +36,21 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** Interactive electrode overlays in circuit preview (independent of the build workflow). */
+export const electrodeOverlaysFlag = defineFlag<boolean>({
+  key: 'electrode-overlays',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Interactive electrode overlays in circuit preview',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
+  electrodeOverlaysFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

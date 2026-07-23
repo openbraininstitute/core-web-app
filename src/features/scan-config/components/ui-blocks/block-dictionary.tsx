@@ -2,6 +2,8 @@ import { capitalize } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 
+import { useFlag } from '@/features/feature-flags';
+import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import {
   getBlockUsabilityConfig,
   isRootBlock,
@@ -73,6 +75,7 @@ export default function BlockDictionary({
   const circuitSceneAnchor = useAtomValue(circuitSceneAnchorAtom);
   const showingDiffs = useShowingDiffs();
   const previewData = useDiffPreview(selectedRootElement, selectedEntry);
+  const electrodeOverlaysEnabled = useFlag(electrodeOverlaysFlag.key);
 
   const selectedBlockLocal =
     isPlainObject(config[selectedRootElement]) &&
@@ -199,8 +202,10 @@ export default function BlockDictionary({
                       initial[subkey] = subValue.default ?? null;
                     });
 
-                  // Seed origin at the loaded circuit centre so new probes appear in view.
+                  // Seed origin at the loaded circuit centre so new probes appear in view
+                  // (only when electrode overlays are feature-flagged on).
                   const seededInitial =
+                    electrodeOverlaysEnabled &&
                     selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY
                       ? (seedElectrodeInitialOrigin(initial, circuitSceneAnchor) as Record<
                           string,
