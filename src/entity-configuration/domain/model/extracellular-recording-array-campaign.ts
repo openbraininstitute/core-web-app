@@ -10,6 +10,7 @@ import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { Task, type TTaskFlowTypes } from '@/entity-configuration/domain/task-functions';
+import { extracellularRecordingArrayBuildFlag } from '@/features/feature-flags/flags';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -129,6 +130,7 @@ export const ExtracellularRecordingArrayCampaign: EntityCoreTypeConfig<
   group: EntityTypeGroup.Models,
   title: 'Extracellular recording array (beta)',
   extendedType: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
+  requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
   type: EntityTypeDict.TaskConfig,
   slug: EntitySlug.ExtracellularRecordingArrayCampaign,
   api: {

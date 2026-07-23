@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { ModeToggle } from './mode-toggle';
@@ -114,6 +115,9 @@ export function CircuitViewerChrome({
               container={portalContainer}
               isFullscreen={isFullscreen}
             />
+            {viz.menu.onToggleElectrodes && viz.menu.showElectrodes !== false && (
+              <ElectrodeInteractionHelp container={portalContainer} />
+            )}
           </>
         )}
       </div>

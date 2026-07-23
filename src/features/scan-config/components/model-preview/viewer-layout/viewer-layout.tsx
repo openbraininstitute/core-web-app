@@ -17,8 +17,11 @@ export interface ViewerLayoutProps {
 }
 
 /**
- * Single-scale circuit preview: loads morphology from the SONATA asset
- * (production path). Electrode overlays are intentionally not wired here yet.
+ * Legacy single-scale preview shell (SONATA → MorphoViewerSmallCircuit).
+ *
+ * Prefer {@link CircuitPreview} / {@link CircuitViz}, which select the SONATA
+ * loader via {@link resolveSmallCircuitLoaderKind}. Kept for the shared
+ * {@link CircuitLoader} module and download helper under this folder.
  */
 export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
   const [progress, setProgress] = React.useState(0);

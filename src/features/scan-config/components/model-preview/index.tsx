@@ -1,12 +1,15 @@
+'use client';
+
 import { memo } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { useFlag } from '@/features/feature-flags';
+import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
+import { resolveEnableElectrodes } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
-
-import ViewerLayout from './viewer-layout';
 
 import type { Config, TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
@@ -16,6 +19,12 @@ export function ModelPreview({
   setConfig,
   selectedRootElement,
   selectedEntry,
+  defaultNeuronOpacity,
+  /**
+   * When set, overrides the feature flag for electrode overlays.
+   * Useful for data-details hosts that opt in/out independently of the build flag.
+   */
+  electrodeOverlaysEnabled,
 }: {
   model: TSupportedEntitiesForScanConfiguration;
   /** Live scan-config (used for electrode_locations overlays). */
@@ -26,7 +35,20 @@ export function ModelPreview({
   selectedRootElement?: string;
   /** Dictionary entry name currently selected (overlay id when electrodes). */
   selectedEntry?: string;
+  /**
+   * Initial neuron opacity for the circuit viewer. Host-owned (scan-config,
+   * details, …). Omit for 100%; pass e.g. 0.2 when electrodes should dominate.
+   */
+  defaultNeuronOpacity?: number;
+  /**
+   * Explicit electrode-overlay gate. When omitted, uses
+   * {@link electrodeOverlaysFlag}.
+   */
+  electrodeOverlaysEnabled?: boolean;
 }) {
+  const flagEnabled = useFlag(electrodeOverlaysFlag.key);
+  const featureEnabled = electrodeOverlaysEnabled ?? !!flagEnabled;
+
   return (
     match(model)
       .with({ type: EntityTypeDict.Memodel }, () => (
@@ -37,28 +59,30 @@ export function ModelPreview({
           disableSynapses
         />
       ))
-      // Single-scale circuits load from the SONATA asset (ViewerLayout), not the
-      // OBI-One /circuit/viz nodes API used by CircuitPreview — that API fails for singles.
-      // Electrode overlays are not enabled on this path yet.
-      .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (
-        <ViewerLayout model={model} />
-      ))
+      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit.
+      // Loader strategy is selected inside CircuitViz by scale (SONATA vs OBI-One).
       .with(
         {
           type: EntityTypeDict.Circuit,
           scale: P.union(
+            CircuitScaleDictionary.Single,
             CircuitScaleDictionary.PairNeuron,
             CircuitScaleDictionary.SmallMicrocircuit
           ),
         },
-        () => (
+        (circuit) => (
           <CircuitPreview
-            circuit={model as ICircuit}
+            circuit={circuit as ICircuit}
             config={config}
             setConfig={setConfig}
             selectedRootElement={selectedRootElement}
             selectedEntry={selectedEntry}
             enableVisualization
+            enableElectrodes={resolveEnableElectrodes({
+              featureEnabled,
+              scale: circuit.scale,
+            })}
+            defaultNeuronOpacity={defaultNeuronOpacity}
           />
         )
       )
@@ -71,6 +95,11 @@ export function ModelPreview({
           selectedEntry={selectedEntry}
           enableVisualization
           largeCircuit
+          enableElectrodes={resolveEnableElectrodes({
+            featureEnabled,
+            largeCircuit: true,
+          })}
+          defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
       .otherwise(() => null)

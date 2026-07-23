@@ -1,0 +1,111 @@
+import { useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
+
+import authFetch from '@/auth-fetch';
+import { config } from '@/config';
+import { sequentialCellLoader } from '@/features/scan-config/components/circuit-viz/sequential-loader';
+import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
+import { NodesSchema } from '@/features/scan-config/types';
+import useWorkspace from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
+import type { SmallCircuitSource } from './types';
+
+type Options = {
+  circuitId: string;
+  showAxons: boolean;
+  colorsByNode?: string[];
+  defaultColor?: string;
+};
+
+/**
+ * Pair / small-microcircuit source: OBI-One `/circuit/viz` nodes + morphologies.
+ *
+ * Hard backend constraint: OBI-One rejects `scale=single` — do not use this
+ * adapter for singles ({@link useSonataAssetSource} instead).
+ */
+export function useObiOneVizSource({
+  circuitId,
+  showAxons,
+  colorsByNode,
+  defaultColor = DEFAULT_NEURON_COLOR,
+}: Options): SmallCircuitSource {
+  const { virtualLabId, projectId } = useWorkspace();
+  const { data: nodes, error, isLoading } = useCircuitNodes(circuitId, virtualLabId, projectId);
+
+  const cells: MorphoViewerSmallCircuitCell[] = useMemo(() => {
+    return (
+      nodes?.map((node, i) => ({
+        id: makeNodeKey(circuitId, showAxons, i),
+        center: node.position,
+        orientation: node.orientation,
+        somaRadius: 8,
+        color: colorsByNode?.[i] ?? defaultColor,
+      })) ?? []
+    );
+  }, [circuitId, showAxons, nodes, colorsByNode, defaultColor]);
+
+  const nodesById = useMemo(() => {
+    if (!nodes) return new Map<string, NonNullable<typeof nodes>[number]>();
+    return new Map(nodes.map((node, i) => [makeNodeKey(circuitId, showAxons, i), node]));
+  }, [circuitId, showAxons, nodes]);
+
+  const loadCell = useCallback(
+    async (cellId: string) => {
+      const node = nodesById.get(cellId);
+      if (!node) return null;
+
+      const { morphology_file: file, morphology_name: name } = node;
+      return sequentialCellLoader.load({
+        virtualLabId,
+        projectId,
+        circuitId,
+        cellId,
+        name,
+        file,
+        showAxon: showAxons,
+      });
+    },
+    [nodesById, virtualLabId, projectId, circuitId, showAxons]
+  );
+
+  return {
+    cells,
+    loadCell,
+    isLoading,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+  };
+}
+
+function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
+  return useQuery({
+    queryKey: keyBuilder.circuitNodes(id),
+    queryFn: async () => {
+      const res = await authFetch(`${config.OBI_ONE_URL}/circuit/viz/${id}/nodes`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'virtual-lab-id': virtualLabId,
+          'project-id': projectId,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch circuit viz for id "${id}"!`);
+      }
+
+      const json = await res.json();
+      return NodesSchema.parse(json);
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+}
+
+function makeNodeKey(circuitId: string, showAxon: boolean, index: number) {
+  return `${circuitId} / ${showAxon} #${index}`;
+}

@@ -65,7 +65,7 @@ export function LargeCircuitPreview({
   onOverlayTransform,
   highlightedOverlayId = null,
   neuronOpacity,
-  electrodeRadius = 25,
+  electrodeRadius = 10,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);

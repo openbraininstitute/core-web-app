@@ -26,6 +26,12 @@ interface Options {
   supportsAxons?: boolean;
   /** whether electrode overlays are available for this preview */
   supportsElectrodes?: boolean;
+  /**
+   * Initial neuron opacity (0–1). Host-owned — e.g. pass
+   * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
+   * Defaults to full opacity when omitted.
+   */
+  defaultNeuronOpacity?: number;
   /** SONATA population whose H5 columns drive colour-by and the nodes table */
   population?: NodePopulation;
 }
@@ -58,10 +64,12 @@ export interface ColorByControls {
  */
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
-  { supportsAxons, supportsElectrodes, population }: Options = {}
+  { supportsAxons, supportsElectrodes, defaultNeuronOpacity, population }: Options = {}
 ) {
   const circuitId = circuit?.id ?? '';
-  const { config, hasSavedConfig, update, reset } = useViewerConfig(circuitId);
+  const { config, hasSavedConfig, update, reset } = useViewerConfig(circuitId, {
+    defaultNeuronOpacity,
+  });
   const property = config.colorByProperty;
   const overridesForProperty = property ? config.colorOverrides[property] : undefined;
   const backgroundDark = backgroundIsDark(config.backgroundColor);
