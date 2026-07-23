@@ -201,71 +201,86 @@ export class Painter {
     this.loadingMesh = true;
     this.isAddingRegions = true;
     this.nextRegionsToAdd = null;
-    const shouldAutoFitCamera = !this.hasFittedCamera && this.AtlasID !== config.MOUSE_ATLAS__ID;
-    let mergedBounds: MeshBounds | null = null;
-    const regionsKeys = new Set(regions.map((region) => region.id));
-    const keysToRemove: string[] = [];
-    for (const key of this.regionPainters.keys()) {
-      if (!regionsKeys.has(key)) {
-        keysToRemove.push(key);
+    try {
+      const shouldAutoFitCamera = !this.hasFittedCamera && this.AtlasID !== config.MOUSE_ATLAS__ID;
+      let mergedBounds: MeshBounds | null = null;
+      const regionsKeys = new Set(regions.map((region) => region.id));
+      const keysToRemove: string[] = [];
+      for (const key of this.regionPainters.keys()) {
+        if (!regionsKeys.has(key)) {
+          keysToRemove.push(key);
+        }
+      }
+      for (const key of keysToRemove) {
+        const painter = this.regionPainters.get(key);
+        this.regionPainters.delete(key);
+        if (!painter) continue;
+
+        this.group?.remove(painter);
+        this.context?.paint();
+      }
+      for (const region of regions) {
+        try {
+          const data = await getCachedBrainRegionMeshArrayBuffer({
+            atlasId: this.AtlasID,
+            regionId: region.id,
+            queryClient: this.queryClient,
+          });
+          // Context was torn down / replaced while fetching. Abort silently and do
+          // NOT reset isAddingRegions/loadingMesh — a newer start()/setRegions owns
+          // that state now, which the guard on the finally below preserves.
+          if (contextVersion !== this.contextVersion) return;
+
+          const meshBounds = await this.addMesh(data, region, contextVersion);
+          // addMesh swallows its own errors and resolves null, so re-check here
+          // before falling through to the cleanup tail.
+          if (contextVersion !== this.contextVersion) return;
+
+          if (shouldAutoFitCamera && meshBounds) {
+            mergedBounds = this.mergeBounds(mergedBounds, meshBounds);
+          }
+        } catch (ex) {
+          // A stale request must never surface a popup on whatever tab the user has
+          // navigated to. Only genuine failures on the current context dispatch.
+          if (contextVersion !== this.contextVersion) return;
+
+          // The region simply has no mesh in this atlas (a selectable-but-non-volumetric
+          // region, e.g. "grooves"). Expected and benign — log it, skip the popup, and
+          // keep loading the remaining regions.
+          if (isMeshNotAvailableError(ex)) {
+            logError(`No 3D mesh available for region "${region.name}":`, ex);
+            continue;
+          }
+
+          logError(`Unable to load mesh for region "${region.name}":`, ex);
+          this.eventError.dispatch(
+            <>
+              <strong>{region.name}</strong>
+              <p>An error occurred while attempting to visualize the brain region mesh.</p>
+            </>
+          );
+        }
+      }
+      if (shouldAutoFitCamera && mergedBounds && this.cameraController) {
+        // Framing is cosmetic: if it fails, the meshes are already in the scene,
+        // so log and carry on rather than leaving the canvas hidden behind the
+        // loading placeholder forever.
+        try {
+          this.cameraController.fitToBounds(mergedBounds.min, mergedBounds.max);
+          this.hasFittedCamera = true;
+        } catch (ex) {
+          logError('Unable to fit the camera to the mesh bounds:', ex);
+        }
+      }
+    } finally {
+      // Only the current owner may clear these. On a stale context a newer
+      // start()/setRegions has taken over and must keep them set (cf. the early
+      // returns above and setPointCloud's guarded finally).
+      if (contextVersion === this.contextVersion) {
+        this.isAddingRegions = false;
+        this.loadingMesh = false;
       }
     }
-    for (const key of keysToRemove) {
-      const painter = this.regionPainters.get(key);
-      this.regionPainters.delete(key);
-      if (!painter) continue;
-
-      this.group?.remove(painter);
-      this.context?.paint();
-    }
-    for (const region of regions) {
-      try {
-        const data = await getCachedBrainRegionMeshArrayBuffer({
-          atlasId: this.AtlasID,
-          regionId: region.id,
-          queryClient: this.queryClient,
-        });
-        // Context was torn down / replaced while fetching. Abort silently and do
-        // NOT reset isAddingRegions/loadingMesh — a newer start()/setRegions owns
-        // that state now (cf. setPointCloud's guarded finally).
-        if (contextVersion !== this.contextVersion) return;
-
-        const meshBounds = await this.addMesh(data, region, contextVersion);
-        // addMesh swallows its own errors and resolves null, so re-check here
-        // before falling through to the cleanup tail.
-        if (contextVersion !== this.contextVersion) return;
-
-        if (shouldAutoFitCamera && meshBounds) {
-          mergedBounds = this.mergeBounds(mergedBounds, meshBounds);
-        }
-      } catch (ex) {
-        // A stale request must never surface a popup on whatever tab the user has
-        // navigated to. Only genuine failures on the current context dispatch.
-        if (contextVersion !== this.contextVersion) return;
-
-        // The region simply has no mesh in this atlas (a selectable-but-non-volumetric
-        // region, e.g. "grooves"). Expected and benign — log it, skip the popup, and
-        // keep loading the remaining regions.
-        if (isMeshNotAvailableError(ex)) {
-          logError(`No 3D mesh available for region "${region.name}":`, ex);
-          continue;
-        }
-
-        logError(`Unable to load mesh for region "${region.name}":`, ex);
-        this.eventError.dispatch(
-          <>
-            <strong>{region.name}</strong>
-            <p>An error occurred while attempting to visualize the brain region mesh.</p>
-          </>
-        );
-      }
-    }
-    if (shouldAutoFitCamera && mergedBounds && this.cameraController) {
-      this.cameraController.fitToBounds(mergedBounds.min, mergedBounds.max);
-      this.hasFittedCamera = true;
-    }
-    this.isAddingRegions = false;
-    this.loadingMesh = false;
     // Check if there is a waiting call.
     const nextRegionsToAdd = this.getNextRegionsToAdd();
     if (nextRegionsToAdd) {

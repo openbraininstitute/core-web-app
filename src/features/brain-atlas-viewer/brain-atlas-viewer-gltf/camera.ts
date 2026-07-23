@@ -99,13 +99,14 @@ export function setCamera(
 
   const resetCamera = () => {
     context.animSchedule({
+      // `restTransformation` carries no zoom, and the interpolation keeps the
+      // current one when the destination omits it, so ask for 1 explicitly to
+      // undo whatever the user wheeled to.
       action: tgdActionCreateCameraInterpolation(context.camera, {
         ...restTransformation,
+        zoom: 1,
       }),
       duration: 0.5,
-      onEnd: () => {
-        controller.resetZoom();
-      },
     });
   };
 
@@ -122,9 +123,6 @@ export function setCamera(
       fovy: tgdCalcDegToRad(55),
       transfo: { ...restTransformation },
     });
-    // a new camera instance invalidates the orbit controller's zoom baseline.
-    // re-sync it to avoid the first wheel zoom causing a huge jump.
-    controller.resetZoom();
     context.paint();
   };
 

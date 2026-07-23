@@ -8,6 +8,8 @@ const h = vi.hoisted(() => ({
   rejectParse: null as null | ((reason: unknown) => void),
   xrayContexts: [] as Array<{ id: number; deleted: boolean }>,
   logError: vi.fn(),
+  /** When set, the camera's `fitToBounds` throws it. See the auto-fit failure test. */
+  fitToBoundsError: null as null | Error,
 }));
 
 // Fake the WebGL toolkit. `TgdDataGlb.parse` is suspended on a controllable
@@ -79,7 +81,12 @@ vi.mock('@tolokoban/tgd', () => {
 });
 
 vi.mock('./camera', () => ({
-  setCamera: () => ({ resetCamera: () => undefined, fitToBounds: () => undefined }),
+  setCamera: () => ({
+    resetCamera: () => undefined,
+    fitToBounds: () => {
+      if (h.fitToBoundsError) throw h.fitToBoundsError;
+    },
+  }),
 }));
 
 vi.mock('./hooks', () => ({
@@ -205,5 +212,60 @@ describe('Painter.setRegions — context teardown race (issue #490)', () => {
 
     expect(dispatched).toHaveLength(1);
     expect(h.logError).toHaveBeenCalled();
+  });
+});
+
+/**
+ * A parsed GLB whose POSITION accessor carries min/max, so `extractBoundsFromGltf`
+ * yields real bounds and `setRegions` goes on to auto-fit the camera.
+ */
+const assetWithBounds = {
+  getJson: () => ({
+    accessors: [{ min: [0, 0, 0], max: [1, 1, 1] }],
+    meshes: [{ primitives: [{ attributes: { POSITION: 0 } }] }],
+  }),
+};
+
+describe('Painter.setRegions — camera auto-fit failure', () => {
+  beforeEach(() => {
+    h.resolveParse = null;
+    h.rejectParse = null;
+    h.xrayContexts.length = 0;
+    h.logError.mockClear();
+    h.fitToBoundsError = null;
+    vi.mocked(getCachedBrainRegionMeshArrayBuffer).mockClear();
+  });
+
+  it('clears the loading flag and stays usable when the camera fails to fit the bounds', async () => {
+    // Framing runs after every mesh is already in the scene, so a throw there must
+    // not strand the viewer: the card keeps its canvas hidden behind the loading
+    // placeholder for as long as `eventLoading` never reports false.
+    h.fitToBoundsError = new Error('resetZoom is not a function');
+
+    const painter = new Painter('atlas-2', {} as never);
+    const loading: boolean[] = [];
+    painter.eventLoading.addListener((value) => loading.push(value));
+    painter.start({} as HTMLCanvasElement);
+
+    const pending = painter.setRegions([region], 'access-token');
+    await waitForParse();
+    h.resolveParse?.(assetWithBounds);
+    await pending;
+
+    expect(loading.at(-1)).toBe(false);
+    expect(painter.isLoading).toBe(false);
+    expect(h.logError).toHaveBeenCalled();
+
+    // `isAddingRegions` must have been released too, otherwise the next call is
+    // parked in the one-slot queue forever and the viewer can never recover.
+    h.resolveParse = null;
+    vi.mocked(getCachedBrainRegionMeshArrayBuffer).mockClear();
+    const next = painter.setRegions([{ ...region, id: 'cerebellum' }], 'access-token');
+    await waitForParse();
+    h.resolveParse?.(assetWithBounds);
+    await next;
+
+    expect(getCachedBrainRegionMeshArrayBuffer).toHaveBeenCalledTimes(1);
+    expect(painter.isLoading).toBe(false);
   });
 });
