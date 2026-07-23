@@ -41,8 +41,8 @@ describe('workflow naming', () => {
 
   it('orders Build with the superseded synaptome workflow last', () => {
     expect(enabledLabelsInOrder(WorkspaceSection.BuildWorkflow)).toEqual([
-      'Single neuron',
       'Ion channel',
+      'Single neuron',
       'Electron microscopy circuit',
       'Extracellular recording array',
       'Synaptome (legacy)',
