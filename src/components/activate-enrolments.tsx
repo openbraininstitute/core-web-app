@@ -29,23 +29,19 @@ export function ActivateEnrolmentsOnLoad() {
     if (!courseId || called.current) return;
     called.current = true;
 
-    const activate = async () => {
-      try {
-        await authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/${courseId}/enrolment/activate`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-        });
-
+    authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/${courseId}/enrolment/activate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    })
+      .then(() => {
         queryClient.invalidateQueries({ queryKey: keyBuilder.membership() });
         queryClient.invalidateQueries({ queryKey: [`${prefix}/list-filtered-virtual-labs`] });
         queryClient.invalidateQueries({ queryKey: [`${prefix}/projects-list`] });
-      } catch (error) {
+      })
+      .catch(() => {
         // biome-ignore lint/suspicious/noConsole: intentional error logging
-        console.error('Failed to activate enrolment', error);
-      }
-    };
-
-    activate();
+        console.error('Failed to activate enrolment');
+      });
   }, [courseId, config.VIRTUAL_LAB_API_URL, queryClient]);
 
   return null;
