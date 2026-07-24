@@ -3,7 +3,10 @@
 import dynamic from 'next/dynamic';
 import { ErrorBoundary } from 'react-error-boundary';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { WorkspaceSection } from '@/constants';
+import { resolveViewerFeaturesForEntityType } from '@/entity-configuration/domain/helpers';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
@@ -19,11 +22,17 @@ const CircuitPreview = dynamic(
 
 /**
  * Interactive 3D circuit viewer for Synaptome (beta) / single-scale circuit
- * detail Overview. Hosts the shared scan-config {@link CircuitPreview} without
- * electrode overlays or form sync.
+ * detail Overview. Feature flags come from the entity domain `viewer` policy.
  */
 export function CircuitDetailViewer({ circuit }: { circuit: ICircuit }) {
   if (!circuit) return null;
+
+  const features = resolveViewerFeaturesForEntityType(
+    ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+    {
+      section: WorkspaceSection.Data,
+    }
+  );
 
   return (
     // Overview sits on `bg-primary-9 text-white`; pin dark text so the viewer's
@@ -36,7 +45,7 @@ export function CircuitDetailViewer({ circuit }: { circuit: ICircuit }) {
           customError: 'Error while loading circuit viewer',
         })}
       >
-        <CircuitPreview circuit={circuit} enableVisualization enableElectrodes={false} />
+        <CircuitPreview circuit={circuit} enableVisualization features={features} />
       </ErrorBoundary>
     </div>
   );

@@ -32,6 +32,7 @@ import { classNames } from '@/util/utils';
 import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { Config } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
@@ -53,10 +54,10 @@ interface CircuitPreviewProps {
   enableVisualization?: boolean;
   largeCircuit?: boolean;
   /**
-   * When false, skip electrode overlay chrome/sync (e.g. single-scale until
-   * that path is validated). Default true — still gated by overlay availability.
+   * Domain-resolved viewer features (electrodes / colorBy / hover / nodes table).
+   * Omit for defaults: electrodes off, colorBy / cellHover / nodesTable on.
    */
-  enableElectrodes?: boolean;
+  features?: Partial<IEntityViewerFeatures>;
   /**
    * Initial neuron opacity (0–1). Host-owned so the viewer stays reusable
    * (scan-config, data details, …). Omit for full opacity; pass
@@ -90,13 +91,18 @@ export function CircuitPreview({
   circuit,
   enableVisualization = false,
   largeCircuit = false,
-  enableElectrodes = true,
+  features,
   defaultNeuronOpacity,
   config: scanConfig,
   setConfig,
   selectedRootElement,
   selectedEntry,
 }: CircuitPreviewProps) {
+  const enableElectrodes = features?.electrodes ?? false;
+  const enableColorBy = features?.colorBy ?? true;
+  const enableCellHover = features?.cellHover ?? true;
+  const enableNodesTable = features?.nodesTable ?? true;
+
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
@@ -164,11 +170,19 @@ export function CircuitPreview({
     enableElectrodes && setConfig && styledOverlays && styledOverlays.length > 0
   );
 
-  // Selecting an electrode in the form turns overlays on so it can be seen.
+  // Selecting an electrode (or having overlays) turns the toggle on so markers
+  // are visible after Add without hunting the settings menu.
   useEffect(() => {
-    if (!highlightedOverlayId || config.showElectrodes || !menu.onToggleElectrodes) return;
+    if (!enableElectrodes || config.showElectrodes || !menu.onToggleElectrodes) return;
+    if (!highlightedOverlayId && !(styledOverlays && styledOverlays.length > 0)) return;
     menu.onToggleElectrodes(true);
-  }, [highlightedOverlayId, config.showElectrodes, menu.onToggleElectrodes]);
+  }, [
+    enableElectrodes,
+    highlightedOverlayId,
+    styledOverlays,
+    config.showElectrodes,
+    menu.onToggleElectrodes,
+  ]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -197,44 +211,73 @@ export function CircuitPreview({
     ? Math.min(maxTableHeight, Math.max(MIN_TABLE_HEIGHT, tableHeight))
     : MIN_TABLE_HEIGHT;
 
+  const vizFeatures = useMemo(() => ({ cellHover: enableCellHover }), [enableCellHover]);
+
+  const showImage = activeMode === ViewerModeDict.Image;
+  const showViz = activeMode === ViewerModeDict.Visualization;
+  // Keep both panes mounted once available so mode switches don't remount
+  // WebGL / reload morphologies (visibility only).
+  const mountImage = hasDesignerImage || !enableVisualization;
+  const mountViz = enableVisualization;
+
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      {activeMode === ViewerModeDict.Image && (
-        <CircuitImage className={className} circuit={circuit} />
+      {mountImage && (
+        <div
+          className={classNames('absolute inset-0', !showImage && 'invisible pointer-events-none')}
+          aria-hidden={!showImage}
+          inert={!showImage || undefined}
+        >
+          <CircuitImage className={className} circuit={circuit} />
+        </div>
       )}
-      {activeMode === ViewerModeDict.Visualization && !largeCircuit && (
-        <CircuitViz
-          key={circuit.id}
-          circuit={circuit}
-          colorsByNode={colorsByNode}
-          defaultColor={defaultColor}
-          showAxons={config.showAxons}
-          backgroundColor={config.backgroundColor}
-          scalebarColor={theme?.foreground}
-          signals={signals}
-          overlays={styledOverlays}
-          overlaysInteractive={overlaysInteractive}
-          onOverlayTransform={handleOverlayTransform}
-          highlightedOverlayId={highlightedOverlayId}
-          neuronOpacity={config.neuronOpacity}
-          electrodeRadius={config.electrodeRadius}
-        />
+      {mountViz && !largeCircuit && (
+        <div
+          className={classNames('absolute inset-0', !showViz && 'invisible pointer-events-none')}
+          aria-hidden={!showViz}
+          inert={!showViz || undefined}
+        >
+          <CircuitViz
+            key={circuit.id}
+            circuit={circuit}
+            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            defaultColor={defaultColor}
+            showAxons={config.showAxons}
+            backgroundColor={config.backgroundColor}
+            scalebarColor={theme?.foreground}
+            signals={signals}
+            overlays={styledOverlays}
+            overlaysInteractive={overlaysInteractive}
+            onOverlayTransform={handleOverlayTransform}
+            highlightedOverlayId={highlightedOverlayId}
+            neuronOpacity={config.neuronOpacity}
+            electrodeRadius={config.electrodeRadius}
+            features={vizFeatures}
+          />
+        </div>
       )}
-      {activeMode === ViewerModeDict.Visualization && largeCircuit && (
-        <LargeCircuitPreview
-          key={circuit.id}
-          circuit={circuit}
-          colorsByNode={colorsByNode}
-          backgroundColor={config.backgroundColor}
-          scalebarColor={theme?.foreground}
-          signals={signals}
-          overlays={styledOverlays}
-          overlaysInteractive={overlaysInteractive}
-          onOverlayTransform={handleOverlayTransform}
-          highlightedOverlayId={highlightedOverlayId}
-          neuronOpacity={config.neuronOpacity}
-          electrodeRadius={config.electrodeRadius}
-        />
+      {mountViz && largeCircuit && (
+        <div
+          className={classNames('absolute inset-0', !showViz && 'invisible pointer-events-none')}
+          aria-hidden={!showViz}
+          inert={!showViz || undefined}
+        >
+          <LargeCircuitPreview
+            key={circuit.id}
+            circuit={circuit}
+            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            backgroundColor={config.backgroundColor}
+            scalebarColor={theme?.foreground}
+            signals={signals}
+            overlays={styledOverlays}
+            overlaysInteractive={overlaysInteractive}
+            onOverlayTransform={handleOverlayTransform}
+            highlightedOverlayId={highlightedOverlayId}
+            neuronOpacity={config.neuronOpacity}
+            electrodeRadius={config.electrodeRadius}
+            features={vizFeatures}
+          />
+        </div>
       )}
 
       {enableVisualization && (
@@ -242,8 +285,8 @@ export function CircuitPreview({
           mode={hasDesignerImage ? activeMode : undefined}
           onModeChange={hasDesignerImage ? setMode : undefined}
           theme={theme}
-          table={{ active: showTable, onToggle: handleToggleTable }}
-          viz={activeMode === ViewerModeDict.Visualization ? { menu, colorBy } : undefined}
+          table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
+          viz={{ menu, colorBy: enableColorBy ? colorBy : undefined }}
         />
       )}
 

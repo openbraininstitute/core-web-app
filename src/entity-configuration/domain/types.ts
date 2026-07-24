@@ -6,6 +6,10 @@ import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type {
+  IEntityViewerConfig,
+  IEntityViewerConfigSource,
+} from '@/entity-configuration/domain/viewer-config';
 import type { FlagKey } from '@/features/feature-flags/flags';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -87,6 +91,15 @@ export type EntityCoreTypeConfig<
     configfile?: AssetLabel;
   };
   viewDefinition?: ViewDefinitionConfig | null;
+  /**
+   * Optional 3D / model-preview feature policy for this entity.
+   *
+   * Static {@link IEntityViewerConfig} or contextual
+   * {@link IEntityViewerConfigSource}.
+   * Resolved via {@link resolveEntityViewerConfig}; see
+   * `@/entity-configuration/domain/viewer-config`.
+   */
+  viewer?: IEntityViewerConfig | IEntityViewerConfigSource;
   isBookmarkable: boolean;
   detailViewSections?: TDetailViewSectionDict[];
   isDownloadable?: boolean;

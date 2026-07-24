@@ -2,7 +2,6 @@ import { useSetAtom } from 'jotai';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { useDownloadHandler } from '@/features/scan-config/components/model-preview/viewer-layout/hooks';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
@@ -20,6 +19,7 @@ import {
 } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
@@ -63,6 +63,11 @@ interface CircuitVizProps {
   neuronOpacity?: number;
   /** Electrode marker radius in world units (morphoviewer `overlaysRadius`). */
   electrodeRadius?: number;
+  /**
+   * Viewer feature flags from domain `viewer` (via host).
+   * Only `cellHover` is consumed here today.
+   */
+  features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
 }
 
 /**
@@ -116,7 +121,6 @@ type CircuitVizViewProps = CircuitVizProps & {
 };
 
 function CircuitVizView({
-  circuit,
   showAxons,
   backgroundColor,
   scalebarColor,
@@ -127,10 +131,12 @@ function CircuitVizView({
   highlightedOverlayId = null,
   neuronOpacity,
   electrodeRadius = 10,
+  features,
   source,
   clearSequentialOnAxonToggle = false,
   errorActions,
 }: CircuitVizViewProps) {
+  const enableCellHover = features?.cellHover ?? true;
   const [progress, setProgress] = useState(0);
   // Stay covered for a paint frame after morphoviewer reports 100%, so the
   // neurite mesh replaces the soma placeholder before the overlay lifts.
@@ -158,11 +164,8 @@ function CircuitVizView({
     [scalebarColor]
   );
 
-  // Synaptome (beta) / single-neuron: skip whole-cell hover. Morphoviewer paints a
-  // flat ADD overlay for every id in `highlightedCellIds`; including the cell id
-  // washes out section colours. An empty list keeps that overlay black (ADD black
-  // = no change) so the shaded morphology matches production.
-  const enableCellHover = circuit.scale !== CircuitScaleDictionary.Single;
+  // Empty highlightedCellIds → morphoviewer flat overlay stays black (ADD black
+  // = no wash-out). Hosts pass features.cellHover from domain `viewer`.
   const [highlightedCellId, setHighlightedCellId] = useState('');
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
