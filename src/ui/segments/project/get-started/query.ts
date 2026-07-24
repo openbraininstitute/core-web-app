@@ -101,7 +101,10 @@ export const ProjectHomeGetStartedQuery = defineQuery(
       "resources": resources[]{
         _key,
         label,
-        link
+        entityType,
+        targetType,
+        "stagingLink": coalesce(stagingEntityId, stagingLink),
+        "productionLink": coalesce(productionEntityId, productionLink)
       }
     },
     "obiAssistant": obiAssistant[]{
@@ -112,10 +115,22 @@ export const ProjectHomeGetStartedQuery = defineQuery(
   }`
 );
 
+export const ProjectHomeResourceEntityTypeDict = {
+  Data: 'data',
+  Workflow: 'workflow',
+  Notebook: 'notebook',
+} as const;
+
+export type TProjectHomeResourceEntityType =
+  (typeof ProjectHomeResourceEntityTypeDict)[keyof typeof ProjectHomeResourceEntityTypeDict];
+
 export type TProjectHomeResource = {
   _key: string;
   label: string;
-  link: string;
+  entityType: TProjectHomeResourceEntityType | null;
+  targetType: string | null;
+  stagingLink: string | null;
+  productionLink: string | null;
 };
 
 export type TProjectHomeGetStartedCard = {
