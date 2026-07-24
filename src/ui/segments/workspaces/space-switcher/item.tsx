@@ -9,9 +9,11 @@ import {
 } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { authFetch } from '@/auth-fetch';
+import { useConfig } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -130,6 +132,32 @@ export function Item({
     });
   };
 
+  const config = useConfig();
+  const courseStartDate = lab.course?.start_date ? new Date(lab.course.start_date) : null;
+  const courseNotStarted = courseStartDate !== null && courseStartDate > new Date();
+  const courseStarted = courseStartDate !== null && !courseNotStarted;
+
+  const [enrolmentActivated, setEnrolmentActivated] = useState(false);
+  const activateCalledRef = useRef(false);
+
+  useEffect(() => {
+    const courseId = lab.course?.id;
+    if (!courseId || !courseStarted || activateCalledRef.current) return;
+    activateCalledRef.current = true;
+
+    authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/${courseId}/enrolment/activate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+    })
+      .then(() => setEnrolmentActivated(true))
+      .catch(() => {});
+  }, [courseStarted, lab.course?.id, config.VIRTUAL_LAB_API_URL]);
+
+  // projects are disabled when:
+  // - course exists and hasn't started yet, OR
+  // - course exists and has started but activate hasn't resolved yet
+  const projectsDisabled = courseStartDate !== null && (courseNotStarted || !enrolmentActivated);
+
   const projectRows = projects?.data ?? [];
   const hasProjects = projectRows.length > 0;
   const isExpanded = expandedLabs.has(lab.id);
@@ -202,6 +230,11 @@ export function Item({
             <h4 className="text-primary-9 text-md line-clamp-1 truncate font-bold" title={lab.name}>
               {lab.name}
             </h4>
+            {courseNotStarted && courseStartDate && (
+              <span className="mt-0.5 truncate text-[11px] text-amber-600">
+                Course starts {courseStartDate.toLocaleDateString()}
+              </span>
+            )}
           </div>
         </div>
         <div className="ml-auto flex items-center gap-1">
@@ -284,21 +317,26 @@ export function Item({
                       rounded
                       size="md"
                       variant="outline"
+                      disabled={projectsDisabled}
                       className={cn(
                         'w-full justify-start bg-white! border shadow-none border-gray-200',
-                        'hover:bg-gray-100!',
+                        projectsDisabled
+                          ? 'cursor-not-allowed opacity-40 hover:bg-white!'
+                          : 'hover:bg-gray-100!',
                         {
                           'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
-                            isProjectActive,
+                            isProjectActive && !projectsDisabled,
                         },
                         { 'border-3! border-gray-200! bg-gray-50!': isProjectSelected }
                       )}
                       title={project.name}
                       onClick={() =>
-                        onProjectClick({
-                          virtualLabId: lab.id,
-                          project,
-                        })
+                        projectsDisabled
+                          ? undefined
+                          : onProjectClick({
+                              virtualLabId: lab.id,
+                              project,
+                            })
                       }
                       id={`project-item-${project.id}`}
                       data-testid="project-item-selector"
