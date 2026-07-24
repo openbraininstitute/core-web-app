@@ -188,6 +188,13 @@ function ResourceItem({
   const onClick = () => {
     if (loading) return;
 
+    if (resource.entityType === ProjectHomeResourceEntityTypeDict.Notebook) {
+      router.push(
+        `${config.ROOT_ROUTE}/${workspace.virtualLabId}/${workspace.projectId}/notebooks/view/analysis-notebook-template/${entityId}/overview`
+      );
+      return;
+    }
+
     if (resource.entityType !== ProjectHomeResourceEntityTypeDict.Workflow) {
       router.push(`/app/entity/${entityId}`);
       return;
