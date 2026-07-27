@@ -193,16 +193,14 @@ export function EntitySelectorSingle({
       className="flex w-full max-w-full min-w-0 flex-col gap-2 overflow-hidden"
       data-scan-config-block-element={ScanConfigUIElementDict.ModelSelectorSingle}
     >
-      {isPending ? <Skeleton className="h-11 w-full rounded-lg bg-gray-100" /> : null}
+      {isPending ? <Skeleton className="h-11 w-full rounded-full bg-gray-100" /> : null}
 
       {!isPending && selectedRef ? (
         resolvedEntity ? (
           <ModelIdentifierEntityCard
             instanceId={selectedRef.id_str}
             blockElement={`${ScanConfigUIElementDict.ModelSelectorSingle}-summary`}
-            // rounded-lg (not the pill default) so the card hugs the block's
-            // rounded-lg diff-highlight wrapper instead of clashing with it
-            className="rounded-lg"
+            collapsibleBadge
             entityName={resolvedEntity.name}
             typeLabel={typeTitle}
             disabled={disabled}
@@ -224,7 +222,7 @@ export function EntitySelectorSingle({
             onRemove={handleRemove}
           />
         ) : (
-          <div className="rounded-lg border border-dashed border-neutral-2 px-4 py-2.5 text-sm text-gray-500">
+          <div className="rounded-full border border-dashed border-neutral-2 px-4 py-2.5 text-sm text-gray-500">
             {selectedRef.id_str}
           </div>
         )
@@ -235,8 +233,6 @@ export function EntitySelectorSingle({
           label={`Select ${entityLabel}`}
           disabled={disabled}
           onClick={openBrowse}
-          // rounded-lg to match the block's diff-highlight wrapper (see card above)
-          className="rounded-lg"
         />
       ) : null}
 

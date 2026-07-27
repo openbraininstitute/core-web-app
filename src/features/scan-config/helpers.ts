@@ -17,6 +17,7 @@ export {
   findLatestExecutionForEntity,
 } from '@/features/task-runner/status';
 
+import { get } from 'es-toolkit/compat';
 import z from 'zod';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -112,6 +113,71 @@ export function isFromIdRef(value: unknown): value is TFromIdRef {
     typeof value.id_str === 'string' &&
     z.uuid().safeParse(value.id_str).success
   );
+}
+
+/** `entity_query` shape on a `model_selector_single` field schema. */
+export type TEntityQuery = {
+  filters?: Record<string, unknown>;
+  /**
+   * dotted config path whose id feeds the dynamic filter(s), e.g.
+   * `initialize.circuit` — the primary circuit the array must belong to.
+   */
+  value_from?: string;
+};
+
+/** reads the entity uuid from a config value (FromID ref, `{id}`/`{id_str}`, or bare string). */
+function extractConfigValueId(source: unknown): string | undefined {
+  if (isFromIdRef(source)) {
+    return source.id_str;
+  }
+  if (typeof source === 'string') {
+    return source;
+  }
+  if (isPlainObject(source)) {
+    const id = source.id_str ?? source.id;
+    return typeof id === 'string' ? id : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * resolves a `model_selector_single` field's browse filters.
+ *
+ * static filters (primitive values, e.g. ion-channel `*__isnull` flags) pass
+ * through unchanged. when `value_from` is set, filters whose value is a
+ * non-primitive placeholder (an ObiOne `set`, e.g. `circuit_id: {"circuit_id"}`)
+ * are *dynamic*: their value is replaced with the id read from `value_from`
+ * (e.g. `initialize.circuit`, the primary circuit selected before scan-config).
+ * a dynamic filter is omitted when `value_from` can't be resolved, so the browse
+ * never queries with the raw placeholder.
+ *
+ * @param entityQuery - the field schema's `entity_query`.
+ * @param config - the root scan-config config (holds `initialize`, etc.).
+ */
+export function resolveEntityQueryFilters(
+  entityQuery: TEntityQuery | undefined,
+  config: Record<string, unknown>
+): Record<string, unknown> {
+  const filters = entityQuery?.filters ?? {};
+  const valueFrom = entityQuery?.value_from;
+  if (!valueFrom) {
+    return filters;
+  }
+
+  const sourceId = extractConfigValueId(get(config, valueFrom));
+  const resolved: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(filters)) {
+    // primitives are static filters; a non-null object is the dynamic placeholder
+    const isDynamicPlaceholder = value !== null && typeof value === 'object';
+    if (!isDynamicPlaceholder) {
+      resolved[key] = value;
+    } else if (sourceId) {
+      resolved[key] = sourceId;
+    }
+  }
+
+  return resolved;
 }
 
 /**

@@ -26,6 +26,8 @@ const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.MEModelWithSynapsesCircuitFromID]:
     ExtendedEntitiesTypeDict.SingleNeuronCircuit,
   [ScanConfigFromIdType.IonChannelModelFromID]: ExtendedEntitiesTypeDict.IonChannelModel,
+  [ScanConfigFromIdType.SimulatableExtracellularRecordingArrayFromID]:
+    ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
 } as const satisfies Record<TScanConfigFromIdType, TExtendedEntitiesTypeDict>;
 
 function isScanConfigFromIdType(value: string): value is TScanConfigFromIdType {

@@ -31,7 +31,11 @@ import {
   type VoltageDurationState,
 } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject } from '@/features/scan-config/components/utils';
-import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
+import {
+  resolveEntityQueryFilters,
+  resolveNeuronFilterProperties,
+  type TEntityQuery,
+} from '@/features/scan-config/helpers';
 import {
   type Config,
   type ConfigSchema,
@@ -329,17 +333,16 @@ export function UIElementRender({
       },
       ({ paramSchema }) => {
         const q = get(paramSchema, 'entity_query') as
-          | {
-              type: TEntityTypeDict;
-              filters: Record<string, unknown>;
-            }
+          | ({ type: TEntityTypeDict } & TEntityQuery)
           | undefined;
         if (q) {
           return (
             <EntitySelectorSingle
               entityType={q.type}
               disabled={disabled}
-              filters={q.filters}
+              // resolve dynamic filters (e.g. circuit_id from `value_from`:
+              // initialize.circuit) against the root config before browsing
+              filters={resolveEntityQueryFilters(q, config)}
               value={value}
               state={state}
               fieldKey={k}
