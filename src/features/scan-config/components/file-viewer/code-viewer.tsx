@@ -81,7 +81,6 @@ export function CodeFileViewer({
 
   const fileName = assetPath?.split('/').at(-1) ?? asset.path.split('/').at(-1);
   const language = fileName?.split('.').at(-1) as BundledLanguage;
-  const filename = assetPath?.split('.').at(-1) ?? asset.path.split('/').pop() ?? 'file';
 
   const LARGE_FILE_CHAR_LIMIT = 10000;
   const isLargeFile = content.length > LARGE_FILE_CHAR_LIMIT;
@@ -93,7 +92,6 @@ export function CodeFileViewer({
       code={displayContent}
       language={language}
       showLineNumbers={!isLargeFile}
-      title={filename}
       className={cn(
         'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
         '[&_pre]:whitespace-pre [&>div]:overflow-auto [&>div>div]:overflow-x-auto',
