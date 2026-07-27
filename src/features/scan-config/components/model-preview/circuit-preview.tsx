@@ -2,53 +2,122 @@ import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
+import { getAsset } from '@/api/entitycore/selectors/assets';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
-import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import CircuitViz, {
+  loaderSupportsAxonToggle,
+  resolveSmallCircuitLoaderKind,
+} from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import {
   type ViewerMode,
   ViewerModeDict,
 } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
+import { useFullscreenElement } from '@/features/scan-config/components/color-by/use-fullscreen-element';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
+import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
+import {
+  type CircuitOverlayGroup,
+  ELECTRODE_LOCATIONS_CONFIG_KEY,
+} from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { useElectrodeLocationsOverlay } from '@/features/scan-config/components/model-preview/use-electrode-locations-overlay';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
 import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { Config } from '@/features/scan-config/types';
+import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
+
+function circuitHasDesignerImage(circuit: ICircuit): boolean {
+  return (
+    getAsset({
+      assets: circuit.assets ?? [],
+      label: AssetLabel.simulation_designer_image,
+    }).getAllOrNull() !== null
+  );
+}
 
 interface CircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
   enableVisualization?: boolean;
   largeCircuit?: boolean;
+  /**
+   * Domain-resolved viewer features (electrodes / colorBy / hover / nodes table).
+   * Omit for defaults: electrodes off, colorBy / cellHover / nodesTable on.
+   */
+  features?: Partial<IEntityViewerFeatures>;
+  /**
+   * Initial neuron opacity (0–1). Host-owned so the viewer stays reusable
+   * (scan-config, data details, …). Omit for full opacity; pass
+   * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when electrodes should dominate.
+   */
+  defaultNeuronOpacity?: number;
+  /** Live scan-config; when it contains `electrode_locations`, overlays are fetched. */
+  config?: Config;
+  /** When set, electrode drag/rotate in 3D writes origin/rotation back into the form. */
+  setConfig?: (newConfig: Config | ((prev: Config) => Config)) => void;
+  /** Schema root currently selected in the form (e.g. `electrode_locations`). */
+  selectedRootElement?: string;
+  /** Dictionary entry name currently selected (matches overlay `id`). */
+  selectedEntry?: string;
 }
 
 /**
  * Hosts the circuit preview and owns all viewer chrome (mode toggle, settings,
- * color-by dropdown/key, nodes table). The color-by state lives here so the mode
- * toggle can also be shown over the image, and the actual viewers stay pure
- * renderers of `colorsByNode` + config.
+ * color-by dropdown/key, nodes table).
+ *
+ * How electrode sync works here:
+ * - {@link useElectrodeLocationsOverlay} → coloured overlays
+ * - form selection → `highlightedOverlayId` + selection styling
+ * - morphoviewer `onOverlayTransform` (phase `end`) →
+ *   {@link applyElectrodeOverlayTransform} → `setConfig`
+ *
+ * Why: keep 3D↔form bidirectional without pushing config on every pointer move.
  */
 export function CircuitPreview({
   className,
   circuit,
   enableVisualization = false,
   largeCircuit = false,
+  features,
+  defaultNeuronOpacity,
+  config: scanConfig,
+  setConfig,
+  selectedRootElement,
+  selectedEntry,
 }: CircuitPreviewProps) {
+  const enableElectrodes = features?.electrodes ?? false;
+  const enableColorBy = features?.colorBy ?? true;
+  const enableCellHover = features?.cellHover ?? true;
+  const enableNodesTable = features?.nodesTable ?? true;
+
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
 
-  const activeMode: ViewerMode = enableVisualization ? mode : 'image';
+  const hasDesignerImage = circuitHasDesignerImage(circuit);
+  // Synaptome (beta) / some circuits have no designer image — stay in 3D and
+  // hide the mode toggle so image mode cannot toast "No image found".
+  const activeMode: ViewerMode = !enableVisualization
+    ? ViewerModeDict.Image
+    : !hasDesignerImage
+      ? ViewerModeDict.Visualization
+      : mode;
+
+  const portalContainer = useFullscreenElement();
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [populationName, setPopulationName] = useState<string | undefined>();
@@ -62,11 +131,58 @@ export function CircuitPreview({
     setPopulationName(name);
   }, []);
 
+  const supportsAxons =
+    !largeCircuit && loaderSupportsAxonToggle(resolveSmallCircuitLoaderKind(circuit.scale));
+
+  const { overlays, available: electrodesAvailable } = useElectrodeLocationsOverlay({
+    config: enableElectrodes ? scanConfig : undefined,
+  });
+
+  const handleOverlayTransform = useCallback(
+    (event: MorphoViewerOverlayTransformEvent) => {
+      if (!setConfig || !enableElectrodes) return;
+      // 3D already updates optimistically during the gesture; write the form
+      // only on drop so React/config churn does not lag the drag.
+      if (event.phase !== 'end') return;
+      setConfig((prev) => applyElectrodeOverlayTransform(prev, event));
+    },
+    [setConfig, enableElectrodes]
+  );
+
   const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
-      supportsAxons: !largeCircuit,
+      supportsAxons,
+      supportsElectrodes: enableElectrodes && electrodesAvailable,
+      defaultNeuronOpacity,
       population,
     });
+
+  const visibleOverlays = enableElectrodes && config.showElectrodes ? overlays : undefined;
+  const highlightedOverlayId =
+    enableElectrodes && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY && selectedEntry
+      ? selectedEntry
+      : null;
+  const styledOverlays = useMemo(
+    () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId),
+    [visibleOverlays, highlightedOverlayId]
+  );
+  const overlaysInteractive = Boolean(
+    enableElectrodes && setConfig && styledOverlays && styledOverlays.length > 0
+  );
+
+  // Selecting an electrode (or having overlays) turns the toggle on so markers
+  // are visible after Add without hunting the settings menu.
+  useEffect(() => {
+    if (!enableElectrodes || config.showElectrodes || !menu.onToggleElectrodes) return;
+    if (!highlightedOverlayId && !(styledOverlays && styledOverlays.length > 0)) return;
+    menu.onToggleElectrodes(true);
+  }, [
+    enableElectrodes,
+    highlightedOverlayId,
+    styledOverlays,
+    config.showElectrodes,
+    menu.onToggleElectrodes,
+  ]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -95,41 +211,82 @@ export function CircuitPreview({
     ? Math.min(maxTableHeight, Math.max(MIN_TABLE_HEIGHT, tableHeight))
     : MIN_TABLE_HEIGHT;
 
+  const vizFeatures = useMemo(() => ({ cellHover: enableCellHover }), [enableCellHover]);
+
+  const showImage = activeMode === ViewerModeDict.Image;
+  const showViz = activeMode === ViewerModeDict.Visualization;
+  // Keep both panes mounted once available so mode switches don't remount
+  // WebGL / reload morphologies (visibility only).
+  const mountImage = hasDesignerImage || !enableVisualization;
+  const mountViz = enableVisualization;
+
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      {activeMode === ViewerModeDict.Image && (
-        <CircuitImage className={className} circuit={circuit} />
+      {mountImage && (
+        <div
+          className={classNames('absolute inset-0', !showImage && 'invisible pointer-events-none')}
+          aria-hidden={!showImage}
+          inert={!showImage || undefined}
+        >
+          <CircuitImage className={className} circuit={circuit} />
+        </div>
       )}
-      {activeMode === ViewerModeDict.Visualization && !largeCircuit && (
-        <CircuitViz
-          key={circuit.id}
-          circuit={circuit}
-          colorsByNode={colorsByNode}
-          defaultColor={defaultColor}
-          showAxons={config.showAxons}
-          backgroundColor={config.backgroundColor}
-          scalebarColor={theme?.foreground}
-          signals={signals}
-        />
+      {mountViz && !largeCircuit && (
+        <div
+          className={classNames('absolute inset-0', !showViz && 'invisible pointer-events-none')}
+          aria-hidden={!showViz}
+          inert={!showViz || undefined}
+        >
+          <CircuitViz
+            key={circuit.id}
+            circuit={circuit}
+            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            defaultColor={defaultColor}
+            showAxons={config.showAxons}
+            backgroundColor={config.backgroundColor}
+            scalebarColor={theme?.foreground}
+            signals={signals}
+            overlays={styledOverlays}
+            overlaysInteractive={overlaysInteractive}
+            onOverlayTransform={handleOverlayTransform}
+            highlightedOverlayId={highlightedOverlayId}
+            neuronOpacity={config.neuronOpacity}
+            electrodeRadius={config.electrodeRadius}
+            features={vizFeatures}
+          />
+        </div>
       )}
-      {activeMode === ViewerModeDict.Visualization && largeCircuit && (
-        <LargeCircuitPreview
-          key={circuit.id}
-          circuit={circuit}
-          colorsByNode={colorsByNode}
-          backgroundColor={config.backgroundColor}
-          scalebarColor={theme?.foreground}
-          signals={signals}
-        />
+      {mountViz && largeCircuit && (
+        <div
+          className={classNames('absolute inset-0', !showViz && 'invisible pointer-events-none')}
+          aria-hidden={!showViz}
+          inert={!showViz || undefined}
+        >
+          <LargeCircuitPreview
+            key={circuit.id}
+            circuit={circuit}
+            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            backgroundColor={config.backgroundColor}
+            scalebarColor={theme?.foreground}
+            signals={signals}
+            overlays={styledOverlays}
+            overlaysInteractive={overlaysInteractive}
+            onOverlayTransform={handleOverlayTransform}
+            highlightedOverlayId={highlightedOverlayId}
+            neuronOpacity={config.neuronOpacity}
+            electrodeRadius={config.electrodeRadius}
+            features={vizFeatures}
+          />
+        </div>
       )}
 
       {enableVisualization && (
         <CircuitViewerChrome
-          mode={activeMode}
-          onModeChange={setMode}
+          mode={hasDesignerImage ? activeMode : undefined}
+          onModeChange={hasDesignerImage ? setMode : undefined}
           theme={theme}
-          table={{ active: showTable, onToggle: handleToggleTable }}
-          viz={activeMode === ViewerModeDict.Visualization ? { menu, colorBy } : undefined}
+          table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
+          viz={{ menu, colorBy: enableColorBy ? colorBy : undefined }}
         />
       )}
 
@@ -155,6 +312,7 @@ export function CircuitPreview({
             circuit={circuit}
             populationName={populationName}
             onPopulationChange={handlePopulationChange}
+            portalContainer={portalContainer}
           />
         </div>
       )}
@@ -261,4 +419,75 @@ export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
       )}
     </div>
   );
+}
+
+/**
+ * Emphasize the form-selected electrode; darken the others (fully opaque).
+ *
+ * Why opaque darkening (not alpha): electrodes must stay 100% opaque even when
+ * neuron opacity is low — translucent rgba made the circuit show through markers.
+ */
+function styleOverlaysForSelection(
+  overlays: CircuitOverlayGroup[] | undefined,
+  selectedId: string | null
+): CircuitOverlayGroup[] | undefined {
+  if (!overlays?.length || !selectedId) return overlays;
+  return overlays.map((group) => {
+    if (group.id === selectedId) {
+      return { ...group, color: emphasizeColor(group.color) };
+    }
+    return { ...group, color: softenColor(group.color) };
+  });
+}
+
+/** Selected electrode: keep full opaque RGB (no wash toward white). */
+function emphasizeColor(color: string): string {
+  return forceOpaqueRgb(color);
+}
+
+/** Non-selected electrodes: darken without introducing alpha. */
+function softenColor(color: string): string {
+  return mixTowardBlack(forceOpaqueRgb(color), 0.35);
+}
+
+/** Strip any CSS alpha so morphoviewer palette texels stay fully opaque. */
+function forceOpaqueRgb(color: string): string {
+  const rgb = parseCssColor(color);
+  if (!rgb) return color;
+  return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+}
+
+function mixTowardBlack(color: string, amount: number): string {
+  const rgb = parseCssColor(color);
+  if (!rgb) return color;
+  const t = Math.min(1, Math.max(0, amount));
+  const r = Math.round(rgb[0] * (1 - t));
+  const g = Math.round(rgb[1] * (1 - t));
+  const b = Math.round(rgb[2] * (1 - t));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+/** Parse `#rgb` / `#rrggbb` / `rgb(...)` / `rgba(...)` into RGB channels. */
+function parseCssColor(color: string): [number, number, number] | null {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim());
+  if (hex) {
+    const h = hex[1];
+    if (h.length === 3) {
+      return [
+        Number.parseInt(h[0] + h[0], 16),
+        Number.parseInt(h[1] + h[1], 16),
+        Number.parseInt(h[2] + h[2], 16),
+      ];
+    }
+    return [
+      Number.parseInt(h.slice(0, 2), 16),
+      Number.parseInt(h.slice(2, 4), 16),
+      Number.parseInt(h.slice(4, 6), 16),
+    ];
+  }
+  const rgb = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(color.trim());
+  if (rgb) {
+    return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+  }
+  return null;
 }

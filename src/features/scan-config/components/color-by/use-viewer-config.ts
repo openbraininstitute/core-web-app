@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CANVAS_LIGHT, normalizeCanvasBackground } from './contrast';
 
@@ -13,25 +13,51 @@ const STORAGE_PREFIX = 'obi:circuit-viewer-config:v1:';
  */
 export const PERSIST_VIEWER_CONFIG = false;
 
+/** Full opacity — default for circuit viewers outside electrode-focused hosts. */
+export const DEFAULT_NEURON_OPACITY = 1;
+
+/**
+ * Dimmed neurons so electrode markers stay readable. Hosts that place /
+ * inspect electrodes (e.g. extracellular recording array campaign or details)
+ * should pass this as {@link resolveViewerConfigDefaults}'s `defaultNeuronOpacity`.
+ */
+export const ELECTRODE_FOCUSED_NEURON_OPACITY = 0.2;
+
+/** Baseline viewer defaults (full neuron opacity, electrode size 10). */
 export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   colorByProperty: null,
   backgroundColor: CANVAS_LIGHT,
   showAxons: false,
+  neuronOpacity: DEFAULT_NEURON_OPACITY,
+  showElectrodes: true,
+  electrodeRadius: 10,
   colorOverrides: {},
 };
+
+export function resolveViewerConfigDefaults(options?: {
+  /** Initial neuron opacity (0–1). Hosts set this; viewer does not infer context. */
+  defaultNeuronOpacity?: number;
+}): ViewerConfig {
+  const neuronOpacity = options?.defaultNeuronOpacity ?? DEFAULT_NEURON_OPACITY;
+  if (neuronOpacity === DEFAULT_VIEWER_CONFIG.neuronOpacity) return DEFAULT_VIEWER_CONFIG;
+  return {
+    ...DEFAULT_VIEWER_CONFIG,
+    neuronOpacity,
+  };
+}
 
 function storageKey(circuitId: string): string {
   return `${STORAGE_PREFIX}${circuitId}`;
 }
 
-function readConfig(circuitId: string): ViewerConfig | null {
+function readConfig(circuitId: string, defaults: ViewerConfig): ViewerConfig | null {
   if (!PERSIST_VIEWER_CONFIG) return null;
   try {
     const raw = globalThis.localStorage?.getItem(storageKey(circuitId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<ViewerConfig>;
     return {
-      ...DEFAULT_VIEWER_CONFIG,
+      ...defaults,
       ...parsed,
       backgroundColor: normalizeCanvasBackground(parsed.backgroundColor ?? CANVAS_LIGHT),
     };
@@ -53,19 +79,27 @@ interface UseViewerConfig {
  * the next visit. the saved-config flag lets the ui show a "reset" control only
  * when the user has configured this circuit before.
  */
-export function useViewerConfig(circuitId: string): UseViewerConfig {
-  const [config, setConfig] = useState<ViewerConfig>(DEFAULT_VIEWER_CONFIG);
+export function useViewerConfig(
+  circuitId: string,
+  options?: { defaultNeuronOpacity?: number }
+): UseViewerConfig {
+  const defaultNeuronOpacity = options?.defaultNeuronOpacity ?? DEFAULT_NEURON_OPACITY;
+  const defaults = useMemo(
+    () => resolveViewerConfigDefaults({ defaultNeuronOpacity }),
+    [defaultNeuronOpacity]
+  );
+  const [config, setConfig] = useState<ViewerConfig>(defaults);
   const [hasSavedConfig, setHasSavedConfig] = useState(false);
   // avoid persisting the initial restore back to storage.
   const hydratedRef = useRef(false);
 
   useEffect(() => {
     hydratedRef.current = false;
-    const saved = readConfig(circuitId);
-    setConfig(saved ?? DEFAULT_VIEWER_CONFIG);
+    const saved = readConfig(circuitId, defaults);
+    setConfig(saved ?? defaults);
     setHasSavedConfig(saved !== null);
     hydratedRef.current = true;
-  }, [circuitId]);
+  }, [circuitId, defaults]);
 
   const update = useCallback(
     (patch: Partial<ViewerConfig>) => {
@@ -97,9 +131,9 @@ export function useViewerConfig(circuitId: string): UseViewerConfig {
     } catch {
       /* ignore */
     }
-    setConfig(DEFAULT_VIEWER_CONFIG);
+    setConfig(defaults);
     setHasSavedConfig(false);
-  }, [circuitId]);
+  }, [circuitId, defaults]);
 
   return { config, hasSavedConfig, update, reset };
 }

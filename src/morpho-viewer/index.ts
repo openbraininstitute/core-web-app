@@ -16,6 +16,8 @@ export type {
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
   MorphoViewerOctreeProps,
+  /** Absolute origin + rotation from electrode overlay drag/rotate (`phase: 'end'`). */
+  MorphoViewerOverlayTransformEvent,
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
   MorphoViewerSnapshotOptions,
