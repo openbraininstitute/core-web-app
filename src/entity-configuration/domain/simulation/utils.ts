@@ -13,18 +13,6 @@ import { ObiOneTaskTypeDict, type TObiOneTaskType } from '@/api/one/types/task';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
 
-const MACHINE_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
-  CircuitScaleDictionary.PairNeuron,
-  CircuitScaleDictionary.SmallMicrocircuit,
-]);
-
-const CLUSTER_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
-  CircuitScaleDictionary.Microcircuit,
-  CircuitScaleDictionary.Region,
-  CircuitScaleDictionary.System,
-  CircuitScaleDictionary.WholeBrain,
-]);
-
 type TSimulationLaunchInput = {
   entityType: TEntityTypeDict | null;
   scale: TCircuitScaleDictionary | null;
@@ -34,6 +22,43 @@ type TSimulationLaunchInput = {
 export type TSimulationLaunchTarget = {
   taskType: TObiOneTaskType;
   requiresOfflineTokenConsent: boolean;
+};
+
+/**
+ * How each circuit scale is launched. A scale that is absent is not launchable through the task
+ * system and falls back to the small-scale simulator.
+ */
+const LAUNCH_TARGET_BY_SCALE: Partial<Record<TCircuitScaleDictionary, TSimulationLaunchTarget>> = {
+  // Scale `single` is the "Synaptome (beta)" circuit; it gets its own task type so it runs on
+  // 1 core / 2 GB and bills as a synaptome sim rather than as a generic circuit simulation.
+  [CircuitScaleDictionary.Single]: {
+    taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
+    requiresOfflineTokenConsent: false,
+  },
+  [CircuitScaleDictionary.PairNeuron]: {
+    taskType: ObiOneTaskTypeDict.CircuitSimulation,
+    requiresOfflineTokenConsent: false,
+  },
+  [CircuitScaleDictionary.SmallMicrocircuit]: {
+    taskType: ObiOneTaskTypeDict.CircuitSimulation,
+    requiresOfflineTokenConsent: false,
+  },
+  [CircuitScaleDictionary.Microcircuit]: {
+    taskType: ObiOneTaskTypeDict.CircuitSimulation,
+    requiresOfflineTokenConsent: true,
+  },
+  [CircuitScaleDictionary.Region]: {
+    taskType: ObiOneTaskTypeDict.CircuitSimulation,
+    requiresOfflineTokenConsent: true,
+  },
+  [CircuitScaleDictionary.System]: {
+    taskType: ObiOneTaskTypeDict.CircuitSimulation,
+    requiresOfflineTokenConsent: true,
+  },
+  [CircuitScaleDictionary.WholeBrain]: {
+    taskType: ObiOneTaskTypeDict.CircuitSimulation,
+    requiresOfflineTokenConsent: true,
+  },
 };
 
 /**
@@ -65,21 +90,7 @@ export function resolveSimulationLaunchTarget({
   if (targetSimulator === 'LearningEngine') {
     return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: false };
   }
-  // Scale `single` is the "Synaptome (beta)" circuit; it gets its own task type so it runs on
-  // 1 core / 2 GB and bills as a synaptome sim rather than as a generic circuit simulation.
-  if (scale === CircuitScaleDictionary.Single) {
-    return {
-      taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
-      requiresOfflineTokenConsent: false,
-    };
-  }
-  if (scale !== null && MACHINE_LAUNCH_SCALES.has(scale)) {
-    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: false };
-  }
-  if (scale !== null && CLUSTER_LAUNCH_SCALES.has(scale)) {
-    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true };
-  }
-  return null;
+  return (scale !== null ? LAUNCH_TARGET_BY_SCALE[scale] : undefined) ?? null;
 }
 
 export function resolveSimulationLaunchTaskType(
