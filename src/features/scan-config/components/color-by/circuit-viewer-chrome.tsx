@@ -7,31 +7,32 @@ import { cn } from '@/utils/css-class';
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
-import { ModeToggle } from './mode-toggle';
+import { ModeToggle, type ViewerMode, ViewerModeDict } from './mode-toggle';
 import { useFullscreenElement } from './use-fullscreen-element';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
 import type { ViewerTheme } from './contrast';
-import type { ViewerMode } from './mode-toggle';
 import type { ColorByControls } from './use-circuit-color-by';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 import styles from './chrome-animations.module.css';
 
 export interface CircuitViewerChromeProps {
-  mode: ViewerMode;
-  onModeChange: (mode: ViewerMode) => void;
+  /** Current viewer mode. Omit with `onModeChange` when image mode is unavailable. */
+  mode?: ViewerMode;
+  onModeChange?: (mode: ViewerMode) => void;
   /** background-derived theme (adaptive mode), or null for the fixed default */
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
   table?: { active: boolean; onToggle: () => void };
   /**
-   * 3D-only chrome (settings menu + color-by dropdown/key). present only in viz
-   * mode; in image mode just the mode toggle is shown
+   * 3D chrome (settings + color-by). Kept mounted across mode switches; hidden
+   * in image mode so controls do not remount.
    */
   viz?: {
     menu: ViewerControlsMenuProps;
-    colorBy: ColorByControls;
+    /** Omit to hide the color-by dropdown + legend. */
+    colorBy?: ColorByControls;
   };
 }
 
@@ -55,6 +56,8 @@ export function CircuitViewerChrome({
     colorBy?.mapping &&
     colorBy.mapping.mode !== 'none';
   const showLegendToggle = !!selectedProperty;
+  // Keep viz chrome mounted across image↔3D switches; only hide it.
+  const showVizChrome = viz != null && mode !== ViewerModeDict.Image;
   const [legendOpen, setLegendOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarWidth, setToolbarWidth] = useState<number>();
@@ -93,7 +96,7 @@ export function CircuitViewerChrome({
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        <ModeToggle mode={mode} onChange={onModeChange} />
+        {mode != null && onModeChange && <ModeToggle mode={mode} onChange={onModeChange} />}
         {table && (
           <ChromeButton
             label={table.active ? 'Hide nodes table' : 'Show nodes table'}
@@ -104,7 +107,14 @@ export function CircuitViewerChrome({
           </ChromeButton>
         )}
         {viz && (
-          <>
+          <div
+            className={cn(
+              'flex items-center gap-2',
+              !showVizChrome && 'invisible pointer-events-none'
+            )}
+            aria-hidden={!showVizChrome}
+            inert={!showVizChrome || undefined}
+          >
             {isFullscreen && (
               <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
                 <RiFullscreenExitLine className="size-4" />
@@ -118,13 +128,18 @@ export function CircuitViewerChrome({
             {viz.menu.onToggleElectrodes && viz.menu.showElectrodes !== false && (
               <ElectrodeInteractionHelp container={portalContainer} />
             )}
-          </>
+          </div>
         )}
       </div>
 
       {colorBy && (
         <div
-          className="pointer-events-auto absolute right-3 top-3 flex flex-col items-end gap-2"
+          className={cn(
+            'pointer-events-auto absolute right-3 top-3 flex flex-col items-end gap-2',
+            !showVizChrome && 'invisible pointer-events-none'
+          )}
+          aria-hidden={!showVizChrome}
+          inert={!showVizChrome || undefined}
           style={
             toolbarWidth != null
               ? ({ '--color-by-toolbar-width': `${toolbarWidth}px` } as React.CSSProperties)

@@ -15,6 +15,7 @@ import { cn } from '@/utils/css-class';
 import { useCircuitNodes, useSomaRadius } from './hooks';
 
 import type { ICircuit } from '@/api/entitycore/types';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 
@@ -45,6 +46,11 @@ export interface LargeCircuitPreviewProps {
   neuronOpacity?: number;
   /** Electrode marker radius (world units). */
   electrodeRadius?: number;
+  /**
+   * Viewer feature flags from domain `viewer` (via host).
+   * Reserved for parity with {@link CircuitViz}; soma-only path has no cell hover.
+   */
+  features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
 }
 
 interface CellInfo {

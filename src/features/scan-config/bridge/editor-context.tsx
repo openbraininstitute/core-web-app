@@ -14,6 +14,7 @@
 
 import { createContext, useContext } from 'react';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceSection } from '@/constants';
 import type { TScanConfigActivity } from '@/features/scan-config/types';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
@@ -33,6 +34,8 @@ export type TScanConfigWorkflowEditorFieldContext = {
   workspaceSection: TWorkspaceSection;
   /** Workflow session id (`wf_…`) from the route; scopes field errors per session. */
   workflowSessionId?: string;
+  /** Workflow hub target — passed into source-entity `viewer` resolve context. */
+  targetType?: TExtendedEntitiesTypeDict;
   configureBinding?: TScanConfigConfigureBinding;
   configurationInputs: readonly IWorkflowConfigurationInput[];
   /** Picked entities and browse prerequisites (see `.prerequisites`). */

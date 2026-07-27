@@ -23,6 +23,16 @@ describe('resolveEnableElectrodes', () => {
     ).toBe(false);
   });
 
+  it('allows singles when the host opts in (ERA build)', () => {
+    expect(
+      resolveEnableElectrodes({
+        featureEnabled: true,
+        scale: CircuitScaleDictionary.Single,
+        allowSingleScale: true,
+      })
+    ).toBe(true);
+  });
+
   it('enables pair/small and large circuits when the flag is on', () => {
     expect(
       resolveEnableElectrodes({

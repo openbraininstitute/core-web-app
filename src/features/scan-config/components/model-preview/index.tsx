@@ -11,6 +11,7 @@ import { CircuitPreview } from '@/features/scan-config/components/model-preview/
 import { resolveEnableElectrodes } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { Config, TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 export function ModelPreview({
@@ -25,6 +26,8 @@ export function ModelPreview({
    * Useful for data-details hosts that opt in/out independently of the build flag.
    */
   electrodeOverlaysEnabled,
+  /** Domain-resolved viewer features (electrodes / colorBy / hover / nodes table). */
+  viewerFeatures,
 }: {
   model: TSupportedEntitiesForScanConfiguration;
   /** Live scan-config (used for electrode_locations overlays). */
@@ -45,9 +48,33 @@ export function ModelPreview({
    * {@link electrodeOverlaysFlag}.
    */
   electrodeOverlaysEnabled?: boolean;
+  viewerFeatures?: Partial<IEntityViewerFeatures>;
 }) {
   const flagEnabled = useFlag(electrodeOverlaysFlag.key);
   const featureEnabled = electrodeOverlaysEnabled ?? !!flagEnabled;
+  const domainElectrodes = viewerFeatures?.electrodes ?? false;
+
+  const featuresForSmall = (circuit: ICircuit): Partial<IEntityViewerFeatures> => ({
+    ...viewerFeatures,
+    electrodes:
+      domainElectrodes &&
+      resolveEnableElectrodes({
+        featureEnabled,
+        scale: circuit.scale,
+        // ERA build opts into electrodes for single-neuron circuits too.
+        allowSingleScale: domainElectrodes,
+      }),
+  });
+
+  const featuresForLarge: Partial<IEntityViewerFeatures> = {
+    ...viewerFeatures,
+    electrodes:
+      domainElectrodes &&
+      resolveEnableElectrodes({
+        featureEnabled,
+        largeCircuit: true,
+      }),
+  };
 
   return (
     match(model)
@@ -78,10 +105,7 @@ export function ModelPreview({
             selectedRootElement={selectedRootElement}
             selectedEntry={selectedEntry}
             enableVisualization
-            enableElectrodes={resolveEnableElectrodes({
-              featureEnabled,
-              scale: circuit.scale,
-            })}
+            features={featuresForSmall(circuit as ICircuit)}
             defaultNeuronOpacity={defaultNeuronOpacity}
           />
         )
@@ -95,10 +119,7 @@ export function ModelPreview({
           selectedEntry={selectedEntry}
           enableVisualization
           largeCircuit
-          enableElectrodes={resolveEnableElectrodes({
-            featureEnabled,
-            largeCircuit: true,
-          })}
+          features={featuresForLarge}
           defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))

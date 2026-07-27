@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { match } from 'ts-pattern';
 
 import { ViewVariant, WorkspaceSection } from '@/constants';
+import { resolveViewerFeaturesForEntityType } from '@/entity-configuration/domain/helpers';
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
@@ -23,6 +24,7 @@ import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type {
   Config,
   TScanConfigActivity,
@@ -45,7 +47,7 @@ const IonChannelModelRecordingRender = dynamic(
 
 type RightProps = {
   activity: TScanConfigActivity;
-  entityType: string;
+  entityType: TExtendedEntitiesTypeDict;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   selectedEntry: string;
   selectedRootElement: string;
@@ -140,6 +142,7 @@ function CircuitModelPreviewPane({
   selectedRootElement,
   selectedEntry,
   defaultNeuronOpacity,
+  viewerFeatures,
 }: {
   entity: TSupportedEntitiesForScanConfiguration;
   config: Config;
@@ -147,6 +150,7 @@ function CircuitModelPreviewPane({
   selectedRootElement: string;
   selectedEntry: string;
   defaultNeuronOpacity: number | undefined;
+  viewerFeatures: IEntityViewerFeatures;
 }) {
   return (
     <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
@@ -158,6 +162,7 @@ function CircuitModelPreviewPane({
           selectedRootElement={selectedRootElement}
           selectedEntry={selectedEntry}
           defaultNeuronOpacity={defaultNeuronOpacity}
+          viewerFeatures={viewerFeatures}
         />
       </div>
     </div>
@@ -183,6 +188,17 @@ export function Right({
 }: RightProps) {
   useClearEntityPreviewOnNavigation(entity?.id);
   const defaultNeuronOpacity = useHostNeuronOpacity();
+  const workflowField = useScanConfigWorkflowEditorField();
+
+  // Source entity owns the viewer; targetType is workflow intent only.
+  const viewerFeatures = resolveViewerFeaturesForEntityType(
+    entityType as TExtendedEntitiesTypeDict,
+    {
+      section: workflowField?.workspaceSection,
+      activity: workflowField?.activity ?? activity,
+      targetType: workflowField?.targetType,
+    }
+  );
 
   const {
     preview: entityPreview,
@@ -224,6 +240,7 @@ export function Right({
           selectedRootElement={selectedRootElement}
           selectedEntry={selectedEntry}
           defaultNeuronOpacity={defaultNeuronOpacity}
+          viewerFeatures={viewerFeatures}
         />
       ) : (
         <EmptyPreviewPane />

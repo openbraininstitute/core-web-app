@@ -2,6 +2,8 @@ import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
+import { getAsset } from '@/api/entitycore/selectors/assets';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
@@ -16,6 +18,7 @@ import {
   ViewerModeDict,
 } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
+import { useFullscreenElement } from '@/features/scan-config/components/color-by/use-fullscreen-element';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
 import {
@@ -29,11 +32,21 @@ import { classNames } from '@/util/utils';
 import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { Config } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
+
+function circuitHasDesignerImage(circuit: ICircuit): boolean {
+  return (
+    getAsset({
+      assets: circuit.assets ?? [],
+      label: AssetLabel.simulation_designer_image,
+    }).getAllOrNull() !== null
+  );
+}
 
 interface CircuitPreviewProps {
   className?: string;
@@ -41,10 +54,10 @@ interface CircuitPreviewProps {
   enableVisualization?: boolean;
   largeCircuit?: boolean;
   /**
-   * When false, skip electrode overlay chrome/sync (e.g. single-scale until
-   * that path is validated). Default true — still gated by overlay availability.
+   * Domain-resolved viewer features (electrodes / colorBy / hover / nodes table).
+   * Omit for defaults: electrodes off, colorBy / cellHover / nodesTable on.
    */
-  enableElectrodes?: boolean;
+  features?: Partial<IEntityViewerFeatures>;
   /**
    * Initial neuron opacity (0–1). Host-owned so the viewer stays reusable
    * (scan-config, data details, …). Omit for full opacity; pass
@@ -78,19 +91,33 @@ export function CircuitPreview({
   circuit,
   enableVisualization = false,
   largeCircuit = false,
-  enableElectrodes = true,
+  features,
   defaultNeuronOpacity,
   config: scanConfig,
   setConfig,
   selectedRootElement,
   selectedEntry,
 }: CircuitPreviewProps) {
+  const enableElectrodes = features?.electrodes ?? false;
+  const enableColorBy = features?.colorBy ?? true;
+  const enableCellHover = features?.cellHover ?? true;
+  const enableNodesTable = features?.nodesTable ?? true;
+
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
 
-  const activeMode: ViewerMode = enableVisualization ? mode : 'image';
+  const hasDesignerImage = circuitHasDesignerImage(circuit);
+  // Synaptome (beta) / some circuits have no designer image — stay in 3D and
+  // hide the mode toggle so image mode cannot toast "No image found".
+  const activeMode: ViewerMode = !enableVisualization
+    ? ViewerModeDict.Image
+    : !hasDesignerImage
+      ? ViewerModeDict.Visualization
+      : mode;
+
+  const portalContainer = useFullscreenElement();
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [populationName, setPopulationName] = useState<string | undefined>();
@@ -143,11 +170,19 @@ export function CircuitPreview({
     enableElectrodes && setConfig && styledOverlays && styledOverlays.length > 0
   );
 
-  // Selecting an electrode in the form turns overlays on so it can be seen.
+  // Selecting an electrode (or having overlays) turns the toggle on so markers
+  // are visible after Add without hunting the settings menu.
   useEffect(() => {
-    if (!highlightedOverlayId || config.showElectrodes || !menu.onToggleElectrodes) return;
+    if (!enableElectrodes || config.showElectrodes || !menu.onToggleElectrodes) return;
+    if (!highlightedOverlayId && !(styledOverlays && styledOverlays.length > 0)) return;
     menu.onToggleElectrodes(true);
-  }, [highlightedOverlayId, config.showElectrodes, menu.onToggleElectrodes]);
+  }, [
+    enableElectrodes,
+    highlightedOverlayId,
+    styledOverlays,
+    config.showElectrodes,
+    menu.onToggleElectrodes,
+  ]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -176,53 +211,82 @@ export function CircuitPreview({
     ? Math.min(maxTableHeight, Math.max(MIN_TABLE_HEIGHT, tableHeight))
     : MIN_TABLE_HEIGHT;
 
+  const vizFeatures = useMemo(() => ({ cellHover: enableCellHover }), [enableCellHover]);
+
+  const showImage = activeMode === ViewerModeDict.Image;
+  const showViz = activeMode === ViewerModeDict.Visualization;
+  // Keep both panes mounted once available so mode switches don't remount
+  // WebGL / reload morphologies (visibility only).
+  const mountImage = hasDesignerImage || !enableVisualization;
+  const mountViz = enableVisualization;
+
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      {activeMode === ViewerModeDict.Image && (
-        <CircuitImage className={className} circuit={circuit} />
+      {mountImage && (
+        <div
+          className={classNames('absolute inset-0', !showImage && 'invisible pointer-events-none')}
+          aria-hidden={!showImage}
+          inert={!showImage || undefined}
+        >
+          <CircuitImage className={className} circuit={circuit} />
+        </div>
       )}
-      {activeMode === ViewerModeDict.Visualization && !largeCircuit && (
-        <CircuitViz
-          key={circuit.id}
-          circuit={circuit}
-          colorsByNode={colorsByNode}
-          defaultColor={defaultColor}
-          showAxons={config.showAxons}
-          backgroundColor={config.backgroundColor}
-          scalebarColor={theme?.foreground}
-          signals={signals}
-          overlays={styledOverlays}
-          overlaysInteractive={overlaysInteractive}
-          onOverlayTransform={handleOverlayTransform}
-          highlightedOverlayId={highlightedOverlayId}
-          neuronOpacity={config.neuronOpacity}
-          electrodeRadius={config.electrodeRadius}
-        />
+      {mountViz && !largeCircuit && (
+        <div
+          className={classNames('absolute inset-0', !showViz && 'invisible pointer-events-none')}
+          aria-hidden={!showViz}
+          inert={!showViz || undefined}
+        >
+          <CircuitViz
+            key={circuit.id}
+            circuit={circuit}
+            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            defaultColor={defaultColor}
+            showAxons={config.showAxons}
+            backgroundColor={config.backgroundColor}
+            scalebarColor={theme?.foreground}
+            signals={signals}
+            overlays={styledOverlays}
+            overlaysInteractive={overlaysInteractive}
+            onOverlayTransform={handleOverlayTransform}
+            highlightedOverlayId={highlightedOverlayId}
+            neuronOpacity={config.neuronOpacity}
+            electrodeRadius={config.electrodeRadius}
+            features={vizFeatures}
+          />
+        </div>
       )}
-      {activeMode === ViewerModeDict.Visualization && largeCircuit && (
-        <LargeCircuitPreview
-          key={circuit.id}
-          circuit={circuit}
-          colorsByNode={colorsByNode}
-          backgroundColor={config.backgroundColor}
-          scalebarColor={theme?.foreground}
-          signals={signals}
-          overlays={styledOverlays}
-          overlaysInteractive={overlaysInteractive}
-          onOverlayTransform={handleOverlayTransform}
-          highlightedOverlayId={highlightedOverlayId}
-          neuronOpacity={config.neuronOpacity}
-          electrodeRadius={config.electrodeRadius}
-        />
+      {mountViz && largeCircuit && (
+        <div
+          className={classNames('absolute inset-0', !showViz && 'invisible pointer-events-none')}
+          aria-hidden={!showViz}
+          inert={!showViz || undefined}
+        >
+          <LargeCircuitPreview
+            key={circuit.id}
+            circuit={circuit}
+            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            backgroundColor={config.backgroundColor}
+            scalebarColor={theme?.foreground}
+            signals={signals}
+            overlays={styledOverlays}
+            overlaysInteractive={overlaysInteractive}
+            onOverlayTransform={handleOverlayTransform}
+            highlightedOverlayId={highlightedOverlayId}
+            neuronOpacity={config.neuronOpacity}
+            electrodeRadius={config.electrodeRadius}
+            features={vizFeatures}
+          />
+        </div>
       )}
 
       {enableVisualization && (
         <CircuitViewerChrome
-          mode={activeMode}
-          onModeChange={setMode}
+          mode={hasDesignerImage ? activeMode : undefined}
+          onModeChange={hasDesignerImage ? setMode : undefined}
           theme={theme}
-          table={{ active: showTable, onToggle: handleToggleTable }}
-          viz={activeMode === ViewerModeDict.Visualization ? { menu, colorBy } : undefined}
+          table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
+          viz={{ menu, colorBy: enableColorBy ? colorBy : undefined }}
         />
       )}
 
@@ -248,6 +312,7 @@ export function CircuitPreview({
             circuit={circuit}
             populationName={populationName}
             onPopulationChange={handlePopulationChange}
+            portalContainer={portalContainer}
           />
         </div>
       )}

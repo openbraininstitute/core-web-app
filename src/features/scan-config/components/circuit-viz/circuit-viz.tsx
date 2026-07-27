@@ -19,6 +19,7 @@ import {
 } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
@@ -62,6 +63,11 @@ interface CircuitVizProps {
   neuronOpacity?: number;
   /** Electrode marker radius in world units (morphoviewer `overlaysRadius`). */
   electrodeRadius?: number;
+  /**
+   * Viewer feature flags from domain `viewer` (via host).
+   * Only `cellHover` is consumed here today.
+   */
+  features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
 }
 
 /**
@@ -125,11 +131,16 @@ function CircuitVizView({
   highlightedOverlayId = null,
   neuronOpacity,
   electrodeRadius = 10,
+  features,
   source,
   clearSequentialOnAxonToggle = false,
   errorActions,
 }: CircuitVizViewProps) {
+  const enableCellHover = features?.cellHover ?? true;
   const [progress, setProgress] = useState(0);
+  // Stay covered for a paint frame after morphoviewer reports 100%, so the
+  // neurite mesh replaces the soma placeholder before the overlay lifts.
+  const [morphologiesPainted, setMorphologiesPainted] = useState(false);
   const { cells, isLoading, error, loadCell } = source;
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
 
@@ -153,6 +164,8 @@ function CircuitVizView({
     [scalebarColor]
   );
 
+  // Empty highlightedCellIds → morphoviewer flat overlay stays black (ADD black
+  // = no wash-out). Hosts pass features.cellHover from domain `viewer`.
   const [highlightedCellId, setHighlightedCellId] = useState('');
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
@@ -165,10 +178,26 @@ function CircuitVizView({
       prevAxonRef.current = showAxons;
       sequentialCellLoader.clear();
       setProgress(0);
+      setMorphologiesPainted(false);
     }
   }, [showAxons, clearSequentialOnAxonToggle]);
 
-  const loading = !error && (isLoading || progress < 1);
+  useEffect(() => {
+    if (progress < 1) {
+      setMorphologiesPainted(false);
+      return;
+    }
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setMorphologiesPainted(true));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [progress]);
+
+  const loading = !error && (isLoading || progress < 1 || !morphologiesPainted);
 
   // Pass interactive metadata through; morphoviewer ignores unknown fields safely.
   const morphoOverlays = useMemo(
@@ -194,8 +223,8 @@ function CircuitVizView({
           backgroundColor={backgroundColor}
           signals={signals}
           circuit={cells}
-          onCellHover={handleCellHover}
-          highlightedCellIds={[highlightedCellId]}
+          onCellHover={enableCellHover ? handleCellHover : undefined}
+          highlightedCellIds={enableCellHover ? [highlightedCellId] : []}
           loadCell={loadCell}
           controls={[]}
           onLoadProgress={setProgress}
