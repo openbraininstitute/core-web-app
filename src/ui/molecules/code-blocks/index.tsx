@@ -145,11 +145,18 @@ export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   iconClassName?: string;
 };
 
-export function CodeBlockLanguageLabel({ className }: { className?: string }): React.ReactElement {
+export function CodeBlockLanguageLabel({
+  className,
+  title,
+}: {
+  className?: string;
+  title?: string;
+}): React.ReactElement {
   const { language } = useContext(CodeBlockContext);
 
   return (
     <span
+      title={title}
       className={cn(
         'rounded-full border border-gray-300 px-4 py-1 text-xs',
         'font-medium tracking-wide text-gray-500 uppercase',
