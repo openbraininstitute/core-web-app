@@ -29,8 +29,6 @@ export type TSimulationLaunchTarget = {
  * system and falls back to the small-scale simulator.
  */
 const LAUNCH_TARGET_BY_SCALE: Partial<Record<TCircuitScaleDictionary, TSimulationLaunchTarget>> = {
-  // Scale `single` is the "Synaptome (beta)" circuit; it gets its own task type so it runs on
-  // 1 core / 2 GB and bills as a synaptome sim rather than as a generic circuit simulation.
   [CircuitScaleDictionary.Single]: {
     taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
     requiresOfflineTokenConsent: false,
