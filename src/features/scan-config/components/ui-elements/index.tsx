@@ -343,6 +343,7 @@ export function UIElementRender({
               value={value}
               state={state}
               fieldKey={k}
+              paramSchema={paramSchema as unknown as Record<string, unknown>}
               valueType={paramSchema.properties?.type?.const}
               onChange={setState}
             />
