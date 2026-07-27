@@ -91,13 +91,7 @@ export function FileViewer({
   }
 
   if (isJson || isMod) {
-    return (
-      <CodeFileViewer
-        url={presignedData.url}
-        filename={asset.path}
-        language={isJson ? 'json' : 'shellscript'}
-      />
-    );
+    return <CodeFileViewer url={presignedData.url} language={isJson ? 'json' : 'shellscript'} />;
   }
 
   return (
@@ -166,15 +160,7 @@ export function PDFViewer({ url, filename }: { url: string; filename: string }) 
   );
 }
 
-export function CodeFileViewer({
-  url,
-  filename,
-  language,
-}: {
-  url: string;
-  filename: string;
-  language: BundledLanguage;
-}) {
+export function CodeFileViewer({ url, language }: { url: string; language: BundledLanguage }) {
   const { data: content, isLoading } = useQuery({
     queryKey: ['file-content', url],
     queryFn: async () => {
@@ -216,7 +202,6 @@ export function CodeFileViewer({
         code={content}
         language={language}
         showLineNumbers
-        title={filename}
         className={cn(
           'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
           '[&_pre]:whitespace-pre [&>div]:overflow-auto [&>div>div]:overflow-x-auto',
