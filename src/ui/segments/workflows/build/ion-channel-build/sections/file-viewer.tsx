@@ -7,7 +7,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { CodeBlock, CodeBlockCopyButton } from '@/ui/molecules/code-blocks';
+import { CodeBlock, CodeBlockCopyButton, CodeBlockLanguageLabel } from '@/ui/molecules/code-blocks';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
@@ -91,7 +91,13 @@ export function FileViewer({
   }
 
   if (isJson || isMod) {
-    return <CodeFileViewer url={presignedData.url} language={isJson ? 'json' : 'shellscript'} />;
+    return (
+      <CodeFileViewer
+        url={presignedData.url}
+        filename={asset.path}
+        language={isJson ? 'json' : 'shellscript'}
+      />
+    );
   }
 
   return (
@@ -160,7 +166,15 @@ export function PDFViewer({ url, filename }: { url: string; filename: string }) 
   );
 }
 
-export function CodeFileViewer({ url, language }: { url: string; language: BundledLanguage }) {
+export function CodeFileViewer({
+  url,
+  filename,
+  language,
+}: {
+  url: string;
+  filename: string;
+  language: BundledLanguage;
+}) {
   const { data: content, isLoading } = useQuery({
     queryKey: ['file-content', url],
     queryFn: async () => {
@@ -209,6 +223,7 @@ export function CodeFileViewer({ url, language }: { url: string; language: Bundl
         )}
       >
         <div className="bg-neutral-light flex items-center justify-between px-2 py-2">
+          <CodeBlockLanguageLabel title={filename} />
           <CodeBlockCopyButton
             onCopy={handleCopy}
             onError={() => {}}

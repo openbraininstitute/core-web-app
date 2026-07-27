@@ -100,7 +100,7 @@ export function CodeFileViewer({
     >
       <div className="bg-neutral-light flex items-center justify-between border-b border-gray-200 px-3 py-2">
         <div className="flex items-center gap-3">
-          <CodeBlockLanguageLabel />
+          <CodeBlockLanguageLabel title={fileName} />
 
           {isLargeFile && (
             <span className="rounded border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
