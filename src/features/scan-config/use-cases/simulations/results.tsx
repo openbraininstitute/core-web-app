@@ -18,7 +18,7 @@ import {
 import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
 import {
   hasSimConfigAsset,
-  resolveSimulationLaunchTaskType,
+  resolveSimulationLaunchTarget,
 } from '@/entity-configuration/domain/simulation/utils';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
@@ -91,13 +91,19 @@ export default function SimulationsTab({
 
   const scale = get(model, 'scale', null);
   const targetSimulator = get(model, 'target_simulator', null);
+  const launchTarget = resolveSimulationLaunchTarget({
+    entityType: entityType ?? null,
+    scale,
+    targetSimulator,
+  });
   // Prefer the workflow definition's resolved binding; fall back to deriving it from the model so
   // simulate workflows without an explicit binding (me-model) keep working. `null` means the
   // campaign is not launchable via obi-one and goes to the small-scale simulator instead.
-  const launchTaskType =
-    taskTypeBindings?.obiOne ??
-    resolveSimulationLaunchTaskType({ entityType: entityType ?? null, scale, targetSimulator });
+  const launchTaskType = taskTypeBindings?.obiOne ?? launchTarget?.taskType ?? null;
   const shouldTreatSimulationAsTask = launchTaskType !== null;
+  // Defaults to asking while the model is still loading: an unnecessary prompt is an annoyance,
+  // whereas a launch that needs consent and doesn't have it fails at job creation.
+  const launchRequiresOfflineTokenConsent = launchTarget?.requiresOfflineTokenConsent ?? true;
 
   const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
@@ -247,15 +253,18 @@ export default function SimulationsTab({
   }, [onActiveSimulationChange, simulations]);
 
   const runViaLaunchSystem = async (simIds: string[]) => {
-    const consentResult = await ensureOfflineTokenConsent();
-    if (!consentResult.ok) {
-      if (consentResult.reason !== 'cancelled') {
-        notification.error({
-          message: 'Unexpected error occurred, please try again later',
-          duration: 10,
-        });
+    if (launchRequiresOfflineTokenConsent) {
+      const consentResult = await ensureOfflineTokenConsent();
+      if (!consentResult.ok) {
+        if (consentResult.reason !== 'cancelled') {
+          notification.error({
+            message: 'Unexpected error occurred, please try again later',
+            duration: 10,
+          });
+        }
+        setSimRequestInProgress(false);
+        return;
       }
-      return;
     }
 
     let nSubmissions = 0;
