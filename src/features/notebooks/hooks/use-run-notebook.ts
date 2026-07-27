@@ -7,9 +7,11 @@ import {
   RiPlayFill,
 } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { getAsset } from '@/api/entitycore/selectors/assets';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
@@ -78,12 +80,20 @@ export function useRunNotebook({
   id,
   assets,
   enabled = true,
+  embed = false,
 }: {
   id: string;
   assets: IAsset[];
   enabled?: boolean;
+  /**
+   * Run the notebook inside the workspace (next to the AI assistant) instead of
+   * handing the browser off to JupyterHub in a new tab. The pod is then spawned
+   * by the run page, so its URL never has to pass through the address bar.
+   */
+  embed?: boolean;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
+  const router = useRouter();
   const notification = useAppNotification();
   const [runningTarget, setRunningTarget] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
@@ -109,6 +119,13 @@ export function useRunNotebook({
     if (!asset || !virtualLabData) return;
 
     const cloud = target.cloud ?? virtualLabData.compute_cell;
+
+    if (embed) {
+      const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/run/${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}/${id}`;
+      router.push(target.cloud ? `${base}?cloud=${encodeURIComponent(target.cloud)}` : base);
+      return;
+    }
+
     setRunningTarget(target.key);
     try {
       const retval: NotebookStartResponse = await startNotebook(

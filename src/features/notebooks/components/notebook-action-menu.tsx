@@ -56,7 +56,7 @@ export function NotebookActionMenu({
   const { replace: navigate } = useRouter();
   const [readmeOpen, setReadmeOpen] = useState(false);
   const { run, runTargets, runningTarget, running, openJupyterHub, opening, creditsModal } =
-    useRunNotebook({ id: entity.id, assets: entity.assets });
+    useRunNotebook({ id: entity.id, assets: entity.assets, embed: isTemplate });
 
   const [, copy, , copying] = useCopyToClipboard({
     onSuccess: () =>
