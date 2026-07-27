@@ -32,6 +32,7 @@ export const ScanConfigGeneratedApiPath = {
   EMSynapseMapping: 'em-synapse-mapping-scan-config-generate-grid',
   CreateExtracellularRecordingArray:
     'create-extracellular-recording-array-scan-config-generate-grid',
+  BuildSynaptome: 'build-synaptome-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -220,6 +221,19 @@ export function createExtracellularRecordingArrayConfigureBinding(): TScanConfig
     },
     generatedApiPath: ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function buildSynaptomeConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Memodel,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Memodel,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.Memodel]: ScanConfigFromIdType.MEModelFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.BuildSynaptome,
+    // no `schemaMappingKey`: the form's only mapped property group is `MorphologySource`
+    // (section types), which obi-one does not yet expose a `property_endpoints` entry for.
   };
 }
 

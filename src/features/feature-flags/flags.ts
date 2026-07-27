@@ -44,6 +44,14 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const buildSynaptomeFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Single neuron synaptome build (OBI-One form)',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** Interactive electrode overlays in circuit preview (independent of the build workflow). */
 export const electrodeOverlaysFlag = defineFlag<boolean>({
   key: 'electrode-overlays',
@@ -59,6 +67,7 @@ export const flags = [
   eFeatureExtractionFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
+  buildSynaptomeFlag,
   electrodeOverlaysFlag,
 ] as const;
 

@@ -41,6 +41,12 @@ export const TaskConfigType = {
     'extracellular_recording_weights_calculation__campaign',
   ExtracellularRecordingWeightsCalculationConfig:
     'extracellular_recording_weights_calculation__config',
+  // placeholder: not yet in entitycore (checked against staging `TaskConfigType`, 27/07/2026).
+  // obi-one's `BuildSynaptomeScanConfig` has no `_campaign_task_config_type` either, so the
+  // generate endpoint cannot register a campaign yet. Names follow the `<task>__campaign` /
+  // `<task>__config` convention and should be confirmed once entitycore lands the type.
+  BuildSynaptomeCampaign: 'build_synaptome__campaign',
+  BuildSynaptomeConfig: 'build_synaptome__config',
 } as const;
 
 export type TTaskConfigType = (typeof TaskConfigType)[keyof typeof TaskConfigType];

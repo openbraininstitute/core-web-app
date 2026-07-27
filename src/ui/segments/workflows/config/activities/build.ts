@@ -1,9 +1,13 @@
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { extracellularRecordingArrayBuildFlag } from '@/features/feature-flags/flags';
+import {
+  buildSynaptomeFlag,
+  extracellularRecordingArrayBuildFlag,
+} from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
+import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 import { createExtracellularRecordingArrayWorkflow } from '@/features/scan-config/workflow/definitions/create-extracellular-recording-array';
 import {
   buildEmDenseMorphologyLoader,
@@ -14,6 +18,7 @@ import { EmSynapseMappingDatasetPrerequisiteCards } from '@/ui/segments/workflow
 
 import {
   buildEmSynapseMappingConfigureBinding,
+  buildSynaptomeConfigureBinding,
   createExtracellularRecordingArrayConfigureBinding,
 } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
@@ -72,6 +77,31 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     order: 2,
     disabled: false,
   },
+  // OBI-One form-driven synaptome build. Runs alongside the legacy `SingleNeuronSynaptome`
+  // builder: they produce different entity types, so neither replaces the other.
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.ScanConfig,
+    sourceType: ExtendedEntitiesTypeDict.Memodel,
+    targetType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
+    label: 'Single neuron synaptome (beta)',
+    breadcrumb: {
+      root: 'Single neuron synaptome (beta) build',
+      steps: {
+        selection: 'Select an ME-model',
+      },
+    },
+    scanConfig: {
+      definition: buildSynaptomeWorkflow,
+      schemaName: SchemaNameDict.BuildSynaptomeScanConfig,
+      configureBinding: buildSynaptomeConfigureBinding(),
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Memodel }],
+    requireFilters: true,
+    order: 3,
+    disabled: false,
+    requiredFeatures: [buildSynaptomeFlag.key],
+  },
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfig,
@@ -93,7 +123,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     requireFilters: false,
     requireSpecies: false,
-    order: 3,
+    order: 4,
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -173,7 +203,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
         },
       },
     },
-    order: 4,
+    order: 5,
     disabled: false,
     requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
   },
@@ -182,7 +212,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.DirectConfigure,
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    order: 5,
+    order: 6,
     disabled: false,
   },
   {
@@ -190,7 +220,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
     targetType: ExtendedEntitiesTypeDict.MemodelCircuit,
-    order: 6,
+    order: 7,
     disabled: true,
   },
   {
@@ -198,7 +228,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
-    order: 7,
+    order: 8,
     disabled: true,
   },
   {
@@ -206,7 +236,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
     targetType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
-    order: 8,
+    order: 9,
     disabled: true,
   },
   {
