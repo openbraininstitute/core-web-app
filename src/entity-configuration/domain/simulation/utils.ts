@@ -13,51 +13,79 @@ import { ObiOneTaskTypeDict, type TObiOneTaskType } from '@/api/one/types/task';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
 
-const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
+const MACHINE_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
   CircuitScaleDictionary.PairNeuron,
   CircuitScaleDictionary.SmallMicrocircuit,
+]);
+
+const CLUSTER_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
   CircuitScaleDictionary.Microcircuit,
   CircuitScaleDictionary.Region,
   CircuitScaleDictionary.System,
   CircuitScaleDictionary.WholeBrain,
 ]);
 
-/**
- * Single source of truth for which obi-one task type launches a simulation campaign, and therefore
- * for whether it goes through the task system at all — `null` means launch via the small-scale
- * simulator instead, and no task configuration/log stream entries.
- *
- * Order matters: a Brian2 circuit also carries a scale, and a me-model campaign carries neither.
- */
-export function resolveSimulationLaunchTaskType({
-  entityType,
-  scale,
-  targetSimulator,
-}: {
+type TSimulationLaunchInput = {
   entityType: TEntityTypeDict | null;
   scale: TCircuitScaleDictionary | null;
   targetSimulator: string | null;
-}): TObiOneTaskType | null {
+};
+
+export type TSimulationLaunchTarget = {
+  taskType: TObiOneTaskType;
+  requiresOfflineTokenConsent: boolean;
+};
+
+/**
+ * Single source of truth for how a simulation campaign is launched, and therefore for whether it
+ * goes through the task system at all — `null` means launch via the small-scale simulator instead,
+ * and no task configuration/log stream entries.
+ *
+ * Order matters: a Brian2 circuit also carries a scale, and a me-model campaign carries neither.
+ */
+export function resolveSimulationLaunchTarget({
+  entityType,
+  scale,
+  targetSimulator,
+}: TSimulationLaunchInput): TSimulationLaunchTarget | null {
   // "Single neuron (beta)" campaigns hang off a me-model, not a circuit, so obi-one's
   // `circuit_simulation` group can't resolve them — it reads `simulation.entity_id` as a Circuit.
   if (entityType === EntityTypeDict.Memodel) {
-    return ObiOneTaskTypeDict.SingleNeuronSimulationExecution;
+    return {
+      taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
+      requiresOfflineTokenConsent: false,
+    };
   }
   if (targetSimulator === 'Brian2') {
-    return ObiOneTaskTypeDict.CircuitSimulationBrian2;
+    return {
+      taskType: ObiOneTaskTypeDict.CircuitSimulationBrian2,
+      requiresOfflineTokenConsent: false,
+    };
   }
   if (targetSimulator === 'LearningEngine') {
-    return ObiOneTaskTypeDict.CircuitSimulation;
+    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: false };
   }
   // Scale `single` is the "Synaptome (beta)" circuit; it gets its own task type so it runs on
   // 1 core / 2 GB and bills as a synaptome sim rather than as a generic circuit simulation.
   if (scale === CircuitScaleDictionary.Single) {
-    return ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution;
+    return {
+      taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
+      requiresOfflineTokenConsent: false,
+    };
   }
-  if (scale !== null && TASK_LAUNCH_SCALES.has(scale)) {
-    return ObiOneTaskTypeDict.CircuitSimulation;
+  if (scale !== null && MACHINE_LAUNCH_SCALES.has(scale)) {
+    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: false };
+  }
+  if (scale !== null && CLUSTER_LAUNCH_SCALES.has(scale)) {
+    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true };
   }
   return null;
+}
+
+export function resolveSimulationLaunchTaskType(
+  input: TSimulationLaunchInput
+): TObiOneTaskType | null {
+  return resolveSimulationLaunchTarget(input)?.taskType ?? null;
 }
 
 // TODO Remove this after the data is migrated
