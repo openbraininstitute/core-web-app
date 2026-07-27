@@ -1,6 +1,7 @@
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
+import { resolveSimulationLaunchTaskType } from '@/entity-configuration/domain/simulation/utils';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
@@ -27,10 +28,14 @@ export function defineSimulateCircuitScanConfigWorkflow({
       className: 'px-4',
     },
     taskTypeBindings: ({ entity }) => ({
+      // Falls back to the generic type while the entity is still loading; once it resolves, scale
+      // and `target_simulator` pick the right one (incl. the dedicated synaptome-beta type).
       obiOne:
-        entity && 'target_simulator' in entity && entity.target_simulator === 'Brian2'
-          ? ObiOneTaskTypeDict.CircuitSimulationBrian2
-          : ObiOneTaskTypeDict.CircuitSimulation,
+        resolveSimulationLaunchTaskType({
+          entityType: entity?.type ?? null,
+          scale: entity && 'scale' in entity ? entity.scale : null,
+          targetSimulator: entity && 'target_simulator' in entity ? entity.target_simulator : null,
+        }) ?? ObiOneTaskTypeDict.CircuitSimulation,
       configGeneration: TaskActivityType.CircuitSimulationConfigGeneration,
       execution: TaskActivityType.CircuitSimulationExecution,
       config: TaskConfigType.CircuitSimulationConfig,
