@@ -8,6 +8,7 @@ import { IonChannelRecording } from '@/entity-configuration/domain/experimental/
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
+import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
@@ -93,6 +94,7 @@ const EntityCoreSimulationConfiguration = {
 
 const EntityCoreExtractionConfiguration = {
   CircuitExtractionCampaign,
+  EFeatureExtractionCampaign,
 };
 
 const EntityCoreProcessingConfiguration = {

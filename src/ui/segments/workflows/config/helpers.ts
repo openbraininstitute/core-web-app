@@ -53,9 +53,33 @@ export const featuresSatisfied = (
   return required.every((flag) => Boolean(flags[flag]));
 };
 
+/**
+ * `featuresSatisfied` is all-of. This is any-of: used by an activity that hosts several
+ * independently flagged workflows, so the activity shows as soon as one of them is enabled
+ * instead of forcing every workflow behind one shared flag.
+ */
+export const anyFeatureSatisfied = (
+  required: readonly FlagKey[] | undefined,
+  flags: FeatureFlags | undefined
+): boolean => {
+  if (!required || required.length === 0) return true;
+  if (!flags) return false;
+  return required.some((flag) => Boolean(flags[flag]));
+};
+
+function activityFeaturesSatisfied(
+  activity: TActivityEntry,
+  flags: FeatureFlags | undefined
+): boolean {
+  return (
+    featuresSatisfied(activity.requiredFeatures, flags) &&
+    anyFeatureSatisfied(activity.requiredAnyFeatures, flags)
+  );
+}
+
 export function listActivities(flags?: FeatureFlags): TActivityEntry[] {
   const visibleActivities = Object.values(ActivityRegistry).filter((activity) =>
-    featuresSatisfied(activity.requiredFeatures, flags)
+    activityFeaturesSatisfied(activity, flags)
   );
 
   return sortBy(visibleActivities, (activity) => activity.order ?? Number.MAX_SAFE_INTEGER);
@@ -140,7 +164,7 @@ export function listWorkflows(opts: {
   const activity = getActivity(opts.activity);
   if (!activity) return [];
   if (activity.disabled) return [];
-  if (!featuresSatisfied(activity.requiredFeatures, opts.flags)) return [];
+  if (!activityFeaturesSatisfied(activity, opts.flags)) return [];
 
   const source = workflowsFor(activity, opts.context ?? WorkflowListContextDict.Configure);
 

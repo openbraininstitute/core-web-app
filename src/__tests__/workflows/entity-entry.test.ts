@@ -7,6 +7,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { WorkflowActivityDictValue } from '@/constants';
 import {
   brainRegionSimulationFlag,
+  efeatureExtractionActivityFlag,
   extracellularRecordingArrayBuildFlag,
   extractionActivityFlag,
 } from '@/features/feature-flags/flags';
@@ -54,6 +55,7 @@ const allFlags = {
   [extractionActivityFlag.key]: true,
   [brainRegionSimulationFlag.key]: true,
   [extracellularRecordingArrayBuildFlag.key]: true,
+  [efeatureExtractionActivityFlag.key]: true,
 } as FeatureFlags;
 
 const ENTITY_ID = 'entity-id';
@@ -187,6 +189,14 @@ const cases: TCase[] = [
     href: `${base}/extract/configure/circuit-extraction-campaign/{session}`,
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
     flags: { [extractionActivityFlag.key]: true } as FeatureFlags,
+  },
+  {
+    name: 'electrical cell recording → intracellular e-feature extraction',
+    fixture: { entity: { type: EntityTypeDict.ElectricalCellRecording } },
+    covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign },
+    href: `${base}/extract/configure/efeature-extraction-campaign/{session}`,
+    selects: { type: ExtendedEntitiesTypeDict.ElectricalCellRecording, id: ENTITY_ID },
+    flags: { [efeatureExtractionActivityFlag.key]: true } as FeatureFlags,
   },
 
   // legacy browse-first workflows: configure keyed by the entity itself ───

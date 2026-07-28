@@ -41,6 +41,7 @@ export function defineSimulateCircuitScanConfigWorkflow({
 export { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
 export { createExtracellularRecordingArrayWorkflow } from '@/features/scan-config/workflow/definitions/create-extracellular-recording-array';
 export { extractCircuitWorkflow } from '@/features/scan-config/workflow/definitions/extract-circuit';
+export { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 export { processEmCellMeshWorkflow } from '@/features/scan-config/workflow/definitions/process-em-cell-mesh';
 export { simulateIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/simulate-ion-channel';
 export { simulateMEModelWithSynapsesCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-me-model-with-synapses-circuit';
