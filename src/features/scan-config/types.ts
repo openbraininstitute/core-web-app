@@ -6,6 +6,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import type {
   ICellMorphology,
   ICircuit,
+  IElectricalCellRecording,
   IMEModel,
   IonChannelModel,
   TEntityTypeDict,
@@ -29,6 +30,7 @@ export type Config = Record<string, ConfigValue>;
 export const SchemaMappingKeyDict = {
   Circuit: 'Circuit',
   IonChannelModel: 'IonChannelModel',
+  ElectricalCellRecordings: 'ElectricalCellRecordings',
 } as const;
 
 export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof SchemaMappingKeyDict];
@@ -115,6 +117,7 @@ export const SchemaNameDict = {
   IonChannelModelSimulationScanConfig: 'IonChannelModelSimulationScanConfig',
   // extraction
   CircuitExtractionScanConfig: 'CircuitExtractionScanConfig',
+  EModelEFeatureExtractionScanConfig: 'EModelEFeatureExtractionScanConfig',
   // build
   EMSynapseMappingScanConfig: 'EMSynapseMappingScanConfig',
   ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
@@ -155,6 +158,8 @@ export const ScanConfigUIElementDict = {
   NeuronPropertyFilter: 'neuron_property_filter',
   NeuronSetCombination: 'neuron_set_combination',
   MorphologySectionTypeSelection: 'morphology_section_type_selection',
+  FloatOptional: 'float_optional',
+  SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -238,6 +243,35 @@ export interface IntParameterSweep extends TBlockElement {
       };
     },
   ];
+}
+
+/**
+ * A nullable float. `null` is meaningful rather than empty: it means the value is not set at
+ * this level, so the one below it in the cascade applies (feature > protocol > global, and
+ * finally the tool's own default).
+ */
+export interface FloatOptional extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.FloatOptional;
+  anyOf: [
+    {
+      type: 'number';
+      minimum?: number;
+      maximum?: number;
+      exclusiveMinimum?: number;
+      exclusiveMaximum?: number;
+    },
+    { type: 'null' },
+  ];
+}
+
+/**
+ * The object behind the per-protocol e-feature picker. One widget renders the whole thing, so
+ * the nested fields carry no `ui_element` of their own.
+ */
+export interface TSelectEFeaturesByProtocol extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.SelectEFeaturesByProtocol;
+  type: 'object';
+  property_endpoints?: string;
 }
 
 export interface Reference extends TBlockElement {
@@ -411,6 +445,8 @@ export type ParamSchema =
   | TModelIdentifierMultiple
   | FloatParameterSweep
   | IntParameterSweep
+  | FloatOptional
+  | TSelectEFeaturesByProtocol
   | Reference
   | NeuronIds
   | EntityPropertyDropdown
@@ -556,7 +592,8 @@ export type TSupportedEntitiesForScanConfiguration =
   | IMEModel
   | IonChannelModel
   | ICellMorphology
-  | IEMCellMesh;
+  | IEMCellMesh
+  | IElectricalCellRecording;
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
@@ -566,4 +603,5 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.EMCellMesh
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
+  | typeof ExtendedEntitiesTypeDict.ElectricalCellRecording
   | typeof ExtendedEntitiesTypeDict.WholeBrain;

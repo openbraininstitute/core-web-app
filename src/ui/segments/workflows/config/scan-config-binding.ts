@@ -27,6 +27,7 @@ export const ScanConfigGeneratedApiPath = {
   MEModelSimulation: 'me-model-simulation-scan-config-generate-grid',
   IonChannelModelSimulation: 'ion-channel-model-simulation-scan-config-generate-grid',
   CircuitExtraction: 'circuit-extraction-scan-config-generate-grid',
+  EFeatureExtraction: 'e-model-e-feature-extraction-scan-config-generate-grid',
   Skeletonization: 'skeletonization-scan-config-generate-grid',
   EMSynapseMapping: 'em-synapse-mapping-scan-config-generate-grid',
   CreateExtracellularRecordingArray:
@@ -170,6 +171,19 @@ export function extractCircuitConfigureBinding(): TScanConfigConfigureBinding {
     },
     generatedApiPath: ScanConfigGeneratedApiPath.CircuitExtraction,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function extractEFeaturesConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.ElectricalCellRecording]:
+        ScanConfigFromIdType.ElectricalCellRecordingFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.EFeatureExtraction,
+    schemaMappingKey: SchemaMappingKeyDict.ElectricalCellRecordings,
   };
 }
 
