@@ -28,6 +28,8 @@ const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.IonChannelModelFromID]: ExtendedEntitiesTypeDict.IonChannelModel,
   [ScanConfigFromIdType.SimulatableExtracellularRecordingArrayFromID]:
     ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+  [ScanConfigFromIdType.ElectricalCellRecordingFromID]:
+    ExtendedEntitiesTypeDict.ElectricalCellRecording,
 } as const satisfies Record<TScanConfigFromIdType, TExtendedEntitiesTypeDict>;
 
 function isScanConfigFromIdType(value: string): value is TScanConfigFromIdType {

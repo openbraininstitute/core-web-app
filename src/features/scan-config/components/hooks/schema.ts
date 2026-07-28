@@ -215,6 +215,7 @@ const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: 'MEModelWithSynapsesCircuitFromID',
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
+  [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'ElectricalCellRecordingFromID',
 };
 
 function buildInitialConfigState(
@@ -297,6 +298,10 @@ function buildInitialConfigState(
             .with(
               { type: EntityTypeDict.Memodel },
               () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+            )
+            .with(
+              { type: EntityTypeDict.ElectricalCellRecording },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.ElectricalCellRecording]
             )
             .otherwise(() => {
               throw new Error(`Unsupported entity type: ${model.type}`);
