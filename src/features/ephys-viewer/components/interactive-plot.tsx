@@ -6,14 +6,9 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
 import { useSweepSeries } from '@/features/ephys-viewer/hooks/use-sweep-series';
+import { type SweepTrace, toPlotTraces } from '@/features/ephys-viewer/plot-traces';
 import { RecordingType } from '@/features/ephys-viewer/trace-index';
-import {
-  type CurrentUnit,
-  convertCurrentSeries,
-  convertVoltageSeries,
-  ensureCurrentUnit,
-  type VoltageUnit,
-} from '@/util/explore-section/plotHelpers';
+import { type CurrentUnit, ensureCurrentUnit } from '@/util/explore-section/plotHelpers';
 
 import type { RecordingSeries } from '@/features/ephys-viewer/trace-index';
 import type { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
@@ -21,7 +16,6 @@ import type { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 const Plot = createPlotlyComponent(Plotly);
 
 export const DEFAULT_CURRENT_UNIT: CurrentUnit = 'pA';
-const DEFAULT_VOLTAGE_UNIT: VoltageUnit = 'mV';
 
 export const currentUnitAtom = atomWithStorage<CurrentUnit>(
   'ephysViewer.currentUnit',
@@ -68,14 +62,14 @@ export default function InteractivePlot({
   const rawData = usePlotTraces(active, colorMap, currentUnit);
 
   const selectedResponse: Partial<PlotData>[] = useMemo(
-    () => rawData.filter((data) => data.sweepName && selectedSweeps.includes(data.sweepName)),
+    () => rawData.filter((data) => selectedSweeps.includes(data.sweepName)),
     [rawData, selectedSweeps]
   );
 
   const previewDataResponse: Partial<PlotData>[] = useMemo(
     () =>
       rawData.map((data) => {
-        const isSelected = data.sweepName ? selectedSweeps.includes(data.sweepName) : false;
+        const isSelected = selectedSweeps.includes(data.sweepName);
         const isPreview = data.sweepName === previewSweep;
         const opacity = isPreview || isSelected ? 1 : 0.05;
 
@@ -85,7 +79,7 @@ export default function InteractivePlot({
   );
 
   const handleClick = ({ data, curveNumber }: Readonly<Plotly.LegendClickEvent>): boolean => {
-    const value: string = (data[curveNumber] as any).sweepName;
+    const { sweepName: value } = data[curveNumber] as unknown as SweepTrace;
     const isSelected = selectedSweeps.includes(value);
     if (isSelected) {
       setSelectedSweeps(selectedSweeps.filter((sweep) => sweep !== value));
@@ -145,32 +139,18 @@ export default function InteractivePlot({
   );
 }
 
-type SweepTrace = Partial<PlotData> & { sweepName?: string };
-
 /** Convert the worker's decimated series into Plotly traces, in the user's chosen units. */
 function usePlotTraces(
   recording: RecordingSeries | undefined,
   colorMap: Map<string, string>,
   currentUnit: string
 ): SweepTrace[] {
-  return useMemo(() => {
-    if (!recording) return [];
-
-    const { unit, conversionFactor } = recording.meta;
-
-    return recording.series.map(({ sweep, x, y }) => ({
-      name: sweep,
-      sweepName: sweep,
-      x,
-      y:
-        unit === 'amperes'
-          ? convertCurrentSeries(
-              y,
-              ensureCurrentUnit(currentUnit, DEFAULT_CURRENT_UNIT),
-              conversionFactor
-            )
-          : convertVoltageSeries(y, DEFAULT_VOLTAGE_UNIT, conversionFactor),
-      line: { color: colorMap.get(sweep) },
-    }));
-  }, [recording, colorMap, currentUnit]);
+  return useMemo(
+    () =>
+      toPlotTraces(recording, {
+        color: (sweep) => colorMap.get(sweep),
+        currentUnit: ensureCurrentUnit(currentUnit, DEFAULT_CURRENT_UNIT),
+      }),
+    [recording, colorMap, currentUnit]
+  );
 }

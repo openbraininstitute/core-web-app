@@ -9,7 +9,7 @@ export type DownloadProgress = {
   total: number | null;
 };
 
-export class AssetFetchError extends Error {
+class AssetFetchError extends Error {
   status: number;
 
   constructor(status: number, message: string) {

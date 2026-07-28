@@ -47,7 +47,6 @@ interface Session {
   refCount: number;
   /** Bumped on every (re)open and on disposal, so stale async results are dropped. */
   epoch: number;
-  disposed: boolean;
   disposeTimer: ReturnType<typeof setTimeout> | null;
 }
 
@@ -84,7 +83,6 @@ class NWBWorkerRegistry {
         listeners: new Set(),
         refCount: 0,
         epoch: 0,
-        disposed: false,
         disposeTimer: null,
       };
       this.sessions.set(key, session);
@@ -139,7 +137,7 @@ class NWBWorkerRegistry {
         type: 'module',
       });
       const proxy = Comlink.wrap<NWBTraceWorkerApi>(worker);
-      if (session.disposed || session.epoch !== epoch) {
+      if (session.epoch !== epoch) {
         proxy[Comlink.releaseProxy]();
         worker.terminate();
         return;
@@ -148,21 +146,21 @@ class NWBWorkerRegistry {
       session.proxy = proxy;
 
       const { url, headers } = await session.buildRequest();
-      if (session.disposed || session.epoch !== epoch) return;
+      if (session.epoch !== epoch) return;
 
       const request: OpenTraceRequest = { fileKey: session.key, url, headers };
       const index = await proxy.open(
         request,
         Comlink.proxy((next: DownloadProgress) => {
-          if (session.disposed || session.epoch !== epoch) return;
+          if (session.epoch !== epoch) return;
           this.setState(session, { progress: next });
         })
       );
-      if (session.disposed || session.epoch !== epoch) return;
+      if (session.epoch !== epoch) return;
 
       this.setState(session, { status: 'ready', index, progress: null, error: null });
     } catch (e) {
-      if (session.disposed || session.epoch !== epoch) return;
+      if (session.epoch !== epoch) return;
       this.teardownWorker(session);
       this.setState(session, {
         status: 'error',
@@ -175,7 +173,6 @@ class NWBWorkerRegistry {
 
   private dispose(session: Session): void {
     if (session.refCount > 0) return; // Re-acquired during the grace window.
-    session.disposed = true;
     session.epoch += 1;
     session.disposeTimer = null;
     this.teardownWorker(session);

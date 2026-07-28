@@ -14,6 +14,7 @@ import {
   ephysSectionLabelClass,
   ephysSelectClass,
 } from '@/features/ephys-viewer/label-styles';
+import { toPlotTraces } from '@/features/ephys-viewer/plot-traces';
 import { useTraceContext } from '@/features/ephys-viewer/trace-context';
 import {
   getCellIds,
@@ -24,7 +25,6 @@ import {
   RecordingType,
 } from '@/features/ephys-viewer/trace-index';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
 import { cn } from '@/utils/css-class';
 
 import type { PlotData } from 'plotly.js-dist-min';
@@ -407,21 +407,11 @@ function usePlotData(
   recording: RecordingSeries | undefined,
   recordingType: RecordingType
 ): Partial<PlotData>[] {
-  return useMemo(() => {
-    if (!recording) return [];
-
-    const { unit, conversionFactor } = recording.meta;
-    const color = colorMap[recordingType];
-
-    return recording.series.map(({ sweep, x, y }) => ({
-      name: sweep,
-      x,
-      y:
-        unit === 'amperes'
-          ? convertCurrentSeries(y, 'pA', conversionFactor)
-          : convertVoltageSeries(y, 'mV', conversionFactor),
-      mode: 'lines' as const,
-      line: { color, width: 1 },
-    }));
-  }, [recording, recordingType]);
+  return useMemo(
+    () =>
+      toPlotTraces(recording, { color: colorMap[recordingType], currentUnit: 'pA' }).map(
+        (trace) => ({ ...trace, mode: 'lines' as const, line: { ...trace.line, width: 1 } })
+      ),
+    [recording, recordingType]
+  );
 }

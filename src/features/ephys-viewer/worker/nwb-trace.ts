@@ -38,8 +38,6 @@ enum NWBKey {
   STARTING_TIME = 'starting_time',
   GENERAL = 'general',
   WAS_GENERATED_BY = 'was_generated_by',
-  TIMESTAMPS = 'timestamps',
-  SESSION_ID = 'session_id',
   TIMESERIES = 'timeseries',
   BIAS_CURRENT = 'bias_current',
   STIMULUS_DESCRIPTION = 'stimulus_description',
@@ -617,23 +615,19 @@ class NWBVUTrace extends NWBTrace {
     };
   }
 
+  /**
+   * Not on the live path — the worker reads through `getSweepData`, which this reader overrides
+   * so both channels come out of one pass. Delegating to it keeps the channel mapping in one
+   * place rather than spelling it out a second time.
+   */
   public getSweepRecordingData(
-    _cellId: string,
+    cellId: string,
     protocol: string,
-    _repetition: string,
+    repetition: string,
     sweep: string,
     recordingType: RecordingType
   ): RecordingData[] {
-    const { current, voltage, units, timeUnit, timeRate } = this.readSweep(
-      this.findSweep(protocol, sweep)
-    );
-
-    return [
-      {
-        ...toVURecordingMeta(units, timeUnit, timeRate, recordingType),
-        data: recordingType === RecordingType.STIMULUS ? current : voltage,
-      },
-    ];
+    return this.getSweepData(cellId, protocol, repetition, sweep)[recordingType] ?? [];
   }
 
   private getProtocolSweeps(protocol: string): VUSweep[] {

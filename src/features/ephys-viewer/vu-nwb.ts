@@ -13,10 +13,8 @@
 
 import type { Samples } from '@/features/ephys-viewer/trace-index';
 
-export type { Samples };
-
 /** VU stimulus descriptions that correspond to a known BBP protocol. */
-export const PROTOCOL_VU_TO_BBP: Record<string, string> = {
+const PROTOCOL_VU_TO_BBP: Record<string, string> = {
   X1PS_SubThresh_DA_0: 'IV',
   X2LP_Search_DA_0: 'IDThresh',
   X3LP_Rheo_DA_0: 'IDRest',
@@ -35,7 +33,7 @@ export const PROTOCOL_VU_TO_BBP: Record<string, string> = {
 };
 
 /** VU stimuli whose samples before 90 ms are a recording artifact. */
-export const VU_STIMULI_REQUIRING_INITIAL_SAMPLE_REPLACEMENT = new Set([
+const VU_STIMULI_REQUIRING_INITIAL_SAMPLE_REPLACEMENT = new Set([
   'CCSteps_DA_0',
   'X1PS_SubThresh_DA_0',
   'X4PS_SupraThresh_DA_0',
@@ -47,7 +45,7 @@ const INITIAL_SAMPLE_REPLACEMENT_TIME = 0.09; // seconds
 /** `bias_current` is stored in pA, samples are in amperes once converted. */
 const PICO = 1e-12;
 
-export function isKnownVUProtocol(description: string): boolean {
+function isKnownVUProtocol(description: string): boolean {
   return Object.hasOwn(PROTOCOL_VU_TO_BBP, description);
 }
 
