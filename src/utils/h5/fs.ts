@@ -95,12 +95,18 @@ export async function fetchToFS({
 
   const reader = body.getReader();
   const stream = FS.open(filename, 'w+');
+  // Size the file up front where the length is known. Emscripten's MEMFS grows a backing buffer
+  // by a factor of 1.125 once past a megabyte, reallocating and copying every time — over a
+  // multi-hundred-megabyte download that is several times the file size in memcpy, and it needs
+  // the old and new buffers side by side at each step. One allocation avoids all of it.
+  if (total) FS.truncate(filename, total);
   // Only surface progress for genuine network downloads. A cache hit reads from disk fast enough that
   // the bar would just flicker, so we leave `progress` null and the UI shows the quick spinner.
   const reportProgress = cached ? undefined : onProgress;
   // When the total is known, emit on each whole-percent change; otherwise emit roughly every 2 MB.
   let lastPercent = -1;
   let lastEmittedBytes = 0;
+  let written = 0;
   try {
     let offset = 0;
     for (;;) {
@@ -122,6 +128,7 @@ export async function fetchToFS({
       }
     }
     reportProgress?.({ received: offset, total });
+    written = offset;
   } catch (err) {
     try {
       FS.unlink(filename);
@@ -132,6 +139,10 @@ export async function fetchToFS({
   } finally {
     FS.close(stream);
   }
+
+  // Content-Length is a promise, not a guarantee. Give back whatever the pre-sizing over-allocated
+  // rather than leaving the file padded with zeros.
+  if (total && written < total) FS.truncate(filename, written);
 
   // Ensure the cross-session cache entry is fully written before returning.
   if (cachePut) await cachePut;

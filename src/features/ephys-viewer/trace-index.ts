@@ -58,6 +58,12 @@ export type TraceCellIndex = {
 
 export type TraceIndex = {
   recordingTypes: RecordingType[];
+  /**
+   * Every protocol across every cell, in the order the reader wants them listed. Most readers
+   * sort alphabetically; the VU reader puts the recognised BBP protocols ahead of the ones
+   * named after their raw stimulus.
+   */
+  protocolOrder: string[];
   cells: TraceCellIndex[];
 };
 

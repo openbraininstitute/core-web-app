@@ -101,48 +101,21 @@ export default abstract class NWBTrace {
       }
     } catch {}
 
+    // Both simulation formats identify themselves by the agent that wrote them.
+    const writerAgents = readWriterAgents(file);
+
     // Ion channel simulation complient
-    try {
-      const generalGroup = file.get(NWBKey.GENERAL);
-      if (!(generalGroup instanceof Group)) {
-        throw new Error('General group not found');
-      }
-
-      const wasGeneratedByDataset = generalGroup.get(NWBKey.WAS_GENERATED_BY);
-      if (!(wasGeneratedByDataset instanceof Dataset)) {
-        throw new Error('Can not find was_generated_by dataset');
-      }
-
-      const wasGeneratedBy = wasGeneratedByDataset.to_array() as string[];
-      if (!wasGeneratedBy.includes(CURRENT_REPORT_WRITER_AGENT_ID)) {
-        throw new Error(`Writer agent is not ${CURRENT_REPORT_WRITER_AGENT_ID}`);
-      }
-
+    if (writerAgents.includes(CURRENT_REPORT_WRITER_AGENT_ID)) {
       return new IonChannelSimulationTrace(file);
-    } catch {}
+    }
 
     // Small scale circuit simulation complient
-    try {
-      const generalGroup = file.get(NWBKey.GENERAL);
-      if (!(generalGroup instanceof Group)) {
-        throw new Error('General group not found');
-      }
-
-      const wasGeneratedByDataset = generalGroup.get(NWBKey.WAS_GENERATED_BY);
-      if (!(wasGeneratedByDataset instanceof Dataset)) {
-        throw new Error('Can not find was_generated_by dataset');
-      }
-
-      const wasGeneratedBy = wasGeneratedByDataset.to_array() as string[];
-      if (!wasGeneratedBy.includes(SMALL_SCALE_SIMULATOR_ID)) {
-        throw new Error('The file does not seem to be produced by OBI small scale simulator');
-      }
-
+    if (writerAgents.includes(SMALL_SCALE_SIMULATOR_ID)) {
       return new NWBCircuitSimulationTrace(file);
-    } catch {
-      // Defaulting to Generic NWB Trace
-      return new NWBGenericTrace(file);
     }
+
+    // Defaulting to Generic NWB Trace
+    return new NWBGenericTrace(file);
   }
 
   abstract init(): void;
@@ -184,32 +157,56 @@ export default abstract class NWBTrace {
    * recordings rather than dropped, so a single bad sweep does not hide a protocol.
    */
   public buildIndex(): TraceIndex {
+    const cells = this.getCellIds().map((id) => ({
+      id,
+      protocols: this.getProtocols(id).map((name): TraceProtocolIndex => {
+        return {
+          name,
+          repetitions: this.getRepetitions(id, name).map((repetition): TraceRepetitionIndex => {
+            const sweeps = this.getSweeps(id, name, repetition);
+
+            return {
+              name: repetition,
+              sweeps,
+              recordings: this.getRepetitionRecordings(id, name, repetition, sweeps),
+            };
+          }),
+        };
+      }),
+    }));
+
+    const protocolNames = new Set<string>();
+    cells.forEach((cell) => {
+      cell.protocols.forEach(({ name }) => {
+        protocolNames.add(name);
+      });
+    });
+
     return {
       recordingTypes: this.recordingTypes,
-      cells: this.getCellIds().map((id) => ({
-        id,
-        protocols: this.getProtocols(id).map((name): TraceProtocolIndex => {
-          return {
-            name,
-            repetitions: this.getRepetitions(id, name).map(
-              (repetition): TraceRepetitionIndex => ({
-                name: repetition,
-                sweeps: this.getSweeps(id, name, repetition),
-                recordings: this.getRepetitionRecordings(id, name, repetition),
-              })
-            ),
-          };
-        }),
-      })),
+      protocolOrder: this.orderProtocols([...protocolNames]),
+      cells,
     };
+  }
+
+  /**
+   * How the viewer should list this file's protocols, given the union across its cells.
+   *
+   * Alphabetical unless a reader says otherwise. Ordering belongs here rather than in the
+   * component: the union is taken across cells, so a component that preserved one reader's
+   * order would be silently reordering every other format by whichever cell came first.
+   */
+  protected orderProtocols(protocols: string[]): string[] {
+    return [...protocols].sort();
   }
 
   private getRepetitionRecordings(
     cellId: string,
     protocol: string,
-    repetition: string
+    repetition: string,
+    sweeps: string[]
   ): TraceRepetitionIndex['recordings'] {
-    const [firstSweep] = this.getSweeps(cellId, protocol, repetition);
+    const [firstSweep] = sweeps;
     if (firstSweep === undefined) return {};
 
     return this.recordingTypes.reduce<TraceRepetitionIndex['recordings']>((acc, recordingType) => {
@@ -280,19 +277,16 @@ export default abstract class NWBTrace {
     repetition: string,
     sweep: string
   ): SweepData {
-    return this.recordingTypes.reduce(
-      (acc, recordingType) => ({
-        ...acc,
-        [recordingType]: this.getSweepRecordingData(
-          cellId,
-          protocol,
-          repetition,
-          sweep,
-          recordingType
-        ),
-      }),
-      {}
-    );
+    return this.recordingTypes.reduce<SweepData>((acc, recordingType) => {
+      acc[recordingType] = this.getSweepRecordingData(
+        cellId,
+        protocol,
+        repetition,
+        sweep,
+        recordingType
+      );
+      return acc;
+    }, {});
   }
 
   public destroy() {
@@ -456,7 +450,7 @@ class NWBLNMCTrace extends NWBTrace {
     return [
       {
         ...this.readMeta(datasetKey, timeDatasetKey),
-        data: this.getDataset(datasetKey).to_array() as number[],
+        data: readSamples(this.getDataset(datasetKey)),
       },
     ];
   }
@@ -570,6 +564,11 @@ class NWBVUTrace extends NWBTrace {
     }
 
     return this.protocols;
+  }
+
+  /** `orderVUProtocols` already put the recognised BBP protocols ahead of the raw VU names. */
+  protected override orderProtocols(protocols: string[]): string[] {
+    return protocols;
   }
 
   public getRepetitions(): string[] {
@@ -846,7 +845,7 @@ class NWBGenericTrace extends NWBTrace {
     return [
       {
         ...this.readMeta(datasetKey, timeDatasetKey),
-        data: this.getDataset(datasetKey).to_array() as number[],
+        data: readSamples(this.getDataset(datasetKey)),
       },
     ];
   }
@@ -890,7 +889,7 @@ class NWBCircuitSimulationTrace extends NWBTrace {
   private getTimeData(cellId: string): { timeUnit: string; timeRate: number } {
     const timeDatasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.STARTING_TIME}`;
 
-    let timeDataset;
+    let timeDataset: Dataset;
 
     try {
       timeDataset = this.getDataset(timeDatasetKey);
@@ -944,7 +943,7 @@ class NWBCircuitSimulationTrace extends NWBTrace {
     const dataset = this.getDataset(`${NWBKey.ACQUISITION}/${cellId}/${NWBKey.DATA}`);
 
     return this.getSweepRecordingMeta(cellId, protocol, repetition, sweep, recordingType).map(
-      (meta) => ({ ...meta, data: dataset.to_array() as number[] })
+      (meta) => ({ ...meta, data: readSamples(dataset) })
     );
   }
 }
@@ -1101,7 +1100,7 @@ class IonChannelSimulationTrace extends NWBTrace {
 
       return {
         ...this.readMeta(datasetKey, `${parentKey}/${groupKey}/${NWBKey.STARTING_TIME}`, label),
-        data: this.getDataset(datasetKey).to_array() as number[],
+        data: readSamples(this.getDataset(datasetKey)),
       };
     });
   }
@@ -1129,6 +1128,24 @@ function toVURecordingMeta(
 }
 
 /**
+ * The agents recorded in `general/was_generated_by`, which is how the two simulation
+ * formats identify themselves. Empty for any file that does not carry it.
+ */
+function readWriterAgents(file: File): string[] {
+  const generalGroup = file.get(NWBKey.GENERAL);
+  if (!(generalGroup instanceof Group)) return [];
+
+  const dataset = generalGroup.get(NWBKey.WAS_GENERATED_BY);
+  if (!(dataset instanceof Dataset)) return [];
+
+  try {
+    return dataset.to_array() as string[];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * VU recordings sit directly under `acquisition`, but BluePyEfe also supports them
  * being nested under `acquisition/timeseries`.
  */
@@ -1136,6 +1153,23 @@ function getVUAcquisitionPath(file: File): string {
   const timeseriesPath = `${NWBKey.ACQUISITION}/${NWBKey.TIMESERIES}`;
 
   return file.get(timeseriesPath) instanceof Group ? timeseriesPath : NWBKey.ACQUISITION;
+}
+
+/**
+ * A dataset's samples, avoiding the per-sample boxing `to_array()` does.
+ *
+ * `to_array()` reads through `json_value`, which spreads the typed array into a plain
+ * `number[]` — a second copy at 8 bytes a sample, allocated and discarded on every read.
+ * `dataset.value` stops one step earlier and hands back the buffer itself. Multi-dimensional
+ * and non-float datasets keep the old path, where `to_array()` also does the reshaping.
+ */
+function readSamples(dataset: Dataset): Samples | number[] {
+  if ((dataset.shape?.length ?? 1) <= 1) {
+    const { value } = dataset;
+    if (value instanceof Float32Array || value instanceof Float64Array) return value;
+  }
+
+  return dataset.to_array() as number[];
 }
 
 /** Narrow a dataset to its raw sample buffer, without boxing it into a `number[]`. */

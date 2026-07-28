@@ -120,15 +120,19 @@ function CellDetails({
 
   const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
 
-  const dataSetOptions = protocols.map((protocol) => {
-    const repetitionNum = getRepetitions(index, cellId, protocol).length;
+  const dataSetOptions = useMemo(
+    () =>
+      protocols.map((protocol) => {
+        const repetitionNum = getRepetitions(index, cellId, protocol).length;
 
-    return (
-      <Select.Option key={protocol} value={protocol}>
-        {protocol} {repetitionNum > 1 && `(${repetitionNum})`}
-      </Select.Option>
-    );
-  });
+        return (
+          <Select.Option key={protocol} value={protocol}>
+            {protocol} {repetitionNum > 1 && `(${repetitionNum})`}
+          </Select.Option>
+        );
+      }),
+    [protocols, index, cellId]
+  );
 
   const repetitionOptions = repetitions.map((v) => (
     <Select.Option key={v} value={v}>

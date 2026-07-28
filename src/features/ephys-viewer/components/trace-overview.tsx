@@ -319,18 +319,8 @@ export default function TraceOverview({
 
   const cellIds = useMemo(() => getCellIds(index), [index]);
 
-  // Readers return protocols in the order they want them listed — the VU reader puts
-  // the recognised protocols before the ones named after their raw stimulus — so this
-  // preserves that order rather than re-sorting.
-  const allProtocols = useMemo(() => {
-    const protocolSet = new Set<string>();
-    cellIds.forEach((cId) => {
-      getProtocols(index, cId).forEach((p) => {
-        protocolSet.add(p);
-      });
-    });
-    return Array.from(protocolSet);
-  }, [cellIds, index]);
+  // Ordering is the reader's call, taken across every cell when the index was built.
+  const allProtocols = index.protocolOrder;
 
   const filteredProtocols = useMemo(
     () => allProtocols.filter((p) => p === protocol || protocol === 'All'),
