@@ -99,20 +99,3 @@ export function lttbDownsample(
 ): { x: number[]; y: number[] } {
   return lttbCore((index) => x[index], y, 0, Math.min(x.length, y.length), desiredLength);
 }
-
-/**
- * Downsample a series sampled at a fixed interval, so the x values never have to be
- * materialised. `start`/`end` bound the window in sample indices.
- */
-export function lttbUniform(
-  y: ArrayLike<number>,
-  deltaTime: number,
-  desiredLength: number,
-  start = 0,
-  end = y.length
-): { x: number[]; y: number[] } {
-  const from = Math.max(0, Math.min(start, y.length));
-  const to = Math.max(from, Math.min(end, y.length));
-
-  return lttbCore((index) => index * deltaTime, y, from, to, desiredLength);
-}

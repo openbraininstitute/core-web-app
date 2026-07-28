@@ -4,7 +4,7 @@ import { NWB_H5_CACHE } from '@/features/ephys-viewer/constants';
 import { deltaTimeMs } from '@/features/ephys-viewer/trace-index';
 import NWBTrace from '@/features/ephys-viewer/worker/nwb-trace';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
-import { lttbUniform } from '@/utils/lttb';
+import { minMaxUniform } from '@/utils/min-max';
 
 import type {
   OpenTraceRequest,
@@ -90,7 +90,7 @@ const api = {
           const start = req.xStart === undefined ? 0 : Math.ceil(req.xStart / deltaTime);
           const end = req.xEnd === undefined ? data.length : Math.ceil(req.xEnd / deltaTime);
 
-          const { x, y } = lttbUniform(data, deltaTime, req.desiredLength, start, end);
+          const { x, y } = minMaxUniform(data, deltaTime, req.desiredLength, start, end);
 
           entry.series.push({ sweep, x, y } satisfies SweepSeries);
           bucket[recordingIndex] = entry;

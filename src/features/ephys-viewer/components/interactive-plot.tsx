@@ -91,10 +91,14 @@ export default function InteractivePlot({
   };
 
   const dataUnit = active?.meta.unit ?? null;
-  const yTitle =
+  const measuredTitle =
     dataUnit === 'amperes'
       ? `${active?.meta.label ?? 'Current'} (${currentUnit})`
       : 'Membrane potential (mV)';
+
+  // What the axis measures is a property of the series, so the plot has nothing to name it with
+  // until one arrives. Blank reads better there than a label that flips a moment later.
+  const yTitle = active ? measuredTitle : '';
 
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;

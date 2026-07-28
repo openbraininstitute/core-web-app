@@ -37,7 +37,11 @@ export default function EphysViewer({
   defaultToInteractiveDetails?: boolean;
   variant?: TViewVariant;
 }) {
-  const { index, progress, error, getSweepSeries } = useTrace({ entity, assetId, ctx });
+  const { index, progress, error, getSweepSeries, getCachedSweepSeries } = useTrace({
+    entity,
+    assetId,
+    ctx,
+  });
 
   const [view, setView] = useState<TraceViewMode>(
     defaultToInteractiveDetails ? TraceViewMode.DETAILED : TraceViewMode.OVERVIEW
@@ -82,7 +86,11 @@ export default function EphysViewer({
   }
 
   return (
-    <TraceProvider index={index} getSweepSeries={getSweepSeries}>
+    <TraceProvider
+      index={index}
+      getSweepSeries={getSweepSeries}
+      getCachedSweepSeries={getCachedSweepSeries}
+    >
       <div className="@container flex flex-col gap-6">
         <TraceViewModeToggle
           value={view}

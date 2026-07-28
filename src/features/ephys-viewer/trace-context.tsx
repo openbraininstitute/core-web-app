@@ -11,6 +11,8 @@ type TraceContextValue = {
   /** Structure of the open file, so lookups don't have to cross the worker boundary. */
   index: TraceIndex;
   getSweepSeries: (req: SweepSeriesRequest) => Promise<SweepSeriesResponse>;
+  /** Series already read out of the file, so a repeat request paints without a loading frame. */
+  getCachedSweepSeries: (req: SweepSeriesRequest) => SweepSeriesResponse | null;
 };
 
 const TraceContext = createContext<TraceContextValue | null>(null);
@@ -18,9 +20,13 @@ const TraceContext = createContext<TraceContextValue | null>(null);
 export function TraceProvider({
   index,
   getSweepSeries,
+  getCachedSweepSeries,
   children,
 }: TraceContextValue & { children: ReactNode }) {
-  const value = useMemo(() => ({ index, getSweepSeries }), [index, getSweepSeries]);
+  const value = useMemo(
+    () => ({ index, getSweepSeries, getCachedSweepSeries }),
+    [index, getSweepSeries, getCachedSweepSeries]
+  );
 
   return <TraceContext.Provider value={value}>{children}</TraceContext.Provider>;
 }

@@ -29,8 +29,14 @@ export const NWB_H5_CACHE = 'obi-ephys-nwb-v1';
  */
 export const PROGRESS_MIN_BYTES = 40 * 1024 * 1024;
 
-/** Points per thumbnail in the overview grid. */
+/**
+ * Points per thumbnail in the overview grid.
+ *
+ * A repetition is only ever read at `DETAIL_PLOT_POINTS` and the thumbnails are reduced from
+ * that, which is exact only where the bucket counts divide — so keep half of this a factor of
+ * half of `DETAIL_PLOT_POINTS`. At 50 and 500 each thumbnail bucket is ten detail buckets.
+ */
 export const OVERVIEW_PLOT_POINTS = 100;
 
-/** Points per trace in the interactive detail plots. */
+/** Points per trace in the interactive detail plots, and the resolution every read is taken at. */
 export const DETAIL_PLOT_POINTS = 1000;

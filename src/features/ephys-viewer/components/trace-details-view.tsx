@@ -27,6 +27,7 @@ import {
   hasCurrentRecordings,
 } from '@/features/ephys-viewer/trace-index';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
+import { cn } from '@/utils/css-class';
 
 interface TraceDetailsViewProps {
   defaultCellId?: string;
@@ -100,6 +101,10 @@ function CellDetails({
   );
 
   const { data, loading, error } = useSweepSeries(seriesRequest);
+
+  // Later reads keep the previous series on screen, so only the very first one has nothing to
+  // draw. That is the one switching into this view hits.
+  const awaitingFirstSeries = loading && !data;
 
   const plots = useMemo(
     () =>
@@ -210,38 +215,48 @@ function CellDetails({
         )}
       </div>
 
-      {error && (
+      {error ? (
         <div className={ephysSectionLabelClass(variant)}>
           There was a problem reading this repetition
         </div>
-      )}
+      ) : (
+        <div className="relative">
+          <div
+            ref={plotContainerRef}
+            className={cn(
+              hasMultipleRecordings
+                ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
+                : 'flex flex-col gap-10 2xl:flex-row',
+              // How many plots there are, and how tall each one is, are both known from the
+              // index — so the area is laid out before the series arrives and only dimmed while
+              // it does. Swapping it for a bare spinner collapsed the page and jumped it back.
+              awaitingFirstSeries && 'pointer-events-none opacity-40'
+            )}
+          >
+            {plots.map(({ recordingType, recordingIndex }) => (
+              <InteractivePlot
+                key={`${recordingType}-${recordingIndex}`}
+                recording={data?.[recordingType]?.[recordingIndex]}
+                recordingType={recordingType}
+                recordingIndex={recordingIndex}
+                seriesRequest={seriesRequest}
+                reset={reset}
+                selectedSweeps={selectedSweeps}
+                setSelectedSweeps={setSelectedSweeps}
+                previewSweep={previewItem}
+                colorMap={colorMap}
+                plotRevision={plotRevision}
+              />
+            ))}
+          </div>
 
-      {!error && loading && !data && <Spin className="self-center" />}
-
-      {!error && (data || !loading) && (
-        <div
-          ref={plotContainerRef}
-          className={
-            hasMultipleRecordings
-              ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
-              : 'flex flex-col gap-10 2xl:flex-row'
-          }
-        >
-          {plots.map(({ recordingType, recordingIndex }) => (
-            <InteractivePlot
-              key={`${recordingType}-${recordingIndex}`}
-              recording={data?.[recordingType]?.[recordingIndex]}
-              recordingType={recordingType}
-              recordingIndex={recordingIndex}
-              seriesRequest={seriesRequest}
-              reset={reset}
-              selectedSweeps={selectedSweeps}
-              setSelectedSweeps={setSelectedSweeps}
-              previewSweep={previewItem}
-              colorMap={colorMap}
-              plotRevision={plotRevision}
-            />
-          ))}
+          {awaitingFirstSeries && (
+            // Centred within the first 70vh rather than over the whole area, which runs several
+            // screens long once a repetition has more than two recordings.
+            <div className="absolute inset-x-0 top-0 flex h-full max-h-[70vh] items-center justify-center">
+              <Spin />
+            </div>
+          )}
         </div>
       )}
     </div>
