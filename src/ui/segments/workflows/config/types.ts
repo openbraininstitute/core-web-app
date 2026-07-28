@@ -243,6 +243,12 @@ export type TActivityEntry = {
   order?: number;
   disabled?: boolean;
   requiredFeatures?: readonly FlagKey[];
+  /**
+   * any-of gate: the activity is visible when at least one of these flags is on. Use it when
+   * the activity hosts independently flagged workflows, so enabling one does not force the
+   * others into view.
+   */
+  requiredAnyFeatures?: readonly FlagKey[];
   /** workflows available when configuring a new run (the /workflows page). */
   workflows: readonly IWorkflowDescriptor[];
   /**
