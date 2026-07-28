@@ -11,6 +11,7 @@ import {
   TraceViewMode,
   TraceViewModeToggle,
 } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
+import { PROGRESS_MIN_BYTES } from '@/features/ephys-viewer/constants';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
 import { TraceProvider } from '@/features/ephys-viewer/trace-context';
 import { cn } from '@/utils/css-class';
@@ -58,17 +59,22 @@ export default function EphysViewer({
   }
 
   if (!index) {
+    // Without a Content-Length the size isn't knowable up front, so fall back to bytes received —
+    // the card then appears mid-download, but still only for files big enough to warrant it.
+    const download =
+      progress && (progress.total ?? progress.received) >= PROGRESS_MIN_BYTES ? progress : null;
+
     return (
       <div className="relative">
-        <div className={cn(progress && 'pointer-events-none opacity-70 blur-[2px]')}>
+        <div className={cn(download && 'pointer-events-none opacity-70 blur-[2px]')}>
           <EphysViewerSkeleton view={view} variant={variant} />
         </div>
-        {progress && (
+        {download && (
           // Centred within the first 70vh rather than over the whole skeleton, which runs long
           // enough to push a truly centred card off screen — the detail view stacks two 40vh
           // plots below 2xl, and the overview grid collapses to one column of eight tiles.
           <div className="absolute inset-x-0 top-0 flex h-full max-h-[70vh] items-center justify-center">
-            <DownloadStatus progress={progress} variant={variant} />
+            <DownloadStatus progress={download} variant={variant} />
           </div>
         )}
       </div>
@@ -119,7 +125,8 @@ export default function EphysViewer({
 
 /**
  * NWB recordings run to hundreds of megabytes, so the download gets its own card over the
- * skeleton rather than being hidden behind it. A cache hit reports no progress and shows nothing.
+ * skeleton rather than being hidden behind it. Cache hits and anything under
+ * `PROGRESS_MIN_BYTES` show the plain skeleton instead.
  *
  * `total` is null when the response carries no Content-Length, which is the only case where the
  * bar can't be determinate.

@@ -23,6 +23,12 @@ export const NWB_ASSET_CACHE_CONFIG = swrCacheConfig(
  */
 export const NWB_H5_CACHE = 'obi-ephys-nwb-v1';
 
+/**
+ * Downloads smaller than this show no progress card. They finish fast enough that it would just
+ * flash — the same reasoning that hides progress on a cache hit.
+ */
+export const PROGRESS_MIN_BYTES = 40 * 1024 * 1024;
+
 /** Points per thumbnail in the overview grid. */
 export const OVERVIEW_PLOT_POINTS = 100;
 
