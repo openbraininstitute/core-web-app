@@ -12,10 +12,13 @@ import {
   TraceViewModeToggle,
 } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
+import { TraceProvider } from '@/features/ephys-viewer/trace-context';
+import { formatBytes } from '@/utils/format';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { WorkspaceContext } from '@/types/common';
+import type { DownloadProgress } from '@/utils/h5/fs';
 
 import './styles/ephys-plugin-styles.css';
 
@@ -32,7 +35,7 @@ export default function EphysViewer({
   defaultToInteractiveDetails?: boolean;
   variant?: TViewVariant;
 }) {
-  const [trace, error] = useTrace({ entity, assetId, ctx });
+  const { index, progress, error, getSweepSeries } = useTrace({ entity, assetId, ctx });
 
   const [view, setView] = useState<TraceViewMode>(
     defaultToInteractiveDetails ? TraceViewMode.DETAILED : TraceViewMode.OVERVIEW
@@ -53,48 +56,71 @@ export default function EphysViewer({
     );
   }
 
-  if (!trace) {
-    return <EphysViewerSkeleton view={view} variant={variant} />;
+  if (!index) {
+    return (
+      <>
+        <DownloadStatus progress={progress} />
+        <EphysViewerSkeleton view={view} variant={variant} />
+      </>
+    );
   }
 
   return (
-    <div className="@container flex flex-col gap-6">
-      <TraceViewModeToggle
-        value={view}
-        onChange={(e) => setView(e.target.value as TraceViewMode)}
-        variant={variant}
-      />
+    <TraceProvider index={index} getSweepSeries={getSweepSeries}>
+      <div className="@container flex flex-col gap-6">
+        <TraceViewModeToggle
+          value={view}
+          onChange={(e) => setView(e.target.value as TraceViewMode)}
+          variant={variant}
+        />
 
-      {view === TraceViewMode.OVERVIEW && (
-        <ErrorBoundary
-          FallbackComponent={SimpleErrorComponent}
-          resetKeys={[trace, cellId, protocol]}
-        >
-          <TraceOverview
-            trace={trace}
-            cellId={cellId}
-            onCellIdChange={setCellId}
-            protocol={protocol}
-            onRepetitionClick={showRepetitionDetails}
-            onProtocolChange={setProtocol}
-            variant={variant}
-          />
-        </ErrorBoundary>
-      )}
+        {view === TraceViewMode.OVERVIEW && (
+          <ErrorBoundary
+            FallbackComponent={SimpleErrorComponent}
+            resetKeys={[index, cellId, protocol]}
+          >
+            <TraceOverview
+              cellId={cellId}
+              onCellIdChange={setCellId}
+              protocol={protocol}
+              onRepetitionClick={showRepetitionDetails}
+              onProtocolChange={setProtocol}
+              variant={variant}
+            />
+          </ErrorBoundary>
+        )}
 
-      {view === TraceViewMode.DETAILED && (
-        <ErrorBoundary
-          FallbackComponent={SimpleErrorComponent}
-          resetKeys={[trace, cellId, protocol, repetition]}
-        >
-          <TraceDetailsView
-            trace={trace}
-            defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
-            defaultRepetition={repetition}
-            variant={variant}
-          />
-        </ErrorBoundary>
-      )}
+        {view === TraceViewMode.DETAILED && (
+          <ErrorBoundary
+            FallbackComponent={SimpleErrorComponent}
+            resetKeys={[index, cellId, protocol, repetition]}
+          >
+            <TraceDetailsView
+              defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
+              defaultRepetition={repetition}
+              variant={variant}
+            />
+          </ErrorBoundary>
+        )}
+      </div>
+    </TraceProvider>
+  );
+}
+
+/**
+ * NWB recordings run to hundreds of megabytes, so the download gets a byte counter rather
+ * than being hidden behind the skeleton. A cache hit reports no progress and shows nothing.
+ */
+function DownloadStatus({ progress }: { progress: DownloadProgress | null }) {
+  if (!progress) return null;
+
+  const received = formatBytes(progress.received, 0);
+
+  return (
+    <div className="text-neutral-4 pb-2 text-sm">
+      {progress.total
+        ? `Downloading recording… ${received} / ${formatBytes(progress.total, 0)}`
+        : `Downloading recording… ${received}`}
     </div>
   );
 }

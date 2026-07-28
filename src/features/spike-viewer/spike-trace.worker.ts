@@ -1,13 +1,14 @@
 import * as Comlink from 'comlink';
 import { File } from 'h5wasm';
 
-import { parseSpikeData, writeToEmscriptenFS } from '@/features/spike-viewer/spike-trace';
+import { parseSpikeData } from '@/features/spike-viewer/spike-trace';
+import { writeToFS } from '@/utils/h5/fs';
 
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 const api = {
   async parseSpikeFile(id: string, buffer: ArrayBuffer): Promise<SpikeData> {
-    const { FS, filename } = await writeToEmscriptenFS(id, buffer);
+    const { FS, filename } = await writeToFS(id, buffer);
 
     let file: File | null = null;
     try {

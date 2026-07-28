@@ -1,13 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { NWB_ASSET_CACHE_CONFIG } from '@/features/ephys-viewer/constants';
-import NWBTrace from '@/features/ephys-viewer/nwb-trace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
+import {
+  IDLE_TRACE_SESSION_STATE,
+  nwbWorkerRegistry,
+  type TraceSessionState,
+} from '@/features/ephys-viewer/hooks/nwb-worker-manager';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
+import type { SweepSeriesRequest, SweepSeriesResponse } from '@/features/ephys-viewer/trace-index';
 import type { WorkspaceContext } from '@/types/common';
 
 type UseTraceArgs = {
@@ -16,15 +18,20 @@ type UseTraceArgs = {
   ctx?: WorkspaceContext;
 };
 
-export default function useTrace({
-  entity,
-  assetId,
-  ctx,
-}: UseTraceArgs): [NWBTrace | null, Error | null] {
-  const [trace, setTrace] = useState<NWBTrace | null>(null);
-  const [nwbError, setNwbError] = useState<Error | null>(null);
-  const initialized = useRef<boolean>(false);
-  const traceRef = useRef<NWBTrace | null>(null);
+export type UseTraceResult = TraceSessionState & {
+  getSweepSeries: (req: SweepSeriesRequest) => Promise<SweepSeriesResponse>;
+  retry: () => void;
+};
+
+/**
+ * Open an entity's NWB asset in a worker and expose its structure.
+ *
+ * The worker downloads the file itself, streaming it into its own Emscripten FS, so the only
+ * thing the main thread ever holds is the trace index and whatever decimated series it asks
+ * for. Building the download request stays here because it needs the NextAuth session.
+ */
+export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTraceResult {
+  const [state, setState] = useState<TraceSessionState>(IDLE_TRACE_SESSION_STATE);
 
   const asset = assetId
     ? entity.assets?.find((a) => a.id === assetId)
@@ -34,48 +41,38 @@ export default function useTrace({
     throw new Error('No NWB file found');
   }
 
-  const { data: nwbArrayBuffer, error: fetchError } = useQuery({
-    queryKey: keyBuilder.asset({
-      context: ctx,
-      entityId: entity.id,
-      assetId: asset.id,
-      assetPath: asset.path,
-      assetType: entity.type,
-      asRawResponse: false,
-    }),
-    queryFn: () =>
-      downloadAsset<ArrayBuffer>({
-        entityType: entity.type,
-        entityId: entity.id,
-        id: asset.id,
-        ctx,
-        cache: NWB_ASSET_CACHE_CONFIG,
-      }),
-  });
+  const entityId = entity.id;
+  const entityType = entity.type;
+  const { id: currentAssetId, path: assetPath } = asset;
+  const key = `${entityId}-${currentAssetId}`;
 
   useEffect(() => {
-    if (initialized.current || !nwbArrayBuffer) {
-      return;
-    }
+    const buildRequest = () =>
+      buildAssetDownloadRequest({
+        ctx,
+        entityType,
+        entityId,
+        id: currentAssetId,
+        assetPath,
+      });
 
-    initialized.current = true;
-
-    const traceId = asset.id ?? entity.id;
-
-    NWBTrace.create(traceId, nwbArrayBuffer)
-      .then((t) => {
-        traceRef.current = t;
-        setTrace(t);
-      })
-      .catch((e) => setNwbError(e));
+    nwbWorkerRegistry.acquire(key, { buildRequest });
+    const sync = () => setState(nwbWorkerRegistry.getState(key));
+    const unsubscribe = nwbWorkerRegistry.subscribe(key, sync);
+    sync();
 
     return () => {
-      traceRef.current?.destroy();
-      initialized.current = false;
+      unsubscribe();
+      nwbWorkerRegistry.release(key);
     };
-  }, [nwbArrayBuffer, entity.id, asset.id]);
+  }, [key, ctx, entityId, entityType, currentAssetId, assetPath]);
 
-  const error = fetchError || nwbError;
+  const getSweepSeries = useCallback(
+    (req: SweepSeriesRequest) => nwbWorkerRegistry.getSweepSeries(key, req),
+    [key]
+  );
 
-  return [trace, error];
+  const retry = useCallback(() => nwbWorkerRegistry.retry(key), [key]);
+
+  return { ...state, getSweepSeries, retry };
 }
