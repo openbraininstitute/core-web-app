@@ -43,7 +43,7 @@ export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTra
 
   const entityId = entity.id;
   const entityType = entity.type;
-  const { id: currentAssetId, path: assetPath } = asset;
+  const { id: currentAssetId } = asset;
   const key = `${entityId}-${currentAssetId}`;
 
   useEffect(() => {
@@ -53,7 +53,6 @@ export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTra
         entityType,
         entityId,
         id: currentAssetId,
-        assetPath,
       });
 
     nwbWorkerRegistry.acquire(key, { buildRequest });
@@ -65,7 +64,7 @@ export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTra
       unsubscribe();
       nwbWorkerRegistry.release(key);
     };
-  }, [key, ctx, entityId, entityType, currentAssetId, assetPath]);
+  }, [key, ctx, entityId, entityType, currentAssetId]);
 
   const getSweepSeries = useCallback(
     (req: SweepSeriesRequest) => nwbWorkerRegistry.getSweepSeries(key, req),
