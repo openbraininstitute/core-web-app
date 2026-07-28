@@ -30,6 +30,8 @@ export const EntityTypeDict = {
   SkeletonizationCampaign: 'skeletonization_campaign',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   CircuitExtractionConfig: 'circuit_extraction_config',
+  EFeatureExtractionCampaign: 'efeature_extraction_campaign',
+  EFeatureExtractionConfig: 'efeature_extraction_config',
   EmSynapseMappingCampaign: 'em_synapse_mapping_campaign',
   EmSynapseMappingConfig: 'em_synapse_mapping_config',
   SimulatableExtracellularRecordingArray: 'simulatable_extracellular_recording_array',

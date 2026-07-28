@@ -20,6 +20,14 @@ export const extractionActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const efeatureExtractionActivityFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Intracellular e-feature extraction workflow',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const brainRegionSimulationFlag = defineFlag<boolean>({
   key: 'brain-region-simulation',
   defaultValue: false,
@@ -48,6 +56,7 @@ export const electrodeOverlaysFlag = defineFlag<boolean>({
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
+  efeatureExtractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   electrodeOverlaysFlag,
