@@ -43,6 +43,7 @@ const SimulationEntitySlug = {
 
 const ExtractionEntitySlug = {
   CircuitExtraction: 'circuit-extraction',
+  EFeatureExtraction: 'intracellular-efeature-extraction',
 } as const;
 
 const ProcessingEntitySlug = {

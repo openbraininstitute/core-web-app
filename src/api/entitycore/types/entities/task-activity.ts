@@ -30,6 +30,8 @@ export const TaskActivityType = {
   CircuitSimulationExecution: 'circuit_simulation__execution',
   CircuitExtractionConfigGeneration: 'circuit_extraction__config_generation',
   CircuitExtractionExecution: 'circuit_extraction__execution',
+  EFeatureExtractionConfigGeneration: 'efeature_extraction__config_generation',
+  EFeatureExtractionExecution: 'efeature_extraction__execution',
   IonChannelModelingConfigGeneration: 'ion_channel_modeling__config_generation',
   IonChannelModelingExecution: 'ion_channel_modeling__execution',
   SkeletonizationConfigGeneration: 'skeletonization__config_generation',
