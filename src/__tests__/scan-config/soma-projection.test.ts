@@ -5,14 +5,17 @@ import {
   type Vec3,
 } from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/sdf';
 import {
-  type Capsule,
   createSomaSdf,
   isSomaSection,
   projectOntoSoma,
+  type SomaPoint,
 } from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/soma-projection';
 
 /** A 10-unit cylinder of radius 2 along +X, centred on the origin. */
-const CYLINDER: Capsule = [-5, 0, 0, 2, 5, 0, 0, 2];
+const CYLINDER: SomaPoint[] = [
+  { x: -5, y: 0, z: 0, radius: 2 },
+  { x: 5, y: 0, z: 0, radius: 2 },
+];
 
 const length = ([x, y, z]: Vec3) => Math.sqrt(x * x + y * y + z * z);
 
@@ -59,17 +62,45 @@ describe('createSomaSdf', () => {
     expect(createSomaSdf([])).toBeNull();
   });
 
-  it('takes the nearest capsule when segments overlap', () => {
-    // Second capsule is fatter, so a point 3 above the axis sits inside it.
-    const sdf = createSomaSdf([CYLINDER, [-5, 0, 0, 4, 5, 0, 0, 4]]);
-    expect(sdf).not.toBeNull();
-    expect(sdf?.([0, 3, 0]).distance).toBeCloseTo(-1, 5);
+  it('treats a single sample as a sphere', () => {
+    const sdf = createSomaSdf([{ x: 0, y: 0, z: 0, radius: 3 }]);
+    expect(sdf?.([0, 5, 0]).distance).toBeCloseTo(2, 5);
+  });
+
+  it('falls back to a sphere when every sample coincides', () => {
+    // A zero-length round cone divides by its squared axis length. Left
+    // unguarded the NaN wins every `<` comparison and the synapse is lost.
+    const sdf = createSomaSdf([
+      { x: 1, y: 1, z: 1, radius: 2 },
+      { x: 1, y: 1, z: 1, radius: 3 },
+    ]);
+    const { distance, normal } = sdf?.([1, 6, 1]) ?? {};
+    expect(distance).toBeCloseTo(2, 5);
+    expect(normal?.every(Number.isFinite)).toBe(true);
+  });
+
+  it('skips coincident samples without poisoning the rest of the stack', () => {
+    const sdf = createSomaSdf([
+      { x: -5, y: 0, z: 0, radius: 2 },
+      { x: -5, y: 0, z: 0, radius: 2 },
+      { x: 5, y: 0, z: 0, radius: 2 },
+    ]);
+    expect(sdf?.([0, 1, 0]).distance).toBeCloseTo(-1, 5);
+  });
+
+  it('takes the nearest segment, so a fatter one swallows what a thin one cannot', () => {
+    // Thin cylinder out to x=5, then flaring to radius 4 by x=15.
+    const sdf = createSomaSdf([...CYLINDER, { x: 15, y: 0, z: 0, radius: 4 }]);
+    if (!sdf) throw new Error('expected an SDF');
+
+    expect(sdf([14, 3, 0]).distance).toBeLessThan(0);
+    expect(sdf([0, 3, 0]).distance).toBeCloseTo(1, 5);
   });
 });
 
 describe('projectOntoSoma', () => {
   it('pushes a synapse buried inside the soma out onto the surface', () => {
-    const sdf = createSomaSdf([CYLINDER]);
+    const sdf = createSomaSdf(CYLINDER);
     if (!sdf) throw new Error('expected an SDF');
 
     // SONATA put this one 1 unit above the axis; the rendered soma has radius 2.
@@ -81,7 +112,7 @@ describe('projectOntoSoma', () => {
   });
 
   it('pulls a synapse floating outside the soma back onto the surface', () => {
-    const sdf = createSomaSdf([CYLINDER]);
+    const sdf = createSomaSdf(CYLINDER);
     if (!sdf) throw new Error('expected an SDF');
 
     const projected = projectOntoSoma([0, 0, 6], sdf);
@@ -90,10 +121,23 @@ describe('projectOntoSoma', () => {
   });
 
   it('leaves a synapse already on the surface where it is', () => {
-    const sdf = createSomaSdf([CYLINDER]);
+    const sdf = createSomaSdf(CYLINDER);
     if (!sdf) throw new Error('expected an SDF');
 
     const projected = projectOntoSoma([0, 2, 0], sdf);
     expect(projected[1]).toBeCloseTo(2, 5);
+  });
+
+  it('lands on the surface for a spherical soma, whichever side it started', () => {
+    const sdf = createSomaSdf([{ x: 10, y: -4, z: 2, radius: 6 }]);
+    if (!sdf) throw new Error('expected an SDF');
+
+    for (const start of [
+      [10, -4, 3],
+      [10, -4, 30],
+      [17, 1, 5],
+    ] as Vec3[]) {
+      expect(sdf(projectOntoSoma(start, sdf)).distance).toBeCloseTo(0, 4);
+    }
   });
 });

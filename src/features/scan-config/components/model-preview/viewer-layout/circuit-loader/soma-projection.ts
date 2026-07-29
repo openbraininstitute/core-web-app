@@ -1,4 +1,11 @@
-import { scale, sdfCapsuleWithNormal, subtract, type Vec3 } from './sdf';
+import {
+  length,
+  scale,
+  sdfCapsuleWithNormal,
+  sdfSphereWithNormal,
+  subtract,
+  type Vec3,
+} from './sdf';
 
 /**
  * Soma synapse placement.
@@ -10,17 +17,8 @@ import { scale, sdfCapsuleWithNormal, subtract, type Vec3 } from './sdf';
  * point of the cylinder stack reconciles them.
  */
 
-/** A soma segment as a round-capped cone: two centres with their radii. */
-export type Capsule = [
-  x0: number,
-  y0: number,
-  z0: number,
-  r0: number,
-  x1: number,
-  y1: number,
-  z1: number,
-  r1: number,
-];
+/** A soma sample in world coordinates. */
+export type SomaPoint = { x: number; y: number; z: number; radius: number };
 
 /** Signed distance from a point to the soma surface, plus the normal there. */
 export type SomaSdf = (p: Vec3) => { distance: number; normal: Vec3 };
@@ -36,25 +34,51 @@ export function isSomaSection(sectionId: number): boolean {
   return sectionId === 0;
 }
 
-function sdfCapsuleAt(p: Vec3, [x0, y0, z0, r0, x1, y1, z1, r1]: Capsule) {
-  return sdfCapsuleWithNormal(p, [x0, y0, z0], [x1, y1, z1], r0, r1);
-}
+const toVec3 = ({ x, y, z }: SomaPoint): Vec3 => [x, y, z];
 
 /**
- * Combine soma segments into one distance field — the union of capsules, which
- * is their pointwise minimum.
+ * Build the soma distance field from its samples.
  *
- * Returns `null` for an empty stack so callers fall back to the raw SONATA
- * coordinates instead of silently projecting against nothing.
+ * Consecutive samples become round-capped cones; the union of those is their
+ * pointwise minimum. Coincident samples are skipped rather than turned into
+ * zero-length cones — the round-cone maths divides by the squared axis length,
+ * and a single NaN there poisons every subsequent `<` comparison and silently
+ * pushes synapses to NaN coordinates.
+ *
+ * Samples are chained in traversal order. Somas written as a chain (the common
+ * MorphIO output) reconstruct exactly; somas written as a star around a centre
+ * still yield a covering blob.
+ *
+ * Returns `null` when there is nothing to project onto, so callers fall back to
+ * the raw SONATA coordinates instead of silently projecting against nothing.
  */
-export function createSomaSdf(capsules: Capsule[]): SomaSdf | null {
-  if (capsules.length === 0) return null;
+export function createSomaSdf(points: SomaPoint[]): SomaSdf | null {
+  if (points.length === 0) return null;
 
-  const [first, ...rest] = capsules;
+  const parts: SomaSdf[] = [];
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    const from = toVec3(a);
+    const to = toVec3(b);
+    if (length(subtract(to, from)) === 0) continue;
+
+    parts.push((p) => sdfCapsuleWithNormal(p, from, to, a.radius, b.radius));
+  }
+
+  // A single sample, or a stack whose samples all coincide: a sphere is the
+  // only shape those describe.
+  if (parts.length === 0) {
+    const fattest = points.reduce((best, p) => (p.radius > best.radius ? p : best));
+    const center = toVec3(fattest);
+    return (p) => sdfSphereWithNormal(p, center, fattest.radius);
+  }
+
+  const [first, ...rest] = parts;
   return (p: Vec3) => {
-    let result = sdfCapsuleAt(p, first);
-    for (const capsule of rest) {
-      const candidate = sdfCapsuleAt(p, capsule);
+    let result = first(p);
+    for (const part of rest) {
+      const candidate = part(p);
       if (candidate.distance < result.distance) result = candidate;
     }
     return result;

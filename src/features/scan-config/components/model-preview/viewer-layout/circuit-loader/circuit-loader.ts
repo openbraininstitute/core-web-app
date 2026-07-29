@@ -13,10 +13,10 @@ import { logError } from '@/utils/logger';
 import { CircuitConfig } from './circuit-config';
 import { Report } from './report';
 import {
-  type Capsule,
   createSomaSdf,
   isSomaSection,
   projectOntoSoma,
+  type SomaPoint,
   type SomaSdf,
 } from './soma-projection';
 import { convertSwcToTree } from './swc';
@@ -199,18 +199,33 @@ export class CircuitLoader {
         const somaSdfs = await this.createSomaSDFs(arrSectionId, arrTarget);
 
         const coordinates = new Float32Array(arrXs.length * 3);
-        let somaCount = 0;
+        let somaTotal = 0;
+        let projected = 0;
+        // How far the projected points still sit from the soma surface. Should
+        // be ~0; anything else means the reconstructed soma disagrees with the
+        // one being rendered, which is the difference between "projection never
+        // ran" and "projection ran against the wrong shape".
+        let worstResidual = 0;
         for (let i = 0; i < arrXs.length; i++) {
           const surface: Vec3 = [arrXs[i], arrYs[i], arrZs[i]];
-          const sdf = isSomaSection(arrSectionId[i]) ? somaSdfs.get(arrTarget[i]) : undefined;
-          if (sdf) somaCount++;
-          const [x, y, z] = sdf ? projectOntoSoma(surface, sdf) : surface;
-          coordinates[i * 3] = x;
-          coordinates[i * 3 + 1] = y;
-          coordinates[i * 3 + 2] = z;
+          const isSoma = isSomaSection(arrSectionId[i]);
+          if (isSoma) somaTotal++;
+          const sdf = isSoma ? somaSdfs.get(arrTarget[i]) : undefined;
+          let point = surface;
+          if (sdf) {
+            point = projectOntoSoma(surface, sdf);
+            projected++;
+            worstResidual = Math.max(worstResidual, Math.abs(sdf(point).distance));
+          }
+          coordinates[i * 3] = point[0];
+          coordinates[i * 3 + 1] = point[1];
+          coordinates[i * 3 + 2] = point[2];
         }
         report.logTask(
-          `Loaded ${arrXs.length} afferent synapses for "${populationName}" (${somaCount} projected onto a soma).`
+          `Loaded ${arrXs.length} afferent synapses for "${populationName}": ` +
+            `${somaTotal} on a soma, ${projected} projected` +
+            (projected > 0 ? `, worst residual ${worstResidual.toFixed(3)}µm` : '') +
+            '.'
         );
         results.push({ coordinates, populationName });
       }
@@ -243,8 +258,8 @@ export class CircuitLoader {
   }
 
   /**
-   * Approximate a cell's soma as the stack of capsules its SWC points describe,
-   * and return the signed distance to that surface.
+   * Approximate a cell's soma as the stack its SWC samples describe, in world
+   * coordinates, and return the signed distance to that surface.
    *
    * Returns `null` when the soma can't be reconstructed, so callers fall back
    * to the raw SONATA coordinates rather than losing the synapse entirely.
@@ -263,28 +278,26 @@ export class CircuitLoader {
     }
 
     const cell = await this.loadCell(cellDef.id);
-    const capsules: Capsule[] = [];
-    const fringe =
-      cell?.data.roots.filter((item) => item.type === MorphoViewerTreeItemType.Soma) ?? [];
+    // Collect every soma sample in the tree rather than only those linked
+    // soma-to-soma: some morphologies emit the soma as separate roots, and
+    // requiring parent links there yields an empty stack and no projection.
+    const points: SomaPoint[] = [];
+    const fringe = [...(cell?.data.roots ?? [])];
     while (fringe.length > 0) {
       const item = fringe.pop();
-      if (!item || item.type !== MorphoViewerTreeItemType.Soma || !item.children) continue;
+      if (!item) continue;
 
-      for (const child of item.children) {
-        if (child.type !== MorphoViewerTreeItemType.Soma) continue;
-
-        fringe.push(child);
-        capsules.push([
-          ...transform(item.x, item.y, item.z, cellDef),
-          item.radius,
-          ...transform(child.x, child.y, child.z, cellDef),
-          child.radius,
-        ]);
+      if (item.type === MorphoViewerTreeItemType.Soma) {
+        const [x, y, z] = transform(item.x, item.y, item.z, cellDef);
+        points.push({ x, y, z, radius: item.radius });
       }
+      if (item.children) fringe.push(...item.children);
     }
-    const sdf = createSomaSdf(capsules);
+    report.logTask(`Cell #${cellIndex} soma reconstructed from ${points.length} sample(s).`);
+
+    const sdf = createSomaSdf(points);
     if (!sdf) {
-      report.logTask(`Cell #${cellIndex} has no soma segments; leaving its synapses unprojected.`);
+      report.logTask(`Cell #${cellIndex} has no soma samples; leaving its synapses unprojected.`);
     }
     return sdf;
   }

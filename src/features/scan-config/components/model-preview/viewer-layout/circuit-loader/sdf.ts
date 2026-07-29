@@ -33,6 +33,30 @@ export function sign(value: number): number {
   return value < 0 ? -1 : 1;
 }
 
+export function length(a: Vec3): number {
+  return Math.sqrt(dot(a, a));
+}
+
+/**
+ * Signed distance from `p` to a sphere, plus the outward unit normal.
+ *
+ * Used for somas that survive as a single point, and as the fallback for
+ * zero-length capsules — which the round-cone maths cannot express (it divides
+ * by the squared axis length).
+ */
+export function sdfSphereWithNormal(
+  p: Vec3,
+  center: Vec3,
+  radius: number
+): { distance: number; normal: Vec3 } {
+  const delta = subtract(p, center);
+  const len = length(delta);
+  // Dead centre has no defined normal; any direction puts the point on the
+  // surface, which beats propagating NaN into the coordinate buffer.
+  const normal: Vec3 = len === 0 ? [0, 1, 0] : scale(delta, 1 / len);
+  return { distance: len - radius, normal };
+}
+
 /**
  * Signed distance from `p` to the capsule spanning `a`→`b` with radii `r1`/`r2`,
  * plus the outward unit normal at the closest surface point.
