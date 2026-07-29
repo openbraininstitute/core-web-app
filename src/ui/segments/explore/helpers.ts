@@ -1,5 +1,6 @@
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
+import { EFeatureExtractionResult } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
@@ -58,6 +59,7 @@ export const BrowseExperimentalDataExtendedTypes = {
   BoutonDensity,
   SynapsesPerConnection,
   EmCellMesh,
+  EFeatureExtractionResult,
 } as const;
 
 /**
