@@ -151,7 +151,11 @@ export function Item({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
       })
-        .then(() => {
+        .then(async (res) => {
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body?.message ?? 'An error occurred');
+          }
           queryClient.invalidateQueries({ queryKey: keyBuilder.membership() });
           queryClient.invalidateQueries({
             queryKey: keyBuilder.listWorkspaceProjects({
@@ -161,9 +165,9 @@ export function Item({
           });
           onSuccess();
         })
-        .catch(() => {
+        .catch((err: unknown) => {
           activatingRef.current = false;
-          setActivationError(new Error('An error occurred'));
+          setActivationError(err instanceof Error ? err : new Error('An error occurred'));
         });
     },
     [config.VIRTUAL_LAB_API_URL, lab.course?.id, lab.id, queryClient]
