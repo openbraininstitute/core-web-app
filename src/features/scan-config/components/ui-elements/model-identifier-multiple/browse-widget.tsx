@@ -244,9 +244,10 @@ export function ModelIdentifierBrowseWidget({
     return null;
   }
 
-  // the cart is a multi-select concept, and it has nowhere to sit beside the
-  // mini detail view — the inline action bar carries confirm/cancel in both cases
-  const showCart = !isSingleSelect && !mdv;
+  // both single and multiple show the selection cart (left panel) with the
+  // staged entity + confirm/cancel; only the mini detail view, which takes the
+  // right side, forces the inline action bar instead
+  const showCart = !mdv;
   const stagedSingle = isSingleSelect ? firstSelectedEntity(selectionsByType) : undefined;
 
   return (
@@ -309,9 +310,6 @@ export function ModelIdentifierBrowseWidget({
               selectedRows: activeSelectedRows,
               onRowsSelected: handleRowsSelected,
               keepSelectionOnScopeChange: true,
-              // single mirrors the old model_selector_single modal, which opened
-              // the table search on mount
-              searchOpenOnMount: isSingleSelect,
             }}
             requireEntityTypeSelector={{
               options: entityTypeSelectorOptions,

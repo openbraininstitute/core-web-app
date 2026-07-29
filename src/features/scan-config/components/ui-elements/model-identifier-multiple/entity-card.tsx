@@ -6,7 +6,7 @@
  * used in both the configure summary column and the browse overlay cart
  */
 
-import { DeleteOutlined, SwapOutlined, TagsOutlined } from '@ant-design/icons';
+import { DeleteOutlined, SwapOutlined } from '@ant-design/icons';
 import { useEffect, useRef, useState } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
@@ -38,9 +38,9 @@ type TProps = {
   onChange?: () => void;
   /**
    * when the type badge is long enough to crowd the name (e.g. "EXTRACELLULAR
-   * RECORDING ARRAY (BETA)"), collapse it to a small icon so the entity name
-   * stays readable; hovering the icon expands it to the full label (and hides
-   * the name). used by `model_selector_single`.
+   * RECORDING ARRAY (BETA)"), hide it so the entity name stays readable and
+   * cross-fade it in over the name when the selector is hovered. used by
+   * `model_selector_single`.
    */
   collapsibleBadge?: boolean;
   /**
@@ -74,10 +74,9 @@ export function ModelIdentifierEntityCard({
   // in readonly mode. `disabled` still controls the mutating remove action below
   const isInteractive = Boolean(onSelect);
 
-  // decide whether the badge crowds the name by comparing the badge's full
-  // (always-rendered, layout-preserving) label width to the card width. the
-  // measured span keeps its dimensions when collapsed (opacity, not display),
-  // so this never feeds back into its own trigger.
+  // decide whether the type label crowds the name by comparing the label's full
+  // width (from an always-rendered hidden measurer) to the card width, so the
+  // decision never depends on the visible (hidden/revealed) state.
   const cardRef = useRef<HTMLDivElement>(null);
   const badgeLabelRef = useRef<HTMLSpanElement>(null);
   const [badgeCrowdsName, setBadgeCrowdsName] = useState(false);
@@ -143,58 +142,47 @@ export function ModelIdentifierEntityCard({
         blockElement ?? `${ScanConfigUIElementDict.ModelIdentifierMultiple}-${variant}`
       }
     >
-      <span
-        className={cn(
-          'min-w-0 truncate text-sm font-semibold text-primary-9',
-          // fade the name out while the (crowding) badge is expanded on hover
-          badgeCrowdsName &&
-            'transition-opacity duration-300 ease-[var(--ease-out-expo)] group-has-[[data-role=entity-type-badge]:hover]/card:opacity-0'
-        )}
-      >
-        {entityName}
-      </span>
-      <div className="flex max-w-full min-w-0 items-center justify-end gap-2">
+      {/* col1: the entity name, plus (when the type doesn't fit) the type label
+          overlaid on the same spot — hovering the selector softly cross-fades
+          name ↔ type (opacity only, no width/reflow, so it doesn't feel robotic) */}
+      <div className="relative flex min-w-0 items-center overflow-hidden">
         <span
-          data-role="entity-type-badge"
-          title={badgeCrowdsName ? typeLabel : undefined}
           className={cn(
-            'group/badge relative inline-flex shrink-0 items-center justify-center overflow-hidden',
-            'rounded-full border border-neutral-2 bg-white text-xs font-semibold tracking-wide uppercase',
-            isSelection ? 'text-gray-400' : 'text-gray-500',
-            badgeCrowdsName
-              ? // collapsed: a 24px icon chip that expands to the full label on hover.
-                // min/max-w (not a fixed w) so `hover:max-w` can actually grow it.
-                // on hover the chip's own border/bg drop away so the expanded label
-                // reads as plain text on the card, not a second pill inside the card.
-                cn(
-                  'h-6 min-w-6 max-w-6 px-0 cursor-default',
-                  'hover:max-w-[28rem] hover:px-2 hover:border-transparent hover:bg-transparent',
-                  'transition-[max-width,padding,border-color,background-color] duration-300 ease-[var(--ease-out-expo)]'
-                )
-              : 'px-2.5 py-0.5'
+            'min-w-0 truncate text-sm font-semibold text-primary-9',
+            badgeCrowdsName && 'transition-opacity duration-200 ease-out group-hover/card:opacity-0'
           )}
         >
-          {badgeCrowdsName ? (
-            // absolute so it never occupies flow width (keeps the chip circular);
-            // fades out as the label reveals on hover
-            <TagsOutlined
-              aria-hidden
-              className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm transition-opacity duration-200 group-hover/badge:opacity-0"
-            />
-          ) : null}
+          {entityName}
+        </span>
+        {badgeCrowdsName ? (
           <span
-            ref={badgeLabelRef}
+            data-role="entity-type-badge"
+            title={typeLabel}
             className={cn(
-              'whitespace-nowrap',
-              // absolute + opacity-0 when collapsed: out of flow (chip stays an
-              // icon) but still measurable; reveals in flow on hover
-              badgeCrowdsName &&
-                'absolute opacity-0 transition-opacity duration-200 group-hover/badge:static group-hover/badge:opacity-100'
+              'pointer-events-none absolute inset-y-0 left-0 flex items-center whitespace-nowrap',
+              'text-xs font-semibold tracking-wide uppercase',
+              isSelection ? 'text-gray-400' : 'text-gray-500',
+              'opacity-0 transition-opacity duration-200 ease-out group-hover/card:opacity-100'
             )}
           >
             {typeLabel}
           </span>
-        </span>
+        ) : null}
+      </div>
+      <div className="flex max-w-full min-w-0 items-center justify-end gap-2">
+        {!badgeCrowdsName ? (
+          // fits: show the type as a normal badge pill beside the name
+          <span
+            data-role="entity-type-badge"
+            className={cn(
+              'inline-flex shrink-0 items-center rounded-full border border-neutral-2 bg-white px-2.5 py-0.5',
+              'text-xs font-semibold tracking-wide uppercase',
+              isSelection ? 'text-gray-400' : 'text-gray-500'
+            )}
+          >
+            {typeLabel}
+          </span>
+        ) : null}
         {!disabled && onChange ? (
           <button
             type="button"
@@ -202,7 +190,7 @@ export function ModelIdentifierEntityCard({
               event.stopPropagation();
               onChange();
             }}
-            className="inline-flex size-6 shrink-0 items-center justify-center text-primary-9 transition-colors hover:text-primary-8 hover:bg-white rounded-full"
+            className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-primary-9 shadow-xs transition-colors hover:bg-primary-8 hover:text-white"
             aria-label={`Change ${entityName}`}
           >
             <SwapOutlined className="text-xs!" />
@@ -215,13 +203,22 @@ export function ModelIdentifierEntityCard({
               event.stopPropagation();
               onRemove();
             }}
-            className="inline-flex size-6 shrink-0 items-center justify-center text-red-500 transition-colors hover:text-red-600 hover:bg-white rounded-full"
+            className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-red-500 shadow-xs transition-colors hover:bg-destructive hover:text-white"
             aria-label={`Remove ${entityName}`}
           >
             <DeleteOutlined className="text-xs!" />
           </button>
         ) : null}
       </div>
+      {/* always rendered, hidden: measures the type label's natural width so the
+          overflow decision never depends on the visible (collapsed) state */}
+      <span
+        ref={badgeLabelRef}
+        aria-hidden
+        className="pointer-events-none invisible absolute whitespace-nowrap text-xs font-semibold tracking-wide uppercase"
+      >
+        {typeLabel}
+      </span>
     </div>
   );
 }

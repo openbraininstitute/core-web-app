@@ -170,6 +170,9 @@ export function SelectionConfirmActions({
         disabled={disabled || confirmDisabled || selectedCount === 0}
         className={cn(
           'h-12 justify-between pl-5 pr-1.5! text-base font-semibold shadow-skmp-s',
+          // when nothing is selected the button reads as disabled (gray), matching
+          // the app's other disabled primary actions — not the always-green success
+          'disabled:bg-neutral-2 disabled:text-neutral-4! disabled:shadow-none',
           isInline ? 'min-w-44' : 'w-full'
         )}
         onClick={onConfirm}
