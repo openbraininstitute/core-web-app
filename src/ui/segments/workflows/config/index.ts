@@ -1,4 +1,5 @@
 export { ActivityRegistry, ActivityValues } from './activities';
+export { resolveWorkflowConfigureHrefForEntity } from './entity-entry';
 export { EntityTypeCatalog } from './entity-types';
 export {
   getActivity,
