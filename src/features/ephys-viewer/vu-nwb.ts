@@ -12,7 +12,9 @@
  * what the file states wrongly or leaves out.
  */
 
-import type { Samples } from '@/features/ephys-viewer/trace-index';
+import { RecordingType } from '@/features/ephys-viewer/trace-index';
+
+import type { RecordingMeta, Samples } from '@/features/ephys-viewer/trace-index';
 
 /** `bias_current` is stored in pA, samples are in amperes once converted. */
 const PICO = 1e-12;
@@ -75,6 +77,27 @@ export function correctUnitMixup(units: RecordingUnits): RecordingUnits {
     voltageConversion: 1e-3,
     currentConversion: 1e-12,
     currentUnit: 'amperes',
+  };
+}
+
+/**
+ * VU sweeps carry the commanded current on the stimulus channel and the recorded voltage on
+ * the response channel, so which half of the corrected unit pair applies depends on the side
+ * being asked for.
+ */
+export function toVURecordingMeta(
+  units: RecordingUnits,
+  timeUnit: string,
+  timeRate: number,
+  recordingType: RecordingType
+): RecordingMeta {
+  const isStimulus = recordingType === RecordingType.STIMULUS;
+
+  return {
+    unit: isStimulus ? units.currentUnit : units.voltageUnit,
+    conversionFactor: isStimulus ? units.currentConversion : units.voltageConversion,
+    timeUnit,
+    timeRate,
   };
 }
 

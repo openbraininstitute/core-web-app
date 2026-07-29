@@ -9,6 +9,7 @@ import {
   correctUnitMixup,
   looksLikeVU,
   toVUAcquisitionName,
+  toVURecordingMeta,
   trimTrailingNaNs,
 } from '@/features/ephys-viewer/vu-nwb';
 
@@ -227,33 +228,53 @@ export default abstract class NWBTrace {
   }
 
   /**
-   * Read a recording's units and timebase off the attributes of its `data` and `starting_time`
-   * datasets, without touching the samples.
+   * Read what a recording measures off its `data` dataset's attributes, without touching the
+   * samples. Split from the timebase because the formats differ over where that comes from,
+   * not over this.
    */
-  protected readMeta(datasetKey: string, timeDatasetKey: string, label?: string): RecordingMeta {
-    const dataset = this.getDataset(datasetKey);
-
+  protected readUnits(dataset: Dataset): { unit: string; conversionFactor: number } {
     const unit = tryGetAttribute(dataset, 'unit');
     if (typeof unit !== 'string') {
-      throw new Error(`Incompatible unit on ${datasetKey}: ${unit}, expected string`);
+      throw new Error(`Incompatible unit on ${dataset.path}: ${unit}, expected string`);
     }
 
     const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
-    const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
-    const timeDataset = this.getDataset(timeDatasetKey);
+    return {
+      unit,
+      conversionFactor: typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1,
+    };
+  }
 
+  /** Read a recording's timebase off its `starting_time` dataset's attributes. */
+  protected readTimebase(timeDataset: Dataset): { timeUnit: string; timeRate: number } {
     const timeUnit = tryGetAttribute(timeDataset, 'unit');
     if (typeof timeUnit !== 'string') {
-      throw new Error(`Incompatible time unit on ${timeDatasetKey}: ${timeUnit}, expected string`);
+      throw new Error(
+        `Incompatible time unit on ${timeDataset.path}: ${timeUnit}, expected string`
+      );
     }
 
     const timeRate = tryGetAttribute(timeDataset, 'rate');
     if (typeof timeRate !== 'number') {
-      throw new Error(`Incompatible time rate on ${timeDatasetKey}: ${timeRate}, expected number`);
+      throw new Error(
+        `Incompatible time rate on ${timeDataset.path}: ${timeRate}, expected number`
+      );
     }
 
-    return { label, unit, conversionFactor, timeUnit, timeRate };
+    return { timeUnit, timeRate };
+  }
+
+  /**
+   * Read a recording's units and timebase off the attributes of its `data` and `starting_time`
+   * datasets, without touching the samples.
+   */
+  protected readMeta(datasetKey: string, timeDatasetKey: string, label?: string): RecordingMeta {
+    return {
+      label,
+      ...this.readUnits(this.getDataset(datasetKey)),
+      ...this.readTimebase(this.getDataset(timeDatasetKey)),
+    };
   }
 
   public getSweepData(
@@ -866,17 +887,7 @@ class NWBCircuitSimulationTrace extends NWBTrace {
       return { timeUnit: 's', timeRate: 1 };
     }
 
-    const timeUnit = tryGetAttribute(timeDataset, 'unit');
-    if (typeof timeUnit !== 'string') {
-      throw new Error(`Incompatible time unit: ${timeUnit}, expected string`);
-    }
-
-    const timeRate = tryGetAttribute(timeDataset, 'rate');
-    if (typeof timeRate !== 'number') {
-      throw new Error(`Incompatible time rate: ${timeRate}, expected number`);
-    }
-
-    return { timeUnit, timeRate };
+    return this.readTimebase(timeDataset);
   }
 
   public getSweepRecordingMeta(
@@ -888,17 +899,9 @@ class NWBCircuitSimulationTrace extends NWBTrace {
   ): RecordingMeta[] {
     const dataset = this.getDataset(`${NWBKey.ACQUISITION}/${cellId}/${NWBKey.DATA}`);
 
-    const unit = tryGetAttribute(dataset, 'unit');
-    if (typeof unit !== 'string') {
-      throw new Error(`Incompatible unit for ${cellId}: ${unit}, expected string`);
-    }
-
-    const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
-    const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
-
-    const { timeUnit, timeRate } = this.getTimeData(cellId);
-
-    return [{ unit, conversionFactor, timeUnit, timeRate }];
+    // Not `readMeta`: these files may carry no `starting_time`, so the timebase comes from
+    // `getTimeData`, which falls back. The units half is read the same way as everywhere else.
+    return [{ ...this.readUnits(dataset), ...this.getTimeData(cellId) }];
   }
 
   public getSweepRecordingData(
@@ -1075,27 +1078,6 @@ class IonChannelSimulationTrace extends NWBTrace {
 }
 
 /**
- * VU sweeps carry the commanded current on the stimulus channel and the recorded voltage on
- * the response channel, so which half of the corrected unit pair applies depends on the side
- * being asked for.
- */
-function toVURecordingMeta(
-  units: RecordingUnits,
-  timeUnit: string,
-  timeRate: number,
-  recordingType: RecordingType
-): RecordingMeta {
-  const isStimulus = recordingType === RecordingType.STIMULUS;
-
-  return {
-    unit: isStimulus ? units.currentUnit : units.voltageUnit,
-    conversionFactor: isStimulus ? units.currentConversion : units.voltageConversion,
-    timeUnit,
-    timeRate,
-  };
-}
-
-/**
  * The agents recorded in `general/was_generated_by`, which is how the two simulation
  * formats identify themselves. Empty for any file that does not carry it.
  */
@@ -1130,11 +1112,17 @@ function getVUAcquisitionPath(file: File): string {
  * `number[]` — a second copy at 8 bytes a sample, allocated and discarded on every read.
  * `dataset.value` stops one step earlier and hands back the buffer itself. Multi-dimensional
  * and non-float datasets keep the old path, where `to_array()` also does the reshaping.
+ *
+ * The float test is on `dtype` rather than on the value, because `dataset.value` is uncached:
+ * reading it to find out whether it is a float array would decompress the whole dataset, and
+ * a non-float one would then be decompressed a second time by `to_array()`. `dtype` comes off
+ * the dataset's metadata, which h5wasm does cache and which reads no samples.
  */
 function readSamples(dataset: Dataset): Samples | number[] {
-  if ((dataset.shape?.length ?? 1) <= 1) {
-    const { value } = dataset;
-    if (value instanceof Float32Array || value instanceof Float64Array) return value;
+  // h5wasm spells a float dtype as an endianness marker followed by `f` — `<f4`, `<f8`. A scalar
+  // is excluded along with the multi-dimensional case: its `value` is a bare number, not a buffer.
+  if (dataset.shape?.length === 1 && /^[<>|]f/.test(String(dataset.dtype))) {
+    return dataset.value as Samples;
   }
 
   return dataset.to_array() as number[];

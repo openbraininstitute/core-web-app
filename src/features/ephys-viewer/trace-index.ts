@@ -59,9 +59,9 @@ export type TraceCellIndex = {
 export type TraceIndex = {
   recordingTypes: RecordingType[];
   /**
-   * Every protocol across every cell, in the order the reader wants them listed. Most readers
-   * sort alphabetically; the VU reader puts the recognised BBP protocols ahead of the ones
-   * named after their raw stimulus.
+   * Every protocol across every cell, in the order they should be listed. The union is taken
+   * here rather than in the component, which would otherwise be following whichever cell it
+   * happened to read first.
    */
   protocolOrder: string[];
   cells: TraceCellIndex[];
@@ -192,6 +192,18 @@ export function isMultiRecordingLayout(slots: RecordingSlot[]): boolean {
   return slots.length > 2;
 }
 
+/**
+ * Whether a recording holds a current rather than a voltage.
+ *
+ * `amperes` is what every reader writes for a current channel. It lives here, in the module both
+ * sides of the worker boundary already share, because it is the contract between the readers and
+ * the UI: the same answer has to select the conversion at each plot and decide whether the pA/nA
+ * toggle appears at all.
+ */
+export function isCurrentUnit(meta: RecordingMeta | undefined): boolean {
+  return meta?.unit === 'amperes';
+}
+
 /** Does any recording of this repetition carry a current, i.e. should the pA/nA toggle show? */
 export function hasCurrentRecordings(
   index: TraceIndex,
@@ -202,9 +214,7 @@ export function hasCurrentRecordings(
   const recordings = findRepetition(index, cellId, protocol, repetition)?.recordings;
   if (!recordings) return false;
 
-  return Object.values(recordings)
-    .flat()
-    .some((recording) => recording.unit === 'amperes');
+  return Object.values(recordings).flat().some(isCurrentUnit);
 }
 
 /**

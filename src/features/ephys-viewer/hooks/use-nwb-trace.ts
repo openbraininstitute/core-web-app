@@ -21,7 +21,6 @@ type UseTraceArgs = {
 export type UseTraceResult = TraceSessionState & {
   getSweepSeries: (req: SweepSeriesRequest) => Promise<SweepSeriesResponse>;
   getCachedSweepSeries: (req: SweepSeriesRequest) => SweepSeriesResponse | null;
-  retry: () => void;
 };
 
 /**
@@ -77,7 +76,5 @@ export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTra
     [key]
   );
 
-  const retry = useCallback(() => nwbWorkerRegistry.retry(key), [key]);
-
-  return { ...state, getSweepSeries, getCachedSweepSeries, retry };
+  return { ...state, getSweepSeries, getCachedSweepSeries };
 }

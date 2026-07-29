@@ -1,3 +1,4 @@
+import { isCurrentUnit } from '@/features/ephys-viewer/trace-index';
 import {
   type CurrentUnit,
   convertCurrentSeries,
@@ -13,14 +14,9 @@ const DEFAULT_VOLTAGE_UNIT: VoltageUnit = 'mV';
 /** A Plotly trace tagged with the sweep it came from, so legend clicks can map back to it. */
 export type SweepTrace = Partial<PlotData> & { sweepName: string };
 
-/**
- * Whether a recording holds a current rather than a voltage.
- *
- * `amperes` is what every reader writes for a current channel, so the check lives here beside
- * the conversion it selects rather than being spelled out again at each plot.
- */
+/** Whether a series holds a current rather than a voltage — see `isCurrentUnit`. */
 export function isCurrentRecording(recording: RecordingSeries | undefined): boolean {
-  return recording?.meta.unit === 'amperes';
+  return isCurrentUnit(recording?.meta);
 }
 
 /**

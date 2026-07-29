@@ -108,9 +108,8 @@ export async function fetchToFS({
   // When the total is known, emit on each whole-percent change; otherwise emit roughly every 2 MB.
   let lastPercent = -1;
   let lastEmittedBytes = 0;
-  let written = 0;
+  let offset = 0;
   try {
-    let offset = 0;
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -130,7 +129,6 @@ export async function fetchToFS({
       }
     }
     reportProgress?.({ received: offset, total });
-    written = offset;
   } catch (err) {
     try {
       FS.unlink(filename);
@@ -144,7 +142,7 @@ export async function fetchToFS({
 
   // Content-Length is a promise, not a guarantee. Give back whatever the pre-sizing over-allocated
   // rather than leaving the file padded with zeros.
-  if (total && written < total) FS.truncate(filename, written);
+  if (total && offset < total) FS.truncate(filename, offset);
 
   // Deliberately not awaited. The FS copy is complete and is the only one this session reads;
   // `cache.put` is disk-bound and still draining the tee's backlog, so waiting for it would park
@@ -159,8 +157,15 @@ export async function fetchToFS({
  * Write an already-downloaded buffer to the Emscripten FS, skipping if already present.
  * Prefer `fetchToFS` where the worker can do the download itself — this keeps the whole file
  * in memory on top of the copy in the FS.
+ *
+ * Like `fetchToFS`, this hands back only the filename; clean up through `unlinkFromFS` so the
+ * FS handle stays inside this module.
  */
-export async function writeToFS(fileKey: string, buffer: ArrayBuffer, extension = '.h5') {
+export async function writeToFS(
+  fileKey: string,
+  buffer: ArrayBuffer,
+  extension = '.h5'
+): Promise<{ filename: string }> {
   const { FS } = await ready;
   if (!FS) throw new Error('h5wasm FS not initialized');
   const filename = `${fileKey}${extension}`;
@@ -171,7 +176,7 @@ export async function writeToFS(fileKey: string, buffer: ArrayBuffer, extension 
     FS.writeFile(filename, new Uint8Array(buffer));
   }
 
-  return { FS, filename };
+  return { filename };
 }
 
 export async function unlinkFromFS(filename: string): Promise<void> {

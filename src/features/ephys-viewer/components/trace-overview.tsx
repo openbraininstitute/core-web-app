@@ -145,15 +145,14 @@ function RepetitionThumbnails({
   protocol,
   repetition,
   thumbnails,
-  hasMultipleRecordings,
 }: {
   cellId: string;
   protocol: string;
   repetition: string;
   thumbnails: RecordingSlot[];
-  hasMultipleRecordings: boolean;
 }) {
   const { index } = useTraceContext();
+  const hasMultipleRecordings = isMultiRecordingLayout(thumbnails);
 
   // Read a repetition a screenful before it scrolls in, once.
   const { ref, inView } = useInView({
@@ -235,7 +234,6 @@ function ImageSetComponent({
           protocol={protocol}
           repetition={repetition}
           thumbnails={thumbnails}
-          hasMultipleRecordings={hasMultipleRecordings}
         />
       </button>
     );
