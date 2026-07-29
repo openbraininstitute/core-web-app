@@ -1,7 +1,5 @@
-import {
-  categoricalColor,
-  MAX_DISTINCT_COLORS,
-} from '@/features/scan-config/components/color-by/palette';
+import chroma from 'chroma-js';
+import { atom } from 'jotai';
 
 import type {
   ElectrodeLocationPoint,
@@ -44,53 +42,88 @@ export interface CircuitOverlayGroup {
 }
 
 /**
- * Hash a block name into `[0, MAX_DISTINCT_COLORS)`.
+ * Neutral electrode palette, in assignment order.
  *
- * Why: `categoricalColor(index)` must be stable across sessions so the same
- * electrode name keeps the same colour without storing overrides.
+ * Why its own palette (not the circuit color-by one): electrodes are read
+ * against neurons, not against each other, so they need plain high-contrast
+ * hues rather than the pink / brown categorical set.
  *
- * @param name - Electrode dictionary entry name
- * @returns Palette index
+ * Why saturated: markers are small (see `DEFAULT_ELECTRODE_RADIUS`), and a
+ * few-pixel sphere only reads as "the blue probe" if its hue is unambiguous.
+ * Lightness is corrected per canvas by `adaptColorToBackground`, so these are
+ * chosen for hue separation and left to the contrast pass to place.
  */
-function hashBlockName(name: string): number {
+export const ELECTRODE_PALETTE: readonly string[] = [
+  '#1b6ef3', // blue
+  '#12a150', // green
+  '#e0293b', // red
+  '#12161c', // black
+  '#f2760a', // orange
+  '#8b3fd9', // purple
+  '#00a5b5', // teal
+  '#d62a9d', // magenta
+];
+
+/**
+ * Stable fallback slot for names with no creation index (renamed / AI-authored).
+ *
+ * FNV-1a: deterministic, so a renamed block keeps one colour across reloads.
+ */
+function hashName(name: string): number {
   let hash = 2166136261;
   for (let i = 0; i < name.length; i++) {
     hash ^= name.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
-  return Math.abs(hash) % MAX_DISTINCT_COLORS;
+  return Math.abs(hash) % ELECTRODE_PALETTE.length;
+}
+
+/**
+ * Palette slot for a block, derived purely from its name.
+ *
+ * How: `BlockDictionary` names new entries `"<Singular> <n>"` where `n` is the
+ * lowest free creation index, so that trailing number *is* a stable ordinal —
+ * block 0 is blue, block 1 green, and adding or deleting a block never
+ * renumbers the others. Names without one fall back to a hash.
+ *
+ * Why derived and not remembered: a module-level registry would mutate during
+ * render, which React Compiler and StrictMode both assume never happens, and it
+ * would hand two sessions different colours for the same config.
+ *
+ * Past `ELECTRODE_PALETTE.length` blocks, colours necessarily repeat.
+ */
+function electrodePaletteIndex(name: string): number {
+  const ordinal = /(\d+)\s*$/.exec(name);
+  if (ordinal) return Number(ordinal[1]) % ELECTRODE_PALETTE.length;
+  return hashName(name);
 }
 
 /**
  * Colour for electrode contact spheres of a named block.
  *
- * How: hash the name → Okabe–Ito / Tableau categorical palette.
- * Why: reuses the circuit color-by palette (colorblind-safer) and stays stable
- * per block name without per-user colour config.
- *
  * @param name - Electrode block name (`electrode_locations` key)
- * @returns CSS hex colour
+ * @returns CSS hex colour, stable for a given name in every session
  *
  * @example
- * colorForElectrodeBlock('probe_a') === colorForElectrodeBlock('probe_a');
+ * colorForElectrodeBlock('Electrode 0'); // → palette[0], blue
  */
 export function colorForElectrodeBlock(name: string): string {
-  return categoricalColor(hashBlockName(name));
+  return ELECTRODE_PALETTE[electrodePaletteIndex(name)];
 }
 
 /**
  * Colour for the origin marker of a named block.
  *
- * How: same hash as contacts, offset by ~⅓ of the palette.
- * Why: tip must contrast with contact spheres so the pivot is obvious in 3D.
+ * How: a lightness shift of the block colour — brighten dark hues, darken light
+ * ones. Why not a second palette entry: the pivot must read as *the same probe*
+ * while still standing out, and a fixed offset would clash with black.
  *
  * @param name - Electrode block name
- * @returns CSS hex colour distinct from {@link colorForElectrodeBlock}
+ * @returns CSS hex colour related to, but distinct from, the contact colour
  */
 export function colorForElectrodeOrigin(name: string): string {
-  return categoricalColor(
-    (hashBlockName(name) + Math.floor(MAX_DISTINCT_COLORS / 3)) % MAX_DISTINCT_COLORS
-  );
+  const base = chroma(colorForElectrodeBlock(name));
+  return base.luminance() < 0.2 ? base.brighten(2).hex() : base.darken(1.4).hex();
 }
 
 /**
@@ -422,4 +455,122 @@ export function seedElectrodeInitialOrigin(
     ...('origin_y' in initial ? { origin_y: roundCoord(anchor[1]) } : {}),
     ...('origin_z' in initial ? { origin_z: roundCoord(anchor[2]) } : {}),
   };
+}
+
+/**
+ * Active value index per swept parameter, keyed `blockName → paramKey → index`.
+ *
+ * Why this exists: a parameter sweep holds several values, but the circuit view
+ * can only draw one coordinate at a time. The eye toggles in the form write
+ * here; the electrode overlay pipeline reads it to pick which value to send to
+ * `block_dictionary_summary`.
+ */
+export type ScanValueSelection = Record<string, Record<string, number>>;
+
+/**
+ * Shared selection state.
+ *
+ * Why jotai: the eye lives deep in the form (`ParameterSweep`) while the reader
+ * is the viewer-side overlay hook — sibling subtrees with no common props.
+ *
+ * Lifetime: module-level, so it survives navigation. `clearScanValueSelection`
+ * is dispatched by the scan-config template when the workflow schema changes so
+ * one workflow's indices never leak into the next.
+ */
+export const scanValueSelectionAtom = atom<ScanValueSelection>({});
+
+/** Write-only: drop every selection (workflow switch / unmount). */
+export const clearScanValueSelectionAtom = atom(null, (_get, set) => {
+  set(scanValueSelectionAtom, {});
+});
+
+/** Write-only: mark `index` active for one parameter of one block. */
+export const selectScanValueAtom = atom(
+  null,
+  (get, set, { block, param, index }: { block: string; param: string; index: number }) => {
+    const current = get(scanValueSelectionAtom);
+    set(scanValueSelectionAtom, {
+      ...current,
+      [block]: { ...current[block], [param]: index },
+    });
+  }
+);
+
+/**
+ * Active index for a parameter, clamped into `length`.
+ *
+ * Why clamp: a stale index (values removed since it was chosen, or a same-named
+ * block in another workflow) must degrade to the first value, never to
+ * `undefined` reads downstream.
+ */
+export function resolveScanIndex(
+  selection: ScanValueSelection | undefined,
+  block: string,
+  param: string,
+  length: number
+): number {
+  const raw = selection?.[block]?.[param];
+  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 0) return 0;
+  return raw < length ? raw : 0;
+}
+
+/** A sweep value: array entries may be null while the user is typing. */
+type SweepValue = (number | null)[];
+
+function isSweepArray(value: unknown): value is SweepValue {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((entry) => entry === null || typeof entry === 'number')
+  );
+}
+
+/**
+ * Collapse every swept parameter in an electrode dictionary to its active value.
+ *
+ * How: each `[a, b, c]` numeric parameter becomes the single selected scalar.
+ * Why: Obi-One's summary endpoint would otherwise expand the sweep, and the
+ * viewer must show exactly one coordinate.
+ *
+ * Assumption: inside an `electrode_locations` block, every numeric array is a
+ * parameter sweep. That holds for the blocks Obi-One exposes today (origin,
+ * rotation, spacing, count — all scalars until swept). A block type that ever
+ * gains a genuine numeric *vector* field would be collapsed wrongly here, so
+ * such a field must be excluded explicitly when it appears.
+ *
+ * @param dictionary - Live `config.electrode_locations`
+ * @param selection - Active indices from {@link scanValueSelectionAtom}
+ * @returns A dictionary with scalars in place of sweeps (input left untouched)
+ *
+ * @example
+ * resolveElectrodeScanSelection({ p: { origin_x: [10, 20] } }, { p: { origin_x: 1 } });
+ * // → { p: { origin_x: 20 } }
+ */
+export function resolveElectrodeScanSelection(
+  dictionary: unknown,
+  selection: ScanValueSelection | undefined
+): unknown {
+  if (!dictionary || typeof dictionary !== 'object' || Array.isArray(dictionary)) return dictionary;
+
+  const out: Record<string, unknown> = {};
+  for (const [blockName, rawBlock] of Object.entries(dictionary as Record<string, unknown>)) {
+    if (!rawBlock || typeof rawBlock !== 'object' || Array.isArray(rawBlock)) {
+      out[blockName] = rawBlock;
+      continue;
+    }
+
+    const block = rawBlock as Record<string, unknown>;
+    let changed = false;
+    const resolved: Record<string, unknown> = {};
+    for (const [paramKey, value] of Object.entries(block)) {
+      if (!isSweepArray(value)) {
+        resolved[paramKey] = value;
+        continue;
+      }
+      resolved[paramKey] = value[resolveScanIndex(selection, blockName, paramKey, value.length)];
+      changed = true;
+    }
+    out[blockName] = changed ? resolved : rawBlock;
+  }
+  return out;
 }

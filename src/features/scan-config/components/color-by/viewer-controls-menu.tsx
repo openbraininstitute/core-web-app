@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
+import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -185,7 +186,7 @@ export function ViewerControlsMenu({
                 <span className="tabular-nums text-neutral-500">{electrodeRadius}</span>
               </div>
               <Slider
-                min={5}
+                min={DEFAULT_ELECTRODE_RADIUS}
                 max={80}
                 step={5}
                 value={electrodeRadius}

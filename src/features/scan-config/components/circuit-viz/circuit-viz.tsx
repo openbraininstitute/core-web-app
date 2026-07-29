@@ -1,7 +1,8 @@
 import { useSetAtom } from 'jotai';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
+import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { useDownloadHandler } from '@/features/scan-config/components/model-preview/viewer-layout/hooks';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
@@ -130,7 +131,7 @@ function CircuitVizView({
   onOverlayTransform,
   highlightedOverlayId = null,
   neuronOpacity,
-  electrodeRadius = 10,
+  electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   features,
   source,
   clearSequentialOnAxonToggle = false,
@@ -167,9 +168,33 @@ function CircuitVizView({
   // Empty highlightedCellIds → morphoviewer flat overlay stays black (ADD black
   // = no wash-out). Hosts pass features.cellHover from domain `viewer`.
   const [highlightedCellId, setHighlightedCellId] = useState('');
-  const handleCellHover = (cell: Cell | undefined): void => {
+  // Dragging an electrode must not leave a neuron lit under it. morphoviewer
+  // only reports overlay transforms once the gesture ends, so the drag is
+  // detected here from the pointer: press clears any highlight and suspends
+  // hover, release resumes it.
+  //
+  // A ref, not state: nothing renders from this flag, and morphoviewer
+  // re-subscribes whenever `onCellHover` changes identity — a stateful flag
+  // would rebuild the closure and churn that listener on every drag.
+  const draggingOverlayRef = useRef(false);
+  const handleCellHover = useCallback((cell: Cell | undefined): void => {
+    if (draggingOverlayRef.current) return;
     setHighlightedCellId(cell?.id ?? '');
+  }, []);
+  const suspendHoverHighlight = () => {
+    if (!overlaysInteractive) return;
+    draggingOverlayRef.current = true;
+    setHighlightedCellId('');
   };
+  const resumeHoverHighlight = () => {
+    draggingOverlayRef.current = false;
+  };
+  // Stable array identity: morphoviewer's `highlightedCellIds` setter bails out
+  // on reference equality, so a fresh array each render forces a repaint pass.
+  const highlightedCellIds = useMemo(
+    () => (enableCellHover ? [highlightedCellId] : []),
+    [enableCellHover, highlightedCellId]
+  );
 
   const prevAxonRef = useRef(showAxons);
   useEffect(() => {
@@ -214,7 +239,13 @@ function CircuitVizView({
   );
 
   return (
-    <div className="h-full w-full relative">
+    <div
+      className="h-full w-full relative"
+      onPointerDown={suspendHoverHighlight}
+      onPointerUp={resumeHoverHighlight}
+      onPointerCancel={resumeHoverHighlight}
+      onPointerLeave={resumeHoverHighlight}
+    >
       {cells.length > 0 && (
         <MorphoViewerSmallCircuit
           className={styles.morphoViewer}
@@ -224,7 +255,7 @@ function CircuitVizView({
           signals={signals}
           circuit={cells}
           onCellHover={enableCellHover ? handleCellHover : undefined}
-          highlightedCellIds={enableCellHover ? [highlightedCellId] : []}
+          highlightedCellIds={highlightedCellIds}
           loadCell={loadCell}
           controls={[]}
           onLoadProgress={setProgress}

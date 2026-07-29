@@ -30,3 +30,22 @@ export function resolveEnableElectrodes(options: {
   if (options.scale === CircuitScaleDictionary.Single) return false;
   return true;
 }
+
+/**
+ * Compose the cell-hover kill-switch for {@link CircuitPreview}.
+ *
+ * Single-scale circuits are one neuron: highlighting it on hover flashes the
+ * entire view and identifies nothing, so hover stays off there in every
+ * scan-config host (build and simulate alike). Domain policy still wins — an
+ * entity that already set `cellHover: false` is never turned back on.
+ *
+ * @param options.domainCellHover - Resolved `viewer.cellHover`; undefined → on
+ * @param options.scale - Circuit scale when known
+ */
+export function resolveEnableCellHover(options: {
+  domainCellHover?: boolean;
+  scale?: TCircuitScaleDictionary;
+}): boolean {
+  if (options.domainCellHover === false) return false;
+  return options.scale !== CircuitScaleDictionary.Single;
+}

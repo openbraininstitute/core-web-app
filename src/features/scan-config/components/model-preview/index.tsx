@@ -8,7 +8,10 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
-import { resolveEnableElectrodes } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
+import {
+  resolveEnableCellHover,
+  resolveEnableElectrodes,
+} from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -56,6 +59,10 @@ export function ModelPreview({
 
   const featuresForSmall = (circuit: ICircuit): Partial<IEntityViewerFeatures> => ({
     ...viewerFeatures,
+    cellHover: resolveEnableCellHover({
+      domainCellHover: viewerFeatures?.cellHover,
+      scale: circuit.scale,
+    }),
     electrodes:
       domainElectrodes &&
       resolveEnableElectrodes({

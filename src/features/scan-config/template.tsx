@@ -11,6 +11,7 @@ import {
 } from '@/features/scan-config/bridge/main-overlay-context';
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
+import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
@@ -129,6 +130,7 @@ function ScanConfigTemplateContent({
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
   const clearDiffState = useSetAtom(clearDiffStateAtom);
+  const clearScanValueSelection = useSetAtom(clearScanValueSelectionAtom);
   const previousSchemaName = usePrevious(schemaName);
   useEffect(() => {
     // reset the global sidebar expansion/highlight state back to its idle default ("Info")
@@ -137,8 +139,19 @@ function ScanConfigTemplateContent({
     if (previousSchemaName !== undefined && previousSchemaName !== schemaName) {
       setTab(defaultTab);
       setSelectedRootElement(firstRoot ?? '');
+      // Selections live in module state that outlives the route and are keyed
+      // by block name, which repeats across workflows. Drop them so the next
+      // workflow starts on each sweep's first value.
+      clearScanValueSelection();
     }
-  }, [schemaName, clearDiffState, previousSchemaName, defaultTab, firstRoot]);
+  }, [
+    schemaName,
+    clearDiffState,
+    clearScanValueSelection,
+    previousSchemaName,
+    defaultTab,
+    firstRoot,
+  ]);
 
   useAgentState(
     aiEnabled

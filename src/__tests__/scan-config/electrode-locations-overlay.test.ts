@@ -1,12 +1,21 @@
+import chroma from 'chroma-js';
 import { describe, expect, it } from 'vitest';
 
 import {
+  adaptColorToBackground,
+  CANVAS_DARK,
+  CANVAS_LIGHT,
+} from '@/features/scan-config/components/color-by/contrast';
+import {
   colorForElectrodeBlock,
   colorForElectrodeOrigin,
+  ELECTRODE_PALETTE,
   electrodeDictionaryToPlaceholderOverlays,
   electrodeSummaryToOverlays,
   hasElectrodeLocationsDictionary,
   mergeElectrodeOverlays,
+  resolveElectrodeScanSelection,
+  resolveScanIndex,
   seedElectrodeInitialOrigin,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 
@@ -188,5 +197,117 @@ describe('mergeElectrodeOverlays', () => {
     expect(ids.sort()).toEqual(['a', 'b']);
     const aElectrodes = merged.find((g) => g.id === 'a' && g.kind === 'electrodes');
     expect(Array.from(aElectrodes?.coordinates ?? [])).toEqual([9, 9, 9]);
+  });
+});
+
+describe('electrode colour assignment', () => {
+  it('maps the creation ordinal in the block name to a palette slot', () => {
+    expect(colorForElectrodeBlock('Electrode 0')).toBe(ELECTRODE_PALETTE[0]);
+    expect(colorForElectrodeBlock('Electrode 1')).toBe(ELECTRODE_PALETTE[1]);
+    expect(colorForElectrodeBlock('Electrode 2')).toBe(ELECTRODE_PALETTE[2]);
+  });
+
+  it('keeps existing colours when a block is added or removed', () => {
+    const before = ['Electrode 0', 'Electrode 1'].map(colorForElectrodeBlock);
+    colorForElectrodeBlock('Electrode 2');
+    expect(['Electrode 0', 'Electrode 1'].map(colorForElectrodeBlock)).toEqual(before);
+    // deleting "Electrode 0" must not renumber the survivors
+    expect(colorForElectrodeBlock('Electrode 1')).toBe(before[1]);
+  });
+
+  it('is pure — same name, same colour, no call-order dependency', () => {
+    expect(colorForElectrodeBlock('Electrode 3')).toBe(colorForElectrodeBlock('Electrode 3'));
+    expect(colorForElectrodeBlock('Electrode 3')).toBe(ELECTRODE_PALETTE[3]);
+  });
+
+  it('wraps past the end of the palette', () => {
+    expect(colorForElectrodeBlock(`Electrode ${ELECTRODE_PALETTE.length}`)).toBe(
+      ELECTRODE_PALETTE[0]
+    );
+  });
+
+  it('falls back to a stable hash for names with no ordinal', () => {
+    const first = colorForElectrodeBlock('renamed probe');
+    expect(ELECTRODE_PALETTE).toContain(first);
+    expect(colorForElectrodeBlock('renamed probe')).toBe(first);
+  });
+
+  it('gives the origin marker a visible variant of the block colour', () => {
+    for (const name of ['blue-block', 'black-block', 'orange-block']) {
+      const block = colorForElectrodeBlock(name);
+      const origin = colorForElectrodeOrigin(name);
+      expect(origin).not.toBe(block);
+      // never collapses to pure black, which would vanish against dark markers
+      expect(origin.toLowerCase()).not.toBe('#000000');
+    }
+  });
+});
+
+describe('resolveScanIndex', () => {
+  it('defaults to the first value when nothing is selected', () => {
+    expect(resolveScanIndex(undefined, 'probe', 'origin_x', 3)).toBe(0);
+    expect(resolveScanIndex({}, 'probe', 'origin_x', 3)).toBe(0);
+  });
+
+  it('returns the selected index when it is still in range', () => {
+    expect(resolveScanIndex({ probe: { origin_x: 2 } }, 'probe', 'origin_x', 3)).toBe(2);
+  });
+
+  it('falls back to the first value when the selection went stale', () => {
+    expect(resolveScanIndex({ probe: { origin_x: 5 } }, 'probe', 'origin_x', 2)).toBe(0);
+    expect(resolveScanIndex({ probe: { origin_x: -1 } }, 'probe', 'origin_x', 2)).toBe(0);
+  });
+});
+
+describe('resolveElectrodeScanSelection', () => {
+  it('collapses each sweep to its active value', () => {
+    const resolved = resolveElectrodeScanSelection(
+      { probe: { origin_x: [4100.223, 1100], origin_y: [0, 50], n_electrodes: 8 } },
+      { probe: { origin_x: 1 } }
+    );
+    expect(resolved).toEqual({ probe: { origin_x: 1100, origin_y: 0, n_electrodes: 8 } });
+  });
+
+  it('leaves blocks without sweeps untouched', () => {
+    const dictionary = { probe: { origin_x: 10, type: 'Linear' } };
+    expect(resolveElectrodeScanSelection(dictionary, {})).toEqual(dictionary);
+  });
+
+  it('ignores selections belonging to another block', () => {
+    const resolved = resolveElectrodeScanSelection(
+      { probe_a: { origin_x: [1, 2] }, probe_b: { origin_x: [7, 8] } },
+      { probe_b: { origin_x: 1 } }
+    );
+    expect(resolved).toEqual({ probe_a: { origin_x: 1 }, probe_b: { origin_x: 8 } });
+  });
+
+  it('passes non-dictionary input straight through', () => {
+    expect(resolveElectrodeScanSelection(null, {})).toBeNull();
+    expect(resolveElectrodeScanSelection([1, 2], {})).toEqual([1, 2]);
+  });
+});
+
+describe('electrode palette legibility', () => {
+  const CANVASES = [CANVAS_LIGHT, CANVAS_DARK];
+
+  it('clears the viewer contrast floor on both canvases once adapted', () => {
+    for (const background of CANVASES) {
+      for (const color of ELECTRODE_PALETTE) {
+        const adapted = adaptColorToBackground(color, background);
+        expect(chroma.contrast(adapted, background)).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
+  it('keeps every pair of adapted colours visually distinct', () => {
+    for (const background of CANVASES) {
+      const adapted = ELECTRODE_PALETTE.map((c) => adaptColorToBackground(c, background));
+      for (let i = 0; i < adapted.length; i++) {
+        for (let j = i + 1; j < adapted.length; j++) {
+          // deltaE > 10 reads as a different colour rather than a shade
+          expect(chroma.deltaE(adapted[i], adapted[j])).toBeGreaterThan(10);
+        }
+      }
+    }
   });
 });

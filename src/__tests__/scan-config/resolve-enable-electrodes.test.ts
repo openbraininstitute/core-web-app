@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { resolveEnableElectrodes } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
+import {
+  resolveEnableCellHover,
+  resolveEnableElectrodes,
+} from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 
 describe('resolveEnableElectrodes', () => {
   it('is off when the feature flag is off', () => {
@@ -47,5 +50,26 @@ describe('resolveEnableElectrodes', () => {
       })
     ).toBe(true);
     expect(resolveEnableElectrodes({ featureEnabled: true, largeCircuit: true })).toBe(true);
+  });
+});
+
+describe('resolveEnableCellHover', () => {
+  it('turns hover off for single-scale circuits', () => {
+    expect(resolveEnableCellHover({ scale: CircuitScaleDictionary.Single })).toBe(false);
+  });
+
+  it('keeps hover on for every other scale', () => {
+    expect(resolveEnableCellHover({ scale: CircuitScaleDictionary.PairNeuron })).toBe(true);
+    expect(resolveEnableCellHover({ scale: CircuitScaleDictionary.SmallMicrocircuit })).toBe(true);
+    expect(resolveEnableCellHover({})).toBe(true);
+  });
+
+  it('never re-enables hover that domain policy switched off', () => {
+    expect(
+      resolveEnableCellHover({
+        domainCellHover: false,
+        scale: CircuitScaleDictionary.PairNeuron,
+      })
+    ).toBe(false);
   });
 });
