@@ -1,4 +1,4 @@
-import { isPlainObject } from '@/features/scan-config/components/utils';
+import { isPlainObject, numericSchemaBounds } from '@/features/scan-config/components/utils';
 
 import type { ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-config/types';
 import type {
@@ -97,14 +97,27 @@ export function efelDocUrl(schema: ConfigSchema, efelName: string | null): strin
   return `${base}#${efelName}`;
 }
 
-/** Illustration for a feature, when the schema names one. */
+/**
+ * Illustration for a feature.
+ *
+ * The schema declares `efel_figures_base_url` but no per-feature file name — `efel_feature_image`
+ * is defined as a schema key upstream yet never set on any feature class — so the file is
+ * addressed by the eFEL key, which is how the eFEL docs name its figures. The caller renders the
+ * result with an error fallback, since not every feature has one.
+ */
 export function efelFigureUrl(
   schema: ConfigSchema,
   variant: Record<string, unknown>
 ): string | null {
   const base = (schema as unknown as Record<string, unknown>).efel_figures_base_url;
-  const image = variant.efel_feature_image;
-  if (typeof base !== 'string' || !base || typeof image !== 'string' || !image) return null;
+  if (typeof base !== 'string' || !base) return null;
+
+  const image =
+    typeof variant.efel_feature_image === 'string' && variant.efel_feature_image
+      ? variant.efel_feature_image
+      : `${efelNameFromDef(variant)}.png`;
+
+  if (image.startsWith('null')) return null;
   return `${base.replace(/\/$/, '')}/${image}`;
 }
 
@@ -148,6 +161,17 @@ export function buildProtocolDef(variant: Record<string, unknown>): TProtocolDef
   };
 }
 
+/**
+ * The eCode name a protocol class stands for, e.g. `APWaveformProtocol` -> `APWaveform`.
+ *
+ * obi-one keeps the real name in a `protocol_name` ClassVar that never reaches the schema, so it
+ * is recovered from the class name. Consumers match it case-insensitively, since the NWB decides
+ * the casing (`IDrest` vs `IDRest`).
+ */
+export function ecodeNameFromTypeName(typeName: string): string {
+  return typeName.replace(/Protocol$/, '');
+}
+
 /** Every protocol the widget can offer, read off the `protocols` union. */
 export function listProtocolDefs(paramSchema: ParamSchema): TProtocolDef[] {
   const properties = asRecord((paramSchema as unknown as Record<string, unknown>).properties);
@@ -187,6 +211,50 @@ export function makeProtocolValue(def: TProtocolDef): TProtocolValue {
     extraction_amplitudes: [],
     features: [],
   };
+}
+
+/**
+ * A protocol carrying every feature it can extract, plus every amplitude the recordings report.
+ *
+ * This is what "automatically fill" produces. obi-one's default protocol set is built by a
+ * `default_factory`, which pydantic does not serialise, so the schema states no default features
+ * at all — the full valid set is used instead, matching what obi-one's own defaults describe.
+ */
+export function makeFilledProtocolValue(
+  def: TProtocolDef,
+  discoveredAmplitudes: number[] | undefined
+): TProtocolValue {
+  return {
+    ...makeProtocolValue(def),
+    extraction_amplitudes: (discoveredAmplitudes ?? []).map(
+      (amplitude): TExtractionAmplitude => [amplitude, false]
+    ),
+    features: def.featureDefs.map(makeFeatureValue),
+  };
+}
+
+/** The value a field falls back to when the user removes it: null when nullable, else its default. */
+export function fieldUnsetValue(paramSchema: ParamSchema): ConfigValue {
+  const schema = paramSchema as unknown as Record<string, unknown>;
+  const nullable =
+    Array.isArray(schema.anyOf) &&
+    (schema.anyOf as Array<Record<string, unknown>>).some((branch) => branch?.type === 'null');
+
+  if (nullable) return null;
+  return (schema.default ?? null) as ConfigValue;
+}
+
+/**
+ * Whether the user has actually set this field.
+ *
+ * Drives the "add a setting / remove a setting" behaviour: a field sitting at its unset value is
+ * not shown, so the form lists only the settings that are doing something. For the stimulus
+ * timings that unset value is `0.0`, which is exactly what obi-one reads as "auto-detect from the
+ * recording".
+ */
+export function isFieldSet(paramSchema: ParamSchema, value: ConfigValue | undefined): boolean {
+  if (value === undefined || value === null) return false;
+  return value !== fieldUnsetValue(paramSchema);
 }
 
 function parseAmplitudes(value: unknown): TExtractionAmplitude[] {
@@ -257,4 +325,83 @@ export function mergeAmplitudeOptions(
   const values = new Set<number>(discovered ?? []);
   for (const [amplitude] of selected) values.add(amplitude);
   return [...values].sort((a, b) => a - b);
+}
+
+/** A validation problem in the selection, keyed by a path suffix under the widget's field. */
+export type TSelectionError = {
+  key: string;
+  message: string;
+};
+
+/** Range check for one numeric settings field, mirroring what the inputs show inline. */
+function boundsError(paramSchema: ParamSchema, value: ConfigValue | undefined): string | undefined {
+  if (typeof value !== 'number') return undefined;
+
+  const { min, max, exclusiveMin, exclusiveMax } = numericSchemaBounds(paramSchema);
+  if (min !== undefined && value < min) return `Must be greater than or equal to ${min}.`;
+  if (max !== undefined && value > max) return `Must be less than or equal to ${max}.`;
+  if (exclusiveMin !== undefined && value <= exclusiveMin)
+    return `Must be greater than ${exclusiveMin}.`;
+  if (exclusiveMax !== undefined && value >= exclusiveMax)
+    return `Must be less than ${exclusiveMax}.`;
+  return undefined;
+}
+
+/**
+ * Everything wrong with the current selection.
+ *
+ * The JSON schema alone cannot express these: `protocols` has no `minItems`, and neither does a
+ * protocol's `features`, so an empty extraction validates perfectly well while producing nothing.
+ * These are reported through the shared field-errors atom so the left menu reflects them.
+ */
+export function collectSelectionErrors(
+  selection: TSelectEFeaturesValue,
+  defsByType: ReadonlyMap<string, TProtocolDef>
+): TSelectionError[] {
+  const errors: TSelectionError[] = [];
+
+  if (selection.protocols.length === 0) {
+    errors.push({
+      key: 'protocols',
+      message: 'Select at least one protocol to extract features from.',
+    });
+  }
+
+  for (const protocol of selection.protocols) {
+    const def = defsByType.get(protocol.type);
+    const label = def?.label ?? protocol.type;
+
+    if (protocol.features.length === 0) {
+      errors.push({
+        key: `${protocol.type}/features`,
+        message: `${label} has no features selected.`,
+      });
+    }
+
+    for (const [fieldKey, fieldSchema] of [
+      ...(def?.timingFields ?? []),
+      ...(def?.overrideFields ?? []),
+    ]) {
+      const message = boundsError(fieldSchema, protocol[fieldKey]);
+      if (message)
+        errors.push({ key: `${protocol.type}/${fieldKey}`, message: `${label}: ${message}` });
+    }
+
+    for (const feature of protocol.features) {
+      const featureDef = def?.featureDefs.find((entry) => entry.typeName === feature.type);
+      const featureName = featureDef ? (featureDef.efelName ?? featureDef.label) : feature.type;
+
+      for (const [fieldKey, fieldSchema] of featureDef?.overrideFields ?? []) {
+        const message = boundsError(fieldSchema, feature[fieldKey]);
+        if (message) {
+          errors.push({
+            key: `${protocol.type}/${feature.type}/${fieldKey}`,
+            message: `${featureName}: ${message}`,
+          });
+        }
+      }
+    }
+  }
+
+  return errors;
 }
