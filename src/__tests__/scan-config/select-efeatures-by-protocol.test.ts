@@ -1,14 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
+  RightPreviewModeDict,
+  resolveRightPreviewMode,
+} from '@/features/scan-config/components/model-preview/helpers';
+import {
+  collectSelectionErrors,
+  ecodeNameFromTypeName,
   efelDocUrl,
   efelNameFromDef,
+  fieldUnsetValue,
   humanizeTypeName,
+  isFieldSet,
   listProtocolDefs,
+  makeFilledProtocolValue,
   makeProtocolValue,
   mergeAmplitudeOptions,
   parseSelectionValue,
 } from '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol/helpers';
+import { numericSchemaBounds } from '@/features/scan-config/components/utils';
+import { ScanConfigActivity } from '@/features/scan-config/types';
 
 import type { ConfigSchema, ParamSchema } from '@/features/scan-config/types';
 
@@ -171,6 +183,30 @@ describe('makeProtocolValue', () => {
   });
 });
 
+describe('makeFilledProtocolValue', () => {
+  it('takes every feature the protocol can extract and every discovered amplitude', () => {
+    const [idRest] = listProtocolDefs(selectionSchema);
+    const value = makeFilledProtocolValue(idRest, [0.2, 0.1]);
+
+    expect(value.features.map((feature) => feature.type)).toEqual([
+      'VoltageBaseFeature',
+      'ISICVFeature',
+    ]);
+    expect(value.extraction_amplitudes).toEqual([
+      [0.2, false],
+      [0.1, false],
+    ]);
+  });
+
+  it('fills features even when the recordings reported no amplitudes', () => {
+    const [idRest] = listProtocolDefs(selectionSchema);
+    const value = makeFilledProtocolValue(idRest, undefined);
+
+    expect(value.extraction_amplitudes).toEqual([]);
+    expect(value.features).toHaveLength(2);
+  });
+});
+
 describe('parseSelectionValue', () => {
   it('normalises stored protocols so amplitudes and features are always arrays', () => {
     const parsed = parseSelectionValue({
@@ -218,5 +254,163 @@ describe('mergeAmplitudeOptions', () => {
 
   it('falls back to the selection when nothing was discovered', () => {
     expect(mergeAmplitudeOptions(undefined, [[0.3, false]])).toEqual([0.3]);
+  });
+});
+
+describe('resolveRightPreviewMode', () => {
+  const base = {
+    entityPreviewActive: false,
+    activity: ScanConfigActivity.Extract,
+    entityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+    hasEntity: true,
+  };
+
+  it('gives an open settings form the right column', () => {
+    expect(resolveRightPreviewMode({ ...base, settingsPanelActive: true })).toBe(
+      RightPreviewModeDict.Settings
+    );
+  });
+
+  it('outranks the entity preview, which the user did not just ask for', () => {
+    expect(
+      resolveRightPreviewMode({ ...base, settingsPanelActive: true, entityPreviewActive: true })
+    ).toBe(RightPreviewModeDict.Settings);
+  });
+
+  it('leaves the previous behaviour alone when no panel is open', () => {
+    expect(resolveRightPreviewMode({ ...base, entityPreviewActive: true })).toBe(
+      RightPreviewModeDict.EntityPreview
+    );
+  });
+});
+
+describe('numericSchemaBounds', () => {
+  it('reads bounds from the numeric branch of a sweepable union', () => {
+    const bounds = numericSchemaBounds({
+      anyOf: [
+        { type: 'number', minimum: 1, maximum: 9 },
+        { type: 'array', items: { type: 'number' } },
+      ],
+    });
+
+    expect(bounds).toEqual({
+      min: 1,
+      max: 9,
+      exclusiveMin: undefined,
+      exclusiveMax: undefined,
+      allowMultiple: true,
+    });
+  });
+
+  it('handles a plain number field that has no anyOf at all', () => {
+    // obi-one declares the stimulus timings as `float`, not `float | list[float]`, so these
+    // arrive with no union; reading anyOf[0] here used to throw and blank the whole editor
+    const bounds = numericSchemaBounds({
+      type: 'number',
+      default: 0.0,
+      exclusiveMinimum: 0,
+      ui_element: 'float_parameter_sweep',
+    });
+
+    expect(bounds.exclusiveMin).toBe(0);
+    expect(bounds.allowMultiple).toBe(false);
+  });
+
+  it('survives a schema that is not an object', () => {
+    expect(numericSchemaBounds(undefined).allowMultiple).toBe(false);
+    expect(numericSchemaBounds(null).min).toBeUndefined();
+  });
+});
+
+describe('field set / unset semantics', () => {
+  const nullable = { anyOf: [{ type: 'number' }, { type: 'null' }], default: null } as never;
+  const timing = { type: 'number', default: 0.0 } as never;
+
+  it('treats a nullable field as unset when null', () => {
+    expect(fieldUnsetValue(nullable)).toBeNull();
+    expect(isFieldSet(nullable, null)).toBe(false);
+    expect(isFieldSet(nullable, -20)).toBe(true);
+  });
+
+  it('treats a timing left at its auto-detect default as unset', () => {
+    expect(fieldUnsetValue(timing)).toBe(0);
+    expect(isFieldSet(timing, 0)).toBe(false);
+    expect(isFieldSet(timing, 2500)).toBe(true);
+  });
+
+  it('treats a missing value as unset', () => {
+    expect(isFieldSet(timing, undefined)).toBe(false);
+  });
+});
+
+describe('ecodeNameFromTypeName', () => {
+  it('drops the class suffix to recover the eCode the NWB uses', () => {
+    expect(ecodeNameFromTypeName('APWaveformProtocol')).toBe('APWaveform');
+    expect(ecodeNameFromTypeName('IDRestProtocol')).toBe('IDRest');
+    expect(ecodeNameFromTypeName('IVProtocol')).toBe('IV');
+  });
+
+  it('leaves a name that does not carry the suffix alone', () => {
+    expect(ecodeNameFromTypeName('SpikeRec')).toBe('SpikeRec');
+  });
+});
+
+describe('collectSelectionErrors', () => {
+  const defs = listProtocolDefs(selectionSchema);
+  const defsByType = new Map(defs.map((def) => [def.typeName, def]));
+  const [idRest] = defs;
+
+  it('flags an empty selection, which the JSON schema happily accepts', () => {
+    // `protocols` has no minItems, so ajv sees nothing wrong with extracting from no protocols
+    const errors = collectSelectionErrors({ protocols: [] }, defsByType);
+
+    expect(errors.map((error) => error.key)).toEqual(['protocols']);
+  });
+
+  it('clears once a protocol with features is selected', () => {
+    const errors = collectSelectionErrors(
+      { protocols: [makeFilledProtocolValue(idRest, [0.1])] },
+      defsByType
+    );
+
+    expect(errors).toEqual([]);
+  });
+
+  it('flags a selected protocol that has no features', () => {
+    const errors = collectSelectionErrors({ protocols: [makeProtocolValue(idRest)] }, defsByType);
+
+    expect(errors.map((error) => error.key)).toEqual(['IDRestProtocol/features']);
+  });
+
+  it('reports again after the last protocol is unchecked', () => {
+    const selected = { protocols: [makeFilledProtocolValue(idRest, [0.1])] };
+    expect(collectSelectionErrors(selected, defsByType)).toEqual([]);
+
+    expect(collectSelectionErrors({ protocols: [] }, defsByType).map((e) => e.key)).toEqual([
+      'protocols',
+    ]);
+  });
+
+  it('flags an out-of-range settings value so the left menu reacts to settings edits', () => {
+    const protocol = {
+      ...makeFilledProtocolValue(idRest, [0.1]),
+      // the schema declares this exclusiveMinimum: 0
+      trace_resampling_timestep: -1,
+    };
+    const withBound = new Map(defsByType);
+    withBound.set('IDRestProtocol', {
+      ...idRest,
+      overrideFields: [
+        [
+          'trace_resampling_timestep',
+          { anyOf: [{ type: 'number', exclusiveMinimum: 0 }, { type: 'null' }] },
+        ],
+      ] as never,
+    });
+
+    const errors = collectSelectionErrors({ protocols: [protocol] }, withBound);
+
+    expect(errors.map((error) => error.key)).toEqual(['IDRestProtocol/trace_resampling_timestep']);
+    expect(errors[0]?.message).toContain('greater than 0');
   });
 });
