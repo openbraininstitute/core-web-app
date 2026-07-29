@@ -7,12 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { getEntity } from '@/api/entitycore/queries/general/entity';
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { getSimulationCampaign } from '@/api/entitycore/queries/simulation/campaign';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-import { WorkflowActivityDictValue } from '@/constants';
 import { useFlags } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -21,14 +17,8 @@ import {
   type TProjectHomeGetStartedCard,
   type TProjectHomeResource,
 } from '@/ui/segments/project/get-started/query';
-import {
-  buildSimulateConfigureUrlFromDataViewEntity,
-  getWorkflow,
-  resolveSimulateSourceTypeFromDataView,
-} from '@/ui/segments/workflows/config';
-import { buildWorkflowActivityConfigurationHref } from '@/ui/segments/workflows/elements/workflow-activity-actions';
+import { resolveWorkflowConfigureHrefForEntity } from '@/ui/segments/workflows/config/entity-entry';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
 
 function CardMedia({ card }: { card: TProjectHomeGetStartedCard }) {
@@ -76,72 +66,6 @@ function resolveResourceEntityId(resource: TProjectHomeResource): string | null 
   return entityId?.trim() || null;
 }
 
-async function resolveSimulateSourceType(
-  entityId: string,
-  context?: WorkspaceContext
-): Promise<ReturnType<typeof resolveSimulateSourceTypeFromDataView>> {
-  const entity = await getEntity({ id: entityId, context });
-  let scale: ICircuit['scale'] | undefined;
-
-  if (entity.type === EntityTypeDict.Circuit) {
-    const circuit = await getCircuit({ id: entityId, context });
-    scale = circuit.scale;
-  }
-
-  return resolveSimulateSourceTypeFromDataView(entity.type, { scale });
-}
-
-async function resolveWorkflowHref({
-  entityId,
-  workspace,
-  flags,
-}: {
-  entityId: string;
-  workspace: WorkspaceContext;
-  flags: ReturnType<typeof useFlags>;
-}): Promise<string | null> {
-  const entity = await getEntity({ id: entityId });
-
-  // Example campaigns from Sanity → reopen configure with ?origin=
-  if (entity.type === EntityTypeDict.SimulationCampaign) {
-    const campaign = await getSimulationCampaign({ id: entityId });
-    const sourceType = await resolveSimulateSourceType(campaign.entity_id);
-    if (!sourceType) return null;
-
-    const workflow = getWorkflow({
-      activity: WorkflowActivityDictValue.simulate,
-      sourceType,
-    });
-    if (!workflow) return null;
-
-    return buildWorkflowActivityConfigurationHref({
-      activity: WorkflowActivityDictValue.simulate,
-      listEntityType: workflow.targetType,
-      workspace,
-      row: {
-        id: campaign.id,
-        type: EntityTypeDict.SimulationCampaign,
-        entity_id: campaign.entity_id,
-      },
-    });
-  }
-
-  // Source models → start a new simulate configure session
-  let scale: ICircuit['scale'] | undefined;
-  if (entity.type === EntityTypeDict.Circuit) {
-    const circuit = await getCircuit({ id: entityId });
-    scale = circuit.scale;
-  }
-
-  return buildSimulateConfigureUrlFromDataViewEntity({
-    workspace,
-    extendedType: entity.type,
-    entityId,
-    entity: { scale },
-    flags,
-  });
-}
-
 const ctaClassName =
   'flex w-full shrink-0 flex-row items-center justify-between rounded-[60px] border-2 border-white/20 bg-[#002766] px-6 py-2.5 text-xl font-semibold text-white no-underline shadow-[-8px_-8px_12px_0_rgba(255,255,255,0.92),6px_8px_12px_0_rgba(0,0,0,0.12)] transition-opacity hover:opacity-90';
 
@@ -174,6 +98,7 @@ function ResourceItem({
   flags: ReturnType<typeof useFlags>;
 }) {
   const router = useRouter();
+  const { error: notifyError } = useAppNotification();
   const [loading, setLoading] = useState(false);
   const entityId = resolveResourceEntityId(resource);
 
@@ -201,9 +126,23 @@ function ResourceItem({
     }
 
     setLoading(true);
-    void resolveWorkflowHref({ entityId, workspace, flags })
+    void resolveWorkflowConfigureHrefForEntity({ entityId, workspace, flags })
       .then((href) => {
-        if (href) router.push(href);
+        if (href) {
+          router.push(href);
+          return;
+        }
+
+        notifyError({
+          message: 'Example unavailable',
+          description: `No workflow configuration could be opened for "${resource.label}".`,
+        });
+      })
+      .catch(() => {
+        notifyError({
+          message: 'Example unavailable',
+          description: `"${resource.label}" could not be loaded. The example may not be public in this environment.`,
+        });
       })
       .finally(() => {
         setLoading(false);
