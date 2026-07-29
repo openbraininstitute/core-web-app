@@ -7,6 +7,7 @@ import { type TViewVariant, ViewVariant } from '@/constants';
 import {
   TraceViewMode,
   TraceViewModeToggle,
+  type TTraceViewMode,
 } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
 
 import { TraceDetailsView } from './components/trace-details-view';
@@ -28,7 +29,7 @@ export default function IonChannelRecordingViewer({
   variant?: TViewVariant;
 }) {
   const [trace, error] = useTrace({ resource, ctx });
-  const [view, setView] = useState<TraceViewMode>(TraceViewMode.DETAILED);
+  const [view, setView] = useState<TTraceViewMode>(TraceViewMode.Detailed);
 
   if (error) {
     return (
@@ -44,17 +45,17 @@ export default function IonChannelRecordingViewer({
     <div className="@container flex flex-col gap-6">
       <TraceViewModeToggle
         value={view}
-        onChange={(e) => setView(e.target.value as TraceViewMode)}
+        onChange={(e) => setView(e.target.value as TTraceViewMode)}
         variant={variant}
       />
 
-      {view === TraceViewMode.OVERVIEW && (
+      {view === TraceViewMode.Overview && (
         <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[trace]}>
           <TraceOverview trace={trace} variant={variant} />
         </ErrorBoundary>
       )}
 
-      {view === TraceViewMode.DETAILED && (
+      {view === TraceViewMode.Detailed && (
         <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[trace]}>
           <TraceDetailsView trace={trace} variant={variant} />
         </ErrorBoundary>

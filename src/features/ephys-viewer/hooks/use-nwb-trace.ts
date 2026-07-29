@@ -37,16 +37,18 @@ export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTra
     ? entity.assets?.find((a) => a.id === assetId)
     : entity.assets?.find((a) => a.content_type === 'application/nwb');
 
-  if (!asset) {
-    throw new Error('No NWB file found');
-  }
-
   const entityId = entity.id;
   const entityType = entity.type;
-  const { id: currentAssetId } = asset;
-  const key = `${entityId}-${currentAssetId}`;
+  const currentAssetId = asset?.id;
+  // the session is only opened once an asset exists, so this is a placeholder in that case
+  const key = `${entityId}-${currentAssetId ?? 'none'}`;
 
   useEffect(() => {
+    if (!currentAssetId) {
+      setState(IDLE_TRACE_SESSION_STATE);
+      return;
+    }
+
     const buildRequest = () =>
       buildAssetDownloadRequest({
         ctx,
@@ -76,5 +78,14 @@ export default function useTrace({ entity, assetId, ctx }: UseTraceArgs): UseTra
     [key]
   );
 
-  return { ...state, getSweepSeries, getCachedSweepSeries };
+  // a missing asset is a result, not a crash: throwing here would take down the tree and skip
+  // the hooks below it, when the caller already handles an error it can return
+  const missingAssetError = asset ? null : new Error('No NWB file found');
+
+  return {
+    ...state,
+    error: missingAssetError ?? state.error,
+    getSweepSeries,
+    getCachedSweepSeries,
+  };
 }

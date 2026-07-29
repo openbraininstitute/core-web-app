@@ -1,0 +1,52 @@
+import { describe, expect, it } from 'vitest';
+
+import { TraceViewMode } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
+import { type TViewerState, viewerReducer } from '@/features/ephys-viewer/ephys-viewer';
+
+const initial: TViewerState = {
+  view: TraceViewMode.Overview,
+  cellId: 'All',
+  protocol: 'All',
+  repetition: undefined,
+};
+
+describe('viewerReducer', () => {
+  it('changes the view without disturbing the selection', () => {
+    const next = viewerReducer(initial, { type: 'setView', view: TraceViewMode.Detailed });
+
+    expect(next.view).toBe(TraceViewMode.Detailed);
+    expect(next.cellId).toBe('All');
+    expect(next.protocol).toBe('All');
+  });
+
+  it('changes the protocol without disturbing the view', () => {
+    const next = viewerReducer(initial, { type: 'setProtocol', protocol: 'IDrest' });
+
+    expect(next.protocol).toBe('IDrest');
+    expect(next.view).toBe(TraceViewMode.Overview);
+  });
+
+  it('opens a repetition as one transition', () => {
+    // this was three separate setters, so the details view could render against a protocol and a
+    // repetition that did not belong together
+    const next = viewerReducer(initial, {
+      type: 'showRepetition',
+      protocol: 'APWaveform',
+      repetition: 'repetition 01',
+    });
+
+    expect(next).toEqual({
+      view: TraceViewMode.Detailed,
+      cellId: 'All',
+      protocol: 'APWaveform',
+      repetition: 'repetition 01',
+    });
+  });
+
+  it('never mutates the state it is given', () => {
+    const before = { ...initial };
+    viewerReducer(initial, { type: 'setCellId', cellId: 'cell-1' });
+
+    expect(initial).toEqual(before);
+  });
+});
