@@ -16,7 +16,6 @@ import {
   efelFigureUrl,
   listProtocolDefs,
   makeFilledProtocolValue,
-  makeProtocolValue,
   parseSelectionValue,
 } from './helpers';
 import { ProtocolCard, type TRenderField } from './protocol-card';
@@ -106,7 +105,6 @@ export function SelectEFeaturesByProtocol({
 }) {
   const workspace = useWorkspace();
   const [expandedProtocols, setExpandedProtocols] = useState<Set<string>>(new Set());
-  const [autoFill, setAutoFill] = useState(false);
 
   const selection = useMemo(() => parseSelectionValue(value), [value]);
   const protocolDefs = useMemo(() => listProtocolDefs(paramSchema), [paramSchema]);
@@ -177,22 +175,28 @@ export function SelectEFeaturesByProtocol({
       return;
     }
 
-    // selecting a protocol opens it, so its features are visible without a second click
+    // a protocol with no features extracts nothing and is reported as invalid, so selecting one
+    // takes its full feature set; removing what is not wanted is the easier direction
     setExpandedProtocols((current) => new Set(current).add(def.typeName));
-    commit([
-      ...selection.protocols,
-      autoFill ? makeFilledProtocolValue(def, amplitudesFor(def)) : makeProtocolValue(def),
-    ]);
+    commit([...selection.protocols, makeFilledProtocolValue(def, amplitudesFor(def))]);
   };
 
   /**
-   * Select every offered protocol with its full feature set. Unchecking leaves the current
-   * selection alone — it governs what filling *does*, and silently wiping the user's work
-   * would be a surprising way to undo it.
+   * Select-all / deselect-all over the offered protocols.
+   *
+   * Checked state is derived from the selection rather than remembered, so unchecking a single
+   * protocol below turns this off by itself instead of the two disagreeing.
    */
-  const toggleAutoFill = (enabled: boolean) => {
-    setAutoFill(enabled);
-    if (!enabled) return;
+  const allSelected =
+    offeredDefs.length > 0 && offeredDefs.every((def) => selectedByType.has(def.typeName));
+  const someSelected = offeredDefs.some((def) => selectedByType.has(def.typeName));
+
+  const toggleAll = (enabled: boolean) => {
+    if (!enabled) {
+      commit([]);
+      setExpandedProtocols(new Set());
+      return;
+    }
 
     commit(offeredDefs.map((def) => makeFilledProtocolValue(def, amplitudesFor(def))));
     setExpandedProtocols(new Set(offeredDefs.map((def) => def.typeName)));
@@ -218,8 +222,9 @@ export function SelectEFeaturesByProtocol({
 
       <Checkbox
         disabled={disabled || offeredDefs.length === 0}
-        checked={autoFill}
-        onChange={(event) => toggleAutoFill(event.target.checked)}
+        checked={allSelected}
+        indeterminate={someSelected && !allSelected}
+        onChange={(event) => toggleAll(event.target.checked)}
       >
         Automatically fill the features and protocols
       </Checkbox>
