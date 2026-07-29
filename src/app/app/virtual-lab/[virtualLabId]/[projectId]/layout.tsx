@@ -45,7 +45,7 @@ export default async function Layout({ children, params: promisedParams }: Props
   }
 
   if (data.is_waitlisted) {
-    const lab = await getVirtualLab({ id: virtualLabId }).catch(() => null);
+    const lab = await getVirtualLab({ id: virtualLabId });
     const startDate = lab?.course?.start_date ? new Date(lab.course.start_date) : null;
     const courseId = lab?.course?.id;
 
