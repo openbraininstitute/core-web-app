@@ -30,7 +30,7 @@ import {
   VoltageDuration,
   type VoltageDurationState,
 } from '@/features/scan-config/components/ui-elements/voltage-duration';
-import { isPlainObject } from '@/features/scan-config/components/utils';
+import { isPlainObject, numericSchemaBounds } from '@/features/scan-config/components/utils';
 import {
   resolveEntityQueryFilters,
   resolveNeuronFilterProperties,
@@ -129,36 +129,45 @@ export function UIElementRender({
           ),
         },
       },
-      ({ paramSchema }) => (
-        <ParameterSweep
-          k={k}
-          min={paramSchema.anyOf[0]?.minimum}
-          max={paramSchema.anyOf[0]?.maximum}
-          exclusiveMin={paramSchema.anyOf[0]?.exclusiveMinimum}
-          exclusiveMax={paramSchema.anyOf[0]?.exclusiveMaximum}
-          disabled={disabled}
-          value={value as number | null | number[]}
-          onChange={(value) => {
-            setState({ ...state, [k]: value });
-          }}
-        />
-      )
+      ({ paramSchema }) => {
+        const bounds = numericSchemaBounds(paramSchema);
+        return (
+          <ParameterSweep
+            k={k}
+            min={bounds.min}
+            max={bounds.max}
+            exclusiveMin={bounds.exclusiveMin}
+            exclusiveMax={bounds.exclusiveMax}
+            // a plain `float` field has no array branch; offering a sweep would build a list the
+            // schema rejects
+            allowMultiple={bounds.allowMultiple}
+            disabled={disabled}
+            value={value as number | null | number[]}
+            onChange={(value) => {
+              setState({ ...state, [k]: value });
+            }}
+          />
+        );
+      }
     )
     .with(
       { paramSchema: { ui_element: ScanConfigUIElementDict.FloatOptional } },
-      ({ paramSchema }) => (
-        <FloatOptional
-          min={paramSchema.anyOf[0]?.minimum}
-          max={paramSchema.anyOf[0]?.maximum}
-          exclusiveMin={paramSchema.anyOf[0]?.exclusiveMinimum}
-          exclusiveMax={paramSchema.anyOf[0]?.exclusiveMaximum}
-          disabled={disabled}
-          value={typeof value === 'number' ? value : null}
-          onChange={(next) => {
-            setState({ ...state, [k]: next });
-          }}
-        />
-      )
+      ({ paramSchema }) => {
+        const bounds = numericSchemaBounds(paramSchema);
+        return (
+          <FloatOptional
+            min={bounds.min}
+            max={bounds.max}
+            exclusiveMin={bounds.exclusiveMin}
+            exclusiveMax={bounds.exclusiveMax}
+            disabled={disabled}
+            value={typeof value === 'number' ? value : null}
+            onChange={(next) => {
+              setState({ ...state, [k]: next });
+            }}
+          />
+        );
+      }
     )
     .with(
       { paramSchema: { ui_element: ScanConfigUIElementDict.SelectEFeaturesByProtocol } },
@@ -172,6 +181,8 @@ export function UIElementRender({
           schema={schema}
           config={config}
           disabled={disabled}
+          entity={entity}
+          errorPathPrefix={errorPathPrefix}
           // the shared renderer is defined in this module; passing it down keeps the widget
           // from importing its own barrel
           renderField={({
