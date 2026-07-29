@@ -96,6 +96,7 @@ export interface IProject {
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
   virtual_lab_id: string;
+  is_waitlisted: boolean;
 }
 
 export interface IProjectExpandedResponse extends IProject, IProjectExtra {

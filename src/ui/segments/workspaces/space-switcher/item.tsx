@@ -7,7 +7,7 @@ import {
   RiHome8Line,
   RiSettings3Line,
 } from '@remixicon/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -133,30 +133,41 @@ export function Item({
   };
 
   const config = useConfig();
+  const queryClient = useQueryClient();
+  const [activationError, setActivationError] = useState<Error | null>(null);
+  if (activationError) throw activationError;
   const courseStartDate = lab.course?.start_date ? new Date(lab.course.start_date) : null;
   const courseNotStarted = courseStartDate !== null && courseStartDate > new Date();
-  const courseStarted = courseStartDate !== null && !courseNotStarted;
 
-  const [enrolmentActivated, setEnrolmentActivated] = useState(false);
-  const activateCalledRef = useRef(false);
+  const activatingRef = useRef(false);
 
-  useEffect(() => {
-    const courseId = lab.course?.id;
-    if (!courseId || !courseStarted || activateCalledRef.current) return;
-    activateCalledRef.current = true;
+  const activateWaitlistedProject = useCallback(
+    (onSuccess: () => void) => {
+      const courseId = lab.course?.id;
+      if (!courseId || activatingRef.current) return;
+      activatingRef.current = true;
 
-    authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/${courseId}/enrolment/activate`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-    })
-      .then(() => setEnrolmentActivated(true))
-      .catch(() => {});
-  }, [courseStarted, lab.course?.id, config.VIRTUAL_LAB_API_URL]);
-
-  // projects are disabled when:
-  // - course exists and hasn't started yet, OR
-  // - course exists and has started but activate hasn't resolved yet
-  const projectsDisabled = courseStartDate !== null && (courseNotStarted || !enrolmentActivated);
+      authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/${courseId}/enrolment/activate`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: keyBuilder.membership() });
+          queryClient.invalidateQueries({
+            queryKey: keyBuilder.listWorkspaceProjects({
+              virtualLabId: lab.id,
+              filter: { order_by: 'updated_at', order_direction: 'desc' },
+            }),
+          });
+          onSuccess();
+        })
+        .catch(() => {
+          activatingRef.current = false;
+          setActivationError(new Error('An error occurred'));
+        });
+    },
+    [config.VIRTUAL_LAB_API_URL, lab.course?.id, lab.id, queryClient]
+  );
 
   const projectRows = projects?.data ?? [];
   const hasProjects = projectRows.length > 0;
@@ -303,6 +314,8 @@ export function Item({
               projectRows.map((project, projectIndex) => {
                 const isProjectActive = project.id === activeProjectId;
                 const isProjectSelected = project.id === selectedProjectId;
+                const isWaitlisted = project.is_waitlisted;
+                const isDisabled = courseNotStarted || isWaitlisted;
                 return (
                   <motion.div
                     key={project.id}
@@ -317,27 +330,28 @@ export function Item({
                       rounded
                       size="md"
                       variant="outline"
-                      disabled={projectsDisabled}
+                      disabled={isDisabled}
                       className={cn(
                         'w-full justify-start bg-white! border shadow-none border-gray-200',
-                        projectsDisabled
+                        isDisabled
                           ? 'cursor-not-allowed opacity-40 hover:bg-white!'
                           : 'hover:bg-gray-100!',
                         {
                           'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
-                            isProjectActive && !projectsDisabled,
+                            isProjectActive && !isDisabled,
                         },
                         { 'border-3! border-gray-200! bg-gray-50!': isProjectSelected }
                       )}
                       title={project.name}
-                      onClick={() =>
-                        projectsDisabled
-                          ? undefined
-                          : onProjectClick({
-                              virtualLabId: lab.id,
-                              project,
-                            })
-                      }
+                      onClick={() => {
+                        if (isWaitlisted && !courseNotStarted) {
+                          activateWaitlistedProject(() =>
+                            onProjectClick({ virtualLabId: lab.id, project })
+                          );
+                        } else {
+                          onProjectClick({ virtualLabId: lab.id, project });
+                        }
+                      }}
                       id={`project-item-${project.id}`}
                       data-testid="project-item-selector"
                     >
