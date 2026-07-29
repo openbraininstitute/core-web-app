@@ -64,14 +64,20 @@ export function ScanParams({
   configId,
   color,
 }: {
-  scanParams: Record<string, unknown>;
+  /**
+   * Undefined for a config registered without scan parameters — a single-coordinate run has
+   * nothing to sweep, and obi-one is free to leave `meta` empty for those.
+   */
+  scanParams: Record<string, unknown> | undefined;
   color: string;
   configId?: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
 
+  const params = useMemo(() => scanParams ?? {}, [scanParams]);
+
   // flatten every model ref across all model-valued params into one batched fetch
-  const refs = useMemo(() => Object.values(scanParams).flatMap(refsFromValue), [scanParams]);
+  const refs = useMemo(() => Object.values(params).flatMap(refsFromValue), [params]);
 
   const { entities } = useResolvedModelIdentifierEntities({
     refs,
@@ -83,7 +89,8 @@ export function ScanParams({
     [entities]
   );
 
-  const isSingleParam = Object.keys(scanParams).length === 1;
+  const paramKeys = Object.keys(params);
+  const isSingleParam = paramKeys.length === 1;
 
   return (
     <div
@@ -95,7 +102,7 @@ export function ScanParams({
         isSingleParam ? 'grid-cols-1' : 'grid-cols-2'
       )}
     >
-      {Object.entries(scanParams).map(([paramKey, paramValue]) => {
+      {Object.entries(params).map(([paramKey, paramValue]) => {
         const refs = refsFromValue(paramValue);
         const filterEntries = isPropertyFilterParam(paramValue)
           ? Object.entries(paramValue.filter_dict)
