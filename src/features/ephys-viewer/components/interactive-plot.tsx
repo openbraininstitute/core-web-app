@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { usePlotRevision } from '@/features/ephys-viewer/hooks/use-plot-revision';
 import { useSweepSeries } from '@/features/ephys-viewer/hooks/use-sweep-series';
 import { type SweepTrace, toPlotTraces, yAxisTitle } from '@/features/ephys-viewer/plot-traces';
 import { RecordingType } from '@/features/ephys-viewer/trace-index';
@@ -77,6 +78,10 @@ export default function InteractivePlot({
     return rawData.filter((data) => selectedSweeps.includes(data.sweepName));
   }, [rawData, selectedSweeps, previewSweep]);
 
+  // A unit switch and a zoom read landing both change the points without changing the layout,
+  // and the container asks for a redraw of its own through `plotRevision`.
+  const dataRevision = usePlotRevision(plotData, plotRevision);
+
   const handleClick = ({ data, curveNumber }: Readonly<Plotly.LegendClickEvent>): boolean => {
     const { sweepName: value } = data[curveNumber] as unknown as SweepTrace;
     const isSelected = selectedSweeps.includes(value);
@@ -111,7 +116,7 @@ export default function InteractivePlot({
       }}
       layout={{
         title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
-        datarevision: plotRevision,
+        datarevision: dataRevision,
         xaxis: {
           title: {
             font,

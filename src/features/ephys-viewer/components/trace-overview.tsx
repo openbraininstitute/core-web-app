@@ -8,6 +8,7 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { CHART_LINE_COLOR, OVERVIEW_PLOT_POINTS } from '@/features/ephys-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { usePlotRevision } from '@/features/ephys-viewer/hooks/use-plot-revision';
 import { useSweepSeries } from '@/features/ephys-viewer/hooks/use-sweep-series';
 import {
   ephysHeadingClass,
@@ -85,6 +86,10 @@ function TraceThumbnail({
 }) {
   const data = usePlotData(recording, recordingType);
 
+  // Plotly stops comparing the traces once a `datarevision` is set, so the revision has to move
+  // with them — a later read of the same repetition would otherwise leave the first one drawn.
+  const dataRevision = usePlotRevision(data, plotRevision);
+
   const yTitle =
     yAxisTitle(recording, {
       currentUnit: THUMBNAIL_CURRENT_UNIT,
@@ -92,7 +97,7 @@ function TraceThumbnail({
     }) ?? '';
 
   const { layout, config } = useOverviewPlotConfig({
-    datarevision: plotRevision,
+    datarevision: dataRevision,
     yTitle,
     xTitle: 'Time (ms)',
   });
