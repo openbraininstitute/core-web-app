@@ -67,6 +67,7 @@ export function resolveHostNeuronOpacity(options: {
 
 /** Exclusive right-column preview modes (entity picker vs model surface). */
 export const RightPreviewModeDict = {
+  Settings: 'settings',
   EntityPreview: 'entity-preview',
   IonChannel: 'ion-channel',
   CircuitModel: 'circuit-model',
@@ -81,23 +82,28 @@ export type TRightPreviewMode = (typeof RightPreviewModeDict)[keyof typeof Right
  * Entity mini-detail wins over model previews so browse selection stays visible.
  */
 export function resolveRightPreviewMode(options: {
+  settingsPanelActive?: boolean;
   entityPreviewActive: boolean;
   activity: TScanConfigActivity;
   entityType: string;
   hasEntity: boolean;
 }): TRightPreviewMode {
-  return match(options)
-    .with({ entityPreviewActive: true }, () => RightPreviewModeDict.EntityPreview)
-    .with(
-      {
-        activity: ScanConfigActivity.Simulate,
-        entityType: ExtendedEntitiesTypeDict.IonChannelModel,
-      },
-      () => RightPreviewModeDict.IonChannel
-    )
-    .when(
-      (state) => shouldShowCircuitModelPreview(state),
-      () => RightPreviewModeDict.CircuitModel
-    )
-    .otherwise(() => RightPreviewModeDict.Empty);
+  return (
+    match(options)
+      // an explicitly opened settings form outranks any preview: it is the thing the user just asked for
+      .with({ settingsPanelActive: true }, () => RightPreviewModeDict.Settings)
+      .with({ entityPreviewActive: true }, () => RightPreviewModeDict.EntityPreview)
+      .with(
+        {
+          activity: ScanConfigActivity.Simulate,
+          entityType: ExtendedEntitiesTypeDict.IonChannelModel,
+        },
+        () => RightPreviewModeDict.IonChannel
+      )
+      .when(
+        (state) => shouldShowCircuitModelPreview(state),
+        () => RightPreviewModeDict.CircuitModel
+      )
+      .otherwise(() => RightPreviewModeDict.Empty)
+  );
 }

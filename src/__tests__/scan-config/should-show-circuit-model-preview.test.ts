@@ -178,6 +178,7 @@ describe('resolveHostNeuronOpacity', () => {
 describe('RightPreviewModeDict', () => {
   it('keeps stable string values used by the right-column matchers', () => {
     expect(RightPreviewModeDict).toEqual({
+      Settings: 'settings',
       EntityPreview: 'entity-preview',
       IonChannel: 'ion-channel',
       CircuitModel: 'circuit-model',
