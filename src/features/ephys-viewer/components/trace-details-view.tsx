@@ -62,7 +62,15 @@ function CellDetails({
 
   const protocols = useMemo(() => getProtocols(index, cellId), [index, cellId]);
 
-  const [selectedProtocol, setSelectedDataSet] = useState<string>(defaultProtocol || protocols[0]);
+  // `defaultProtocol` may come from a caller that knows the eCode by a different casing (or one
+  // this cell does not have at all), so it is resolved against what the trace really contains
+  // instead of being trusted verbatim
+  const [selectedProtocol, setSelectedDataSet] = useState<string>(() => {
+    const match =
+      defaultProtocol &&
+      protocols.find((name) => name.toLowerCase() === defaultProtocol.toLowerCase());
+    return match || protocols[0];
+  });
 
   const [selectedRepetition, setSelectedRepetition] = useState<string>(
     defaultRepetition || getRepetitions(index, cellId, selectedProtocol)[0]
