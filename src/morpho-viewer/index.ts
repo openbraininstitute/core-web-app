@@ -11,8 +11,6 @@ export {
   tgdFullscreenToggle,
 } from '@openbraininstitute/morphoviewer';
 
-export * from './sdf';
-
 export type {
   ColoringType,
   MorphoViewerElectrodeInjection,

@@ -5,20 +5,26 @@ import {
   type MorphoViewerSmallCircuitCell,
   type MorphoViewerSmallCircuitCellData,
   MorphoViewerTreeItemType,
-  sdfCapsuleWithNormal,
 } from '@/morpho-viewer';
-import { center, distanceSquare, scale, subtract, type Vec3 } from '@/morpho-viewer/sdf/_common';
 import GenericEvent from '@/util/generic-event';
 import { assertType } from '@/util/type-guards';
 import { logError } from '@/utils/logger';
 
 import { CircuitConfig } from './circuit-config';
 import { Report } from './report';
+import {
+  type Capsule,
+  createSomaSdf,
+  isSomaSection,
+  projectOntoSoma,
+  type SomaSdf,
+} from './soma-projection';
 import { convertSwcToTree } from './swc';
 import { transform } from './transform';
 
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
+import type { Vec3 } from './sdf';
 
 export class CircuitLoader {
   public readonly report = new Report();
@@ -90,9 +96,6 @@ export class CircuitLoader {
     try {
       const morphologyFilename = `${this.morphologiesDir}/${id}.swc`;
       const morphology = await this.loadText(morphologyFilename);
-      console.log(`Cell id: "${id}"`);
-      console.log('File name:', morphologyFilename);
-      console.log(morphology);
       const tree = convertSwcToTree(morphology);
       const cell: MorphoViewerSmallCircuitCellData = { type: 'tree', data: tree };
       return cell;
@@ -155,10 +158,15 @@ export class CircuitLoader {
   }
 
   /**
-   * Retrieve afferent synapses from the SONATA file and return an array
-   * with elements beging: a Float32Array of coordinates [x, y, z, ...] for each synapse.
+   * Retrieve afferent synapses from the SONATA file, one entry per edge
+   * population, each holding a flat `[x, y, z, ...]` array of world coordinates.
    *
-   * @see https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html?__cf_chl_f_tk=8LaFE6S6ks0.NQd7i94pJOFTxRY348hcHmlSApXEXlM-1783337207-1.0.1.1-tyiZ9zw5F15QapS7mvqX6n9W5epT6n7_Q5P0BREj_9Q#fields-for-edges
+   * Positions come from `afferent_surface_*`, which is already on the neurite
+   * surface. Soma synapses are the exception: they are computed against a
+   * spherical soma while SWC stores a cylinder stack, so they get projected
+   * onto that stack ({@link projectOntoSoma}) or they float free of the mesh.
+   *
+   * @see https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html#fields-for-edges
    */
   private async getAfferentSynapses(): Promise<
     Array<{ coordinates: Float32Array; populationName: string }>
@@ -182,35 +190,28 @@ export class CircuitLoader {
         const ds = (name: string) =>
           this.getDataset(edgesFile, `edges/${populationName}/${name}`, assertArrayNumber);
         const arrXs = ds('0/afferent_surface_x');
-        const arrXc = ds('0/afferent_center_x');
         const arrYs = ds('0/afferent_surface_y');
-        const arrYc = ds('0/afferent_center_y');
         const arrZs = ds('0/afferent_surface_z');
-        const arrZc = ds('0/afferent_center_z');
-        const arrId = ds('0/afferent_section_id');
+        const arrSectionId = ds('0/afferent_section_id');
+        // Unlike the `afferent_*` datasets, this one is not nested under `0/`.
         const arrTarget = ds('target_node_id');
-        const coordinates = new Float32Array(arrXs.length * 3);
-        for (let i = 0; i < arrXs.length; i++) {
-          // Somas have always a section id equal to zero.
-          const isSoma = arrId[i] === 0;
-          if (!isSoma) continue;
 
-          const [x, y, z] = await this.stickSynapsesToSoma(
-            isSoma,
-            arrXs[i],
-            arrYs[i],
-            arrZs[i],
-            arrXc[i],
-            arrYc[i],
-            arrZc[i],
-            arrTarget[i]
-          );
+        const somaSdfs = await this.createSomaSDFs(arrSectionId, arrTarget);
+
+        const coordinates = new Float32Array(arrXs.length * 3);
+        let somaCount = 0;
+        for (let i = 0; i < arrXs.length; i++) {
+          const surface: Vec3 = [arrXs[i], arrYs[i], arrZs[i]];
+          const sdf = isSomaSection(arrSectionId[i]) ? somaSdfs.get(arrTarget[i]) : undefined;
+          if (sdf) somaCount++;
+          const [x, y, z] = sdf ? projectOntoSoma(surface, sdf) : surface;
           coordinates[i * 3] = x;
           coordinates[i * 3 + 1] = y;
           coordinates[i * 3 + 2] = z;
-          console.log('🐞 [circuit-loader@211] x,y,z =', x, y, z); // @FIXME: Remove this line written on 2026-07-07 at 17:16
         }
-        report.logTask(`Loaded ${arrXs.length} afferent synapses for "${populationName}".`);
+        report.logTask(
+          `Loaded ${arrXs.length} afferent synapses for "${populationName}" (${somaCount} projected onto a soma).`
+        );
         results.push({ coordinates, populationName });
       }
     }
@@ -218,60 +219,53 @@ export class CircuitLoader {
   }
 
   /**
+   * Build one soma SDF per *distinct* target cell that carries soma synapses.
    *
-   * @param x
-   * @param y
-   * @param z
-   * @param type
-   * @returns
+   * Why up front: a cell's soma geometry is identical for all of its synapses,
+   * and a circuit typically has a handful of cells against thousands of
+   * synapses. Building per synapse would re-walk the morphology tree every
+   * time and make the projection loop quadratic.
    */
-  private async stickSynapsesToSoma(
-    isSoma: boolean,
-    xSurface: number,
-    ySurface: number,
-    zSurface: number,
-    xCenter: number,
-    yCenter: number,
-    zCenter: number,
-    cellIndex: number
-  ): Promise<[number, number, number]> {
-    if (!isSoma) return [xSurface, ySurface, zSurface];
-
-    const surface: Vec3 = [xSurface, ySurface, zSurface];
-    const sdf = await this.createSomaSDF(cellIndex);
-    const { distance, normal } = sdf(surface);
-    return subtract(surface, scale(normal, distance));
+  private async createSomaSDFs(
+    sectionIds: number[],
+    targetNodeIds: number[]
+  ): Promise<Map<number, SomaSdf>> {
+    const sdfs = new Map<number, SomaSdf>();
+    const cellIndices = new Set<number>();
+    for (let i = 0; i < sectionIds.length; i++) {
+      if (isSomaSection(sectionIds[i])) cellIndices.add(targetNodeIds[i]);
+    }
+    for (const cellIndex of cellIndices) {
+      const sdf = await this.createSomaSDF(cellIndex);
+      if (sdf) sdfs.set(cellIndex, sdf);
+    }
+    return sdfs;
   }
 
-  private async createSomaSDF(
-    cellIndex: number
-  ): Promise<(p: Vec3) => { distance: number; normal: Vec3 }> {
+  /**
+   * Approximate a cell's soma as the stack of capsules its SWC points describe,
+   * and return the signed distance to that surface.
+   *
+   * Returns `null` when the soma can't be reconstructed, so callers fall back
+   * to the raw SONATA coordinates rather than losing the synapse entirely.
+   */
+  private async createSomaSDF(cellIndex: number): Promise<SomaSdf | null> {
+    const { report } = this;
+    // `target_node_id` indexes the target population; `circuit` holds the
+    // selected node set. Those coincide for the single-cell circuits this
+    // loader serves, but not in general — hence the lookup guard.
     const cellDef = this.circuit[cellIndex];
     if (!cellDef) {
-      throw new Error(`Cell #${cellIndex} has no morphology!`);
+      report.logTask(
+        `No morphology for cell #${cellIndex}; leaving its soma synapses unprojected.`
+      );
+      return null;
     }
 
-    const morphologyId = cellDef.id;
-    const capsules: Array<
-      [
-        x0: number,
-        y0: number,
-        z0: number,
-        r0: number,
-        x1: number,
-        y1: number,
-        z1: number,
-        r1: number,
-      ]
-    > = [];
-    const cell = await this.loadCell(morphologyId);
+    const cell = await this.loadCell(cellDef.id);
+    const capsules: Capsule[] = [];
     const fringe =
       cell?.data.roots.filter((item) => item.type === MorphoViewerTreeItemType.Soma) ?? [];
-    /**
-     * For some reasons, this value makes the projection work best.
-     * We need to investigate this further, but later.
-     */
-    const RADIUS_MULTIPLIER = 1; // 0.75;
     while (fringe.length > 0) {
       const item = fringe.pop();
       if (!item || item.type !== MorphoViewerTreeItemType.Soma || !item.children) continue;
@@ -282,35 +276,17 @@ export class CircuitLoader {
         fringe.push(child);
         capsules.push([
           ...transform(item.x, item.y, item.z, cellDef),
-          item.radius * RADIUS_MULTIPLIER,
+          item.radius,
           ...transform(child.x, child.y, child.z, cellDef),
-          child.radius * RADIUS_MULTIPLIER,
+          child.radius,
         ]);
       }
     }
-    const sdf = (
-      p: Vec3,
-      capsule: [number, number, number, number, number, number, number, number]
-    ) => {
-      const [x0, y0, z0, r0, x1, y1, z1, r1] = capsule;
-      const a: Vec3 = [x0, y0, z0];
-      const b: Vec3 = [x1, y1, z1];
-      return sdfCapsuleWithNormal(p, a, b, r0, r1);
-    };
-    return capsules.length === 0
-      ? (_p: Vec3) => ({ distance: 0, normal: [0, 0, 0] })
-      : ([x, y, z]: Vec3) => {
-          const p: Vec3 = [x, y, z];
-          const [first, ...rest] = capsules;
-          let result = sdf(p, first);
-          for (const item of rest) {
-            const candidate = sdf(p, item);
-            if (candidate.distance < result.distance) {
-              result = candidate;
-            }
-          }
-          return result;
-        };
+    const sdf = createSomaSdf(capsules);
+    if (!sdf) {
+      report.logTask(`Cell #${cellIndex} has no soma segments; leaving its synapses unprojected.`);
+    }
+    return sdf;
   }
 
   private async getMorphoViewerSmallCircuitCells(

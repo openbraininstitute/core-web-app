@@ -1,12 +1,15 @@
 import { useCallback, useMemo } from 'react';
 
-import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
+import {
+  categoricalColor,
+  DEFAULT_NEURON_COLOR,
+} from '@/features/scan-config/components/color-by/palette';
 import { CircuitLoader } from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
-import type { SmallCircuitSource } from './types';
+import type { SmallCircuitSource, SmallCircuitSynapseGroup } from './types';
 
 type Options = {
   circuit: ICircuit;
@@ -45,6 +48,15 @@ export function useSonataAssetSource({
     }));
   }, [loaded, loader, colorsByNode, defaultColor]);
 
+  // One colour per edge population, from the colourblind-safe categorical set.
+  const synapses: SmallCircuitSynapseGroup[] = useMemo(() => {
+    if (!loaded) return [];
+    return loader.synapses.map(({ coordinates }, index) => ({
+      color: categoricalColor(index),
+      coordinates,
+    }));
+  }, [loaded, loader]);
+
   const loadCell = useCallback((cellId: string) => loader.loadCell(cellId), [loader]);
 
   const error = useMemo(() => {
@@ -58,5 +70,6 @@ export function useSonataAssetSource({
     loadCell,
     isLoading: !loaded && !hasError,
     error,
+    synapses,
   };
 }

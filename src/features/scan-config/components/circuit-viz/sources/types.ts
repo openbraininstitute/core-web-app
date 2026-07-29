@@ -1,7 +1,16 @@
 import type {
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
+  MorphoViewerSmallCircuitProps,
 } from '@/morpho-viewer';
+
+/**
+ * One coloured synapse point cloud — flat `[x, y, z, …]` world coordinates.
+ * Derived from the package prop so the contract can't drift from the viewer.
+ */
+export type SmallCircuitSynapseGroup = NonNullable<
+  MorphoViewerSmallCircuitProps['synapses']
+>[number];
 
 /**
  * Normalized data contract for {@link MorphoViewerSmallCircuit}.
@@ -14,6 +23,11 @@ export type SmallCircuitSource = {
   loadCell: (cellId: string) => Promise<MorphoViewerSmallCircuitCellData | null>;
   isLoading: boolean;
   error: Error | null;
+  /**
+   * Afferent synapses, one group per edge population. Optional: only the SONATA
+   * source reads edge files — OBI-One `/circuit/viz` returns nodes only.
+   */
+  synapses?: SmallCircuitSynapseGroup[];
 };
 
 /** Strategies that can satisfy {@link SmallCircuitSource}. */
