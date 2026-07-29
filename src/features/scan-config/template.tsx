@@ -228,7 +228,17 @@ function ScanConfigTemplateContent({
       <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
       <div id="template-content" className="flex-1 min-h-0">
         {isConfigurationTab && browseOverlay ? (
-          <div id="scan-config-model-selection-overlay" className="h-[calc(100%-0.5rem)] min-h-0">
+          <div
+            id="scan-config-model-selection-overlay"
+            // the picker replaces the whole main area — fade + slight rise on open
+            // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
+            // reduced motion keeps the fade, drops the movement
+            className={cn(
+              'h-[calc(100%-0.5rem)] min-h-0',
+              'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
+              'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
+            )}
+          >
             <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
               {browseOverlay}
             </Suspense>

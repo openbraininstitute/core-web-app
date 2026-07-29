@@ -100,6 +100,8 @@ export default function Block({
               if (isType(blockElementSchema)) return null;
               const isBooleanInput =
                 blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
+              const isPillField =
+                blockElementSchema.ui_element === ScanConfigUIElementDict.ModelSelectorSingle;
 
               const value = state[k];
               const fieldBorderClass = getFieldDiffClass(k);
@@ -131,7 +133,8 @@ export default function Block({
                         <div className="mb-1 w-full min-w-0 max-w-full">
                           <div
                             className={cn(
-                              'w-full min-w-0 max-w-full rounded-lg border',
+                              'w-full min-w-0 max-w-full border',
+                              isPillField ? 'rounded-full' : 'rounded-lg',
                               fieldBorderClass,
                               !fieldBorderClass && 'border-transparent'
                             )}

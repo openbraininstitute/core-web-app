@@ -13,16 +13,10 @@ import {
   type SchemaName,
   type TBlockElement,
 } from '@/features/scan-config/types';
-
-const ScanConfigFromIdType = {
-  CellMorphologyFromID: 'CellMorphologyFromID',
-  MEModelFromID: 'MEModelFromID',
-  CircuitFromID: 'CircuitFromID',
-  EMCellMeshFromID: 'EMCellMeshFromID',
-  MEModelWithSynapsesCircuitFromID: 'MEModelWithSynapsesCircuitFromID',
-} as const;
-
-type TScanConfigFromIdType = (typeof ScanConfigFromIdType)[keyof typeof ScanConfigFromIdType];
+import {
+  ScanConfigFromIdType,
+  type TScanConfigFromIdType,
+} from '@/features/scan-config/workflow/scan-config-from-id-type';
 
 const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.CellMorphologyFromID]: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -31,6 +25,9 @@ const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.EMCellMeshFromID]: ExtendedEntitiesTypeDict.EMCellMesh,
   [ScanConfigFromIdType.MEModelWithSynapsesCircuitFromID]:
     ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+  [ScanConfigFromIdType.IonChannelModelFromID]: ExtendedEntitiesTypeDict.IonChannelModel,
+  [ScanConfigFromIdType.SimulatableExtracellularRecordingArrayFromID]:
+    ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
 } as const satisfies Record<TScanConfigFromIdType, TExtendedEntitiesTypeDict>;
 
 function isScanConfigFromIdType(value: string): value is TScanConfigFromIdType {

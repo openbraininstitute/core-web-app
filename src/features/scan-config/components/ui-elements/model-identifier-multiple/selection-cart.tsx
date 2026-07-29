@@ -109,33 +109,90 @@ export function ModelIdentifierSelectionCart({
         </div>
       </div>
 
-      <div className="mt-auto flex w-full min-w-0 flex-col gap-2 px-2">
-        <Button
-          type="button"
-          rounded
-          variant="success"
-          size="responsive"
-          disabled={disabled || confirmDisabled || selectedCount === 0}
-          className="h-12 w-full justify-between pl-5 pr-1.5! text-base font-semibold shadow-skmp-s"
-          onClick={onConfirm}
-        >
-          <span>Confirm {selectedCount > 0 ? `(${selectedCount})` : ''}</span>
-          <span className="flex p-2 items-center justify-center rounded-full bg-white/20">
-            <CheckOutlined className="text-base" />
-          </span>
-        </Button>
-        <Button
-          rounded
-          type="button"
-          variant="ghost"
-          size="responsive"
+      <div className="mt-auto w-full min-w-0 px-2">
+        <SelectionConfirmActions
+          selectedCount={selectedCount}
           disabled={disabled}
-          onClick={onCancel}
-          className="py-1 text-center text-sm text-primary-9 transition-colors hover:text-primary-9/80 disabled:opacity-50"
-        >
-          Cancel
-        </Button>
+          confirmDisabled={confirmDisabled}
+          onConfirm={onConfirm}
+          onCancel={onCancel}
+        />
       </div>
+    </div>
+  );
+}
+
+type TSelectionConfirmActionsProps = {
+  /** staged entity count; drives the `(n)` suffix and the empty-selection guard */
+  selectedCount: number;
+  /** hide the `(n)` suffix where the field only ever takes one entity */
+  showCount?: boolean;
+  disabled?: boolean;
+  confirmDisabled?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  /** `stacked` fills the cart footer; `inline` sits in the cart-less action bar */
+  layout?: 'stacked' | 'inline';
+  className?: string;
+};
+
+/**
+ * confirm / cancel pair for the browse overlay
+ *
+ * shared so the cart footer (multi-select) and the inline action bar
+ * (single-select, or multi-select beside the mini detail view) stay identical
+ */
+export function SelectionConfirmActions({
+  selectedCount,
+  showCount = true,
+  disabled,
+  confirmDisabled,
+  onConfirm,
+  onCancel,
+  layout = 'stacked',
+  className,
+}: TSelectionConfirmActionsProps) {
+  const isInline = layout === 'inline';
+
+  return (
+    <div
+      className={cn(
+        'flex min-w-0',
+        isInline ? 'flex-row-reverse items-center gap-2' : 'w-full flex-col gap-2',
+        className
+      )}
+    >
+      <Button
+        type="button"
+        rounded
+        variant="success"
+        size="responsive"
+        disabled={disabled || confirmDisabled || selectedCount === 0}
+        className={cn(
+          'h-12 justify-between pl-5 pr-1.5! text-base font-semibold shadow-skmp-s',
+          // when nothing is selected the button reads as disabled (gray), matching
+          // the app's other disabled primary actions — not the always-green success
+          'disabled:bg-neutral-2 disabled:text-neutral-4! disabled:shadow-none',
+          isInline ? 'min-w-44' : 'w-full'
+        )}
+        onClick={onConfirm}
+      >
+        <span>Confirm {showCount && selectedCount > 0 ? `(${selectedCount})` : ''}</span>
+        <span className="flex p-2 items-center justify-center rounded-full bg-white/20">
+          <CheckOutlined className="text-base" />
+        </span>
+      </Button>
+      <Button
+        rounded
+        type="button"
+        variant="ghost"
+        size="responsive"
+        disabled={disabled}
+        onClick={onCancel}
+        className="py-1 text-center text-sm text-primary-9 transition-colors hover:text-primary-9/80 disabled:opacity-50"
+      >
+        Cancel
+      </Button>
     </div>
   );
 }
