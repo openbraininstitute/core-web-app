@@ -21,10 +21,11 @@ import { useTraceContext } from '@/features/ephys-viewer/trace-context';
 import {
   getCellIds,
   getProtocols,
-  getRecordings,
+  getRecordingSlots,
   getRepetitions,
   getSweeps,
   hasCurrentRecordings,
+  isMultiRecordingLayout,
 } from '@/features/ephys-viewer/trace-index';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import { cn } from '@/utils/css-class';
@@ -107,16 +108,11 @@ function CellDetails({
   const awaitingFirstSeries = loading && !data;
 
   const plots = useMemo(
-    () =>
-      index.recordingTypes.flatMap((recordingType) =>
-        getRecordings(index, cellId, selectedProtocol, selectedRepetition, recordingType).map(
-          (_, recordingIndex) => ({ recordingType, recordingIndex })
-        )
-      ),
+    () => getRecordingSlots(index, cellId, selectedProtocol, selectedRepetition),
     [index, cellId, selectedProtocol, selectedRepetition]
   );
 
-  const hasMultipleRecordings = plots.length > 2;
+  const hasMultipleRecordings = isMultiRecordingLayout(plots);
 
   const showCurrentUnitToggle = useMemo(
     () => hasCurrentRecordings(index, cellId, selectedProtocol, selectedRepetition),

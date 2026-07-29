@@ -106,11 +106,11 @@ export type OpenTraceRequest = {
   headers: Record<string, string>;
 };
 
-export function findCell(index: TraceIndex, cellId: string): TraceCellIndex | undefined {
+function findCell(index: TraceIndex, cellId: string): TraceCellIndex | undefined {
   return index.cells.find((cell) => cell.id === cellId);
 }
 
-export function findProtocol(
+function findProtocol(
   index: TraceIndex,
   cellId: string,
   protocol: string
@@ -156,6 +156,40 @@ export function getRecordings(
   recordingType: RecordingType
 ): RecordingMeta[] {
   return findRepetition(index, cellId, protocol, repetition)?.recordings[recordingType] ?? [];
+}
+
+/** One plot of a repetition: which recording type it draws, and which recording of that type. */
+export type RecordingSlot = {
+  recordingType: RecordingType;
+  recordingIndex: number;
+};
+
+/**
+ * Every plot a repetition is drawn as, in display order.
+ *
+ * The overview grid and the detail view lay the same set out differently but must agree on what
+ * is in it — a thumbnail without a matching detail plot is a tile that opens onto nothing.
+ */
+export function getRecordingSlots(
+  index: TraceIndex,
+  cellId: string,
+  protocol: string,
+  repetition: string
+): RecordingSlot[] {
+  return index.recordingTypes.flatMap((recordingType) =>
+    getRecordings(index, cellId, protocol, repetition, recordingType).map((_, recordingIndex) => ({
+      recordingType,
+      recordingIndex,
+    }))
+  );
+}
+
+/**
+ * Whether a repetition has more recordings than the stimulus/response pair both views lay out
+ * side by side. Past that they switch to a grid, so the threshold has to be the same in each.
+ */
+export function isMultiRecordingLayout(slots: RecordingSlot[]): boolean {
+  return slots.length > 2;
 }
 
 /** Does any recording of this repetition carry a current, i.e. should the pA/nA toggle show? */

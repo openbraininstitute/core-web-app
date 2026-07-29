@@ -1,7 +1,7 @@
 import { Select } from 'antd';
 import startCase from 'es-toolkit/compat/startCase';
 import Plotly from 'plotly.js-dist-min';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
@@ -14,21 +14,23 @@ import {
   ephysSectionLabelClass,
   ephysSelectClass,
 } from '@/features/ephys-viewer/label-styles';
-import { toPlotTraces } from '@/features/ephys-viewer/plot-traces';
+import { toPlotTraces, yAxisTitle } from '@/features/ephys-viewer/plot-traces';
 import { useTraceContext } from '@/features/ephys-viewer/trace-context';
 import {
   getCellIds,
   getProtocols,
-  getRecordings,
+  getRecordingSlots,
   getRepetitions,
   getSweeps,
+  isMultiRecordingLayout,
   RecordingType,
 } from '@/features/ephys-viewer/trace-index';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import { cn } from '@/utils/css-class';
 
 import type { PlotData } from 'plotly.js-dist-min';
-import type { RecordingSeries } from '@/features/ephys-viewer/trace-index';
+import type { RecordingSeries, RecordingSlot } from '@/features/ephys-viewer/trace-index';
+import type { CurrentUnit } from '@/util/explore-section/plotHelpers';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -64,16 +66,13 @@ interface TraceOverviewComponentProps {
   variant?: TViewVariant;
 }
 
-type Thumbnail = {
-  recordingType: RecordingType;
-  recordingIndex: number;
-  key: string;
-};
-
 const colorMap = {
   stimulus: '#ff0000',
   response: CHART_LINE_COLOR,
 };
+
+/** Thumbnails are too small for the detail view's pA/nA toggle to be legible on. */
+const THUMBNAIL_CURRENT_UNIT: CurrentUnit = 'pA';
 
 function TraceThumbnail({
   recording,
@@ -86,12 +85,11 @@ function TraceThumbnail({
 }) {
   const data = usePlotData(recording, recordingType);
 
-  const dataUnit = recording?.meta.unit ?? null;
-  const unitStr = dataUnit === 'amperes' ? 'pA' : 'mV';
   const yTitle =
-    dataUnit === 'amperes'
-      ? `${recording?.meta.label ?? 'Current'} (${unitStr})`
-      : `${startCase(recordingType)} (${unitStr})`;
+    yAxisTitle(recording, {
+      currentUnit: THUMBNAIL_CURRENT_UNIT,
+      voltageTitle: startCase(recordingType),
+    }) ?? '';
 
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
@@ -147,22 +145,17 @@ function RepetitionThumbnails({
   cellId: string;
   protocol: string;
   repetition: string;
-  thumbnails: Thumbnail[];
+  thumbnails: RecordingSlot[];
   hasMultipleRecordings: boolean;
 }) {
   const { index } = useTraceContext();
 
-  const { ref: setInViewRef, inView } = useInView({
+  // Read a repetition a screenful before it scrolls in, once.
+  const { ref, inView } = useInView({
     threshold: 0,
     triggerOnce: true,
     rootMargin: '1200px',
   });
-
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (ref.current) setInViewRef(ref.current);
-  }, [setInViewRef]);
 
   const sweeps = getSweeps(index, cellId, protocol, repetition);
 
@@ -187,9 +180,9 @@ function RepetitionThumbnails({
           : undefined
       }
     >
-      {thumbnails.map(({ recordingType, recordingIndex, key }) => (
+      {thumbnails.map(({ recordingType, recordingIndex }) => (
         <TraceThumbnailContainer
-          key={key}
+          key={`${recordingType}-${recordingIndex}`}
           recording={data?.[recordingType]?.[recordingIndex]}
           recordingType={recordingType}
           className={cn(
@@ -216,15 +209,8 @@ function ImageSetComponent({
   const repetitions = repetitionMap.get(protocol) ?? [];
 
   const content = repetitions.map((repetition) => {
-    const thumbnails = index.recordingTypes.flatMap((recordingType) =>
-      getRecordings(index, cellId, protocol, repetition, recordingType).map((_, i) => ({
-        recordingType,
-        recordingIndex: i,
-        key: `${recordingType}-${i}`,
-      }))
-    );
-
-    const hasMultipleRecordings = thumbnails.length > 2;
+    const thumbnails = getRecordingSlots(index, cellId, protocol, repetition);
+    const hasMultipleRecordings = isMultiRecordingLayout(thumbnails);
 
     return (
       <button

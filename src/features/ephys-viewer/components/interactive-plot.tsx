@@ -6,7 +6,7 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
 import { useSweepSeries } from '@/features/ephys-viewer/hooks/use-sweep-series';
-import { type SweepTrace, toPlotTraces } from '@/features/ephys-viewer/plot-traces';
+import { type SweepTrace, toPlotTraces, yAxisTitle } from '@/features/ephys-viewer/plot-traces';
 import { RecordingType } from '@/features/ephys-viewer/trace-index';
 import { type CurrentUnit, ensureCurrentUnit } from '@/util/explore-section/plotHelpers';
 
@@ -61,22 +61,21 @@ export default function InteractivePlot({
 
   const rawData = usePlotTraces(active, colorMap, currentUnit);
 
-  const selectedResponse: Partial<PlotData>[] = useMemo(
-    () => rawData.filter((data) => selectedSweeps.includes(data.sweepName)),
-    [rawData, selectedSweeps]
-  );
+  // Previewing dims everything but the hovered and selected sweeps; otherwise a selection
+  // narrows to it, and an empty selection means all of them.
+  const plotData: Partial<PlotData>[] = useMemo(() => {
+    if (previewSweep) {
+      return rawData.map((data) => ({
+        ...data,
+        opacity:
+          data.sweepName === previewSweep || selectedSweeps.includes(data.sweepName) ? 1 : 0.05,
+      }));
+    }
 
-  const previewDataResponse: Partial<PlotData>[] = useMemo(
-    () =>
-      rawData.map((data) => {
-        const isSelected = selectedSweeps.includes(data.sweepName);
-        const isPreview = data.sweepName === previewSweep;
-        const opacity = isPreview || isSelected ? 1 : 0.05;
+    if (!selectedSweeps.length) return rawData;
 
-        return { ...data, opacity };
-      }),
-    [rawData, selectedSweeps, previewSweep]
-  );
+    return rawData.filter((data) => selectedSweeps.includes(data.sweepName));
+  }, [rawData, selectedSweeps, previewSweep]);
 
   const handleClick = ({ data, curveNumber }: Readonly<Plotly.LegendClickEvent>): boolean => {
     const { sweepName: value } = data[curveNumber] as unknown as SweepTrace;
@@ -90,22 +89,15 @@ export default function InteractivePlot({
     return false;
   };
 
-  const dataUnit = active?.meta.unit ?? null;
-  const measuredTitle =
-    dataUnit === 'amperes'
-      ? `${active?.meta.label ?? 'Current'} (${currentUnit})`
-      : 'Membrane potential (mV)';
-
-  // What the axis measures is a property of the series, so the plot has nothing to name it with
-  // until one arrives. Blank reads better there than a label that flips a moment later.
-  const yTitle = active ? measuredTitle : '';
-
-  const isEmptySelection = !selectedSweeps.length;
-  const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
+  const yTitle =
+    yAxisTitle(active, {
+      currentUnit: ensureCurrentUnit(currentUnit, DEFAULT_CURRENT_UNIT),
+      voltageTitle: 'Membrane potential',
+    }) ?? '';
 
   return (
     <Plot
-      data={previewSweep ? previewDataResponse : isEmptySelectionResponse}
+      data={plotData}
       onLegendClick={handleClick}
       onDoubleClick={() => false}
       onRelayout={(e) => {

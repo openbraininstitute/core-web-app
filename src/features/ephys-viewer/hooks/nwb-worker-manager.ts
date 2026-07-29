@@ -12,10 +12,10 @@ import type {
 import type { NWBTraceWorkerApi } from '@/features/ephys-viewer/worker/nwb.worker';
 import type { DownloadProgress } from '@/utils/h5/fs';
 
-export type TraceSessionStatus = 'idle' | 'loading' | 'ready' | 'error';
+type SessionStatus = 'idle' | 'loading' | 'ready' | 'error';
 
+/** What the viewer renders from: the file's structure, or how far off it is. */
 export interface TraceSessionState {
-  status: TraceSessionStatus;
   index: TraceIndex | null;
   progress: DownloadProgress | null;
   error: Error | null;
@@ -23,7 +23,6 @@ export interface TraceSessionState {
 
 /** Stable reference for "no session yet" so React reads don't loop on identity. */
 export const IDLE_TRACE_SESSION_STATE: TraceSessionState = Object.freeze({
-  status: 'idle',
   index: null,
   progress: null,
   error: null,
@@ -41,24 +40,55 @@ export interface TraceOpenParams {
 const DISPOSE_GRACE_MS = 1500;
 
 /**
- * Decimated series to keep per session, most recently used first.
+ * Plot points to keep per session, across the repetitions read at detail resolution.
  *
  * Producing one means reading whole sweeps out of the file and decimating them, so holding on to
  * the recent ones is what makes switching back to a view it already drew instant rather than a
- * second round of spinners. A repetition takes one entry for the detail-resolution read plus one
- * for each coarser view taken from it, and zooming mints one per window — which is what the cap
- * is for.
+ * second round of spinners. Budgeting points rather than entries is what keeps that honest: a
+ * repetition costs `sweeps × recordings × 2 × DETAIL_PLOT_POINTS` points, which is two hundred
+ * thousand for a two-sweep pair and forty times that for a forty-sweep file with six recordings.
+ * At eight bytes a point this caps the main thread's share at roughly 40 MB either way.
  */
-const SERIES_CACHE_SIZE = 48;
+const SERIES_POINT_BUDGET = 5_000_000;
+
+/**
+ * Zoom windows to keep, budgeted apart from the repetitions above.
+ *
+ * A window is keyed by the range Plotly reports for the drag that made it, so two gestures
+ * practically never produce the same key and an entry stops being useful the moment the plot
+ * leaves that window. Drawn from the same budget, a handful of them would evict the
+ * whole-repetition reads that are still worth having.
+ */
+const WINDOW_CACHE_SIZE = 4;
+
+/**
+ * One read of the file, with the coarser views taken from it.
+ *
+ * Reductions hang off their source rather than taking a cache slot of their own: they are free
+ * to remint from it and worthless without it, so letting them compete for room with the reads
+ * they came from would trade an expensive entry for a cheap one.
+ */
+interface SeriesEntry {
+  source: SweepSeriesResponse;
+  /** Plot points held by `source`, which dominates — reductions are a tenth of it or less. */
+  points: number;
+  /** Coarser views of `source`, by the point count that was asked for. */
+  reductions: Map<number, SweepSeriesResponse>;
+}
 
 interface Session {
   key: string;
   worker: Worker | null;
   proxy: Comlink.Remote<NWBTraceWorkerApi> | null;
   buildRequest: TraceOpenParams['buildRequest'];
+  /** Drives the registry's own guards; the viewer reads `state`, which is derived from the same
+   * transitions but carries only what it renders. */
+  status: SessionStatus;
   state: TraceSessionState;
-  /** Decimated series already read out of this file, keyed by the request that produced them. */
-  seriesCache: Map<string, SweepSeriesResponse>;
+  /** Whole repetitions already read out of this file, keyed by the request that produced them. */
+  seriesCache: Map<string, SeriesEntry>;
+  /** Zoom windows, kept apart so they can't crowd out `seriesCache`. */
+  windowCache: Map<string, SeriesEntry>;
   listeners: Set<() => void>;
   refCount: number;
   /** Bumped on every (re)open and on disposal, so stale async results are dropped. */
@@ -95,8 +125,10 @@ class NWBWorkerRegistry {
         worker: null,
         proxy: null,
         buildRequest: params.buildRequest,
+        status: 'idle',
         state: IDLE_TRACE_SESSION_STATE,
         seriesCache: new Map(),
+        windowCache: new Map(),
         listeners: new Set(),
         refCount: 0,
         epoch: 0,
@@ -111,7 +143,7 @@ class NWBWorkerRegistry {
     session.refCount += 1;
     // Keep the freshest request builder around for retries, which re-sign the URL.
     session.buildRequest = params.buildRequest;
-    if (session.state.status === 'idle') this.open(session);
+    if (session.status === 'idle') this.open(session);
   }
 
   release(key: string): void {
@@ -125,7 +157,7 @@ class NWBWorkerRegistry {
 
   retry(key: string): void {
     const session = this.sessions.get(key);
-    if (!session || session.state.status !== 'error') return;
+    if (!session || session.status !== 'error') return;
     this.open(session);
   }
 
@@ -139,18 +171,9 @@ class NWBWorkerRegistry {
     const session = this.sessions.get(key);
     if (!session) return null;
 
-    const hit = this.readCache(session, req);
-    if (hit) return hit;
+    const entry = this.readEntry(session, sourceRequest(req));
 
-    const source = sourceRequest(req);
-    if (source.desiredLength === req.desiredLength) return null;
-
-    const cachedSource = this.readCache(session, source);
-    if (!cachedSource) return null;
-
-    // Stored rather than just returned: callers compare successive reads by identity, and
-    // reducing afresh on every render would hand back a new object each time.
-    return this.writeCache(session, req, reduceSweepSeries(cachedSource, req.desiredLength));
+    return entry && viewOf(entry, req.desiredLength);
   }
 
   async getSweepSeries(key: string, req: SweepSeriesRequest): Promise<SweepSeriesResponse> {
@@ -158,49 +181,57 @@ class NWBWorkerRegistry {
     if (cached) return cached;
 
     const session = this.sessions.get(key);
-    if (!session?.proxy || session.state.status !== 'ready') {
+    if (!session?.proxy || session.status !== 'ready') {
       throw new Error('NWB worker not ready');
     }
 
     const source = sourceRequest(req);
-    const series = await session.proxy.getSweepSeries(source);
-    this.writeCache(session, source, series);
+    const entry = this.writeEntry(session, source, await session.proxy.getSweepSeries(source));
 
-    if (source.desiredLength === req.desiredLength) return series;
-
-    return this.writeCache(session, req, reduceSweepSeries(series, req.desiredLength));
+    return viewOf(entry, req.desiredLength);
   }
 
-  private readCache(session: Session, req: SweepSeriesRequest): SweepSeriesResponse | null {
-    const cacheKey = JSON.stringify(req);
-    const hit = session.seriesCache.get(cacheKey);
-    if (!hit) return null;
+  private readEntry(session: Session, source: SweepSeriesRequest): SeriesEntry | null {
+    const cache = cacheFor(session, source);
+    const cacheKey = JSON.stringify(source);
+    const entry = cache.get(cacheKey);
+    if (!entry) return null;
 
     // Re-insert so it counts as the most recently used.
-    session.seriesCache.delete(cacheKey);
-    session.seriesCache.set(cacheKey, hit);
+    cache.delete(cacheKey);
+    cache.set(cacheKey, entry);
 
-    return hit;
+    return entry;
   }
 
-  private writeCache(
+  private writeEntry(
     session: Session,
-    req: SweepSeriesRequest,
+    source: SweepSeriesRequest,
     series: SweepSeriesResponse
-  ): SweepSeriesResponse {
-    session.seriesCache.set(JSON.stringify(req), series);
+  ): SeriesEntry {
+    const entry: SeriesEntry = {
+      source: series,
+      points: countPoints(series),
+      reductions: new Map(),
+    };
 
-    if (session.seriesCache.size > SERIES_CACHE_SIZE) {
-      // A Map iterates in insertion order, so the first key is the least recently used.
-      const oldest = session.seriesCache.keys().next().value;
-      if (oldest !== undefined) session.seriesCache.delete(oldest);
-    }
+    const cache = cacheFor(session, source);
+    cache.set(JSON.stringify(source), entry);
+    evictDownToBudget(cache, cache === session.windowCache);
 
-    return series;
+    return entry;
   }
 
-  private setState(session: Session, patch: Partial<TraceSessionState>): void {
-    session.state = { ...session.state, ...patch };
+  /** Move a session to a new status, and to the state the viewer should render at it. */
+  private transition(session: Session, status: SessionStatus, state: TraceSessionState): void {
+    session.status = status;
+    session.state = state;
+    for (const listener of session.listeners) listener();
+  }
+
+  /** Report download progress without disturbing the status the session is in. */
+  private setProgress(session: Session, progress: DownloadProgress): void {
+    session.state = { ...session.state, progress };
     for (const listener of session.listeners) listener();
   }
 
@@ -211,7 +242,8 @@ class NWBWorkerRegistry {
     // the file it read them from.
     this.teardownWorker(session);
     session.seriesCache.clear();
-    this.setState(session, { status: 'loading', index: null, progress: null, error: null });
+    session.windowCache.clear();
+    this.transition(session, 'loading', { index: null, progress: null, error: null });
 
     try {
       const worker = new Worker(new URL('../worker/nwb.worker.ts', import.meta.url), {
@@ -230,21 +262,25 @@ class NWBWorkerRegistry {
       if (session.epoch !== epoch) return;
 
       const request: OpenTraceRequest = { fileKey: session.key, url, headers };
+      // The worker holds this callback for as long as its port lives, so it looks the session up
+      // by key rather than closing over it — capturing it would pin the whole series cache past
+      // disposal.
+      const { key } = session;
       const index = await proxy.open(
         request,
         Comlink.proxy((next: DownloadProgress) => {
-          if (session.epoch !== epoch) return;
-          this.setState(session, { progress: next });
+          const current = this.sessions.get(key);
+          if (!current || current.epoch !== epoch) return;
+          this.setProgress(current, next);
         })
       );
       if (session.epoch !== epoch) return;
 
-      this.setState(session, { status: 'ready', index, progress: null, error: null });
+      this.transition(session, 'ready', { index, progress: null, error: null });
     } catch (e) {
       if (session.epoch !== epoch) return;
       this.teardownWorker(session);
-      this.setState(session, {
-        status: 'error',
+      this.transition(session, 'error', {
         index: null,
         progress: null,
         error: e instanceof Error ? e : new Error(String(e)),
@@ -297,4 +333,66 @@ function sourceRequest(req: SweepSeriesRequest): SweepSeriesRequest {
   const desiredLength = Math.max(req.desiredLength, DETAIL_PLOT_POINTS);
 
   return desiredLength === req.desiredLength ? req : { ...req, desiredLength };
+}
+
+/** Which of a session's two caches a request belongs in — see `WINDOW_CACHE_SIZE`. */
+function cacheFor(session: Session, req: SweepSeriesRequest): Map<string, SeriesEntry> {
+  const windowed = req.xStart !== undefined || req.xEnd !== undefined;
+
+  return windowed ? session.windowCache : session.seriesCache;
+}
+
+/**
+ * An entry at the requested resolution, reducing from its source the first time each coarser
+ * view is asked for.
+ *
+ * The reduction is kept rather than just returned: callers compare successive reads by identity,
+ * and reducing afresh on every render would hand back a new object each time.
+ */
+function viewOf(entry: SeriesEntry, desiredLength: number): SweepSeriesResponse {
+  // Anything at or above the read resolution is the read itself; see `sourceRequest`.
+  if (desiredLength >= DETAIL_PLOT_POINTS) return entry.source;
+
+  const existing = entry.reductions.get(desiredLength);
+  if (existing) return existing;
+
+  const reduced = reduceSweepSeries(entry.source, desiredLength);
+  entry.reductions.set(desiredLength, reduced);
+
+  return reduced;
+}
+
+/** Plot points in a response, summed across every recording and sweep. */
+function countPoints(series: SweepSeriesResponse): number {
+  return Object.values(series)
+    .flat()
+    .reduce(
+      (total, recording) => total + recording.series.reduce((sum, { y }) => sum + y.length, 0),
+      0
+    );
+}
+
+/**
+ * Drop least-recently-used entries until the cache is back within budget, always leaving the
+ * one just written — evicting that would mean re-reading it on the very next render.
+ */
+function evictDownToBudget(cache: Map<string, SeriesEntry>, isWindowCache: boolean): void {
+  if (isWindowCache) {
+    while (cache.size > WINDOW_CACHE_SIZE) {
+      // A Map iterates in insertion order, so the first key is the least recently used.
+      const oldest = cache.keys().next().value;
+      if (oldest === undefined) return;
+      cache.delete(oldest);
+    }
+    return;
+  }
+
+  let total = 0;
+  for (const entry of cache.values()) total += entry.points;
+
+  for (const [cacheKey, entry] of cache) {
+    if (total <= SERIES_POINT_BUDGET || cache.size <= 1) return;
+    cache.delete(cacheKey);
+    total -= entry.points;
+  }
 }

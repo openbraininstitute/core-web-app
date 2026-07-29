@@ -102,10 +102,6 @@ const api = {
 
     return response;
   },
-
-  async close(): Promise<void> {
-    await closeSession();
-  },
 };
 
 export type NWBTraceWorkerApi = typeof api;

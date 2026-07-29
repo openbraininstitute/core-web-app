@@ -48,7 +48,10 @@ export async function fetchToFS({
   extension?: string;
   onProgress?: (progress: DownloadProgress) => void;
 }): Promise<{ filename: string }> {
-  const { FS } = await ready;
+  // Instantiating the WASM module and opening the CacheStorage bucket are independent, and on a
+  // cold worker the former is the slower of the two — running them in series would add it to the
+  // front of every download.
+  const [{ FS }, cache] = await Promise.all([ready, caches.open(cacheName)]);
   if (!FS) throw new Error('h5wasm FS not initialized');
 
   const filename = `${fileKey}${extension}`;
@@ -59,7 +62,6 @@ export async function fetchToFS({
     /* not in FS yet */
   }
 
-  const cache = await caches.open(cacheName);
   const cached = await cache.match(url);
 
   // Stream the *live network response* into the FS while tee-ing a second branch into CacheStorage,
@@ -144,8 +146,11 @@ export async function fetchToFS({
   // rather than leaving the file padded with zeros.
   if (total && written < total) FS.truncate(filename, written);
 
-  // Ensure the cross-session cache entry is fully written before returning.
-  if (cachePut) await cachePut;
+  // Deliberately not awaited. The FS copy is complete and is the only one this session reads;
+  // `cache.put` is disk-bound and still draining the tee's backlog, so waiting for it would park
+  // the viewer on a finished progress bar. It already has a `.catch`, and `put` is atomic — a
+  // worker torn down mid-write leaves no entry rather than a partial one, costing a re-download.
+  void cachePut;
 
   return { filename };
 }
