@@ -15,6 +15,7 @@ import {
   seedElectrodeInitialOrigin,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import Block from '@/features/scan-config/components/ui-blocks/block';
+import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
@@ -116,7 +117,12 @@ export default function BlockDictionary({
     // the new/restored values instead of the current live values.
     const state = previewData ?? liveState ?? {};
 
-    return (
+    // Electrode sweeps drive a 3D preview that can only draw one coordinate, so
+    // their values get per-value eyes; other workflows render sweeps unchanged.
+    const offersScanValueSelection =
+      electrodeOverlaysEnabled && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY;
+
+    const block = (
       <Block
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
@@ -141,6 +147,12 @@ export default function BlockDictionary({
         selectedEntry={selectedEntry}
         errorPathPrefix={errorPathPrefix}
       />
+    );
+
+    return offersScanValueSelection ? (
+      <ScanValueSelectorProvider blockName={selectedEntry}>{block}</ScanValueSelectorProvider>
+    ) : (
+      block
     );
   }
 

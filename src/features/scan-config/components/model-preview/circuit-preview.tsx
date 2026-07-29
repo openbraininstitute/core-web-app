@@ -1,5 +1,6 @@
 import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
+import chroma from 'chroma-js';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { getAsset } from '@/api/entitycore/selectors/assets';
@@ -13,6 +14,7 @@ import CircuitViz, {
   resolveSmallCircuitLoaderKind,
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
+import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
 import {
   type ViewerMode,
   ViewerModeDict,
@@ -163,8 +165,8 @@ export function CircuitPreview({
       ? selectedEntry
       : null;
   const styledOverlays = useMemo(
-    () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId),
-    [visibleOverlays, highlightedOverlayId]
+    () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId, config.backgroundColor),
+    [visibleOverlays, highlightedOverlayId, config.backgroundColor]
   );
   const overlaysInteractive = Boolean(
     enableElectrodes && setConfig && styledOverlays && styledOverlays.length > 0
@@ -422,32 +424,43 @@ export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
 }
 
 /**
- * Emphasize the form-selected electrode; darken the others (fully opaque).
+ * Make every electrode legible on the current canvas, then recede the ones the
+ * form is not editing.
  *
- * Why opaque darkening (not alpha): electrodes must stay 100% opaque even when
- * neuron opacity is low — translucent rgba made the circuit show through markers.
+ * Why adapt at all: neuron colours already go through
+ * {@link adaptColorToBackground}; electrodes did not, so a near-black probe was
+ * invisible on the dark canvas and pale hues washed out on the light one. This
+ * runs unconditionally — colours must read even when nothing is selected.
+ *
+ * Why opaque throughout: electrodes stay 100% opaque even at low neuron
+ * opacity — translucent rgba let the circuit show through the markers.
  */
 function styleOverlaysForSelection(
   overlays: CircuitOverlayGroup[] | undefined,
-  selectedId: string | null
+  selectedId: string | null,
+  background: string
 ): CircuitOverlayGroup[] | undefined {
-  if (!overlays?.length || !selectedId) return overlays;
+  if (!overlays?.length) return overlays;
   return overlays.map((group) => {
-    if (group.id === selectedId) {
-      return { ...group, color: emphasizeColor(group.color) };
-    }
-    return { ...group, color: softenColor(group.color) };
+    const legible = forceOpaqueRgb(adaptColorToBackground(group.color, background));
+    if (!selectedId || group.id === selectedId) return { ...group, color: legible };
+    return { ...group, color: recedeColor(legible, background) };
   });
 }
 
-/** Selected electrode: keep full opaque RGB (no wash toward white). */
-function emphasizeColor(color: string): string {
-  return forceOpaqueRgb(color);
-}
-
-/** Non-selected electrodes: darken without introducing alpha. */
-function softenColor(color: string): string {
-  return mixTowardBlack(forceOpaqueRgb(color), 0.35);
+/**
+ * Non-selected electrodes: keep the hue, drop its intensity.
+ *
+ * Why not mix toward grey: at a 5-unit radius a greyed marker loses the one cue
+ * that says *which* probe it is. Desaturating and easing toward the background
+ * pushes it back without discarding its identity.
+ */
+function recedeColor(color: string, background: string): string {
+  try {
+    return chroma.mix(chroma(color).desaturate(1.4), background, 0.18, 'oklab').hex();
+  } catch {
+    return color;
+  }
 }
 
 /** Strip any CSS alpha so morphoviewer palette texels stay fully opaque. */
@@ -455,16 +468,6 @@ function forceOpaqueRgb(color: string): string {
   const rgb = parseCssColor(color);
   if (!rgb) return color;
   return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-}
-
-function mixTowardBlack(color: string, amount: number): string {
-  const rgb = parseCssColor(color);
-  if (!rgb) return color;
-  const t = Math.min(1, Math.max(0, amount));
-  const r = Math.round(rgb[0] * (1 - t));
-  const g = Math.round(rgb[1] * (1 - t));
-  const b = Math.round(rgb[2] * (1 - t));
-  return `rgb(${r}, ${g}, ${b})`;
 }
 
 /** Parse `#rgb` / `#rrggbb` / `rgb(...)` / `rgba(...)` into RGB channels. */

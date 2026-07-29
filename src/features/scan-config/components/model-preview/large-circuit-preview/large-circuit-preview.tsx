@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 import { useSetAtom } from 'jotai';
 import React from 'react';
 
+import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
@@ -71,7 +72,7 @@ export function LargeCircuitPreview({
   onOverlayTransform,
   highlightedOverlayId = null,
   neuronOpacity,
-  electrodeRadius = 10,
+  electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);

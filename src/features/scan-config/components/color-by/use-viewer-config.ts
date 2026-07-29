@@ -23,14 +23,22 @@ export const DEFAULT_NEURON_OPACITY = 1;
  */
 export const ELECTRODE_FOCUSED_NEURON_OPACITY = 0.2;
 
-/** Baseline viewer defaults (full neuron opacity, electrode size 10). */
+/**
+ * Electrode marker radius in world units — also the viewer-controls slider min.
+ *
+ * Why small: contacts read as a probe rather than a string of beads, and the
+ * per-pixel floor keeps them visible when the camera pulls back.
+ */
+export const DEFAULT_ELECTRODE_RADIUS = 5;
+
+/** Baseline viewer defaults (full neuron opacity, electrode size 5). */
 export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   colorByProperty: null,
   backgroundColor: CANVAS_LIGHT,
   showAxons: false,
   neuronOpacity: DEFAULT_NEURON_OPACITY,
   showElectrodes: true,
-  electrodeRadius: 10,
+  electrodeRadius: DEFAULT_ELECTRODE_RADIUS,
   colorOverrides: {},
 };
 

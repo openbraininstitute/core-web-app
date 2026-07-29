@@ -72,7 +72,7 @@ export interface ViewerConfig {
   showElectrodes: boolean;
   /**
    * World-space electrode marker radius (morphoviewer overlaysRadius).
-   * Default 10.
+   * Defaults to {@link DEFAULT_ELECTRODE_RADIUS}.
    */
   electrodeRadius: number;
   /** per-property, per-value color overrides chosen by the user */

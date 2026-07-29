@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DEFAULT_ELECTRODE_RADIUS,
   DEFAULT_NEURON_OPACITY,
   DEFAULT_VIEWER_CONFIG,
   ELECTRODE_FOCUSED_NEURON_OPACITY,
@@ -8,10 +9,11 @@ import {
 } from '@/features/scan-config/components/color-by/use-viewer-config';
 
 describe('resolveViewerConfigDefaults', () => {
-  it('uses full neuron opacity and electrode size 10 by default', () => {
+  it('uses full neuron opacity and the default electrode size', () => {
     expect(resolveViewerConfigDefaults()).toEqual(DEFAULT_VIEWER_CONFIG);
     expect(resolveViewerConfigDefaults().neuronOpacity).toBe(DEFAULT_NEURON_OPACITY);
-    expect(resolveViewerConfigDefaults().electrodeRadius).toBe(10);
+    expect(DEFAULT_ELECTRODE_RADIUS).toBe(5);
+    expect(resolveViewerConfigDefaults().electrodeRadius).toBe(DEFAULT_ELECTRODE_RADIUS);
   });
 
   it('applies host-provided neuron opacity without inferring context', () => {
@@ -19,6 +21,6 @@ describe('resolveViewerConfigDefaults', () => {
       defaultNeuronOpacity: ELECTRODE_FOCUSED_NEURON_OPACITY,
     });
     expect(defaults.neuronOpacity).toBe(0.2);
-    expect(defaults.electrodeRadius).toBe(10);
+    expect(defaults.electrodeRadius).toBe(DEFAULT_ELECTRODE_RADIUS);
   });
 });

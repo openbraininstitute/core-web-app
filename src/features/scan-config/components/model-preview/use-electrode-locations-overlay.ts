@@ -1,6 +1,7 @@
 'use client';
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -25,6 +26,8 @@ import {
   electrodeSummaryToOverlays,
   hasElectrodeLocationsDictionary,
   mergeElectrodeOverlays,
+  resolveElectrodeScanSelection,
+  scanValueSelectionAtom,
 } from './electrode-locations-overlay';
 
 import type { Config } from '@/features/scan-config/types';
@@ -102,7 +105,14 @@ export function useElectrodeLocationsOverlay({ config, arrayEntity }: Options = 
   error: Error | null;
 } {
   const ctx = useWorkspace();
-  const liveDictionary = config?.[ELECTRODE_LOCATIONS_CONFIG_KEY];
+  const rawDictionary = config?.[ELECTRODE_LOCATIONS_CONFIG_KEY];
+  const scanSelection = useAtomValue(scanValueSelectionAtom);
+  // Only one coordinate of a sweep may be drawn, so collapse every swept
+  // parameter to its active value before it reaches the API or the placeholders.
+  const liveDictionary = useMemo(
+    () => resolveElectrodeScanSelection(rawDictionary, scanSelection),
+    [rawDictionary, scanSelection]
+  );
   const hasLive = hasElectrodeLocationsDictionary(liveDictionary);
 
   // Primitive query dep: serialize so deep edits invalidate without object identity.
