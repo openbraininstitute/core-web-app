@@ -1,5 +1,8 @@
 import { type TViewVariant, ViewVariant } from '@/constants';
-import { TraceViewMode } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
+import {
+  TraceViewMode,
+  type TTraceViewMode,
+} from '@/features/ephys-viewer/components/trace-view-mode-toggle';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
@@ -18,7 +21,7 @@ export default function EphysViewerSkeleton({
   view,
   variant = ViewVariant.Light,
 }: {
-  view: TraceViewMode;
+  view: TTraceViewMode;
   variant?: TViewVariant;
 }) {
   // A light-grey skeleton is too harsh on the dark page; use a translucent white tone there.
@@ -32,7 +35,7 @@ export default function EphysViewerSkeleton({
         <Skeleton className={cn(tone, 'h-8 w-36 rounded-full')} />
       </div>
 
-      {view === TraceViewMode.OVERVIEW ? (
+      {view === TraceViewMode.Overview ? (
         <div className="flex flex-col gap-10">
           <div className="flex flex-col gap-2">
             <Skeleton className={cn(tone, 'h-4 w-40')} />

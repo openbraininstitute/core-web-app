@@ -311,7 +311,10 @@ function TraceDetailsView({
       <div className="flex flex-col gap-16">
         {selectedCellIds.map((cellId: string) => (
           <CellDetails
-            key={cellId}
+            // CellDetails seeds its protocol and repetition once, so a newly requested protocol
+            // has to remount it. Keyed here rather than on the view as a whole so changing
+            // protocol does not also throw away the cell selection above.
+            key={`${cellId}:${defaultProtocol ?? ''}`}
             cellId={cellId}
             showCellLabel={cellIds.length > 1}
             defaultProtocol={defaultProtocol}
