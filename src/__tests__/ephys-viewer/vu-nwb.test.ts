@@ -3,13 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   applyHoldingCurrent,
   correctUnitMixup,
-  initialReplacementIndex,
   looksLikeVU,
-  orderVUProtocols,
-  replaceInitialSamples,
-  requiresInitialSampleReplacement,
   toVUAcquisitionName,
-  translateVUProtocol,
   trimTrailingNaNs,
 } from '@/features/ephys-viewer/vu-nwb';
 
@@ -19,46 +14,6 @@ import {
  */
 const FLOAT32_PICO = 9.999999960041972e-13;
 const FLOAT32_MILLI = 0.0010000000474974513;
-
-describe('VU protocol naming', () => {
-  it('translates known descriptions and passes unknown ones through', () => {
-    expect(translateVUProtocol('X1PS_SubThresh_DA_0')).toBe('IV');
-    expect(translateVUProtocol('CCSteps_DA_0')).toBe('Step');
-    expect(translateVUProtocol('X5A_CHIRP_DA_0')).toBe('X5A_CHIRP_DA_0');
-  });
-
-  it('does not treat inherited object properties as known protocols', () => {
-    expect(translateVUProtocol('toString')).toBe('toString');
-  });
-
-  it('lists known protocols first, then raw VU names, each sorted', () => {
-    // The stimulus descriptions present in a VU sample file.
-    const descriptions = [
-      'X6SQ22_C2SSTRIPL_DA_0',
-      'X7Ramp_DA_0',
-      'CCSteps_DA_0',
-      'EXTP3_BREAKN_DA_0',
-      'X1PS_SubThresh_DA_0',
-      'X5A_CHIRP_DA_0',
-    ];
-
-    expect(orderVUProtocols(descriptions)).toEqual([
-      'IV',
-      'Ramp',
-      'Step',
-      'EXTP3_BREAKN_DA_0',
-      'X5A_CHIRP_DA_0',
-      'X6SQ22_C2SSTRIPL_DA_0',
-    ]);
-  });
-
-  it('collapses descriptions that share a BBP protocol', () => {
-    expect(orderVUProtocols(['X2LP_Search_DA_0', 'X5SP_Search_DA_0'])).toEqual(['IDThresh']);
-    expect(orderVUProtocols(['X3LP_Rheo_DA_0', 'X6SP_Rheo_DA_0', 'X4PS_SupraThresh_DA_0'])).toEqual(
-      ['IDRest']
-    );
-  });
-});
 
 describe('VU file detection', () => {
   it('pairs a DA stimulus entry with its AD acquisition entry', () => {
@@ -194,40 +149,5 @@ describe('holding current offset', () => {
     applyHoldingCurrent(current, undefined, 1e-12);
 
     expect(Array.from(current)).toEqual([1, 2, 3]);
-  });
-});
-
-describe('initial sample replacement', () => {
-  it('applies only to the flagged VU stimuli', () => {
-    expect(requiresInitialSampleReplacement('CCSteps_DA_0')).toBe(true);
-    expect(requiresInitialSampleReplacement('X1PS_SubThresh_DA_0')).toBe(true);
-    expect(requiresInitialSampleReplacement('X4PS_SupraThresh_DA_0')).toBe(true);
-    expect(requiresInitialSampleReplacement('X7Ramp_DA_0')).toBe(false);
-  });
-
-  it('resolves 90 ms against the sampling rate', () => {
-    expect(initialReplacementIndex(500_000)).toBe(45_000);
-    expect(initialReplacementIndex(125_000)).toBe(11_250);
-  });
-
-  it('overwrites both channels with the value at 90 ms', () => {
-    // 100 Hz, so 90 ms lands on index 9.
-    const current = Float32Array.from(Array.from({ length: 12 }, (_, i) => i));
-    const voltage = Float32Array.from(Array.from({ length: 12 }, (_, i) => i * 10));
-
-    expect(replaceInitialSamples(current, voltage, 100)).toBe(true);
-
-    expect(Array.from(current)).toEqual([9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 11]);
-    expect(Array.from(voltage)).toEqual([90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 100, 110]);
-  });
-
-  it('keeps a recording that is too short to reach 90 ms unmodified', () => {
-    const current = Float32Array.from([1, 2, 3]);
-    const voltage = Float32Array.from([4, 5, 6]);
-
-    expect(replaceInitialSamples(current, voltage, 500_000)).toBe(false);
-
-    expect(Array.from(current)).toEqual([1, 2, 3]);
-    expect(Array.from(voltage)).toEqual([4, 5, 6]);
   });
 });

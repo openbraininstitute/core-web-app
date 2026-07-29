@@ -8,11 +8,7 @@ import {
   applyHoldingCurrent,
   correctUnitMixup,
   looksLikeVU,
-  orderVUProtocols,
-  replaceInitialSamples,
-  requiresInitialSampleReplacement,
   toVUAcquisitionName,
-  translateVUProtocol,
   trimTrailingNaNs,
 } from '@/features/ephys-viewer/vu-nwb';
 
@@ -182,20 +178,11 @@ export default abstract class NWBTrace {
 
     return {
       recordingTypes: this.recordingTypes,
-      protocolOrder: this.orderProtocols([...protocolNames]),
+      // How the viewer lists this file's protocols. The union is taken across cells, so a
+      // component ordering them itself would be following whichever cell came first.
+      protocolOrder: [...protocolNames].sort(),
       cells,
     };
-  }
-
-  /**
-   * How the viewer should list this file's protocols, given the union across its cells.
-   *
-   * Alphabetical unless a reader says otherwise. Ordering belongs here rather than in the
-   * component: the union is taken across cells, so a component that preserved one reader's
-   * order would be silently reordering every other format by whichever cell came first.
-   */
-  protected orderProtocols(protocols: string[]): string[] {
-    return [...protocols].sort();
   }
 
   private getRepetitionRecordings(
@@ -459,7 +446,6 @@ type VUSweep = {
   stimulusKey: string;
   acquisitionKey: string;
   sweepNumber: number;
-  description: string;
 };
 
 const VU_CELL_ID = 'Default';
@@ -474,14 +460,14 @@ const VU_REPETITION = 'Default';
  * into protocols by their `stimulus_description`, under one cell and one repetition:
  *
  * - Default (cell)
- *   └── Protocol (stimulus_description, translated to its BBP name where known)
+ *   └── Protocol (stimulus_description)
  *       └── Default (repetition)
  *           └── Sweep (sweep_number)
  *
- * BluePyEfe reads these files to extract features and so drops every sweep it can not
- * map onto a BBP protocol; the viewer keeps them all, falling back to the raw VU name.
- * The per-sweep corrections BluePyEfe applies — unit mixup, NaN padding, holding
- * current and the 90 ms artifact — live in `vu-nwb.ts` and are applied on read.
+ * BluePyEfe reads these files to extract features and so drops every sweep it can not map
+ * onto a BBP protocol; the viewer keeps them all, under the name the file gives them. The
+ * corrections it does share — the unit mixup, the NaN padding and the holding current —
+ * live in `vu-nwb.ts` and are applied on read.
  *
  * @class
  * @extends NWBTrace
@@ -511,8 +497,6 @@ class NWBVUTrace extends NWBTrace {
     const presentationGroup = this.getGroup(NWBKey.STIMULUS_PRESENTATION);
     const acquisitionKeys = new Set(this.getGroup(this.acquisitionPath).keys());
 
-    const descriptions: string[] = [];
-
     presentationGroup.keys().forEach((stimulusKey, index) => {
       const acquisitionKey = toVUAcquisitionName(stimulusKey);
       if (!acquisitionKeys.has(acquisitionKey)) return;
@@ -531,25 +515,23 @@ class NWBVUTrace extends NWBTrace {
       }
 
       const sweepNumber = getOptionalAttribute(this.getGroup(stimulusPath), 'sweep_number');
-      const protocol = translateVUProtocol(description);
-      const sweeps = this.sweepsByProtocol.get(protocol) ?? [];
+      const sweeps = this.sweepsByProtocol.get(description) ?? [];
 
       sweeps.push({
         stimulusKey,
         acquisitionKey,
         sweepNumber: typeof sweepNumber === 'number' ? sweepNumber : index,
-        description,
       });
 
-      this.sweepsByProtocol.set(protocol, sweeps);
-      descriptions.push(description);
+      this.sweepsByProtocol.set(description, sweeps);
     });
 
     this.sweepsByProtocol.forEach((sweeps) => {
       sweeps.sort((a, b) => a.sweepNumber - b.sweepNumber);
     });
 
-    this.protocols = orderVUProtocols(descriptions);
+    // Sorted rather than left in file order, which varies between files.
+    this.protocols = [...this.sweepsByProtocol.keys()].sort();
   }
 
   public getCellIds(): string[] {
@@ -562,11 +544,6 @@ class NWBVUTrace extends NWBTrace {
     }
 
     return this.protocols;
-  }
-
-  /** `orderVUProtocols` already put the recognised BBP protocols ahead of the raw VU names. */
-  protected override orderProtocols(protocols: string[]): string[] {
-    return protocols;
   }
 
   public getRepetitions(): string[] {
@@ -734,11 +711,12 @@ class NWBVUTrace extends NWBTrace {
   }
 
   /**
-   * Read both channels of a sweep and correct them, in the order BluePyEfe does.
+   * Read both channels of a sweep, trim the NaN padding some protocols end with, and put
+   * the holding current back onto the stimulus.
    *
-   * Both are always read, even when only one was asked for: the NaN padding is
-   * detected on the stimulus but has to be trimmed off the response as well, or the
-   * two would no longer line up.
+   * Both channels are always read, even when only one was asked for: the padding is
+   * detected on the stimulus but has to be trimmed off the response as well, or the two
+   * would no longer line up.
    */
   private readSweep(vuSweep: VUSweep): {
     current: Samples;
@@ -756,10 +734,6 @@ class NWBVUTrace extends NWBTrace {
     );
 
     applyHoldingCurrent(current, this.getBiasCurrent(acquisitionPath), units.currentConversion);
-
-    if (requiresInitialSampleReplacement(vuSweep.description)) {
-      replaceInitialSamples(current, voltage, timeRate);
-    }
 
     return { current, voltage, units, timeUnit, timeRate };
   }
