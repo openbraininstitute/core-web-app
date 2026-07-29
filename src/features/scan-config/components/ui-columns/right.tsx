@@ -1,5 +1,6 @@
 'use client';
 
+import { CloseOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -14,6 +15,12 @@ import {
   usePreviewRecord,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
+import {
+  type TScanConfigSettingsPanel,
+  useScanConfigSettingsPanel,
+  useSetScanConfigSettingsPanel,
+  useSetScanConfigSettingsPanelSlot,
+} from '@/features/scan-config/bridge/settings-panel';
 import {
   RightPreviewModeDict,
   resolveHostNeuronOpacity,
@@ -194,6 +201,37 @@ function EmptyPreviewPane() {
 }
 
 /**
+ * Host for a field's settings form.
+ *
+ * Only the frame and the mount point live here; the field portals the form itself in, so it keeps
+ * reading the live schema and config rather than a snapshot taken when the panel opened.
+ */
+function SettingsPane({ panel }: { panel: TScanConfigSettingsPanel }) {
+  const setSlot = useSetScanConfigSettingsPanelSlot();
+  const setPanel = useSetScanConfigSettingsPanel();
+
+  useEffect(() => {
+    return () => setSlot(null);
+  }, [setSlot]);
+
+  return (
+    <div
+      id="scan-config-controls-right-settings"
+      className="h-full min-h-0 overflow-y-auto rounded-lg bg-white px-4 py-3"
+    >
+      <header className="mb-3 flex items-start justify-between gap-2">
+        <h3 className="text-primary-9 text-lg font-bold">{panel.title}</h3>
+        <button type="button" aria-label="Close settings" onClick={() => setPanel(null)}>
+          <CloseOutlined className="text-primary-9!" />
+        </button>
+      </header>
+
+      <div ref={setSlot} />
+    </div>
+  );
+}
+
+/**
  * Scan-config right column: exclusive preview variants (entity mini-detail,
  * ion-channel figure, or circuit model). Mode is derived during render.
  */
@@ -227,7 +265,10 @@ export function Right({
     isLoading: isPreviewLoading,
   } = usePreviewRecord();
 
+  const settingsPanel = useScanConfigSettingsPanel();
+
   const mode = resolveRightPreviewMode({
+    settingsPanelActive: Boolean(settingsPanel),
     entityPreviewActive: Boolean(entityPreview && (previewRecord || isPreviewLoading)),
     activity,
     entityType,
@@ -235,6 +276,9 @@ export function Right({
   });
 
   return match(mode)
+    .with(RightPreviewModeDict.Settings, () =>
+      settingsPanel ? <SettingsPane panel={settingsPanel} /> : <EmptyPreviewPane />
+    )
     .with(RightPreviewModeDict.EntityPreview, () =>
       entityPreview ? (
         <EntityPreviewPane
