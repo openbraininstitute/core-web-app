@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createSurfaceSdf,
+  drawnRadiusFactor,
   isSomaSection,
   projectOntoSurface,
+  rescueOffSurface,
   type SurfacePoint,
   type SurfaceSegment,
+  somaEnvelopeOf,
 } from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/morphology-surface';
 import {
   sdfCapsuleWithNormal,
@@ -39,6 +42,54 @@ describe('isSomaSection', () => {
     expect(isSomaSection(1)).toBe(false);
     expect(isSomaSection(2)).toBe(false);
     expect(isSomaSection(42)).toBe(false);
+  });
+});
+
+describe('drawnRadiusFactor', () => {
+  it('leaves a segment square to the shader reference vector at full radius', () => {
+    // fakeY is (0,1,0) and the axis is perpendicular to it, so the un-normalised
+    // cross product happens to come out unit length and nothing is lost.
+    expect(drawnRadiusFactor([0, 0, 0], [10, 0, 0])).toBeCloseTo(1, 6);
+    expect(drawnRadiusFactor([0, 0, 0], [0, 0, -4])).toBeCloseTo(1, 6);
+  });
+
+  it('thins a tilted segment by the sine of its tilt', () => {
+    // 45° in the XY plane: |cross((0,1,0), Z)| = sqrt(1 - 0.5).
+    expect(drawnRadiusFactor([0, 0, 0], [3, 3, 0])).toBeCloseTo(Math.SQRT1_2, 6);
+  });
+
+  it('leaves a zero-length segment alone, the way the sphere branch does', () => {
+    // Where a parentless root — and every single-point soma — ends up.
+    expect(drawnRadiusFactor([7, -2, 1], [7, -2, 1])).toBe(1);
+  });
+
+  it('jumps at the threshold where the shader swaps its reference vector', () => {
+    // Just under |Z.y| = 0.9 the shader uses (0,1,0) and the segment is drawn at
+    // 44% of its radius; a hair steeper it swaps to (0,0,1) and snaps back to
+    // full width. Not a rounding artefact to be smoothed over — this is the
+    // discontinuity, and the projection has to follow it to stay on the mesh.
+    const steep = Math.sqrt(1 - 0.9 * 0.9);
+    expect(drawnRadiusFactor([0, 0, 0], [steep, 0.899, 0])).toBeCloseTo(0.436, 3);
+    expect(drawnRadiusFactor([0, 0, 0], [steep, 0.901, 0])).toBeCloseTo(1, 6);
+  });
+
+  it('depends on where a segment points, not where it is or how long it runs', () => {
+    const straight = drawnRadiusFactor([0, 0, 0], [3, 4, 0]);
+    expect(drawnRadiusFactor([100, -50, 8], [103, -46, 8])).toBeCloseTo(straight, 6);
+    expect(drawnRadiusFactor([0, 0, 0], [300, 400, 0])).toBeCloseTo(straight, 6);
+  });
+
+  it('never widens a segment', () => {
+    for (const to of [
+      [1, 1, 1],
+      [0.2, 9, -3],
+      [-6, 0.1, 0.4],
+      [0, -1, 0],
+    ] as Vec3[]) {
+      const factor = drawnRadiusFactor([0, 0, 0], to);
+      expect(factor).toBeGreaterThan(0);
+      expect(factor).toBeLessThanOrEqual(1);
+    }
   });
 });
 
@@ -158,6 +209,61 @@ describe('projectOntoSurface', () => {
     ] as Vec3[]) {
       expect(sdf(projectOntoSurface(start, sdf)).distance).toBeCloseTo(0, 4);
     }
+  });
+});
+
+describe('somaEnvelopeOf', () => {
+  const ORIGIN: Vec3 = [0, 0, 0];
+
+  it('returns null for a cell that draws no soma, so the rescue is skipped', () => {
+    expect(somaEnvelopeOf([], ORIGIN)).toBeNull();
+  });
+
+  it('reaches past the furthest sample by that sample own radius', () => {
+    // The sphere has to contain what is drawn, not just the sample centres.
+    expect(somaEnvelopeOf(CYLINDER, ORIGIN)?.radius).toBeCloseTo(7, 5);
+  });
+
+  it('measures from the cell position, not from the samples', () => {
+    // The cell position is where SONATA centres its spherical soma; a soma drawn
+    // off to one side has to be reached from there.
+    const root = point(3, 0, 0, 1);
+    expect(somaEnvelopeOf([{ from: root, to: root }], ORIGIN)?.radius).toBeCloseTo(4, 5);
+  });
+});
+
+describe('rescueOffSurface', () => {
+  const SOMA = createSurfaceSdf(CYLINDER);
+  // Everything the cylinder draws, as a sphere about the origin.
+  const ENVELOPE = { centre: [0, 0, 0] as Vec3, radius: 7 };
+  const TOLERANCE = 0.5;
+
+  if (!SOMA) throw new Error('expected an SDF');
+
+  it('pulls a synapse the circuit left hanging near the soma back onto the mesh', () => {
+    const rescued = rescueOffSurface([0, 4, 0], SOMA, ENVELOPE, TOLERANCE);
+    expect(rescued).not.toBeNull();
+    expect(rescued?.[1]).toBeCloseTo(2, 5);
+    expect(SOMA(rescued as Vec3).distance).toBeCloseTo(0, 5);
+  });
+
+  it('leaves a synapse that already touches its branch alone', () => {
+    // 0.3µm out, closer than a marker radius — moving it would change nothing
+    // anyone can see, and it is data we have no reason to distrust.
+    expect(rescueOffSurface([0, 2.3, 0], SOMA, ENVELOPE, TOLERANCE)).toBeNull();
+  });
+
+  it('leaves a synapse buried in the mesh alone', () => {
+    expect(rescueOffSurface([0, 1, 0], SOMA, ENVELOPE, TOLERANCE)).toBeNull();
+  });
+
+  it('ignores anything beyond the soma neighbourhood, however far off it sits', () => {
+    // This is the whole point of the envelope. Out here the spherical-soma model
+    // does not apply, so a gap is the circuit's own geometry and not ours to
+    // overrule — and testing every synapse against a whole morphology is what
+    // makes the load path expensive.
+    expect(SOMA([0, 20, 0]).distance).toBeGreaterThan(TOLERANCE);
+    expect(rescueOffSurface([0, 20, 0], SOMA, ENVELOPE, TOLERANCE)).toBeNull();
   });
 });
 

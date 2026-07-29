@@ -13,11 +13,15 @@ import { logError } from '@/utils/logger';
 import { CircuitConfig } from './circuit-config';
 import {
   createSurfaceSdf,
+  drawnRadiusFactor,
   isSomaSection,
   projectOntoSurface,
+  rescueOffSurface,
+  type SomaEnvelope,
   type SurfacePoint,
   type SurfaceSdf,
   type SurfaceSegment,
+  somaEnvelopeOf,
 } from './morphology-surface';
 import { Report } from './report';
 import { convertSwcToTree } from './swc';
@@ -31,9 +35,41 @@ import type { Vec3 } from './sdf';
 type CellSurfaces = {
   /** What the soma painter draws — where SONATA's soma synapses belong. */
   soma: SurfaceSdf | null;
-  /** Everything the cell draws, for measuring neurite synapses against. */
+  /** Everything the cell draws, for measuring and rescuing synapses against. */
   whole: SurfaceSdf | null;
+  /** Where the spherical-soma model can reach — see {@link rescueOffSurface}. */
+  somaEnvelope: SomaEnvelope | null;
 };
+
+/**
+ * One morphology sample, kept in both spaces: local because that is where the
+ * renderer decides how thick to draw a segment, world because that is where the
+ * synapses are.
+ */
+type Sample = { local: Vec3; point: SurfacePoint };
+
+/**
+ * The segment between two samples as the viewer paints it, radii and all.
+ *
+ * Passing the same sample twice gives the degenerate segment a parentless root
+ * is drawn as, which the renderer draws at its true radius.
+ *
+ * @see drawnRadiusFactor — why the radii are not the ones the morphology states.
+ */
+function drawnSegment(from: Sample, to: Sample): SurfaceSegment {
+  const factor = drawnRadiusFactor(from.local, to.local);
+  return {
+    from: { ...from.point, radius: from.point.radius * factor },
+    to: { ...to.point, radius: to.point.radius * factor },
+  };
+}
+
+/**
+ * How far outside the drawn surface a synapse has to sit before it is worth
+ * moving. About the radius the viewer gives a marker: any closer and the marker
+ * still touches its branch, so there is nothing to see.
+ */
+const OFF_SURFACE_TOLERANCE = 0.5;
 
 /**
  * How many neurite synapses to measure against the drawn surface. Enough for a
@@ -187,8 +223,13 @@ export class CircuitLoader {
    * surface. Soma synapses are the exception: they are computed against a
    * spherical soma while SWC stores a stack of cones, so they get projected
    * onto the drawn soma ({@link projectOntoSurface}) or they float free of it.
+   * "Drawn" there means the soma on screen, which is thinner than the one the
+   * morphology describes — {@link drawnRadiusFactor} explains why, and why we
+   * follow the picture rather than the data.
    *
-   * Neurite synapses are left where SONATA put them, but a sample of them is
+   * Neurite synapses are left where SONATA put them, with one exception: a few
+   * arrive near the soma yet clear of everything drawn, and those get pulled
+   * back onto the mesh — see {@link rescueOffSurface}. A sample of the rest is
    * measured against the drawn surface — see {@link probeNeuriteSynapses}.
    *
    * @see https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html#fields-for-edges
@@ -231,16 +272,29 @@ export class CircuitLoader {
         // being drawn, which is the difference between "projection never ran"
         // and "projection ran against the wrong shape".
         let worstResidual = 0;
+        let rescued = 0;
         for (let i = 0; i < arrXs.length; i++) {
           const surface: Vec3 = [arrXs[i], arrYs[i], arrZs[i]];
           const isSoma = isSomaSection(arrSectionId[i]);
           if (isSoma) somaTotal++;
-          const sdf = isSoma ? surfaces.get(arrTarget[i])?.soma : undefined;
+          const cell = surfaces.get(arrTarget[i]);
+          const sdf = isSoma ? cell?.soma : undefined;
           let point = surface;
           if (sdf) {
             point = projectOntoSurface(surface, sdf);
             projected++;
             worstResidual = Math.max(worstResidual, Math.abs(sdf(point).distance));
+          } else if (cell?.whole && cell.somaEnvelope) {
+            const rescue = rescueOffSurface(
+              surface,
+              cell.whole,
+              cell.somaEnvelope,
+              OFF_SURFACE_TOLERANCE
+            );
+            if (rescue) {
+              point = rescue;
+              rescued++;
+            }
           }
           coordinates[i * 3] = point[0];
           coordinates[i * 3 + 1] = point[1];
@@ -250,6 +304,7 @@ export class CircuitLoader {
           `Loaded ${arrXs.length} afferent synapses for "${populationName}": ` +
             `${somaTotal} on a soma, ${projected} projected` +
             (projected > 0 ? `, worst residual ${worstResidual.toFixed(3)}µm` : '') +
+            (rescued > 0 ? `, ${rescued} rescued off the surface near a soma` : '') +
             '.'
         );
         this.probeNeuriteSynapses(populationName, coordinates, arrSectionId, arrTarget, surfaces);
@@ -273,24 +328,16 @@ export class CircuitLoader {
   ): Promise<Map<number, CellSurfaces>> {
     const surfaces = new Map<number, CellSurfaces>();
     const cellIndices = new Set(targetNodeIds);
-    // Only cells that carry soma synapses need a soma SDF; every cell needs the
-    // whole-morphology one only if we are going to probe its neurites.
+    // Only cells that carry soma synapses need a soma SDF. The whole-morphology
+    // one is built for every cell — it costs a couple of milliseconds and both
+    // the rescue and the probe want it.
     const somaCells = new Set<number>();
     for (let i = 0; i < sectionIds.length; i++) {
       if (isSomaSection(sectionIds[i])) somaCells.add(targetNodeIds[i]);
     }
-    const probeNeurites = cellIndices.size <= NEURITE_PROBE_CELL_LIMIT;
-    if (!probeNeurites) {
-      this.report.logTask(
-        `${cellIndices.size} target cells — skipping the neurite surface probe (limit ${NEURITE_PROBE_CELL_LIMIT}).`
-      );
-    }
 
     for (const cellIndex of cellIndices) {
-      const built = await this.buildCellSurfaces(cellIndex, {
-        soma: somaCells.has(cellIndex),
-        whole: probeNeurites,
-      });
+      const built = await this.buildCellSurfaces(cellIndex, { soma: somaCells.has(cellIndex) });
       if (built) surfaces.set(cellIndex, built);
     }
     return surfaces;
@@ -305,7 +352,7 @@ export class CircuitLoader {
    */
   private async buildCellSurfaces(
     cellIndex: number,
-    want: { soma: boolean; whole: boolean }
+    want: { soma: boolean }
   ): Promise<CellSurfaces | null> {
     const { report } = this;
     // `target_node_id` indexes the target population; `circuit` holds the
@@ -316,14 +363,13 @@ export class CircuitLoader {
       report.logTask(`No morphology for cell #${cellIndex}; leaving its synapses unprojected.`);
       return null;
     }
-    if (!want.soma && !want.whole) return null;
 
     const cell = await this.loadCell(cellDef.id);
     const somaSegments: SurfaceSegment[] = [];
     const wholeSegments: SurfaceSegment[] = [];
     const stack = (cell?.data.roots ?? []).map((item) => ({
       item,
-      parent: null as SurfacePoint | null,
+      parent: null as Sample | null,
     }));
     while (stack.length > 0) {
       const entry = stack.pop();
@@ -331,18 +377,21 @@ export class CircuitLoader {
 
       const { item, parent } = entry;
       const [x, y, z] = transform(item.x, item.y, item.z, cellDef);
-      const point: SurfacePoint = { x, y, z, radius: item.radius };
+      const sample: Sample = {
+        local: [item.x, item.y, item.z],
+        point: { x, y, z, radius: item.radius },
+      };
       // Mirror the viewer's own segment construction: a parentless root is drawn
       // as a degenerate segment (a sphere), every other sample as a cone from
       // its parent — soma-typed ones by the soma painter, the rest by the
       // neurite painter. Reconstructing the soma any other way, by chaining
       // samples in traversal order say, invents surfaces the viewer never draws,
       // and synapses projected onto those hang off the mesh.
-      const segment: SurfaceSegment = { from: parent ?? point, to: point };
+      const segment = parent ? drawnSegment(parent, sample) : drawnSegment(sample, sample);
       if (!parent || item.type === MorphoViewerTreeItemType.Soma) somaSegments.push(segment);
       wholeSegments.push(segment);
 
-      for (const child of item.children ?? []) stack.push({ item: child, parent: point });
+      for (const child of item.children ?? []) stack.push({ item: child, parent: sample });
     }
     report.logTask(
       `Cell #${cellIndex} draws ${wholeSegments.length} segment(s), ${somaSegments.length} of them soma.`
@@ -352,7 +401,15 @@ export class CircuitLoader {
     if (want.soma && !soma) {
       report.logTask(`Cell #${cellIndex} draws no soma; leaving its soma synapses unprojected.`);
     }
-    return { soma, whole: want.whole ? createSurfaceSdf(wholeSegments) : null };
+    return {
+      soma,
+      whole: createSurfaceSdf(wholeSegments),
+      somaEnvelope: somaEnvelopeOf(somaSegments, [
+        cellDef.center[0],
+        cellDef.center[1],
+        cellDef.center[2],
+      ]),
+    };
   }
 
   /**
@@ -363,6 +420,11 @@ export class CircuitLoader {
    * neurite surface already, so a median near zero means any floating-looking
    * markers are a drawing artefact (a marker wider than its own branch, or a
    * branch out of frame) rather than misplaced coordinates.
+   *
+   * Near zero, not zero: neurites keep their SONATA coordinates, so they sit on
+   * the branch the morphology describes rather than the slightly thinner one on
+   * screen. At a median radius of 0.22µm that gap is measured in hundredths of a
+   * micron — see {@link drawnRadiusFactor}.
    */
   private probeNeuriteSynapses(
     populationName: string,
@@ -371,6 +433,15 @@ export class CircuitLoader {
     targetNodeIds: number[],
     surfaces: Map<number, CellSurfaces>
   ) {
+    // Each query walks every segment of its cell, so this stays worth doing only
+    // while "small circuit" means what it says.
+    if (surfaces.size > NEURITE_PROBE_CELL_LIMIT) {
+      this.report.logTask(
+        `${surfaces.size} target cells — skipping the neurite surface probe (limit ${NEURITE_PROBE_CELL_LIMIT}).`
+      );
+      return;
+    }
+
     const candidates: number[] = [];
     for (let i = 0; i < sectionIds.length; i++) {
       if (!isSomaSection(sectionIds[i]) && surfaces.get(targetNodeIds[i])?.whole)
