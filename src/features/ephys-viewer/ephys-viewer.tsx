@@ -30,12 +30,19 @@ export default function EphysViewer({
   ctx,
   defaultToInteractiveDetails = true,
   variant = ViewVariant.Light,
+  protocol: protocolOverride,
 }: {
   entity: IElectricalCellRecording | ISimulationResult;
   assetId?: string;
   ctx?: WorkspaceContext;
   defaultToInteractiveDetails?: boolean;
   variant?: TViewVariant;
+  /**
+   * Protocol to show, driven from outside. Matched case-insensitively against the protocols the
+   * trace actually contains, so a caller can pass an eCode name without knowing how the NWB
+   * capitalised it. Omit to let the viewer manage its own selection, as the detail pages do.
+   */
+  protocol?: string;
 }) {
   const { index, progress, error, getSweepSeries, getCachedSweepSeries } = useTrace({
     entity,
@@ -48,7 +55,8 @@ export default function EphysViewer({
   );
   const [repetition, setRepetition] = useState<string>();
   const [cellId, setCellId] = useState<string>('All');
-  const [protocol, setProtocol] = useState<string>('All');
+  const [internalProtocol, setProtocol] = useState<string>('All');
+  const protocol = protocolOverride ?? internalProtocol;
 
   const showRepetitionDetails = (protocolClosure: string, repetitionClosure: string) => () => {
     setProtocol(protocolClosure);
@@ -120,6 +128,8 @@ export default function EphysViewer({
             resetKeys={[index, cellId, protocol, repetition]}
           >
             <TraceDetailsView
+              // the details view seeds its selection once, so a new protocol needs a fresh mount
+              key={protocol}
               defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
               defaultRepetition={repetition}
               variant={variant}
