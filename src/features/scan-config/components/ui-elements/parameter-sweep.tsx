@@ -94,6 +94,7 @@ export default function ParameterSweep({
   exclusiveMax,
   onChange,
   disabled,
+  allowMultiple = true,
   k,
 }: {
   value: null | number | (number | null)[];
@@ -103,6 +104,8 @@ export default function ParameterSweep({
   exclusiveMax: number | undefined;
   onChange: (v: null | number | (number | null)[]) => void;
   disabled: boolean;
+  /** false when the schema has no array branch, so the value cannot be swept */
+  allowMultiple?: boolean;
   k: string;
 }) {
   const mode: 'single' | 'multiple' = Array.isArray(value) ? 'multiple' : 'single';
@@ -170,7 +173,7 @@ export default function ParameterSweep({
 
         {errorMessage && <span className="text-red-500">{errorMessage}</span>}
 
-        {!disabled && (
+        {!disabled && allowMultiple && (
           <SweepIconButton
             label="Scan over several values"
             className="absolute top-1/2 right-2 -translate-y-1/2"
