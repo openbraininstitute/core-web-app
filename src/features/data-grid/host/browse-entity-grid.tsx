@@ -381,12 +381,16 @@ export function EntityDataGrid({
           )}
           renderCount={({ total, loading }) =>
             loading ? (
-              // skeleton bar while the count resolves (no "Loading…" text)
+              // two fully-rounded skeleton pills (the number + the word "results"),
+              // no "Loading…" text
               <span
                 role="status"
                 aria-label="Loading results count"
-                className="inline-block h-4 w-20 animate-pulse rounded bg-gray-200"
-              />
+                className="flex items-center gap-1.5"
+              >
+                <span className="inline-block h-4 w-8 animate-pulse rounded-full bg-gray-200" />
+                <span className="inline-block h-4 w-14 animate-pulse rounded-full bg-gray-200" />
+              </span>
             ) : (
               <span className="text-xs text-gray-600">{`${total.toLocaleString()} results`}</span>
             )

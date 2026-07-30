@@ -50,8 +50,8 @@ export function ExpandToggleButton<Row>({
       aria-label={expanded ? 'Collapse row' : 'Expand row'}
       aria-expanded={expanded}
       className={cn(
-        // rounded pill; on hover/focus it fills primary-8 with white glyph
-        'flex items-center justify-center rounded-md text-gray-500 outline-none transition-colors',
+        // fully-rounded icon button; on hover/focus it fills primary-8 with a white glyph
+        'flex items-center justify-center rounded-full text-gray-500 outline-none transition-colors',
         'hover:bg-primary-8 hover:text-white focus-visible:bg-primary-8 focus-visible:text-white',
         fill ? 'size-7' : 'size-6'
       )}

@@ -5,10 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import ChevronRight from '@/components/icons/ChevronRight';
 import { OperatorId } from '@/features/data-grid/core';
 import { InMemoryGrid } from '@/features/data-grid/presets/in-memory-grid';
-import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnProps } from 'antd/es/table';
@@ -246,20 +244,13 @@ export function CircuitRecursiveGrid({
     () =>
       canExpand
         ? {
-            // host the chevron in the same (Subcircuits) column at every depth.
+            // host the chevron in the same (Subcircuits) column at every depth. The
+            // default remixicon chevron is used (visible, follows currentColor → white
+            // on hover) — no custom glyph.
             columnId: expandColumnId,
             align: 'right' as const,
             isExpandable: (row: ICircuit) => subCircuitsOf(row).length > 0,
             initialHeight: 96,
-            renderExpander: (open: boolean) => (
-              <ChevronRight
-                fill="currentColor"
-                className={classNames(
-                  'transform transition-transform duration-200 ease-in-out',
-                  open ? 'rotate-90' : 'rotate-0'
-                )}
-              />
-            ),
             renderDetail: (row: ICircuit) => (
               <SubcircuitsDetail>
                 <CircuitRecursiveGrid

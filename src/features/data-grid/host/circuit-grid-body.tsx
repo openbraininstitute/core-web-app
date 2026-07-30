@@ -4,7 +4,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
-import ChevronRight from '@/components/icons/ChevronRight';
 import { WorkspaceSection } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
@@ -25,7 +24,6 @@ import {
   circuitRepresentationViewAtom,
 } from '@/ui/segments/explore/circuit/helpers';
 import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
-import { classNames } from '@/util/utils';
 
 import { EntityDataGrid } from './browse-entity-grid';
 
@@ -155,21 +153,7 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
       getRowClass={getRowClass}
       detailOverride={isHierarchy ? detailOverride : undefined}
       expandColumn={
-        isHierarchy
-          ? {
-              columnId: EntityCoreFields.CircuitSubCircuit,
-              align: 'right',
-              renderExpander: (open) => (
-                <ChevronRight
-                  fill="currentColor"
-                  className={classNames(
-                    'transform transition-transform duration-200 ease-in-out',
-                    open ? 'rotate-90' : 'rotate-0'
-                  )}
-                />
-              ),
-            }
-          : undefined
+        isHierarchy ? { columnId: EntityCoreFields.CircuitSubCircuit, align: 'right' } : undefined
       }
     />
   );

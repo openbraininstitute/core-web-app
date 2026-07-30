@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { cn } from '@/utils/css-class';
 
 import { isSelectionEnabled } from '../core';
+import { ActiveFiltersButton } from './active-filters';
 import { BulkActions } from './bulk-actions';
 import { ColumnChooser } from './column-chooser';
 import { GridPagination } from './pagination';
@@ -135,7 +136,13 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
       <DataGridToolbar
         slots={{ ...toolbarSlots, bulkActions: bulkActions ?? toolbarSlots?.bulkActions }}
         columnChooser={
-          showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : undefined
+          showColumnChooser || Object.keys(state.filters).length > 0 ? (
+            <div className="flex items-center gap-2">
+              {showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : null}
+              {/* appears only when the grid has active filters */}
+              <ActiveFiltersButton controller={controller} state={state} />
+            </div>
+          ) : undefined
         }
       />
       <div className={cn('min-h-0 flex-1', gridClassName)}>{renderer(rendererProps)}</div>

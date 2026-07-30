@@ -5,7 +5,7 @@ export {
   resolveContextual,
   whenMatches,
 } from './domain/contextual';
-export { isEmptyFilterValue } from './domain/filter-model';
+export { isEmptyFilterValue, summarizeFilter } from './domain/filter-model';
 export { mergeColumnDef } from './domain/merge-column';
 export {
   defaultHiddenColumnIds,
