@@ -131,12 +131,16 @@ export function adaptCircuitColumns(
  */
 export function SubcircuitsDetail({ children }: { children: ReactNode }) {
   return (
-    <div className="flex w-full flex-col items-start gap-3 py-3">
-      <div className="ml-4 flex flex-row items-center gap-2">
+    // Each nested SubcircuitsDetail adds this step (margin + guide line + padding) ON
+    // TOP of its parent's — because the deeper grid is DOM-nested inside this one — so
+    // the tree visibly shifts right one level at a time. The left border is the tree
+    // guide line.
+    <div className="border-neutral-3 ml-5 flex w-full flex-col items-start gap-3 border-l-2 py-3 pl-4">
+      <div className="flex flex-row items-center gap-2">
         <ArrowReturnRight className="text-neutral-4 text-2xl" />
         <div className="text-neutral-4 text-base font-semibold uppercase">subcircuits</div>
       </div>
-      <div className="ml-4 w-full">{children}</div>
+      <div className="w-full">{children}</div>
     </div>
   );
 }

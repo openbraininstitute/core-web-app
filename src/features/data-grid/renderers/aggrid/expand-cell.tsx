@@ -50,9 +50,13 @@ export function ExpandToggleButton<Row>({
       aria-label={expanded ? 'Collapse row' : 'Expand row'}
       aria-expanded={expanded}
       className={cn(
-        // fully-rounded icon button; on hover/focus it fills primary-8 with a white glyph
+        // fully-rounded icon button; on hover/focus it fills primary-8 with a white glyph.
+        // Forcing `fill` on the descendant svg (via CSS, which beats the icon's own
+        // `fill="currentColor"` attribute and any AG-cell color inheritance) is what
+        // actually turns the glyph white — plain text-white was being overridden.
         'flex items-center justify-center rounded-full text-gray-500 outline-none transition-colors',
-        'hover:bg-primary-8 hover:text-white focus-visible:bg-primary-8 focus-visible:text-white',
+        'hover:bg-primary-8 focus-visible:bg-primary-8',
+        '[&_svg]:transition-colors [&:hover_svg]:fill-white [&:focus-visible_svg]:fill-white',
         fill ? 'size-7' : 'size-6'
       )}
       onClick={(e) => {

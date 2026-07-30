@@ -326,7 +326,7 @@ export function InMemoryGrid<Row>({
           data-grid-expander=""
           aria-label={open ? 'Collapse row' : 'Expand row'}
           aria-expanded={open}
-          className="flex size-6 items-center justify-center rounded-full text-gray-500 outline-none transition-colors hover:bg-primary-8 hover:text-white focus-visible:bg-primary-8 focus-visible:text-white"
+          className="flex size-6 items-center justify-center rounded-full text-gray-500 outline-none transition-colors hover:bg-primary-8 focus-visible:bg-primary-8 [&:hover_svg]:fill-white [&:focus-visible_svg]:fill-white"
           onClick={(e) => {
             e.stopPropagation();
             e.nativeEvent.stopImmediatePropagation();
