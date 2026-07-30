@@ -34,10 +34,10 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
 import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
-import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
 import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
 import {
   CircuitRepresentationView,
@@ -311,17 +311,19 @@ export function BrowseCircuit({
           </div>
           <div className="w-full">
             <div className="ml-4">
-              <RecursiveExpandableTable
+              <CircuitRecursiveGrid
                 key={queryKeyHash}
-                id={queryKeyHash}
                 circuits={records as Array<ICircuitEnriched>}
                 columns={nestedTableColumns}
                 dataType={dataType}
-                dataScope={scope}
-                workspace={{ virtualLabId, projectId }}
                 onCellClick={onCellClick}
-                view={view}
-                level={1}
+                rowClassName={(record) =>
+                  'isFiltered' in record && record.isFiltered
+                    ? '[&_.ag-cell]:text-primary-8!'
+                    : view === CircuitRepresentationView.Hierarchy
+                      ? 'opacity-60 [&_.ag-cell]:text-neutral-4!'
+                      : '[&_.ag-cell]:text-primary-8!'
+                }
               />
             </div>
           </div>

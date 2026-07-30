@@ -1,16 +1,16 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
+import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { BaseTable } from '@/ui/segments/data-table/table';
 import { WorkspaceScope } from '@/constants';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
@@ -44,7 +44,7 @@ export function Parent({ data }: Props) {
     )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
-  const onCellClick = (basePath: string, record: ICircuit) => {
+  const onCellClick = (_basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
@@ -55,13 +55,11 @@ export function Parent({ data }: Props) {
   };
 
   return (
-    <BaseTable
-      loading={false}
+    <CircuitRecursiveGrid
       columns={columns}
       dataType={ExtendedEntitiesTypeDict.Circuit}
       onCellClick={onCellClick}
-      dataSource={data ? [data] : []}
-      wrapperClassname="[&_.ant-table-body]:max-h-full!"
+      circuits={data ? [data] : []}
     />
   );
 }

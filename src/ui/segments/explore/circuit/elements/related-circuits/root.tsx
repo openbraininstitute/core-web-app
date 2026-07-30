@@ -1,17 +1,18 @@
-import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { tryCatch } from '@/api/utils';
+import { WorkspaceScope } from '@/constants';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+// biome-ignore lint/suspicious/noShadowRestrictedNames: `Error` is an existing local component export used across circuit tables.
 import { Error } from '@/ui/segments/explore/circuit/elements/error';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { WorkspaceScope } from '@/constants';
-import { tryCatch } from '@/api/utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
@@ -55,7 +56,7 @@ export function Root({ circuit }: Props) {
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
-  const onCellClick = (basePath: string, record: ICircuit) => {
+  const onCellClick = (_basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
@@ -120,13 +121,12 @@ export function Root({ circuit }: Props) {
   }
 
   return (
-    <BaseTable
+    <CircuitRecursiveGrid
       loading={rootCircuit.loading}
       columns={columns}
       dataType={ExtendedEntitiesTypeDict.Circuit}
-      dataSource={rootCircuit.record ? [rootCircuit.record] : []}
+      circuits={rootCircuit.record ? [rootCircuit.record] : []}
       onCellClick={onCellClick}
-      wrapperClassname="[&_.ant-table-body]:max-h-full!"
     />
   );
 }
