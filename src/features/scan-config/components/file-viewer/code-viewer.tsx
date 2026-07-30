@@ -81,7 +81,6 @@ export function CodeFileViewer({
 
   const fileName = assetPath?.split('/').at(-1) ?? asset.path.split('/').at(-1);
   const language = fileName?.split('.').at(-1) as BundledLanguage;
-  const filename = assetPath?.split('.').at(-1) ?? asset.path.split('/').pop() ?? 'file';
 
   const LARGE_FILE_CHAR_LIMIT = 10000;
   const isLargeFile = content.length > LARGE_FILE_CHAR_LIMIT;
@@ -93,7 +92,6 @@ export function CodeFileViewer({
       code={displayContent}
       language={language}
       showLineNumbers={!isLargeFile}
-      title={filename}
       className={cn(
         'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
         '[&_pre]:whitespace-pre [&>div]:overflow-auto [&>div>div]:overflow-x-auto',
@@ -102,7 +100,7 @@ export function CodeFileViewer({
     >
       <div className="bg-neutral-light flex items-center justify-between border-b border-gray-200 px-3 py-2">
         <div className="flex items-center gap-3">
-          <CodeBlockLanguageLabel />
+          <CodeBlockLanguageLabel title={fileName} />
 
           {isLargeFile && (
             <span className="rounded border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">

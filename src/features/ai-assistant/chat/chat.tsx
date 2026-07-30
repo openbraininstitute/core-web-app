@@ -60,8 +60,12 @@ export default function Chat({
     pendingUserMessage,
     addToolApprovalResponse,
   } = useServiceAiAgentChat(threadId ?? '');
-  const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
-    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
+  const [suggestions, clearSuggestions, isRefreshing, refetchSuggestions] =
+    useServiceAiAgentSuggestionFromUserJourney(
+      threadId ?? '',
+      status,
+      !!(threadId && !isEmptyThread) // prevents suggestion refetch on navigation during active chat
+    );
 
   React.useEffect(() => {
     onRefetchSuggestions?.(refetchSuggestions);
@@ -114,6 +118,28 @@ export default function Chat({
     threadId,
     containerRef: refContainer,
   });
+
+  // Scroll to bottom when new suggestions appear in an active conversation
+  const prevSuggestionsRef = React.useRef(suggestions);
+  React.useEffect(() => {
+    if (
+      threadId &&
+      !isEmptyThread &&
+      suggestions.length > 0 &&
+      suggestions !== prevSuggestionsRef.current
+    ) {
+      requestAnimationFrame(() => {
+        const container = refContainer.current;
+        if (container) {
+          container.scrollTo({
+            top: container.scrollHeight - container.clientHeight,
+            behavior: 'smooth',
+          });
+        }
+      });
+    }
+    prevSuggestionsRef.current = suggestions;
+  }, [suggestions, threadId, isEmptyThread, refContainer]);
 
   const hasUnresolvedApprovals = React.useMemo(
     () =>
@@ -248,7 +274,8 @@ export default function Chat({
                     onClick={handlePrompt}
                     suggestions={suggestions}
                     clearSuggestions={clearSuggestions}
-                    isLoading={isLoadingSuggestions || status !== 'ready' || !!pendingUserMessage}
+                    isLoading={status !== 'ready' || !!pendingUserMessage}
+                    isRefreshing={isRefreshing}
                   />
                 </div>
               )}
@@ -258,7 +285,8 @@ export default function Chat({
                     onClick={handlePrompt}
                     suggestions={suggestions}
                     clearSuggestions={clearSuggestions}
-                    isLoading={isLoadingSuggestions || status !== 'ready'}
+                    isLoading={status !== 'ready'}
+                    isRefreshing={isRefreshing}
                   />
                 </div>
               )}

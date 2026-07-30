@@ -7,7 +7,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { CodeBlock, CodeBlockCopyButton } from '@/ui/molecules/code-blocks';
+import { CodeBlock, CodeBlockCopyButton, CodeBlockLanguageLabel } from '@/ui/molecules/code-blocks';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
@@ -216,7 +216,6 @@ export function CodeFileViewer({
         code={content}
         language={language}
         showLineNumbers
-        title={filename}
         className={cn(
           'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
           '[&_pre]:whitespace-pre [&>div]:overflow-auto [&>div>div]:overflow-x-auto',
@@ -224,6 +223,7 @@ export function CodeFileViewer({
         )}
       >
         <div className="bg-neutral-light flex items-center justify-between px-2 py-2">
+          <CodeBlockLanguageLabel title={filename} />
           <CodeBlockCopyButton
             onCopy={handleCopy}
             onError={() => {}}

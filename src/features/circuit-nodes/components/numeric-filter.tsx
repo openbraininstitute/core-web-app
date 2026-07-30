@@ -53,7 +53,8 @@ export function NumericFilter({ model, onModelChange }: Params) {
   const hidePopupRef = useRef<(() => void) | null>(null);
   const valueInputRef = useRef<GetRef<typeof InputNumberType>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const getPopupContainer = () => containerRef.current ?? document.body;
+  const getPopupContainer = () =>
+    containerRef.current ?? (document.fullscreenElement as HTMLElement | null) ?? document.body;
   useGridFilter({
     doesFilterPass: () => true,
     afterGuiAttached: (params) => {

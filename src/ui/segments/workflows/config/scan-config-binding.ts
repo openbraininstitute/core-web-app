@@ -1,6 +1,10 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config as appConfig } from '@/config';
 import { SchemaMappingKeyDict, SchemaNameDict } from '@/features/scan-config/types';
+import {
+  ScanConfigFromIdType,
+  type TScanConfigFromIdType,
+} from '@/features/scan-config/workflow/scan-config-from-id-type';
 
 import type { TCircuitTargetSimulator } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -11,16 +15,8 @@ import type {
 } from '@/features/scan-config/types';
 import type { IWorkflowDescriptor } from './types';
 
-export const ScanConfigFromIdType = {
-  CellMorphologyFromID: 'CellMorphologyFromID',
-  MEModelFromID: 'MEModelFromID',
-  CircuitFromID: 'CircuitFromID',
-  EMCellMeshFromID: 'EMCellMeshFromID',
-  MEModelWithSynapsesCircuitFromID: 'MEModelWithSynapsesCircuitFromID',
-} as const;
-
-export type TScanConfigFromIdType =
-  (typeof ScanConfigFromIdType)[keyof typeof ScanConfigFromIdType];
+// re-exported so existing consumers of this module keep their import path
+export { ScanConfigFromIdType, type TScanConfigFromIdType };
 
 export const ScanConfigGeneratedApiPath = {
   CircuitSimulation: 'circuit-simulation-scan-config-generate-grid',
@@ -157,7 +153,9 @@ export function ionChannelSimulationConfigureBinding(): TScanConfigConfigureBind
   return {
     browseType: ExtendedEntitiesTypeDict.IonChannelModel,
     scanConfigEntityType: ExtendedEntitiesTypeDict.IonChannelModel,
-    fromIdTypeByBrowseType: {},
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.IonChannelModel]: ScanConfigFromIdType.IonChannelModelFromID,
+    },
     generatedApiPath: ScanConfigGeneratedApiPath.IonChannelModelSimulation,
     schemaMappingKey: SchemaMappingKeyDict.IonChannelModel,
   };

@@ -1,6 +1,11 @@
+import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import {
+  SweepIconButton,
+  sweepSingleValue,
+} from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
@@ -100,9 +105,20 @@ export default function Block({
               if (isType(blockElementSchema)) return null;
               const isBooleanInput =
                 blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
+              const isPillField =
+                blockElementSchema.ui_element === ScanConfigUIElementDict.ModelSelectorSingle;
 
               const value = state[k];
               const fieldBorderClass = getFieldDiffClass(k);
+              // A sweep expanded into several values offers a way back to one
+              // value. It renders on this title row rather than inside the
+              // element so it sits level with the label instead of floating
+              // above the values card.
+              const canCollapseSweep =
+                !disabled &&
+                Array.isArray(value) &&
+                (blockElementSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
+                  blockElementSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep);
 
               return (
                 <div
@@ -113,7 +129,7 @@ export default function Block({
                   )}
                   data-scan-config-block-element={blockElementSchema.ui_element}
                 >
-                  <div className="flex gap-3 w-full items-center mb-2">
+                  <div className="flex gap-0.5 w-full items-center mb-2">
                     <div
                       className="text-primary-9 text-base font-semibold uppercase"
                       title={blockElementSchema.description}
@@ -123,6 +139,17 @@ export default function Block({
                     {blockElementSchema.units && (
                       <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
                     )}
+                    {canCollapseSweep && (
+                      <SweepIconButton
+                        label="Use a single value"
+                        className="ml-auto"
+                        onClick={() => {
+                          setState({ ...state, [k]: sweepSingleValue(value as (number | null)[]) });
+                        }}
+                      >
+                        <RiCloseLine className="size-3.5" />
+                      </SweepIconButton>
+                    )}
                   </div>
 
                   <Tooltip>
@@ -131,7 +158,8 @@ export default function Block({
                         <div className="mb-1 w-full min-w-0 max-w-full">
                           <div
                             className={cn(
-                              'w-full min-w-0 max-w-full rounded-lg border',
+                              'w-full min-w-0 max-w-full border',
+                              isPillField ? 'rounded-full' : 'rounded-lg',
                               fieldBorderClass,
                               !fieldBorderClass && 'border-transparent'
                             )}

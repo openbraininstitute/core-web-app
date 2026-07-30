@@ -11,6 +11,7 @@ import {
 } from '@/features/scan-config/bridge/main-overlay-context';
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
+import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
@@ -129,6 +130,7 @@ function ScanConfigTemplateContent({
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
   const clearDiffState = useSetAtom(clearDiffStateAtom);
+  const clearScanValueSelection = useSetAtom(clearScanValueSelectionAtom);
   const previousSchemaName = usePrevious(schemaName);
   useEffect(() => {
     // reset the global sidebar expansion/highlight state back to its idle default ("Info")
@@ -137,8 +139,19 @@ function ScanConfigTemplateContent({
     if (previousSchemaName !== undefined && previousSchemaName !== schemaName) {
       setTab(defaultTab);
       setSelectedRootElement(firstRoot ?? '');
+      // Selections live in module state that outlives the route and are keyed
+      // by block name, which repeats across workflows. Drop them so the next
+      // workflow starts on each sweep's first value.
+      clearScanValueSelection();
     }
-  }, [schemaName, clearDiffState, previousSchemaName, defaultTab, firstRoot]);
+  }, [
+    schemaName,
+    clearDiffState,
+    clearScanValueSelection,
+    previousSchemaName,
+    defaultTab,
+    firstRoot,
+  ]);
 
   useAgentState(
     aiEnabled
@@ -228,7 +241,17 @@ function ScanConfigTemplateContent({
       <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
       <div id="template-content" className="flex-1 min-h-0">
         {isConfigurationTab && browseOverlay ? (
-          <div id="scan-config-model-selection-overlay" className="h-[calc(100%-0.5rem)] min-h-0">
+          <div
+            id="scan-config-model-selection-overlay"
+            // the picker replaces the whole main area — fade + slight rise on open
+            // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
+            // reduced motion keeps the fade, drops the movement
+            className={cn(
+              'h-[calc(100%-0.5rem)] min-h-0',
+              'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
+              'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
+            )}
+          >
             <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
               {browseOverlay}
             </Suspense>
@@ -310,6 +333,7 @@ function ScanConfigTemplateContent({
               selectedEntry={selectedEntry}
               selectedRootElement={selectedRootElement}
               config={config}
+              setConfig={setConfig}
             />
           </div>
         </div>

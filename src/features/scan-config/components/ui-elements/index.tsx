@@ -13,6 +13,7 @@ import {
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
+import MorphologySectionTypeSelection from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import NeuronPropertyFilter, {
   type INeuronPropertyFilter,
@@ -30,7 +31,11 @@ import {
   type VoltageDurationState,
 } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject } from '@/features/scan-config/components/utils';
-import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
+import {
+  resolveEntityQueryFilters,
+  resolveNeuronFilterProperties,
+  type TEntityQuery,
+} from '@/features/scan-config/helpers';
 import {
   type Config,
   type ConfigSchema,
@@ -328,20 +333,20 @@ export function UIElementRender({
       },
       ({ paramSchema }) => {
         const q = get(paramSchema, 'entity_query') as
-          | {
-              type: TEntityTypeDict;
-              filters: Record<string, unknown>;
-            }
+          | ({ type: TEntityTypeDict } & TEntityQuery)
           | undefined;
         if (q) {
           return (
             <EntitySelectorSingle
               entityType={q.type}
               disabled={disabled}
-              filters={q.filters}
+              // resolve dynamic filters (e.g. circuit_id from `value_from`:
+              // initialize.circuit) against the root config before browsing
+              filters={resolveEntityQueryFilters(q, config)}
               value={value}
               state={state}
               fieldKey={k}
+              paramSchema={paramSchema as unknown as Record<string, unknown>}
               valueType={paramSchema.properties?.type?.const}
               onChange={setState}
             />
@@ -398,6 +403,22 @@ export function UIElementRender({
           disabled={disabled}
           paramSchema={paramSchema}
           onChange={(newValue: string) => setState({ ...state, [k]: newValue })}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.MorphologySectionTypeSelection },
+      },
+      ({ paramSchema }) => (
+        <MorphologySectionTypeSelection
+          schema={schema}
+          entityId={entity?.id}
+          property={paramSchema.property}
+          propertyGroup={paramSchema.property_group}
+          value={value}
+          disabled={disabled}
+          onChange={(newValue) => setState({ ...state, [k]: newValue })}
         />
       )
     )

@@ -325,6 +325,11 @@ export function resolveSimulateSourceTypeFromDataView(
     return getSimulateCircuitSourceTypeByScale(entity.scale);
   }
 
+  // ME-models simulate through the beta scan-config workflow, not the legacy browse-first one
+  if (extendedType === ExtendedEntitiesTypeDict.Memodel) {
+    return ExtendedEntitiesTypeDict.MemodelCircuit;
+  }
+
   return extendedType;
 }
 

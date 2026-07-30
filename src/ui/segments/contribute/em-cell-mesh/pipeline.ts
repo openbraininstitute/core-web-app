@@ -13,10 +13,13 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EM_CELL_MESH_PROGRESS_STEPS } from '@/ui/segments/contribute/em-cell-mesh/config';
+import {
+  getEMCellMeshMimeType,
+  type TEMCellMeshForm,
+} from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
 import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
-import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -79,7 +82,7 @@ export function useEMCellMeshPipeline({
         entityType: ExtendedEntitiesTypeDict.EMCellMesh,
         entityId,
         fileName: file.name,
-        mimeType: 'application/obj',
+        mimeType: getEMCellMeshMimeType(file) ?? file.type,
         payload: file,
         label: 'cell_surface_mesh' as Parameters<typeof createAsset>[0]['label'],
       });
@@ -130,10 +133,10 @@ export function useEMCellMeshPipeline({
     createEntity: async ({ values }: { values: TEMCellMeshForm }) => {
       const cellMorphology = await createEMCellMeshAsync.mutateAsync(values);
 
-      if (values.assets?.obj) {
+      if (values.assets?.mesh) {
         await createAssetsAsync.mutateAsync({
           entityId: cellMorphology.id,
-          file: values.assets.obj,
+          file: values.assets.mesh,
         });
       }
 

@@ -2,12 +2,20 @@ import { capitalize } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 
+import { useFlag } from '@/features/feature-flags';
+import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import {
   getBlockUsabilityConfig,
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
+import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
+import {
+  ELECTRODE_LOCATIONS_CONFIG_KEY,
+  seedElectrodeInitialOrigin,
+} from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import Block from '@/features/scan-config/components/ui-blocks/block';
+import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
@@ -65,8 +73,10 @@ export default function BlockDictionary({
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
   const diffs = useAtomValue(configDiffsAtom);
+  const circuitSceneAnchor = useAtomValue(circuitSceneAnchorAtom);
   const showingDiffs = useShowingDiffs();
   const previewData = useDiffPreview(selectedRootElement, selectedEntry);
+  const electrodeOverlaysEnabled = useFlag(electrodeOverlaysFlag.key);
 
   const selectedBlockLocal =
     isPlainObject(config[selectedRootElement]) &&
@@ -107,7 +117,12 @@ export default function BlockDictionary({
     // the new/restored values instead of the current live values.
     const state = previewData ?? liveState ?? {};
 
-    return (
+    // Electrode sweeps drive a 3D preview that can only draw one coordinate, so
+    // their values get per-value eyes; other workflows render sweeps unchanged.
+    const offersScanValueSelection =
+      electrodeOverlaysEnabled && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY;
+
+    const block = (
       <Block
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
@@ -132,6 +147,12 @@ export default function BlockDictionary({
         selectedEntry={selectedEntry}
         errorPathPrefix={errorPathPrefix}
       />
+    );
+
+    return offersScanValueSelection ? (
+      <ScanValueSelectorProvider blockName={selectedEntry}>{block}</ScanValueSelectorProvider>
+    ) : (
+      block
     );
   }
 
@@ -193,6 +214,17 @@ export default function BlockDictionary({
                       initial[subkey] = subValue.default ?? null;
                     });
 
+                  // Seed origin at the loaded circuit centre so new probes appear in view
+                  // (only when electrode overlays are feature-flagged on).
+                  const seededInitial =
+                    electrodeOverlaysEnabled &&
+                    selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY
+                      ? (seedElectrodeInitialOrigin(initial, circuitSceneAnchor) as Record<
+                          string,
+                          ConfigValue
+                        >)
+                      : initial;
+
                   const element = schema.properties?.[selectedRootElement];
 
                   const baseName =
@@ -215,7 +247,7 @@ export default function BlockDictionary({
                     ...config,
                     [selectedRootElement]: {
                       ...config[selectedRootElement],
-                      [newEntry]: initial,
+                      [newEntry]: seededInitial,
                     },
                   });
                 }}

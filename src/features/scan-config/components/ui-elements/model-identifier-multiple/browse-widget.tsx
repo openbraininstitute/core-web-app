@@ -4,13 +4,19 @@ import { CloseOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
+import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import {
   countSelectedEntities,
   mergeConfigurationInputs,
   selectionsByTypeToFromIdRefs,
 } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
-import { ModelIdentifierSelectionCart } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/selection-cart';
+import {
+  ModelIdentifierSelectionCart,
+  SelectionConfirmActions,
+} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/selection-cart';
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
+import { getEntityTypeTagLabel } from '@/features/scan-config/helpers';
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { Button } from '@/ui/molecules/button';
 import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
@@ -30,12 +36,26 @@ import type {
 import type { TScanConfigConfigureBinding } from '@/ui/segments/workflows/config/scan-config-binding';
 import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config/types';
 
+/**
+ * how many entities the browse widget commits. `Single` (used by
+ * `model_selector_single`) swaps checkboxes for radios and replaces the
+ * selection cart with an inline action bar; `Multiple` keeps the cart.
+ */
+export const ModelIdentifierBrowseWidgetSelectionMode = {
+  Single: 'single',
+  Multiple: 'multiple',
+} as const;
+
+export type TModelIdentifierBrowseWidgetSelectionMode =
+  (typeof ModelIdentifierBrowseWidgetSelectionMode)[keyof typeof ModelIdentifierBrowseWidgetSelectionMode];
+
 type TProps = {
   title: string;
   fieldSchema: Record<string, unknown>;
   initialRefs: readonly TFromIdRef[];
   initialGroupName?: string;
   showGroupName?: boolean;
+  selectionMode?: TModelIdentifierBrowseWidgetSelectionMode;
   configurationInputs?: readonly IWorkflowConfigurationInput[];
   configureBinding?: TScanConfigConfigureBinding;
   workspaceSection: TWorkspaceSection;
@@ -61,12 +81,26 @@ function groupEntitiesByType(
   }, {});
 }
 
+/** first staged entity across all types, or undefined — used by the single-select action bar */
+function firstSelectedEntity(
+  selectionsByType: TModelIdentifierBrowseSelectionsByType
+): { entityType: TExtendedEntitiesTypeDict; entity: EntityCoreIdentifiableNamed } | undefined {
+  for (const [entityType, rows] of Object.entries(selectionsByType)) {
+    const entity = rows?.[0];
+    if (entity) {
+      return { entityType: entityType as TExtendedEntitiesTypeDict, entity };
+    }
+  }
+  return undefined;
+}
+
 export function ModelIdentifierBrowseWidget({
   title,
   fieldSchema,
   initialRefs,
   initialGroupName = 'Default name',
   showGroupName = false,
+  selectionMode = ModelIdentifierBrowseWidgetSelectionMode.Multiple,
   configurationInputs,
   configureBinding,
   workspaceSection,
@@ -81,6 +115,7 @@ export function ModelIdentifierBrowseWidget({
 }: TProps) {
   const instanceId = useId();
   const { mdv } = useMiniDetailView();
+  const isSingleSelect = selectionMode === ModelIdentifierBrowseWidgetSelectionMode.Single;
   const mergedInputs = useMemo(
     () => mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs }),
     [configurationInputs, fieldSchema]
@@ -177,12 +212,17 @@ export function ModelIdentifierBrowseWidget({
         return;
       }
 
-      setSelectionsByType((previous) => ({
-        ...previous,
-        [activeEntityType]: rows,
-      }));
+      setSelectionsByType((previous) => {
+        // single-select is exclusive across type tabs too: picking a row in one
+        // tab drops whatever was staged in another
+        if (isSingleSelect) {
+          return { [activeEntityType]: rows.slice(-1) };
+        }
+
+        return { ...previous, [activeEntityType]: rows };
+      });
     },
-    [activeEntityType]
+    [activeEntityType, isSingleSelect]
   );
 
   const handleRemoveEntity = useCallback(
@@ -204,17 +244,23 @@ export function ModelIdentifierBrowseWidget({
     return null;
   }
 
+  // both single and multiple show the selection cart (left panel) with the
+  // staged entity + confirm/cancel; only the mini detail view, which takes the
+  // right side, forces the inline action bar instead
+  const showCart = !mdv;
+  const stagedSingle = isSingleSelect ? firstSelectedEntity(selectionsByType) : undefined;
+
   return (
     <div
       className={cn(
         'grid h-full min-h-0 gap-3 overflow-hidden bg-gray-50 rounded-2xl border border-gray-50',
         {
-          'grid-cols-1': mdv,
-          'grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]': !mdv,
+          'grid-cols-1': !showCart,
+          'grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]': showCart,
         }
       )}
     >
-      {!mdv ? (
+      {showCart ? (
         <ModelIdentifierSelectionCart
           title={title}
           selectionsByType={selectionsByType}
@@ -260,7 +306,7 @@ export function ModelIdentifierBrowseWidget({
             listQueryFn={loaderListQueryFn}
             facetsQueryFn={loaderFacetsQueryFn}
             mainTableProps={{
-              selectionType: 'checkbox',
+              selectionType: isSingleSelect ? 'radio' : 'checkbox',
               selectedRows: activeSelectedRows,
               onRowsSelected: handleRowsSelected,
               keepSelectionOnScopeChange: true,
@@ -283,6 +329,44 @@ export function ModelIdentifierBrowseWidget({
             }}
           />
         </div>
+
+        {showCart ? null : (
+          <div
+            className={cn(
+              'z-10 flex shrink-0 items-center justify-between gap-4 px-3 py-2',
+              'border-t border-gray-200 bg-white'
+            )}
+          >
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {stagedSingle ? (
+                <ModelIdentifierEntityCard
+                  variant="selection"
+                  className="w-auto max-w-md"
+                  blockElement={`${ScanConfigUIElementDict.ModelSelectorSingle}-selection`}
+                  instanceId={`action-bar-${stagedSingle.entity.id}`}
+                  entityName={stagedSingle.entity.name}
+                  typeLabel={getEntityTypeTagLabel(stagedSingle.entityType)}
+                  disabled={disabled}
+                  showRemove={false}
+                />
+              ) : (
+                <span className="min-w-0 truncate text-sm text-gray-500">
+                  {isSingleSelect ? 'Select a row to continue' : `${selectedCount} selected`}
+                </span>
+              )}
+            </div>
+
+            <SelectionConfirmActions
+              layout="inline"
+              selectedCount={selectedCount}
+              showCount={!isSingleSelect}
+              disabled={disabled}
+              confirmDisabled={selectedCount === 0}
+              onConfirm={handleConfirm}
+              onCancel={onCancel}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

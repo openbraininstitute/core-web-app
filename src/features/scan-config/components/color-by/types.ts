@@ -63,6 +63,18 @@ export interface ViewerConfig {
   colorByProperty: string | null;
   backgroundColor: string;
   showAxons: boolean;
+  /**
+   * Neuron / soma paint opacity (0–1). Default 1; hosts may pass a lower
+   * initial value (e.g. 0.2) when electrode overlays should dominate.
+   */
+  neuronOpacity: number;
+  /** Show electrode location overlays when present. Default on. */
+  showElectrodes: boolean;
+  /**
+   * World-space electrode marker radius (morphoviewer overlaysRadius).
+   * Defaults to {@link DEFAULT_ELECTRODE_RADIUS}.
+   */
+  electrodeRadius: number;
   /** per-property, per-value color overrides chosen by the user */
   colorOverrides: ColorOverrides;
 }

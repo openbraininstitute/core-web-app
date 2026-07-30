@@ -3,23 +3,33 @@
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+import { match } from 'ts-pattern';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ViewVariant, WorkspaceSection } from '@/constants';
+import { resolveViewerFeaturesForEntityType } from '@/entity-configuration/domain/helpers';
+import { useFlag } from '@/features/feature-flags';
+import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
+import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
   usePreviewRecord,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
 import {
-  ScanConfigActivity,
-  type TScanConfigActivity,
-  type TSupportedEntitiesForScanConfiguration,
-} from '@/features/scan-config/types';
+  RightPreviewModeDict,
+  resolveHostNeuronOpacity,
+  resolveRightPreviewMode,
+} from '@/features/scan-config/components/model-preview/helpers';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { Config } from '@/features/scan-config/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type {
+  Config,
+  TScanConfigActivity,
+  TSupportedEntitiesForScanConfiguration,
+} from '@/features/scan-config/types';
 import type { Nullish } from '@/utils/type';
 
 const ModelPreview = dynamic(
@@ -35,28 +45,22 @@ const IonChannelModelRecordingRender = dynamic(
   { ssr: false }
 );
 
-type Props = {
+type RightProps = {
   activity: TScanConfigActivity;
-  entityType: string;
+  entityType: TExtendedEntitiesTypeDict;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   selectedEntry: string;
   selectedRootElement: string;
   config: Config;
+  setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
 };
 
-export function Right({
-  activity,
-  entityType,
-  entity,
-  selectedEntry,
-  selectedRootElement,
-  config,
-}: Props) {
-  const {
-    preview: entityPreview,
-    record: previewRecord,
-    isLoading: isPreviewLoading,
-  } = usePreviewRecord();
+/**
+ * Clear the entity mini-detail when the workflow session / origin / model changes.
+ *
+ * Kept as a hook so {@link Right} stays a thin composition of preview variants.
+ */
+function useClearEntityPreviewOnNavigation(entityId: string | undefined) {
   const setEntityPreview = useSetScanConfigEntityPreview();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -66,56 +70,182 @@ export function Right({
   // biome-ignore lint/correctness/useExhaustiveDependencies: clear stale preview when route session or entity changes
   useEffect(() => {
     setEntityPreview(null);
-  }, [sessionId, origin, entity?.id, setEntityPreview]);
+  }, [sessionId, origin, entityId, setEntityPreview]);
+}
 
-  if (entityPreview && (previewRecord || isPreviewLoading)) {
-    return (
-      <div
-        id="scan-config-controls-right-mini-detail"
-        className="h-full min-h-0 rounded-lg px-0.5 py-1"
-      >
-        {previewRecord ? (
-          <MiniDetailViewRenderer
-            section={WorkspaceSection.Data}
-            record={previewRecord as EntityCoreObjectTypes}
-            dataType={entityPreview.dataType}
-            theme={ViewVariant.Light}
-            enableAnimation={false}
-            hideUseModelAction
-            onClose={() => setEntityPreview(null)}
-          />
-        ) : (
-          <Skeleton className="h-full w-full rounded-lg" />
-        )}
-      </div>
-    );
-  }
+function useHostNeuronOpacity(): number | undefined {
+  const workflowField = useScanConfigWorkflowEditorField();
+  const electrodeOverlaysEnabled = !!useFlag(electrodeOverlaysFlag.key);
+
+  return resolveHostNeuronOpacity({
+    electrodeOverlaysEnabled,
+    generatedApiPath: workflowField?.configureBinding?.generatedApiPath,
+  });
+}
+
+/** Browse-selection overlay: loaded mini-detail or loading skeleton. */
+function EntityPreviewPane({
+  dataType,
+  record,
+}: {
+  dataType: TExtendedEntitiesTypeDict;
+  record: EntityCoreObjectTypes | null;
+}) {
+  const setEntityPreview = useSetScanConfigEntityPreview();
+
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
-      {activity === ScanConfigActivity.Simulate &&
-        entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
-          <IonChannelModelRecordingRender
-            selectedRootElement={selectedRootElement}
-            selectedEntry={selectedEntry}
-            config={config}
-          />
-        )}
-      {((activity === ScanConfigActivity.Simulate &&
-        (entityType === ExtendedEntitiesTypeDict.Circuit ||
-          entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
-          entityType === ExtendedEntitiesTypeDict.WholeBrain ||
-          entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) &&
-        entity) ||
-        (activity === ScanConfigActivity.Extract &&
-          entity &&
-          entityType === ExtendedEntitiesTypeDict.Circuit) ||
-        (activity === ScanConfigActivity.Build &&
-          entity &&
-          entityType === ExtendedEntitiesTypeDict.Circuit)) && (
-        <div className="rounded-lg h-full" id="scan-config-right-model-preview">
-          <ModelPreview model={entity} />
-        </div>
+    <div
+      id="scan-config-controls-right-mini-detail"
+      className="h-full min-h-0 rounded-lg px-0.5 py-1"
+    >
+      {record ? (
+        <MiniDetailViewRenderer
+          section={WorkspaceSection.Data}
+          record={record}
+          dataType={dataType}
+          theme={ViewVariant.Light}
+          enableAnimation={false}
+          hideUseModelAction
+          onClose={() => setEntityPreview(null)}
+        />
+      ) : (
+        <Skeleton className="h-full w-full rounded-lg" />
       )}
     </div>
   );
+}
+
+function IonChannelPreviewPane({
+  selectedRootElement,
+  selectedEntry,
+  config,
+}: {
+  selectedRootElement: string;
+  selectedEntry: string;
+  config: Config;
+}) {
+  return (
+    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
+      <IonChannelModelRecordingRender
+        selectedRootElement={selectedRootElement}
+        selectedEntry={selectedEntry}
+        config={config}
+      />
+    </div>
+  );
+}
+
+function CircuitModelPreviewPane({
+  entity,
+  config,
+  setConfig,
+  selectedRootElement,
+  selectedEntry,
+  defaultNeuronOpacity,
+  viewerFeatures,
+}: {
+  entity: TSupportedEntitiesForScanConfiguration;
+  config: Config;
+  setConfig: RightProps['setConfig'];
+  selectedRootElement: string;
+  selectedEntry: string;
+  defaultNeuronOpacity: number | undefined;
+  viewerFeatures: IEntityViewerFeatures;
+}) {
+  return (
+    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
+      <div className="rounded-lg h-full" id="scan-config-right-model-preview">
+        <ModelPreview
+          model={entity}
+          config={config}
+          setConfig={setConfig}
+          selectedRootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          defaultNeuronOpacity={defaultNeuronOpacity}
+          viewerFeatures={viewerFeatures}
+        />
+      </div>
+    </div>
+  );
+}
+
+function EmptyPreviewPane() {
+  return <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full" />;
+}
+
+/**
+ * Scan-config right column: exclusive preview variants (entity mini-detail,
+ * ion-channel figure, or circuit model). Mode is derived during render.
+ */
+export function Right({
+  activity,
+  entityType,
+  entity,
+  selectedEntry,
+  selectedRootElement,
+  config,
+  setConfig,
+}: RightProps) {
+  useClearEntityPreviewOnNavigation(entity?.id);
+  const defaultNeuronOpacity = useHostNeuronOpacity();
+  const workflowField = useScanConfigWorkflowEditorField();
+
+  // Source entity owns the viewer; targetType is workflow intent only.
+  const viewerFeatures = resolveViewerFeaturesForEntityType(
+    entityType as TExtendedEntitiesTypeDict,
+    {
+      section: workflowField?.workspaceSection,
+      activity: workflowField?.activity ?? activity,
+      targetType: workflowField?.targetType,
+    }
+  );
+
+  const {
+    preview: entityPreview,
+    record: previewRecord,
+    isLoading: isPreviewLoading,
+  } = usePreviewRecord();
+
+  const mode = resolveRightPreviewMode({
+    entityPreviewActive: Boolean(entityPreview && (previewRecord || isPreviewLoading)),
+    activity,
+    entityType,
+    hasEntity: Boolean(entity),
+  });
+
+  return match(mode)
+    .with(RightPreviewModeDict.EntityPreview, () =>
+      entityPreview ? (
+        <EntityPreviewPane
+          dataType={entityPreview.dataType}
+          record={(previewRecord as EntityCoreObjectTypes | null) ?? null}
+        />
+      ) : (
+        <EmptyPreviewPane />
+      )
+    )
+    .with(RightPreviewModeDict.IonChannel, () => (
+      <IonChannelPreviewPane
+        selectedRootElement={selectedRootElement}
+        selectedEntry={selectedEntry}
+        config={config}
+      />
+    ))
+    .with(RightPreviewModeDict.CircuitModel, () =>
+      entity ? (
+        <CircuitModelPreviewPane
+          entity={entity}
+          config={config}
+          setConfig={setConfig}
+          selectedRootElement={selectedRootElement}
+          selectedEntry={selectedEntry}
+          defaultNeuronOpacity={defaultNeuronOpacity}
+          viewerFeatures={viewerFeatures}
+        />
+      ) : (
+        <EmptyPreviewPane />
+      )
+    )
+    .with(RightPreviewModeDict.Empty, () => <EmptyPreviewPane />)
+    .exhaustive();
 }

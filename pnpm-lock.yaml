@@ -57,8 +57,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: 0.30.0
-        version: 0.30.0(react@19.2.6)
+        specifier: 0.31.0
+        version: 0.31.0(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -2713,8 +2713,8 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@0.30.0':
-    resolution: {integrity: sha512-6F+j9mEs26XaHskteNJfBrAtsLzUz7ZM6K7LLGkam6cLy5q5Cx/857QikPf1sbxZpRzRjL7HRW5uNsc+y2N1NA==}
+  '@openbraininstitute/morphoviewer@0.31.0':
+    resolution: {integrity: sha512-caC+mYRm6KJbjeYeNePSaHM1Z5rMEkcDlEOrDnBS/NMQX5Kyey9F5yhA84JhBjqrEpODvaW8dbxMbFvS+GTYQw==}
     peerDependencies:
       react: ^19.2.5
 
@@ -4933,6 +4933,9 @@ packages:
 
   '@tolokoban/tgd@2.2.0':
     resolution: {integrity: sha512-SminZtYAn5GZxfaEMRPW1SVl29HFzAlYeChWWq4/Rm81UzhjCY8s5F7PcbZuNl13TD7wREld3Y+Ea+WZf+W13Q==}
+
+  '@tolokoban/tgd@2.4.0':
+    resolution: {integrity: sha512-K/hDSvKmoqZ1LIamFhIfdHWNrkcpkLH7pJptJKkPOPnbmdpEBEOtsI+aiZMUVMEgKKGmOaM30eJvVNBRLEFSDA==}
 
   '@turf/area@7.3.5':
     resolution: {integrity: sha512-sSn80wPT7XfBIDN3vurCPxhk9W4U8ozS/XImSqeLN8qveTICOxzZkhsGDMp0CuncaN+plWut4a2TdNM7mzZB6Q==}
@@ -7618,6 +7621,7 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonify@0.0.1:
     resolution: {integrity: sha512-2/Ki0GcmuqSrgFyelQq9M05y7PS0mEwuIzrf3f1fPqkVDVRvZrPZtVSMHxdgo8Aq0sxAOb/cr2aqqA3LeWHVPg==}
@@ -13080,9 +13084,9 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@0.30.0(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@0.31.0(react@19.2.6)':
     dependencies:
-      '@tolokoban/tgd': 2.2.0
+      '@tolokoban/tgd': 2.4.0
       fflate: 0.8.3
       react: 19.2.6
       tslib: 2.8.1
@@ -15627,6 +15631,15 @@ snapshots:
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
 
   '@tolokoban/tgd@2.2.0':
+    dependencies:
+      '@loaders.gl/core': 4.4.1
+      '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
+      '@loaders.gl/gltf': 4.4.1(@loaders.gl/core@4.4.1)
+      gl-matrix: 3.4.4
+    transitivePeerDependencies:
+      - '@75lb/nature'
+
+  '@tolokoban/tgd@2.4.0':
     dependencies:
       '@loaders.gl/core': 4.4.1
       '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)

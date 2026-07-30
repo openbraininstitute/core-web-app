@@ -1,33 +1,48 @@
 'use client';
 
-import { CloseOutlined, LinkOutlined, SearchOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
-import { type SetStateAction, useAtom } from 'jotai';
-import { useCallback, useId, useRef, useState } from 'react';
+/**
+ * `model_selector_single` — pick exactly one entity from the scan-config editor.
+ *
+ * separate field and separate value shape from `model_identifier_multiple` (a
+ * scalar FromID ref, not a list), but the same surfaces: the middle-column card
+ * previews into the right column, and picking opens the shared browse overlay
+ * in single-select mode
+ */
 
-import { type TWorkspaceScope, WorkspaceScope, WorkspaceSection } from '@/constants';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useCallback, useMemo, useState } from 'react';
+
+import { WorkspaceSection } from '@/constants';
+import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
-  type ConfigValue,
-  ScanConfigUIElementDict,
-  type SetAtom,
-} from '@/features/scan-config/types';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { useScope } from '@/ui/hooks/use-scope';
+  useScanConfigEntityPreview,
+  useSetScanConfigEntityPreview,
+} from '@/features/scan-config/bridge/entity-preview';
+import { useScanConfigMainOverlayOptional } from '@/features/scan-config/bridge/main-overlay-context';
+import {
+  ModelIdentifierBrowseWidget,
+  ModelIdentifierBrowseWidgetSelectionMode,
+} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/browse-widget';
+import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
+import {
+  collectWorkflowSessionRefs,
+  resolveEntityFetchTarget,
+} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { ModelIdentifierAddActionButton } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/summary-view';
+import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
+import {
+  getEntityTypeTagLabel,
+  isFromIdRef,
+  type TFromIdRef,
+} from '@/features/scan-config/helpers';
+import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useLatest } from '@/ui/hooks/use-latest';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Badge, BadgeButton } from '@/ui/molecules/badge';
-import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { Skeleton } from '@/ui/molecules/skeleton';
-import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
-import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { cn } from '@/utils/css-class';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-export type SelectorValue = { id_str: string; type: string };
 interface SelectorModalProps {
   disabled?: boolean;
   entityType: TEntityTypeDict;
@@ -37,7 +52,10 @@ interface SelectorModalProps {
   valueType?: string;
   state: Record<string, ConfigValue>;
   fieldKey: string;
+  /** json schema fragment for the field; supplies accepted types when declared */
+  paramSchema?: Record<string, unknown>;
 }
+
 export function EntitySelectorSingle({
   onChange,
   entityType,
@@ -47,218 +65,202 @@ export function EntitySelectorSingle({
   state,
   fieldKey,
   valueType,
+  paramSchema,
 }: SelectorModalProps) {
-  const instanceId = useId();
   const { virtualLabId, projectId } = useWorkspace();
-  const entityConfig = getEntityByExtendedType({ type: entityType });
-  const { scope } = useScope();
-  const { dataKey } = makeDataKey({
-    virtualLabId,
-    projectId,
-    section: WorkspaceSection.GeneralWorkflow,
-    dataType: entityType,
-    scope,
-    id: instanceId,
+  const workflowField = useScanConfigWorkflowEditorField();
+  const overlayHost = useScanConfigMainOverlayOptional();
+  const entityPreview = useScanConfigEntityPreview();
+  const setEntityPreview = useSetScanConfigEntityPreview();
+
+  // fallback surface when the field renders outside the scan-config template
+  // (no overlay host): the same widget, wrapped in a modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // `openOverlay` snapshots the browse widget at open time; the confirm/remove
+  // handlers must merge against the current block state, not the captured one
+  const latestWrite = useLatest({ state, onChange });
+
+  const browseEntityType = entityType as unknown as TExtendedEntitiesTypeDict;
+  const selectedRef = isFromIdRef(value) ? value : null;
+
+  const refs = useMemo(() => (selectedRef ? [selectedRef] : []), [selectedRef]);
+  const sessionRefs = useMemo(
+    () => collectWorkflowSessionRefs(workflowField?.workflowSessionSelection),
+    [workflowField?.workflowSessionSelection]
+  );
+
+  const { entities, pendingIds } = useResolvedModelIdentifierEntities({
+    refs,
+    sessionRefs,
+    context: { virtualLabId, projectId },
   });
 
-  const [selectedRows, setSelectedRows] = useAtom(coreSelectedRowsAtom(dataKey));
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [usedRow, setUsedRow] = useState<EntityCoreIdentifiableNamed | null>(null);
-  const scopeRef = useRef<{ changeScope: (value: TWorkspaceScope | null) => void } | null>(null);
+  const resolvedEntity = selectedRef
+    ? entities.find((entity) => entity.id === selectedRef.id_str)
+    : undefined;
+  const isPending = Boolean(selectedRef && !resolvedEntity && pendingIds.has(selectedRef.id_str));
 
-  const displayEntity =
-    usedRow ??
-    (value && typeof value === 'object' && ('name' in value || 'id_str' in value) ? value : null);
+  const typeTitle = getEntityTypeTagLabel(browseEntityType);
+  const entityLabel = typeTitle.toLowerCase();
 
-  const usedKey =
-    displayEntity && 'id' in displayEntity
-      ? (displayEntity.id as string)
-      : (displayEntity as SelectorValue)?.id_str;
+  // the field accepts exactly one type, so the overlay's type switcher stays hidden
+  const configurationInputs = useMemo(
+    () => [{ type: browseEntityType, label: typeTitle, filters }],
+    [browseEntityType, filters, typeTitle]
+  );
 
-  const { data, isLoading } = useQuery<EntityCoreIdentifiableNamed | undefined>({
-    queryKey: keyBuilder.entity({ context: { virtualLabId, projectId }, id: usedKey }),
-    queryFn: async () => {
-      return entityConfig?.api.query.one({ context: { virtualLabId, projectId }, id: usedKey });
+  const closeSurface = useCallback(() => {
+    setIsModalOpen(false);
+    overlayHost?.closeOverlay();
+  }, [overlayHost]);
+
+  // id-only preview; the right column resolves the record itself
+  const previewRef = useCallback(
+    (ref: TFromIdRef | undefined) => {
+      if (!ref) {
+        return;
+      }
+      const target = resolveEntityFetchTarget(ref);
+      if (target) {
+        setEntityPreview({ dataType: target.entityType, id: target.id });
+      }
     },
-    enabled: !!usedKey,
-    staleTime: 600, // 10 minutes
-  });
+    [setEntityPreview]
+  );
 
-  const onClose = () => setIsModalOpen(false);
+  const handleConfirm = useCallback(
+    (confirmedRefs: TFromIdRef[]) => {
+      const picked = confirmedRefs.at(0);
+      if (picked) {
+        // the schema's `type` const stays authoritative for the stored value;
+        // the browse-resolved FromID type is the fallback
+        const nextRef: TFromIdRef = { id_str: picked.id_str, type: valueType ?? picked.type };
+        // read `state`/`onChange` through a ref: `openOverlay` snapshots this
+        // widget at open time, so merging against a captured `state` would
+        // clobber any sibling-field edit that landed while the picker was open
+        const { state: latestState, onChange: latestOnChange } = latestWrite.current;
+        latestOnChange({ ...latestState, [fieldKey]: nextRef });
+        previewRef(nextRef);
+      }
+      closeSurface();
+    },
+    [closeSurface, fieldKey, latestWrite, previewRef, valueType]
+  );
 
-  const onDisplay = useCallback(() => {
-    setIsModalOpen(true);
-  }, []);
+  // closed without confirming: keep previewing whatever is still selected
+  const handleCancel = useCallback(() => {
+    previewRef(selectedRef ?? undefined);
+    closeSurface();
+  }, [closeSurface, previewRef, selectedRef]);
 
-  const onSelect = () => {
-    const selected = selectedRows.at(0);
-    if (selected && valueType) {
-      setUsedRow(selected);
-      onChange({ ...state, [fieldKey]: { id_str: selected.id, type: valueType } });
+  const browseWidget = (
+    <ModelIdentifierBrowseWidget
+      title={typeTitle}
+      fieldSchema={paramSchema ?? {}}
+      initialRefs={refs}
+      selectionMode={ModelIdentifierBrowseWidgetSelectionMode.Single}
+      configurationInputs={configurationInputs}
+      configureBinding={workflowField?.configureBinding}
+      workspaceSection={workflowField?.workspaceSection ?? WorkspaceSection.GeneralWorkflow}
+      workspace={{ virtualLabId, projectId }}
+      sessionRefs={sessionRefs}
+      requireSpecies={workflowField?.requireSpecies}
+      browseConfig={workflowField?.browseConfig}
+      prerequisites={workflowField?.workflowSessionSelection?.prerequisites}
+      disabled={disabled}
+      onConfirm={handleConfirm}
+      onCancel={handleCancel}
+    />
+  );
+
+  const openBrowse = useCallback(() => {
+    if (overlayHost) {
+      overlayHost.openOverlay(browseWidget);
+      return;
     }
-    onClose();
-    scopeRef.current?.changeScope(null);
-  };
+    setIsModalOpen(true);
+  }, [browseWidget, overlayHost]);
 
-  const onRemoveRecording = useCallback(() => {
-    setUsedRow(null);
-    onChange({ ...state, [fieldKey]: null });
-    onDisplay();
-  }, [onChange, onDisplay, fieldKey, state]);
-
-  const onRowsSelected = (rows: Array<EntityCoreIdentifiableNamed>) => {
-    setSelectedRows(rows);
-  };
+  const handleRemove = useCallback(() => {
+    setEntityPreview((current) => (current?.id === selectedRef?.id_str ? null : current));
+    const { state: latestState, onChange: latestOnChange } = latestWrite.current;
+    latestOnChange({ ...latestState, [fieldKey]: null });
+  }, [fieldKey, latestWrite, selectedRef?.id_str, setEntityPreview]);
 
   return (
-    <div className="w-full">
-      <div className="w-full">
-        <Button
-          data-scan-config-block-element={ScanConfigUIElementDict.ModelSelectorSingle}
-          type="button"
-          variant="outline"
-          onClick={data?.id ? undefined : onDisplay}
-          className={cn(
-            'border-label relative h-auto min-h-10 w-full items-start justify-start p-1 focus-within:bg-white',
-            'lg:min-h-12 active:border-primary-8 active:border-2! active:bg-white',
-            'focus-within:bg-white focus-within:shadow-none! focus-within:ring-0!',
-            'has-[.placeholder]:items-center',
-            { 'pointer-events-none': disabled }
-          )}
-          aria-disabled={disabled}
-          disabled={disabled}
-        >
-          <div className="flex flex-1 flex-wrap items-center gap-1 select-none">
-            {isLoading ? (
-              <Skeleton className="h-10 w-full bg-gray-100 rounded-md max-w-[calc(100%-30px)]" />
-            ) : displayEntity && !isLoading ? (
-              <Badge
-                key={data?.id}
-                variant="outline"
-                className={cn(
-                  'relative flex h-auto items-start justify-start gap-1 py-1!',
-                  'hover:bg-gray-100 hover:text-primary-8 min-w-0 w-full',
-                  { 'pointer-events-none': disabled },
-                  { 'max-w-[calc(100%-30px)]': !disabled }
-                )}
-                aria-disabled={disabled}
-              >
-                <div
-                  className={cn('flex flex-col items-start min-w-0 w-full', {
-                    'max-w-[calc(100%-1.75rem)]': !disabled,
-                  })}
-                >
-                  <div
-                    className={cn(
-                      'flex items-center justify-between gap-1',
-                      'text-primary-9 min-w-0 max-w-full text-xs lg:text-sm'
-                    )}
-                    title={data?.id}
-                  >
-                    <span className="truncate max-w-[calc(100%-30px)]">{data?.id}</span>
-                    <a
-                      href={`/app/entity/${data?.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      className={cn(
-                        'inline-flex items-center justify-center text-primary-9 min-w-6!',
-                        'min-h-6! px-1 border-gray-200 bg-white',
-                        'transition-colors hover:bg-gray-100 hover:border-gray-300 rounded-full',
-                        'hover:text-primary-9 pointer-events-auto [&_svg]:pointer-events-auto'
-                      )}
-                      aria-label={`View ion channel ${data?.name}`}
-                    >
-                      <LinkOutlined />
-                    </a>
-                  </div>
-                  <div className="text-sm lg:text-base font-semibold">{data?.name}</div>
-                </div>
-                {!disabled && (
-                  <BadgeButton
-                    onClick={onRemoveRecording}
-                    className="absolute inset-e-3 top-1/2 -translate-y-1/2"
-                  >
-                    <CloseOutlined className="text-xs! [&>svg]:size-3!" />
-                  </BadgeButton>
-                )}
-              </Badge>
-            ) : (
-              <span className="placeholder px-2.5 text-slate-500">
-                Select <span className="font-semibold">{entityConfig?.title}</span>
-              </span>
-            )}
-          </div>
-          {!disabled && (
-            <div
-              className={cn('absolute inset-e-3 top-1/2 ', '-translate-y-1/2 [&_svg]:size-3.5!')}
-            >
-              <SearchOutlined className={cn('text-primary-9 ')} />
-            </div>
-          )}
-        </Button>
-      </div>
+    <div
+      className="flex w-full max-w-full min-w-0 flex-col gap-2 overflow-hidden"
+      data-scan-config-block-element={ScanConfigUIElementDict.ModelSelectorSingle}
+    >
+      {isPending ? <Skeleton className="h-11 w-full rounded-full bg-gray-100" /> : null}
 
-      <Modal
-        destroyOnClose
-        open={isModalOpen}
-        afterClose={() => setSelectedRows([])}
-        onClose={onClose}
-        title={
-          <div className="text-primary-9 text-2xl font-light">
-            Select <span className="font-bold">{entityConfig?.title}</span>
-          </div>
-        }
-        headerClassName="[&>div]:text-2xl! select-none font-bold [&>div]:text-primary-8! "
-        bodyClassName="h-full w-full max-h-[calc(100vh-140px)]"
-        closeIconClassName="rounded-full size-8 flex items-center justify-center hover:text-primary-8!"
-        className="h-screen w-screen rounded-none"
-        size="full"
-        footer={
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-2">
-              <Button rounded variant="outline" className="h-10 px-10 lg:h-12" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                rounded
-                className="h-10 px-10 lg:h-12"
-                variant="default"
-                onClick={onSelect}
-                disabled={selectedRows.length === 0}
-              >
-                Select
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="h-full w-full">
-          <BrowseEntityScope
-            id={instanceId}
-            requireScopeSelector
-            requireBrainRegion={false}
-            requireMiniDetailView={false}
-            section={WorkspaceSection.SimulateWorkflow}
-            dataType={entityType}
-            scope={WorkspaceScope.Public}
-            extraQueryParams={filters}
-            mainTableProps={{
-              selectionType: 'radio',
-              onRowsSelected,
-              searchOpenOnMount: true,
-            }}
-            classNames={{
-              container: 'h-full',
-              filterClassNames: {
-                container: 'w-2/5 min-h-full',
-                // speciesSelector: 'w-90',
-              },
-            }}
+      {!isPending && selectedRef ? (
+        resolvedEntity ? (
+          <ModelIdentifierEntityCard
+            instanceId={selectedRef.id_str}
+            blockElement={`${ScanConfigUIElementDict.ModelSelectorSingle}-summary`}
+            collapsibleBadge
+            entityName={resolvedEntity.name}
+            typeLabel={typeTitle}
+            disabled={disabled}
+            selected={
+              entityPreview?.id === resolvedEntity.id &&
+              entityPreview.dataType === resolvedEntity.entityType
+            }
+            onSelect={() =>
+              setEntityPreview({
+                dataType: resolvedEntity.entityType,
+                id: resolvedEntity.id,
+                record: {
+                  ...resolvedEntity,
+                  type: resolvedEntity.type ?? resolvedEntity.entityType,
+                },
+              })
+            }
+            onChange={openBrowse}
+            onRemove={handleRemove}
           />
-        </div>
-      </Modal>
+        ) : (
+          <div className="rounded-full border border-dashed border-neutral-2 px-4 py-2.5 text-sm text-gray-500">
+            {selectedRef.id_str}
+          </div>
+        )
+      ) : null}
+
+      {!selectedRef && !isPending && !disabled ? (
+        <ModelIdentifierAddActionButton
+          label={`Select ${entityLabel}`}
+          disabled={disabled}
+          onClick={openBrowse}
+        />
+      ) : null}
+
+      {/* read-only field with no value: keep an explicit empty state (the old
+          disabled placeholder) instead of rendering nothing */}
+      {disabled && !selectedRef && !isPending ? (
+        <span className="px-1 text-sm text-gray-400 italic">No {entityLabel} selected</span>
+      ) : null}
+
+      {overlayHost ? null : (
+        <Modal
+          destroyOnClose
+          open={isModalOpen}
+          onClose={handleCancel}
+          title={
+            <div className="text-primary-9 text-2xl font-light">
+              Select <span className="font-bold">{typeTitle}</span>
+            </div>
+          }
+          headerClassName="[&>div]:text-2xl! select-none font-bold [&>div]:text-primary-8!"
+          bodyClassName="h-full w-full max-h-[calc(100vh-140px)]"
+          closeIconClassName="rounded-full size-8 flex items-center justify-center hover:text-primary-8!"
+          className="h-screen w-screen rounded-none"
+          size="full"
+        >
+          <div className="h-full w-full">{isModalOpen ? browseWidget : null}</div>
+        </Modal>
+      )}
     </div>
   );
 }

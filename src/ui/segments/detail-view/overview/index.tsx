@@ -38,6 +38,7 @@ import {
 } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
+import { CircuitDetailViewer } from '@/features/entities/circuit/detail-view';
 import { EmCellMeshMetadata } from '@/features/entities/em-cell-mesh';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
@@ -504,6 +505,14 @@ export default async function Overview({
     </div>
   ) : null;
 
+  // Synaptome (beta) is scale='single' and usually has no circuit_visualization
+  // image, so it never enters `visualizations` above. Show the interactive 3D
+  // viewer directly under the entity description instead.
+  const circuitViewerSection =
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuit ? (
+      <CircuitDetailViewer circuit={entity as ICircuit} />
+    ) : null;
+
   const subjectSection =
     'subject' in entity ? (
       <SubjectDetails className="mb-8" entity={entity} variant={fieldVariant} />
@@ -561,6 +570,7 @@ export default async function Overview({
 
   return (
     <>
+      {circuitViewerSection}
       {visualizations}
       {metadataGrid}
       {subjectSection}

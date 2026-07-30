@@ -11,6 +11,7 @@ interface SuggestedQuestionsProps {
   suggestions: string[];
   clearSuggestions(): void;
   isLoading: boolean;
+  isRefreshing?: boolean;
 }
 
 const SKELETON_COUNT = 3;
@@ -21,11 +22,13 @@ export default function SuggestedQuestions({
   suggestions,
   clearSuggestions,
   isLoading,
+  isRefreshing,
 }: SuggestedQuestionsProps) {
-  const showSkeletons = isLoading || suggestions.length === 0;
+  const showSkeletons = isLoading && suggestions.length === 0;
 
   return (
     <div className={classNames(className, styles.suggestedQuestions, styles.container)}>
+      {isRefreshing && suggestions.length > 0 && <div className={styles.refreshingOverlay} />}
       <div className={styles.suggestions}>
         {showSkeletons
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
@@ -36,6 +39,8 @@ export default function SuggestedQuestions({
               <button
                 key={prompt}
                 type="button"
+                disabled={isRefreshing}
+                className={classNames(isRefreshing && styles.disabled)}
                 onClick={() => {
                   onClick(prompt ?? '');
                   clearSuggestions();

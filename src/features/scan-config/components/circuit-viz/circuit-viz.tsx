@@ -1,15 +1,30 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { match } from 'ts-pattern';
 
+import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
+import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
+import { useDownloadHandler } from '@/features/scan-config/components/model-preview/viewer-layout/hooks';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
+import { Button } from '@/ui/molecules/button';
 
-import { useCircuit } from './hooks';
 import { sequentialCellLoader } from './sequential-loader';
+import {
+  loaderSupportsAxonToggle,
+  resolveSmallCircuitLoaderKind,
+  SmallCircuitLoaderKind,
+  useObiOneVizSource,
+  useSonataAssetSource,
+} from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
-import type { MorphoViewerSignals } from '@/morpho-viewer';
+import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
+import type { SmallCircuitSource } from './sources';
 
 import styles from './circuit-viz.module.css';
 
@@ -25,75 +40,249 @@ interface CircuitVizProps {
   scalebarColor?: string;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
+  /**
+   * World-coordinate electrode overlays from {@link useElectrodeLocationsOverlay}.
+   * Passed through to morphoviewer as point clouds (not Three.js helpers).
+   */
+  overlays?: CircuitOverlayGroup[];
+  /**
+   * Enable left-drag (translate) / right-drag or Alt/Shift (rotate) on overlays.
+   * Why gated: only when `setConfig` exists so 3D edits can write the form.
+   */
+  overlaysInteractive?: boolean;
+  /**
+   * Fired by morphoviewer on gesture end with absolute origin + rotation.
+   * Host applies via {@link applyElectrodeOverlayTransform}.
+   */
+  onOverlayTransform?: (event: MorphoViewerOverlayTransformEvent) => void;
+  /** Form-selected electrode block name → highlight in the 3D view. */
+  highlightedOverlayId?: string | null;
+  /**
+   * Neuron paint opacity (0–1). Host defaults: 1 generally, 0.2 for the
+   * extracellular recording array campaign. Electrode markers stay opaque.
+   */
+  neuronOpacity?: number;
+  /** Electrode marker radius in world units (morphoviewer `overlaysRadius`). */
+  electrodeRadius?: number;
+  /**
+   * Viewer feature flags from domain `viewer` (via host).
+   * Only `cellHover` is consumed here today.
+   */
+  features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
 }
 
-const CircuitViz = ({
-  circuit: circuitEntity,
-  colorsByNode,
-  defaultColor,
+/**
+ * Small-circuit GPU surface. Data strategy is selected by circuit scale:
+ * - pair / small → OBI-One `/circuit/viz`
+ * - single → client SONATA asset
+ *
+ * Split child components keep Rules of Hooks intact (SONATA must not mount for pair).
+ */
+const CircuitViz = (props: CircuitVizProps) =>
+  match(resolveSmallCircuitLoaderKind(props.circuit.scale))
+    .with(SmallCircuitLoaderKind.SonataAsset, () => <CircuitVizSonata {...props} />)
+    .with(SmallCircuitLoaderKind.ObiOneVisualization, () => <CircuitVizObiOne {...props} />)
+    .exhaustive();
+
+function CircuitVizObiOne(props: CircuitVizProps) {
+  const source = useObiOneVizSource({
+    circuitId: props.circuit.id,
+    showAxons: props.showAxons,
+    colorsByNode: props.colorsByNode,
+    defaultColor: props.defaultColor,
+  });
+  return <CircuitVizView {...props} source={source} clearSequentialOnAxonToggle />;
+}
+
+function CircuitVizSonata(props: CircuitVizProps) {
+  const source = useSonataAssetSource({
+    circuit: props.circuit,
+    colorsByNode: props.colorsByNode,
+    defaultColor: props.defaultColor,
+  });
+  const handleDownload = useDownloadHandler(props.circuit);
+  return (
+    <CircuitVizView
+      {...props}
+      source={source}
+      errorActions={
+        <Button className="mt-3" onClick={handleDownload}>
+          Download SONATA file
+        </Button>
+      }
+    />
+  );
+}
+
+type CircuitVizViewProps = CircuitVizProps & {
+  source: SmallCircuitSource;
+  /** OBI-One axon toggle remounts morph keys — clear the sequential morphology cache. */
+  clearSequentialOnAxonToggle?: boolean;
+  errorActions?: ReactNode;
+};
+
+function CircuitVizView({
   showAxons,
   backgroundColor,
   scalebarColor,
   signals,
-}: CircuitVizProps) => {
+  overlays,
+  overlaysInteractive = false,
+  onOverlayTransform,
+  highlightedOverlayId = null,
+  neuronOpacity,
+  electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
+  features,
+  source,
+  clearSequentialOnAxonToggle = false,
+  errorActions,
+}: CircuitVizViewProps) {
+  const enableCellHover = features?.cellHover ?? true;
   const [progress, setProgress] = useState(0);
-  const { circuit, isLoading, error, loadCell } = useCircuit(
-    circuitEntity.id,
-    showAxons,
-    colorsByNode,
-    defaultColor
-  );
+  // Stay covered for a paint frame after morphoviewer reports 100%, so the
+  // neurite mesh replaces the soma placeholder before the overlay lifts.
+  const [morphologiesPainted, setMorphologiesPainted] = useState(false);
+  const { cells, isLoading, error, loadCell } = source;
+  const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
+
+  // Publish circuit centre so Add-electrode can seed origin_* in-view.
+  useEffect(() => {
+    if (!cells.length) return;
+    let sx = 0;
+    let sy = 0;
+    let sz = 0;
+    for (const cell of cells) {
+      sx += cell.center[0];
+      sy += cell.center[1];
+      sz += cell.center[2];
+    }
+    const n = cells.length;
+    setCircuitSceneAnchor([sx / n, sy / n, sz / n]);
+  }, [cells, setCircuitSceneAnchor]);
+
   const scalebar = useMemo(
     () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
     [scalebarColor]
   );
+
+  // Empty highlightedCellIds → morphoviewer flat overlay stays black (ADD black
+  // = no wash-out). Hosts pass features.cellHover from domain `viewer`.
   const [highlightedCellId, setHighlightedCellId] = useState('');
-  const handleCellHover = (cell: Cell | undefined): void => {
+  // Dragging an electrode must not leave a neuron lit under it. morphoviewer
+  // only reports overlay transforms once the gesture ends, so the drag is
+  // detected here from the pointer: press clears any highlight and suspends
+  // hover, release resumes it.
+  //
+  // A ref, not state: nothing renders from this flag, and morphoviewer
+  // re-subscribes whenever `onCellHover` changes identity — a stateful flag
+  // would rebuild the closure and churn that listener on every drag.
+  const draggingOverlayRef = useRef(false);
+  const handleCellHover = useCallback((cell: Cell | undefined): void => {
+    if (draggingOverlayRef.current) return;
     setHighlightedCellId(cell?.id ?? '');
+  }, []);
+  const suspendHoverHighlight = () => {
+    if (!overlaysInteractive) return;
+    draggingOverlayRef.current = true;
+    setHighlightedCellId('');
   };
-  // reloading cells (axon toggle/recolor) restarts the sequential loader
+  const resumeHoverHighlight = () => {
+    draggingOverlayRef.current = false;
+  };
+  // Stable array identity: morphoviewer's `highlightedCellIds` setter bails out
+  // on reference equality, so a fresh array each render forces a repaint pass.
+  const highlightedCellIds = useMemo(
+    () => (enableCellHover ? [highlightedCellId] : []),
+    [enableCellHover, highlightedCellId]
+  );
+
   const prevAxonRef = useRef(showAxons);
   useEffect(() => {
+    if (!clearSequentialOnAxonToggle) return;
     if (prevAxonRef.current !== showAxons) {
       prevAxonRef.current = showAxons;
       sequentialCellLoader.clear();
       setProgress(0);
+      setMorphologiesPainted(false);
     }
-  }, [showAxons]);
+  }, [showAxons, clearSequentialOnAxonToggle]);
 
-  const loading = !error && (isLoading || progress < 1);
+  useEffect(() => {
+    if (progress < 1) {
+      setMorphologiesPainted(false);
+      return;
+    }
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setMorphologiesPainted(true));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, [progress]);
+
+  const loading = !error && (isLoading || progress < 1 || !morphologiesPainted);
+
+  // Pass interactive metadata through; morphoviewer ignores unknown fields safely.
+  const morphoOverlays = useMemo(
+    () =>
+      overlays?.map(({ color, coordinates, id, kind, origin, rotation }) => ({
+        color,
+        coordinates,
+        id,
+        kind,
+        origin,
+        rotation,
+      })),
+    [overlays]
+  );
 
   return (
-    <div className="h-full w-full relative">
-      {circuit && circuit.length > 0 && (
+    <div
+      className="h-full w-full relative"
+      onPointerDown={suspendHoverHighlight}
+      onPointerUp={resumeHoverHighlight}
+      onPointerCancel={resumeHoverHighlight}
+      onPointerLeave={resumeHoverHighlight}
+    >
+      {cells.length > 0 && (
         <MorphoViewerSmallCircuit
           className={styles.morphoViewer}
           gizmo
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           signals={signals}
-          circuit={circuit}
-          onCellHover={handleCellHover}
-          highlightedCellIds={[highlightedCellId]}
+          circuit={cells}
+          onCellHover={enableCellHover ? handleCellHover : undefined}
+          highlightedCellIds={highlightedCellIds}
           loadCell={loadCell}
           controls={[]}
           onLoadProgress={setProgress}
+          overlays={morphoOverlays}
+          overlaysRadius={electrodeRadius}
+          overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
+          overlaysInteractive={overlaysInteractive}
+          onOverlayTransform={onOverlayTransform}
+          highlightedOverlayId={highlightedOverlayId}
+          neuronOpacity={neuronOpacity}
         />
       )}
       {loading && <VisualizationLoadingIndicator progress={progress} />}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
           <details className="text-red-500">
             <summary>
               <strong>Couldn't load the visualization</strong>
             </summary>
             <div>{error.message}</div>
           </details>
+          {errorActions}
         </div>
       )}
     </div>
   );
-};
+}
 
 export function buildMorphoTree(
   sections: Sections,
@@ -178,4 +367,5 @@ export function buildMorphoTree(
   };
 }
 
+export { loaderSupportsAxonToggle, resolveSmallCircuitLoaderKind };
 export default CircuitViz;

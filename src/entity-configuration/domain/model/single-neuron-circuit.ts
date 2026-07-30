@@ -44,6 +44,11 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
+  viewer: {
+    electrodes: false,
+    cellHover: false,
+    colorBy: false,
+  },
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,

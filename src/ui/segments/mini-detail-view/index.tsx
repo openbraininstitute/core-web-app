@@ -25,6 +25,7 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { CircuitPreview } from '@/ui/segments/mini-detail-view/previews/circuit-preview';
+import { ExtracellularRecordingArrayPreview } from '@/ui/segments/mini-detail-view/previews/extracellular-recording-array-preview';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
@@ -43,6 +44,7 @@ import type {
 } from '@/api/entitycore/types';
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
@@ -254,6 +256,20 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
         return (
           <div className="mt-5 w-full" key={record.id}>
             <CircuitPreview record={record as ICircuit} />
+          </div>
+        );
+      }
+    )
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+      },
+      () => {
+        return (
+          <div className="mt-5 w-full" key={record.id}>
+            <ExtracellularRecordingArrayPreview
+              record={record as ISimulatableExtracellularRecordingArray}
+            />
           </div>
         );
       }

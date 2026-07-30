@@ -1,8 +1,11 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: The list is not suppose to change */
 
 import { saveAs } from 'file-saver';
+import { useSetAtom } from 'jotai';
 import React from 'react';
 
+import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
+import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerSomasOnly, useMorphoViewerDebugMode } from '@/morpho-viewer';
@@ -13,7 +16,9 @@ import { cn } from '@/utils/css-class';
 import { useCircuitNodes, useSomaRadius } from './hooks';
 
 import type { ICircuit } from '@/api/entitycore/types';
-import type { MorphoViewerSignals } from '@/morpho-viewer';
+import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
 
@@ -27,6 +32,26 @@ export interface LargeCircuitPreviewProps {
   scalebarColor?: string;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
+  /**
+   * World-coordinate electrode overlays (same pipeline as CircuitViz).
+   * Large circuits use MorphoViewerSomasOnly; overlay interaction is identical.
+   */
+  overlays?: CircuitOverlayGroup[];
+  /** Enable left-drag / right-drag on electrode overlays when form can write back. */
+  overlaysInteractive?: boolean;
+  /** Gesture-end transform → host `applyElectrodeOverlayTransform`. */
+  onOverlayTransform?: (event: MorphoViewerOverlayTransformEvent) => void;
+  /** Form-selected electrode block name → highlight in the 3D view. */
+  highlightedOverlayId?: string | null;
+  /** Soma paint opacity (0–1); electrodes stay fully opaque independently. */
+  neuronOpacity?: number;
+  /** Electrode marker radius (world units). */
+  electrodeRadius?: number;
+  /**
+   * Viewer feature flags from domain `viewer` (via host).
+   * Reserved for parity with {@link CircuitViz}; soma-only path has no cell hover.
+   */
+  features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
 }
 
 interface CellInfo {
@@ -42,10 +67,30 @@ export function LargeCircuitPreview({
   backgroundColor,
   scalebarColor,
   signals,
+  overlays,
+  overlaysInteractive = false,
+  onOverlayTransform,
+  highlightedOverlayId = null,
+  neuronOpacity,
+  electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);
   const nodes = useCircuitNodes(circuit);
+  const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
+  React.useEffect(() => {
+    if (!nodes || nodes instanceof Error || nodes.length === 0) return;
+    let sx = 0;
+    let sy = 0;
+    let sz = 0;
+    for (const node of nodes) {
+      sx += node.position[0];
+      sy += node.position[1];
+      sz += node.position[2];
+    }
+    const n = nodes.length;
+    setCircuitSceneAnchor([sx / n, sy / n, sz / n]);
+  }, [nodes, setCircuitSceneAnchor]);
   const scalebar = React.useMemo(
     () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
     [scalebarColor]
@@ -67,6 +112,19 @@ export function LargeCircuitPreview({
     });
   }, [nodes, colorsByNode]);
 
+  const morphoOverlays = React.useMemo(
+    () =>
+      overlays?.map(({ color, coordinates, id, kind, origin, rotation }) => ({
+        color,
+        coordinates,
+        id,
+        kind,
+        origin,
+        rotation,
+      })),
+    [overlays]
+  );
+
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
       {!nodes && <VisualizationLoadingIndicator />}
@@ -87,6 +145,13 @@ export function LargeCircuitPreview({
             cellInfos={cellInfos}
             backgroundColor={backgroundColor}
             signals={signals}
+            overlays={morphoOverlays}
+            overlaysRadius={electrodeRadius}
+            overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
+            overlaysInteractive={overlaysInteractive}
+            onOverlayTransform={onOverlayTransform}
+            highlightedOverlayId={highlightedOverlayId}
+            neuronOpacity={neuronOpacity}
             controls={[
               debugMode
                 ? [

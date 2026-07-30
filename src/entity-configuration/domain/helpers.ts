@@ -1,6 +1,11 @@
 import { filter, find, intersection, set } from 'es-toolkit/compat';
 
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
+import {
+  type IEntityViewerFeatures,
+  type IEntityViewerResolveContext,
+  resolveEntityViewerConfig,
+} from '@/entity-configuration/domain/viewer-config';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -23,6 +28,19 @@ export const getEntityByExtendedType = ({ type }: { type?: TExtendedEntitiesType
   find(EntityCoreConfiguration, { extendedType: type });
 
 export type TEntityByExtendedTypeConfig = ReturnType<typeof getEntityByExtendedType>;
+
+/**
+ * Resolve viewer features for an extended entity type from its domain config.
+ *
+ * Falls back to defaults when the type is unknown or omits `viewer`.
+ */
+export function resolveViewerFeaturesForEntityType(
+  type: TExtendedEntitiesTypeDict | undefined,
+  ctx: IEntityViewerResolveContext = {}
+): IEntityViewerFeatures {
+  const entity = type ? getEntityByExtendedType({ type }) : undefined;
+  return resolveEntityViewerConfig(entity?.viewer, ctx);
+}
 
 // TODO: fix type to be a list of available types in entitycore
 export const getEntityByCoreType = ({ type }: { type?: TEntityTypeDict }) =>

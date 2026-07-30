@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { LoadingNeuronSpinner } from '@/components/neuron-viewer/';
+import { LoadingNeuronSpinner } from '@/components/neuron-viewer';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -16,6 +16,13 @@ export interface ViewerLayoutProps {
   model: TSupportedEntitiesForScanConfiguration;
 }
 
+/**
+ * Legacy single-scale preview shell (SONATA → MorphoViewerSmallCircuit).
+ *
+ * Prefer {@link CircuitPreview} / {@link CircuitViz}, which select the SONATA
+ * loader via {@link resolveSmallCircuitLoaderKind}. Kept for the shared
+ * {@link CircuitLoader} module and download helper under this folder.
+ */
 export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
   const [progress, setProgress] = React.useState(0);
   const circuitLoader = useCircuitLoader(model);

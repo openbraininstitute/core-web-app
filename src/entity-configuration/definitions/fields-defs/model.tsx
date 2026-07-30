@@ -19,6 +19,7 @@ import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { ReferenceCell } from '@/entity-configuration/definitions/reference-cell';
 import {
   EmptyPreview,
   EmptyValue,
@@ -689,6 +690,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         },
       },
     },
-    render: (r) => renderEmptyOrValue((r as ISimulatableExtracellularRecordingArray).circuit_id),
+    render: (r) => {
+      const circuitId = (r as ISimulatableExtracellularRecordingArray).circuit_id;
+      if (!circuitId) return EmptyValue;
+      return <ReferenceCell entityId={circuitId} entityType={ExtendedEntitiesTypeDict.Circuit} />;
+    },
   },
 };
