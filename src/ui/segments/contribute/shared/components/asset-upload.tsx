@@ -29,7 +29,7 @@ function getFileTypeLabel(file: File): string {
 
 export function AssetUpload({
   maxFiles = 1,
-  maxSize = 500 * 1024 * 1024, // 500 MB
+  maxSize = 10 * 1024 * 1024 * 1024, // 10 GB
   accept = '*',
   multiple = false,
   className,
