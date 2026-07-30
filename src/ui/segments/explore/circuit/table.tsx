@@ -12,6 +12,7 @@ import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-fi
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
 import { Search } from '@/ui/segments/data-table/search';
 import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
+import { CircuitListingGrid } from '@/ui/segments/explore/circuit/elements/circuit-listing-grid';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { cn } from '@/utils/css-class';
@@ -66,6 +67,12 @@ export type Props<T> = {
   queryKeyHash?: string;
   expandableConfig?: ExpandableConfig<T>;
   searchOpenOnMount?: boolean;
+  /**
+   * Render the listing body on the AG-Grid-based {@link CircuitListingGrid} (T-08).
+   * Defaults to `true`. Set `false` to fall back to the legacy antd `WrapperTable`
+   * path, which is retained intact.
+   */
+  useGridRenderer?: boolean;
 };
 
 export function MainTable({
@@ -92,6 +99,7 @@ export function MainTable({
   queryKeyHash,
   expandableConfig,
   searchOpenOnMount = false,
+  useGridRenderer = true,
 }: Props<ICircuit>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -139,48 +147,64 @@ export function MainTable({
             </div>
           </div>
         </div>
-        <WrapperTable<ICircuit>
-          key={view === CircuitRepresentationView.Hierarchy ? queryKeyHash : 'circuit-table'}
-          dataType={dataType}
-          columns={columns}
-          dataSource={dataSource}
-          loading={
-            showLoadingState && isLoading
-              ? {
-                  indicator: (
-                    <Spin indicator={<LoadingOutlined spin className="text-primary-6" />} />
-                  ),
-                  spinning: showLoadingState && isLoading,
-                  size: 'large',
-                }
-              : false
-          }
-          onCellClick={onCellClick}
-          renderButton={renderButton}
-          selectionType={selectionType}
-          onRowsSelected={onRowsSelected}
-          dataKey={dataKey}
-          rowClassName={(record: ICircuit) =>
-            // eslint-disable-next-line no-nested-ternary
-            'isFiltered' in record && record.isFiltered
-              ? `filtered-in [&_td_svg]:text-primary-8!`
-              : view === 'hierarchy'
-                ? 'filtered-out [&_td]:bg-background! [&_td]:text-neutral-4!'
-                : '[&_td_svg]:text-primary-8!'
-          }
-          tableStyle={tableStyle}
-          onRow={onRow}
-          sticky={sticky}
-          className={cls?.table}
-          controls={
-            view === CircuitRepresentationView.Flat && (
-              <div className="w-full">
-                <Pagination {...{ dataKey, dataType, section, resultPagination }} />
-              </div>
-            )
-          }
-          expandableConfig={expandableConfig}
-        />
+        {useGridRenderer ? (
+          <CircuitListingGrid
+            gridKey={view === CircuitRepresentationView.Hierarchy ? queryKeyHash : 'circuit-table'}
+            columns={columns}
+            dataSource={dataSource}
+            dataType={dataType}
+            onCellClick={onCellClick}
+            loading={Boolean(showLoadingState && isLoading)}
+            view={view}
+            dataKey={dataKey}
+            section={section}
+            resultPagination={resultPagination}
+            className={cls?.table}
+          />
+        ) : (
+          <WrapperTable<ICircuit>
+            key={view === CircuitRepresentationView.Hierarchy ? queryKeyHash : 'circuit-table'}
+            dataType={dataType}
+            columns={columns}
+            dataSource={dataSource}
+            loading={
+              showLoadingState && isLoading
+                ? {
+                    indicator: (
+                      <Spin indicator={<LoadingOutlined spin className="text-primary-6" />} />
+                    ),
+                    spinning: showLoadingState && isLoading,
+                    size: 'large',
+                  }
+                : false
+            }
+            onCellClick={onCellClick}
+            renderButton={renderButton}
+            selectionType={selectionType}
+            onRowsSelected={onRowsSelected}
+            dataKey={dataKey}
+            rowClassName={(record: ICircuit) =>
+              // eslint-disable-next-line no-nested-ternary
+              'isFiltered' in record && record.isFiltered
+                ? `filtered-in [&_td_svg]:text-primary-8!`
+                : view === 'hierarchy'
+                  ? 'filtered-out [&_td]:bg-background! [&_td]:text-neutral-4!'
+                  : '[&_td_svg]:text-primary-8!'
+            }
+            tableStyle={tableStyle}
+            onRow={onRow}
+            sticky={sticky}
+            className={cls?.table}
+            controls={
+              view === CircuitRepresentationView.Flat && (
+                <div className="w-full">
+                  <Pagination {...{ dataKey, dataType, section, resultPagination }} />
+                </div>
+              )
+            }
+            expandableConfig={expandableConfig}
+          />
+        )}
       </section>
       {displayControlPanel && filters && (
         <ListingFilterPanel
