@@ -14,7 +14,7 @@ import { summarizeFilter } from './filters/summary';
 import { useGridState } from './use-grid-state';
 
 import type { CustomHeaderProps } from 'ag-grid-react';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import type { FilterOptionsSource } from '../../core';
 import type { AgGridContext } from './ag-context';
 
@@ -22,6 +22,11 @@ interface HeaderParams {
   columnId: string;
   unit?: string;
   sortable?: boolean;
+  /**
+   * Rich header node (multi-line labels, icons, tooltips) rendered in place of the
+   * plain `displayName` string. Backward-compatible: omit it for a text header.
+   */
+  headerNode?: ReactNode;
   /** filter configuration, present when the column is filterable in this context */
   filter?: {
     facetKey: string;
@@ -40,7 +45,8 @@ interface HeaderParams {
  */
 export function AgHeader(props: CustomHeaderProps) {
   const ctx = props.context as AgGridContext;
-  const { columnId, unit, sortable, filter } = props as CustomHeaderProps & HeaderParams;
+  const { columnId, unit, sortable, filter, headerNode } = props as CustomHeaderProps &
+    HeaderParams;
   const state = useGridState(ctx.controller);
   const [open, setOpen] = useState(false);
 
@@ -65,7 +71,11 @@ export function AgHeader(props: CustomHeaderProps) {
           sortable ? 'cursor-pointer' : 'cursor-default'
         )}
       >
-        <span className="truncate font-light text-gray-400">{props.displayName}</span>
+        {headerNode !== undefined ? (
+          <span className="flex min-w-0 flex-1 items-center">{headerNode}</span>
+        ) : (
+          <span className="truncate font-light text-gray-400">{props.displayName}</span>
+        )}
         {unit ? <span className="text-xs font-light text-gray-400">[{unit}]</span> : null}
         {sortable && (
           <span className="flex shrink-0 items-center gap-0.5">

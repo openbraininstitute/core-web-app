@@ -82,4 +82,15 @@ describe('adaptCircuitColumns', () => {
     const row = { id: 'x', name: 'Alpha' } as unknown as ICircuit;
     expect(col.renderCell?.(row)).toBe('Alpha');
   });
+
+  it('attaches a best-effort text filter + getValue for header filtering/sorting', () => {
+    const [col] = adaptCircuitColumns([{ key: 'name', title: 'Name' }]);
+    expect(col.filter?.operators).toContain('ilike');
+    expect(col.sortable).toBe(true);
+    const row = { id: 'x', name: 'Alpha' } as unknown as ICircuit;
+    expect(col.getValue?.(row)).toBe('Alpha');
+    // non-primitive fields resolve to undefined (a no-op for filter/sort)
+    const nested = { id: 'y', name: { deep: true } } as unknown as ICircuit;
+    expect(col.getValue?.(nested)).toBeUndefined();
+  });
 });

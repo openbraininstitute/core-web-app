@@ -1,5 +1,6 @@
 'use client';
 
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
 import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
@@ -80,6 +81,12 @@ export function CircuitListingGrid({
 }: CircuitListingGridProps) {
   const isEmpty = !loading && dataSource.length === 0;
 
+  // Host the expander inside the "Subcircuits" column (right-aligned, centred) when
+  // that column is active; otherwise the grid falls back to a leading expander.
+  const expandColumnId = columns.some((c) => String(c.key) === EntityCoreFields.CircuitSubCircuit)
+    ? EntityCoreFields.CircuitSubCircuit
+    : undefined;
+
   return (
     <div className={cn('flex h-full w-full min-w-0 flex-col', className)}>
       <div className="min-h-0 w-full flex-1 overflow-auto">
@@ -90,6 +97,7 @@ export function CircuitListingGrid({
           dataType={dataType}
           onCellClick={onCellClick}
           loading={loading}
+          expandColumnId={expandColumnId}
           rowClassName={(record) => circuitListingRowClass(record, view)}
         />
         {isEmpty && (

@@ -7,6 +7,7 @@ import { cn } from '@/utils/css-class';
 
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
+import { InMemoryGrid } from './in-memory-grid';
 
 import type {
   ColDef,
@@ -19,7 +20,7 @@ import type {
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
-import type { ColumnModel } from '../core';
+import type { ColumnModel, OperatorRegistry, SortModel } from '../core';
 
 registerDataGridModules();
 
@@ -86,6 +87,23 @@ export interface SimpleGridProps<Row> {
   rowSelection?: SimpleRowSelection<Row>;
   /** Extra classes for the grid wrapper. */
   className?: string;
+
+  // ── opt-in parity features (default off → existing consumers are unchanged) ──
+
+  /**
+   * Enable per-column custom header filter popovers (same Radix UX as the entity
+   * grid). Only columns that declare a `filter` show the filter icon. Turning this
+   * on activates the enhanced engine (store-driven sort + in-memory filtering).
+   */
+  filterable?: boolean;
+  /** Show the column show/hide chooser above the grid. Activates the enhanced engine. */
+  showColumnChooser?: boolean;
+  /** Default sort applied (enhanced engine only) when the user has set none. */
+  defaultSort?: SortModel;
+  /** Page-size choices for the enhanced engine's pagination size changer. */
+  pageSizeOptions?: number[];
+  /** Operator catalog for the filter editors (default: the standard registry). */
+  operators?: OperatorRegistry;
 }
 
 /** Inline cell renderer host — invokes the column's `renderCell` with the row. */
@@ -186,7 +204,13 @@ const SELECTION_COLUMN_DEF: ColDef = {
   headerClass: 'flex items-center justify-center',
 };
 
-export function SimpleGrid<Row>({
+/**
+ * Backward-compatible lightweight grid: AG Grid's client-side row model with the
+ * shared theme, optional native sorting/pagination/selection. This is the ORIGINAL
+ * `SimpleGrid` body, unchanged — used whenever no opt-in parity feature is
+ * requested, so every existing consumer behaves exactly as before.
+ */
+function SimpleGridBasic<Row>({
   columns,
   rows,
   getRowId,
@@ -285,5 +309,38 @@ export function SimpleGrid<Row>({
         onRowDataUpdated={applySelection}
       />
     </div>
+  );
+}
+
+/**
+ * A light-weight grid preset for STATIC / nested tables (non-entitycore). By default
+ * it is the original lightweight grid (AG Grid client-side model). Opt in to
+ * `filterable`/`showColumnChooser` to activate the ENHANCED engine, which gives it
+ * the SAME feature set as the browse-entity grid — per-column custom header filter
+ * popovers, a column chooser, store-driven sorting, column resizing and pagination —
+ * all reusing the shared components. Every existing call site (which passes none of
+ * the opt-in props) keeps the original behaviour.
+ */
+export function SimpleGrid<Row>(props: SimpleGridProps<Row>) {
+  const enhanced = Boolean(props.filterable || props.showColumnChooser);
+  if (!enhanced) return <SimpleGridBasic {...props} />;
+
+  return (
+    <InMemoryGrid<Row>
+      columns={props.columns}
+      rows={props.rows}
+      getRowId={props.getRowId}
+      filterable={props.filterable}
+      showColumnChooser={props.showColumnChooser}
+      sortable={props.sortable}
+      defaultSort={props.defaultSort}
+      pagination={props.pagination}
+      pageSize={props.pageSize}
+      pageSizeOptions={props.pageSizeOptions}
+      hideHeader={props.hideHeader}
+      rowSelection={props.rowSelection}
+      operators={props.operators}
+      className={props.className}
+    />
   );
 }

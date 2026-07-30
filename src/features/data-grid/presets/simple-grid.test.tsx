@@ -1,9 +1,17 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { OperatorId } from '../core';
 import { buildSimpleColDefs, SimpleGrid } from './simple-grid';
 
+import type { ReactNode } from 'react';
 import type { SimpleColumn } from './simple-grid';
+
+function withQuery(ui: ReactNode) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+}
 
 interface Row {
   id: string;
@@ -209,5 +217,71 @@ describe('SimpleGrid row selection', () => {
       expect(container.querySelector('.ag-root-wrapper')).toBeInTheDocument();
     });
     expect(container.querySelector('.ag-row-selected')).not.toBeInTheDocument();
+  });
+});
+
+// Opt-in enhanced mode: reuses the shared header filters, column chooser,
+// store-driven sorting and pagination — the same stack as the entity grid.
+const filterColumns: Array<SimpleColumn<Row>> = [
+  {
+    id: 'name',
+    header: 'Name',
+    field: 'name',
+    sortable: true,
+    filter: { operators: [OperatorId.Ilike] },
+  },
+  { id: 'seed', header: 'Seed', getValue: (r) => r.scan_parameters.seed as number },
+];
+
+describe('SimpleGrid enhanced mode', () => {
+  it('stays on the basic path (no chooser/filter chrome) when no opt-in prop is set', async () => {
+    const { container } = render(
+      <SimpleGrid columns={filterColumns} rows={rows} getRowId={(r) => r.id} sortable />
+    );
+    await waitFor(() => {
+      expect(container.querySelector('.ag-header-cell-text')).toBeInTheDocument();
+    });
+    expect(container.querySelector('[aria-label="Choose columns"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-label^="Filter "]')).not.toBeInTheDocument();
+  });
+
+  it('renders a filter icon for filterable columns when filterable is set', async () => {
+    const { container } = withQuery(
+      <SimpleGrid columns={filterColumns} rows={rows} getRowId={(r) => r.id} filterable />
+    );
+    await waitFor(() => {
+      expect(container.querySelector('.ag-root-wrapper')).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(container.querySelector('[aria-label="Filter Name"]')).toBeInTheDocument();
+    });
+    // the non-filterable column shows no filter icon
+    expect(container.querySelector('[aria-label="Filter Seed"]')).not.toBeInTheDocument();
+    expect(container.textContent).toContain('Alpha');
+  });
+
+  it('renders the column chooser control when showColumnChooser is set', async () => {
+    const { container } = withQuery(
+      <SimpleGrid columns={filterColumns} rows={rows} getRowId={(r) => r.id} showColumnChooser />
+    );
+    await waitFor(() => {
+      expect(container.querySelector('[aria-label="Choose columns"]')).toBeInTheDocument();
+    });
+  });
+
+  it('renders a pagination panel in enhanced mode when paginating past one page', async () => {
+    const { container } = withQuery(
+      <SimpleGrid
+        columns={filterColumns}
+        rows={rows}
+        getRowId={(r) => r.id}
+        filterable
+        pagination
+        pageSize={2}
+      />
+    );
+    await waitFor(() => {
+      expect(container.querySelector('.ant-pagination')).toBeInTheDocument();
+    });
   });
 });

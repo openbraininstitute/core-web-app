@@ -1,26 +1,22 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { AgGridReact } from 'ag-grid-react';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import ChevronRight from '@/components/icons/ChevronRight';
-import { buildSimpleColDefs, type SimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
-import { dataGridTheme } from '@/features/data-grid/renderers/aggrid/theme';
+import { OperatorId } from '@/features/data-grid/core';
+import { InMemoryGrid } from '@/features/data-grid/presets/in-memory-grid';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import type { ColDef, GridApi, ICellRendererParams } from 'ag-grid-community';
 import type { ColumnProps } from 'antd/es/table';
 import type { ComponentProps, ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-
-registerDataGridModules();
 
 /** Cell-click callback compatible with the antd `OnCellClick` used across circuit tables. */
 export type CircuitCellClick = (
@@ -36,39 +32,27 @@ export type CircuitCellClick = (
  */
 export const MAX_CIRCUIT_DEPTH = 6;
 
-const EXPAND_COL_ID = '__circuit_expand';
-
-/** Fallback height for a detail row before its nested grid has measured itself. */
-const INITIAL_DETAIL_HEIGHT = 96;
-
-/** Synthetic full-width row that hosts the nested grid of a circuit's subcircuits. */
-interface CircuitDetailRow {
-  readonly __circuitDetail: true;
-  /** id of the parent circuit row this detail belongs to */
-  readonly parentId: string;
-  /** the subcircuits to render in the nested grid */
-  readonly children: ReadonlyArray<ICircuitEnriched>;
-  /** depth of the nested grid (parent depth + 1) */
-  readonly depth: number;
-}
-
-type DisplayRow = ICircuit | CircuitDetailRow;
-
-function isCircuitDetailRow(row: unknown): row is CircuitDetailRow {
-  return typeof row === 'object' && row !== null && '__circuitDetail' in row;
-}
-
 /** Subcircuits attached to a circuit record (enriched hierarchy nodes), or `[]`. */
 function subCircuitsOf(record: ICircuit): ReadonlyArray<ICircuitEnriched> {
   const enriched = record as ICircuitEnriched;
   return enriched.sub_circuits && enriched.sub_circuits.length > 0 ? enriched.sub_circuits : [];
 }
 
+/** Synthetic full-width row that hosts the nested grid of a circuit's subcircuits. */
+interface CircuitDetailRow {
+  readonly __circuitDetail: true;
+  readonly parentId: string;
+  readonly children: ReadonlyArray<ICircuitEnriched>;
+  readonly depth: number;
+}
+
+type DisplayRow = ICircuit | CircuitDetailRow;
+
 /**
  * Interleave a synthetic full-width detail row after each expanded circuit that
  * has subcircuits. Pure (no React) so the recursion/expansion bookkeeping is
- * unit-testable in isolation. Mirrors `interleaveDetailRows` from the server grid
- * but carries the children + depth needed to mount a nested grid.
+ * unit-testable in isolation. Retained for its unit tests and as the reference
+ * model for the shared engine's own interleaving.
  */
 export function interleaveCircuitRows(
   circuits: ReadonlyArray<ICircuit>,
@@ -88,11 +72,19 @@ export function interleaveCircuitRows(
   return out;
 }
 
+/** Extract a primitive (filter/sort) value for a synthetic column key off a record. */
+function primitiveField(row: ICircuit, id: string): string | number | boolean | undefined {
+  const v = (row as unknown as Record<string, unknown>)[id];
+  return typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined;
+}
+
 /**
  * Adapt the antd `ColumnProps` produced by `useDataTableColumns` to the
- * renderer-agnostic {@link SimpleColumn}s consumed by `buildSimpleColDefs`. The
+ * renderer-agnostic {@link SimpleColumn}s consumed by the shared grid engine. The
  * antd `render(value, record, index)` becomes an inline `renderCell(row)`; the
- * rich `title` node becomes `headerNode`. Pure — no hooks — so it is testable.
+ * rich `title` node becomes `headerNode`. A best-effort text `filter` + `getValue`
+ * (from the record's like-named field) are attached so the shared header filter /
+ * sort work over the values that back simple text columns. Pure — no hooks.
  */
 export function adaptCircuitColumns(
   columns: ReadonlyArray<ColumnProps<ICircuit>>
@@ -114,67 +106,16 @@ export function adaptCircuitColumns(
       headerNode: col.title as ReactNode,
       align: col.align as SimpleColumn<ICircuit>['align'],
       width,
+      field: id,
+      sortField: id,
+      sortable: true,
+      filter: { operators: [OperatorId.Ilike], field: id },
+      getValue: (row: ICircuit) => primitiveField(row, id),
       renderCell: render
         ? (row: ICircuit) => render(undefined, row, 0) as ReactNode
         : (row: ICircuit) => (row as unknown as Record<string, ReactNode>)[id] ?? null,
     } satisfies SimpleColumn<ICircuit>;
   });
-}
-
-type CircuitGridContext = {
-  columns: ReadonlyArray<ColumnProps<ICircuit>>;
-  dataType: TExtendedEntitiesTypeDict;
-  onCellClick?: CircuitCellClick;
-  rowClassName?: (record: ICircuit) => string;
-};
-
-/**
- * Full-width renderer for a synthetic detail row: mounts a nested
- * {@link CircuitRecursiveGrid} for the parent circuit's subcircuits and forwards
- * its measured height to the AG Grid row node so deeply-nested trees never clip
- * or jitter (mirrors `AgDetailCell` from the server grid).
- */
-function CircuitDetailCell(props: ICellRendererParams<DisplayRow>) {
-  const ref = useRef<HTMLDivElement>(null);
-  const detail = props.data;
-  const ctx = props.context as CircuitGridContext;
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    const measure = () => {
-      const target = Math.max(el.scrollHeight, INITIAL_DETAIL_HEIGHT);
-      if (props.node.rowHeight !== target) {
-        props.node.setRowHeight(target);
-        props.api.onRowHeightChanged();
-      }
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    measure();
-    return () => observer.disconnect();
-  }, [props.api, props.node]);
-
-  if (!isCircuitDetailRow(detail)) return null;
-
-  return (
-    <div ref={ref} className="border-neutral-2 bg-neutral-1/40 border-b py-3">
-      <div className="my-2 ml-2 flex flex-row items-center gap-2">
-        <ArrowReturnRight className="text-neutral-4 text-2xl" />
-        <div className="text-neutral-4 text-base font-semibold uppercase">subcircuits</div>
-      </div>
-      <div className="ml-4">
-        <CircuitRecursiveGrid
-          circuits={detail.children}
-          columns={ctx.columns}
-          dataType={ctx.dataType}
-          onCellClick={ctx.onCellClick}
-          rowClassName={ctx.rowClassName}
-          depth={detail.depth + 1}
-        />
-      </div>
-    </div>
-  );
 }
 
 export type CircuitRecursiveGridProps = {
@@ -190,15 +131,30 @@ export type CircuitRecursiveGridProps = {
   depth?: number;
   /** Show a loading spinner instead of the (empty) grid. */
   loading?: boolean;
+  /**
+   * Column id whose cell hosts the expander (right-aligned, vertically centred).
+   * Omit for a fixed leading expander column. Only honoured at the top level.
+   */
+  expandColumnId?: string;
+  /** Enable per-column custom header filters (top level only). */
+  filterable?: boolean;
+  /** Show the column show/hide chooser (top level only). */
+  showColumnChooser?: boolean;
+  /** Enable store-driven sorting via the custom header (top level only). */
+  sortable?: boolean;
+  /** Enable client-side pagination (top level only — the REGULAR/flat view). */
+  pagination?: boolean;
+  pageSize?: number;
   className?: ComponentProps<'div'>['className'];
 };
 
 /**
  * A depth-limited, self-recursive grid for circuit subcircuit trees, built on the
- * shared AG Grid theme + {@link buildSimpleColDefs}. Rows with subcircuits get a
- * leading expander; expanding a row interleaves a full-width detail row that
- * mounts another `CircuitRecursiveGrid` for the children. Replaces the antd
- * `RecursiveExpandableTable`/`BaseTable` recursion.
+ * SHARED {@link InMemoryGrid} engine — so it inherits the entity grid's custom
+ * header filters, column chooser, sorting, resizing and pagination while keeping
+ * its recursive expandable subcircuit rows. Expanding a row interleaves a
+ * full-width detail row that mounts another `CircuitRecursiveGrid` for the
+ * children. Filters/chooser/sort/pagination are enabled at the top level only.
  */
 export function CircuitRecursiveGrid({
   circuits,
@@ -208,78 +164,68 @@ export function CircuitRecursiveGrid({
   rowClassName,
   depth = 0,
   loading = false,
+  expandColumnId,
+  filterable = false,
+  showColumnChooser = false,
+  sortable = false,
+  pagination = false,
+  pageSize = 20,
   className,
 }: CircuitRecursiveGridProps) {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
-  const apiRef = useRef<GridApi<DisplayRow> | null>(null);
 
-  useEffect(() => setMounted(true), []);
-
-  const rows = useMemo<ReadonlyArray<ICircuit>>(() => circuits ?? [], [circuits]);
+  const rows = useMemo<ICircuit[]>(() => [...(circuits ?? [])], [circuits]);
   const canExpand = depth < MAX_CIRCUIT_DEPTH;
+  const isTop = depth === 0;
 
-  const anyExpandable = useMemo(
-    () => canExpand && rows.some((r) => subCircuitsOf(r).length > 0),
-    [canExpand, rows]
+  // Adapt once, then enable interactive resize on every column.
+  const adaptedColumns = useMemo(
+    () =>
+      adaptCircuitColumns(columns).map((c) => ({ ...c, width: { ...c.width, resizable: true } })),
+    [columns]
   );
 
-  const displayRows = useMemo(
-    () => interleaveCircuitRows(rows, expandedIds, depth),
-    [rows, expandedIds, depth]
-  );
-
-  const colDefs = useMemo(() => {
-    const dataCols = adaptCircuitColumns(columns);
-    if (!anyExpandable) return buildSimpleColDefs(dataCols, { sortable: false });
-
-    const expandCol: SimpleColumn<ICircuit> = {
-      id: EXPAND_COL_ID,
-      header: '',
-      align: 'center',
-      width: { width: 48 },
-      renderCell: (row) => {
-        if (subCircuitsOf(row).length === 0) return null;
-        const isOpen = expandedIds.includes(row.id);
-        return (
-          <button
-            type="button"
-            aria-label={isOpen ? 'Collapse subcircuits' : 'Expand subcircuits'}
-            className="flex items-center justify-center p-1"
-            onClick={(event) => {
-              event.stopPropagation();
-              setExpandedIds((prev) =>
-                prev.includes(row.id) ? prev.filter((id) => id !== row.id) : [...prev, row.id]
-              );
-            }}
-          >
-            <ChevronRight
-              fill="#003a8c"
-              className={classNames(
-                'transform transition-transform duration-200 ease-in-out',
-                isOpen ? 'rotate-90' : 'rotate-0'
-              )}
-            />
-          </button>
-        );
-      },
-    };
-
-    return buildSimpleColDefs([expandCol, ...dataCols], { sortable: false });
-  }, [columns, anyExpandable, expandedIds]);
-
-  // The expander chevron reflects `expandedIds`, but toggling only swaps row data
-  // (the detail row) — the parent row's cells are not diffed. Force a refresh so
-  // the chevron rotation stays in sync.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: expandedIds is the intended trigger, not a body dependency.
-  useEffect(() => {
-    apiRef.current?.refreshCells({ force: true });
-  }, [expandedIds]);
-
-  const context = useMemo<CircuitGridContext>(
-    () => ({ columns, dataType, onCellClick, rowClassName }),
-    [columns, dataType, onCellClick, rowClassName]
+  // biome-ignore lint/correctness/useExhaustiveDependencies: CircuitRecursiveGrid is a stable module-level self-reference (recursion)
+  const expansion = useMemo(
+    () =>
+      canExpand
+        ? {
+            columnId: isTop ? expandColumnId : undefined,
+            align: 'right' as const,
+            isExpandable: (row: ICircuit) => subCircuitsOf(row).length > 0,
+            initialHeight: 96,
+            renderExpander: (open: boolean) => (
+              <ChevronRight
+                fill="#003a8c"
+                className={classNames(
+                  'transform transition-transform duration-200 ease-in-out',
+                  open ? 'rotate-90' : 'rotate-0'
+                )}
+              />
+            ),
+            renderDetail: (row: ICircuit) => (
+              <div className="border-neutral-2 bg-neutral-1/40 border-b py-3">
+                <div className="my-2 ml-2 flex flex-row items-center gap-2">
+                  <ArrowReturnRight className="text-neutral-4 text-2xl" />
+                  <div className="text-neutral-4 text-base font-semibold uppercase">
+                    subcircuits
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <CircuitRecursiveGrid
+                    circuits={subCircuitsOf(row)}
+                    columns={columns}
+                    dataType={dataType}
+                    onCellClick={onCellClick}
+                    rowClassName={rowClassName}
+                    depth={depth + 1}
+                  />
+                </div>
+              </div>
+            ),
+          }
+        : undefined,
+    [canExpand, isTop, expandColumnId, columns, dataType, onCellClick, rowClassName, depth]
   );
 
   if (loading) {
@@ -290,40 +236,22 @@ export function CircuitRecursiveGrid({
     );
   }
 
-  if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
-
   return (
-    <div className={cn('ag-data-grid w-full', className)}>
-      <AgGridReact<DisplayRow>
-        theme={dataGridTheme}
-        columnDefs={colDefs as ColDef<DisplayRow>[]}
-        rowData={displayRows as DisplayRow[]}
-        context={context}
-        getRowId={(p) =>
-          isCircuitDetailRow(p.data)
-            ? `circuit-detail:${p.data.parentId}:${p.data.depth}`
-            : String((p.data as ICircuit).id)
-        }
-        domLayout="autoHeight"
-        headerHeight={depth === 0 ? 48 : 40}
-        suppressCellFocus
-        animateRows={false}
-        isFullWidthRow={(p) => isCircuitDetailRow(p.rowNode.data)}
-        fullWidthCellRenderer={CircuitDetailCell}
-        getRowHeight={(p) => (isCircuitDetailRow(p.data) ? INITIAL_DETAIL_HEIGHT : undefined)}
-        getRowClass={(p) =>
-          !isCircuitDetailRow(p.data) && rowClassName ? rowClassName(p.data as ICircuit) : undefined
-        }
-        onGridReady={(e) => {
-          apiRef.current = e.api;
-        }}
-        onCellClicked={(e) => {
-          if (e.colDef.colId === EXPAND_COL_ID) return;
-          if (isCircuitDetailRow(e.data)) return;
-          onCellClick?.(pathname, e.data as ICircuit, dataType);
-        }}
-      />
-    </div>
+    <InMemoryGrid<ICircuit>
+      columns={adaptedColumns}
+      rows={rows}
+      getRowId={(row) => String(row.id)}
+      filterable={isTop && filterable}
+      showColumnChooser={isTop && showColumnChooser}
+      sortable={isTop && sortable}
+      pagination={isTop && pagination}
+      pageSize={pageSize}
+      headerHeight={isTop ? 48 : 40}
+      expansion={expansion}
+      getRowClass={rowClassName}
+      onRowClick={(row) => onCellClick?.(pathname, row, dataType)}
+      className={className}
+    />
   );
 }
 
