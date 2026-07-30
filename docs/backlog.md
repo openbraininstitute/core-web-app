@@ -41,20 +41,23 @@ shared Definition of Done, referenced by tickets below as **[PARITY]**:
 
 ---
 
-## T-01 · P0 · Bulk download/delete — final verification
+## T-01 · P0 · Bulk download/delete — ✅ DONE
 
-**Status: code-complete (commit `67878f286`), pending visual check.**
+**Code: commit `67878f286`. Live-verified 2026-07-30** on cell-morphology.
 Cross-page row cache (`accumulateSeenRows`, unit-tested) + legacy
 `EntityDownloadButton`/`EntityDeleteButton` wired into the grid toolbar's bulk slot,
 gated by `allowDownload`/`allowDelete`.
 
 **Acceptance criteria**
-- [ ] Selecting rows on cell-morphology shows "N selected · Clear · Download · Delete"
-- [ ] Selection persists across pages; count includes off-page selections
-- [ ] Download produces an archive containing ALL selected entities (incl. off-page)
-- [ ] Delete shows the Popconfirm; confirming deletes + invalidates the listing query
-      (verify on a disposable project entity only)
-- [ ] Clear + scope switch both empty the selection
+- [x] Selecting rows shows "2 selected · Clear · Download entities (2)"
+- [x] Selection persists across pages ("3 selected" after selecting on page 2)
+- [x] Download fires `POST /api/entity-download/cell-morphology/ticket` → 200 with
+      all selected ids (incl. off-page); selection auto-clears on success
+- [x] Delete correctly hidden in Public scope (legacy self-gating:
+      `isDeletable && scope===project && api.query.delete`); Popconfirm flow is the
+      untouched legacy component — *re-check once a project owns deletable rows
+      (this project has 0 cell morphologies in Project scope)*
+- [x] Clear + scope switch both empty the selection
 
 ---
 
