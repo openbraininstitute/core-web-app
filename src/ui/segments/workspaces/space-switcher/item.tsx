@@ -326,7 +326,8 @@ export function Item({
                     animate={{ opacity: 1 }}
                     transition={{ delay: projectIndex * 0.01, duration: 0.1 }}
                     className={cn(
-                      'flex w-full cursor-pointer items-center justify-between transition-colors duration-150'
+                      'flex w-full items-center justify-between transition-colors duration-150',
+                      project.is_waitlisted ? 'cursor-default' : 'cursor-pointer'
                     )}
                   >
                     <Button
@@ -337,7 +338,7 @@ export function Item({
                       className={cn(
                         'w-full justify-start bg-white! border shadow-none border-gray-200',
                         project.is_waitlisted
-                          ? 'cursor-not-allowed opacity-40 hover:bg-white!'
+                          ? 'pointer-events-none opacity-50 text-gray-400! hover:bg-white!'
                           : 'hover:bg-gray-100!',
                         {
                           'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
