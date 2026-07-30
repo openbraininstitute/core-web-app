@@ -32,8 +32,8 @@ export interface IEntityLifecycleStatus {
 }
 
 export type EntityCoreOwnership = {
-  created_by: IPerson | null;
-  updated_by: IPerson | null;
+  created_by: IPlatformUser | null;
+  updated_by: IPlatformUser | null;
 };
 
 export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
@@ -188,6 +188,15 @@ export interface IOrganization extends Timestamps, EntityCoreIdentifiable {
 
 export interface IPerson extends Timestamps, EntityCoreIdentifiable {
   type: 'person';
+  given_name: string | null;
+  family_name: string | null;
+  pref_label: string;
+}
+
+// The platform user that created/updated an entity, keyed by Keycloak sub id. Not an Agent:
+// a platform user need not be a contributor, and a contributor need not have an account.
+export interface IPlatformUser extends Timestamps {
+  id: string; // Keycloak sub id
   given_name: string | null;
   family_name: string | null;
   pref_label: string;

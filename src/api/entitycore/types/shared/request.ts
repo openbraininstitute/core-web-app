@@ -146,28 +146,22 @@ export interface OwnershipFilter {
   created_by__pref_label?: string | null;
   created_by__pref_label__in?: string[] | null;
   created_by__pref_label__ilike?: string | null;
-  created_by__id?: string | null; // UUID
-  created_by__id__in?: string[] | null;
-  created_by__type?: string | null;
+  created_by__id?: string | null; // Keycloak sub id
+  created_by__id__in?: string[] | null; // Keycloak sub ids
   created_by__given_name?: string | null;
   created_by__given_name__ilike?: string | null;
   created_by__family_name?: string | null;
   created_by__family_name__ilike?: string | null;
-  created_by__sub_id?: string | null; // UUID
-  created_by__sub_id_in?: string[] | null;
   // Updated by
   updated_by__pref_label?: string | null;
   updated_by__pref_label__in?: string[] | null;
   updated_by__pref_label__ilike?: string | null;
-  updated_by__id?: string | null; // UUID
-  updated_by__id_in?: string[] | null;
-  updated_by__type?: string | null;
+  updated_by__id?: string | null; // Keycloak sub id
+  updated_by__id__in?: string[] | null; // Keycloak sub ids
   updated_by__given_name?: string | null;
   updated_by__given_name__ilike?: string | null;
   updated_by__family_name?: string | null;
   updated_by__family_name__ilike?: string | null;
-  updated_by__sub_id?: string | null; // UUID
-  updated_by__sub_id__in?: string[] | null;
   // Order by
   created_by__order_by?: string | null;
   updated_by__order_by?: string | null;

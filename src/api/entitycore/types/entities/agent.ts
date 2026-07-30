@@ -6,17 +6,11 @@ import type {
   PrefLabelFilter,
 } from '@/api/entitycore/types/shared/request';
 
-type KeycloakIdentifierFilter = {
-  sub_id: string | null;
-  sub_id__in: string | null;
-};
-
 export interface IPersonFilter
   extends PaginationFilter,
     OwnershipFilter,
     PrefLabelFilter,
-    PersonNameFilter,
-    KeycloakIdentifierFilter {}
+    PersonNameFilter {}
 
 export interface IOrganizationFilter
   extends PaginationFilter,
