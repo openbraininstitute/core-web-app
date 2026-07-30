@@ -139,7 +139,8 @@ class NWBWorkerRegistry {
       session.disposeTimer = null;
     }
     session.refCount += 1;
-    // The URL is signed and short-lived, so the newest builder is the one worth keeping.
+    // The URL is stable but the bearer token it is fetched with is short-lived, so the newest
+    // builder is the one worth keeping.
     session.buildRequest = params.buildRequest;
     if (isNew) this.open(session);
   }
