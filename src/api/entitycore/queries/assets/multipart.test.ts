@@ -93,6 +93,9 @@ describe('createAsset threshold routing', () => {
       `/electrical-cell-recording/${ENTITY_ID}/assets/multipart-upload/initiate`
     );
     expect(initiateOptions.headers).toMatchObject({
+      // The ApiClient sends no default content-type; without an explicit one the
+      // stringified body goes out as text/plain and entitycore rejects it.
+      'content-type': 'application/json',
       'virtual-lab-id': 'vl-1',
       'project-id': 'pr-1',
     });

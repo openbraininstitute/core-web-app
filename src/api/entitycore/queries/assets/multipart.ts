@@ -61,7 +61,13 @@ export async function initiateMultipartUpload({
   return await api.post<IAssetWithUploadMeta>(
     `${entityAssetsPath(entityType, entityId)}/multipart-upload/initiate`,
     {
-      ...getEntityCoreContext(ctx),
+      headers: {
+        // The ApiClient sends no default content-type, and fetch marks a stringified
+        // body as text/plain, which entitycore rejects.
+        accept: 'application/json',
+        'content-type': 'application/json',
+        ...getEntityCoreContext(ctx).headers,
+      },
       body: payload,
     }
   );
