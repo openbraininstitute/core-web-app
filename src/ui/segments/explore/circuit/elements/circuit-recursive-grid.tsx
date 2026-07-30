@@ -2,7 +2,7 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import ChevronRight from '@/components/icons/ChevronRight';
@@ -78,6 +78,12 @@ function primitiveField(row: ICircuit, id: string): string | number | boolean | 
   return typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? v : undefined;
 }
 
+/** Humanise a column key ("brain_region" → "Brain region") for the column chooser. */
+function humanizeColumnId(id: string): string {
+  const spaced = id.replace(/[._]+/g, ' ').trim();
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : id;
+}
+
 /**
  * Adapt the antd `ColumnProps` produced by `useDataTableColumns` to the
  * renderer-agnostic {@link SimpleColumn}s consumed by the shared grid engine. The
@@ -102,7 +108,8 @@ export function adaptCircuitColumns(
 
     return {
       id,
-      header: id,
+      // plain-text label for the column chooser; the visible header uses `headerNode`
+      header: typeof col.title === 'string' ? col.title : humanizeColumnId(id),
       headerNode: col.title as ReactNode,
       align: col.align as SimpleColumn<ICircuit>['align'],
       width,
@@ -178,6 +185,16 @@ export function CircuitRecursiveGrid({
   const canExpand = depth < MAX_CIRCUIT_DEPTH;
   const isTop = depth === 0;
 
+  // The chooser lives on the top-level grid, but nested subcircuit grids are
+  // separate grid instances — so mirror the hidden set down the tree (by antd
+  // column `key`) to keep every depth column-consistent.
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const visibleColumns = useMemo(() => {
+    if (hiddenColumns.length === 0) return columns;
+    const hidden = new Set(hiddenColumns);
+    return columns.filter((c) => !hidden.has(String(c.key ?? '')));
+  }, [columns, hiddenColumns]);
+
   // Adapt once, then enable interactive resize on every column.
   const adaptedColumns = useMemo(
     () =>
@@ -214,7 +231,7 @@ export function CircuitRecursiveGrid({
                 <div className="ml-4">
                   <CircuitRecursiveGrid
                     circuits={subCircuitsOf(row)}
-                    columns={columns}
+                    columns={visibleColumns}
                     dataType={dataType}
                     onCellClick={onCellClick}
                     rowClassName={rowClassName}
@@ -225,7 +242,7 @@ export function CircuitRecursiveGrid({
             ),
           }
         : undefined,
-    [canExpand, isTop, expandColumnId, columns, dataType, onCellClick, rowClassName, depth]
+    [canExpand, isTop, expandColumnId, visibleColumns, dataType, onCellClick, rowClassName, depth]
   );
 
   if (loading) {
@@ -243,6 +260,7 @@ export function CircuitRecursiveGrid({
       getRowId={(row) => String(row.id)}
       filterable={isTop && filterable}
       showColumnChooser={isTop && showColumnChooser}
+      onHiddenColumnsChange={isTop && showColumnChooser ? setHiddenColumns : undefined}
       sortable={isTop && sortable}
       pagination={isTop && pagination}
       pageSize={pageSize}

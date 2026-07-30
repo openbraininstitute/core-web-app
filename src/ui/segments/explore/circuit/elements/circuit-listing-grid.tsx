@@ -98,6 +98,10 @@ export function CircuitListingGrid({
           onCellClick={onCellClick}
           loading={loading}
           expandColumnId={expandColumnId}
+          // Column chooser + resize only — filter/sort/pagination stay server-owned
+          // (MainTable/BrowseCircuit), so the hierarchy gray-out and server paging
+          // aren't overridden by client-side controls.
+          showColumnChooser
           rowClassName={(record) => circuitListingRowClass(record, view)}
         />
         {isEmpty && (

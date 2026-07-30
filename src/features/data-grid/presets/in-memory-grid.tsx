@@ -90,6 +90,12 @@ export interface InMemoryGridProps<Row> {
   filterable?: boolean;
   /** show the column show/hide chooser control (default: false). */
   showColumnChooser?: boolean;
+  /**
+   * Notified whenever the user shows/hides columns (via the chooser). Lets a host
+   * (e.g. a recursive grid) mirror the hidden set into nested grids so the whole
+   * tree stays column-consistent.
+   */
+  onHiddenColumnsChange?: (hidden: string[]) => void;
   /** enable store-driven sorting via the custom header (default: false). */
   sortable?: boolean;
   /** default sort applied when the user has set none. */
@@ -176,6 +182,7 @@ export function InMemoryGrid<Row>({
   getRowId,
   filterable = false,
   showColumnChooser = false,
+  onHiddenColumnsChange,
   sortable = false,
   defaultSort,
   pagination = false,
@@ -278,6 +285,17 @@ export function InMemoryGrid<Row>({
     const api = apiRef.current;
     if (facets && api && !api.isDestroyed()) api.refreshHeader();
   }, [facets]);
+
+  // Report column show/hide changes so a host can mirror them into nested grids.
+  // Guard on the serialized set so we don't re-notify (or loop) on unrelated renders.
+  const lastHiddenKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!onHiddenColumnsChange) return;
+    const key = state.hiddenColumns.join('|');
+    if (key === lastHiddenKey.current) return;
+    lastHiddenKey.current = key;
+    onHiddenColumnsChange(state.hiddenColumns);
+  }, [state.hiddenColumns, onHiddenColumnsChange]);
 
   // ── column defs ──────────────────────────────────────────────────────────────
   const hidden = useMemo(() => new Set(state.hiddenColumns), [state.hiddenColumns]);

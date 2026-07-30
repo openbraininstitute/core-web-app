@@ -59,12 +59,20 @@ describe('adaptCircuitColumns', () => {
   ];
 
   it('maps antd key/title/align/width onto the SimpleColumn shape', () => {
-    const [name] = adaptCircuitColumns(columns);
+    const [name, w] = adaptCircuitColumns(columns);
     expect(name.id).toBe('name');
-    expect(name.header).toBe('name');
+    // a ReactNode title has no plain-text form → humanised id for the chooser label
+    expect(name.header).toBe('Name');
     expect(name.headerNode).toBeTruthy();
     expect(name.align).toBe('right');
     expect(name.width).toEqual({ width: 220 });
+    // a string title is used verbatim as the chooser label
+    expect(w.header).toBe('W');
+  });
+
+  it('humanises an underscored/dotted key when the title is a node', () => {
+    const [col] = adaptCircuitColumns([{ key: 'brain_region', title: <span>x</span> }]);
+    expect(col.header).toBe('Brain region');
   });
 
   it('parses a string width into a number', () => {
