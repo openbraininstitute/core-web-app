@@ -18,7 +18,7 @@ export {
   DEFAULT_OPERATORS,
   OperatorId,
 } from './operators/default-operators';
-export { OperatorRegistry } from './operators/operator-registry';
+export { DEFAULT_FILTER_COMMIT_MODE, OperatorRegistry } from './operators/operator-registry';
 export { GridStateStore } from './state/grid-state-store';
 export { reducer } from './state/reducer';
 
@@ -45,7 +45,11 @@ export type { DetailSpec, GridSchema, SelectionSpec } from './domain/schema';
 export type { SortDirection, SortEntry, SortModel } from './domain/sort-model';
 export type { GridControllerOptions } from './grid-controller';
 export type { TOperatorId } from './operators/default-operators';
-export type { OperatorDef, OperatorUiKind } from './operators/operator-registry';
+export type {
+  FilterCommitMode,
+  OperatorDef,
+  OperatorUiKind,
+} from './operators/operator-registry';
 export type { GridDataSource } from './ports/data-source';
 export type { DetailProvider } from './ports/detail-provider';
 export type { StatePersistence } from './ports/state-persistence';

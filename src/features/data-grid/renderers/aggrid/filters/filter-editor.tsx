@@ -19,7 +19,7 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
-import { isEmptyFilterValue } from '../../../core';
+import { DEFAULT_FILTER_COMMIT_MODE, isEmptyFilterValue } from '../../../core';
 import {
   GRID_INPUT_CLASS,
   GRID_SELECT_CONTENT_CLASS,
@@ -98,25 +98,20 @@ export function FilterEditor({
   const current = state.filters[columnId];
 
   const [operator, setOperator] = useState<string>(current?.operator ?? operatorIds[0]);
-  const uiKind = ctx.operators.get(operator).uiKind;
-  const value: FilterValue =
-    current && current.operator === operator ? current.value : emptyForUiKind(uiKind);
+  const operatorDef = ctx.operators.get(operator);
+  const uiKind = operatorDef.uiKind;
+  // Per-operator (per-type) commit behavior; unset → deferred `apply` (the default).
+  const commitMode = operatorDef.commitMode ?? DEFAULT_FILTER_COMMIT_MODE;
 
-  // Date ranges are edited locally and only committed on Apply — so picking a single
-  // endpoint (or typing one bound) neither refetches the grid nor closes the panel.
-  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(() =>
-    current?.value.kind === 'dateRange'
-      ? { from: toDateOrUndefined(current.value.from), to: toDateOrUndefined(current.value.to) }
-      : undefined
+  // The editor's WORKING value, held locally for every kind. In `apply` mode nothing
+  // reaches the grid until Apply; in `immediate` mode each change is also committed.
+  const [pending, setPending] = useState<FilterValue>(() =>
+    current && current.operator === operator ? current.value : emptyForUiKind(uiKind)
   );
 
   const commit = (v: FilterValue | null) => {
     if (v === null || isEmptyFilterValue(v)) {
-      ctx.controller.store.dispatch({
-        type: 'setFilter',
-        columnId,
-        entry: null,
-      });
+      ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
     } else {
       ctx.controller.store.dispatch({
         type: 'setFilter',
@@ -127,28 +122,40 @@ export function FilterEditor({
   };
   const debouncedCommit = useDebouncedCallback(commit, [columnId, operator], COMMIT_DEBOUNCE_MS);
 
+  // Update the working value; only push to the grid now when the operator commits
+  // immediately (typed inputs are debounced so we don't refetch on every keystroke).
+  const change = (v: FilterValue, opts?: { debounce?: boolean }) => {
+    setPending(v);
+    if (commitMode === 'immediate') {
+      if (opts?.debounce) debouncedCommit(v);
+      else commit(v);
+    }
+  };
+
   const onOperatorChange = (op: string) => {
     debouncedCommit.cancel();
     setOperator(op);
-    setPendingRange(undefined);
+    setPending(emptyForUiKind(ctx.operators.get(op).uiKind));
     ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
   };
 
   const onApply = () => {
-    if (uiKind === 'dateRange') {
-      const hasValue = pendingRange?.from || pendingRange?.to;
-      commit(
-        hasValue
-          ? {
-              kind: 'dateRange',
-              from: pendingRange?.from ? pendingRange.from.toISOString() : null,
-              to: pendingRange?.to ? pendingRange.to.toISOString() : null,
-            }
-          : null
-      );
-    }
+    // commit the working value (a no-op re-commit in immediate mode) and close
+    debouncedCommit.cancel();
+    commit(isEmptyFilterValue(pending) ? null : pending);
     onClose();
   };
+
+  const onReset = () => {
+    debouncedCommit.cancel();
+    setPending(emptyForUiKind(uiKind));
+    commit(null);
+  };
+
+  const pendingDateRange: DateRange | undefined =
+    pending.kind === 'dateRange'
+      ? { from: toDateOrUndefined(pending.from), to: toDateOrUndefined(pending.to) }
+      : undefined;
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -177,8 +184,8 @@ export function FilterEditor({
           autoFocus
           className={INPUT_CLASS}
           placeholder="Filter…"
-          defaultValue={value.kind === 'text' ? value.text : ''}
-          onChange={(e) => debouncedCommit({ kind: 'text', text: e.target.value })}
+          value={pending.kind === 'text' ? pending.text : ''}
+          onChange={(e) => change({ kind: 'text', text: e.target.value }, { debounce: true })}
         />
       )}
 
@@ -187,8 +194,10 @@ export function FilterEditor({
           type="number"
           className={INPUT_CLASS}
           placeholder="Value"
-          defaultValue={value.kind === 'number' && value.value != null ? String(value.value) : ''}
-          onChange={(e) => debouncedCommit({ kind: 'number', value: toNumber(e.target.value) })}
+          value={pending.kind === 'number' && pending.value != null ? String(pending.value) : ''}
+          onChange={(e) =>
+            change({ kind: 'number', value: toNumber(e.target.value) }, { debounce: true })
+          }
         />
       )}
 
@@ -198,13 +207,16 @@ export function FilterEditor({
             type="number"
             className={INPUT_CLASS}
             placeholder="Min"
-            defaultValue={value.kind === 'range' && value.min != null ? String(value.min) : ''}
+            value={pending.kind === 'range' && pending.min != null ? String(pending.min) : ''}
             onChange={(e) =>
-              debouncedCommit({
-                kind: 'range',
-                min: toNumber(e.target.value),
-                max: value.kind === 'range' ? value.max : null,
-              })
+              change(
+                {
+                  kind: 'range',
+                  min: toNumber(e.target.value),
+                  max: pending.kind === 'range' ? pending.max : null,
+                },
+                { debounce: true }
+              )
             }
           />
           <span className="text-gray-300">–</span>
@@ -212,32 +224,47 @@ export function FilterEditor({
             type="number"
             className={INPUT_CLASS}
             placeholder="Max"
-            defaultValue={value.kind === 'range' && value.max != null ? String(value.max) : ''}
+            value={pending.kind === 'range' && pending.max != null ? String(pending.max) : ''}
             onChange={(e) =>
-              debouncedCommit({
-                kind: 'range',
-                min: value.kind === 'range' ? value.min : null,
-                max: toNumber(e.target.value),
-              })
+              change(
+                {
+                  kind: 'range',
+                  min: pending.kind === 'range' ? pending.min : null,
+                  max: toNumber(e.target.value),
+                },
+                { debounce: true }
+              )
             }
           />
         </div>
       )}
 
       {uiKind === 'dateRange' && (
-        // edits stay local (pendingRange) until Apply — see onApply
-        <DateRangePicker value={pendingRange} onChange={setPendingRange} />
+        <DateRangePicker
+          value={pendingDateRange}
+          onChange={(dr) =>
+            change({
+              kind: 'dateRange',
+              from: dr?.from ? dr.from.toISOString() : null,
+              to: dr?.to ? dr.to.toISOString() : null,
+            })
+          }
+        />
       )}
 
       {uiKind === 'boolean' &&
         (() => {
           const boolValue =
-            value.kind === 'boolean' && value.value != null ? (value.value ? 'yes' : 'no') : 'any';
+            pending.kind === 'boolean' && pending.value != null
+              ? pending.value
+                ? 'yes'
+                : 'no'
+              : 'any';
           return (
             <Select
               value={boolValue}
               onValueChange={(v) =>
-                commit(v === 'any' ? null : { kind: 'boolean', value: v === 'yes' })
+                change({ kind: 'boolean', value: v === 'any' ? null : v === 'yes' })
               }
             >
               <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
@@ -263,8 +290,8 @@ export function FilterEditor({
           facetKey={facetKey}
           optionsSource={optionsSource}
           ctx={ctx}
-          selected={value.kind === 'set' ? value.values : []}
-          onChange={(values) => commit({ kind: 'set', values })}
+          selected={pending.kind === 'set' ? pending.values : []}
+          onChange={(values) => change({ kind: 'set', values })}
         />
       )}
 
@@ -272,11 +299,7 @@ export function FilterEditor({
         <button
           type="button"
           className="text-[13px] font-medium text-gray-500 underline-offset-2 hover:text-gray-800 hover:underline"
-          onClick={() => {
-            debouncedCommit.cancel();
-            setPendingRange(undefined);
-            commit(null);
-          }}
+          onClick={onReset}
         >
           Reset
         </button>

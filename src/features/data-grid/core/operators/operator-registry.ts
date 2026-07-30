@@ -3,12 +3,25 @@ import type { FilterValueKind } from '../domain/filter-model';
 /** How an operator is presented/edited in the filter UI. */
 export type OperatorUiKind = 'text' | 'number' | 'range' | 'dateRange' | 'set' | 'boolean';
 
+/**
+ * When an operator's editor commits its value to the grid:
+ * - `apply` — edits stay local until the Apply button (nothing refetches meanwhile).
+ * - `immediate` — every change commits (debounced for typed inputs).
+ * Configured per operator (i.e. per filter type); the default when unset is `apply`.
+ */
+export type FilterCommitMode = 'immediate' | 'apply';
+
+/** Default commit behavior for any operator that doesn't declare one. */
+export const DEFAULT_FILTER_COMMIT_MODE: FilterCommitMode = 'apply';
+
 export interface OperatorDef {
   id: string;
   label: string;
   uiKind: OperatorUiKind;
   /** the FilterValue kind this operator edits */
   valueKind: FilterValueKind;
+  /** when the editor commits (default {@link DEFAULT_FILTER_COMMIT_MODE} = `apply`). */
+  commitMode?: FilterCommitMode;
 }
 
 /**

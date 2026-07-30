@@ -136,7 +136,8 @@ export function buildSimpleColDefs<Row>(
       minWidth: c.width?.minWidth,
       // an explicit width wins over flex sizing
       flex: c.width?.width != null ? undefined : c.width?.flex,
-      resizable: c.width?.resizable ?? false,
+      // resizable by default (parity with the browse-entity renderer); opt out per column
+      resizable: c.width?.resizable ?? true,
       // client-side sorting is opt-in; a column may still opt out via `sortable`
       sortable: options.sortable && (c.sortable ?? true),
       pinned: c.pinned,
