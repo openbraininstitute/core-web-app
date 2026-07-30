@@ -1,12 +1,12 @@
 'use client';
 
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { ConfigProvider, Table } from 'antd';
 import { compact, get, sortBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
 
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -15,8 +15,8 @@ import { RoleModifier } from '@/ui/segments/project/team/role-modifier';
 import { extractInitials } from '@/util/slugify';
 import { cn } from '@/utils/css-class';
 
-import type { ColumnType } from 'antd/es/table';
-import type { Member, MembersResponse, TRole } from '@/api/virtual-lab-svc/queries/types';
+import type { Member, MembersResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 export function ListingMembers({
   onAddMemberClick,
@@ -36,20 +36,32 @@ export function ListingMembers({
   const total = list?.data?.total;
   const users = list?.data?.users;
 
-  const columns: Array<ColumnType<Member>> = [
+  const orderedUsers = useMemo(
+    () =>
+      sortBy(users, [
+        (member) => (member.id === ownerId ? 0 : 1),
+        (member) => (member.id === data?.user.id ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'admin' ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'member' ? 0 : 1),
+        (member) => (member.invite_accepted ? 0 : 1),
+        'created_at',
+      ]),
+    [users, ownerId, data?.user.id]
+  );
+
+  const columns: Array<SimpleColumn<Member>> = [
     {
-      title: 'name',
-      dataIndex: 'name',
-      key: 'name',
-      width: 400,
-      render: (_: string, record: Member, indx) => (
+      id: 'name',
+      header: '',
+      width: { width: 400 },
+      renderCell: (record) => (
         <div className="flex w-max items-center justify-center">
           <MemberAvatarCasual
             withEmail
             isOwner={ownerId === record.id || virtualLabAdmins?.includes(record.id)}
             shape={record.role === 'admin' ? 'square' : 'circle'}
             key={`project-avatar-${record.id ?? record.email}`}
-            index={indx}
+            index={orderedUsers.indexOf(record)}
             size="small"
             layout="horizontal"
             id={record.id ?? record.email}
@@ -90,12 +102,11 @@ export function ListingMembers({
       ),
     },
     {
-      title: 'Action',
-      key: 'role',
-      dataIndex: 'role',
+      id: 'role',
+      header: '',
       align: 'right',
-      width: '250px',
-      render: (_: TRole, record) => {
+      width: { width: 250 },
+      renderCell: (record) => {
         if (isLoading) return <LoadingOutlined />;
         return (
           <RoleModifier
@@ -108,19 +119,6 @@ export function ListingMembers({
       },
     },
   ];
-
-  const orderedUsers = useMemo(
-    () =>
-      sortBy(users, [
-        (member) => (member.id === ownerId ? 0 : 1),
-        (member) => (member.id === data?.user.id ? 0 : 1),
-        (member) => (member.invite_accepted && member.role === 'admin' ? 0 : 1),
-        (member) => (member.invite_accepted && member.role === 'member' ? 0 : 1),
-        (member) => (member.invite_accepted ? 0 : 1),
-        'created_at',
-      ]),
-    [users, ownerId, data?.user.id]
-  );
 
   return (
     <div className="animate-fade-in flex h-full w-full flex-col pr-4 pl-8">
@@ -153,43 +151,21 @@ export function ListingMembers({
           </Button>
         </div>
       </div>
-      <div className="h-full grow overflow-hidden py-5">
-        <ConfigProvider
-          theme={{
-            components: {
-              Table: {
-                colorBgContainer: 'rgba(255, 255, 255, 0)',
-                colorText: '#FFFFFF',
-                borderColor: 'rgba(255, 255, 255, 0)',
-                cellPaddingInline: 0,
-                rowHoverBg: 'rgba(0, 58, 140, 0.3)',
-              },
-            },
-          }}
-        >
-          <Table
-            loading={false}
-            bordered={false}
-            dataSource={orderedUsers}
-            pagination={false}
-            columns={columns}
-            showHeader={false}
-            size="middle"
-            rowKey={(record) => record.id ?? record.email}
-            className={cn(
-              'h-full w-full',
-              '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
-              '[&_.ant-table-cell-row-hover]:bg-gray-200!',
-              '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
-              '[&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
-              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3'
-            )}
-            rowClassName={() => {
-              return 'hover:bg-primary-9/10 hover:text-white';
-            }}
-            scroll={{ y: 'calc(100vh - 180px)' }}
-          />
-        </ConfigProvider>
+      <div className="secondary-scrollbar h-full grow overflow-y-auto py-5 pr-3">
+        <SimpleGrid<Member>
+          columns={columns}
+          rows={orderedUsers}
+          getRowId={(record) => record.id ?? record.email}
+          hideHeader
+          className={cn(
+            'h-full w-full',
+            // faithfully reproduce antd's transparent, borderless table so the
+            // parent panel background shows through (avatars set their own colors)
+            '[&_.ag-root-wrapper]:border-0 [&_.ag-root-wrapper]:bg-transparent!',
+            '[&_.ag-row]:border-0 [&_.ag-row]:bg-transparent!',
+            '[&_.ag-cell]:bg-transparent!'
+          )}
+        />
       </div>
     </div>
   );

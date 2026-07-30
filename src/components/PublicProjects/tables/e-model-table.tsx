@@ -1,22 +1,20 @@
 'use client';
 
-import { Table, TableProps } from 'antd';
-import { Key, useState } from 'react';
-import { EModelsProps } from '../type/artifactsType';
+import { useState } from 'react';
+
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
+import { classNames } from '@/util/utils';
+
 import columns from './columns/e-model-columns';
 
-import { classNames } from '@/util/utils';
+import type { EModelsProps } from '../type/artifactsType';
+
 import styles from './tables.module.scss';
 
 export default function EModelTable({ content }: { content: EModelsProps[] }) {
   const [selectedRow, setSelectedRow] = useState<EModelsProps | null>(null);
 
-  const rowSelection: TableProps<EModelsProps>['rowSelection'] = {
-    type: 'radio',
-    onChange: (selectedRowKeys: Key[], selectedRows: EModelsProps[]) => {
-      setSelectedRow(selectedRows[0] || null);
-    },
-  };
+  const getRowId = (record: EModelsProps) => `${record.name}_${content.indexOf(record)}`;
 
   const handleDownload = () => {
     if (selectedRow?.downloadLink) {
@@ -26,14 +24,15 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
 
   return (
     <div>
-      <Table
+      <SimpleGrid
         className={styles.circuitTable}
-        dataSource={content}
+        rows={content}
         columns={columns()}
-        rowKey={(record, index) => `${record.name}_${index}`}
-        pagination={false}
-        rowSelection={rowSelection}
-        scroll={{ x: 'max-content' }}
+        getRowId={getRowId}
+        rowSelection={{
+          mode: 'single',
+          onSelectionChange: (_ids, selectedRows) => setSelectedRow(selectedRows[0] ?? null),
+        }}
       />
 
       <button

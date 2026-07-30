@@ -1,35 +1,29 @@
 'use client';
 
-import { Table, TableProps } from 'antd';
 import { useState } from 'react';
 
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import columns from '@/ui/segments/reports/obi-showcases/artifacts/columns/synaptome-column';
-import { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
-
 import { classNames } from '@/util/utils';
+
+import type { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 import styles from '@/ui/segments/reports/obi-showcases/artifacts/styles/synaptome.module.css';
 
 export default function SynaptomeTable({ content }: { content: SynaptomeProps[] }) {
   const [selectedRow, setSelectedRow] = useState<SynaptomeProps | null>(null);
 
-  const rowSelection: TableProps<SynaptomeProps>['rowSelection'] = {
-    type: 'radio',
-    onChange: (selectedRowKeys: React.Key[], selectedRows: SynaptomeProps[]) => {
-      setSelectedRow(selectedRows[0] || null);
-    },
-  };
-
   return (
     <div>
-      <Table
+      <SimpleGrid
         className={styles.circuitTable}
-        dataSource={content}
+        rows={content}
         columns={columns()}
-        rowKey="name"
-        pagination={false}
-        rowSelection={rowSelection}
-        scroll={{ x: 'max-content' }}
+        getRowId={(record) => record.name}
+        rowSelection={{
+          mode: 'single',
+          onSelectionChange: (_ids, selectedRows) => setSelectedRow(selectedRows[0] ?? null),
+        }}
       />
 
       <button

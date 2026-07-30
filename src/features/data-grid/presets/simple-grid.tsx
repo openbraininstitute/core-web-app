@@ -1,14 +1,23 @@
 'use client';
 
 import { AgGridReact } from 'ag-grid-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
 
-import type { ColDef, GetRowIdParams, ICellRendererParams, IHeaderParams } from 'ag-grid-community';
+import type {
+  ColDef,
+  GetRowIdParams,
+  GridApi,
+  GridReadyEvent,
+  ICellRendererParams,
+  IHeaderParams,
+  RowSelectionOptions,
+  SelectionChangedEvent,
+} from 'ag-grid-community';
 import type { ReactNode } from 'react';
 import type { ColumnModel } from '../core';
 
@@ -33,6 +42,29 @@ export interface SimpleColumn<Row = unknown> extends ColumnModel<Row> {
   renderCell?: (row: Row) => ReactNode;
   /** Rich header node; falls back to the plain `header` string when omitted. */
   headerNode?: ReactNode;
+  /** Grow the row height to fit this cell's content (AG Grid `autoHeight`). */
+  autoHeight?: boolean;
+  /** Wrap long cell text instead of truncating (AG Grid `wrapText`). */
+  wrapText?: boolean;
+}
+
+/**
+ * Row-selection config for {@link SimpleGrid}. Renders a pinned checkbox
+ * (`multi`) / radio (`single`) selection column via AG Grid's native
+ * `rowSelection` options. Selection is controlled when `selectedIds` is
+ * provided (kept in sync with the grid); leave it undefined for an uncontrolled
+ * grid that only emits through `onSelectionChange`.
+ */
+export interface SimpleRowSelection<Row> {
+  /** `single` renders radio buttons; `multi` renders checkboxes. */
+  mode: 'single' | 'multi';
+  /**
+   * Controlled selection by row id (matched against `getRowId`, falling back to
+   * AG Grid's internal node id). Omit for an uncontrolled grid.
+   */
+  selectedIds?: string[];
+  /** Emitted on user-driven selection changes with the selected ids and rows. */
+  onSelectionChange?: (ids: string[], rows: Row[]) => void;
 }
 
 export interface SimpleGridProps<Row> {
@@ -48,6 +80,10 @@ export interface SimpleGridProps<Row> {
   pageSize?: number;
   /** Enable client-side sorting (default: false). Per-column via `column.sortable`. */
   sortable?: boolean;
+  /** Hide the column header row (antd `showHeader={false}`). */
+  hideHeader?: boolean;
+  /** Enable a pinned checkbox/radio selection column. Omit to disable selection. */
+  rowSelection?: SimpleRowSelection<Row>;
   /** Extra classes for the grid wrapper. */
   className?: string;
 }
@@ -56,7 +92,7 @@ export interface SimpleGridProps<Row> {
 function SimpleRenderCell<Row>(
   props: ICellRendererParams<Row> & { render: (row: Row) => ReactNode }
 ) {
-  return props.data != null ? <>{props.render(props.data)}</> : null;
+  return props.data != null ? props.render(props.data) : null;
 }
 
 /** Rich header host — renders the column's `headerNode`. */
@@ -86,6 +122,11 @@ export function buildSimpleColDefs<Row>(
       // client-side sorting is opt-in; a column may still opt out via `sortable`
       sortable: options.sortable && (c.sortable ?? true),
       pinned: c.pinned,
+      autoHeight: c.autoHeight,
+      wrapText: c.wrapText,
+      // auto-height cells hold tall content (code blocks, wrapped text) — top-align
+      // them instead of vertically centring (the default col def centres cells).
+      cellStyle: c.autoHeight ? { display: 'flex', alignItems: 'flex-start' } : undefined,
       cellClass:
         c.align === 'right'
           ? 'ag-right-aligned-cell'
@@ -130,6 +171,21 @@ const DEFAULT_COL_DEF: ColDef = {
  * embedding inside an expanded row. AG Grid is client-only, so the component
  * renders a placeholder until mounted (mirrors the main renderer's SSR guard).
  */
+/**
+ * The pinned selection column: fixed width, non-movable, checkbox/radio centred
+ * to line up with the flex-centred data cells. Mirrors the main renderer.
+ */
+const SELECTION_COLUMN_DEF: ColDef = {
+  width: 48,
+  maxWidth: 48,
+  pinned: 'left',
+  resizable: false,
+  suppressMovable: true,
+  lockPosition: 'left',
+  cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  headerClass: 'flex items-center justify-center',
+};
+
 export function SimpleGrid<Row>({
   columns,
   rows,
@@ -137,6 +193,8 @@ export function SimpleGrid<Row>({
   pagination = false,
   pageSize = 20,
   sortable = false,
+  hideHeader = false,
+  rowSelection,
   className,
 }: SimpleGridProps<Row>) {
   const [mounted, setMounted] = useState(false);
@@ -148,6 +206,57 @@ export function SimpleGrid<Row>({
     () => (getRowId ? (p: GetRowIdParams<Row>) => getRowId(p.data) : undefined),
     [getRowId]
   );
+
+  const apiRef = useRef<GridApi<Row> | null>(null);
+
+  const agRowSelection = useMemo<RowSelectionOptions<Row> | undefined>(() => {
+    if (!rowSelection) return undefined;
+    if (rowSelection.mode === 'single') {
+      return { mode: 'singleRow', checkboxes: true, enableClickSelection: false };
+    }
+    return {
+      mode: 'multiRow',
+      checkboxes: true,
+      headerCheckbox: true,
+      selectAll: 'currentPage',
+      enableClickSelection: false,
+    };
+  }, [rowSelection]);
+
+  const onSelectionChange = rowSelection?.onSelectionChange;
+  const onSelectionChanged = useCallback(
+    (e: SelectionChangedEvent<Row>) => {
+      if (e.source === 'api') return; // our own store → grid sync
+      const selectedRows = e.api.getSelectedRows();
+      const ids = e.api
+        .getSelectedNodes()
+        .map((n) => (getRowId && n.data != null ? getRowId(n.data) : (n.id ?? '')));
+      onSelectionChange?.(ids, selectedRows);
+    },
+    [getRowId, onSelectionChange]
+  );
+
+  // store → grid: apply the controlled `selectedIds` onto the grid nodes. Only
+  // runs in controlled mode (selectedIds provided); uncontrolled grids are left
+  // to manage their own selection.
+  const selectedIds = rowSelection?.selectedIds;
+  const applySelection = useCallback(() => {
+    const api = apiRef.current;
+    if (!api || api.isDestroyed() || selectedIds === undefined) return;
+    const selected = new Set(selectedIds);
+    api.forEachNode((node) => {
+      if (node.data == null) return;
+      const id = getRowId ? getRowId(node.data) : node.id;
+      const shouldSelect = id != null && selected.has(id);
+      if (node.isSelected() !== shouldSelect) {
+        node.setSelected(shouldSelect, false, 'api');
+      }
+    });
+  }, [selectedIds, getRowId]);
+
+  useEffect(() => {
+    applySelection();
+  }, [applySelection]);
 
   if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
 
@@ -165,7 +274,15 @@ export function SimpleGrid<Row>({
         paginationPageSizeSelector={false}
         suppressCellFocus
         animateRows={false}
-        headerHeight={48}
+        headerHeight={hideHeader ? 0 : 48}
+        rowSelection={agRowSelection}
+        selectionColumnDef={rowSelection ? SELECTION_COLUMN_DEF : undefined}
+        onSelectionChanged={rowSelection ? onSelectionChanged : undefined}
+        onGridReady={(e: GridReadyEvent<Row>) => {
+          apiRef.current = e.api;
+          applySelection();
+        }}
+        onRowDataUpdated={applySelection}
       />
     </div>
   );

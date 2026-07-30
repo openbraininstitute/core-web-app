@@ -1,24 +1,19 @@
 'use client';
 
-import { Table, TableProps } from 'antd';
-import { Key, useState } from 'react';
+import { useState } from 'react';
 
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import columns from '@/ui/segments/reports/obi-showcases/artifacts/columns/me-model-column';
-import { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
-
 import { classNames } from '@/util/utils';
+
+import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 import styles from '@/ui/segments/reports/obi-showcases/artifacts/styles/me-model.module.css';
 
 export default function MEModelTable({ content }: { content: MEModelsProps[] }) {
   const [selectedRow, setSelectedRow] = useState<MEModelsProps | null>(null);
 
-  const rowSelection: TableProps<MEModelsProps>['rowSelection'] = {
-    type: 'radio',
-    onChange: (selectedRowKeys: Key[], selectedRows: MEModelsProps[]) => {
-      setSelectedRow(selectedRows[0] || null);
-    },
-  };
+  const getRowId = (record: MEModelsProps) => `${record.name}_${content.indexOf(record)}`;
 
   const handleDownload = () => {
     if (selectedRow?.download) {
@@ -28,14 +23,15 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
 
   return (
     <div>
-      <Table
+      <SimpleGrid
         className={styles.circuitTable}
-        dataSource={content}
+        rows={content}
         columns={columns()}
-        rowKey={(record, index) => `${record.name}_${index}`}
-        pagination={false}
-        rowSelection={rowSelection}
-        scroll={{ x: 'max-content' }}
+        getRowId={getRowId}
+        rowSelection={{
+          mode: 'single',
+          onSelectionChange: (_ids, selectedRows) => setSelectedRow(selectedRows[0] ?? null),
+        }}
       />
 
       <button

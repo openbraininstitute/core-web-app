@@ -1,9 +1,9 @@
 'use client';
 
 import { RiCheckLine, RiFileCopyLine } from '@remixicon/react';
-import { Table } from 'antd';
 import { useState } from 'react';
 
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { ActivityStatusColorMap } from '@/features/scan-config/constants';
 import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
@@ -11,9 +11,11 @@ import { CodeBlock } from '@/ui/molecules/code-blocks';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import type { ColumnsType } from 'antd/es/table';
 import type { ReactNode } from 'react';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { ITaskLogsDataState } from '@/features/task-logs-stream/types';
+
+type ConfigRow = { key: string; label: string; value: ReactNode; isCode?: boolean };
 
 interface IProps {
   configuration: ITaskLogsDataState['configuration'];
@@ -104,7 +106,7 @@ export function Configuration({ configuration }: IProps) {
     setTimeout(() => setIsIdCopied(false), 1400);
   };
 
-  const rows: Array<{ key: string; label: string; value: ReactNode; isCode?: boolean }> = [
+  const rows: Array<ConfigRow> = [
     {
       key: 'id',
       label: 'id',
@@ -202,28 +204,32 @@ export function Configuration({ configuration }: IProps) {
     { key: 'meta', label: 'meta', value: codeCell({ value: configuration.meta }), isCode: true },
   ];
 
-  const columns: ColumnsType<(typeof rows)[number]> = [
+  const columns: Array<SimpleColumn<ConfigRow>> = [
     {
-      dataIndex: 'label',
-      key: 'label',
-      width: 100,
-      render: (label: string) => (
+      id: 'label',
+      header: '',
+      width: { width: 100 },
+      autoHeight: true,
+      renderCell: (row) => (
         <div className="px-3 py-2 text-base font-semibold text-neutral-700 uppercase whitespace-nowrap">
-          {label}
+          {row.label}
         </div>
       ),
     },
     {
-      dataIndex: 'value',
-      key: 'value',
-      render: (value: ReactNode, row) => (
+      id: 'value',
+      header: '',
+      width: { flex: 1, minWidth: 200 },
+      autoHeight: true,
+      wrapText: true,
+      renderCell: (row) => (
         <div
           className={cn(
             'w-full min-w-0 px-3 py-2 text-base text-neutral-800 whitespace-normal wrap-break-word',
             row.isCode && 'px-3 py-2'
           )}
         >
-          {value}
+          {row.value}
         </div>
       ),
     },
@@ -234,15 +240,12 @@ export function Configuration({ configuration }: IProps) {
       id="job-configuration"
       className="overflow-hidden rounded-xl border border-neutral-200 bg-white px-4"
     >
-      <Table
-        tableLayout="fixed"
-        className="[&_.ant-table]:bg-transparent [&_.ant-table-cell]:border-b-neutral-200 [&_.ant-table-cell]:align-top [&_.ant-table-tbody>tr:last-child>td]:border-b-0"
+      <SimpleGrid
         columns={columns}
-        dataSource={rows}
-        pagination={false}
-        showHeader={false}
-        size="small"
-        rowKey="key"
+        rows={rows}
+        getRowId={(row) => row.key}
+        hideHeader
+        className="[&_.ag-cell]:border-b-neutral-200"
       />
     </div>
   );

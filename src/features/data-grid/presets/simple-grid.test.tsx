@@ -102,4 +102,112 @@ describe('SimpleGrid (jsdom mount)', () => {
       expect(container.querySelector('.ag-paging-panel')).toBeInTheDocument();
     });
   });
+
+  it('collapses the header row when hideHeader is set', async () => {
+    const { container } = render(
+      <SimpleGrid columns={columns} rows={rows} getRowId={(r) => r.id} hideHeader />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.ag-root-wrapper')).toBeInTheDocument();
+    });
+
+    const header = container.querySelector<HTMLElement>('.ag-header');
+    expect(header).not.toBeNull();
+    // headerHeight={0} → collapsed header container (AG Grid adds a 1px border)
+    expect(header?.style.height).toBe('1px');
+  });
+
+  it('keeps the header row when hideHeader is not set', async () => {
+    const { container } = render(
+      <SimpleGrid columns={columns} rows={rows} getRowId={(r) => r.id} />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.ag-header-cell-text')).toBeInTheDocument();
+    });
+
+    const header = container.querySelector<HTMLElement>('.ag-header');
+    // 48px headerHeight + AG Grid's 1px header border
+    expect(header?.style.height).toBe('49px');
+  });
+});
+
+describe('SimpleGrid row selection', () => {
+  it('renders a radio selection column in single mode', async () => {
+    const { container } = render(
+      <SimpleGrid
+        columns={columns}
+        rows={rows}
+        getRowId={(r) => r.id}
+        rowSelection={{ mode: 'single' }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.ag-root-wrapper')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      // one selection affordance per row (single mode = no header select-all)
+      expect(container.querySelectorAll('.ag-selection-checkbox').length).toBe(rows.length);
+    });
+    expect(container.querySelector('.ag-header-select-all')).not.toBeInTheDocument();
+  });
+
+  it('renders checkboxes plus a header select-all in multi mode', async () => {
+    const { container } = render(
+      <SimpleGrid
+        columns={columns}
+        rows={rows}
+        getRowId={(r) => r.id}
+        rowSelection={{ mode: 'multi' }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelectorAll('.ag-selection-checkbox').length).toBe(rows.length);
+    });
+    expect(container.querySelector('.ag-header-select-all')).toBeInTheDocument();
+  });
+
+  it('applies controlled selectedIds onto the matching row', async () => {
+    const { container } = render(
+      <SimpleGrid
+        columns={columns}
+        rows={rows}
+        getRowId={(r) => r.id}
+        rowSelection={{ mode: 'single', selectedIds: ['b'] }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.ag-row-selected')).toBeInTheDocument();
+    });
+
+    // pinned-left + center + pinned-right containers each render the row, so a
+    // single selected logical row maps to several `.ag-row-selected` fragments
+    const selectedIds = new Set(
+      Array.from(container.querySelectorAll('.ag-row-selected')).map((el) =>
+        el.getAttribute('row-id')
+      )
+    );
+    expect([...selectedIds]).toEqual(['b']);
+  });
+
+  it('does not force selection when uncontrolled (no selectedIds)', async () => {
+    const { container } = render(
+      <SimpleGrid
+        columns={columns}
+        rows={rows}
+        getRowId={(r) => r.id}
+        rowSelection={{ mode: 'single' }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('.ag-root-wrapper')).toBeInTheDocument();
+    });
+    expect(container.querySelector('.ag-row-selected')).not.toBeInTheDocument();
+  });
 });

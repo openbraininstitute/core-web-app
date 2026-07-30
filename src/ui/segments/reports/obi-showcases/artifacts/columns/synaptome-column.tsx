@@ -1,71 +1,55 @@
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
-const columns = () => {
+const columns = (): Array<SimpleColumn<SynaptomeProps>> => {
   return [
     {
-      title: 'Name',
-      key: 'name',
-      width: '200px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.name}</div>
-      ),
+      id: 'name',
+      header: 'Name',
+      width: { width: 200 },
+      renderCell: (record) => <div className="font-normal">{record.name}</div>,
     },
     {
-      title: 'Description',
-      key: 'description',
-      width: '200px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.description}</div>
-      ),
+      id: 'description',
+      header: 'Description',
+      width: { width: 200 },
+      renderCell: (record) => <div className="font-normal">{record.description}</div>,
     },
     {
-      title: 'M-Type',
-      key: 'MType',
-      width: '100px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.MType}</div>
-      ),
+      id: 'MType',
+      header: 'M-Type',
+      width: { width: 100 },
+      renderCell: (record) => <div className="font-normal">{record.MType}</div>,
     },
     {
-      title: 'E-Type',
-      key: 'EType',
-      width: '100px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.EType}</div>
-      ),
+      id: 'EType',
+      header: 'E-Type',
+      width: { width: 100 },
+      renderCell: (record) => <div className="font-normal">{record.EType}</div>,
     },
     {
-      title: 'Brain region',
-      key: 'brainRegion',
-      width: '200px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.brainRegion}</div>
-      ),
-    },
-
-    {
-      title: 'Species',
-      key: 'species',
-      width: '150px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.species}</div>
-      ),
+      id: 'brainRegion',
+      header: 'Brain region',
+      width: { width: 200 },
+      renderCell: (record) => <div className="font-normal">{record.brainRegion}</div>,
     },
     {
-      title: 'Registered By',
-      key: 'createdBy',
-      width: '150px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.createdBy}</div>
-      ),
+      id: 'species',
+      header: 'Species',
+      width: { width: 150 },
+      renderCell: (record) => <div className="font-normal">{record.species}</div>,
     },
     {
-      title: 'Registration Date',
-      key: 'creationDate',
-      width: '150px',
-      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
-        <div className="font-normal">{record.creationDate}</div>
-      ),
+      id: 'createdBy',
+      header: 'Registered By',
+      width: { width: 150 },
+      renderCell: (record) => <div className="font-normal">{record.createdBy}</div>,
+    },
+    {
+      id: 'creationDate',
+      header: 'Registration Date',
+      width: { width: 150 },
+      renderCell: (record) => <div className="font-normal">{record.creationDate}</div>,
     },
   ];
 };
