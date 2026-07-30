@@ -49,18 +49,42 @@ function readsAsHDF5(FS: EmscriptenFS, stream: FSStream): boolean {
 }
 
 /**
+ * Write a file under a staging name, publishing it as `filename` once `write` returns.
+ *
+ * A file under `filename` is then always a complete one — which is what lets callers take finding
+ * one as enough. In MEMFS a rename is a relink of the node, so this costs nothing. Should `write`
+ * throw, nothing is left behind under either name.
+ *
+ * (Two writers of one `fileKey` in the same worker would collide on the staging name, as they
+ * already would on the final one; there is one download per worker.)
+ */
+async function publishToFS(
+  FS: EmscriptenFS,
+  filename: string,
+  write: (partial: string) => void | Promise<void>
+): Promise<void> {
+  const partial = `${filename}.part`;
+
+  try {
+    await write(partial);
+    FS.rename(partial, filename);
+  } catch (err) {
+    try {
+      FS.unlink(partial);
+    } catch {
+      /* nothing staged */
+    }
+    throw err;
+  }
+}
+
+/**
  * Stream a body into the FS, publishing it as `filename` once it holds up.
  *
- * The bytes are written under a staging name and renamed into place at the end, so a file under
- * `filename` is always a complete one — which is what lets callers take finding one as enough. In
- * MEMFS a rename is a relink of the node, so this costs nothing. (Two downloads of one `fileKey`
- * in the same worker would collide on the staging name, as they already would on the final one;
- * there is one download per worker.)
- *
- * Throws, leaving nothing behind under either name, if the body ends short of the length it
- * declared or what arrives is not an HDF5 file.
+ * Throws, leaving nothing behind, if the body ends short of the length it declared or what arrives
+ * is not an HDF5 file.
  */
-async function streamToFS({
+function streamToFS({
   FS,
   filename,
   body,
@@ -73,63 +97,55 @@ async function streamToFS({
   total: number | null;
   onProgress?: (progress: DownloadProgress) => void;
 }): Promise<void> {
-  const partial = `${filename}.part`;
-  const reader = body.getReader();
-  const stream = FS.open(partial, 'w+');
-  // Size the file up front where the length is known. Emscripten's MEMFS grows a backing buffer
-  // by a factor of 1.125 once past a megabyte, reallocating and copying every time — over a
-  // multi-hundred-megabyte download that is several times the file size in memcpy, and it needs
-  // the old and new buffers side by side at each step. One allocation avoids all of it.
-  if (total) FS.truncate(partial, total);
-  // When the total is known, emit on each whole-percent change; otherwise emit roughly every 2 MB.
-  let lastPercent = -1;
-  let lastEmittedBytes = 0;
-  let offset = 0;
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      FS.write(stream, value, 0, value.byteLength, offset);
-      offset += value.byteLength;
-      if (onProgress) {
-        if (total) {
-          const percent = Math.floor((offset / total) * 100);
-          if (percent !== lastPercent) {
-            lastPercent = percent;
+  return publishToFS(FS, filename, async (partial) => {
+    const reader = body.getReader();
+    const stream = FS.open(partial, 'w+');
+    // Size the file up front where the length is known. Emscripten's MEMFS grows a backing buffer
+    // by a factor of 1.125 once past a megabyte, reallocating and copying every time — over a
+    // multi-hundred-megabyte download that is several times the file size in memcpy, and it needs
+    // the old and new buffers side by side at each step. One allocation avoids all of it.
+    if (total) FS.truncate(partial, total);
+    // When the total is known, emit on each whole-percent change; otherwise roughly every 2 MB.
+    let lastPercent = -1;
+    let lastEmittedBytes = 0;
+    let offset = 0;
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        FS.write(stream, value, 0, value.byteLength, offset);
+        offset += value.byteLength;
+        if (onProgress) {
+          if (total) {
+            const percent = Math.floor((offset / total) * 100);
+            if (percent !== lastPercent) {
+              lastPercent = percent;
+              onProgress({ received: offset, total });
+            }
+          } else if (offset - lastEmittedBytes >= PROGRESS_BYTE_STEP) {
+            lastEmittedBytes = offset;
             onProgress({ received: offset, total });
           }
-        } else if (offset - lastEmittedBytes >= PROGRESS_BYTE_STEP) {
-          lastEmittedBytes = offset;
-          onProgress({ received: offset, total });
         }
       }
-    }
-    onProgress?.({ received: offset, total });
+      onProgress?.({ received: offset, total });
 
-    // Content-Length is a promise the transfer either keeps or breaks. A body that ends early is
-    // an interrupted download rather than a lenient server, and trimming the file to what did
-    // arrive would hand HDF5 something it opens and then rejects at the superblock, several
-    // layers from the cause. Only a short body is a failure: a `Content-Encoding` response counts
-    // encoded bytes in the header and yields decoded ones through the stream, so a longer one is
-    // legitimate.
-    if (total && offset < total) {
-      throw new AssetFetchError(0, `Asset download ended early: ${offset} of ${total} bytes`);
+      // Content-Length is a promise the transfer either keeps or breaks. A body that ends early is
+      // an interrupted download rather than a lenient server, and trimming the file to what did
+      // arrive would hand HDF5 something it opens and then rejects at the superblock, several
+      // layers from the cause. Only a short body is a failure: a `Content-Encoding` response counts
+      // encoded bytes in the header and yields decoded ones through the stream, so a longer one is
+      // legitimate.
+      if (total && offset < total) {
+        throw new AssetFetchError(0, `Asset download ended early: ${offset} of ${total} bytes`);
+      }
+      if (!readsAsHDF5(FS, stream)) {
+        throw new AssetFetchError(0, 'Asset is not an HDF5 file');
+      }
+    } finally {
+      FS.close(stream);
     }
-    if (!readsAsHDF5(FS, stream)) {
-      throw new AssetFetchError(0, 'Asset is not an HDF5 file');
-    }
-
-    FS.rename(partial, filename);
-  } catch (err) {
-    try {
-      FS.unlink(partial);
-    } catch {
-      /* ignore */
-    }
-    throw err;
-  } finally {
-    FS.close(stream);
-  }
+  });
 }
 
 /**
@@ -204,7 +220,7 @@ export async function fetchToFS({
   if (!FS) throw new Error('h5wasm FS not initialized');
 
   const filename = `${fileKey}${extension}`;
-  // A file only ever appears under this name complete — `streamToFS` publishes by rename — so
+  // A file only ever appears under this name complete — `publishToFS` renames it into place — so
   // finding one is enough on its own.
   try {
     FS.stat(filename);
@@ -283,11 +299,7 @@ export async function writeToFS(
   try {
     FS.stat(filename);
   } catch {
-    // Staged and renamed as in `streamToFS`, so a write that throws part-way leaves nothing under
-    // the name the next call takes as complete.
-    const partial = `${filename}.part`;
-    FS.writeFile(partial, new Uint8Array(buffer));
-    FS.rename(partial, filename);
+    await publishToFS(FS, filename, (partial) => FS.writeFile(partial, new Uint8Array(buffer)));
   }
 
   return { filename };

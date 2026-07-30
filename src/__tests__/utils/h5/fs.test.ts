@@ -132,6 +132,7 @@ function createFakeCaches() {
   return { caches: { open: async () => cache } as unknown as CacheStorage, entries };
 }
 
+let FS: ReturnType<typeof createFakeFS>['FS'];
 let files: Map<string, FakeFile>;
 let entries: Map<string, FakeEntry>;
 
@@ -149,6 +150,7 @@ function fetchAsset(onProgress?: (progress: DownloadProgress) => void) {
 beforeEach(() => {
   const fs = createFakeFS();
   h5.FS = fs.FS;
+  FS = fs.FS;
   files = fs.files;
 
   const cacheStorage = createFakeCaches();
@@ -262,5 +264,20 @@ describe('writeToFS', () => {
     expect(filename).toBe('spikes.h5');
     expect(files.has('spikes.h5')).toBe(true);
     expect(files.has('spikes.h5.part')).toBe(false);
+  });
+
+  it('leaves nothing behind when the write fails part-way', async () => {
+    const writeFile = FS.writeFile;
+    FS.writeFile = (path, data) => {
+      writeFile(path, data.subarray(0, 128));
+      throw new Error('out of memory');
+    };
+
+    await expect(writeToFS('spikes', hdf5Bytes(512).buffer as ArrayBuffer)).rejects.toThrow(
+      'out of memory'
+    );
+    // Not under the final name, which the next call would take as complete, nor under the staging
+    // one, which nothing else would ever clear.
+    expect(files.size).toBe(0);
   });
 });
