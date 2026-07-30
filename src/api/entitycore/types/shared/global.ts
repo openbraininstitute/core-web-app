@@ -214,8 +214,9 @@ export interface IContributor extends Timestamps, EntityCoreIdentifiable {
   role: IRole;
 }
 
-enum AssetStatus {
+export enum AssetStatus {
   CREATED = 'created',
+  UPLOADING = 'uploading',
   DELETED = 'deleted',
 }
 
@@ -290,6 +291,12 @@ export enum AssetContentType {
   zip = 'application/zip',
 }
 
+const ASSET_CONTENT_TYPE_VALUES = new Set<string>(Object.values(AssetContentType));
+
+export function isAssetContentType(value: string): value is AssetContentType {
+  return ASSET_CONTENT_TYPE_VALUES.has(value);
+}
+
 type AssetBase = {
   path: string;
   full_path: string;
@@ -304,6 +311,20 @@ type AssetBase = {
 export interface IAsset extends AssetBase, AssetLegacyMeta {
   id: string;
   status: AssetStatus;
+}
+
+export interface IUploadPart {
+  part_number: number;
+  url: string;
+}
+
+export interface IUploadMeta {
+  part_size: number;
+  parts: IUploadPart[];
+}
+
+export interface IAssetWithUploadMeta extends IAsset {
+  upload_meta?: IUploadMeta | null;
 }
 
 export type EntityAuthorization = {
