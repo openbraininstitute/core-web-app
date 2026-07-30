@@ -379,11 +379,18 @@ export function EntityDataGrid({
               )}
             </div>
           )}
-          renderCount={({ total, loading }) => (
-            <span className="text-xs text-gray-600">
-              {loading ? 'Loading…' : `${total.toLocaleString()} results`}
-            </span>
-          )}
+          renderCount={({ total, loading }) =>
+            loading ? (
+              // skeleton bar while the count resolves (no "Loading…" text)
+              <span
+                role="status"
+                aria-label="Loading results count"
+                className="inline-block h-4 w-20 animate-pulse rounded bg-gray-200"
+              />
+            ) : (
+              <span className="text-xs text-gray-600">{`${total.toLocaleString()} results`}</span>
+            )
+          }
           renderError={(error) => renderListingError(error, entity?.title)}
         />
       </div>

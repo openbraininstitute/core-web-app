@@ -125,6 +125,24 @@ export function adaptCircuitColumns(
   });
 }
 
+/**
+ * The shared "↳ SUBCIRCUITS" detail wrapper. One component → one style + one indent
+ * for every expanded level (top-level plugin detail AND the deeper recursion), so the
+ * heading never drifts between levels. Content is inset (`ml-4`) so each nested table
+ * shifts right of its DIRECT parent.
+ */
+export function SubcircuitsDetail({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex w-full flex-col items-start gap-3 py-3">
+      <div className="ml-4 flex flex-row items-center gap-2">
+        <ArrowReturnRight className="text-neutral-4 text-2xl" />
+        <div className="text-neutral-4 text-base font-semibold uppercase">subcircuits</div>
+      </div>
+      <div className="ml-4 w-full">{children}</div>
+    </div>
+  );
+}
+
 export type CircuitRecursiveGridProps = {
   /** Circuits (possibly enriched with `sub_circuits`) to render at this level. */
   circuits: ReadonlyArray<ICircuit> | undefined;
@@ -147,6 +165,9 @@ export type CircuitRecursiveGridProps = {
   rowClassName?: (record: ICircuit) => string;
   /** Nesting depth; 0 at the top level. Recursion stops at {@link MAX_CIRCUIT_DEPTH}. */
   depth?: number;
+  /** Circuit id of the DIRECT parent whose subcircuits this grid renders (for the
+   * container's `data-parent-id`). Undefined at the outermost level. */
+  parentId?: string;
   /** Show a loading spinner instead of the (empty) grid. */
   loading?: boolean;
   /**
@@ -182,6 +203,7 @@ export function CircuitRecursiveGrid({
   onCellClick,
   rowClassName,
   depth = 0,
+  parentId,
   loading = false,
   expandColumnId,
   filterable = false,
@@ -231,7 +253,7 @@ export function CircuitRecursiveGrid({
             initialHeight: 96,
             renderExpander: (open: boolean) => (
               <ChevronRight
-                fill="#003a8c"
+                fill="currentColor"
                 className={classNames(
                   'transform transition-transform duration-200 ease-in-out',
                   open ? 'rotate-90' : 'rotate-0'
@@ -239,25 +261,18 @@ export function CircuitRecursiveGrid({
               />
             ),
             renderDetail: (row: ICircuit) => (
-              <div className="border-neutral-2 bg-neutral-1/40 border-b py-3">
-                <div className="my-2 ml-2 flex flex-row items-center gap-2">
-                  <ArrowReturnRight className="text-neutral-4 text-2xl" />
-                  <div className="text-neutral-4 text-base font-semibold uppercase">
-                    subcircuits
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <CircuitRecursiveGrid
-                    circuits={subCircuitsOf(row)}
-                    simpleColumns={visibleColumns}
-                    expandColumnId={expandColumnId}
-                    dataType={dataType}
-                    onCellClick={onCellClick}
-                    rowClassName={rowClassName}
-                    depth={depth + 1}
-                  />
-                </div>
-              </div>
+              <SubcircuitsDetail>
+                <CircuitRecursiveGrid
+                  circuits={subCircuitsOf(row)}
+                  simpleColumns={visibleColumns}
+                  expandColumnId={expandColumnId}
+                  dataType={dataType}
+                  onCellClick={onCellClick}
+                  rowClassName={rowClassName}
+                  depth={depth + 1}
+                  parentId={row.id}
+                />
+              </SubcircuitsDetail>
             ),
           }
         : undefined,
@@ -273,22 +288,31 @@ export function CircuitRecursiveGrid({
   }
 
   return (
-    <InMemoryGrid<ICircuit>
-      columns={adaptedColumns}
-      rows={rows}
-      getRowId={(row) => String(row.id)}
-      filterable={isTop && filterable}
-      showColumnChooser={isTop && showColumnChooser}
-      onHiddenColumnsChange={isTop && showColumnChooser ? setHiddenColumns : undefined}
-      sortable={isTop && sortable}
-      pagination={isTop && pagination}
-      pageSize={pageSize}
-      headerHeight={isTop ? 48 : 40}
-      expansion={expansion}
-      getRowClass={rowClassName}
-      onRowClick={(row) => onCellClick?.(pathname, row, dataType)}
-      className={className}
-    />
+    // Container carries the hierarchy level in its id + the direct parent circuit id
+    // (`data-parent-id`), so any depth of the subcircuit tree is addressable in the DOM.
+    <div
+      id={`circuit-grid-level-${depth}${parentId ? `-${parentId}` : ''}`}
+      data-grid-level={depth}
+      data-parent-id={parentId}
+      className="w-full"
+    >
+      <InMemoryGrid<ICircuit>
+        columns={adaptedColumns}
+        rows={rows}
+        getRowId={(row) => String(row.id)}
+        filterable={isTop && filterable}
+        showColumnChooser={isTop && showColumnChooser}
+        onHiddenColumnsChange={isTop && showColumnChooser ? setHiddenColumns : undefined}
+        sortable={isTop && sortable}
+        pagination={isTop && pagination}
+        pageSize={pageSize}
+        headerHeight={isTop ? 48 : 40}
+        expansion={expansion}
+        getRowClass={rowClassName}
+        onRowClick={(row) => onCellClick?.(pathname, row, dataType)}
+        className={className}
+      />
+    </div>
   );
 }
 

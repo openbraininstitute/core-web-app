@@ -4,7 +4,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
-import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import ChevronRight from '@/components/icons/ChevronRight';
 import { WorkspaceSection } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -16,7 +15,10 @@ import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { circuitListingRowClass } from '@/ui/segments/explore/circuit/elements/circuit-listing-grid';
-import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+import {
+  CircuitRecursiveGrid,
+  SubcircuitsDetail,
+} from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import {
   CircuitRepresentationView,
@@ -118,25 +120,20 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
         const hidden = new Set(state?.hiddenColumns ?? []);
         const visibleColumns = schemaColumns.filter((c) => !hidden.has(c.id));
         return (
-          <div className="my-5 flex flex-col items-start gap-5">
-            <div className="ml-7 flex flex-row items-center gap-2">
-              <ArrowReturnRight className="text-neutral-3 text-3xl" />
-              <div className="text-neutral-3 text-lg font-semibold uppercase">subcircuits</div>
-            </div>
-            <div className="w-full">
-              <div className="ml-4">
-                <CircuitRecursiveGrid
-                  key={row.id}
-                  circuits={children}
-                  simpleColumns={visibleColumns}
-                  expandColumnId={EntityCoreFields.CircuitSubCircuit}
-                  dataType={dataType}
-                  onCellClick={onCellClick}
-                  rowClassName={(record) => circuitListingRowClass(record, view)}
-                />
-              </div>
-            </div>
-          </div>
+          <SubcircuitsDetail>
+            <CircuitRecursiveGrid
+              key={row.id}
+              circuits={children}
+              simpleColumns={visibleColumns}
+              expandColumnId={EntityCoreFields.CircuitSubCircuit}
+              dataType={dataType}
+              onCellClick={onCellClick}
+              rowClassName={(record) => circuitListingRowClass(record, view)}
+              // top server grid is level 0; the first expanded subcircuit grid is level 1
+              depth={1}
+              parentId={row.id}
+            />
+          </SubcircuitsDetail>
         );
       },
     }),

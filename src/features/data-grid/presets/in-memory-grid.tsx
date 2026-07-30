@@ -321,11 +321,15 @@ export function InMemoryGrid<Row>({
       return (
         <button
           type="button"
+          // same rounded pill + hover/focus (primary-8 bg, white glyph) as the shared
+          // ExpandToggleButton, so the expander looks identical at every table level.
+          data-grid-expander=""
           aria-label={open ? 'Collapse row' : 'Expand row'}
           aria-expanded={open}
-          className="flex items-center justify-center text-gray-500 transition-colors hover:text-primary-7"
+          className="flex size-6 items-center justify-center rounded-md text-gray-500 outline-none transition-colors hover:bg-primary-8 hover:text-white focus-visible:bg-primary-8 focus-visible:text-white"
           onClick={(e) => {
             e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
             toggleExpand(row);
           }}
         >
