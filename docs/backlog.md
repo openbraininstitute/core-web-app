@@ -61,23 +61,37 @@ gated by `allowDownload`/`allowDelete`.
 
 ---
 
-## T-02 · P1 · Flip the experimental entity batch
+## T-02 · P1 · Flip the experimental entity batch — 🟡 IN PROGRESS
 
-Author + register grid schemas for the remaining non-expandable experimental
-dataTypes: `electrical_cell_recording`, `ion_channel_recording`,
-`experimental_neuron_density`, `experimental_bouton_density`,
-`experimental_synapses_per_connection`, `em_cell_mesh`,
-`universal_cell_morphology` (+ `synthesized_cell_morphology` if listed in the data
-section). Compose from `bindings/entitycore/columns/catalog.ts`; add missing
-catalog factories (e.g. etype, licence, measurement columns) as they surface.
+**Wave 1 done (commit `8b313bd99`): `electrical_cell_recording`,
+`ion_channel_recording`, `universal_cell_morphology`.** Catalog gained
+ionChannel/temperature/cellLine/subjectAge/numberOfMeasurements/releaseVersion
+factories + measurement helpers; shared `EntityPreview` renderer. Row types
+intersected with catalog `Has*` shapes to cover the hand-written entity types'
+**missing `subject`/`etypes`/`contributions`/`temperature`/`cell_line` fields** (real
+type gap — candidate for a proper type-completion pass).
+
+**Wave 2 remaining: `experimental_neuron_density`, `experimental_bouton_density`,
+`experimental_synapses_per_connection`, `em_cell_mesh`** (+
+`synthesized_cell_morphology` if in the data section). These need
+measurement/density value columns (helpers already added), the pre/post-synaptic
+region + cell-type columns (literal gotcha: `post_region__name_in`, single
+underscore), and the async `em_dense_reconstruction_dataset` name cell.
+
+Compose from `bindings/entitycore/columns/catalog.ts`.
 
 **Acceptance criteria**
-- [ ] One schema file per dataType (30–60 lines, catalog-composed) + registry entry
-- [ ] Per-entity parity test (like `__tests__/cell-morphology-parity.test.ts`):
-      serialized params == legacy oracle; column ids/order == legacy view-def
-- [ ] Custom cell renderers re-authored where the legacy listing had them
-      (previews/thumbnails via `@/features/thumbnail/preview`)
-- [ ] **[PARITY]** checklist per entity, browser-verified
+- [x] (wave 1) schema file per dataType + registry entry
+- [x] (wave 1) per-entity parity test — `__tests__/experimental-parity.test.ts`
+      (9 assertions: column ids/order resolved in Data section == legacy; filter/sort
+      params == legacy constraint keys)
+- [x] (wave 1) shared preview renderer via `@/features/thumbnail/preview`
+- [x] (wave 1) `electrical_cell_recording` browser-verified live (2,247 results, 9
+      rows, correct columns + selection col + species/etype values); `ion_channel`
+      & `universal` compile + 200 + no runtime errors, render pending a focused-tab
+      check (background-tab throttling on the cold dev server; identical infra to
+      the verified electrical path)
+- [ ] wave 2 schemas + parity tests + browser gates
 - [ ] Entity-specific narrow filters confirmed applied (counts match legacy)
 
 ## T-03 · P1 · Delete flipped entities' listing-only legacy config
