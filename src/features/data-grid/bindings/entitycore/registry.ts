@@ -1,5 +1,8 @@
 import { CellRendererRegistry } from '../../react';
 import { cellMorphologyGridDefinition } from './schemas/cell-morphology';
+import { electricalCellRecordingGridDefinition } from './schemas/electrical-cell-recording';
+import { ionChannelRecordingGridDefinition } from './schemas/ion-channel-recording';
+import { universalCellMorphologyGridDefinition } from './schemas/universal-cell-morphology';
 
 import type { GridSchema } from '../../core';
 import type { DetailRenderFn } from '../../react';
@@ -31,6 +34,9 @@ export type AnyEntityGridDefinition = EntityGridDefinition<any>;
  */
 const definitions: Record<string, AnyEntityGridDefinition> = {
   [cellMorphologyGridDefinition.dataType]: cellMorphologyGridDefinition,
+  [electricalCellRecordingGridDefinition.dataType]: electricalCellRecordingGridDefinition,
+  [ionChannelRecordingGridDefinition.dataType]: ionChannelRecordingGridDefinition,
+  [universalCellMorphologyGridDefinition.dataType]: universalCellMorphologyGridDefinition,
 };
 
 export function getEntityGridDefinition(dataType: string): AnyEntityGridDefinition | undefined {

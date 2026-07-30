@@ -48,6 +48,45 @@ export interface HasCreationDate {
 export interface HasUpdateDate {
   update_date?: Nullable<string>;
 }
+export interface HasIonChannel {
+  ion_channel?: Nullable<{ name?: Nullable<string> }>;
+}
+export interface HasTemperature {
+  temperature?: Nullable<number>;
+}
+export interface HasCellLine {
+  cell_line?: Nullable<string>;
+}
+export interface HasSubjectAge {
+  subject?: Nullable<{ age_value?: Nullable<number> }>;
+}
+export interface Measurement {
+  name?: Nullable<string>;
+  unit?: Nullable<string>;
+  value?: Nullable<number>;
+}
+export interface HasMeasurements {
+  measurements?: Nullable<Array<Measurement>>;
+}
+export interface HasReleaseVersion {
+  release_version?: Nullable<number | string>;
+}
+
+/** Find a measurement by its `name` (mean / standard_deviation / standard_error …). */
+export function measurementByName(row: HasMeasurements, name: string): Measurement | undefined {
+  return row.measurements?.find((m) => m?.name === name);
+}
+/** The dimensionless "number of measurements" measurement value. */
+export function measurementCount(row: HasMeasurements): number | null {
+  return row.measurements?.find((m) => m?.unit === 'dimensionless')?.value ?? null;
+}
+function formatFloat(value: Nullable<number>, fixed = 4): string {
+  return value == null || Number.isNaN(value) ? '' : Number(value.toFixed(fixed)).toString();
+}
+/** Age stored in seconds → whole days, matching the legacy "N days" accessor. */
+function ageInDays(seconds: Nullable<number>): string {
+  return seconds == null ? '' : `${Math.floor(seconds / 86_400)} days`;
+}
 
 export function formatDate(iso?: Nullable<string>): string {
   if (!iso) return '';
@@ -272,4 +311,118 @@ export function updateDateColumn<Row extends HasUpdateDate>(
     },
     o
   );
+}
+
+export function ionChannelColumn<Row extends HasIonChannel>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'ionChannel',
+      header: 'Ion channel',
+      sortable: true,
+      sortField: 'ion_channel__name',
+      getValue: (r) => r.ion_channel?.name ?? '—',
+      width: { minWidth: 140, flex: 1 },
+      filter: { operators: [OperatorId.Ilike], field: 'ion_channel__name' },
+    },
+    o
+  );
+}
+
+export function temperatureColumn<Row extends HasTemperature>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'temperature',
+      header: 'Temperature',
+      unit: '°C',
+      sortable: true,
+      sortField: 'temperature',
+      getValue: (r) => (r.temperature == null ? '' : `${r.temperature} °C`),
+      width: { minWidth: 130 },
+      filter: { operators: [OperatorId.Range], field: 'temperature' },
+    },
+    o
+  );
+}
+
+export function cellLineColumn<Row extends HasCellLine>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'cellLine',
+      header: 'Cell line',
+      sortable: true,
+      sortField: 'cell_line',
+      getValue: (r) => r.cell_line ?? '—',
+      width: { minWidth: 130, flex: 1 },
+      filter: { operators: [OperatorId.Ilike], field: 'cell_line' },
+    },
+    o
+  );
+}
+
+export function subjectAgeColumn<Row extends HasSubjectAge>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'subjectAge',
+      header: 'Age',
+      // sortable only where the entity binds `subject__age_value` — enable per schema
+      sortField: 'subject__age_value',
+      getValue: (r) => ageInDays(r.subject?.age_value),
+      width: { minWidth: 110 },
+    },
+    o
+  );
+}
+
+export function numberOfMeasurementsColumn<Row extends HasMeasurements>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'numberOfMeasurements',
+      header: 'N° of Measurements',
+      getValue: (r) => measurementCount(r),
+      align: 'right',
+      width: { minWidth: 150 },
+    },
+    o
+  );
+}
+
+export function releaseVersionColumn<Row extends HasReleaseVersion>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'releaseVersion',
+      header: 'Version',
+      sortable: true,
+      sortField: 'release_version',
+      getValue: (r) => (r.release_version == null ? '' : String(r.release_version)),
+      width: { minWidth: 110 },
+      filter: {
+        operators: [OperatorId.In],
+        field: 'release_version',
+        facetKey: 'release_version',
+        options: { kind: 'facets' },
+      },
+    },
+    o
+  );
+}
+
+/** Formatted mean value from a density-style `measurements` array (legacy renderFloatNumber). */
+export function meanValue(row: HasMeasurements): string {
+  return formatFloat(measurementByName(row, 'mean')?.value);
+}
+/** "mean ± std" string from a density-style `measurements` array. */
+export function meanStd(row: HasMeasurements): string {
+  const mean = formatFloat(measurementByName(row, 'mean')?.value);
+  const std = formatFloat(measurementByName(row, 'standard_deviation')?.value);
+  return mean || std ? `${mean} ± ${std}` : '';
 }

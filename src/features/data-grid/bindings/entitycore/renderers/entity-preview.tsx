@@ -1,7 +1,11 @@
 import { hasAssets } from '@/api/entitycore/guards';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreResource,
+} from '@/api/entitycore/types/shared/global';
 import type { CellRendererProps } from '../../../react';
 
 /** Cell-renderer registry key for the shared entity preview thumbnail. */
@@ -15,7 +19,7 @@ export const ENTITY_PREVIEW_RENDERER = 'entityPreview';
  * preview column's `cellRenderer`.
  */
 export function EntityPreview({ row }: CellRendererProps<EntityCoreIdentifiable>) {
-  if (!row || !hasAssets(row)) {
+  if (!row || !hasAssets(row as unknown as EntityCoreObjectTypes)) {
     return (
       <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-300">
         No preview
@@ -24,7 +28,7 @@ export function EntityPreview({ row }: CellRendererProps<EntityCoreIdentifiable>
   }
   return (
     <PreviewThumbnail
-      entity={row}
+      entity={row as unknown as EntityCoreResource}
       width={184}
       height={108}
       className="rounded border border-gray-100 bg-white object-contain"
