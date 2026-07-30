@@ -1,5 +1,6 @@
 import { CellRendererRegistry } from '../../react';
 import { cellMorphologyGridDefinition } from './schemas/cell-morphology';
+import { circuitSimulationGridDefinitions } from './schemas/circuit-simulations';
 import { electricalCellRecordingGridDefinition } from './schemas/electrical-cell-recording';
 import { emCellMeshGridDefinition } from './schemas/em-cell-mesh';
 import { experimentalBoutonDensityGridDefinition } from './schemas/experimental-bouton-density';
@@ -46,6 +47,8 @@ const definitions: Record<string, AnyEntityGridDefinition> = {
   [experimentalSynapsesPerConnectionGridDefinition.dataType]:
     experimentalSynapsesPerConnectionGridDefinition,
   [emCellMeshGridDefinition.dataType]: emCellMeshGridDefinition,
+  // T-05: expandable circuit-simulation dataTypes flipped to full-width detail rows.
+  ...Object.fromEntries(circuitSimulationGridDefinitions.map((def) => [def.dataType, def])),
 };
 
 export function getEntityGridDefinition(dataType: string): AnyEntityGridDefinition | undefined {
