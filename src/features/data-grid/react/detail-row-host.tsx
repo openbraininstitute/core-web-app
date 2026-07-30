@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import type { ReactNode } from 'react';
+import type { GridState } from '../core';
 import type { DetailRuntime } from './renderer';
 
 export interface DetailRowHostProps<Row> {
@@ -13,6 +14,8 @@ export interface DetailRowHostProps<Row> {
   minHeight?: number;
   /** reports the measured content height so the renderer can size the full-width row */
   onHeight: (height: number) => void;
+  /** live parent grid state, forwarded to the detail render (optional, additive) */
+  state?: GridState;
 }
 
 /**
@@ -28,6 +31,7 @@ export function DetailRowHost<Row>({
   detail,
   minHeight,
   onHeight,
+  state,
 }: DetailRowHostProps<Row>): ReactNode {
   const containerRef = useRef<HTMLDivElement>(null);
   const onHeightRef = useRef(onHeight);
@@ -58,6 +62,7 @@ export function DetailRowHost<Row>({
         data: hasFetch ? data : undefined,
         loading: hasFetch ? isLoading : false,
         error,
+        state,
       })}
     </div>
   );

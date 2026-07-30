@@ -1,5 +1,5 @@
-import { CellRendererRegistry } from '../../react';
 import { cellMorphologyGridDefinition } from './schemas/cell-morphology';
+import { circuitGridDefinition } from './schemas/circuit';
 import { circuitSimulationGridDefinitions } from './schemas/circuit-simulations';
 import { electricalCellRecordingGridDefinition } from './schemas/electrical-cell-recording';
 import { emCellMeshGridDefinition } from './schemas/em-cell-mesh';
@@ -9,8 +9,10 @@ import { experimentalSynapsesPerConnectionGridDefinition } from './schemas/exper
 import { ionChannelRecordingGridDefinition } from './schemas/ion-channel-recording';
 import { universalCellMorphologyGridDefinition } from './schemas/universal-cell-morphology';
 
+import type { FC } from 'react';
 import type { GridSchema } from '../../core';
-import type { DetailRenderFn } from '../../react';
+import type { BrowseEntityGridProps } from '../../host/browse-entity-grid';
+import type { CellRendererRegistry, DetailRenderFn } from '../../react';
 
 /**
  * An entity grid definition pairs a re-authored {@link GridSchema} (table
@@ -26,6 +28,13 @@ export interface EntityGridDefinition<Row> {
   registerCellRenderers?: (registry: CellRendererRegistry) => void;
   /** renderer for the schema's `detail` spec (full-width expanded rows) */
   renderDetail?: DetailRenderFn<Row>;
+  /**
+   * Optional custom-entity PLUGIN body. When present, `BrowseEntityGrid` renders it
+   * instead of the shared `EntityDataGrid`; the body owns its own state and wraps
+   * `EntityDataGrid` with strategy overrides (e.g. circuit's flat↔hierarchy toggle
+   * + recursive subcircuit expansion). Absent for standard entities (unchanged).
+   */
+  plugin?: { Body: FC<BrowseEntityGridProps> };
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: registry holds heterogeneous row types per entity
@@ -49,15 +58,11 @@ const definitions: Record<string, AnyEntityGridDefinition> = {
   [emCellMeshGridDefinition.dataType]: emCellMeshGridDefinition,
   // T-05: expandable circuit-simulation dataTypes flipped to full-width detail rows.
   ...Object.fromEntries(circuitSimulationGridDefinitions.map((def) => [def.dataType, def])),
+  // Circuit listing flipped onto the shared stack via a PLUGIN body (flat↔hierarchy
+  // toggle + recursive subcircuit expansion). Rollback = remove this one line.
+  [circuitGridDefinition.dataType]: circuitGridDefinition,
 };
 
 export function getEntityGridDefinition(dataType: string): AnyEntityGridDefinition | undefined {
   return definitions[dataType];
-}
-
-/** Build a cell-renderer registry populated with a definition's renderers. */
-export function buildCellRenderers(definition: AnyEntityGridDefinition): CellRendererRegistry {
-  const registry = new CellRendererRegistry();
-  definition.registerCellRenderers?.(registry);
-  return registry;
 }

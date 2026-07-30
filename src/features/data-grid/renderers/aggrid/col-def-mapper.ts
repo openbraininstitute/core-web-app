@@ -1,10 +1,12 @@
 import { AgCellHost } from './cell-host';
 import { isDetailRow } from './detail-rows';
 import { AgExpandCell } from './expand-cell';
+import { AgExpandHostCell } from './expand-host-cell';
 import { AgHeader } from './header';
 
 import type { ColDef } from 'ag-grid-community';
 import type { ResolvedColumn } from '../../core';
+import type { ExpandColumnConfig } from '../../react';
 
 export const EXPAND_COL_ID = '__expand';
 
@@ -14,6 +16,12 @@ export interface BuildColDefsOptions {
   columnWidths: Record<string, number>;
   /** prepend the expand-chevron column (grids with a detail runtime) */
   withExpandColumn?: boolean;
+  /**
+   * optional placement of the expander. When `columnId` matches a data column the
+   * chevron hosts inside that cell and no leading column is prepended; otherwise
+   * (default) the fixed leading `__expand` column is used.
+   */
+  expandColumn?: ExpandColumnConfig;
 }
 
 /** Fixed, non-interactive expander column shown when detail rows are enabled. */
@@ -41,7 +49,16 @@ export function buildColDefs<Row>(
   columns: Array<ResolvedColumn<Row>>,
   options: BuildColDefsOptions
 ): Array<ColDef<Row>> {
-  const { hidden, columnWidths, withExpandColumn } = options;
+  const { hidden, columnWidths, withExpandColumn, expandColumn } = options;
+
+  // Host the expander inside a named column only when a detail runtime exists AND a
+  // matching column id was supplied; otherwise fall back to the leading column.
+  const hostColumnId =
+    withExpandColumn && expandColumn?.columnId
+      ? columns.some((c) => c.id === expandColumn.columnId)
+        ? expandColumn.columnId
+        : undefined
+      : undefined;
 
   const defs = columns.map((c) => {
     const field = c.field ?? c.id;
@@ -94,7 +111,17 @@ export function buildColDefs<Row>(
       colDef.field = field as ColDef<Row>['field'];
     }
 
-    if (c.cellRenderer) {
+    if (c.id === hostColumnId) {
+      // Host the expander inside this column's cell; the host renderer also draws
+      // the column's normal content (via `rendererKey` or the plain value).
+      colDef.cellRenderer = AgExpandHostCell;
+      colDef.cellRendererParams = {
+        rendererKey: c.cellRenderer,
+        ...c.cellRendererParams,
+        expandAlign: expandColumn?.align ?? 'right',
+        renderExpander: expandColumn?.renderExpander,
+      };
+    } else if (c.cellRenderer) {
       colDef.cellRenderer = AgCellHost;
       colDef.cellRendererParams = { rendererKey: c.cellRenderer, ...c.cellRendererParams };
     }
@@ -106,5 +133,7 @@ export function buildColDefs<Row>(
     return colDef;
   });
 
-  return withExpandColumn ? [expandColDef<Row>(), ...defs] : defs;
+  // Prepend the fixed leading expander only when the expander is NOT hosted inside
+  // a data column — preserving the historical default for every existing entity.
+  return withExpandColumn && !hostColumnId ? [expandColDef<Row>(), ...defs] : defs;
 }

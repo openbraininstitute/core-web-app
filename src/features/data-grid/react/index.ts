@@ -18,6 +18,12 @@ export type { ColumnChooserProps } from './column-chooser';
 export type { DataGridProps } from './data-grid';
 export type { DetailRowHostProps } from './detail-row-host';
 export type { GridPaginationProps } from './pagination';
-export type { DetailRenderFn, DetailRuntime, GridRenderer, GridRendererProps } from './renderer';
+export type {
+  DetailRenderFn,
+  DetailRuntime,
+  ExpandColumnConfig,
+  GridRenderer,
+  GridRendererProps,
+} from './renderer';
 export type { DataGridToolbarProps, DataGridToolbarSlots } from './toolbar';
 export type { UseDataGridArgs, UseDataGridResult } from './use-data-grid';

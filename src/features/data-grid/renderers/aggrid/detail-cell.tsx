@@ -1,5 +1,6 @@
 import { DetailRowHost } from '../../react';
 import { isDetailRow } from './detail-rows';
+import { useGridState } from './use-grid-state';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { AgGridContext } from './ag-context';
@@ -15,6 +16,9 @@ export const DEFAULT_DETAIL_MIN_HEIGHT = 160;
 export function AgDetailCell(props: CustomCellRendererProps) {
   const ctx = props.context as AgGridContext;
   const row = props.data;
+  // Subscribe to the live parent state so the detail render can stay
+  // column-consistent (forwarded as an optional, additive arg).
+  const state = useGridState(ctx.controller);
 
   if (!ctx.detail || !isDetailRow(row)) return null;
 
@@ -28,6 +32,7 @@ export function AgDetailCell(props: CustomCellRendererProps) {
         gridId={ctx.controller.schema.id}
         detail={ctx.detail}
         minHeight={minHeight}
+        state={state}
         onHeight={(height) => {
           const target = Math.max(height, minHeight);
           if (props.node.rowHeight !== target) {

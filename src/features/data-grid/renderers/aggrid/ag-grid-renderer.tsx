@@ -57,6 +57,8 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     selectionEnabled,
     onRowClick,
     activeRowId,
+    getRowClass,
+    expandColumn,
   } = props;
 
   // AG Grid is client-only (mirrors the legacy table's ssr:false). Render a sized
@@ -82,8 +84,9 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         hidden,
         columnWidths: state.columnWidths,
         withExpandColumn: Boolean(detail),
+        expandColumn,
       }),
-    [orderedColumns, hidden, state.columnWidths, detail]
+    [orderedColumns, hidden, state.columnWidths, detail, expandColumn]
   );
 
   const context = useMemo<AgGridContext<Row>>(
@@ -263,6 +266,14 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     [activeRowId, onRowClick, getRowId]
   );
 
+  // Optional per-row class (e.g. hierarchy gray-out). Never applied to synthetic
+  // detail rows. `undefined` when the host supplies no hook = unchanged behavior.
+  const rowClass = useCallback(
+    (p: RowClassParams<DisplayRow<Row>>): string | undefined =>
+      getRowClass && p.data != null && !isDetailRow(p.data) ? getRowClass(p.data) : undefined,
+    [getRowClass]
+  );
+
   if (!mounted) return <div className="ag-data-grid h-full min-h-0 w-full" />;
 
   return (
@@ -295,6 +306,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         onColumnResized={onColumnResized}
         onCellClicked={onCellClicked}
         getRowStyle={getRowStyle}
+        getRowClass={getRowClass ? rowClass : undefined}
       />
     </div>
   );

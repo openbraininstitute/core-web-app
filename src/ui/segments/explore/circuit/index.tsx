@@ -5,7 +5,7 @@ import { get } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { type ComponentProps, type ReactNode, useEffect, useRef } from 'react';
+import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import ApiError from '@/api/error';
@@ -17,6 +17,7 @@ import {
   workspaceHierarchySpeciesAtom,
 } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import {
   useQueryExtendedEntityType,
   useQueryExtendedEntityTypeFacets,
@@ -61,8 +62,17 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { Pagination, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { BrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
+import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
+
+// AG Grid is client-only; load it lazily (like `BrowseEntityScope`) so the legacy
+// path never pays for the AG Grid bundle and vice-versa.
+const BrowseEntityGrid = dynamic(
+  () => import('@/features/data-grid/host/browse-entity-grid').then((m) => m.BrowseEntityGrid),
+  { ssr: false }
+) as (props: BrowseEntityGridProps) => ReactElement | null;
 
 type Props = {
   id?: string;
@@ -81,7 +91,7 @@ type Props = {
   extraQueryParams?: Record<string, any>;
 };
 
-export function BrowseCircuit({
+function BrowseCircuitLegacy({
   id,
   classNames,
   section = WorkspaceSection.Data,
@@ -450,4 +460,22 @@ export function BrowseCircuit({
       <DownloadPanel />
     </>
   );
+}
+
+/**
+ * Circuit listing router (mirrors `BrowseEntityScope`). When the circuit dataType is
+ * registered in the data-grid registry, render it on the shared AG Grid stack via
+ * the `circuitGridDefinition` PLUGIN body (`CircuitGridBody`); otherwise fall back to
+ * the bespoke antd listing, preserved verbatim as {@link BrowseCircuitLegacy}. The
+ * circuit `page.tsx` import is unchanged, so rollback = remove the registry entry.
+ */
+export function BrowseCircuit(props: Props) {
+  const definition = getEntityGridDefinition(props.dataType);
+  if (definition) {
+    // The AG Grid host reads only the shared listing props; `mainTableProps` is
+    // antd-`CircuitTable`-shaped and unused there, so it is dropped.
+    const { mainTableProps: _mainTableProps, ...rest } = props;
+    return <BrowseEntityGrid {...(rest as BrowseEntityScopeProps)} definition={definition} />;
+  }
+  return <BrowseCircuitLegacy {...props} />;
 }

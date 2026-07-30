@@ -15,7 +15,12 @@ import type { ReactNode } from 'react';
 import type { Facets, GridController, GridDataSource, OperatorRegistry } from '../core';
 import type { BulkActionsRenderArgs } from './bulk-actions';
 import type { CellRendererRegistry } from './cell-renderer-registry';
-import type { DetailRuntime, GridRenderer, GridRendererProps } from './renderer';
+import type {
+  DetailRuntime,
+  ExpandColumnConfig,
+  GridRenderer,
+  GridRendererProps,
+} from './renderer';
 import type { DataGridToolbarSlots } from './toolbar';
 
 export interface DataGridProps<Row> {
@@ -36,6 +41,10 @@ export interface DataGridProps<Row> {
   onRowClick?: (row: Row) => void;
   /** id of the row whose mini-detail view is open — highlighted in the grid */
   activeRowId?: string;
+  /** optional per-row css class hook (e.g. hierarchy filtered-in/out styling) */
+  getRowClass?: (row: Row) => string | undefined;
+  /** optional placement of the expand control (default: fixed leading column) */
+  expandColumn?: ExpandColumnConfig;
   toolbarSlots?: DataGridToolbarSlots;
   /** bulk actions rendered in the toolbar while rows are selected */
   renderBulkActions?: (args: BulkActionsRenderArgs<Row>) => ReactNode;
@@ -66,6 +75,8 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     detail,
     onRowClick,
     activeRowId,
+    getRowClass,
+    expandColumn,
     toolbarSlots,
     renderBulkActions,
     renderCount,
@@ -100,6 +111,8 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     selectionEnabled,
     onRowClick,
     activeRowId,
+    getRowClass,
+    expandColumn,
   };
 
   if (error && renderError) {
