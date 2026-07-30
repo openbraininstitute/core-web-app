@@ -28,12 +28,12 @@ export const cellMorphologySchema: GridSchema<ICellMorphology> = {
   id: 'cell-morphology',
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
-  rowHeight: 124,
+  rowHeight: 118,
   selection: { enabled: true },
   columns: [
     previewColumn<ICellMorphology>({
       cellRenderer: 'cellMorphologyPreview',
-      width: { width: 196, minWidth: 120, resizable: true },
+      width: { width: 184, minWidth: 120, resizable: true },
     }),
     brainRegionColumn<ICellMorphology>(),
     speciesColumn<ICellMorphology>(),

@@ -1,6 +1,10 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
-import { CheckListDescription } from '@/features/listing-filter-panel/checklist/option';
+import { getEtype } from '@/api/entitycore/queries/annotations/etype';
+import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { Checkbox } from '@/ui/molecules/checkbox';
 import { Input } from '@/ui/molecules/input';
@@ -11,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
 import { isEmptyFilterValue } from '../../../core';
@@ -23,7 +28,8 @@ import type { AgGridContext } from '../ag-context';
 const COMMIT_DEBOUNCE_MS = 250;
 
 /** rounded-xl input styling shared by every editor control */
-const INPUT_CLASS = 'h-9 rounded-xl text-sm';
+const INPUT_CLASS =
+  'h-9 rounded-xl text-sm ring-0 shadow-none! shadow-ring-0! focus-visible:ring-0! focus-visible:shadow-none! focus-visible:shadow-ring-0!';
 
 export interface FilterEditorProps {
   ctx: AgGridContext;
@@ -94,7 +100,11 @@ export function FilterEditor({
 
   const commit = (v: FilterValue | null) => {
     if (v === null || isEmptyFilterValue(v)) {
-      ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
+      ctx.controller.store.dispatch({
+        type: 'setFilter',
+        columnId,
+        entry: null,
+      });
     } else {
       ctx.controller.store.dispatch({
         type: 'setFilter',
@@ -340,6 +350,7 @@ function SetEditor({
                 <Checkbox
                   checked={selectedSet.has(o.value)}
                   onCheckedChange={(checked) => toggle(o.value, checked === true)}
+                  className="shrink-0 **:data-[slot=checkbox-indicator]:text-white!"
                 />
                 <span className="flex-1 truncate text-primary-8">{o.label}</span>
                 {o.count != null && (
@@ -358,5 +369,24 @@ function SetEditor({
         )}
       </div>
     </div>
+  );
+}
+
+export function CheckListDescription({ id, type }: { id: string; type: 'mtype' | 'etype' }) {
+  const { data } = useQuery({
+    queryKey: keyBuilder.annotation({ entityId: id }),
+    queryFn: async () => {
+      if (type === 'mtype') return await getMtype({ id });
+      return await getEtype({ id });
+    },
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  return (
+    <span className="text-gray-600 text-left wrap-break-word hyphens-auto">{data?.definition}</span>
   );
 }

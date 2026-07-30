@@ -22,8 +22,8 @@ export function CellMorphologyPreview({ row }: CellRendererProps<ICellMorphology
       entity={row}
       width={184}
       height={108}
-      className="rounded border border-neutral-3 object-contain"
-      rootClassName="h-full w-full"
+      className="rounded border border-gray-100 object-contain bg-white"
+      rootClassName="h-full w-full preview-thumbnail-root my-1"
     />
   );
 }

@@ -54,7 +54,11 @@ export function formatDate(iso?: Nullable<string>): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
     ? ''
-    : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    : d.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
 }
 
 function joinLabels(values: Array<Nullable<string>>): string {
@@ -66,7 +70,11 @@ function joinLabels(values: Array<Nullable<string>>): string {
 
 export function previewColumn<Row>(o?: ColumnOverride<Row>): ColumnModel<Row> {
   return mergeColumnDef<Row>(
-    { id: 'preview', header: 'Preview', width: { width: 92, minWidth: 72, resizable: true } },
+    {
+      id: 'preview',
+      header: 'Preview',
+      width: { width: 140, minWidth: 72, resizable: true },
+    },
     o
   );
 }

@@ -1,4 +1,4 @@
-import { themeMaterial } from 'ag-grid-community';
+import { themeQuartz } from 'ag-grid-community';
 
 /**
  * AG Grid v35 Theming API — an elegant, Airbnb-flavoured look driven by the app's
@@ -10,7 +10,7 @@ import { themeMaterial } from 'ag-grid-community';
  * hairline border (so it reads as a floating card, not a raw menu). Filter inputs
  * get rounded corners, a calm resting border and a branded focus ring.
  */
-export const dataGridTheme = themeMaterial.withParams({
+export const dataGridTheme = themeQuartz.withParams({
   // palette
   accentColor: 'var(--color-primary-6, #1668dc)',
   foregroundColor: 'var(--color-primary-9, #101828)',
@@ -19,7 +19,7 @@ export const dataGridTheme = themeMaterial.withParams({
 
   // typography
   fontFamily: 'inherit',
-  fontSize: 16,
+  fontSize: 14,
 
   // chrome — hairline borders only, no vertical rules
   borderColor: 'color-mix(in srgb, var(--color-primary-9, #101828) 8%, transparent)',
