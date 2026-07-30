@@ -1,17 +1,17 @@
-import { ConfigProvider, Table } from 'antd';
 import { get, lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { ActivityStatusRenderer } from '@/features/task-runner/activity-execution/status';
-import { cn } from '@/utils/css-class';
 
-import type { ColumnsType } from 'antd/es/table';
 import type { ReactNode, SVGProps } from 'react';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import type {
   TTaskCampaignExecutionRow,
   TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-functions';
+import type { CellValue } from '@/features/data-grid/core';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 export function getParamLabel(param: string) {
   // e.g. "initialize.random_seed" -> "Random seed"
@@ -46,14 +46,8 @@ export function scanParameterKeys(scanParameters: unknown): string[] {
   return [];
 }
 
-const cellClassName = 'text-primary-9! whitespace-nowrap';
 const headerWrapClassName = 'text-primary-9! whitespace-normal break-words';
 const expandedTableWrapperClassName = 'pr-36 pl-12';
-const expandedTableClassName = cn(
-  '[&_.ant-table-cell]:bg-background!',
-  '[&_.ant-table-thead>th]:text-primary-9!',
-  '[&_.ant-table-row:hover>td]:bg-gray-100!'
-);
 
 type ScanParamsRow = {
   id: string;
@@ -63,69 +57,57 @@ type ScanParamsRow = {
 
 export function createScanParameterColumns<R extends ScanParamsRow>(
   paramKeys: Iterable<string>
-): ColumnsType<R> {
+): Array<SimpleColumn<R>> {
   return Array.from(paramKeys).map((param) => ({
-    title: (
+    id: param,
+    header: getParamLabel(param),
+    headerNode: (
       <div title={param} className={headerWrapClassName}>
         {getParamTitle(param)}
       </div>
     ),
-    className: cellClassName,
-    onHeaderCell: () => ({
-      className: headerWrapClassName,
-      style: { whiteSpace: 'normal' },
-    }),
-    dataIndex: ['scan_parameters', param],
-    ellipsis: true,
-    key: param,
+    getValue: (row: R) => get(row, ['scan_parameters', param]) as CellValue,
   }));
 }
 
-export function createNameColumn<R extends ScanParamsRow>(): ColumnsType<R>[number] {
+export function createNameColumn<R extends ScanParamsRow>(): SimpleColumn<R> {
   return {
-    title: <span className={cellClassName}>Name</span>,
-    className: cellClassName,
-    dataIndex: 'name',
-    key: 'name',
-    ellipsis: true,
-    width: 200,
-    fixed: 'left',
+    id: 'name',
+    header: 'Name',
+    field: 'name',
+    width: { width: 200 },
+    pinned: 'left',
   };
 }
 
 export function createStatusColumn<R>(
   renderStatus: (_: unknown, record: R) => ReactNode,
   opts?: { width?: number }
-): ColumnsType<R>[number] {
+): SimpleColumn<R> {
   return {
-    title: <span className={cellClassName}>Status</span>,
-    render: renderStatus,
-    width: opts?.width ?? 120,
+    id: 'status',
+    header: 'Status',
+    renderCell: (record: R) => renderStatus(undefined, record),
+    width: { width: opts?.width ?? 120 },
     align: 'center',
-    className: cellClassName,
-    key: 'status',
-    fixed: 'right' as const,
+    pinned: 'right',
   };
 }
 
 export function renderExpandedTable<R extends { id: string }>(props: {
-  columns: ColumnsType<R>;
+  columns: Array<SimpleColumn<R>>;
   dataSource: R[];
   rowKey?: string | ((record: R) => string);
 }) {
+  const { rowKey } = props;
+  const getRowId =
+    typeof rowKey === 'function'
+      ? rowKey
+      : (record: R) => String((record as Record<string, unknown>)[rowKey ?? 'id']);
+
   return (
     <div className={expandedTableWrapperClassName}>
-      <ConfigProvider theme={{ hashed: false }}>
-        <Table
-          size="middle"
-          bordered
-          columns={props.columns}
-          dataSource={props.dataSource}
-          rowKey={props.rowKey ?? 'id'}
-          pagination={false}
-          className={expandedTableClassName}
-        />
-      </ConfigProvider>
+      <SimpleGrid columns={props.columns} rows={props.dataSource} getRowId={getRowId} />
     </div>
   );
 }
@@ -202,7 +184,7 @@ export const TaskViewConfig: ListExpandedViewConfig<
       status: getExecutionStatus(r),
     }));
 
-    const columns: ColumnsType<Row> = [
+    const columns: Array<SimpleColumn<Row>> = [
       createNameColumn<Row>(),
       ...extraColumns,
       createStatusColumn<Row>((_: unknown, r: Row) => (
