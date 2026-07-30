@@ -28,6 +28,8 @@ import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
+import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
+import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 import { EntityTypeSelector } from '@/ui/segments/data-table/elements/entity-selector';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -72,6 +74,8 @@ export function BrowseEntityGrid({
   miniViewProps,
   allowSearch = true,
   allowQuery = true,
+  allowDownload,
+  allowDelete,
   requireSpeciesSelector,
   requireScopeSelector,
   requireEntityTypeSelector,
@@ -262,16 +266,34 @@ export function BrowseEntityGrid({
               />
             ) : undefined,
           }}
-          renderBulkActions={({ selectedIds, clearSelection }) => (
-            <div className="flex items-center gap-2 text-xs">
-              <span className="font-medium text-primary-8">{selectedIds.length} selected</span>
+          renderBulkActions={({ selectedIds, selectedRows, clearSelection }) => (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-primary-8">
+                {selectedIds.length} selected
+              </span>
               <button
                 type="button"
                 onClick={clearSelection}
-                className="rounded-full px-2 py-0.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                className="rounded-full px-2 py-0.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               >
                 Clear
               </button>
+              {allowDownload && (
+                <EntityDownloadButton<EntityCoreIdentifiableNamed>
+                  selectedRows={selectedRows}
+                  dataType={dataType}
+                  clearSelectedRows={clearSelection}
+                  workspace={{ virtualLabId, projectId }}
+                />
+              )}
+              {allowDelete && (
+                <EntityDeleteButton<EntityCoreIdentifiableNamed>
+                  selectedRows={selectedRows}
+                  dataType={dataType}
+                  clearSelectedRows={clearSelection}
+                  workspace={{ virtualLabId, projectId }}
+                />
+              )}
             </div>
           )}
           renderCount={({ total, loading }) => (

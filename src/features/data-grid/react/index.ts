@@ -1,4 +1,4 @@
-export { BulkActions } from './bulk-actions';
+export { accumulateSeenRows, BulkActions } from './bulk-actions';
 export { CellRendererRegistry } from './cell-renderer-registry';
 export { ColumnChooser } from './column-chooser';
 export { DataGrid } from './data-grid';
