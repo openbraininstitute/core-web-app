@@ -7,6 +7,7 @@ import { getEtype } from '@/api/entitycore/queries/annotations/etype';
 import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { Checkbox } from '@/ui/molecules/checkbox';
+import { DateRangePicker } from '@/ui/molecules/date-picker';
 import { Input } from '@/ui/molecules/input';
 import {
   Select,
@@ -19,17 +20,23 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
 import { isEmptyFilterValue } from '../../../core';
+import {
+  GRID_INPUT_CLASS,
+  GRID_SELECT_CONTENT_CLASS,
+  GRID_SELECT_ITEM_CLASS,
+  GRID_SELECT_TRIGGER_CLASS,
+} from '../../../react/molecules-theme';
 import { useGridState } from '../use-grid-state';
 import { useSetOptions } from './use-set-options';
 
+import type { DateRange } from 'react-day-picker';
 import type { FilterOptionsSource, FilterValue } from '../../../core';
 import type { AgGridContext } from '../ag-context';
 
 const COMMIT_DEBOUNCE_MS = 250;
 
 /** rounded-xl input styling shared by every editor control */
-const INPUT_CLASS =
-  'h-9 rounded-xl text-sm ring-0 shadow-none! shadow-ring-0! focus-visible:ring-0! focus-visible:shadow-none! focus-visible:shadow-ring-0!';
+const INPUT_CLASS = GRID_INPUT_CLASS;
 
 export interface FilterEditorProps {
   ctx: AgGridContext;
@@ -67,12 +74,9 @@ function toNumber(v: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** a `type=date` input expects `yyyy-mm-dd`; we store ISO strings */
-function toDateInputValue(iso: string | null): string {
-  return iso ? new Date(iso).toISOString().slice(0, 10) : '';
-}
-function fromDateInputValue(v: string): string | null {
-  return v ? new Date(v).toISOString() : null;
+/** the store keeps ISO strings; the date-range picker works in `Date`s */
+function toDateOrUndefined(iso: string | null): Date | undefined {
+  return iso ? new Date(iso) : undefined;
 }
 
 /**
@@ -98,6 +102,14 @@ export function FilterEditor({
   const value: FilterValue =
     current && current.operator === operator ? current.value : emptyForUiKind(uiKind);
 
+  // Date ranges are edited locally and only committed on Apply — so picking a single
+  // endpoint (or typing one bound) neither refetches the grid nor closes the panel.
+  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(() =>
+    current?.value.kind === 'dateRange'
+      ? { from: toDateOrUndefined(current.value.from), to: toDateOrUndefined(current.value.to) }
+      : undefined
+  );
+
   const commit = (v: FilterValue | null) => {
     if (v === null || isEmptyFilterValue(v)) {
       ctx.controller.store.dispatch({
@@ -118,7 +130,24 @@ export function FilterEditor({
   const onOperatorChange = (op: string) => {
     debouncedCommit.cancel();
     setOperator(op);
+    setPendingRange(undefined);
     ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
+  };
+
+  const onApply = () => {
+    if (uiKind === 'dateRange') {
+      const hasValue = pendingRange?.from || pendingRange?.to;
+      commit(
+        hasValue
+          ? {
+              kind: 'dateRange',
+              from: pendingRange?.from ? pendingRange.from.toISOString() : null,
+              to: pendingRange?.to ? pendingRange.to.toISOString() : null,
+            }
+          : null
+      );
+    }
+    onClose();
   };
 
   return (
@@ -130,12 +159,12 @@ export function FilterEditor({
 
       {operatorIds.length > 1 && (
         <Select value={operator} onValueChange={onOperatorChange}>
-          <SelectTrigger className="h-9 w-full rounded-xl text-sm">
+          <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
             <SelectValue>{ctx.operators.get(operator).label}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className={GRID_SELECT_CONTENT_CLASS}>
             {operatorIds.map((id) => (
-              <SelectItem key={id} value={id}>
+              <SelectItem key={id} value={id} className={GRID_SELECT_ITEM_CLASS}>
                 {ctx.operators.get(id).label}
               </SelectItem>
             ))}
@@ -196,33 +225,8 @@ export function FilterEditor({
       )}
 
       {uiKind === 'dateRange' && (
-        <div className="flex items-center gap-2">
-          <Input
-            type="date"
-            className={INPUT_CLASS}
-            value={value.kind === 'dateRange' ? toDateInputValue(value.from) : ''}
-            onChange={(e) =>
-              commit({
-                kind: 'dateRange',
-                from: fromDateInputValue(e.target.value),
-                to: value.kind === 'dateRange' ? value.to : null,
-              })
-            }
-          />
-          <span className="text-gray-300">–</span>
-          <Input
-            type="date"
-            className={INPUT_CLASS}
-            value={value.kind === 'dateRange' ? toDateInputValue(value.to) : ''}
-            onChange={(e) =>
-              commit({
-                kind: 'dateRange',
-                from: value.kind === 'dateRange' ? value.from : null,
-                to: fromDateInputValue(e.target.value),
-              })
-            }
-          />
-        </div>
+        // edits stay local (pendingRange) until Apply — see onApply
+        <DateRangePicker value={pendingRange} onChange={setPendingRange} />
       )}
 
       {uiKind === 'boolean' &&
@@ -236,13 +240,19 @@ export function FilterEditor({
                 commit(v === 'any' ? null : { kind: 'boolean', value: v === 'yes' })
               }
             >
-              <SelectTrigger className="h-9 w-full rounded-xl text-sm">
+              <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
                 <SelectValue>{{ any: 'Any', yes: 'Yes', no: 'No' }[boolValue]}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">Any</SelectItem>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no">No</SelectItem>
+              <SelectContent className={GRID_SELECT_CONTENT_CLASS}>
+                <SelectItem value="any" className={GRID_SELECT_ITEM_CLASS}>
+                  Any
+                </SelectItem>
+                <SelectItem value="yes" className={GRID_SELECT_ITEM_CLASS}>
+                  Yes
+                </SelectItem>
+                <SelectItem value="no" className={GRID_SELECT_ITEM_CLASS}>
+                  No
+                </SelectItem>
               </SelectContent>
             </Select>
           );
@@ -264,6 +274,7 @@ export function FilterEditor({
           className="text-[13px] font-medium text-gray-500 underline-offset-2 hover:text-gray-800 hover:underline"
           onClick={() => {
             debouncedCommit.cancel();
+            setPendingRange(undefined);
             commit(null);
           }}
         >
@@ -272,7 +283,7 @@ export function FilterEditor({
         <button
           type="button"
           className="rounded-xl bg-primary-8 px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-9"
-          onClick={onClose}
+          onClick={onApply}
         >
           Apply
         </button>

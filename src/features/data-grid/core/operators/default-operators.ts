@@ -8,6 +8,13 @@ export const OperatorId = {
   Contains: 'contains',
   Eq: 'eq',
   In: 'in',
+  /**
+   * Set membership, but serialized with a SINGLE-underscore `_in` separator instead
+   * of the usual `__in`. Semantically identical to {@link OperatorId.In}; exists only
+   * because a few entitycore relation filters are spelled that way on the backend
+   * (currently `post_region__name_in` on synapses-per-connection). Prefer `In`.
+   */
+  InSingleUnderscore: 'inSingleUnderscore',
   NotIn: 'notIn',
   Gte: 'gte',
   Lte: 'lte',
@@ -28,6 +35,7 @@ export const DEFAULT_OPERATORS: ReadonlyArray<OperatorDef> = [
   },
   { id: OperatorId.Eq, label: 'Equals', uiKind: 'text', valueKind: 'text' },
   { id: OperatorId.In, label: 'Is any of', uiKind: 'set', valueKind: 'set' },
+  { id: OperatorId.InSingleUnderscore, label: 'Is any of', uiKind: 'set', valueKind: 'set' },
   { id: OperatorId.NotIn, label: 'Is none of', uiKind: 'set', valueKind: 'set' },
   { id: OperatorId.Gte, label: 'From', uiKind: 'number', valueKind: 'number' },
   { id: OperatorId.Lte, label: 'To', uiKind: 'number', valueKind: 'number' },

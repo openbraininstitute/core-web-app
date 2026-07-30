@@ -9,7 +9,8 @@ import {
   registrationDateColumn,
   speciesColumn,
 } from '../columns/catalog';
-import { ENTITY_PREVIEW_RENDERER, EntityPreview } from '../renderers/entity-preview';
+import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
+import { registerSharedRenderers } from '../renderers/register';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { GridSchema } from '../../../core';
@@ -51,6 +52,6 @@ export const electricalCellRecordingGridDefinition: EntityGridDefinition<Row> = 
   dataType: EntityTypeDict.ElectricalCellRecording,
   schema: electricalCellRecordingSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
-    registry.register(ENTITY_PREVIEW_RENDERER, EntityPreview);
+    registerSharedRenderers(registry);
   },
 };

@@ -9,6 +9,12 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
+import {
+  GRID_SELECT_CONTENT_CLASS,
+  GRID_SELECT_ITEM_CLASS,
+  GRID_SELECT_TRIGGER_CLASS,
+} from './molecules-theme';
+
 import type { GridController } from '../core';
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -33,16 +39,12 @@ export function GridPagination<Row>({
   pageSize,
   className,
 }: GridPaginationProps<Row>) {
-  if (total <= 0) return null;
+  // hidden when there's nothing to paginate — zero results or a single page
+  if (total <= 0 || Math.ceil(total / pageSize) <= 1) return null;
   const options = controller.schema.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
 
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center gap-3 border-t border-gray-100 px-2 py-2.5',
-        className
-      )}
-    >
+    <div className={cn('flex items-center justify-center gap-3', className)}>
       <Pagination
         className={cn(
           'flex items-center gap-1',
@@ -51,7 +53,7 @@ export function GridPagination<Row>({
           '[&_.ant-pagination-item>a]:text-primary-8 [&_.ant-pagination-item:hover]:bg-gray-100',
           // active: filled dark circle
           '[&_.ant-pagination-item-active]:border-transparent [&_.ant-pagination-item-active]:bg-primary-8',
-          '[&_.ant-pagination-item-active:hover]:bg-primary-9 [&_.ant-pagination-item-active>a]:font-semibold [&_.ant-pagination-item-active>a]:text-white',
+          '[&_.ant-pagination-item-active:hover]:bg-primary-9 [&_.ant-pagination-item-active>a]:font-semibold [&_.ant-pagination-item-active>a]:text-white!',
           // fully-rounded prev / next
           '[&_.ant-pagination-prev_.ant-pagination-item-link]:rounded-full [&_.ant-pagination-next_.ant-pagination-item-link]:rounded-full',
           '[&_.ant-pagination-prev:hover_.ant-pagination-item-link]:bg-gray-100 [&_.ant-pagination-next:hover_.ant-pagination-item-link]:bg-gray-100'
@@ -69,13 +71,13 @@ export function GridPagination<Row>({
           controller.store.dispatch({ type: 'setPageSize', pageSize: Number(v) })
         }
       >
-        <SelectTrigger size="sm" className="rounded-xl text-sm">
+        <SelectTrigger size="sm" className={GRID_SELECT_TRIGGER_CLASS}>
           {/* render the label explicitly — Radix can't derive it until the menu opens once */}
           <SelectValue>{pageSize} / page</SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className={GRID_SELECT_CONTENT_CLASS}>
           {options.map((size) => (
-            <SelectItem key={size} value={String(size)}>
+            <SelectItem key={size} value={String(size)} className={GRID_SELECT_ITEM_CLASS}>
               {size} / page
             </SelectItem>
           ))}

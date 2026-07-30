@@ -17,8 +17,10 @@ import type {
   GetRowIdParams,
   GridApi,
   GridReadyEvent,
+  RowClassParams,
   RowHeightParams,
   RowSelectionOptions,
+  RowStyle,
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { GridRendererProps } from '../../react';
@@ -31,6 +33,15 @@ registerDataGridModules();
 const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 
 const DEFAULT_ROW_HEIGHT = 44;
+
+/**
+ * Vertically centre every cell's content. AG Grid otherwise top-aligns text in tall
+ * rows (e.g. preview rows), which reads inconsistently next to our flex-centred custom
+ * renderers. `justify-content` is left to the per-column `ag-*-aligned-cell` classes.
+ */
+const DEFAULT_COL_DEF: ColDef = {
+  cellStyle: { display: 'flex', alignItems: 'center' },
+};
 
 function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   const {
@@ -45,6 +56,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     detail,
     selectionEnabled,
     onRowClick,
+    activeRowId,
   } = props;
 
   // AG Grid is client-only (mirrors the legacy table's ssr:false). Render a sized
@@ -86,6 +98,14 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     const api = apiRef.current;
     if (facets && api && !api.isDestroyed()) api.refreshHeader();
   }, [facets]);
+
+  // Re-apply row styles when the mini-detail-view's active row changes, so the
+  // highlight follows the open row (getRowStyle is only re-evaluated on redraw).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: activeRowId is the trigger, not read in the body
+  useEffect(() => {
+    const api = apiRef.current;
+    if (api && !api.isDestroyed()) api.redrawRows();
+  }, [activeRowId]);
 
   // Interleave synthetic full-width detail rows after expanded data rows.
   const displayRows = useMemo<Array<DisplayRow<Row>>>(
@@ -138,6 +158,10 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
             resizable: false,
             suppressMovable: true,
             lockPosition: 'left' as const,
+            // center the checkbox both axes so it lines up with the flex-centered
+            // data cells (the default col def doesn't reach the selection column)
+            cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+            headerClass: 'flex items-center justify-center',
           }
         : undefined,
     [selectionEnabled, selectionSpec?.columnWidth]
@@ -220,12 +244,32 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     [onRowClick]
   );
 
+  // Row styling: pointer cursor when clickable, plus a primary tint + left accent on
+  // the row whose mini-detail view is currently open.
+  const getRowStyle = useCallback(
+    (p: RowClassParams<DisplayRow<Row>>): RowStyle | undefined => {
+      const isActive =
+        !!activeRowId && !!p.data && !isDetailRow(p.data) && getRowId(p.data) === activeRowId;
+      if (isActive) {
+        // background tint only — no border/shadow (it bled into the pinned
+        // selection cell's edges); kept light so it reads as a gentle highlight
+        return {
+          cursor: 'pointer',
+          backgroundColor: 'color-mix(in srgb, var(--color-primary-6, #1668dc) 7%, transparent)',
+        };
+      }
+      return onRowClick ? { cursor: 'pointer' } : undefined;
+    },
+    [activeRowId, onRowClick, getRowId]
+  );
+
   if (!mounted) return <div className="ag-data-grid h-full min-h-0 w-full" />;
 
   return (
     <div className="ag-data-grid h-full min-h-0 w-full">
       <AgGridReact<DisplayRow<Row>>
         theme={dataGridTheme}
+        defaultColDef={DEFAULT_COL_DEF}
         columnDefs={colDefs as Array<ColDef<DisplayRow<Row>>>}
         rowData={displayRows}
         getRowId={getDisplayRowId}
@@ -250,7 +294,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         onColumnMoved={onColumnMoved}
         onColumnResized={onColumnResized}
         onCellClicked={onCellClicked}
-        rowStyle={onRowClick ? { cursor: 'pointer' } : undefined}
+        getRowStyle={getRowStyle}
       />
     </div>
   );

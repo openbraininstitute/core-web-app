@@ -45,17 +45,19 @@ export function ColumnChooser<Row>({ controller, state, className }: ColumnChoos
   );
 
   return (
-    <Popover trigger="click" placement="bottomRight" content={content}>
+    <Popover trigger="click" placement="bottomLeft" content={content}>
       <button
         type="button"
         aria-label="Choose columns"
+        title="Choose columns"
         className={cn(
-          'flex items-center gap-1 rounded-md px-2 py-1 text-sm text-primary-7 hover:bg-gray-100',
+          // icon-only pill matching the search bar: round, white, soft shadow
+          'flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary-8 shadow-sm',
+          'transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md active:scale-95',
           className
         )}
       >
-        <RiLayoutColumnLine size={16} />
-        Columns
+        <RiLayoutColumnLine size={18} />
       </button>
     </Popover>
   );

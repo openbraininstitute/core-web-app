@@ -65,8 +65,8 @@ export function AgHeader(props: CustomHeaderProps) {
           sortable ? 'cursor-pointer' : 'cursor-default'
         )}
       >
-        <span className="truncate font-semibold text-primary-8">{props.displayName}</span>
-        {unit ? <span className="text-xs font-normal text-gray-400">[{unit}]</span> : null}
+        <span className="truncate font-light text-gray-400">{props.displayName}</span>
+        {unit ? <span className="text-xs font-light text-gray-400">[{unit}]</span> : null}
         {sortable && (
           <span className="flex shrink-0 items-center gap-0.5">
             {entry?.direction === 'asc' ? (
@@ -94,9 +94,12 @@ export function AgHeader(props: CustomHeaderProps) {
               aria-label={`Filter ${props.displayName}`}
               className={cn(
                 'flex size-7 shrink-0 items-center justify-center rounded-full transition-colors',
-                filterActive
-                  ? 'bg-primary-6 text-white shadow-sm hover:bg-primary-7'
-                  : 'text-gray-400 hover:bg-gray-100 hover:text-primary-7'
+                // open panel: raised white pill with a primary-8 icon
+                open
+                  ? 'bg-white text-primary-8 shadow-sm ring-1 ring-gray-200'
+                  : filterActive
+                    ? 'bg-primary-6 text-white shadow-sm hover:bg-primary-7'
+                    : 'text-gray-400 hover:bg-gray-100 hover:text-primary-7'
               )}
             >
               <RiFilter3Fill size={14} />
@@ -107,6 +110,19 @@ export function AgHeader(props: CustomHeaderProps) {
             side="bottom"
             sideOffset={6}
             className="w-72 rounded-2xl border-gray-100 bg-white p-4 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]"
+            // The operator/facet Selects and the date-picker calendar portal their
+            // content outside this popover; don't let interacting with those (a
+            // dropdown option, a calendar day) dismiss the filter panel.
+            onInteractOutside={(e) => {
+              const target = e.target as Element | null;
+              if (
+                target?.closest(
+                  '[data-slot="select-content"],[data-radix-select-viewport],[role="listbox"],[data-slot="popover-content"]'
+                )
+              ) {
+                e.preventDefault();
+              }
+            }}
           >
             <FilterEditor
               ctx={ctx}

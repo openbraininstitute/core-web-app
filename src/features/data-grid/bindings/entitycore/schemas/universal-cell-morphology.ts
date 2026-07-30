@@ -15,7 +15,8 @@ import {
   registrationDateColumn,
   speciesColumn,
 } from '../columns/catalog';
-import { ENTITY_PREVIEW_RENDERER, EntityPreview } from '../renderers/entity-preview';
+import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
+import { registerSharedRenderers } from '../renderers/register';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { FilterOptionsSource, GridSchema } from '../../../core';
@@ -113,6 +114,6 @@ export const universalCellMorphologyGridDefinition: EntityGridDefinition<Univers
   dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
   schema: universalCellMorphologySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
-    registry.register(ENTITY_PREVIEW_RENDERER, EntityPreview);
+    registerSharedRenderers(registry);
   },
 };

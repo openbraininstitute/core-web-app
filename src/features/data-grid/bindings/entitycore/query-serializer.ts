@@ -35,6 +35,10 @@ const STRATEGIES: Record<string, Strategy> = {
     e.value.kind === 'text' && e.value.text.trim() ? { [field]: e.value.text.trim() } : {},
   [OperatorId.In]: (field, e) =>
     e.value.kind === 'set' && e.value.values.length ? { [`${field}__in`]: e.value.values } : {},
+  // Single-underscore `_in` — see OperatorId.InSingleUnderscore (backend spells a
+  // handful of relation filters this way, e.g. `post_region__name_in`).
+  [OperatorId.InSingleUnderscore]: (field, e) =>
+    e.value.kind === 'set' && e.value.values.length ? { [`${field}_in`]: e.value.values } : {},
   [OperatorId.NotIn]: (field, e) =>
     e.value.kind === 'set' && e.value.values.length ? { [`${field}__not_in`]: e.value.values } : {},
   [OperatorId.Gte]: (field, e) =>

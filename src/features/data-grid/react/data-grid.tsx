@@ -34,6 +34,8 @@ export interface DataGridProps<Row> {
   facets?: Facets;
   detail?: DetailRuntime<Row>;
   onRowClick?: (row: Row) => void;
+  /** id of the row whose mini-detail view is open — highlighted in the grid */
+  activeRowId?: string;
   toolbarSlots?: DataGridToolbarSlots;
   /** bulk actions rendered in the toolbar while rows are selected */
   renderBulkActions?: (args: BulkActionsRenderArgs<Row>) => ReactNode;
@@ -63,6 +65,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     facets: externalFacets,
     detail,
     onRowClick,
+    activeRowId,
     toolbarSlots,
     renderBulkActions,
     renderCount,
@@ -96,6 +99,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     detail,
     selectionEnabled,
     onRowClick,
+    activeRowId,
   };
 
   if (error && renderError) {
@@ -111,22 +115,41 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
       </BulkActions>
     ) : undefined;
 
+  const selectionCount = state.selection.length;
+
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
       <DataGridToolbar
         slots={{ ...toolbarSlots, bulkActions: bulkActions ?? toolbarSlots?.bulkActions }}
-        count={renderCount?.({ total, loading, error })}
         columnChooser={
           showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : undefined
         }
       />
       <div className={cn('min-h-0 flex-1', gridClassName)}>{renderer(rendererProps)}</div>
-      <GridPagination
-        controller={controller}
-        total={total}
-        page={state.page}
-        pageSize={state.pageSize}
-      />
+      {/* footer: results + selection on the left, pagination centered (both on one row) */}
+      <div className="relative flex min-h-[52px] items-center justify-center border-t border-gray-100 px-3 py-2">
+        <div className="absolute left-3 flex flex-col gap-0.5">
+          {renderCount?.({ total, loading, error })}
+          {selectionEnabled && selectionCount > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-primary-8">{selectionCount} selected</span>
+              <button
+                type="button"
+                onClick={() => controller.store.dispatch({ type: 'setSelection', ids: [] })}
+                className="rounded-full px-1.5 py-0.5 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+              >
+                Clear
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <GridPagination
+          controller={controller}
+          total={total}
+          page={state.page}
+          pageSize={state.pageSize}
+        />
+      </div>
     </div>
   );
 }

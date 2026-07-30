@@ -11,7 +11,8 @@ import {
   speciesColumn,
   temperatureColumn,
 } from '../columns/catalog';
-import { ENTITY_PREVIEW_RENDERER, EntityPreview } from '../renderers/entity-preview';
+import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
+import { registerSharedRenderers } from '../renderers/register';
 
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type { GridSchema } from '../../../core';
@@ -55,6 +56,6 @@ export const ionChannelRecordingGridDefinition: EntityGridDefinition<Row> = {
   dataType: EntityTypeDict.IonChannelRecording,
   schema: ionChannelRecordingSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
-    registry.register(ENTITY_PREVIEW_RENDERER, EntityPreview);
+    registerSharedRenderers(registry);
   },
 };

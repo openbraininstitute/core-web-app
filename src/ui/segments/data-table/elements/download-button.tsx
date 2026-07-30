@@ -4,15 +4,17 @@ import { CheckCircleFilled, DownloadOutlined, LoadingOutlined } from '@ant-desig
 import { useAtomValue } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useCallback, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import { useAppNotification } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
-import type { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 
 const DownloadStateDict = {
   idle: 'idle',
@@ -29,7 +31,12 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   dataType,
   clearSelectedRows,
   workspace,
-}: RenderButtonProps<T> & { children?: ReactNode; workspace?: WorkspaceContext }) {
+  className,
+}: RenderButtonProps<T> & {
+  children?: ReactNode;
+  workspace?: WorkspaceContext;
+  className?: string;
+}) {
   const session = useAtomValue(sessionAtom);
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
   const notify = useAppNotification();
@@ -145,7 +152,8 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
           'transition-all duration-300 ease-out',
           'hover:scale-[1.02] active:scale-[0.98]',
-          'disabled:cursor-not-allowed disabled:opacity-70'
+          'disabled:cursor-not-allowed disabled:opacity-70',
+          className
         )}
         onClick={download}
         data-testid="bulk-download-button"

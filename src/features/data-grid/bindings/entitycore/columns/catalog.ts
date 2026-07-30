@@ -1,5 +1,10 @@
-import { mergeColumnDef, OperatorId } from '../../../core';
+import { MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 
+import { mergeColumnDef, OperatorId } from '../../../core';
+import { CONTRIBUTORS_RENDERER } from '../renderers/contributors-cell';
+import { EM_DATASET_RENDERER } from '../renderers/em-dataset-cell';
+
+import type { TMeasurementStatistic } from '@/api/entitycore/types/shared/global';
 import type { ColumnModel, ColumnOverride } from '../../../core';
 
 /**
@@ -12,6 +17,9 @@ import type { ColumnModel, ColumnOverride } from '../../../core';
  *   nameColumn<ICellMorphology>({ width: { flex: 3 } })
  *   speciesColumn<IEModel>({ filter: { field: 'species__name' } })
  */
+
+/** Shared placeholder shown when a cell value is empty/absent (em dash). */
+export const EMPTY_PLACEHOLDER = '—';
 
 type Nullable<T> = T | null | undefined;
 
@@ -61,7 +69,7 @@ export interface HasSubjectAge {
   subject?: Nullable<{ age_value?: Nullable<number> }>;
 }
 export interface Measurement {
-  name?: Nullable<string>;
+  name?: Nullable<TMeasurementStatistic>;
   unit?: Nullable<string>;
   value?: Nullable<number>;
 }
@@ -71,9 +79,27 @@ export interface HasMeasurements {
 export interface HasReleaseVersion {
   release_version?: Nullable<number | string>;
 }
+export interface HasPreRegion {
+  pre_region?: Nullable<{ name?: Nullable<string> }>;
+}
+export interface HasPostRegion {
+  post_region?: Nullable<{ name?: Nullable<string> }>;
+}
+export interface HasPreMtype {
+  pre_mtype?: Nullable<{ pref_label?: Nullable<string> }>;
+}
+export interface HasPostMtype {
+  post_mtype?: Nullable<{ pref_label?: Nullable<string> }>;
+}
+export interface HasEmDataset {
+  em_dense_reconstruction_dataset?: Nullable<{ id?: Nullable<string> }>;
+}
 
-/** Find a measurement by its `name` (mean / standard_deviation / standard_error …). */
-export function measurementByName(row: HasMeasurements, name: string): Measurement | undefined {
+/** Find a measurement by its statistic `name` (mean / standard_deviation / standard_error …). */
+export function measurementByName(
+  row: HasMeasurements,
+  name: TMeasurementStatistic
+): Measurement | undefined {
   return row.measurements?.find((m) => m?.name === name);
 }
 /** The dimensionless "number of measurements" measurement value. */
@@ -235,7 +261,8 @@ export function contributionsColumn<Row extends HasContributions>(
       id: 'contributions',
       header: 'Contributors',
       getValue: (r) => joinLabels((r.contributions ?? []).map((c) => c.agent?.pref_label)),
-      width: { minWidth: 160, flex: 1 },
+      cellRenderer: CONTRIBUTORS_RENDERER,
+      width: { minWidth: 180, flex: 1 },
       filter: {
         operators: [OperatorId.In],
         field: 'contribution__pref_label',
@@ -322,7 +349,7 @@ export function ionChannelColumn<Row extends HasIonChannel>(
       header: 'Ion channel',
       sortable: true,
       sortField: 'ion_channel__name',
-      getValue: (r) => r.ion_channel?.name ?? '—',
+      getValue: (r) => r.ion_channel?.name ?? EMPTY_PLACEHOLDER,
       width: { minWidth: 140, flex: 1 },
       filter: { operators: [OperatorId.Ilike], field: 'ion_channel__name' },
     },
@@ -355,7 +382,7 @@ export function cellLineColumn<Row extends HasCellLine>(o?: ColumnOverride<Row>)
       header: 'Cell line',
       sortable: true,
       sortField: 'cell_line',
-      getValue: (r) => r.cell_line ?? '—',
+      getValue: (r) => r.cell_line ?? EMPTY_PLACEHOLDER,
       width: { minWidth: 130, flex: 1 },
       filter: { operators: [OperatorId.Ilike], field: 'cell_line' },
     },
@@ -418,11 +445,196 @@ export function releaseVersionColumn<Row extends HasReleaseVersion>(
 
 /** Formatted mean value from a density-style `measurements` array (legacy renderFloatNumber). */
 export function meanValue(row: HasMeasurements): string {
-  return formatFloat(measurementByName(row, 'mean')?.value);
+  return formatFloat(measurementByName(row, MeasurementStatistic.mean)?.value);
 }
 /** "mean ± std" string from a density-style `measurements` array. */
 export function meanStd(row: HasMeasurements): string {
-  const mean = formatFloat(measurementByName(row, 'mean')?.value);
-  const std = formatFloat(measurementByName(row, 'standard_deviation')?.value);
+  const mean = formatFloat(measurementByName(row, MeasurementStatistic.mean)?.value);
+  const std = formatFloat(measurementByName(row, MeasurementStatistic.standard_deviation)?.value);
   return mean || std ? `${mean} ± ${std}` : '';
+}
+/** Formatted standard-error (SEM) value from a density-style `measurements` array. */
+export function standardErrorValue(row: HasMeasurements): string {
+  return formatFloat(measurementByName(row, MeasurementStatistic.standard_error)?.value);
+}
+
+/**
+ * Mean density value column (e.g. neuron density's "Density [1/mm³]"). Not sortable
+ * or filterable in the legacy listing — the mean lives in the `measurements` array,
+ * not a queryable scalar column.
+ */
+export function densityColumn<Row extends HasMeasurements>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'density',
+      header: 'Density',
+      unit: '1/mm³',
+      getValue: (r) => meanValue(r),
+      align: 'right',
+      width: { minWidth: 130 },
+    },
+    o
+  );
+}
+
+/**
+ * "Mean ± STD" measurement column. Sortability differs per entity (bouton density
+ * sorts on `measurement_mean__value`; synapses-per-connection isn't sortable), so it
+ * defaults to unsortable — enable with `{ sortable: true }` where the entity binds it.
+ */
+export function meanStdColumn<Row extends HasMeasurements>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'meanStd',
+      header: 'Mean ± STD',
+      unit: 'µm⁻¹',
+      sortField: 'measurement_mean__value',
+      getValue: (r) => meanStd(r),
+      align: 'right',
+      width: { minWidth: 150 },
+    },
+    o
+  );
+}
+
+/** Standard-error (SEM) measurement column — sorts on `measurement_standard_error__value`. */
+export function standardErrorColumn<Row extends HasMeasurements>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'sem',
+      header: 'SEM',
+      sortable: true,
+      sortField: 'measurement_standard_error__value',
+      getValue: (r) => standardErrorValue(r),
+      align: 'right',
+      width: { minWidth: 110 },
+    },
+    o
+  );
+}
+
+/** Pre-synaptic brain region ("Brain Region [From]") — synapses-per-connection. */
+export function preSynapticRegionColumn<Row extends HasPreRegion>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'preRegion',
+      header: 'Brain Region [From]',
+      sortable: true,
+      sortField: 'pre_region__name',
+      getValue: (r) => r.pre_region?.name ?? '',
+      width: { minWidth: 150, flex: 1 },
+      filter: {
+        operators: [OperatorId.In],
+        field: 'pre_region__name',
+        facetKey: 'pre_region',
+        options: { kind: 'facets' },
+      },
+    },
+    o
+  );
+}
+
+/**
+ * Post-synaptic brain region ("Brain Region [To]"). NB: the backend filter field is
+ * `post_region__name_in` — a SINGLE underscore before `in` — so this uses
+ * {@link OperatorId.InSingleUnderscore}, unlike every sibling `__in` filter.
+ */
+export function postSynapticRegionColumn<Row extends HasPostRegion>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'postRegion',
+      header: 'Brain Region [To]',
+      sortable: true,
+      sortField: 'post_region__name',
+      getValue: (r) => r.post_region?.name ?? '',
+      width: { minWidth: 150, flex: 1 },
+      filter: {
+        operators: [OperatorId.InSingleUnderscore],
+        field: 'post_region__name',
+        facetKey: 'post_region',
+        options: { kind: 'facets' },
+      },
+    },
+    o
+  );
+}
+
+/** Pre-synaptic cell type ("Cell Type [From]") — synapses-per-connection. */
+export function preSynapticCellTypeColumn<Row extends HasPreMtype>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'preMtype',
+      header: 'Cell Type [From]',
+      sortable: true,
+      sortField: 'pre_mtype__pref_label',
+      getValue: (r) => r.pre_mtype?.pref_label ?? '',
+      width: { minWidth: 150, flex: 1 },
+      filter: {
+        operators: [OperatorId.In],
+        field: 'pre_mtype__pref_label',
+        facetKey: 'pre_mtype',
+        options: { kind: 'facets' },
+      },
+    },
+    o
+  );
+}
+
+/** Post-synaptic cell type ("Cell Type [To]") — synapses-per-connection. */
+export function postSynapticCellTypeColumn<Row extends HasPostMtype>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'postMtype',
+      header: 'Cell Type [To]',
+      sortable: true,
+      sortField: 'post_mtype__pref_label',
+      getValue: (r) => r.post_mtype?.pref_label ?? '',
+      width: { minWidth: 150, flex: 1 },
+      filter: {
+        operators: [OperatorId.In],
+        field: 'post_mtype__pref_label',
+        facetKey: 'post_mtype',
+        options: { kind: 'facets' },
+      },
+    },
+    o
+  );
+}
+
+/**
+ * EM dense-reconstruction dataset name ("Dataset") for em-cell-mesh. The list row
+ * carries only the dataset's `{ id }`, so the NAME is fetched lazily by the
+ * {@link EM_DATASET_RENDERER} cell; sort/filter operate on the backend scalar
+ * `em_dense_reconstruction_dataset__name`.
+ */
+export function emDatasetColumn<Row extends HasEmDataset>(
+  o?: ColumnOverride<Row>
+): ColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'emDataset',
+      header: 'Dataset',
+      sortable: true,
+      sortField: 'em_dense_reconstruction_dataset__name',
+      getValue: (r) => r.em_dense_reconstruction_dataset?.id ?? '',
+      cellRenderer: EM_DATASET_RENDERER,
+      width: { minWidth: 160, flex: 1 },
+      filter: { operators: [OperatorId.Ilike], field: 'em_dense_reconstruction_dataset__name' },
+    },
+    o
+  );
 }

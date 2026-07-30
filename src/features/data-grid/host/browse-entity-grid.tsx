@@ -2,7 +2,7 @@
 
 import { WarningOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
@@ -91,7 +91,11 @@ export function BrowseEntityGrid({
   const entity = getEntityByExtendedType({ type: dataType });
 
   const { mdv, setMdv } = useMiniDetailView();
-  useSelectEntityClickEvent((event) => setMdv(event.detail.display));
+  const [activeRowId, setActiveRowId] = useState<string | undefined>(undefined);
+  useSelectEntityClickEvent<EntityCoreIdentifiableNamed>((event) => {
+    setMdv(event.detail.display);
+    setActiveRowId(event.detail.display ? (event.detail.data?.id ?? undefined) : undefined);
+  });
   useEffect(() => {
     setMdv(false);
     return () => {
@@ -255,6 +259,7 @@ export function BrowseEntityGrid({
           className="h-full"
           gridClassName={classNames?.tableClassNames?.container}
           onRowClick={handleRowClick}
+          activeRowId={activeRowId}
           toolbarSlots={{
             left: toolbarLeft,
             search: allowSearch ? <GridSearch onSearch={handleSearch} openOnMount /> : undefined,
@@ -266,24 +271,17 @@ export function BrowseEntityGrid({
               />
             ) : undefined,
           }}
-          renderBulkActions={({ selectedIds, selectedRows, clearSelection }) => (
+          renderBulkActions={({ selectedRows, clearSelection }) => (
+            // Buttons only — the "N selected" count + Clear live in the footer. Sized
+            // to the search-bar pill (h-10, compact) while keeping their own colors.
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-primary-8">
-                {selectedIds.length} selected
-              </span>
-              <button
-                type="button"
-                onClick={clearSelection}
-                className="rounded-full px-2 py-0.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-              >
-                Clear
-              </button>
               {allowDownload && (
                 <EntityDownloadButton<EntityCoreIdentifiableNamed>
                   selectedRows={selectedRows}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
+                  className="h-10 min-w-0 px-4 text-sm shadow-sm"
                 />
               )}
               {allowDelete && (
@@ -292,6 +290,7 @@ export function BrowseEntityGrid({
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
+                  className="h-10 min-w-0 px-4 text-sm shadow-sm"
                 />
               )}
             </div>

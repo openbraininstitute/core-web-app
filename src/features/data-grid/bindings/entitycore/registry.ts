@@ -1,6 +1,10 @@
 import { CellRendererRegistry } from '../../react';
 import { cellMorphologyGridDefinition } from './schemas/cell-morphology';
 import { electricalCellRecordingGridDefinition } from './schemas/electrical-cell-recording';
+import { emCellMeshGridDefinition } from './schemas/em-cell-mesh';
+import { experimentalBoutonDensityGridDefinition } from './schemas/experimental-bouton-density';
+import { experimentalNeuronDensityGridDefinition } from './schemas/experimental-neuron-density';
+import { experimentalSynapsesPerConnectionGridDefinition } from './schemas/experimental-synapses-per-connection';
 import { ionChannelRecordingGridDefinition } from './schemas/ion-channel-recording';
 import { universalCellMorphologyGridDefinition } from './schemas/universal-cell-morphology';
 
@@ -37,6 +41,11 @@ const definitions: Record<string, AnyEntityGridDefinition> = {
   [electricalCellRecordingGridDefinition.dataType]: electricalCellRecordingGridDefinition,
   [ionChannelRecordingGridDefinition.dataType]: ionChannelRecordingGridDefinition,
   [universalCellMorphologyGridDefinition.dataType]: universalCellMorphologyGridDefinition,
+  [experimentalNeuronDensityGridDefinition.dataType]: experimentalNeuronDensityGridDefinition,
+  [experimentalBoutonDensityGridDefinition.dataType]: experimentalBoutonDensityGridDefinition,
+  [experimentalSynapsesPerConnectionGridDefinition.dataType]:
+    experimentalSynapsesPerConnectionGridDefinition,
+  [emCellMeshGridDefinition.dataType]: emCellMeshGridDefinition,
 };
 
 export function getEntityGridDefinition(dataType: string): AnyEntityGridDefinition | undefined {

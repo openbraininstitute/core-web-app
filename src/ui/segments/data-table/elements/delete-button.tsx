@@ -127,9 +127,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   dataType,
   workspace,
   clearSelectedRows,
+  className,
 }: RenderButtonProps<T> & {
   children?: ReactNode;
   workspace?: WorkspaceContext;
+  className?: string;
 }) {
   const notify = useAppNotification();
   const queryClient = useQueryClient();
@@ -297,7 +299,8 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
             'bg-linear-to-r from-destructive via-destructive/80 to-destructive bg-size-[200%_100%]',
             'transition-all duration-300 ease-out',
             'hover:scale-[1.02] active:scale-[0.98]',
-            'disabled:cursor-not-allowed disabled:opacity-70'
+            'disabled:cursor-not-allowed disabled:opacity-70',
+            className
           )}
           data-testid="bulk-delete-button"
         >

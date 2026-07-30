@@ -60,8 +60,9 @@ export function GridSearch({ onSearch, openOnMount = false, className }: GridSea
   return (
     <div
       className={cn(
-        'flex min-w-0 items-center transition-all duration-300 ease-in-out',
-        open && 'w-full max-w-96 rounded-full border border-gray-100 bg-white shadow-sm',
+        // only the quiet chrome (bg/border/shadow) cross-fades here — never width
+        'flex min-w-0 items-center rounded-full border transition-[background-color,border-color,box-shadow] duration-200 ease-out',
+        open ? 'border-gray-100 bg-white shadow-sm' : 'border-transparent',
         className
       )}
     >
@@ -70,22 +71,31 @@ export function GridSearch({ onSearch, openOnMount = false, className }: GridSea
         onClick={toggle}
         aria-label={open ? 'Close search' : 'Open search'}
         className={cn(
-          'flex size-10 shrink-0 items-center justify-center bg-white text-primary-8 transition-all duration-300 ease-in-out',
-          open
-            ? 'rounded-l-full'
-            : 'rounded-full shadow-sm hover:scale-105 hover:shadow-md active:scale-95'
+          'flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary-8',
+          // instant press feedback; no layout animation on the button itself
+          'transition-transform duration-150 ease-out active:scale-95',
+          open ? '' : 'shadow-sm hover:scale-105'
         )}
       >
         <RiSearchLine size={18} />
       </button>
 
+      {/*
+       * A single clip wrapper animates `width` (0 → SEARCH_WIDTH) with an
+       * ease-out-expo curve and `will-change`, revealing an input that is ALREADY
+       * laid out at its full width — so the content never reflows mid-animation
+       * (the classic source of the jank). Width is the only layout property that
+       * moves, on one element. `motion-reduce` collapses it to an instant change.
+       */}
       <div
         className={cn(
-          'overflow-hidden transition-all duration-300 ease-in-out',
-          open ? 'w-full min-w-52 opacity-100' : 'w-0 opacity-0'
+          'overflow-hidden opacity-0 [transition:width_360ms_cubic-bezier(0.22,1,0.36,1),opacity_220ms_ease-out]',
+          'will-change-[width] motion-reduce:transition-none',
+          open ? 'w-64 opacity-100' : 'w-0'
         )}
+        aria-hidden={!open}
       >
-        <div className="flex h-10 w-full items-center rounded-r-full bg-white pr-1.5">
+        <div className="flex h-10 w-64 items-center rounded-r-full bg-white pr-1.5">
           <input
             ref={inputRef}
             type="text"
@@ -94,6 +104,7 @@ export function GridSearch({ onSearch, openOnMount = false, className }: GridSea
             onKeyDown={onKeyDown}
             placeholder="Search for entities…"
             aria-label="Search"
+            tabIndex={open ? 0 : -1}
             className={cn(
               'w-full bg-transparent px-2 py-2 font-medium text-primary-9 outline-none',
               'placeholder:font-light placeholder:text-gray-400'

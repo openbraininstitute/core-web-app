@@ -5,6 +5,10 @@ import { WorkspaceSection } from '@/constants';
 import { OperatorId, resolveColumns } from '../../../core';
 import { serializeQuery } from '../query-serializer';
 import { electricalCellRecordingSchema } from '../schemas/electrical-cell-recording';
+import { emCellMeshSchema } from '../schemas/em-cell-mesh';
+import { experimentalBoutonDensitySchema } from '../schemas/experimental-bouton-density';
+import { experimentalNeuronDensitySchema } from '../schemas/experimental-neuron-density';
+import { experimentalSynapsesPerConnectionSchema } from '../schemas/experimental-synapses-per-connection';
 import { ionChannelRecordingSchema } from '../schemas/ion-channel-recording';
 import { universalCellMorphologySchema } from '../schemas/universal-cell-morphology';
 
@@ -34,6 +38,18 @@ function ilike(columnId: string): FilterModel {
   return {
     [columnId]: { columnId, operator: OperatorId.Ilike, value: { kind: 'text', text: 'foo' } },
   };
+}
+function setInSingle(columnId: string): FilterModel {
+  return {
+    [columnId]: {
+      columnId,
+      operator: OperatorId.InSingleUnderscore,
+      value: { kind: 'set', values: ['x'] },
+    },
+  };
+}
+function sortDesc(columnId: string): Partial<GridQuery> {
+  return { sort: [{ columnId, direction: 'desc' }] };
 }
 
 describe('electrical_cell_recording parity', () => {
@@ -139,5 +155,135 @@ describe('universal_cell_morphology parity', () => {
     expect(serializeQuery(query({ filters: setIn('mtype') }), s).mtype__pref_label__in).toEqual([
       'x',
     ]);
+  });
+});
+
+describe('experimental_neuron_density parity', () => {
+  const s = experimentalNeuronDensitySchema;
+  it('columns match the legacy order', () => {
+    expect(ids(s, dataCtx('experimental_neuron_density'))).toEqual([
+      'brainRegion',
+      'species',
+      'mtype',
+      'etype',
+      'density',
+      'numberOfMeasurements',
+      'name',
+      'subjectAge',
+      'contributions',
+      'registrationDate',
+    ]);
+  });
+  it('species/mtype/etype/contribution facets serialize to legacy __in keys', () => {
+    expect(
+      serializeQuery(query({ filters: setIn('species') }), s).subject__species__name__in
+    ).toEqual(['x']);
+    expect(serializeQuery(query({ filters: setIn('mtype') }), s).mtype__pref_label__in).toEqual([
+      'x',
+    ]);
+    expect(serializeQuery(query({ filters: setIn('etype') }), s).etype__pref_label__in).toEqual([
+      'x',
+    ]);
+    expect(
+      serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
+    ).toEqual(['x']);
+  });
+  it('density is a non-sortable, non-filterable measurement column; age sorts on subject__age_value', () => {
+    const density = s.columns.find((c) => c.id === 'density');
+    expect(density?.sortable).toBeFalsy();
+    expect(density?.filter).toBeUndefined();
+    expect(serializeQuery(query(sortDesc('subjectAge')), s).order_by).toEqual([
+      '-subject__age_value',
+    ]);
+  });
+  it('default sort is -creation_date', () => {
+    expect(serializeQuery(query(sortDesc('registrationDate')), s).order_by).toEqual([
+      '-creation_date',
+    ]);
+  });
+});
+
+describe('experimental_bouton_density parity', () => {
+  const s = experimentalBoutonDensitySchema;
+  it('columns match the legacy order', () => {
+    expect(ids(s, dataCtx('experimental_bouton_density'))).toEqual([
+      'brainRegion',
+      'species',
+      'mtype',
+      'meanStd',
+      'sem',
+      'numberOfMeasurements',
+      'contributions',
+    ]);
+  });
+  it('measurement columns sort on the legacy measurement_*__value keys', () => {
+    expect(s.columns.find((c) => c.id === 'meanStd')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('meanStd')), s).order_by).toEqual([
+      '-measurement_mean__value',
+    ]);
+    expect(serializeQuery(query(sortDesc('sem')), s).order_by).toEqual([
+      '-measurement_standard_error__value',
+    ]);
+    expect(serializeQuery(query(sortDesc('numberOfMeasurements')), s).order_by).toEqual([
+      '-measurement_sample_size__value',
+    ]);
+  });
+});
+
+describe('experimental_synapses_per_connection parity', () => {
+  const s = experimentalSynapsesPerConnectionSchema;
+  it('columns match the legacy order', () => {
+    expect(ids(s, dataCtx('experimental_synapses_per_connection'))).toEqual([
+      'preRegion',
+      'postRegion',
+      'preMtype',
+      'postMtype',
+      'meanStd',
+      'species',
+      'subjectAge',
+      'contributions',
+    ]);
+  });
+  it('pre/post region + cell-type filters serialize to legacy keys (post_region uses SINGLE underscore)', () => {
+    expect(serializeQuery(query({ filters: setIn('preRegion') }), s).pre_region__name__in).toEqual([
+      'x',
+    ]);
+    // the gotcha: post_region__name_in — single underscore before `in`
+    const post = serializeQuery(query({ filters: setInSingle('postRegion') }), s);
+    expect(post.post_region__name_in).toEqual(['x']);
+    expect(post.post_region__name__in).toBeUndefined();
+    expect(
+      serializeQuery(query({ filters: setIn('preMtype') }), s).pre_mtype__pref_label__in
+    ).toEqual(['x']);
+    expect(
+      serializeQuery(query({ filters: setIn('postMtype') }), s).post_mtype__pref_label__in
+    ).toEqual(['x']);
+  });
+  it('mean ± std is not sortable for this entity', () => {
+    expect(s.columns.find((c) => c.id === 'meanStd')?.sortable).toBeFalsy();
+  });
+});
+
+describe('em_cell_mesh parity', () => {
+  const s = emCellMeshSchema;
+  it('columns match the legacy order', () => {
+    expect(ids(s, dataCtx('em_cell_mesh'))).toEqual([
+      'name',
+      'brainRegion',
+      'species',
+      'releaseVersion',
+      'emDataset',
+      'registrationDate',
+    ]);
+  });
+  it('version facet + dataset ilike serialize to legacy keys; species not sortable', () => {
+    expect(
+      serializeQuery(query({ filters: setIn('releaseVersion') }), s).release_version__in
+    ).toEqual(['x']);
+    expect(
+      serializeQuery(query({ filters: ilike('emDataset') }), s)
+        .em_dense_reconstruction_dataset__name__ilike
+    ).toBe('%foo%');
+    expect(s.columns.find((c) => c.id === 'species')?.sortable).toBe(false);
   });
 });

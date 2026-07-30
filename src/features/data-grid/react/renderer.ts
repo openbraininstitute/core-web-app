@@ -41,6 +41,8 @@ export interface GridRendererProps<Row> {
   /** whether checkbox multi-row selection is active in the current context */
   selectionEnabled?: boolean;
   onRowClick?: (row: Row) => void;
+  /** id of the row whose mini-detail view is open — highlighted in the grid */
+  activeRowId?: string;
 }
 
 /** The rendering port (Strategy). Implemented by `renderers/aggrid`. */

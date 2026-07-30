@@ -15,29 +15,28 @@ export interface DataGridToolbarSlots {
 
 export interface DataGridToolbarProps {
   slots?: DataGridToolbarSlots;
-  count?: ReactNode;
   columnChooser?: ReactNode;
   className?: string;
 }
 
 /**
- * Thin toolbar shell. The grid owns table-scoped controls (count, column chooser,
- * bulk actions); the host injects workspace controls through {@link DataGridToolbarSlots}.
+ * Thin toolbar shell. Left cluster is the column chooser + quick-search (`column |
+ * search`); the right cluster holds bulk actions and host controls. The results/
+ * selection counts live in the footer, not here.
  */
-export function DataGridToolbar({ slots, count, columnChooser, className }: DataGridToolbarProps) {
+export function DataGridToolbar({ slots, columnChooser, className }: DataGridToolbarProps) {
   const hasAnything =
-    slots?.left || slots?.search || slots?.right || slots?.bulkActions || count || columnChooser;
+    slots?.left || slots?.search || slots?.right || slots?.bulkActions || columnChooser;
   if (!hasAnything) return null;
 
   return (
     <div className={cn('flex min-h-10 w-full items-center gap-2 px-1 py-2', className)}>
-      {slots?.left}
+      {columnChooser}
       {slots?.search}
+      {slots?.left}
       <div className="ml-auto flex items-center gap-2">
-        {count}
         {slots?.bulkActions}
         {slots?.right}
-        {columnChooser}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   speciesColumn,
 } from '../columns/catalog';
 import { CellMorphologyPreview } from '../renderers/cell-morphology-cells';
+import { registerSharedRenderers } from '../renderers/register';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { GridSchema } from '../../../core';
@@ -48,6 +49,7 @@ export const cellMorphologyGridDefinition: EntityGridDefinition<ICellMorphology>
   dataType: ExtendedEntitiesTypeDict.CellMorphology,
   schema: cellMorphologySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
+    registerSharedRenderers(registry);
     registry.register('cellMorphologyPreview', CellMorphologyPreview);
   },
 };
