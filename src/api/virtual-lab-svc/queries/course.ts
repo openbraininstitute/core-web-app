@@ -129,3 +129,10 @@ export async function dropSeats(courseId: string, seatIds: string[]): Promise<Dr
     },
   });
 }
+
+export async function activateEnrolment(courseId: string): Promise<void> {
+  const api = await virtualLabRootApi();
+  await api.post(`/courses/${courseId}/enrolment/activate`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
