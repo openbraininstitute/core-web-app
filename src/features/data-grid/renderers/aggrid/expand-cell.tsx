@@ -1,5 +1,7 @@
 import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
 
+import { cn } from '@/utils/css-class';
+
 import { isDetailRow } from './detail-rows';
 import { useGridState } from './use-grid-state';
 
@@ -47,11 +49,12 @@ export function ExpandToggleButton<Row>({
       data-grid-expander=""
       aria-label={expanded ? 'Collapse row' : 'Expand row'}
       aria-expanded={expanded}
-      className={
-        fill
-          ? 'flex h-full w-full items-center justify-center text-gray-500 hover:text-primary-7'
-          : 'flex items-center justify-center text-gray-500 transition-colors hover:text-primary-7'
-      }
+      className={cn(
+        // rounded pill; on hover/focus it fills primary-8 with white glyph
+        'flex items-center justify-center rounded-md text-gray-500 outline-none transition-colors',
+        'hover:bg-primary-8 hover:text-white focus-visible:bg-primary-8 focus-visible:text-white',
+        fill ? 'size-7' : 'size-6'
+      )}
       onClick={(e) => {
         // stop React + native bubbling so a click on a DEEP grid's expander never
         // reaches an ancestor grid (which would otherwise open/collapse a parent row).

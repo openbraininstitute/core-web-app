@@ -18,7 +18,10 @@ import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { circuitListingRowClass } from '@/ui/segments/explore/circuit/elements/circuit-listing-grid';
 import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
-import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
+import {
+  CircuitRepresentationView,
+  circuitRepresentationViewAtom,
+} from '@/ui/segments/explore/circuit/helpers';
 import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { classNames } from '@/util/utils';
 
@@ -66,6 +69,13 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
+
+  // Subcircuit expansion is a HIERARCHY-view concept only. In flat view the listing
+  // is a plain server page (no tree, no expander) — so the plugin simply withholds
+  // the detail runtime + expand column. Generic: EntityDataGrid renders an expander
+  // iff a `detailOverride`/`expandColumn` is supplied; nothing circuit-specific leaks
+  // into the shared host.
+  const isHierarchy = view === CircuitRepresentationView.Hierarchy;
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
   const dataSource = useMemo(
@@ -146,20 +156,24 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
       extraParams={{ [CIRCUIT_VIEW_PARAM]: view }}
       extraToolbarSlots={toolbarSlots}
       getRowClass={getRowClass}
-      detailOverride={detailOverride}
-      expandColumn={{
-        columnId: EntityCoreFields.CircuitSubCircuit,
-        align: 'right',
-        renderExpander: (open) => (
-          <ChevronRight
-            fill="#003a8c"
-            className={classNames(
-              'transform transition-transform duration-200 ease-in-out',
-              open ? 'rotate-90' : 'rotate-0'
-            )}
-          />
-        ),
-      }}
+      detailOverride={isHierarchy ? detailOverride : undefined}
+      expandColumn={
+        isHierarchy
+          ? {
+              columnId: EntityCoreFields.CircuitSubCircuit,
+              align: 'right',
+              renderExpander: (open) => (
+                <ChevronRight
+                  fill="currentColor"
+                  className={classNames(
+                    'transform transition-transform duration-200 ease-in-out',
+                    open ? 'rotate-90' : 'rotate-0'
+                  )}
+                />
+              ),
+            }
+          : undefined
+      }
     />
   );
 }

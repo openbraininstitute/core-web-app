@@ -590,7 +590,10 @@ export function InMemoryGrid<Row>({
             if (!onRowClick) return;
             // expander click (here or bubbled from a nested grid) must not open the row
             if (isExpanderClick(e.event)) return;
-            if (SYNTHETIC_COL_IDS.has(e.column.getColId())) return;
+            const colId = e.column.getColId();
+            if (SYNTHETIC_COL_IDS.has(colId)) return;
+            // the column hosting the in-cell expander never opens the row
+            if (expansion?.columnId && colId === expansion.columnId) return;
             if (e.data == null || isDetailRow(e.data)) return;
             onRowClick(e.data as Row);
           }}

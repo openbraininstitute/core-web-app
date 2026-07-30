@@ -24,8 +24,19 @@ export function AgDetailCell(props: CustomCellRendererProps) {
 
   const minHeight = ctx.controller.schema.detail?.minHeight ?? DEFAULT_DETAIL_MIN_HEIGHT;
 
+  // A full-width detail row spans the whole grid, starting under the pinned-left
+  // columns (selection checkbox, and a leading expander when present). Inset the
+  // content by their total width so nested content lines up with the DATA columns
+  // instead of the far-left edge. General across grids — no per-entity offset.
+  const pinnedLeftWidth = (props.api.getAllDisplayedColumns?.() ?? [])
+    .filter((c) => c.getPinned() === 'left')
+    .reduce((sum, c) => sum + c.getActualWidth(), 0);
+
   return (
-    <div className="h-full w-full overflow-auto border-b border-gray-100 bg-gray-50/50">
+    <div
+      className="h-full w-full overflow-auto border-b border-gray-100 bg-gray-50/50"
+      style={{ paddingLeft: pinnedLeftWidth }}
+    >
       <DetailRowHost
         row={row.forRow}
         rowId={row.forRowId}
