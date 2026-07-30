@@ -1,10 +1,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Table } from 'antd';
+import { Pagination as AntPagination } from 'antd';
 import find from 'es-toolkit/compat/find';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { DEFAULT_PAGE_SMALL_SIZE } from '@/constants';
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { ServiceSubtype } from '@/types/accounting';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -13,9 +14,8 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { JobReport } from '@/types/accounting';
-
-const { Column } = Table;
 
 const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
@@ -92,16 +92,12 @@ export function JobReportList() {
   const { virtualLabId, projectId } = useWorkspace();
   const [pagination, setPagination] = useState({ page: 1, pageSize: DEFAULT_PAGE_SMALL_SIZE });
 
-  const { data: users, isLoading: isLoadingUsers } = useQuery({
+  const { data: users } = useQuery({
     queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
     queryFn: () => listProjectMembers({ virtualLabId, projectId }),
   });
 
-  const {
-    data,
-    isPending: isLoadingJobReports,
-    isFetching: isFetchingJobReports,
-  } = useQuery({
+  const { data } = useQuery({
     queryKey: keyBuilder.credits({ virtualLabId, projectId, ...pagination }),
     queryFn: () =>
       getProjectJobReports({
@@ -124,39 +120,56 @@ export function JobReportList() {
     [users]
   );
 
+  const columns = useMemo<Array<SimpleColumn<JobReport>>>(
+    () => [
+      {
+        id: 'category',
+        header: 'Category',
+        getValue: (record) => categoryRenderFn(record.subtype),
+      },
+      { id: 'type', header: 'Type', getValue: (record) => typeRenderFn(record.subtype) },
+      { id: 'user', header: 'Member', getValue: (record) => userRenderFn(record.user_id) },
+      {
+        id: 'date',
+        header: 'Date',
+        renderCell: (record) => renderDateAndHour(record.started_at),
+      },
+      {
+        id: 'cost',
+        header: 'Cost (Credits)',
+        renderCell: (record) => costRenderFn(record.amount),
+      },
+    ],
+    [userRenderFn]
+  );
+
   return (
     <div className="mb-4 flex w-full flex-col items-start gap-2">
       <h3 className="text-primary-9 text-xl font-bold">History</h3>
       <Card shadowless className={cn('w-full', { 'pb-0': !!total })}>
         <CardContent>
-          <Table<JobReport>
-            sticky
-            size="middle"
-            className={cn(
-              '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!',
-              '[&.ant-table]:bg-neutral-1! w-full!',
-              '[&_.ant-table-thead_th]:text-neutral-4! [&_.ant-table-thead_th]:font-light!',
-              '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
-              '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2',
-              '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!',
-              '[&_th]:uppercase!'
-            )}
-            loading={isLoadingJobReports || isLoadingUsers || isFetchingJobReports}
-            dataSource={jobReports}
-            pagination={{
-              pageSize: pagination.pageSize,
-              total,
-              onChange: (page, pageSize) => setPagination((prev) => ({ ...prev, page, pageSize })),
-              hideOnSinglePage: true,
-            }}
-            rowKey="job_id"
-          >
-            <Column title="Category" dataIndex="subtype" key="category" render={categoryRenderFn} />
-            <Column title="Type" dataIndex="subtype" key="type" render={typeRenderFn} />
-            <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
-            <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
-            <Column title="Cost (Credits)" dataIndex="amount" key="cost" render={costRenderFn} />
-          </Table>
+          <SimpleGrid<JobReport>
+            columns={columns}
+            rows={jobReports ?? []}
+            getRowId={(record) => record.job_id}
+          />
+          {!!total && total > pagination.pageSize && (
+            <div className="mt-3 flex w-full items-center justify-end">
+              <AntPagination
+                hideOnSinglePage
+                current={pagination.page}
+                pageSize={pagination.pageSize}
+                total={total}
+                showSizeChanger={false}
+                onChange={(page, pageSize) =>
+                  setPagination((prev) => ({ ...prev, page, pageSize }))
+                }
+                className={cn(
+                  '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!'
+                )}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

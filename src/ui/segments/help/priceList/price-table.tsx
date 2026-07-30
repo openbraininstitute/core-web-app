@@ -1,12 +1,12 @@
 'use client';
 
-import { Table } from 'antd';
 import { useMemo } from 'react';
 
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { cn } from '@/utils/css-class';
 
-import type { ColumnsType } from 'antd/es/table';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { CreditsPack, SinglePrice } from '@/services/sanity';
 
 type PriceTableProps = {
@@ -15,30 +15,20 @@ type PriceTableProps = {
   backgroundTitle?: string;
 };
 
-function CustomHeaderCell({
-  children,
-  style,
-  ...props
-}: {
-  children: ReactNode;
-  style?: CSSProperties;
-  [key: string]: unknown;
-}) {
+/** Uppercase muted header, matching the previous antd custom header cell. */
+function PriceHeader({ children }: { children: ReactNode }) {
   return (
-    <th
-      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
+    <span
       style={{
-        ...style,
         fontWeight: 'normal',
         fontSize: '16px',
         color: '#A5A5A5',
-        backgroundColor: 'transparent',
         textTransform: 'uppercase',
         letterSpacing: '0.025em',
       }}
     >
       {children}
-    </th>
+    </span>
   );
 }
 
@@ -83,20 +73,23 @@ const formatQuantityRange = (value: string): string => {
   return value;
 };
 
-const creditsPackColumns: ColumnsType<CreditsPack> = [
+const creditsPackColumns: Array<SimpleColumn<CreditsPack>> = [
   {
-    title: 'Credits',
-    dataIndex: 'quantity',
-    key: 'quantity',
-    render: (value: string) => (
-      <span style={{ fontWeight: 'bold', color: '#002766' }}>{formatQuantityRange(value)}</span>
+    id: 'quantity',
+    header: 'Credits',
+    headerNode: <PriceHeader>Credits</PriceHeader>,
+    renderCell: (record) => (
+      <span style={{ fontWeight: 'bold', color: '#002766' }}>
+        {formatQuantityRange(record.quantity)}
+      </span>
     ),
   },
   {
-    title: 'Discount',
-    dataIndex: 'discount',
-    key: 'discount',
-    render: (value: number) => {
+    id: 'discount',
+    header: 'Discount',
+    headerNode: <PriceHeader>Discount</PriceHeader>,
+    renderCell: (record) => {
+      const value = record.discount;
       if (!value || value === 0) {
         return <span style={{ color: '#002766' }}>—</span>;
       }
@@ -109,12 +102,12 @@ const creditsPackColumns: ColumnsType<CreditsPack> = [
     },
   },
   {
-    title: 'Price/Credit (CHF)',
-    dataIndex: 'pricePerCredit',
-    key: 'pricePerCredit',
-    render: (value: number) => (
+    id: 'pricePerCredit',
+    header: 'Price/Credit (CHF)',
+    headerNode: <PriceHeader>Price/Credit (CHF)</PriceHeader>,
+    renderCell: (record) => (
       <span style={{ color: '#002766' }}>
-        CHF <span style={{ fontWeight: 'bold' }}>{formatNumber(value)}</span>
+        CHF <span style={{ fontWeight: 'bold' }}>{formatNumber(record.pricePerCredit)}</span>
       </span>
     ),
   },
@@ -125,20 +118,6 @@ export default function PriceTable({
   creditsPacks,
   backgroundTitle = 'white/50',
 }: PriceTableProps) {
-  const tableClassName =
-    '[&_.ant-table]:bg-transparent [&_.ant-table-cell]:bg-transparent [&_.ant-table-cell]:text-[18px] [&_.ant-table-cell]:text-[#002766] [&_.ant-table-tbody>tr]:bg-transparent [&_.ant-table-tbody>tr>td]:bg-transparent [&_.ant-table-tbody>tr>td]:text-[18px] [&_.ant-table-thead>tr]:bg-transparent [&_.ant-table-thead>tr>th]:bg-transparent [&_.ant-table-thead>tr>th]:text-[16px] [&_.ant-table-thead>tr>th]:font-normal [&_.ant-table-thead>tr>th]:tracking-[0.025em] [&_.ant-table-thead>tr>th]:text-[#A5A5A5] [&_.ant-table-thead>tr>th]:uppercase';
-
-  const tableStyle = {
-    fontSize: '16px',
-    color: '#002766',
-    backgroundColor: 'transparent',
-  } as const;
-  const tableComponents = {
-    header: {
-      cell: CustomHeaderCell,
-    },
-  };
-
   const sortedCreditsPacks = useMemo(() => {
     return [...creditsPacks].sort((a, b) => {
       const discountA = a.discount ?? 0;
@@ -159,15 +138,10 @@ export default function PriceTable({
           >
             Credits
           </h3>
-          <Table
-            dataSource={sortedCreditsPacks}
+          <SimpleGrid<CreditsPack>
             columns={creditsPackColumns}
-            rowKey={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
-            pagination={false}
-            locale={{ emptyText: 'No credits packs available' }}
-            style={tableStyle}
-            className={tableClassName}
-            components={tableComponents}
+            rows={sortedCreditsPacks}
+            getRowId={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
           />
         </div>
       )}
