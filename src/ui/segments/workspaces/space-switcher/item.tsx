@@ -318,6 +318,9 @@ export function Item({
               projectRows.map((project, projectIndex) => {
                 const isProjectActive = project.id === activeProjectId;
                 const isProjectSelected = project.id === selectedProjectId;
+                const isWaitlisted = project.is_waitlisted;
+                // admins/owners can always click; students can click if course started or not waitlisted
+                const isDisabled = isWaitlisted && courseNotStarted && !canCreateProject;
 
                 return (
                   <motion.div
@@ -327,28 +330,27 @@ export function Item({
                     transition={{ delay: projectIndex * 0.01, duration: 0.1 }}
                     className={cn(
                       'flex w-full items-center justify-between transition-colors duration-150',
-                      project.is_waitlisted ? 'cursor-default' : 'cursor-pointer'
+                      isDisabled ? 'cursor-default' : 'cursor-pointer'
                     )}
                   >
                     <Button
                       rounded
                       size="md"
                       variant="outline"
-                      disabled={project.is_waitlisted}
                       className={cn(
                         'w-full justify-start bg-white! border shadow-none border-gray-200',
-                        project.is_waitlisted
+                        isDisabled
                           ? 'pointer-events-none opacity-50 text-gray-400! hover:bg-white!'
                           : 'hover:bg-gray-100!',
                         {
                           'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
-                            isProjectActive && !project.is_waitlisted,
+                            isProjectActive && !isDisabled,
                         },
                         { 'border-3! border-gray-200! bg-gray-50!': isProjectSelected }
                       )}
                       title={project.name}
                       onClick={() => {
-                        if (project.is_waitlisted && !courseNotStarted) {
+                        if (isWaitlisted && !courseNotStarted) {
                           activateWaitlistedProject(() =>
                             onProjectClick({ virtualLabId: lab.id, project })
                           );
