@@ -128,8 +128,19 @@ export function adaptCircuitColumns(
 export type CircuitRecursiveGridProps = {
   /** Circuits (possibly enriched with `sub_circuits`) to render at this level. */
   circuits: ReadonlyArray<ICircuit> | undefined;
-  /** antd column defs from `useDataTableColumns` (adapted internally). */
-  columns: ReadonlyArray<ColumnProps<ICircuit>>;
+  /**
+   * antd column defs from `useDataTableColumns` (adapted internally). Ignored when
+   * {@link simpleColumns} is supplied. Optional so a caller can drive the grid purely
+   * from pre-built {@link SimpleColumn}s.
+   */
+  columns?: ReadonlyArray<ColumnProps<ICircuit>>;
+  /**
+   * Pre-built {@link SimpleColumn}s, used verbatim (skips `adaptCircuitColumns`). This
+   * is how the circuit PLUGIN feeds the nested subcircuit grid the SAME schema columns
+   * the parent server grid renders, so every depth is column-identical. When set,
+   * `columns` is ignored. Recursion forwards these (filtered by the hidden set) down.
+   */
+  simpleColumns?: ReadonlyArray<SimpleColumn<ICircuit>>;
   dataType: TExtendedEntitiesTypeDict;
   onCellClick?: CircuitCellClick;
   /** Optional per-row class (e.g. hierarchy filtered-in/out styling). */
@@ -165,7 +176,8 @@ export type CircuitRecursiveGridProps = {
  */
 export function CircuitRecursiveGrid({
   circuits,
-  columns,
+  columns = [],
+  simpleColumns,
   dataType,
   onCellClick,
   rowClassName,
@@ -185,29 +197,35 @@ export function CircuitRecursiveGrid({
   const canExpand = depth < MAX_CIRCUIT_DEPTH;
   const isTop = depth === 0;
 
-  // The chooser lives on the top-level grid, but nested subcircuit grids are
-  // separate grid instances — so mirror the hidden set down the tree (by antd
-  // column `key`) to keep every depth column-consistent.
-  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const visibleColumns = useMemo(() => {
-    if (hiddenColumns.length === 0) return columns;
-    const hidden = new Set(hiddenColumns);
-    return columns.filter((c) => !hidden.has(String(c.key ?? '')));
-  }, [columns, hiddenColumns]);
-
-  // Adapt once, then enable interactive resize on every column.
-  const adaptedColumns = useMemo(
+  // Column source: pre-built `simpleColumns` verbatim (the plugin path — identical to
+  // the parent's schema columns), else adapt the antd `columns` (legacy path). Enable
+  // interactive resize on every column either way.
+  const adaptedColumns = useMemo<SimpleColumn<ICircuit>[]>(
     () =>
-      adaptCircuitColumns(columns).map((c) => ({ ...c, width: { ...c.width, resizable: true } })),
-    [columns]
+      (simpleColumns ? [...simpleColumns] : adaptCircuitColumns(columns)).map((c) => ({
+        ...c,
+        width: { ...c.width, resizable: true },
+      })),
+    [simpleColumns, columns]
   );
+
+  // The chooser lives on the top-level grid, but nested subcircuit grids are separate
+  // grid instances — so mirror the hidden set down the tree (by column id) to keep
+  // every depth column-consistent. Recursion is always driven by `simpleColumns`.
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const visibleColumns = useMemo<SimpleColumn<ICircuit>[]>(() => {
+    if (hiddenColumns.length === 0) return adaptedColumns;
+    const hidden = new Set(hiddenColumns);
+    return adaptedColumns.filter((c) => !hidden.has(c.id));
+  }, [adaptedColumns, hiddenColumns]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: CircuitRecursiveGrid is a stable module-level self-reference (recursion)
   const expansion = useMemo(
     () =>
       canExpand
         ? {
-            columnId: isTop ? expandColumnId : undefined,
+            // host the chevron in the same (Subcircuits) column at every depth.
+            columnId: expandColumnId,
             align: 'right' as const,
             isExpandable: (row: ICircuit) => subCircuitsOf(row).length > 0,
             initialHeight: 96,
@@ -231,7 +249,8 @@ export function CircuitRecursiveGrid({
                 <div className="ml-4">
                   <CircuitRecursiveGrid
                     circuits={subCircuitsOf(row)}
-                    columns={visibleColumns}
+                    simpleColumns={visibleColumns}
+                    expandColumnId={expandColumnId}
                     dataType={dataType}
                     onCellClick={onCellClick}
                     rowClassName={rowClassName}

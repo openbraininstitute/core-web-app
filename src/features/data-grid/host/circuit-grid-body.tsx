@@ -15,7 +15,6 @@ import {
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { circuitListingRowClass } from '@/ui/segments/explore/circuit/elements/circuit-listing-grid';
 import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
@@ -25,10 +24,10 @@ import { classNames } from '@/util/utils';
 
 import { EntityDataGrid } from './browse-entity-grid';
 
-import type { ColumnProps } from 'antd/es/table';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { GridDataSource } from '@/features/data-grid/core';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { DetailRuntime } from '@/features/data-grid/react';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { BrowseEntityGridProps } from './browse-entity-grid';
@@ -79,8 +78,11 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
     [definition.schema, workspace, queryClient]
   );
 
-  // antd columns for the NESTED recursive grid (hierarchy: no sort — tree order fixed).
-  const antdColumns = useDataTableColumns<ICircuit>({ dataType });
+  // Columns for the NESTED recursive grid = the SAME schema columns the parent server
+  // grid renders (SimpleColumn extends ColumnModel, so schema columns pass straight
+  // through). This is what keeps the expanded subcircuit rows column-identical to the
+  // parent — no separate antd column set.
+  const schemaColumns = definition.schema.columns as unknown as SimpleColumn<ICircuit>[];
 
   const onCellClick = useCallback(
     (_: string, record: ICircuit) => makeSelectEntityClickEvent({ display: true, data: record }),
@@ -101,12 +103,10 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
       render: ({ row, state }) => {
         const children = subCircuitsOf(row);
         if (!children) return null;
-        // Thread the parent's hidden columns onto the nested grid (by antd key ===
-        // schema column id) so every depth stays column-consistent with the chooser.
+        // Thread the parent's hidden columns onto the nested grid (by column id) so
+        // every depth stays column-consistent with the chooser.
         const hidden = new Set(state?.hiddenColumns ?? []);
-        const visibleColumns: ColumnProps<ICircuit>[] = antdColumns.filter(
-          (c) => !hidden.has(String(c.key ?? ''))
-        );
+        const visibleColumns = schemaColumns.filter((c) => !hidden.has(c.id));
         return (
           <div className="my-5 flex flex-col items-start gap-5">
             <div className="ml-7 flex flex-row items-center gap-2">
@@ -118,7 +118,8 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
                 <CircuitRecursiveGrid
                   key={row.id}
                   circuits={children}
-                  columns={visibleColumns}
+                  simpleColumns={visibleColumns}
+                  expandColumnId={EntityCoreFields.CircuitSubCircuit}
                   dataType={dataType}
                   onCellClick={onCellClick}
                   rowClassName={(record) => circuitListingRowClass(record, view)}
@@ -129,7 +130,7 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
         );
       },
     }),
-    [antdColumns, dataType, onCellClick, view]
+    [schemaColumns, dataType, onCellClick, view]
   );
 
   const toolbarSlots = useMemo(
