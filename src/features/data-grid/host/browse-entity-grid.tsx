@@ -1,6 +1,7 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -47,6 +48,7 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import type { ReactNode } from 'react';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { AnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
+import type { Facets } from '@/features/data-grid/core';
 import type { DetailRuntime } from '@/features/data-grid/react';
 import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
 
@@ -204,6 +206,22 @@ export function BrowseEntityGrid({
 
   const enabled = allowQuery && (isAllSpeciesMode || !requireBrainRegion || hasBrainRegion);
 
+  // External facets. When a loader-scoped `facetsQueryFn` override is present the
+  // data source runs with `withFacets: false` (facets are NOT in the list response),
+  // so set/facet filters would otherwise show "No options". Mirror the legacy
+  // listing by fetching facets separately and handing them to `<DataGrid facets>`.
+  // Same request scope the grid uses (brain-region + scope + extra params, minus the
+  // grid's own column filters — parity with `useQueryExtendedEntityTypeFacets`);
+  // `order_by` is irrelevant to facet buckets so it stays out of `params`.
+  const facetsQuery = useQuery({
+    queryKey: ['data-grid', 'facets', dataType, dataKey, params],
+    queryFn: () => facetsQueryFn?.({ filters: params, context: { virtualLabId, projectId } }),
+    enabled: enabled && Boolean(facetsQueryFn),
+  });
+  // Only override when a `facetsQueryFn` exists; otherwise facets keep coming from
+  // the list response and this stays `undefined` (unchanged behavior).
+  const externalFacets = facetsQueryFn ? (facetsQuery.data as Facets | undefined) : undefined;
+
   const detail = useMemo<DetailRuntime<EntityCoreIdentifiableNamed> | undefined>(() => {
     if (!definition.schema.detail || !definition.renderDetail) return undefined;
     const isExpandable = definition.schema.detail.isExpandable;
@@ -255,6 +273,7 @@ export function BrowseEntityGrid({
           queryKey={['data-grid', dataType, dataKey]}
           params={params}
           enabled={enabled}
+          facets={externalFacets}
           detail={detail}
           className="h-full"
           gridClassName={classNames?.tableClassNames?.container}
