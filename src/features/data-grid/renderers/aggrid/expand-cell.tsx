@@ -41,6 +41,10 @@ export function ExpandToggleButton<Row>({
   return (
     <button
       type="button"
+      // marks this control so grids' `onCellClicked` ignore the click (no row-open /
+      // mini-detail). Nested grids bubble the native click up to ancestor grids, so
+      // every grid checks for this attribute — see `isExpanderClick`.
+      data-grid-expander=""
       aria-label={expanded ? 'Collapse row' : 'Expand row'}
       aria-expanded={expanded}
       className={
@@ -49,7 +53,10 @@ export function ExpandToggleButton<Row>({
           : 'flex items-center justify-center text-gray-500 transition-colors hover:text-primary-7'
       }
       onClick={(e) => {
+        // stop React + native bubbling so a click on a DEEP grid's expander never
+        // reaches an ancestor grid (which would otherwise open/collapse a parent row).
         e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
         controller.store.dispatch({ type: 'toggleExpanded', id: rowId });
       }}
     >
@@ -62,6 +69,17 @@ export function ExpandToggleButton<Row>({
       )}
     </button>
   );
+}
+
+/**
+ * True when a grid click originated on an expand/collapse toggle (marked with
+ * `data-grid-expander`). A grid's `onCellClicked` uses this to skip row-open /
+ * mini-detail for expander clicks — including clicks that bubbled up from a nested
+ * grid's expander (which is why the ancestor grid must check too).
+ */
+export function isExpanderClick(event: Event | null | undefined): boolean {
+  const target = event?.target;
+  return target instanceof Element && Boolean(target.closest('[data-grid-expander]'));
 }
 
 /**

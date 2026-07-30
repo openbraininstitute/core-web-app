@@ -20,6 +20,7 @@ import {
 import { CellRendererRegistry } from '../react/cell-renderer-registry';
 import { ColumnChooser } from '../react/column-chooser';
 import { GridPagination } from '../react/pagination';
+import { isExpanderClick } from '../renderers/aggrid/expand-cell';
 import { AgHeader } from '../renderers/aggrid/header';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
@@ -587,6 +588,8 @@ export function InMemoryGrid<Row>({
           onColumnResized={onColumnResized}
           onCellClicked={(e) => {
             if (!onRowClick) return;
+            // expander click (here or bubbled from a nested grid) must not open the row
+            if (isExpanderClick(e.event)) return;
             if (SYNTHETIC_COL_IDS.has(e.column.getColId())) return;
             if (e.data == null || isDetailRow(e.data)) return;
             onRowClick(e.data as Row);

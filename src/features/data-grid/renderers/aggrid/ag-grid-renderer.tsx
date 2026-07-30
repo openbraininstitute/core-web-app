@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
 import { AgDetailCell, DEFAULT_DETAIL_MIN_HEIGHT } from './detail-cell';
 import { detailRowId, interleaveDetailRows, isDetailRow } from './detail-rows';
+import { isExpanderClick } from './expand-cell';
 import { registerDataGridModules } from './register-modules';
 import { dataGridTheme } from './theme';
 
@@ -240,6 +241,8 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   const onCellClicked = useCallback(
     (e: CellClickedEvent<DisplayRow<Row>>) => {
       if (!onRowClick) return;
+      // an expander click (here or bubbled up from a nested grid) must not open the row
+      if (isExpanderClick(e.event)) return;
       if (SYNTHETIC_COL_IDS.has(e.column.getColId())) return;
       if (e.data == null || isDetailRow(e.data)) return;
       onRowClick(e.data);
