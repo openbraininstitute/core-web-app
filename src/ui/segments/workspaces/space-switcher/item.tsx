@@ -318,8 +318,7 @@ export function Item({
               projectRows.map((project, projectIndex) => {
                 const isProjectActive = project.id === activeProjectId;
                 const isProjectSelected = project.id === selectedProjectId;
-                const isWaitlisted = project.is_waitlisted;
-                const isDisabled = courseNotStarted || isWaitlisted;
+
                 return (
                   <motion.div
                     key={project.id}
@@ -334,21 +333,21 @@ export function Item({
                       rounded
                       size="md"
                       variant="outline"
-                      disabled={isDisabled}
+                      disabled={project.is_waitlisted}
                       className={cn(
                         'w-full justify-start bg-white! border shadow-none border-gray-200',
-                        isDisabled
+                        project.is_waitlisted
                           ? 'cursor-not-allowed opacity-40 hover:bg-white!'
                           : 'hover:bg-gray-100!',
                         {
                           'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
-                            isProjectActive && !isDisabled,
+                            isProjectActive && !project.is_waitlisted,
                         },
                         { 'border-3! border-gray-200! bg-gray-50!': isProjectSelected }
                       )}
                       title={project.name}
                       onClick={() => {
-                        if (isWaitlisted && !courseNotStarted) {
+                        if (project.is_waitlisted && !courseNotStarted) {
                           activateWaitlistedProject(() =>
                             onProjectClick({ virtualLabId: lab.id, project })
                           );
