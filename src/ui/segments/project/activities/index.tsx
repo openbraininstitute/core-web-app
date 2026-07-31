@@ -13,6 +13,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Header } from '@/ui/segments/project/activities/elements/header';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { ActivityValues } from '@/ui/segments/workflows/config';
+import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
@@ -102,18 +103,11 @@ export function ProjectActivities({
     {
       id: 'status',
       header: 'Status',
-      renderCell: (record) => {
-        const status = get(record, 'status', 'default');
-        const mapper = get(StatusMap, status, null);
-        const icon = mapper?.icon;
-        const title = mapper?.title;
-        return (
-          <span className="flex items-center capitalize" style={{ color: mapper?.color }}>
-            {icon}
-            {title}
-          </span>
-        );
-      },
+      // per-type aggregated status (badge + scan-cards popover), same as the workflows
+      // activity table — differs by record.type (simulation campaign / task / etc.)
+      renderCell: (record) => (
+        <WorkflowStatusCell record={record} workspace={{ virtualLabId, projectId }} />
+      ),
     },
     {
       id: 'creation_date',
