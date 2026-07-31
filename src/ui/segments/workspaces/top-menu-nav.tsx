@@ -15,6 +15,7 @@ import {
 } from '@/components/icons/buttons';
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
+import { WorkspaceMainPages } from '@/constants';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -69,7 +70,7 @@ const links: LinkItem[] = [
     id: 'workspace-explore-data',
     key: 'data',
     title: 'Data',
-    url: 'data',
+    url: WorkspaceMainPages.Data,
     icon: <ExploreIcon className="group-hover:text-primary-3 size-5! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
@@ -79,7 +80,7 @@ const links: LinkItem[] = [
     id: 'workspace-workflows',
     key: 'workflows',
     title: 'Workflows',
-    url: 'workflows',
+    url: WorkspaceMainPages.Workflows,
     icon: <WorkflowIcon className="group-hover:text-primary-3 size-5! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
@@ -91,7 +92,7 @@ const links: LinkItem[] = [
     id: 'workspace-notebooks',
     key: 'notebooks',
     title: 'Notebooks',
-    url: 'notebooks/browse/analysis-notebook-template',
+    url: WorkspaceMainPages.Notebooks,
     icon: <NotebookIcon className="group-hover:text-primary-3 size-5! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
@@ -104,7 +105,7 @@ const links: LinkItem[] = [
     id: 'workspace-reports',
     key: 'reports',
     title: 'Reports',
-    url: 'reports',
+    url: WorkspaceMainPages.Reports,
     icon: <ReportsIcon className="group-hover:text-primary-3 size-[17px]! shrink-0" />,
     allowText: true,
     className: 'px-6 gap-2',
