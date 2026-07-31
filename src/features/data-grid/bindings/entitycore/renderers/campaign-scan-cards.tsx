@@ -68,55 +68,79 @@ export function toScanCardData(records: unknown): ScanCard[] {
   });
 }
 
+/** Fixed card width so the popover sizes to its content (up to 3 cards per row). */
+const CARD_WIDTH = 'w-56';
+
 function ScanParameterCard({ card }: { card: ScanCard }): ReactNode {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-neutral-2 bg-white p-3">
-      <div className="flex items-start justify-between gap-2">
+    <div
+      className={`flex ${CARD_WIDTH} shrink-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white`}
+    >
+      {/* header — title + status, separated from the body by a border (image style) */}
+      <div className="flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2">
         <span
           title={card.title}
           className="min-w-0 flex-1 truncate text-sm font-semibold text-primary-9"
         >
           {card.title}
         </span>
-        {card.status ? <CampaignStatusBadge status={card.status} /> : null}
+        {card.status ? <CampaignStatusBadge status={card.status} compact /> : null}
       </div>
-      {card.params.length > 0 ? (
-        <dl className="flex flex-col gap-1">
-          {card.params.map((param) => (
-            <div key={param.name} className="flex items-baseline justify-between gap-3 text-xs">
-              <dt title={param.name} className="truncate text-neutral-6">
-                {param.label}
-              </dt>
-              <dd
-                title={param.value}
-                className="max-w-[60%] truncate text-right font-medium text-primary-8"
-              >
-                {param.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      ) : (
-        <span className="text-xs italic text-neutral-5">No scan parameters</span>
-      )}
+      {/* body — the scan parameters */}
+      <div className="px-3 py-2">
+        {card.params.length > 0 ? (
+          <dl className="flex flex-col gap-1">
+            {card.params.map((param) => (
+              <div key={param.name} className="flex items-baseline justify-between gap-3 text-xs">
+                <dt title={param.name} className="truncate text-neutral-6">
+                  {param.label}
+                </dt>
+                <dd
+                  title={param.value}
+                  className="max-w-[60%] truncate text-right font-medium text-primary-8"
+                >
+                  {param.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <span className="text-xs italic text-neutral-5">No scan parameters</span>
+        )}
+      </div>
     </div>
   );
 }
 
 interface CampaignScanCardsProps {
   records: unknown;
+  /** popover heading, e.g. `"{sim_name} execution status"`. */
+  title?: string;
   loading?: boolean;
   error?: unknown;
 }
 
 /**
- * Responsive grid of scan-parameter cards for the status popover. Three columns by
- * default, collapsing to 1–2 on narrow widths, inside a fixed-height vertical scroll
- * area so long campaigns never overflow the popover.
+ * Scan-parameter cards for the status popover. The card row FITS ITS CONTENT — a
+ * fixed card width, wrapping at most 3 per row (`max-w`), so a campaign with one or
+ * two cards renders a compact popover rather than a fixed wide box. Height is capped
+ * (`max-h-80`) with vertical scroll for long campaigns, and shrinks to content when
+ * there are few cards. A `{sim_name} execution status` heading sits on top.
  */
-export function CampaignScanCards({ records, loading, error }: CampaignScanCardsProps): ReactNode {
+export function CampaignScanCards({
+  records,
+  title,
+  loading,
+  error,
+}: CampaignScanCardsProps): ReactNode {
   return (
-    <div className="w-[min(88vw,44rem)] max-w-full">
+    // w-fit → the popover width tracks the cards (1 → narrow, 3+ → capped at max-w)
+    <div className="flex w-fit max-w-[min(88vw,44rem)] flex-col gap-2">
+      {title ? (
+        <div className="truncate px-1 text-sm font-semibold text-primary-9" title={title}>
+          {title}
+        </div>
+      ) : null}
       <div className="max-h-80 overflow-y-auto pr-1">
         <CampaignScanCardsBody records={records} loading={loading} error={error} />
       </div>
@@ -134,10 +158,13 @@ function CampaignScanCardsBody({ records, loading, error }: CampaignScanCardsPro
   }
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-wrap gap-2">
         {Array.from({ length: 3 }).map((_, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
-          <div key={i} className="h-24 animate-pulse rounded-lg bg-neutral-100" />
+          <div
+            key={i}
+            className={`${CARD_WIDTH} h-24 shrink-0 animate-pulse rounded-xl bg-neutral-100`}
+          />
         ))}
       </div>
     );
@@ -151,7 +178,8 @@ function CampaignScanCardsBody({ records, loading, error }: CampaignScanCardsPro
     );
   }
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    // fixed-width cards + wrap → the row is exactly as wide as its cards (≤ 3 across)
+    <div className="flex flex-wrap gap-2">
       {cards.map((card) => (
         <ScanParameterCard key={card.id} card={card} />
       ))}

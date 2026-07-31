@@ -38,17 +38,23 @@ const ACTIVE_STATUSES = [ActivityStatus.PENDING, ActivityStatus.RUNNING];
  * scan rows are fetched lazily on first open (React-Query cached) — the popover content
  * is NOT mounted until the user hovers the badge.
  */
-export function CampaignStatusCell({ row }: CellRendererProps<{ id?: string | null }>): ReactNode {
+export function CampaignStatusCell({
+  row,
+}: CellRendererProps<{ id?: string | null; name?: string | null }>): ReactNode {
   const campaignId = row?.id ?? undefined;
   if (!campaignId) return null;
-  return <CampaignStatusBadgePopover campaignId={campaignId} />;
+  return <CampaignStatusBadgePopover campaignId={campaignId} simName={row?.name ?? undefined} />;
 }
 
 interface CampaignStatusBadgePopoverProps {
   campaignId: string;
+  simName?: string;
 }
 
-function CampaignStatusBadgePopover({ campaignId }: CampaignStatusBadgePopoverProps): ReactNode {
+function CampaignStatusBadgePopover({
+  campaignId,
+  simName,
+}: CampaignStatusBadgePopoverProps): ReactNode {
   const { virtualLabId, projectId } = useWorkspace();
   const workspace = { virtualLabId, projectId };
   const enabled = Boolean(campaignId && virtualLabId && projectId);
@@ -90,17 +96,24 @@ function CampaignStatusBadgePopover({ campaignId }: CampaignStatusBadgePopoverPr
     <div className="flex w-full items-center justify-center">
       <Popover
         trigger="hover"
-        placement="bottom"
+        placement="bottomRight"
         mouseEnterDelay={0.15}
         mouseLeaveDelay={0.2}
         open={open}
         onOpenChange={setOpen}
         destroyOnHidden
         classNames={{ root: '[&_.ant-popover-inner]:p-2!' }}
-        content={<CampaignScanCards records={scanRows} loading={scanLoading} error={scanError} />}
+        content={
+          <CampaignScanCards
+            records={scanRows}
+            title={`${simName ?? 'Simulation'} execution status`}
+            loading={scanLoading}
+            error={scanError}
+          />
+        }
       >
         <button type="button" className="inline-flex cursor-default border-0 bg-transparent p-0">
-          <CampaignStatusBadge status={headline} count={count} />
+          <CampaignStatusBadge status={headline} count={count} fixedWidth />
         </button>
       </Popover>
     </div>

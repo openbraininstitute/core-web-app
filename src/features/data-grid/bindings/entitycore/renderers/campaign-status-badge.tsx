@@ -114,6 +114,10 @@ interface CampaignStatusBadgeProps {
   status: ActivityStatus | undefined;
   /** total member count, appended as a subtle "×N" suffix when > 1 */
   count?: number;
+  /** smaller + lighter pill (used inside the scan-parameter cards). */
+  compact?: boolean;
+  /** give every status the SAME width so the cell column reads uniformly. */
+  fixedWidth?: boolean;
   className?: string;
 }
 
@@ -121,6 +125,8 @@ interface CampaignStatusBadgeProps {
 export function CampaignStatusBadge({
   status,
   count,
+  compact = false,
+  fixedWidth = false,
   className,
 }: CampaignStatusBadgeProps): ReactNode {
   const spec = getCampaignStatusBadgeSpec(status);
@@ -131,13 +137,27 @@ export function CampaignStatusBadge({
       rounded
       size="sm"
       variant={spec.variant}
-      className={['gap-1.5 font-semibold select-none', spec.className, className]
+      className={[
+        'select-none',
+        // compact = smaller footprint + lighter weight (for the card headers)
+        compact ? 'h-5 gap-1 px-2 py-0 text-[10px] font-medium' : 'gap-1.5 font-semibold',
+        // uniform width across statuses so the centred cell column isn't ragged
+        fixedWidth ? 'min-w-[7.5rem] justify-center' : '',
+        spec.className,
+        className,
+      ]
         .filter(Boolean)
         .join(' ')}
     >
-      {icon ? <span className="text-xs leading-none">{icon}</span> : null}
+      {icon ? (
+        <span className={compact ? 'text-[10px] leading-none' : 'text-xs leading-none'}>
+          {icon}
+        </span>
+      ) : null}
       <span>{spec.label}</span>
-      {typeof count === 'number' && count > 1 ? <span className="opacity-60">×{count}</span> : null}
+      {!compact && typeof count === 'number' && count > 1 ? (
+        <span className="opacity-60">×{count}</span>
+      ) : null}
     </Badge>
   );
 }
