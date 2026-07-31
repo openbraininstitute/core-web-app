@@ -177,12 +177,24 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   // baseline is captured WITHOUT emitting (parity with the legacy table, which fires
   // `onRowsSelected` only on user action), so a restored/empty selection never wipes
   // the host form on first render.
+  //
+  // A CONTROLLER SWAP (the host rebuilds its `GridController` when the listing key
+  // changes — scope, species, dataType) restarts the store on a fresh, usually empty
+  // selection while this component instance — and with it `lastEmittedRef` — survives.
+  // That is not a user action either, so it re-baselines exactly like a mount. Without
+  // that, the two selection effects fight: this one reports the new store's empty
+  // selection to the host, the CONTROLLED sync above pushes the host's picks back into
+  // the store, each reading the other's pre-swap value — an unbounded ping-pong that
+  // React reports as "Maximum update depth exceeded".
   const onPickerChange = selection?.onChange;
   const lastEmittedRef = useRef<string | null>(null);
+  const emitBaselineControllerRef = useRef<GridController<Row> | null>(null);
   useEffect(() => {
     if (!onPickerChange) return;
     const key = state.selection.join('|');
-    if (lastEmittedRef.current === null) {
+    const isNewController = emitBaselineControllerRef.current !== controller;
+    emitBaselineControllerRef.current = controller;
+    if (lastEmittedRef.current === null || isNewController) {
       lastEmittedRef.current = key;
       return;
     }
@@ -192,7 +204,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       .map((id) => rowCacheRef.current.get(id))
       .filter((r): r is Row => r !== undefined);
     onPickerChange(selectedRows);
-  }, [state.selection, onPickerChange]);
+  }, [state.selection, onPickerChange, controller]);
 
   const rendererProps: IGridRendererProps<Row> = {
     controller,
