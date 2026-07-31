@@ -204,8 +204,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       h5wasm:
-        specifier: ^0.7.9
-        version: 0.7.9
+        specifier: ^0.10.3
+        version: 0.10.3
       hash-wasm:
         specifier: ^4.12.0
         version: 4.12.0
@@ -7142,8 +7142,8 @@ packages:
     resolution: {integrity: sha512-4haO1M4mLO91PW57BMsDFf75UmwoRX0GkdD+Faw+Lr+r/OZrOCS0pIBwOL1xCKQqnQzbNFGgK2V2CpBUPeFNTw==}
     hasBin: true
 
-  h5wasm@0.7.9:
-    resolution: {integrity: sha512-V3N+SSQdrTjQUqwu6sJsOcwocZCXeZnwmuNO/gervRaTiqJD1lSybqB+7d3YSciej3OIwmturEP1UzhIOZ77pA==}
+  h5wasm@0.10.3:
+    resolution: {integrity: sha512-W4Jy5ExtX/VNbyD8GdOBckDuj6AL16TemppVNxZsV3rJZEWCv2sxlCzOttZLer3zkMttbDYsWHl0qt1z3Bln+Q==}
 
   hachure-fill@0.5.2:
     resolution: {integrity: sha512-3GKBOn+m2LX9iq+JC1064cSFprJY4jL1jCXTcpnfER5HYE2l/4EfWSGzkPa/ZDBmYI0ZOEj5VHV/eKnPGkHuOg==}
@@ -18093,7 +18093,7 @@ snapshots:
       pumpify: 1.5.1
       through2: 2.0.5
 
-  h5wasm@0.7.9: {}
+  h5wasm@0.10.3: {}
 
   hachure-fill@0.5.2: {}
 
