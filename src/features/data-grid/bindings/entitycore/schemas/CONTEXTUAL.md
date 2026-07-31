@@ -88,3 +88,9 @@ rules run; it returns the context-resolved, ordered column list. The controller 
 the initial column order + default-hidden set from it, and the user's persisted
 drag-reorder / chooser layout is applied on top. All resolution is pure and unit
 tested (`core/domain/contextual.test.ts`, `resolve-schema.test.ts`).
+
+## See also
+
+`features/data-grid/FILTERS.md` — the filter model shared by column filters and the
+schema's `advancedFilters`, how an operator becomes a query param, and how to verify a
+param exists before declaring it.

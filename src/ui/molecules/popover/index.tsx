@@ -20,13 +20,10 @@ function PopoverContent({
   className,
   align = 'center',
   sideOffset = 4,
-  container,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content> & {
-  container?: React.ComponentProps<typeof PopoverPrimitive.Portal>['container'];
-}) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
-    <PopoverPrimitive.Portal container={container}>
+    <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
@@ -45,4 +42,28 @@ function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitiv
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
-export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
+/**
+ * The popover's tip, pointing back at the trigger. Radix renders it as an `<svg>`
+ * polygon positioned/rotated for the resolved side, so callers only pick a size and
+ * a fill matching their `PopoverContent` background (there is no `--color-popover`
+ * token in this theme — panels set `bg-white` explicitly, so the arrow does too).
+ * Must be a direct child of `PopoverContent`.
+ */
+function PopoverArrow({
+  className,
+  width = 14,
+  height = 7,
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Arrow>) {
+  return (
+    <PopoverPrimitive.Arrow
+      data-slot="popover-arrow"
+      width={width}
+      height={height}
+      className={cn('fill-white', className)}
+      {...props}
+    />
+  );
+}
+
+export { Popover, PopoverAnchor, PopoverArrow, PopoverContent, PopoverTrigger };

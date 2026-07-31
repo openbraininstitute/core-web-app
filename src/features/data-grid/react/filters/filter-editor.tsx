@@ -40,6 +40,7 @@ import { splitIdTokens } from './id-tokens';
 import { FREE_ENTRY_SEPARATOR_HINT, resolveFilterPlaceholder } from './placeholder';
 import { useSetOptions } from './use-set-options';
 
+import type { ReactNode } from 'react';
 import type { DateRange } from 'react-day-picker';
 import type { IFilterTarget, TFilterOptionsSource, TFilterValue } from '../../core';
 import type { IFilterEditorContext } from './context';
@@ -60,6 +61,13 @@ export interface IFilterEditorProps {
   filterKey: string;
   /** heading shown above the controls (the column header, or the filter's label) */
   label: string;
+  /**
+   * Replaces the plain heading, keeping the target's description beneath it. The
+   * advanced-filters submenu passes an interactive title here so its "back to the
+   * filter list" chevron and the filter's name are ONE control instead of two
+   * stacked headings.
+   */
+  titleSlot?: ReactNode;
   /**
    * Fields this filter can be matched by, already filtered for context and for the
    * grid's advanced-filters setting. A classic single-field column (and every
@@ -109,7 +117,14 @@ function toDateOrUndefined(iso: string | null): Date | undefined {
  * {@link IFilterEditorProps.filterKey} slot of `GridState.filters`, whether that key
  * is a column id or an advanced filter's `adv:<group>:<filter>` key.
  */
-export function FilterEditor({ ctx, filterKey, label, targets, onClose }: IFilterEditorProps) {
+export function FilterEditor({
+  ctx,
+  filterKey,
+  label,
+  titleSlot,
+  targets,
+  onClose,
+}: IFilterEditorProps) {
   const state = useGridState(ctx.controller);
   const current = state.filters[filterKey];
 
@@ -254,7 +269,9 @@ export function FilterEditor({ ctx, filterKey, label, targets, onClose }: IFilte
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex flex-col gap-0.5">
-        <span className="text-[13px] font-semibold text-primary-8">{label || 'Filter'}</span>
+        {titleSlot ?? (
+          <span className="text-[13px] font-semibold text-primary-8">{label || 'Filter'}</span>
+        )}
         {description ? <span className="text-xs text-gray-400">{description}</span> : null}
       </div>
 

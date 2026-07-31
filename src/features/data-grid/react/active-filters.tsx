@@ -3,7 +3,7 @@
 import { RiCloseLine, RiFilter3Line, RiRestartLine } from '@remixicon/react';
 import { useMemo, useState } from 'react';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 import { GridActionType, resolveAdvancedFilterGroups, summarizeFilter } from '../core';
@@ -99,6 +99,9 @@ export function ActiveFiltersButton<Row>({
         align="start"
         side="bottom"
         sideOffset={6}
+        // `arrowPadding` keeps the tip clear of the rounded-2xl corner; with
+        // `align="start"` it lands over the trigger, i.e. on the panel's left.
+        arrowPadding={12}
         className="w-80 rounded-2xl border-gray-100 bg-white p-3 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]"
         // The operator/option Selects and the date picker portal their content
         // outside this popover; interacting with those must not dismiss it.
@@ -113,6 +116,9 @@ export function ActiveFiltersButton<Row>({
           }
         }}
       >
+        {/* tip on top, over the trigger — same affordance as the column chooser's
+            `placement="bottomLeft"` popover */}
+        <PopoverArrow />
         <div className="flex flex-col gap-2">
           {hasAdvanced && operators ? (
             <AdvancedFiltersMenu

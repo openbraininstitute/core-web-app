@@ -186,7 +186,15 @@ function AdvancedFilterList({
   );
 }
 
-/** One filter's submenu: a back affordance plus the shared operator/value editor. */
+/**
+ * One filter's submenu: the shared operator/value editor, with its heading replaced
+ * by a back control.
+ *
+ * The chevron is not a separate button next to a separate heading — the whole
+ * "‹ Generation type" line IS the title AND the way back to the group's list, so the
+ * panel never shows the filter's name twice. `aria-label` opens with that same
+ * visible text (WCAG 2.5.3) and then says where "back" leads.
+ */
 function AdvancedFilterSubmenu<Row>({
   controller,
   operators,
@@ -211,7 +219,7 @@ function AdvancedFilterSubmenu<Row>({
     <div
       role="menu"
       aria-label={filter.def.label}
-      className="flex flex-col gap-2"
+      className="flex flex-col"
       onKeyDown={(e) => {
         if (e.key !== 'Escape' && e.key !== 'ArrowLeft') return;
         // Escape backs out of the SUBMENU first; it must not close the popover too.
@@ -219,14 +227,6 @@ function AdvancedFilterSubmenu<Row>({
         onBack();
       }}
     >
-      <button
-        type="button"
-        onClick={onBack}
-        className="-ml-1 flex items-center gap-0.5 self-start rounded-lg px-1 py-0.5 text-xs text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
-      >
-        <RiArrowLeftSLine size={14} />
-        {filter.groupLabel}
-      </button>
       <FilterEditor
         // Remount per filter: the editor holds a draft keyed to ONE slot, and
         // carrying it across filters would leak a value into the wrong param.
@@ -234,6 +234,17 @@ function AdvancedFilterSubmenu<Row>({
         ctx={ctx}
         filterKey={filter.key}
         label={filter.def.label}
+        titleSlot={
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label={`${filter.def.label} — back to ${filter.groupLabel}`}
+            className="-ml-1.5 flex items-center gap-0.5 self-start rounded-lg py-0.5 pl-0.5 pr-1.5 text-left text-[13px] font-semibold text-primary-8 transition-colors hover:bg-gray-50"
+          >
+            <RiArrowLeftSLine size={15} aria-hidden className="shrink-0 text-gray-400" />
+            {filter.def.label}
+          </button>
+        }
         targets={[filter.def]}
         onClose={onClose}
       />
