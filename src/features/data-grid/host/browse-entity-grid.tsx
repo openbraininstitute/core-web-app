@@ -2,7 +2,7 @@
 
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
@@ -26,6 +26,7 @@ import { buildCellRenderers } from '@/features/data-grid/bindings/entitycore/cel
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import { createDefaultOperatorRegistry, GridController } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
+import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
 import { createDefaultPersistence, DataGrid } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useScope } from '@/ui/hooks/use-scope';
@@ -162,6 +163,19 @@ export function EntityDataGrid({
   const hasBrainRegion = Boolean(brainRegionId);
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
+
+  // Publish the grid's FILTERED total under this listing's dataKey so the data
+  // sidebar's "x of y" counters follow the grid's filters/search (parity with the
+  // legacy table, whose query cache `useTableQueryCount` read). Cleared on
+  // unmount/key change so a stale count never survives the listing it came from.
+  const setGridTotal = useSetAtom(gridFilteredTotalAtom(dataKey));
+  const handleTotalChange = useCallback(
+    ({ total, loading }: { total: number; loading: boolean }) => {
+      if (!loading) setGridTotal(total);
+    },
+    [setGridTotal]
+  );
+  useEffect(() => () => setGridTotal(undefined), [setGridTotal]);
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
   const cellRenderers = useMemo(() => buildCellRenderers(definition), [definition]);
@@ -419,6 +433,7 @@ export function EntityDataGrid({
             )
           }
           renderError={(error) => renderListingError(error, entity?.title)}
+          onTotalChange={handleTotalChange}
           queryOptions={{
             refetchOnWindowFocus: false,
           }}

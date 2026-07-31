@@ -10,6 +10,7 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
 import { buildQueryKey, useQueryParameters } from '@/ui/hooks/use-query-extended-entity-type';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 
@@ -100,7 +101,13 @@ export function useTableQueryCount({
     [cache, queryKeyHash]
   );
 
-  const count = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
+  const legacyCount = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
+
+  // The AG Grid listing publishes its FILTERED total under the same dataKey (the
+  // legacy table's count lives in its query cache instead). Grid total wins when
+  // present — a flipped entity never writes the legacy cache entry.
+  const gridTotal = useAtomValue(gridFilteredTotalAtom(dataKey));
+  const count = isActiveEntity ? (gridTotal ?? legacyCount) : legacyCount;
 
   const queryState = isActiveEntity ? cache.find({ queryKey })?.state : undefined;
   const isFetching = queryState?.fetchStatus === 'fetching';
@@ -109,6 +116,6 @@ export function useTableQueryCount({
     dataKey,
     count,
     isLoading: isActiveEntity && isFetching && count === undefined,
-    isError: queryState?.status === 'error',
+    isError: count === undefined && queryState?.status === 'error',
   };
 }
