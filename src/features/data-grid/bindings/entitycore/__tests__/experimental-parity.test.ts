@@ -10,6 +10,7 @@ import { experimentalBoutonDensitySchema } from '../schemas/experimental-bouton-
 import { experimentalNeuronDensitySchema } from '../schemas/experimental-neuron-density';
 import { experimentalSynapsesPerConnectionSchema } from '../schemas/experimental-synapses-per-connection';
 import { ionChannelRecordingSchema } from '../schemas/ion-channel-recording';
+import { synthesizedCellMorphologySchema } from '../schemas/synthesized-cell-morphology';
 import { universalCellMorphologySchema } from '../schemas/universal-cell-morphology';
 
 import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../core';
@@ -197,6 +198,45 @@ describe('experimental_neuron_density parity', () => {
     ]);
   });
   it('default sort is -creation_date', () => {
+    expect(serializeQuery(query(sortDesc('registrationDate')), s).order_by).toEqual([
+      '-creation_date',
+    ]);
+  });
+});
+
+describe('synthesized_cell_morphology parity', () => {
+  const s = synthesizedCellMorphologySchema;
+  it('columns match the legacy synthesized-morphology view-def order', () => {
+    expect(ids(s, dataCtx('synthesized_cell_morphology'))).toEqual([
+      'preview',
+      'brainRegion',
+      'species',
+      'mtype',
+      'name',
+      'contributions',
+      'registrationDate',
+    ]);
+  });
+  it('species/mtype/contribution facets serialize to legacy __in keys', () => {
+    expect(
+      serializeQuery(query({ filters: setIn('species') }), s).subject__species__name__in
+    ).toEqual(['x']);
+    expect(serializeQuery(query({ filters: setIn('mtype') }), s).mtype__pref_label__in).toEqual([
+      'x',
+    ]);
+    expect(
+      serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
+    ).toEqual(['x']);
+  });
+  it('m-type IS server-sortable here (unlike universal) → mtype__pref_label', () => {
+    expect(s.columns.find((c) => c.id === 'mtype')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('mtype')), s).order_by).toEqual(['-mtype__pref_label']);
+  });
+  it('name ilike + brain-region/registration sorts serialize to legacy keys', () => {
+    expect(serializeQuery(query({ filters: ilike('name') }), s).name__ilike).toBe('%foo%');
+    expect(serializeQuery(query(sortDesc('brainRegion')), s).order_by).toEqual([
+      '-brain_region__name',
+    ]);
     expect(serializeQuery(query(sortDesc('registrationDate')), s).order_by).toEqual([
       '-creation_date',
     ]);

@@ -7,6 +7,7 @@ import { experimentalBoutonDensityGridDefinition } from './schemas/experimental-
 import { experimentalNeuronDensityGridDefinition } from './schemas/experimental-neuron-density';
 import { experimentalSynapsesPerConnectionGridDefinition } from './schemas/experimental-synapses-per-connection';
 import { ionChannelRecordingGridDefinition } from './schemas/ion-channel-recording';
+import { synthesizedCellMorphologyGridDefinition } from './schemas/synthesized-cell-morphology';
 import { universalCellMorphologyGridDefinition } from './schemas/universal-cell-morphology';
 
 import type { FC } from 'react';
@@ -51,6 +52,7 @@ const definitions: Record<string, AnyEntityGridDefinition> = {
   [electricalCellRecordingGridDefinition.dataType]: electricalCellRecordingGridDefinition,
   [ionChannelRecordingGridDefinition.dataType]: ionChannelRecordingGridDefinition,
   [universalCellMorphologyGridDefinition.dataType]: universalCellMorphologyGridDefinition,
+  [synthesizedCellMorphologyGridDefinition.dataType]: synthesizedCellMorphologyGridDefinition,
   [experimentalNeuronDensityGridDefinition.dataType]: experimentalNeuronDensityGridDefinition,
   [experimentalBoutonDensityGridDefinition.dataType]: experimentalBoutonDensityGridDefinition,
   [experimentalSynapsesPerConnectionGridDefinition.dataType]:
