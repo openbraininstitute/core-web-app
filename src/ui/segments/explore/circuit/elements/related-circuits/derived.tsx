@@ -1,14 +1,10 @@
 import { snakeCase } from 'es-toolkit/compat';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
 import { useParams, useRouter } from 'next/navigation';
-import { useMemo } from 'react';
 
-import { WorkspaceScope } from '@/constants';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+import { RELATED_CIRCUIT_COLUMNS } from '@/ui/segments/explore/circuit/elements/related-circuits/columns';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -26,27 +22,6 @@ export function Derived({ data }: Props) {
   const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
 
-  const cols = useDataTableColumns<ICircuit>({
-    dataType,
-    setSortState: undefined,
-    sortState: undefined,
-    initialColumns: [],
-  });
-  const activeColumns = useAtomValue(
-    useMemo(
-      () =>
-        unwrap(
-          activeColumnsAtom({
-            dataType,
-            dataScope: WorkspaceScope.Custom,
-            key: '',
-          })
-        ),
-      [dataType]
-    )
-  );
-  const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
-
   const onCellClick = (_basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
@@ -59,7 +34,8 @@ export function Derived({ data }: Props) {
 
   return (
     <CircuitRecursiveGrid
-      columns={columns}
+      simpleColumns={RELATED_CIRCUIT_COLUMNS}
+      expandColumnId={EntityCoreFields.CircuitSubCircuit}
       dataType={dataType}
       circuits={data}
       onCellClick={onCellClick}

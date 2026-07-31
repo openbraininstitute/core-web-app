@@ -1,15 +1,11 @@
 'use client';
 
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
 import { useParams, useRouter } from 'next/navigation';
-import { useMemo } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceScope } from '@/constants';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+import { RELATED_CIRCUIT_COLUMNS } from '@/ui/segments/explore/circuit/elements/related-circuits/columns';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -22,26 +18,6 @@ type Props = {
 export function DerivedFrom({ data }: Props) {
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const cols = useDataTableColumns<ICircuit>({
-    dataType: ExtendedEntitiesTypeDict.Circuit,
-    setSortState: undefined,
-    sortState: undefined,
-    initialColumns: [],
-  });
-  const activeColumns = useAtomValue(
-    useMemo(
-      () =>
-        unwrap(
-          activeColumnsAtom({
-            dataType: ExtendedEntitiesTypeDict.Circuit,
-            dataScope: WorkspaceScope.Custom,
-            key: data?.id ?? '',
-          })
-        ),
-      [data?.id]
-    )
-  );
-  const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
   const onCellClick = (_basePath: string, record: ICircuit) => {
     navigate(
@@ -55,7 +31,8 @@ export function DerivedFrom({ data }: Props) {
 
   return (
     <CircuitRecursiveGrid
-      columns={columns}
+      simpleColumns={RELATED_CIRCUIT_COLUMNS}
+      expandColumnId={EntityCoreFields.CircuitSubCircuit}
       dataType={ExtendedEntitiesTypeDict.Circuit}
       circuits={data ? [data] : []}
       onCellClick={onCellClick}

@@ -698,6 +698,15 @@ export function InMemoryGrid<Row>({
             if (!onRowClick) return;
             // expander click (here or bubbled from a nested grid) must not open the row
             if (isExpanderClick(e.event)) return;
+            // clicks on interactive cell content (per-row download button, links, …)
+            // never open the row. AG's own listener fires BEFORE any React handler,
+            // so a stopPropagation inside the cell can't protect us — guard here.
+            const target = e.event?.target;
+            if (
+              target instanceof HTMLElement &&
+              target.closest('button, a, input, [role="button"]')
+            )
+              return;
             const colId = e.column.getColId();
             if (SYNTHETIC_COL_IDS.has(colId)) return;
             // the column hosting the in-cell expander never opens the row

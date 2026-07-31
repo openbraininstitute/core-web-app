@@ -1,17 +1,14 @@
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
-import { WorkspaceScope } from '@/constants';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 // biome-ignore lint/suspicious/noShadowRestrictedNames: `Error` is an existing local component export used across circuit tables.
 import { Error } from '@/ui/segments/explore/circuit/elements/error';
+import { RELATED_CIRCUIT_COLUMNS } from '@/ui/segments/explore/circuit/elements/related-circuits/columns';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -33,28 +30,6 @@ export function Root({ circuit }: Props) {
     error: null,
     record: null,
   });
-
-  const cols = useDataTableColumns<ICircuit>({
-    dataType: ExtendedEntitiesTypeDict.Circuit,
-    setSortState: undefined,
-    sortState: undefined,
-    initialColumns: [],
-  });
-
-  const activeColumns = useAtomValue(
-    useMemo(
-      () =>
-        unwrap(
-          activeColumnsAtom({
-            dataType: ExtendedEntitiesTypeDict.Circuit,
-            dataScope: WorkspaceScope.Custom,
-            key: circuit.id,
-          })
-        ),
-      [circuit.id]
-    )
-  );
-  const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
   const onCellClick = (_basePath: string, record: ICircuit) => {
     navigate(
@@ -123,7 +98,8 @@ export function Root({ circuit }: Props) {
   return (
     <CircuitRecursiveGrid
       loading={rootCircuit.loading}
-      columns={columns}
+      simpleColumns={RELATED_CIRCUIT_COLUMNS}
+      expandColumnId={EntityCoreFields.CircuitSubCircuit}
       dataType={ExtendedEntitiesTypeDict.Circuit}
       circuits={rootCircuit.record ? [rootCircuit.record] : []}
       onCellClick={onCellClick}
