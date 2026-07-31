@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { RiRestartLine } from '@remixicon/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Form, Input, List, Popconfirm, Select } from 'antd';
+import { Form, Input, List, Popconfirm, Select, Table } from 'antd';
 import { compact, find, get, sortBy, uniqBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import { type SVGProps, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -28,7 +28,6 @@ import {
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
@@ -51,8 +50,8 @@ import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
+import type { ColumnType } from 'antd/es/table';
 import type { Member, TRole } from '@/api/virtual-lab-svc/queries/types';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 const { TextArea } = Input;
 
@@ -693,13 +692,25 @@ function CancelProjectInvitation({
         email: user.email,
         role: user.role,
       }),
-    onError: () => {
+    onMutate: () => {
+      const row =
+        document.querySelector(`tr[data-row-key="${user.email}"]`) ??
+        document.querySelector(`tr[data-row-key="${user.id}"]`);
+      if (row) {
+        row.classList.add('ant-table-row-remove');
+      }
+      return { row };
+    },
+    onError: (_e, _v, ctx) => {
       notifyError({
         message:
           'Failed to cancel invite. Please try again or contact support if the issue persists.',
         placement: 'topRight',
         key: 'user-cancel-invite',
       });
+      if (ctx?.row) {
+        ctx.row.classList.remove('ant-table-row-remove');
+      }
     },
     async onSuccess() {
       notifySuccess({
@@ -816,7 +827,16 @@ function ProjectRoleModifier({
         projectId: targetProjectId,
         userId: user.id,
       }),
-    onError: (error) => {
+    onMutate: () => {
+      const row =
+        document.querySelector(`tr[data-row-key="${user.email}"]`) ??
+        document.querySelector(`tr[data-row-key="${user.id}"]`);
+      if (row) {
+        row.classList.add('ant-table-row-remove');
+      }
+      return { row };
+    },
+    onError: (error, _v, ctx) => {
       if (get(error, 'cause.error_code') === 'FORBIDDEN_OPERATION') {
         notifyError({
           message: 'You are not authorized to remove this user from the project.',
@@ -829,6 +849,9 @@ function ProjectRoleModifier({
           placement: 'topRight',
           key: 'user-remove-from-project',
         });
+      }
+      if (ctx?.row) {
+        ctx.row.classList.remove('ant-table-row-remove');
       }
     },
     async onSuccess() {
@@ -969,7 +992,10 @@ function ProjectMembersListing({
     virtualLabId: targetVirtualLabId,
     projectId: targetProjectId,
   });
-  const { data: team } = useQuery({
+  const tableSlotRef = useRef<HTMLDivElement>(null);
+  const [tableBodyScrollY, setTableBodyScrollY] = useState<number>();
+
+  const { data: team, isLoading } = useQuery({
     queryKey: keyBuilder.listProjectTeam({
       virtualLabId: targetVirtualLabId,
       projectId: targetProjectId,
@@ -983,25 +1009,13 @@ function ProjectMembersListing({
   const ownerId = team?.data?.owner_id;
   const users = team?.data?.users;
 
-  const orderedUsers = useMemo(
-    () =>
-      sortBy(users, [
-        (member) => (member.id === ownerId ? 0 : 1),
-        (member) => (member.id === session?.user.id ? 0 : 1),
-        (member) => (member.invite_accepted && member.role === 'admin' ? 0 : 1),
-        (member) => (member.invite_accepted && member.role === 'member' ? 0 : 1),
-        (member) => (member.invite_accepted ? 0 : 1),
-        'created_at',
-      ]),
-    [users, ownerId, session?.user.id]
-  );
-
-  const columns: Array<SimpleColumn<Member>> = useMemo(
+  const columns: Array<ColumnType<Member>> = useMemo(
     () => [
       {
-        id: 'name',
-        header: '',
-        renderCell: (record) => (
+        title: 'name',
+        dataIndex: 'name',
+        key: 'name',
+        render: (_: string, record: Member, indx) => (
           <div className="flex w-full min-w-0 items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 items-start justify-start">
               <MemberAvatarCasual
@@ -1009,7 +1023,7 @@ function ProjectMembersListing({
                 isOwner={ownerId === record.id || virtualLabAdmins?.includes(record.id)}
                 shape={record.role === 'admin' ? 'square' : 'circle'}
                 key={`project-avatar-${record.id ?? record.email}`}
-                index={orderedUsers.indexOf(record)}
+                index={indx}
                 size="small"
                 layout="horizontal"
                 id={record.id ?? record.email}
@@ -1070,9 +1084,41 @@ function ProjectMembersListing({
       isMembershipLoading,
       targetVirtualLabId,
       targetProjectId,
-      orderedUsers,
     ]
   );
+
+  const orderedUsers = useMemo(
+    () =>
+      sortBy(users, [
+        (member) => (member.id === ownerId ? 0 : 1),
+        (member) => (member.id === session?.user.id ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'admin' ? 0 : 1),
+        (member) => (member.invite_accepted && member.role === 'member' ? 0 : 1),
+        (member) => (member.invite_accepted ? 0 : 1),
+        'created_at',
+      ]),
+    [users, ownerId, session?.user.id]
+  );
+
+  useLayoutEffect(() => {
+    const el = tableSlotRef.current;
+    if (!el) return;
+
+    const measure = (contentHeight: number) => {
+      const h = Math.floor(contentHeight);
+      setTableBodyScrollY(h > 12 ? Math.max(80, h - 4) : undefined);
+    };
+
+    measure(el.getBoundingClientRect().height);
+
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      measure(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const canInvite = isVirtualLabAdmin || isProjectAdmin;
 
@@ -1083,16 +1129,34 @@ function ProjectMembersListing({
       data-testid="workspace-manager-project-members-container"
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-2 w-full mb-8">
-        <div className="secondary-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto w-full pr-3">
-          <SimpleGrid<Member>
+        <div ref={tableSlotRef} className="flex min-h-0 flex-1 flex-col overflow-hidden w-full">
+          <Table
+            id="workspace-manager-project-members-table"
+            bordered={false}
+            loading={isLoading}
+            dataSource={orderedUsers}
+            pagination={false}
             columns={columns}
-            rows={orderedUsers}
-            getRowId={(record) => record.id ?? record.email}
-            hideHeader
-            className={cn(
-              'h-full min-h-0 bg-white',
-              '[&_.ag-root-wrapper]:border-0 [&_.ag-row]:border-0'
+            showHeader={false}
+            size="middle"
+            rowKey={(record) => record.id ?? record.email}
+            rootClassName={cn(
+              '[&_.ant-spin-blur]:opacity-0',
+              '[&_.ant-table-wrapper]:bg-white!',
+              '[&_#workspace-manager-project-members-table]:bg-white!'
             )}
+            className={cn(
+              'h-full min-h-0',
+              '[&_.ant-table]:bg-white!',
+              '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
+              '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
+              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3',
+              '[&_.ant-table-placeholder]:bg-white!',
+              '[&_.ant-table-container]:h-full [&_.ant-table-container]:min-h-0',
+              '[&_.ant-empty-description]:text-primary-9!',
+              '[&_.ant-table-cell]:bg-white!'
+            )}
+            scroll={{ y: tableBodyScrollY ?? 'calc(100vh - 40rem)' }}
           />
         </div>
       </div>
