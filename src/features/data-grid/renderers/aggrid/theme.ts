@@ -78,5 +78,20 @@ export const dataGridTheme = themeQuartz.withParams({
   },
   focusShadow: '0 0 0 3px color-mix(in srgb, var(--color-primary-6, #1668dc) 16%, transparent)',
   checkboxBorderRadius: 4,
-  checkboxCheckedBackgroundColor: 'var(--color-primary-6, #1668dc)',
+  checkboxCheckedBackgroundColor: 'var(--color-primary-9, #101828)',
 });
+
+/**
+ * Single-select styles AG's selection control as a RADIO. AG renders the same
+ * checkbox widget for `singleRow` and `multiRow` row selection (there is no
+ * native radio), so single mode restyles it: fully-round box, and the checked
+ * glyph becomes a centred dot (the tick mask is dropped; the ::after — which
+ * already carries the checked shape color — is shrunk and rounded). Multi-select
+ * checkboxes keep `checkboxBorderRadius` above. Apply on the grid wrapper.
+ */
+export const SINGLE_SELECT_RADIO_CLASS = [
+  '[&_.ag-selection-checkbox_.ag-checkbox-input-wrapper]:rounded-full!',
+  '[&_.ag-selection-checkbox_.ag-checkbox-input-wrapper.ag-checked::after]:[mask:none]!',
+  '[&_.ag-selection-checkbox_.ag-checkbox-input-wrapper.ag-checked::after]:inset-[3px]!',
+  '[&_.ag-selection-checkbox_.ag-checkbox-input-wrapper.ag-checked::after]:rounded-full',
+].join(' ');

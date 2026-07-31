@@ -10,7 +10,7 @@ import { detailRowId, interleaveDetailRows, isDetailRow } from './detail-rows';
 import { isExpanderClick } from './expand-cell';
 import { registerDataGridModules } from './register-modules';
 import { mergePageSelection } from './selection';
-import { dataGridTheme } from './theme';
+import { dataGridTheme, SINGLE_SELECT_RADIO_CLASS } from './theme';
 
 import type {
   CellClickedEvent,
@@ -297,7 +297,12 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   return (
     // strip the AG overlay's default card so GridLoader blends in; and make center/right
     // aligned cells actually justify (our cells are flex, so text-align alone won't center)
-    <div className="ag-data-grid h-full min-h-0 w-full [&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none! [&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end!">
+    <div
+      className={`ag-data-grid h-full min-h-0 w-full [&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none! [&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end! ${
+        // single-select (picker radio / schema single mode) renders as a radio control
+        effectiveSelectionMode === 'single' ? SINGLE_SELECT_RADIO_CLASS : ''
+      }`}
+    >
       <AgGridReact<DisplayRow<Row>>
         theme={dataGridTheme}
         defaultColDef={DEFAULT_COL_DEF}
