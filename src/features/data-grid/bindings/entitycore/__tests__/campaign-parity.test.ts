@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
+import { regionCircuitSimulationExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
 
 import { OperatorId, resolveColumns } from '../../../core';
 import { serializeQuery } from '../query-serializer';
 import {
+  buildSimulationCampaignDefinition,
   ionChannelModelSimulationGridDefinition,
   memodelCircuitSimulationGridDefinition,
   microcircuitSimulationGridDefinition,
@@ -57,15 +59,13 @@ const STANDARD_COLUMNS = [
 
 /** Shared assertions common to every flipped simulation-campaign definition. */
 function assertCampaignDetail(def: EntityGridDefinition<CampaignRow>, dataType: string) {
-  it('exposes a full-width detail spec with all rows expandable', () => {
-    const detail = def.schema.detail;
-    expect(detail).toBeDefined();
-    expect(detail?.isExpandable?.({ id: 'row-1' })).toBe(true);
-    expect(detail?.minHeight).toBeGreaterThan(0);
-    expect(detail?.rendererKey).toBeTruthy();
+  it('defaults to popover-cards mode: no full-width detail row is wired', () => {
+    // The new default (flag OFF) presents the status as a badge + hover popover of cards,
+    // so the collapsed listing no longer wires the nested-table detail spec/renderer.
+    expect(def.schema.detail).toBeUndefined();
+    expect(def.renderDetail).toBeUndefined();
   });
-  it('supplies a renderDetail fn and registers the status cell renderer', () => {
-    expect(typeof def.renderDetail).toBe('function');
+  it('registers the status cell renderer', () => {
     expect(typeof def.registerCellRenderers).toBe('function');
   });
   it('routes under the expected dataType', () => {
@@ -141,4 +141,27 @@ describe('ion_channel_model_simulation parity', () => {
     ]);
   });
   assertCampaignDetail(def, 'ion_channel_model_simulation');
+});
+
+describe('nested-table mode (flag ON)', () => {
+  const nested = buildSimulationCampaignDefinition({
+    dataType: 'region_circuit_simulation',
+    id: 'region-circuit-simulation-nested',
+    viewConfig: regionCircuitSimulationExpandedViewConfig,
+    nestedMode: true,
+  });
+
+  it('restores the full-width detail spec with all rows expandable', () => {
+    const detail = nested.schema.detail;
+    expect(detail).toBeDefined();
+    expect(detail?.isExpandable?.({ id: 'row-1' })).toBe(true);
+    expect(detail?.minHeight).toBeGreaterThan(0);
+    expect(detail?.rendererKey).toBeTruthy();
+  });
+  it('supplies a renderDetail fn (nested scan-parameter table)', () => {
+    expect(typeof nested.renderDetail).toBe('function');
+  });
+  it('keeps the same collapsed column order as popover-cards mode', () => {
+    expect(ids(nested.schema, dataCtx('region_circuit_simulation'))).toEqual(STANDARD_COLUMNS);
+  });
 });

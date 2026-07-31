@@ -10,7 +10,9 @@ import {
   wholeBrainCircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
 
+import { makeCampaignScanTableRenderDetail } from '../renderers/campaign-scan-table';
 import {
+  CAMPAIGN_NESTED_MODE_DEFAULT,
   type CampaignRow,
   campaignCreatedByColumn,
   campaignDescriptionColumn,
@@ -20,7 +22,6 @@ import {
   campaignSpeciesColumn,
   campaignStatusColumn,
   circuitNameColumn,
-  makeCampaignRenderDetail,
   registerCampaignRenderers,
 } from './campaign-common';
 
@@ -43,20 +44,31 @@ import type { EntityGridDefinition } from '../registry';
 interface BuildOptions {
   dataType: string;
   id: string;
+  /**
+   * Legacy expanded-view config for this dataType. Retained so the nested-table
+   * byte-parity renderer (`makeCampaignRenderDetail`) stays available for rollback;
+   * the default popover-cards mode does not consume it.
+   */
   // biome-ignore lint/suspicious/noExplicitAny: viewConfig row type is entity-specific; forwarded verbatim to render
   viewConfig: ListExpandedViewConfig<any>;
   /** the circuit-simulation variants all show a "Circuit" column except ion-channel */
   withCircuit?: boolean;
   /** memodel circuit simulation adds a Species column */
   withSpecies?: boolean;
+  /**
+   * Presentation mode for the Status column. `false` (default) → popover-cards; `true`
+   * → also wire the full-width nested scan-parameter table (see
+   * {@link CAMPAIGN_NESTED_MODE_DEFAULT}). Exposed so tests can build a nested variant.
+   */
+  nestedMode?: boolean;
 }
 
-function buildSimulationCampaignDefinition({
+export function buildSimulationCampaignDefinition({
   dataType,
   id,
-  viewConfig,
   withCircuit = true,
   withSpecies = false,
+  nestedMode = CAMPAIGN_NESTED_MODE_DEFAULT,
 }: BuildOptions): EntityGridDefinition<CampaignRow> {
   const columns: Array<ColumnModel<CampaignRow>> = [
     campaignNameColumn<CampaignRow>(),
@@ -73,13 +85,17 @@ function buildSimulationCampaignDefinition({
     getRowId: (row) => row.id,
     defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
     columns,
-    detail: campaignDetailSpec<CampaignRow>(),
+    // Popover-cards mode (default) wires NO full-width detail row, so the legacy
+    // nested-table expander is not shown; nested mode restores it.
+    ...(nestedMode ? { detail: campaignDetailSpec<CampaignRow>() } : {}),
   };
 
   return {
     dataType,
     schema,
-    renderDetail: makeCampaignRenderDetail(viewConfig),
+    // Nested mode swaps the expanded table's status cell to the new badge; popover-cards
+    // mode needs no detail renderer.
+    ...(nestedMode ? { renderDetail: makeCampaignScanTableRenderDetail() } : {}),
     registerCellRenderers: registerCampaignRenderers,
   };
 }

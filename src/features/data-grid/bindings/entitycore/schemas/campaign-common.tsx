@@ -133,6 +133,22 @@ export const campaignRegistrationDateColumn = registrationDateColumn;
 export const CAMPAIGN_DETAIL_RENDERER = 'campaignDetail';
 
 /**
+ * Presentation flag for the campaign "Status" column.
+ *
+ * - `false` (DEFAULT): popover-cards mode. The status cell shows a {@link CampaignStatusBadge}
+ *   that reveals the scan-parameter sets as cards on hover; NO full-width detail row is wired,
+ *   so the legacy nested-table expander is not shown.
+ * - `true`: nested-table mode. Restores the full-width expandable detail row (scan-parameter
+ *   table) alongside the badge — kept for parity/rollback. The nested table's status cell uses
+ *   the new badge too (see {@link makeCampaignScanTableRenderDetail}).
+ *
+ * The badge-in-status-cell expander relocation for nested mode is DEFERRED: a cell renderer
+ * receives no expand handle (`CellRendererProps` has row/value/rowIndex/params only), so wiring
+ * the expander into the status cell needs a shared-host `expandColumn` change (out of fence).
+ */
+export const CAMPAIGN_NESTED_MODE_DEFAULT = false;
+
+/**
  * The `schema.detail` spec shared by every flipped simulation campaign: all rows are
  * expandable (parity with the legacy `isExpandable: () => true`), and the full-width
  * detail row starts at `minHeight` while the nested SimpleGrid measures itself.
