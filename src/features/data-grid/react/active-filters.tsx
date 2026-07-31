@@ -98,12 +98,8 @@ export function ActiveFiltersButton<Row>({
       <PopoverContent
         align="start"
         side="bottom"
-        sideOffset={8}
-        // `rounded-2xl` is a 16px corner radius, so anything closer than
-        // 16 + half the 14px arrow (~23px) puts the arrow's base over the curve
-        // rather than the panel's straight top edge — it then reads as floating
-        // detached above the panel. 24px is the first offset fully clear of it.
-        arrowPadding={24}
+        sideOffset={1}
+        arrowPadding={12}
         className="w-80 rounded-2xl border-gray-100 bg-white p-3 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]"
         // The operator/option Selects and the date picker portal their content
         // outside this popover; interacting with those must not dismiss it.
@@ -118,11 +114,7 @@ export function ActiveFiltersButton<Row>({
           }
         }}
       >
-        {/* Tip on top, over the trigger — same affordance as the column chooser's
-            `placement="bottomLeft"` popover. The panel draws a 1px border and the
-            panel's straight edge (see `arrowPadding`), so it reads as extruded
-            from the surface rather than floating above it. */}
-        <PopoverArrow />
+        <PopoverArrow className="-translate-y-0.75" />
         <div className="flex flex-col gap-2">
           {hasAdvanced && operators ? (
             <AdvancedFiltersMenu

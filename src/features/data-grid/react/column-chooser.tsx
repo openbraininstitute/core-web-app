@@ -1,4 +1,4 @@
-import { RiLayoutColumnLine } from '@remixicon/react';
+import { RiTable3 } from '@remixicon/react';
 import { Checkbox, Popover } from 'antd';
 import { useMemo } from 'react';
 
@@ -64,7 +64,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
           className
         )}
       >
-        <RiLayoutColumnLine size={18} />
+        <RiTable3 size={18} />
       </button>
     </Popover>
   );

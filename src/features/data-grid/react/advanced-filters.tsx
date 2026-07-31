@@ -282,7 +282,7 @@ function AdvancedFilterSubmenu<Row>({
             type="button"
             onClick={onBack}
             aria-label={`${filter.def.label} — back to ${filter.groupLabel}`}
-            className="-ml-1.5 flex items-center gap-0.5 self-start rounded-lg py-0.5 pl-0.5 pr-1.5 text-left text-[13px] font-semibold text-primary-8 transition-colors hover:bg-gray-50"
+            className="-ml-1.5 flex items-center gap-1.5 self-start rounded-full py-0.5 pl-0.5 pr-3 text-left text-[13px] font-semibold text-primary-8 transition-colors bg-gray-50 hover:bg-gray-100"
           >
             <RiArrowLeftSLine size={15} aria-hidden className="shrink-0 text-gray-400" />
             {filter.def.label}
