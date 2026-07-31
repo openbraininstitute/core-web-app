@@ -31,6 +31,7 @@ import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
 import { useGridState } from '../renderers/aggrid/use-grid-state';
 
+import type { UseQueryOptions } from '@tanstack/react-query';
 import type {
   ColDef,
   ColumnMovedEvent,
@@ -54,6 +55,15 @@ const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 
 /** Shared empty registry — the in-memory grid renders cells inline, not via keys. */
 const EMPTY_CELL_RENDERERS = new CellRendererRegistry();
+
+/**
+ * Vertically-centre cells (parity with the server `AgGridRenderer`). Making cells flex
+ * is ALSO what lets `justify-content` (the center/right alignment classes) work — a
+ * plain block cell ignores `justify-content`, so aligned cells would read left.
+ */
+const IM_DEFAULT_COL_DEF: ColDef = {
+  cellStyle: { display: 'flex', alignItems: 'center' },
+};
 
 /** Stable empty base query key so client-mode consumers add no extra key segments. */
 const EMPTY_QUERY_KEY: ReadonlyArray<unknown> = [];
@@ -127,6 +137,8 @@ export interface InMemoryGridProps<Row> {
   serverParams?: Record<string, unknown>;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`). */
   loadingLabel?: string;
+  /** pass-through React Query options for the server fetch (refetchOnWindowFocus, …). */
+  serverQueryOptions?: Omit<UseQueryOptions<GridPage<Row>>, 'queryKey' | 'queryFn'>;
   /** Gate the server fetch (default: true when a `dataSource` is set). */
   enabled?: boolean;
   /** Total row count fallback when the data source doesn't return one. */
@@ -227,6 +239,7 @@ export function InMemoryGrid<Row>({
   getRowId,
   dataSource,
   loadingLabel,
+  serverQueryOptions,
   queryKey,
   serverParams,
   enabled,
@@ -316,11 +329,13 @@ export function InMemoryGrid<Row>({
   // fallback client (client mode) means no `QueryClientProvider` is required.
   const serverResult = useQuery(
     {
+      // host overrides first; the grid's key/fn + enabled/placeholder defaults win
+      placeholderData: keepPreviousData,
+      ...serverQueryOptions,
       queryKey: [...(queryKey ?? EMPTY_QUERY_KEY), query],
       queryFn: ({ signal }): Promise<GridPage<Row>> =>
         dataSource ? dataSource.fetch(query, signal) : Promise.resolve({ rows: [], total: 0 }),
       enabled: isServerMode && (enabled ?? true),
-      placeholderData: keepPreviousData,
     },
     isServerMode ? undefined : getFallbackQueryClient()
   );
@@ -655,6 +670,7 @@ export function InMemoryGrid<Row>({
       >
         <AgGridReact<DisplayRow<Row>>
           theme={dataGridTheme}
+          defaultColDef={IM_DEFAULT_COL_DEF}
           columnDefs={colDefs}
           rowData={displayRows}
           getRowId={getDisplayRowId}

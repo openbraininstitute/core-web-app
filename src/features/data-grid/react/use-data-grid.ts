@@ -3,7 +3,19 @@ import { useSyncExternalStore } from 'react';
 
 import { buildGridQuery } from '../core';
 
-import type { Facets, GridController, GridDataSource, GridState } from '../core';
+import type { UseQueryOptions } from '@tanstack/react-query';
+import type { Facets, GridController, GridDataSource, GridPage, GridState } from '../core';
+
+/**
+ * Extra React Query knobs a host may pass through to the grid's list query — e.g.
+ * `refetchOnWindowFocus`, `staleTime`, `gcTime`, `retry`, `refetchInterval`. The grid
+ * always owns `queryKey`/`queryFn` (and its own `enabled`/`placeholderData` defaults,
+ * which a caller can still override here).
+ */
+export type DataGridQueryOptions<Row> = Omit<
+  UseQueryOptions<GridPage<Row>, unknown, GridPage<Row>, ReadonlyArray<unknown>>,
+  'queryKey' | 'queryFn'
+>;
 
 export interface UseDataGridArgs<Row> {
   controller: GridController<Row>;
@@ -14,6 +26,8 @@ export interface UseDataGridArgs<Row> {
   /** stable base key; the built query is appended so changes refetch */
   queryKey: ReadonlyArray<unknown>;
   keepPrevious?: boolean;
+  /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …) */
+  queryOptions?: DataGridQueryOptions<Row>;
 }
 
 export interface UseDataGridResult<Row> {
@@ -33,7 +47,15 @@ export interface UseDataGridResult<Row> {
  * pure. State changes rebuild the query, which changes the query key and refetches.
  */
 export function useDataGrid<Row>(args: UseDataGridArgs<Row>): UseDataGridResult<Row> {
-  const { controller, dataSource, params, enabled = true, queryKey, keepPrevious = true } = args;
+  const {
+    controller,
+    dataSource,
+    params,
+    enabled = true,
+    queryKey,
+    keepPrevious = true,
+    queryOptions,
+  } = args;
 
   const state = useSyncExternalStore(
     controller.store.subscribe,
@@ -48,10 +70,12 @@ export function useDataGrid<Row>(args: UseDataGridArgs<Row>): UseDataGridResult<
   const query = buildGridQuery(state, params);
 
   const result = useQuery({
+    // host overrides first; the grid's key/fn + its enabled/placeholder defaults win
+    placeholderData: keepPrevious ? keepPreviousData : undefined,
+    ...queryOptions,
     queryKey: [...queryKey, query],
     queryFn: ({ signal }) => dataSource.fetch(query, signal),
     enabled,
-    placeholderData: keepPrevious ? keepPreviousData : undefined,
   });
 
   return {

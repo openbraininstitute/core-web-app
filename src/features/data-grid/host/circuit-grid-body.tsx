@@ -77,6 +77,12 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
   // into the shared host.
   const isHierarchy = view === CircuitRepresentationView.Hierarchy;
 
+  // A PICKER (workflow "new"/build pages select a circuit) uses the REGULAR browse
+  // grid — no flat/hierarchy toggle, no recursive subcircuits — exactly like the other
+  // workflow pickers. Only the Data → Circuit explore listing (no picker selection)
+  // gets the hierarchy plugin. Detected via the legacy picker surface `selectionType`.
+  const isPicker = Boolean(props.mainTableProps?.selectionType);
+
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
   const dataSource = useMemo(
     () =>
@@ -142,6 +148,12 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
     () => ({ right: <CircuitViewToggle dataKey={dataKey} /> }),
     [dataKey]
   );
+
+  // Picker → the plain shared grid (regular flat listing + picker selection via the
+  // host's `mainTableProps` handling); no circuit hierarchy/flat overrides.
+  if (isPicker) {
+    return <EntityDataGrid {...props} />;
+  }
 
   return (
     <EntityDataGrid

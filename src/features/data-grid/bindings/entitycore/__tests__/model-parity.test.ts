@@ -290,10 +290,10 @@ describe('analysis_notebook_result parity', () => {
       'updateDate',
     ]);
   });
-  it('update date is display + sortable on updated_at with no column filter', () => {
+  it('update date is display + sortable on update_date with no column filter', () => {
     const upd = s.columns.find((c) => c.id === 'updateDate');
     expect(upd?.filter).toBeUndefined();
-    expect(serializeQuery(query(sortDesc('updateDate')), s).order_by).toEqual(['-updated_at']);
+    expect(serializeQuery(query(sortDesc('updateDate')), s).order_by).toEqual(['-update_date']);
     expect(s.columns.find((c) => c.id === 'description')?.filter).toBeUndefined();
     expect(
       serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in

@@ -86,7 +86,7 @@ function scanCardsWidth(cols: number): string {
 function ScanParameterCard({ card }: { card: ScanCard }): ReactNode {
   return (
     // fills its grid column (single card → full popover width); hover greys the whole card
-    <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-100">
+    <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">
       {/* header — title + status, separated from the body by a border (image style) */}
       <div className="flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2">
         <span
@@ -152,7 +152,10 @@ export function CampaignScanCards({
       style={{ width: scanCardsWidth(cols), maxWidth: 'min(88vw, 44rem)' }}
     >
       {title ? (
-        <div className="break-words px-1 text-base font-semibold text-primary-9" title={title}>
+        <div
+          className="break-words border-b border-neutral-2 px-1 pb-2 text-lg font-semibold text-primary-9"
+          title={title}
+        >
           {title}
         </div>
       ) : null}

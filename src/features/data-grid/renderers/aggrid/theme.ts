@@ -77,5 +77,6 @@ export const dataGridTheme = themeQuartz.withParams({
     color: 'var(--color-primary-6, #1668dc)',
   },
   focusShadow: '0 0 0 3px color-mix(in srgb, var(--color-primary-6, #1668dc) 16%, transparent)',
+  checkboxBorderRadius: 4,
   checkboxCheckedBackgroundColor: 'var(--color-primary-6, #1668dc)',
 });

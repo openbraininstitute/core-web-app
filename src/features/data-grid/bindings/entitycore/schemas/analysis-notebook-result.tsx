@@ -17,7 +17,8 @@ import type { EntityGridDefinition } from '../registry';
  *
  * Per the legacy field-defs: the preview renders notebook figures via the shared
  * `NotebookPreviewThumbnail`; Description is DISPLAY-ONLY (`isFilterable: false`);
- * Update date is display + sortable on `updated_at` (legacy `order.value`) with NO
+ * Update date is display + sortable on `update_date` (the backend ordering field —
+ * `updated_at` is rejected as an invalid ordering field) with NO
  * column filter (`isFilterable: false`); Contributors facet-filters on
  * `contribution__pref_label__in` but is not server-sortable for notebooks.
  */
@@ -45,7 +46,7 @@ export const analysisNotebookResultSchema: GridSchema<IAnalysisNotebookResult> =
       id: 'updateDate',
       header: 'Update date',
       sortable: true,
-      sortField: 'updated_at',
+      sortField: 'update_date',
       getValue: (r) => formatDate(r.update_date),
       width: { minWidth: 150 },
     },

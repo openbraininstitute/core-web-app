@@ -9,6 +9,7 @@ import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
 import { InMemoryGrid } from './in-memory-grid';
 
+import type { UseQueryOptions } from '@tanstack/react-query';
 import type {
   ColDef,
   GetRowIdParams,
@@ -20,7 +21,7 @@ import type {
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
-import type { ColumnModel, GridDataSource, OperatorRegistry, SortModel } from '../core';
+import type { ColumnModel, GridDataSource, GridPage, OperatorRegistry, SortModel } from '../core';
 
 registerDataGridModules();
 
@@ -85,6 +86,8 @@ export interface SimpleServerSide<Row> {
   enabled?: boolean;
   /** Total row count fallback when the data source doesn't return one. */
   total?: number;
+  /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …). */
+  queryOptions?: Omit<UseQueryOptions<GridPage<Row>>, 'queryKey' | 'queryFn'>;
 }
 
 export interface SimpleGridProps<Row> {
@@ -401,6 +404,7 @@ export function SimpleGrid<Row>(props: SimpleGridProps<Row>) {
       serverParams={serverSide?.params}
       enabled={serverSide?.enabled}
       total={serverSide?.total}
+      serverQueryOptions={serverSide?.queryOptions}
       loadingLabel={props.loadingLabel}
       filterable={props.filterable}
       showColumnChooser={props.showColumnChooser}

@@ -23,6 +23,7 @@ import type {
   GridRendererProps,
 } from './renderer';
 import type { DataGridToolbarSlots } from './toolbar';
+import type { DataGridQueryOptions } from './use-data-grid';
 
 /**
  * Picker selection mode. When present, the grid renders a single (radio) / multi
@@ -54,6 +55,8 @@ export interface DataGridProps<Row> {
   /** opaque host params merged into the request (brain-region, scope, with_facets, …) */
   params?: Record<string, unknown>;
   enabled?: boolean;
+  /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …) */
+  queryOptions?: DataGridQueryOptions<Row>;
   /** external facets override (when the host computes facets separately) */
   facets?: Facets;
   detail?: DetailRuntime<Row>;
@@ -94,6 +97,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     queryKey,
     params,
     enabled,
+    queryOptions,
     facets: externalFacets,
     detail,
     onRowClick,
@@ -117,6 +121,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     params,
     enabled,
     queryKey,
+    queryOptions,
   });
 
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
@@ -201,7 +206,9 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
 
   if (error && renderError) {
     return (
-      <div className={cn('flex h-full min-h-0 flex-col', className)}>{renderError(error)}</div>
+      <div className={cn('flex h-full min-h-0 flex-col items-center justify-center', className)}>
+        {renderError(error)}
+      </div>
     );
   }
 
