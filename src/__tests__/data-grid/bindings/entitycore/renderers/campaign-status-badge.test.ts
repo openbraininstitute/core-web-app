@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-
-import { formatScanValue, toScanCardData } from '../campaign-scan-cards';
-import { aggregateCampaignStatus, getCampaignStatusBadgeSpec } from '../campaign-status-badge';
+import {
+  formatScanValue,
+  toScanCardData,
+} from '@/features/data-grid/bindings/entitycore/renderers/campaign-scan-cards';
+import {
+  aggregateCampaignStatus,
+  getCampaignStatusBadgeSpec,
+} from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
 
 describe('getCampaignStatusBadgeSpec (status → badge colours)', () => {
   it('every status is a LIGHT bg + full-colour border/text/chip (Done-green template)', () => {

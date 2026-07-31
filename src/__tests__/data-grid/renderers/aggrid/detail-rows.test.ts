@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { detailRowId, interleaveDetailRows, isDetailRow } from './detail-rows';
+import {
+  detailRowId,
+  interleaveDetailRows,
+  isDetailRow,
+} from '@/features/data-grid/renderers/aggrid/detail-rows';
 
 type Row = { id: string; name: string };
 

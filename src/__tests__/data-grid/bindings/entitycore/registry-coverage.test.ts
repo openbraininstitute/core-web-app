@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { getEntityGridDefinition } from '../registry';
+import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 

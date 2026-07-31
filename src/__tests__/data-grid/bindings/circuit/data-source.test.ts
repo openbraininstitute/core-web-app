@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { circuitSchema } from '../../entitycore/schemas/circuit';
-import { CIRCUIT_VIEW_PARAM, createCircuitDataSource } from '../data-source';
+import {
+  CIRCUIT_VIEW_PARAM,
+  createCircuitDataSource,
+} from '@/features/data-grid/bindings/circuit/data-source';
+import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
 
 import type { QueryClient } from '@tanstack/react-query';
-import type { IGridQuery } from '../../../core';
+import type { IGridQuery } from '@/features/data-grid/core';
 
 // Mock the entitycore circuit queries so the FLAT branch never hits the network; the
 // flat path delegates through `Circuit.api.query.list` → `getCircuits`.

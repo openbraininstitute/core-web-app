@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { byContext } from './contextual';
-import { mergeColumnDef } from './merge-column';
-import { defaultHiddenColumnIds, isSelectionEnabled, resolveColumns } from './resolve-schema';
+import { byContext } from '@/features/data-grid/core/domain/contextual';
+import { mergeColumnDef } from '@/features/data-grid/core/domain/merge-column';
+import {
+  defaultHiddenColumnIds,
+  isSelectionEnabled,
+  resolveColumns,
+} from '@/features/data-grid/core/domain/resolve-schema';
 
-import type { IGridContext } from './grid-context';
-import type { IGridSchema } from './schema';
+import type { IGridContext } from '@/features/data-grid/core/domain/grid-context';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 type Row = { id: string };
 

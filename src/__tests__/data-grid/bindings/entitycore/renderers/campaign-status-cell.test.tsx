@@ -3,8 +3,7 @@ import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-
-import { CampaignStatusBadgePopover } from '../campaign-status-cell';
+import { CampaignStatusBadgePopover } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-cell';
 
 import type { ReactNode } from 'react';
 

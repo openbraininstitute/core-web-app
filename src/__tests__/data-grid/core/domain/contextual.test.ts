@@ -6,9 +6,9 @@ import {
   mergeContextual,
   resolveContextual,
   whenMatches,
-} from './contextual';
+} from '@/features/data-grid/core/domain/contextual';
 
-import type { IGridContext } from './grid-context';
+import type { IGridContext } from '@/features/data-grid/core/domain/grid-context';
 
 const ctx = (over: Partial<IGridContext> = {}): IGridContext => ({
   dataType: 'cell_morphology',

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { FilterValueKind, OperatorId, SortDirection } from '../../core';
 import {
   computeInMemoryFacets,
   createInMemoryDataSource,
   runInMemoryQuery,
   type TInMemoryColumn,
-} from './data-source';
+} from '@/features/data-grid/bindings/inmemory/data-source';
+import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
-import type { IGridQuery } from '../../core';
+import type { IGridQuery } from '@/features/data-grid/core';
 
 interface Row {
   id: string;

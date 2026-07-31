@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { accumulateSeenRows } from './bulk-actions';
+import { accumulateSeenRows } from '@/features/data-grid/react/bulk-actions';
 
 type Row = { id: string; name: string };
 

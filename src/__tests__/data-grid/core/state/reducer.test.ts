@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { FilterValueKind } from '../domain/filter-model';
-import { SortDirection } from '../domain/sort-model';
-import { createInitialState } from '../grid-controller';
-import { GridActionType } from './grid-state';
-import { reducer } from './reducer';
+import { FilterValueKind } from '@/features/data-grid/core/domain/filter-model';
+import { SortDirection } from '@/features/data-grid/core/domain/sort-model';
+import { createInitialState } from '@/features/data-grid/core/grid-controller';
+import { GridActionType } from '@/features/data-grid/core/state/grid-state';
+import { reducer } from '@/features/data-grid/core/state/reducer';
 
-import type { IGridSchema } from '../domain/schema';
-import type { IGridState } from './grid-state';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
+import type { IGridState } from '@/features/data-grid/core/state/grid-state';
 
 const schema: IGridSchema<{ id: string }> = {
   id: 'test',

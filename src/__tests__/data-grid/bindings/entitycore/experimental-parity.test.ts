@@ -1,19 +1,28 @@
 import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
+import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import { electricalCellRecordingSchema } from '@/features/data-grid/bindings/entitycore/schemas/electrical-cell-recording';
+import { emCellMeshSchema } from '@/features/data-grid/bindings/entitycore/schemas/em-cell-mesh';
+import { experimentalBoutonDensitySchema } from '@/features/data-grid/bindings/entitycore/schemas/experimental-bouton-density';
+import { experimentalNeuronDensitySchema } from '@/features/data-grid/bindings/entitycore/schemas/experimental-neuron-density';
+import { experimentalSynapsesPerConnectionSchema } from '@/features/data-grid/bindings/entitycore/schemas/experimental-synapses-per-connection';
+import { ionChannelRecordingSchema } from '@/features/data-grid/bindings/entitycore/schemas/ion-channel-recording';
+import { synthesizedCellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/synthesized-cell-morphology';
+import { universalCellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/universal-cell-morphology';
+import {
+  FilterValueKind,
+  OperatorId,
+  resolveColumns,
+  SortDirection,
+} from '@/features/data-grid/core';
 
-import { FilterValueKind, OperatorId, resolveColumns, SortDirection } from '../../../core';
-import { serializeQuery } from '../query-serializer';
-import { electricalCellRecordingSchema } from '../schemas/electrical-cell-recording';
-import { emCellMeshSchema } from '../schemas/em-cell-mesh';
-import { experimentalBoutonDensitySchema } from '../schemas/experimental-bouton-density';
-import { experimentalNeuronDensitySchema } from '../schemas/experimental-neuron-density';
-import { experimentalSynapsesPerConnectionSchema } from '../schemas/experimental-synapses-per-connection';
-import { ionChannelRecordingSchema } from '../schemas/ion-channel-recording';
-import { synthesizedCellMorphologySchema } from '../schemas/synthesized-cell-morphology';
-import { universalCellMorphologySchema } from '../schemas/universal-cell-morphology';
-
-import type { IGridContext, IGridQuery, IGridSchema, TFilterModel } from '../../../core';
+import type {
+  IGridContext,
+  IGridQuery,
+  IGridSchema,
+  TFilterModel,
+} from '@/features/data-grid/core';
 
 /**
  * Per-entity parity harness for the experimental batch: locks the serialized query

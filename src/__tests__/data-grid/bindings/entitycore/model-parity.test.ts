@@ -1,18 +1,27 @@
 import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
+import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import { analysisNotebookResultSchema } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-result';
+import { analysisNotebookTemplateSchema } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-template';
+import { emodelSchema } from '@/features/data-grid/bindings/entitycore/schemas/emodel';
+import { ionChannelModelSchema } from '@/features/data-grid/bindings/entitycore/schemas/ion-channel-model';
+import { meModelCircuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/me-model-circuit';
+import { memodelSchema } from '@/features/data-grid/bindings/entitycore/schemas/memodel';
+import { singleNeuronSynaptomeSchema } from '@/features/data-grid/bindings/entitycore/schemas/single-neuron-synaptome';
+import {
+  FilterValueKind,
+  OperatorId,
+  resolveColumns,
+  SortDirection,
+} from '@/features/data-grid/core';
 
-import { FilterValueKind, OperatorId, resolveColumns, SortDirection } from '../../../core';
-import { serializeQuery } from '../query-serializer';
-import { analysisNotebookResultSchema } from '../schemas/analysis-notebook-result';
-import { analysisNotebookTemplateSchema } from '../schemas/analysis-notebook-template';
-import { emodelSchema } from '../schemas/emodel';
-import { ionChannelModelSchema } from '../schemas/ion-channel-model';
-import { meModelCircuitSchema } from '../schemas/me-model-circuit';
-import { memodelSchema } from '../schemas/memodel';
-import { singleNeuronSynaptomeSchema } from '../schemas/single-neuron-synaptome';
-
-import type { IGridContext, IGridQuery, IGridSchema, TFilterModel } from '../../../core';
+import type {
+  IGridContext,
+  IGridQuery,
+  IGridSchema,
+  TFilterModel,
+} from '@/features/data-grid/core';
 
 /**
  * Per-entity parity harness for the model + notebook batch (Groups 2/3/7). Locks the

@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import { FilterValueKind, OperatorId, SortDirection } from '../../../core';
-import { serializeQuery } from '../query-serializer';
-import { circuitSchema } from '../schemas/circuit';
+import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
+import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-import type { IGridQuery, TFilterModel } from '../../../core';
+import type { IGridQuery, TFilterModel } from '@/features/data-grid/core';
 
 /**
  * Golden parity for the circuit FLAT branch. The circuit data source's flat view

@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
 import { regionCircuitSimulationExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
-
-import { FilterValueKind, OperatorId, resolveColumns, SortDirection } from '../../../core';
-import { serializeQuery } from '../query-serializer';
+import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import {
   buildSimulationCampaignDefinition,
   ionChannelModelSimulationGridDefinition,
@@ -15,12 +13,23 @@ import {
   singleNeuronCircuitSimulationGridDefinition,
   smallMicrocircuitSimulationGridDefinition,
   wholeBrainCircuitSimulationGridDefinition,
-} from '../schemas/circuit-simulations';
-import { simulationCampaignGridDefinition } from '../schemas/simulation-campaign';
+} from '@/features/data-grid/bindings/entitycore/schemas/circuit-simulations';
+import { simulationCampaignGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/simulation-campaign';
+import {
+  FilterValueKind,
+  OperatorId,
+  resolveColumns,
+  SortDirection,
+} from '@/features/data-grid/core';
 
-import type { IGridContext, IGridQuery, IGridSchema, TFilterModel } from '../../../core';
-import type { IEntityGridDefinition } from '../registry';
-import type { ICampaignRow } from '../schemas/campaign-common';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { ICampaignRow } from '@/features/data-grid/bindings/entitycore/schemas/campaign-common';
+import type {
+  IGridContext,
+  IGridQuery,
+  IGridSchema,
+  TFilterModel,
+} from '@/features/data-grid/core';
 
 /**
  * T-05 parity harness for the expandable circuit-simulation dataTypes. Locks (a) the

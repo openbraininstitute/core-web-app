@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { FilterValueKind, OperatorId, SortDirection } from '../../core';
-import { serializeQuery, toContainsPattern } from './query-serializer';
+import {
+  serializeQuery,
+  toContainsPattern,
+} from '@/features/data-grid/bindings/entitycore/query-serializer';
+import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
-import type { IFilterEntry, IGridQuery, IGridSchema, TFilterValue } from '../../core';
+import type {
+  IFilterEntry,
+  IGridQuery,
+  IGridSchema,
+  TFilterValue,
+} from '@/features/data-grid/core';
 
 type Row = { id: string };
 

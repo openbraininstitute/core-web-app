@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { viewDefForCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/cell-morphology';
-
-import { FilterValueKind, OperatorId, SortDirection } from '../../../core';
-import { serializeQuery } from '../query-serializer';
-import { cellMorphologySchema } from '../schemas/cell-morphology';
+import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
+import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-import type { IGridQuery, TFilterModel } from '../../../core';
+import type { IGridQuery, TFilterModel } from '@/features/data-grid/core';
 
 /**
  * Per-entity parity harness for cell_morphology. Locks the AG Grid grid's serialized

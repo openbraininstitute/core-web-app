@@ -2,13 +2,27 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { Align, createDefaultOperatorRegistry, GridController, OperatorId } from '../core';
-import { CellRendererRegistry } from './cell-renderer-registry';
-import { DataGrid } from './data-grid';
+import {
+  Align,
+  createDefaultOperatorRegistry,
+  GridController,
+  OperatorId,
+} from '@/features/data-grid/core';
+import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
+import { DataGrid } from '@/features/data-grid/react/data-grid';
 
 import type { ReactNode } from 'react';
-import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema } from '../core';
-import type { IExpandColumnConfig, IGridRendererProps, TGridRenderer } from './renderer';
+import type {
+  IGridDataSource,
+  IGridPage,
+  IGridQuery,
+  IGridSchema,
+} from '@/features/data-grid/core';
+import type {
+  IExpandColumnConfig,
+  IGridRendererProps,
+  TGridRenderer,
+} from '@/features/data-grid/react/renderer';
 
 interface Row {
   id: string;

@@ -2,12 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Align, OperatorId, SortDirection } from '../core';
-import { buildSimpleColDefs, SimpleGrid } from './simple-grid';
+import { Align, OperatorId, SortDirection } from '@/features/data-grid/core';
+import { buildSimpleColDefs, SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 
 import type { ReactNode } from 'react';
-import type { IGridDataSource, IGridPage, IGridQuery } from '../core';
-import type { ISimpleColumn } from './simple-grid';
+import type { IGridDataSource, IGridPage, IGridQuery } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 function withQuery(ui: ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });

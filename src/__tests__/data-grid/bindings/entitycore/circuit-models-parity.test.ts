@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import { FilterValueKind, OperatorId, resolveColumns, SortDirection } from '../../../core';
-import { serializeQuery } from '../query-serializer';
+import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import {
   brainRegionGridDefinition,
   microCircuitGridDefinition,
@@ -12,12 +10,23 @@ import {
   singleNeuronCircuitGridDefinition,
   smallMicroCircuitGridDefinition,
   wholeBrainGridDefinition,
-} from '../schemas/circuit-models';
-import { extracellularRecordingArraySchema } from '../schemas/extracellular-recording-array';
-import { singleNeuronSimulationSchema } from '../schemas/single-neuron-simulation';
-import { singleNeuronSynaptomeSimulationSchema } from '../schemas/single-neuron-synaptome-simulation';
+} from '@/features/data-grid/bindings/entitycore/schemas/circuit-models';
+import { extracellularRecordingArraySchema } from '@/features/data-grid/bindings/entitycore/schemas/extracellular-recording-array';
+import { singleNeuronSimulationSchema } from '@/features/data-grid/bindings/entitycore/schemas/single-neuron-simulation';
+import { singleNeuronSynaptomeSimulationSchema } from '@/features/data-grid/bindings/entitycore/schemas/single-neuron-synaptome-simulation';
+import {
+  FilterValueKind,
+  OperatorId,
+  resolveColumns,
+  SortDirection,
+} from '@/features/data-grid/core';
 
-import type { IGridContext, IGridQuery, IGridSchema, TFilterModel } from '../../../core';
+import type {
+  IGridContext,
+  IGridQuery,
+  IGridSchema,
+  TFilterModel,
+} from '@/features/data-grid/core';
 
 /**
  * Parity harness for the 9 model/simulation schemas flipped to AG Grid. Locks (a) the

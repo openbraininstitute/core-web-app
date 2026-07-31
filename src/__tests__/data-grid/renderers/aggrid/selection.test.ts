@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mergePageSelection } from './selection';
+import { mergePageSelection } from '@/features/data-grid/renderers/aggrid/selection';
 
 describe('mergePageSelection', () => {
   it('single mode REPLACES the whole selection with the current page pick', () => {

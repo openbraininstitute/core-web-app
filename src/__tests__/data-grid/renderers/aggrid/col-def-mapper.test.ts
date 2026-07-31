@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { Align } from '../../core';
-import { AgCellHost } from './cell-host';
-import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
-import { AgExpandHostCell } from './expand-host-cell';
+import { Align } from '@/features/data-grid/core';
+import { AgCellHost } from '@/features/data-grid/renderers/aggrid/cell-host';
+import { buildColDefs, EXPAND_COL_ID } from '@/features/data-grid/renderers/aggrid/col-def-mapper';
+import { AgExpandHostCell } from '@/features/data-grid/renderers/aggrid/expand-host-cell';
 
-import type { IResolvedColumn } from '../../core';
+import type { IResolvedColumn } from '@/features/data-grid/core';
 
 interface Row {
   id: string;
