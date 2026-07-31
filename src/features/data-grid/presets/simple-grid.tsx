@@ -108,6 +108,12 @@ export interface SimpleGridProps<Row> {
   hideHeader?: boolean;
   /** Enable a pinned checkbox/radio selection column. Omit to disable selection. */
   rowSelection?: SimpleRowSelection<Row>;
+  /**
+   * Draw the divider border on pinned columns (default: true). The data-section
+   * selection column wants it; a table that merely pins an actions column to the
+   * right (e.g. project activities) can turn it off for a seamless look.
+   */
+  pinnedColumnBorder?: boolean;
   /** Extra classes for the grid wrapper. */
   className?: string;
 
@@ -210,6 +216,28 @@ const DEFAULT_COL_DEF: ColDef = {
 };
 
 /**
+ * Removes the divider border AG Grid draws on pinned columns (cells + headers, both
+ * edges). Applied to the grid wrapper when `pinnedColumnBorder` is false.
+ */
+const NO_PINNED_BORDER_CLASS = cn(
+  '[&_.ag-cell.ag-cell-last-left-pinned]:border-r-0!',
+  '[&_.ag-cell.ag-cell-first-right-pinned]:border-l-0!',
+  '[&_.ag-header-cell.ag-header-cell-last-left-pinned]:border-r-0!',
+  '[&_.ag-header-cell.ag-header-cell-first-right-pinned]:border-l-0!',
+  '[&_.ag-pinned-left-header]:border-r-0! [&_.ag-pinned-right-header]:border-l-0!',
+  '[&_.ag-pinned-left-cols-container]:border-r-0! [&_.ag-pinned-right-cols-container]:border-l-0!'
+);
+
+/** Wrapper class for a SimpleGrid, folding in the pinned-border toggle. */
+function simpleGridWrapperClass(className?: string, pinnedColumnBorder = true): string {
+  return cn(
+    'ag-data-grid w-full',
+    pinnedColumnBorder ? undefined : NO_PINNED_BORDER_CLASS,
+    className
+  );
+}
+
+/**
  * A light-weight grid preset for STATIC / nested tables (non-entitycore): AG Grid's
  * client-side row model with the shared {@link dataGridTheme}, optional client-side
  * pagination and sorting. No controller, no data source, no React Query — pass
@@ -249,6 +277,7 @@ function SimpleGridBasic<Row>({
   sortable = false,
   hideHeader = false,
   rowSelection,
+  pinnedColumnBorder = true,
   className,
 }: SimpleGridProps<Row>) {
   const [mounted, setMounted] = useState(false);
@@ -312,10 +341,10 @@ function SimpleGridBasic<Row>({
     applySelection();
   }, [applySelection]);
 
-  if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
+  if (!mounted) return <div className={simpleGridWrapperClass(className, pinnedColumnBorder)} />;
 
   return (
-    <div className={cn('ag-data-grid w-full', className)}>
+    <div className={simpleGridWrapperClass(className, pinnedColumnBorder)}>
       <AgGridReact<Row>
         theme={dataGridTheme}
         defaultColDef={DEFAULT_COL_DEF}
@@ -378,7 +407,10 @@ export function SimpleGrid<Row>(props: SimpleGridProps<Row>) {
       hideHeader={props.hideHeader}
       rowSelection={props.rowSelection}
       operators={props.operators}
-      className={props.className}
+      className={cn(
+        props.className,
+        props.pinnedColumnBorder === false ? NO_PINNED_BORDER_CLASS : undefined
+      )}
     />
   );
 }

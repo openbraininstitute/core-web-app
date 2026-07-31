@@ -118,19 +118,18 @@ export function ProjectActivities({
     {
       id: 'creation_date',
       header: 'Date',
+      width: { flex: 1 },
       renderCell: (record) => (
         <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>
       ),
     },
     {
-      id: 'spacer',
-      header: '',
-      width: { flex: 1 },
-    },
-    {
       id: 'linkUrl',
       header: 'Actions',
       align: 'center',
+      pinned: 'right',
+      // action column: fixed width, not resizable (so only Date shows a resize handle)
+      width: { width: 96, resizable: false },
       renderCell: (record) => {
         const status = get(record, 'status', 'default');
         const color = get(StatusMap, status, null)?.color;
@@ -178,6 +177,7 @@ export function ProjectActivities({
               columns={columns}
               getRowId={(o) => o.id}
               pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+              pinnedColumnBorder={false}
               serverSide={{
                 dataSource,
                 queryKey: ['project-activities', virtualLabId, projectId, activity, entityType],
