@@ -25,6 +25,7 @@ import {
   FilterValueKind,
   GridActionType,
   isEmptyFilterValue,
+  isFreeEntryTarget,
   OperatorUiKind,
 } from '../../../core';
 import {
@@ -34,11 +35,13 @@ import {
   GRID_SELECT_TRIGGER_CLASS,
 } from '../../../react/molecules-theme';
 import { useGridState } from '../use-grid-state';
+import { splitIdTokens } from './id-tokens';
 import { useSetOptions } from './use-set-options';
 
 import type { DateRange } from 'react-day-picker';
-import type { TFilterOptionsSource, TFilterValue } from '../../../core';
+import type { IFilterTarget, TFilterOptionsSource, TFilterValue } from '../../../core';
 import type { IAgGridContext } from '../ag-context';
+import type { IIdTokenSplit } from './id-tokens';
 
 const COMMIT_DEBOUNCE_MS = 250;
 
@@ -49,11 +52,12 @@ export interface IFilterEditorProps {
   ctx: IAgGridContext;
   columnId: string;
   columnName: string;
-  /** key for facet-option lookup (not the serialization field) */
-  facetKey: string;
-  operatorIds: string[];
-  optionsSource?: TFilterOptionsSource;
-  description?: string;
+  /**
+   * Fields this column can be matched by, already filtered for context and for the
+   * grid's advanced-filters setting. A classic single-field column passes exactly
+   * one target and the "match by" switch is not rendered.
+   */
+  targets: ReadonlyArray<IFilterTarget>;
   /** close the popover (Apply / done) */
   onClose: () => void;
 }
@@ -91,20 +95,30 @@ function toDateOrUndefined(iso: string | null): Date | undefined {
  * `ui/molecules` primitives (rounded-xl), it drives the headless store directly —
  * no AG Grid filter model — so styling and positioning are fully ours.
  */
-export function FilterEditor({
-  ctx,
-  columnId,
-  columnName,
-  facetKey,
-  operatorIds,
-  optionsSource,
-  description,
-  onClose,
-}: IFilterEditorProps) {
+export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IFilterEditorProps) {
   const state = useGridState(ctx.controller);
   const current = state.filters[columnId];
 
-  const [operator, setOperator] = useState<string>(current?.operator ?? operatorIds[0]);
+  // WHICH FIELD we match by. An entry written before targets existed (or naming a
+  // target that is no longer offered) falls back to the first target — today's
+  // single-field behaviour.
+  const [targetId, setTargetId] = useState<string>(() =>
+    current?.targetId && targets.some((t) => t.id === current.targetId)
+      ? current.targetId
+      : targets[0].id
+  );
+  const target = targets.find((t) => t.id === targetId) ?? targets[0];
+  const operatorIds = target.operators;
+  const facetKey = target.facetKey ?? target.field;
+  const optionsSource = target.options;
+  const description = target.description;
+  // A target with no option source collects pasted ids instead of facet checkboxes.
+  const freeEntry = isFreeEntryTarget(target);
+
+  // The current entry's operator only applies while its target is the active one.
+  const [operator, setOperator] = useState<string>(() =>
+    current && (current.targetId ?? targets[0].id) === target.id ? current.operator : operatorIds[0]
+  );
   const operatorDef = ctx.operators.get(operator);
   const uiKind = operatorDef.uiKind;
   // Per-operator (per-type) commit behavior; unset → deferred `apply` (the default).
@@ -116,6 +130,18 @@ export function FilterEditor({
     current && current.operator === operator ? current.value : emptyForUiKind(uiKind)
   );
 
+  // Free-entry ids are edited as raw pasted text; the chips and the committed value
+  // are derived from it, so a malformed token stays visible (and blocks Apply)
+  // instead of being silently dropped.
+  const [idDraft, setIdDraft] = useState<string>(() =>
+    current?.value.kind === FilterValueKind.Set &&
+    (current.targetId ?? targets[0].id) === target.id &&
+    freeEntry
+      ? current.value.values.join('\n')
+      : ''
+  );
+  const idTokens = useMemo(() => splitIdTokens(idDraft), [idDraft]);
+
   const commit = (v: TFilterValue | null) => {
     if (v === null || isEmptyFilterValue(v)) {
       ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
@@ -123,11 +149,15 @@ export function FilterEditor({
       ctx.controller.store.dispatch({
         type: GridActionType.SetFilter,
         columnId,
-        entry: { columnId, operator, value: v },
+        entry: { columnId, operator, targetId: target.id, value: v },
       });
     }
   };
-  const debouncedCommit = useDebouncedCallback(commit, [columnId, operator], COMMIT_DEBOUNCE_MS);
+  const debouncedCommit = useDebouncedCallback(
+    commit,
+    [columnId, operator, target.id],
+    COMMIT_DEBOUNCE_MS
+  );
 
   // Update the working value; only push to the grid now when the operator commits
   // immediately (typed inputs are debounced so we don't refetch on every keystroke).
@@ -143,11 +173,33 @@ export function FilterEditor({
     debouncedCommit.cancel();
     setOperator(op);
     setPending(emptyForUiKind(ctx.operators.get(op).uiKind));
+    setIdDraft('');
     ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
   };
 
+  /**
+   * Switching the matched field starts over: a UUID is meaningless as a name chip
+   * (and vice versa), so the pending value is cleared and the operator resets to the
+   * new target's default.
+   */
+  const onTargetChange = (id: string) => {
+    if (id === target.id) return;
+    const next = targets.find((t) => t.id === id) ?? targets[0];
+    const nextOperator = next.operators[0];
+    debouncedCommit.cancel();
+    setTargetId(next.id);
+    setOperator(nextOperator);
+    setPending(emptyForUiKind(ctx.operators.get(nextOperator).uiKind));
+    setIdDraft('');
+    ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
+  };
+
+  // A malformed id must never reach the API.
+  const applyBlocked = freeEntry && idTokens.invalid.length > 0;
+
   const onApply = () => {
     // commit the working value (a no-op re-commit in immediate mode) and close
+    if (applyBlocked) return;
     debouncedCommit.cancel();
     commit(isEmptyFilterValue(pending) ? null : pending);
     onClose();
@@ -156,6 +208,7 @@ export function FilterEditor({
   const onReset = () => {
     debouncedCommit.cancel();
     setPending(emptyForUiKind(uiKind));
+    setIdDraft('');
     commit(null);
   };
 
@@ -170,6 +223,32 @@ export function FilterEditor({
         <span className="text-[13px] font-semibold text-primary-8">{columnName || 'Filter'}</span>
         {description ? <span className="text-xs text-gray-400">{description}</span> : null}
       </div>
+
+      {targets.length > 1 && (
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] font-medium tracking-wide text-gray-400 uppercase">
+            Match by
+          </span>
+          <div className="flex items-center gap-0.5 rounded-xl bg-gray-100 p-0.5">
+            {targets.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={t.id === target.id}
+                onClick={() => onTargetChange(t.id)}
+                className={cn(
+                  'flex-1 rounded-[10px] px-2 py-1 text-xs font-medium transition-colors',
+                  t.id === target.id
+                    ? 'bg-white text-primary-8 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {operatorIds.length > 1 && (
         <Select value={operator} onValueChange={onOperatorChange}>
@@ -309,15 +388,25 @@ export function FilterEditor({
           );
         })()}
 
-      {uiKind === OperatorUiKind.Set && (
-        <SetEditor
-          facetKey={facetKey}
-          optionsSource={optionsSource}
-          ctx={ctx}
-          selected={pending.kind === FilterValueKind.Set ? pending.values : []}
-          onChange={(values) => change({ kind: FilterValueKind.Set, values })}
-        />
-      )}
+      {uiKind === OperatorUiKind.Set &&
+        (freeEntry ? (
+          <IdTokenEditor
+            draft={idDraft}
+            tokens={idTokens}
+            onDraftChange={(text) => {
+              setIdDraft(text);
+              change({ kind: FilterValueKind.Set, values: splitIdTokens(text).valid });
+            }}
+          />
+        ) : (
+          <SetEditor
+            facetKey={facetKey}
+            optionsSource={optionsSource}
+            ctx={ctx}
+            selected={pending.kind === FilterValueKind.Set ? pending.values : []}
+            onChange={(values) => change({ kind: FilterValueKind.Set, values })}
+          />
+        ))}
 
       <div className="mt-0.5 flex items-center justify-between border-t border-gray-100 pt-3">
         <button
@@ -329,12 +418,83 @@ export function FilterEditor({
         </button>
         <button
           type="button"
-          className="rounded-xl bg-primary-8 px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-primary-9"
+          disabled={applyBlocked}
+          className={cn(
+            'rounded-xl px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors',
+            applyBlocked ? 'cursor-not-allowed bg-gray-300' : 'bg-primary-8 hover:bg-primary-9'
+          )}
           onClick={onApply}
         >
           Apply
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Free-entry value editor for id targets. Accepts one OR many ids pasted in any
+ * shape (whitespace / comma / newline separated), renders them as chips, and marks
+ * every token that is not a well-formed UUID in a danger chip — those block Apply
+ * rather than being silently sent to the API. Removing a chip rewrites the draft, so
+ * the textarea and the chips never drift apart.
+ */
+function IdTokenEditor({
+  draft,
+  tokens,
+  onDraftChange,
+}: {
+  draft: string;
+  tokens: IIdTokenSplit;
+  onDraftChange: (text: string) => void;
+}) {
+  const remove = (token: string) =>
+    onDraftChange(tokens.tokens.filter((t) => t !== token).join('\n'));
+
+  return (
+    <div className="flex flex-col gap-2">
+      <textarea
+        rows={3}
+        className={cn(INPUT_CLASS, 'min-h-16 resize-y py-2 leading-5')}
+        placeholder="Paste one or more ids…"
+        value={draft}
+        onChange={(e) => onDraftChange(e.target.value)}
+      />
+
+      {tokens.tokens.length > 0 && (
+        <div className="flex max-h-32 flex-wrap gap-1 overflow-auto">
+          {tokens.tokens.map((token) => {
+            const invalid = tokens.invalid.includes(token);
+            return (
+              <span
+                key={token}
+                title={token}
+                className={cn(
+                  'flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[11px]',
+                  invalid ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-primary-8'
+                )}
+              >
+                <span className="truncate font-mono">{token}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${token}`}
+                  className="shrink-0 text-gray-400 hover:text-gray-700"
+                  onClick={() => remove(token)}
+                >
+                  ×
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {tokens.invalid.length > 0 && (
+        <span className="text-[11px] text-red-600">
+          {tokens.invalid.length} invalid id{tokens.invalid.length > 1 ? 's' : ''} — remove them to
+          apply.
+        </span>
+      )}
     </div>
   );
 }

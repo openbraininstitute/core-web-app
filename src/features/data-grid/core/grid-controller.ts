@@ -1,3 +1,4 @@
+import { hydrateFilterTargetIds } from './domain/filter-targets';
 import { resolveColumns } from './domain/resolve-schema';
 import { GridActionType } from './state/grid-state';
 import { GridStateStore } from './state/grid-state-store';
@@ -94,6 +95,12 @@ export class GridController<Row> {
         const slice = p.load(instanceKey);
         if (slice) hydrated = { ...hydrated, ...slice };
       }
+      // Stored entries predate filter targets: default a missing/stale `targetId`
+      // to the column's first target so old snapshots keep resolving to a field.
+      hydrated = {
+        ...hydrated,
+        filters: hydrateFilterTargetIds(hydrated.filters, options.schema),
+      };
     }
 
     this.store = new GridStateStore(hydrated);

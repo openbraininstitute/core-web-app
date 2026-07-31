@@ -16,7 +16,7 @@ import { useGridState } from './use-grid-state';
 
 import type { CustomHeaderProps } from 'ag-grid-react';
 import type { MouseEvent, ReactNode } from 'react';
-import type { TFilterOptionsSource } from '../../core';
+import type { IFilterTarget } from '../../core';
 import type { IAgGridContext } from './ag-context';
 
 interface HeaderParams {
@@ -28,12 +28,12 @@ interface HeaderParams {
    * plain `displayName` string. Backward-compatible: omit it for a text header.
    */
   headerNode?: ReactNode;
-  /** filter configuration, present when the column is filterable in this context */
+  /**
+   * filter configuration, present when the column is filterable in this context.
+   * `targets` are the fields it can be matched by (one for a classic column).
+   */
   filter?: {
-    facetKey: string;
-    operatorIds: string[];
-    optionsSource?: TFilterOptionsSource;
-    description?: string;
+    targets: ReadonlyArray<IFilterTarget>;
   };
 }
 
@@ -143,10 +143,7 @@ export function AgHeader(props: CustomHeaderProps) {
               ctx={ctx}
               columnId={columnId}
               columnName={props.displayName ?? ''}
-              facetKey={filter.facetKey}
-              operatorIds={filter.operatorIds}
-              optionsSource={filter.optionsSource}
-              description={filter.description}
+              targets={filter.targets}
               onClose={() => setOpen(false)}
             />
           </PopoverContent>

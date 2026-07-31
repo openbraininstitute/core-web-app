@@ -38,6 +38,38 @@ export type TFilterOptionsSource =
       load: () => Promise<Array<{ id: string; label: string }>>;
     };
 
+/**
+ * One backend field a column can be filtered BY ("match by name" vs "match by id").
+ * A column declares its targets on {@link IColumnFilter.targets}; the filter editor
+ * renders a segmented switch when more than one is visible, and the active target's
+ * {@link field} is what the binding serializes.
+ *
+ * The legacy flat `{ field, operators, options, facetKey, description }` on
+ * {@link IColumnFilter} IS an implicit single target — see `resolveFilterTargets`,
+ * which synthesises it when {@link IColumnFilter.targets} is absent, so every
+ * pre-existing schema keeps working untouched.
+ */
+export interface IFilterTarget {
+  /** stable id, persisted on the filter entry (`'name'`, `'id'`, `'acronym'`, …) */
+  id: string;
+  /** sentence-case label shown in the "match by" switch */
+  label: string;
+  /** backend field used for serializing the filter when this target is active */
+  field: string;
+  /** ordered operator ids valid FOR THIS TARGET; index 0 is the default */
+  operators: string[];
+  /** option source for set/facet operators; omit for free-entry (id/UUID) targets */
+  options?: TFilterOptionsSource;
+  /** key under which facet options are returned; defaults to {@link field} */
+  facetKey?: string;
+  /** short help text shown at the top of the filter popup for this target */
+  description?: string;
+  /** only offered when the grid enables advanced filters (default: false) */
+  advanced?: boolean;
+  /** contextual availability (default: true) */
+  available?: TContextualValue<boolean>;
+}
+
 export interface IColumnFilter {
   /** ordered operator ids; index 0 is the default. Each must exist in the operator registry. */
   operators: string[];
@@ -55,6 +87,12 @@ export interface IColumnFilter {
   description?: string;
   /** contextual availability (default: true) */
   available?: TContextualValue<boolean>;
+  /**
+   * The fields this column can be filtered BY. Omit for the classic single-field
+   * column: the flat props above are then synthesised into a single target (see
+   * `resolveFilterTargets`), so existing schemas need no migration.
+   */
+  targets?: ReadonlyArray<IFilterTarget>;
 }
 
 /**

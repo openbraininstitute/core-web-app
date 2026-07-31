@@ -1,6 +1,7 @@
 import { resolveContextual } from './contextual';
+import { availableFilterTargets } from './filter-targets';
 
-import type { IColumnModel } from './column-model';
+import type { IColumnModel, IFilterTarget } from './column-model';
 import type { IGridContext } from './grid-context';
 import type { IGridSchema } from './schema';
 
@@ -9,6 +10,12 @@ export interface IResolvedColumn<Row> extends IColumnModel<Row> {
   filterAvailable: boolean;
   /** whether this column starts hidden in the current context */
   hiddenByDefaultResolved: boolean;
+  /**
+   * The filter targets available in this context (a legacy flat filter resolves to
+   * exactly one). Optional so hand-built resolved columns stay valid; consumers
+   * fall back to `resolveFilterTargets(column)`.
+   */
+  filterTargets?: ReadonlyArray<IFilterTarget>;
 }
 
 /**
@@ -47,6 +54,7 @@ export function resolveColumns<Row>(
       filterAvailable: column.filter
         ? resolveContextual(column.filter.available ?? true, ctx)
         : false,
+      filterTargets: availableFilterTargets(column, ctx),
       hiddenByDefaultResolved: resolveContextual(column.hiddenByDefault ?? false, ctx),
     }));
 }

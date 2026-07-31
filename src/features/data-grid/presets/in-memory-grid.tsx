@@ -20,6 +20,7 @@ import {
   type IGridPage,
   type IGridSchema,
   type OperatorRegistry,
+  resolveFilterTargets,
   type TFacets,
   type TSortModel,
 } from '../core';
@@ -444,15 +445,10 @@ export function InMemoryGrid<Row>({
 
     const defs = orderedColumns.map((c) => {
       const userWidth = state.columnWidths[c.id];
-      const filterParams =
-        filterable && c.filter
-          ? {
-              facetKey: c.filter.facetKey ?? c.filter.field ?? c.field ?? c.id,
-              operatorIds: c.filter.operators,
-              optionsSource: c.filter.options,
-              description: c.filter.description,
-            }
-          : undefined;
+      // Advanced targets are a server-listing affordance; the in-memory preset only
+      // offers the plain ones (a legacy flat filter resolves to exactly one target).
+      const targets = filterable ? resolveFilterTargets(c).filter((t) => !t.advanced) : [];
+      const filterParams = targets.length > 0 ? { targets } : undefined;
 
       const colDef: ColDef<TDisplayRow<Row>> = {
         colId: c.id,

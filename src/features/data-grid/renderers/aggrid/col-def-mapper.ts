@@ -1,4 +1,4 @@
-import { Align } from '../../core';
+import { Align, resolveFilterTargets } from '../../core';
 import { AgCellHost } from './cell-host';
 import { isDetailRow } from './detail-rows';
 import { keepsBlankWhenEmpty, withEmptyPlaceholder } from './empty-cell';
@@ -24,6 +24,8 @@ export interface IBuildColDefsOptions {
    * (default) the fixed leading `__expand` column is used.
    */
   expandColumn?: IExpandColumnConfig;
+  /** offer filter targets marked `advanced` (default: false) */
+  advancedFilters?: boolean;
 }
 
 /** Fixed, non-interactive expander column shown when detail rows are enabled. */
@@ -51,7 +53,7 @@ export function buildColDefs<Row>(
   columns: Array<IResolvedColumn<Row>>,
   options: IBuildColDefsOptions
 ): Array<ColDef<Row>> {
-  const { hidden, columnWidths, withExpandColumn, expandColumn } = options;
+  const { hidden, columnWidths, withExpandColumn, expandColumn, advancedFilters } = options;
 
   // Host the expander inside a named column only when a detail runtime exists AND a
   // matching column id was supplied; otherwise fall back to the leading column.
@@ -69,16 +71,12 @@ export function buildColDefs<Row>(
 
     // the whole filter UI now lives in the custom header (round icon-button +
     // popover), so there is no AG floating-filter row — the header just needs the
-    // column's filter config to render it.
-    const filterParams =
-      c.filterAvailable && c.filter
-        ? {
-            facetKey: c.filter.facetKey ?? c.filter.field ?? field,
-            operatorIds: c.filter.operators,
-            optionsSource: c.filter.options,
-            description: c.filter.description,
-          }
-        : undefined;
+    // column's filter targets (a legacy flat filter resolves to exactly one) to
+    // render it. Advanced targets are hidden unless the grid opts in.
+    const targets = (c.filterTargets ?? resolveFilterTargets(c)).filter(
+      (t) => advancedFilters || !t.advanced
+    );
+    const filterParams = c.filterAvailable && targets.length > 0 ? { targets } : undefined;
 
     const colDef: ColDef<Row> = {
       colId: c.id,

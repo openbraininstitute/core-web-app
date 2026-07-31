@@ -1,4 +1,10 @@
-import { FilterValueKind, OperatorId, SortDirection } from '../../core';
+import {
+  activeFilterTarget,
+  FilterValueKind,
+  OperatorId,
+  resolveFilterTargets,
+  SortDirection,
+} from '../../core';
 
 import type { IFilterEntry, IGridQuery, IGridSchema, TFilterModel, TSortModel } from '../../core';
 
@@ -78,16 +84,21 @@ const STRATEGIES: Record<string, Strategy> = {
 };
 
 interface ColumnLookup {
-  filterField(columnId: string): string;
+  /** backend field for a filter entry, resolved from its ACTIVE target */
+  filterField(columnId: string, targetId?: string): string;
   sortFields(columnId: string): string[];
 }
 
 export function buildColumnLookup<Row>(schema: IGridSchema<Row>): ColumnLookup {
   const byId = new Map(schema.columns.map((c) => [c.id, c] as const));
   return {
-    filterField(columnId) {
+    filterField(columnId, targetId) {
       const c = byId.get(columnId);
-      return c?.filter?.field ?? c?.field ?? columnId;
+      if (!c) return columnId;
+      // A single-target (legacy) column synthesises exactly one target whose field is
+      // `filter.field ?? column.field ?? column.id` — byte-identical to before.
+      const target = activeFilterTarget(resolveFilterTargets(c), targetId);
+      return target?.field ?? c.field ?? columnId;
     },
     sortFields(columnId) {
       const c = byId.get(columnId);
@@ -102,7 +113,7 @@ function serializeFilters(filters: TFilterModel, lookup: ColumnLookup): TEntityc
   for (const entry of Object.values(filters)) {
     const strategy = STRATEGIES[entry.operator];
     if (!strategy) continue;
-    Object.assign(out, strategy(lookup.filterField(entry.columnId), entry));
+    Object.assign(out, strategy(lookup.filterField(entry.columnId, entry.targetId), entry));
   }
   return out;
 }

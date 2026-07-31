@@ -7,6 +7,14 @@ export {
   whenMatches,
 } from './domain/contextual';
 export { FilterValueKind, isEmptyFilterValue, summarizeFilter } from './domain/filter-model';
+export {
+  activeFilterTarget,
+  availableFilterTargets,
+  DEFAULT_FILTER_TARGET_ID,
+  hydrateFilterTargetIds,
+  isFreeEntryTarget,
+  resolveFilterTargets,
+} from './domain/filter-targets';
 export { mergeColumnDef } from './domain/merge-column';
 export {
   defaultHiddenColumnIds,
@@ -33,6 +41,7 @@ export { reducer } from './state/reducer';
 export type {
   IColumnFilter,
   IColumnModel,
+  IFilterTarget,
   IWidthSpec,
   TAlign,
   TCellValue,

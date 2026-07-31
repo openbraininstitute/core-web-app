@@ -27,6 +27,12 @@ export interface IFilterEntry {
   columnId: string;
   /** chosen operator id (must be one of the column's declared operators) */
   operator: string;
+  /**
+   * id of the {@link IFilterTarget} this entry filters by (which backend field).
+   * Absent on entries written before targets existed (and on single-target columns
+   * set programmatically) — consumers fall back to the column's first target.
+   */
+  targetId?: string;
   value: TFilterValue;
 }
 

@@ -220,11 +220,34 @@ export function speciesColumn<Row extends IHasSpecies>(
       getValue: (r) => r.subject?.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
+        // The flat props stay as the single source of truth for the DEFAULT target;
+        // `targets[0]` mirrors them, so overrides and non-target-aware readers are
+        // unaffected. `subject__species__id__in` is a documented entitycore query
+        // param on every endpoint that accepts `subject__species__name__in`.
         operators: [OperatorId.In, OperatorId.Ilike],
         field: 'subject__species__name',
         facetKey: 'species',
         description: 'Species',
         options: { kind: FilterOptionsKind.Facets },
+        targets: [
+          {
+            id: 'name',
+            label: 'Name',
+            field: 'subject__species__name',
+            operators: [OperatorId.In, OperatorId.Ilike],
+            facetKey: 'species',
+            description: 'Species',
+            options: { kind: FilterOptionsKind.Facets },
+          },
+          {
+            id: 'id',
+            label: 'ID',
+            field: 'subject__species__id',
+            operators: [OperatorId.In],
+            description: 'Paste one or more species ids',
+            advanced: true,
+          },
+        ],
       },
     },
     o
