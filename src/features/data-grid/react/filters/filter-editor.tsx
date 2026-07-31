@@ -522,7 +522,16 @@ function IdTokenEditor({
     <div className="flex flex-col gap-2">
       <textarea
         rows={3}
-        className={cn(INPUT_CLASS, 'min-h-16 resize-y border-gray-100 px-3 py-2 leading-5')}
+        // mirrors the `Input` molecule's own base classes (a raw <textarea> gets
+        // none of them) so the free-entry box is visually identical to the single
+        // -value inputs in the same popover — same radius, border, padding, focus.
+        className={cn(
+          'placeholder:text-muted-foreground selection:bg-primary-0 selection:text-primary-9',
+          'flex w-full min-w-0 border bg-transparent text-base shadow-xs outline-none md:text-sm',
+          'transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50',
+          INPUT_CLASS,
+          'h-auto min-h-16 resize-y px-3 py-2 leading-5'
+        )}
         placeholder={placeholder}
         value={draft}
         onChange={(e) => onDraftChange(e.target.value)}
