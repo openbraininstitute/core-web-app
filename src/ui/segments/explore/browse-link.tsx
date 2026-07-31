@@ -51,6 +51,7 @@ type BrowseLinkContentProps = {
   title: string;
   count: ReactNode;
   href: string;
+  legacy?: boolean;
 };
 
 export function BrowseLinkContent({
@@ -60,6 +61,7 @@ export function BrowseLinkContent({
   title,
   count,
   href,
+  legacy,
 }: BrowseLinkContentProps) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
@@ -98,7 +100,11 @@ export function BrowseLinkContent({
             }}
             className="flex! w-full items-center justify-between!"
           >
-            <div className="font-bold text-current">{title}</div>
+            {/*
+              Superseded types drop to normal weight, matching the workflow menus — the count
+              keeps its own weight rules, since it is data rather than part of the label.
+            */}
+            <div className={cn('text-current', legacy ? 'font-normal' : 'font-bold')}>{title}</div>
             <div
               className={cn(
                 'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
@@ -371,6 +377,7 @@ export function BrowseLink({
           isLoading,
           isUploadable: entity?.isContributable,
           title: entity?.title,
+          legacy: entity?.legacy,
           count: countRenderer,
         }}
       />

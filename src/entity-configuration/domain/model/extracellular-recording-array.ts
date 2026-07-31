@@ -15,7 +15,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const ExtracellularRecordingArray: EntityCoreTypeConfig<ISimulatableExtracellularRecordingArray> =
   {
     group: EntityTypeGroup.Models,
-    title: 'Extracellular recording array (beta)',
+    title: 'Extracellular recording array',
     extendedType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
     type: EntityTypeDict.SimulatableExtracellularRecordingArray,
     slug: EntitySlug.ExtracellularRecordingArray,

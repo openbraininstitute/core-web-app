@@ -110,7 +110,7 @@ function isSingleNeuronCircuit(entity: TActivityCustomFile['entity']): boolean {
 function getOutputEntityLabel(file: TActivityCustomFile): string | null {
   if (file.renderer !== ActivityCustomFileRenderer.MiniDetailView) return null;
 
-  // EM synapse-mapping outputs a single-scale circuit, labeled Synaptome (beta)
+  // EM synapse-mapping outputs a single-scale circuit, labeled Synaptome
   const entityType = isSingleNeuronCircuit(file.entity)
     ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
     : (file.entity.type as TExtendedEntitiesTypeDict);

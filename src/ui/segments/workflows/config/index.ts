@@ -10,6 +10,7 @@ export {
   getSourceType,
   getTargetType,
   getWorkflow,
+  getWorkflowEntityLabel,
   getWorkflowInitialStage,
   getWorkflowSegment,
   groupWorkflowsByEntityGroup,

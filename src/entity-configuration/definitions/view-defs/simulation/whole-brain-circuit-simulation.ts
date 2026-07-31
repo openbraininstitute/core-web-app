@@ -6,7 +6,7 @@ import {
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const viewDefForWholeBrainCircuitSimulation: ViewDefinitionConfig = {
-  title: 'Whole brain circuit Simulation (beta)',
+  title: 'Whole brain circuit Simulation',
   group: DataTypeGroup.SimulationData,
   name: EntitySlug.WholeBrainCircuitSimulation,
   curated: false,

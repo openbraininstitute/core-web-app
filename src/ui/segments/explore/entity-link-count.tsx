@@ -1,4 +1,3 @@
-import { map } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
@@ -26,7 +25,46 @@ import {
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 export { ExploreDataTypeTabs, type TExploreDataTypeTabs } from '@/ui/segments/explore/helpers';
+
+type TBrowseLinkListEntity = {
+  title: string;
+  extendedType: TExtendedEntitiesTypeDict;
+};
+
+type TBrowseLinkListProps = {
+  entities: TBrowseLinkListEntity[];
+  scope: TWorkspaceScope;
+  hierarchyId?: string;
+  currentBrainRegionId?: string;
+  defaultBrainRegionId?: string;
+};
+
+/**
+ * One Data nav list. Render order is the key order of the registries in `explore/helpers.ts`,
+ * which puts the superseded ("(legacy)") types last; `BrowseLink` dims those rows itself.
+ */
+function BrowseLinkList({
+  entities,
+  scope,
+  hierarchyId,
+  currentBrainRegionId,
+  defaultBrainRegionId,
+}: TBrowseLinkListProps) {
+  return entities.map((entity) => (
+    <BrowseLink
+      enabled
+      key={`link-${entity.title}/${entity.extendedType}`}
+      scope={scope}
+      extendedType={entity.extendedType}
+      hierarchyId={hierarchyId}
+      currentBrainRegionId={currentBrainRegionId}
+      defaultBrainRegionId={defaultBrainRegionId}
+    />
+  ));
+}
 
 export function EntityLinkCount() {
   const featureFlags = useFlags();
@@ -66,50 +104,21 @@ export function EntityLinkCount() {
       !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
 
+  const listProps = {
+    scope,
+    hierarchyId: effectiveHierarchyId,
+    currentBrainRegionId: effectiveCurrentBrainRegionId,
+    defaultBrainRegionId: effectiveDefaultBrainRegionId,
+  };
+
   const content = match(activeTab)
-    .with(ExploreDataTypeTabs.Experimental, () =>
-      map(experimental, (value) => (
-        <BrowseLink
-          enabled
-          key={`link-${value.title}/${value.type}`}
-          scope={scope}
-          extendedType={value.extendedType}
-          hierarchyId={effectiveHierarchyId}
-          currentBrainRegionId={effectiveCurrentBrainRegionId}
-          defaultBrainRegionId={effectiveDefaultBrainRegionId}
-        />
-      ))
-    )
-    .with(ExploreDataTypeTabs.Models, () =>
-      map(models, (value) => {
-        return (
-          <BrowseLink
-            enabled
-            key={`link-${value.title}/${value.type}`}
-            extendedType={value.extendedType}
-            scope={scope}
-            hierarchyId={effectiveHierarchyId}
-            currentBrainRegionId={effectiveCurrentBrainRegionId}
-            defaultBrainRegionId={effectiveDefaultBrainRegionId}
-          />
-        );
-      })
-    )
-    .with(ExploreDataTypeTabs.Simulations, () =>
-      map(simulations, (value) => {
-        return (
-          <BrowseLink
-            enabled
-            key={`link-${value.title}/${value.type}`}
-            scope={scope}
-            extendedType={value.extendedType}
-            hierarchyId={effectiveHierarchyId}
-            currentBrainRegionId={effectiveCurrentBrainRegionId}
-            defaultBrainRegionId={effectiveDefaultBrainRegionId}
-          />
-        );
-      })
-    )
+    .with(ExploreDataTypeTabs.Experimental, () => (
+      <BrowseLinkList entities={experimental} {...listProps} />
+    ))
+    .with(ExploreDataTypeTabs.Models, () => <BrowseLinkList entities={models} {...listProps} />)
+    .with(ExploreDataTypeTabs.Simulations, () => (
+      <BrowseLinkList entities={simulations} {...listProps} />
+    ))
     .otherwise(() => null);
 
   return (

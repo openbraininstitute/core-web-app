@@ -90,7 +90,7 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Paired neurons (beta)',
+  title: 'Paired neurons',
   extendedType: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
   discriminator: { key: 'scale', value: [SCALE] },
   type: EntityTypeDict.SimulationCampaign,

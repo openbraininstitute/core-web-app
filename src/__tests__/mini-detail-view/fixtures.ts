@@ -28,8 +28,8 @@ export function makeCircuit(overrides: Partial<ICircuit> = {}): ICircuit {
 }
 
 /**
- * a circuit built at single-neuron scale from an EM dense reconstruction (the "em-circuit
- * (beta)" build) — its details page is `single-neuron-circuit/{id}` ("Synaptome (beta)"),
+ * a circuit built at single-neuron scale from an EM dense reconstruction (the "em-circuit"
+ * build) — its details page is `single-neuron-circuit/{id}` ("Synaptome"),
  * not the generic `circuit/{id}` page
  */
 export function makeSingleNeuronScaleCircuit(overrides: Partial<ICircuit> = {}): ICircuit {

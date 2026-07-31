@@ -6,7 +6,7 @@ import {
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const viewDefForRegionCircuitSimulation: ViewDefinitionConfig = {
-  title: 'Region circuit Simulation (beta)',
+  title: 'Region circuit Simulation',
   group: DataTypeGroup.SimulationData,
   name: EntitySlug.RegionCircuitSimulation,
   curated: false,

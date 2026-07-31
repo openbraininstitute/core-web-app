@@ -6,7 +6,7 @@ import {
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const viewDefForSmallMicrocircuitSimulation: ViewDefinitionConfig = {
-  title: 'Small microcircuit Simulation (beta)',
+  title: 'Small microcircuit Simulation',
   group: DataTypeGroup.SimulationData,
   name: EntitySlug.SmallMicrocircuitSimulation,
   curated: false,

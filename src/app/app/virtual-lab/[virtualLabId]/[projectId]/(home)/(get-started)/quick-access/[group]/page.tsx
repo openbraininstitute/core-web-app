@@ -17,6 +17,7 @@ import {
   type IQuickAccessList,
   QuickAccessGroupDict,
 } from '@/ui/segments/project/get-started/query';
+import { getWorkflowEntityLabel } from '@/ui/segments/workflows/config';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
@@ -90,7 +91,7 @@ export default async function Page({
       ...a,
       title: a.title ?? a.entity.name,
       description: a.description ?? a.entity.description,
-      artifactTitle: getEntityByExtendedType({ type: a.extendedType })?.title ?? null,
+      artifactTitle: getWorkflowEntityLabel(a.extendedType),
     }));
 
   if (!results.length) {

@@ -91,7 +91,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Small microcircuit (beta)',
+  title: 'Small microcircuit',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   discriminator: { key: 'scale', value: [SCALE] },
   type: EntityTypeDict.SimulationCampaign,

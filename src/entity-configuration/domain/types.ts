@@ -31,6 +31,12 @@ export type EntityCoreTypeConfig<
   title: string;
   alternateTitle?: string;
   requiredFeatures?: FlagKey[];
+  /**
+   * The type is superseded by a newer implementation. Machine-readable counterpart of the
+   * `(legacy)` suffix in {@link title}: the Data nav reads it to separate and de-emphasise
+   * these entries. Mirrors `TEntityTypeMeta.legacy` on the workflow entity catalog.
+   */
+  legacy?: boolean;
   api: {
     config: {
       allowedFacets?: boolean;

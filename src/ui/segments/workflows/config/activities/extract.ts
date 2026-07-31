@@ -15,8 +15,8 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
     breadcrumb: {
-      root: 'Circuit (beta) extraction',
-      steps: { selection: 'Select circuit (beta)' },
+      root: 'Circuit extraction',
+      steps: { selection: 'Select circuit' },
     },
     scanConfig: {
       definition: extractCircuitWorkflow,
@@ -24,7 +24,7 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
       configureBinding: extractCircuitConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
-    label: 'Circuit (beta)',
+    label: 'Circuit',
     disabled: false,
     requiredFeatures: [extractionActivityFlag.key],
   },
