@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { RiEqualizerLine } from '@remixicon/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -136,6 +137,16 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
 
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
 
+  // Advanced filter targets (e.g. match a column by ID) are opt-in per grid. The
+  // toggle is self-serve: it appears only when a column actually declares one, so
+  // grids without any advanced target are visually unchanged. The `advancedFilters`
+  // prop seeds the initial state, letting a host force it on.
+  const hasAdvancedTargets = useMemo(
+    () => columns.some((c) => c.filter?.targets?.some((target) => target.advanced)),
+    [columns]
+  );
+  const [advancedOn, setAdvancedOn] = useState(advancedFilters);
+
   // effect-time (never during render) so a host can safely publish the total
   // into external state (jotai/query cache) without render-phase side effects.
   useEffect(() => {
@@ -218,7 +229,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     getRowClass,
     expandColumn,
     loadingLabel,
-    advancedFilters,
+    advancedFilters: advancedOn,
   };
 
   if (error && renderError) {
@@ -245,9 +256,26 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       <DataGridToolbar
         slots={{ ...toolbarSlots, bulkActions: bulkActions ?? toolbarSlots?.bulkActions }}
         columnChooser={
-          showColumnChooser || Object.keys(state.filters).length > 0 ? (
+          showColumnChooser || hasAdvancedTargets || Object.keys(state.filters).length > 0 ? (
             <div className="flex items-center gap-2">
               {showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : null}
+              {/* only when a column actually declares an advanced filter target */}
+              {hasAdvancedTargets ? (
+                <button
+                  type="button"
+                  aria-pressed={advancedOn}
+                  aria-label="Toggle advanced filters"
+                  title={advancedOn ? 'Hide advanced filters' : 'Show advanced filters'}
+                  onClick={() => setAdvancedOn((v) => !v)}
+                  className={cn(
+                    'flex size-10 shrink-0 items-center justify-center rounded-full shadow-sm',
+                    'transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md active:scale-95',
+                    advancedOn ? 'bg-primary-9 text-white' : 'bg-white text-primary-8'
+                  )}
+                >
+                  <RiEqualizerLine size={18} />
+                </button>
+              ) : null}
               {/* appears only when the grid has active filters */}
               <ActiveFiltersButton controller={controller} state={state} />
             </div>
