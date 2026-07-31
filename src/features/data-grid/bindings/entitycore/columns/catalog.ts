@@ -18,8 +18,15 @@ import type { IColumnModel, TColumnOverride } from '../../../core';
  *   speciesColumn<IEModel>({ filter: { field: 'species__name' } })
  */
 
-/** Shared placeholder shown when a cell value is empty/absent (em dash). */
-export const EMPTY_PLACEHOLDER = '—';
+/**
+ * Shared placeholder shown when a cell value is empty/absent (em dash).
+ * Declared in the renderer ring (which cannot import this module — bindings sit
+ * above it, and catalog already cycles with its own renderers), re-exported here
+ * so bindings keep one import site and there is a single source of truth.
+ */
+import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
+
+export { EMPTY_PLACEHOLDER };
 
 type Nullable<T> = T | null | undefined;
 
