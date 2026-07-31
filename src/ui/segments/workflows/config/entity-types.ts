@@ -46,17 +46,20 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     value: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
     group: EntityGroupDict.Cellular,
     label: 'Single neuron simulation (legacy)',
+    legacy: true,
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     group: EntityGroupDict.Cellular,
     label: 'Synaptome (legacy)',
     title: 'Synaptome (legacy)',
+    legacy: true,
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     group: EntityGroupDict.Cellular,
     label: 'Synaptome simulation (legacy)',
+    legacy: true,
   },
   [ExtendedEntitiesTypeDict.MemodelCircuit]: {
     value: ExtendedEntitiesTypeDict.MemodelCircuit,

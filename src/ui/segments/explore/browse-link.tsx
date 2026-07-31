@@ -51,6 +51,7 @@ type BrowseLinkContentProps = {
   title: string;
   count: ReactNode;
   href: string;
+  legacy?: boolean;
 };
 
 export function BrowseLinkContent({
@@ -60,6 +61,7 @@ export function BrowseLinkContent({
   title,
   count,
   href,
+  legacy,
 }: BrowseLinkContentProps) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
@@ -77,7 +79,14 @@ export function BrowseLinkContent({
   const onClick = () => userJourneyTracker.registerArtifactClick(title);
 
   return (
-    <div className="group flex w-full items-center justify-center gap-0">
+    // superseded types are dimmed as a whole rather than recoloured: the title and count already
+    // switch colour on active/hover, and a competing text colour would fight those rules. Hover
+    // lifts the row back to full strength so it doesn't read as disabled.
+    <div
+      className={cn('group flex w-full items-center justify-center gap-0', {
+        'opacity-65 transition-opacity hover:opacity-100': legacy,
+      })}
+    >
       <div className="relative flex w-full items-center">
         <Button
           asChild
@@ -371,6 +380,7 @@ export function BrowseLink({
           isLoading,
           isUploadable: entity?.isContributable,
           title: entity?.title,
+          legacy: entity?.legacy,
           count: countRenderer,
         }}
       />

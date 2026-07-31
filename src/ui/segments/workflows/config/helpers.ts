@@ -114,6 +114,7 @@ function resolveWorkflow(
     entity,
     disabled,
     label: workflow.label ?? entity.label,
+    legacy: workflow.legacy ?? entity.legacy ?? false,
   };
 }
 

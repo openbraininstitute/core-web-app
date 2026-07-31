@@ -1,10 +1,10 @@
 'use client';
 
-import type { ComponentProps } from 'react';
-
 import { ArrowOpenRight } from '@/components/icons/buttons';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
+
+import type { ComponentProps } from 'react';
 
 type Props<T> = {
   title: string;
@@ -12,6 +12,8 @@ type Props<T> = {
   group?: string;
   active: boolean;
   disabled: boolean;
+  /** superseded by a newer workflow — dims the title, but the card stays fully usable */
+  legacy?: boolean;
   onClick: (v: T) => void;
   className?: ComponentProps<'div'>['className'];
 };
@@ -22,6 +24,7 @@ export function MenuItem<T>({
   value,
   disabled,
   active,
+  legacy,
   className,
   onClick,
 }: Props<T>) {
@@ -56,7 +59,19 @@ export function MenuItem<T>({
             {group}
           </div>
         )}
-        {title}
+        {/*
+          A superseded card keeps the white background and the Start affordance — only the title
+          is dimmed, so it stays distinguishable from a disabled card, which greys the whole card
+          and drops Start. Full strength once hovered or selected, where the card inverts to white
+          text on primary.
+        */}
+        <span
+          className={cn({
+            'opacity-60 transition-opacity group-hover:opacity-100': legacy && !disabled && !active,
+          })}
+        >
+          {title}
+        </span>
       </CardTitle>
       {!disabled && (
         <div

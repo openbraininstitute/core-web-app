@@ -52,6 +52,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
     group: EntityTypeGroup.Simulations,
     title: 'Synaptome (legacy)',
     alternateTitle: 'synaptome simulation (legacy)',
+    legacy: true,
     extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     type: EntityTypeDict.SingleNeuronSynaptomeSimulation,
     slug: EntitySlug.SingleNeuronSynaptomeSimulation,

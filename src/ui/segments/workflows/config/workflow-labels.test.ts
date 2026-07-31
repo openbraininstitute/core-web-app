@@ -14,24 +14,30 @@ import type { FeatureFlags } from '@/features/feature-flags/flags';
  */
 const allFlagsOn = new Proxy({}, { get: () => true }) as FeatureFlags;
 
-function enabledLabelsInOrder(activity: string) {
+const EVERY_ACTIVITY = [
+  WorkspaceSection.BuildWorkflow,
+  WorkspaceSection.SimulateWorkflow,
+  WorkspaceSection.ExtractWorkflow,
+  WorkspaceSection.ProcessWorkflow,
+];
+
+const LEGACY_SUFFIX = '(legacy)';
+
+function enabledWorkflowsInOrder(activity: string) {
   return listWorkflows({
     activity,
     flags: allFlagsOn,
     sort: WorkflowListSortDict.Order,
-  })
-    .filter((workflow) => !workflow.disabled)
-    .map((workflow) => workflow.label);
+  }).filter((workflow) => !workflow.disabled);
+}
+
+function enabledLabelsInOrder(activity: string) {
+  return enabledWorkflowsInOrder(activity).map((workflow) => workflow.label);
 }
 
 describe('workflow naming', () => {
   it('has no "(beta)" left in any workflow label', () => {
-    const everyLabel = [
-      WorkspaceSection.BuildWorkflow,
-      WorkspaceSection.SimulateWorkflow,
-      WorkspaceSection.ExtractWorkflow,
-      WorkspaceSection.ProcessWorkflow,
-    ].flatMap((activity) =>
+    const everyLabel = EVERY_ACTIVITY.flatMap((activity) =>
       listWorkflows({ activity, flags: allFlagsOn }).map((workflow) => workflow.label)
     );
 
@@ -76,6 +82,60 @@ describe('workflow naming', () => {
     expect(enabledLabelsInOrder(WorkspaceSection.SimulateWorkflow)).toContain(
       'Single neuron (legacy)'
     );
+  });
+});
+
+/**
+ * The `legacy` flag is what the menus read to sort superseded entries last and render them
+ * de-emphasised; the `(legacy)` suffix is what the user reads. They are maintained in separate
+ * places, so these guard that one is never added without the other.
+ */
+describe('legacy marking', () => {
+  it('flags exactly the workflows whose label carries the suffix', () => {
+    const mismatched = EVERY_ACTIVITY.flatMap((activity) =>
+      listWorkflows({ activity, flags: allFlagsOn })
+        .filter((workflow) => workflow.label.includes(LEGACY_SUFFIX) !== workflow.legacy)
+        .map((workflow) => `${activity}: ${workflow.label} (legacy=${workflow.legacy})`)
+    );
+
+    expect(mismatched).toEqual([]);
+  });
+
+  it('flags exactly the data entities whose title carries the suffix', () => {
+    const mismatched = [
+      ...Object.values(ModelDataExtendedTypes),
+      ...Object.values(SimulationDataExtendedTypes),
+    ]
+      .filter((entity) => entity.title.includes(LEGACY_SUFFIX) !== Boolean(entity.legacy))
+      .map((entity) => `${entity.title} (legacy=${entity.legacy})`);
+
+    expect(mismatched).toEqual([]);
+  });
+
+  /**
+   * Superseded entries belong in one block at the end, not interleaved — both because the ticket
+   * asks for it and because any grouped treatment of them (a rule, a caption) needs one boundary.
+   */
+  it.each([
+    ['Model', ModelDataExtendedTypes],
+    ['Simulations', SimulationDataExtendedTypes],
+  ])('keeps Data > %s legacy entries contiguous at the end', (_name, registry) => {
+    const flags = Object.values(registry).map((entity) => Boolean(entity.legacy));
+    const firstLegacyIndex = flags.indexOf(true);
+
+    expect(firstLegacyIndex).toBeGreaterThan(0);
+    expect(flags.slice(firstLegacyIndex)).not.toContain(false);
+  });
+
+  it.each([
+    WorkspaceSection.BuildWorkflow,
+    WorkspaceSection.SimulateWorkflow,
+  ])('keeps %s legacy workflows contiguous at the end', (activity) => {
+    const flags = enabledWorkflowsInOrder(activity).map((workflow) => workflow.legacy);
+    const firstLegacyIndex = flags.indexOf(true);
+
+    expect(firstLegacyIndex).toBeGreaterThan(0);
+    expect(flags.slice(firstLegacyIndex)).not.toContain(false);
   });
 });
 

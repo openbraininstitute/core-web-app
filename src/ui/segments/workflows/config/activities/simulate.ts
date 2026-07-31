@@ -218,6 +218,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     // Memodel is only superseded on Simulate: the MemodelCircuit *build* workflow is still
     // disabled, so Build keeps the plain `Single neuron` label from the entity catalog.
     label: 'Single neuron (legacy)',
+    legacy: true,
     order: 9,
     disabled: false,
   },

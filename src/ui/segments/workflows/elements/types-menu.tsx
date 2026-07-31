@@ -54,7 +54,7 @@ export function TypesMenu({
         </div>
       </div>
       <CarouselContent className="items-stretch">
-        {options.map(({ targetType, disabled, entity, label }) => {
+        {options.map(({ targetType, disabled, entity, label, legacy }) => {
           return (
             <CarouselItem
               key={`type-selector-${entity.group}-${label}`}
@@ -65,6 +65,7 @@ export function TypesMenu({
                 active={current === targetType}
                 value={targetType ?? null}
                 disabled={disabled}
+                legacy={legacy}
                 title={label}
                 onClick={onItemClick}
               />
