@@ -2,6 +2,7 @@ import { analysisNotebookResultGridDefinition } from './schemas/analysis-noteboo
 import { analysisNotebookTemplateGridDefinition } from './schemas/analysis-notebook-template';
 import { cellMorphologyGridDefinition } from './schemas/cell-morphology';
 import { circuitGridDefinition } from './schemas/circuit';
+import { circuitModelGridDefinitions } from './schemas/circuit-models';
 import { circuitSimulationGridDefinitions } from './schemas/circuit-simulations';
 import { electricalCellRecordingGridDefinition } from './schemas/electrical-cell-recording';
 import { emCellMeshGridDefinition } from './schemas/em-cell-mesh';
@@ -9,11 +10,14 @@ import { emodelGridDefinition } from './schemas/emodel';
 import { experimentalBoutonDensityGridDefinition } from './schemas/experimental-bouton-density';
 import { experimentalNeuronDensityGridDefinition } from './schemas/experimental-neuron-density';
 import { experimentalSynapsesPerConnectionGridDefinition } from './schemas/experimental-synapses-per-connection';
+import { extracellularRecordingArrayGridDefinition } from './schemas/extracellular-recording-array';
 import { ionChannelModelGridDefinition } from './schemas/ion-channel-model';
 import { ionChannelRecordingGridDefinition } from './schemas/ion-channel-recording';
 import { meModelCircuitGridDefinition } from './schemas/me-model-circuit';
 import { memodelGridDefinition } from './schemas/memodel';
+import { singleNeuronSimulationGridDefinition } from './schemas/single-neuron-simulation';
 import { singleNeuronSynaptomeGridDefinition } from './schemas/single-neuron-synaptome';
+import { singleNeuronSynaptomeSimulationGridDefinition } from './schemas/single-neuron-synaptome-simulation';
 import { synthesizedCellMorphologyGridDefinition } from './schemas/synthesized-cell-morphology';
 import { universalCellMorphologyGridDefinition } from './schemas/universal-cell-morphology';
 
@@ -75,6 +79,14 @@ const definitions: Record<string, AnyEntityGridDefinition> = {
   // Group 7 — analysis-notebook template + result listings.
   [analysisNotebookTemplateGridDefinition.dataType]: analysisNotebookTemplateGridDefinition,
   [analysisNotebookResultGridDefinition.dataType]: analysisNotebookResultGridDefinition,
+  [extracellularRecordingArrayGridDefinition.dataType]: extracellularRecordingArrayGridDefinition,
+  [singleNeuronSimulationGridDefinition.dataType]: singleNeuronSimulationGridDefinition,
+  [singleNeuronSynaptomeSimulationGridDefinition.dataType]:
+    singleNeuronSynaptomeSimulationGridDefinition,
+  // Circuit-family plain models (micro/small-micro/paired-neuron/whole-brain/single-neuron
+  // circuits + the brain-region browse) flipped to the shared AG Grid stack. Flat listings,
+  // NO recursive-subcircuit plugin. Rollback = remove this spread.
+  ...Object.fromEntries(circuitModelGridDefinitions.map((def) => [def.dataType, def])),
   // T-05: expandable circuit-simulation dataTypes flipped to full-width detail rows.
   ...Object.fromEntries(circuitSimulationGridDefinitions.map((def) => [def.dataType, def])),
   // Circuit listing flipped onto the shared stack via a PLUGIN body (flat↔hierarchy
