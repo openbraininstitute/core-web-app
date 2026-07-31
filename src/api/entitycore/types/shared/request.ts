@@ -42,17 +42,12 @@ export type BrainRegionHierarchyFilter = {
    * @deprecated using the other two is enough
    */
   within_brain_region_hierarchy_id: string;
-  /**
-   * @deprecated Use `within_brain_region_direction` instead.
-   */
-  within_brain_region_ascendants?: boolean;
 };
 
 export type ContributionFilter = {
   contribution__id: string | null;
   contribution__pref_label: string | null;
   contribution__pref_label__in: string | null;
-  contribution__order_by: string | null;
 };
 export type PaginationFilter = {
   page: number;
@@ -63,11 +58,10 @@ export type IlikeSearchFilter = {
 };
 export type SpeciesFilter = {
   species__id: string | null;
-  species_id__in: number | null;
+  species__id__in: string[] | null;
   species__name: string | null;
   species__name__in: string | null;
   species__name__ilike: string | null;
-  species__order_by: string | null;
 };
 
 export type StainFilter = {
@@ -154,13 +148,13 @@ export interface OwnershipFilter {
   created_by__family_name?: string | null;
   created_by__family_name__ilike?: string | null;
   created_by__sub_id?: string | null; // UUID
-  created_by__sub_id_in?: string[] | null;
+  created_by__sub_id__in?: string[] | null;
   // Updated by
   updated_by__pref_label?: string | null;
   updated_by__pref_label__in?: string[] | null;
   updated_by__pref_label__ilike?: string | null;
   updated_by__id?: string | null; // UUID
-  updated_by__id_in?: string[] | null;
+  updated_by__id__in?: string[] | null;
   updated_by__type?: string | null;
   updated_by__given_name?: string | null;
   updated_by__given_name__ilike?: string | null;
@@ -196,7 +190,7 @@ export type SubjectFilter = {
 
   // Nested species filter (prefixed)
   subject__species__id: string | null;
-  subject__species_id__in: number | null;
+  subject__species__id__in: string[] | null;
   subject__species__name: string | null;
   subject__species__name__in: string | null;
   subject__species__name__ilike: string | null;
