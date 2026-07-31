@@ -124,7 +124,7 @@ describe('serializeQuery — filter targets', () => {
 describe('speciesColumn — declared targets', () => {
   const targets = speciesColumn<Row>().filter?.targets ?? [];
 
-  it('keeps the name target first (the default) and marks the id target advanced', () => {
+  it('keeps the name target first (the default) and adds the id target', () => {
     expect(targets.map((t) => t.id)).toEqual(['name', 'id']);
     expect(targets[0]).toMatchObject({
       field: 'subject__species__name',
@@ -134,7 +134,6 @@ describe('speciesColumn — declared targets', () => {
     expect(targets[1]).toMatchObject({
       field: 'subject__species__id',
       operators: [OperatorId.In],
-      advanced: true,
     });
     // no facets for the id target — it is a free-entry (paste ids) target
     expect(targets[1]?.options).toBeUndefined();

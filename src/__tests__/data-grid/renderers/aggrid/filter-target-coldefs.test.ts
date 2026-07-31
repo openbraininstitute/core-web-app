@@ -20,7 +20,6 @@ const ID_TARGET: IFilterTarget = {
   label: 'ID',
   field: 'subject__species__id',
   operators: ['in'],
-  advanced: true,
 };
 
 const OPTIONS = { hidden: new Set<string>(), columnWidths: {} };
@@ -43,13 +42,8 @@ function headerFilter(def: { headerComponentParams?: unknown }) {
 }
 
 describe('buildColDefs — filter targets', () => {
-  it('hides `advanced` targets by default', () => {
+  it('offers every target a column declares — no opt-in needed', () => {
     const [def] = buildColDefs([speciesColumn()], OPTIONS);
-    expect(headerFilter(def)?.targets.map((t) => t.id)).toEqual(['name']);
-  });
-
-  it('offers them when the grid enables advanced filters', () => {
-    const [def] = buildColDefs([speciesColumn()], { ...OPTIONS, advancedFilters: true });
     expect(headerFilter(def)?.targets.map((t) => t.id)).toEqual(['name', 'id']);
   });
 

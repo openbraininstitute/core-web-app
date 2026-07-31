@@ -72,10 +72,8 @@ export function buildColDefs<Row>(
     // the whole filter UI now lives in the custom header (round icon-button +
     // popover), so there is no AG floating-filter row — the header just needs the
     // column's filter targets (a legacy flat filter resolves to exactly one) to
-    // render it. Advanced targets are hidden unless the grid opts in.
-    const targets = (c.filterTargets ?? resolveFilterTargets(c)).filter(
-      (t) => advancedFilters || !t.advanced
-    );
+    // render it. A column that declares targets always offers them.
+    const targets = c.filterTargets ?? resolveFilterTargets(c);
     const filterParams = c.filterAvailable && targets.length > 0 ? { targets } : undefined;
 
     const colDef: ColDef<Row> = {

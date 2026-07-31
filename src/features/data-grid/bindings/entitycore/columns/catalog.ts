@@ -252,7 +252,6 @@ export function speciesColumn<Row extends IHasSpecies>(
             field: 'subject__species__id',
             operators: [OperatorId.In],
             description: 'Paste one or more species ids',
-            advanced: true,
           },
         ],
       },

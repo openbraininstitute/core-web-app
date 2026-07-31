@@ -37,12 +37,11 @@ export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
       cellRenderer: 'cellMorphologyPreview',
       width: { width: 184, minWidth: 120, resizable: true },
     }),
-    // ADVANCED targets are declared per-entity, not on the shared catalog factory:
-    // the `__id__in` params below are confirmed on `GET /cell-morphology`, but the
-    // same factories serve entities whose endpoints do not accept them. Each is
-    // `advanced`, so it stays hidden until the grid enables advanced filters, and
-    // `targets[0]` mirrors the factory's own filter so default behavior is unchanged.
-    // `speciesColumn` already ships its own name/ID targets.
+    // Per-column ID targets are declared per-entity, not on the shared catalog
+    // factory: the `__id__in` params below are confirmed on `GET /cell-morphology`,
+    // but the same factories serve entities whose endpoints do not accept them.
+    // `targets[0]` mirrors the factory's own filter so default behavior is
+    // unchanged. `speciesColumn` already ships its own name/ID targets.
     brainRegionColumn<ICellMorphology>({
       filter: {
         targets: [
@@ -61,7 +60,6 @@ export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
             field: 'brain_region__id',
             operators: [OperatorId.In],
             description: 'Brain region ID',
-            advanced: true,
           },
         ],
       },
@@ -85,7 +83,6 @@ export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
             field: 'mtype__id',
             operators: [OperatorId.In],
             description: 'M-type ID',
-            advanced: true,
           },
         ],
       },
@@ -115,7 +112,6 @@ export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
             field: 'id',
             operators: [OperatorId.In],
             description: 'Morphology ID',
-            advanced: true,
           },
         ],
       },
@@ -137,7 +133,6 @@ export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
             field: 'contribution__id',
             operators: [OperatorId.In],
             description: 'Contributor ID',
-            advanced: true,
           },
         ],
       },
