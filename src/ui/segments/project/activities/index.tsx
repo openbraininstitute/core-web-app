@@ -1,20 +1,17 @@
 'use client';
 
 import { RightSquareOutlined } from '@ant-design/icons';
-import { Pagination as AntPagination, Empty } from 'antd';
 import { get } from 'es-toolkit/compat';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Card, CardContent } from '@/ui/molecules/card';
 import { Header } from '@/ui/segments/project/activities/elements/header';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
-import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityValues } from '@/ui/segments/workflows/config';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
@@ -22,6 +19,7 @@ import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { GridDataSource, GridPage } from '@/features/data-grid/core';
 import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
@@ -42,8 +40,6 @@ export function ProjectActivities({
   const virtualLabId = targetVirtualLabId || context.virtualLabId;
   const projectId = targetProjectId || context.projectId;
 
-  const [page, setPage] = useState(1);
-
   // Category -> Type selection, mirroring the workflows browse view:
   // `activity` is the Category (Build / Simulate / Extract / Process data) and
   // `entityType` is the Type (the target entity the activity produces).
@@ -58,25 +54,44 @@ export function ProjectActivities({
     throw new Error(`No entity found for type: ${entityType}`);
   }
 
+  // Changing the category/type resets to page 1: the SimpleGrid below is keyed on
+  // `${activity}-${entityType}`, so a change remounts it with a fresh page-1 store
+  // (parity with the legacy `setPage(1)` on selector change).
   const onActivityChange = (next: TActivityValue | null) => {
     if (next) setActivity(next);
-    setPage(1);
   };
 
   const onEntityTypeChange = (next: TExtendedEntitiesTypeDict | null) => {
     if (next) setEntityType(next);
-    setPage(1);
   };
 
-  const { data, isQueryEnabled } = useQueryActivity({
-    activity,
-    selectionType: entityType,
-    entityType: entity?.extendedType,
-    page,
-    useKeepPreviousData: true,
-    targetVirtualLabId: virtualLabId,
-    targetProjectId: projectId,
-  });
+  // Server data source: the grid owns paging; each page fetches via the entity's
+  // list query (same call the legacy `useQueryActivity` made).
+  const listQuery = entity.api.query?.list;
+  const dataSource = useMemo<GridDataSource<EntityCoreObjectTypes>>(
+    () => ({
+      fetch: async (query): Promise<GridPage<EntityCoreObjectTypes>> => {
+        if (!listQuery) return { rows: [], total: 0 };
+        const response = await listQuery({
+          withFacets: false,
+          context: { virtualLabId, projectId },
+          filters: {
+            page: query.page,
+            page_size: query.pageSize,
+            authorized_project_id: projectId,
+            authorized_public: false,
+          },
+        });
+        return {
+          // the per-entity list queries return a union of entity arrays; the table is
+          // entity-agnostic (legacy typed this response as `EntityCoreResponse<any>`).
+          rows: (response?.data ?? []) as EntityCoreObjectTypes[],
+          total: response?.pagination?.total_items ?? 0,
+        };
+      },
+    }),
+    [listQuery, virtualLabId, projectId]
+  );
 
   const columns: Array<SimpleColumn<EntityCoreObjectTypes>> = [
     {
@@ -140,9 +155,6 @@ export function ProjectActivities({
     },
   ];
 
-  const shouldShowEmptyState =
-    data && !data.pagination.total_items && !isQueryEnabled && activity && entityType;
-
   return (
     <div
       className={cn(
@@ -158,52 +170,22 @@ export function ProjectActivities({
         showTitle={showTitle}
       />
       <div className="flex-1 overflow-hidden flex flex-col mt-5">
-        {shouldShowEmptyState ? (
-          <Card className="text-neutral-4 shadow-xs">
-            <CardContent>You don't have any activities yet </CardContent>
-          </Card>
-        ) : (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="secondary-scrollbar flex-1 overflow-auto">
-              {data?.data?.length ? (
-                <SimpleGrid<EntityCoreObjectTypes>
-                  columns={columns}
-                  rows={data.data}
-                  getRowId={(o) => o.id}
-                />
-              ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    <span className="text-primary-9">
-                      No activities found for{' '}
-                      <strong>{getEntityByExtendedType({ type: entityType })?.title}</strong>.
-                    </span>
-                  }
-                />
-              )}
-            </div>
-            <div className="flex shrink-0 items-center justify-end py-3">
-              <AntPagination
-                responsive
-                showLessItems
-                hideOnSinglePage
-                pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
-                defaultPageSize={DEFAULT_PAGE_MEDIUM_SIZE}
-                current={page}
-                total={data?.pagination.total_items}
-                showSizeChanger={false}
-                size="default"
-                onChange={(_page) => setPage(_page)}
-                className={cn(
-                  '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!',
-                  '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
-                  '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!'
-                )}
-              />
-            </div>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="secondary-scrollbar flex-1 overflow-auto">
+            <SimpleGrid<EntityCoreObjectTypes>
+              // remount on category/type change → fresh page-1 store (legacy setPage(1))
+              key={`${activity}-${entityType}`}
+              columns={columns}
+              getRowId={(o) => o.id}
+              pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+              serverSide={{
+                dataSource,
+                queryKey: ['project-activities', virtualLabId, projectId, activity, entityType],
+                enabled: Boolean(activity && entityType),
+              }}
+            />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

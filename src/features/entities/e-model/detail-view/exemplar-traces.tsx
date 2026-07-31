@@ -1,30 +1,30 @@
-import { Pagination } from 'antd';
 import isString from 'es-toolkit/compat/isString';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { match, P } from 'ts-pattern';
+import { useMemo } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ErrorData } from '@/components/message-banners/error';
+import { getElectricalCellRecordings } from '@/api/entitycore/queries';
+import { getEntityDerivations } from '@/api/entitycore/queries/general/derivation';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { DEFAULT_PAGE_XSMALL_SIZE, type TViewVariant, ViewVariant } from '@/constants';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { Header } from '@/features/entities/e-model/detail-view/header';
-import { useElectricalCellRecordingsByDerivations, useEmodelDerivations } from '@/ui/hooks/data';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import {
-  detailViewInsetPanelClass,
-  detailViewPaginationClass,
-} from '@/ui/segments/detail-view/variant-styles';
+import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
-import type { ColumnsType } from 'antd/es/table';
 import type {
   EntityCoreObjectTypes,
   IElectricalCellRecording,
   IEModel,
+  TEntityTypeDict,
 } from '@/api/entitycore/types';
+import type { GridDataSource, GridPage } from '@/features/data-grid/core';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { NormalizeChars } from '@/utils/type';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -37,15 +37,16 @@ const defaultColumnsFields = getFieldsDefinition([
 function makeColumns(
   virtualLabId: string,
   projectId: string
-): ColumnsType<IElectricalCellRecording> {
+): Array<SimpleColumn<IElectricalCellRecording>> {
   return Object.entries(defaultColumnsFields).map(([key, field]) => ({
-    title: isString(field.title) ? field.title.toUpperCase() : field.title,
-    key,
-    render: (entity: EntityCoreObjectTypes) => {
+    id: key,
+    header: isString(field.title) ? field.title.toUpperCase() : key,
+    headerNode: isString(field.title) ? undefined : field.title,
+    renderCell: (entity) => {
       const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/electrical-cell-recording/${
         entity.id
       }/overview`;
-      return <Link href={href}>{field.render?.(entity)}</Link>;
+      return <Link href={href}>{field.render?.(entity as EntityCoreObjectTypes)}</Link>;
     },
   }));
 }
@@ -57,144 +58,53 @@ type Props = {
 
 export function ExemplarTraces({ source, variant = ViewVariant.Light }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
-  const [{ pageNumber, pageSize }, updatePageState] = useState({
-    pageNumber: 1,
-    pageSize: DEFAULT_PAGE_XSMALL_SIZE,
-  });
 
-  const { derivations, error, isLoading, isSuccessDerivations } = useEmodelDerivations({
-    entityId: source.id,
-    virtualLabId,
-    projectId,
-    pageNumber,
-    pageSize,
-  });
+  const columns = useMemo(() => makeColumns(virtualLabId, projectId), [virtualLabId, projectId]);
 
-  const { eModelExemplarTraces, errorExemplarTraces, isLoadingExemplarTraces } =
-    useElectricalCellRecordingsByDerivations({
-      virtualLabId,
-      projectId,
-      enabled: isSuccessDerivations ? !!(derivations!.pagination.total_items > 0) : false,
-      Ids: derivations?.data.map((p) => p.id) || [],
-    });
-
-  const total = derivations?.pagination.total_items;
-  const columns: ColumnsType<IElectricalCellRecording> = useMemo(
-    () => makeColumns(virtualLabId, projectId),
-    [virtualLabId, projectId]
-  );
-
-  const content = match({
-    isLoading,
-    isLoadingExemplarTraces,
-    error,
-    errorExemplarTraces,
-    eModelExemplarTraces,
-  })
-    .with(
-      P.union(
-        { isLoading: true, isLoadingExemplarTraces: P._ },
-        { isLoading: P._, isLoadingExemplarTraces: true }
-      ),
-      () => (
-        <div className="mx-auto mt-4 w-full">
-          <div className="animate-pulse">
-            {Array.from({ length: 5 }, (_, i) => i).map((value) => (
-              <div
-                key={`row-ske-${value}`}
-                className={cn(
-                  'flex h-[132px] w-full items-center gap-x-6 border-b py-8',
-                  variant === ViewVariant.Default ? 'border-white/20' : 'border-gray-300'
-                )}
-              >
-                <div className="flex w-[330px] items-center justify-start">
-                  <div className="h-[116px] w-[184px] rounded-md bg-gray-200" />
-                </div>
-                <div className="h-8 flex-1 rounded-md bg-gray-200" />
-                <div className="h-8 flex-1 rounded-md bg-gray-200" />
-                <div className="h-8 flex-1 rounded-md bg-gray-200" />
-                <div className="h-8 flex-1 rounded-md bg-gray-200" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    )
-    .with(
-      P.union(
-        { error: P.nonNullable, errorExemplarTraces: P._ },
-        { errorExemplarTraces: P.nonNullable, error: P._ }
-      ),
-      () => {
-        return (
-          <ErrorData
-            title="No exemplar traces found"
-            description="No exemplar traces found for this e-model"
-            cls={{
-              container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full!',
-              title: 'text-primary-9',
-              description: 'text-primary-9',
-            }}
-          />
-        );
-      }
-    )
-    .with(
-      {
-        isLoading: P.boolean.and(false),
-        isLoadingExemplarTraces: P.boolean.and(false),
-        error: P.nullish,
-        errorExemplarTraces: P.nullish,
-        eModelExemplarTraces: P.nonNullable.select('result'),
+  // Server data source: mirrors the legacy two-step paginated fetch — page the
+  // e-model derivations (`total_items` drives the pager), then resolve the matching
+  // electrical-cell recordings for the current page's ids. SimpleGrid owns paging.
+  const dataSource = useMemo<GridDataSource<IElectricalCellRecording>>(
+    () => ({
+      fetch: async (query): Promise<GridPage<IElectricalCellRecording>> => {
+        const derivations = await getEntityDerivations({
+          context: { virtualLabId, projectId },
+          entityRoute: kebabCase(EntityTypeDict.Emodel) as NormalizeChars<TEntityTypeDict>,
+          entityId: source.id,
+          filters: {
+            derivation_type: DerivationTypeDictionary.Unspecified,
+            page: query.page,
+            page_size: query.pageSize,
+          },
+        });
+        const total = derivations.pagination.total_items;
+        const ids = derivations.data.map((p) => p.id);
+        if (total <= 0 || ids.length === 0) return { rows: [], total };
+        const recordings = await getElectricalCellRecordings({
+          context: { virtualLabId, projectId },
+          filters: { id__in: ids },
+          withFacets: false,
+        });
+        return { rows: recordings.data, total };
       },
-      ({ result }) => {
-        return (
-          <div className={cn(detailViewInsetPanelClass(variant))}>
-            <BaseTable
-              size="small"
-              wrapperClassname="h-full min-h-max "
-              className="h-full [&_.ant-table-body]:max-h-full!"
-              dataType={ExtendedEntitiesTypeDict.ElectricalCellRecording}
-              dataSource={result.data}
-              rowKey="id"
-              columns={columns}
-              rowClassName="[&:last-child>td]:border-b-0!"
-              scroll={{
-                x: true,
-              }}
-            />
-          </div>
-        );
-      }
-    )
-    .otherwise(() => null);
+    }),
+    [virtualLabId, projectId, source.id]
+  );
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Header variant={variant}>Exemplar Traces</Header>
-        <Pagination
-          simple
-          responsive
-          hideOnSinglePage
-          defaultPageSize={DEFAULT_PAGE_XSMALL_SIZE}
-          total={total}
-          pageSize={pageSize}
-          current={pageNumber}
-          defaultCurrent={1}
-          align="end"
-          size="default"
-          role="button"
-          className={cn('m-0!', detailViewPaginationClass(variant))}
-          onChange={(_page, _pageSize) => {
-            updatePageState({
-              pageNumber: _page,
-              pageSize: _pageSize,
-            });
+      <Header variant={variant}>Exemplar Traces</Header>
+      <div className={cn(detailViewInsetPanelClass(variant))}>
+        <SimpleGrid<IElectricalCellRecording>
+          columns={columns}
+          getRowId={(row) => row.id}
+          pageSize={DEFAULT_PAGE_XSMALL_SIZE}
+          serverSide={{
+            dataSource,
+            queryKey: ['emodel-exemplar-traces', virtualLabId, projectId, source.id],
           }}
         />
       </div>
-      {content}
     </div>
   );
 }

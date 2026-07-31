@@ -1,7 +1,6 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Pagination as AntPagination } from 'antd';
+import { useQuery } from '@tanstack/react-query';
 import find from 'es-toolkit/compat/find';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, } from 'react';
 
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { DEFAULT_PAGE_SMALL_SIZE } from '@/constants';
@@ -14,6 +13,7 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
+import type { GridDataSource, GridPage } from '@/features/data-grid/core';
 import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { JobReport } from '@/types/accounting';
 
@@ -88,29 +88,34 @@ function costRenderFn(amount: string) {
   return <span>{formattedAmount}</span>;
 }
 
+const JOB_REPORTS_PAGE_SIZE = 8;
+
 export function JobReportList() {
   const { virtualLabId, projectId } = useWorkspace();
-  const [pagination, setPagination] = useState({ page: 1, pageSize: DEFAULT_PAGE_SMALL_SIZE });
 
   const { data: users } = useQuery({
     queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
     queryFn: () => listProjectMembers({ virtualLabId, projectId }),
   });
 
-  const { data } = useQuery({
-    queryKey: keyBuilder.credits({ virtualLabId, projectId, ...pagination }),
-    queryFn: () =>
-      getProjectJobReports({
-        virtualLabId,
-        projectId,
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      }),
-    placeholderData: keepPreviousData,
-  });
-
-  const jobReports = data?.data.items;
-  const total = data?.data.meta.total_items;
+  // Server data source: the grid owns paging; the report list is fetched per page.
+  const dataSource = useMemo<GridDataSource<JobReport>>(
+    () => ({
+      fetch: async (query): Promise<GridPage<JobReport>> => {
+        const response = await getProjectJobReports({
+          virtualLabId,
+          projectId,
+          page: query.page,
+          pageSize: query.pageSize,
+        });
+        return {
+          rows: response?.data.items ?? [],
+          total: response?.data.meta.total_items ?? 0,
+        };
+      },
+    }),
+    [virtualLabId, projectId]
+  );
 
   const userRenderFn = useCallback(
     (userId: string) => {
@@ -146,30 +151,17 @@ export function JobReportList() {
   return (
     <div className="mb-4 flex w-full flex-col items-start gap-2">
       <h3 className="text-primary-9 text-xl font-bold">History</h3>
-      <Card shadowless className={cn('w-full', { 'pb-0': !!total })}>
+      <Card shadowless className={cn('w-full')}>
         <CardContent>
           <SimpleGrid<JobReport>
             columns={columns}
-            rows={jobReports ?? []}
             getRowId={(record) => record.job_id}
+            pageSize={JOB_REPORTS_PAGE_SIZE}
+            serverSide={{
+              dataSource,
+              queryKey: ['project-job-reports', virtualLabId, projectId],
+            }}
           />
-          {!!total && total > pagination.pageSize && (
-            <div className="mt-3 flex w-full items-center justify-end">
-              <AntPagination
-                hideOnSinglePage
-                current={pagination.page}
-                pageSize={pagination.pageSize}
-                total={total}
-                showSizeChanger={false}
-                onChange={(page, pageSize) =>
-                  setPagination((prev) => ({ ...prev, page, pageSize }))
-                }
-                className={cn(
-                  '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!'
-                )}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

@@ -2,25 +2,24 @@ import isString from 'es-toolkit/compat/isString';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import ErrorMessageLine, {
   StandardFallback,
 } from '@/features/entities/e-model/detail-view/error-message-line';
 import { Header } from '@/features/entities/e-model/detail-view/header';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { BaseTable } from '@/ui/segments/data-table/table';
 import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
-import type { ColumnsType } from 'antd/es/table';
 import type {
   EntityCoreObjectTypes,
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types';
+import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -31,17 +30,23 @@ const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Contributions,
 ]);
 
-function makeColumns(virtualLabId: string, projectId: string): ColumnsType<ICellMorphology> {
+function makeColumns(
+  virtualLabId: string,
+  projectId: string
+): Array<SimpleColumn<ICellMorphology>> {
   return Object.entries(defaultColumnsFields).map(([key, field]) => ({
-    title: isString(field.title) ? field.title.toUpperCase() : field.title,
-    key,
-    render: (entity: EntityCoreObjectTypes) => {
+    id: key,
+    // legacy uppercased string titles; a rich (ReactNode) title becomes a headerNode
+    header: isString(field.title) ? field.title.toUpperCase() : key,
+    headerNode: isString(field.title) ? undefined : field.title,
+    // preview keeps its fixed width; other columns size to content (legacy 'max-content')
+    width: key === EntityCoreFields.Preview ? { width: 200 } : undefined,
+    renderCell: (entity) => {
       const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/cell-morphology/${
         entity.id
       }/overview`;
-      return <Link href={href}>{field.render?.(entity)}</Link>;
+      return <Link href={href}>{field.render?.(entity as EntityCoreObjectTypes)}</Link>;
     },
-    width: key === EntityCoreFields.Preview ? '200px' : 'max-content',
   }));
 }
 
@@ -81,18 +86,10 @@ export function ExemplarMorphology({ exemplarMorphology, variant = ViewVariant.L
     <div className="flex flex-col gap-4">
       <Header variant={variant}>{title}</Header>
       <div className={cn(detailViewInsetPanelClass(variant))}>
-        <BaseTable
-          size="small"
-          wrapperClassname="h-full min-h-max "
-          className="h-full [&_.ant-table-body]:max-h-full!"
-          dataType={ExtendedEntitiesTypeDict.CellMorphology}
-          dataSource={morphologies}
-          rowKey="id"
+        <SimpleGrid<ICellMorphology>
+          rows={morphologies}
           columns={columns}
-          rowClassName="[&:last-child>td]:border-b-0!"
-          scroll={{
-            x: true,
-          }}
+          getRowId={(row) => row.id}
         />
       </div>
       <ErrorMessageLine message={displayMorphologyError} />
