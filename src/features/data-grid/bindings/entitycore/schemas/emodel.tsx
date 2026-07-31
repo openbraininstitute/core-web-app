@@ -24,14 +24,16 @@ import type { IEntityGridDefinition } from '../registry';
  * Exemplar morphology, Model score, Contributors, Registration date.
  *
  * Per the legacy field-defs:
- *  - Species is display + facet-filter (`species__name__in`) but NOT server-sortable
- *    for e-model (no `order_by` binding). E-model carries species at the top level
- *    (`r.species`), not under `subject`, so the value accessor reads it directly.
+ *  - Species facet-filters on `species__name__in` (plus `species__name__ilike`) and IS
+ *    server-sortable — `species__name` is in EModelFilter's ordering fields. E-model
+ *    carries species at the top level (`r.species`), not under `subject`, so the value
+ *    accessor reads it directly.
  *  - M-type / E-type sort + facet-filter on `mtype__pref_label` / `etype__pref_label`.
  *  - Contributors ARE sortable for e-model (`contribution__pref_label`).
- *  - Response is a preview of the entity itself (shared entity-preview renderer);
- *    Exemplar morphology (sort `exemplar_morphology__name`) and Model score
- *    (sort `score`) are display + sortable, with no column filter.
+ *  - Response is a preview of the entity itself (shared entity-preview renderer).
+ *  - Exemplar morphology sorts on `exemplar_morphology__name` and filters via the
+ *    `exemplar_morphology` facet (`exemplar_morphology__name__in` / `__ilike`).
+ *  - Model score sorts on `score` and range-filters to `score__gte` / `score__lte`.
  */
 export const emodelSchema: IGridSchema<IEModel> = {
   id: 'emodel',
@@ -51,10 +53,12 @@ export const emodelSchema: IGridSchema<IEModel> = {
     {
       id: 'species',
       header: 'Species',
+      sortable: true,
+      sortField: 'species__name',
       getValue: (r) => r.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'species__name',
         facetKey: 'species',
         description: 'Species',
@@ -70,6 +74,13 @@ export const emodelSchema: IGridSchema<IEModel> = {
       sortField: 'exemplar_morphology__name',
       getValue: (r) => r.exemplar_morphology?.name ?? '',
       width: { minWidth: 160, flex: 1 },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'exemplar_morphology__name',
+        facetKey: 'exemplar_morphology',
+        description: 'Exemplar morphology',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     {
       id: 'eModelScore',
@@ -79,6 +90,7 @@ export const emodelSchema: IGridSchema<IEModel> = {
       getValue: (r) => (r.score == null ? '' : String(r.score)),
       align: Align.Right,
       width: { minWidth: 150 },
+      filter: { operators: [OperatorId.Range], field: 'score' },
     },
     contributionsColumn<IEModel>({ sortable: true, sortField: 'contribution__pref_label' }),
     registrationDateColumn<IEModel>(),

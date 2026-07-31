@@ -141,9 +141,12 @@ describe('me_model_circuit_simulation parity', () => {
       'status',
     ]);
   });
-  it('species facet serializes to the legacy species__name__in (NOT subject__…)', () => {
+  it('species is display-only — /simulation-campaign exposes no species query param', () => {
+    // The legacy field-def bound `species__name__in`, but the endpoint accepts nothing
+    // matching `species*`, so the filter was silently dropped by the API.
+    expect(def.schema.columns.find((c) => c.id === 'species')?.filter).toBeUndefined();
     const p = serializeQuery(query({ filters: setIn('species') }), def.schema);
-    expect(p.species__name__in).toEqual(['x']);
+    expect(p.species__name__in).toBeUndefined();
     expect(p.subject__species__name__in).toBeUndefined();
   });
   assertCampaignDetail(def, 'me_model_circuit_simulation');

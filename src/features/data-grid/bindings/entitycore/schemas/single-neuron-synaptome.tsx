@@ -31,10 +31,13 @@ function labels(values: Array<{ pref_label?: string | null } | undefined> | null
  *    on the `me_model__…` relation keys (`me_model__mtype__pref_label` /
  *    `me_model__etype__pref_label`) — the synaptome-specific `perTypeConstraint`.
  *  - Created by sorts + facet-filters on `created_by__pref_label`.
- *  - Description, ME-model name and Species are DISPLAY-ONLY here: description has no
- *    column filter (legacy `isFilterable: false`); ME-model name has `filter: null`;
- *    and Species has no `order_by`/facet binding for synaptome (its value is read
- *    from the linked ME-model for display).
+ *  - ME-model name filters via the `me_model` facet (`me_model__name__in` /
+ *    `me_model__name__ilike`); it is not server-sortable (absent from
+ *    SingleNeuronSynaptomeFilter's ordering fields).
+ *  - Species reads from the linked ME-model and filters on `me_model__species__name`.
+ *    `me_model.species` is a filter key but NOT a facet key server-side, so this is a
+ *    free-text ilike filter with no option list; it is not server-sortable either.
+ *  - Description is DISPLAY-ONLY: no entitycore endpoint accepts a `description` param.
  */
 export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = {
   id: 'single-neuron-synaptome',
@@ -55,6 +58,13 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
       header: 'ME-model',
       getValue: (r) => r.me_model?.name ?? '',
       width: { minWidth: 160, flex: 1 },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'me_model__name',
+        facetKey: 'me_model',
+        description: 'ME-model',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     {
       id: 'mtype',
@@ -64,7 +74,7 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
       getValue: (r) => labels(r.me_model?.mtypes),
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'me_model__mtype__pref_label',
         facetKey: 'mtype',
         description: 'Morphological type',
@@ -79,7 +89,7 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
       getValue: (r) => labels(r.me_model?.etypes),
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'me_model__etype__pref_label',
         facetKey: 'etype',
         description: 'Electrical type',
@@ -92,6 +102,7 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
       header: 'Species',
       getValue: (r) => r.me_model?.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
+      filter: { operators: [OperatorId.Ilike], field: 'me_model__species__name' },
     },
     createdByColumn<ISingleNeuronSynaptome>({
       sortable: true,

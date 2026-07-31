@@ -75,7 +75,11 @@ export function buildSimulationCampaignDefinition({
     campaignNameColumn<ICampaignRow>(),
     campaignDescriptionColumn<ICampaignRow>(),
     ...(withCircuit ? [circuitNameColumn<ICampaignRow>()] : []),
-    campaignCreatedByColumn<ICampaignRow>(),
+    // `created_by__pref_label` is in SimulationCampaignFilter's ordering fields.
+    campaignCreatedByColumn<ICampaignRow>({
+      sortable: true,
+      sortField: 'created_by__pref_label',
+    }),
     ...(withSpecies ? [campaignSpeciesColumn<ICampaignRow>()] : []),
     campaignRegistrationDateColumn<ICampaignRow>(),
     campaignStatusColumn<ICampaignRow>(),

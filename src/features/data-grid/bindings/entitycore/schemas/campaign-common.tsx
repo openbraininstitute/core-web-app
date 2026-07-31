@@ -33,8 +33,10 @@ export interface ICampaignRow {
 
 /**
  * "Circuit" column — the campaign's source circuit name (legacy
- * `EntityCoreFields.CircuitName`). Display-only: legacy `filter: null`,
- * not sortable.
+ * `EntityCoreFields.CircuitName`). The legacy field-def declared `filter: null`, but
+ * `/simulation-campaign` exposes `circuit__name__in` / `circuit__name__ilike`, serves
+ * a `circuit` facet bucket, and lists `circuit__name` in
+ * SimulationCampaignFilter's ordering fields — so it is both filterable and sortable.
  */
 export function circuitNameColumn<Row extends { circuit?: { name?: string | null } | null }>(
   o?: TColumnOverride<Row>
@@ -43,8 +45,17 @@ export function circuitNameColumn<Row extends { circuit?: { name?: string | null
     {
       id: 'circuitName',
       header: 'Circuit',
+      sortable: true,
+      sortField: 'circuit__name',
       getValue: (r) => r.circuit?.name ?? EMPTY_PLACEHOLDER,
       width: { minWidth: 160, flex: 1 },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'circuit__name',
+        facetKey: 'circuit',
+        description: 'Circuit',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     o
   );
@@ -52,8 +63,8 @@ export function circuitNameColumn<Row extends { circuit?: { name?: string | null
 
 /**
  * "Description" column with NO filter — legacy `EntityCoreFields.Description` is
- * `isFilterable: false` for these listings, unlike the shared `descriptionColumn`
- * factory (which declares an ilike filter for entities that support it).
+ * `isFilterable: false`, and no entitycore list endpoint exposes a `description`
+ * query param either, so there is nothing to bind.
  */
 export function campaignDescriptionColumn<Row extends { description?: string | null }>(
   o?: TColumnOverride<Row>
@@ -71,10 +82,13 @@ export function campaignDescriptionColumn<Row extends { description?: string | n
 
 /**
  * "Species" column for memodel circuit simulations. The row carries a top-level
- * `species` array (legacy renders `r.species`), and the legacy filter constraint is
- * `species__name__in` (the default `SpeciesName` constraint — memodel has no
- * per-type override), so the field is `species__name`, NOT the `subject__…` path the
- * shared `speciesColumn` uses. Not sortable (memodel has no `species` order mapping).
+ * `species` array (legacy renders `r.species`).
+ *
+ * DISPLAY-ONLY. The legacy field-def bound the default `species__name__in`
+ * constraint, but `/simulation-campaign` exposes NO species query param at all
+ * (nothing matching `species*`), `species` is not one of its facet keys, and
+ * `species__name` is absent from SimulationCampaignFilter's ordering fields — so the
+ * filter was silently dropped by the API and has been removed rather than reworded.
  */
 export function campaignSpeciesColumn<Row extends ICampaignRow>(
   o?: TColumnOverride<Row>
@@ -91,13 +105,6 @@ export function campaignSpeciesColumn<Row extends ICampaignRow>(
         return fromArray || r.subject?.species?.name || '';
       },
       width: { minWidth: 130, flex: 1 },
-      filter: {
-        operators: [OperatorId.In],
-        field: 'species__name',
-        facetKey: 'species',
-        description: 'Species',
-        options: { kind: FilterOptionsKind.Facets },
-      },
     },
     o
   );

@@ -62,6 +62,24 @@ function ilike(columnId: string): TFilterModel {
     },
   };
 }
+function range(columnId: string, min: number, max: number): TFilterModel {
+  return {
+    [columnId]: {
+      columnId,
+      operator: OperatorId.Range,
+      value: { kind: FilterValueKind.Range, min, max },
+    },
+  };
+}
+function dateRange(columnId: string, from: string, to: string): TFilterModel {
+  return {
+    [columnId]: {
+      columnId,
+      operator: OperatorId.DateRange,
+      value: { kind: FilterValueKind.DateRange, from, to },
+    },
+  };
+}
 function boolTrue(columnId: string): TFilterModel {
   return {
     [columnId]: {
@@ -106,8 +124,10 @@ describe('emodel parity', () => {
       serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
     ).toEqual(['x']);
   });
-  it('sorts: species is NOT sortable; morphology/score/contributions bind their legacy order keys', () => {
-    expect(s.columns.find((c) => c.id === 'species')?.sortable).toBeFalsy();
+  it('sorts: species/morphology/score/contributions bind their EModelFilter order keys', () => {
+    // `species__name` IS in EModelFilter.Constants.ordering_model_fields.
+    expect(s.columns.find((c) => c.id === 'species')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('species')), s).order_by).toEqual(['-species__name']);
     expect(serializeQuery(query(sortDesc('exemplarMorphology')), s).order_by).toEqual([
       '-exemplar_morphology__name',
     ]);
@@ -119,10 +139,15 @@ describe('emodel parity', () => {
       '-creation_date',
     ]);
   });
-  it('Response / morphology / score carry no column filter', () => {
-    for (const id of ['eModelResponse', 'exemplarMorphology', 'eModelScore']) {
-      expect(s.columns.find((c) => c.id === id)?.filter).toBeUndefined();
-    }
+  it('Response is display-only; morphology facet-filters and score range-filters', () => {
+    expect(s.columns.find((c) => c.id === 'eModelResponse')?.filter).toBeUndefined();
+    expect(
+      serializeQuery(query({ filters: setIn('exemplarMorphology') }), s)
+        .exemplar_morphology__name__in
+    ).toEqual(['x']);
+    const scored = serializeQuery(query({ filters: range('eModelScore', 1, 9) }), s);
+    expect(scored.score__gte).toBe(1);
+    expect(scored.score__lte).toBe(9);
   });
 });
 
@@ -212,10 +237,16 @@ describe('single_neuron_synaptome parity', () => {
       '-me_model__etype__pref_label',
     ]);
   });
-  it('description / me-model / species are display-only (no column filter)', () => {
-    for (const id of ['description', 'me_model', 'species']) {
-      expect(s.columns.find((c) => c.id === id)?.filter).toBeUndefined();
-    }
+  it('description is display-only; me-model + species filter on their me_model__ keys', () => {
+    expect(s.columns.find((c) => c.id === 'description')?.filter).toBeUndefined();
+    expect(serializeQuery(query({ filters: setIn('me_model') }), s).me_model__name__in).toEqual([
+      'x',
+    ]);
+    expect(
+      serializeQuery(query({ filters: ilike('species') }), s).me_model__species__name__ilike
+    ).toBe('%foo%');
+    // Neither is in SingleNeuronSynaptomeFilter's ordering fields.
+    expect(s.columns.find((c) => c.id === 'me_model')?.sortable).toBeFalsy();
     expect(s.columns.find((c) => c.id === 'species')?.sortable).toBeFalsy();
   });
   it('createdBy sorts + facet-filters on created_by__pref_label', () => {
@@ -311,9 +342,13 @@ describe('analysis_notebook_result parity', () => {
       'updateDate',
     ]);
   });
-  it('update date is display + sortable on update_date with no column filter', () => {
-    const upd = s.columns.find((c) => c.id === 'updateDate');
-    expect(upd?.filter).toBeUndefined();
+  it('update date sorts on update_date and date-range-filters on update_date__gte/__lte', () => {
+    const dated = serializeQuery(
+      query({ filters: dateRange('updateDate', '2026-01-01', '2026-02-01') }),
+      s
+    );
+    expect(dated.update_date__gte).toBe('2026-01-01');
+    expect(dated.update_date__lte).toBe('2026-02-01');
     expect(serializeQuery(query(sortDesc('updateDate')), s).order_by).toEqual(['-update_date']);
     expect(s.columns.find((c) => c.id === 'description')?.filter).toBeUndefined();
     expect(

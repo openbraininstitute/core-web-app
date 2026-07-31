@@ -23,7 +23,6 @@ type Row = IEMCellMesh & IHasSpecies & IHasReleaseVersion & IHasEmDataset;
 /**
  * EM cell mesh listing (curated). Column order matches the legacy `em-cell-mesh`
  * view-def (Name, Brain region, Species, Version, Dataset, Registration date).
- * Species has no backend order key in the Data section, so it is not sortable here.
  * The "Dataset" column resolves the dense-reconstruction dataset name lazily via
  * {@link EM_DATASET_RENDERER}.
  */
@@ -36,11 +35,11 @@ export const emCellMeshSchema: IGridSchema<Row> = {
   columns: [
     nameColumn<Row>(),
     brainRegionColumn<Row>(),
-    // Species has no backend order key for em-cell-mesh in the Data section, so it is
-    // not sortable. Legacy also gates the species *filter* to the Simulate/Process/
-    // Extract workflows; we keep it filterable here — an additive, backend-supported
-    // capability (subject__species__name__in), not a parity regression.
-    speciesColumn<Row>({ sortable: false }),
+    // `subject__species__name` is in EMCellMeshFilter.Constants.ordering_model_fields,
+    // so species IS server-sortable here. Legacy gates the species *filter* to the
+    // Simulate/Process/Extract workflows; we keep it filterable in every section — an
+    // additive, backend-supported capability, not a parity regression.
+    speciesColumn<Row>(),
     releaseVersionColumn<Row>(),
     emDatasetColumn<Row>(),
     registrationDateColumn<Row>(),

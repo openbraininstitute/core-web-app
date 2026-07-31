@@ -57,7 +57,7 @@ export const ionChannelModelSchema: IGridSchema<IonChannelModel> = {
       getValue: (r) => r.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'subject__species__name',
         facetKey: 'species',
         description: 'Species',

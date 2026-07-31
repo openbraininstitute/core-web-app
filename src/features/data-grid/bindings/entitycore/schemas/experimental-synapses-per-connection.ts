@@ -40,9 +40,9 @@ type Row = IExperimentalSynapsesPerConnection &
 /**
  * Experimental synapses-per-connection listing. Column order matches the legacy
  * view-def (Brain Region [From]/[To], Cell Type [From]/[To], Mean ± STD, Species,
- * Age, Contributors). Mean ± STD and Age are not sortable here (no backend order key
- * for this entity). NB: the post-region filter serializes to the single-underscore
- * `post_region__name_in` — see `postSynapticRegionColumn`.
+ * Age, Contributors). Mean ± STD is not sortable here (the measurement scalars are
+ * absent from ExperimentalSynapsesPerConnectionFilter's ordering fields), but Age IS
+ * (`subject__age_value`).
  */
 export const experimentalSynapsesPerConnectionSchema: IGridSchema<Row> = {
   id: 'experimental-synapses-per-connection',
@@ -57,7 +57,7 @@ export const experimentalSynapsesPerConnectionSchema: IGridSchema<Row> = {
     postSynapticCellTypeColumn<Row>(),
     meanStdColumn<Row>(),
     speciesColumn<Row>(),
-    subjectAgeColumn<Row>(),
+    subjectAgeColumn<Row>({ sortable: true }),
     contributionsColumn<Row>(),
   ],
 };

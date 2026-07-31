@@ -70,8 +70,9 @@ export const circuitSchema: IGridSchema<ICircuit> = {
       },
     } satisfies IColumnModel<ICircuit>,
     descriptionColumn<ICircuit>({ id: EntityCoreFields.Description }),
-    // ICircuit's type omits `brain_region` (present on the wire); read it via a cast
-    // — same shape the catalog `brainRegionColumn` reads, region gating owns filtering.
+    // ICircuit's type omits `brain_region` (present on the wire); read it via a cast —
+    // same shape/filter binding as the catalog `brainRegionColumn`. The hierarchy
+    // selector's `within_brain_region_*` gating still applies on top.
     {
       id: EntityCoreFields.BrainRegion,
       header: 'Brain region',
@@ -80,6 +81,13 @@ export const circuitSchema: IGridSchema<ICircuit> = {
       width: { minWidth: 150, flex: 1 },
       getValue: (row) =>
         (row as unknown as { brain_region?: { name?: string | null } }).brain_region?.name ?? '',
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'brain_region__name',
+        facetKey: 'brain_region',
+        description: 'Brain region',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     } satisfies IColumnModel<ICircuit>,
     speciesColumn<ICircuit>({ id: EntityCoreFields.SpeciesName }),
     {
@@ -171,13 +179,20 @@ export const circuitSchema: IGridSchema<ICircuit> = {
       sortField: 'published_in',
       width: { minWidth: 150, flex: 1 },
       getValue: (row) => row.published_in ?? '',
+      // /circuit exposes `published_in` + `published_in__ilike` (no `__in`).
+      filter: { operators: [OperatorId.Ilike], field: 'published_in' },
     } satisfies IColumnModel<ICircuit>,
     {
       id: EntityCoreFields.ArtifactExperimentDate,
       header: 'Experiment date',
       align: Align.Left,
+      // `experiment_date` is in CircuitFilter's ordering fields, and /circuit exposes
+      // `experiment_date__gte` / `experiment_date__lte`.
+      sortable: true,
+      sortField: 'experiment_date',
       width: { minWidth: 140 },
       getValue: (row) => formatDate(row.experiment_date),
+      filter: { operators: [OperatorId.DateRange], field: 'experiment_date' },
     } satisfies IColumnModel<ICircuit>,
   ],
 };

@@ -108,8 +108,14 @@ function assertCircuitFamilyFilters(schema: IGridSchema<unknown>) {
     '%foo%'
   );
   expect(col(schema, EntityCoreFields.Description)?.filter).toBeUndefined();
-  // Brain region has no filter (region gating owns it); Scale has no filter for these types.
-  expect(col(schema, EntityCoreFields.BrainRegion)?.filter).toBeUndefined();
+  // Brain region filters by name on top of the hierarchy gating (`brain_region__name__in`
+  // / `__ilike` are accepted by /circuit and `brain_region` is one of its facet keys).
+  expect(
+    serializeQuery(query({ filters: setIn(EntityCoreFields.BrainRegion) }), schema)
+      .brain_region__name__in
+  ).toEqual(['x']);
+  // Scale stays unfiltered: each of these dataTypes narrows `scale__in` to its own scale in
+  // the domain config, and a user-supplied scale would override that narrowing.
   expect(col(schema, EntityCoreFields.CircuitScale)?.filter).toBeUndefined();
   // Number-of-* ValueRange → field__gte/__lte.
   const neurons = serializeQuery(
@@ -165,9 +171,9 @@ describe.each([
         .target_simulator__in
     ).toEqual(['x']);
   });
-  it('sortability mirrors the field-def order.types (species NOT sortable here)', () => {
+  it('sortability follows CircuitFilter.ordering_model_fields (species included)', () => {
     expect(col(s, EntityCoreFields.BrainRegion)?.sortable).toBe(true);
-    expect(col(s, EntityCoreFields.SpeciesName)?.sortable).toBe(false);
+    expect(col(s, EntityCoreFields.SpeciesName)?.sortable).toBe(true);
     expect(col(s, EntityCoreFields.CircuitScale)?.sortable).toBe(true);
     expect(col(s, EntityCoreFields.CircuitNumberNeurons)?.sortable).toBe(true);
     expect(col(s, EntityCoreFields.CircuitTargetSimulator)?.sortable).toBe(true);
@@ -186,21 +192,24 @@ describe('whole_brain parity', () => {
   it('columns match the legacy view-def order', () => {
     expect(ids(s, dataCtx('whole_brain'))).toEqual(CIRCUIT_FAMILY_COLUMNS);
   });
-  it('serializes the same filters, but Species is display-only (no legacy filter rule)', () => {
+  it('serializes the same filters, incl. the species facet', () => {
     assertCircuitFamilyFilters(s);
-    expect(col(s, EntityCoreFields.SpeciesName)?.filter).toBeUndefined();
+    expect(
+      serializeQuery(query({ filters: setIn(EntityCoreFields.SpeciesName) }), s)
+        .subject__species__name__in
+    ).toEqual(['x']);
     expect(
       serializeQuery(query({ filters: setIn(EntityCoreFields.CircuitTargetSimulator) }), s)
         .target_simulator__in
     ).toEqual(['x']);
   });
-  it('only Target simulator + Name/Registration date are sortable (whole_brain order.types)', () => {
+  it('every CircuitFilter ordering field is sortable (same endpoint as the rest)', () => {
     expect(col(s, EntityCoreFields.CircuitTargetSimulator)?.sortable).toBe(true);
-    expect(col(s, EntityCoreFields.BrainRegion)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.SpeciesName)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.CircuitScale)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.CircuitNumberNeurons)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.CreatedBy)?.sortable).toBe(false);
+    expect(col(s, EntityCoreFields.BrainRegion)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.SpeciesName)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.CircuitScale)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.CircuitNumberNeurons)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.CreatedBy)?.sortable).toBe(true);
   });
 });
 
@@ -217,7 +226,7 @@ describe('single_neuron_circuit parity', () => {
         .subject__species__name__in
     ).toEqual(['x']);
   });
-  it('species IS server-sortable here (only family member in species order.types)', () => {
+  it('species IS server-sortable (`subject__species__name` is a CircuitFilter order field)', () => {
     expect(col(s, EntityCoreFields.SpeciesName)?.sortable).toBe(true);
     expect(serializeQuery(query(sortDesc(EntityCoreFields.SpeciesName)), s).order_by).toEqual([
       '-subject__species__name',
@@ -251,12 +260,12 @@ describe('brain_region parity', () => {
         .subject__species__name__in
     ).toEqual(['x']);
   });
-  it('nothing but Name/Registration date is sortable (brain_region in no order.types)', () => {
-    expect(col(s, EntityCoreFields.BrainRegion)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.SpeciesName)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.CircuitScale)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.CircuitNumberNeurons)?.sortable).toBe(false);
-    expect(col(s, EntityCoreFields.CreatedBy)?.sortable).toBe(false);
+  it('sorts like the rest of the family (same /circuit endpoint + CircuitFilter)', () => {
+    expect(col(s, EntityCoreFields.BrainRegion)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.SpeciesName)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.CircuitScale)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.CircuitNumberNeurons)?.sortable).toBe(true);
+    expect(col(s, EntityCoreFields.CreatedBy)?.sortable).toBe(true);
     expect(col(s, EntityCoreFields.RegistrationDate)?.sortable).toBe(true);
   });
 });
@@ -321,7 +330,6 @@ describe('single_neuron_simulation parity', () => {
         .created_by__pref_label__in
     ).toEqual(['x']);
     for (const id of [
-      EntityCoreFields.SimulationModel,
       EntityCoreFields.SimulationStimulus,
       EntityCoreFields.SimulationResponse,
       EntityCoreFields.InjectionLocation,
@@ -330,10 +338,19 @@ describe('single_neuron_simulation parity', () => {
       expect(col(s, id)?.filter).toBeUndefined();
       expect(col(s, id)?.sortable).toBeFalsy();
     }
+    // ME-model is filterable (`me_model__name__in` + the `me_model` facet) but not sortable.
+    expect(
+      serializeQuery(query({ filters: setIn(EntityCoreFields.SimulationModel) }), s)
+        .me_model__name__in
+    ).toEqual(['x']);
+    expect(col(s, EntityCoreFields.SimulationModel)?.sortable).toBeFalsy();
   });
   it('brain region + created by are server-sortable (in the field-def order.types)', () => {
     expect(col(s, EntityCoreFields.BrainRegion)?.sortable).toBe(true);
-    expect(col(s, EntityCoreFields.BrainRegion)?.filter).toBeUndefined();
+    expect(
+      serializeQuery(query({ filters: setIn(EntityCoreFields.BrainRegion) }), s)
+        .brain_region__name__in
+    ).toEqual(['x']);
     expect(col(s, EntityCoreFields.CreatedBy)?.sortable).toBe(true);
     expect(serializeQuery(query(sortDesc(EntityCoreFields.CreatedBy)), s).order_by).toEqual([
       '-created_by__pref_label',
@@ -367,10 +384,15 @@ describe('single_neuron_synaptome_simulation parity', () => {
       EntityCoreFields.Description,
       EntityCoreFields.SimulationStimulus,
       EntityCoreFields.SimulationResponse,
-      EntityCoreFields.SynaptomeModelName,
     ]) {
       expect(col(s, id)?.filter).toBeUndefined();
     }
+    // Synaptome is filterable (`synaptome__name__in` + the `synaptome` facet), not sortable.
+    expect(
+      serializeQuery(query({ filters: setIn(EntityCoreFields.SynaptomeModelName) }), s)
+        .synaptome__name__in
+    ).toEqual(['x']);
+    expect(col(s, EntityCoreFields.SynaptomeModelName)?.sortable).toBeFalsy();
   });
   it('brain region + created by are server-sortable', () => {
     expect(col(s, EntityCoreFields.BrainRegion)?.sortable).toBe(true);

@@ -20,11 +20,18 @@ import type { IEntityGridDefinition } from '../registry';
  * mirror the shared circuit column presentation (`schemas/circuit.tsx`) MINUS the flat↔
  * hierarchy plugin — they are flat listings with no recursive subcircuit expansion.
  *
- * The collapsed columns follow each entity's legacy `view-defs/model/*` order; per-column
- * server filters/sorts are locked to the legacy field metadata (`fields-defs/model.tsx` +
- * `fields-defs/common.tsx`) by the model-parity test, NOT copied wholesale from the circuit
- * schema — several sorts/filters that Circuit has are absent for these types (see per-entity
- * flags below and the parity test's per-type expectations).
+ * The collapsed columns follow each entity's legacy `view-defs/model/*` order. Filters and
+ * sorts are bound to what the BACKEND accepts, not to the legacy per-type field metadata:
+ * every family member is served by `GET /circuit` through the same `CircuitFilter`, so the
+ * accepted query params and `CircuitFilter.Constants.ordering_model_fields` are identical
+ * across all six. The legacy `order.types` / per-type filter rules were a UI-side
+ * restriction, so brain region, species, scale, the three counters, target simulator and
+ * created-by are sortable — and species filterable — for ALL of them.
+ *
+ * The one deliberate omission is the Scale column filter: each of these dataTypes narrows
+ * `scale__in` to its own scale in the entity domain config (`circuitScaleFilter`), and a
+ * user-supplied `scale__in` would override that narrowing and dissolve the listing's
+ * identity. Only the base `circuit` dataType (`schemas/circuit.tsx`) exposes it.
  *
  * Legacy view-def column order (per `view-defs/model/*`):
  *   Name, Description, Brain region, Species, Scale, N° neurons, N° synapses, N° connections,
@@ -45,17 +52,12 @@ function keyByValue<T extends Record<string, { key: string }>>(
 }
 
 /** ValueRange number column (localized display, `field__gte`/`field__lte` filter). */
-function numberColumn(
-  id: string,
-  header: string,
-  field: string,
-  sortable: boolean
-): IColumnModel<ICircuit> {
+function numberColumn(id: string, header: string, field: string): IColumnModel<ICircuit> {
   return {
     id,
     header,
     align: Align.Right,
-    sortable,
+    sortable: true,
     sortField: field,
     width: { minWidth: 130 },
     getValue: (row) => localizedNumber((row as unknown as Record<string, number>)[field]),
@@ -63,22 +65,9 @@ function numberColumn(
   };
 }
 
-/** Per-entity sort availability (mirrors each field-def's `order.types` membership). */
-interface CircuitModelSorts {
-  brainRegion: boolean;
-  species: boolean;
-  scale: boolean;
-  numbers: boolean;
-  targetSimulator: boolean;
-  createdBy: boolean;
-}
-
 interface BuildOptions {
   dataType: string;
   id: string;
-  sorts: CircuitModelSorts;
-  /** whether the Species column exposes the `subject__species__name` facet filter */
-  speciesFilter: boolean;
   /** brain_region's legacy view-def omits the Target simulator column */
   includeTargetSimulator: boolean;
 }
@@ -86,72 +75,56 @@ interface BuildOptions {
 function buildCircuitModelDefinition({
   dataType,
   id,
-  sorts,
-  speciesFilter,
   includeTargetSimulator,
 }: BuildOptions): IEntityGridDefinition<ICircuit> {
   const columns: Array<IColumnModel<ICircuit>> = [
     nameColumn<ICircuit>({ id: EntityCoreFields.Name }),
-    // Description is display-only: the legacy field (`fields-defs/common.tsx`) is
-    // `isFilterable: false` with a `search` constraint (the quick-search box, not a column
-    // filter), so NO per-column ilike filter is declared here.
+    // Description is display-only: /circuit exposes no `description` query param at all
+    // (free-text description search goes through the quick-search box).
     {
       id: EntityCoreFields.Description,
       header: 'Description',
       getValue: (row) => row.description ?? '',
       width: { minWidth: 200, flex: 2 },
     },
-    // Brain region: no filter (region gating owns filtering); sortable only where the
-    // field-def's `order.types` includes this entity. ICircuit's type omits `brain_region`
-    // (present on the wire) — read it via a cast, same as circuit.tsx.
+    // Brain region: `brain_region__name__in` / `__ilike` + the `brain_region` facet come
+    // from the shared catalog factory; region gating (`within_brain_region_*`) still applies
+    // on top. ICircuit's type omits `brain_region` (present on the wire) — read it via a
+    // cast, same as circuit.tsx.
     {
       id: EntityCoreFields.BrainRegion,
       header: 'Brain region',
-      sortable: sorts.brainRegion,
+      sortable: true,
       sortField: 'brain_region__name',
       width: { minWidth: 150, flex: 1 },
       getValue: (row) =>
         (row as unknown as { brain_region?: { name?: string | null } }).brain_region?.name ?? '',
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'brain_region__name',
+        facetKey: 'brain_region',
+        description: 'Brain region',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
-    speciesFilter
-      ? speciesColumn<ICircuit>({ id: EntityCoreFields.SpeciesName, sortable: sorts.species })
-      : // whole_brain: species has no legacy filter rule → display-only.
-        {
-          id: EntityCoreFields.SpeciesName,
-          header: 'Species',
-          sortable: sorts.species,
-          sortField: 'subject__species__name',
-          width: { minWidth: 140, flex: 1 },
-          getValue: (row) => row.subject?.species?.name ?? '',
-        },
-    // Scale: no filter for these types (only the base Circuit dataType enables the scale
-    // filter in the legacy field-def); sortable per `order.types`.
+    speciesColumn<ICircuit>({ id: EntityCoreFields.SpeciesName }),
+    // Scale: sortable, but NOT filterable — see the module doc (the dataType's own
+    // `scale__in` narrowing would be overridden by a user-supplied scale filter).
     {
       id: EntityCoreFields.CircuitScale,
       header: 'Scale',
       align: Align.Left,
-      sortable: sorts.scale,
+      sortable: true,
       sortField: 'scale',
       width: { width: 120, minWidth: 100 },
       getValue: (row) => CircuitScale[keyByValue(CircuitScale, row.scale)]?.label ?? '',
     },
-    numberColumn(
-      EntityCoreFields.CircuitNumberNeurons,
-      'Number of neurons',
-      'number_neurons',
-      sorts.numbers
-    ),
-    numberColumn(
-      EntityCoreFields.CircuitNumberSynapses,
-      'Number of synapses',
-      'number_synapses',
-      sorts.numbers
-    ),
+    numberColumn(EntityCoreFields.CircuitNumberNeurons, 'Number of neurons', 'number_neurons'),
+    numberColumn(EntityCoreFields.CircuitNumberSynapses, 'Number of synapses', 'number_synapses'),
     numberColumn(
       EntityCoreFields.CircuitNumberConnections,
       'Number of connections',
-      'number_connections',
-      sorts.numbers
+      'number_connections'
     ),
   ];
 
@@ -160,7 +133,7 @@ function buildCircuitModelDefinition({
       id: EntityCoreFields.CircuitTargetSimulator,
       header: 'Target simulator',
       align: Align.Left,
-      sortable: sorts.targetSimulator,
+      sortable: true,
       sortField: 'target_simulator',
       width: { minWidth: 150, flex: 1 },
       getValue: (row) =>
@@ -182,7 +155,7 @@ function buildCircuitModelDefinition({
   columns.push(
     createdByColumn<ICircuit>({
       id: EntityCoreFields.CreatedBy,
-      sortable: sorts.createdBy,
+      sortable: true,
       sortField: 'created_by__pref_label',
     }),
     registrationDateColumn<ICircuit>({ id: EntityCoreFields.RegistrationDate })
@@ -199,86 +172,41 @@ function buildCircuitModelDefinition({
   return { dataType, schema };
 }
 
-/** Micro-, small-micro- and paired-neuron circuits share identical filter/sort metadata. */
-const CIRCUIT_LIKE_SORTS: CircuitModelSorts = {
-  brainRegion: true,
-  species: false,
-  scale: true,
-  numbers: true,
-  targetSimulator: true,
-  createdBy: true,
-};
-
 export const microCircuitGridDefinition = buildCircuitModelDefinition({
   dataType: ExtendedEntitiesTypeDict.Microcircuit,
   id: 'micro-circuit',
-  sorts: CIRCUIT_LIKE_SORTS,
-  speciesFilter: true,
   includeTargetSimulator: true,
 });
 
 export const smallMicroCircuitGridDefinition = buildCircuitModelDefinition({
   dataType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
   id: 'small-micro-circuit',
-  sorts: CIRCUIT_LIKE_SORTS,
-  speciesFilter: true,
   includeTargetSimulator: true,
 });
 
 export const pairedNeuronCircuitGridDefinition = buildCircuitModelDefinition({
   dataType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
   id: 'paired-neuron-circuit',
-  sorts: CIRCUIT_LIKE_SORTS,
-  speciesFilter: true,
   includeTargetSimulator: true,
 });
 
 export const wholeBrainGridDefinition = buildCircuitModelDefinition({
   dataType: ExtendedEntitiesTypeDict.WholeBrain,
   id: 'whole-brain',
-  // whole_brain appears only in target_simulator's `order.types` — every other sort is absent.
-  sorts: {
-    brainRegion: false,
-    species: false,
-    scale: false,
-    numbers: false,
-    targetSimulator: true,
-    createdBy: false,
-  },
-  speciesFilter: false,
   includeTargetSimulator: true,
 });
 
 export const singleNeuronCircuitGridDefinition = buildCircuitModelDefinition({
   dataType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
   id: 'single-neuron-circuit',
-  // SingleNeuronCircuit is the only family member whose species column is server-sortable.
-  sorts: {
-    brainRegion: true,
-    species: true,
-    scale: true,
-    numbers: true,
-    targetSimulator: true,
-    createdBy: true,
-  },
-  speciesFilter: true,
   includeTargetSimulator: true,
 });
 
 export const brainRegionGridDefinition = buildCircuitModelDefinition({
   dataType: ExtendedEntitiesTypeDict.BrainRegion,
   id: 'brain-region',
-  // brain_region is absent from every circuit field-def `order.types` → nothing sortable
-  // except Name/Registration date (which are always sortable).
-  sorts: {
-    brainRegion: false,
-    species: false,
-    scale: false,
-    numbers: false,
-    targetSimulator: false,
-    createdBy: false,
-  },
-  speciesFilter: true,
+  // The brain-region browse is the only family member whose legacy view-def omits the
+  // Target simulator column.
   includeTargetSimulator: false,
 });
 

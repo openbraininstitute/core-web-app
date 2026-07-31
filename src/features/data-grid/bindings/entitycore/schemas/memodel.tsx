@@ -34,8 +34,10 @@ import type { IEntityGridDefinition } from '../registry';
  *  - "Validated" is a display-only True/False derived from `validation_status`.
  *  - Brain region sorts on `brain_region__name` (no column filter — handled by the
  *    brain-region hierarchy selector).
- *  - Species is display + facet-filter (`species__name__in`) but NOT server-sortable
- *    for me-model; the value is read from the top-level `species`, not `subject`.
+ *  - Species is display + facet-filter (`species__name__in` / `species__name__ilike`)
+ *    but NOT server-sortable for me-model (`species__name` is absent from
+ *    MEModelFilter's ordering fields); the value is read from the top-level `species`,
+ *    not `subject`.
  *  - M-type / E-type sort + facet-filter on `mtype__pref_label` / `etype__pref_label`.
  *  - Created by sorts + facet-filters on `created_by__pref_label`.
  */
@@ -67,7 +69,7 @@ export function buildMemodelColumns(): Array<IColumnModel<IMEModel>> {
       getValue: (r) => r.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'species__name',
         facetKey: 'species',
         description: 'Species',

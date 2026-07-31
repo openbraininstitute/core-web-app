@@ -1,6 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { SortDirection } from '../../../core';
+import { OperatorId, SortDirection } from '../../../core';
 import { contributionsColumn, formatDate, nameColumn, previewColumn } from '../columns/catalog';
 import { NOTEBOOK_IMAGE_PREVIEW_RENDERER, NotebookImagePreview } from '../renderers/notebook-cells';
 import { registerSharedRenderers } from '../renderers/register';
@@ -17,11 +17,12 @@ import type { IEntityGridDefinition } from '../registry';
  * registration date.
  *
  * Per the legacy field-defs: the preview renders notebook figures via the shared
- * `NotebookPreviewThumbnail`; Description is DISPLAY-ONLY (`isFilterable: false`);
- * Update date is display + sortable on `update_date` (the backend ordering field —
- * `updated_at` is rejected as an invalid ordering field) with NO
- * column filter (`isFilterable: false`); Contributors facet-filters on
- * `contribution__pref_label__in` but is not server-sortable for notebooks.
+ * `NotebookPreviewThumbnail`; Description is DISPLAY-ONLY (no entitycore endpoint
+ * accepts a `description` param); Update date sorts on `update_date` (the backend
+ * ordering field — `updated_at` is rejected as an invalid ordering field) and
+ * date-range-filters to `update_date__gte` / `update_date__lte`; Contributors
+ * facet-filters on `contribution__pref_label__in` (plus `__ilike`) but is not
+ * server-sortable for notebooks.
  */
 export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> = {
   id: 'analysis-notebook-result',
@@ -50,6 +51,7 @@ export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> 
       sortField: 'update_date',
       getValue: (r) => formatDate(r.update_date),
       width: { minWidth: 150 },
+      filter: { operators: [OperatorId.DateRange], field: 'update_date' },
     },
   ],
 };

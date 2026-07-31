@@ -159,6 +159,12 @@ export function nameColumn<Row extends IHasName>(o?: TColumnOverride<Row>): ICol
   );
 }
 
+/**
+ * Description is DISPLAY-ONLY: no entitycore list endpoint exposes a `description`
+ * query param (verified against the OpenAPI spec — zero paths accept `description`,
+ * `description__ilike` or `description__in`). Free-text description search is served
+ * by the quick-search box (`search` / `ilike_search`), not a column filter.
+ */
 export function descriptionColumn<Row extends IHasDescription>(
   o?: TColumnOverride<Row>
 ): IColumnModel<Row> {
@@ -168,12 +174,17 @@ export function descriptionColumn<Row extends IHasDescription>(
       header: 'Description',
       getValue: (r) => r.description ?? '',
       width: { minWidth: 200, flex: 2 },
-      filter: { operators: [OperatorId.Ilike], field: 'description' },
     },
     o
   );
 }
 
+/**
+ * Brain region. The brain-region hierarchy selector filters by ascendants
+ * (`within_brain_region_*`); this column adds the orthogonal per-name filter the
+ * backend also accepts (`brain_region__name__in` / `brain_region__name__ilike`),
+ * with options from the server-computed `brain_region` facet bucket.
+ */
 export function brainRegionColumn<Row extends IHasBrainRegion>(
   o?: TColumnOverride<Row>
 ): IColumnModel<Row> {
@@ -185,6 +196,13 @@ export function brainRegionColumn<Row extends IHasBrainRegion>(
       sortField: 'brain_region__name',
       getValue: (r) => r.brain_region?.name ?? '',
       width: { minWidth: 150, flex: 1 },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'brain_region__name',
+        facetKey: 'brain_region',
+        description: 'Brain region',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     o
   );
@@ -202,7 +220,7 @@ export function speciesColumn<Row extends IHasSpecies>(
       getValue: (r) => r.subject?.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'subject__species__name',
         facetKey: 'species',
         description: 'Species',
@@ -223,7 +241,7 @@ export function mtypeColumn<Row extends IHasMtypes>(o?: TColumnOverride<Row>): I
       getValue: (r) => joinLabels((r.mtypes ?? []).map((m) => m.pref_label)),
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'mtype__pref_label',
         facetKey: 'mtype',
         description: 'Morphological type',
@@ -244,7 +262,7 @@ export function etypeColumn<Row extends IHasEtypes>(o?: TColumnOverride<Row>): I
       getValue: (r) => joinLabels((r.etypes ?? []).map((e) => e.pref_label)),
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'etype__pref_label',
         facetKey: 'etype',
         description: 'Electrical type',
@@ -266,7 +284,7 @@ export function contributionsColumn<Row extends IHasContributions>(
       cellRenderer: CONTRIBUTORS_RENDERER,
       width: { minWidth: 180, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'contribution__pref_label',
         facetKey: 'contribution',
         options: { kind: FilterOptionsKind.Facets },
@@ -286,7 +304,7 @@ export function createdByColumn<Row extends IHasCreatedBy>(
       getValue: (r) => r.created_by?.pref_label ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'created_by__pref_label',
         facetKey: 'created_by',
         options: { kind: FilterOptionsKind.Facets },
@@ -538,7 +556,7 @@ export function preSynapticRegionColumn<Row extends IHasPreRegion>(
       getValue: (r) => r.pre_region?.name ?? '',
       width: { minWidth: 150, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'pre_region__name',
         facetKey: 'pre_region',
         options: { kind: FilterOptionsKind.Facets },
@@ -549,9 +567,14 @@ export function preSynapticRegionColumn<Row extends IHasPreRegion>(
 }
 
 /**
- * Post-synaptic brain region ("Brain Region [To]"). NB: the backend filter field is
- * `post_region__name_in` — a SINGLE underscore before `in` — so this uses
- * {@link OperatorId.InSingleUnderscore}, unlike every sibling `__in` filter.
+ * Post-synaptic brain region ("Brain Region [To]").
+ *
+ * This used to serialize to the single-underscore `post_region__name_in`
+ * ({@link OperatorId.InSingleUnderscore}), copied from the legacy field-def. The
+ * current entitycore spec does NOT expose that param at all — the only set filter on
+ * `/experimental-synapses-per-connection` is the standard `post_region__name__in`
+ * (plus `post_region__name__ilike`), so the single-underscore filter was silently
+ * dropped by the API. Now spelled like every sibling relation filter.
  */
 export function postSynapticRegionColumn<Row extends IHasPostRegion>(
   o?: TColumnOverride<Row>
@@ -565,7 +588,7 @@ export function postSynapticRegionColumn<Row extends IHasPostRegion>(
       getValue: (r) => r.post_region?.name ?? '',
       width: { minWidth: 150, flex: 1 },
       filter: {
-        operators: [OperatorId.InSingleUnderscore],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'post_region__name',
         facetKey: 'post_region',
         options: { kind: FilterOptionsKind.Facets },
@@ -588,7 +611,7 @@ export function preSynapticCellTypeColumn<Row extends IHasPreMtype>(
       getValue: (r) => r.pre_mtype?.pref_label ?? '',
       width: { minWidth: 150, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'pre_mtype__pref_label',
         facetKey: 'pre_mtype',
         options: { kind: FilterOptionsKind.Facets },
@@ -611,7 +634,7 @@ export function postSynapticCellTypeColumn<Row extends IHasPostMtype>(
       getValue: (r) => r.post_mtype?.pref_label ?? '',
       width: { minWidth: 150, flex: 1 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'post_mtype__pref_label',
         facetKey: 'post_mtype',
         options: { kind: FilterOptionsKind.Facets },
@@ -639,7 +662,12 @@ export function emDatasetColumn<Row extends IHasEmDataset>(
       getValue: (r) => r.em_dense_reconstruction_dataset?.id ?? '',
       cellRenderer: EM_DATASET_RENDERER,
       width: { minWidth: 160, flex: 1 },
-      filter: { operators: [OperatorId.Ilike], field: 'em_dense_reconstruction_dataset__name' },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'em_dense_reconstruction_dataset__name',
+        facetKey: 'em_dense_reconstruction_dataset',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     o
   );

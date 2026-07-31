@@ -170,8 +170,9 @@ describe('universal_cell_morphology parity', () => {
       serializeQuery(query({ filters: gen }), s).cell_morphology_protocol__generation_type__in
     ).toEqual(['digital_reconstruction']);
   });
-  it('m-type is not sortable but still filters as mtype__pref_label__in', () => {
-    expect(s.columns.find((c) => c.id === 'mtype')?.sortable).toBe(false);
+  it('m-type sorts + filters on mtype__pref_label (same CellMorphologyFilter as cell_morphology)', () => {
+    expect(s.columns.find((c) => c.id === 'mtype')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('mtype')), s).order_by).toEqual(['-mtype__pref_label']);
     expect(serializeQuery(query({ filters: setIn('mtype') }), s).mtype__pref_label__in).toEqual([
       'x',
     ]);
@@ -303,14 +304,18 @@ describe('experimental_synapses_per_connection parity', () => {
       'contributions',
     ]);
   });
-  it('pre/post region + cell-type filters serialize to legacy keys (post_region uses SINGLE underscore)', () => {
+  it('pre/post region + cell-type filters serialize to the backend keys', () => {
     expect(serializeQuery(query({ filters: setIn('preRegion') }), s).pre_region__name__in).toEqual([
       'x',
     ]);
-    // the gotcha: post_region__name_in — single underscore before `in`
-    const post = serializeQuery(query({ filters: setInSingle('postRegion') }), s);
-    expect(post.post_region__name_in).toEqual(['x']);
-    expect(post.post_region__name__in).toBeUndefined();
+    // The legacy field-def spelled this `post_region__name_in` (SINGLE underscore); the
+    // current spec has no such param, only the standard `post_region__name__in`.
+    const post = serializeQuery(query({ filters: setIn('postRegion') }), s);
+    expect(post.post_region__name__in).toEqual(['x']);
+    expect(post.post_region__name_in).toBeUndefined();
+    expect(
+      serializeQuery(query({ filters: setInSingle('postRegion') }), s).post_region__name_in
+    ).toBeDefined();
     expect(
       serializeQuery(query({ filters: setIn('preMtype') }), s).pre_mtype__pref_label__in
     ).toEqual(['x']);
@@ -318,8 +323,13 @@ describe('experimental_synapses_per_connection parity', () => {
       serializeQuery(query({ filters: setIn('postMtype') }), s).post_mtype__pref_label__in
     ).toEqual(['x']);
   });
-  it('mean ± std is not sortable for this entity', () => {
+  it('mean ± std is not sortable, but subject age is', () => {
     expect(s.columns.find((c) => c.id === 'meanStd')?.sortable).toBeFalsy();
+    // `subject__age_value` IS in ExperimentalSynapsesPerConnectionFilter's ordering fields.
+    expect(s.columns.find((c) => c.id === 'subjectAge')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('subjectAge')), s).order_by).toEqual([
+      '-subject__age_value',
+    ]);
   });
 });
 
@@ -335,7 +345,7 @@ describe('em_cell_mesh parity', () => {
       'registrationDate',
     ]);
   });
-  it('version facet + dataset ilike serialize to legacy keys; species not sortable', () => {
+  it('version facet + dataset filters serialize to the backend keys; species IS sortable', () => {
     expect(
       serializeQuery(query({ filters: setIn('releaseVersion') }), s).release_version__in
     ).toEqual(['x']);
@@ -343,6 +353,14 @@ describe('em_cell_mesh parity', () => {
       serializeQuery(query({ filters: ilike('emDataset') }), s)
         .em_dense_reconstruction_dataset__name__ilike
     ).toBe('%foo%');
-    expect(s.columns.find((c) => c.id === 'species')?.sortable).toBe(false);
+    expect(
+      serializeQuery(query({ filters: setIn('emDataset') }), s)
+        .em_dense_reconstruction_dataset__name__in
+    ).toEqual(['x']);
+    // `subject__species__name` is in EMCellMeshFilter.Constants.ordering_model_fields.
+    expect(s.columns.find((c) => c.id === 'species')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('species')), s).order_by).toEqual([
+      '-subject__species__name',
+    ]);
   });
 });

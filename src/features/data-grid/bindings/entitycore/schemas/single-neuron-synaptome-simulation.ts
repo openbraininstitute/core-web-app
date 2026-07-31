@@ -1,7 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import { Align, SortDirection } from '../../../core';
+import { Align, FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
@@ -24,7 +24,13 @@ type Row = ISingleNeuronSynaptomeSimulation;
  *  - Stimulus / Response: preview-thumbnail cells in the legacy; the thumbnail renderer is
  *    deferred (renderers fence), so these are display-only placeholders preserving column
  *    identity/order. `filter: null` either way.
- *  - Synaptome name (SynaptomeModelName): `filter: null` → display-only; renders `synaptome.name`.
+ *
+ * Synaptome name (SynaptomeModelName) renders `synaptome.name`. The legacy field-def is
+ * `filter: null`, but `/single-neuron-synaptome-simulation` exposes
+ * `synaptome__name__in` / `synaptome__name__ilike` and serves a `synaptome` facet
+ * bucket, so the column now carries that filter. Still not sortable
+ * (`synaptome__name` is absent from SingleNeuronSynaptomeSimulationFilter's ordering
+ * fields).
  *
  * Brain region (no filter; sortable — SingleNeuronSynaptomeSimulation is in `brain_region`'s
  * `order.types`), Created by (facet filter + server-sortable), and Registration date
@@ -63,6 +69,13 @@ export const singleNeuronSynaptomeSimulationSchema: IGridSchema<Row> = {
       align: Align.Left,
       getValue: (row) => row.synaptome?.name ?? '',
       width: { minWidth: 160, flex: 1 },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'synaptome__name',
+        facetKey: 'synaptome',
+        description: 'Synaptome',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     brainRegionColumn<Row>({ id: EntityCoreFields.BrainRegion }),
     createdByColumn<Row>({

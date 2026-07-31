@@ -74,8 +74,9 @@ export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
     }),
     brainRegionColumn<UniversalRow>(),
     speciesColumn<UniversalRow>(),
-    // M-type is not sortable for universal (no legacy order binding)
-    mtypeColumn<UniversalRow>({ sortable: false, sortField: undefined }),
+    // `mtype__pref_label` is in CellMorphologyFilter.Constants.ordering_model_fields,
+    // which /cell-morphology serves for universal too — so it IS server-sortable.
+    mtypeColumn<UniversalRow>(),
     nameColumn<UniversalRow>(),
     {
       id: 'generationType',
@@ -87,7 +88,7 @@ export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
         generation.labelByKey.get(r.cell_morphology_protocol?.generation_type ?? '') ?? '',
       width: { minWidth: 160 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.NotIn],
         field: 'cell_morphology_protocol__generation_type',
         options: generation.options,
       },
@@ -100,7 +101,7 @@ export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
         protocol.labelByKey.get(r.cell_morphology_protocol?.protocol_design ?? '') ?? '',
       width: { minWidth: 160 },
       filter: {
-        operators: [OperatorId.In],
+        operators: [OperatorId.In, OperatorId.NotIn],
         field: 'cell_morphology_protocol__protocol_design',
         options: protocol.options,
       },

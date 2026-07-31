@@ -1,7 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import { Align, SortDirection } from '../../../core';
+import { Align, FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
@@ -27,7 +27,11 @@ function joinLocations(values: Array<string> | null | undefined): string {
  *
  * Every simulation-specific column is display-only (all `fields-defs/experiment.tsx` entries
  * are `filter: null`):
- *  - ME-model (SimulationModel): renders `me_model.name`.
+ *  - ME-model (SimulationModel): renders `me_model.name`. The legacy field-def is
+ *    `filter: null`, but `/single-neuron-simulation` exposes `me_model__name__in` /
+ *    `me_model__name__ilike` and serves a `me_model` facet bucket, so the column now
+ *    carries that filter. Still not sortable (`me_model__name` is absent from
+ *    SingleNeuronSimulationFilter's ordering fields).
  *  - Stimulus / Response: the legacy renders preview thumbnails; the thumbnail cell renderer
  *    is deferred (out of the renderers fence), so these are display-only placeholders that
  *    preserve column identity/order. No filter/sort either way.
@@ -49,6 +53,13 @@ export const singleNeuronSimulationSchema: IGridSchema<Row> = {
       header: 'ME-model',
       getValue: (row) => row.me_model?.name ?? '',
       width: { minWidth: 160, flex: 1 },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'me_model__name',
+        facetKey: 'me_model',
+        description: 'ME-model',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     {
       id: EntityCoreFields.SimulationStimulus,
