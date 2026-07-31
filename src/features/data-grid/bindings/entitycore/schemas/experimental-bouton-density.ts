@@ -10,14 +10,38 @@ import {
   standardErrorColumn,
 } from '../columns/catalog';
 import { registerSharedRenderers } from '../renderers/register';
+import {
+  lastUpdatedFilter,
+  recordIdFilter,
+  recordNameFilter,
+  registrationDateFilter,
+  subjectAdvancedGroup,
+} from './common-filters';
 
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
-import type { IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type { IHasContributions, IHasMeasurements, IHasSpecies } from '../columns/catalog';
 import type { IEntityGridDefinition } from '../registry';
 
 type Row = IExperimentalBoutonDensity & IHasSpecies & IHasMeasurements & IHasContributions;
+
+/**
+ * ADVANCED FILTERS — `GET /experimental-bouton-density` params with no column here.
+ *
+ * This listing shows neither a Name nor a Registration date column, so `name*` and
+ * `creation_date__gte/__lte` genuinely have no home on a column and belong here.
+ * A density is not a ScientificArtifact, so `experiment_date__*`, `published_in*`
+ * and `contact_email` do not exist on this endpoint at all.
+ */
+const experimentalBoutonDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
+  subjectAdvancedGroup('The animal the density was measured in.'),
+  {
+    id: 'record',
+    label: 'Record',
+    filters: [recordNameFilter, recordIdFilter, registrationDateFilter, lastUpdatedFilter],
+  },
+];
 
 /**
  * Experimental bouton density listing. Column order matches the legacy
@@ -31,6 +55,7 @@ export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
   defaultSort: [],
   rowHeight: 56,
   selection: { enabled: true },
+  advancedFilters: experimentalBoutonDensityAdvancedFilters,
   columns: [
     brainRegionColumn<Row>(),
     speciesColumn<Row>(),
