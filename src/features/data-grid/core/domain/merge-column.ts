@@ -1,6 +1,6 @@
 import { mergeContextual } from './contextual';
 
-import type { ColumnFilter, ColumnModel, WidthSpec } from './column-model';
+import type { IColumnFilter, IColumnModel, IWidthSpec } from './column-model';
 
 /**
  * A partial override applied on top of a reusable column factory's defaults.
@@ -8,9 +8,9 @@ import type { ColumnFilter, ColumnModel, WidthSpec } from './column-model';
  * base. (A partial `filter` on a base without one only makes sense when it carries
  * `operators`; the catalog's factories always declare a full base filter.)
  */
-export type ColumnOverride<Row> = Omit<Partial<ColumnModel<Row>>, 'filter' | 'width'> & {
-  filter?: Partial<ColumnFilter>;
-  width?: Partial<WidthSpec>;
+export type TColumnOverride<Row> = Omit<Partial<IColumnModel<Row>>, 'filter' | 'width'> & {
+  filter?: Partial<IColumnFilter>;
+  width?: Partial<IWidthSpec>;
 };
 
 /**
@@ -24,12 +24,12 @@ export type ColumnOverride<Row> = Omit<Partial<ColumnModel<Row>>, 'filter' | 'wi
  * both reusable and customizable.
  */
 export function mergeColumnDef<Row>(
-  base: ColumnModel<Row>,
-  overrides?: ColumnOverride<Row>
-): ColumnModel<Row> {
+  base: IColumnModel<Row>,
+  overrides?: TColumnOverride<Row>
+): IColumnModel<Row> {
   if (!overrides) return base;
 
-  const merged: ColumnModel<Row> = {
+  const merged: IColumnModel<Row> = {
     ...base,
     ...overrides,
     filter: base.filter,
@@ -43,7 +43,7 @@ export function mergeColumnDef<Row>(
     merged.width = { ...base.width, ...overrides.width };
   }
   if (base.filter || overrides.filter) {
-    merged.filter = { ...base.filter, ...overrides.filter } as ColumnFilter;
+    merged.filter = { ...base.filter, ...overrides.filter } as IColumnFilter;
   }
   if (base.cellRendererParams || overrides.cellRendererParams) {
     merged.cellRendererParams = { ...base.cellRendererParams, ...overrides.cellRendererParams };

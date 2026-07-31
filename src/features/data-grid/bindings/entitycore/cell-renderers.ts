@@ -1,6 +1,6 @@
 import { CellRendererRegistry } from '../../react';
 
-import type { AnyEntityGridDefinition } from './registry';
+import type { TAnyEntityGridDefinition } from './registry';
 
 /**
  * Build a cell-renderer registry populated with a definition's renderers.
@@ -11,7 +11,7 @@ import type { AnyEntityGridDefinition } from './registry';
  * module-init cycle. The host imports it from here instead; only a type import ties
  * this file to the registry, which is erased at runtime.
  */
-export function buildCellRenderers(definition: AnyEntityGridDefinition): CellRendererRegistry {
+export function buildCellRenderers(definition: TAnyEntityGridDefinition): CellRendererRegistry {
   const registry = new CellRendererRegistry();
   definition.registerCellRenderers?.(registry);
   return registry;

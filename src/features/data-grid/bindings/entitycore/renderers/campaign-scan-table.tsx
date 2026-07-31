@@ -13,7 +13,7 @@ import { CampaignStatusBadge } from './campaign-status-badge';
 import type { ReactNode } from 'react';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { SimulationRow } from '@/entity-configuration/domain/simulation/simulation-campaign';
-import type { DetailRenderFn } from '../../../react';
+import type { TDetailRenderFn } from '../../../react';
 
 type ScanTableRow = SimulationRow & { scan_parameters: Record<string, unknown> };
 
@@ -27,7 +27,7 @@ function resolveStatus(row: SimulationRow): ActivityStatus {
  * {@link CampaignStatusBadge}. The expand payload (`data`) is the same
  * {@link SimulationRow}[] the popover-cards mode consumes, so both modes stay in sync.
  */
-export function makeCampaignScanTableRenderDetail(): DetailRenderFn<{ id: string }> {
+export function makeCampaignScanTableRenderDetail(): TDetailRenderFn<{ id: string }> {
   return ({ data, loading, error }): ReactNode => {
     if (error) {
       return (

@@ -4,7 +4,7 @@
  * expand and how to fetch its detail payload). Nested expansion is realised by a
  * provider whose renderer mounts a child grid (Composite).
  */
-export interface DetailProvider<Row, Detail = unknown> {
+export interface IDetailProvider<Row, Detail = unknown> {
   canExpand(row: Row): boolean;
   /** async detail payload; omit when the renderer works from the row alone */
   fetch?(row: Row, signal?: AbortSignal): Promise<Detail>;

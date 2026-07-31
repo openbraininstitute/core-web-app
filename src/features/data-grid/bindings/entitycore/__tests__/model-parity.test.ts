@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
 
-import { OperatorId, resolveColumns } from '../../../core';
+import { FilterValueKind, OperatorId, resolveColumns, SortDirection } from '../../../core';
 import { serializeQuery } from '../query-serializer';
 import { analysisNotebookResultSchema } from '../schemas/analysis-notebook-result';
 import { analysisNotebookTemplateSchema } from '../schemas/analysis-notebook-template';
@@ -12,7 +12,7 @@ import { meModelCircuitSchema } from '../schemas/me-model-circuit';
 import { memodelSchema } from '../schemas/memodel';
 import { singleNeuronSynaptomeSchema } from '../schemas/single-neuron-synaptome';
 
-import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../core';
+import type { IGridContext, IGridQuery, IGridSchema, TFilterModel } from '../../../core';
 
 /**
  * Per-entity parity harness for the model + notebook batch (Groups 2/3/7). Locks the
@@ -23,35 +23,47 @@ import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../c
  * the source of truth.
  */
 
-function query(over: Partial<GridQuery> = {}): GridQuery {
+function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
 function ctx(
   dataType: string,
-  section: GridContext['section'] = WorkspaceSection.Data
-): GridContext {
+  section: IGridContext['section'] = WorkspaceSection.Data
+): IGridContext {
   return { dataType, section };
 }
-function ids<Row>(schema: GridSchema<Row>, c: GridContext): string[] {
+function ids<Row>(schema: IGridSchema<Row>, c: IGridContext): string[] {
   return resolveColumns(schema, c).map((col) => col.id);
 }
-function setIn(columnId: string): FilterModel {
+function setIn(columnId: string): TFilterModel {
   return {
-    [columnId]: { columnId, operator: OperatorId.In, value: { kind: 'set', values: ['x'] } },
+    [columnId]: {
+      columnId,
+      operator: OperatorId.In,
+      value: { kind: FilterValueKind.Set, values: ['x'] },
+    },
   };
 }
-function ilike(columnId: string): FilterModel {
+function ilike(columnId: string): TFilterModel {
   return {
-    [columnId]: { columnId, operator: OperatorId.Ilike, value: { kind: 'text', text: 'foo' } },
+    [columnId]: {
+      columnId,
+      operator: OperatorId.Ilike,
+      value: { kind: FilterValueKind.Text, text: 'foo' },
+    },
   };
 }
-function boolTrue(columnId: string): FilterModel {
+function boolTrue(columnId: string): TFilterModel {
   return {
-    [columnId]: { columnId, operator: OperatorId.Bool, value: { kind: 'boolean', value: true } },
+    [columnId]: {
+      columnId,
+      operator: OperatorId.Bool,
+      value: { kind: FilterValueKind.Boolean, value: true },
+    },
   };
 }
-function sortDesc(columnId: string): Partial<GridQuery> {
-  return { sort: [{ columnId, direction: 'desc' }] };
+function sortDesc(columnId: string): Partial<IGridQuery> {
+  return { sort: [{ columnId, direction: SortDirection.Desc }] };
 }
 
 describe('emodel parity', () => {
@@ -225,11 +237,11 @@ describe('ion_channel_model parity', () => {
     expect(
       serializeQuery(query({ filters: setIn('species') }), s).subject__species__name__in
     ).toEqual(['x']);
-    const temp: FilterModel = {
+    const temp: TFilterModel = {
       temperatureCelsius: {
         columnId: 'temperatureCelsius',
         operator: OperatorId.Range,
-        value: { kind: 'range', min: 20, max: 40 },
+        value: { kind: FilterValueKind.Range, min: 20, max: 40 },
       },
     };
     const p = serializeQuery(query({ filters: temp }), s);

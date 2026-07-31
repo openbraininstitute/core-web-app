@@ -1,5 +1,6 @@
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 
+import { SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   emDatasetColumn,
@@ -12,12 +13,12 @@ import { EM_DATASET_RENDERER, EmDatasetCell } from '../renderers/em-dataset-cell
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { HasEmDataset, HasReleaseVersion, HasSpecies } from '../columns/catalog';
-import type { EntityGridDefinition } from '../registry';
+import type { IHasEmDataset, IHasReleaseVersion, IHasSpecies } from '../columns/catalog';
+import type { IEntityGridDefinition } from '../registry';
 
-type Row = IEMCellMesh & HasSpecies & HasReleaseVersion & HasEmDataset;
+type Row = IEMCellMesh & IHasSpecies & IHasReleaseVersion & IHasEmDataset;
 
 /**
  * EM cell mesh listing (curated). Column order matches the legacy `em-cell-mesh`
@@ -26,10 +27,10 @@ type Row = IEMCellMesh & HasSpecies & HasReleaseVersion & HasEmDataset;
  * The "Dataset" column resolves the dense-reconstruction dataset name lazily via
  * {@link EM_DATASET_RENDERER}.
  */
-export const emCellMeshSchema: GridSchema<Row> = {
+export const emCellMeshSchema: IGridSchema<Row> = {
   id: 'em-cell-mesh',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 56,
   selection: { enabled: true },
   columns: [
@@ -46,7 +47,7 @@ export const emCellMeshSchema: GridSchema<Row> = {
   ],
 };
 
-export const emCellMeshGridDefinition: EntityGridDefinition<Row> = {
+export const emCellMeshGridDefinition: IEntityGridDefinition<Row> = {
   dataType: EntityTypeDict.EMCellMesh,
   schema: emCellMeshSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

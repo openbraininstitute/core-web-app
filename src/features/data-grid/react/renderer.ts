@@ -1,15 +1,15 @@
 import type { ReactNode } from 'react';
 import type {
-  DetailProvider,
-  Facets,
   GridController,
-  GridState,
+  IDetailProvider,
+  IGridState,
+  IResolvedColumn,
   OperatorRegistry,
-  ResolvedColumn,
+  TFacets,
 } from '../core';
 import type { CellRendererRegistry } from './cell-renderer-registry';
 
-export type DetailRenderFn<Row> = (args: {
+export type TDetailRenderFn<Row> = (args: {
   row: Row;
   data: unknown;
   loading: boolean;
@@ -20,24 +20,24 @@ export type DetailRenderFn<Row> = (args: {
    * nested subcircuit grid by the parent's `hiddenColumns`. Existing renderers that
    * ignore it are unchanged.
    */
-  state?: GridState;
+  state?: IGridState;
 }) => ReactNode;
 
 /** Behaviour (provider port) + presentation (render fn) for expandable rows. */
-export interface DetailRuntime<Row> {
-  provider: DetailProvider<Row>;
-  render: DetailRenderFn<Row>;
+export interface IDetailRuntime<Row> {
+  provider: IDetailProvider<Row>;
+  render: TDetailRenderFn<Row>;
 }
 
 /**
  * Configurable placement for the expand/collapse control of a grid that has a
- * {@link DetailRuntime}. By default (config omitted) the renderer prepends a fixed,
+ * {@link IDetailRuntime}. By default (config omitted) the renderer prepends a fixed,
  * non-movable leading `__expand` column — the historical behaviour. When
  * {@link columnId} is supplied the chevron renders INSIDE that data column's cell
  * (right-aligned by default, vertically centred), and no leading column is added.
  * Renderer-agnostic on purpose so it can be honoured by any rendering strategy.
  */
-export interface ExpandColumnConfig {
+export interface IExpandColumnConfig {
   /** id of the data column that hosts the expander; omit for a leading column. */
   columnId?: string;
   /** within-cell alignment when {@link columnId} is set (default: 'right'). */
@@ -51,17 +51,17 @@ export interface ExpandColumnConfig {
  * State is mutated exclusively through `controller.store.dispatch`, so any renderer
  * (AG Grid today, something else tomorrow) stays a thin, swappable adapter.
  */
-export interface GridRendererProps<Row> {
+export interface IGridRendererProps<Row> {
   controller: GridController<Row>;
-  columns: Array<ResolvedColumn<Row>>;
+  columns: Array<IResolvedColumn<Row>>;
   rows: Row[];
   total: number;
   loading: boolean;
-  state: GridState;
-  facets?: Facets;
+  state: IGridState;
+  facets?: TFacets;
   operators: OperatorRegistry;
   cellRenderers: CellRendererRegistry;
-  detail?: DetailRuntime<Row>;
+  detail?: IDetailRuntime<Row>;
   /** whether checkbox multi-row selection is active in the current context */
   selectionEnabled?: boolean;
   /**
@@ -76,10 +76,10 @@ export interface GridRendererProps<Row> {
   /** optional per-row css class hook (e.g. hierarchy filtered-in/out styling) */
   getRowClass?: (row: Row) => string | undefined;
   /** optional placement of the expand control (default: fixed leading column) */
-  expandColumn?: ExpandColumnConfig;
+  expandColumn?: IExpandColumnConfig;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
   loadingLabel?: string;
 }
 
 /** The rendering port (Strategy). Implemented by `renderers/aggrid`. */
-export type GridRenderer = <Row>(props: GridRendererProps<Row>) => ReactNode;
+export type TGridRenderer = <Row>(props: IGridRendererProps<Row>) => ReactNode;

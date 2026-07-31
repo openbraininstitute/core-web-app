@@ -25,15 +25,16 @@ import {
 } from '@/ui/segments/explore/circuit/helpers';
 import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 
+import { Align } from '../core';
 import { EntityDataGrid } from './browse-entity-grid';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { GridDataSource } from '@/features/data-grid/core';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { DetailRuntime } from '@/features/data-grid/react';
+import type { IGridDataSource } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { IDetailRuntime } from '@/features/data-grid/react';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { BrowseEntityGridProps } from './browse-entity-grid';
+import type { IBrowseEntityGridProps } from './browse-entity-grid';
 
 /** Subcircuits attached to an enriched hierarchy node, or `undefined`. */
 function subCircuitsOf(row: EntityCoreIdentifiableNamed): ICircuitEnriched[] | undefined {
@@ -61,7 +62,7 @@ function subCircuitsOf(row: EntityCoreIdentifiableNamed): ICircuitEnriched[] | u
  *
  * All circuit specifics live here; the shared template stays circuit-agnostic.
  */
-export function CircuitGridBody(props: BrowseEntityGridProps) {
+export function CircuitGridBody(props: IBrowseEntityGridProps) {
   const { definition, dataType, section = WorkspaceSection.Data, id, scope: defaultScope } = props;
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
@@ -84,15 +85,15 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
         schema: definition.schema,
         workspace,
         queryClient,
-      }) as unknown as GridDataSource<EntityCoreIdentifiableNamed>,
+      }) as unknown as IGridDataSource<EntityCoreIdentifiableNamed>,
     [definition.schema, workspace, queryClient]
   );
 
   // Columns for the NESTED recursive grid = the SAME schema columns the parent server
-  // grid renders (SimpleColumn extends ColumnModel, so schema columns pass straight
+  // grid renders (ISimpleColumn extends IColumnModel, so schema columns pass straight
   // through). This is what keeps the expanded subcircuit rows column-identical to the
   // parent — no separate antd column set.
-  const schemaColumns = definition.schema.columns as unknown as SimpleColumn<ICircuit>[];
+  const schemaColumns = definition.schema.columns as unknown as ISimpleColumn<ICircuit>[];
 
   const onCellClick = useCallback(
     (_: string, record: ICircuit) => makeSelectEntityClickEvent({ display: true, data: record }),
@@ -104,7 +105,7 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
     [view]
   );
 
-  const detailOverride = useMemo<DetailRuntime<EntityCoreIdentifiableNamed>>(
+  const detailOverride = useMemo<IDetailRuntime<EntityCoreIdentifiableNamed>>(
     () => ({
       provider: {
         canExpand: (row) => Boolean(subCircuitsOf(row)),
@@ -153,7 +154,9 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
       getRowClass={getRowClass}
       detailOverride={isHierarchy ? detailOverride : undefined}
       expandColumn={
-        isHierarchy ? { columnId: EntityCoreFields.CircuitSubCircuit, align: 'right' } : undefined
+        isHierarchy
+          ? { columnId: EntityCoreFields.CircuitSubCircuit, align: Align.Right }
+          : undefined
       }
     />
   );

@@ -2,10 +2,12 @@ import { useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
+import { GridActionType } from '../core';
+
 import type { ReactNode } from 'react';
 import type { GridController } from '../core';
 
-export interface BulkActionsRenderArgs<Row> {
+export interface IBulkActionsRenderArgs<Row> {
   /** ids of the currently selected rows (across pages) */
   selectedIds: string[];
   /** full selected rows, including rows selected on OTHER pages (legacy parity) */
@@ -13,12 +15,12 @@ export interface BulkActionsRenderArgs<Row> {
   clearSelection: () => void;
 }
 
-export interface BulkActionsProps<Row> {
+export interface IBulkActionsProps<Row> {
   controller: GridController<Row>;
   rows: Row[];
   selection: string[];
   /** host-provided actions (download / delete buttons) receiving the selection */
-  children: (args: BulkActionsRenderArgs<Row>) => ReactNode;
+  children: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
   className?: string;
 }
 
@@ -58,7 +60,7 @@ export function BulkActions<Row>({
   selection,
   children,
   className,
-}: BulkActionsProps<Row>) {
+}: IBulkActionsProps<Row>) {
   const getRowId = controller.schema.getRowId;
 
   // Canonical "derive state from props during render" pattern: when the page's
@@ -81,7 +83,8 @@ export function BulkActions<Row>({
       {children({
         selectedIds: selection,
         selectedRows,
-        clearSelection: () => controller.store.dispatch({ type: 'setSelection', ids: [] }),
+        clearSelection: () =>
+          controller.store.dispatch({ type: GridActionType.SetSelection, ids: [] }),
       })}
     </div>
   );

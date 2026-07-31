@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { ITaskLogsDataState } from '@/features/task-logs-stream/types';
 
 type ConfigRow = { key: string; label: string; value: ReactNode; isCode?: boolean };
@@ -204,7 +204,7 @@ export function Configuration({ configuration }: IProps) {
     { key: 'meta', label: 'meta', value: codeCell({ value: configuration.meta }), isCode: true },
   ];
 
-  const columns: Array<SimpleColumn<ConfigRow>> = [
+  const columns: Array<ISimpleColumn<ConfigRow>> = [
     {
       id: 'label',
       header: '',

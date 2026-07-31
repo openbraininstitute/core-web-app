@@ -12,12 +12,12 @@ import {
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { HasContributions, HasMeasurements, HasSpecies } from '../columns/catalog';
-import type { EntityGridDefinition } from '../registry';
+import type { IHasContributions, IHasMeasurements, IHasSpecies } from '../columns/catalog';
+import type { IEntityGridDefinition } from '../registry';
 
-type Row = IExperimentalBoutonDensity & HasSpecies & HasMeasurements & HasContributions;
+type Row = IExperimentalBoutonDensity & IHasSpecies & IHasMeasurements & IHasContributions;
 
 /**
  * Experimental bouton density listing. Column order matches the legacy
@@ -25,7 +25,7 @@ type Row = IExperimentalBoutonDensity & HasSpecies & HasMeasurements & HasContri
  * SEM, N° of measurements, Contributors). The three measurement columns sort on the
  * backend's `measurement_*__value` scalars.
  */
-export const experimentalBoutonDensitySchema: GridSchema<Row> = {
+export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
   id: 'experimental-bouton-density',
   getRowId: (row) => row.id,
   defaultSort: [],
@@ -45,7 +45,7 @@ export const experimentalBoutonDensitySchema: GridSchema<Row> = {
   ],
 };
 
-export const experimentalBoutonDensityGridDefinition: EntityGridDefinition<Row> = {
+export const experimentalBoutonDensityGridDefinition: IEntityGridDefinition<Row> = {
   dataType: EntityTypeDict.ExperimentalBoutonDensity,
   schema: experimentalBoutonDensitySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

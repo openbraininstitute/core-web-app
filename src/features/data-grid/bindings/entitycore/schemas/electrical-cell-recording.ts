@@ -1,5 +1,6 @@
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 
+import { SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -13,14 +14,14 @@ import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { HasContributions, HasEtypes, HasSpecies } from '../columns/catalog';
-import type { EntityGridDefinition } from '../registry';
+import type { IHasContributions, IHasEtypes, IHasSpecies } from '../columns/catalog';
+import type { IEntityGridDefinition } from '../registry';
 
 // The hand-written entity type omits subject/etypes/contributions (present at
 // runtime); augment locally so the catalog factories stay type-safe.
-type Row = IElectricalCellRecording & HasSpecies & HasEtypes & HasContributions;
+type Row = IElectricalCellRecording & IHasSpecies & IHasEtypes & IHasContributions;
 
 /**
  * Electrical cell recording listing — cell-morphology-shaped, with E-type instead
@@ -28,10 +29,10 @@ type Row = IElectricalCellRecording & HasSpecies & HasEtypes & HasContributions;
  * The `recording_origin` narrow filter lives in the entity domain config, so the
  * delegating data source applies it automatically.
  */
-export const electricalCellRecordingSchema: GridSchema<Row> = {
+export const electricalCellRecordingSchema: IGridSchema<Row> = {
   id: 'electrical-cell-recording',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -48,7 +49,7 @@ export const electricalCellRecordingSchema: GridSchema<Row> = {
   ],
 };
 
-export const electricalCellRecordingGridDefinition: EntityGridDefinition<Row> = {
+export const electricalCellRecordingGridDefinition: IEntityGridDefinition<Row> = {
   dataType: EntityTypeDict.ElectricalCellRecording,
   schema: electricalCellRecordingSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

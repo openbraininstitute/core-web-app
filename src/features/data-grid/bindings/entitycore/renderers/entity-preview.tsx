@@ -6,7 +6,7 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreResource,
 } from '@/api/entitycore/types/shared/global';
-import type { CellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '../../../react';
 
 /** Cell-renderer registry key for the shared entity preview thumbnail. */
 export const ENTITY_PREVIEW_RENDERER = 'entityPreview';
@@ -18,7 +18,7 @@ export const ENTITY_PREVIEW_RENDERER = 'entityPreview';
  * register it under {@link ENTITY_PREVIEW_RENDERER} and reference it from their
  * preview column's `cellRenderer`.
  */
-export function EntityPreview({ row }: CellRendererProps<EntityCoreIdentifiable>) {
+export function EntityPreview({ row }: ICellRendererProps<EntityCoreIdentifiable>) {
   if (!row || !hasAssets(row as unknown as EntityCoreObjectTypes)) {
     return (
       <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-300">

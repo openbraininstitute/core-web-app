@@ -19,7 +19,7 @@ import type {
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -33,7 +33,7 @@ const defaultColumnsFields = getFieldsDefinition([
 function makeColumns(
   virtualLabId: string,
   projectId: string
-): Array<SimpleColumn<ICellMorphology>> {
+): Array<ISimpleColumn<ICellMorphology>> {
   return Object.entries(defaultColumnsFields).map(([key, field]) => ({
     id: key,
     // legacy uppercased string titles; a rich (ReactNode) title becomes a headerNode

@@ -13,7 +13,7 @@ import type { ColumnProps } from 'antd/es/table';
 import type { ComponentProps, ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 
 /** Cell-click callback compatible with the antd `OnCellClick` used across circuit tables. */
@@ -44,7 +44,7 @@ interface CircuitDetailRow {
   readonly depth: number;
 }
 
-type DisplayRow = ICircuit | CircuitDetailRow;
+type TDisplayRow = ICircuit | CircuitDetailRow;
 
 /**
  * Interleave a synthetic full-width detail row after each expanded circuit that
@@ -56,10 +56,10 @@ export function interleaveCircuitRows(
   circuits: ReadonlyArray<ICircuit>,
   expandedIds: ReadonlyArray<string>,
   depth: number
-): DisplayRow[] {
+): TDisplayRow[] {
   if (expandedIds.length === 0) return [...circuits];
   const expanded = new Set(expandedIds);
-  const out: DisplayRow[] = [];
+  const out: TDisplayRow[] = [];
   for (const circuit of circuits) {
     out.push(circuit);
     const children = subCircuitsOf(circuit);
@@ -84,7 +84,7 @@ function humanizeColumnId(id: string): string {
 
 /**
  * Adapt the antd `ColumnProps` produced by `useDataTableColumns` to the
- * renderer-agnostic {@link SimpleColumn}s consumed by the shared grid engine. The
+ * renderer-agnostic {@link ISimpleColumn}s consumed by the shared grid engine. The
  * antd `render(value, record, index)` becomes an inline `renderCell(row)`; the
  * rich `title` node becomes `headerNode`. A best-effort text `filter` + `getValue`
  * (from the record's like-named field) are attached so the shared header filter /
@@ -92,7 +92,7 @@ function humanizeColumnId(id: string): string {
  */
 export function adaptCircuitColumns(
   columns: ReadonlyArray<ColumnProps<ICircuit>>
-): Array<SimpleColumn<ICircuit>> {
+): Array<ISimpleColumn<ICircuit>> {
   return columns.map((col) => {
     const id = String(col.key ?? '');
     const render = col.render;
@@ -109,7 +109,7 @@ export function adaptCircuitColumns(
       // plain-text label for the column chooser; the visible header uses `headerNode`
       header: typeof col.title === 'string' ? col.title : humanizeColumnId(id),
       headerNode: col.title as ReactNode,
-      align: col.align as SimpleColumn<ICircuit>['align'],
+      align: col.align as ISimpleColumn<ICircuit>['align'],
       width,
       field: id,
       sortField: id,
@@ -119,7 +119,7 @@ export function adaptCircuitColumns(
       renderCell: render
         ? (row: ICircuit) => render(undefined, row, 0) as ReactNode
         : (row: ICircuit) => (row as unknown as Record<string, ReactNode>)[id] ?? null,
-    } satisfies SimpleColumn<ICircuit>;
+    } satisfies ISimpleColumn<ICircuit>;
   });
 }
 
@@ -151,16 +151,16 @@ export type CircuitRecursiveGridProps = {
   /**
    * antd column defs from `useDataTableColumns` (adapted internally). Ignored when
    * {@link simpleColumns} is supplied. Optional so a caller can drive the grid purely
-   * from pre-built {@link SimpleColumn}s.
+   * from pre-built {@link ISimpleColumn}s.
    */
   columns?: ReadonlyArray<ColumnProps<ICircuit>>;
   /**
-   * Pre-built {@link SimpleColumn}s, used verbatim (skips `adaptCircuitColumns`). This
+   * Pre-built {@link ISimpleColumn}s, used verbatim (skips `adaptCircuitColumns`). This
    * is how the circuit PLUGIN feeds the nested subcircuit grid the SAME schema columns
    * the parent server grid renders, so every depth is column-identical. When set,
    * `columns` is ignored. Recursion forwards these (filtered by the hidden set) down.
    */
-  simpleColumns?: ReadonlyArray<SimpleColumn<ICircuit>>;
+  simpleColumns?: ReadonlyArray<ISimpleColumn<ICircuit>>;
   dataType: TExtendedEntitiesTypeDict;
   onCellClick?: CircuitCellClick;
   /** Optional per-row class (e.g. hierarchy filtered-in/out styling). */
@@ -224,7 +224,7 @@ export function CircuitRecursiveGrid({
   // Column source: pre-built `simpleColumns` verbatim (the plugin path — identical to
   // the parent's schema columns), else adapt the antd `columns` (legacy path). Enable
   // interactive resize on every column either way.
-  const adaptedColumns = useMemo<SimpleColumn<ICircuit>[]>(
+  const adaptedColumns = useMemo<ISimpleColumn<ICircuit>[]>(
     () =>
       (simpleColumns ? [...simpleColumns] : adaptCircuitColumns(columns)).map((c) => ({
         ...c,
@@ -237,7 +237,7 @@ export function CircuitRecursiveGrid({
   // grid instances — so mirror the hidden set down the tree (by column id) to keep
   // every depth column-consistent. Recursion is always driven by `simpleColumns`.
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const visibleColumns = useMemo<SimpleColumn<ICircuit>[]>(() => {
+  const visibleColumns = useMemo<ISimpleColumn<ICircuit>[]>(() => {
     if (hiddenColumns.length === 0) return adaptedColumns;
     const hidden = new Set(hiddenColumns);
     return adaptedColumns.filter((c) => !hidden.has(c.id));

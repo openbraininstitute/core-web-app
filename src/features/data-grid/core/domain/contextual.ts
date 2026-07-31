@@ -1,15 +1,15 @@
-import type { GridContext, GridContextValue } from './grid-context';
+import type { IGridContext, TGridContextValue } from './grid-context';
 
 /**
  * Context-aware presentation resolution.
  *
- * A {@link ContextualValue} lets any schema facet (column availability, order,
+ * A {@link TContextualValue} lets any schema facet (column availability, order,
  * default visibility, filter availability, …) vary with the runtime
- * {@link GridContext} — the successor to the legacy `matchesFieldApiWhen` /
+ * {@link IGridContext} — the successor to the legacy `matchesFieldApiWhen` /
  * `resolveContextualValue` engine, generalised so it is:
  *
  * - **extensible** — `when` matches ANY context key, including forward-compatible
- *   {@link GridContext.factors} (role, feature flag, view variant, device…), so a
+ *   {@link IGridContext.factors} (role, feature flag, view variant, device…), so a
  *   new factor needs no change here: add it to the context and rules can match it.
  * - **declarative & inspectable** — the rule form is plain data (serialisable,
  *   debuggable, diffable), not an opaque closure.
@@ -22,41 +22,41 @@ import type { GridContext, GridContextValue } from './grid-context';
  * Three authoring forms, in increasing power (all interchangeable):
  * 1. a constant `T` — `available: true`
  * 2. a predicate `(ctx) => T` — imperative escape hatch
- * 3. a {@link ContextualSpec} via {@link byContext} — declarative rules
+ * 3. a {@link IContextualSpec} via {@link byContext} — declarative rules
  */
 
-/** `T` or a readonly list of `T` (list = OR semantics in a {@link WhenClause}). */
-export type Matchable<T> = T | readonly T[];
+/** `T` or a readonly list of `T` (list = OR semantics in a {@link TWhenClause}). */
+export type TMatchable<T> = T | readonly T[];
 
 /**
  * Declarative predicate over the context. Keys are AND-ed; a list value inside a
  * key is OR-ed; an omitted (or `undefined`) key does not constrain. Known context
- * keys get autocomplete; any additional {@link GridContext.factors} key is also
+ * keys get autocomplete; any additional {@link IGridContext.factors} key is also
  * matchable.
  */
-export type WhenClause = {
-  dataType?: Matchable<string>;
-  section?: Matchable<string>;
-  scope?: Matchable<string>;
-  species?: Matchable<string>;
-} & { [factor: string]: Matchable<GridContextValue> | undefined };
+export type TWhenClause = {
+  dataType?: TMatchable<string>;
+  section?: TMatchable<string>;
+  scope?: TMatchable<string>;
+  species?: TMatchable<string>;
+} & { [factor: string]: TMatchable<TGridContextValue> | undefined };
 
 /** One ordered rule: matches when `when` AND the optional `matches` predicate hold. */
-export interface ContextRule<T> {
-  when?: WhenClause;
+export interface IContextRule<T> {
+  when?: TWhenClause;
   /** imperative refinement evaluated only if `when` matched (escape hatch) */
-  matches?: (ctx: GridContext) => boolean;
+  matches?: (ctx: IGridContext) => boolean;
   value: T;
 }
 
 /** Declarative contextual value: start at `default`, then later matching rules win. */
-export interface ContextualSpec<T> {
+export interface IContextualSpec<T> {
   default?: T;
-  rules?: Array<ContextRule<T>>;
+  rules?: Array<IContextRule<T>>;
 }
 
 /** A value that is constant, computed from context, or resolved from declarative rules. */
-export type ContextualValue<T> = T | ((ctx: GridContext) => T) | ContextualSpec<T>;
+export type TContextualValue<T> = T | ((ctx: IGridContext) => T) | IContextualSpec<T>;
 
 const CONTEXTUAL_SPEC = Symbol('data-grid.contextual-spec');
 
@@ -74,14 +74,14 @@ const CONTEXTUAL_SPEC = Symbol('data-grid.contextual-spec');
  * })
  * ```
  */
-export function byContext<T>(spec: ContextualSpec<T>): ContextualValue<T> {
+export function byContext<T>(spec: IContextualSpec<T>): TContextualValue<T> {
   return Object.defineProperty({ ...spec }, CONTEXTUAL_SPEC, {
     value: true,
     enumerable: false,
-  }) as ContextualSpec<T>;
+  }) as IContextualSpec<T>;
 }
 
-function isContextualSpec<T>(value: unknown): value is ContextualSpec<T> {
+function isContextualSpec<T>(value: unknown): value is IContextualSpec<T> {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -90,7 +90,7 @@ function isContextualSpec<T>(value: unknown): value is ContextualSpec<T> {
 }
 
 /** Flatten known keys + factors into one scalar map (known keys take precedence). */
-function flattenContext(ctx: GridContext): Record<string, GridContextValue | undefined> {
+function flattenContext(ctx: IGridContext): Record<string, TGridContextValue | undefined> {
   return {
     ...ctx.factors,
     dataType: ctx.dataType,
@@ -100,8 +100,8 @@ function flattenContext(ctx: GridContext): Record<string, GridContextValue | und
   };
 }
 
-/** Evaluate a declarative {@link WhenClause} against the context. */
-export function whenMatches(when: WhenClause | undefined, ctx: GridContext): boolean {
+/** Evaluate a declarative {@link TWhenClause} against the context. */
+export function whenMatches(when: TWhenClause | undefined, ctx: IGridContext): boolean {
   if (!when) return true;
   const flat = flattenContext(ctx);
   for (const key of Object.keys(when)) {
@@ -118,20 +118,20 @@ export function whenMatches(when: WhenClause | undefined, ctx: GridContext): boo
 }
 
 /** A rule matches when its `when` clause AND its imperative `matches` predicate hold. */
-export function matchesRule<T>(rule: ContextRule<T>, ctx: GridContext): boolean {
+export function matchesRule<T>(rule: IContextRule<T>, ctx: IGridContext): boolean {
   if (!whenMatches(rule.when, ctx)) return false;
   if (rule.matches && !rule.matches(ctx)) return false;
   return true;
 }
 
 /**
- * Resolve any {@link ContextualValue} form for the given context. For the
+ * Resolve any {@link TContextualValue} form for the given context. For the
  * declarative form, resolution starts at `default` and the LAST matching rule wins
  * (so specific rules are placed after general ones).
  */
-export function resolveContextual<T>(value: ContextualValue<T>, ctx: GridContext): T {
+export function resolveContextual<T>(value: TContextualValue<T>, ctx: IGridContext): T {
   if (typeof value === 'function') {
-    return (value as (c: GridContext) => T)(ctx);
+    return (value as (c: IGridContext) => T)(ctx);
   }
   if (isContextualSpec<T>(value)) {
     let resolved = value.default as T;
@@ -156,9 +156,9 @@ export function resolveContextual<T>(value: ContextualValue<T>, ctx: GridContext
  * - override constant/function → replaces the base outright (explicit intent)
  */
 export function mergeContextual<T>(
-  base: ContextualValue<T> | undefined,
-  override: ContextualValue<T> | undefined
-): ContextualValue<T> | undefined {
+  base: TContextualValue<T> | undefined,
+  override: TContextualValue<T> | undefined
+): TContextualValue<T> | undefined {
   if (override === undefined) return base;
   if (base === undefined) return override;
   if (isContextualSpec<T>(base) && isContextualSpec<T>(override)) {

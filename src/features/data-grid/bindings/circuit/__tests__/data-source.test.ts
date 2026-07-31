@@ -4,7 +4,7 @@ import { circuitSchema } from '../../entitycore/schemas/circuit';
 import { CIRCUIT_VIEW_PARAM, createCircuitDataSource } from '../data-source';
 
 import type { QueryClient } from '@tanstack/react-query';
-import type { GridQuery } from '../../../core';
+import type { IGridQuery } from '../../../core';
 
 // Mock the entitycore circuit queries so the FLAT branch never hits the network; the
 // flat path delegates through `Circuit.api.query.list` → `getCircuits`.
@@ -21,7 +21,7 @@ vi.mock('@/api/entitycore/queries/model/circuit', () => ({
 
 const WORKSPACE = { virtualLabId: 'vl', projectId: 'pr' };
 
-function baseQuery(over: Partial<GridQuery> = {}): GridQuery {
+function baseQuery(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
 

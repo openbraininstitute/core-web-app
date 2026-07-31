@@ -2,20 +2,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { createDefaultOperatorRegistry, GridController, OperatorId } from '../core';
+import { Align, createDefaultOperatorRegistry, GridController, OperatorId } from '../core';
 import { CellRendererRegistry } from './cell-renderer-registry';
 import { DataGrid } from './data-grid';
 
 import type { ReactNode } from 'react';
-import type { GridDataSource, GridPage, GridQuery, GridSchema } from '../core';
-import type { ExpandColumnConfig, GridRenderer, GridRendererProps } from './renderer';
+import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema } from '../core';
+import type { IExpandColumnConfig, IGridRendererProps, TGridRenderer } from './renderer';
 
 interface Row {
   id: string;
   name: string;
 }
 
-const schema: GridSchema<Row> = {
+const schema: IGridSchema<Row> = {
   id: 't',
   getRowId: (r) => r.id,
   columns: [
@@ -37,19 +37,19 @@ function controller() {
   return new GridController<Row>({ schema, context: { dataType: 't' }, defaultPageSize: 30 });
 }
 
-const dataSource: GridDataSource<Row> = {
-  fetch: async (_q: GridQuery): Promise<GridPage<Row>> => ({ rows: [], total: 0 }),
+const dataSource: IGridDataSource<Row> = {
+  fetch: async (_q: IGridQuery): Promise<IGridPage<Row>> => ({ rows: [], total: 0 }),
 };
 
 describe('DataGrid — optional getRowClass / expandColumn passthrough (backward-compatible)', () => {
   it('forwards getRowClass and expandColumn to the renderer', async () => {
-    let received: GridRendererProps<Row> | undefined;
-    const spyRenderer: GridRenderer = (props) => {
-      received = props as unknown as GridRendererProps<Row>;
+    let received: IGridRendererProps<Row> | undefined;
+    const spyRenderer: TGridRenderer = (props) => {
+      received = props as unknown as IGridRendererProps<Row>;
       return null;
     };
     const getRowClass = (row: Row) => (row.id === 'x' ? 'dim' : undefined);
-    const expandColumn: ExpandColumnConfig = { columnId: 'name', align: 'right' };
+    const expandColumn: IExpandColumnConfig = { columnId: 'name', align: Align.Right };
 
     wrap(
       <DataGrid
@@ -71,9 +71,9 @@ describe('DataGrid — optional getRowClass / expandColumn passthrough (backward
   });
 
   it('omitting them leaves the renderer props undefined (unchanged default)', async () => {
-    let received: GridRendererProps<Row> | undefined;
-    const spyRenderer: GridRenderer = (props) => {
-      received = props as unknown as GridRendererProps<Row>;
+    let received: IGridRendererProps<Row> | undefined;
+    const spyRenderer: TGridRenderer = (props) => {
+      received = props as unknown as IGridRendererProps<Row>;
       return null;
     };
 
@@ -95,7 +95,7 @@ describe('DataGrid — optional getRowClass / expandColumn passthrough (backward
   });
 
   it('merges host-supplied toolbar slots into the toolbar', async () => {
-    const nullRenderer: GridRenderer = () => null;
+    const nullRenderer: TGridRenderer = () => null;
     const { getByTestId } = wrap(
       <DataGrid
         controller={controller()}

@@ -2,20 +2,26 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { createDefaultOperatorRegistry, GridController, OperatorId } from '../core';
+import {
+  createDefaultOperatorRegistry,
+  FilterValueKind,
+  GridActionType,
+  GridController,
+  OperatorId,
+} from '../core';
 import { CellRendererRegistry } from './cell-renderer-registry';
 import { DataGrid } from './data-grid';
 
 import type { ReactNode } from 'react';
-import type { GridDataSource, GridPage, GridQuery, GridSchema } from '../core';
-import type { GridRenderer } from './renderer';
+import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema } from '../core';
+import type { TGridRenderer } from './renderer';
 
 interface Row {
   id: string;
   name: string;
 }
 
-const schema: GridSchema<Row> = {
+const schema: IGridSchema<Row> = {
   id: 't',
   getRowId: (r) => r.id,
   columns: [
@@ -28,7 +34,7 @@ const schema: GridSchema<Row> = {
   ],
 };
 
-const nullRenderer: GridRenderer = () => null;
+const nullRenderer: TGridRenderer = () => null;
 
 function wrap(ui: ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -41,8 +47,10 @@ function setup() {
     context: { dataType: 't' },
     defaultPageSize: 30,
   });
-  const fetch = vi.fn(async (_q: GridQuery): Promise<GridPage<Row>> => ({ rows: [], total: 100 }));
-  const dataSource: GridDataSource<Row> = { fetch };
+  const fetch = vi.fn(
+    async (_q: IGridQuery): Promise<IGridPage<Row>> => ({ rows: [], total: 100 })
+  );
+  const dataSource: IGridDataSource<Row> = { fetch };
   wrap(
     <DataGrid
       controller={controller}
@@ -68,16 +76,16 @@ describe('DataGrid refetch wiring', () => {
   it('refetches when the page changes', async () => {
     const { controller, fetch } = setup();
     await waitFor(() => expect(fetch).toHaveBeenCalled());
-    act(() => controller.store.dispatch({ type: 'setPage', page: 2 }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetPage, page: 2 }));
     await waitFor(() => expect(fetch.mock.calls.some((c) => c[0].page === 2)).toBe(true));
   });
 
   it('refetches at page 1 when the page size changes', async () => {
     const { controller, fetch } = setup();
     await waitFor(() => expect(fetch).toHaveBeenCalled());
-    act(() => controller.store.dispatch({ type: 'setPage', page: 3 }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetPage, page: 3 }));
     await waitFor(() => expect(fetch.mock.calls.some((c) => c[0].page === 3)).toBe(true));
-    act(() => controller.store.dispatch({ type: 'setPageSize', pageSize: 50 }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetPageSize, pageSize: 50 }));
     await waitFor(() =>
       expect(fetch.mock.calls.some((c) => c[0].pageSize === 50 && c[0].page === 1)).toBe(true)
     );
@@ -88,12 +96,12 @@ describe('DataGrid refetch wiring', () => {
     await waitFor(() => expect(fetch).toHaveBeenCalled());
     act(() =>
       controller.store.dispatch({
-        type: 'setFilter',
+        type: GridActionType.SetFilter,
         columnId: 'name',
         entry: {
           columnId: 'name',
           operator: OperatorId.Ilike,
-          value: { kind: 'text', text: 'foo' },
+          value: { kind: FilterValueKind.Text, text: 'foo' },
         },
       })
     );
@@ -104,7 +112,7 @@ describe('DataGrid refetch wiring', () => {
     const { controller, fetch } = setup();
     await waitFor(() => expect(fetch).toHaveBeenCalled());
     const callsBefore = fetch.mock.calls.length;
-    act(() => controller.store.dispatch({ type: 'setSelection', ids: ['a', 'b'] }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a', 'b'] }));
     // give any spurious refetch a chance to fire
     await new Promise((r) => setTimeout(r, 20));
     expect(fetch.mock.calls.length).toBe(callsBefore);

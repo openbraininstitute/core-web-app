@@ -2,7 +2,7 @@ import { hasAssets } from '@/api/entitycore/guards';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { CellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '../../../react';
 
 /** Cell-renderer registry key for the ME-model morphology preview thumbnail. */
 export const MEMODEL_MORPHOLOGY_PREVIEW_RENDERER = 'memodelMorphologyPreview';
@@ -14,7 +14,7 @@ export const MEMODEL_MORPHOLOGY_PREVIEW_RENDERER = 'memodelMorphologyPreview';
  * legacy `MEModelMorphologyPreview` field-def. Reuses the same lazy, asset-backed
  * {@link PreviewThumbnail} so previews stay fully functional, not placeholders.
  */
-export function MEModelMorphologyPreview({ row }: CellRendererProps<IMEModel>) {
+export function MEModelMorphologyPreview({ row }: ICellRendererProps<IMEModel>) {
   const morphology = row?.morphology;
   if (!morphology || !hasAssets(morphology)) {
     return (

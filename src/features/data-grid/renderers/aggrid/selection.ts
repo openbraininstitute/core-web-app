@@ -1,7 +1,7 @@
-import type { SelectionSpec } from '../../core';
+import type { ISelectionSpec } from '../../core';
 
 /** Effective selection mode: schema-declared, but overridable (picker single/multi). */
-export type SelectionMode = NonNullable<SelectionSpec['mode']>;
+export type TSelectionMode = NonNullable<ISelectionSpec['mode']>;
 
 /**
  * Merge the checkboxes toggled on the CURRENT page into the cross-page selection.
@@ -15,7 +15,7 @@ export type SelectionMode = NonNullable<SelectionSpec['mode']>;
  * Pure so it is unit-testable without a live AG Grid.
  */
 export function mergePageSelection(
-  mode: SelectionMode | undefined,
+  mode: TSelectionMode | undefined,
   current: string[],
   pageIds: string[],
   selectedOnPage: string[]

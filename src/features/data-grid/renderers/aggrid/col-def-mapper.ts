@@ -1,3 +1,4 @@
+import { Align } from '../../core';
 import { AgCellHost } from './cell-host';
 import { isDetailRow } from './detail-rows';
 import { AgExpandCell } from './expand-cell';
@@ -5,12 +6,12 @@ import { AgExpandHostCell } from './expand-host-cell';
 import { AgHeader } from './header';
 
 import type { ColDef } from 'ag-grid-community';
-import type { ResolvedColumn } from '../../core';
-import type { ExpandColumnConfig } from '../../react';
+import type { IResolvedColumn } from '../../core';
+import type { IExpandColumnConfig } from '../../react';
 
 export const EXPAND_COL_ID = '__expand';
 
-export interface BuildColDefsOptions {
+export interface IBuildColDefsOptions {
   hidden: Set<string>;
   /** user-resized widths (take precedence over the schema's width spec) */
   columnWidths: Record<string, number>;
@@ -21,7 +22,7 @@ export interface BuildColDefsOptions {
    * chevron hosts inside that cell and no leading column is prepended; otherwise
    * (default) the fixed leading `__expand` column is used.
    */
-  expandColumn?: ExpandColumnConfig;
+  expandColumn?: IExpandColumnConfig;
 }
 
 /** Fixed, non-interactive expander column shown when detail rows are enabled. */
@@ -41,13 +42,13 @@ function expandColDef<Row>(): ColDef<Row> {
 }
 
 /**
- * Maps the renderer-agnostic {@link ResolvedColumn} list to AG Grid `ColDef`s.
+ * Maps the renderer-agnostic {@link IResolvedColumn} list to AG Grid `ColDef`s.
  * Sorting is delegated to the custom header (server-side), and filtering to the
  * custom filter components, so AG Grid's built-in sort/filter never run.
  */
 export function buildColDefs<Row>(
-  columns: Array<ResolvedColumn<Row>>,
-  options: BuildColDefsOptions
+  columns: Array<IResolvedColumn<Row>>,
+  options: IBuildColDefsOptions
 ): Array<ColDef<Row>> {
   const { hidden, columnWidths, withExpandColumn, expandColumn } = options;
 
@@ -96,9 +97,9 @@ export function buildColDefs<Row>(
       flex: userWidth != null ? undefined : c.width?.flex,
       resizable: c.width?.resizable ?? true,
       cellClass:
-        c.align === 'right'
+        c.align === Align.Right
           ? 'ag-right-aligned-cell'
-          : c.align === 'center'
+          : c.align === Align.Center
             ? 'ag-center-aligned-cell'
             : undefined,
     };

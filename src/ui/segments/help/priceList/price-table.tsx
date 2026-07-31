@@ -6,7 +6,7 @@ import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { CreditsPack, SinglePrice } from '@/services/sanity';
 
 type PriceTableProps = {
@@ -73,7 +73,7 @@ const formatQuantityRange = (value: string): string => {
   return value;
 };
 
-const creditsPackColumns: Array<SimpleColumn<CreditsPack>> = [
+const creditsPackColumns: Array<ISimpleColumn<CreditsPack>> = [
   {
     id: 'quantity',
     header: 'Credits',

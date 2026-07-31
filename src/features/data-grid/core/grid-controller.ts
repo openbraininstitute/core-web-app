@@ -1,16 +1,17 @@
 import { resolveColumns } from './domain/resolve-schema';
+import { GridActionType } from './state/grid-state';
 import { GridStateStore } from './state/grid-state-store';
 
-import type { GridContext } from './domain/grid-context';
-import type { GridQuery } from './domain/query';
-import type { ResolvedColumn } from './domain/resolve-schema';
-import type { GridSchema } from './domain/schema';
-import type { StatePersistence } from './ports/state-persistence';
-import type { GridState } from './state/grid-state';
+import type { IGridContext } from './domain/grid-context';
+import type { IGridQuery } from './domain/query';
+import type { IResolvedColumn } from './domain/resolve-schema';
+import type { IGridSchema } from './domain/schema';
+import type { IStatePersistence } from './ports/state-persistence';
+import type { IGridState } from './state/grid-state';
 
-export interface GridControllerOptions<Row> {
-  schema: GridSchema<Row>;
-  context: GridContext;
+export interface IGridControllerOptions<Row> {
+  schema: IGridSchema<Row>;
+  context: IGridContext;
   /** stable key for persistence (the clean successor to the old `dataKey`) */
   instanceKey?: string;
   /**
@@ -19,7 +20,7 @@ export interface GridControllerOptions<Row> {
    * slices are merged over the schema defaults, on save each adapter extracts its
    * own slice from the full state.
    */
-  persistence?: StatePersistence[];
+  persistence?: IStatePersistence[];
   defaultPageSize: number;
 }
 
@@ -31,7 +32,7 @@ export interface GridControllerOptions<Row> {
  * reads the store invisibly and gets memoized against the stable `controller`
  * reference, freezing the query at its first value.
  */
-export function buildGridQuery(state: GridState, params?: Record<string, unknown>): GridQuery {
+export function buildGridQuery(state: IGridState, params?: Record<string, unknown>): IGridQuery {
   return {
     page: state.page,
     pageSize: state.pageSize,
@@ -43,10 +44,10 @@ export function buildGridQuery(state: GridState, params?: Record<string, unknown
 }
 
 export function createInitialState<Row>(
-  schema: GridSchema<Row>,
-  context: GridContext,
+  schema: IGridSchema<Row>,
+  context: IGridContext,
   defaultPageSize: number
-): GridState {
+): IGridState {
   // Default column order & visibility come from the CONTEXT-RESOLVED columns, so
   // contextual `order`/`available`/`hiddenByDefault` are honoured before any
   // persisted user layout is merged on top.
@@ -67,19 +68,19 @@ export function createInitialState<Row>(
 
 /**
  * The headless "brain": owns the state store, resolves the schema against the
- * context, builds the abstract {@link GridQuery}, and wires persistence. It holds
+ * context, builds the abstract {@link IGridQuery}, and wires persistence. It holds
  * NO data-fetching logic (that lives in the React ring via React Query) and NO
  * rendering — keeping it pure and unit-testable.
  */
 export class GridController<Row> {
   readonly store: GridStateStore;
-  readonly schema: GridSchema<Row>;
-  readonly context: GridContext;
+  readonly schema: IGridSchema<Row>;
+  readonly context: IGridContext;
 
   private readonly defaultPageSize: number;
   private unsubscribePersistence?: () => void;
 
-  constructor(options: GridControllerOptions<Row>) {
+  constructor(options: IGridControllerOptions<Row>) {
     this.schema = options.schema;
     this.context = options.context;
     this.defaultPageSize = options.defaultPageSize;
@@ -106,7 +107,7 @@ export class GridController<Row> {
   }
 
   /** Columns visible/filterable in the current context, in canonical order. */
-  resolvedColumns(): Array<ResolvedColumn<Row>> {
+  resolvedColumns(): Array<IResolvedColumn<Row>> {
     return resolveColumns(this.schema, this.context);
   }
 
@@ -115,14 +116,14 @@ export class GridController<Row> {
    * Non-React callers only — React code must use {@link buildGridQuery} with the
    * state from `useSyncExternalStore` (see its doc for the React Compiler pitfall).
    */
-  buildQuery(params?: Record<string, unknown>): GridQuery {
+  buildQuery(params?: Record<string, unknown>): IGridQuery {
     return buildGridQuery(this.store.getSnapshot(), params);
   }
 
   /** Reset to initial defaults (used on species/scope change). */
   resetState(): void {
     this.store.dispatch({
-      type: 'reset',
+      type: GridActionType.Reset,
       state: createInitialState(this.schema, this.context, this.defaultPageSize),
     });
   }

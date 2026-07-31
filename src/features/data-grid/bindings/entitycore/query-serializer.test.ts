@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { OperatorId } from '../../core';
+import { FilterValueKind, OperatorId, SortDirection } from '../../core';
 import { serializeQuery, toContainsPattern } from './query-serializer';
 
-import type { FilterEntry, FilterValue, GridQuery, GridSchema } from '../../core';
+import type { IFilterEntry, IGridQuery, IGridSchema, TFilterValue } from '../../core';
 
 type Row = { id: string };
 
-const schema: GridSchema<Row> = {
+const schema: IGridSchema<Row> = {
   id: 'test',
   columns: [
     { id: 'name', header: 'Name', filter: { operators: [OperatorId.Ilike], field: 'name' } },
@@ -37,11 +37,11 @@ const schema: GridSchema<Row> = {
   getRowId: (r) => r.id,
 };
 
-function query(over: Partial<GridQuery> = {}): GridQuery {
+function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
 
-function entry(columnId: string, operator: string, value: FilterValue): FilterEntry {
+function entry(columnId: string, operator: string, value: TFilterValue): IFilterEntry {
   return { columnId, operator, value };
 }
 
@@ -65,7 +65,9 @@ describe('serializeQuery — operators', () => {
     expect(toContainsPattern('a%b_c')).toBe('%a\\%b\\_c%');
     const params = serializeQuery(
       query({
-        filters: { name: entry('name', OperatorId.Ilike, { kind: 'text', text: ' foo ' }) },
+        filters: {
+          name: entry('name', OperatorId.Ilike, { kind: FilterValueKind.Text, text: ' foo ' }),
+        },
       }),
       schema
     );
@@ -76,8 +78,14 @@ describe('serializeQuery — operators', () => {
     const params = serializeQuery(
       query({
         filters: {
-          mtype: entry('mtype', OperatorId.In, { kind: 'set', values: ['L5_TPC', 'L23_BP'] }),
-          protocol: entry('protocol', OperatorId.NotIn, { kind: 'set', values: ['computational'] }),
+          mtype: entry('mtype', OperatorId.In, {
+            kind: FilterValueKind.Set,
+            values: ['L5_TPC', 'L23_BP'],
+          }),
+          protocol: entry('protocol', OperatorId.NotIn, {
+            kind: FilterValueKind.Set,
+            values: ['computational'],
+          }),
         },
       }),
       schema
@@ -88,13 +96,19 @@ describe('serializeQuery — operators', () => {
 
   it('eq uses the bare field; contains uses __contains', () => {
     const p1 = serializeQuery(
-      query({ filters: { name: entry('name', OperatorId.Eq, { kind: 'text', text: 'exact' }) } }),
+      query({
+        filters: {
+          name: entry('name', OperatorId.Eq, { kind: FilterValueKind.Text, text: 'exact' }),
+        },
+      }),
       schema
     );
     expect(p1.name).toBe('exact');
     const p2 = serializeQuery(
       query({
-        filters: { name: entry('name', OperatorId.Contains, { kind: 'text', text: 'Sub' }) },
+        filters: {
+          name: entry('name', OperatorId.Contains, { kind: FilterValueKind.Text, text: 'Sub' }),
+        },
       }),
       schema
     );
@@ -105,7 +119,11 @@ describe('serializeQuery — operators', () => {
     const p1 = serializeQuery(
       query({
         filters: {
-          weight: entry('weight', OperatorId.Range, { kind: 'range', min: 1, max: null }),
+          weight: entry('weight', OperatorId.Range, {
+            kind: FilterValueKind.Range,
+            min: 1,
+            max: null,
+          }),
         },
       }),
       schema
@@ -117,7 +135,7 @@ describe('serializeQuery — operators', () => {
       query({
         filters: {
           registrationDate: entry('registrationDate', OperatorId.DateRange, {
-            kind: 'dateRange',
+            kind: FilterValueKind.DateRange,
             from: '2026-01-01T00:00:00.000Z',
             to: '2026-02-01T00:00:00.000Z',
           }),
@@ -133,8 +151,8 @@ describe('serializeQuery — operators', () => {
     const params = serializeQuery(
       query({
         filters: {
-          name: entry('name', OperatorId.Ilike, { kind: 'text', text: '   ' }),
-          mtype: entry('mtype', OperatorId.In, { kind: 'set', values: [] }),
+          name: entry('name', OperatorId.Ilike, { kind: FilterValueKind.Text, text: '   ' }),
+          mtype: entry('mtype', OperatorId.In, { kind: FilterValueKind.Set, values: [] }),
         },
       }),
       schema
@@ -144,7 +162,9 @@ describe('serializeQuery — operators', () => {
 
   it('unknown operators are skipped rather than crashing', () => {
     const params = serializeQuery(
-      query({ filters: { name: entry('name', 'nope', { kind: 'text', text: 'x' }) } }),
+      query({
+        filters: { name: entry('name', 'nope', { kind: FilterValueKind.Text, text: 'x' }) },
+      }),
       schema
     );
     expect(Object.keys(params).sort()).toEqual(['page', 'page_size']);
@@ -156,8 +176,8 @@ describe('serializeQuery — sort', () => {
     const params = serializeQuery(
       query({
         sort: [
-          { columnId: 'registrationDate', direction: 'desc' },
-          { columnId: 'name', direction: 'asc' },
+          { columnId: 'registrationDate', direction: SortDirection.Desc },
+          { columnId: 'name', direction: SortDirection.Asc },
         ],
       }),
       schema
@@ -167,7 +187,7 @@ describe('serializeQuery — sort', () => {
 
   it('expands multi-field sortField and omits order_by when unsorted', () => {
     const params = serializeQuery(
-      query({ sort: [{ columnId: 'multi', direction: 'asc' }] }),
+      query({ sort: [{ columnId: 'multi', direction: SortDirection.Asc }] }),
       schema
     );
     expect(params.order_by).toEqual(['+a', '+b']);

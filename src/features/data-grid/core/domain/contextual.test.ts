@@ -8,9 +8,9 @@ import {
   whenMatches,
 } from './contextual';
 
-import type { GridContext } from './grid-context';
+import type { IGridContext } from './grid-context';
 
-const ctx = (over: Partial<GridContext> = {}): GridContext => ({
+const ctx = (over: Partial<IGridContext> = {}): IGridContext => ({
   dataType: 'cell_morphology',
   section: 'data',
   scope: 'project',
@@ -51,7 +51,7 @@ describe('matchesRule', () => {
   it('requires both the `when` clause and the imperative `matches` predicate', () => {
     const rule = {
       when: { section: 'data' },
-      matches: (c: GridContext) => c.scope === 'project',
+      matches: (c: IGridContext) => c.scope === 'project',
       value: 1,
     };
     expect(matchesRule(rule, ctx())).toBe(true);

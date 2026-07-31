@@ -1,57 +1,57 @@
-import { OperatorId } from '../../core';
+import { FilterOptionsKind, FilterValueKind, OperatorId, SortDirection } from '../../core';
 
 import type {
-  CellValue,
-  ColumnModel,
-  Facets,
-  FilterEntry,
-  FilterModel,
-  GridDataSource,
-  GridPage,
-  GridQuery,
-  SortModel,
+  IColumnModel,
+  IFilterEntry,
+  IGridDataSource,
+  IGridPage,
+  IGridQuery,
+  TCellValue,
+  TFacets,
+  TFilterModel,
+  TSortModel,
 } from '../../core';
 
 /**
- * The subset of a {@link ColumnModel} the in-memory engine needs to read/compare a
- * cell value and know how a column filters. `SimpleColumn` (and every schema
- * `ColumnModel`) already satisfies this, so callers pass their columns straight in.
+ * The subset of a {@link IColumnModel} the in-memory engine needs to read/compare a
+ * cell value and know how a column filters. `ISimpleColumn` (and every schema
+ * `IColumnModel`) already satisfies this, so callers pass their columns straight in.
  */
-export type InMemoryColumn<Row> = Pick<ColumnModel<Row>, 'id' | 'field' | 'getValue' | 'filter'>;
+export type TInMemoryColumn<Row> = Pick<IColumnModel<Row>, 'id' | 'field' | 'getValue' | 'filter'>;
 
 /** Read a (possibly dotted) field path off a row without throwing on nullish links. */
-function readPath(row: unknown, path: string): CellValue {
+function readPath(row: unknown, path: string): TCellValue {
   const value = path
     .split('.')
     .reduce<unknown>(
       (acc, key) => (acc == null ? undefined : (acc as Record<string, unknown>)[key]),
       row
     );
-  return value as CellValue;
+  return value as TCellValue;
 }
 
 /** Resolve a column's raw cell value: explicit `getValue` wins, else `field ?? id`. */
-function cellValue<Row>(column: InMemoryColumn<Row>, row: Row): CellValue {
+function cellValue<Row>(column: TInMemoryColumn<Row>, row: Row): TCellValue {
   if (column.getValue) return column.getValue(row);
   return readPath(row, column.field ?? column.id);
 }
 
 /** The facet lookup key for a column (mirrors `col-def-mapper`/`query-serializer`). */
-function facetKeyOf<Row>(column: InMemoryColumn<Row>): string {
+function facetKeyOf<Row>(column: TInMemoryColumn<Row>): string {
   return column.filter?.facetKey ?? column.filter?.field ?? column.field ?? column.id;
 }
 
-function asText(value: CellValue): string {
+function asText(value: TCellValue): string {
   return value == null ? '' : String(value);
 }
 
-function asNumber(value: CellValue): number | null {
+function asNumber(value: TCellValue): number | null {
   if (value == null || value === '') return null;
   const n = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(n) ? n : null;
 }
 
-function asTime(value: CellValue): number | null {
+function asTime(value: TCellValue): number | null {
   if (value == null) return null;
   const t = new Date(value as string | number).getTime();
   return Number.isFinite(t) ? t : null;
@@ -62,45 +62,45 @@ function asTime(value: CellValue): number | null {
  * `query-serializer` semantics but evaluated against the row value instead of
  * serialized to request params. Adding an operator = add a predicate here.
  */
-type Predicate = (value: CellValue, entry: FilterEntry) => boolean;
+type Predicate = (value: TCellValue, entry: IFilterEntry) => boolean;
 
 const PREDICATES: Record<string, Predicate> = {
   [OperatorId.Ilike]: (value, e) => {
-    if (e.value.kind !== 'text' || !e.value.text.trim()) return true;
+    if (e.value.kind !== FilterValueKind.Text || !e.value.text.trim()) return true;
     return asText(value).toLowerCase().includes(e.value.text.trim().toLowerCase());
   },
   [OperatorId.Contains]: (value, e) => {
-    if (e.value.kind !== 'text' || !e.value.text.trim()) return true;
+    if (e.value.kind !== FilterValueKind.Text || !e.value.text.trim()) return true;
     return asText(value).includes(e.value.text.trim());
   },
   [OperatorId.Eq]: (value, e) => {
-    if (e.value.kind !== 'text' || !e.value.text.trim()) return true;
+    if (e.value.kind !== FilterValueKind.Text || !e.value.text.trim()) return true;
     return asText(value).trim() === e.value.text.trim();
   },
   [OperatorId.In]: (value, e) =>
-    e.value.kind !== 'set' || e.value.values.length === 0
+    e.value.kind !== FilterValueKind.Set || e.value.values.length === 0
       ? true
       : e.value.values.includes(asText(value)),
   [OperatorId.InSingleUnderscore]: (value, e) =>
-    e.value.kind !== 'set' || e.value.values.length === 0
+    e.value.kind !== FilterValueKind.Set || e.value.values.length === 0
       ? true
       : e.value.values.includes(asText(value)),
   [OperatorId.NotIn]: (value, e) =>
-    e.value.kind !== 'set' || e.value.values.length === 0
+    e.value.kind !== FilterValueKind.Set || e.value.values.length === 0
       ? true
       : !e.value.values.includes(asText(value)),
   [OperatorId.Gte]: (value, e) => {
-    if (e.value.kind !== 'number' || e.value.value == null) return true;
+    if (e.value.kind !== FilterValueKind.Number || e.value.value == null) return true;
     const n = asNumber(value);
     return n != null && n >= e.value.value;
   },
   [OperatorId.Lte]: (value, e) => {
-    if (e.value.kind !== 'number' || e.value.value == null) return true;
+    if (e.value.kind !== FilterValueKind.Number || e.value.value == null) return true;
     const n = asNumber(value);
     return n != null && n <= e.value.value;
   },
   [OperatorId.Range]: (value, e) => {
-    if (e.value.kind !== 'range') return true;
+    if (e.value.kind !== FilterValueKind.Range) return true;
     const n = asNumber(value);
     if (n == null) return e.value.min == null && e.value.max == null;
     if (e.value.min != null && n < e.value.min) return false;
@@ -108,7 +108,7 @@ const PREDICATES: Record<string, Predicate> = {
     return true;
   },
   [OperatorId.DateRange]: (value, e) => {
-    if (e.value.kind !== 'dateRange') return true;
+    if (e.value.kind !== FilterValueKind.DateRange) return true;
     const t = asTime(value);
     if (t == null) return !e.value.from && !e.value.to;
     const from = e.value.from ? new Date(e.value.from).getTime() : null;
@@ -118,13 +118,15 @@ const PREDICATES: Record<string, Predicate> = {
     return true;
   },
   [OperatorId.Bool]: (value, e) =>
-    e.value.kind !== 'boolean' || e.value.value == null ? true : Boolean(value) === e.value.value,
+    e.value.kind !== FilterValueKind.Boolean || e.value.value == null
+      ? true
+      : Boolean(value) === e.value.value,
 };
 
 function matchesFilters<Row>(
   row: Row,
-  filters: FilterModel,
-  byId: Map<string, InMemoryColumn<Row>>
+  filters: TFilterModel,
+  byId: Map<string, TInMemoryColumn<Row>>
 ): boolean {
   for (const entry of Object.values(filters)) {
     const column = byId.get(entry.columnId);
@@ -135,7 +137,7 @@ function matchesFilters<Row>(
   return true;
 }
 
-function matchesQuick<Row>(row: Row, quick: string, columns: Array<InMemoryColumn<Row>>): boolean {
+function matchesQuick<Row>(row: Row, quick: string, columns: Array<TInMemoryColumn<Row>>): boolean {
   const needle = quick.trim().toLowerCase();
   if (!needle) return true;
   return columns.some((c) => asText(cellValue(c, row)).toLowerCase().includes(needle));
@@ -145,8 +147,8 @@ function matchesQuick<Row>(row: Row, quick: string, columns: Array<InMemoryColum
 function compareBySort<Row>(
   a: Row,
   b: Row,
-  sort: SortModel,
-  byId: Map<string, InMemoryColumn<Row>>
+  sort: TSortModel,
+  byId: Map<string, TInMemoryColumn<Row>>
 ): number {
   for (const entry of sort) {
     const column = byId.get(entry.columnId);
@@ -167,24 +169,25 @@ function compareBySort<Row>(
     } else {
       cmp = asText(av).localeCompare(asText(bv));
     }
-    if (cmp !== 0) return entry.direction === 'asc' ? cmp : -cmp;
+    if (cmp !== 0) return entry.direction === SortDirection.Asc ? cmp : -cmp;
   }
   return 0;
 }
 
 /**
- * Facets computed from the FULL (unfiltered) row set, so a set/facet filter's
+ * TFacets computed from the FULL (unfiltered) row set, so a set/facet filter's
  * options stay stable while the user narrows the grid. One bucket per distinct
  * value; the value doubles as both `id` and `label` (there are no UUIDs here).
  */
 export function computeInMemoryFacets<Row>(
   rows: ReadonlyArray<Row>,
-  columns: Array<InMemoryColumn<Row>>
-): Facets {
-  const facets: Facets = {};
+  columns: Array<TInMemoryColumn<Row>>
+): TFacets {
+  const facets: TFacets = {};
   for (const column of columns) {
     const operators = column.filter?.operators ?? [];
-    const usesFacets = column.filter?.options == null || column.filter.options.kind === 'facets';
+    const usesFacets =
+      column.filter?.options == null || column.filter.options.kind === FilterOptionsKind.Facets;
     const setOps: string[] = [OperatorId.In, OperatorId.InSingleUnderscore, OperatorId.NotIn];
     const isSet = operators.some((op) => setOps.includes(op));
     if (!column.filter || !isSet || !usesFacets) continue;
@@ -202,8 +205,8 @@ export function computeInMemoryFacets<Row>(
   return facets;
 }
 
-export interface RunInMemoryOptions<Row> {
-  columns: Array<InMemoryColumn<Row>>;
+export interface IRunInMemoryOptions<Row> {
+  columns: Array<TInMemoryColumn<Row>>;
   /** Ignore `query.page`/`pageSize` and return every matching row (default: false). */
   disablePagination?: boolean;
   /** Include computed facets on the returned page (default: false — compute once outside). */
@@ -211,15 +214,15 @@ export interface RunInMemoryOptions<Row> {
 }
 
 /**
- * Apply a {@link GridQuery} (filters → sort → pagination) to an in-memory array.
+ * Apply a {@link IGridQuery} (filters → sort → pagination) to an in-memory array.
  * Pure and synchronous, so a static grid can derive its page in a `useMemo`
  * without React Query. The same engine backs {@link createInMemoryDataSource}.
  */
 export function runInMemoryQuery<Row>(
   rows: ReadonlyArray<Row>,
-  query: GridQuery,
-  options: RunInMemoryOptions<Row>
-): GridPage<Row> {
+  query: IGridQuery,
+  options: IRunInMemoryOptions<Row>
+): IGridPage<Row> {
   const { columns, disablePagination = false, withFacets = false } = options;
   const byId = new Map(columns.map((c) => [c.id, c] as const));
 
@@ -247,22 +250,22 @@ export function runInMemoryQuery<Row>(
   };
 }
 
-export interface InMemoryDataSourceOptions<Row> {
-  columns: Array<InMemoryColumn<Row>>;
+export interface IInMemoryDataSourceOptions<Row> {
+  columns: Array<TInMemoryColumn<Row>>;
   disablePagination?: boolean;
 }
 
 /**
- * Wrap an in-memory array as a {@link GridDataSource}, so a static list can flow
+ * Wrap an in-memory array as a {@link IGridDataSource}, so a static list can flow
  * through the exact same controller/`useDataGrid`/renderer stack as an entitycore
  * REST source. Resolves synchronously (the Promise is immediate).
  */
 export function createInMemoryDataSource<Row>(
   rows: ReadonlyArray<Row>,
-  options: InMemoryDataSourceOptions<Row>
-): GridDataSource<Row> {
+  options: IInMemoryDataSourceOptions<Row>
+): IGridDataSource<Row> {
   return {
-    fetch(query: GridQuery): Promise<GridPage<Row>> {
+    fetch(query: IGridQuery): Promise<IGridPage<Row>> {
       return Promise.resolve(
         runInMemoryQuery(rows, query, {
           columns: options.columns,

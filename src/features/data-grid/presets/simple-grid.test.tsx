@@ -2,12 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { OperatorId } from '../core';
+import { Align, OperatorId, SortDirection } from '../core';
 import { buildSimpleColDefs, SimpleGrid } from './simple-grid';
 
 import type { ReactNode } from 'react';
-import type { GridDataSource, GridPage, GridQuery } from '../core';
-import type { SimpleColumn } from './simple-grid';
+import type { IGridDataSource, IGridPage, IGridQuery } from '../core';
+import type { ISimpleColumn } from './simple-grid';
 
 function withQuery(ui: ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -27,13 +27,13 @@ const rows: Row[] = [
   { id: 'c', name: 'Gamma', count: 3, scan_parameters: { seed: 30 } },
 ];
 
-const columns: Array<SimpleColumn<Row>> = [
+const columns: Array<ISimpleColumn<Row>> = [
   { id: 'name', header: 'Name', field: 'name', width: { width: 200 }, pinned: 'left' },
   { id: 'seed', header: 'Seed', getValue: (r) => r.scan_parameters.seed as number },
   {
     id: 'status',
     header: 'Status',
-    align: 'center',
+    align: Align.Center,
     pinned: 'right',
     renderCell: (r) => <span data-testid="status-cell">{r.count > 1 ? 'many' : 'one'}</span>,
   },
@@ -223,7 +223,7 @@ describe('SimpleGrid row selection', () => {
 
 // Opt-in enhanced mode: reuses the shared header filters, column chooser,
 // store-driven sorting and pagination — the same stack as the entity grid.
-const filterColumns: Array<SimpleColumn<Row>> = [
+const filterColumns: Array<ISimpleColumn<Row>> = [
   {
     id: 'name',
     header: 'Name',
@@ -288,7 +288,7 @@ describe('SimpleGrid enhanced mode', () => {
 });
 
 // ── Server mode: the data source resolves filter/sort/pagination; store changes
-//    (page, sort) re-issue `dataSource.fetch` with the updated GridQuery. ──────────
+//    (page, sort) re-issue `dataSource.fetch` with the updated IGridQuery. ──────────
 interface SRow {
   id: string;
   name: string;
@@ -300,22 +300,22 @@ const serverRows: SRow[] = [
   { id: '3', name: 'Three' },
 ];
 
-const serverColumns: Array<SimpleColumn<SRow>> = [
+const serverColumns: Array<ISimpleColumn<SRow>> = [
   { id: 'name', header: 'Name', field: 'name', sortable: true },
 ];
 
 /** A fake data source that records every query and paginates/sorts `serverRows`. */
 function makeServerSource() {
-  const fetch = vi.fn((query: GridQuery): Promise<GridPage<SRow>> => {
+  const fetch = vi.fn((query: IGridQuery): Promise<IGridPage<SRow>> => {
     const sorted = [...serverRows];
-    if (query.sort[0]?.direction === 'desc') sorted.reverse();
+    if (query.sort[0]?.direction === SortDirection.Desc) sorted.reverse();
     const start = (query.page - 1) * query.pageSize;
     return Promise.resolve({
       rows: sorted.slice(start, start + query.pageSize),
       total: serverRows.length,
     });
   });
-  const dataSource: GridDataSource<SRow> = { fetch };
+  const dataSource: IGridDataSource<SRow> = { fetch };
   return { fetch, dataSource };
 }
 
@@ -390,7 +390,7 @@ describe('SimpleGrid server mode', () => {
     await waitFor(() =>
       expect(
         fetch.mock.calls.some(
-          ([q]) => q.sort[0]?.columnId === 'name' && q.sort[0]?.direction === 'desc'
+          ([q]) => q.sort[0]?.columnId === 'name' && q.sort[0]?.direction === SortDirection.Desc
         )
       ).toBe(true)
     );

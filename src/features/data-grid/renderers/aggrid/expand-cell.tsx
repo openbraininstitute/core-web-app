@@ -2,14 +2,15 @@ import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
 
 import { cn } from '@/utils/css-class';
 
+import { GridActionType } from '../../core';
 import { isDetailRow } from './detail-rows';
 import { useGridState } from './use-grid-state';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { ReactNode } from 'react';
 import type { GridController } from '../../core';
-import type { DetailRuntime } from '../../react';
-import type { AgGridContext } from './ag-context';
+import type { IDetailRuntime } from '../../react';
+import type { IAgGridContext } from './ag-context';
 
 /**
  * The reusable expand/collapse toggle. Reads the expanded set from the headless
@@ -25,7 +26,7 @@ export function ExpandToggleButton<Row>({
   fill = true,
 }: {
   controller: GridController<Row>;
-  detail?: DetailRuntime<Row>;
+  detail?: IDetailRuntime<Row>;
   row: unknown;
   /** custom glyph given the open state (default: chevron right/down). */
   renderGlyph?: (open: boolean) => ReactNode;
@@ -64,7 +65,7 @@ export function ExpandToggleButton<Row>({
         // reaches an ancestor grid (which would otherwise open/collapse a parent row).
         e.stopPropagation();
         e.nativeEvent.stopImmediatePropagation();
-        controller.store.dispatch({ type: 'toggleExpanded', id: rowId });
+        controller.store.dispatch({ type: GridActionType.ToggleExpanded, id: rowId });
       }}
     >
       {renderGlyph ? (
@@ -95,6 +96,6 @@ export function isExpanderClick(event: Event | null | undefined): boolean {
  * full-width detail row. The fixed leading-column placement (default).
  */
 export function AgExpandCell(props: CustomCellRendererProps) {
-  const ctx = props.context as AgGridContext;
+  const ctx = props.context as IAgGridContext;
   return <ExpandToggleButton controller={ctx.controller} detail={ctx.detail} row={props.data} />;
 }

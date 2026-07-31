@@ -62,7 +62,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { Pagination, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { BrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
+import type { IBrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
 import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
@@ -72,7 +72,7 @@ const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table')
 const BrowseEntityGrid = dynamic(
   () => import('@/features/data-grid/host/browse-entity-grid').then((m) => m.BrowseEntityGrid),
   { ssr: false }
-) as (props: BrowseEntityGridProps) => ReactElement | null;
+) as (props: IBrowseEntityGridProps) => ReactElement | null;
 
 type Props = {
   id?: string;

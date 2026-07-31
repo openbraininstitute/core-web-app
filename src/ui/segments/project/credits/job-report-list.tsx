@@ -13,8 +13,8 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
-import type { GridDataSource, GridPage } from '@/features/data-grid/core';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { JobReport } from '@/types/accounting';
 
 const categoryLabel: Record<ServiceSubtype, string> = {
@@ -99,9 +99,9 @@ export function JobReportList() {
   });
 
   // Server data source: the grid owns paging; the report list is fetched per page.
-  const dataSource = useMemo<GridDataSource<JobReport>>(
+  const dataSource = useMemo<IGridDataSource<JobReport>>(
     () => ({
-      fetch: async (query): Promise<GridPage<JobReport>> => {
+      fetch: async (query): Promise<IGridPage<JobReport>> => {
         const response = await getProjectJobReports({
           virtualLabId,
           projectId,
@@ -125,7 +125,7 @@ export function JobReportList() {
     [users]
   );
 
-  const columns = useMemo<Array<SimpleColumn<JobReport>>>(
+  const columns = useMemo<Array<ISimpleColumn<JobReport>>>(
     () => [
       {
         id: 'category',

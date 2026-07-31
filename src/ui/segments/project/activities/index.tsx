@@ -20,8 +20,8 @@ import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { GridDataSource, GridPage } from '@/features/data-grid/core';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export function ProjectActivities({
@@ -69,9 +69,9 @@ export function ProjectActivities({
   // Server data source: the grid owns paging; each page fetches via the entity's
   // list query (same call the legacy `useQueryActivity` made).
   const listQuery = entity.api.query?.list;
-  const dataSource = useMemo<GridDataSource<EntityCoreObjectTypes>>(
+  const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
     () => ({
-      fetch: async (query): Promise<GridPage<EntityCoreObjectTypes>> => {
+      fetch: async (query): Promise<IGridPage<EntityCoreObjectTypes>> => {
         if (!listQuery) return { rows: [], total: 0 };
         const response = await listQuery({
           withFacets: false,
@@ -94,7 +94,7 @@ export function ProjectActivities({
     [listQuery, virtualLabId, projectId]
   );
 
-  const columns: Array<SimpleColumn<EntityCoreObjectTypes>> = [
+  const columns: Array<ISimpleColumn<EntityCoreObjectTypes>> = [
     {
       id: 'name',
       header: 'Name',

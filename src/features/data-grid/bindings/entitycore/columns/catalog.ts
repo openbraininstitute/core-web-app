@@ -1,15 +1,15 @@
 import { MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 
-import { mergeColumnDef, OperatorId } from '../../../core';
+import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '../../../core';
 import { CONTRIBUTORS_RENDERER } from '../renderers/contributors-cell';
 import { EM_DATASET_RENDERER } from '../renderers/em-dataset-cell';
 
 import type { TMeasurementStatistic } from '@/api/entitycore/types/shared/global';
-import type { ColumnModel, ColumnOverride } from '../../../core';
+import type { IColumnModel, TColumnOverride } from '../../../core';
 
 /**
  * Reusable entitycore column factories. Each is structurally typed to the minimal
- * row shape it reads (e.g. {@link HasName}), so it works for ANY entity that exposes
+ * row shape it reads (e.g. {@link IHasName}), so it works for ANY entity that exposes
  * that shape — which most do, since entitycore entities share base interfaces
  * (name, Timestamps, Subject, brain_region, …). Every factory takes an optional
  * override so a schema can customize per use:
@@ -23,87 +23,87 @@ export const EMPTY_PLACEHOLDER = '—';
 
 type Nullable<T> = T | null | undefined;
 
-export interface HasName {
+export interface IHasName {
   name?: Nullable<string>;
 }
-export interface HasDescription {
+export interface IHasDescription {
   description?: Nullable<string>;
 }
-export interface HasBrainRegion {
+export interface IHasBrainRegion {
   brain_region?: Nullable<{ name?: Nullable<string> }>;
 }
-export interface HasSpecies {
+export interface IHasSpecies {
   subject?: Nullable<{ species?: Nullable<{ name?: Nullable<string> }> }>;
 }
-export interface HasMtypes {
+export interface IHasMtypes {
   mtypes?: Nullable<Array<{ pref_label?: Nullable<string> }>>;
 }
-export interface HasEtypes {
+export interface IHasEtypes {
   etypes?: Nullable<Array<{ pref_label?: Nullable<string> }>>;
 }
-export interface HasContributions {
+export interface IHasContributions {
   contributions?: Nullable<Array<{ agent?: Nullable<{ pref_label?: Nullable<string> }> }>>;
 }
-export interface HasCreatedBy {
+export interface IHasCreatedBy {
   created_by?: Nullable<{ pref_label?: Nullable<string> }>;
 }
-export interface HasLicense {
+export interface IHasLicense {
   license?: Nullable<{ label?: Nullable<string> }>;
 }
-export interface HasCreationDate {
+export interface IHasCreationDate {
   creation_date?: Nullable<string>;
 }
-export interface HasUpdateDate {
+export interface IHasUpdateDate {
   update_date?: Nullable<string>;
 }
-export interface HasIonChannel {
+export interface IHasIonChannel {
   ion_channel?: Nullable<{ name?: Nullable<string> }>;
 }
-export interface HasTemperature {
+export interface IHasTemperature {
   temperature?: Nullable<number>;
 }
-export interface HasCellLine {
+export interface IHasCellLine {
   cell_line?: Nullable<string>;
 }
-export interface HasSubjectAge {
+export interface IHasSubjectAge {
   subject?: Nullable<{ age_value?: Nullable<number> }>;
 }
-export interface Measurement {
+export interface IMeasurement {
   name?: Nullable<TMeasurementStatistic>;
   unit?: Nullable<string>;
   value?: Nullable<number>;
 }
-export interface HasMeasurements {
-  measurements?: Nullable<Array<Measurement>>;
+export interface IHasMeasurements {
+  measurements?: Nullable<Array<IMeasurement>>;
 }
-export interface HasReleaseVersion {
+export interface IHasReleaseVersion {
   release_version?: Nullable<number | string>;
 }
-export interface HasPreRegion {
+export interface IHasPreRegion {
   pre_region?: Nullable<{ name?: Nullable<string> }>;
 }
-export interface HasPostRegion {
+export interface IHasPostRegion {
   post_region?: Nullable<{ name?: Nullable<string> }>;
 }
-export interface HasPreMtype {
+export interface IHasPreMtype {
   pre_mtype?: Nullable<{ pref_label?: Nullable<string> }>;
 }
-export interface HasPostMtype {
+export interface IHasPostMtype {
   post_mtype?: Nullable<{ pref_label?: Nullable<string> }>;
 }
-export interface HasEmDataset {
+export interface IHasEmDataset {
   em_dense_reconstruction_dataset?: Nullable<{ id?: Nullable<string> }>;
 }
 
 /** Find a measurement by its statistic `name` (mean / standard_deviation / standard_error …). */
 export function measurementByName(
-  row: HasMeasurements,
+  row: IHasMeasurements,
   name: TMeasurementStatistic
-): Measurement | undefined {
+): IMeasurement | undefined {
   return row.measurements?.find((m) => m?.name === name);
 }
 /** The dimensionless "number of measurements" measurement value. */
-export function measurementCount(row: HasMeasurements): number | null {
+export function measurementCount(row: IHasMeasurements): number | null {
   return row.measurements?.find((m) => m?.unit === 'dimensionless')?.value ?? null;
 }
 function formatFloat(value: Nullable<number>, fixed = 4): string {
@@ -133,7 +133,7 @@ function joinLabels(values: Array<Nullable<string>>): string {
     .join(', ');
 }
 
-export function previewColumn<Row>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+export function previewColumn<Row>(o?: TColumnOverride<Row>): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'preview',
@@ -144,7 +144,7 @@ export function previewColumn<Row>(o?: ColumnOverride<Row>): ColumnModel<Row> {
   );
 }
 
-export function nameColumn<Row extends HasName>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+export function nameColumn<Row extends IHasName>(o?: TColumnOverride<Row>): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'name',
@@ -159,9 +159,9 @@ export function nameColumn<Row extends HasName>(o?: ColumnOverride<Row>): Column
   );
 }
 
-export function descriptionColumn<Row extends HasDescription>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function descriptionColumn<Row extends IHasDescription>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'description',
@@ -174,9 +174,9 @@ export function descriptionColumn<Row extends HasDescription>(
   );
 }
 
-export function brainRegionColumn<Row extends HasBrainRegion>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function brainRegionColumn<Row extends IHasBrainRegion>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'brainRegion',
@@ -190,7 +190,9 @@ export function brainRegionColumn<Row extends HasBrainRegion>(
   );
 }
 
-export function speciesColumn<Row extends HasSpecies>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+export function speciesColumn<Row extends IHasSpecies>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'species',
@@ -204,14 +206,14 @@ export function speciesColumn<Row extends HasSpecies>(o?: ColumnOverride<Row>): 
         field: 'subject__species__name',
         facetKey: 'species',
         description: 'Species',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
   );
 }
 
-export function mtypeColumn<Row extends HasMtypes>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+export function mtypeColumn<Row extends IHasMtypes>(o?: TColumnOverride<Row>): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'mtype',
@@ -225,14 +227,14 @@ export function mtypeColumn<Row extends HasMtypes>(o?: ColumnOverride<Row>): Col
         field: 'mtype__pref_label',
         facetKey: 'mtype',
         description: 'Morphological type',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
   );
 }
 
-export function etypeColumn<Row extends HasEtypes>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+export function etypeColumn<Row extends IHasEtypes>(o?: TColumnOverride<Row>): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'etype',
@@ -246,16 +248,16 @@ export function etypeColumn<Row extends HasEtypes>(o?: ColumnOverride<Row>): Col
         field: 'etype__pref_label',
         facetKey: 'etype',
         description: 'Electrical type',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
   );
 }
 
-export function contributionsColumn<Row extends HasContributions>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function contributionsColumn<Row extends IHasContributions>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'contributions',
@@ -267,16 +269,16 @@ export function contributionsColumn<Row extends HasContributions>(
         operators: [OperatorId.In],
         field: 'contribution__pref_label',
         facetKey: 'contribution',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
   );
 }
 
-export function createdByColumn<Row extends HasCreatedBy>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function createdByColumn<Row extends IHasCreatedBy>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'createdBy',
@@ -287,14 +289,16 @@ export function createdByColumn<Row extends HasCreatedBy>(
         operators: [OperatorId.In],
         field: 'created_by__pref_label',
         facetKey: 'created_by',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
   );
 }
 
-export function licenseColumn<Row extends HasLicense>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+export function licenseColumn<Row extends IHasLicense>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'license',
@@ -306,9 +310,9 @@ export function licenseColumn<Row extends HasLicense>(o?: ColumnOverride<Row>): 
   );
 }
 
-export function registrationDateColumn<Row extends HasCreationDate>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function registrationDateColumn<Row extends IHasCreationDate>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'registrationDate',
@@ -323,9 +327,9 @@ export function registrationDateColumn<Row extends HasCreationDate>(
   );
 }
 
-export function updateDateColumn<Row extends HasUpdateDate>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function updateDateColumn<Row extends IHasUpdateDate>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'updateDate',
@@ -340,9 +344,9 @@ export function updateDateColumn<Row extends HasUpdateDate>(
   );
 }
 
-export function ionChannelColumn<Row extends HasIonChannel>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function ionChannelColumn<Row extends IHasIonChannel>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'ionChannel',
@@ -357,9 +361,9 @@ export function ionChannelColumn<Row extends HasIonChannel>(
   );
 }
 
-export function temperatureColumn<Row extends HasTemperature>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function temperatureColumn<Row extends IHasTemperature>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'temperature',
@@ -375,7 +379,9 @@ export function temperatureColumn<Row extends HasTemperature>(
   );
 }
 
-export function cellLineColumn<Row extends HasCellLine>(o?: ColumnOverride<Row>): ColumnModel<Row> {
+export function cellLineColumn<Row extends IHasCellLine>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'cellLine',
@@ -390,9 +396,9 @@ export function cellLineColumn<Row extends HasCellLine>(o?: ColumnOverride<Row>)
   );
 }
 
-export function subjectAgeColumn<Row extends HasSubjectAge>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function subjectAgeColumn<Row extends IHasSubjectAge>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'subjectAge',
@@ -406,24 +412,24 @@ export function subjectAgeColumn<Row extends HasSubjectAge>(
   );
 }
 
-export function numberOfMeasurementsColumn<Row extends HasMeasurements>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function numberOfMeasurementsColumn<Row extends IHasMeasurements>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'numberOfMeasurements',
       header: 'N° of Measurements',
       getValue: (r) => measurementCount(r),
-      align: 'right',
+      align: Align.Right,
       width: { minWidth: 150 },
     },
     o
   );
 }
 
-export function releaseVersionColumn<Row extends HasReleaseVersion>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function releaseVersionColumn<Row extends IHasReleaseVersion>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'releaseVersion',
@@ -436,7 +442,7 @@ export function releaseVersionColumn<Row extends HasReleaseVersion>(
         operators: [OperatorId.In],
         field: 'release_version',
         facetKey: 'release_version',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
@@ -444,17 +450,17 @@ export function releaseVersionColumn<Row extends HasReleaseVersion>(
 }
 
 /** Formatted mean value from a density-style `measurements` array (legacy renderFloatNumber). */
-export function meanValue(row: HasMeasurements): string {
+export function meanValue(row: IHasMeasurements): string {
   return formatFloat(measurementByName(row, MeasurementStatistic.mean)?.value);
 }
 /** "mean ± std" string from a density-style `measurements` array. */
-export function meanStd(row: HasMeasurements): string {
+export function meanStd(row: IHasMeasurements): string {
   const mean = formatFloat(measurementByName(row, MeasurementStatistic.mean)?.value);
   const std = formatFloat(measurementByName(row, MeasurementStatistic.standard_deviation)?.value);
   return mean || std ? `${mean} ± ${std}` : '';
 }
 /** Formatted standard-error (SEM) value from a density-style `measurements` array. */
-export function standardErrorValue(row: HasMeasurements): string {
+export function standardErrorValue(row: IHasMeasurements): string {
   return formatFloat(measurementByName(row, MeasurementStatistic.standard_error)?.value);
 }
 
@@ -463,16 +469,16 @@ export function standardErrorValue(row: HasMeasurements): string {
  * or filterable in the legacy listing — the mean lives in the `measurements` array,
  * not a queryable scalar column.
  */
-export function densityColumn<Row extends HasMeasurements>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function densityColumn<Row extends IHasMeasurements>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'density',
       header: 'Density',
       unit: '1/mm³',
       getValue: (r) => meanValue(r),
-      align: 'right',
+      align: Align.Right,
       width: { minWidth: 130 },
     },
     o
@@ -484,9 +490,9 @@ export function densityColumn<Row extends HasMeasurements>(
  * sorts on `measurement_mean__value`; synapses-per-connection isn't sortable), so it
  * defaults to unsortable — enable with `{ sortable: true }` where the entity binds it.
  */
-export function meanStdColumn<Row extends HasMeasurements>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function meanStdColumn<Row extends IHasMeasurements>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'meanStd',
@@ -494,7 +500,7 @@ export function meanStdColumn<Row extends HasMeasurements>(
       unit: 'µm⁻¹',
       sortField: 'measurement_mean__value',
       getValue: (r) => meanStd(r),
-      align: 'right',
+      align: Align.Right,
       width: { minWidth: 150 },
     },
     o
@@ -502,9 +508,9 @@ export function meanStdColumn<Row extends HasMeasurements>(
 }
 
 /** Standard-error (SEM) measurement column — sorts on `measurement_standard_error__value`. */
-export function standardErrorColumn<Row extends HasMeasurements>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function standardErrorColumn<Row extends IHasMeasurements>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'sem',
@@ -512,7 +518,7 @@ export function standardErrorColumn<Row extends HasMeasurements>(
       sortable: true,
       sortField: 'measurement_standard_error__value',
       getValue: (r) => standardErrorValue(r),
-      align: 'right',
+      align: Align.Right,
       width: { minWidth: 110 },
     },
     o
@@ -520,9 +526,9 @@ export function standardErrorColumn<Row extends HasMeasurements>(
 }
 
 /** Pre-synaptic brain region ("Brain Region [From]") — synapses-per-connection. */
-export function preSynapticRegionColumn<Row extends HasPreRegion>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function preSynapticRegionColumn<Row extends IHasPreRegion>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'preRegion',
@@ -535,7 +541,7 @@ export function preSynapticRegionColumn<Row extends HasPreRegion>(
         operators: [OperatorId.In],
         field: 'pre_region__name',
         facetKey: 'pre_region',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
@@ -547,9 +553,9 @@ export function preSynapticRegionColumn<Row extends HasPreRegion>(
  * `post_region__name_in` — a SINGLE underscore before `in` — so this uses
  * {@link OperatorId.InSingleUnderscore}, unlike every sibling `__in` filter.
  */
-export function postSynapticRegionColumn<Row extends HasPostRegion>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function postSynapticRegionColumn<Row extends IHasPostRegion>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'postRegion',
@@ -562,7 +568,7 @@ export function postSynapticRegionColumn<Row extends HasPostRegion>(
         operators: [OperatorId.InSingleUnderscore],
         field: 'post_region__name',
         facetKey: 'post_region',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
@@ -570,9 +576,9 @@ export function postSynapticRegionColumn<Row extends HasPostRegion>(
 }
 
 /** Pre-synaptic cell type ("Cell Type [From]") — synapses-per-connection. */
-export function preSynapticCellTypeColumn<Row extends HasPreMtype>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function preSynapticCellTypeColumn<Row extends IHasPreMtype>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'preMtype',
@@ -585,7 +591,7 @@ export function preSynapticCellTypeColumn<Row extends HasPreMtype>(
         operators: [OperatorId.In],
         field: 'pre_mtype__pref_label',
         facetKey: 'pre_mtype',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
@@ -593,9 +599,9 @@ export function preSynapticCellTypeColumn<Row extends HasPreMtype>(
 }
 
 /** Post-synaptic cell type ("Cell Type [To]") — synapses-per-connection. */
-export function postSynapticCellTypeColumn<Row extends HasPostMtype>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function postSynapticCellTypeColumn<Row extends IHasPostMtype>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'postMtype',
@@ -608,7 +614,7 @@ export function postSynapticCellTypeColumn<Row extends HasPostMtype>(
         operators: [OperatorId.In],
         field: 'post_mtype__pref_label',
         facetKey: 'post_mtype',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     o
@@ -621,9 +627,9 @@ export function postSynapticCellTypeColumn<Row extends HasPostMtype>(
  * {@link EM_DATASET_RENDERER} cell; sort/filter operate on the backend scalar
  * `em_dense_reconstruction_dataset__name`.
  */
-export function emDatasetColumn<Row extends HasEmDataset>(
-  o?: ColumnOverride<Row>
-): ColumnModel<Row> {
+export function emDatasetColumn<Row extends IHasEmDataset>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'emDataset',

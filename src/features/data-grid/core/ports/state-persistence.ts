@@ -1,4 +1,4 @@
-import type { GridState } from '../state/grid-state';
+import type { IGridState } from '../state/grid-state';
 
 /**
  * The persistence port. Implementations decide WHICH slice of state to persist
@@ -6,8 +6,8 @@ import type { GridState } from '../state/grid-state';
  * slice keeps column layout) and WHERE (sessionStorage, localStorage, URL, …).
  * The controller stays agnostic.
  */
-export interface StatePersistence {
-  load(key: string): Partial<GridState> | null;
-  save(key: string, state: GridState): void;
+export interface IStatePersistence {
+  load(key: string): Partial<IGridState> | null;
+  save(key: string, state: IGridState): void;
   clear?(key: string): void;
 }

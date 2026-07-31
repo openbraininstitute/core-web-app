@@ -10,8 +10,8 @@ import type {
   TTaskCampaignExecutionRow,
   TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-functions';
-import type { CellValue } from '@/features/data-grid/core';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { TCellValue } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 export function getParamLabel(param: string) {
   // e.g. "initialize.random_seed" -> "Random seed"
@@ -57,7 +57,7 @@ type ScanParamsRow = {
 
 export function createScanParameterColumns<R extends ScanParamsRow>(
   paramKeys: Iterable<string>
-): Array<SimpleColumn<R>> {
+): Array<ISimpleColumn<R>> {
   return Array.from(paramKeys).map((param) => ({
     id: param,
     header: getParamLabel(param),
@@ -66,11 +66,11 @@ export function createScanParameterColumns<R extends ScanParamsRow>(
         {getParamTitle(param)}
       </div>
     ),
-    getValue: (row: R) => get(row, ['scan_parameters', param]) as CellValue,
+    getValue: (row: R) => get(row, ['scan_parameters', param]) as TCellValue,
   }));
 }
 
-export function createNameColumn<R extends ScanParamsRow>(): SimpleColumn<R> {
+export function createNameColumn<R extends ScanParamsRow>(): ISimpleColumn<R> {
   return {
     id: 'name',
     header: 'Name',
@@ -83,7 +83,7 @@ export function createNameColumn<R extends ScanParamsRow>(): SimpleColumn<R> {
 export function createStatusColumn<R>(
   renderStatus: (_: unknown, record: R) => ReactNode,
   opts?: { width?: number }
-): SimpleColumn<R> {
+): ISimpleColumn<R> {
   return {
     id: 'status',
     header: 'Status',
@@ -95,7 +95,7 @@ export function createStatusColumn<R>(
 }
 
 export function renderExpandedTable<R extends { id: string }>(props: {
-  columns: Array<SimpleColumn<R>>;
+  columns: Array<ISimpleColumn<R>>;
   dataSource: R[];
   rowKey?: string | ((record: R) => string);
 }) {
@@ -184,7 +184,7 @@ export const TaskViewConfig: ListExpandedViewConfig<
       status: getExecutionStatus(r),
     }));
 
-    const columns: Array<SimpleColumn<Row>> = [
+    const columns: Array<ISimpleColumn<Row>> = [
       createNameColumn<Row>(),
       ...extraColumns,
       createStatusColumn<Row>((_: unknown, r: Row) => (

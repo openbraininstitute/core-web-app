@@ -2,10 +2,10 @@ import Image from 'next/image';
 
 import truncateText from '@/util/truncate';
 
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
-const columns = (): Array<SimpleColumn<MEModelsProps>> => {
+const columns = (): Array<ISimpleColumn<MEModelsProps>> => {
   return [
     {
       id: 'name',

@@ -1,17 +1,18 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import { SortDirection } from '../../../core';
 import {
-  type CampaignRow,
   campaignDescriptionColumn,
   campaignNameColumn,
   campaignRegistrationDateColumn,
   campaignStatusColumn,
   circuitNameColumn,
+  type ICampaignRow,
   registerCampaignRenderers,
 } from './campaign-common';
 
-import type { ColumnModel, GridSchema } from '../../../core';
-import type { EntityGridDefinition } from '../registry';
+import type { IColumnModel, IGridSchema } from '../../../core';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * Grid schema for the generic `simulation_campaign` dataType (Data → Simulations).
@@ -26,22 +27,22 @@ import type { EntityGridDefinition } from '../registry';
  * expandable detail row is wired (unlike the legacy antd nested table). Column order
  * is the parity contract locked by `__tests__/campaign-parity.test.ts`.
  */
-const columns: Array<ColumnModel<CampaignRow>> = [
-  campaignNameColumn<CampaignRow>(),
-  campaignDescriptionColumn<CampaignRow>(),
-  circuitNameColumn<CampaignRow>(),
-  campaignRegistrationDateColumn<CampaignRow>(),
-  campaignStatusColumn<CampaignRow>(),
+const columns: Array<IColumnModel<ICampaignRow>> = [
+  campaignNameColumn<ICampaignRow>(),
+  campaignDescriptionColumn<ICampaignRow>(),
+  circuitNameColumn<ICampaignRow>(),
+  campaignRegistrationDateColumn<ICampaignRow>(),
+  campaignStatusColumn<ICampaignRow>(),
 ];
 
-const schema: GridSchema<CampaignRow> = {
+const schema: IGridSchema<ICampaignRow> = {
   id: 'simulation-campaign',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   columns,
 };
 
-export const simulationCampaignGridDefinition: EntityGridDefinition<CampaignRow> = {
+export const simulationCampaignGridDefinition: IEntityGridDefinition<ICampaignRow> = {
   dataType: ExtendedEntitiesTypeDict.SimulationCampaign,
   schema,
   registerCellRenderers: registerCampaignRenderers,

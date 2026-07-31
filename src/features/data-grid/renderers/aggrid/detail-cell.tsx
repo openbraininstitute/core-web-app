@@ -3,7 +3,7 @@ import { isDetailRow } from './detail-rows';
 import { useGridState } from './use-grid-state';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
-import type { AgGridContext } from './ag-context';
+import type { IAgGridContext } from './ag-context';
 
 /** Fallback height for a detail row while its content is measuring itself. */
 export const DEFAULT_DETAIL_MIN_HEIGHT = 160;
@@ -14,7 +14,7 @@ export const DEFAULT_DETAIL_MIN_HEIGHT = 160;
  * Grid row node so dynamic content — including nested grids — never clips.
  */
 export function AgDetailCell(props: CustomCellRendererProps) {
-  const ctx = props.context as AgGridContext;
+  const ctx = props.context as IAgGridContext;
   const row = props.data;
   // Subscribe to the live parent state so the detail render can stay
   // column-consistent (forwarded as an optional, additive arg).

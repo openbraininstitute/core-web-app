@@ -1,13 +1,14 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import { SortDirection } from '../../../core';
 import { contributionsColumn, formatDate, nameColumn, previewColumn } from '../columns/catalog';
 import { NOTEBOOK_IMAGE_PREVIEW_RENDERER, NotebookImagePreview } from '../renderers/notebook-cells';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IAnalysisNotebookResult } from '@/api/entitycore/types/entities/analysis-notebook-result';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * Analysis-notebook result listing. Column order mirrors the legacy
@@ -22,10 +23,10 @@ import type { EntityGridDefinition } from '../registry';
  * column filter (`isFilterable: false`); Contributors facet-filters on
  * `contribution__pref_label__in` but is not server-sortable for notebooks.
  */
-export const analysisNotebookResultSchema: GridSchema<IAnalysisNotebookResult> = {
+export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> = {
   id: 'analysis-notebook-result',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'updateDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'updateDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -53,11 +54,12 @@ export const analysisNotebookResultSchema: GridSchema<IAnalysisNotebookResult> =
   ],
 };
 
-export const analysisNotebookResultGridDefinition: EntityGridDefinition<IAnalysisNotebookResult> = {
-  dataType: ExtendedEntitiesTypeDict.AnalysisNotebookResult,
-  schema: analysisNotebookResultSchema,
-  registerCellRenderers: (registry: CellRendererRegistry) => {
-    registerSharedRenderers(registry);
-    registry.register(NOTEBOOK_IMAGE_PREVIEW_RENDERER, NotebookImagePreview);
-  },
-};
+export const analysisNotebookResultGridDefinition: IEntityGridDefinition<IAnalysisNotebookResult> =
+  {
+    dataType: ExtendedEntitiesTypeDict.AnalysisNotebookResult,
+    schema: analysisNotebookResultSchema,
+    registerCellRenderers: (registry: CellRendererRegistry) => {
+      registerSharedRenderers(registry);
+      registry.register(NOTEBOOK_IMAGE_PREVIEW_RENDERER, NotebookImagePreview);
+    },
+  };

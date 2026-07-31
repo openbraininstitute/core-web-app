@@ -36,8 +36,8 @@ import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { GridDataSource, GridPage } from '@/features/data-grid/core';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
@@ -131,9 +131,9 @@ export function WorkflowActivity() {
   // total/loading into `gridMeta` so the empty + loading states are preserved.
   const entity = getEntityByExtendedType({ type: resolvedEntityType });
   const listQuery = entity?.api.query?.list;
-  const dataSource = useMemo<GridDataSource<EntityCoreObjectTypes>>(
+  const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
     () => ({
-      fetch: async (q): Promise<GridPage<EntityCoreObjectTypes>> => {
+      fetch: async (q): Promise<IGridPage<EntityCoreObjectTypes>> => {
         setGridMeta((m) => ({ ...m, status: 'loading' }));
         if (!listQuery) {
           setGridMeta({ total: 0, status: 'loaded' });
@@ -264,7 +264,7 @@ export function WorkflowActivity() {
 
   const shouldShowEmptyState = gridMeta.status === 'loaded' && gridMeta.total === 0;
 
-  const columns: Array<SimpleColumn<EntityCoreObjectTypes>> = useMemo(
+  const columns: Array<ISimpleColumn<EntityCoreObjectTypes>> = useMemo(
     () => [
       {
         id: 'name',

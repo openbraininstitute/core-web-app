@@ -3,26 +3,35 @@
  * (see {@link OperatorUiKind}). A binding's serializer turns (operator, value)
  * into transport-specific request params.
  */
-export type FilterValue =
-  | { kind: 'text'; text: string }
-  | { kind: 'number'; value: number | null }
-  | { kind: 'range'; min: number | null; max: number | null }
-  | { kind: 'dateRange'; from: string | null; to: string | null }
-  | { kind: 'set'; values: string[] }
-  | { kind: 'boolean'; value: boolean | null };
+export const FilterValueKind = {
+  Text: 'text',
+  Number: 'number',
+  Range: 'range',
+  DateRange: 'dateRange',
+  Set: 'set',
+  Boolean: 'boolean',
+} as const;
 
-export type FilterValueKind = FilterValue['kind'];
+export type TFilterValueKind = (typeof FilterValueKind)[keyof typeof FilterValueKind];
 
-export interface FilterEntry {
+export type TFilterValue =
+  | { kind: typeof FilterValueKind.Text; text: string }
+  | { kind: typeof FilterValueKind.Number; value: number | null }
+  | { kind: typeof FilterValueKind.Range; min: number | null; max: number | null }
+  | { kind: typeof FilterValueKind.DateRange; from: string | null; to: string | null }
+  | { kind: typeof FilterValueKind.Set; values: string[] }
+  | { kind: typeof FilterValueKind.Boolean; value: boolean | null };
+
+export interface IFilterEntry {
   /** logical column id */
   columnId: string;
   /** chosen operator id (must be one of the column's declared operators) */
   operator: string;
-  value: FilterValue;
+  value: TFilterValue;
 }
 
 /** Active filters keyed by column id. */
-export type FilterModel = Record<string, FilterEntry>;
+export type TFilterModel = Record<string, IFilterEntry>;
 
 function formatIsoDate(iso: string | null): string {
   return iso ? new Date(iso).toLocaleDateString() : '';
@@ -33,7 +42,7 @@ function formatIsoDate(iso: string | null): string {
  * `"2024-01-01 – *"`). Renderer-agnostic — used by the header floating summary and
  * the active-filters popover. Returns `''` for an empty/no-op value.
  */
-export function summarizeFilter(entry: FilterEntry): string {
+export function summarizeFilter(entry: IFilterEntry): string {
   const v = entry.value;
   switch (v.kind) {
     case 'text':
@@ -57,7 +66,7 @@ export function summarizeFilter(entry: FilterEntry): string {
 }
 
 /** True when a filter value would serialize to nothing (used to drop no-op entries). */
-export function isEmptyFilterValue(value: FilterValue): boolean {
+export function isEmptyFilterValue(value: TFilterValue): boolean {
   switch (value.kind) {
     case 'text':
       return value.text.trim() === '';

@@ -1,14 +1,14 @@
 import type { ComponentType } from 'react';
-import type { CellValue } from '../core';
+import type { TCellValue } from '../core';
 
-export interface CellRendererProps<Row = unknown> {
+export interface ICellRendererProps<Row = unknown> {
   row: Row;
-  value: CellValue;
+  value: TCellValue;
   rowIndex: number;
   params?: Record<string, unknown>;
 }
 
-export type CellRendererComponent<Row = unknown> = ComponentType<CellRendererProps<Row>>;
+export type TCellRendererComponent<Row = unknown> = ComponentType<ICellRendererProps<Row>>;
 
 /**
  * Maps a column's `cellRenderer` key to a React component. Keeping cell rendering
@@ -17,14 +17,14 @@ export type CellRendererComponent<Row = unknown> = ComponentType<CellRendererPro
  */
 export class CellRendererRegistry {
   // heterogeneous components keyed by string — `unknown` row at the boundary
-  private readonly map = new Map<string, CellRendererComponent<unknown>>();
+  private readonly map = new Map<string, TCellRendererComponent<unknown>>();
 
-  register<Row>(key: string, component: CellRendererComponent<Row>): this {
-    this.map.set(key, component as unknown as CellRendererComponent<unknown>);
+  register<Row>(key: string, component: TCellRendererComponent<Row>): this {
+    this.map.set(key, component as unknown as TCellRendererComponent<unknown>);
     return this;
   }
 
-  get(key: string): CellRendererComponent<unknown> | undefined {
+  get(key: string): TCellRendererComponent<unknown> | undefined {
     return this.map.get(key);
   }
 

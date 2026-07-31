@@ -1,13 +1,13 @@
-import type { ColumnModel } from './column-model';
-import type { ContextualValue } from './grid-context';
-import type { SortModel } from './sort-model';
+import type { IColumnModel } from './column-model';
+import type { TContextualValue } from './grid-context';
+import type { TSortModel } from './sort-model';
 
 /**
  * Expandable full-width detail rows. The `rendererKey` selects a React renderer
- * from the detail-renderer registry; the optional {@link DetailProvider} port
+ * from the detail-renderer registry; the optional {@link IDetailProvider} port
  * (passed to the grid alongside the schema) supplies async payload loading.
  */
-export interface DetailSpec<Row = unknown> {
+export interface IDetailSpec<Row = unknown> {
   /** detail renderer key resolved by the rendering adapter's detail registry */
   rendererKey: string;
   /** whether a given row can expand (default: all rows) */
@@ -17,9 +17,9 @@ export interface DetailSpec<Row = unknown> {
 }
 
 /** Multi-row checkbox selection feeding the toolbar's bulk actions. */
-export interface SelectionSpec {
+export interface ISelectionSpec {
   /** contextual enablement (default: false — selection is opt-in) */
-  enabled: ContextualValue<boolean>;
+  enabled: TContextualValue<boolean>;
   /** single vs multi-row checkboxes (default: 'multiRow') */
   mode?: 'single' | 'multiRow';
   /** show the header "select all (current page)" checkbox (default: true, multiRow only) */
@@ -33,12 +33,12 @@ export interface SelectionSpec {
  * Authored per entity in a binding; consumed by the headless controller and the
  * rendering adapter.
  */
-export interface GridSchema<Row = unknown> {
+export interface IGridSchema<Row = unknown> {
   /** stable id, typically the dataType */
   id: string;
-  columns: Array<ColumnModel<Row>>;
+  columns: Array<IColumnModel<Row>>;
   /** default sort applied when state carries none */
-  defaultSort?: SortModel;
+  defaultSort?: TSortModel;
   /** row height in px (e.g. taller rows for preview thumbnails); default 44 */
   rowHeight?: number;
   /** page-size choices offered by the pagination size changer */
@@ -46,7 +46,7 @@ export interface GridSchema<Row = unknown> {
   /** unique, stable row id accessor */
   getRowId: (row: Row) => string;
   /** optional expandable detail capability */
-  detail?: DetailSpec<Row>;
+  detail?: IDetailSpec<Row>;
   /** optional checkbox selection capability */
-  selection?: SelectionSpec;
+  selection?: ISelectionSpec;
 }

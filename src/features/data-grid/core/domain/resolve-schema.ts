@@ -1,10 +1,10 @@
 import { resolveContextual } from './contextual';
 
-import type { ColumnModel } from './column-model';
-import type { GridContext } from './grid-context';
-import type { GridSchema } from './schema';
+import type { IColumnModel } from './column-model';
+import type { IGridContext } from './grid-context';
+import type { IGridSchema } from './schema';
 
-export interface ResolvedColumn<Row> extends ColumnModel<Row> {
+export interface IResolvedColumn<Row> extends IColumnModel<Row> {
   /** whether this column exposes a filter in the current context */
   filterAvailable: boolean;
   /** whether this column starts hidden in the current context */
@@ -25,9 +25,9 @@ export interface ResolvedColumn<Row> extends ColumnModel<Row> {
  * user layout (drag reorder / chooser) is applied on top of it by the renderer.
  */
 export function resolveColumns<Row>(
-  schema: GridSchema<Row>,
-  ctx: GridContext
-): Array<ResolvedColumn<Row>> {
+  schema: IGridSchema<Row>,
+  ctx: IGridContext
+): Array<IResolvedColumn<Row>> {
   return schema.columns
     .map((column, declarationIndex) => ({ column, declarationIndex }))
     .filter(({ column }) => resolveContextual(column.available ?? true, ctx))
@@ -52,13 +52,13 @@ export function resolveColumns<Row>(
 }
 
 /** Column ids hidden by default in this context (used when no persisted layout exists). */
-export function defaultHiddenColumnIds<Row>(schema: GridSchema<Row>, ctx: GridContext): string[] {
+export function defaultHiddenColumnIds<Row>(schema: IGridSchema<Row>, ctx: IGridContext): string[] {
   return resolveColumns(schema, ctx)
     .filter((c) => c.hiddenByDefaultResolved)
     .map((c) => c.id);
 }
 
 /** Whether selection is enabled for the schema in the given context. */
-export function isSelectionEnabled<Row>(schema: GridSchema<Row>, ctx: GridContext): boolean {
+export function isSelectionEnabled<Row>(schema: IGridSchema<Row>, ctx: IGridContext): boolean {
   return schema.selection ? resolveContextual(schema.selection.enabled, ctx) : false;
 }

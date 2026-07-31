@@ -4,7 +4,7 @@ import { cn } from '@/utils/css-class';
 
 import { EMPTY_PLACEHOLDER } from '../columns/catalog';
 
-import type { CellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '../../../react';
 
 /** Cell-renderer registry key for the contributors cell. */
 export const CONTRIBUTORS_RENDERER = 'contributors';
@@ -30,7 +30,7 @@ function isPerson(agent: Agent): boolean {
  * split into People and Institutions. Institutions sort before people (matching the
  * legacy `transformAgentToNames` ordering).
  */
-export function ContributorsCell({ row }: CellRendererProps<ContributorsRow>) {
+export function ContributorsCell({ row }: ICellRendererProps<ContributorsRow>) {
   const agents = (row?.contributions ?? [])
     .map((c) => c?.agent)
     .filter((a): a is Agent => Boolean(a?.pref_label));

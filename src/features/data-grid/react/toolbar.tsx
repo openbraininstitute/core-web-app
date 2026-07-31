@@ -2,7 +2,7 @@ import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
-export interface DataGridToolbarSlots {
+export interface IDataGridToolbarSlots {
   /** host-owned controls on the left (e.g. scope / species selectors) */
   left?: ReactNode;
   /** quick-search input */
@@ -13,8 +13,8 @@ export interface DataGridToolbarSlots {
   bulkActions?: ReactNode;
 }
 
-export interface DataGridToolbarProps {
-  slots?: DataGridToolbarSlots;
+export interface IDataGridToolbarProps {
+  slots?: IDataGridToolbarSlots;
   columnChooser?: ReactNode;
   className?: string;
 }
@@ -24,7 +24,7 @@ export interface DataGridToolbarProps {
  * search`); the right cluster holds bulk actions and host controls. The results/
  * selection counts live in the footer, not here.
  */
-export function DataGridToolbar({ slots, columnChooser, className }: DataGridToolbarProps) {
+export function DataGridToolbar({ slots, columnChooser, className }: IDataGridToolbarProps) {
   const hasAnything =
     slots?.left || slots?.search || slots?.right || slots?.bulkActions || columnChooser;
   if (!hasAnything) return null;

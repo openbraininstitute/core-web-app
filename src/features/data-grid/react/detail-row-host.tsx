@@ -2,25 +2,25 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import type { ReactNode } from 'react';
-import type { GridState } from '../core';
-import type { DetailRuntime } from './renderer';
+import type { IGridState } from '../core';
+import type { IDetailRuntime } from './renderer';
 
-export interface DetailRowHostProps<Row> {
+export interface IDetailRowHostProps<Row> {
   row: Row;
   rowId: string;
   /** stable grid instance id, namespaces the detail cache */
   gridId: string;
-  detail: DetailRuntime<Row>;
+  detail: IDetailRuntime<Row>;
   minHeight?: number;
   /** reports the measured content height so the renderer can size the full-width row */
   onHeight: (height: number) => void;
   /** live parent grid state, forwarded to the detail render (optional, additive) */
-  state?: GridState;
+  state?: IGridState;
 }
 
 /**
  * Renders one expanded row's detail content. Loads the payload through the
- * {@link DetailProvider} port via React Query (cached per row id, so re-expanding
+ * {@link IDetailProvider} port via React Query (cached per row id, so re-expanding
  * doesn't refetch), and reports its measured height through a ResizeObserver so
  * dynamic content — including nested grids — never clips or jitters.
  */
@@ -32,7 +32,7 @@ export function DetailRowHost<Row>({
   minHeight,
   onHeight,
   state,
-}: DetailRowHostProps<Row>): ReactNode {
+}: IDetailRowHostProps<Row>): ReactNode {
   const containerRef = useRef<HTMLDivElement>(null);
   const onHeightRef = useRef(onHeight);
   onHeightRef.current = onHeight;

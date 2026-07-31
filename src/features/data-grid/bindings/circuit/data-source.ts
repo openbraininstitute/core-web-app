@@ -24,7 +24,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import type { GridDataSource, GridPage, GridQuery, GridSchema } from '../../core';
+import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema } from '../../core';
 
 /** Marker param, injected by the plugin body via `extraParams`, selecting the view. */
 export const CIRCUIT_VIEW_PARAM = '__view';
@@ -32,9 +32,9 @@ export const CIRCUIT_VIEW_PARAM = '__view';
 const HIERARCHY_CHUNK_SIZE = 30;
 const HIERARCHY_CONCURRENCY = 5;
 
-export interface CircuitDataSourceOptions {
+export interface ICircuitDataSourceOptions {
   /** the circuit grid schema (resolves column ids → server fields for serialize). */
-  schema: GridSchema<ICircuit>;
+  schema: IGridSchema<ICircuit>;
   workspace: WorkspaceContext;
   /** shared React Query client — the 3 hierarchy fetches reuse the hook cache keys. */
   queryClient: QueryClient;
@@ -48,7 +48,7 @@ function withoutViewParam(params: Record<string, unknown> | undefined): Record<s
 }
 
 /**
- * View-aware circuit {@link GridDataSource}. Reads the view from
+ * View-aware circuit {@link IGridDataSource}. Reads the view from
  * `query.params.__view`:
  *
  * - **flat** delegates to {@link createEntitycorePagedDataSource} (→ `serializeQuery`
@@ -61,8 +61,8 @@ function withoutViewParam(params: Record<string, unknown> | undefined): Record<s
  *   is ignored in hierarchy (tree order is fixed), matching legacy.
  */
 export function createCircuitDataSource(
-  options: CircuitDataSourceOptions
-): GridDataSource<ICircuit> {
+  options: ICircuitDataSourceOptions
+): IGridDataSource<ICircuit> {
   const { schema, workspace, queryClient } = options;
 
   // Flat delegates to the shared paged source — identical params to standard entities.
@@ -72,7 +72,7 @@ export function createCircuitDataSource(
     context: workspace,
   });
 
-  async function fetchHierarchy(query: GridQuery): Promise<GridPage<ICircuit>> {
+  async function fetchHierarchy(query: IGridQuery): Promise<IGridPage<ICircuit>> {
     const { virtualLabId, projectId } = workspace;
 
     // 1. derivation tree (circuit-extraction) — shared cache key with the hooks.
@@ -213,7 +213,7 @@ export function createCircuitDataSource(
   }
 
   return {
-    async fetch(query: GridQuery, signal?: AbortSignal): Promise<GridPage<ICircuit>> {
+    async fetch(query: IGridQuery, signal?: AbortSignal): Promise<IGridPage<ICircuit>> {
       const view = query.params?.[CIRCUIT_VIEW_PARAM];
       if (view === CircuitRepresentationView.Hierarchy) {
         return fetchHierarchy(query);

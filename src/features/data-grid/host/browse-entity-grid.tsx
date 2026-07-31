@@ -24,7 +24,11 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 // cycle (the registry's definitions would see `undefined` for the circuit entry).
 import { buildCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
-import { createDefaultOperatorRegistry, GridController } from '@/features/data-grid/core';
+import {
+  createDefaultOperatorRegistry,
+  GridActionType,
+  GridController,
+} from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
 import { createDefaultPersistence, DataGrid } from '@/features/data-grid/react';
@@ -50,18 +54,18 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { FC, ReactNode } from 'react';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { AnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
-import type { Facets, GridDataSource } from '@/features/data-grid/core';
+import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
+import type { IGridDataSource, TFacets } from '@/features/data-grid/core';
 import type {
-  DataGridSelection,
-  DataGridToolbarSlots,
-  DetailRuntime,
-  ExpandColumnConfig,
+  IDataGridSelection,
+  IDataGridToolbarSlots,
+  IDetailRuntime,
+  IExpandColumnConfig,
 } from '@/features/data-grid/react';
 import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
 
-export interface BrowseEntityGridProps extends BrowseEntityScopeProps {
-  definition: AnyEntityGridDefinition;
+export interface IBrowseEntityGridProps extends BrowseEntityScopeProps {
+  definition: TAnyEntityGridDefinition;
 }
 
 /**
@@ -73,33 +77,33 @@ export interface BrowseEntityGridProps extends BrowseEntityScopeProps {
  * to the host's `EntityCoreIdentifiableNamed` row; plugins narrow via a cast (same
  * pattern the host already uses for `expandRow`).
  */
-export interface EntityDataGridOverrides {
+export interface IEntityDataGridOverrides {
   /** replaces the default entitycore paged data source (e.g. a view-aware source). */
-  dataSourceOverride?: GridDataSource<EntityCoreIdentifiableNamed>;
+  dataSourceOverride?: IGridDataSource<EntityCoreIdentifiableNamed>;
   /** merged into the request params → part of the query key, so changes refetch. */
   extraParams?: Record<string, unknown>;
   /** merged into the toolbar slots (e.g. a view toggle). */
-  extraToolbarSlots?: Partial<DataGridToolbarSlots>;
+  extraToolbarSlots?: Partial<IDataGridToolbarSlots>;
   /** per-row css class hook (e.g. hierarchy gray-out). */
   getRowClass?: (row: EntityCoreIdentifiableNamed) => string | undefined;
   /** replaces the schema-derived detail runtime (e.g. a recursive detail). */
-  detailOverride?: DetailRuntime<EntityCoreIdentifiableNamed>;
+  detailOverride?: IDetailRuntime<EntityCoreIdentifiableNamed>;
   /** places the expand control inside a data column instead of a leading column. */
-  expandColumn?: ExpandColumnConfig;
+  expandColumn?: IExpandColumnConfig;
   /** extra AND-ed enable gate on top of the shared species/scope gate. */
   extraEnabled?: boolean;
 }
 
-export type EntityDataGridProps = BrowseEntityGridProps & EntityDataGridOverrides;
+export type TEntityDataGridProps = IBrowseEntityGridProps & IEntityDataGridOverrides;
 
 /**
  * The reusable TEMPLATE body behind the AG Grid listing. Owns all SHARED workspace
  * integration — brain-region/species gating + reset, scope/params, `MiniDetailView`,
  * download/delete bulk actions, error UX, toolbar assembly, and the `<DataGrid>`
  * render — and hands the API-agnostic grid its request params + `enabled` gate.
- * Columns, filters, sort and paging live in the entity's authored `GridSchema`.
+ * Columns, filters, sort and paging live in the entity's authored `IGridSchema`.
  *
- * Accepts optional {@link EntityDataGridOverrides}, all defaulting to today's
+ * Accepts optional {@link IEntityDataGridOverrides}, all defaulting to today's
  * behavior, so with no overrides it is byte-for-byte equivalent to the previous
  * grid (every already-flipped entity is untouched). A custom-entity plugin body
  * wraps this with its own state + overrides; see {@link BrowseEntityGrid}.
@@ -134,7 +138,7 @@ export function EntityDataGrid({
   detailOverride,
   expandColumn,
   extraEnabled,
-}: EntityDataGridProps) {
+}: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
@@ -195,7 +199,7 @@ export function EntityDataGrid({
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
   const pickerSelection = useMemo<
-    DataGridSelection<EntityCoreIdentifiableNamed> | undefined
+    IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
   >(() => {
     if (!selectionType || !onRowsSelected) return undefined;
     return {
@@ -220,7 +224,7 @@ export function EntityDataGrid({
   useEffect(() => () => controller.dispose(), [controller]);
 
   const handleSearch = useCallback(
-    (text: string) => controller.store.dispatch({ type: 'setQuickFilter', text }),
+    (text: string) => controller.store.dispatch({ type: GridActionType.SetQuickFilter, text }),
     [controller]
   );
 
@@ -313,9 +317,9 @@ export function EntityDataGrid({
   });
   // Only override when a `facetsQueryFn` exists; otherwise facets keep coming from
   // the list response and this stays `undefined` (unchanged behavior).
-  const externalFacets = facetsQueryFn ? (facetsQuery.data as Facets | undefined) : undefined;
+  const externalFacets = facetsQueryFn ? (facetsQuery.data as TFacets | undefined) : undefined;
 
-  const schemaDetail = useMemo<DetailRuntime<EntityCoreIdentifiableNamed> | undefined>(() => {
+  const schemaDetail = useMemo<IDetailRuntime<EntityCoreIdentifiableNamed> | undefined>(() => {
     if (!definition.schema.detail || !definition.renderDetail) return undefined;
     const isExpandable = definition.schema.detail.isExpandable;
     return {
@@ -472,12 +476,12 @@ export function EntityDataGrid({
  * template — matching the legacy tables, where the bespoke pages were Data-only
  * and workflow pickers always listed entities flat.
  */
-export function BrowseEntityGrid(props: BrowseEntityGridProps) {
+export function BrowseEntityGrid(props: IBrowseEntityGridProps) {
   const { plugin } = props.definition;
   const isExplore =
     (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data &&
     !props.mainTableProps?.selectionType;
-  const Body: FC<BrowseEntityGridProps> = plugin && isExplore ? plugin.Body : EntityDataGrid;
+  const Body: FC<IBrowseEntityGridProps> = plugin && isExplore ? plugin.Body : EntityDataGrid;
   return <Body {...props} />;
 }
 

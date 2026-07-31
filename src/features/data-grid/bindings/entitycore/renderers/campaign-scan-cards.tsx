@@ -8,18 +8,18 @@ import type { ReactNode } from 'react';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 
 /** One name → value pair shown inside a scan-parameter card. */
-export interface ScanCardParam {
+export interface IScanCardParam {
   name: string;
   label: string;
   value: string;
 }
 
 /** A single scan-parameter set rendered as a card in the popover grid. */
-export interface ScanCard {
+export interface IScanCard {
   id: string;
   title: string;
   status?: ActivityStatus;
-  params: ScanCardParam[];
+  params: IScanCardParam[];
 }
 
 /** Loose shape of an expand-payload row (a simulation with its scan parameters). */
@@ -52,14 +52,14 @@ export function formatScanValue(value: unknown): string {
  * flat list of formatted scan-parameter rows. Non-object / empty payloads yield `[]`.
  * This is the unit under test for the "records → cards" shaping.
  */
-export function toScanCardData(records: unknown): ScanCard[] {
+export function toScanCardData(records: unknown): IScanCard[] {
   if (!Array.isArray(records)) return [];
   return records.map((raw, index) => {
     const row = (raw ?? {}) as RawScanRow;
     const id = row.id ?? `scan-${index}`;
     const title = row.name || row.id || `Simulation ${index + 1}`;
     const scanParameters = row.scan_parameters ?? {};
-    const params: ScanCardParam[] = Object.entries(scanParameters).map(([name, value]) => ({
+    const params: IScanCardParam[] = Object.entries(scanParameters).map(([name, value]) => ({
       name,
       label: getParamLabel(name),
       value: formatScanValue(value),
@@ -83,7 +83,7 @@ function scanCardsWidth(cols: number): string {
   return `${cols * CARD_W_REM + (cols - 1) * GAP_REM}rem`;
 }
 
-function ScanParameterCard({ card }: { card: ScanCard }): ReactNode {
+function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
   return (
     // fills its grid column (single card → full popover width); hover greys the whole card
     <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">

@@ -1,7 +1,7 @@
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
-const columns = (): Array<SimpleColumn<SynaptomeProps>> => {
+const columns = (): Array<ISimpleColumn<SynaptomeProps>> => {
   return [
     {
       id: 'name',

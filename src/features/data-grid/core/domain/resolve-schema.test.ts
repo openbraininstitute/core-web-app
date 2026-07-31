@@ -4,19 +4,19 @@ import { byContext } from './contextual';
 import { mergeColumnDef } from './merge-column';
 import { defaultHiddenColumnIds, isSelectionEnabled, resolveColumns } from './resolve-schema';
 
-import type { GridContext } from './grid-context';
-import type { GridSchema } from './schema';
+import type { IGridContext } from './grid-context';
+import type { IGridSchema } from './schema';
 
 type Row = { id: string };
 
-const ctx = (over: Partial<GridContext> = {}): GridContext => ({
+const ctx = (over: Partial<IGridContext> = {}): IGridContext => ({
   dataType: 'cell_morphology',
   section: 'data',
   scope: 'project',
   ...over,
 });
 
-const schema: GridSchema<Row> = {
+const schema: IGridSchema<Row> = {
   id: 'test',
   columns: [
     { id: 'name', header: 'Name', filter: { operators: ['ilike'] } },
@@ -58,7 +58,7 @@ describe('resolveColumns', () => {
   });
 
   it('orders by contextual `order` ("where"), ties keep declaration order', () => {
-    const ordered: GridSchema<Row> = {
+    const ordered: IGridSchema<Row> = {
       id: 't',
       getRowId: (r) => r.id,
       columns: [
@@ -91,7 +91,7 @@ describe('resolveColumns', () => {
   });
 
   it('resolves contextual default-hidden columns', () => {
-    const withHidden: GridSchema<Row> = {
+    const withHidden: IGridSchema<Row> = {
       id: 't',
       getRowId: (r) => r.id,
       columns: [

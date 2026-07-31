@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 import { buildGridQuery } from '../core';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
-import type { Facets, GridController, GridDataSource, GridPage, GridState } from '../core';
+import type { GridController, IGridDataSource, IGridPage, IGridState, TFacets } from '../core';
 
 /**
  * Extra React Query knobs a host may pass through to the grid's list query — e.g.
@@ -12,14 +12,14 @@ import type { Facets, GridController, GridDataSource, GridPage, GridState } from
  * always owns `queryKey`/`queryFn` (and its own `enabled`/`placeholderData` defaults,
  * which a caller can still override here).
  */
-export type DataGridQueryOptions<Row> = Omit<
-  UseQueryOptions<GridPage<Row>, unknown, GridPage<Row>, ReadonlyArray<unknown>>,
+export type TDataGridQueryOptions<Row> = Omit<
+  UseQueryOptions<IGridPage<Row>, unknown, IGridPage<Row>, ReadonlyArray<unknown>>,
   'queryKey' | 'queryFn'
 >;
 
-export interface UseDataGridArgs<Row> {
+export interface IUseDataGridArgs<Row> {
   controller: GridController<Row>;
-  dataSource: GridDataSource<Row>;
+  dataSource: IGridDataSource<Row>;
   /** opaque, host-provided request params (brain-region, scope, with_facets, …) */
   params?: Record<string, unknown>;
   enabled?: boolean;
@@ -27,14 +27,14 @@ export interface UseDataGridArgs<Row> {
   queryKey: ReadonlyArray<unknown>;
   keepPrevious?: boolean;
   /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …) */
-  queryOptions?: DataGridQueryOptions<Row>;
+  queryOptions?: TDataGridQueryOptions<Row>;
 }
 
-export interface UseDataGridResult<Row> {
-  state: GridState;
+export interface IUseDataGridResult<Row> {
+  state: IGridState;
   rows: Row[];
   total: number;
-  facets?: Facets;
+  facets?: TFacets;
   loading: boolean;
   error: unknown;
   status: 'pending' | 'error' | 'success';
@@ -46,7 +46,7 @@ export interface UseDataGridResult<Row> {
  * port to React Query. Data fetching/caching lives here — the controller stays
  * pure. State changes rebuild the query, which changes the query key and refetches.
  */
-export function useDataGrid<Row>(args: UseDataGridArgs<Row>): UseDataGridResult<Row> {
+export function useDataGrid<Row>(args: IUseDataGridArgs<Row>): IUseDataGridResult<Row> {
   const {
     controller,
     dataSource,

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { WorkspaceSection } from '@/constants';
 import { regionCircuitSimulationExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
 
-import { OperatorId, resolveColumns } from '../../../core';
+import { FilterValueKind, OperatorId, resolveColumns, SortDirection } from '../../../core';
 import { serializeQuery } from '../query-serializer';
 import {
   buildSimulationCampaignDefinition,
@@ -18,9 +18,9 @@ import {
 } from '../schemas/circuit-simulations';
 import { simulationCampaignGridDefinition } from '../schemas/simulation-campaign';
 
-import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../core';
-import type { EntityGridDefinition } from '../registry';
-import type { CampaignRow } from '../schemas/campaign-common';
+import type { IGridContext, IGridQuery, IGridSchema, TFilterModel } from '../../../core';
+import type { IEntityGridDefinition } from '../registry';
+import type { ICampaignRow } from '../schemas/campaign-common';
 
 /**
  * T-05 parity harness for the expandable circuit-simulation dataTypes. Locks (a) the
@@ -30,22 +30,30 @@ import type { CampaignRow } from '../schemas/campaign-common';
  * guarantee no regression when the router flips these dataTypes to AG Grid detail rows.
  */
 
-function query(over: Partial<GridQuery> = {}): GridQuery {
+function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
-const dataCtx = (dataType: string): GridContext => ({ dataType, section: WorkspaceSection.Data });
+const dataCtx = (dataType: string): IGridContext => ({ dataType, section: WorkspaceSection.Data });
 
-function ids<Row>(schema: GridSchema<Row>, ctx: GridContext): string[] {
+function ids<Row>(schema: IGridSchema<Row>, ctx: IGridContext): string[] {
   return resolveColumns(schema, ctx).map((c) => c.id);
 }
-function setIn(columnId: string): FilterModel {
+function setIn(columnId: string): TFilterModel {
   return {
-    [columnId]: { columnId, operator: OperatorId.In, value: { kind: 'set', values: ['x'] } },
+    [columnId]: {
+      columnId,
+      operator: OperatorId.In,
+      value: { kind: FilterValueKind.Set, values: ['x'] },
+    },
   };
 }
-function ilike(columnId: string): FilterModel {
+function ilike(columnId: string): TFilterModel {
   return {
-    [columnId]: { columnId, operator: OperatorId.Ilike, value: { kind: 'text', text: 'foo' } },
+    [columnId]: {
+      columnId,
+      operator: OperatorId.Ilike,
+      value: { kind: FilterValueKind.Text, text: 'foo' },
+    },
   };
 }
 
@@ -59,7 +67,7 @@ const STANDARD_COLUMNS = [
 ];
 
 /** Shared assertions common to every flipped simulation-campaign definition. */
-function assertCampaignDetail(def: EntityGridDefinition<CampaignRow>, dataType: string) {
+function assertCampaignDetail(def: IEntityGridDefinition<ICampaignRow>, dataType: string) {
   it('defaults to popover-cards mode: no full-width detail row is wired', () => {
     // The new default (flag OFF) presents the status as a badge + hover popover of cards,
     // so the collapsed listing no longer wires the nested-table detail spec/renderer.
@@ -78,19 +86,21 @@ function assertCampaignDetail(def: EntityGridDefinition<CampaignRow>, dataType: 
     expect(
       serializeQuery(query({ filters: setIn('createdBy') }), s).created_by__pref_label__in
     ).toEqual(['x']);
-    const dateFilter: FilterModel = {
+    const dateFilter: TFilterModel = {
       registrationDate: {
         columnId: 'registrationDate',
         operator: OperatorId.DateRange,
-        value: { kind: 'dateRange', from: '2026-01-01', to: '2026-02-01' },
+        value: { kind: FilterValueKind.DateRange, from: '2026-01-01', to: '2026-02-01' },
       },
     };
     const dated = serializeQuery(query({ filters: dateFilter }), s);
     expect(dated.creation_date__gte).toBe('2026-01-01');
     expect(dated.creation_date__lte).toBe('2026-02-01');
     expect(
-      serializeQuery(query({ sort: [{ columnId: 'registrationDate', direction: 'desc' }] }), s)
-        .order_by
+      serializeQuery(
+        query({ sort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }] }),
+        s
+      ).order_by
     ).toEqual(['-creation_date']);
   });
 }
@@ -176,19 +186,21 @@ describe('simulation_campaign parity (generic Data → Simulations listing)', ()
   it('serializes name filter + registration date range + default sort to the legacy keys', () => {
     const s = def.schema;
     expect(serializeQuery(query({ filters: ilike('name') }), s).name__ilike).toBe('%foo%');
-    const dateFilter: FilterModel = {
+    const dateFilter: TFilterModel = {
       registrationDate: {
         columnId: 'registrationDate',
         operator: OperatorId.DateRange,
-        value: { kind: 'dateRange', from: '2026-01-01', to: '2026-02-01' },
+        value: { kind: FilterValueKind.DateRange, from: '2026-01-01', to: '2026-02-01' },
       },
     };
     const dated = serializeQuery(query({ filters: dateFilter }), s);
     expect(dated.creation_date__gte).toBe('2026-01-01');
     expect(dated.creation_date__lte).toBe('2026-02-01');
     expect(
-      serializeQuery(query({ sort: [{ columnId: 'registrationDate', direction: 'desc' }] }), s)
-        .order_by
+      serializeQuery(
+        query({ sort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }] }),
+        s
+      ).order_by
     ).toEqual(['-creation_date']);
   });
 });

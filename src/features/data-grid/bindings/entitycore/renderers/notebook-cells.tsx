@@ -1,7 +1,7 @@
 import { NotebookPreviewThumbnail } from '@/features/notebooks/components/notebook-preview-thumbnail';
 
 import type { IAnalysisNotebookResult } from '@/api/entitycore/types/entities/analysis-notebook-result';
-import type { CellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '../../../react';
 
 /** Cell-renderer registry key for the notebook-result image preview. */
 export const NOTEBOOK_IMAGE_PREVIEW_RENDERER = 'notebookImagePreview';
@@ -11,7 +11,7 @@ export const NOTEBOOK_IMAGE_PREVIEW_RENDERER = 'notebookImagePreview';
  * (lazy, in-view figure loader) exactly as the `NotebookImagePreview` field-def did,
  * so the AG Grid listing shows the same notebook figures as the antd table.
  */
-export function NotebookImagePreview({ row }: CellRendererProps<IAnalysisNotebookResult>) {
+export function NotebookImagePreview({ row }: ICellRendererProps<IAnalysisNotebookResult>) {
   if (!row) return null;
   return (
     <NotebookPreviewThumbnail

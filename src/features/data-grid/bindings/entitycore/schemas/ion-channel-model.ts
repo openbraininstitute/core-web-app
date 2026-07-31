@@ -1,6 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { OperatorId } from '../../../core';
+import { FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   nameColumn,
@@ -11,9 +11,9 @@ import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * Ion-channel model listing (curated). Column order mirrors the legacy
@@ -36,10 +36,10 @@ import type { EntityGridDefinition } from '../registry';
  *    shared entity-preview thumbnail (see note in the report re: the
  *    `ion_channel_model_thumbnail` asset label the legacy renderer selected).
  */
-export const ionChannelModelSchema: GridSchema<IonChannelModel> = {
+export const ionChannelModelSchema: IGridSchema<IonChannelModel> = {
   id: 'ion-channel-model',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -61,7 +61,7 @@ export const ionChannelModelSchema: GridSchema<IonChannelModel> = {
         field: 'subject__species__name',
         facetKey: 'species',
         description: 'Species',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     {
@@ -96,7 +96,7 @@ export const ionChannelModelSchema: GridSchema<IonChannelModel> = {
   ],
 };
 
-export const ionChannelModelGridDefinition: EntityGridDefinition<IonChannelModel> = {
+export const ionChannelModelGridDefinition: IEntityGridDefinition<IonChannelModel> = {
   dataType: ExtendedEntitiesTypeDict.IonChannelModel,
   schema: ionChannelModelSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

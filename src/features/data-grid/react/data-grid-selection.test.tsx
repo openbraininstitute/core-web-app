@@ -2,20 +2,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { createDefaultOperatorRegistry, GridController } from '../core';
+import { createDefaultOperatorRegistry, GridActionType, GridController } from '../core';
 import { CellRendererRegistry } from './cell-renderer-registry';
-import { DataGrid, type DataGridSelection } from './data-grid';
+import { DataGrid, type IDataGridSelection } from './data-grid';
 
 import type { ReactNode } from 'react';
-import type { GridDataSource, GridPage, GridQuery, GridSchema } from '../core';
-import type { GridRenderer, GridRendererProps } from './renderer';
+import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema } from '../core';
+import type { IGridRendererProps, TGridRenderer } from './renderer';
 
 interface Row {
   id: string;
   name: string;
 }
 
-const schema: GridSchema<Row> = {
+const schema: IGridSchema<Row> = {
   id: 't',
   getRowId: (r) => r.id,
   columns: [{ id: 'name', header: 'Name', getValue: (r) => r.name }],
@@ -31,7 +31,7 @@ function wrap(ui: ReactNode) {
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
 }
 
-function setup(opts?: { selection?: DataGridSelection<Row>; rows?: Row[] }) {
+function setup(opts?: { selection?: IDataGridSelection<Row>; rows?: Row[] }) {
   const controller = new GridController<Row>({
     schema,
     context: { dataType: 't' },
@@ -39,12 +39,12 @@ function setup(opts?: { selection?: DataGridSelection<Row>; rows?: Row[] }) {
   });
   const rows = opts?.rows ?? ROWS;
   const fetch = vi.fn(
-    async (_q: GridQuery): Promise<GridPage<Row>> => ({ rows, total: rows.length })
+    async (_q: IGridQuery): Promise<IGridPage<Row>> => ({ rows, total: rows.length })
   );
-  const dataSource: GridDataSource<Row> = { fetch };
-  let received: GridRendererProps<Row> | undefined;
-  const spyRenderer: GridRenderer = (props) => {
-    received = props as unknown as GridRendererProps<Row>;
+  const dataSource: IGridDataSource<Row> = { fetch };
+  let received: IGridRendererProps<Row> | undefined;
+  const spyRenderer: TGridRenderer = (props) => {
+    received = props as unknown as IGridRendererProps<Row>;
     return null;
   };
   wrap(
@@ -97,9 +97,9 @@ describe('DataGrid picker selection', () => {
     const { controller, getReceived } = setup({ selection: { mode: 'multi', onChange } });
     await waitFor(() => expect(getReceived()).toBeDefined());
     // rows are loaded → cache populated; simulate the renderer's grid→store dispatch
-    act(() => controller.store.dispatch({ type: 'setSelection', ids: ['a'] }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
     await waitFor(() => expect(onChange).toHaveBeenCalledWith([{ id: 'a', name: 'A' }]));
-    act(() => controller.store.dispatch({ type: 'setSelection', ids: ['a', 'b'] }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a', 'b'] }));
     await waitFor(() =>
       expect(onChange).toHaveBeenLastCalledWith([
         { id: 'a', name: 'A' },
@@ -112,9 +112,9 @@ describe('DataGrid picker selection', () => {
     const onChange = vi.fn();
     const { controller, getReceived } = setup({ selection: { mode: 'single', onChange } });
     await waitFor(() => expect(getReceived()).toBeDefined());
-    act(() => controller.store.dispatch({ type: 'setSelection', ids: ['a'] }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith([{ id: 'a', name: 'A' }]));
-    act(() => controller.store.dispatch({ type: 'setSelection', ids: ['b'] }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['b'] }));
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith([{ id: 'b', name: 'B' }]));
   });
 
@@ -126,7 +126,7 @@ describe('DataGrid picker selection', () => {
     await waitFor(() => expect(getReceived()).toBeDefined());
     await waitFor(() => expect(controller.store.getSnapshot().selection).toEqual(['a']));
     // a later user-driven change still resolves BOTH rows (controlled row seeded the cache)
-    act(() => controller.store.dispatch({ type: 'setSelection', ids: ['a', 'b'] }));
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a', 'b'] }));
     await waitFor(() =>
       expect(onChange).toHaveBeenLastCalledWith([
         { id: 'a', name: 'A' },

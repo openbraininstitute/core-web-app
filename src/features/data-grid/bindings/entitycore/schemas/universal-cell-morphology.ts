@@ -5,7 +5,7 @@ import {
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 
-import { byContext, OperatorId } from '../../../core';
+import { byContext, FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -19,9 +19,9 @@ import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { FilterOptionsSource, GridSchema } from '../../../core';
+import type { IGridSchema, TFilterOptionsSource } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 type UniversalRow = ICellMorphology & {
   cell_morphology_protocol?: {
@@ -34,8 +34,8 @@ type UniversalRow = ICellMorphology & {
 function dictEntries(dict: Record<string, { key: string; label: string }>) {
   const values = Object.values(dict);
   const labelByKey = new Map(values.map((v) => [v.key, v.label] as const));
-  const options: FilterOptionsSource = {
-    kind: 'static',
+  const options: TFilterOptionsSource = {
+    kind: FilterOptionsKind.Static,
     items: values.map((v) => ({ id: v.key, label: v.label })),
   };
   return { labelByKey, options };
@@ -61,10 +61,10 @@ const availableInBuildWorkflow = byContext<boolean>({
  * is NO generation-type narrow filter). Adds the two build-workflow-only dropdown
  * columns.
  */
-export const universalCellMorphologySchema: GridSchema<UniversalRow> = {
+export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
   id: 'universal-cell-morphology',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -110,7 +110,7 @@ export const universalCellMorphologySchema: GridSchema<UniversalRow> = {
   ],
 };
 
-export const universalCellMorphologyGridDefinition: EntityGridDefinition<UniversalRow> = {
+export const universalCellMorphologyGridDefinition: IEntityGridDefinition<UniversalRow> = {
   dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
   schema: universalCellMorphologySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

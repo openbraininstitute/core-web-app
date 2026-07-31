@@ -9,8 +9,8 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import { EMPTY_PLACEHOLDER } from '../columns/catalog';
 
-import type { CellRendererProps } from '../../../react';
-import type { HasEmDataset } from '../columns/catalog';
+import type { ICellRendererProps } from '../../../react';
+import type { IHasEmDataset } from '../columns/catalog';
 
 /** Cell-renderer registry key for the EM dense-reconstruction dataset name cell. */
 export const EM_DATASET_RENDERER = 'emDataset';
@@ -22,7 +22,7 @@ export const EM_DATASET_RENDERER = 'emDataset';
  * result is treated as immutable (`staleTime`/`gcTime: Infinity`) since dataset names
  * don't change within a session.
  */
-export function EmDatasetCell({ row }: CellRendererProps<HasEmDataset>) {
+export function EmDatasetCell({ row }: ICellRendererProps<IHasEmDataset>) {
   const datasetId = row?.em_dense_reconstruction_dataset?.id ?? '';
   const { virtualLabId, projectId } = useWorkspace();
   const context = { virtualLabId, projectId };

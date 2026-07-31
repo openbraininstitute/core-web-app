@@ -7,7 +7,7 @@ import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 /**
  * Per-row download action for the related-circuits tables. These tables have no
@@ -43,12 +43,12 @@ function DownloadCell({ circuit }: { circuit: ICircuit }) {
  * grid renders — so widths, headers, truncation and the in-cell expander column
  * are identical — plus the leading per-row download action.
  */
-export const RELATED_CIRCUIT_COLUMNS: ReadonlyArray<SimpleColumn<ICircuit>> = [
+export const RELATED_CIRCUIT_COLUMNS: ReadonlyArray<ISimpleColumn<ICircuit>> = [
   {
     id: '__download',
     header: '',
     width: { width: 48, minWidth: 48, resizable: false },
     renderCell: (row) => <DownloadCell circuit={row} />,
   },
-  ...(circuitSchema.columns as ReadonlyArray<SimpleColumn<ICircuit>>),
+  ...(circuitSchema.columns as ReadonlyArray<ISimpleColumn<ICircuit>>),
 ];

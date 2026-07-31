@@ -23,7 +23,7 @@ import {
 } from './campaign-status-badge';
 
 import type { ReactNode } from 'react';
-import type { CellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '../../../react';
 
 /** Cell-renderer registry key for the campaign/simulation aggregated status cell. */
 export const CAMPAIGN_STATUS_RENDERER = 'campaignStatus';
@@ -47,7 +47,7 @@ const ACTIVE_STATUSES = [ActivityStatus.PENDING, ActivityStatus.RUNNING];
  * loose `{ id, name, status, scan_parameters }` shape that {@link CampaignScanCards}
  * (via `toScanCardData`) consumes.
  */
-export interface CampaignStatusBadgePopoverProps {
+export interface ICampaignStatusBadgePopoverProps {
   /** Pre-resolved aggregated status counts (SYNC sources). Wins over {@link fetchStatus}. */
   statusCountMap?: Map<ActivityStatus, number>;
   /** Async status fetcher, polled while a member is PENDING/RUNNING (ASYNC sources). */
@@ -73,7 +73,7 @@ export interface CampaignStatusBadgePopoverProps {
  */
 export function CampaignStatusCell({
   row,
-}: CellRendererProps<{ id?: string | null; name?: string | null }>): ReactNode {
+}: ICellRendererProps<{ id?: string | null; name?: string | null }>): ReactNode {
   const campaignId = row?.id ?? undefined;
   if (!campaignId) return null;
   return <SimulationCampaignStatusCell campaignId={campaignId} simName={row?.name ?? undefined} />;
@@ -111,7 +111,7 @@ function SimulationCampaignStatusCell({
  * status as a coloured {@link CampaignStatusBadge} and, when a scan fetcher is
  * supplied, reveals the scan-parameter sets as a responsive grid of {@link CampaignScanCards}
  * on hover. Neither the status source nor the scan source is hard-wired — the caller
- * injects them (see {@link CampaignStatusBadgePopoverProps}), so this single component
+ * injects them (see {@link ICampaignStatusBadgePopoverProps}), so this single component
  * serves every campaign/activity type.
  *
  * - SYNC status (`statusCountMap`): rendered immediately, no polling, no skeleton.
@@ -128,7 +128,7 @@ export function CampaignStatusBadgePopover({
   scanQueryKey,
   title,
   enabled = true,
-}: CampaignStatusBadgePopoverProps): ReactNode {
+}: ICampaignStatusBadgePopoverProps): ReactNode {
   const [open, setOpen] = useState(false);
   const hasProvidedMap = providedMap !== undefined;
   const isAsync = !hasProvidedMap && Boolean(fetchStatus);

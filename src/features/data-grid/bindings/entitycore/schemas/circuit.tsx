@@ -12,13 +12,13 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import { CircuitGridBody } from '@/features/data-grid/host/circuit-grid-body';
 import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
 
-import { OperatorId } from '../../../core';
+import { Align, FilterOptionsKind, OperatorId } from '../../../core';
 import { descriptionColumn, nameColumn, speciesColumn } from '../columns/catalog';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { ColumnModel, FilterOptionsSource, GridSchema } from '../../../core';
-import type { EntityGridDefinition } from '../registry';
+import type { IColumnModel, IGridSchema, TFilterOptionsSource } from '../../../core';
+import type { IEntityGridDefinition } from '../registry';
 
 /** Localized integer, matching the legacy `renderLocalizedNumber`. */
 function localizedNumber(value: number | null | undefined): string {
@@ -26,9 +26,9 @@ function localizedNumber(value: number | null | undefined): string {
 }
 
 /** Build a static option source from a `{ key, label }` dictionary. */
-function staticOptions(dict: Record<string, { key: string; label: string }>): FilterOptionsSource {
+function staticOptions(dict: Record<string, { key: string; label: string }>): TFilterOptionsSource {
   return {
-    kind: 'static',
+    kind: FilterOptionsKind.Static,
     items: Object.values(dict).map((item) => ({ id: item.key, label: item.label })),
   };
 }
@@ -42,7 +42,7 @@ function staticOptions(dict: Record<string, { key: string; label: string }>): Fi
  * bulk download). Per-column server filters/sorts are locked to the legacy
  * `transformFiltersToQuery` oracle by the circuit parity test.
  */
-export const circuitSchema: GridSchema<ICircuit> = {
+export const circuitSchema: IGridSchema<ICircuit> = {
   id: 'circuit',
   getRowId: (row) => row.id,
   selection: { enabled: true },
@@ -62,13 +62,13 @@ export const circuitSchema: GridSchema<ICircuit> = {
     {
       id: EntityCoreFields.CircuitSubCircuit,
       header: 'Subcircuits',
-      align: 'left',
+      align: Align.Left,
       width: { width: 110, minWidth: 90 },
       getValue: (row) => {
         const enriched = row as ICircuitEnriched;
         return 'sub_circuits' in row ? countDeepSubCircuits(enriched) || '' : '';
       },
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
     descriptionColumn<ICircuit>({ id: EntityCoreFields.Description }),
     // ICircuit's type omits `brain_region` (present on the wire); read it via a cast
     // — same shape the catalog `brainRegionColumn` reads, region gating owns filtering.
@@ -80,12 +80,12 @@ export const circuitSchema: GridSchema<ICircuit> = {
       width: { minWidth: 150, flex: 1 },
       getValue: (row) =>
         (row as unknown as { brain_region?: { name?: string | null } }).brain_region?.name ?? '',
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
     speciesColumn<ICircuit>({ id: EntityCoreFields.SpeciesName }),
     {
       id: EntityCoreFields.CircuitScale,
       header: 'Scale',
-      align: 'left',
+      align: Align.Left,
       sortable: true,
       sortField: 'scale',
       width: { width: 120, minWidth: 100 },
@@ -95,13 +95,13 @@ export const circuitSchema: GridSchema<ICircuit> = {
         field: 'scale',
         // options mirror the legacy dropdown (all scales except "Single").
         options: {
-          kind: 'static',
+          kind: FilterOptionsKind.Static,
           items: Object.values(CircuitScale)
             .filter((s) => s.key !== CircuitScale.Single.key)
             .map((s) => ({ id: s.key, label: s.label })),
         },
       },
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
     numberColumn(EntityCoreFields.CircuitNumberNeurons, 'Number of neurons', 'number_neurons'),
     numberColumn(EntityCoreFields.CircuitNumberSynapses, 'Number of synapses', 'number_synapses'),
     numberColumn(
@@ -112,7 +112,7 @@ export const circuitSchema: GridSchema<ICircuit> = {
     {
       id: EntityCoreFields.CircuitBuildCategory,
       header: 'Build category',
-      align: 'left',
+      align: Align.Left,
       sortable: true,
       sortField: 'build_category',
       width: { minWidth: 140, flex: 1 },
@@ -123,11 +123,11 @@ export const circuitSchema: GridSchema<ICircuit> = {
         field: 'build_category',
         options: staticOptions(CircuitBuildCategory),
       },
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
     {
       id: EntityCoreFields.CircuitTargetSimulator,
       header: 'Target simulator',
-      align: 'left',
+      align: Align.Left,
       sortable: true,
       sortField: 'target_simulator',
       width: { minWidth: 150, flex: 1 },
@@ -141,11 +141,11 @@ export const circuitSchema: GridSchema<ICircuit> = {
         field: 'target_simulator',
         options: staticOptions(CircuitTargetSimulator),
       },
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
     {
       id: EntityCoreFields.CircuitDerivationType,
       header: 'Derivation type',
-      align: 'left',
+      align: Align.Left,
       width: { minWidth: 140, flex: 1 },
       getValue: (row) => {
         const derivations =
@@ -158,36 +158,36 @@ export const circuitSchema: GridSchema<ICircuit> = {
         operators: [OperatorId.In],
         field: 'generated_derivation__derivation_type',
         options: {
-          kind: 'static',
+          kind: FilterOptionsKind.Static,
           items: CircuitDerivationFilterOptions.map((o) => ({ id: o.value, label: o.label })),
         },
       },
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
     {
       id: EntityCoreFields.ArtifactPublishedIn,
       header: 'Published in',
-      align: 'left',
+      align: Align.Left,
       sortable: true,
       sortField: 'published_in',
       width: { minWidth: 150, flex: 1 },
       getValue: (row) => row.published_in ?? '',
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
     {
       id: EntityCoreFields.ArtifactExperimentDate,
       header: 'Experiment date',
-      align: 'left',
+      align: Align.Left,
       width: { minWidth: 140 },
       getValue: (row) => formatDate(row.experiment_date),
-    } satisfies ColumnModel<ICircuit>,
+    } satisfies IColumnModel<ICircuit>,
   ],
 };
 
 /** ValueRange number column (localized display, `field__gte`/`field__lte` filter). */
-function numberColumn(id: string, header: string, field: string): ColumnModel<ICircuit> {
+function numberColumn(id: string, header: string, field: string): IColumnModel<ICircuit> {
   return {
     id,
     header,
-    align: 'right',
+    align: Align.Right,
     sortable: true,
     sortField: field,
     width: { minWidth: 130 },
@@ -213,7 +213,7 @@ function formatDate(iso?: string | null): string {
     : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export const circuitGridDefinition: EntityGridDefinition<ICircuit> = {
+export const circuitGridDefinition: IEntityGridDefinition<ICircuit> = {
   dataType: ExtendedEntitiesTypeDict.Circuit,
   schema: circuitSchema,
   plugin: { Body: CircuitGridBody },

@@ -1,7 +1,7 @@
-import type { FilterModel } from './filter-model';
-import type { SortModel } from './sort-model';
+import type { TFilterModel } from './filter-model';
+import type { TSortModel } from './sort-model';
 
-export interface FacetBucket {
+export interface IFacetBucket {
   id: string;
   label: string;
   count: number;
@@ -9,18 +9,18 @@ export interface FacetBucket {
   type?: string | null;
 }
 
-export type Facets = Record<string, FacetBucket[]>;
+export type TFacets = Record<string, IFacetBucket[]>;
 
 /**
- * Abstract, transport-agnostic request. A {@link GridDataSource} resolves it into
+ * Abstract, transport-agnostic request. A {@link IGridDataSource} resolves it into
  * a real call (REST, GraphQL, in-memory, …).
  */
-export interface GridQuery {
+export interface IGridQuery {
   /** 1-indexed page number */
   page: number;
   pageSize: number;
-  sort: SortModel;
-  filters: FilterModel;
+  sort: TSortModel;
+  filters: TFilterModel;
   /** free-text quick filter (a binding maps this to e.g. search / ilike_search) */
   quickFilter?: string;
   /**
@@ -31,9 +31,9 @@ export interface GridQuery {
   params?: Record<string, unknown>;
 }
 
-export interface GridPage<Row> {
+export interface IGridPage<Row> {
   rows: Row[];
   /** total number of matching rows (drives pagination) */
   total: number;
-  facets?: Facets;
+  facets?: TFacets;
 }

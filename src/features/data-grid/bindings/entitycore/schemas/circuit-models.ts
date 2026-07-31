@@ -2,7 +2,7 @@ import { CircuitScale, CircuitTargetSimulator } from '@/api/entitycore/types/ent
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import { OperatorId } from '../../../core';
+import { Align, FilterOptionsKind, OperatorId } from '../../../core';
 import {
   createdByColumn,
   nameColumn,
@@ -11,8 +11,8 @@ import {
 } from '../columns/catalog';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ColumnModel, GridSchema } from '../../../core';
-import type { EntityGridDefinition } from '../registry';
+import type { IColumnModel, IGridSchema } from '../../../core';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * Re-authored grid schemas for the "circuit-family" plain models (micro-, small-micro-,
@@ -50,11 +50,11 @@ function numberColumn(
   header: string,
   field: string,
   sortable: boolean
-): ColumnModel<ICircuit> {
+): IColumnModel<ICircuit> {
   return {
     id,
     header,
-    align: 'right',
+    align: Align.Right,
     sortable,
     sortField: field,
     width: { minWidth: 130 },
@@ -89,8 +89,8 @@ function buildCircuitModelDefinition({
   sorts,
   speciesFilter,
   includeTargetSimulator,
-}: BuildOptions): EntityGridDefinition<ICircuit> {
-  const columns: Array<ColumnModel<ICircuit>> = [
+}: BuildOptions): IEntityGridDefinition<ICircuit> {
+  const columns: Array<IColumnModel<ICircuit>> = [
     nameColumn<ICircuit>({ id: EntityCoreFields.Name }),
     // Description is display-only: the legacy field (`fields-defs/common.tsx`) is
     // `isFilterable: false` with a `search` constraint (the quick-search box, not a column
@@ -129,7 +129,7 @@ function buildCircuitModelDefinition({
     {
       id: EntityCoreFields.CircuitScale,
       header: 'Scale',
-      align: 'left',
+      align: Align.Left,
       sortable: sorts.scale,
       sortField: 'scale',
       width: { width: 120, minWidth: 100 },
@@ -159,7 +159,7 @@ function buildCircuitModelDefinition({
     columns.push({
       id: EntityCoreFields.CircuitTargetSimulator,
       header: 'Target simulator',
-      align: 'left',
+      align: Align.Left,
       sortable: sorts.targetSimulator,
       sortField: 'target_simulator',
       width: { minWidth: 150, flex: 1 },
@@ -172,7 +172,7 @@ function buildCircuitModelDefinition({
         operators: [OperatorId.In],
         field: 'target_simulator',
         options: {
-          kind: 'static',
+          kind: FilterOptionsKind.Static,
           items: Object.values(CircuitTargetSimulator).map((s) => ({ id: s.key, label: s.label })),
         },
       },
@@ -188,7 +188,7 @@ function buildCircuitModelDefinition({
     registrationDateColumn<ICircuit>({ id: EntityCoreFields.RegistrationDate })
   );
 
-  const schema: GridSchema<ICircuit> = {
+  const schema: IGridSchema<ICircuit> = {
     id,
     getRowId: (row) => row.id,
     // Shared row selection + bulk download replace the legacy antd per-row Download action.
@@ -283,7 +283,7 @@ export const brainRegionGridDefinition = buildCircuitModelDefinition({
 });
 
 /** All circuit-family model grid definitions, keyed by dataType in the registry. */
-export const circuitModelGridDefinitions: Array<EntityGridDefinition<ICircuit>> = [
+export const circuitModelGridDefinitions: Array<IEntityGridDefinition<ICircuit>> = [
   microCircuitGridDefinition,
   smallMicroCircuitGridDefinition,
   pairedNeuronCircuitGridDefinition,

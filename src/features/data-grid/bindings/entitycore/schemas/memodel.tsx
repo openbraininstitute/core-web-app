@@ -1,7 +1,7 @@
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { OperatorId } from '../../../core';
+import { FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
@@ -19,9 +19,9 @@ import {
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { ColumnModel, GridSchema } from '../../../core';
+import type { IColumnModel, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * Shared ME-model column set. Both `memodel` and `me_model_circuit` list ME-model
@@ -39,7 +39,7 @@ import type { EntityGridDefinition } from '../registry';
  *  - M-type / E-type sort + facet-filter on `mtype__pref_label` / `etype__pref_label`.
  *  - Created by sorts + facet-filters on `created_by__pref_label`.
  */
-export function buildMemodelColumns(): Array<ColumnModel<IMEModel>> {
+export function buildMemodelColumns(): Array<IColumnModel<IMEModel>> {
   return [
     nameColumn<IMEModel>(),
     previewColumn<IMEModel>({
@@ -71,7 +71,7 @@ export function buildMemodelColumns(): Array<ColumnModel<IMEModel>> {
         field: 'species__name',
         facetKey: 'species',
         description: 'Species',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     mtypeColumn<IMEModel>(),
@@ -81,16 +81,16 @@ export function buildMemodelColumns(): Array<ColumnModel<IMEModel>> {
   ];
 }
 
-export const memodelSchema: GridSchema<IMEModel> = {
+export const memodelSchema: IGridSchema<IMEModel> = {
   id: 'memodel',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: buildMemodelColumns(),
 };
 
-export const memodelGridDefinition: EntityGridDefinition<IMEModel> = {
+export const memodelGridDefinition: IEntityGridDefinition<IMEModel> = {
   dataType: ExtendedEntitiesTypeDict.Memodel,
   schema: memodelSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

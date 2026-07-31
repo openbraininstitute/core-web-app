@@ -1,31 +1,32 @@
+import { Align } from '../../core';
 import { isDetailRow } from './detail-rows';
 import { ExpandToggleButton } from './expand-cell';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { ReactNode } from 'react';
-import type { CellRendererProps } from '../../react';
-import type { AgGridContext } from './ag-context';
+import type { ICellRendererProps } from '../../react';
+import type { IAgGridContext } from './ag-context';
 
 /** Params threaded onto the host column by the col-def mapper. */
-export interface ExpandHostCellParams {
+export interface IExpandHostCellParams {
   /** cell-renderer registry key for the column's normal content (optional). */
   rendererKey?: string;
   /** within-cell alignment of the expander (default: 'right'). */
   expandAlign?: 'left' | 'right';
-  /** custom expander glyph, forwarded from the ExpandColumnConfig. */
+  /** custom expander glyph, forwarded from the IExpandColumnConfig. */
   renderExpander?: (open: boolean) => ReactNode;
   [key: string]: unknown;
 }
 
 /**
- * Hosts the expand toggle INSIDE a data column's cell (see {@link ExpandColumnConfig}).
+ * Hosts the expand toggle INSIDE a data column's cell (see {@link IExpandColumnConfig}).
  * Renders the column's normal content — via the cell-renderer registry when a
  * `rendererKey` is set, else the plain value — and places the shared
  * {@link ExpandToggleButton} at the cell's leading/trailing edge, vertically centred.
  */
 export function AgExpandHostCell(props: CustomCellRendererProps) {
-  const ctx = props.context as AgGridContext;
-  const params = (props.colDef?.cellRendererParams ?? {}) as ExpandHostCellParams;
+  const ctx = props.context as IAgGridContext;
+  const params = (props.colDef?.cellRendererParams ?? {}) as IExpandHostCellParams;
   const row = props.data;
 
   if (row == null || isDetailRow(row)) return null;
@@ -36,9 +37,9 @@ export function AgExpandHostCell(props: CustomCellRendererProps) {
   if (params.rendererKey) {
     const Component = ctx.cellRenderers.get(params.rendererKey);
     if (Component) {
-      const cellProps: CellRendererProps<unknown> = {
+      const cellProps: ICellRendererProps<unknown> = {
         row: props.data,
-        value: props.value as CellRendererProps<unknown>['value'],
+        value: props.value as ICellRendererProps<unknown>['value'],
         rowIndex: props.node?.rowIndex ?? 0,
         params,
       };
@@ -64,9 +65,9 @@ export function AgExpandHostCell(props: CustomCellRendererProps) {
 
   return (
     <div className="flex h-full w-full items-center gap-1">
-      {align === 'left' && toggle}
+      {align === Align.Left && toggle}
       <span className="min-w-0 flex-1">{content}</span>
-      {align === 'right' && toggle}
+      {align === Align.Right && toggle}
     </div>
   );
 }

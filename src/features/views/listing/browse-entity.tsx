@@ -7,7 +7,7 @@ import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycor
 import { BrowseEntityScopeLegacy } from './browse-entity-legacy';
 
 import type { ReactElement } from 'react';
-import type { BrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
+import type { IBrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
 import type { BrowseEntityScopeProps } from './browse-entity-legacy';
 
 // AG Grid is client-only; loaded lazily like the legacy MainTable so neither
@@ -15,7 +15,7 @@ import type { BrowseEntityScopeProps } from './browse-entity-legacy';
 const BrowseEntityGrid = dynamic(
   () => import('@/features/data-grid/host/browse-entity-grid').then((m) => m.BrowseEntityGrid),
   { ssr: false }
-) as (props: BrowseEntityGridProps) => ReactElement | null;
+) as (props: IBrowseEntityGridProps) => ReactElement | null;
 
 export type { BrowseEntityScopeProps };
 
@@ -28,7 +28,7 @@ export type { BrowseEntityScopeProps };
 export function BrowseEntityScope(props: BrowseEntityScopeProps) {
   const definition = getEntityGridDefinition(props.dataType);
   if (definition) {
-    return <BrowseEntityGrid {...props} definition={definition}  />;
+    return <BrowseEntityGrid {...props} definition={definition} />;
   }
   return <BrowseEntityScopeLegacy {...props} />;
 }

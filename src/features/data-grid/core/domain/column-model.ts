@@ -1,29 +1,50 @@
-import type { ContextualValue } from './grid-context';
+import type { TContextualValue } from './grid-context';
 
-export type Align = 'left' | 'center' | 'right';
+export const Align = {
+  Left: 'left',
+  Center: 'center',
+  Right: 'right',
+} as const;
 
-export interface WidthSpec {
+export type TAlign = (typeof Align)[keyof typeof Align];
+
+export interface IWidthSpec {
   width?: number;
   minWidth?: number;
   flex?: number;
   resizable?: boolean;
 }
 
-export type CellValue = string | number | boolean | null | undefined;
+export type TCellValue = string | number | boolean | null | undefined;
+
+/** Discriminants for {@link TFilterOptionsSource}. */
+export const FilterOptionsKind = {
+  Facets: 'facets',
+  Static: 'static',
+  Async: 'async',
+} as const;
+
+export type TFilterOptionsKind = (typeof FilterOptionsKind)[keyof typeof FilterOptionsKind];
 
 /** Where a set/facet filter sources its selectable options. */
-export type FilterOptionsSource =
-  | { kind: 'facets' }
-  | { kind: 'static'; items: ReadonlyArray<{ id: string; label: string }> }
-  | { kind: 'async'; load: () => Promise<Array<{ id: string; label: string }>> };
+export type TFilterOptionsSource =
+  | { kind: typeof FilterOptionsKind.Facets }
+  | {
+      kind: typeof FilterOptionsKind.Static;
+      items: ReadonlyArray<{ id: string; label: string }>;
+    }
+  | {
+      kind: typeof FilterOptionsKind.Async;
+      load: () => Promise<Array<{ id: string; label: string }>>;
+    };
 
-export interface ColumnFilter {
+export interface IColumnFilter {
   /** ordered operator ids; index 0 is the default. Each must exist in the operator registry. */
   operators: string[];
   /** backend field used for serializing the filter; defaults to column.field ?? column.id */
   field?: string;
   /** option source for set/facet operators */
-  options?: FilterOptionsSource;
+  options?: TFilterOptionsSource;
   /**
    * key under which facet options are returned (when it differs from the
    * serialization {@link field} — e.g. options under `mtype` but filtered as
@@ -33,7 +54,7 @@ export interface ColumnFilter {
   /** short help text shown at the top of the filter popup */
   description?: string;
   /** contextual availability (default: true) */
-  available?: ContextualValue<boolean>;
+  available?: TContextualValue<boolean>;
 }
 
 /**
@@ -41,20 +62,20 @@ export interface ColumnFilter {
  * `cellRenderer` key resolved by the rendering adapter's registry, so this type
  * (and the whole core ring) stays free of React / AG Grid.
  */
-export interface ColumnModel<Row = unknown> {
+export interface IColumnModel<Row = unknown> {
   /** logical id — used in state, sort and filter models */
   id: string;
   /** backend field path; defaults to id. Used for serialization & sort. */
   field?: string;
   header: string;
   unit?: string;
-  align?: Align;
-  width?: WidthSpec;
+  align?: TAlign;
+  width?: IWidthSpec;
   sortable?: boolean;
   /** backend field(s) for order_by; defaults to field ?? id */
   sortField?: string | string[];
   /** value accessor (sort fallback, quick filter, export) */
-  getValue?: (row: Row) => CellValue;
+  getValue?: (row: Row) => TCellValue;
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */
   cellRenderer?: string;
   cellRendererParams?: Record<string, unknown>;
@@ -64,17 +85,17 @@ export interface ColumnModel<Row = unknown> {
    * column chooser. Contextual, so a column can appear only in certain
    * sections/scopes/species/etc.
    */
-  available?: ContextualValue<boolean>;
+  available?: TContextualValue<boolean>;
   /**
    * Position weight ("where") — columns are ordered by ascending resolved value,
    * ties keeping declaration order. Contextual, so a column can move position by
    * context. Columns without an explicit order keep their declaration slot.
    */
-  order?: ContextualValue<number>;
+  order?: TContextualValue<number>;
   /**
    * Start hidden — present in the grid and offered by the column chooser, but not
    * shown until the user enables it. Contextual (default: false).
    */
-  hiddenByDefault?: ContextualValue<boolean>;
-  filter?: ColumnFilter;
+  hiddenByDefault?: TContextualValue<boolean>;
+  filter?: IColumnFilter;
 }

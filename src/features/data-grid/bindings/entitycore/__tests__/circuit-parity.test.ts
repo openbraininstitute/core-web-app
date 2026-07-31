@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import { OperatorId } from '../../../core';
+import { FilterValueKind, OperatorId, SortDirection } from '../../../core';
 import { serializeQuery } from '../query-serializer';
 import { circuitSchema } from '../schemas/circuit';
 
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-import type { FilterModel, GridQuery } from '../../../core';
+import type { IGridQuery, TFilterModel } from '../../../core';
 
 /**
  * Golden parity for the circuit FLAT branch. The circuit data source's flat view
@@ -17,7 +17,7 @@ import type { FilterModel, GridQuery } from '../../../core';
  * the flat request params are byte-for-byte identical to the legacy circuit list.
  * Constraints mirror the circuit field-defs (`fields-defs/model.tsx`).
  */
-function query(over: Partial<GridQuery> = {}): GridQuery {
+function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
 
@@ -52,11 +52,11 @@ describe('circuit — flat serialize parity with transformFiltersToQuery', () =>
     const legacy = transformFiltersToQuery([
       { field: 'name', type: 'Text', value: '*foo*', constraint: 'name__ilike' } as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       [EntityCoreFields.Name]: {
         columnId: EntityCoreFields.Name,
         operator: OperatorId.Ilike,
-        value: { kind: 'text', text: 'foo' },
+        value: { kind: FilterValueKind.Text, text: 'foo' },
       },
     };
     const grid = serializeQuery(query({ filters }), circuitSchema);
@@ -73,11 +73,11 @@ describe('circuit — flat serialize parity with transformFiltersToQuery', () =>
         constraint: 'scale__in',
       } as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       [EntityCoreFields.CircuitScale]: {
         columnId: EntityCoreFields.CircuitScale,
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['microcircuit'] },
+        value: { kind: FilterValueKind.Set, values: ['microcircuit'] },
       },
     };
     const grid = serializeQuery(query({ filters }), circuitSchema);
@@ -94,11 +94,11 @@ describe('circuit — flat serialize parity with transformFiltersToQuery', () =>
         constraint: { gte: 'number_neurons__gte', lte: 'number_neurons__lte' },
       } as unknown as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       [EntityCoreFields.CircuitNumberNeurons]: {
         columnId: EntityCoreFields.CircuitNumberNeurons,
         operator: OperatorId.Range,
-        value: { kind: 'range', min: 10, max: 1000 },
+        value: { kind: FilterValueKind.Range, min: 10, max: 1000 },
       },
     };
     const grid = serializeQuery(query({ filters }), circuitSchema);
@@ -121,16 +121,16 @@ describe('circuit — flat serialize parity with transformFiltersToQuery', () =>
         constraint: 'target_simulator__in',
       } as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       [EntityCoreFields.CircuitBuildCategory]: {
         columnId: EntityCoreFields.CircuitBuildCategory,
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['computational_model'] },
+        value: { kind: FilterValueKind.Set, values: ['computational_model'] },
       },
       [EntityCoreFields.CircuitTargetSimulator]: {
         columnId: EntityCoreFields.CircuitTargetSimulator,
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['NEURON'] },
+        value: { kind: FilterValueKind.Set, values: ['NEURON'] },
       },
     };
     const grid = serializeQuery(query({ filters }), circuitSchema);
@@ -147,11 +147,11 @@ describe('circuit — flat serialize parity with transformFiltersToQuery', () =>
         constraint: 'generated_derivation__derivation_type__in',
       } as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       [EntityCoreFields.CircuitDerivationType]: {
         columnId: EntityCoreFields.CircuitDerivationType,
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['circuit_extraction'] },
+        value: { kind: FilterValueKind.Set, values: ['circuit_extraction'] },
       },
     };
     const grid = serializeQuery(query({ filters }), circuitSchema);
@@ -169,11 +169,11 @@ describe('circuit — flat serialize parity with transformFiltersToQuery', () =>
         constraint: 'subject__species__name__in',
       } as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       [EntityCoreFields.SpeciesName]: {
         columnId: EntityCoreFields.SpeciesName,
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['Mus musculus'] },
+        value: { kind: FilterValueKind.Set, values: ['Mus musculus'] },
       },
     };
     const grid = serializeQuery(query({ filters }), circuitSchema);
@@ -183,7 +183,9 @@ describe('circuit — flat serialize parity with transformFiltersToQuery', () =>
   it('scale sort serializes to +scale / -scale; paging passes through', () => {
     expect(
       serializeQuery(
-        query({ sort: [{ columnId: EntityCoreFields.CircuitScale, direction: 'asc' }] }),
+        query({
+          sort: [{ columnId: EntityCoreFields.CircuitScale, direction: SortDirection.Asc }],
+        }),
         circuitSchema
       ).order_by
     ).toEqual(['+scale']);

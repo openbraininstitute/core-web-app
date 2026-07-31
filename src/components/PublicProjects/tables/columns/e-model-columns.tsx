@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 import truncateText from '@/util/truncate';
 
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { EModelsProps } from '../../type/artifactsType';
 
 function formatDate(isoDateString: string | null) {
@@ -15,7 +15,7 @@ function formatDate(isoDateString: string | null) {
   return `${day}.${month}.${year}`;
 }
 
-const columns = (): Array<SimpleColumn<EModelsProps>> => {
+const columns = (): Array<ISimpleColumn<EModelsProps>> => {
   return [
     {
       id: 'name',

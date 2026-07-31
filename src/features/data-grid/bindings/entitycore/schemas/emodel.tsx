@@ -1,6 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { OperatorId } from '../../../core';
+import { Align, FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -14,9 +14,9 @@ import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * E-model listing (curated). Column order mirrors the legacy `ViewDefForEmodel`
@@ -33,10 +33,10 @@ import type { EntityGridDefinition } from '../registry';
  *    Exemplar morphology (sort `exemplar_morphology__name`) and Model score
  *    (sort `score`) are display + sortable, with no column filter.
  */
-export const emodelSchema: GridSchema<IEModel> = {
+export const emodelSchema: IGridSchema<IEModel> = {
   id: 'emodel',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -58,7 +58,7 @@ export const emodelSchema: GridSchema<IEModel> = {
         field: 'species__name',
         facetKey: 'species',
         description: 'Species',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     mtypeColumn<IEModel>(),
@@ -77,7 +77,7 @@ export const emodelSchema: GridSchema<IEModel> = {
       sortable: true,
       sortField: 'score',
       getValue: (r) => (r.score == null ? '' : String(r.score)),
-      align: 'right',
+      align: Align.Right,
       width: { minWidth: 150 },
     },
     contributionsColumn<IEModel>({ sortable: true, sortField: 'contribution__pref_label' }),
@@ -85,7 +85,7 @@ export const emodelSchema: GridSchema<IEModel> = {
   ],
 };
 
-export const emodelGridDefinition: EntityGridDefinition<IEModel> = {
+export const emodelGridDefinition: IEntityGridDefinition<IEModel> = {
   dataType: ExtendedEntitiesTypeDict.Emodel,
   schema: emodelSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

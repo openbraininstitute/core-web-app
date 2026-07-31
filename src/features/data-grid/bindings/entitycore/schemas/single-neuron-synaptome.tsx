@@ -1,6 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { OperatorId } from '../../../core';
+import { FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
@@ -10,9 +10,9 @@ import {
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 function labels(values: Array<{ pref_label?: string | null } | undefined> | null | undefined) {
   return (values ?? [])
@@ -36,10 +36,10 @@ function labels(values: Array<{ pref_label?: string | null } | undefined> | null
  *    and Species has no `order_by`/facet binding for synaptome (its value is read
  *    from the linked ME-model for display).
  */
-export const singleNeuronSynaptomeSchema: GridSchema<ISingleNeuronSynaptome> = {
+export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = {
   id: 'single-neuron-synaptome',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -68,7 +68,7 @@ export const singleNeuronSynaptomeSchema: GridSchema<ISingleNeuronSynaptome> = {
         field: 'me_model__mtype__pref_label',
         facetKey: 'mtype',
         description: 'Morphological type',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     {
@@ -83,7 +83,7 @@ export const singleNeuronSynaptomeSchema: GridSchema<ISingleNeuronSynaptome> = {
         field: 'me_model__etype__pref_label',
         facetKey: 'etype',
         description: 'Electrical type',
-        options: { kind: 'facets' },
+        options: { kind: FilterOptionsKind.Facets },
       },
     },
     brainRegionColumn<ISingleNeuronSynaptome>(),
@@ -101,7 +101,7 @@ export const singleNeuronSynaptomeSchema: GridSchema<ISingleNeuronSynaptome> = {
   ],
 };
 
-export const singleNeuronSynaptomeGridDefinition: EntityGridDefinition<ISingleNeuronSynaptome> = {
+export const singleNeuronSynaptomeGridDefinition: IEntityGridDefinition<ISingleNeuronSynaptome> = {
   dataType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   schema: singleNeuronSynaptomeSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

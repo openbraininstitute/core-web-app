@@ -10,10 +10,10 @@ import {
   wholeBrainCircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
 
+import { SortDirection } from '../../../core';
 import { makeCampaignScanTableRenderDetail } from '../renderers/campaign-scan-table';
 import {
   CAMPAIGN_NESTED_MODE_DEFAULT,
-  type CampaignRow,
   campaignCreatedByColumn,
   campaignDescriptionColumn,
   campaignDetailSpec,
@@ -22,12 +22,13 @@ import {
   campaignSpeciesColumn,
   campaignStatusColumn,
   circuitNameColumn,
+  type ICampaignRow,
   registerCampaignRenderers,
 } from './campaign-common';
 
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
-import type { ColumnModel, GridSchema } from '../../../core';
-import type { EntityGridDefinition } from '../registry';
+import type { IColumnModel, IGridSchema } from '../../../core';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * Re-authored grid schemas for the expandable circuit-simulation dataTypes (T-05).
@@ -69,25 +70,25 @@ export function buildSimulationCampaignDefinition({
   withCircuit = true,
   withSpecies = false,
   nestedMode = CAMPAIGN_NESTED_MODE_DEFAULT,
-}: BuildOptions): EntityGridDefinition<CampaignRow> {
-  const columns: Array<ColumnModel<CampaignRow>> = [
-    campaignNameColumn<CampaignRow>(),
-    campaignDescriptionColumn<CampaignRow>(),
-    ...(withCircuit ? [circuitNameColumn<CampaignRow>()] : []),
-    campaignCreatedByColumn<CampaignRow>(),
-    ...(withSpecies ? [campaignSpeciesColumn<CampaignRow>()] : []),
-    campaignRegistrationDateColumn<CampaignRow>(),
-    campaignStatusColumn<CampaignRow>(),
+}: BuildOptions): IEntityGridDefinition<ICampaignRow> {
+  const columns: Array<IColumnModel<ICampaignRow>> = [
+    campaignNameColumn<ICampaignRow>(),
+    campaignDescriptionColumn<ICampaignRow>(),
+    ...(withCircuit ? [circuitNameColumn<ICampaignRow>()] : []),
+    campaignCreatedByColumn<ICampaignRow>(),
+    ...(withSpecies ? [campaignSpeciesColumn<ICampaignRow>()] : []),
+    campaignRegistrationDateColumn<ICampaignRow>(),
+    campaignStatusColumn<ICampaignRow>(),
   ];
 
-  const schema: GridSchema<CampaignRow> = {
+  const schema: IGridSchema<ICampaignRow> = {
     id,
     getRowId: (row) => row.id,
-    defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+    defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
     columns,
     // Popover-cards mode (default) wires NO full-width detail row, so the legacy
     // nested-table expander is not shown; nested mode restores it.
-    ...(nestedMode ? { detail: campaignDetailSpec<CampaignRow>() } : {}),
+    ...(nestedMode ? { detail: campaignDetailSpec<ICampaignRow>() } : {}),
   };
 
   return {
@@ -151,7 +152,7 @@ export const ionChannelModelSimulationGridDefinition = buildSimulationCampaignDe
 });
 
 /** All circuit-simulation grid definitions flipped in T-05, keyed by dataType. */
-export const circuitSimulationGridDefinitions: Array<EntityGridDefinition<CampaignRow>> = [
+export const circuitSimulationGridDefinitions: Array<IEntityGridDefinition<ICampaignRow>> = [
   regionCircuitSimulationGridDefinition,
   wholeBrainCircuitSimulationGridDefinition,
   microcircuitSimulationGridDefinition,

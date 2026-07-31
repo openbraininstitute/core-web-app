@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import { Align } from '../../core';
 import { AgCellHost } from './cell-host';
 import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
 import { AgExpandHostCell } from './expand-host-cell';
 
-import type { ResolvedColumn } from '../../core';
+import type { IResolvedColumn } from '../../core';
 
 interface Row {
   id: string;
 }
 
-function col(id: string, over: Partial<ResolvedColumn<Row>> = {}): ResolvedColumn<Row> {
+function col(id: string, over: Partial<IResolvedColumn<Row>> = {}): IResolvedColumn<Row> {
   return { id, header: id, filterAvailable: false, hiddenByDefaultResolved: false, ...over };
 }
 
@@ -36,7 +37,7 @@ describe('buildColDefs — expander placement (backward-compatible default)', ()
     const defs = buildColDefs(columns, {
       ...OPTIONS,
       withExpandColumn: true,
-      expandColumn: { columnId: 'subcircuit', align: 'right' },
+      expandColumn: { columnId: 'subcircuit', align: Align.Right },
     });
     expect(defs.some((d) => d.colId === EXPAND_COL_ID)).toBe(false);
     expect(defs).toHaveLength(columns.length);

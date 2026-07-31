@@ -22,8 +22,8 @@ import type {
   IEModel,
   TEntityTypeDict,
 } from '@/api/entitycore/types';
-import type { GridDataSource, GridPage } from '@/features/data-grid/core';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { NormalizeChars } from '@/utils/type';
 
 const defaultColumnsFields = getFieldsDefinition([
@@ -37,7 +37,7 @@ const defaultColumnsFields = getFieldsDefinition([
 function makeColumns(
   virtualLabId: string,
   projectId: string
-): Array<SimpleColumn<IElectricalCellRecording>> {
+): Array<ISimpleColumn<IElectricalCellRecording>> {
   return Object.entries(defaultColumnsFields).map(([key, field]) => ({
     id: key,
     header: isString(field.title) ? field.title.toUpperCase() : key,
@@ -64,9 +64,9 @@ export function ExemplarTraces({ source, variant = ViewVariant.Light }: Props) {
   // Server data source: mirrors the legacy two-step paginated fetch — page the
   // e-model derivations (`total_items` drives the pager), then resolve the matching
   // electrical-cell recordings for the current page's ids. SimpleGrid owns paging.
-  const dataSource = useMemo<GridDataSource<IElectricalCellRecording>>(
+  const dataSource = useMemo<IGridDataSource<IElectricalCellRecording>>(
     () => ({
-      fetch: async (query): Promise<GridPage<IElectricalCellRecording>> => {
+      fetch: async (query): Promise<IGridPage<IElectricalCellRecording>> => {
         const derivations = await getEntityDerivations({
           context: { virtualLabId, projectId },
           entityRoute: kebabCase(EntityTypeDict.Emodel) as NormalizeChars<TEntityTypeDict>,

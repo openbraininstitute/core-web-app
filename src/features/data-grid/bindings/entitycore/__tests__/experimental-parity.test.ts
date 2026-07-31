@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
 
-import { OperatorId, resolveColumns } from '../../../core';
+import { FilterValueKind, OperatorId, resolveColumns, SortDirection } from '../../../core';
 import { serializeQuery } from '../query-serializer';
 import { electricalCellRecordingSchema } from '../schemas/electrical-cell-recording';
 import { emCellMeshSchema } from '../schemas/em-cell-mesh';
@@ -13,7 +13,7 @@ import { ionChannelRecordingSchema } from '../schemas/ion-channel-recording';
 import { synthesizedCellMorphologySchema } from '../schemas/synthesized-cell-morphology';
 import { universalCellMorphologySchema } from '../schemas/universal-cell-morphology';
 
-import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../core';
+import type { IGridContext, IGridQuery, IGridSchema, TFilterModel } from '../../../core';
 
 /**
  * Per-entity parity harness for the experimental batch: locks the serialized query
@@ -22,35 +22,43 @@ import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../c
  * The exact legacy constraint keys are the source of truth (from the field-defs).
  */
 
-function query(over: Partial<GridQuery> = {}): GridQuery {
+function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
-const dataCtx = (dataType: string): GridContext => ({ dataType, section: WorkspaceSection.Data });
+const dataCtx = (dataType: string): IGridContext => ({ dataType, section: WorkspaceSection.Data });
 
-function ids<Row>(schema: GridSchema<Row>, ctx: GridContext): string[] {
+function ids<Row>(schema: IGridSchema<Row>, ctx: IGridContext): string[] {
   return resolveColumns(schema, ctx).map((c) => c.id);
 }
-function setIn(columnId: string): FilterModel {
+function setIn(columnId: string): TFilterModel {
   return {
-    [columnId]: { columnId, operator: OperatorId.In, value: { kind: 'set', values: ['x'] } },
+    [columnId]: {
+      columnId,
+      operator: OperatorId.In,
+      value: { kind: FilterValueKind.Set, values: ['x'] },
+    },
   };
 }
-function ilike(columnId: string): FilterModel {
+function ilike(columnId: string): TFilterModel {
   return {
-    [columnId]: { columnId, operator: OperatorId.Ilike, value: { kind: 'text', text: 'foo' } },
+    [columnId]: {
+      columnId,
+      operator: OperatorId.Ilike,
+      value: { kind: FilterValueKind.Text, text: 'foo' },
+    },
   };
 }
-function setInSingle(columnId: string): FilterModel {
+function setInSingle(columnId: string): TFilterModel {
   return {
     [columnId]: {
       columnId,
       operator: OperatorId.InSingleUnderscore,
-      value: { kind: 'set', values: ['x'] },
+      value: { kind: FilterValueKind.Set, values: ['x'] },
     },
   };
 }
-function sortDesc(columnId: string): Partial<GridQuery> {
-  return { sort: [{ columnId, direction: 'desc' }] };
+function sortDesc(columnId: string): Partial<IGridQuery> {
+  return { sort: [{ columnId, direction: SortDirection.Desc }] };
 }
 
 describe('electrical_cell_recording parity', () => {
@@ -79,8 +87,10 @@ describe('electrical_cell_recording parity', () => {
   });
   it('default sort is -creation_date', () => {
     expect(
-      serializeQuery(query({ sort: [{ columnId: 'registrationDate', direction: 'desc' }] }), s)
-        .order_by
+      serializeQuery(
+        query({ sort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }] }),
+        s
+      ).order_by
     ).toEqual(['-creation_date']);
   });
 });
@@ -105,11 +115,11 @@ describe('ion_channel_recording parity', () => {
       serializeQuery(query({ filters: ilike('ionChannel') }), s).ion_channel__name__ilike
     ).toBe('%foo%');
     expect(serializeQuery(query({ filters: ilike('cellLine') }), s).cell_line__ilike).toBe('%foo%');
-    const temp: FilterModel = {
+    const temp: TFilterModel = {
       temperature: {
         columnId: 'temperature',
         operator: OperatorId.Range,
-        value: { kind: 'range', min: 20, max: 40 },
+        value: { kind: FilterValueKind.Range, min: 20, max: 40 },
       },
     };
     const p = serializeQuery(query({ filters: temp }), s);
@@ -140,11 +150,11 @@ describe('universal_cell_morphology parity', () => {
     expect(cols).toContain('protocolDesign');
   });
   it('generation/protocol serialize to the legacy protocol __in keys', () => {
-    const gen: FilterModel = {
+    const gen: TFilterModel = {
       generationType: {
         columnId: 'generationType',
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['digital_reconstruction'] },
+        value: { kind: FilterValueKind.Set, values: ['digital_reconstruction'] },
       },
     };
     expect(

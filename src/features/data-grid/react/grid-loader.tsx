@@ -4,7 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 
 import { cn } from '@/utils/css-class';
 
-export interface GridLoaderProps {
+export interface IGridLoaderProps {
   /** what is loading — shown as `loading {label}`. Default: `entities`. */
   label?: string;
   className?: string;
@@ -16,7 +16,7 @@ export interface GridLoaderProps {
  * swapped out anywhere without touching the grids. The container carries NO shadow
  * and the grid background (`bg-background`) so it blends into the table area.
  */
-export function GridLoader({ label = 'entities', className }: GridLoaderProps) {
+export function GridLoader({ label = 'entities', className }: IGridLoaderProps) {
   return (
     <div
       className={cn(

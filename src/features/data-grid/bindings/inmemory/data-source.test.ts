@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { OperatorId } from '../../core';
+import { FilterValueKind, OperatorId, SortDirection } from '../../core';
 import {
   computeInMemoryFacets,
   createInMemoryDataSource,
-  type InMemoryColumn,
   runInMemoryQuery,
+  type TInMemoryColumn,
 } from './data-source';
 
-import type { GridQuery } from '../../core';
+import type { IGridQuery } from '../../core';
 
 interface Row {
   id: string;
@@ -25,7 +25,7 @@ const rows: Row[] = [
   { id: 'c', name: 'Gamma', count: 2, region: 'CA3', active: true, meta: { seed: 20 } },
 ];
 
-const columns: Array<InMemoryColumn<Row>> = [
+const columns: Array<TInMemoryColumn<Row>> = [
   { id: 'name', field: 'name', filter: { operators: [OperatorId.Ilike] } },
   { id: 'count', field: 'count', filter: { operators: [OperatorId.Range] } },
   { id: 'region', field: 'region', filter: { operators: [OperatorId.In] } },
@@ -33,7 +33,7 @@ const columns: Array<InMemoryColumn<Row>> = [
   { id: 'seed', getValue: (r) => r.meta.seed },
 ];
 
-function query(partial: Partial<GridQuery>): GridQuery {
+function query(partial: Partial<IGridQuery>): IGridQuery {
   return { page: 1, pageSize: 50, sort: [], filters: {}, ...partial };
 }
 
@@ -46,7 +46,7 @@ describe('runInMemoryQuery — filtering', () => {
           name: {
             columnId: 'name',
             operator: OperatorId.Ilike,
-            value: { kind: 'text', text: 'a' },
+            value: { kind: FilterValueKind.Text, text: 'a' },
           },
         },
       }),
@@ -62,7 +62,7 @@ describe('runInMemoryQuery — filtering', () => {
           name: {
             columnId: 'name',
             operator: OperatorId.Ilike,
-            value: { kind: 'text', text: 'gam' },
+            value: { kind: FilterValueKind.Text, text: 'gam' },
           },
         },
       }),
@@ -79,7 +79,7 @@ describe('runInMemoryQuery — filtering', () => {
           count: {
             columnId: 'count',
             operator: OperatorId.Range,
-            value: { kind: 'range', min: 2, max: null },
+            value: { kind: FilterValueKind.Range, min: 2, max: null },
           },
         },
       }),
@@ -96,7 +96,7 @@ describe('runInMemoryQuery — filtering', () => {
           region: {
             columnId: 'region',
             operator: OperatorId.In,
-            value: { kind: 'set', values: ['CA3'] },
+            value: { kind: FilterValueKind.Set, values: ['CA3'] },
           },
         },
       }),
@@ -113,7 +113,7 @@ describe('runInMemoryQuery — filtering', () => {
           active: {
             columnId: 'active',
             operator: OperatorId.Bool,
-            value: { kind: 'boolean', value: false },
+            value: { kind: FilterValueKind.Boolean, value: false },
           },
         },
       }),
@@ -135,7 +135,7 @@ describe('runInMemoryQuery — filtering', () => {
           name: {
             columnId: 'name',
             operator: OperatorId.Ilike,
-            value: { kind: 'text', text: '  ' },
+            value: { kind: FilterValueKind.Text, text: '  ' },
           },
         },
       }),
@@ -147,13 +147,17 @@ describe('runInMemoryQuery — filtering', () => {
 
 describe('runInMemoryQuery — sorting', () => {
   it('sorts numerically ascending/descending via getValue', () => {
-    const asc = runInMemoryQuery(rows, query({ sort: [{ columnId: 'seed', direction: 'asc' }] }), {
-      columns,
-    });
+    const asc = runInMemoryQuery(
+      rows,
+      query({ sort: [{ columnId: 'seed', direction: SortDirection.Asc }] }),
+      {
+        columns,
+      }
+    );
     expect(asc.rows.map((r) => r.id)).toEqual(['b', 'c', 'a']);
     const desc = runInMemoryQuery(
       rows,
-      query({ sort: [{ columnId: 'seed', direction: 'desc' }] }),
+      query({ sort: [{ columnId: 'seed', direction: SortDirection.Desc }] }),
       { columns }
     );
     expect(desc.rows.map((r) => r.id)).toEqual(['a', 'c', 'b']);
@@ -162,7 +166,7 @@ describe('runInMemoryQuery — sorting', () => {
   it('sorts strings with localeCompare', () => {
     const desc = runInMemoryQuery(
       rows,
-      query({ sort: [{ columnId: 'name', direction: 'desc' }] }),
+      query({ sort: [{ columnId: 'name', direction: SortDirection.Desc }] }),
       { columns }
     );
     expect(desc.rows.map((r) => r.id)).toEqual(['c', 'b', 'a']);
@@ -173,7 +177,7 @@ describe('runInMemoryQuery — pagination', () => {
   it('slices to the requested page', () => {
     const page = runInMemoryQuery(
       rows,
-      query({ page: 2, pageSize: 2, sort: [{ columnId: 'name', direction: 'asc' }] }),
+      query({ page: 2, pageSize: 2, sort: [{ columnId: 'name', direction: SortDirection.Asc }] }),
       {
         columns,
       }
@@ -204,10 +208,10 @@ describe('computeInMemoryFacets', () => {
 });
 
 describe('createInMemoryDataSource', () => {
-  it('resolves the query as a GridDataSource with facets', async () => {
+  it('resolves the query as a IGridDataSource with facets', async () => {
     const source = createInMemoryDataSource(rows, { columns });
     const page = await source.fetch(
-      query({ page: 1, pageSize: 2, sort: [{ columnId: 'name', direction: 'asc' }] })
+      query({ page: 1, pageSize: 2, sort: [{ columnId: 'name', direction: SortDirection.Asc }] })
     );
     expect(page.total).toBe(3);
     expect(page.rows.map((r) => r.id)).toEqual(['a', 'b']);

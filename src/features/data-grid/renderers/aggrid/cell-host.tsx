@@ -1,6 +1,6 @@
 import type { CustomCellRendererProps } from 'ag-grid-react';
-import type { CellRendererProps } from '../../react';
-import type { AgGridContext } from './ag-context';
+import type { ICellRendererProps } from '../../react';
+import type { IAgGridContext } from './ag-context';
 
 interface CellHostParams {
   rendererKey?: string;
@@ -12,16 +12,16 @@ interface CellHostParams {
  * free of React components.
  */
 export function AgCellHost(props: CustomCellRendererProps) {
-  const ctx = props.context as AgGridContext;
+  const ctx = props.context as IAgGridContext;
   const params = (props.colDef?.cellRendererParams ?? {}) as CellHostParams &
     Record<string, unknown>;
 
   if (params.rendererKey) {
     const Component = ctx.cellRenderers.get(params.rendererKey);
     if (Component) {
-      const cellProps: CellRendererProps<unknown> = {
+      const cellProps: ICellRendererProps<unknown> = {
         row: props.data,
-        value: props.value as CellRendererProps<unknown>['value'],
+        value: props.value as ICellRendererProps<unknown>['value'],
         rowIndex: props.node?.rowIndex ?? 0,
         params,
       };

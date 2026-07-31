@@ -4,13 +4,13 @@ import { useMemo } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import { summarizeFilter } from '../core';
+import { GridActionType, summarizeFilter } from '../core';
 
-import type { GridController, GridState } from '../core';
+import type { GridController, IGridState } from '../core';
 
-export interface ActiveFiltersButtonProps<Row> {
+export interface IActiveFiltersButtonProps<Row> {
   controller: GridController<Row>;
-  state: GridState;
+  state: IGridState;
   className?: string;
 }
 
@@ -26,7 +26,7 @@ export function ActiveFiltersButton<Row>({
   controller,
   state,
   className,
-}: ActiveFiltersButtonProps<Row>) {
+}: IActiveFiltersButtonProps<Row>) {
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
   const labelById = useMemo(
     () => new Map(columns.map((c) => [c.id, c.header] as const)),
@@ -42,8 +42,8 @@ export function ActiveFiltersButton<Row>({
   if (active.length === 0) return null;
 
   const clearOne = (columnId: string) =>
-    controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
-  const clearAll = () => controller.store.dispatch({ type: 'clearFilters' });
+    controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
+  const clearAll = () => controller.store.dispatch({ type: GridActionType.ClearFilters });
 
   const content = (
     <div className="flex w-64 flex-col">

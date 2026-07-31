@@ -1,4 +1,4 @@
-import type { GridState, StatePersistence } from '../../core';
+import type { IGridState, IStatePersistence } from '../../core';
 
 /**
  * Two persistence slices, deliberately stored apart:
@@ -18,15 +18,15 @@ const SESSION_KEYS = [
   'page',
   'pageSize',
   'quickFilter',
-] as const satisfies ReadonlyArray<keyof GridState>;
+] as const satisfies ReadonlyArray<keyof IGridState>;
 const LOCAL_KEYS = [
   'columnOrder',
   'hiddenColumns',
   'columnWidths',
-] as const satisfies ReadonlyArray<keyof GridState>;
+] as const satisfies ReadonlyArray<keyof IGridState>;
 
-function pick(state: GridState, keys: ReadonlyArray<keyof GridState>): Partial<GridState> {
-  const out: Partial<GridState> = {};
+function pick(state: IGridState, keys: ReadonlyArray<keyof IGridState>): Partial<IGridState> {
+  const out: Partial<IGridState> = {};
   for (const key of keys) {
     (out as Record<string, unknown>)[key] = state[key];
   }
@@ -36,8 +36,8 @@ function pick(state: GridState, keys: ReadonlyArray<keyof GridState>): Partial<G
 function createStoragePersistence(
   getStorage: () => Storage | undefined,
   namespace: string,
-  keys: ReadonlyArray<keyof GridState>
-): StatePersistence {
+  keys: ReadonlyArray<keyof IGridState>
+): IStatePersistence {
   const storage = (): Storage | undefined => {
     try {
       return getStorage();
@@ -53,7 +53,7 @@ function createStoragePersistence(
       if (!s) return null;
       try {
         const raw = s.getItem(storageKey(key));
-        return raw ? (JSON.parse(raw) as Partial<GridState>) : null;
+        return raw ? (JSON.parse(raw) as Partial<IGridState>) : null;
       } catch {
         return null;
       }
@@ -80,7 +80,7 @@ function createStoragePersistence(
 }
 
 /** Session slice: browse state, cleared when the tab closes. */
-export function createSessionStatePersistence(): StatePersistence {
+export function createSessionStatePersistence(): IStatePersistence {
   return createStoragePersistence(
     () => (typeof window !== 'undefined' ? window.sessionStorage : undefined),
     'data-grid:v1:s:',
@@ -89,7 +89,7 @@ export function createSessionStatePersistence(): StatePersistence {
 }
 
 /** Local slice: durable column layout (order, visibility, widths). */
-export function createLocalLayoutPersistence(): StatePersistence {
+export function createLocalLayoutPersistence(): IStatePersistence {
   return createStoragePersistence(
     () => (typeof window !== 'undefined' ? window.localStorage : undefined),
     'data-grid:v1:l:',
@@ -98,6 +98,6 @@ export function createLocalLayoutPersistence(): StatePersistence {
 }
 
 /** The standard pair used by entity listings. */
-export function createDefaultPersistence(): StatePersistence[] {
+export function createDefaultPersistence(): IStatePersistence[] {
   return [createSessionStatePersistence(), createLocalLayoutPersistence()];
 }

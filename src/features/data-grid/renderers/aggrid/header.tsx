@@ -9,14 +9,15 @@ import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
+import { GridActionType, SortDirection } from '../../core';
 import { FilterEditor } from './filters/filter-editor';
 import { summarizeFilter } from './filters/summary';
 import { useGridState } from './use-grid-state';
 
 import type { CustomHeaderProps } from 'ag-grid-react';
 import type { MouseEvent, ReactNode } from 'react';
-import type { FilterOptionsSource } from '../../core';
-import type { AgGridContext } from './ag-context';
+import type { TFilterOptionsSource } from '../../core';
+import type { IAgGridContext } from './ag-context';
 
 interface HeaderParams {
   columnId: string;
@@ -31,7 +32,7 @@ interface HeaderParams {
   filter?: {
     facetKey: string;
     operatorIds: string[];
-    optionsSource?: FilterOptionsSource;
+    optionsSource?: TFilterOptionsSource;
     description?: string;
   };
 }
@@ -44,7 +45,7 @@ interface HeaderParams {
  * no AG floating-filter row, so the grid saves vertical space.
  */
 export function AgHeader(props: CustomHeaderProps) {
-  const ctx = props.context as AgGridContext;
+  const ctx = props.context as IAgGridContext;
   const { columnId, unit, sortable, filter, headerNode } = props as CustomHeaderProps &
     HeaderParams;
   const state = useGridState(ctx.controller);
@@ -58,7 +59,11 @@ export function AgHeader(props: CustomHeaderProps) {
 
   const onSortClick = (e: MouseEvent) => {
     if (!sortable) return;
-    ctx.controller.store.dispatch({ type: 'toggleSort', columnId, allowMulti: e.shiftKey });
+    ctx.controller.store.dispatch({
+      type: GridActionType.ToggleSort,
+      columnId,
+      allowMulti: e.shiftKey,
+    });
   };
 
   return (
@@ -79,9 +84,9 @@ export function AgHeader(props: CustomHeaderProps) {
         {unit ? <span className="text-xs font-light text-gray-500">[{unit}]</span> : null}
         {sortable && (
           <span className="flex shrink-0 items-center gap-0.5">
-            {entry?.direction === 'asc' ? (
+            {entry?.direction === SortDirection.Asc ? (
               <RiArrowUpSLine size={16} className="text-primary-6" />
-            ) : entry?.direction === 'desc' ? (
+            ) : entry?.direction === SortDirection.Desc ? (
               <RiArrowDownSLine size={16} className="text-primary-6" />
             ) : (
               <RiExpandUpDownLine

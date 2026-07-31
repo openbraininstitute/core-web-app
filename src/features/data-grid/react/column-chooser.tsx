@@ -4,11 +4,13 @@ import { useMemo } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import type { GridController, GridState } from '../core';
+import { GridActionType } from '../core';
 
-export interface ColumnChooserProps<Row> {
+import type { GridController, IGridState } from '../core';
+
+export interface IColumnChooserProps<Row> {
   controller: GridController<Row>;
-  state: GridState;
+  state: IGridState;
   className?: string;
 }
 
@@ -17,7 +19,7 @@ export interface ColumnChooserProps<Row> {
  * `hiddenColumns` state, dispatches `setHiddenColumns`. The legacy "active columns"
  * feature, re-expressed against the new store.
  */
-export function ColumnChooser<Row>({ controller, state, className }: ColumnChooserProps<Row>) {
+export function ColumnChooser<Row>({ controller, state, className }: IColumnChooserProps<Row>) {
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
   const hidden = useMemo(() => new Set(state.hiddenColumns), [state.hiddenColumns]);
   const value = columns.filter((c) => !hidden.has(c.id)).map((c) => c.id);
@@ -25,7 +27,7 @@ export function ColumnChooser<Row>({ controller, state, className }: ColumnChoos
   const onChange = (checked: Array<string>) => {
     const checkedSet = new Set(checked);
     const nextHidden = columns.filter((c) => !checkedSet.has(c.id)).map((c) => c.id);
-    controller.store.dispatch({ type: 'setHiddenColumns', hidden: nextHidden });
+    controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: nextHidden });
   };
 
   const content = (

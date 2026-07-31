@@ -1,13 +1,18 @@
-export type SortDirection = 'asc' | 'desc';
+export const SortDirection = {
+  Asc: 'asc',
+  Desc: 'desc',
+} as const;
 
-export interface SortEntry {
+export type TSortDirection = (typeof SortDirection)[keyof typeof SortDirection];
+
+export interface ISortEntry {
   /** logical column id */
   columnId: string;
-  direction: SortDirection;
+  direction: TSortDirection;
 }
 
 /**
  * Ordered list of sort entries. Index 0 is the primary sort; subsequent entries
  * are tie-breakers (multi-sort). An empty list means "no explicit sort".
  */
-export type SortModel = SortEntry[];
+export type TSortModel = ISortEntry[];

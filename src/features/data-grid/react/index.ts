@@ -12,18 +12,18 @@ export {
 export { DataGridToolbar } from './toolbar';
 export { useDataGrid } from './use-data-grid';
 
-export type { BulkActionsProps, BulkActionsRenderArgs } from './bulk-actions';
-export type { CellRendererComponent, CellRendererProps } from './cell-renderer-registry';
-export type { ColumnChooserProps } from './column-chooser';
-export type { DataGridProps, DataGridSelection } from './data-grid';
-export type { DetailRowHostProps } from './detail-row-host';
-export type { GridPaginationProps } from './pagination';
+export type { IBulkActionsProps, IBulkActionsRenderArgs } from './bulk-actions';
+export type { ICellRendererProps, TCellRendererComponent } from './cell-renderer-registry';
+export type { IColumnChooserProps } from './column-chooser';
+export type { IDataGridProps, IDataGridSelection } from './data-grid';
+export type { IDetailRowHostProps } from './detail-row-host';
+export type { IGridPaginationProps } from './pagination';
 export type {
-  DetailRenderFn,
-  DetailRuntime,
-  ExpandColumnConfig,
-  GridRenderer,
-  GridRendererProps,
+  IDetailRuntime,
+  IExpandColumnConfig,
+  IGridRendererProps,
+  TDetailRenderFn,
+  TGridRenderer,
 } from './renderer';
-export type { DataGridToolbarProps, DataGridToolbarSlots } from './toolbar';
-export type { UseDataGridArgs, UseDataGridResult } from './use-data-grid';
+export type { IDataGridToolbarProps, IDataGridToolbarSlots } from './toolbar';
+export type { IUseDataGridArgs, IUseDataGridResult } from './use-data-grid';

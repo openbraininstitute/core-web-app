@@ -1,5 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import { SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -13,9 +14,9 @@ import { CellMorphologyPreview } from '../renderers/cell-morphology-cells';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 /**
  * Re-authored cell-morphology grid schema, composed from the shared column catalog.
@@ -25,10 +26,10 @@ import type { EntityGridDefinition } from '../registry';
  * the entity domain config's `api.query.list`, so it is applied automatically by the
  * delegating data source — not restated here.
  */
-export const cellMorphologySchema: GridSchema<ICellMorphology> = {
+export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
   id: 'cell-morphology',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -45,7 +46,7 @@ export const cellMorphologySchema: GridSchema<ICellMorphology> = {
   ],
 };
 
-export const cellMorphologyGridDefinition: EntityGridDefinition<ICellMorphology> = {
+export const cellMorphologyGridDefinition: IEntityGridDefinition<ICellMorphology> = {
   dataType: ExtendedEntitiesTypeDict.CellMorphology,
   schema: cellMorphologySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

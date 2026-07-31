@@ -1,5 +1,5 @@
 /** Scalar factor values the contextual resolver can match on. */
-export type GridContextValue = string | number | boolean;
+export type TGridContextValue = string | number | boolean;
 
 /**
  * Runtime inputs used to resolve contextual schema rules (column availability,
@@ -10,14 +10,14 @@ export type GridContextValue = string | number | boolean;
  * …) that rules can match on WITHOUT touching the core. Kept flat and scalar so
  * `when` matching and query-key memoisation stay cheap.
  */
-export interface GridContext {
+export interface IGridContext {
   dataType: string;
   section?: string;
   scope?: string;
   /** species identity (`all` or a hierarchy id) when the host is species-aware */
   species?: string;
   /** additional, host-defined factors matchable by contextual rules */
-  factors?: Readonly<Record<string, GridContextValue>>;
+  factors?: Readonly<Record<string, TGridContextValue>>;
 }
 
 export {
@@ -31,9 +31,9 @@ export {
 // Re-exported so existing `./grid-context` importers keep working; the engine
 // itself lives in ./contextual.
 export type {
-  ContextRule,
-  ContextualSpec,
-  ContextualValue,
-  Matchable,
-  WhenClause,
+  IContextRule,
+  IContextualSpec,
+  TContextualValue,
+  TMatchable,
+  TWhenClause,
 } from './contextual';

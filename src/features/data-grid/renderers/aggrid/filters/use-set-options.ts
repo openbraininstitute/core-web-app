@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import type { FilterOptionsSource } from '../../../core';
-import type { AgGridContext } from '../ag-context';
+import { FilterOptionsKind } from '../../../core';
 
-export interface SetOption {
+import type { TFilterOptionsSource } from '../../../core';
+import type { IAgGridContext } from '../ag-context';
+
+export interface ISetOption {
   id: string;
   label: string;
   /** value sent to the API `__in` filter — the facet label (e.g. pref_label), not the id */
@@ -14,8 +16,8 @@ export interface SetOption {
   type?: string | null;
 }
 
-export interface SetOptionsResult {
-  options: SetOption[];
+export interface ISetOptionsResult {
+  options: ISetOption[];
   loading: boolean;
 }
 
@@ -32,12 +34,12 @@ const FIVE_MINUTES = 5 * 60 * 1000;
  * for per-option definition lookups.
  */
 export function useSetOptions(
-  source: FilterOptionsSource | undefined,
+  source: TFilterOptionsSource | undefined,
   facetKey: string,
-  ctx: AgGridContext
-): SetOptionsResult {
+  ctx: IAgGridContext
+): ISetOptionsResult {
   const facets = ctx.facets;
-  const asyncSource = source?.kind === 'async' ? source : undefined;
+  const asyncSource = source?.kind === FilterOptionsKind.Async ? source : undefined;
 
   const query = useQuery({
     queryKey: ['data-grid', 'filter-options', facetKey],
@@ -46,8 +48,8 @@ export function useSetOptions(
     staleTime: FIVE_MINUTES,
   });
 
-  return useMemo<SetOptionsResult>(() => {
-    if (!source || source.kind === 'facets') {
+  return useMemo<ISetOptionsResult>(() => {
+    if (!source || source.kind === FilterOptionsKind.Facets) {
       const buckets = facets?.[facetKey] ?? [];
       return {
         options: buckets.map((b) => ({
@@ -60,7 +62,7 @@ export function useSetOptions(
         loading: false,
       };
     }
-    if (source.kind === 'static') {
+    if (source.kind === FilterOptionsKind.Static) {
       return {
         options: source.items.map((i) => ({ id: i.id, label: i.label, value: i.id })),
         loading: false,

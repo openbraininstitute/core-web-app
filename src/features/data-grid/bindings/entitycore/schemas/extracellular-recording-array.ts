@@ -5,10 +5,11 @@ import {
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
+import { Align, SortDirection } from '../../../core';
 import { createdByColumn, nameColumn, registrationDateColumn } from '../columns/catalog';
 
-import type { GridSchema } from '../../../core';
-import type { EntityGridDefinition } from '../registry';
+import type { IGridSchema } from '../../../core';
+import type { IEntityGridDefinition } from '../registry';
 
 // The hand-written entity type omits nothing we read, but `created_by` lives on
 // EntityAuthorization and `creation_date` on Timestamps (both extended) — the catalog
@@ -35,10 +36,10 @@ function electrodeTypeLabel(value: string | null | undefined): string {
  *  - Created by: facet filter, but NOT server-sortable for this entity (absent from
  *    `created_by`'s `order.types`).
  */
-export const extracellularRecordingArraySchema: GridSchema<Row> = {
+export const extracellularRecordingArraySchema: IGridSchema<Row> = {
   id: 'extracellular-recording-array',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: EntityCoreFields.RegistrationDate, direction: 'desc' }],
+  defaultSort: [{ columnId: EntityCoreFields.RegistrationDate, direction: SortDirection.Desc }],
   selection: { enabled: true },
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
@@ -57,7 +58,7 @@ export const extracellularRecordingArraySchema: GridSchema<Row> = {
     {
       id: EntityCoreFields.ElectrodeType,
       header: 'Electrode type',
-      align: 'left',
+      align: Align.Left,
       getValue: (row) => electrodeTypeLabel(row.electrode_type),
       width: { minWidth: 150, flex: 1 },
     },
@@ -66,7 +67,7 @@ export const extracellularRecordingArraySchema: GridSchema<Row> = {
   ],
 };
 
-export const extracellularRecordingArrayGridDefinition: EntityGridDefinition<Row> = {
+export const extracellularRecordingArrayGridDefinition: IEntityGridDefinition<Row> = {
   dataType: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
   schema: extracellularRecordingArraySchema,
 };

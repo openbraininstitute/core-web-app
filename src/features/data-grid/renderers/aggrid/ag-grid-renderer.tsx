@@ -3,6 +3,7 @@
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { GridActionType } from '../../core';
 import { GridLoaderOverlay } from '../../react/grid-loader';
 import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
 import { AgDetailCell, DEFAULT_DETAIL_MIN_HEIGHT } from './detail-cell';
@@ -26,9 +27,9 @@ import type {
   RowStyle,
   SelectionChangedEvent,
 } from 'ag-grid-community';
-import type { GridRendererProps } from '../../react';
-import type { AgGridContext } from './ag-context';
-import type { DisplayRow } from './detail-rows';
+import type { IGridRendererProps } from '../../react';
+import type { IAgGridContext } from './ag-context';
+import type { TDisplayRow } from './detail-rows';
 
 registerDataGridModules();
 
@@ -46,7 +47,7 @@ const DEFAULT_COL_DEF: ColDef = {
   cellStyle: { display: 'flex', alignItems: 'center' },
 };
 
-function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
+function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   const {
     controller,
     columns,
@@ -71,7 +72,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const apiRef = useRef<GridApi<DisplayRow<Row>> | null>(null);
+  const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
   const getRowId = controller.schema.getRowId;
 
   // Apply the persisted column order from state.
@@ -94,7 +95,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     [orderedColumns, hidden, state.columnWidths, detail, expandColumn]
   );
 
-  const context = useMemo<AgGridContext<Row>>(
+  const context = useMemo<IAgGridContext<Row>>(
     () => ({ controller, operators, facets, cellRenderers, detail }),
     [controller, operators, facets, cellRenderers, detail]
   );
@@ -116,19 +117,19 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   }, [activeRowId]);
 
   // Interleave synthetic full-width detail rows after expanded data rows.
-  const displayRows = useMemo<Array<DisplayRow<Row>>>(
+  const displayRows = useMemo<Array<TDisplayRow<Row>>>(
     () => interleaveDetailRows(rows, detail ? state.expanded : [], getRowId),
     [rows, detail, state.expanded, getRowId]
   );
 
   const getDisplayRowId = useCallback(
-    (p: GetRowIdParams<DisplayRow<Row>>) =>
+    (p: GetRowIdParams<TDisplayRow<Row>>) =>
       isDetailRow<Row>(p.data) ? detailRowId(p.data.forRowId) : getRowId(p.data),
     [getRowId]
   );
 
   const getRowHeight = useCallback(
-    (p: RowHeightParams<DisplayRow<Row>>) =>
+    (p: RowHeightParams<TDisplayRow<Row>>) =>
       isDetailRow(p.data)
         ? (controller.schema.detail?.minHeight ?? DEFAULT_DETAIL_MIN_HEIGHT)
         : (controller.schema.rowHeight ?? DEFAULT_ROW_HEIGHT),
@@ -138,7 +139,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   const selectionSpec = controller.schema.selection;
   // Picker mode overrides the schema's declared mode (radio single / checkbox multi).
   const effectiveSelectionMode = selectionModeOverride ?? selectionSpec?.mode;
-  const rowSelection = useMemo<RowSelectionOptions<DisplayRow<Row>> | undefined>(() => {
+  const rowSelection = useMemo<RowSelectionOptions<TDisplayRow<Row>> | undefined>(() => {
     if (!selectionEnabled) return undefined;
     if (effectiveSelectionMode === 'single') {
       return {
@@ -181,7 +182,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   // page's checkboxes with the ids selected on other pages (which the grid cannot
   // see). `single` (radio) replaces; `multiRow` accumulates.
   const onSelectionChanged = useCallback(
-    (e: SelectionChangedEvent<DisplayRow<Row>>) => {
+    (e: SelectionChangedEvent<TDisplayRow<Row>>) => {
       if (e.source === 'api') return; // our own store → grid sync
       const selectedOnPage = e.api
         .getSelectedRows()
@@ -193,7 +194,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         rows.map(getRowId),
         selectedOnPage
       );
-      controller.store.dispatch({ type: 'setSelection', ids: next });
+      controller.store.dispatch({ type: GridActionType.SetSelection, ids: next });
     },
     [controller, rows, getRowId, effectiveSelectionMode]
   );
@@ -219,7 +220,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     applySelection();
   }, [applySelection]);
 
-  // Persist drag-and-drop column reordering into the store (→ StatePersistence).
+  // Persist drag-and-drop column reordering into the store (→ IStatePersistence).
   const onColumnMoved = useCallback(
     (e: ColumnMovedEvent) => {
       if (!e.finished) return;
@@ -227,12 +228,12 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         .getColumnState()
         .map((s) => s.colId)
         .filter((id): id is string => typeof id === 'string' && !SYNTHETIC_COL_IDS.has(id));
-      controller.store.dispatch({ type: 'setColumnOrder', order });
+      controller.store.dispatch({ type: GridActionType.SetColumnOrder, order });
     },
     [controller]
   );
 
-  // Persist interactive column resizes into the store (→ StatePersistence).
+  // Persist interactive column resizes into the store (→ IStatePersistence).
   const onColumnResized = useCallback(
     (e: ColumnResizedEvent) => {
       if (!e.finished || e.source !== 'uiColumnResized') return;
@@ -240,7 +241,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         const id = col.getColId();
         if (SYNTHETIC_COL_IDS.has(id)) continue;
         controller.store.dispatch({
-          type: 'setColumnWidth',
+          type: GridActionType.SetColumnWidth,
           columnId: id,
           width: col.getActualWidth(),
         });
@@ -250,7 +251,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   );
 
   const onCellClicked = useCallback(
-    (e: CellClickedEvent<DisplayRow<Row>>) => {
+    (e: CellClickedEvent<TDisplayRow<Row>>) => {
       if (!onRowClick) return;
       // an expander click (here or bubbled up from a nested grid) must not open the row
       if (isExpanderClick(e.event)) return;
@@ -268,7 +269,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   // Row styling: pointer cursor when clickable, plus a primary tint + left accent on
   // the row whose mini-detail view is currently open.
   const getRowStyle = useCallback(
-    (p: RowClassParams<DisplayRow<Row>>): RowStyle | undefined => {
+    (p: RowClassParams<TDisplayRow<Row>>): RowStyle | undefined => {
       const isActive =
         !!activeRowId && !!p.data && !isDetailRow(p.data) && getRowId(p.data) === activeRowId;
       if (isActive) {
@@ -287,7 +288,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   // Optional per-row class (e.g. hierarchy gray-out). Never applied to synthetic
   // detail rows. `undefined` when the host supplies no hook = unchanged behavior.
   const rowClass = useCallback(
-    (p: RowClassParams<DisplayRow<Row>>): string | undefined =>
+    (p: RowClassParams<TDisplayRow<Row>>): string | undefined =>
       getRowClass && p.data != null && !isDetailRow(p.data) ? getRowClass(p.data) : undefined,
     [getRowClass]
   );
@@ -303,10 +304,10 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         effectiveSelectionMode === 'single' ? SINGLE_SELECT_RADIO_CLASS : ''
       }`}
     >
-      <AgGridReact<DisplayRow<Row>>
+      <AgGridReact<TDisplayRow<Row>>
         theme={dataGridTheme}
         defaultColDef={DEFAULT_COL_DEF}
-        columnDefs={colDefs as Array<ColDef<DisplayRow<Row>>>}
+        columnDefs={colDefs as Array<ColDef<TDisplayRow<Row>>>}
         rowData={displayRows}
         getRowId={getDisplayRowId}
         context={context}
@@ -324,7 +325,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         rowSelection={rowSelection}
         selectionColumnDef={selectionColumnDef}
         onSelectionChanged={selectionEnabled ? onSelectionChanged : undefined}
-        onGridReady={(e: GridReadyEvent<DisplayRow<Row>>) => {
+        onGridReady={(e: GridReadyEvent<TDisplayRow<Row>>) => {
           apiRef.current = e.api;
           applySelection();
         }}
@@ -342,8 +343,8 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
 /**
  * The AG Grid rendering strategy. The only module that imports `ag-grid-*`. A thin
  * wrapper so the impl (which uses hooks) mounts as a real component when the generic
- * `GridRenderer` is invoked.
+ * `TGridRenderer` is invoked.
  */
-export function AgGridRenderer<Row>(props: GridRendererProps<Row>) {
+export function AgGridRenderer<Row>(props: IGridRendererProps<Row>) {
   return <AgGridRendererImpl {...props} />;
 }

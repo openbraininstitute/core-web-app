@@ -13,29 +13,29 @@ import {
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type {
-  HasContributions,
-  HasMeasurements,
-  HasPostMtype,
-  HasPostRegion,
-  HasPreMtype,
-  HasPreRegion,
-  HasSpecies,
-  HasSubjectAge,
+  IHasContributions,
+  IHasMeasurements,
+  IHasPostMtype,
+  IHasPostRegion,
+  IHasPreMtype,
+  IHasPreRegion,
+  IHasSpecies,
+  IHasSubjectAge,
 } from '../columns/catalog';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 type Row = IExperimentalSynapsesPerConnection &
-  HasPreRegion &
-  HasPostRegion &
-  HasPreMtype &
-  HasPostMtype &
-  HasSpecies &
-  HasSubjectAge &
-  HasMeasurements &
-  HasContributions;
+  IHasPreRegion &
+  IHasPostRegion &
+  IHasPreMtype &
+  IHasPostMtype &
+  IHasSpecies &
+  IHasSubjectAge &
+  IHasMeasurements &
+  IHasContributions;
 
 /**
  * Experimental synapses-per-connection listing. Column order matches the legacy
@@ -44,7 +44,7 @@ type Row = IExperimentalSynapsesPerConnection &
  * for this entity). NB: the post-region filter serializes to the single-underscore
  * `post_region__name_in` — see `postSynapticRegionColumn`.
  */
-export const experimentalSynapsesPerConnectionSchema: GridSchema<Row> = {
+export const experimentalSynapsesPerConnectionSchema: IGridSchema<Row> = {
   id: 'experimental-synapses-per-connection',
   getRowId: (row) => row.id,
   defaultSort: [],
@@ -62,7 +62,7 @@ export const experimentalSynapsesPerConnectionSchema: GridSchema<Row> = {
   ],
 };
 
-export const experimentalSynapsesPerConnectionGridDefinition: EntityGridDefinition<Row> = {
+export const experimentalSynapsesPerConnectionGridDefinition: IEntityGridDefinition<Row> = {
   dataType: EntityTypeDict.ExperimentalSynapsesPerConnection,
   schema: experimentalSynapsesPerConnectionSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

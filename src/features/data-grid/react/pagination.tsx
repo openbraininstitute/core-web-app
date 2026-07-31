@@ -9,6 +9,7 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
+import { GridActionType } from '../core';
 import {
   GRID_SELECT_CONTENT_CLASS,
   GRID_SELECT_ITEM_CLASS,
@@ -20,7 +21,7 @@ import type { GridController } from '../core';
 // includes 30 — the app-wide DEFAULT_PAGE_SIZE — so the selector shows the active value
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100];
 
-export interface GridPaginationProps<Row> {
+export interface IGridPaginationProps<Row> {
   controller: GridController<Row>;
   total: number;
   page: number;
@@ -39,7 +40,7 @@ export function GridPagination<Row>({
   page,
   pageSize,
   className,
-}: GridPaginationProps<Row>) {
+}: IGridPaginationProps<Row>) {
   // hidden when there's nothing to paginate — zero results or a single page
   if (total <= 0 || Math.ceil(total / pageSize) <= 1) return null;
   const options = controller.schema.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
@@ -63,13 +64,15 @@ export function GridPagination<Row>({
         pageSize={pageSize}
         total={total}
         showSizeChanger={false}
-        onChange={(nextPage) => controller.store.dispatch({ type: 'setPage', page: nextPage })}
+        onChange={(nextPage) =>
+          controller.store.dispatch({ type: GridActionType.SetPage, page: nextPage })
+        }
       />
 
       <Select
         value={String(pageSize)}
         onValueChange={(v) =>
-          controller.store.dispatch({ type: 'setPageSize', pageSize: Number(v) })
+          controller.store.dispatch({ type: GridActionType.SetPageSize, pageSize: Number(v) })
         }
       >
         <SelectTrigger size="sm" className={GRID_SELECT_TRIGGER_CLASS}>

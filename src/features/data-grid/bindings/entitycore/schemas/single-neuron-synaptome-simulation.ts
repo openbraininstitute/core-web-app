@@ -1,6 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
+import { Align, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
@@ -9,8 +10,8 @@ import {
 } from '../columns/catalog';
 
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
-import type { GridSchema } from '../../../core';
-import type { EntityGridDefinition } from '../registry';
+import type { IGridSchema } from '../../../core';
+import type { IEntityGridDefinition } from '../registry';
 
 type Row = ISingleNeuronSynaptomeSimulation;
 
@@ -29,10 +30,10 @@ type Row = ISingleNeuronSynaptomeSimulation;
  * `order.types`), Created by (facet filter + server-sortable), and Registration date
  * (DateRange filter + sortable) carry the legacy filter/sort metadata.
  */
-export const singleNeuronSynaptomeSimulationSchema: GridSchema<Row> = {
+export const singleNeuronSynaptomeSimulationSchema: IGridSchema<Row> = {
   id: 'single-neuron-synaptome-simulation',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: EntityCoreFields.RegistrationDate, direction: 'desc' }],
+  defaultSort: [{ columnId: EntityCoreFields.RegistrationDate, direction: SortDirection.Desc }],
   selection: { enabled: true },
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
@@ -45,21 +46,21 @@ export const singleNeuronSynaptomeSimulationSchema: GridSchema<Row> = {
     {
       id: EntityCoreFields.SimulationStimulus,
       header: 'Stimulus',
-      align: 'left',
+      align: Align.Left,
       getValue: () => '',
       width: { width: 184, minWidth: 120 },
     },
     {
       id: EntityCoreFields.SimulationResponse,
       header: 'Response',
-      align: 'left',
+      align: Align.Left,
       getValue: () => '',
       width: { width: 184, minWidth: 120 },
     },
     {
       id: EntityCoreFields.SynaptomeModelName,
       header: 'Synaptome name',
-      align: 'left',
+      align: Align.Left,
       getValue: (row) => row.synaptome?.name ?? '',
       width: { minWidth: 160, flex: 1 },
     },
@@ -73,7 +74,7 @@ export const singleNeuronSynaptomeSimulationSchema: GridSchema<Row> = {
   ],
 };
 
-export const singleNeuronSynaptomeSimulationGridDefinition: EntityGridDefinition<Row> = {
+export const singleNeuronSynaptomeSimulationGridDefinition: IEntityGridDefinition<Row> = {
   dataType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
   schema: singleNeuronSynaptomeSimulationSchema,
 };

@@ -8,11 +8,18 @@ import { cn } from '@/utils/css-class';
 import type { ReactNode } from 'react';
 
 /** Semantic tone for a campaign's aggregated status. */
-export type CampaignStatusTone = 'success' | 'destructive' | 'primary' | 'neutral';
+export const CampaignStatusTone = {
+  Success: 'success',
+  Destructive: 'destructive',
+  Primary: 'primary',
+  Neutral: 'neutral',
+} as const;
 
-export interface CampaignStatusBadgeSpec {
+export type TCampaignStatusTone = (typeof CampaignStatusTone)[keyof typeof CampaignStatusTone];
+
+export interface ICampaignStatusBadgeSpec {
   label: string;
-  tone: CampaignStatusTone;
+  tone: TCampaignStatusTone;
   /** light pill background */
   bg: string;
   /** full-colour border */
@@ -29,10 +36,10 @@ export interface CampaignStatusBadgeSpec {
  * icon glyph white inside a full-colour chip. Only the hue changes per status — no
  * status is a solid fill. Pure/data-only (the unit under test).
  */
-const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
+const STATUS_BADGE: Record<ActivityStatus, ICampaignStatusBadgeSpec> = {
   [ActivityStatus.DONE]: {
     label: 'Done',
-    tone: 'success',
+    tone: CampaignStatusTone.Success,
     bg: 'bg-green-50',
     border: 'border-green-500',
     text: 'text-green-700',
@@ -40,7 +47,7 @@ const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
   },
   [ActivityStatus.ERROR]: {
     label: 'Error',
-    tone: 'destructive',
+    tone: CampaignStatusTone.Destructive,
     bg: 'bg-red-50',
     border: 'border-red-500',
     text: 'text-red-700',
@@ -48,7 +55,7 @@ const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
   },
   [ActivityStatus.RUNNING]: {
     label: 'Running',
-    tone: 'primary',
+    tone: CampaignStatusTone.Primary,
     bg: 'bg-blue-50',
     border: 'border-blue-500',
     text: 'text-blue-700',
@@ -56,7 +63,7 @@ const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
   },
   [ActivityStatus.PENDING]: {
     label: 'Pending',
-    tone: 'neutral',
+    tone: CampaignStatusTone.Neutral,
     bg: 'bg-amber-50',
     border: 'border-amber-500',
     text: 'text-amber-700',
@@ -64,7 +71,7 @@ const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
   },
   [ActivityStatus.CREATED]: {
     label: 'Generated',
-    tone: 'neutral',
+    tone: CampaignStatusTone.Neutral,
     bg: 'bg-slate-50',
     border: 'border-slate-400',
     text: 'text-slate-600',
@@ -72,7 +79,7 @@ const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
   },
   [ActivityStatus.CANCELLED]: {
     label: 'Cancelled',
-    tone: 'neutral',
+    tone: CampaignStatusTone.Neutral,
     bg: 'bg-gray-50',
     border: 'border-gray-400',
     text: 'text-gray-600',
@@ -80,9 +87,9 @@ const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
   },
 };
 
-const FALLBACK_BADGE: CampaignStatusBadgeSpec = {
+const FALLBACK_BADGE: ICampaignStatusBadgeSpec = {
   label: 'Unknown',
-  tone: 'neutral',
+  tone: CampaignStatusTone.Neutral,
   bg: 'bg-gray-50',
   border: 'border-gray-300',
   text: 'text-gray-600',
@@ -95,7 +102,7 @@ const FALLBACK_BADGE: CampaignStatusBadgeSpec = {
  */
 export function getCampaignStatusBadgeSpec(
   status: ActivityStatus | undefined
-): CampaignStatusBadgeSpec {
+): ICampaignStatusBadgeSpec {
   if (!status) return FALLBACK_BADGE;
   return STATUS_BADGE[status] ?? FALLBACK_BADGE;
 }

@@ -1,18 +1,19 @@
 import { AnalysisScaleDict } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import { SortDirection } from '../../../core';
 import { contributionsColumn, nameColumn, registrationDateColumn } from '../columns/catalog';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { HasContributions } from '../columns/catalog';
-import type { EntityGridDefinition } from '../registry';
+import type { IHasContributions } from '../columns/catalog';
+import type { IEntityGridDefinition } from '../registry';
 
 // The hand-written template type omits `contributions` (present at runtime); augment
 // locally so the shared contributions factory stays type-safe.
-type Row = IAnalysisNotebookTemplate & HasContributions;
+type Row = IAnalysisNotebookTemplate & IHasContributions;
 
 const SCALE_LABEL = new Map(Object.values(AnalysisScaleDict).map((s) => [s.key, s.label] as const));
 
@@ -25,10 +26,10 @@ const SCALE_LABEL = new Map(Object.values(AnalysisScaleDict).map((s) => [s.key, 
  * Registration date keep their standard filter+sort; Contributors facet-filters on
  * `contribution__pref_label__in` but is not server-sortable for notebooks.
  */
-export const analysisNotebookTemplateSchema: GridSchema<Row> = {
+export const analysisNotebookTemplateSchema: IGridSchema<Row> = {
   id: 'analysis-notebook-template',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
@@ -50,7 +51,7 @@ export const analysisNotebookTemplateSchema: GridSchema<Row> = {
   ],
 };
 
-export const analysisNotebookTemplateGridDefinition: EntityGridDefinition<Row> = {
+export const analysisNotebookTemplateGridDefinition: IEntityGridDefinition<Row> = {
   dataType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
   schema: analysisNotebookTemplateSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

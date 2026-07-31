@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
+import { Align } from '../core';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
 import { InMemoryGrid } from './in-memory-grid';
@@ -21,13 +22,19 @@ import type {
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
-import type { ColumnModel, GridDataSource, GridPage, OperatorRegistry, SortModel } from '../core';
+import type {
+  IColumnModel,
+  IGridDataSource,
+  IGridPage,
+  OperatorRegistry,
+  TSortModel,
+} from '../core';
 
 registerDataGridModules();
 
 /**
  * A column for {@link SimpleGrid}. Extends the renderer-agnostic
- * {@link ColumnModel} from `core` with the two extras a static/nested table needs
+ * {@link IColumnModel} from `core` with the two extras a static/nested table needs
  * that the server grid resolves through its registry instead:
  *
  * - `renderCell` — an inline React cell renderer (there is no cell-renderer
@@ -37,7 +44,7 @@ registerDataGridModules();
  *
  * `pinned` maps to AG Grid column pinning (antd's `fixed: 'left' | 'right'`).
  */
-export interface SimpleColumn<Row = unknown> extends ColumnModel<Row> {
+export interface ISimpleColumn<Row = unknown> extends IColumnModel<Row> {
   /** Pin the column to an edge (antd `fixed`). */
   pinned?: 'left' | 'right';
   /** Inline React cell renderer. Wins over `getValue`/`field` when present. */
@@ -57,7 +64,7 @@ export interface SimpleColumn<Row = unknown> extends ColumnModel<Row> {
  * provided (kept in sync with the grid); leave it undefined for an uncontrolled
  * grid that only emits through `onSelectionChange`.
  */
-export interface SimpleRowSelection<Row> {
+export interface ISimpleRowSelection<Row> {
   /** `single` renders radio buttons; `multi` renders checkboxes. */
   mode: 'single' | 'multi';
   /**
@@ -75,9 +82,9 @@ export interface SimpleRowSelection<Row> {
  * the serialized query changes, and React Query refetches via `dataSource.fetch`.
  * The data source owns filtering/sorting/paging — `rows` is ignored.
  */
-export interface SimpleServerSide<Row> {
-  /** Resolves a {@link GridQuery} into a `{ rows, total, facets }` page. */
-  dataSource: GridDataSource<Row>;
+export interface ISimpleServerSide<Row> {
+  /** Resolves a {@link IGridQuery} into a `{ rows, total, facets }` page. */
+  dataSource: IGridDataSource<Row>;
   /** Stable base React Query key; the built query is appended so changes refetch. */
   queryKey: ReadonlyArray<unknown>;
   /** Opaque host params merged into the request (brain-region, scope, …). */
@@ -87,15 +94,15 @@ export interface SimpleServerSide<Row> {
   /** Total row count fallback when the data source doesn't return one. */
   total?: number;
   /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …). */
-  queryOptions?: Omit<UseQueryOptions<GridPage<Row>>, 'queryKey' | 'queryFn'>;
+  queryOptions?: Omit<UseQueryOptions<IGridPage<Row>>, 'queryKey' | 'queryFn'>;
 }
 
-export interface SimpleGridProps<Row> {
-  /** Column definitions, typed via the shared {@link SimpleColumn}/`ColumnModel`. */
-  columns: Array<SimpleColumn<Row>>;
+export interface ISimpleGridProps<Row> {
+  /** Column definitions, typed via the shared {@link ISimpleColumn}/`IColumnModel`. */
+  columns: Array<ISimpleColumn<Row>>;
   /**
    * Row data — passed straight to AG Grid's client-side row model. Optional and
-   * ignored when {@link SimpleGridProps.serverSide} is set (the data source
+   * ignored when {@link ISimpleGridProps.serverSide} is set (the data source
    * provides rows).
    */
   rows?: Row[];
@@ -110,7 +117,7 @@ export interface SimpleGridProps<Row> {
   /** Hide the column header row (antd `showHeader={false}`). */
   hideHeader?: boolean;
   /** Enable a pinned checkbox/radio selection column. Omit to disable selection. */
-  rowSelection?: SimpleRowSelection<Row>;
+  rowSelection?: ISimpleRowSelection<Row>;
   /**
    * Draw the divider border on pinned columns (default: true). The data-section
    * selection column wants it; a table that merely pins an actions column to the
@@ -133,7 +140,7 @@ export interface SimpleGridProps<Row> {
   /** Show the column show/hide chooser above the grid. Activates the enhanced engine. */
   showColumnChooser?: boolean;
   /** Default sort applied (enhanced engine only) when the user has set none. */
-  defaultSort?: SortModel;
+  defaultSort?: TSortModel;
   /** Page-size choices for the enhanced engine's pagination size changer. */
   pageSizeOptions?: number[];
   /** Operator catalog for the filter editors (default: the standard registry). */
@@ -143,7 +150,7 @@ export interface SimpleGridProps<Row> {
    * (server-side), not in memory. Routes to the enhanced engine. Leave unset for
    * the client-side grid.
    */
-  serverSide?: SimpleServerSide<Row>;
+  serverSide?: ISimpleServerSide<Row>;
 }
 
 /** Inline cell renderer host — invokes the column's `renderCell` with the row. */
@@ -159,13 +166,13 @@ function SimpleHeaderCell(props: IHeaderParams & { node: ReactNode }) {
 }
 
 /**
- * Map {@link SimpleColumn}s to AG Grid `ColDef`s for the client-side row model.
+ * Map {@link ISimpleColumn}s to AG Grid `ColDef`s for the client-side row model.
  * Pure (no hooks, no side effects) so it is unit-testable in isolation. Mirrors
  * the approach in `renderers/aggrid/col-def-mapper.ts`, minus the server-grid
  * concerns (custom sort header, filter popovers, expand column).
  */
 export function buildSimpleColDefs<Row>(
-  columns: Array<SimpleColumn<Row>>,
+  columns: Array<ISimpleColumn<Row>>,
   options: { sortable: boolean }
 ): Array<ColDef<Row>> {
   return columns.map((c) => {
@@ -187,12 +194,12 @@ export function buildSimpleColDefs<Row>(
       // them instead of vertically centring (the default col def centres cells).
       cellStyle: c.autoHeight ? { display: 'flex', alignItems: 'flex-start' } : undefined,
       cellClass:
-        c.align === 'right'
+        c.align === Align.Right
           ? 'ag-right-aligned-cell'
-          : c.align === 'center'
+          : c.align === Align.Center
             ? 'ag-center-aligned-cell'
             : undefined,
-      headerClass: c.align === 'right' ? 'ag-right-aligned-header' : undefined,
+      headerClass: c.align === Align.Right ? 'ag-right-aligned-header' : undefined,
     };
 
     if (c.headerNode !== undefined) {
@@ -286,7 +293,7 @@ function SimpleGridBasic<Row>({
   rowSelection,
   pinnedColumnBorder = true,
   className,
-}: SimpleGridProps<Row>) {
+}: ISimpleGridProps<Row>) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -387,7 +394,7 @@ function SimpleGridBasic<Row>({
  * all reusing the shared components. Every existing call site (which passes none of
  * the opt-in props) keeps the original behaviour.
  */
-export function SimpleGrid<Row>(props: SimpleGridProps<Row>) {
+export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
   // Server mode also runs the enhanced engine (the store drives the query the data
   // source resolves), so `serverSide` activates it too.
   const enhanced = Boolean(props.filterable || props.showColumnChooser || props.serverSide);

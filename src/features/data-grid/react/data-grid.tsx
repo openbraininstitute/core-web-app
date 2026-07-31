@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import { isSelectionEnabled } from '../core';
+import { GridActionType, isSelectionEnabled } from '../core';
 import { ActiveFiltersButton } from './active-filters';
 import { BulkActions } from './bulk-actions';
 import { ColumnChooser } from './column-chooser';
@@ -13,17 +13,17 @@ import { DataGridToolbar } from './toolbar';
 import { useDataGrid } from './use-data-grid';
 
 import type { ReactNode } from 'react';
-import type { Facets, GridController, GridDataSource, OperatorRegistry } from '../core';
-import type { BulkActionsRenderArgs } from './bulk-actions';
+import type { GridController, IGridDataSource, OperatorRegistry, TFacets } from '../core';
+import type { IBulkActionsRenderArgs } from './bulk-actions';
 import type { CellRendererRegistry } from './cell-renderer-registry';
 import type {
-  DetailRuntime,
-  ExpandColumnConfig,
-  GridRenderer,
-  GridRendererProps,
+  IDetailRuntime,
+  IExpandColumnConfig,
+  IGridRendererProps,
+  TGridRenderer,
 } from './renderer';
-import type { DataGridToolbarSlots } from './toolbar';
-import type { DataGridQueryOptions } from './use-data-grid';
+import type { IDataGridToolbarSlots } from './toolbar';
+import type { TDataGridQueryOptions } from './use-data-grid';
 
 /**
  * Picker selection mode. When present, the grid renders a single (radio) / multi
@@ -35,7 +35,7 @@ import type { DataGridQueryOptions } from './use-data-grid';
  * full rows. Bulk actions + the selection-count footer are suppressed in this mode —
  * a picker selects INTO a form, it does not bulk-act.
  */
-export interface DataGridSelection<Row> {
+export interface IDataGridSelection<Row> {
   mode: 'single' | 'multi';
   /** controlled picks (full rows); omit for uncontrolled. */
   selectedRows?: Row[];
@@ -43,11 +43,11 @@ export interface DataGridSelection<Row> {
   onChange: (rows: Row[]) => void;
 }
 
-export interface DataGridProps<Row> {
+export interface IDataGridProps<Row> {
   controller: GridController<Row>;
-  dataSource: GridDataSource<Row>;
+  dataSource: IGridDataSource<Row>;
   /** rendering strategy (e.g. the AG Grid adapter) */
-  renderer: GridRenderer;
+  renderer: TGridRenderer;
   operators: OperatorRegistry;
   cellRenderers: CellRendererRegistry;
   /** stable base query key for React Query */
@@ -56,22 +56,22 @@ export interface DataGridProps<Row> {
   params?: Record<string, unknown>;
   enabled?: boolean;
   /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …) */
-  queryOptions?: DataGridQueryOptions<Row>;
+  queryOptions?: TDataGridQueryOptions<Row>;
   /** external facets override (when the host computes facets separately) */
-  facets?: Facets;
-  detail?: DetailRuntime<Row>;
+  facets?: TFacets;
+  detail?: IDetailRuntime<Row>;
   onRowClick?: (row: Row) => void;
   /** id of the row whose mini-detail view is open — highlighted in the grid */
   activeRowId?: string;
   /** optional per-row css class hook (e.g. hierarchy filtered-in/out styling) */
   getRowClass?: (row: Row) => string | undefined;
   /** optional placement of the expand control (default: fixed leading column) */
-  expandColumn?: ExpandColumnConfig;
+  expandColumn?: IExpandColumnConfig;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
   loadingLabel?: string;
-  toolbarSlots?: DataGridToolbarSlots;
+  toolbarSlots?: IDataGridToolbarSlots;
   /** bulk actions rendered in the toolbar while rows are selected */
-  renderBulkActions?: (args: BulkActionsRenderArgs<Row>) => ReactNode;
+  renderBulkActions?: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
   renderCount?: (info: { total: number; loading: boolean; error: unknown }) => ReactNode;
   /** effect-time notification of the fetched total (e.g. to publish the filtered
    * count to chrome outside the grid, like the data sidebar's "x of y"). */
@@ -82,7 +82,7 @@ export interface DataGridProps<Row> {
   className?: string;
   gridClassName?: string;
   /** picker selection (single/multi) that propagates chosen rows to a host form. */
-  selection?: DataGridSelection<Row>;
+  selection?: IDataGridSelection<Row>;
 }
 
 /**
@@ -90,7 +90,7 @@ export interface DataGridProps<Row> {
  * building), the data port (via React Query), and a rendering strategy. Knows
  * nothing about entitycore or AG Grid.
  */
-export function DataGrid<Row>(props: DataGridProps<Row>) {
+export function DataGrid<Row>(props: IDataGridProps<Row>) {
   const {
     controller,
     dataSource,
@@ -170,7 +170,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     const current = controller.store.getSnapshot().selection;
     const same =
       current.length === controlledIds.length && current.every((id, i) => id === controlledIds[i]);
-    if (!same) controller.store.dispatch({ type: 'setSelection', ids: controlledIds });
+    if (!same) controller.store.dispatch({ type: GridActionType.SetSelection, ids: controlledIds });
   }, [controlledIds, controller]);
 
   // store → parent: emit the selected rows on every user-driven change. The mount
@@ -194,7 +194,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     onPickerChange(selectedRows);
   }, [state.selection, onPickerChange]);
 
-  const rendererProps: GridRendererProps<Row> = {
+  const rendererProps: IGridRendererProps<Row> = {
     controller,
     columns,
     rows,
@@ -257,7 +257,9 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
               <span className="text-xs font-medium text-primary-8">{selectionCount} selected</span>
               <button
                 type="button"
-                onClick={() => controller.store.dispatch({ type: 'setSelection', ids: [] })}
+                onClick={() =>
+                  controller.store.dispatch({ type: GridActionType.SetSelection, ids: [] })
+                }
                 className="rounded-full px-1.5 py-0.5 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
               >
                 Clear

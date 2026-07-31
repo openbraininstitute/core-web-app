@@ -8,6 +8,6 @@ export {
 } from './query-serializer';
 export { getEntityGridDefinition } from './registry';
 
-export type { EntitycorePagedDataSourceOptions, ListQueryFn } from './data-source.paged';
-export type { EntitycoreParams, SerializeOptions } from './query-serializer';
-export type { AnyEntityGridDefinition, EntityGridDefinition } from './registry';
+export type { IEntitycorePagedDataSourceOptions, TListQueryFn } from './data-source.paged';
+export type { ISerializeOptions, TEntitycoreParams } from './query-serializer';
+export type { IEntityGridDefinition, TAnyEntityGridDefinition } from './registry';

@@ -6,7 +6,7 @@
 
 const DETAIL_ID_PREFIX = 'data-grid-detail:';
 
-export interface DetailRowEntry<Row> {
+export interface IDetailRowEntry<Row> {
   readonly __dataGridDetail: true;
   /** the data row this detail belongs to */
   readonly forRow: Row;
@@ -14,9 +14,9 @@ export interface DetailRowEntry<Row> {
   readonly forRowId: string;
 }
 
-export type DisplayRow<Row> = Row | DetailRowEntry<Row>;
+export type TDisplayRow<Row> = Row | IDetailRowEntry<Row>;
 
-export function isDetailRow<Row>(row: unknown): row is DetailRowEntry<Row> {
+export function isDetailRow<Row>(row: unknown): row is IDetailRowEntry<Row> {
   return typeof row === 'object' && row !== null && '__dataGridDetail' in row;
 }
 
@@ -29,10 +29,10 @@ export function interleaveDetailRows<Row>(
   rows: Row[],
   expandedIds: ReadonlyArray<string>,
   getRowId: (row: Row) => string
-): Array<DisplayRow<Row>> {
+): Array<TDisplayRow<Row>> {
   if (expandedIds.length === 0) return rows;
   const expanded = new Set(expandedIds);
-  const out: Array<DisplayRow<Row>> = [];
+  const out: Array<TDisplayRow<Row>> = [];
   for (const row of rows) {
     out.push(row);
     const id = getRowId(row);

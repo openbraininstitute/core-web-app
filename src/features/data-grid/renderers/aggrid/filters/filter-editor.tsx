@@ -19,7 +19,14 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
-import { DEFAULT_FILTER_COMMIT_MODE, isEmptyFilterValue } from '../../../core';
+import {
+  DEFAULT_FILTER_COMMIT_MODE,
+  FilterCommitMode,
+  FilterValueKind,
+  GridActionType,
+  isEmptyFilterValue,
+  OperatorUiKind,
+} from '../../../core';
 import {
   GRID_INPUT_CLASS,
   GRID_SELECT_CONTENT_CLASS,
@@ -30,41 +37,41 @@ import { useGridState } from '../use-grid-state';
 import { useSetOptions } from './use-set-options';
 
 import type { DateRange } from 'react-day-picker';
-import type { FilterOptionsSource, FilterValue } from '../../../core';
-import type { AgGridContext } from '../ag-context';
+import type { TFilterOptionsSource, TFilterValue } from '../../../core';
+import type { IAgGridContext } from '../ag-context';
 
 const COMMIT_DEBOUNCE_MS = 250;
 
 /** rounded-xl input styling shared by every editor control */
 const INPUT_CLASS = GRID_INPUT_CLASS;
 
-export interface FilterEditorProps {
-  ctx: AgGridContext;
+export interface IFilterEditorProps {
+  ctx: IAgGridContext;
   columnId: string;
   columnName: string;
   /** key for facet-option lookup (not the serialization field) */
   facetKey: string;
   operatorIds: string[];
-  optionsSource?: FilterOptionsSource;
+  optionsSource?: TFilterOptionsSource;
   description?: string;
   /** close the popover (Apply / done) */
   onClose: () => void;
 }
 
-function emptyForUiKind(kind: string): FilterValue {
+function emptyForUiKind(kind: string): TFilterValue {
   switch (kind) {
     case 'number':
-      return { kind: 'number', value: null };
+      return { kind: FilterValueKind.Number, value: null };
     case 'range':
-      return { kind: 'range', min: null, max: null };
+      return { kind: FilterValueKind.Range, min: null, max: null };
     case 'dateRange':
-      return { kind: 'dateRange', from: null, to: null };
+      return { kind: FilterValueKind.DateRange, from: null, to: null };
     case 'set':
-      return { kind: 'set', values: [] };
+      return { kind: FilterValueKind.Set, values: [] };
     case 'boolean':
-      return { kind: 'boolean', value: null };
+      return { kind: FilterValueKind.Boolean, value: null };
     default:
-      return { kind: 'text', text: '' };
+      return { kind: FilterValueKind.Text, text: '' };
   }
 }
 
@@ -93,7 +100,7 @@ export function FilterEditor({
   optionsSource,
   description,
   onClose,
-}: FilterEditorProps) {
+}: IFilterEditorProps) {
   const state = useGridState(ctx.controller);
   const current = state.filters[columnId];
 
@@ -105,16 +112,16 @@ export function FilterEditor({
 
   // The editor's WORKING value, held locally for every kind. In `apply` mode nothing
   // reaches the grid until Apply; in `immediate` mode each change is also committed.
-  const [pending, setPending] = useState<FilterValue>(() =>
+  const [pending, setPending] = useState<TFilterValue>(() =>
     current && current.operator === operator ? current.value : emptyForUiKind(uiKind)
   );
 
-  const commit = (v: FilterValue | null) => {
+  const commit = (v: TFilterValue | null) => {
     if (v === null || isEmptyFilterValue(v)) {
-      ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
+      ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
     } else {
       ctx.controller.store.dispatch({
-        type: 'setFilter',
+        type: GridActionType.SetFilter,
         columnId,
         entry: { columnId, operator, value: v },
       });
@@ -124,9 +131,9 @@ export function FilterEditor({
 
   // Update the working value; only push to the grid now when the operator commits
   // immediately (typed inputs are debounced so we don't refetch on every keystroke).
-  const change = (v: FilterValue, opts?: { debounce?: boolean }) => {
+  const change = (v: TFilterValue, opts?: { debounce?: boolean }) => {
     setPending(v);
-    if (commitMode === 'immediate') {
+    if (commitMode === FilterCommitMode.Immediate) {
       if (opts?.debounce) debouncedCommit(v);
       else commit(v);
     }
@@ -136,7 +143,7 @@ export function FilterEditor({
     debouncedCommit.cancel();
     setOperator(op);
     setPending(emptyForUiKind(ctx.operators.get(op).uiKind));
-    ctx.controller.store.dispatch({ type: 'setFilter', columnId, entry: null });
+    ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
   };
 
   const onApply = () => {
@@ -153,7 +160,7 @@ export function FilterEditor({
   };
 
   const pendingDateRange: DateRange | undefined =
-    pending.kind === 'dateRange'
+    pending.kind === FilterValueKind.DateRange
       ? { from: toDateOrUndefined(pending.from), to: toDateOrUndefined(pending.to) }
       : undefined;
 
@@ -179,41 +186,54 @@ export function FilterEditor({
         </Select>
       )}
 
-      {uiKind === 'text' && (
+      {uiKind === OperatorUiKind.Text && (
         <Input
           autoFocus
           className={INPUT_CLASS}
           placeholder="Filter…"
-          value={pending.kind === 'text' ? pending.text : ''}
-          onChange={(e) => change({ kind: 'text', text: e.target.value }, { debounce: true })}
-        />
-      )}
-
-      {uiKind === 'number' && (
-        <Input
-          type="number"
-          className={INPUT_CLASS}
-          placeholder="Value"
-          value={pending.kind === 'number' && pending.value != null ? String(pending.value) : ''}
+          value={pending.kind === FilterValueKind.Text ? pending.text : ''}
           onChange={(e) =>
-            change({ kind: 'number', value: toNumber(e.target.value) }, { debounce: true })
+            change({ kind: FilterValueKind.Text, text: e.target.value }, { debounce: true })
           }
         />
       )}
 
-      {uiKind === 'range' && (
+      {uiKind === OperatorUiKind.Number && (
+        <Input
+          type="number"
+          className={INPUT_CLASS}
+          placeholder="Value"
+          value={
+            pending.kind === FilterValueKind.Number && pending.value != null
+              ? String(pending.value)
+              : ''
+          }
+          onChange={(e) =>
+            change(
+              { kind: FilterValueKind.Number, value: toNumber(e.target.value) },
+              { debounce: true }
+            )
+          }
+        />
+      )}
+
+      {uiKind === OperatorUiKind.Range && (
         <div className="flex items-center gap-2">
           <Input
             type="number"
             className={INPUT_CLASS}
             placeholder="Min"
-            value={pending.kind === 'range' && pending.min != null ? String(pending.min) : ''}
+            value={
+              pending.kind === FilterValueKind.Range && pending.min != null
+                ? String(pending.min)
+                : ''
+            }
             onChange={(e) =>
               change(
                 {
-                  kind: 'range',
+                  kind: FilterValueKind.Range,
                   min: toNumber(e.target.value),
-                  max: pending.kind === 'range' ? pending.max : null,
+                  max: pending.kind === FilterValueKind.Range ? pending.max : null,
                 },
                 { debounce: true }
               )
@@ -224,12 +244,16 @@ export function FilterEditor({
             type="number"
             className={INPUT_CLASS}
             placeholder="Max"
-            value={pending.kind === 'range' && pending.max != null ? String(pending.max) : ''}
+            value={
+              pending.kind === FilterValueKind.Range && pending.max != null
+                ? String(pending.max)
+                : ''
+            }
             onChange={(e) =>
               change(
                 {
-                  kind: 'range',
-                  min: pending.kind === 'range' ? pending.min : null,
+                  kind: FilterValueKind.Range,
+                  min: pending.kind === FilterValueKind.Range ? pending.min : null,
                   max: toNumber(e.target.value),
                 },
                 { debounce: true }
@@ -239,12 +263,12 @@ export function FilterEditor({
         </div>
       )}
 
-      {uiKind === 'dateRange' && (
+      {uiKind === OperatorUiKind.DateRange && (
         <DateRangePicker
           value={pendingDateRange}
           onChange={(dr) =>
             change({
-              kind: 'dateRange',
+              kind: FilterValueKind.DateRange,
               from: dr?.from ? dr.from.toISOString() : null,
               to: dr?.to ? dr.to.toISOString() : null,
             })
@@ -252,10 +276,10 @@ export function FilterEditor({
         />
       )}
 
-      {uiKind === 'boolean' &&
+      {uiKind === OperatorUiKind.Boolean &&
         (() => {
           const boolValue =
-            pending.kind === 'boolean' && pending.value != null
+            pending.kind === FilterValueKind.Boolean && pending.value != null
               ? pending.value
                 ? 'yes'
                 : 'no'
@@ -264,7 +288,7 @@ export function FilterEditor({
             <Select
               value={boolValue}
               onValueChange={(v) =>
-                change({ kind: 'boolean', value: v === 'any' ? null : v === 'yes' })
+                change({ kind: FilterValueKind.Boolean, value: v === 'any' ? null : v === 'yes' })
               }
             >
               <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
@@ -285,13 +309,13 @@ export function FilterEditor({
           );
         })()}
 
-      {uiKind === 'set' && (
+      {uiKind === OperatorUiKind.Set && (
         <SetEditor
           facetKey={facetKey}
           optionsSource={optionsSource}
           ctx={ctx}
-          selected={pending.kind === 'set' ? pending.values : []}
-          onChange={(values) => change({ kind: 'set', values })}
+          selected={pending.kind === FilterValueKind.Set ? pending.values : []}
+          onChange={(values) => change({ kind: FilterValueKind.Set, values })}
         />
       )}
 
@@ -323,8 +347,8 @@ function SetEditor({
   onChange,
 }: {
   facetKey: string;
-  optionsSource?: FilterOptionsSource;
-  ctx: AgGridContext;
+  optionsSource?: TFilterOptionsSource;
+  ctx: IAgGridContext;
   selected: string[];
   onChange: (values: string[]) => void;
 }) {

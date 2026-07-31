@@ -1,5 +1,6 @@
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 
+import { SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -15,22 +16,22 @@ import {
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
-import type { GridSchema } from '../../../core';
+import type { IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type {
-  HasContributions,
-  HasMeasurements,
-  HasSpecies,
-  HasSubjectAge,
+  IHasContributions,
+  IHasMeasurements,
+  IHasSpecies,
+  IHasSubjectAge,
 } from '../columns/catalog';
-import type { EntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '../registry';
 
 // The hand-written entity type omits runtime-present contributions; augment locally.
 type Row = IExperimentalNeuronDensity &
-  HasSpecies &
-  HasSubjectAge &
-  HasMeasurements &
-  HasContributions;
+  IHasSpecies &
+  IHasSubjectAge &
+  IHasMeasurements &
+  IHasContributions;
 
 /**
  * Experimental neuron density listing. Column order matches the legacy
@@ -39,10 +40,10 @@ type Row = IExperimentalNeuronDensity &
  * "Density" value is the mean of the `measurements` array (not a queryable scalar),
  * so it is neither sortable nor filterable — matching legacy.
  */
-export const experimentalNeuronDensitySchema: GridSchema<Row> = {
+export const experimentalNeuronDensitySchema: IGridSchema<Row> = {
   id: 'experimental-neuron-density',
   getRowId: (row) => row.id,
-  defaultSort: [{ columnId: 'registrationDate', direction: 'desc' }],
+  defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 56,
   selection: { enabled: true },
   columns: [
@@ -59,7 +60,7 @@ export const experimentalNeuronDensitySchema: GridSchema<Row> = {
   ],
 };
 
-export const experimentalNeuronDensityGridDefinition: EntityGridDefinition<Row> = {
+export const experimentalNeuronDensityGridDefinition: IEntityGridDefinition<Row> = {
   dataType: EntityTypeDict.ExperimentalNeuronDensity,
   schema: experimentalNeuronDensitySchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {

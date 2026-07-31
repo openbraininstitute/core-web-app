@@ -9,17 +9,19 @@ import { cn } from '@/utils/css-class';
 
 import { computeInMemoryFacets, runInMemoryQuery } from '../bindings/inmemory/data-source';
 import {
+  Align,
   buildGridQuery,
-  type ColumnModel,
   createDefaultOperatorRegistry,
-  type Facets,
-  type GridContext,
+  GridActionType,
   GridController,
-  type GridDataSource,
-  type GridPage,
-  type GridSchema,
+  type IColumnModel,
+  type IGridContext,
+  type IGridDataSource,
+  type IGridPage,
+  type IGridSchema,
   type OperatorRegistry,
-  type SortModel,
+  type TFacets,
+  type TSortModel,
 } from '../core';
 import { CellRendererRegistry } from '../react/cell-renderer-registry';
 import { ColumnChooser } from '../react/column-chooser';
@@ -44,8 +46,8 @@ import type {
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
-import type { AgGridContext } from '../renderers/aggrid/ag-context';
-import type { SimpleColumn, SimpleRowSelection } from './simple-grid';
+import type { IAgGridContext } from '../renderers/aggrid/ag-context';
+import type { ISimpleColumn, ISimpleRowSelection } from './simple-grid';
 
 registerDataGridModules();
 
@@ -91,7 +93,7 @@ interface InMemoryDetailRow<Row> {
   readonly forRowId: string;
 }
 
-type DisplayRow<Row> = Row | InMemoryDetailRow<Row>;
+type TDisplayRow<Row> = Row | InMemoryDetailRow<Row>;
 
 function isDetailRow<Row>(row: unknown): row is InMemoryDetailRow<Row> {
   return typeof row === 'object' && row !== null && '__imDetail' in row;
@@ -102,7 +104,7 @@ function isDetailRow<Row>(row: unknown): row is InMemoryDetailRow<Row> {
  * that column's cell (right by default, vertically centred); otherwise it falls
  * back to a fixed leading column. `render` overrides the default chevron.
  */
-export interface ExpandColumnConfig<Row> {
+export interface IExpandColumnConfig<Row> {
   /** id of the data column that hosts the expander; omit for a leading column. */
   columnId?: string;
   /** within-cell alignment when {@link columnId} is set (default: 'right'). */
@@ -117,20 +119,20 @@ export interface ExpandColumnConfig<Row> {
   renderExpander?: (open: boolean) => ReactNode;
 }
 
-export interface InMemoryGridProps<Row> {
-  columns: Array<SimpleColumn<Row>>;
+export interface IInMemoryGridProps<Row> {
+  columns: Array<ISimpleColumn<Row>>;
   /** Client-side rows. Ignored in server mode (`dataSource` set); defaults to `[]`. */
   rows?: Row[];
   getRowId?: (row: Row) => string;
   // ── server mode (opt-in) ──────────────────────────────────────────────────────
   /**
    * When provided, the grid switches to SERVER mode: sort/filter/pagination
-   * dispatch to the store → the serialized {@link GridQuery} changes → React Query
+   * dispatch to the store → the serialized {@link IGridQuery} changes → React Query
    * refetches via `dataSource.fetch(query, signal)`. The data source owns
    * filtering/sorting/paging; `rows` is ignored and `computeInMemoryFacets`/
    * `runInMemoryQuery` are NOT run. Absent → the existing client behavior.
    */
-  dataSource?: GridDataSource<Row>;
+  dataSource?: IGridDataSource<Row>;
   /** Stable base React Query key; the built query is appended so changes refetch. */
   queryKey?: ReadonlyArray<unknown>;
   /** Opaque host params merged into the request (brain-region, scope, …). */
@@ -138,7 +140,7 @@ export interface InMemoryGridProps<Row> {
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`). */
   loadingLabel?: string;
   /** pass-through React Query options for the server fetch (refetchOnWindowFocus, …). */
-  serverQueryOptions?: Omit<UseQueryOptions<GridPage<Row>>, 'queryKey' | 'queryFn'>;
+  serverQueryOptions?: Omit<UseQueryOptions<IGridPage<Row>>, 'queryKey' | 'queryFn'>;
   /** Gate the server fetch (default: true when a `dataSource` is set). */
   enabled?: boolean;
   /** Total row count fallback when the data source doesn't return one. */
@@ -156,18 +158,18 @@ export interface InMemoryGridProps<Row> {
   /** enable store-driven sorting via the custom header (default: false). */
   sortable?: boolean;
   /** default sort applied when the user has set none. */
-  defaultSort?: SortModel;
+  defaultSort?: TSortModel;
   /** enable client-side pagination (default: false). */
   pagination?: boolean;
   pageSize?: number;
   pageSizeOptions?: number[];
   hideHeader?: boolean;
   headerHeight?: number;
-  rowSelection?: SimpleRowSelection<Row>;
+  rowSelection?: ISimpleRowSelection<Row>;
   /** operator catalog for the filter editors (default: the standard registry). */
   operators?: OperatorRegistry;
   /** expandable detail rows + configurable expander position. */
-  expansion?: ExpandColumnConfig<Row>;
+  expansion?: IExpandColumnConfig<Row>;
   /** per-row class hook (e.g. hierarchy filtered-in/out styling). */
   getRowClass?: (row: Row) => string | undefined;
   onRowClick?: (row: Row) => void;
@@ -178,15 +180,15 @@ export interface InMemoryGridProps<Row> {
   gridClassName?: string;
 }
 
-/** Strip the presentation-only extras so `SimpleColumn` fits the pure schema. */
-function toColumnModel<Row>(c: SimpleColumn<Row>): ColumnModel<Row> {
+/** Strip the presentation-only extras so `ISimpleColumn` fits the pure schema. */
+function toColumnModel<Row>(c: ISimpleColumn<Row>): IColumnModel<Row> {
   const { renderCell: _r, headerNode: _h, pinned: _p, autoHeight: _a, wrapText: _w, ...model } = c;
   return model;
 }
 
 /** Inline cell renderer host — invokes the column's `renderCell` with the row. */
 function InMemoryRenderCell<Row>(
-  props: ICellRendererParams<DisplayRow<Row>> & { render: (row: Row) => ReactNode }
+  props: ICellRendererParams<TDisplayRow<Row>> & { render: (row: Row) => ReactNode }
 ) {
   const data = props.data;
   return data != null && !isDetailRow(data) ? props.render(data as Row) : null;
@@ -203,7 +205,7 @@ interface InMemoryDetailContext<Row> {
  * render fn from `context.imDetail`, mounts the content and forwards the measured
  * height to the AG Grid row node so nested grids never clip or jitter.
  */
-function InMemoryDetailCell<Row>(props: ICellRendererParams<DisplayRow<Row>>) {
+function InMemoryDetailCell<Row>(props: ICellRendererParams<TDisplayRow<Row>>) {
   const ref = useRef<HTMLDivElement>(null);
   const cfg = (props.context as { imDetail?: InMemoryDetailContext<Row> }).imDetail;
   const data = props.data;
@@ -262,11 +264,11 @@ export function InMemoryGrid<Row>({
   autoHeight = true,
   className,
   gridClassName,
-}: InMemoryGridProps<Row>) {
+}: IInMemoryGridProps<Row>) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const apiRef = useRef<GridApi<DisplayRow<Row>> | null>(null);
+  const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
   const operatorRegistry = useMemo(() => operators ?? createDefaultOperatorRegistry(), [operators]);
 
   // Stable row-id resolver: use the caller's accessor, else a per-object fallback.
@@ -302,10 +304,10 @@ export function InMemoryGrid<Row>({
     [columns, sortable, defaultSort, pageSize]
   );
 
-  const context = useMemo<GridContext>(() => ({ dataType: 'in-memory-grid' }), []);
+  const context = useMemo<IGridContext>(() => ({ dataType: 'in-memory-grid' }), []);
   const controllerRef = useRef<{ sig: string; controller: GridController<Row> } | null>(null);
   if (!controllerRef.current || controllerRef.current.sig !== signature) {
-    const schema: GridSchema<Row> = {
+    const schema: IGridSchema<Row> = {
       id: 'in-memory-grid',
       getRowId: rowId,
       columns: columns.map(toColumnModel),
@@ -333,20 +335,20 @@ export function InMemoryGrid<Row>({
       placeholderData: keepPreviousData,
       ...serverQueryOptions,
       queryKey: [...(queryKey ?? EMPTY_QUERY_KEY), query],
-      queryFn: ({ signal }): Promise<GridPage<Row>> =>
+      queryFn: ({ signal }): Promise<IGridPage<Row>> =>
         dataSource ? dataSource.fetch(query, signal) : Promise.resolve({ rows: [], total: 0 }),
       enabled: isServerMode && (enabled ?? true),
     },
     isServerMode ? undefined : getFallbackQueryClient()
   );
 
-  // Facets: client mode computes from the FULL row set so set-filter options stay
+  // TFacets: client mode computes from the FULL row set so set-filter options stay
   // stable as the grid narrows; server mode reads them off the fetched page.
   const clientFacets = useMemo(
     () => (filterable && !isServerMode ? computeInMemoryFacets(rows, columns) : undefined),
     [filterable, isServerMode, rows, columns]
   );
-  const facets: Facets | undefined = isServerMode ? serverResult.data?.facets : clientFacets;
+  const facets: TFacets | undefined = isServerMode ? serverResult.data?.facets : clientFacets;
 
   // Page: client mode filters/sorts/paginates in memory; server mode uses the
   // fetched page (the data source already did it) with a `total` fallback.
@@ -354,11 +356,11 @@ export function InMemoryGrid<Row>({
     () => runInMemoryQuery(rows, query, { columns, disablePagination: !pagination }),
     [rows, query, columns, pagination]
   );
-  const page: GridPage<Row> = isServerMode
+  const page: IGridPage<Row> = isServerMode
     ? { rows: serverResult.data?.rows ?? [], total: serverResult.data?.total ?? total ?? 0 }
     : clientPage;
 
-  const agContext = useMemo<AgGridContext<Row>>(
+  const agContext = useMemo<IAgGridContext<Row>>(
     () => ({
       controller,
       operators: operatorRegistry,
@@ -397,7 +399,8 @@ export function InMemoryGrid<Row>({
 
   const isExpandable = expansion?.isExpandable ?? (() => true);
   const toggleExpand = useCallback(
-    (row: Row) => controller.store.dispatch({ type: 'toggleExpanded', id: rowId(row) }),
+    (row: Row) =>
+      controller.store.dispatch({ type: GridActionType.ToggleExpanded, id: rowId(row) }),
     [controller, rowId]
   );
   const expandedSet = useMemo(() => new Set(state.expanded), [state.expanded]);
@@ -434,7 +437,7 @@ export function InMemoryGrid<Row>({
     [expansion, isExpandable, expandedSet, rowId, toggleExpand]
   );
 
-  const colDefs = useMemo<Array<ColDef<DisplayRow<Row>>>>(() => {
+  const colDefs = useMemo<Array<ColDef<TDisplayRow<Row>>>>(() => {
     const expandInside = expansion?.columnId;
     const expandAlign = expansion?.align ?? 'right';
 
@@ -450,7 +453,7 @@ export function InMemoryGrid<Row>({
             }
           : undefined;
 
-      const colDef: ColDef<DisplayRow<Row>> = {
+      const colDef: ColDef<TDisplayRow<Row>> = {
         colId: c.id,
         headerName: c.header,
         hide: hidden.has(c.id),
@@ -473,12 +476,12 @@ export function InMemoryGrid<Row>({
         wrapText: c.wrapText,
         cellStyle: c.autoHeight ? { display: 'flex', alignItems: 'flex-start' } : undefined,
         cellClass:
-          c.align === 'right'
+          c.align === Align.Right
             ? 'ag-right-aligned-cell'
-            : c.align === 'center'
+            : c.align === Align.Center
               ? 'ag-center-aligned-cell'
               : undefined,
-        headerClass: c.align === 'right' ? 'ag-right-aligned-header' : undefined,
+        headerClass: c.align === Align.Right ? 'ag-right-aligned-header' : undefined,
       };
       if (filterParams) colDef.suppressHeaderMenuButton = true;
 
@@ -498,9 +501,13 @@ export function InMemoryGrid<Row>({
             if (!isHost) return content;
             return (
               <div className="flex h-full w-full items-center gap-1">
-                {expandAlign === 'left' && <span className="shrink-0">{renderExpander(row)}</span>}
+                {expandAlign === Align.Left && (
+                  <span className="shrink-0">{renderExpander(row)}</span>
+                )}
                 <span className="min-w-0 flex-1">{content}</span>
-                {expandAlign === 'right' && <span className="shrink-0">{renderExpander(row)}</span>}
+                {expandAlign === Align.Right && (
+                  <span className="shrink-0">{renderExpander(row)}</span>
+                )}
               </div>
             );
           },
@@ -510,7 +517,7 @@ export function InMemoryGrid<Row>({
         colDef.valueGetter = (p) =>
           p.data && !isDetailRow(p.data) ? (getValue(p.data as Row) ?? null) : null;
       } else {
-        colDef.field = (c.field ?? c.id) as ColDef<DisplayRow<Row>>['field'];
+        colDef.field = (c.field ?? c.id) as ColDef<TDisplayRow<Row>>['field'];
       }
 
       return colDef;
@@ -518,7 +525,7 @@ export function InMemoryGrid<Row>({
 
     // Fixed leading expander column when no host column was named.
     if (expansion && !expandInside) {
-      const leading: ColDef<DisplayRow<Row>> = {
+      const leading: ColDef<TDisplayRow<Row>> = {
         colId: EXPAND_COL_ID,
         headerName: '',
         width: 44,
@@ -538,10 +545,10 @@ export function InMemoryGrid<Row>({
   }, [orderedColumns, hidden, state.columnWidths, sortable, filterable, expansion, renderExpander]);
 
   // ── display rows (interleave synthetic detail rows after expanded rows) ────────
-  const displayRows = useMemo<Array<DisplayRow<Row>>>(() => {
+  const displayRows = useMemo<Array<TDisplayRow<Row>>>(() => {
     if (!expansion || state.expanded.length === 0) return page.rows;
     const expanded = new Set(state.expanded);
-    const out: Array<DisplayRow<Row>> = [];
+    const out: Array<TDisplayRow<Row>> = [];
     for (const row of page.rows) {
       out.push(row);
       const id = rowId(row);
@@ -553,7 +560,7 @@ export function InMemoryGrid<Row>({
   }, [page.rows, expansion, state.expanded, rowId, isExpandable]);
 
   const getDisplayRowId = useCallback(
-    (p: GetRowIdParams<DisplayRow<Row>>) =>
+    (p: GetRowIdParams<TDisplayRow<Row>>) =>
       isDetailRow<Row>(p.data) ? `${DETAIL_ID_PREFIX}${p.data.forRowId}` : rowId(p.data as Row),
     [rowId]
   );
@@ -571,7 +578,7 @@ export function InMemoryGrid<Row>({
   );
 
   // ── selection ──────────────────────────────────────────────────────────────
-  const agRowSelection = useMemo<RowSelectionOptions<DisplayRow<Row>> | undefined>(() => {
+  const agRowSelection = useMemo<RowSelectionOptions<TDisplayRow<Row>> | undefined>(() => {
     if (!rowSelection) return undefined;
     if (rowSelection.mode === 'single') {
       return {
@@ -591,7 +598,7 @@ export function InMemoryGrid<Row>({
 
   const onSelectionChange = rowSelection?.onSelectionChange;
   const onSelectionChanged = useCallback(
-    (e: SelectionChangedEvent<DisplayRow<Row>>) => {
+    (e: SelectionChangedEvent<TDisplayRow<Row>>) => {
       if (e.source === 'api') return;
       const selectedRows = e.api.getSelectedRows().filter((r): r is Row => !isDetailRow(r));
       const ids = selectedRows.map(rowId);
@@ -624,7 +631,7 @@ export function InMemoryGrid<Row>({
         .getColumnState()
         .map((s) => s.colId)
         .filter((id): id is string => typeof id === 'string' && !SYNTHETIC_COL_IDS.has(id));
-      controller.store.dispatch({ type: 'setColumnOrder', order });
+      controller.store.dispatch({ type: GridActionType.SetColumnOrder, order });
     },
     [controller]
   );
@@ -635,7 +642,7 @@ export function InMemoryGrid<Row>({
         const id = col.getColId();
         if (SYNTHETIC_COL_IDS.has(id)) continue;
         controller.store.dispatch({
-          type: 'setColumnWidth',
+          type: GridActionType.SetColumnWidth,
           columnId: id,
           width: col.getActualWidth(),
         });
@@ -670,7 +677,7 @@ export function InMemoryGrid<Row>({
           gridClassName
         )}
       >
-        <AgGridReact<DisplayRow<Row>>
+        <AgGridReact<TDisplayRow<Row>>
           theme={dataGridTheme}
           defaultColDef={IM_DEFAULT_COL_DEF}
           columnDefs={colDefs}
@@ -716,7 +723,7 @@ export function InMemoryGrid<Row>({
             if (e.data == null || isDetailRow(e.data)) return;
             onRowClick(e.data as Row);
           }}
-          onGridReady={(e: GridReadyEvent<DisplayRow<Row>>) => {
+          onGridReady={(e: GridReadyEvent<TDisplayRow<Row>>) => {
             apiRef.current = e.api;
             applySelection();
           }}

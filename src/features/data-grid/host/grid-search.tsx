@@ -6,7 +6,7 @@ import { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } fro
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { cn } from '@/utils/css-class';
 
-export interface GridSearchProps {
+export interface IGridSearchProps {
   onSearch: (text: string) => void;
   openOnMount?: boolean;
   className?: string;
@@ -17,7 +17,7 @@ export interface GridSearchProps {
  * button that expands into a rounded-full pill input with a live clear affordance.
  * Debounced text is pushed to the grid store's quick filter via {@link onSearch}.
  */
-export function GridSearch({ onSearch, openOnMount = false, className }: GridSearchProps) {
+export function GridSearch({ onSearch, openOnMount = false, className }: IGridSearchProps) {
   const [open, setOpen] = useState(openOnMount);
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);

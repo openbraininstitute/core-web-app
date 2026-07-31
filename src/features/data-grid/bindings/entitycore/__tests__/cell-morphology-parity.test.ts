@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { viewDefForCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/cell-morphology';
 
-import { OperatorId } from '../../../core';
+import { FilterValueKind, OperatorId, SortDirection } from '../../../core';
 import { serializeQuery } from '../query-serializer';
 import { cellMorphologySchema } from '../schemas/cell-morphology';
 
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-import type { FilterModel, GridQuery } from '../../../core';
+import type { IGridQuery, TFilterModel } from '../../../core';
 
 /**
  * Per-entity parity harness for cell_morphology. Locks the AG Grid grid's serialized
@@ -17,7 +17,7 @@ import type { FilterModel, GridQuery } from '../../../core';
  * the two invariants that guarantee no query or presentation regression on flip.
  */
 
-function query(over: Partial<GridQuery> = {}): GridQuery {
+function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
 
@@ -44,8 +44,12 @@ describe('cell_morphology — query param parity with transformFiltersToQuery', 
     const legacy = transformFiltersToQuery([
       { field: 'name', type: 'Text', value: '*foo*', constraint: 'name__ilike' } as TCoreFilter,
     ]);
-    const filters: FilterModel = {
-      name: { columnId: 'name', operator: OperatorId.Ilike, value: { kind: 'text', text: 'foo' } },
+    const filters: TFilterModel = {
+      name: {
+        columnId: 'name',
+        operator: OperatorId.Ilike,
+        value: { kind: FilterValueKind.Text, text: 'foo' },
+      },
     };
     const grid = serializeQuery(query({ filters }), cellMorphologySchema);
     expect(grid.name__ilike).toBe(legacy.name__ilike);
@@ -67,16 +71,16 @@ describe('cell_morphology — query param parity with transformFiltersToQuery', 
         constraint: 'subject__species__name__in',
       } as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       mtype: {
         columnId: 'mtype',
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['L5_TPC'] },
+        value: { kind: FilterValueKind.Set, values: ['L5_TPC'] },
       },
       species: {
         columnId: 'species',
         operator: OperatorId.In,
-        value: { kind: 'set', values: ['Mus musculus'] },
+        value: { kind: FilterValueKind.Set, values: ['Mus musculus'] },
       },
     };
     const grid = serializeQuery(query({ filters }), cellMorphologySchema);
@@ -93,12 +97,12 @@ describe('cell_morphology — query param parity with transformFiltersToQuery', 
         constraint: { gte: 'creation_date__gte', lte: 'creation_date__lte' },
       } as unknown as TCoreFilter,
     ]);
-    const filters: FilterModel = {
+    const filters: TFilterModel = {
       registrationDate: {
         columnId: 'registrationDate',
         operator: OperatorId.DateRange,
         value: {
-          kind: 'dateRange',
+          kind: FilterValueKind.DateRange,
           from: '2026-01-01T00:00:00.000Z',
           to: '2026-02-01T00:00:00.000Z',
         },
@@ -111,7 +115,7 @@ describe('cell_morphology — query param parity with transformFiltersToQuery', 
 
   it('default sort serializes to -creation_date (legacy default registration desc)', () => {
     const grid = serializeQuery(
-      query({ sort: [{ columnId: 'registrationDate', direction: 'desc' }] }),
+      query({ sort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }] }),
       cellMorphologySchema
     );
     expect(grid.order_by).toEqual(['-creation_date']);

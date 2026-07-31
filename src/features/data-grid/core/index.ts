@@ -1,3 +1,4 @@
+export { Align, FilterOptionsKind } from './domain/column-model';
 export {
   byContext,
   matchesRule,
@@ -5,53 +6,66 @@ export {
   resolveContextual,
   whenMatches,
 } from './domain/contextual';
-export { isEmptyFilterValue, summarizeFilter } from './domain/filter-model';
+export { FilterValueKind, isEmptyFilterValue, summarizeFilter } from './domain/filter-model';
 export { mergeColumnDef } from './domain/merge-column';
 export {
   defaultHiddenColumnIds,
   isSelectionEnabled,
   resolveColumns,
 } from './domain/resolve-schema';
+export { SortDirection } from './domain/sort-model';
 export { buildGridQuery, createInitialState, GridController } from './grid-controller';
 export {
   createDefaultOperatorRegistry,
   DEFAULT_OPERATORS,
   OperatorId,
 } from './operators/default-operators';
-export { DEFAULT_FILTER_COMMIT_MODE, OperatorRegistry } from './operators/operator-registry';
+export {
+  DEFAULT_FILTER_COMMIT_MODE,
+  FilterCommitMode,
+  OperatorRegistry,
+  OperatorUiKind,
+} from './operators/operator-registry';
+export { GridActionType } from './state/grid-state';
 export { GridStateStore } from './state/grid-state-store';
 export { reducer } from './state/reducer';
 
 export type {
-  Align,
-  CellValue,
-  ColumnFilter,
-  ColumnModel,
-  FilterOptionsSource,
-  WidthSpec,
+  IColumnFilter,
+  IColumnModel,
+  IWidthSpec,
+  TAlign,
+  TCellValue,
+  TFilterOptionsKind,
+  TFilterOptionsSource,
 } from './domain/column-model';
 export type {
-  ContextRule,
-  ContextualSpec,
-  Matchable,
-  WhenClause,
+  IContextRule,
+  IContextualSpec,
+  TMatchable,
+  TWhenClause,
 } from './domain/contextual';
-export type { FilterEntry, FilterModel, FilterValue, FilterValueKind } from './domain/filter-model';
-export type { ContextualValue, GridContext, GridContextValue } from './domain/grid-context';
-export type { ColumnOverride } from './domain/merge-column';
-export type { FacetBucket, Facets, GridPage, GridQuery } from './domain/query';
-export type { ResolvedColumn } from './domain/resolve-schema';
-export type { DetailSpec, GridSchema, SelectionSpec } from './domain/schema';
-export type { SortDirection, SortEntry, SortModel } from './domain/sort-model';
-export type { GridControllerOptions } from './grid-controller';
+export type {
+  IFilterEntry,
+  TFilterModel,
+  TFilterValue,
+  TFilterValueKind,
+} from './domain/filter-model';
+export type { IGridContext, TContextualValue, TGridContextValue } from './domain/grid-context';
+export type { TColumnOverride } from './domain/merge-column';
+export type { IFacetBucket, IGridPage, IGridQuery, TFacets } from './domain/query';
+export type { IResolvedColumn } from './domain/resolve-schema';
+export type { IDetailSpec, IGridSchema, ISelectionSpec } from './domain/schema';
+export type { ISortEntry, TSortDirection, TSortModel } from './domain/sort-model';
+export type { IGridControllerOptions } from './grid-controller';
 export type { TOperatorId } from './operators/default-operators';
 export type {
-  FilterCommitMode,
-  OperatorDef,
-  OperatorUiKind,
+  IOperatorDef,
+  TFilterCommitMode,
+  TOperatorUiKind,
 } from './operators/operator-registry';
-export type { GridDataSource } from './ports/data-source';
-export type { DetailProvider } from './ports/detail-provider';
-export type { StatePersistence } from './ports/state-persistence';
-export type { GridAction, GridState } from './state/grid-state';
-export type { Unsubscribe } from './state/grid-state-store';
+export type { IGridDataSource } from './ports/data-source';
+export type { IDetailProvider } from './ports/detail-provider';
+export type { IStatePersistence } from './ports/state-persistence';
+export type { IGridState, TGridAction, TGridActionType } from './state/grid-state';
+export type { TUnsubscribe } from './state/grid-state-store';
