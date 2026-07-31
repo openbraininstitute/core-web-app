@@ -3,73 +3,90 @@
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { executionStatusIconMap } from '@/components/icons/activity-execution';
 import { Badge } from '@/ui/molecules/badge';
+import { cn } from '@/utils/css-class';
 
-import type { VariantProps } from 'class-variance-authority';
 import type { ReactNode } from 'react';
-import type { badgeVariants } from '@/ui/molecules/badge';
 
-type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>;
-
-/** Semantic tone for a campaign's aggregated status — drives colour + Badge variant. */
+/** Semantic tone for a campaign's aggregated status. */
 export type CampaignStatusTone = 'success' | 'destructive' | 'primary' | 'neutral';
 
 export interface CampaignStatusBadgeSpec {
   label: string;
   tone: CampaignStatusTone;
-  variant: BadgeVariant;
-  /** colour overrides layered on top of the Badge variant */
-  className: string;
+  /** light pill background */
+  bg: string;
+  /** full-colour border */
+  border: string;
+  /** full-colour text */
+  text: string;
+  /** full-colour chip behind the (white) icon glyph */
+  chip: string;
 }
 
 /**
- * Static status → badge presentation map. Each {@link ActivityStatus} resolves to a
- * label, a semantic tone, a {@link Badge} variant and a colour className. This is the
- * unit under test for the "status → badge variant" mapping — keep it pure/data-only.
+ * Static status → badge presentation map. Every status follows the SAME shape (the
+ * "Done" green template): a LIGHT background, a FULL-colour border + text, and the
+ * icon glyph white inside a full-colour chip. Only the hue changes per status — no
+ * status is a solid fill. Pure/data-only (the unit under test).
  */
 const STATUS_BADGE: Record<ActivityStatus, CampaignStatusBadgeSpec> = {
-  [ActivityStatus.CREATED]: {
-    label: 'Generated',
-    tone: 'neutral',
-    variant: 'outline',
-    className: 'border-neutral-3 bg-white text-primary-8',
-  },
-  [ActivityStatus.PENDING]: {
-    label: 'Pending',
-    tone: 'neutral',
-    variant: 'outline',
-    className: 'border-purple-300 bg-purple-50 text-purple-700',
-  },
-  [ActivityStatus.RUNNING]: {
-    label: 'Running',
-    tone: 'primary',
-    variant: 'default',
-    className: '',
-  },
   [ActivityStatus.DONE]: {
     label: 'Done',
     tone: 'success',
-    variant: 'outline',
-    className: 'border-green-500 bg-green-50 text-green-700',
+    bg: 'bg-green-50',
+    border: 'border-green-500',
+    text: 'text-green-700',
+    chip: 'bg-green-500',
   },
   [ActivityStatus.ERROR]: {
     label: 'Error',
     tone: 'destructive',
-    variant: 'destructive',
-    className: '',
+    bg: 'bg-red-50',
+    border: 'border-red-500',
+    text: 'text-red-700',
+    chip: 'bg-red-500',
+  },
+  [ActivityStatus.RUNNING]: {
+    label: 'Running',
+    tone: 'primary',
+    bg: 'bg-blue-50',
+    border: 'border-blue-500',
+    text: 'text-blue-700',
+    chip: 'bg-blue-500',
+  },
+  [ActivityStatus.PENDING]: {
+    label: 'Pending',
+    tone: 'neutral',
+    bg: 'bg-amber-50',
+    border: 'border-amber-500',
+    text: 'text-amber-700',
+    chip: 'bg-amber-500',
+  },
+  [ActivityStatus.CREATED]: {
+    label: 'Generated',
+    tone: 'neutral',
+    bg: 'bg-slate-50',
+    border: 'border-slate-400',
+    text: 'text-slate-600',
+    chip: 'bg-slate-400',
   },
   [ActivityStatus.CANCELLED]: {
     label: 'Cancelled',
     tone: 'neutral',
-    variant: 'outline',
-    className: 'border-neutral-4 bg-neutral-1 text-neutral-6',
+    bg: 'bg-gray-50',
+    border: 'border-gray-400',
+    text: 'text-gray-600',
+    chip: 'bg-gray-400',
   },
 };
 
 const FALLBACK_BADGE: CampaignStatusBadgeSpec = {
   label: 'Unknown',
   tone: 'neutral',
-  variant: 'outline',
-  className: 'border-neutral-3 bg-white text-neutral-6',
+  bg: 'bg-gray-50',
+  border: 'border-gray-300',
+  text: 'text-gray-600',
+  chip: 'bg-gray-400',
 };
 
 /**
@@ -136,21 +153,29 @@ export function CampaignStatusBadge({
     <Badge
       rounded
       size="sm"
-      variant={spec.variant}
-      className={[
-        'select-none',
+      variant="outline"
+      className={cn(
+        'select-none border',
+        // light bg + full-colour border + full-colour text (the Done-green template for all)
+        spec.bg,
+        spec.border,
+        spec.text,
         // compact = smaller footprint + lighter weight (for the card headers)
         compact ? 'h-[18px] gap-1 px-1.5 py-0 text-[9px] font-medium' : 'gap-1.5 font-semibold',
         // uniform width across statuses so the centred cell column isn't ragged
         fixedWidth ? 'min-w-[7.5rem] justify-center' : '',
-        spec.className,
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
+        className
+      )}
     >
       {icon ? (
-        <span className={compact ? 'text-[10px] leading-none' : 'text-xs leading-none'}>
+        // full-colour chip with a WHITE glyph (the status icons are `currentColor`)
+        <span
+          className={cn(
+            'inline-flex shrink-0 items-center justify-center rounded-full text-white',
+            spec.chip,
+            compact ? 'size-3 [&_svg]:size-2' : 'size-4 [&_svg]:size-2.5'
+          )}
+        >
           {icon}
         </span>
       ) : null}
@@ -162,7 +187,7 @@ export function CampaignStatusBadge({
   );
 }
 
-/** Loading placeholder matching the badge footprint. */
+/** Rounded skeleton matching the (fixed-width) badge footprint — no loader icon. */
 export function CampaignStatusBadgeSkeleton(): ReactNode {
-  return <span className="h-6 w-20 animate-pulse rounded-full bg-neutral-200" />;
+  return <span className="inline-block h-6 w-[7.5rem] animate-pulse rounded-full bg-neutral-200" />;
 }

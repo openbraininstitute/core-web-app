@@ -64,6 +64,8 @@ export interface DataGridProps<Row> {
   getRowClass?: (row: Row) => string | undefined;
   /** optional placement of the expand control (default: fixed leading column) */
   expandColumn?: ExpandColumnConfig;
+  /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
+  loadingLabel?: string;
   toolbarSlots?: DataGridToolbarSlots;
   /** bulk actions rendered in the toolbar while rows are selected */
   renderBulkActions?: (args: BulkActionsRenderArgs<Row>) => ReactNode;
@@ -98,6 +100,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     activeRowId,
     getRowClass,
     expandColumn,
+    loadingLabel,
     toolbarSlots,
     renderBulkActions,
     renderCount,
@@ -193,6 +196,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     activeRowId,
     getRowClass,
     expandColumn,
+    loadingLabel,
   };
 
   if (error && renderError) {

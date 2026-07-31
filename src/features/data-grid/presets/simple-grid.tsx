@@ -114,6 +114,8 @@ export interface SimpleGridProps<Row> {
    * right (e.g. project activities) can turn it off for a seamless look.
    */
   pinnedColumnBorder?: boolean;
+  /** noun shown in the server-mode loading overlay as `loading {label}` (default: `entities`). */
+  loadingLabel?: string;
   /** Extra classes for the grid wrapper. */
   className?: string;
 
@@ -232,6 +234,8 @@ const NO_PINNED_BORDER_CLASS = cn(
 function simpleGridWrapperClass(className?: string, pinnedColumnBorder = true): string {
   return cn(
     'ag-data-grid w-full',
+    // center/right aligned cells must justify (our flex cells ignore text-align)
+    '[&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end!',
     pinnedColumnBorder ? undefined : NO_PINNED_BORDER_CLASS,
     className
   );
@@ -397,6 +401,7 @@ export function SimpleGrid<Row>(props: SimpleGridProps<Row>) {
       serverParams={serverSide?.params}
       enabled={serverSide?.enabled}
       total={serverSide?.total}
+      loadingLabel={props.loadingLabel}
       filterable={props.filterable}
       showColumnChooser={props.showColumnChooser}
       sortable={props.sortable}

@@ -378,11 +378,6 @@ export function WorkflowActivity() {
             data-testid="workflow-activities-full-table"
           >
             <div className="relative min-h-0 flex-1">
-              {gridMeta.status === 'loading' && (
-                <div className="pointer-events-none absolute right-3 top-2 z-10 text-primary-9">
-                  <LoadingOutlined aria-label="loading activities" />
-                </div>
-              )}
               <div className="secondary-scrollbar h-full max-h-[calc(100%-4rem)] overflow-auto">
                 <SimpleGrid<EntityCoreObjectTypes>
                   // remount on category/type change → fresh page-1 store (legacy setPage(1))
@@ -390,6 +385,7 @@ export function WorkflowActivity() {
                   columns={columns}
                   getRowId={(o) => o.id}
                   pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+                  loadingLabel="activities"
                   className={cn('[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4')}
                   rowSelection={{
                     mode: 'single',

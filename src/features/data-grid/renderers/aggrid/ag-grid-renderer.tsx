@@ -3,6 +3,7 @@
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { GridLoaderOverlay } from '../../react/grid-loader';
 import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
 import { AgDetailCell, DEFAULT_DETAIL_MIN_HEIGHT } from './detail-cell';
 import { detailRowId, interleaveDetailRows, isDetailRow } from './detail-rows';
@@ -62,6 +63,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     activeRowId,
     getRowClass,
     expandColumn,
+    loadingLabel,
   } = props;
 
   // AG Grid is client-only (mirrors the legacy table's ssr:false). Render a sized
@@ -293,7 +295,9 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   if (!mounted) return <div className="ag-data-grid h-full min-h-0 w-full" />;
 
   return (
-    <div className="ag-data-grid h-full min-h-0 w-full">
+    // strip the AG overlay's default card so GridLoader blends in; and make center/right
+    // aligned cells actually justify (our cells are flex, so text-align alone won't center)
+    <div className="ag-data-grid h-full min-h-0 w-full [&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none! [&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end!">
       <AgGridReact<DisplayRow<Row>>
         theme={dataGridTheme}
         defaultColDef={DEFAULT_COL_DEF}
@@ -302,6 +306,8 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
         getRowId={getDisplayRowId}
         context={context}
         loading={loading}
+        loadingOverlayComponent={GridLoaderOverlay}
+        loadingOverlayComponentParams={{ label: loadingLabel ?? 'entities' }}
         suppressCellFocus
         suppressDragLeaveHidesColumns
         maintainColumnOrder

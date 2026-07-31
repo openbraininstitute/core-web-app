@@ -5,45 +5,37 @@ import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { formatScanValue, toScanCardData } from '../campaign-scan-cards';
 import { aggregateCampaignStatus, getCampaignStatusBadgeSpec } from '../campaign-status-badge';
 
-describe('getCampaignStatusBadgeSpec (status → badge variant)', () => {
-  it('maps DONE to a success/outline green badge', () => {
-    const spec = getCampaignStatusBadgeSpec(ActivityStatus.DONE);
-    expect(spec.tone).toBe('success');
-    expect(spec.variant).toBe('outline');
-    expect(spec.label).toBe('Done');
-    expect(spec.className).toContain('green');
+describe('getCampaignStatusBadgeSpec (status → badge colours)', () => {
+  it('every status is a LIGHT bg + full-colour border/text/chip (Done-green template)', () => {
+    const done = getCampaignStatusBadgeSpec(ActivityStatus.DONE);
+    expect(done.tone).toBe('success');
+    expect(done.label).toBe('Done');
+    expect(done.bg).toContain('green-50');
+    expect(done.border).toContain('green-500');
+    expect(done.text).toContain('green-700');
+    expect(done.chip).toContain('green-500');
+    // ERROR is NOT a solid red fill — it follows the same light-bg shape
+    const err = getCampaignStatusBadgeSpec(ActivityStatus.ERROR);
+    expect(err.tone).toBe('destructive');
+    expect(err.bg).toContain('red-50');
+    expect(err.border).toContain('red-500');
+    expect(err.text).toContain('red-700');
   });
 
-  it('maps ERROR to the destructive variant', () => {
-    const spec = getCampaignStatusBadgeSpec(ActivityStatus.ERROR);
-    expect(spec.tone).toBe('destructive');
-    expect(spec.variant).toBe('destructive');
-    expect(spec.label).toBe('Error');
+  it('maps RUNNING / PENDING to their hues', () => {
+    expect(getCampaignStatusBadgeSpec(ActivityStatus.RUNNING).label).toBe('Running');
+    expect(getCampaignStatusBadgeSpec(ActivityStatus.RUNNING).bg).toContain('blue-50');
+    expect(getCampaignStatusBadgeSpec(ActivityStatus.PENDING).label).toBe('Pending');
+    expect(getCampaignStatusBadgeSpec(ActivityStatus.PENDING).bg).toContain('amber-50');
   });
 
-  it('maps RUNNING to the primary/default variant', () => {
-    const spec = getCampaignStatusBadgeSpec(ActivityStatus.RUNNING);
-    expect(spec.tone).toBe('primary');
-    expect(spec.variant).toBe('default');
-    expect(spec.label).toBe('Running');
-  });
-
-  it('maps PENDING to a neutral outline badge', () => {
-    const spec = getCampaignStatusBadgeSpec(ActivityStatus.PENDING);
-    expect(spec.tone).toBe('neutral');
-    expect(spec.variant).toBe('outline');
-    expect(spec.label).toBe('Pending');
-  });
-
-  it('maps CANCELLED / CREATED to neutral outline badges', () => {
-    expect(getCampaignStatusBadgeSpec(ActivityStatus.CANCELLED).variant).toBe('outline');
+  it('maps CREATED to "Generated"', () => {
     expect(getCampaignStatusBadgeSpec(ActivityStatus.CREATED).label).toBe('Generated');
   });
 
   it('degrades unknown/undefined status to a neutral fallback', () => {
     const spec = getCampaignStatusBadgeSpec(undefined);
     expect(spec.tone).toBe('neutral');
-    expect(spec.variant).toBe('outline');
     expect(spec.label).toBe('Unknown');
   });
 });

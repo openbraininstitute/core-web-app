@@ -23,6 +23,7 @@ import {
 } from '../core';
 import { CellRendererRegistry } from '../react/cell-renderer-registry';
 import { ColumnChooser } from '../react/column-chooser';
+import { GridLoaderOverlay } from '../react/grid-loader';
 import { GridPagination } from '../react/pagination';
 import { isExpanderClick } from '../renderers/aggrid/expand-cell';
 import { AgHeader } from '../renderers/aggrid/header';
@@ -124,6 +125,8 @@ export interface InMemoryGridProps<Row> {
   queryKey?: ReadonlyArray<unknown>;
   /** Opaque host params merged into the request (brain-region, scope, …). */
   serverParams?: Record<string, unknown>;
+  /** noun shown in the loading overlay as `loading {label}` (default: `entities`). */
+  loadingLabel?: string;
   /** Gate the server fetch (default: true when a `dataSource` is set). */
   enabled?: boolean;
   /** Total row count fallback when the data source doesn't return one. */
@@ -223,6 +226,7 @@ export function InMemoryGrid<Row>({
   rows = [],
   getRowId,
   dataSource,
+  loadingLabel,
   queryKey,
   serverParams,
   enabled,
@@ -639,7 +643,16 @@ export function InMemoryGrid<Row>({
           <ColumnChooser controller={controller} state={state} />
         </div>
       )}
-      <div className={cn('ag-data-grid w-full', gridClassName)}>
+      <div
+        className={cn(
+          'ag-data-grid w-full',
+          // strip the AG overlay's default card so our GridLoader blends in
+          '[&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none!',
+          // center/right aligned cells must justify (flex cells ignore text-align)
+          '[&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end!',
+          gridClassName
+        )}
+      >
         <AgGridReact<DisplayRow<Row>>
           theme={dataGridTheme}
           columnDefs={colDefs}
@@ -648,6 +661,9 @@ export function InMemoryGrid<Row>({
           context={gridContext}
           domLayout={autoHeight ? 'autoHeight' : 'normal'}
           headerHeight={hideHeader ? 0 : headerHeight}
+          loading={isServerMode && serverResult.isLoading}
+          loadingOverlayComponent={GridLoaderOverlay}
+          loadingOverlayComponentParams={{ label: loadingLabel ?? 'entities' }}
           suppressCellFocus
           suppressDragLeaveHidesColumns
           maintainColumnOrder

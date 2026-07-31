@@ -77,6 +77,8 @@ export interface GridRendererProps<Row> {
   getRowClass?: (row: Row) => string | undefined;
   /** optional placement of the expand control (default: fixed leading column) */
   expandColumn?: ExpandColumnConfig;
+  /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
+  loadingLabel?: string;
 }
 
 /** The rendering port (Strategy). Implemented by `renderers/aggrid`. */

@@ -142,7 +142,8 @@ export function CampaignScanCards({
   error,
 }: CampaignScanCardsProps): ReactNode {
   const cards = loading || error ? [] : toScanCardData(records);
-  const cols = scanCardColumns(loading ? MAX_COLS : cards.length);
+  // loading shows just 2 skeleton cards (not the 3-wide final state)
+  const cols = scanCardColumns(loading ? 2 : cards.length);
   const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` };
 
   return (
