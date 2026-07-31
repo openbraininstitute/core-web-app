@@ -357,8 +357,8 @@ describe('SimpleGrid server mode', () => {
     await waitFor(() => expect(container.textContent).toContain('One'));
 
     const page2 = container.querySelector<HTMLElement>('.ant-pagination-item-2');
-    expect(page2).not.toBeNull();
-    fireEvent.click(page2!);
+    if (!page2) throw new Error('expected a page-2 control in the pager');
+    fireEvent.click(page2);
 
     // page 2 (size 2) = Three
     await waitFor(() => expect(container.textContent).toContain('Three'));
@@ -383,8 +383,8 @@ describe('SimpleGrid server mode', () => {
     const sortButton = Array.from(container.querySelectorAll('button')).find((b) =>
       b.textContent?.includes('Name')
     );
-    expect(sortButton).toBeDefined();
-    fireEvent.click(sortButton!);
+    if (!sortButton) throw new Error('expected a sortable header button for "Name"');
+    fireEvent.click(sortButton);
 
     // first click → descending sort on 'name' → a fresh fetch with the new query
     await waitFor(() =>
