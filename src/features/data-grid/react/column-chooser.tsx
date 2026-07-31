@@ -32,7 +32,12 @@ export function ColumnChooser<Row>({ controller, state, className }: ColumnChoos
     <Checkbox.Group
       value={value}
       onChange={(v) => onChange(v as Array<string>)}
-      className="max-h-80 overflow-auto"
+      className={cn(
+        'max-h-80 overflow-auto',
+        // checked state uses primary-9 (not antd's default blue)
+        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-9! [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-9!',
+        '[&_.ant-checkbox-checked:after]:border-primary-9! [&_.ant-checkbox:hover_.ant-checkbox-inner]:border-primary-9!'
+      )}
     >
       <div className="flex flex-col gap-1">
         {columns.map((c) => (

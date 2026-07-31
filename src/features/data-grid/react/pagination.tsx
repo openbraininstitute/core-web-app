@@ -17,7 +17,8 @@ import {
 
 import type { GridController } from '../core';
 
-const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+// includes 30 — the app-wide DEFAULT_PAGE_SIZE — so the selector shows the active value
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100];
 
 export interface GridPaginationProps<Row> {
   controller: GridController<Row>;

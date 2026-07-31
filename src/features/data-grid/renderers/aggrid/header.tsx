@@ -74,9 +74,9 @@ export function AgHeader(props: CustomHeaderProps) {
         {headerNode !== undefined ? (
           <span className="flex min-w-0 flex-1 items-center">{headerNode}</span>
         ) : (
-          <span className="truncate font-light text-gray-400">{props.displayName}</span>
+          <span className="truncate font-light text-gray-500">{props.displayName}</span>
         )}
-        {unit ? <span className="text-xs font-light text-gray-400">[{unit}]</span> : null}
+        {unit ? <span className="text-xs font-light text-gray-500">[{unit}]</span> : null}
         {sortable && (
           <span className="flex shrink-0 items-center gap-0.5">
             {entry?.direction === 'asc' ? (
@@ -109,7 +109,7 @@ export function AgHeader(props: CustomHeaderProps) {
                   ? 'bg-white text-primary-8 shadow-sm ring-1 ring-gray-200'
                   : filterActive
                     ? 'bg-primary-6 text-white shadow-sm hover:bg-primary-7'
-                    : 'text-gray-400 hover:bg-gray-100 hover:text-primary-7'
+                    : 'text-gray-500 hover:bg-gray-100 hover:text-primary-7'
               )}
             >
               <RiFilter3Fill size={14} />

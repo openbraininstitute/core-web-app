@@ -26,7 +26,10 @@ import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../c
 function query(over: Partial<GridQuery> = {}): GridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
 }
-function ctx(dataType: string, section: WorkspaceSection = WorkspaceSection.Data): GridContext {
+function ctx(
+  dataType: string,
+  section: GridContext['section'] = WorkspaceSection.Data
+): GridContext {
   return { dataType, section };
 }
 function ids<Row>(schema: GridSchema<Row>, c: GridContext): string[] {
