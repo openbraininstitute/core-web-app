@@ -63,15 +63,16 @@ export function EntityTypeSelectScrollable({
               {/*
                 This menu groups by entity group, so superseded entries sort last within their own
                 group rather than at the bottom of the menu — unlike the flat carousel and Data nav.
+                Weight, not opacity, marks them: see the note on `MenuItem`.
               */}
               {options.map(({ label, targetType, legacy }) => (
                 <SelectItem
                   key={`entity-type-${targetType}`}
                   value={targetType}
                   className={cn(
-                    'text-primary-9 text-lg font-bold',
+                    'text-primary-9 text-lg',
                     'data-highlighted:text-primary-7! cursor-pointer',
-                    { 'opacity-60 data-highlighted:opacity-100': legacy }
+                    legacy ? 'font-normal' : 'font-bold'
                   )}
                 >
                   {label}

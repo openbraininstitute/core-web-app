@@ -79,14 +79,7 @@ export function BrowseLinkContent({
   const onClick = () => userJourneyTracker.registerArtifactClick(title);
 
   return (
-    // superseded types are dimmed as a whole rather than recoloured: the title and count already
-    // switch colour on active/hover, and a competing text colour would fight those rules. Hover
-    // lifts the row back to full strength so it doesn't read as disabled.
-    <div
-      className={cn('group flex w-full items-center justify-center gap-0', {
-        'opacity-65 transition-opacity hover:opacity-100': legacy,
-      })}
-    >
+    <div className="group flex w-full items-center justify-center gap-0">
       <div className="relative flex w-full items-center">
         <Button
           asChild
@@ -107,7 +100,11 @@ export function BrowseLinkContent({
             }}
             className="flex! w-full items-center justify-between!"
           >
-            <div className="font-bold text-current">{title}</div>
+            {/*
+              Superseded types drop to normal weight, matching the workflow menus — the count
+              keeps its own weight rules, since it is data rather than part of the label.
+            */}
+            <div className={cn('text-current', legacy ? 'font-normal' : 'font-bold')}>{title}</div>
             <div
               className={cn(
                 'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',

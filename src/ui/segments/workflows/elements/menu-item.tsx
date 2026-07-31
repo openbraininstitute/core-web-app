@@ -12,7 +12,7 @@ type Props<T> = {
   group?: string;
   active: boolean;
   disabled: boolean;
-  /** superseded by a newer workflow — dims the title, but the card stays fully usable */
+  /** superseded by a newer workflow — drops the title to normal weight, card stays fully usable */
   legacy?: boolean;
   onClick: (v: T) => void;
   className?: ComponentProps<'div'>['className'];
@@ -60,18 +60,13 @@ export function MenuItem<T>({
           </div>
         )}
         {/*
-          A superseded card keeps the white background and the Start affordance — only the title
-          is dimmed, so it stays distinguishable from a disabled card, which greys the whole card
-          and drops Start. Full strength once hovered or selected, where the card inverts to white
-          text on primary.
+          Superseded is marked by weight and never by opacity — that is what keeps it reading as
+          "older" rather than "unavailable". Disabled already fades this same title
+          (`text-primary-9/50`) and greys the card, so putting both in one channel made legacy
+          cards look broken. Kept in separate channels the two compose, and weight holds through
+          hover and selection. The type dropdown and the Data nav apply the same rule.
         */}
-        <span
-          className={cn({
-            'opacity-60 transition-opacity group-hover:opacity-100': legacy && !disabled && !active,
-          })}
-        >
-          {title}
-        </span>
+        <span className={cn({ 'font-normal': legacy })}>{title}</span>
       </CardTitle>
       {!disabled && (
         <div
