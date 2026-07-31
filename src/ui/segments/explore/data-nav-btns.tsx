@@ -12,6 +12,7 @@ import {
   WorkspaceSection,
 } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { createSessionStatePersistence } from '@/features/data-grid/react';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
@@ -180,6 +181,11 @@ export function DataBreadcrumb({
   const onLinkClick = () => {
     if (isBrowser()) {
       runStorageReset();
+      // ALSO clear the AG Grid listing's transient session slice (filters/sort/
+      // page/search) for this dataKey — legacy parity: breadcrumb = fresh listing,
+      // close (X) = state kept. The durable column-layout slice is left intact,
+      // matching legacy (its reset never wiped column layout either).
+      createSessionStatePersistence().clear?.(dataKey);
     }
   };
 

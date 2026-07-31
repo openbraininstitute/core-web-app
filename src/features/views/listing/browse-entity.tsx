@@ -28,7 +28,7 @@ export type { BrowseEntityScopeProps };
 export function BrowseEntityScope(props: BrowseEntityScopeProps) {
   const definition = getEntityGridDefinition(props.dataType);
   if (definition) {
-    return <BrowseEntityGrid {...props} definition={definition} />;
+    return <BrowseEntityGrid {...props} definition={definition}  />;
   }
   return <BrowseEntityScopeLegacy {...props} />;
 }
