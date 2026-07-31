@@ -1,4 +1,4 @@
-import { Radio, Select } from 'antd';
+import { Radio, Select, Spin } from 'antd';
 import DistinctColors from 'distinct-colors';
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -10,18 +10,27 @@ import InteractivePlot, {
 } from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import { DETAIL_PLOT_POINTS } from '@/features/ephys-viewer/constants';
+import { useSweepSeries } from '@/features/ephys-viewer/hooks/use-sweep-series';
 import {
   ephysHeadingClass,
   ephysSectionLabelClass,
   ephysSelectClass,
 } from '@/features/ephys-viewer/label-styles';
-import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
+import { useTraceContext } from '@/features/ephys-viewer/trace-context';
+import {
+  getCellIds,
+  getProtocols,
+  getRecordingSlots,
+  getRepetitions,
+  getSweeps,
+  hasCurrentRecordings,
+  isMultiRecordingLayout,
+} from '@/features/ephys-viewer/trace-index';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-
-import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
+import { cn } from '@/utils/css-class';
 
 interface TraceDetailsViewProps {
-  trace: NWBTrace;
   defaultCellId?: string;
   defaultProtocol?: string;
   defaultRepetition?: string;
@@ -29,7 +38,6 @@ interface TraceDetailsViewProps {
 }
 
 interface CellDetailsProps {
-  trace: NWBTrace;
   cellId: string;
   showCellLabel?: boolean;
   defaultProtocol?: string;
@@ -38,13 +46,13 @@ interface CellDetailsProps {
 }
 
 function CellDetails({
-  trace,
   cellId,
   showCellLabel,
   defaultProtocol,
   defaultRepetition,
   variant = ViewVariant.Light,
 }: CellDetailsProps) {
+  const { index } = useTraceContext();
   const [reset, setReset] = useState<boolean>(false);
 
   const plotContainerRef = useRef<HTMLDivElement>(null);
@@ -52,12 +60,12 @@ function CellDetails({
   const updatePlots = useCallback(() => setPlotRevision((prev) => prev + 1), []);
   useResizeObserver(plotContainerRef, updatePlots);
 
-  const [selectedProtocol, setSelectedDataSet] = useState<string>(
-    defaultProtocol || trace.getProtocols(cellId)[0]
-  );
+  const protocols = useMemo(() => getProtocols(index, cellId), [index, cellId]);
+
+  const [selectedProtocol, setSelectedDataSet] = useState<string>(defaultProtocol || protocols[0]);
 
   const [selectedRepetition, setSelectedRepetition] = useState<string>(
-    defaultRepetition || trace.getRepetitions(cellId, selectedProtocol)[0]
+    defaultRepetition || getRepetitions(index, cellId, selectedProtocol)[0]
   );
 
   const [selectedSweeps, setSelectedSweeps] = useState<string[]>([]);
@@ -65,46 +73,67 @@ function CellDetails({
   const [previewItem, setPreviewItem] = useState<string>();
 
   const repetitions: string[] = useMemo(
-    () => trace.getRepetitions(cellId, selectedProtocol),
-    [cellId, selectedProtocol, trace]
+    () => getRepetitions(index, cellId, selectedProtocol),
+    [index, cellId, selectedProtocol]
   );
 
-  const { sweeps, sweepDataMap, colorMap } = useSweeps(
-    trace,
-    cellId,
-    selectedProtocol,
-    selectedRepetition
+  const sweeps = useMemo(
+    () => getSweeps(index, cellId, selectedProtocol, selectedRepetition),
+    [index, cellId, selectedProtocol, selectedRepetition]
   );
 
-  const recordingCounts = useMemo(() => {
-    const firstSweepData = sweepDataMap.values().next().value;
-    return {
-      stimulus: firstSweepData?.stimulus?.length ?? 0,
-      response: firstSweepData?.response?.length ?? 0,
-    };
-  }, [sweepDataMap]);
-
-  const hasMultipleRecordings = recordingCounts.stimulus > 1 || recordingCounts.response > 1;
-
-  const hasCurrentRecordings = useMemo(() => {
-    const firstSweepData = sweepDataMap.values().next().value;
-    if (!firstSweepData) return false;
-    return [...(firstSweepData.stimulus ?? []), ...(firstSweepData.response ?? [])].some(
-      (r) => r.unit === 'amperes'
+  const colorMap = useMemo(() => {
+    const colors = DistinctColors({ count: sweeps.length });
+    return sweeps.reduce(
+      (map, sweep, idx) => map.set(sweep, colors[idx].hex()),
+      new Map<string, string>()
     );
-  }, [sweepDataMap]);
+  }, [sweeps]);
+
+  const seriesRequest = useMemo(
+    () => ({
+      cellId,
+      protocol: selectedProtocol,
+      repetition: selectedRepetition,
+      sweeps,
+      desiredLength: DETAIL_PLOT_POINTS,
+    }),
+    [cellId, selectedProtocol, selectedRepetition, sweeps]
+  );
+
+  const { data, loading, error } = useSweepSeries(seriesRequest);
+
+  // Later reads keep the previous series on screen, so only the very first one has nothing to
+  // draw. That is the one switching into this view hits.
+  const awaitingFirstSeries = loading && !data;
+
+  const plots = useMemo(
+    () => getRecordingSlots(index, cellId, selectedProtocol, selectedRepetition),
+    [index, cellId, selectedProtocol, selectedRepetition]
+  );
+
+  const hasMultipleRecordings = isMultiRecordingLayout(plots);
+
+  const showCurrentUnitToggle = useMemo(
+    () => hasCurrentRecordings(index, cellId, selectedProtocol, selectedRepetition),
+    [index, cellId, selectedProtocol, selectedRepetition]
+  );
 
   const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
 
-  const dataSetOptions = trace.getProtocols(cellId).map((protocol) => {
-    const repetitionNum = trace.getRepetitions(cellId, protocol).length;
+  const dataSetOptions = useMemo(
+    () =>
+      protocols.map((protocol) => {
+        const repetitionNum = getRepetitions(index, cellId, protocol).length;
 
-    return (
-      <Select.Option key={protocol} value={protocol}>
-        {protocol} {repetitionNum > 1 && `(${repetitionNum})`}
-      </Select.Option>
-    );
-  });
+        return (
+          <Select.Option key={protocol} value={protocol}>
+            {protocol} {repetitionNum > 1 && `(${repetitionNum})`}
+          </Select.Option>
+        );
+      }),
+    [protocols, index, cellId]
+  );
 
   const repetitionOptions = repetitions.map((v) => (
     <Select.Option key={v} value={v}>
@@ -112,11 +141,11 @@ function CellDetails({
     </Select.Option>
   ));
 
-  const sweepOptions = sweeps ? sweeps.map((sweep) => ({ label: sweep, value: sweep })) : [];
+  const sweepOptions = sweeps.map((sweep) => ({ label: sweep, value: sweep }));
 
   const handleProtocolChange = (protocol: string) => {
     setSelectedDataSet(protocol);
-    setSelectedRepetition(trace.getRepetitions(cellId, protocol)[0]);
+    setSelectedRepetition(getRepetitions(index, cellId, protocol)[0]);
     setSelectedSweeps([]);
     setReset(!reset);
   };
@@ -135,18 +164,6 @@ function CellDetails({
     setReset(!reset);
   };
 
-  const sweepObject = useMemo(
-    () => ({
-      selectedSweeps,
-      colorMap,
-      sweepDataMap,
-      allSweeps: sweeps,
-      previewSweep: previewItem,
-      plotRevision, // This is used to force a re-render of the plot
-    }),
-    [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision]
-  );
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: selectedSweeps is used to force a re-render of the plot
   useEffect(
     () => updatePlots(),
@@ -158,14 +175,14 @@ function CellDetails({
       {showCellLabel && <div className={ephysHeadingClass(variant)}>{cellId}</div>}
       <div className="flex flex-wrap gap-8">
         <OptionSelect
-          label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
+          label={{ title: 'Protocol', numberOfAvailable: protocols.length }}
           options={dataSetOptions}
           value={selectedProtocol}
           onChange={handleProtocolChange}
           variant={variant}
         />
         <OptionSelect
-          label={{ title: 'Repetition', numberOfAvailable: Object.keys(repetitions).length }}
+          label={{ title: 'Repetition', numberOfAvailable: repetitions.length }}
           options={repetitionOptions}
           value={selectedRepetition}
           onChange={handleRepetitionChange}
@@ -181,7 +198,7 @@ function CellDetails({
           sweepOptions={sweepOptions}
           variant={variant}
         />
-        {hasCurrentRecordings && (
+        {showCurrentUnitToggle && (
           <Radio.Group
             onChange={(e) => setCurrentUnit(e.target.value)}
             value={currentUnit}
@@ -193,74 +210,64 @@ function CellDetails({
           </Radio.Group>
         )}
       </div>
-      <div
-        ref={plotContainerRef}
-        className={
-          hasMultipleRecordings
-            ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
-            : 'flex flex-col gap-10 2xl:flex-row'
-        }
-      >
-        {hasMultipleRecordings ? (
-          <>
-            {trace.recordingTypes.includes(RecordingType.STIMULUS) &&
-              Array.from({ length: recordingCounts.stimulus }, (_, i) => (
-                <InteractivePlot
-                  key={`stimulus-${i}`}
-                  recordingType={RecordingType.STIMULUS}
-                  recordingIndex={i}
-                  reset={reset}
-                  setSelectedSweeps={setSelectedSweeps}
-                  sweeps={sweepObject}
-                />
-              ))}
-            {trace.recordingTypes.includes(RecordingType.RESPONSE) &&
-              Array.from({ length: recordingCounts.response }, (_, i) => (
-                <InteractivePlot
-                  key={`response-${i}`}
-                  recordingType={RecordingType.RESPONSE}
-                  recordingIndex={i}
-                  reset={reset}
-                  setSelectedSweeps={setSelectedSweeps}
-                  sweeps={sweepObject}
-                />
-              ))}
-          </>
-        ) : (
-          <>
-            {trace.recordingTypes.includes(RecordingType.STIMULUS) && (
-              <InteractivePlot
-                recordingType={RecordingType.STIMULUS}
-                recordingIndex={0}
-                reset={reset}
-                setSelectedSweeps={setSelectedSweeps}
-                sweeps={sweepObject}
-              />
+
+      {error ? (
+        <div className={ephysSectionLabelClass(variant)}>
+          There was a problem reading this repetition
+        </div>
+      ) : (
+        <div className="relative">
+          <div
+            ref={plotContainerRef}
+            className={cn(
+              hasMultipleRecordings
+                ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
+                : 'flex flex-col gap-10 2xl:flex-row',
+              // How many plots there are, and how tall each one is, are both known from the
+              // index — so the area is laid out before the series arrives and only dimmed while
+              // it does. Swapping it for a bare spinner collapsed the page and jumped it back.
+              awaitingFirstSeries && 'pointer-events-none opacity-40'
             )}
-            {trace.recordingTypes.includes(RecordingType.RESPONSE) && (
+          >
+            {plots.map(({ recordingType, recordingIndex }) => (
               <InteractivePlot
-                recordingType={RecordingType.RESPONSE}
-                recordingIndex={0}
+                key={`${recordingType}-${recordingIndex}`}
+                recording={data?.[recordingType]?.[recordingIndex]}
+                recordingType={recordingType}
+                recordingIndex={recordingIndex}
+                seriesRequest={seriesRequest}
                 reset={reset}
+                selectedSweeps={selectedSweeps}
                 setSelectedSweeps={setSelectedSweeps}
-                sweeps={sweepObject}
+                previewSweep={previewItem}
+                colorMap={colorMap}
+                plotRevision={plotRevision}
               />
-            )}
-          </>
-        )}
-      </div>
+            ))}
+          </div>
+
+          {awaitingFirstSeries && (
+            // Centred within the first 70vh rather than over the whole area, which runs several
+            // screens long once a repetition has more than two recordings.
+            <div className="absolute inset-x-0 top-0 flex h-full max-h-[70vh] items-center justify-center">
+              <Spin />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function TraceDetailsView({
-  trace,
   defaultCellId,
   defaultProtocol,
   defaultRepetition,
   variant = ViewVariant.Light,
 }: TraceDetailsViewProps) {
-  const cellIds = useMemo(() => trace.getCellIds(), [trace]);
+  const { index } = useTraceContext();
+
+  const cellIds = useMemo(() => getCellIds(index), [index]);
   const [selectedCellId, setSelectedCellId] = useState<string>(
     defaultCellId || cellIds[0] || 'All'
   );
@@ -297,7 +304,6 @@ function TraceDetailsView({
         {selectedCellIds.map((cellId: string) => (
           <CellDetails
             key={cellId}
-            trace={trace}
             cellId={cellId}
             showCellLabel={cellIds.length > 1}
             defaultProtocol={defaultProtocol}
@@ -311,28 +317,3 @@ function TraceDetailsView({
 }
 
 export default TraceDetailsView;
-
-function useSweeps(
-  trace: NWBTrace,
-  cellId: string,
-  selectedProtocol: string,
-  selectedRepetition: string
-): { sweeps: string[]; sweepDataMap: Map<string, SweepData>; colorMap: Map<string, string> } {
-  return useMemo(() => {
-    const sweeps: string[] = trace.getSweeps(cellId, selectedProtocol, selectedRepetition);
-    const colors = DistinctColors({ count: sweeps.length });
-
-    const colorMap = sweeps.reduce(
-      (map, sweep, idx) => map.set(sweep, colors[idx].hex()),
-      new Map<string, string>()
-    );
-
-    const sweepDataMap = sweeps.reduce(
-      (map, sweep) =>
-        map.set(sweep, trace.getSweepData(cellId, selectedProtocol, selectedRepetition, sweep)),
-      new Map<string, SweepData>()
-    );
-
-    return { sweeps, sweepDataMap, colorMap };
-  }, [cellId, selectedProtocol, selectedRepetition, trace]);
-}

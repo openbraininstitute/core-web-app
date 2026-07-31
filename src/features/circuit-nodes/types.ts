@@ -98,12 +98,7 @@ export type OpenResponse = {
   columns: ColumnMeta[];
 };
 
-/** Download progress reported from the worker's fetch loop. `total` is null when the response
- * carries no Content-Length. */
-export type DownloadProgress = {
-  received: number;
-  total: number | null;
-};
+export type { DownloadProgress } from '@/utils/h5/fs';
 
 export type NodePopulation = {
   name: string;

@@ -1,4 +1,4 @@
-import { Dataset, type File, Group, ready } from 'h5wasm';
+import { Dataset, type File, Group } from 'h5wasm';
 
 /** Convert any TypedArray from h5wasm to Float32Array without unnecessary copies. */
 export function toFloat32(arr: ArrayLike<number | bigint>): Float32Array {
@@ -110,22 +110,4 @@ export function parseSpikeData(file: File): SpikeData {
       max: globalMaxNodeId === -Infinity ? 0 : globalMaxNodeId,
     },
   };
-}
-
-/**
- * Write an ArrayBuffer to the Emscripten virtual FS, skipping if already present.
- * Returns a non-null FS handle and the filename used.
- */
-export async function writeToEmscriptenFS(id: string, buffer: ArrayBuffer, suffix = '.h5') {
-  const { FS } = await ready;
-  if (!FS) throw new Error('h5wasm FS not initialized');
-  const filename = `${id}${suffix}`;
-
-  try {
-    FS.stat(filename);
-  } catch {
-    FS.writeFile(filename, new Uint8Array(buffer));
-  }
-
-  return { FS, filename };
 }
