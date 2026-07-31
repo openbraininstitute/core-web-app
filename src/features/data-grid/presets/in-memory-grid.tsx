@@ -1,6 +1,7 @@
 'use client';
 
 import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
+import { keepPreviousData, QueryClient, useQuery } from '@tanstack/react-query';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -11,8 +12,11 @@ import {
   buildGridQuery,
   type ColumnModel,
   createDefaultOperatorRegistry,
+  type Facets,
   type GridContext,
   GridController,
+  type GridDataSource,
+  type GridPage,
   type GridSchema,
   type OperatorRegistry,
   type SortModel,
@@ -50,6 +54,25 @@ const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 /** Shared empty registry — the in-memory grid renders cells inline, not via keys. */
 const EMPTY_CELL_RENDERERS = new CellRendererRegistry();
 
+/** Stable empty base query key so client-mode consumers add no extra key segments. */
+const EMPTY_QUERY_KEY: ReadonlyArray<unknown> = [];
+
+/**
+ * Fallback React Query client used ONLY in client mode, so the always-called
+ * `useQuery` (rules of hooks) never requires a `QueryClientProvider` in the tree —
+ * keeping every existing client-mode consumer working unchanged. Server mode uses
+ * the app's real provider client (passing `undefined` reads it from context).
+ */
+let fallbackQueryClient: QueryClient | undefined;
+function getFallbackQueryClient(): QueryClient {
+  if (!fallbackQueryClient) {
+    fallbackQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    });
+  }
+  return fallbackQueryClient;
+}
+
 /** Synthetic full-width row hosting a column's expandable detail content. */
 interface InMemoryDetailRow<Row> {
   readonly __imDetail: true;
@@ -85,8 +108,26 @@ export interface ExpandColumnConfig<Row> {
 
 export interface InMemoryGridProps<Row> {
   columns: Array<SimpleColumn<Row>>;
-  rows: Row[];
+  /** Client-side rows. Ignored in server mode (`dataSource` set); defaults to `[]`. */
+  rows?: Row[];
   getRowId?: (row: Row) => string;
+  // ── server mode (opt-in) ──────────────────────────────────────────────────────
+  /**
+   * When provided, the grid switches to SERVER mode: sort/filter/pagination
+   * dispatch to the store → the serialized {@link GridQuery} changes → React Query
+   * refetches via `dataSource.fetch(query, signal)`. The data source owns
+   * filtering/sorting/paging; `rows` is ignored and `computeInMemoryFacets`/
+   * `runInMemoryQuery` are NOT run. Absent → the existing client behavior.
+   */
+  dataSource?: GridDataSource<Row>;
+  /** Stable base React Query key; the built query is appended so changes refetch. */
+  queryKey?: ReadonlyArray<unknown>;
+  /** Opaque host params merged into the request (brain-region, scope, …). */
+  serverParams?: Record<string, unknown>;
+  /** Gate the server fetch (default: true when a `dataSource` is set). */
+  enabled?: boolean;
+  /** Total row count fallback when the data source doesn't return one. */
+  total?: number;
   /** enable the per-column custom header filter popovers (default: false). */
   filterable?: boolean;
   /** show the column show/hide chooser control (default: false). */
@@ -179,8 +220,13 @@ function InMemoryDetailCell<Row>(props: ICellRendererParams<DisplayRow<Row>>) {
  */
 export function InMemoryGrid<Row>({
   columns,
-  rows,
+  rows = [],
   getRowId,
+  dataSource,
+  queryKey,
+  serverParams,
+  enabled,
+  total,
   filterable = false,
   showColumnChooser = false,
   onHiddenColumnsChange,
@@ -257,18 +303,41 @@ export function InMemoryGrid<Row>({
   const controller = controllerRef.current.controller;
 
   const state = useGridState(controller);
-  const query = buildGridQuery(state);
+  const isServerMode = Boolean(dataSource);
+  const query = buildGridQuery(state, serverParams);
 
-  // Facets are computed from the FULL row set so set-filter options stay stable as
-  // the grid narrows; the page derives from the reactive query.
-  const facets = useMemo(
-    () => (filterable ? computeInMemoryFacets(rows, columns) : undefined),
-    [filterable, rows, columns]
+  // Server mode: fetch via React Query keyed on the serialized query so sort/filter/
+  // page changes refetch. The hook is ALWAYS called (rules of hooks) and gated by
+  // `enabled`; in client mode it stays disabled and never touches the network. The
+  // fallback client (client mode) means no `QueryClientProvider` is required.
+  const serverResult = useQuery(
+    {
+      queryKey: [...(queryKey ?? EMPTY_QUERY_KEY), query],
+      queryFn: ({ signal }): Promise<GridPage<Row>> =>
+        dataSource ? dataSource.fetch(query, signal) : Promise.resolve({ rows: [], total: 0 }),
+      enabled: isServerMode && (enabled ?? true),
+      placeholderData: keepPreviousData,
+    },
+    isServerMode ? undefined : getFallbackQueryClient()
   );
-  const page = useMemo(
+
+  // Facets: client mode computes from the FULL row set so set-filter options stay
+  // stable as the grid narrows; server mode reads them off the fetched page.
+  const clientFacets = useMemo(
+    () => (filterable && !isServerMode ? computeInMemoryFacets(rows, columns) : undefined),
+    [filterable, isServerMode, rows, columns]
+  );
+  const facets: Facets | undefined = isServerMode ? serverResult.data?.facets : clientFacets;
+
+  // Page: client mode filters/sorts/paginates in memory; server mode uses the
+  // fetched page (the data source already did it) with a `total` fallback.
+  const clientPage = useMemo(
     () => runInMemoryQuery(rows, query, { columns, disablePagination: !pagination }),
     [rows, query, columns, pagination]
   );
+  const page: GridPage<Row> = isServerMode
+    ? { rows: serverResult.data?.rows ?? [], total: serverResult.data?.total ?? total ?? 0 }
+    : clientPage;
 
   const agContext = useMemo<AgGridContext<Row>>(
     () => ({
@@ -378,7 +447,8 @@ export function InMemoryGrid<Row>({
         width: userWidth ?? c.width?.width,
         minWidth: c.width?.minWidth,
         flex: userWidth != null || c.width?.width != null ? undefined : c.width?.flex,
-        resizable: c.width?.resizable ?? false,
+        // resizable by default (parity with the legacy table + the basic path); opt out per column
+        resizable: c.width?.resizable ?? true,
         pinned: c.pinned,
         autoHeight: c.autoHeight,
         wrapText: c.wrapText,
@@ -556,7 +626,9 @@ export function InMemoryGrid<Row>({
   );
 
   const showChooser = showColumnChooser;
-  const showPagination = pagination;
+  // server mode paginates via the data source → always show the pager; client mode
+  // keeps the opt-in `pagination` flag.
+  const showPagination = pagination || isServerMode;
 
   if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
 

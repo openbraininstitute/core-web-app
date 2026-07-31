@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { OperatorId } from '../core';
 import { buildSimpleColDefs, SimpleGrid } from './simple-grid';
 
 import type { ReactNode } from 'react';
+import type { GridDataSource, GridPage, GridQuery } from '../core';
 import type { SimpleColumn } from './simple-grid';
 
 function withQuery(ui: ReactNode) {
@@ -283,5 +284,132 @@ describe('SimpleGrid enhanced mode', () => {
     await waitFor(() => {
       expect(container.querySelector('.ant-pagination')).toBeInTheDocument();
     });
+  });
+});
+
+// ── Server mode: the data source resolves filter/sort/pagination; store changes
+//    (page, sort) re-issue `dataSource.fetch` with the updated GridQuery. ──────────
+interface SRow {
+  id: string;
+  name: string;
+}
+
+const serverRows: SRow[] = [
+  { id: '1', name: 'One' },
+  { id: '2', name: 'Two' },
+  { id: '3', name: 'Three' },
+];
+
+const serverColumns: Array<SimpleColumn<SRow>> = [
+  { id: 'name', header: 'Name', field: 'name', sortable: true },
+];
+
+/** A fake data source that records every query and paginates/sorts `serverRows`. */
+function makeServerSource() {
+  const fetch = vi.fn((query: GridQuery): Promise<GridPage<SRow>> => {
+    const sorted = [...serverRows];
+    if (query.sort[0]?.direction === 'desc') sorted.reverse();
+    const start = (query.page - 1) * query.pageSize;
+    return Promise.resolve({
+      rows: sorted.slice(start, start + query.pageSize),
+      total: serverRows.length,
+    });
+  });
+  const dataSource: GridDataSource<SRow> = { fetch };
+  return { fetch, dataSource };
+}
+
+describe('SimpleGrid server mode', () => {
+  it('fetches page 1 via the data source and renders the server rows + pager', async () => {
+    const { fetch, dataSource } = makeServerSource();
+    const { container } = withQuery(
+      <SimpleGrid
+        columns={serverColumns}
+        serverSide={{ dataSource, queryKey: ['srv'] }}
+        getRowId={(r) => r.id}
+        sortable
+        pageSize={2}
+      />
+    );
+
+    await waitFor(() => expect(container.textContent).toContain('One'));
+    // server-paginated page 1 (size 2) = One, Two — Three is on page 2
+    expect(container.textContent).toContain('Two');
+    expect(container.textContent).not.toContain('Three');
+    expect(fetch).toHaveBeenCalled();
+    expect(fetch.mock.calls[0][0]).toMatchObject({ page: 1, pageSize: 2 });
+    // total (3) > pageSize (2) → the pager is shown
+    await waitFor(() => expect(container.querySelector('.ant-pagination')).toBeInTheDocument());
+  });
+
+  it('re-issues fetch with the new page and renders that page on a pagination change', async () => {
+    const { fetch, dataSource } = makeServerSource();
+    const { container } = withQuery(
+      <SimpleGrid
+        columns={serverColumns}
+        serverSide={{ dataSource, queryKey: ['srv'] }}
+        getRowId={(r) => r.id}
+        sortable
+        pageSize={2}
+      />
+    );
+
+    await waitFor(() => expect(container.textContent).toContain('One'));
+
+    const page2 = container.querySelector<HTMLElement>('.ant-pagination-item-2');
+    expect(page2).not.toBeNull();
+    fireEvent.click(page2!);
+
+    // page 2 (size 2) = Three
+    await waitFor(() => expect(container.textContent).toContain('Three'));
+    expect(fetch.mock.calls.some(([q]) => q.page === 2)).toBe(true);
+  });
+
+  it('re-issues fetch with the updated sort when a sortable header is clicked', async () => {
+    const { fetch, dataSource } = makeServerSource();
+    const { container } = withQuery(
+      <SimpleGrid
+        columns={serverColumns}
+        serverSide={{ dataSource, queryKey: ['srv'] }}
+        getRowId={(r) => r.id}
+        sortable
+        pageSize={2}
+      />
+    );
+
+    await waitFor(() => expect(container.textContent).toContain('One'));
+
+    // the custom header's sort control is the label button carrying the column name
+    const sortButton = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Name')
+    );
+    expect(sortButton).toBeDefined();
+    fireEvent.click(sortButton!);
+
+    // first click → descending sort on 'name' → a fresh fetch with the new query
+    await waitFor(() =>
+      expect(
+        fetch.mock.calls.some(
+          ([q]) => q.sort[0]?.columnId === 'name' && q.sort[0]?.direction === 'desc'
+        )
+      ).toBe(true)
+    );
+    // desc: server page 1 (size 2) now = Three, Two
+    await waitFor(() => expect(container.textContent).toContain('Three'));
+  });
+
+  it('does not fetch when the server mode is disabled (enabled: false)', async () => {
+    const { fetch, dataSource } = makeServerSource();
+    const { container } = withQuery(
+      <SimpleGrid
+        columns={serverColumns}
+        serverSide={{ dataSource, queryKey: ['srv'], enabled: false }}
+        getRowId={(r) => r.id}
+        pageSize={2}
+      />
+    );
+
+    await waitFor(() => expect(container.querySelector('.ag-root-wrapper')).toBeInTheDocument());
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

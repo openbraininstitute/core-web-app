@@ -20,7 +20,7 @@ import type {
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
-import type { ColumnModel, OperatorRegistry, SortModel } from '../core';
+import type { ColumnModel, GridDataSource, OperatorRegistry, SortModel } from '../core';
 
 registerDataGridModules();
 
@@ -68,11 +68,34 @@ export interface SimpleRowSelection<Row> {
   onSelectionChange?: (ids: string[], rows: Row[]) => void;
 }
 
+/**
+ * Server-side config for {@link SimpleGrid}. When set, the grid runs the ENHANCED
+ * engine in SERVER mode: header sort/filter and the pager dispatch to the store,
+ * the serialized query changes, and React Query refetches via `dataSource.fetch`.
+ * The data source owns filtering/sorting/paging — `rows` is ignored.
+ */
+export interface SimpleServerSide<Row> {
+  /** Resolves a {@link GridQuery} into a `{ rows, total, facets }` page. */
+  dataSource: GridDataSource<Row>;
+  /** Stable base React Query key; the built query is appended so changes refetch. */
+  queryKey: ReadonlyArray<unknown>;
+  /** Opaque host params merged into the request (brain-region, scope, …). */
+  params?: Record<string, unknown>;
+  /** Gate the fetch (default: true). */
+  enabled?: boolean;
+  /** Total row count fallback when the data source doesn't return one. */
+  total?: number;
+}
+
 export interface SimpleGridProps<Row> {
   /** Column definitions, typed via the shared {@link SimpleColumn}/`ColumnModel`. */
   columns: Array<SimpleColumn<Row>>;
-  /** Row data — passed straight to AG Grid's client-side row model. */
-  rows: Row[];
+  /**
+   * Row data — passed straight to AG Grid's client-side row model. Optional and
+   * ignored when {@link SimpleGridProps.serverSide} is set (the data source
+   * provides rows).
+   */
+  rows?: Row[];
   /** Stable row identity. Omit to let AG Grid assign internal ids. */
   getRowId?: (row: Row) => string;
   /** Enable client-side pagination (default: false). */
@@ -104,6 +127,12 @@ export interface SimpleGridProps<Row> {
   pageSizeOptions?: number[];
   /** Operator catalog for the filter editors (default: the standard registry). */
   operators?: OperatorRegistry;
+  /**
+   * Opt into SERVER mode: sort/filter/pagination are resolved by the data source
+   * (server-side), not in memory. Routes to the enhanced engine. Leave unset for
+   * the client-side grid.
+   */
+  serverSide?: SimpleServerSide<Row>;
 }
 
 /** Inline cell renderer host — invokes the column's `renderCell` with the row. */
@@ -213,7 +242,7 @@ const SELECTION_COLUMN_DEF: ColDef = {
  */
 function SimpleGridBasic<Row>({
   columns,
-  rows,
+  rows = [],
   getRowId,
   pagination = false,
   pageSize = 20,
@@ -323,14 +352,22 @@ function SimpleGridBasic<Row>({
  * the opt-in props) keeps the original behaviour.
  */
 export function SimpleGrid<Row>(props: SimpleGridProps<Row>) {
-  const enhanced = Boolean(props.filterable || props.showColumnChooser);
+  // Server mode also runs the enhanced engine (the store drives the query the data
+  // source resolves), so `serverSide` activates it too.
+  const enhanced = Boolean(props.filterable || props.showColumnChooser || props.serverSide);
   if (!enhanced) return <SimpleGridBasic {...props} />;
 
+  const { serverSide } = props;
   return (
     <InMemoryGrid<Row>
       columns={props.columns}
       rows={props.rows}
       getRowId={props.getRowId}
+      dataSource={serverSide?.dataSource}
+      queryKey={serverSide?.queryKey}
+      serverParams={serverSide?.params}
+      enabled={serverSide?.enabled}
+      total={serverSide?.total}
       filterable={props.filterable}
       showColumnChooser={props.showColumnChooser}
       sortable={props.sortable}
