@@ -1,3 +1,4 @@
+import { pruneAdvancedFilters } from './domain/advanced-filters';
 import { hydrateFilterTargetIds } from './domain/filter-targets';
 import { resolveColumns } from './domain/resolve-schema';
 import { GridActionType } from './state/grid-state';
@@ -97,9 +98,14 @@ export class GridController<Row> {
       }
       // Stored entries predate filter targets: default a missing/stale `targetId`
       // to the column's first target so old snapshots keep resolving to a field.
+      // Advanced-filter entries are pruned in the same pass — an orphaned `adv:…`
+      // key would otherwise be serialized verbatim as a bogus query param.
       hydrated = {
         ...hydrated,
-        filters: hydrateFilterTargetIds(hydrated.filters, options.schema),
+        filters: pruneAdvancedFilters(
+          hydrateFilterTargetIds(hydrated.filters, options.schema),
+          options.schema
+        ),
       };
     }
 

@@ -245,11 +245,19 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       <DataGridToolbar
         slots={{ ...toolbarSlots, bulkActions: bulkActions ?? toolbarSlots?.bulkActions }}
         columnChooser={
-          showColumnChooser || Object.keys(state.filters).length > 0 ? (
+          showColumnChooser ||
+          Object.keys(state.filters).length > 0 ||
+          controller.schema.advancedFilters?.length ? (
             <div className="flex items-center gap-2">
               {showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : null}
-              {/* appears only when the grid has active filters */}
-              <ActiveFiltersButton controller={controller} state={state} />
+              {/* the schema's advanced filters + every applied filter; self-hiding
+                  when the grid has neither */}
+              <ActiveFiltersButton
+                controller={controller}
+                state={state}
+                operators={operators}
+                facets={facets ?? externalFacets}
+              />
             </div>
           ) : undefined
         }

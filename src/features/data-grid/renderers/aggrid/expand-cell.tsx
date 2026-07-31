@@ -3,8 +3,8 @@ import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
 import { cn } from '@/utils/css-class';
 
 import { GridActionType } from '../../core';
+import { useGridState } from '../../react/use-grid-state';
 import { isDetailRow } from './detail-rows';
-import { useGridState } from './use-grid-state';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { ReactNode } from 'react';

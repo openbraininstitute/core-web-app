@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { FilterOptionsKind } from '../../../core';
+import { FilterOptionsKind } from '../../core';
 
-import type { TFilterOptionsSource } from '../../../core';
-import type { IAgGridContext } from '../ag-context';
+import type { TFilterOptionsSource } from '../../core';
+import type { IFilterEditorContext } from './context';
 
 export interface ISetOption {
   id: string;
@@ -36,7 +36,7 @@ const FIVE_MINUTES = 5 * 60 * 1000;
 export function useSetOptions(
   source: TFilterOptionsSource | undefined,
   facetKey: string,
-  ctx: IAgGridContext
+  ctx: IFilterEditorContext
 ): ISetOptionsResult {
   const facets = ctx.facets;
   const asyncSource = source?.kind === FilterOptionsKind.Async ? source : undefined;

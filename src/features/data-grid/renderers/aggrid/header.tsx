@@ -10,9 +10,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover'
 import { cn } from '@/utils/css-class';
 
 import { GridActionType, SortDirection } from '../../core';
-import { FilterEditor } from './filters/filter-editor';
+import { FilterEditor } from '../../react/filters/filter-editor';
+import { useGridState } from '../../react/use-grid-state';
 import { summarizeFilter } from './filters/summary';
-import { useGridState } from './use-grid-state';
 
 import type { CustomHeaderProps } from 'ag-grid-react';
 import type { MouseEvent, ReactNode } from 'react';
@@ -141,8 +141,8 @@ export function AgHeader(props: CustomHeaderProps) {
           >
             <FilterEditor
               ctx={ctx}
-              columnId={columnId}
-              columnName={props.displayName ?? ''}
+              filterKey={columnId}
+              label={props.displayName ?? ''}
               targets={filter.targets}
               onClose={() => setOpen(false)}
             />

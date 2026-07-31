@@ -1,4 +1,12 @@
-export { Align, FilterOptionsKind } from './domain/column-model';
+export {
+  ADVANCED_FILTER_KEY_PREFIX,
+  advancedFilterDefsByKey,
+  advancedFilterKey,
+  isAdvancedFilterKey,
+  pruneAdvancedFilters,
+  resolveAdvancedFilterGroups,
+} from './domain/advanced-filters';
+export { Align, FilterOptionsKind, FreeEntryKind } from './domain/column-model';
 export {
   byContext,
   matchesRule,
@@ -11,6 +19,7 @@ export {
   activeFilterTarget,
   availableFilterTargets,
   DEFAULT_FILTER_TARGET_ID,
+  freeEntryKind,
   hydrateFilterTargetIds,
   isFreeEntryTarget,
   resolveFilterTargets,
@@ -39,6 +48,12 @@ export { GridStateStore } from './state/grid-state-store';
 export { reducer } from './state/reducer';
 
 export type {
+  IAdvancedFilterGroup,
+  IResolvedAdvancedFilter,
+  IResolvedAdvancedFilterGroup,
+  TAdvancedFilterDef,
+} from './domain/advanced-filters';
+export type {
   IColumnFilter,
   IColumnModel,
   IFilterTarget,
@@ -47,6 +62,7 @@ export type {
   TCellValue,
   TFilterOptionsKind,
   TFilterOptionsSource,
+  TFreeEntryKind,
 } from './domain/column-model';
 export type {
   IContextRule,

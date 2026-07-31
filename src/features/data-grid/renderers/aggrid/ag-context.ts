@@ -1,5 +1,5 @@
-import type { GridController, OperatorRegistry, TFacets } from '../../core';
 import type { CellRendererRegistry, IDetailRuntime } from '../../react';
+import type { IFilterEditorContext } from '../../react/filters/context';
 
 /**
  * Object handed to AG Grid as `context`, forwarded to every custom sub-component
@@ -7,10 +7,7 @@ import type { CellRendererRegistry, IDetailRuntime } from '../../react';
  * AG-managed components reach the headless store and registries without prop
  * drilling.
  */
-export interface IAgGridContext<Row = unknown> {
-  controller: GridController<Row>;
-  operators: OperatorRegistry;
-  facets?: TFacets;
+export interface IAgGridContext<Row = unknown> extends IFilterEditorContext<Row> {
   cellRenderers: CellRendererRegistry;
   detail?: IDetailRuntime<Row>;
 }

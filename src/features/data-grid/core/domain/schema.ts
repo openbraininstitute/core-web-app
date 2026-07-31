@@ -1,3 +1,4 @@
+import type { IAdvancedFilterGroup } from './advanced-filters';
 import type { IColumnModel } from './column-model';
 import type { TContextualValue } from './grid-context';
 import type { TSortModel } from './sort-model';
@@ -37,6 +38,13 @@ export interface IGridSchema<Row = unknown> {
   /** stable id, typically the dataType */
   id: string;
   columns: Array<IColumnModel<Row>>;
+  /**
+   * Backend filters this entity accepts that have NO column in the grid — grouped
+   * for the toolbar's filter menubar. Each entry is an ordinary
+   * {@link IFilterTarget}, so advanced and column filters share one model, one
+   * operator registry, one set of value editors and one serializer.
+   */
+  advancedFilters?: ReadonlyArray<IAdvancedFilterGroup>;
   /** default sort applied when state carries none */
   defaultSort?: TSortModel;
   /** row height in px (e.g. taller rows for preview thumbnails); default 44 */

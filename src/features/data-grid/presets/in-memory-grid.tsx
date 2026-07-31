@@ -28,12 +28,12 @@ import { CellRendererRegistry } from '../react/cell-renderer-registry';
 import { ColumnChooser } from '../react/column-chooser';
 import { GridLoaderOverlay } from '../react/grid-loader';
 import { GridPagination } from '../react/pagination';
+import { useGridState } from '../react/use-grid-state';
 import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
 import { isExpanderClick } from '../renderers/aggrid/expand-cell';
 import { AgHeader } from '../renderers/aggrid/header';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme, SINGLE_SELECT_RADIO_CLASS } from '../renderers/aggrid/theme';
-import { useGridState } from '../renderers/aggrid/use-grid-state';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
 import type {

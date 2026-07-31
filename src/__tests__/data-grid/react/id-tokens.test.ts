@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  isUuid,
-  parseIdTokens,
-  splitIdTokens,
-} from '@/features/data-grid/renderers/aggrid/filters/id-tokens';
+import { isUuid, parseIdTokens, splitIdTokens } from '@/features/data-grid/react/filters/id-tokens';
 
 const A = 'b2f0e1b2-0000-4000-8000-000000000000';
 const B = '3fa85f64-5717-4562-b3fc-2c963f66afa6';

@@ -1,6 +1,6 @@
 import { DetailRowHost } from '../../react';
+import { useGridState } from '../../react/use-grid-state';
 import { isDetailRow } from './detail-rows';
-import { useGridState } from './use-grid-state';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { IAgGridContext } from './ag-context';

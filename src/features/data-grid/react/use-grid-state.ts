@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
-import type { GridController, IGridState } from '../../core';
+import type { GridController, IGridState } from '../core';
 
-/** Subscribe an AG-managed sub-component to the headless store. */
+/** Subscribe a React component to the headless grid store. */
 export function useGridState<Row>(controller: GridController<Row>): IGridState {
   return useSyncExternalStore(
     controller.store.subscribe,

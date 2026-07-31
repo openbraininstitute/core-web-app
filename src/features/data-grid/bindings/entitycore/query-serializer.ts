@@ -1,6 +1,8 @@
 import {
   activeFilterTarget,
+  advancedFilterDefsByKey,
   FilterValueKind,
+  isAdvancedFilterKey,
   OperatorId,
   resolveFilterTargets,
   SortDirection,
@@ -91,8 +93,17 @@ interface ColumnLookup {
 
 export function buildColumnLookup<Row>(schema: IGridSchema<Row>): ColumnLookup {
   const byId = new Map(schema.columns.map((c) => [c.id, c] as const));
+  // Advanced filters share the `filters` record with column filters, keyed by their
+  // namespaced `adv:<group>:<filter>` id. They resolve to a field the same way — an
+  // advanced filter IS a filter target — so a single strategy table serves both.
+  const advanced = advancedFilterDefsByKey(schema);
   return {
     filterField(columnId, targetId) {
+      if (isAdvancedFilterKey(columnId)) {
+        // An orphaned key (schema edited after the state was persisted) must NOT be
+        // emitted as a param literally named `adv:…`; it is dropped instead.
+        return advanced.get(columnId)?.field ?? '';
+      }
       const c = byId.get(columnId);
       if (!c) return columnId;
       // A single-target (legacy) column synthesises exactly one target whose field is
@@ -113,7 +124,11 @@ function serializeFilters(filters: TFilterModel, lookup: ColumnLookup): TEntityc
   for (const entry of Object.values(filters)) {
     const strategy = STRATEGIES[entry.operator];
     if (!strategy) continue;
-    Object.assign(out, strategy(lookup.filterField(entry.columnId, entry.targetId), entry));
+    const field = lookup.filterField(entry.columnId, entry.targetId);
+    // An empty field means the entry no longer resolves to anything (a pruned
+    // advanced filter) — emitting `__in` on an empty name would corrupt the request.
+    if (!field) continue;
+    Object.assign(out, strategy(field, entry));
   }
   return out;
 }

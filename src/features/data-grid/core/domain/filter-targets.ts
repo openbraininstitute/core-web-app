@@ -1,6 +1,7 @@
+import { FreeEntryKind } from './column-model';
 import { resolveContextual } from './contextual';
 
-import type { IColumnModel, IFilterTarget } from './column-model';
+import type { IColumnModel, IFilterTarget, TFreeEntryKind } from './column-model';
 import type { TFilterModel } from './filter-model';
 import type { IGridContext } from './grid-context';
 import type { IGridSchema } from './schema';
@@ -65,12 +66,28 @@ export function activeFilterTarget(
 }
 
 /**
- * A target with no option source is a FREE-ENTRY target (paste ids/UUIDs) rather
+ * What a free-entry (paste-a-list) target collects, or `null` when the target is not
+ * free-entry at all. A target with an option source is a picker, never free entry;
+ * the synthesised legacy target is never free entry either, because its missing
+ * `options` has always meant "fall back to the grid's facets".
+ *
+ * The default for a declared target with no options is {@link FreeEntryKind.Uuid} —
+ * every such target predating this function was an id target — so a target that
+ * collects plain strings must say so with {@link IFilterTarget.freeEntry}.
+ */
+export function freeEntryKind(target: IFilterTarget): TFreeEntryKind | null {
+  if (target.options) return null;
+  if (target.id === DEFAULT_FILTER_TARGET_ID) return null;
+  return target.freeEntry ?? FreeEntryKind.Uuid;
+}
+
+/**
+ * A target with no option source is a FREE-ENTRY target (paste ids/values) rather
  * than a facet picker. Never true for the synthesised legacy target, whose missing
  * `options` has always meant "fall back to the grid's facets".
  */
 export function isFreeEntryTarget(target: IFilterTarget): boolean {
-  return !target.options && target.id !== DEFAULT_FILTER_TARGET_ID;
+  return freeEntryKind(target) !== null;
 }
 
 /**

@@ -22,25 +22,27 @@ import { cn } from '@/utils/css-class';
 import {
   DEFAULT_FILTER_COMMIT_MODE,
   FilterCommitMode,
+  FilterOptionsKind,
   FilterValueKind,
+  freeEntryKind,
   GridActionType,
   isEmptyFilterValue,
-  isFreeEntryTarget,
   OperatorUiKind,
-} from '../../../core';
+} from '../../core';
 import {
   GRID_INPUT_CLASS,
   GRID_SELECT_CONTENT_CLASS,
   GRID_SELECT_ITEM_CLASS,
   GRID_SELECT_TRIGGER_CLASS,
-} from '../../../react/molecules-theme';
+} from '../molecules-theme';
 import { useGridState } from '../use-grid-state';
 import { splitIdTokens } from './id-tokens';
+import { FREE_ENTRY_SEPARATOR_HINT, resolveFilterPlaceholder } from './placeholder';
 import { useSetOptions } from './use-set-options';
 
 import type { DateRange } from 'react-day-picker';
-import type { IFilterTarget, TFilterOptionsSource, TFilterValue } from '../../../core';
-import type { IAgGridContext } from '../ag-context';
+import type { IFilterTarget, TFilterOptionsSource, TFilterValue } from '../../core';
+import type { IFilterEditorContext } from './context';
 import type { IIdTokenSplit } from './id-tokens';
 
 const COMMIT_DEBOUNCE_MS = 250;
@@ -49,13 +51,20 @@ const COMMIT_DEBOUNCE_MS = 250;
 const INPUT_CLASS = GRID_INPUT_CLASS;
 
 export interface IFilterEditorProps {
-  ctx: IAgGridContext;
-  columnId: string;
-  columnName: string;
+  ctx: IFilterEditorContext;
   /**
-   * Fields this column can be matched by, already filtered for context and for the
-   * grid's advanced-filters setting. A classic single-field column passes exactly
-   * one target and the "match by" switch is not rendered.
+   * Key this filter occupies in `GridState.filters` — a COLUMN ID for a column
+   * filter, an `adv:<group>:<filter>` key for an advanced filter. The editor never
+   * needs to know which: it only reads and writes that one slot.
+   */
+  filterKey: string;
+  /** heading shown above the controls (the column header, or the filter's label) */
+  label: string;
+  /**
+   * Fields this filter can be matched by, already filtered for context and for the
+   * grid's advanced-filters setting. A classic single-field column (and every
+   * advanced filter) passes exactly one target, and the "match by" switch is not
+   * rendered.
    */
   targets: ReadonlyArray<IFilterTarget>;
   /** close the popover (Apply / done) */
@@ -91,13 +100,18 @@ function toDateOrUndefined(iso: string | null): Date | undefined {
 }
 
 /**
- * The filter editor rendered inside the header's Radix popover. Built entirely from
- * `ui/molecules` primitives (rounded-xl), it drives the headless store directly —
- * no AG Grid filter model — so styling and positioning are fully ours.
+ * THE filter editor — one component behind both filter surfaces: the column header
+ * popover (AG Grid ring) and the toolbar's advanced-filter menubar. Built entirely
+ * from `ui/molecules` primitives (rounded-xl), it drives the headless store directly
+ * — no AG Grid filter model — so styling and positioning are fully ours.
+ *
+ * It is agnostic about WHICH filter it edits: it reads and writes one
+ * {@link IFilterEditorProps.filterKey} slot of `GridState.filters`, whether that key
+ * is a column id or an advanced filter's `adv:<group>:<filter>` key.
  */
-export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IFilterEditorProps) {
+export function FilterEditor({ ctx, filterKey, label, targets, onClose }: IFilterEditorProps) {
   const state = useGridState(ctx.controller);
-  const current = state.filters[columnId];
+  const current = state.filters[filterKey];
 
   // WHICH FIELD we match by. An entry written before targets existed (or naming a
   // target that is no longer offered) falls back to the first target — today's
@@ -112,8 +126,10 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
   const facetKey = target.facetKey ?? target.field;
   const optionsSource = target.options;
   const description = target.description;
-  // A target with no option source collects pasted ids instead of facet checkboxes.
-  const freeEntry = isFreeEntryTarget(target);
+  // A target with no option source collects pasted values instead of facet
+  // checkboxes; its KIND decides whether those values must be well-formed ids.
+  const freeKind = freeEntryKind(target);
+  const freeEntry = freeKind !== null;
 
   // The current entry's operator only applies while its target is the active one.
   const [operator, setOperator] = useState<string>(() =>
@@ -140,22 +156,32 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
       ? current.value.values.join('\n')
       : ''
   );
-  const idTokens = useMemo(() => splitIdTokens(idDraft), [idDraft]);
+  const idTokens = useMemo(
+    () => splitIdTokens(idDraft, freeKind ?? undefined),
+    [idDraft, freeKind]
+  );
+  const placeholder = resolveFilterPlaceholder(target, operatorDef);
 
   const commit = (v: TFilterValue | null) => {
     if (v === null || isEmptyFilterValue(v)) {
-      ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
+      ctx.controller.store.dispatch({
+        type: GridActionType.SetFilter,
+        columnId: filterKey,
+        entry: null,
+      });
     } else {
       ctx.controller.store.dispatch({
         type: GridActionType.SetFilter,
-        columnId,
-        entry: { columnId, operator, targetId: target.id, value: v },
+        columnId: filterKey,
+        // `columnId` on the entry IS the state key — a column id, or an advanced
+        // filter's namespaced `adv:<group>:<filter>` key.
+        entry: { columnId: filterKey, operator, targetId: target.id, value: v },
       });
     }
   };
   const debouncedCommit = useDebouncedCallback(
     commit,
-    [columnId, operator, target.id],
+    [filterKey, operator, target.id],
     COMMIT_DEBOUNCE_MS
   );
 
@@ -174,7 +200,11 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
     setOperator(op);
     setPending(emptyForUiKind(ctx.operators.get(op).uiKind));
     setIdDraft('');
-    ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
+    ctx.controller.store.dispatch({
+      type: GridActionType.SetFilter,
+      columnId: filterKey,
+      entry: null,
+    });
   };
 
   /**
@@ -191,7 +221,11 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
     setOperator(nextOperator);
     setPending(emptyForUiKind(ctx.operators.get(nextOperator).uiKind));
     setIdDraft('');
-    ctx.controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
+    ctx.controller.store.dispatch({
+      type: GridActionType.SetFilter,
+      columnId: filterKey,
+      entry: null,
+    });
   };
 
   // A malformed id must never reach the API.
@@ -220,7 +254,7 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="flex flex-col gap-0.5">
-        <span className="text-[13px] font-semibold text-primary-8">{columnName || 'Filter'}</span>
+        <span className="text-[13px] font-semibold text-primary-8">{label || 'Filter'}</span>
         {description ? <span className="text-xs text-gray-400">{description}</span> : null}
       </div>
 
@@ -265,23 +299,50 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
         </Select>
       )}
 
-      {uiKind === OperatorUiKind.Text && (
-        <Input
-          autoFocus
-          className={INPUT_CLASS}
-          placeholder="Filter…"
-          value={pending.kind === FilterValueKind.Text ? pending.text : ''}
-          onChange={(e) =>
-            change({ kind: FilterValueKind.Text, text: e.target.value }, { debounce: true })
-          }
-        />
-      )}
+      {/*
+        A text operator on a target with a STATIC option list is an exact-match enum
+        (`lifecycle_status`, `…__protocol_design`), not free text — so it picks from
+        the list. The committed value is still a plain text value, so nothing about
+        serialization changes.
+      */}
+      {uiKind === OperatorUiKind.Text &&
+        (optionsSource?.kind === FilterOptionsKind.Static ? (
+          <Select
+            value={pending.kind === FilterValueKind.Text ? pending.text : ''}
+            onValueChange={(v) => change({ kind: FilterValueKind.Text, text: v })}
+          >
+            <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
+              <SelectValue placeholder={placeholder}>
+                {optionsSource.items.find(
+                  (i) => pending.kind === FilterValueKind.Text && i.id === pending.text
+                )?.label ?? placeholder}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className={GRID_SELECT_CONTENT_CLASS}>
+              {optionsSource.items.map((item) => (
+                <SelectItem key={item.id} value={item.id} className={GRID_SELECT_ITEM_CLASS}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            autoFocus
+            className={INPUT_CLASS}
+            placeholder={placeholder}
+            value={pending.kind === FilterValueKind.Text ? pending.text : ''}
+            onChange={(e) =>
+              change({ kind: FilterValueKind.Text, text: e.target.value }, { debounce: true })
+            }
+          />
+        ))}
 
       {uiKind === OperatorUiKind.Number && (
         <Input
           type="number"
           className={INPUT_CLASS}
-          placeholder="Value"
+          placeholder={placeholder}
           value={
             pending.kind === FilterValueKind.Number && pending.value != null
               ? String(pending.value)
@@ -393,9 +454,13 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
           <IdTokenEditor
             draft={idDraft}
             tokens={idTokens}
+            placeholder={placeholder}
             onDraftChange={(text) => {
               setIdDraft(text);
-              change({ kind: FilterValueKind.Set, values: splitIdTokens(text).valid });
+              change({
+                kind: FilterValueKind.Set,
+                values: splitIdTokens(text, freeKind ?? undefined).valid,
+              });
             }}
           />
         ) : (
@@ -442,10 +507,12 @@ export function FilterEditor({ ctx, columnId, columnName, targets, onClose }: IF
 function IdTokenEditor({
   draft,
   tokens,
+  placeholder,
   onDraftChange,
 }: {
   draft: string;
   tokens: IIdTokenSplit;
+  placeholder: string;
   onDraftChange: (text: string) => void;
 }) {
   const remove = (token: string) =>
@@ -455,11 +522,13 @@ function IdTokenEditor({
     <div className="flex flex-col gap-2">
       <textarea
         rows={3}
-        className={cn(INPUT_CLASS, 'min-h-16 resize-y py-2 leading-5')}
-        placeholder="Paste one or more ids…"
+        className={cn(INPUT_CLASS, 'min-h-16 resize-y border-gray-100 px-3 py-2 leading-5')}
+        placeholder={placeholder}
         value={draft}
         onChange={(e) => onDraftChange(e.target.value)}
       />
+      {/* The accepted separators are not guessable — state them once, under the box. */}
+      <span className="text-[11px] text-gray-400">{FREE_ENTRY_SEPARATOR_HINT}</span>
 
       {tokens.tokens.length > 0 && (
         <div className="flex max-h-32 flex-wrap gap-1 overflow-auto">
@@ -508,7 +577,7 @@ function SetEditor({
 }: {
   facetKey: string;
   optionsSource?: TFilterOptionsSource;
-  ctx: IAgGridContext;
+  ctx: IFilterEditorContext;
   selected: string[];
   onChange: (values: string[]) => void;
 }) {

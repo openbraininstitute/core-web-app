@@ -39,6 +39,19 @@ export type TFilterOptionsSource =
     };
 
 /**
+ * How a SET filter with no {@link TFilterOptionsSource} collects its values, i.e.
+ * what the free-entry (paste-a-list) editor accepts and validates:
+ * - `uuid` — canonical UUIDs only; malformed tokens are flagged and block Apply.
+ * - `text` — arbitrary strings (exact names, document URLs, …); nothing to validate.
+ */
+export const FreeEntryKind = {
+  Uuid: 'uuid',
+  Text: 'text',
+} as const;
+
+export type TFreeEntryKind = (typeof FreeEntryKind)[keyof typeof FreeEntryKind];
+
+/**
  * One backend field a column can be filtered BY ("match by name" vs "match by id").
  * A column declares its targets on {@link IColumnFilter.targets}; the filter editor
  * renders a segmented switch when more than one is visible, and the active target's
@@ -64,6 +77,19 @@ export interface IFilterTarget {
   facetKey?: string;
   /** short help text shown at the top of the filter popup for this target */
   description?: string;
+  /**
+   * Placeholder for this target's value input, overriding the one derived from the
+   * active operator (see `resolveFilterPlaceholder`). Declare it whenever the
+   * generic wording would mislead — the editor is shared by every filter, so it
+   * cannot know that a field wants an acronym, a URL or an annotation value.
+   */
+  placeholder?: string;
+  /**
+   * For a set target WITHOUT {@link options} (a free-entry, paste-a-list target):
+   * what its tokens are. Defaults to {@link FreeEntryKind.Uuid} — the historical
+   * behaviour, since every free-entry target so far has been an id target.
+   */
+  freeEntry?: TFreeEntryKind;
   /** only offered when the grid enables advanced filters (default: false) */
   advanced?: boolean;
   /** contextual availability (default: true) */
