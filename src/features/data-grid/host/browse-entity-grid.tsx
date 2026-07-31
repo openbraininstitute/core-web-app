@@ -419,6 +419,9 @@ export function EntityDataGrid({
             )
           }
           renderError={(error) => renderListingError(error, entity?.title)}
+          queryOptions={{
+            refetchOnWindowFocus: false,
+          }}
         />
       </div>
       {requireMiniDetailView && (
@@ -442,13 +445,24 @@ export function EntityDataGrid({
 /**
  * Router (registry-driven Strategy): renders the entity's PLUGIN body when its
  * definition registers one, else the shared {@link EntityDataGrid} template. The
- * component type is selected by the STABLE `definition.plugin` (fixed per dataType),
- * so there is no rules-of-hooks hazard and entities stay independent. A plugin body
- * (e.g. `CircuitGridBody`) owns its own state and wraps `EntityDataGrid` with
- * strategy overrides. This is the AG Grid replacement for `BrowseEntityScopeLegacy`.
+ * component type is selected by STABLE per-mount inputs (`definition.plugin` is
+ * fixed per dataType; `section`/picker mode are fixed per page), so there is no
+ * rules-of-hooks hazard and entities stay independent. A plugin body (e.g.
+ * `CircuitGridBody`) owns its own state and wraps `EntityDataGrid` with strategy
+ * overrides. This is the AG Grid replacement for `BrowseEntityScopeLegacy`.
+ *
+ * A plugin is an EXPLORE affordance: it mounts only on the Data browse listing
+ * (section `data`, no picker selection). Workflow surfaces (extract/simulate/build
+ * `/new` pages pass their own section) and checkbox pickers get the plain shared
+ * template — matching the legacy tables, where the bespoke pages were Data-only
+ * and workflow pickers always listed entities flat.
  */
 export function BrowseEntityGrid(props: BrowseEntityGridProps) {
-  const Body: FC<BrowseEntityGridProps> = props.definition.plugin?.Body ?? EntityDataGrid;
+  const { plugin } = props.definition;
+  const isExplore =
+    (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data &&
+    !props.mainTableProps?.selectionType;
+  const Body: FC<BrowseEntityGridProps> = plugin && isExplore ? plugin.Body : EntityDataGrid;
   return <Body {...props} />;
 }
 

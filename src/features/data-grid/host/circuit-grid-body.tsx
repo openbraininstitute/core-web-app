@@ -77,14 +77,6 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
   // into the shared host.
   const isHierarchy = view === CircuitRepresentationView.Hierarchy;
 
-  // The hierarchy plugin is an EXPLORE-only affordance: it activates solely on the
-  // Data → Circuit listing (section `data`, no picker selection). Every workflow
-  // surface — extract/simulate/build "new" pages pass their own section (e.g.
-  // `extract`), and checkbox pickers set `selectionType` — gets the REGULAR browse
-  // grid, matching the legacy tables (the bespoke hierarchy page was Data-only;
-  // workflow pickers always listed circuits flat).
-  const isExplore = section === WorkspaceSection.Data && !props.mainTableProps?.selectionType;
-
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
   const dataSource = useMemo(
     () =>
@@ -150,12 +142,6 @@ export function CircuitGridBody(props: BrowseEntityGridProps) {
     () => ({ right: <CircuitViewToggle dataKey={dataKey} /> }),
     [dataKey]
   );
-
-  // Workflow surfaces + pickers → the plain shared grid (regular flat listing);
-  // no circuit hierarchy/flat overrides, no view toggle.
-  if (!isExplore) {
-    return <EntityDataGrid {...props} />;
-  }
 
   return (
     <EntityDataGrid

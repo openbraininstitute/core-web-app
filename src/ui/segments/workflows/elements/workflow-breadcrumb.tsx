@@ -17,7 +17,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
-import { Button } from '@/ui/molecules/button';
 import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-workflow-selection-config';
 import { useWorkflowBreadcrumbState } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
 import {
@@ -47,7 +46,7 @@ export function WorkflowBreadcrumb() {
   const { workflow } = useWorkflowSelectionConfig({ activity, targetType });
 
   if (!workflow || !activity) {
-    return <div className="px-3 pt-4 pb-2" />;
+    return <div className="pt-4 pr-3 pb-2 pl-4" />;
   }
 
   const { root, trail } = resolveWorkflowBreadcrumb({
@@ -58,7 +57,7 @@ export function WorkflowBreadcrumb() {
   });
 
   if (!root || trail.length === 0) {
-    return <div className="px-3 pt-4 pb-2" />;
+    return <div className="pt-4 pr-3 pb-2 pl-4" />;
   }
 
   const homeLink = buildWorkflowHomeHref({
@@ -70,22 +69,23 @@ export function WorkflowBreadcrumb() {
   const handleBack = () => (onBack ? onBack() : navigate(homeLink));
 
   return (
-    <div className="px-3 pt-4 pb-2">
+    <div className="pt-4 pr-3 pb-2 pl-4">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <Button
-              rounded
-              variant="icon"
+            {/* icon pill styled EXACTLY like the grid's column chooser so the two align visually */}
+            <button
+              type="button"
               onClick={handleBack}
               aria-label="Go back"
+              title="Go back"
               className={cn(
-                'text-primary-9 bg-white! shadow-bnb hover:text-primary-7 hover:border hover:bg-gray-50! size-8!',
-                'flex items-center justify-center rounded-full transition-colors'
+                'flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary-8 shadow-sm',
+                'transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md active:scale-95'
               )}
             >
-              <RiArrowLeftLongLine className="text-base" />
-            </Button>
+              <RiArrowLeftLongLine size={18} />
+            </button>
           </BreadcrumbItem>
           <BreadcrumbItem>
             <BreadcrumbLink
