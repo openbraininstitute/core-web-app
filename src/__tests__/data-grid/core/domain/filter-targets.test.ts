@@ -46,7 +46,7 @@ const speciesLike: IColumnModel<Row> = {
         facetKey: 'species',
         options: { kind: 'facets' },
       },
-      { id: 'id', label: 'ID', field: 'subject__species__id', operators: ['in'], advanced: true },
+      { id: 'id', label: 'ID', field: 'subject__species__id', operators: ['in'] },
     ],
   },
 };

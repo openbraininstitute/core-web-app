@@ -92,11 +92,6 @@ export interface IEntityDataGridOverrides {
   expandColumn?: IExpandColumnConfig;
   /** extra AND-ed enable gate on top of the shared species/scope gate. */
   extraEnabled?: boolean;
-  /**
-   * Offer `advanced` filter targets (e.g. Species "match by id") in the per-column
-   * filter editor. Default `false`; no toolbar switch is wired yet.
-   */
-  advancedFilters?: boolean;
 }
 
 export type TEntityDataGridProps = IBrowseEntityGridProps & IEntityDataGridOverrides;
@@ -143,7 +138,6 @@ export function EntityDataGrid({
   detailOverride,
   expandColumn,
   extraEnabled,
-  advancedFilters,
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
@@ -383,7 +377,6 @@ export function EntityDataGrid({
           detail={detail}
           getRowClass={getRowClass}
           expandColumn={expandColumn}
-          advancedFilters={advancedFilters}
           className="h-full"
           gridClassName={classNames?.tableClassNames?.container}
           onRowClick={handleRowClick}

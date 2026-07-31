@@ -13,6 +13,10 @@ two filter surfaces is only *where the editor is opened from*.
 | multiple targets | yes (renders a "match by" switch) | no (a group's filter is exactly one target) |
 | state key | the column id | `adv:<groupId>:<filterId>` |
 
+There is no per-target opt-in: **every target a column declares is offered** in that
+column's popover. "Advanced filter" only ever means an entry in
+`IGridSchema.advancedFilters` — it is never a property of a single `IFilterTarget`.
+
 Everything else is shared:
 
 - **one vocabulary** — an advanced filter *is* an `IFilterTarget`

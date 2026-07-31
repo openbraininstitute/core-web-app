@@ -83,11 +83,6 @@ export interface IDataGridProps<Row> {
   gridClassName?: string;
   /** picker selection (single/multi) that propagates chosen rows to a host form. */
   selection?: IDataGridSelection<Row>;
-  /**
-   * Offer filter targets marked `advanced` (e.g. Species "match by id") in the
-   * per-column filter editor. Default `false`.
-   */
-  advancedFilters?: boolean;
 }
 
 /**
@@ -122,7 +117,6 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     className,
     gridClassName,
     selection,
-    advancedFilters = false,
   } = props;
 
   const { state, rows, total, facets, loading, error } = useDataGrid<Row>({
@@ -218,7 +212,6 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     getRowClass,
     expandColumn,
     loadingLabel,
-    advancedFilters,
   };
 
   if (error && renderError) {

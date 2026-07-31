@@ -90,8 +90,6 @@ export interface IFilterTarget {
    * behaviour, since every free-entry target so far has been an id target.
    */
   freeEntry?: TFreeEntryKind;
-  /** only offered when the grid enables advanced filters (default: false) */
-  advanced?: boolean;
   /** contextual availability (default: true) */
   available?: TContextualValue<boolean>;
 }

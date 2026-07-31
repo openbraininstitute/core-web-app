@@ -43,8 +43,11 @@ function headerFilter(def: { headerComponentParams?: unknown }) {
 
 describe('buildColDefs — filter targets', () => {
   it('offers every target a column declares — no opt-in needed', () => {
-    const [def] = buildColDefs([speciesColumn()], OPTIONS);
-    expect(headerFilter(def)?.targets.map((t) => t.id)).toEqual(['name', 'id']);
+    const declared = [NAME_TARGET, ID_TARGET];
+    const [def] = buildColDefs([speciesColumn({ filterTargets: declared })], OPTIONS);
+    // ALL declared targets reach the header, verbatim — there is no per-target
+    // gate. ("Advanced filters" means `IGridSchema.advancedFilters`, not this.)
+    expect(headerFilter(def)?.targets).toEqual(declared);
   });
 
   it('BACK-COMPAT: a legacy flat filter yields exactly one synthesised target', () => {

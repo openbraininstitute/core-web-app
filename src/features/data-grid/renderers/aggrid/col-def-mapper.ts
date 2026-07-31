@@ -24,8 +24,6 @@ export interface IBuildColDefsOptions {
    * (default) the fixed leading `__expand` column is used.
    */
   expandColumn?: IExpandColumnConfig;
-  /** offer filter targets marked `advanced` (default: false) */
-  advancedFilters?: boolean;
 }
 
 /** Fixed, non-interactive expander column shown when detail rows are enabled. */
@@ -53,7 +51,7 @@ export function buildColDefs<Row>(
   columns: Array<IResolvedColumn<Row>>,
   options: IBuildColDefsOptions
 ): Array<ColDef<Row>> {
-  const { hidden, columnWidths, withExpandColumn, expandColumn, advancedFilters } = options;
+  const { hidden, columnWidths, withExpandColumn, expandColumn } = options;
 
   // Host the expander inside a named column only when a detail runtime exists AND a
   // matching column id was supplied; otherwise fall back to the leading column.

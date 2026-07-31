@@ -445,9 +445,9 @@ export function InMemoryGrid<Row>({
 
     const defs = orderedColumns.map((c) => {
       const userWidth = state.columnWidths[c.id];
-      // Advanced targets are a server-listing affordance; the in-memory preset only
-      // offers the plain ones (a legacy flat filter resolves to exactly one target).
-      const targets = filterable ? resolveFilterTargets(c).filter((t) => !t.advanced) : [];
+      // Every target the column declares is offered (a legacy flat filter resolves
+      // to exactly one target).
+      const targets = filterable ? resolveFilterTargets(c) : [];
       const filterParams = targets.length > 0 ? { targets } : undefined;
 
       const colDef: ColDef<TDisplayRow<Row>> = {

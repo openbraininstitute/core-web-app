@@ -65,7 +65,6 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     getRowClass,
     expandColumn,
     loadingLabel,
-    advancedFilters,
   } = props;
 
   // AG Grid is client-only (mirrors the legacy table's ssr:false). Render a sized
@@ -92,9 +91,8 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         columnWidths: state.columnWidths,
         withExpandColumn: Boolean(detail),
         expandColumn,
-        advancedFilters,
       }),
-    [orderedColumns, hidden, state.columnWidths, detail, expandColumn, advancedFilters]
+    [orderedColumns, hidden, state.columnWidths, detail, expandColumn]
   );
 
   const context = useMemo<IAgGridContext<Row>>(

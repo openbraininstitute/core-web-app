@@ -79,11 +79,6 @@ export interface IGridRendererProps<Row> {
   expandColumn?: IExpandColumnConfig;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
   loadingLabel?: string;
-  /**
-   * Offer filter targets marked `advanced` (e.g. "match by id") in the per-column
-   * filter editor. Default `false` — the extra targets stay hidden.
-   */
-  advancedFilters?: boolean;
 }
 
 /** The rendering port (Strategy). Implemented by `renderers/aggrid`. */
