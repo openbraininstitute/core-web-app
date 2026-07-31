@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -23,6 +23,24 @@ import type {
   GridRendererProps,
 } from './renderer';
 import type { DataGridToolbarSlots } from './toolbar';
+
+/**
+ * Picker selection mode. When present, the grid renders a single (radio) / multi
+ * (checkbox) selection column INDEPENDENT of the schema's bulk-action `selection`,
+ * and emits the selected rows to `onChange` (single = one row, replace; multi =
+ * accumulate across pages). Optional `selectedRows` makes selection CONTROLLED: the
+ * parent owns the picks, the grid mirrors them (checked state survives page/tab
+ * switches) and seeds them into the row cache so cross-page ids always resolve to
+ * full rows. Bulk actions + the selection-count footer are suppressed in this mode —
+ * a picker selects INTO a form, it does not bulk-act.
+ */
+export interface DataGridSelection<Row> {
+  mode: 'single' | 'multi';
+  /** controlled picks (full rows); omit for uncontrolled. */
+  selectedRows?: Row[];
+  /** emitted with the selected rows on every user-driven change. */
+  onChange: (rows: Row[]) => void;
+}
 
 export interface DataGridProps<Row> {
   controller: GridController<Row>;
@@ -55,6 +73,8 @@ export interface DataGridProps<Row> {
   showColumnChooser?: boolean;
   className?: string;
   gridClassName?: string;
+  /** picker selection (single/multi) that propagates chosen rows to a host form. */
+  selection?: DataGridSelection<Row>;
 }
 
 /**
@@ -85,6 +105,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     showColumnChooser = true,
     className,
     gridClassName,
+    selection,
   } = props;
 
   const { state, rows, total, facets, loading, error } = useDataGrid<Row>({
@@ -96,7 +117,64 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
   });
 
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
-  const selectionEnabled = isSelectionEnabled(controller.schema, controller.context);
+
+  // Picker mode forces the selection column ON (regardless of the schema's opt-in
+  // bulk-action selection) and drives the mode from the picker's single/multi.
+  const pickerMode = Boolean(selection);
+  const selectionEnabled = pickerMode || isSelectionEnabled(controller.schema, controller.context);
+  const selectionModeOverride = selection
+    ? selection.mode === 'single'
+      ? ('single' as const)
+      : ('multiRow' as const)
+    : undefined;
+
+  // Full-row cache keyed by row id, accumulated as pages load and seeded with any
+  // CONTROLLED picks. Lets the store's id-only selection resolve back to whole rows
+  // for `onChange`, even for rows selected on a page that is no longer visible.
+  const getRowId = controller.schema.getRowId;
+  const rowCacheRef = useRef(new Map<string, Row>());
+  const controlledRows = selection?.selectedRows;
+  useEffect(() => {
+    if (!pickerMode) return;
+    for (const r of rows) rowCacheRef.current.set(getRowId(r), r);
+  }, [rows, pickerMode, getRowId]);
+  useEffect(() => {
+    if (!controlledRows) return;
+    for (const r of controlledRows) rowCacheRef.current.set(getRowId(r), r);
+  }, [controlledRows, getRowId]);
+
+  // CONTROLLED sync: mirror the parent's picks into the store so the grid shows them
+  // checked. Only dispatch when they diverge — after a user action the store already
+  // matches what the parent will set, so this is a no-op and no loop forms.
+  const controlledIds = useMemo(() => controlledRows?.map(getRowId), [controlledRows, getRowId]);
+  useEffect(() => {
+    if (!controlledIds) return;
+    const current = controller.store.getSnapshot().selection;
+    const same =
+      current.length === controlledIds.length && current.every((id, i) => id === controlledIds[i]);
+    if (!same) controller.store.dispatch({ type: 'setSelection', ids: controlledIds });
+  }, [controlledIds, controller]);
+
+  // store → parent: emit the selected rows on every user-driven change. The mount
+  // baseline is captured WITHOUT emitting (parity with the legacy table, which fires
+  // `onRowsSelected` only on user action), so a restored/empty selection never wipes
+  // the host form on first render.
+  const onPickerChange = selection?.onChange;
+  const lastEmittedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!onPickerChange) return;
+    const key = state.selection.join('|');
+    if (lastEmittedRef.current === null) {
+      lastEmittedRef.current = key;
+      return;
+    }
+    if (lastEmittedRef.current === key) return;
+    lastEmittedRef.current = key;
+    const selectedRows = state.selection
+      .map((id) => rowCacheRef.current.get(id))
+      .filter((r): r is Row => r !== undefined);
+    onPickerChange(selectedRows);
+  }, [state.selection, onPickerChange]);
 
   const rendererProps: GridRendererProps<Row> = {
     controller,
@@ -110,6 +188,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     cellRenderers,
     detail,
     selectionEnabled,
+    selectionModeOverride,
     onRowClick,
     activeRowId,
     getRowClass,
@@ -122,8 +201,10 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
     );
   }
 
+  // Bulk actions are a browse-mode affordance; a picker routes selection to the host
+  // form instead, so they (and the "N selected" footer below) are suppressed there.
   const bulkActions =
-    selectionEnabled && renderBulkActions ? (
+    !pickerMode && selectionEnabled && renderBulkActions ? (
       <BulkActions controller={controller} rows={rows} selection={state.selection}>
         {renderBulkActions}
       </BulkActions>
@@ -150,7 +231,7 @@ export function DataGrid<Row>(props: DataGridProps<Row>) {
       <div className="relative flex min-h-[52px] items-center justify-center border-t border-gray-100 px-3 py-2">
         <div className="absolute left-3 flex flex-col gap-0.5">
           {renderCount?.({ total, loading, error })}
-          {selectionEnabled && selectionCount > 0 ? (
+          {!pickerMode && selectionEnabled && selectionCount > 0 ? (
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-primary-8">{selectionCount} selected</span>
               <button

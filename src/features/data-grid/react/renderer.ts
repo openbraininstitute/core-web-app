@@ -64,6 +64,12 @@ export interface GridRendererProps<Row> {
   detail?: DetailRuntime<Row>;
   /** whether checkbox multi-row selection is active in the current context */
   selectionEnabled?: boolean;
+  /**
+   * Overrides the schema's `selection.mode` for the current render (picker mode).
+   * `'single'` = radio (one winner, replace); `'multiRow'` = checkboxes (accumulate).
+   * When omitted the renderer falls back to `schema.selection.mode`.
+   */
+  selectionModeOverride?: 'single' | 'multiRow';
   onRowClick?: (row: Row) => void;
   /** id of the row whose mini-detail view is open — highlighted in the grid */
   activeRowId?: string;

@@ -8,6 +8,7 @@ import { AgDetailCell, DEFAULT_DETAIL_MIN_HEIGHT } from './detail-cell';
 import { detailRowId, interleaveDetailRows, isDetailRow } from './detail-rows';
 import { isExpanderClick } from './expand-cell';
 import { registerDataGridModules } from './register-modules';
+import { mergePageSelection } from './selection';
 import { dataGridTheme } from './theme';
 
 import type {
@@ -56,6 +57,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     cellRenderers,
     detail,
     selectionEnabled,
+    selectionModeOverride,
     onRowClick,
     activeRowId,
     getRowClass,
@@ -132,9 +134,11 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
   );
 
   const selectionSpec = controller.schema.selection;
+  // Picker mode overrides the schema's declared mode (radio single / checkbox multi).
+  const effectiveSelectionMode = selectionModeOverride ?? selectionSpec?.mode;
   const rowSelection = useMemo<RowSelectionOptions<DisplayRow<Row>> | undefined>(() => {
     if (!selectionEnabled) return undefined;
-    if (selectionSpec?.mode === 'single') {
+    if (effectiveSelectionMode === 'single') {
       return {
         mode: 'singleRow',
         checkboxes: (p) => !isDetailRow(p.data),
@@ -148,7 +152,7 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
       selectAll: 'currentPage',
       enableClickSelection: false,
     };
-  }, [selectionEnabled, selectionSpec?.mode, selectionSpec?.headerCheckbox]);
+  }, [selectionEnabled, effectiveSelectionMode, selectionSpec?.headerCheckbox]);
 
   // the checkbox column is pinned first, fixed width and non-movable — a clean,
   // high-quality selection affordance (AG Grid inserts it before all data columns).
@@ -171,20 +175,25 @@ function AgGridRendererImpl<Row>(props: GridRendererProps<Row>) {
     [selectionEnabled, selectionSpec?.columnWidth]
   );
 
-  // grid → store. Selection is cross-page: merge this page's checkboxes with the
-  // ids selected on other pages (which the grid cannot see).
+  // grid → store. Selection is cross-page: `mergePageSelection` reconciles this
+  // page's checkboxes with the ids selected on other pages (which the grid cannot
+  // see). `single` (radio) replaces; `multiRow` accumulates.
   const onSelectionChanged = useCallback(
     (e: SelectionChangedEvent<DisplayRow<Row>>) => {
       if (e.source === 'api') return; // our own store → grid sync
-      const pageIds = new Set(rows.map(getRowId));
       const selectedOnPage = e.api
         .getSelectedRows()
         .filter((r): r is Row => !isDetailRow(r))
         .map(getRowId);
-      const offPage = controller.store.getSnapshot().selection.filter((id) => !pageIds.has(id));
-      controller.store.dispatch({ type: 'setSelection', ids: [...offPage, ...selectedOnPage] });
+      const next = mergePageSelection(
+        effectiveSelectionMode,
+        controller.store.getSnapshot().selection,
+        rows.map(getRowId),
+        selectedOnPage
+      );
+      controller.store.dispatch({ type: 'setSelection', ids: next });
     },
-    [controller, rows, getRowId]
+    [controller, rows, getRowId, effectiveSelectionMode]
   );
 
   // store → grid. Re-applied when the store selection changes (effect below) and

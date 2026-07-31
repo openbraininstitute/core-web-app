@@ -52,6 +52,7 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { AnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import type { Facets, GridDataSource } from '@/features/data-grid/core';
 import type {
+  DataGridSelection,
   DataGridToolbarSlots,
   DetailRuntime,
   ExpandColumnConfig,
@@ -113,6 +114,7 @@ export function EntityDataGrid({
   dataType,
   scope: defaultScope,
   miniViewProps,
+  mainTableProps,
   allowSearch = true,
   allowQuery = true,
   allowDownload,
@@ -168,6 +170,26 @@ export function EntityDataGrid({
     (row: EntityCoreIdentifiableNamed) => makeSelectEntityClickEvent({ display: true, data: row }),
     []
   );
+
+  // PICKER selection contract (same surface the legacy `MainTable` reads from
+  // `mainTableProps`): `selectionType` 'radio'|'checkbox' → single|multi, optional
+  // controlled `selectedRows`, and `onRowsSelected` as the host-form callback. When
+  // both a type and a callback are present the grid renders the selection column and
+  // propagates picks to the form; otherwise selection stays schema-driven (bulk
+  // actions) — never regressing already-flipped browse entities.
+  const selectionType = mainTableProps?.selectionType;
+  const onRowsSelected = mainTableProps?.onRowsSelected;
+  const controlledSelectedRows = mainTableProps?.selectedRows;
+  const pickerSelection = useMemo<
+    DataGridSelection<EntityCoreIdentifiableNamed> | undefined
+  >(() => {
+    if (!selectionType || !onRowsSelected) return undefined;
+    return {
+      mode: selectionType === 'radio' ? 'single' : 'multi',
+      selectedRows: controlledSelectedRows,
+      onChange: onRowsSelected,
+    };
+  }, [selectionType, onRowsSelected, controlledSelectedRows]);
 
   const speciesKey = isAllSpeciesMode ? 'all' : workspaceSpecies?.hierarchId;
   const controller = useMemo(
@@ -341,6 +363,7 @@ export function EntityDataGrid({
           gridClassName={classNames?.tableClassNames?.container}
           onRowClick={handleRowClick}
           activeRowId={activeRowId}
+          selection={pickerSelection}
           toolbarSlots={{
             left: toolbarLeft,
             search: allowSearch ? <GridSearch onSearch={handleSearch} openOnMount /> : undefined,

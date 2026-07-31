@@ -15,7 +15,7 @@ export { useDataGrid } from './use-data-grid';
 export type { BulkActionsProps, BulkActionsRenderArgs } from './bulk-actions';
 export type { CellRendererComponent, CellRendererProps } from './cell-renderer-registry';
 export type { ColumnChooserProps } from './column-chooser';
-export type { DataGridProps } from './data-grid';
+export type { DataGridProps, DataGridSelection } from './data-grid';
 export type { DetailRowHostProps } from './detail-row-host';
 export type { GridPaginationProps } from './pagination';
 export type {
