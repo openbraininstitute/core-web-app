@@ -98,7 +98,7 @@ export function ActiveFiltersButton<Row>({
       <PopoverContent
         align="start"
         side="bottom"
-        sideOffset={6}
+        sideOffset={8}
         // `arrowPadding` keeps the tip clear of the rounded-2xl corner; with
         // `align="start"` it lands over the trigger, i.e. on the panel's left.
         arrowPadding={12}
@@ -116,9 +116,12 @@ export function ActiveFiltersButton<Row>({
           }
         }}
       >
-        {/* tip on top, over the trigger — same affordance as the column chooser's
-            `placement="bottomLeft"` popover */}
-        <PopoverArrow />
+        {/* Tip on top, over the trigger — same affordance as the column chooser's
+            `placement="bottomLeft"` popover. The panel draws a 1px border and the
+            arrow does not, so an exactly-flush arrow reads as a detached triangle
+            with the border line cutting across its base. Nudging it 1px INTO the
+            panel overlaps that seam, so the tip looks extruded from the surface. */}
+        <PopoverArrow className="translate-y-px" />
         <div className="flex flex-col gap-2">
           {hasAdvanced && operators ? (
             <AdvancedFiltersMenu
