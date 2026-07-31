@@ -16,6 +16,7 @@ import {
   smallMicrocircuitSimulationGridDefinition,
   wholeBrainCircuitSimulationGridDefinition,
 } from '../schemas/circuit-simulations';
+import { simulationCampaignGridDefinition } from '../schemas/simulation-campaign';
 
 import type { FilterModel, GridContext, GridQuery, GridSchema } from '../../../core';
 import type { EntityGridDefinition } from '../registry';
@@ -141,6 +142,55 @@ describe('ion_channel_model_simulation parity', () => {
     ]);
   });
   assertCampaignDetail(def, 'ion_channel_model_simulation');
+});
+
+describe('simulation_campaign parity (generic Data → Simulations listing)', () => {
+  const def = simulationCampaignGridDefinition;
+  const dataType = 'simulation_campaign';
+
+  it('columns match the legacy view-def order (no Created by, no Species)', () => {
+    // view-defs/simulation/simulation-campaign.ts:
+    //   Name, Description, CircuitName, RegistrationDate, LegacyActivityStatus
+    expect(ids(def.schema, dataCtx(dataType))).toEqual([
+      'name',
+      'description',
+      'circuitName',
+      'registrationDate',
+      'status',
+    ]);
+  });
+
+  it('routes under the simulation_campaign dataType', () => {
+    expect(def.dataType).toBe(dataType);
+  });
+
+  it('defaults to popover-cards mode: no full-width detail row is wired', () => {
+    expect(def.schema.detail).toBeUndefined();
+    expect(def.renderDetail).toBeUndefined();
+  });
+
+  it('registers the status cell renderer', () => {
+    expect(typeof def.registerCellRenderers).toBe('function');
+  });
+
+  it('serializes name filter + registration date range + default sort to the legacy keys', () => {
+    const s = def.schema;
+    expect(serializeQuery(query({ filters: ilike('name') }), s).name__ilike).toBe('%foo%');
+    const dateFilter: FilterModel = {
+      registrationDate: {
+        columnId: 'registrationDate',
+        operator: OperatorId.DateRange,
+        value: { kind: 'dateRange', from: '2026-01-01', to: '2026-02-01' },
+      },
+    };
+    const dated = serializeQuery(query({ filters: dateFilter }), s);
+    expect(dated.creation_date__gte).toBe('2026-01-01');
+    expect(dated.creation_date__lte).toBe('2026-02-01');
+    expect(
+      serializeQuery(query({ sort: [{ columnId: 'registrationDate', direction: 'desc' }] }), s)
+        .order_by
+    ).toEqual(['-creation_date']);
+  });
 });
 
 describe('nested-table mode (flag ON)', () => {

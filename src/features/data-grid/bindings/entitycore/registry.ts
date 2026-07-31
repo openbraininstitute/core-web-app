@@ -15,6 +15,7 @@ import { ionChannelModelGridDefinition } from './schemas/ion-channel-model';
 import { ionChannelRecordingGridDefinition } from './schemas/ion-channel-recording';
 import { meModelCircuitGridDefinition } from './schemas/me-model-circuit';
 import { memodelGridDefinition } from './schemas/memodel';
+import { simulationCampaignGridDefinition } from './schemas/simulation-campaign';
 import { singleNeuronSimulationGridDefinition } from './schemas/single-neuron-simulation';
 import { singleNeuronSynaptomeGridDefinition } from './schemas/single-neuron-synaptome';
 import { singleNeuronSynaptomeSimulationGridDefinition } from './schemas/single-neuron-synaptome-simulation';
@@ -89,6 +90,8 @@ const definitions: Record<string, AnyEntityGridDefinition> = {
   ...Object.fromEntries(circuitModelGridDefinitions.map((def) => [def.dataType, def])),
   // T-05: expandable circuit-simulation dataTypes flipped to full-width detail rows.
   ...Object.fromEntries(circuitSimulationGridDefinitions.map((def) => [def.dataType, def])),
+  // Generic simulation_campaign listing (Data → Simulations): badge + scan-cards popover.
+  [simulationCampaignGridDefinition.dataType]: simulationCampaignGridDefinition,
   // Circuit listing flipped onto the shared stack via a PLUGIN body (flat↔hierarchy
   // toggle + recursive subcircuit expansion). Rollback = remove this one line.
   [circuitGridDefinition.dataType]: circuitGridDefinition,
