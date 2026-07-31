@@ -187,6 +187,42 @@ function AdvancedFilterList({
 }
 
 /**
+ * `<input>` types for which ArrowLeft is INERT — no caret to move (the checkbox and
+ * the button-like types), nothing to step. Every other input type is assumed to own
+ * the key: the text-entry types move the caret, `range` steps the value and `radio`
+ * moves the selection inside its group.
+ *
+ * Defaulting to "the control owns ArrowLeft" is deliberate. Stealing the key from a
+ * value editor backs out of the submenu and DISCARDS the draft — real data loss —
+ * whereas leaving it with an exotic control merely costs one keyboard shortcut that
+ * the back chevron, Escape and Shift+Tab all still provide.
+ */
+const ARROW_LEFT_INERT_INPUT_TYPES: ReadonlySet<string> = new Set([
+  'button',
+  'checkbox',
+  'color',
+  'file',
+  'hidden',
+  'image',
+  'reset',
+  'submit',
+]);
+
+/**
+ * True when ArrowLeft belongs to the focused control rather than to the menu, i.e.
+ * the submenu must NOT treat it as "back": a textarea or contenteditable (caret), a
+ * native `<select>` (ArrowLeft changes the selected option) or any input other than
+ * the inert types above.
+ */
+function ownsArrowLeft(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  if (target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return true;
+  if (target instanceof HTMLInputElement) return !ARROW_LEFT_INERT_INPUT_TYPES.has(target.type);
+  return false;
+}
+
+/**
  * One filter's submenu: the shared operator/value editor, with its heading replaced
  * by a back control.
  *
@@ -222,6 +258,13 @@ function AdvancedFilterSubmenu<Row>({
       className="flex flex-col"
       onKeyDown={(e) => {
         if (e.key !== 'Escape' && e.key !== 'ArrowLeft') return;
+        // ArrowLeft is "back" only from the menu's OWN rows — inside the editor's
+        // value controls it is caret movement, and hijacking it there threw the
+        // draft away (see `ownsArrowLeft`). Escape is unconditional: unlike an
+        // arrow it means "dismiss this layer" everywhere, including in a text box,
+        // and NOT handling it here would simply let it bubble to the popover and
+        // close the whole surface — the same lost draft plus the lost surface.
+        if (e.key === 'ArrowLeft' && ownsArrowLeft(e.target)) return;
         // Escape backs out of the SUBMENU first; it must not close the popover too.
         e.stopPropagation();
         onBack();
