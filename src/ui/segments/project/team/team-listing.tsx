@@ -1,12 +1,12 @@
 'use client';
 
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { List } from 'antd';
 import { compact, get, sortBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
 
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -15,8 +15,7 @@ import { RoleModifier } from '@/ui/segments/project/team/role-modifier';
 import { extractInitials } from '@/util/slugify';
 import { cn } from '@/utils/css-class';
 
-import type { Member, MembersResponse } from '@/api/virtual-lab-svc/queries/types';
-import type { SimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 
 export function ListingMembers({
   onAddMemberClick,
@@ -49,77 +48,6 @@ export function ListingMembers({
     [users, ownerId, data?.user.id]
   );
 
-  const columns: Array<SimpleColumn<Member>> = [
-    {
-      id: 'name',
-      header: '',
-      width: { width: 400 },
-      renderCell: (record) => (
-        <div className="flex w-max items-center justify-center">
-          <MemberAvatarCasual
-            withEmail
-            isOwner={ownerId === record.id || virtualLabAdmins?.includes(record.id)}
-            shape={record.role === 'admin' ? 'square' : 'circle'}
-            key={`project-avatar-${record.id ?? record.email}`}
-            index={orderedUsers.indexOf(record)}
-            size="small"
-            layout="horizontal"
-            id={record.id ?? record.email}
-            email={record.email}
-            role={record.role}
-            pending={!record.invite_accepted}
-            name={
-              record.id
-                ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
-                  get(record, 'username') ||
-                  record.email
-                : record.email
-            }
-            initials={extractInitials(
-              record.id
-                ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
-                    get(record, 'username') ||
-                    record.email
-                : record.email
-            )}
-            cls={{
-              text: cn(
-                'text-white  wrap-text',
-                record.invite_accepted ? 'font-bold' : 'font-light'
-              ),
-              pending: cn(
-                '[&_.avatar-email]:text-primary-9!',
-                '[&_.avatar-role]:text-primary-8!',
-                '[&_.avatar-icon]:text-primary-9!'
-              ),
-            }}
-            pendingIcon={{
-              envelop: '#d9d9d9',
-              halfCircle: '#002766',
-            }}
-          />
-        </div>
-      ),
-    },
-    {
-      id: 'role',
-      header: '',
-      align: 'right',
-      width: { width: 250 },
-      renderCell: (record) => {
-        if (isLoading) return <LoadingOutlined />;
-        return (
-          <RoleModifier
-            virtualLabOwnerId={virtualLabOwnerId}
-            virtualLabAdmins={virtualLabAdmins}
-            projectAdmins={projectAdmins}
-            user={record}
-          />
-        );
-      },
-    },
-  ];
-
   return (
     <div className="animate-fade-in flex h-full w-full flex-col pr-4 pl-8">
       <div className="flex w-full items-center justify-between px-3">
@@ -151,19 +79,87 @@ export function ListingMembers({
           </Button>
         </div>
       </div>
+      {/* A member row is an avatar block + a role control, not tabular data — a list
+          fits it better than a grid (no headers, sorting, resizing or column model
+          to justify). Borderless + transparent so the parent panel shows through,
+          matching the original antd table. */}
       <div className="secondary-scrollbar h-full grow overflow-y-auto py-5 pr-3">
-        <SimpleGrid<Member>
-          columns={columns}
-          rows={orderedUsers}
-          getRowId={(record) => record.id ?? record.email}
-          hideHeader
-          className={cn(
-            'h-full w-full',
-            // faithfully reproduce antd's transparent, borderless table so the
-            // parent panel background shows through (avatars set their own colors)
-            '[&_.ag-root-wrapper]:border-0 [&_.ag-root-wrapper]:bg-transparent!',
-            '[&_.ag-row]:border-0 [&_.ag-row]:bg-transparent!',
-            '[&_.ag-cell]:bg-transparent!'
+        <List
+          split={false}
+          dataSource={orderedUsers}
+          rowKey={(record) => record.id ?? record.email}
+          className="h-full w-full"
+          renderItem={(record, index) => (
+            <List.Item
+              key={record.id ?? record.email}
+              className={cn(
+                'border-none! px-0! py-3!',
+                'transition-colors duration-300 hover:bg-gray-200'
+              )}
+            >
+              <div className="flex w-full items-center justify-between gap-4">
+                <div className="flex w-max items-center justify-center">
+                  <MemberAvatarCasual
+                    withEmail
+                    isOwner={ownerId === record.id || virtualLabAdmins?.includes(record.id)}
+                    shape={record.role === 'admin' ? 'square' : 'circle'}
+                    key={`project-avatar-${record.id ?? record.email}`}
+                    index={index}
+                    size="small"
+                    layout="horizontal"
+                    id={record.id ?? record.email}
+                    email={record.email}
+                    role={record.role}
+                    pending={!record.invite_accepted}
+                    name={
+                      record.id
+                        ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(
+                            ' '
+                          ) ||
+                          get(record, 'username') ||
+                          record.email
+                        : record.email
+                    }
+                    initials={extractInitials(
+                      record.id
+                        ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(
+                            ' '
+                          ) ||
+                            get(record, 'username') ||
+                            record.email
+                        : record.email
+                    )}
+                    cls={{
+                      text: cn(
+                        'text-white  wrap-text',
+                        record.invite_accepted ? 'font-bold' : 'font-light'
+                      ),
+                      pending: cn(
+                        '[&_.avatar-email]:text-primary-9!',
+                        '[&_.avatar-role]:text-primary-8!',
+                        '[&_.avatar-icon]:text-primary-9!'
+                      ),
+                    }}
+                    pendingIcon={{
+                      envelop: '#d9d9d9',
+                      halfCircle: '#002766',
+                    }}
+                  />
+                </div>
+                <div className="flex shrink-0 items-center justify-end">
+                  {isLoading ? (
+                    <LoadingOutlined />
+                  ) : (
+                    <RoleModifier
+                      virtualLabOwnerId={virtualLabOwnerId}
+                      virtualLabAdmins={virtualLabAdmins}
+                      projectAdmins={projectAdmins}
+                      user={record}
+                    />
+                  )}
+                </div>
+              </div>
+            </List.Item>
           )}
         />
       </div>
