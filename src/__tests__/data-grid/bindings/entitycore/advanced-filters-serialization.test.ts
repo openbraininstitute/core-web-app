@@ -186,7 +186,9 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
       { kind: FilterValueKind.Boolean, value: false } satisfies TFilterValue,
       { has_segmented_spines: false },
     ],
-    ['record', 'lifecycleStatus', OperatorId.Eq, text('active'), { lifecycle_status: 'active' }],
+    // the morphology's own entity id, moved here from the Name column's targets
+    ['record', 'id', OperatorId.In, set(PROTOCOL_ID), { id__in: [PROTOCOL_ID] }],
+    ['record', 'id', OperatorId.Eq, text(PROTOCOL_ID), { id: PROTOCOL_ID }],
   ])('%s · %s + %s', (groupId, filterId, operator, value, expected) => {
     expect(serializeOne(groupId, filterId, operator, value)).toEqual(expected);
   });
@@ -195,7 +197,7 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
     const groups = resolveAdvancedFilterGroups(cellMorphologySchema, CTX);
     const declared = groups.flatMap((g) => g.filters.flatMap((f) => f.def.operators));
     // Bool appears twice (true/false); the rest map 1:1 onto a case above.
-    expect(declared).toHaveLength(20);
+    expect(declared).toHaveLength(21);
   });
 
   it('composes with column filters into ONE request', () => {
