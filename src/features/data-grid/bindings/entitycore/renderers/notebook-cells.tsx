@@ -12,7 +12,14 @@ export const NOTEBOOK_IMAGE_PREVIEW_RENDERER = 'notebookImagePreview';
  * so the AG Grid listing shows the same notebook figures as the antd table.
  */
 export function NotebookImagePreview({ row }: ICellRendererProps<IAnalysisNotebookResult>) {
-  if (!row) return null;
+  // same empty state the other preview cells use — a preview column never goes blank
+  if (!row) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-300">
+        No preview
+      </div>
+    );
+  }
   return (
     <NotebookPreviewThumbnail
       record={row as unknown as Parameters<typeof NotebookPreviewThumbnail>[0]['record']}

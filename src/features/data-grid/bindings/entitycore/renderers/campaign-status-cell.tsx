@@ -15,6 +15,7 @@ import {
 } from '@/features/task-runner/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
+import { EMPTY_PLACEHOLDER } from '../columns/catalog';
 import { CampaignScanCards } from './campaign-scan-cards';
 import {
   aggregateCampaignStatus,
@@ -75,7 +76,8 @@ export function CampaignStatusCell({
   row,
 }: ICellRendererProps<{ id?: string | null; name?: string | null }>): ReactNode {
   const campaignId = row?.id ?? undefined;
-  if (!campaignId) return null;
+  // no campaign id → no status to aggregate; show the shared placeholder, not a blank
+  if (!campaignId) return <span className="text-gray-300">{EMPTY_PLACEHOLDER}</span>;
   return <SimulationCampaignStatusCell campaignId={campaignId} simName={row?.name ?? undefined} />;
 }
 

@@ -2,6 +2,7 @@
 
 import { getParamLabel } from '@/features/task-runner/expanded-view';
 
+import { EMPTY_PLACEHOLDER } from '../columns/catalog';
 import { CampaignStatusBadge } from './campaign-status-badge';
 
 import type { ReactNode } from 'react';
@@ -32,10 +33,11 @@ interface RawScanRow {
 
 /** Format an arbitrary scan-parameter value for compact display inside a card. */
 export function formatScanValue(value: unknown): string {
-  if (value == null) return '—';
-  if (Array.isArray(value)) return value.map(formatScanValue).join(', ');
+  if (value == null) return EMPTY_PLACEHOLDER;
+  if (Array.isArray(value))
+    return value.length === 0 ? EMPTY_PLACEHOLDER : value.map(formatScanValue).join(', ');
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (typeof value === 'string') return value;
+  if (typeof value === 'string') return value.trim() === '' ? EMPTY_PLACEHOLDER : value;
   if (typeof value === 'object') {
     try {
       return JSON.stringify(value);

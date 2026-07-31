@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/utils/css-class';
 
 import { Align } from '../core';
+import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
 import { InMemoryGrid } from './in-memory-grid';
@@ -217,6 +218,10 @@ export function buildSimpleColDefs<Row>(
       // `field` may be a dotted path; cast past AG Grid's keyof-based field type
       colDef.field = (c.field ?? c.id) as ColDef<Row>['field'];
     }
+
+    // Plain-value columns show the shared placeholder instead of a blank cell. A
+    // column with its own `renderCell` owns its empty state and is left alone.
+    if (!c.renderCell && !keepsBlankWhenEmpty(c)) withEmptyPlaceholder(colDef);
 
     return colDef;
   });

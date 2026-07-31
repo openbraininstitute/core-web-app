@@ -1,3 +1,5 @@
+import { renderCellValue } from './empty-cell';
+
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { ICellRendererProps } from '../../react';
 import type { IAgGridContext } from './ag-context';
@@ -29,5 +31,7 @@ export function AgCellHost(props: CustomCellRendererProps) {
     }
   }
 
-  return props.value == null ? null : String(props.value);
+  // No (or unresolved) renderer key: print the plain value, or the shared
+  // placeholder when it is missing/empty — never an empty cell.
+  return renderCellValue(props.value);
 }

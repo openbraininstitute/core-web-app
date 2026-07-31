@@ -27,6 +27,7 @@ import { CellRendererRegistry } from '../react/cell-renderer-registry';
 import { ColumnChooser } from '../react/column-chooser';
 import { GridLoaderOverlay } from '../react/grid-loader';
 import { GridPagination } from '../react/pagination';
+import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
 import { isExpanderClick } from '../renderers/aggrid/expand-cell';
 import { AgHeader } from '../renderers/aggrid/header';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
@@ -519,6 +520,10 @@ export function InMemoryGrid<Row>({
       } else {
         colDef.field = (c.field ?? c.id) as ColDef<TDisplayRow<Row>>['field'];
       }
+
+      // Plain-value columns show the shared placeholder instead of a blank cell;
+      // inline-rendered, expander-host and deliberately-blank columns are left alone.
+      if (!baseRender && !isHost && !keepsBlankWhenEmpty(c)) withEmptyPlaceholder(colDef);
 
       return colDef;
     });

@@ -1,6 +1,7 @@
 import { Align } from '../../core';
 import { AgCellHost } from './cell-host';
 import { isDetailRow } from './detail-rows';
+import { keepsBlankWhenEmpty, withEmptyPlaceholder } from './empty-cell';
 import { AgExpandCell } from './expand-cell';
 import { AgExpandHostCell } from './expand-host-cell';
 import { AgHeader } from './header';
@@ -130,6 +131,10 @@ export function buildColDefs<Row>(
     if (filterParams) {
       colDef.suppressHeaderMenuButton = true;
     }
+
+    // Columns the grid prints itself show the shared placeholder when the value is
+    // missing/empty, so a cell is never silently blank.
+    if (!keepsBlankWhenEmpty(c, hostColumnId)) withEmptyPlaceholder(colDef);
 
     return colDef;
   });
