@@ -84,6 +84,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
   const { run, runTargets, runningTarget, running, creditsModal } = useRunNotebook({
     id: record.id,
     assets,
+    embed: isTemplate,
   });
 
   const [pendingDownload, setPendingDownload] = useState(false);

@@ -1,0 +1,246 @@
+/*
+ * Component styling for the embedded notebook workbench. The colour tokens,
+ * fonts and scrollbar utilities all come from the app's globals.css — this file
+ * only styles what CodeMirror and kernel-produced output render into.
+ */
+
+.nbw-root {
+  --nbw-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+/* ---------------------------------------------------------------- CodeMirror */
+
+.nbw-root .cm-editor {
+  background: transparent;
+  font-family: var(--nbw-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.nbw-root .cm-editor.cm-focused {
+  outline: none !important;
+}
+
+.nbw-root .cm-editor .cm-scroller {
+  font-family: inherit;
+  line-height: inherit;
+}
+
+.nbw-root .cm-editor .cm-content {
+  padding: 10px 0;
+  caret-color: var(--color-primary-9);
+}
+
+.nbw-root .cm-editor .cm-line {
+  padding: 0 14px;
+}
+
+.nbw-root .cm-editor .cm-gutters {
+  background: transparent;
+  border: none;
+  color: var(--color-neutral-3);
+  font-size: 11px;
+  padding-left: 6px;
+}
+
+.nbw-root .cm-editor .cm-activeLine {
+  background: rgba(232, 247, 255, 0.55);
+}
+
+.nbw-root .cm-editor .cm-activeLineGutter {
+  background: transparent;
+  color: var(--color-primary-6);
+}
+
+.nbw-root .cm-editor .cm-selectionBackground,
+.nbw-root .cm-editor.cm-focused .cm-selectionBackground,
+.nbw-root .cm-editor ::selection {
+  background: var(--color-primary-highlight) !important;
+}
+
+.nbw-root .cm-editor .cm-cursor {
+  border-left-color: var(--color-primary-9);
+  border-left-width: 2px;
+}
+
+.cm-tooltip.cm-tooltip-autocomplete {
+  border: 1px solid var(--color-neutral-2);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow:
+    rgba(0, 0, 0, 0.1) 0 3px 10px -3px,
+    rgba(0, 0, 0, 0.06) 0 2px 4px -2px;
+  overflow: hidden;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  z-index: 60;
+}
+
+.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: var(--color-primary-9);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------------ Markdown */
+
+.nbw-root .md-body {
+  color: var(--color-primary-9);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+.nbw-root .md-body > *:first-child {
+  margin-top: 0;
+}
+.nbw-root .md-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.nbw-root .md-body h1,
+.nbw-root .md-body h2,
+.nbw-root .md-body h3,
+.nbw-root .md-body h4 {
+  font-family: var(--font-title, inherit);
+  font-weight: 700;
+  color: var(--color-primary-9);
+  line-height: 1.25;
+  margin: 1.4em 0 0.5em;
+}
+
+.nbw-root .md-body h1 {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+.nbw-root .md-body h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+.nbw-root .md-body h3 {
+  font-size: 1.2rem;
+}
+.nbw-root .md-body h4 {
+  font-size: 1rem;
+}
+
+.nbw-root .md-body p {
+  margin: 0.7em 0;
+}
+
+.nbw-root .md-body a {
+  color: var(--color-primary-6);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nbw-root .md-body ul,
+.nbw-root .md-body ol {
+  margin: 0.7em 0;
+  padding-left: 1.5em;
+}
+.nbw-root .md-body ul {
+  list-style: disc;
+}
+.nbw-root .md-body ol {
+  list-style: decimal;
+}
+.nbw-root .md-body li {
+  margin: 0.25em 0;
+}
+
+.nbw-root .md-body blockquote {
+  border-left: 3px solid var(--color-primary-2);
+  padding-left: 1em;
+  margin: 0.9em 0;
+  color: var(--color-neutral-4);
+}
+
+.nbw-root .md-body code {
+  font-family: var(--nbw-mono);
+  font-size: 0.86em;
+  background: var(--color-primary-0);
+  color: var(--color-primary-8);
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
+}
+
+.nbw-root .md-body pre {
+  background: var(--color-primary-9);
+  color: #fff;
+  padding: 14px 16px;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 0.9em 0;
+}
+
+.nbw-root .md-body pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 12.5px;
+}
+
+.nbw-root .md-body table {
+  border-collapse: collapse;
+  margin: 0.9em 0;
+  font-size: 13px;
+  display: block;
+  overflow-x: auto;
+}
+
+.nbw-root .md-body th,
+.nbw-root .md-body td {
+  border: 1px solid var(--color-neutral-2);
+  padding: 7px 11px;
+  text-align: left;
+}
+
+.nbw-root .md-body th {
+  background: var(--color-neutral-1);
+  font-weight: 600;
+}
+
+.nbw-root .md-body hr {
+  border: none;
+  border-top: 1px solid var(--color-neutral-2);
+  margin: 1.4em 0;
+}
+
+.nbw-root .md-body img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+/* --------------------------------------------------------- Rendered outputs */
+
+.nbw-root .jp-output-html {
+  font-size: 13px;
+  color: var(--color-primary-9);
+  overflow-x: auto;
+}
+
+.nbw-root .jp-output-html table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.nbw-root .jp-output-html table th,
+.nbw-root .jp-output-html table td {
+  border: 1px solid var(--color-neutral-2);
+  padding: 5px 11px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nbw-root .jp-output-html table th {
+  background: var(--color-neutral-1);
+  font-weight: 600;
+  color: var(--color-neutral-5);
+}
+
+.nbw-root .jp-output-html table tr:hover td {
+  background: var(--color-primary-0);
+}
+
+.nbw-root .jp-output-html img {
+  max-width: 100%;
+}
