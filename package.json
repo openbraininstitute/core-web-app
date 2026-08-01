@@ -79,6 +79,7 @@
     "chroma-js": "^3.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cnfast": "^0.0.8",
     "comlink": "^4.4.2",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.20",
