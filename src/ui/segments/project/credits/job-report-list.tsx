@@ -88,7 +88,7 @@ function costRenderFn(amount: string) {
   return <span>{formattedAmount}</span>;
 }
 
-const JOB_REPORTS_PAGE_SIZE = 8;
+const JOB_REPORTS_PAGE_SIZE = 10;
 
 export function JobReportList() {
   const { virtualLabId, projectId } = useWorkspace();
