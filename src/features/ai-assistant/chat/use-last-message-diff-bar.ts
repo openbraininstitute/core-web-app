@@ -1,6 +1,6 @@
 'use client';
 
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
 import {
@@ -26,6 +26,8 @@ export interface LastMessageDiffBarState {
   clearDiffBarData: () => void;
 }
 
+export const diffBarDataAtom = atom<DiffBarData | null>(null);
+
 /**
  * Panel-level hook that manages diff bar population and diff highlight
  * show/hide for the last message. Extracted from useMessageDiffs to keep
@@ -43,8 +45,8 @@ export function useLastMessageDiffBar(
   const clearDiffState = React.useCallback(() => clearDiff(), [clearDiff]);
 
   // Local state instead of a global atom — only this hook and chat.tsx use it
-  const [diffBarData, setDiffBarData] = React.useState<DiffBarData | null>(null);
-  const clearDiffBarData = React.useCallback(() => setDiffBarData(null), []);
+  const [diffBarData, setDiffBarData] = useAtom(diffBarDataAtom);
+  const clearDiffBarData = React.useCallback(() => setDiffBarData(null), [setDiffBarData]);
 
   // Config snapshot captured by chat.ts before the first editstate call
   const preMessageConfig = useAtomValue(preMessageConfigAtom);
@@ -89,7 +91,14 @@ export function useLastMessageDiffBar(
       accumulatedDiffs,
       oldConfig: preMessageConfig,
     });
-  }, [hasCompletedEditStateCalls, status, lastMessage, accumulatedDiffs, preMessageConfig]);
+  }, [
+    hasCompletedEditStateCalls,
+    status,
+    lastMessage,
+    accumulatedDiffs,
+    preMessageConfig,
+    setDiffBarData,
+  ]);
 
   // ── Show / hide diff highlights ────────────────────────────────────────
 
