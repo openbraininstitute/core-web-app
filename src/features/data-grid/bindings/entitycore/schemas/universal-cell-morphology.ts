@@ -23,7 +23,7 @@ import {
 } from '../columns/catalog';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
-import { lastUpdatedFilter, recordIdFilter, subjectAdvancedGroup } from './common-filters';
+import { flatAdvancedFilters, recordIdFilter, subjectAdvancedGroup } from './common-filters';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IAdvancedFilterGroup, IGridSchema, TFilterOptionsSource } from '../../../core';
@@ -153,7 +153,6 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
         operators: [OperatorId.Bool],
         description: 'Whether dendritic spines are segmented in the reconstruction',
       },
-      lastUpdatedFilter,
     ],
   },
 ];
@@ -170,7 +169,8 @@ export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  advancedFilters: universalCellMorphologyAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(universalCellMorphologyAdvancedFilters),
   columns: [
     previewColumn<UniversalRow>({
       cellRenderer: ENTITY_PREVIEW_RENDERER,

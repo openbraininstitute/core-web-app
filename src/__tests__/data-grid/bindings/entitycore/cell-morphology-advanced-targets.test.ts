@@ -2,7 +2,22 @@ import { describe, expect, it } from 'vitest';
 
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
+import {
+  FLAT_ADVANCED_FILTER_GROUP_ID,
+  flatAdvancedFilterId,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
 import { advancedFilterKey, FilterValueKind, OperatorId } from '@/features/data-grid/core';
+
+/**
+ * The schema collapses its groups for display (`flatAdvancedFilters`), so the filter
+ * declared as `record · id` lives under the flat group's key. Spelled out here so
+ * the assertions below still read in the schema's own vocabulary.
+ */
+const RECORD_ID_KEY = advancedFilterKey(
+  FLAT_ADVANCED_FILTER_GROUP_ID,
+  flatAdvancedFilterId('record', 'id')
+);
+const RECORD_ID_TARGET = flatAdvancedFilterId('record', 'id');
 
 import type { IGridQuery, TFilterValue } from '@/features/data-grid/core';
 
@@ -46,11 +61,16 @@ describe('cell_morphology — advanced ID filter targets', () => {
    * wire param: a pasted id from a link or a report still resolves in the listing.
    */
   it('record ID advanced filter serializes to id__in', () => {
-    const key = advancedFilterKey('record', 'id');
+    const key = RECORD_ID_KEY;
     const params = serializeQuery(
       query({
         filters: {
-          [key]: { columnId: key, operator: OperatorId.In, targetId: 'id', value: set([UUID]) },
+          [key]: {
+            columnId: key,
+            operator: OperatorId.In,
+            targetId: RECORD_ID_TARGET,
+            value: set([UUID]),
+          },
         },
       }),
       cellMorphologySchema
@@ -59,7 +79,7 @@ describe('cell_morphology — advanced ID filter targets', () => {
   });
 
   it('the Name column filters names only — never the entity id', () => {
-    const key = advancedFilterKey('record', 'id');
+    const key = RECORD_ID_KEY;
     const targetIds = cellMorphologySchema.columns
       .find((c) => c.id === 'name')
       ?.filter?.targets?.map((t) => t.id);

@@ -17,7 +17,7 @@ import {
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import {
-  lastUpdatedFilter,
+  flatAdvancedFilters,
   recordIdFilter,
   staticOptions,
   subjectAdvancedGroup,
@@ -50,7 +50,10 @@ const synthesizedCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGro
         // `__not_in` and the bare param are different param names and compose with it
         // correctly (intersection).
         operators: [OperatorId.NotIn, OperatorId.Eq],
-        options: staticOptions(CellMorphologyGenerationType),
+        options: staticOptions(CellMorphologyGenerationType, [
+          'digital_reconstruction',
+          'placeholder',
+        ]),
         description: 'This listing only ever contains synthesized, modified and placeholder cells',
       },
       {
@@ -105,7 +108,6 @@ const synthesizedCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGro
         operators: [OperatorId.Bool],
         description: 'Whether dendritic spines are segmented in the reconstruction',
       },
-      lastUpdatedFilter,
     ],
   },
 ];
@@ -127,7 +129,8 @@ export const synthesizedCellMorphologySchema: IGridSchema<ICellMorphology> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  advancedFilters: synthesizedCellMorphologyAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(synthesizedCellMorphologyAdvancedFilters),
   columns: [
     previewColumn<ICellMorphology>({
       cellRenderer: ENTITY_PREVIEW_RENDERER,

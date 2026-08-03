@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
 import {
+  FLAT_ADVANCED_FILTER_GROUP_ID,
+  flatAdvancedFilterId,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import {
+  advancedFilterDefsByKey,
   advancedFilterKey,
   FilterValueKind,
   OperatorId,
@@ -45,6 +50,22 @@ function text(value: string): TFilterValue {
   return { kind: FilterValueKind.Text, text: value };
 }
 
+/**
+ * The state key a filter DECLARED as `groupId · filterId` actually occupies. The
+ * schema collapses its groups for display (`flatAdvancedFilters`), which
+ * re-namespaces the filter ids; the case table below stays in the schema's own
+ * vocabulary and resolves through here.
+ */
+function declaredKey(groupId: string, filterId: string): string {
+  const flat = advancedFilterKey(
+    FLAT_ADVANCED_FILTER_GROUP_ID,
+    flatAdvancedFilterId(groupId, filterId)
+  );
+  return advancedFilterDefsByKey(cellMorphologySchema).has(flat)
+    ? flat
+    : advancedFilterKey(groupId, filterId);
+}
+
 /** Serialize ONE advanced filter and return only the params it added. */
 function serializeOne(
   groupId: string,
@@ -52,9 +73,10 @@ function serializeOne(
   operator: string,
   value: TFilterValue
 ): Record<string, unknown> {
-  const key = advancedFilterKey(groupId, filterId);
+  const key = declaredKey(groupId, filterId);
+  const targetId = advancedFilterDefsByKey(cellMorphologySchema).get(key)?.id ?? filterId;
   const params = serializeQuery(
-    query({ filters: { [key]: entry(key, operator, value, filterId) } }),
+    query({ filters: { [key]: entry(key, operator, value, targetId) } }),
     cellMorphologySchema
   );
   const { page, page_size: pageSize, order_by: orderBy, ...rest } = params;
@@ -201,11 +223,16 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
   });
 
   it('composes with column filters into ONE request', () => {
-    const key = advancedFilterKey('protocol', 'protocolDesign');
+    const key = declaredKey('protocol', 'protocolDesign');
     const params = serializeQuery(
       query({
         filters: {
-          [key]: entry(key, OperatorId.In, set('cell_patch'), 'protocolDesign'),
+          [key]: entry(
+            key,
+            OperatorId.In,
+            set('cell_patch'),
+            flatAdvancedFilterId('protocol', 'protocolDesign')
+          ),
           species: {
             columnId: 'species',
             operator: OperatorId.In,

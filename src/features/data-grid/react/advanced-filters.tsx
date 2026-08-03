@@ -88,6 +88,13 @@ export function AdvancedFiltersMenu<Row>({
 
   return (
     <div className="flex w-full flex-col gap-2">
+      {/*
+        GROUP TABS ONLY WHEN GROUPING SAYS SOMETHING. A schema that resolves to a
+        single group renders a FLAT filter list: a one-tab menubar is a control with
+        no choice in it, and the roving-focus keyboard model it brings costs a tab
+        stop for nothing. The grouped path below is untouched and is what a schema
+        with two or more resolved groups still gets.
+      */}
       {groups.length > 1 && (
         <div
           ref={menubarRef}
@@ -152,7 +159,7 @@ function AdvancedFilterList({
       {group.description ? (
         <span className="px-1 pb-1.5 text-xs text-gray-400">{group.description}</span>
       ) : null}
-      <div className="max-h-72 overflow-auto">
+      <div className="max-h-72 overflow-auto secondary-scrollbar">
         {group.filters.map((f) => {
           const entry = state.filters[f.key];
           // an advanced filter IS its own target, so its labeler is direct

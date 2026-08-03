@@ -16,7 +16,7 @@ import { registerSharedRenderers } from '../renderers/register';
 import {
   contactEmailFilter,
   experimentDateFilter,
-  lastUpdatedFilter,
+  flatAdvancedFilters,
   publishedInFilter,
   recordIdFilter,
   staticOptions,
@@ -63,6 +63,11 @@ const STRUCTURAL_DOMAINS = [
  */
 const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter],
+  },
+  {
     id: 'mesh',
     label: 'Mesh',
     description: 'How the mesh itself was produced.',
@@ -103,7 +108,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
     filters: [
       {
         id: 'prefLabel',
-        label: 'Name',
+        label: 'M-type name',
         // `mtype__pref_label__ilike`, `mtype__pref_label__in`
         field: 'mtype__pref_label',
         operators: [OperatorId.Ilike, OperatorId.In],
@@ -147,13 +152,6 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
         field: 'em_dense_reconstruction_dataset__experiment_date',
         operators: [OperatorId.DateRange],
       },
-      {
-        id: 'registrationDate',
-        label: 'Dataset registration date',
-        // `em_dense_reconstruction_dataset__creation_date__gte` / `…__lte`
-        field: 'em_dense_reconstruction_dataset__creation_date',
-        operators: [OperatorId.DateRange],
-      },
     ],
   },
   {
@@ -172,7 +170,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       },
       {
         id: 'kindLabel',
-        label: 'Measurement',
+        label: 'Measurement label',
         // `measurement_kind__pref_label` (exact) ONLY.
         field: 'measurement_kind__pref_label',
         operators: [OperatorId.Eq],
@@ -181,7 +179,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       },
       {
         id: 'statistic',
-        label: 'Statistic',
+        label: 'Measurement statistic',
         // `measurement_item__name` (exact) ONLY.
         field: 'measurement_item__name',
         operators: [OperatorId.Eq],
@@ -189,7 +187,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       },
       {
         id: 'unit',
-        label: 'Unit',
+        label: 'Measurement unit',
         // `measurement_item__unit` (exact) ONLY.
         field: 'measurement_item__unit',
         operators: [OperatorId.Eq],
@@ -197,7 +195,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       },
       {
         id: 'value',
-        label: 'Value',
+        label: 'Measurement value',
         // `measurement_item__value__gte` / `measurement_item__value__lte`
         field: 'measurement_item__value',
         operators: [OperatorId.Range],
@@ -209,13 +207,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
     id: 'record',
     label: 'Record',
-    filters: [
-      recordIdFilter,
-      experimentDateFilter,
-      lastUpdatedFilter,
-      publishedInFilter,
-      contactEmailFilter,
-    ],
+    filters: [experimentDateFilter, publishedInFilter, contactEmailFilter],
   },
 ];
 
@@ -231,7 +223,8 @@ export const emCellMeshSchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 56,
   selection: { enabled: true },
-  advancedFilters: emCellMeshAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(emCellMeshAdvancedFilters),
   columns: [
     nameColumn<Row>(),
     brainRegionColumn<Row>(),

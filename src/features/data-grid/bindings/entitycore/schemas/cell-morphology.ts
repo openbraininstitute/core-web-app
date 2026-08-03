@@ -16,19 +16,12 @@ import {
 } from '../columns/catalog';
 import { CellMorphologyPreview } from '../renderers/cell-morphology-cells';
 import { registerSharedRenderers } from '../renderers/register';
+import { flatAdvancedFilters, staticOptions } from './common-filters';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { IAdvancedFilterGroup, IGridSchema, TFilterOptionsSource } from '../../../core';
+import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
-
-/** Static option list from a `{ Foo: { key, label } }` enum dict. */
-function staticOptions(dict: Record<string, { key: string; label: string }>): TFilterOptionsSource {
-  return {
-    kind: FilterOptionsKind.Static,
-    items: Object.values(dict).map((v) => ({ id: v.key, label: v.label })),
-  };
-}
 
 /**
  * ADVANCED FILTERS — `GET /cell-morphology` params with no column in this grid.
@@ -39,6 +32,18 @@ function staticOptions(dict: Record<string, { key: string; label: string }>): TF
  */
 const cellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
+    id: 'common',
+    label: 'Common',
+    filters: [
+      {
+        id: 'id',
+        label: 'ID',
+        field: 'id',
+        operators: [OperatorId.In, OperatorId.Eq],
+      },
+    ],
+  },
+  {
     id: 'protocol',
     label: 'Protocol',
     description: 'How each morphology was produced.',
@@ -48,7 +53,10 @@ const cellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
         label: 'Generation type',
         field: 'cell_morphology_protocol__generation_type',
         operators: [OperatorId.In, OperatorId.Eq],
-        options: staticOptions(CellMorphologyGenerationType),
+        options: staticOptions(CellMorphologyGenerationType, [
+          'computationally_synthesized',
+          'modified_reconstruction',
+        ]),
         description: 'This listing already excludes synthesized and modified morphologies',
       },
       {
@@ -76,13 +84,6 @@ const cellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
         description: 'Reference document describing the protocol',
         placeholder: 'Enter a document reference',
       },
-      {
-        id: 'protocolId',
-        label: 'Protocol ID',
-        field: 'cell_morphology_protocol__id',
-        operators: [OperatorId.In],
-        description: 'Exact protocol entity id',
-      },
     ],
   },
   {
@@ -99,12 +100,6 @@ const cellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
         placeholder: 'Enter a strain name',
       },
       {
-        id: 'strainId',
-        label: 'Strain ID',
-        field: 'subject__strain__id',
-        operators: [OperatorId.In],
-      },
-      {
         id: 'subjectName',
         label: 'Subject name',
         // `subject__name__ilike`, `subject__name__in`
@@ -112,25 +107,12 @@ const cellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
         operators: [OperatorId.Ilike, OperatorId.In],
         freeEntry: FreeEntryKind.Text,
       },
-      {
-        id: 'subjectId',
-        label: 'Subject ID',
-        field: 'subject__id',
-        operators: [OperatorId.In],
-      },
     ],
   },
   {
     id: 'record',
     label: 'Record',
     filters: [
-      {
-        id: 'id',
-        label: 'ID',
-        field: 'id',
-        operators: [OperatorId.In, OperatorId.Eq],
-        description: 'Morphology ID',
-      },
       {
         id: 'hasSegmentedSpines',
         label: 'Segmented spines',
@@ -149,7 +131,8 @@ export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  advancedFilters: cellMorphologyAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(cellMorphologyAdvancedFilters),
   columns: [
     previewColumn<ICellMorphology>({
       cellRenderer: 'cellMorphologyPreview',

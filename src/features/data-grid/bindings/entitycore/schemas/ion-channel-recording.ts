@@ -18,7 +18,7 @@ import { registerSharedRenderers } from '../renderers/register';
 import {
   contactEmailFilter,
   experimentDateFilter,
-  lastUpdatedFilter,
+  flatAdvancedFilters,
   publishedInFilter,
   recordIdFilter,
   staticOptions,
@@ -51,6 +51,11 @@ type Row = IIonChannelRecording & IHasSpecies & IHasTemperature & IHasCellLine &
  * re-intersect a listing that is already exactly the in-vitro recordings.
  */
 const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
+  {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter],
+  },
   {
     id: 'ionChannel',
     label: 'Ion channel',
@@ -103,13 +108,6 @@ const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = 
         freeEntry: FreeEntryKind.Text,
         placeholder: 'Enter part of a validation name',
       },
-      {
-        id: 'validationId',
-        label: 'Validation ID',
-        // `validation_result__id__in`
-        field: 'validation_result__id',
-        operators: [OperatorId.In],
-      },
     ],
   },
   {
@@ -130,13 +128,7 @@ const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = 
   {
     id: 'record',
     label: 'Record',
-    filters: [
-      recordIdFilter,
-      experimentDateFilter,
-      lastUpdatedFilter,
-      publishedInFilter,
-      contactEmailFilter,
-    ],
+    filters: [experimentDateFilter, publishedInFilter, contactEmailFilter],
   },
 ];
 
@@ -152,7 +144,8 @@ export const ionChannelRecordingSchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  advancedFilters: ionChannelRecordingAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(ionChannelRecordingAdvancedFilters),
   columns: [
     previewColumn<Row>({
       cellRenderer: ENTITY_PREVIEW_RENDERER,

@@ -16,13 +16,65 @@ import type { IAdvancedFilterGroup, TAdvancedFilterDef, TFilterOptionsSource } f
  * is inferred from a naming convention.
  */
 
+/**
+ * Group id of the single group {@link flatAdvancedFilters} collapses into. Part of
+ * every flattened filter's state key (`adv:filters:<group>_<filter>`).
+ */
+export const FLAT_ADVANCED_FILTER_GROUP_ID = 'filters';
+
+/**
+ * COLLAPSE a schema's advanced-filter groups into ONE, so its popover shows a flat
+ * filter list instead of group tabs.
+ *
+ * The grouping capability stays in the model ({@link IAdvancedFilterGroup} and the
+ * menubar that renders it are untouched) — this is a per-schema presentation choice
+ * that today's entity listings all make, and reverting one is a matter of dropping
+ * this wrapper from its `advancedFilters`.
+ *
+ * Two details matter:
+ * - filter ids are re-namespaced to `<groupId>_<filterId>`, so two groups that both
+ *   declare e.g. `name` cannot collide on one state key once merged. Ids are
+ *   internal (the wire param comes from `field`), so nothing about serialization
+ *   changes — but the key does, and a previously persisted `adv:<group>:<filter>`
+ *   entry is dropped by `pruneAdvancedFilters` rather than mis-applied.
+ * - a group-level `available` is pushed down onto the filters that declare none.
+ *   A filter that declares its own keeps it: the two cannot be AND-ed in the
+ *   contextual model, and no schema currently declares both.
+ */
+export function flatAdvancedFilters(
+  groups: ReadonlyArray<IAdvancedFilterGroup>
+): ReadonlyArray<IAdvancedFilterGroup> {
+  if (groups.length <= 1) return groups;
+  return [
+    {
+      id: FLAT_ADVANCED_FILTER_GROUP_ID,
+      label: 'Filters',
+      filters: groups.flatMap((group) =>
+        group.filters.map((def) => ({
+          ...def,
+          id: flatAdvancedFilterId(group.id, def.id),
+          available: def.available ?? group.available,
+        }))
+      ),
+    },
+  ];
+}
+
+/** The id a filter declared under `groupId` takes once the groups are collapsed. */
+export function flatAdvancedFilterId(groupId: string, filterId: string): string {
+  return `${groupId}_${filterId}`;
+}
+
 /** Static option list from a `{ Foo: { key, label } }` enum dict. */
 export function staticOptions(
-  dict: Record<string, { key: string; label: string }>
+  dict: Record<string, { key: string; label: string }>,
+  exclude?: string[]
 ): TFilterOptionsSource {
   return {
     kind: FilterOptionsKind.Static,
-    items: Object.values(dict).map((v) => ({ id: v.key, label: v.label })),
+    items: Object.values(dict)
+      .map((v) => ({ id: v.key, label: v.label }))
+      .filter((v) => !exclude?.includes(v.id)),
   };
 }
 
@@ -126,13 +178,6 @@ export function subjectAdvancedGroup(description: string): IAdvancedFilterGroup 
         placeholder: 'Enter a strain name',
       },
       {
-        id: 'strainId',
-        label: 'Strain ID',
-        // `subject__strain__id__in`
-        field: 'subject__strain__id',
-        operators: [OperatorId.In],
-      },
-      {
         id: 'subjectName',
         label: 'Subject name',
         // `subject__name__ilike`, `subject__name__in`
@@ -140,13 +185,6 @@ export function subjectAdvancedGroup(description: string): IAdvancedFilterGroup 
         operators: [OperatorId.Ilike, OperatorId.In],
         freeEntry: FreeEntryKind.Text,
         placeholder: 'Enter a subject name',
-      },
-      {
-        id: 'subjectId',
-        label: 'Subject ID',
-        // `subject__id__in`
-        field: 'subject__id',
-        operators: [OperatorId.In],
       },
     ],
   };

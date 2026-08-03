@@ -14,7 +14,12 @@ import {
   subjectAgeColumn,
 } from '../columns/catalog';
 import { registerSharedRenderers } from '../renderers/register';
-import { lastUpdatedFilter, recordIdFilter, subjectAdvancedGroup } from './common-filters';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+  recordNameFilter,
+  subjectAdvancedGroup,
+} from './common-filters';
 
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
 import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
@@ -43,12 +48,12 @@ type Row = IExperimentalNeuronDensity &
  * `contact_email` — they are absent here on purpose, not by oversight.
  */
 const experimentalNeuronDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
-  subjectAdvancedGroup('The animal the density was measured in.'),
   {
-    id: 'record',
-    label: 'Record',
-    filters: [recordIdFilter, lastUpdatedFilter],
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter, recordNameFilter],
   },
+  subjectAdvancedGroup('The animal the density was measured in.'),
 ];
 
 /**
@@ -64,7 +69,8 @@ export const experimentalNeuronDensitySchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 56,
   selection: { enabled: true },
-  advancedFilters: experimentalNeuronDensityAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(experimentalNeuronDensityAdvancedFilters),
   columns: [
     brainRegionColumn<Row>(),
     speciesColumn<Row>(),

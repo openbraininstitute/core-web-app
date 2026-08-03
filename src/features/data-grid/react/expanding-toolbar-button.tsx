@@ -45,7 +45,7 @@ export function ExpandingToolbarButton({
       {...rest}
       className={cn(
         'group/toolbar-pill relative flex h-10 shrink-0 items-center rounded-full bg-white px-2.5',
-        'text-primary-8 shadow-sm outline-none',
+        'text-primary-8 shadow-sm outline-none hover:pr-3.5 hover:bg-gray-100',
         // never animate `width` off a content-driven layout: only paint properties here
         'transition-[box-shadow,background-color] duration-300 ease-in-out hover:shadow-md active:scale-95',
         'focus-visible:ring-2 focus-visible:ring-primary-8/30',

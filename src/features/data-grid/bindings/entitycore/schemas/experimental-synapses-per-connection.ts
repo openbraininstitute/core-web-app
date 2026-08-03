@@ -13,10 +13,9 @@ import {
 } from '../columns/catalog';
 import { registerSharedRenderers } from '../renderers/register';
 import {
-  lastUpdatedFilter,
+  flatAdvancedFilters,
   recordIdFilter,
   recordNameFilter,
-  registrationDateFilter,
   subjectAdvancedGroup,
 } from './common-filters';
 
@@ -60,13 +59,18 @@ type Row = IExperimentalSynapsesPerConnection &
  */
 const experimentalSynapsesPerConnectionAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter, recordNameFilter],
+  },
+  {
     id: 'brainRegion',
     label: 'Brain region',
     description: 'The region the measurement itself is annotated with.',
     filters: [
       {
         id: 'name',
-        label: 'Name',
+        label: 'Brain region name',
         // `brain_region__name__ilike`, `brain_region__name__in`
         field: 'brain_region__name',
         operators: [OperatorId.Ilike, OperatorId.In],
@@ -75,7 +79,7 @@ const experimentalSynapsesPerConnectionAdvancedFilters: ReadonlyArray<IAdvancedF
       },
       {
         id: 'acronym',
-        label: 'Acronym',
+        label: 'Brain region acronym',
         // `brain_region__acronym__in`, `brain_region__acronym` (exact)
         field: 'brain_region__acronym',
         operators: [OperatorId.In, OperatorId.Eq],
@@ -85,7 +89,7 @@ const experimentalSynapsesPerConnectionAdvancedFilters: ReadonlyArray<IAdvancedF
       },
       {
         id: 'id',
-        label: 'ID',
+        label: 'Brain region ID',
         // `brain_region__id__in`
         field: 'brain_region__id',
         operators: [OperatorId.In],
@@ -93,11 +97,6 @@ const experimentalSynapsesPerConnectionAdvancedFilters: ReadonlyArray<IAdvancedF
     ],
   },
   subjectAdvancedGroup('The animal the connections were measured in.'),
-  {
-    id: 'record',
-    label: 'Record',
-    filters: [recordNameFilter, recordIdFilter, registrationDateFilter, lastUpdatedFilter],
-  },
 ];
 
 /**
@@ -113,7 +112,8 @@ export const experimentalSynapsesPerConnectionSchema: IGridSchema<Row> = {
   defaultSort: [],
   rowHeight: 56,
   selection: { enabled: true },
-  advancedFilters: experimentalSynapsesPerConnectionAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(experimentalSynapsesPerConnectionAdvancedFilters),
   columns: [
     preSynapticRegionColumn<Row>(),
     postSynapticRegionColumn<Row>(),

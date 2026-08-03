@@ -14,23 +14,16 @@ import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
 
 import { Align, FilterOptionsKind, OperatorId } from '../../../core';
 import { descriptionColumn, nameColumn, speciesColumn } from '../columns/catalog';
+import { staticOptions } from './common-filters';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { IColumnModel, IGridSchema, TFilterOptionsSource } from '../../../core';
+import type { IColumnModel, IGridSchema } from '../../../core';
 import type { IEntityGridDefinition } from '../registry';
 
 /** Localized integer, matching the legacy `renderLocalizedNumber`. */
 function localizedNumber(value: number | null | undefined): string {
   return value == null || Number.isNaN(value) ? '' : value.toLocaleString();
-}
-
-/** Build a static option source from a `{ key, label }` dictionary. */
-function staticOptions(dict: Record<string, { key: string; label: string }>): TFilterOptionsSource {
-  return {
-    kind: FilterOptionsKind.Static,
-    items: Object.values(dict).map((item) => ({ id: item.key, label: item.label })),
-  };
 }
 
 /**

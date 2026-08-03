@@ -147,6 +147,41 @@ That is the whole integration. The toolbar button renders itself as soon as
 itself from `resolveAdvancedFilterGroups(schema, ctx)`, and the entry serializes
 through the same strategy table as any column filter.
 
+## Groups, and why today's schemas show none
+
+The popover is TWO PANES (`react/active-filters.tsx`): the left one is the filter
+list, or the open filter's editor with its Reset/Apply; the right one is everything
+already applied, with the global reset. Group TABS appear in the left pane only when
+`resolveAdvancedFilterGroups` returns **more than one** group — a one-tab menubar is
+a control with no choice in it.
+
+Every entitycore listing currently opts out of tabs by wrapping its declaration in
+`flatAdvancedFilters(...)` (`bindings/entitycore/schemas/common-filters.ts`), which
+merges its groups into a single `filters` group and re-namespaces each filter id to
+`<groupId>_<filterId>` so two groups declaring the same id cannot collide on one
+state key. Nothing about serialization changes (the wire param comes from `field`),
+but the STATE KEY does — a persisted `adv:<oldGroup>:<filter>` entry is dropped by
+`pruneAdvancedFilters` rather than mis-applied. `IAdvancedFilterGroup` and the
+grouped rendering path are untouched: drop the wrapper and a schema gets its tabs
+back.
+
+## Summaries show labels, not wire ids
+
+A filter stores the wire value — a static option's `id`
+(`'modified_reconstruction'`), a facet bucket's label, a pasted UUID. Every summary
+shown to a user resolves that back to the label it was picked by, via
+`summarizeFilter(entry, labelOf)` and the labelers in
+`core/domain/filter-labels.ts`:
+
+- `filterOptionLabeler(target, facets)` — static items by id, facet buckets by label
+  and by id. Async sources and free-entry (paste-a-list) targets have no labeler; a
+  set with no labeler summarizes as `"3 selected"`, which is the right answer for
+  UUIDs.
+- `summarizeFilterEntry(entry, schema, facets)` — the same thing keyed off a state
+  key, so the applied-filters pane needs no per-surface lookup.
+
+An unresolvable value falls back to the raw value; it is never hidden.
+
 `facetKey` has no use here yet — no advanced filter sources facet options today. It
 matters on columns whose bucket key differs from the filtered field, e.g. options
 returned under `mtype` but filtered as `mtype__pref_label__in`:

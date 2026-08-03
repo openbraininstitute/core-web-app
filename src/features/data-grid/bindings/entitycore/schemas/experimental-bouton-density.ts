@@ -11,10 +11,9 @@ import {
 } from '../columns/catalog';
 import { registerSharedRenderers } from '../renderers/register';
 import {
-  lastUpdatedFilter,
+  flatAdvancedFilters,
   recordIdFilter,
   recordNameFilter,
-  registrationDateFilter,
   subjectAdvancedGroup,
 } from './common-filters';
 
@@ -35,12 +34,12 @@ type Row = IExperimentalBoutonDensity & IHasSpecies & IHasMeasurements & IHasCon
  * and `contact_email` do not exist on this endpoint at all.
  */
 const experimentalBoutonDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
-  subjectAdvancedGroup('The animal the density was measured in.'),
   {
-    id: 'record',
-    label: 'Record',
-    filters: [recordNameFilter, recordIdFilter, registrationDateFilter, lastUpdatedFilter],
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter, recordNameFilter],
   },
+  subjectAdvancedGroup('The animal the density was measured in.'),
 ];
 
 /**
@@ -55,7 +54,8 @@ export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
   defaultSort: [],
   rowHeight: 56,
   selection: { enabled: true },
-  advancedFilters: experimentalBoutonDensityAdvancedFilters,
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(experimentalBoutonDensityAdvancedFilters),
   columns: [
     brainRegionColumn<Row>(),
     speciesColumn<Row>(),

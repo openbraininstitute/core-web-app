@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import {
+  FLAT_ADVANCED_FILTER_GROUP_ID,
+  flatAdvancedFilterId,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
 import { electricalCellRecordingSchema } from '@/features/data-grid/bindings/entitycore/schemas/electrical-cell-recording';
 import { emCellMeshSchema } from '@/features/data-grid/bindings/entitycore/schemas/em-cell-mesh';
 import { experimentalBoutonDensitySchema } from '@/features/data-grid/bindings/entitycore/schemas/experimental-bouton-density';
@@ -58,6 +62,22 @@ function dates(from: string | null, to: string | null): TFilterValue {
 const FROM = '2024-01-01';
 const TO = '2024-12-31';
 
+/**
+ * The state key a filter DECLARED as `groupId · filterId` actually occupies.
+ *
+ * The case tables below are written in the schema's own vocabulary (the group and
+ * filter a maintainer reads in the schema file), but a schema whose groups are
+ * collapsed by `flatAdvancedFilters` stores that filter under the flat group's key.
+ * Resolving through the schema keeps the tables readable AND correct either way.
+ */
+function declaredKey<Row>(schema: IGridSchema<Row>, groupId: string, filterId: string): string {
+  const flat = advancedFilterKey(
+    FLAT_ADVANCED_FILTER_GROUP_ID,
+    flatAdvancedFilterId(groupId, filterId)
+  );
+  return advancedFilterDefsByKey(schema).has(flat) ? flat : advancedFilterKey(groupId, filterId);
+}
+
 /** Serialize ONE advanced filter and return only the params it added. */
 function serializeOne<Row>(
   schema: IGridSchema<Row>,
@@ -66,9 +86,10 @@ function serializeOne<Row>(
   operator: string,
   value: TFilterValue
 ): Record<string, unknown> {
-  const key = advancedFilterKey(groupId, filterId);
+  const key = declaredKey(schema, groupId, filterId);
+  const targetId = advancedFilterDefsByKey(schema).get(key)?.id ?? filterId;
   const params = serializeQuery(
-    query({ filters: { [key]: { columnId: key, operator, targetId: filterId, value } } }),
+    query({ filters: { [key]: { columnId: key, operator, targetId, value } } }),
     schema
   );
   const { page, page_size: pageSize, order_by: orderBy, ...rest } = params;
@@ -82,9 +103,9 @@ function declaredPairs<Row>(schema: IGridSchema<Row>): string[] {
     .sort();
 }
 
-function exercisedPairs(cases: ReadonlyArray<TCase>): string[] {
+function exercisedPairs<Row>(schema: IGridSchema<Row>, cases: ReadonlyArray<TCase>): string[] {
   return [
-    ...new Set(cases.map(([g, f, op]) => `${advancedFilterKey(g, f)}|${op}`)),
+    ...new Set(cases.map(([g, f, op]) => `${declaredKey(schema, g, f)}|${op}`)),
   ].sort() as string[];
 }
 
@@ -246,7 +267,7 @@ function suite<Row>(schema: IGridSchema<Row>, cases: ReadonlyArray<TCase>) {
   });
 
   it('exercises every declared (filter, operator) pair — and no undeclared one', () => {
-    expect(exercisedPairs(cases)).toEqual(declaredPairs(schema));
+    expect(exercisedPairs(schema, cases)).toEqual(declaredPairs(schema));
   });
 }
 
@@ -281,7 +302,7 @@ describe('electrical-cell-recording advanced filters — GET /electrical-cell-re
 
   it('never offers recording_origin__in — the listing pins it as a host param', () => {
     const def = advancedFilterDefsByKey(electricalCellRecordingSchema).get(
-      advancedFilterKey('recording', 'recordingOrigin')
+      declaredKey(electricalCellRecordingSchema, 'recording', 'recordingOrigin')
     );
     expect(def?.operators).toEqual([OperatorId.Eq]);
   });
@@ -542,7 +563,7 @@ describe('universal-cell-morphology advanced filters — GET /cell-morphology', 
 
   it('offers __not_in on generation type — this listing pins no host filter', () => {
     const def = advancedFilterDefsByKey(universalCellMorphologySchema).get(
-      advancedFilterKey('protocol', 'generationType')
+      declaredKey(universalCellMorphologySchema, 'protocol', 'generationType')
     );
     expect(def?.operators).toContain(OperatorId.NotIn);
   });
@@ -573,7 +594,7 @@ describe('synthesized-cell-morphology advanced filters — GET /cell-morphology'
 
   it('never offers generation_type __in — the listing pins it as a host param', () => {
     const def = advancedFilterDefsByKey(synthesizedCellMorphologySchema).get(
-      advancedFilterKey('protocol', 'generationType')
+      declaredKey(synthesizedCellMorphologySchema, 'protocol', 'generationType')
     );
     expect(def?.operators).not.toContain(OperatorId.In);
   });
