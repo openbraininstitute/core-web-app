@@ -7,6 +7,12 @@ import { type ReactNode, useCallback, useState } from 'react';
 
 import { useAppNotification } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+// direct module import (not the react barrel) — this file is reachable from the
+// grid host, and the barrel would close a module-init cycle
+import {
+  EXPANDING_PILL_BASE_CLASS,
+  ExpandingPillContent,
+} from '@/features/data-grid/react/expanding-toolbar-button';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
 import { Button } from '@/ui/molecules/button';
@@ -32,10 +38,18 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   clearSelectedRows,
   workspace,
   className,
+  expanding = false,
 }: RenderButtonProps<T> & {
   children?: ReactNode;
   workspace?: WorkspaceContext;
   className?: string;
+  /**
+   * Render as the grid's EXPANDING pill — the icon alone at rest, the label revealed
+   * on hover/focus-visible — instead of the wide labelled button. Same behaviour as
+   * every other grid pill (it reuses `ExpandingPillContent`), but this button keeps
+   * its own primary gradient: a bulk action is not toolbar chrome.
+   */
+  expanding?: boolean;
 }) {
   const session = useAtomValue(sessionAtom);
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
@@ -135,6 +149,43 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   };
 
   if (!session) return null;
+
+  const label = getButtonLabel();
+  /** the gradient + chrome that make this button READ as the primary bulk action */
+  const palette = cn(
+    'overflow-hidden border border-white/20 font-semibold text-white',
+    'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
+    'disabled:cursor-not-allowed disabled:opacity-70'
+  );
+
+  if (expanding) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      >
+        <Button
+          rounded
+          aria-label={label}
+          title={label}
+          variant="default"
+          disabled={downloadState === DownloadStateDict.loading}
+          className={cn(
+            EXPANDING_PILL_BASE_CLASS,
+            palette,
+            'focus-visible:ring-2 focus-visible:ring-primary-8/40',
+            className
+          )}
+          onClick={download}
+          data-testid="bulk-download-button"
+        >
+          <ExpandingPillContent icon={renderButtonIcon()} label={label} />
+        </Button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

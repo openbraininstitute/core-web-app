@@ -11,6 +11,12 @@ import { type ReactNode, useMemo } from 'react';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+// direct module import (not the react barrel) — this file is reachable from the
+// grid host, and the barrel would close a module-init cycle
+import {
+  EXPANDING_PILL_BASE_CLASS,
+  ExpandingPillContent,
+} from '@/features/data-grid/react/expanding-toolbar-button';
 import { useScope } from '@/ui/hooks/use-scope';
 import { Button } from '@/ui/molecules/button';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
@@ -128,10 +134,17 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   workspace,
   clearSelectedRows,
   className,
+  expanding = false,
 }: RenderButtonProps<T> & {
   children?: ReactNode;
   workspace?: WorkspaceContext;
   className?: string;
+  /**
+   * Render as the grid's EXPANDING pill (icon at rest, label on hover/focus-visible)
+   * instead of the wide labelled button — same reveal as every other grid pill, but
+   * keeping the destructive palette. See the download button's twin prop.
+   */
+  expanding?: boolean;
 }) {
   const notify = useAppNotification();
   const queryClient = useQueryClient();
@@ -259,6 +272,14 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 
   if (!permissions.delete) return null;
 
+  const buttonLabel = getButtonLabel();
+  /** the gradient + chrome that make this button READ as destructive */
+  const destructivePalette = cn(
+    'overflow-hidden border border-white/20 font-semibold text-white',
+    'bg-linear-to-r from-destructive via-destructive/80 to-destructive bg-size-[200%_100%]',
+    'disabled:cursor-not-allowed disabled:opacity-70'
+  );
+
   return (
     <Popconfirm
       title={<div className="font-bold text-lg text-primary-8">Delete entities</div>}
@@ -284,31 +305,50 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       }}
     >
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: expanding ? -20 : 20 }}
         animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 20 }}
+        exit={{ opacity: 0, x: expanding ? -20 : 20 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       >
-        <Button
-          rounded
-          type="button"
-          variant="default"
-          disabled={deleteMutation.isPending}
-          className={cn(
-            'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
-            'bg-linear-to-r from-destructive via-destructive/80 to-destructive bg-size-[200%_100%]',
-            'transition-all duration-300 ease-out',
-            'hover:scale-[1.02] active:scale-[0.98]',
-            'disabled:cursor-not-allowed disabled:opacity-70',
-            className
-          )}
-          data-testid="bulk-delete-button"
-        >
-          <span className="flex items-center justify-center gap-2.5">
-            {renderButtonIcon()}
-            <span className="whitespace-nowrap">{children ?? getButtonLabel()}</span>
-          </span>
-        </Button>
+        {expanding ? (
+          <Button
+            rounded
+            type="button"
+            aria-label={buttonLabel}
+            title={buttonLabel}
+            variant="default"
+            disabled={deleteMutation.isPending}
+            className={cn(
+              EXPANDING_PILL_BASE_CLASS,
+              destructivePalette,
+              'focus-visible:ring-2 focus-visible:ring-destructive/40',
+              className
+            )}
+            data-testid="bulk-delete-button"
+          >
+            <ExpandingPillContent icon={renderButtonIcon()} label={buttonLabel} />
+          </Button>
+        ) : (
+          <Button
+            rounded
+            type="button"
+            variant="default"
+            disabled={deleteMutation.isPending}
+            className={cn(
+              'relative h-12 min-w-45 px-6',
+              destructivePalette,
+              'transition-all duration-300 ease-out',
+              'hover:scale-[1.02] active:scale-[0.98]',
+              className
+            )}
+            data-testid="bulk-delete-button"
+          >
+            <span className="flex items-center justify-center gap-2.5">
+              {renderButtonIcon()}
+              <span className="whitespace-nowrap">{children ?? buttonLabel}</span>
+            </span>
+          </Button>
+        )}
       </motion.div>
     </Popconfirm>
   );

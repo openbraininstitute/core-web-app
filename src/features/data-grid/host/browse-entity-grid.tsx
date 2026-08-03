@@ -405,25 +405,27 @@ export function EntityDataGrid({
             ...extraToolbarSlots,
           }}
           renderBulkActions={({ selectedRows, clearSelection }) => (
-            // Buttons only — the "N selected" count + Clear live in the footer. Sized
-            // to the search-bar pill (h-10, compact) while keeping their own colors.
+            // Buttons only — the "N selected" count + Clear live in the footer. Both
+            // are EXPANDING pills (icon at rest, label on hover/focus) like the rest
+            // of the grid's controls, but they keep their own primary/destructive
+            // colors: a bulk action is not chrome.
             <div className="flex items-center gap-2">
               {allowDownload && (
                 <EntityDownloadButton<EntityCoreIdentifiableNamed>
+                  expanding
                   selectedRows={selectedRows}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
-                  className="h-10 min-w-0 px-4 text-sm shadow-sm"
                 />
               )}
               {allowDelete && (
                 <EntityDeleteButton<EntityCoreIdentifiableNamed>
+                  expanding
                   selectedRows={selectedRows}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
-                  className="h-10 min-w-0 px-4 text-sm shadow-sm"
                 />
               )}
             </div>
