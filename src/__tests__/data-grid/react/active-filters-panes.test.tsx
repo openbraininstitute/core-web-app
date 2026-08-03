@@ -101,12 +101,58 @@ describe('ActiveFiltersButton — two-pane popover', () => {
     expect(screen.getByRole('button', { name: /Reset all filters/ })).toBeInTheDocument();
   });
 
+  it('puts the applied list in a RIGHT pane — a sibling after the filter list, not inside it', () => {
+    openPopover(oneGroup, true);
+    const listPane = screen.getByTestId('advanced-filters-pane');
+    const appliedPane = screen.getByTestId('applied-filters-pane');
+
+    // two panes, side by side: neither contains the other
+    expect(listPane.contains(appliedPane)).toBe(false);
+    expect(appliedPane.contains(listPane)).toBe(false);
+    expect(appliedPane.parentElement).toBe(listPane.parentElement);
+
+    // the applied pane is the SECOND one, and the row is not reversed — so it paints
+    // on the right, behind the hairline divider on its leading edge
+    expect(listPane.nextElementSibling).toBe(appliedPane);
+    const row = appliedPane.parentElement;
+    expect(row?.className).not.toContain('flex-row-reverse');
+    expect(appliedPane.className).toContain('border-l');
+
+    // the applied list scrolls on its own rather than stretching the popover
+    const scroller = screen.getByText('Applied Filters').parentElement?.querySelector('.max-h-72');
+    expect(scroller?.className).toContain('overflow-y-auto');
+
+    // and both panes' content really is where it should be
+    expect(listPane).toContainElement(screen.getByRole('menuitem', { name: /Generation type/ }));
+    expect(appliedPane).toContainElement(screen.getByRole('button', { name: 'Clear Name filter' }));
+    expect(appliedPane).toContainElement(screen.getByRole('button', { name: /Reset all filters/ }));
+  });
+
   it('drops the applied pane entirely when nothing is applied', () => {
     openPopover(oneGroup, false);
     // the filter list is still there; the second column is not
+    expect(screen.getByTestId('advanced-filters-pane')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /Generation type/ })).toBeInTheDocument();
+    expect(screen.queryByTestId('applied-filters-pane')).toBeNull();
     expect(screen.queryByText('Applied Filters')).toBeNull();
     expect(screen.queryByRole('button', { name: /Reset all filters/ })).toBeNull();
+  });
+
+  it('narrows to one pane with none applied, widens with one — never snapping', () => {
+    const single = openPopover(oneGroup, false);
+    const narrow = document.querySelector('[data-slot="popover-content"]')?.className ?? '';
+    expect(narrow).toContain('w-80');
+    // the width change is animated, so the filter list glides rather than teleports
+    // when the second pane arrives and pushes the panel open to the left
+    expect(narrow).toContain('transition-[width]');
+    // and the widened panel still has to fit the viewport
+    expect(narrow).toContain('max-w-[calc(100vw-1.5rem)]');
+    single.unmount();
+
+    openPopover(oneGroup, true);
+    const wide = document.querySelector('[data-slot="popover-content"]')?.className ?? '';
+    expect(wide).toContain('w-2xl');
+    expect(wide).toContain('max-w-[calc(100vw-1.5rem)]');
   });
 
   it('renders NO group tabs when the schema resolves to a single group', () => {

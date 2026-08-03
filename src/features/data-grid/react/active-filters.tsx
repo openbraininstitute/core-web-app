@@ -148,22 +148,25 @@ export function ActiveFiltersButton<Row>({
       >
         <PopoverArrow className="-translate-y-0.75" />
         {/*
-          The filter list (or the open filter's editor, with its own Reset + Apply)
-          and everything already applied, side by side — stacked, applying a filter
-          used to push the applied list out of view; side by side, choosing and
-          reviewing are visible at once.
+          LEFT: the filter list, or the open filter's editor with its own Reset +
+          Apply. RIGHT: everything already applied, with the global reset, behind a
+          hairline divider. Stacked, applying a filter pushed the applied list out of
+          view; side by side, choosing and reviewing are visible at once, and the
+          reading order matches the doing order — pick on the left, review on the
+          right.
 
-          `flex-row-reverse` is what keeps the second pane from being disruptive. The
-          popover is anchored `align="end"`, so its RIGHT edge is pinned to the
-          trigger and all growth happens leftward. Painting the filter list against
-          that pinned edge means the rows under the pointer do not move a pixel when
-          the applied pane appears or disappears — the panel simply grows or shrinks
-          away from the hand. DOM order is unchanged (list first, applied second), so
-          tab order and screen-reader order still read "choose, then review".
+          The panel is anchored `align="end"`, so its right edge is pinned to the
+          trigger and the second pane arrives by growing the panel leftward: the
+          filter list shifts left as it appears. That is why the width is
+          TRANSITIONED rather than snapped (see the content class above) — the list
+          glides under the pointer over 200ms instead of teleporting. Paying that to
+          keep "applied" on the right is the deliberate trade: an applied list that
+          reads left of the thing it was applied from is more confusing than a
+          200ms slide.
         */}
         {hasAdvanced && operators ? (
-          <div className="flex flex-row-reverse items-stretch gap-3">
-            <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex items-stretch gap-3">
+            <div className="flex min-w-0 flex-1 flex-col" data-testid="advanced-filters-pane">
               <AdvancedFiltersMenu
                 controller={controller}
                 state={state}
@@ -173,7 +176,10 @@ export function ActiveFiltersButton<Row>({
               />
             </div>
             {twoPane ? (
-              <div className="flex min-w-0 shrink basis-80 flex-col border-r border-gray-100 pr-3">
+              <div
+                data-testid="applied-filters-pane"
+                className="flex min-w-0 shrink basis-80 flex-col border-l border-gray-100 pl-3"
+              >
                 <AppliedFilters
                   active={active}
                   labelByKey={labelByKey}
