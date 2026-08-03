@@ -1,8 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
@@ -10,9 +9,11 @@ import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import {
+  getEntityTypeTagLabel,
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
+import { useGeneratedOutputs } from '@/features/scan-config/outputs/use-generated-outputs';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import {
   makeLogStreamFileDescriptors,
@@ -20,11 +21,10 @@ import {
   makeTaskLogsFile,
   prependLogStreamFile,
 } from '@/features/task-logs-stream/descriptor';
-import { MAX_VISUALIZATION_ASSET_REFETCH_RETRIES } from '@/features/task-runner';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 
 type Props = {
@@ -46,7 +46,12 @@ export function InOutFiles({
   context,
   campaignOrigin,
 }: Props) {
-  const { entity: circuit } = useModelQuery({ id: execution?.generated.at(0)?.id, context });
+  // the sonata config below is a circuit asset, so this only resolves when a circuit is what the
+  // run generated — asking the circuit endpoint for another shape's id just 404s
+  const generatedRef = execution?.generated?.at(0);
+  const generatedCircuitId =
+    generatedRef?.type === EntityTypeDict.Circuit ? generatedRef.id : undefined;
+  const { entity: circuit } = useModelQuery({ id: generatedCircuitId, context });
   const extractionConfigAsset = config.assets.find((o) => o.label === AssetLabel.task_config);
   const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
   const circuitConfigAsset = circuitAssets?.find(
@@ -92,48 +97,25 @@ export function InOutFiles({
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
 
-  const extractedCircuitId = execution?.generated?.[0]?.id;
-  const { data: extractedCircuit, isLoading } = useQuery({
-    queryKey: keyBuilder.oneCircuit({
-      virtualLabId: context.virtualLabId,
-      projectId: context.projectId,
-      entityId: extractedCircuitId ?? '',
-    }),
-    // biome-ignore lint/style/noNonNullAssertion: the function is enable only if extractedCircuitId is present (see useQuery/enabled)
-    queryFn: () => getCircuit({ id: extractedCircuitId!, context }),
-    enabled: !!extractedCircuitId,
-    refetchInterval(query) {
-      if (campaignOrigin === ScanConfigCampaignOriginActionDict.View) return false;
-
-      const data = query.state.data;
-      const hasVisAsset = data?.assets?.some(
-        (asset) => asset.label === AssetLabel.circuit_visualization
-      );
-      const hasReachedMaxRetries =
-        query.state.dataUpdateCount >= MAX_VISUALIZATION_ASSET_REFETCH_RETRIES;
-      return hasVisAsset || hasReachedMaxRetries ? false : 2_000;
-    },
+  // whatever the run generated — a circuit, a task result holding several assets — resolved by the
+  // strategy that claims each ref rather than assumed to be a circuit
+  const { files: generatedFiles, isLoading } = useGeneratedOutputs({
+    execution,
+    context,
+    pollingEnabled: campaignOrigin !== ScanConfigCampaignOriginActionDict.View,
   });
 
-  const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    const files: TActivityCustomFile[] = [];
-    if (extractedCircuit) {
-      files.push({
-        id: extractedCircuit.id,
-        entity: extractedCircuit,
-        asset: extractedCircuit.assets[0],
-        name: extractedCircuit.name,
-        renderer: ActivityCustomFileRenderer.MiniDetailView,
-      });
-    }
-    return prependLogStreamFile({
-      file:
-        logStreamFiles.output && execution
-          ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
-          : null,
-      files,
-    });
-  }, [extractedCircuit, execution, logStreamFiles.output]);
+  const outputFiles: TActivityCustomFile[] = useMemo(
+    () =>
+      prependLogStreamFile({
+        file:
+          logStreamFiles.output && execution
+            ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+            : null,
+        files: generatedFiles,
+      }),
+    [generatedFiles, execution, logStreamFiles.output]
+  );
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,
@@ -147,7 +129,7 @@ export function InOutFiles({
     <IoLayout
       showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFiles.length === 0}
-      outputIsEmpty={!extractedCircuit && !isLoading && !logStreamFiles.output}
+      outputIsEmpty={generatedFiles.length === 0 && !isLoading && !logStreamFiles.output}
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
           id={file.asset.id}
@@ -159,11 +141,15 @@ export function InOutFiles({
         />
       ))}
       outputItems={outputFiles.map((file) => {
-        const isExtractedCircuit = file.renderer === ActivityCustomFileRenderer.MiniDetailView;
+        // the label names whatever the run generated, which is no longer always a circuit
+        const entityLabel =
+          file.renderer === ActivityCustomFileRenderer.MiniDetailView
+            ? getEntityTypeTagLabel(file.entity.type as TExtendedEntitiesTypeDict)
+            : null;
         return (
           <TaskIOFileItem
             id={file.id}
-            label={isExtractedCircuit ? <small className="uppercase">Circuit</small> : undefined}
+            label={entityLabel ? <small className="uppercase">{entityLabel}</small> : undefined}
             selected={file.id === selectedFile?.id}
             key={file.id}
             file={file}
