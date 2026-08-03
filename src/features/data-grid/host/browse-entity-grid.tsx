@@ -394,6 +394,7 @@ export function EntityDataGrid({
             brainRegion: toolbarBrainRegion,
             entityType: requireEntityTypeSelector?.enabled ? (
               <EntityTypeSelector
+                compact
                 options={requireEntityTypeSelector.options}
                 value={requireEntityTypeSelector.value}
                 onSelect={requireEntityTypeSelector.onSelect}

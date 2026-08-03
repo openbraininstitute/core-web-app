@@ -18,6 +18,13 @@ export type EntityTypeSelectorProps = {
   options: readonly EntityTypeSelectorOption[];
   value: TExtendedEntitiesTypeDict;
   onSelect: (value: TExtendedEntitiesTypeDict) => void;
+  /**
+   * TOOLBAR SIZING — 40px instead of the default 48px trigger, to sit level with the
+   * other controls in the data-grid toolbar (search pill, scope tabs, region banner,
+   * toolbar buttons — all h-10). Opt-in: the legacy table tools keep the taller
+   * original. The count badge is 28px and unaffected either way.
+   */
+  compact?: boolean;
 };
 
 function EntityTypeCountBadge({ count, className }: { count: number; className?: string }) {
@@ -35,7 +42,12 @@ function EntityTypeCountBadge({ count, className }: { count: number; className?:
   );
 }
 
-export function EntityTypeSelector({ options, value, onSelect }: EntityTypeSelectorProps) {
+export function EntityTypeSelector({
+  options,
+  value,
+  onSelect,
+  compact = false,
+}: EntityTypeSelectorProps) {
   const selectedOption = useMemo(
     () => options.find((option) => option.value === value),
     [options, value]
@@ -48,8 +60,11 @@ export function EntityTypeSelector({ options, value, onSelect }: EntityTypeSelec
     <Select value={value} onValueChange={handleValueChange}>
       <SelectTrigger
         className={cn(
-          'max-w-max min-w-36 max-h-12! min-h-12! rounded-full text-primary-9! border-neutral-2 bg-white text-base shadow-none py-0! px-6 pl-2 ring-0',
-          'focus-visible:ring-0'
+          'max-w-max min-w-36 rounded-full text-primary-9! border-neutral-2 bg-white text-base shadow-none py-0! px-6 pl-2 ring-0',
+          'focus-visible:ring-0',
+          // the trigger's OWN height — the molecule's `data-[size=default]:h-9` is
+          // overridden here, so this pair is the only thing that sizes the control
+          compact ? 'max-h-10! min-h-10!' : 'max-h-12! min-h-12!'
         )}
       >
         <span className="flex items-center gap-2">
