@@ -30,6 +30,7 @@ export {
   isSelectionEnabled,
   resolveColumns,
 } from './domain/resolve-schema';
+export { SelectionMode } from './domain/selection-model';
 export { SortDirection } from './domain/sort-model';
 export { buildGridQuery, createInitialState, GridController } from './grid-controller';
 export {
@@ -81,6 +82,7 @@ export type { TColumnOverride } from './domain/merge-column';
 export type { IFacetBucket, IGridPage, IGridQuery, TFacets } from './domain/query';
 export type { IResolvedColumn } from './domain/resolve-schema';
 export type { IDetailSpec, IGridSchema, ISelectionSpec } from './domain/schema';
+export type { TSelectionMode } from './domain/selection-model';
 export type { ISortEntry, TSortDirection, TSortModel } from './domain/sort-model';
 export type { IGridControllerOptions } from './grid-controller';
 export type { TOperatorId } from './operators/default-operators';

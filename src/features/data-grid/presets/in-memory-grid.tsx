@@ -21,6 +21,7 @@ import {
   type IGridSchema,
   type OperatorRegistry,
   resolveFilterTargets,
+  SelectionMode,
   type TFacets,
   type TSortModel,
 } from '../core';
@@ -581,7 +582,7 @@ export function InMemoryGrid<Row>({
   // ── selection ──────────────────────────────────────────────────────────────
   const agRowSelection = useMemo<RowSelectionOptions<TDisplayRow<Row>> | undefined>(() => {
     if (!rowSelection) return undefined;
-    if (rowSelection.mode === 'single') {
+    if (rowSelection.mode === SelectionMode.Single) {
       return {
         mode: 'singleRow',
         checkboxes: (p) => !isDetailRow(p.data),
@@ -674,7 +675,7 @@ export function InMemoryGrid<Row>({
           // center/right aligned cells must justify (flex cells ignore text-align)
           '[&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end!',
           // single-select renders the selection control as a radio (round + dot)
-          rowSelection?.mode === 'single' && SINGLE_SELECT_RADIO_CLASS,
+          rowSelection?.mode === SelectionMode.Single && SINGLE_SELECT_RADIO_CLASS,
           gridClassName
         )}
       >

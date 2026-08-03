@@ -21,7 +21,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
-import { createDefaultOperatorRegistry, GridController } from '@/features/data-grid/core';
+import {
+  createDefaultOperatorRegistry,
+  GridController,
+  SelectionMode,
+} from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 import { DataGrid } from '@/features/data-grid/react/data-grid';
@@ -131,7 +135,7 @@ describe('DataGrid picker selection survives a controller swap', () => {
           cellRenderers={new CellRendererRegistry()}
           queryKey={['t', scopeKey]}
           showColumnChooser={false}
-          selection={{ mode: 'multi', selectedRows: selected, onChange }}
+          selection={{ mode: SelectionMode.Multi, selectedRows: selected, onChange }}
         />
       );
     }

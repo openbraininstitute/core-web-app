@@ -6,6 +6,7 @@ import {
   createDefaultOperatorRegistry,
   GridActionType,
   GridController,
+  SelectionMode,
 } from '@/features/data-grid/core';
 import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 import { DataGrid, type IDataGridSelection } from '@/features/data-grid/react/data-grid';
@@ -73,14 +74,14 @@ function setup(opts?: { selection?: IDataGridSelection<Row>; rows?: Row[] }) {
 
 describe('DataGrid picker selection', () => {
   it('single (radio) forces selection on and forwards mode "single" to the renderer', async () => {
-    const { getReceived } = setup({ selection: { mode: 'single', onChange: vi.fn() } });
+    const { getReceived } = setup({ selection: { mode: SelectionMode.Single, onChange: vi.fn() } });
     await waitFor(() => expect(getReceived()).toBeDefined());
     expect(getReceived()?.selectionEnabled).toBe(true);
     expect(getReceived()?.selectionModeOverride).toBe('single');
   });
 
   it('multi (checkbox) forces selection on and forwards mode "multiRow"', async () => {
-    const { getReceived } = setup({ selection: { mode: 'multi', onChange: vi.fn() } });
+    const { getReceived } = setup({ selection: { mode: SelectionMode.Multi, onChange: vi.fn() } });
     await waitFor(() => expect(getReceived()).toBeDefined());
     expect(getReceived()?.selectionEnabled).toBe(true);
     expect(getReceived()?.selectionModeOverride).toBe('multiRow');
@@ -95,7 +96,7 @@ describe('DataGrid picker selection', () => {
 
   it('does NOT emit onChange on mount (parity: only user-driven changes)', async () => {
     const onChange = vi.fn();
-    const { getReceived } = setup({ selection: { mode: 'multi', onChange } });
+    const { getReceived } = setup({ selection: { mode: SelectionMode.Multi, onChange } });
     await waitFor(() => expect(getReceived()).toBeDefined());
     await new Promise((r) => setTimeout(r, 20));
     expect(onChange).not.toHaveBeenCalled();
@@ -103,7 +104,9 @@ describe('DataGrid picker selection', () => {
 
   it('multi: propagates selected rows and accumulates as the store selection grows', async () => {
     const onChange = vi.fn();
-    const { controller, getReceived } = setup({ selection: { mode: 'multi', onChange } });
+    const { controller, getReceived } = setup({
+      selection: { mode: SelectionMode.Multi, onChange },
+    });
     await waitFor(() => expect(getReceived()).toBeDefined());
     // rows are loaded → cache populated; simulate the renderer's grid→store dispatch
     act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
@@ -119,7 +122,9 @@ describe('DataGrid picker selection', () => {
 
   it('single: emits one row and replaces on the next pick', async () => {
     const onChange = vi.fn();
-    const { controller, getReceived } = setup({ selection: { mode: 'single', onChange } });
+    const { controller, getReceived } = setup({
+      selection: { mode: SelectionMode.Single, onChange },
+    });
     await waitFor(() => expect(getReceived()).toBeDefined());
     act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith([{ id: 'a', name: 'A' }]));
@@ -130,7 +135,7 @@ describe('DataGrid picker selection', () => {
   it('controlled: seeds the store from selectedRows so the grid mirrors the parent picks', async () => {
     const onChange = vi.fn();
     const { controller, getReceived } = setup({
-      selection: { mode: 'multi', selectedRows: [{ id: 'a', name: 'A' }], onChange },
+      selection: { mode: SelectionMode.Multi, selectedRows: [{ id: 'a', name: 'A' }], onChange },
     });
     await waitFor(() => expect(getReceived()).toBeDefined());
     await waitFor(() => expect(controller.store.getSnapshot().selection).toEqual(['a']));

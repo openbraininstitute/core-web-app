@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { classNames } from '@/util/utils';
 
@@ -30,7 +31,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
         columns={columns()}
         getRowId={getRowId}
         rowSelection={{
-          mode: 'single',
+          mode: SelectionMode.Single,
           onSelectionChange: (_ids, selectedRows) => setSelectedRow(selectedRows[0] ?? null),
         }}
       />

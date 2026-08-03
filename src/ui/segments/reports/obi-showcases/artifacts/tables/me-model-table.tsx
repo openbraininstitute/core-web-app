@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import columns from '@/ui/segments/reports/obi-showcases/artifacts/columns/me-model-column';
 import { classNames } from '@/util/utils';
@@ -29,7 +30,7 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
         columns={columns()}
         getRowId={getRowId}
         rowSelection={{
-          mode: 'single',
+          mode: SelectionMode.Single,
           onSelectionChange: (_ids, selectedRows) => setSelectedRow(selectedRows[0] ?? null),
         }}
       />

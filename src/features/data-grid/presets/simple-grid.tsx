@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import { Align } from '../core';
+import { Align, SelectionMode } from '../core';
 import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme } from '../renderers/aggrid/theme';
@@ -28,6 +28,7 @@ import type {
   IGridDataSource,
   IGridPage,
   OperatorRegistry,
+  TSelectionMode,
   TSortModel,
 } from '../core';
 
@@ -66,8 +67,8 @@ export interface ISimpleColumn<Row = unknown> extends IColumnModel<Row> {
  * grid that only emits through `onSelectionChange`.
  */
 export interface ISimpleRowSelection<Row> {
-  /** `single` renders radio buttons; `multi` renders checkboxes. */
-  mode: 'single' | 'multi';
+  /** `Single` renders radio buttons; `Multi` renders checkboxes. */
+  mode: TSelectionMode;
   /**
    * Controlled selection by row id (matched against `getRowId`, falling back to
    * AG Grid's internal node id). Omit for an uncontrolled grid.
@@ -313,7 +314,7 @@ function SimpleGridBasic<Row>({
 
   const agRowSelection = useMemo<RowSelectionOptions<Row> | undefined>(() => {
     if (!rowSelection) return undefined;
-    if (rowSelection.mode === 'single') {
+    if (rowSelection.mode === SelectionMode.Single) {
       return { mode: 'singleRow', checkboxes: true, enableClickSelection: false };
     }
     return {

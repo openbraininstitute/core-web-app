@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Align, OperatorId, SortDirection } from '@/features/data-grid/core';
+import { Align, OperatorId, SelectionMode, SortDirection } from '@/features/data-grid/core';
 import { buildSimpleColDefs, SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 
 import type { ReactNode } from 'react';
@@ -149,7 +149,7 @@ describe('SimpleGrid row selection', () => {
         columns={columns}
         rows={rows}
         getRowId={(r) => r.id}
-        rowSelection={{ mode: 'single' }}
+        rowSelection={{ mode: SelectionMode.Single }}
       />
     );
 
@@ -170,7 +170,7 @@ describe('SimpleGrid row selection', () => {
         columns={columns}
         rows={rows}
         getRowId={(r) => r.id}
-        rowSelection={{ mode: 'multi' }}
+        rowSelection={{ mode: SelectionMode.Multi }}
       />
     );
 
@@ -186,7 +186,7 @@ describe('SimpleGrid row selection', () => {
         columns={columns}
         rows={rows}
         getRowId={(r) => r.id}
-        rowSelection={{ mode: 'single', selectedIds: ['b'] }}
+        rowSelection={{ mode: SelectionMode.Single, selectedIds: ['b'] }}
       />
     );
 
@@ -210,7 +210,7 @@ describe('SimpleGrid row selection', () => {
         columns={columns}
         rows={rows}
         getRowId={(r) => r.id}
-        rowSelection={{ mode: 'single' }}
+        rowSelection={{ mode: SelectionMode.Single }}
       />
     );
 

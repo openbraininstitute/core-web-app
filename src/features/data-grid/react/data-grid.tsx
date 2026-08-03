@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import { GridActionType, isSelectionEnabled } from '../core';
+import { GridActionType, isSelectionEnabled, SelectionMode } from '../core';
 import { ActiveFiltersButton } from './active-filters';
 import { BulkActions } from './bulk-actions';
 import { ColumnChooser } from './column-chooser';
@@ -13,7 +13,13 @@ import { DataGridToolbar } from './toolbar';
 import { useDataGrid } from './use-data-grid';
 
 import type { ReactNode } from 'react';
-import type { GridController, IGridDataSource, OperatorRegistry, TFacets } from '../core';
+import type {
+  GridController,
+  IGridDataSource,
+  OperatorRegistry,
+  TFacets,
+  TSelectionMode,
+} from '../core';
 import type { IBulkActionsRenderArgs } from './bulk-actions';
 import type { CellRendererRegistry } from './cell-renderer-registry';
 import type {
@@ -36,7 +42,7 @@ import type { TDataGridQueryOptions } from './use-data-grid';
  * a picker selects INTO a form, it does not bulk-act.
  */
 export interface IDataGridSelection<Row> {
-  mode: 'single' | 'multi';
+  mode: TSelectionMode;
   /** controlled picks (full rows); omit for uncontrolled. */
   selectedRows?: Row[];
   /** emitted with the selected rows on every user-driven change. */
@@ -140,8 +146,11 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   // bulk-action selection) and drives the mode from the picker's single/multi.
   const pickerMode = Boolean(selection);
   const selectionEnabled = pickerMode || isSelectionEnabled(controller.schema, controller.context);
+  // EXPLICIT mapping: the picker's `SelectionMode` (single/multi) is a different
+  // vocabulary from the renderer's schema-level mode ('single' radio / 'multiRow'
+  // checkboxes, which itself maps onto AG Grid's 'singleRow'/'multiRow').
   const selectionModeOverride = selection
-    ? selection.mode === 'single'
+    ? selection.mode === SelectionMode.Single
       ? ('single' as const)
       : ('multiRow' as const)
     : undefined;

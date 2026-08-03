@@ -28,6 +28,7 @@ import {
   createDefaultOperatorRegistry,
   GridActionType,
   GridController,
+  SelectionMode,
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
@@ -203,7 +204,8 @@ export function EntityDataGrid({
   >(() => {
     if (!selectionType || !onRowsSelected) return undefined;
     return {
-      mode: selectionType === 'radio' ? 'single' : 'multi',
+      // legacy antd `RowSelectionType` ('radio'|'checkbox') → picker SelectionMode
+      mode: selectionType === 'radio' ? SelectionMode.Single : SelectionMode.Multi,
       selectedRows: controlledSelectedRows,
       onChange: onRowsSelected,
     };

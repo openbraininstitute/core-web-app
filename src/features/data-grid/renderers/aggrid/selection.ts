@@ -1,7 +1,11 @@
 import type { ISelectionSpec } from '../../core';
 
-/** Effective selection mode: schema-declared, but overridable (picker single/multi). */
-export type TSelectionMode = NonNullable<ISelectionSpec['mode']>;
+/**
+ * Effective SCHEMA-level selection mode ('single' radio / 'multiRow' checkboxes),
+ * overridable per render by the picker (see `SelectionMode` in core, a separate
+ * single/multi vocabulary that the grid maps onto this one).
+ */
+export type TSchemaSelectionMode = NonNullable<ISelectionSpec['mode']>;
 
 /**
  * Merge the checkboxes toggled on the CURRENT page into the cross-page selection.
@@ -15,7 +19,7 @@ export type TSelectionMode = NonNullable<ISelectionSpec['mode']>;
  * Pure so it is unit-testable without a live AG Grid.
  */
 export function mergePageSelection(
-  mode: TSelectionMode | undefined,
+  mode: TSchemaSelectionMode | undefined,
   current: string[],
   pageIds: string[],
   selectedOnPage: string[]

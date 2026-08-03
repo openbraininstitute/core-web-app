@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import columns from '@/ui/segments/reports/obi-showcases/artifacts/columns/synaptome-column';
 import { classNames } from '@/util/utils';
@@ -21,7 +22,7 @@ export default function SynaptomeTable({ content }: { content: SynaptomeProps[] 
         columns={columns()}
         getRowId={(record) => record.name}
         rowSelection={{
-          mode: 'single',
+          mode: SelectionMode.Single,
           onSelectionChange: (_ids, selectedRows) => setSelectedRow(selectedRows[0] ?? null),
         }}
       />

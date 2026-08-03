@@ -17,6 +17,7 @@ import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { EmptyValue, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -388,7 +389,7 @@ export function WorkflowActivity() {
                   loadingLabel="activities"
                   className={cn('[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4')}
                   rowSelection={{
-                    mode: 'single',
+                    mode: SelectionMode.Single,
                     selectedIds: selectedRow ? [selectedRow.id] : [],
                     onSelectionChange: (_ids, rows) => setSelectedRow(rows.at(0)),
                   }}
