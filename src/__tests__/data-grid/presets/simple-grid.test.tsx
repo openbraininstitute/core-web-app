@@ -242,7 +242,7 @@ describe('SimpleGrid enhanced mode', () => {
     await waitFor(() => {
       expect(container.querySelector('.ag-header-cell-text')).toBeInTheDocument();
     });
-    expect(container.querySelector('[aria-label="Choose columns"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-label="Columns"]')).not.toBeInTheDocument();
     expect(container.querySelector('[aria-label^="Filter "]')).not.toBeInTheDocument();
   });
 
@@ -266,7 +266,7 @@ describe('SimpleGrid enhanced mode', () => {
       <SimpleGrid columns={filterColumns} rows={rows} getRowId={(r) => r.id} showColumnChooser />
     );
     await waitFor(() => {
-      expect(container.querySelector('[aria-label="Choose columns"]')).toBeInTheDocument();
+      expect(container.querySelector('[aria-label="Columns"]')).toBeInTheDocument();
     });
   });
 

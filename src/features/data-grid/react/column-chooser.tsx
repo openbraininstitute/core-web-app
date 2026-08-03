@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { cn } from '@/utils/css-class';
 
 import { GridActionType } from '../core';
+import { ExpandingToolbarButton } from './expanding-toolbar-button';
 
 import type { GridController, IGridState } from '../core';
 
@@ -53,19 +54,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
 
   return (
     <Popover trigger="click" placement="bottomLeft" content={content}>
-      <button
-        type="button"
-        aria-label="Choose columns"
-        title="Choose columns"
-        className={cn(
-          // icon-only pill matching the search bar: round, white, soft shadow
-          'flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary-8 shadow-sm',
-          'transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md active:scale-95',
-          className
-        )}
-      >
-        <RiTable3 size={18} />
-      </button>
+      <ExpandingToolbarButton icon={<RiTable3 size={18} />} label="Columns" className={className} />
     </Popover>
   );
 }

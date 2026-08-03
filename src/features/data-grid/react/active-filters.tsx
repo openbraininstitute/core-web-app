@@ -8,6 +8,7 @@ import { cn } from '@/utils/css-class';
 
 import { GridActionType, resolveAdvancedFilterGroups, summarizeFilterEntry } from '../core';
 import { AdvancedFiltersMenu } from './advanced-filters';
+import { ExpandingToolbarButton } from './expanding-toolbar-button';
 
 import type { GridController, IGridState, OperatorRegistry, TFacets } from '../core';
 
@@ -85,24 +86,18 @@ export function ActiveFiltersButton<Row>({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={hasAdvanced ? 'Filters' : 'Active filters'}
-          title={hasAdvanced ? 'Filters' : 'Active filters'}
-          className={cn(
-            // icon-only pill matching the column chooser, with an active-count badge
-            'relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary-8 shadow-sm',
-            'transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md active:scale-95',
-            className
-          )}
-        >
-          <RiFilter3Line size={18} />
-          {active.length > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-8 px-1 text-[10px] font-semibold text-white">
-              {active.length}
-            </span>
-          )}
-        </button>
+        <ExpandingToolbarButton
+          icon={<RiFilter3Line size={18} />}
+          label={hasAdvanced ? 'Advanced filters' : 'Active filters'}
+          badge={
+            active.length > 0 ? (
+              <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-8 px-1 text-[10px] font-semibold text-white">
+                {active.length}
+              </span>
+            ) : null
+          }
+          className={className}
+        />
       </PopoverTrigger>
       <PopoverContent
         align="start"
