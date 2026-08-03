@@ -43,6 +43,9 @@ import { clearDiffStateAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
+import { diffBarDataAtom } from '../ai-assistant/chat/use-last-message-diff-bar';
+import { showRestoreAtom } from '../ai-assistant/message-item/collapsible-message/collapsible-message';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
@@ -132,6 +135,10 @@ function ScanConfigTemplateContent({
   const clearDiffState = useSetAtom(clearDiffStateAtom);
   const clearScanValueSelection = useSetAtom(clearScanValueSelectionAtom);
   const previousSchemaName = usePrevious(schemaName);
+
+  const setDiffBarData = useSetAtom(diffBarDataAtom);
+  const setShowRestore = useSetAtom(showRestoreAtom);
+
   useEffect(() => {
     // reset the global sidebar expansion/highlight state back to its idle default ("Info")
     clearDiffState();
@@ -152,6 +159,14 @@ function ScanConfigTemplateContent({
     defaultTab,
     firstRoot,
   ]);
+
+  useEffect(
+    () => () => {
+      setDiffBarData(null);
+      setShowRestore(false);
+    },
+    [setDiffBarData, setShowRestore]
+  );
 
   useAgentState(
     aiEnabled
