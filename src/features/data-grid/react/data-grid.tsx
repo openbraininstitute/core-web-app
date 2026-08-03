@@ -273,10 +273,28 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
         }
       />
       <div className={cn('min-h-0 flex-1', gridClassName)}>{renderer(rendererProps)}</div>
-      {/* footer: bulk actions + results/selection on the left, pagination centered */}
-      <div className="relative flex min-h-13 items-center justify-center border-t border-gray-100 px-3 py-2">
-        <div className="absolute left-3 flex items-center gap-3">
-          {bulkActions}
+      {/*
+        FOOTER — what you can DO with the selection on the left, what the grid IS
+        showing on the right, paging between them.
+
+        Three flex items rather than absolutely-positioned corners: `flex-1 basis-0`
+        makes the two side cells share the leftover width equally, which centres the
+        pagination exactly, while `min-w-fit` stops either of them collapsing under
+        its own content. Together with `flex-wrap` that is the narrow-width answer —
+        the row breaks into stacked lines instead of the two ends sliding under the
+        pagination, which is what the previous `absolute` corners did.
+      */}
+      <div className="flex min-h-13 flex-wrap items-center gap-x-3 gap-y-2 border-t border-gray-100 px-3 py-2">
+        <div className="flex min-w-fit flex-1 basis-0 items-center gap-2">{bulkActions}</div>
+        <GridPagination
+          controller={controller}
+          total={total}
+          page={state.page}
+          pageSize={state.pageSize}
+          // holds its size: the two side cells give way first, then the row wraps
+          className="shrink-0"
+        />
+        <div className="flex min-w-fit flex-1 basis-0 items-center justify-end gap-3">
           {renderCount?.({ total, loading, error })}
           {!pickerMode && selectionEnabled && selectionCount > 0 ? (
             <div className="flex items-center gap-1.5">
@@ -293,12 +311,6 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
             </div>
           ) : null}
         </div>
-        <GridPagination
-          controller={controller}
-          total={total}
-          page={state.page}
-          pageSize={state.pageSize}
-        />
       </div>
     </div>
   );
