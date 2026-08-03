@@ -3,7 +3,6 @@
 import { useSetAtom } from 'jotai';
 
 import { DownloadIcon } from '@/components/icons';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
 import { Align } from '@/features/data-grid/core';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -51,6 +50,14 @@ function DownloadCell({ circuit }: { circuit: ICircuit }) {
  * subcircuits / derived): the SAME schema columns the Data → Circuit hierarchy
  * grid renders — so widths, headers, truncation and the in-cell expander column
  * are identical — plus the leading per-row download action.
+ *
+ * `available` is STRIPPED from every column. The schema gates Subcircuits behind a
+ * contextual rule (Data section + hierarchy view); `InMemoryGrid` resolves columns
+ * against its own generic context, so the gate would drop Subcircuits from the
+ * controller's `columnOrder` — and an id missing from that order sorts LAST, which
+ * is how the column ended up trailing Experiment date instead of following Name.
+ * These tables ARE the subcircuit view, so every schema column is unconditionally
+ * wanted here and the schema's own order is the order that renders.
  */
 export const RELATED_CIRCUIT_COLUMNS: ReadonlyArray<ISimpleColumn<ICircuit>> = [
   {
@@ -62,19 +69,7 @@ export const RELATED_CIRCUIT_COLUMNS: ReadonlyArray<ISimpleColumn<ICircuit>> = [
     width: { width: 64, minWidth: 64, resizable: false },
     renderCell: (row) => <DownloadCell circuit={row} />,
   },
-  ...orderedSchemaColumns(),
+  ...(circuitSchema.columns as ReadonlyArray<ISimpleColumn<ICircuit>>).map(
+    ({ available: _available, ...column }) => column
+  ),
 ];
-
-/**
- * The schema orders circuits as `Name, Subcircuits, …` for the Data → Circuit
- * listing. These tabs ARE the subcircuit view, so the count (and the expander it
- * hosts) leads the data columns instead — Subcircuits is hoisted to sit directly
- * after the download action, ahead of Name. Reordering a copy here keeps
- * `circuitSchema.columns` — and the parity test that pins its order — untouched.
- */
-function orderedSchemaColumns(): ReadonlyArray<ISimpleColumn<ICircuit>> {
-  const columns = circuitSchema.columns as ReadonlyArray<ISimpleColumn<ICircuit>>;
-  const subcircuits = columns.find((c) => c.id === EntityCoreFields.CircuitSubCircuit);
-  if (!subcircuits) return columns;
-  return [subcircuits, ...columns.filter((c) => c !== subcircuits)];
-}
