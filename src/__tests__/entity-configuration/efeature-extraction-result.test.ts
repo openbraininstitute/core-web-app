@@ -17,31 +17,34 @@ describe('intracellular efeature extraction result', () => {
     expect(config.group).toBe('experimental');
   });
 
-  it('lists the columns the acceptance criteria call for', () => {
+  it('lists only the columns a task result actually carries', () => {
     const viewDef = getViewDefinitionByExtendedType(
       ExtendedEntitiesTypeDict.EFeatureExtractionResult
     );
 
-    expect(viewDef?.columns).toEqual(
-      expect.arrayContaining([
-        EntityCoreFields.Name,
-        EntityCoreFields.EType,
-        EntityCoreFields.BrainRegion,
-        EntityCoreFields.SpeciesName,
-      ])
-    );
+    expect(viewDef?.columns).toEqual([
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.RegistrationDate,
+    ]);
   });
 
-  it('shows etype, brain region and species on the detail view', () => {
+  it('does not display fields a task result has no value for', () => {
+    // etype, brain region and species belong to the recordings the extraction ran on, not to the
+    // result; listing them renders a column that is empty for every row
     const viewDef = getViewDefinitionByExtendedType(
       ExtendedEntitiesTypeDict.EFeatureExtractionResult
     );
 
-    expect(viewDef?.summaryViewFields?.map((entry) => entry.field)).toEqual([
-      EntityCoreFields.EType,
-      EntityCoreFields.BrainRegion,
-      EntityCoreFields.SpeciesName,
-    ]);
+    const displayed = [
+      ...(viewDef?.columns ?? []),
+      ...(viewDef?.summaryViewFields ?? []).map((entry) => entry.field),
+      ...(viewDef?.miniDetailView ?? []).map((entry) => entry.field),
+    ];
+
+    expect(displayed).not.toContain(EntityCoreFields.EType);
+    expect(displayed).not.toContain(EntityCoreFields.BrainRegion);
+    expect(displayed).not.toContain(EntityCoreFields.SpeciesName);
   });
 
   it('opts out of brain-region hierarchy scoping', () => {

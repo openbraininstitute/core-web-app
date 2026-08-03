@@ -8,21 +8,15 @@ export const viewDefForEFeatureExtractionResult: ViewDefinitionConfig = {
   title: 'Intracellular e-feature extraction',
   group: DataTypeGroup.ExperimentalData,
   name: EntitySlug.EFeatureExtractionResult,
-  columns: [
-    EntityCoreFields.Name,
-    EntityCoreFields.EType,
-    EntityCoreFields.BrainRegion,
-    EntityCoreFields.SpeciesName,
-    EntityCoreFields.RegistrationDate,
-  ],
+  // A task result has no e-type, brain region or species of its own, so the table shows only
+  // what the entity actually carries.
+  columns: [EntityCoreFields.Name, EntityCoreFields.Description, EntityCoreFields.RegistrationDate],
   summaryViewFields: [
-    { field: EntityCoreFields.EType },
-    { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.SpeciesName },
+    { field: EntityCoreFields.Description },
+    { field: EntityCoreFields.RegistrationDate },
   ],
   miniDetailView: [
-    { field: EntityCoreFields.EType },
-    { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.SpeciesName },
+    { field: EntityCoreFields.Description },
+    { field: EntityCoreFields.RegistrationDate },
   ],
 };
