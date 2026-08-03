@@ -1,4 +1,5 @@
 import { MenuOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -16,6 +17,7 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
+import { lastSectionLocationAtom } from '@/state/section-location';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -28,6 +30,7 @@ import {
 } from '@/ui/molecules/dropdown-menu';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
+import { WORKSPACE_NAV_BACK, WORKSPACE_NAV_FORWARD } from '@/utils/workspace-view-transition';
 
 import type React from 'react';
 import type { ReactNode } from 'react';
@@ -140,11 +143,35 @@ export function TopMenuNavigation() {
   const activeSection = getActiveSection(pathname);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
-  const hashedLinks = links.map((link) => ({
-    ...link,
-    baseUrl: link.url,
-    url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
-  }));
+  const lastSectionLocation = useAtomValue(lastSectionLocationAtom);
+  const workspacePrefix = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
+
+  const hashedLinks = links.map((link) => {
+    // Tabs of sections you are not currently in link back to the last visited
+    // page of that section (when recorded for this workspace); the active
+    // tab always resets to its section root.
+    const isCurrentSection = activeSection === link.url || link.isActive?.(pathname);
+    const remembered = lastSectionLocation[link.url];
+    const url =
+      !isCurrentSection && remembered?.startsWith(`${workspacePrefix}/`)
+        ? remembered
+        : `${workspacePrefix}/${link.url}`;
+
+    return { ...link, baseUrl: link.url, url };
+  });
+
+  const activeIndex = hashedLinks.findIndex(
+    (link) =>
+      link.id !== 'workspace-feedbacks' &&
+      (activeSection === link.baseUrl || link.isActive?.(pathname))
+  );
+
+  // The workspace <ViewTransition> slides the section in from the side the
+  // target tab sits on relative to the active one.
+  const getTransitionTypes = (index: number) => {
+    if (activeIndex === -1 || index === activeIndex) return undefined;
+    return index > activeIndex ? [WORKSPACE_NAV_FORWARD] : [WORKSPACE_NAV_BACK];
+  };
 
   // (after tests:) breakpoint for 950px threshold
   const useCustomBreakpoint = createBreakpoint({ mobile: 0, desktop: 950 });
@@ -163,7 +190,7 @@ export function TopMenuNavigation() {
             align="end"
             className="border-neutral-1 w-56 rounded-xl bg-white p-1"
           >
-            {hashedLinks.map((link) => {
+            {hashedLinks.map((link, index) => {
               if (link.id === 'workspace-feedbacks') {
                 return (
                   <DropdownMenuItem
@@ -185,11 +212,7 @@ export function TopMenuNavigation() {
                         className="text-primary-9 hover:text-primary-7! flex items-center gap-2 px-3 py-2"
                         asChild
                       >
-                        <Link
-                          href={{
-                            pathname: link.url,
-                          }}
-                        >
+                        <Link href={link.url} transitionTypes={getTransitionTypes(index)}>
                           {link.icon}
                           <span className="text-lg">{link.title}</span>
                         </Link>
@@ -205,12 +228,7 @@ export function TopMenuNavigation() {
                   className="text-primary-9 hover:text-primary-7! flex cursor-pointer items-center gap-2 px-3 py-2"
                   asChild
                 >
-                  <Link
-                    prefetch
-                    href={{
-                      pathname: link.url,
-                    }}
-                  >
+                  <Link prefetch href={link.url} transitionTypes={getTransitionTypes(index)}>
                     {link.icon}
                     <span className="text-lg">{link.title}</span>
                   </Link>
@@ -229,18 +247,10 @@ export function TopMenuNavigation() {
   return (
     <>
       {hashedLinks.map(
-        ({
-          id,
-          key,
-          title,
-          url,
-          baseUrl,
-          icon,
-          allowText,
-          className: clx,
-          isActive,
-          hasAction,
-        }) => {
+        (
+          { id, key, title, url, baseUrl, icon, allowText, className: clx, isActive, hasAction },
+          index
+        ) => {
           if (id === 'workspace-feedbacks') {
             const isActive = activeSection === baseUrl;
             return (
@@ -305,12 +315,7 @@ export function TopMenuNavigation() {
                       clx
                     )}
                   >
-                    <Link
-                      prefetch
-                      href={{
-                        pathname: url,
-                      }}
-                    >
+                    <Link prefetch href={url} transitionTypes={getTransitionTypes(index)}>
                       {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                       {icon}
                     </Link>
@@ -350,12 +355,7 @@ export function TopMenuNavigation() {
                     clx
                   )}
                 >
-                  <Link
-                    prefetch
-                    href={{
-                      pathname: url,
-                    }}
-                  >
+                  <Link prefetch href={url} transitionTypes={getTransitionTypes(index)}>
                     {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                     {icon}
                   </Link>

@@ -1,5 +1,5 @@
 import { PlayCircleOutlined } from '@ant-design/icons';
-import { unstable_ViewTransition as ViewTransition } from 'react';
+import { ViewTransition } from 'react';
 
 import { tryCatch } from '@/api/utils';
 import { getQueryClient } from '@/query-provider/server';
@@ -7,6 +7,7 @@ import { getClient } from '@/services/sanity/client';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
+import { unlessWorkspaceNav } from '@/utils/workspace-view-transition';
 
 import type { Metadata } from 'next';
 import type { ServerSideComponentProp } from '@/types/common';
@@ -56,7 +57,10 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
 
   if (!video) {
     return (
-      <ViewTransition enter="vt-slide-up-enter" exit="vt-slide-down-exit">
+      <ViewTransition
+        enter={unlessWorkspaceNav('vt-slide-up-enter')}
+        exit={unlessWorkspaceNav('vt-slide-down-exit')}
+      >
         <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl bg-primary-9 flex flex-col items-center justify-center text-center px-6">
           <div className="flex items-center justify-center size-20 rounded-full bg-white/10 mb-6">
             <PlayCircleOutlined className="text-white! text-4xl" />
@@ -76,7 +80,10 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
   }
 
   return (
-    <ViewTransition enter="vt-slide-up-enter" exit="vt-slide-down-exit">
+    <ViewTransition
+      enter={unlessWorkspaceNav('vt-slide-up-enter')}
+      exit={unlessWorkspaceNav('vt-slide-down-exit')}
+    >
       <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
         <VideoPlayer url={video?.url} />
       </div>

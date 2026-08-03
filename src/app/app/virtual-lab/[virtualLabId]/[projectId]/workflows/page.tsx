@@ -17,6 +17,7 @@ import {
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
+import { WORKFLOW_NAV_DOWN } from '@/utils/workflow-view-transition';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -75,7 +76,8 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
         workflow,
         schemaSelection,
         query,
-      })
+      }),
+      { transitionTypes: [WORKFLOW_NAV_DOWN] }
     );
   };
 

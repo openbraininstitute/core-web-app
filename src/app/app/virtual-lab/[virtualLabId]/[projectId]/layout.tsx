@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { getBrainAtlases } from '@/api/entitycore/queries/general/brain-atlas';
 import {
   getBrainRegionHierarchiesWithSpecies,
@@ -10,7 +12,9 @@ import {
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
+import { WorkspaceBodyTransition } from '@/ui/layouts/workspace-body-transition';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
+import { SectionLocationRecorder } from '@/ui/segments/workspaces/section-location-recorder';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
 import { keyBuilderAtlas, keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
@@ -70,12 +74,10 @@ export default async function Layout({ children }: Props) {
         <div className="w-full p-3 pb-0 [grid-area:header]">
           <WorkspaceTopMenu />
         </div>
-        <div
-          id="workspace-body"
-          className="secondary-scrollbar w-full overflow-x-hidden overflow-y-auto pb-3 [grid-area:main]"
-        >
-          {children}
-        </div>
+        <WorkspaceBodyTransition>{children}</WorkspaceBodyTransition>
+        <Suspense>
+          <SectionLocationRecorder />
+        </Suspense>
         <SpaceManagerContainer />
         <AiContainer />
       </ProjectRootLayout>

@@ -16,6 +16,7 @@ import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { WORKFLOW_NAV_DOWN } from '@/utils/workflow-view-transition';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config/types';
@@ -110,6 +111,7 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
                   ...useModelQuery,
                 },
               }}
+              transitionTypes={[WORKFLOW_NAV_DOWN]}
             >
               Use model
             </Link>

@@ -635,6 +635,131 @@ dialog {
   }
 }
 
+/*
+  Workspace section slide: pushes the page area sideways when switching
+  between the top-menu tabs. The old section carries the exit class, the new
+  one the enter class — both are activated by the <ViewTransition> in
+  workspace-body-transition.tsx, and the direction follows the position of
+  the target tab relative to the active one.
+*/
+::view-transition-image-pair(.workspace-slide-enter-forward),
+::view-transition-image-pair(.workspace-slide-exit-forward),
+::view-transition-image-pair(.workspace-slide-enter-back),
+::view-transition-image-pair(.workspace-slide-exit-back) {
+  overflow: clip;
+}
+
+::view-transition-old(.workspace-slide-exit-forward),
+::view-transition-new(.workspace-slide-enter-forward),
+::view-transition-old(.workspace-slide-exit-back),
+::view-transition-new(.workspace-slide-enter-back) {
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+::view-transition-old(.workspace-slide-exit-forward) {
+  animation-name: workspace-slide-out-to-left;
+}
+
+::view-transition-new(.workspace-slide-enter-forward) {
+  animation-name: workspace-slide-in-from-right;
+}
+
+::view-transition-old(.workspace-slide-exit-back) {
+  animation-name: workspace-slide-out-to-right;
+}
+
+::view-transition-new(.workspace-slide-enter-back) {
+  animation-name: workspace-slide-in-from-left;
+}
+
+@keyframes workspace-slide-out-to-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes workspace-slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes workspace-slide-out-to-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes workspace-slide-in-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+/*
+  Workflow drill-down slide: pushes the page area vertically between the steps
+  of the workflow flow (start → entity selection → scan config). Activated by
+  the <ViewTransition> in workflow-flow-transition.tsx: stepping deeper slides
+  down, stepping back slides up.
+*/
+::view-transition-image-pair(.workflow-slide-enter-down),
+::view-transition-image-pair(.workflow-slide-exit-down),
+::view-transition-image-pair(.workflow-slide-enter-up),
+::view-transition-image-pair(.workflow-slide-exit-up) {
+  overflow: clip;
+}
+
+::view-transition-old(.workflow-slide-exit-down),
+::view-transition-new(.workflow-slide-enter-down),
+::view-transition-old(.workflow-slide-exit-up),
+::view-transition-new(.workflow-slide-enter-up) {
+  animation-duration: 350ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+::view-transition-old(.workflow-slide-exit-down) {
+  animation-name: workflow-slide-out-to-top;
+}
+
+::view-transition-new(.workflow-slide-enter-down) {
+  animation-name: workflow-slide-in-from-bottom;
+}
+
+::view-transition-old(.workflow-slide-exit-up) {
+  animation-name: workflow-slide-out-to-bottom;
+}
+
+::view-transition-new(.workflow-slide-enter-up) {
+  animation-name: workflow-slide-in-from-top;
+}
+
+@keyframes workflow-slide-out-to-top {
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes workflow-slide-in-from-bottom {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes workflow-slide-out-to-bottom {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes workflow-slide-in-from-top {
+  from {
+    transform: translateY(-100%);
+  }
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(*),

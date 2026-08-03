@@ -26,6 +26,7 @@ import {
   resolveWorkflowBreadcrumb,
 } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
+import { WORKFLOW_NAV_UP } from '@/utils/workflow-view-transition';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { KebabCase } from '@/utils/type';
@@ -67,7 +68,8 @@ export function WorkflowBreadcrumb() {
     workspace: { virtualLabId, projectId },
   });
 
-  const handleBack = () => (onBack ? onBack() : navigate(homeLink));
+  const handleBack = () =>
+    onBack ? onBack() : navigate(homeLink, { transitionTypes: [WORKFLOW_NAV_UP] });
 
   return (
     <div className="px-3 pt-4 pb-2">
@@ -92,7 +94,9 @@ export function WorkflowBreadcrumb() {
               asChild
               className="text-primary-9 hover:text-primary-7 text-lg font-light"
             >
-              <Link href={homeLink}>{root}</Link>
+              <Link href={homeLink} transitionTypes={[WORKFLOW_NAV_UP]}>
+                {root}
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           {trail.map((crumb) => (
