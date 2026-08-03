@@ -1,10 +1,10 @@
-import { atomWithReset } from 'jotai/utils';
 import { keyBy } from 'es-toolkit/compat';
 import { atom } from 'jotai';
+import { atomWithReset } from 'jotai/utils';
 
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { HierarchyNode, HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const CircuitRepresentationView = {
   Flat: 'flat',
@@ -12,6 +12,15 @@ export const CircuitRepresentationView = {
 } as const;
 export type TCircuitRepresentationView =
   (typeof CircuitRepresentationView)[keyof typeof CircuitRepresentationView];
+
+/**
+ * Grid-context FACTOR key under which the circuit plugin publishes its current
+ * representation view. Only the circuit plugin body supplies it, so a listing that
+ * is not the circuit plugin (workflow picker, any non-Data surface) simply has no
+ * such factor — which is what lets the schema's contextual `available` rules gate
+ * hierarchy-only columns without the shared host knowing anything about circuits.
+ */
+export const CIRCUIT_VIEW_FACTOR = 'circuitView';
 
 export const circuitRepresentationViewAtom = atomWithReset<TCircuitRepresentationView>('hierarchy');
 export const resetFilterSignalAtom = atom(0);

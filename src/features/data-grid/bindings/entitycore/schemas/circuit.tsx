@@ -8,11 +8,16 @@ import {
   getCircuitDerivationColumnLabels,
 } from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { WorkspaceSection } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { CircuitGridBody } from '@/features/data-grid/host/circuit-grid-body';
-import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
+import {
+  CIRCUIT_VIEW_FACTOR,
+  CircuitRepresentationView,
+  countDeepSubCircuits,
+} from '@/ui/segments/explore/circuit/helpers';
 
-import { Align, FilterOptionsKind, OperatorId } from '../../../core';
+import { Align, byContext, FilterOptionsKind, OperatorId } from '../../../core';
 import { descriptionColumn, nameColumn, speciesColumn } from '../columns/catalog';
 import { buildCircuitAdvancedFilters } from './circuit-models';
 import { flatAdvancedFilters, staticOptions } from './common-filters';
@@ -69,10 +74,31 @@ export const circuitSchema: IGridSchema<ICircuit> = {
   },
   columns: [
     nameColumn<ICircuit>({ id: EntityCoreFields.Name }),
-    // Hosts the expand chevron (right-aligned) in hierarchy view; empty otherwise.
+    // Hosts the expand chevron (right-aligned), and only ever means something in the
+    // Data → Circuit HIERARCHY listing: the count describes a subtree the flat listing
+    // does not render, and the expander only exists when the plugin supplies its
+    // recursive detail. So availability is contextual and DENY-BY-DEFAULT — it turns on
+    // only for the Data section AND the circuit plugin's hierarchy view (published as
+    // the `CIRCUIT_VIEW_FACTOR` grid-context factor by `CircuitGridBody`). Every other
+    // mount of this schema (workflow/extract pickers, any non-Data surface) never sets
+    // that factor, so the column resolves away. NB: `resolveColumns` is what applies
+    // this, so `circuitSchema.columns` still carries the column for the NESTED
+    // `CircuitRecursiveGrid` and `RELATED_CIRCUIT_COLUMNS`, which need the expander.
     {
       id: EntityCoreFields.CircuitSubCircuit,
       header: 'Subcircuits',
+      available: byContext<boolean>({
+        default: false,
+        rules: [
+          {
+            when: {
+              section: WorkspaceSection.Data,
+              [CIRCUIT_VIEW_FACTOR]: CircuitRepresentationView.Hierarchy,
+            },
+            value: true,
+          },
+        ],
+      }),
       align: Align.Left,
       width: { width: 110, minWidth: 90 },
       getValue: (row) => {

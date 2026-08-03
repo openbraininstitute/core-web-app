@@ -56,7 +56,7 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import type { FC, ReactNode } from 'react';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
-import type { IGridDataSource, TFacets } from '@/features/data-grid/core';
+import type { IGridDataSource, TFacets, TGridContextValue } from '@/features/data-grid/core';
 import type {
   IDataGridSelection,
   IDataGridToolbarSlots,
@@ -93,6 +93,14 @@ export interface IEntityDataGridOverrides {
   expandColumn?: IExpandColumnConfig;
   /** extra AND-ed enable gate on top of the shared species/scope gate. */
   extraEnabled?: boolean;
+  /**
+   * Extra host-defined factors merged into the controller's {@link IGridContext},
+   * so a plugin can publish a dimension only IT knows (e.g. the circuit flat↔
+   * hierarchy view) and the entity's schema can gate columns/filters on it through
+   * the standard contextual `available` rules. Memoise it in the plugin: a new
+   * object identity rebuilds the controller.
+   */
+  extraFactors?: Readonly<Record<string, TGridContextValue>>;
 }
 
 export type TEntityDataGridProps = IBrowseEntityGridProps & IEntityDataGridOverrides;
@@ -139,6 +147,7 @@ export function EntityDataGrid({
   detailOverride,
   expandColumn,
   extraEnabled,
+  extraFactors,
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
@@ -216,12 +225,12 @@ export function EntityDataGrid({
     () =>
       new GridController<EntityCoreIdentifiableNamed>({
         schema: definition.schema,
-        context: { dataType, section, scope, species: speciesKey },
+        context: { dataType, section, scope, species: speciesKey, factors: extraFactors },
         instanceKey: dataKey,
         persistence: createDefaultPersistence(),
         defaultPageSize: DEFAULT_PAGE_SIZE,
       }),
-    [definition, dataKey, dataType, section, scope, speciesKey]
+    [definition, dataKey, dataType, section, scope, speciesKey, extraFactors]
   );
   useEffect(() => () => controller.dispose(), [controller]);
 

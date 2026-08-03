@@ -20,6 +20,7 @@ import {
 } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import {
+  CIRCUIT_VIEW_FACTOR,
   CircuitRepresentationView,
   circuitRepresentationViewAtom,
 } from '@/ui/segments/explore/circuit/helpers';
@@ -146,6 +147,12 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
     [dataKey]
   );
 
+  // Publish the view as a grid-context FACTOR so the schema's contextual rules can
+  // gate hierarchy-only columns (the Subcircuits expander host). Only this plugin
+  // supplies it, so every other mount of the circuit schema (workflow pickers, any
+  // non-Data surface) resolves the rule to its `false` default.
+  const gridFactors = useMemo(() => ({ [CIRCUIT_VIEW_FACTOR]: view }), [view]);
+
   return (
     <EntityDataGrid
       {...props}
@@ -153,6 +160,7 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
       dataSourceOverride={dataSource}
       extraParams={{ [CIRCUIT_VIEW_PARAM]: view }}
       extraToolbarSlots={toolbarSlots}
+      extraFactors={gridFactors}
       getRowClass={getRowClass}
       detailOverride={isHierarchy ? detailOverride : undefined}
       expandColumn={
