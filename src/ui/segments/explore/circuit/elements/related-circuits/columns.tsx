@@ -4,6 +4,7 @@ import { useSetAtom } from 'jotai';
 
 import { DownloadIcon } from '@/components/icons';
 import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
+import { Align } from '@/features/data-grid/core';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -23,7 +24,12 @@ function DownloadCell({ circuit }: { circuit: ICircuit }) {
       type="button"
       aria-label="Download circuit"
       title="Download"
-      className="flex size-7 items-center justify-center rounded-full text-primary-8 transition-colors hover:bg-primary-8 hover:text-white"
+      // The AG cell is `display:flex` (IM_DEFAULT_COL_DEF), so this button is a flex
+      // ITEM: without `shrink-0` it is squeezed narrower than it is tall by a column
+      // too narrow for 28px + the theme's 2x16px cell padding, and `rounded-full`
+      // then reads as a rounded rectangle. `shrink-0` pins the square that makes the
+      // circle a circle; the column width below reserves the room it needs.
+      className="flex size-7 shrink-0 items-center justify-center rounded-full text-primary-8 transition-colors hover:bg-primary-8 hover:text-white"
       onClick={(e) => {
         // belt-and-braces for ancestor grids; the grid itself also ignores clicks
         // originating from interactive elements (see InMemoryGrid onCellClicked).
@@ -32,7 +38,9 @@ function DownloadCell({ circuit }: { circuit: ICircuit }) {
         setDownloadPanelCircuit(circuit);
       }}
     >
-      <DownloadIcon className="text-current" />
+      {/* `shrink-0`: this is a raw <button>, so it has none of the `Button` molecule's
+          `[&_svg]:shrink-0` safety net and the glyph would squash with the box. */}
+      <DownloadIcon className="shrink-0 text-current" />
     </button>
   );
 }
@@ -47,7 +55,10 @@ export const RELATED_CIRCUIT_COLUMNS: ReadonlyArray<ISimpleColumn<ICircuit>> = [
   {
     id: '__download',
     header: '',
-    width: { width: 48, minWidth: 48, resizable: false },
+    align: Align.Center,
+    // 28px button + the grid theme's 2 x 16px cell padding = 60px minimum; anything
+    // narrower squeezes the (now non-shrinking) circle against the cell edges.
+    width: { width: 64, minWidth: 64, resizable: false },
     renderCell: (row) => <DownloadCell circuit={row} />,
   },
   ...(circuitSchema.columns as ReadonlyArray<ISimpleColumn<ICircuit>>),
