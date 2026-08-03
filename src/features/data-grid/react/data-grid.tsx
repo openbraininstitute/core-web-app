@@ -257,29 +257,26 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
       <DataGridToolbar
-        slots={{ ...toolbarSlots, bulkActions: bulkActions ?? toolbarSlots?.bulkActions }}
+        slots={toolbarSlots}
+        // the schema's advanced filters + every applied filter; self-hiding when the
+        // grid has neither
+        filters={
+          <ActiveFiltersButton
+            controller={controller}
+            state={state}
+            operators={operators}
+            facets={facets ?? externalFacets}
+          />
+        }
         columnChooser={
-          showColumnChooser ||
-          Object.keys(state.filters).length > 0 ||
-          controller.schema.advancedFilters?.length ? (
-            <div className="flex items-center gap-2">
-              {showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : null}
-              {/* the schema's advanced filters + every applied filter; self-hiding
-                  when the grid has neither */}
-              <ActiveFiltersButton
-                controller={controller}
-                state={state}
-                operators={operators}
-                facets={facets ?? externalFacets}
-              />
-            </div>
-          ) : undefined
+          showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : undefined
         }
       />
       <div className={cn('min-h-0 flex-1', gridClassName)}>{renderer(rendererProps)}</div>
-      {/* footer: results + selection on the left, pagination centered (both on one row) */}
+      {/* footer: bulk actions + results/selection on the left, pagination centered */}
       <div className="relative flex min-h-13 items-center justify-center border-t border-gray-100 px-3 py-2">
-        <div className="absolute left-3 flex flex-col gap-0.5">
+        <div className="absolute left-3 flex items-center gap-3">
+          {bulkActions}
           {renderCount?.({ total, loading, error })}
           {!pickerMode && selectionEnabled && selectionCount > 0 ? (
             <div className="flex items-center gap-1.5">

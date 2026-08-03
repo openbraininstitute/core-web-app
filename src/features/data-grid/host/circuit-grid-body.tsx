@@ -139,8 +139,10 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
     [schemaColumns, dataType, onCellClick, view]
   );
 
+  // `left`: the view toggle says WHAT this listing is showing, so it belongs with the
+  // scope/region/type pickers — the right cluster is reserved for search/filter/columns.
   const toolbarSlots = useMemo(
-    () => ({ right: <CircuitViewToggle dataKey={dataKey} /> }),
+    () => ({ left: <CircuitViewToggle dataKey={dataKey} /> }),
     [dataKey]
   );
 

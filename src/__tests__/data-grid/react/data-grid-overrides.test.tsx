@@ -118,7 +118,7 @@ describe('DataGrid — optional getRowClass / expandColumn passthrough (backward
         operators={createDefaultOperatorRegistry()}
         cellRenderers={new CellRendererRegistry()}
         queryKey={['t']}
-        toolbarSlots={{ right: <div data-testid="plugin-slot">toggle</div> }}
+        toolbarSlots={{ left: <div data-testid="plugin-slot">toggle</div> }}
         showColumnChooser={false}
       />
     );

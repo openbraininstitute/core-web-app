@@ -341,20 +341,25 @@ export function EntityDataGrid({
   // subcircuit grid); default is the schema-derived detail above.
   const detail = detailOverride ?? schemaDetail;
 
-  const toolbarLeft = useMemo<ReactNode>(() => {
-    if (!requireScopeSelector && !requireSpeciesSelector) return undefined;
-    return (
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        {requireScopeSelector ? <WorkflowScopeTabs className="max-w-max" /> : null}
-        {requireSpeciesSelector ? (
-          <PortalRegionBanner
-            dataKey={dataKey}
-            className={cn('w-110', classNames?.filterClassNames?.speciesSelector)}
-          />
-        ) : null}
-      </div>
-    );
-  }, [requireScopeSelector, requireSpeciesSelector, dataKey, classNames?.filterClassNames]);
+  // LEFT CLUSTER — scope, then brain region, then entity type (the toolbar owns the
+  // order; these only say what exists). `compact` is the grid-scoped height opt-in:
+  // both pickers are taller than the h-10 search pill everywhere else they are used,
+  // and inside one toolbar row they have to agree with it.
+  const toolbarScope = useMemo<ReactNode>(
+    () => (requireScopeSelector ? <WorkflowScopeTabs compact className="max-w-max" /> : undefined),
+    [requireScopeSelector]
+  );
+  const toolbarBrainRegion = useMemo<ReactNode>(
+    () =>
+      requireSpeciesSelector ? (
+        <PortalRegionBanner
+          compact
+          dataKey={dataKey}
+          className={cn('w-110', classNames?.filterClassNames?.speciesSelector)}
+        />
+      ) : undefined,
+    [requireSpeciesSelector, dataKey, classNames?.filterClassNames]
+  );
 
   return (
     <>
@@ -385,15 +390,16 @@ export function EntityDataGrid({
           activeRowId={activeRowId}
           selection={pickerSelection}
           toolbarSlots={{
-            left: toolbarLeft,
-            search: allowSearch ? <GridSearch onSearch={handleSearch} openOnMount /> : undefined,
-            right: requireEntityTypeSelector?.enabled ? (
+            scope: toolbarScope,
+            brainRegion: toolbarBrainRegion,
+            entityType: requireEntityTypeSelector?.enabled ? (
               <EntityTypeSelector
                 options={requireEntityTypeSelector.options}
                 value={requireEntityTypeSelector.value}
                 onSelect={requireEntityTypeSelector.onSelect}
               />
             ) : undefined,
+            search: allowSearch ? <GridSearch onSearch={handleSearch} openOnMount /> : undefined,
             // plugin-contributed slots (e.g. the circuit view toggle) are merged
             // last so a plugin can add without disturbing the shared controls.
             ...extraToolbarSlots,

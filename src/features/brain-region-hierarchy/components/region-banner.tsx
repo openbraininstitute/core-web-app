@@ -44,6 +44,12 @@ type RegionBannerProps = {
   view: TExploreLeftMenuContext;
   onSwitchView: (_view: TExploreLeftMenuContext) => void;
   classNames?: TRegionBannerClassNames;
+  /**
+   * Pin the banner to a 40px pill instead of its default 50px. Opt-in, for callers
+   * that put it in a row of h-10 controls (the data-grid toolbar, alongside the
+   * search pill); every other caller keeps the roomier default.
+   */
+  compact?: boolean;
 };
 
 type TPortalRegionBannerProps = {
@@ -54,10 +60,12 @@ type TPortalRegionBannerProps = {
   className?: string;
   modalClassName?: string;
   portalContainer?: HTMLElement | null;
+  /** render the banner as a 40px pill — see {@link RegionBanner} */
+  compact?: boolean;
   onRegionSelect?: (_node: TTreeNode) => void;
 };
 
-export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerProps) {
+export function RegionBanner({ view, onSwitchView, classNames, compact }: RegionBannerProps) {
   const notifier = useAppNotification();
   const {
     changeBulkStoreHierarchySpecies,
@@ -91,7 +99,8 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
         data-testid="atlas-regions-selector"
         data-label="brain-region-banner"
         className={cn(
-          'border-gray-100 border borders relative flex h-12.5 w-full items-center justify-between gap-2 rounded-full',
+          'border-gray-100 border borders relative flex w-full items-center justify-between gap-2 rounded-full',
+          compact ? 'h-10' : 'h-12.5',
           !isAllMode && 'cursor-pointer',
           !isAllMode && view === ExploreLeftMenuContext.DataGroup && 'hover:bg-background',
           classNames?.selector
@@ -118,6 +127,7 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
             <FocusedModeContent
               loading={isUiLoading}
               selectedBrainRegion={selectedBrainRegion}
+              compact={compact}
               onOpenTree={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
             />
           )}
@@ -131,16 +141,24 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
 export function FocusedModeContent({
   loading,
   selectedBrainRegion,
+  compact,
   onOpenTree,
 }: {
   loading: boolean;
   selectedBrainRegion: BrainRegionHierarchyBase | null;
+  /** match the compact banner shell — see {@link RegionBanner} */
+  compact?: boolean;
   onOpenTree: () => void;
 }) {
   return (
     <>
       <div className="h-6 w-px bg-gray-200 shrink-0" />
-      <div className="items-stretch h-12 w-full flex-1 rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">
+      <div
+        className={cn(
+          'items-stretch w-full flex-1 rounded-r-full pl-3 pr-10 hover:bg-gray-100 min-w-0 overflow-hidden',
+          compact ? 'h-10 py-1' : 'h-12 py-2'
+        )}
+      >
         {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
         <div
           data-label="brain-region-switcher"
@@ -240,6 +258,7 @@ export function PortalRegionBanner({
   className,
   modalClassName = 'rounded-2xl bg-white shadow-xl',
   portalContainer,
+  compact,
   onRegionSelect,
 }: TPortalRegionBannerProps) {
   const anchorRef = useRef<HTMLDivElement | null>(null);
@@ -345,6 +364,7 @@ export function PortalRegionBanner({
         <RegionBanner
           view={view}
           onSwitchView={onSwitchView}
+          compact={compact}
           classNames={{ selector: 'bg-white shadow-sm' }}
         />
       </div>
