@@ -157,6 +157,7 @@ export function JobReportList() {
             columns={columns}
             getRowId={(record) => record.job_id}
             pageSize={JOB_REPORTS_PAGE_SIZE}
+            loadingLabel="history"
             serverSide={{
               dataSource,
               queryKey: ['project-job-reports', virtualLabId, projectId],
