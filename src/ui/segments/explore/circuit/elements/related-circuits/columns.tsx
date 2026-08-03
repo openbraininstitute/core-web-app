@@ -3,6 +3,7 @@
 import { useSetAtom } from 'jotai';
 
 import { DownloadIcon } from '@/components/icons';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
 import { Align } from '@/features/data-grid/core';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -61,5 +62,19 @@ export const RELATED_CIRCUIT_COLUMNS: ReadonlyArray<ISimpleColumn<ICircuit>> = [
     width: { width: 64, minWidth: 64, resizable: false },
     renderCell: (row) => <DownloadCell circuit={row} />,
   },
-  ...(circuitSchema.columns as ReadonlyArray<ISimpleColumn<ICircuit>>),
+  ...orderedSchemaColumns(),
 ];
+
+/**
+ * The schema orders circuits as `Name, Subcircuits, …` for the Data → Circuit
+ * listing. These tabs ARE the subcircuit view, so the count (and the expander it
+ * hosts) leads the data columns instead — Subcircuits is hoisted to sit directly
+ * after the download action, ahead of Name. Reordering a copy here keeps
+ * `circuitSchema.columns` — and the parity test that pins its order — untouched.
+ */
+function orderedSchemaColumns(): ReadonlyArray<ISimpleColumn<ICircuit>> {
+  const columns = circuitSchema.columns as ReadonlyArray<ISimpleColumn<ICircuit>>;
+  const subcircuits = columns.find((c) => c.id === EntityCoreFields.CircuitSubCircuit);
+  if (!subcircuits) return columns;
+  return [subcircuits, ...columns.filter((c) => c !== subcircuits)];
+}
