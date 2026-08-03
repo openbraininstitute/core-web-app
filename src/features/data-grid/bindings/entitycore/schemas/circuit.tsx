@@ -14,12 +14,28 @@ import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
 
 import { Align, FilterOptionsKind, OperatorId } from '../../../core';
 import { descriptionColumn, nameColumn, speciesColumn } from '../columns/catalog';
-import { staticOptions } from './common-filters';
+import { buildCircuitAdvancedFilters } from './circuit-models';
+import { flatAdvancedFilters, staticOptions } from './common-filters';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { IColumnModel, IGridSchema } from '../../../core';
 import type { IEntityGridDefinition } from '../registry';
+
+/**
+ * ADVANCED FILTERS — `GET /circuit` params with no column in this grid. The whole
+ * circuit family shares one declaration ({@link buildCircuitAdvancedFilters}); this
+ * listing is the one that shows Build category and Target simulator COLUMNS, so both
+ * are excluded here.
+ *
+ * `scale` is deliberately absent too: the base circuit listing narrows `scale__in` in
+ * its domain config (`narrowFilters`, everything except Single) and the Scale column
+ * already owns that param.
+ */
+const circuitAdvancedFilters = buildCircuitAdvancedFilters({
+  includeBuildCategory: false,
+  includeTargetSimulator: false,
+});
 
 /** Localized integer, matching the legacy `renderLocalizedNumber`. */
 function localizedNumber(value: number | null | undefined): string {
@@ -39,6 +55,8 @@ export const circuitSchema: IGridSchema<ICircuit> = {
   id: 'circuit',
   getRowId: (row) => row.id,
   selection: { enabled: true },
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(circuitAdvancedFilters),
   // Detail rows host the recursive subcircuit grid (hierarchy view). The runtime is
   // supplied by the plugin body (`detailOverride`); this only sizes the detail row.
   detail: {

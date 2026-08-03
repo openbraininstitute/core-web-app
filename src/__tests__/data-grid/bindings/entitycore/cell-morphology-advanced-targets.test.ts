@@ -10,14 +10,14 @@ import { advancedFilterKey, FilterValueKind, OperatorId } from '@/features/data-
 
 /**
  * The schema collapses its groups for display (`flatAdvancedFilters`), so the filter
- * declared as `record · id` lives under the flat group's key. Spelled out here so
+ * declared as `common · id` lives under the flat group's key. Spelled out here so
  * the assertions below still read in the schema's own vocabulary.
  */
 const RECORD_ID_KEY = advancedFilterKey(
   FLAT_ADVANCED_FILTER_GROUP_ID,
-  flatAdvancedFilterId('record', 'id')
+  flatAdvancedFilterId('common', 'id')
 );
-const RECORD_ID_TARGET = flatAdvancedFilterId('record', 'id');
+const RECORD_ID_TARGET = flatAdvancedFilterId('common', 'id');
 
 import type { IGridQuery, TFilterValue } from '@/features/data-grid/core';
 
@@ -57,7 +57,7 @@ describe('cell_morphology — advanced ID filter targets', () => {
 
   /**
    * The morphology's OWN entity id is no longer a target on the Name column — it
-   * lives in the `Record` advanced group (`adv:record:id`). Same capability, same
+   * lives in the `Common` advanced group (`adv:common:id`). Same capability, same
    * wire param: a pasted id from a link or a report still resolves in the listing.
    */
   it('record ID advanced filter serializes to id__in', () => {

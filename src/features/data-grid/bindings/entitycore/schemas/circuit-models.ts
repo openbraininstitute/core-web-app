@@ -1,17 +1,32 @@
-import { CircuitScale, CircuitTargetSimulator } from '@/api/entitycore/types/entities/circuit';
+import {
+  CircuitBuildCategory,
+  CircuitScale,
+  CircuitTargetSimulator,
+} from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import { Align, FilterOptionsKind, OperatorId } from '../../../core';
+import { Align, FilterOptionsKind, FreeEntryKind, OperatorId } from '../../../core';
 import {
   createdByColumn,
   nameColumn,
   registrationDateColumn,
   speciesColumn,
 } from '../columns/catalog';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+  staticOptions,
+  subjectAdvancedGroup,
+} from './common-filters';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IColumnModel, IGridSchema } from '../../../core';
+import type {
+  IAdvancedFilterGroup,
+  IColumnModel,
+  IGridSchema,
+  TAdvancedFilterDef,
+} from '../../../core';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
@@ -37,6 +52,148 @@ import type { IEntityGridDefinition } from '../registry';
  *   Name, Description, Brain region, Species, Scale, N° neurons, N° synapses, N° connections,
  *   [Target simulator — every family member except brain_region], Created by, Registration date
  */
+
+/**
+ * ADVANCED FILTERS for the WHOLE circuit family — `GET /circuit` params that no
+ * circuit listing shows a column for. Every family member is served by the same
+ * `CircuitFilter`, so one declaration covers them all; the two flags carve out the
+ * fields a given listing DOES show as a column (`filter.targets` already own those).
+ *
+ * Every field/operator pair was checked against the live OpenAPI spec; the emitted
+ * param is named in each comment.
+ *
+ * Two deliberate omissions:
+ *  - `scale` — every dataType in this module pins `scale__in` to its own scale in the
+ *    entity domain config (`circuitScaleFilter`). For `paired_neuron_circuit` and
+ *    `single_neuron_circuit` the host spread wins outright (`{...filters, ...scale}`),
+ *    and for the others a user-supplied scale would dissolve the listing's identity.
+ *  - `published_in*`, `experiment_date__*`, `contact_email`, `lifecycle_status` —
+ *    record metadata the advanced-filter surface does not carry (see the sibling
+ *    schemas); registration date already has a column.
+ */
+export function buildCircuitAdvancedFilters({
+  includeBuildCategory,
+  includeTargetSimulator,
+}: {
+  /** true where the listing shows NO Build category column */
+  includeBuildCategory: boolean;
+  /** true where the listing shows NO Target simulator column (brain-region browse) */
+  includeTargetSimulator: boolean;
+}): ReadonlyArray<IAdvancedFilterGroup> {
+  const classification: Array<IAdvancedFilterGroup> = [];
+  const classificationFilters: Array<TAdvancedFilterDef> = [];
+  if (includeBuildCategory) {
+    classificationFilters.push({
+      id: 'buildCategory',
+      label: 'Build category',
+      // `build_category__in`, `build_category` (exact). No `__not_in`.
+      field: 'build_category',
+      operators: [OperatorId.In, OperatorId.Eq],
+      options: staticOptions(CircuitBuildCategory),
+    });
+  }
+  if (includeTargetSimulator) {
+    classificationFilters.push({
+      id: 'targetSimulator',
+      label: 'Target simulator',
+      // `target_simulator__in`, `target_simulator` (exact). No `__not_in`.
+      field: 'target_simulator',
+      operators: [OperatorId.In, OperatorId.Eq],
+      options: staticOptions(CircuitTargetSimulator),
+    });
+  }
+  if (classificationFilters.length > 0) {
+    classification.push({
+      id: 'classification',
+      label: 'Classification',
+      filters: classificationFilters,
+    });
+  }
+
+  return [
+    {
+      id: 'common',
+      label: 'Common',
+      filters: [recordIdFilter],
+    },
+    ...classification,
+    {
+      id: 'contents',
+      label: 'Contents',
+      description: 'What the circuit is built out of. No column shows these.',
+      filters: [
+        {
+          id: 'hasMorphologies',
+          label: 'Has morphologies',
+          // `has_morphologies` (boolean)
+          field: 'has_morphologies',
+          operators: [OperatorId.Bool],
+        },
+        {
+          id: 'hasPointNeurons',
+          label: 'Has point neurons',
+          // `has_point_neurons` (boolean)
+          field: 'has_point_neurons',
+          operators: [OperatorId.Bool],
+        },
+        {
+          id: 'hasElectricalCellModels',
+          label: 'Has electrical cell models',
+          // `has_electrical_cell_models` (boolean)
+          field: 'has_electrical_cell_models',
+          operators: [OperatorId.Bool],
+          description: 'Circuits with electrical cell models are the simulatable ones',
+        },
+        {
+          id: 'hasSpines',
+          label: 'Has spines',
+          // `has_spines` (boolean)
+          field: 'has_spines',
+          operators: [OperatorId.Bool],
+        },
+      ],
+    },
+    {
+      id: 'provenance',
+      label: 'Provenance',
+      filters: [
+        {
+          id: 'atlasId',
+          label: 'Atlas ID',
+          // `atlas_id` (exact UUID) ONLY — no list form.
+          field: 'atlas_id',
+          operators: [OperatorId.Eq],
+          description: 'The brain atlas the circuit was built against',
+        },
+        {
+          id: 'rootCircuitId',
+          label: 'Root circuit ID',
+          // `root_circuit_id` (exact UUID) ONLY — no list form.
+          field: 'root_circuit_id',
+          operators: [OperatorId.Eq],
+          description: 'Circuits belonging to one root circuit, subcircuits included',
+        },
+      ],
+    },
+    subjectAdvancedGroup('The animal the circuit models.'),
+    {
+      id: 'contribution',
+      label: 'Contributors',
+      filters: [
+        {
+          id: 'prefLabel',
+          label: 'Contributor',
+          // `contribution__pref_label__ilike`, `contribution__pref_label__in`. No
+          // circuit listing shows a Contributors column.
+          field: 'contribution__pref_label',
+          operators: [OperatorId.Ilike, OperatorId.In],
+          freeEntry: FreeEntryKind.Text,
+          placeholder: 'Enter a contributor name',
+        },
+      ],
+    },
+  ];
+}
 
 /** Localized integer, matching the legacy `renderLocalizedNumber`. */
 function localizedNumber(value: number | null | undefined): string {
@@ -166,6 +323,14 @@ function buildCircuitModelDefinition({
     getRowId: (row) => row.id,
     // Shared row selection + bulk download replace the legacy antd per-row Download action.
     selection: { enabled: true },
+    // flat list, no group tabs — see `flatAdvancedFilters`. Build category has no
+    // column here; Target simulator only lacks one on the brain-region browse.
+    advancedFilters: flatAdvancedFilters(
+      buildCircuitAdvancedFilters({
+        includeBuildCategory: true,
+        includeTargetSimulator: !includeTargetSimulator,
+      })
+    ),
     columns,
   };
 

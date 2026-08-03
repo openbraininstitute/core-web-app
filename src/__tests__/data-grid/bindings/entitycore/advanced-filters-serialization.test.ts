@@ -164,13 +164,6 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
       { cell_morphology_protocol__protocol_document: 'https://doi.org/10.1038/x' },
     ],
     [
-      'protocol',
-      'protocolId',
-      OperatorId.In,
-      set(PROTOCOL_ID),
-      { cell_morphology_protocol__id__in: [PROTOCOL_ID] },
-    ],
-    [
       'subject',
       'strainName',
       OperatorId.Ilike,
@@ -184,16 +177,8 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
       set('C57BL/6J'),
       { subject__strain__name__in: ['C57BL/6J'] },
     ],
-    [
-      'subject',
-      'strainId',
-      OperatorId.In,
-      set(PROTOCOL_ID),
-      { subject__strain__id__in: [PROTOCOL_ID] },
-    ],
     ['subject', 'subjectName', OperatorId.Ilike, text('rat'), { subject__name__ilike: '%rat%' }],
     ['subject', 'subjectName', OperatorId.In, set('Rat 12'), { subject__name__in: ['Rat 12'] }],
-    ['subject', 'subjectId', OperatorId.In, set(PROTOCOL_ID), { subject__id__in: [PROTOCOL_ID] }],
     [
       'record',
       'hasSegmentedSpines',
@@ -209,8 +194,8 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
       { has_segmented_spines: false },
     ],
     // the morphology's own entity id, moved here from the Name column's targets
-    ['record', 'id', OperatorId.In, set(PROTOCOL_ID), { id__in: [PROTOCOL_ID] }],
-    ['record', 'id', OperatorId.Eq, text(PROTOCOL_ID), { id: PROTOCOL_ID }],
+    ['common', 'id', OperatorId.In, set(PROTOCOL_ID), { id__in: [PROTOCOL_ID] }],
+    ['common', 'id', OperatorId.Eq, text(PROTOCOL_ID), { id: PROTOCOL_ID }],
   ])('%s · %s + %s', (groupId, filterId, operator, value, expected) => {
     expect(serializeOne(groupId, filterId, operator, value)).toEqual(expected);
   });
@@ -219,7 +204,7 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
     const groups = resolveAdvancedFilterGroups(cellMorphologySchema, CTX);
     const declared = groups.flatMap((g) => g.filters.flatMap((f) => f.def.operators));
     // Bool appears twice (true/false); the rest map 1:1 onto a case above.
-    expect(declared).toHaveLength(21);
+    expect(declared).toHaveLength(18);
   });
 
   it('composes with column filters into ONE request', () => {

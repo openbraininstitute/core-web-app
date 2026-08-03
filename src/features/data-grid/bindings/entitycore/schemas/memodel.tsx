@@ -1,7 +1,7 @@
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
+import { FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
@@ -17,11 +17,111 @@ import {
   MEModelMorphologyPreview,
 } from '../renderers/me-model-cells';
 import { registerSharedRenderers } from '../renderers/register';
+import { flatAdvancedFilters, recordIdFilter } from './common-filters';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { IColumnModel, IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
+
+/**
+ * ADVANCED FILTERS — `GET /memodel` params with no column in this grid. Shared by
+ * `memodel` and `me_model_circuit`, which list the same rows through the same
+ * endpoint with the same columns (see {@link buildMemodelColumns}).
+ *
+ * Every field/operator pair below was checked against the live OpenAPI spec; the
+ * emitted param is named in each comment.
+ *
+ * `MEModelFilter` composes `SpeciesFilterMixin`, so strain sits at the TOP level
+ * (`strain__*`), not under `subject__*` — the shared `subjectAdvancedGroup` would
+ * emit params this endpoint does not accept.
+ */
+export const memodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
+  {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter],
+  },
+  {
+    id: 'morphology',
+    label: 'Morphology',
+    description: 'The reconstruction the ME-model combines. No column shows it.',
+    filters: [
+      {
+        id: 'name',
+        label: 'Morphology name',
+        // `morphology__name__ilike`, `morphology__name__in`, `morphology__name`
+        field: 'morphology__name',
+        operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a morphology name',
+      },
+      {
+        id: 'hasSegmentedSpines',
+        label: 'Segmented spines',
+        // `morphology__has_segmented_spines` (boolean)
+        field: 'morphology__has_segmented_spines',
+        operators: [OperatorId.Bool],
+        description: 'Whether the morphology has segmented dendritic spines',
+      },
+    ],
+  },
+  {
+    id: 'emodel',
+    label: 'E-model',
+    description: 'The e-model the ME-model combines. No column shows it.',
+    filters: [
+      {
+        id: 'name',
+        label: 'E-model name',
+        // `emodel__name__ilike`, `emodel__name__in`, `emodel__name`
+        field: 'emodel__name',
+        operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter an e-model name',
+      },
+      {
+        id: 'score',
+        label: 'E-model score',
+        // `emodel__score__gte` / `emodel__score__lte`
+        field: 'emodel__score',
+        operators: [OperatorId.Range],
+        description: 'Bounds on the e-model cumulated score',
+      },
+    ],
+  },
+  {
+    id: 'strain',
+    label: 'Strain',
+    filters: [
+      {
+        id: 'name',
+        label: 'Strain',
+        // `strain__name__ilike`, `strain__name__in` (top level, NOT `subject__strain__*`)
+        field: 'strain__name',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a strain name',
+      },
+    ],
+  },
+  {
+    id: 'contribution',
+    label: 'Contributors',
+    filters: [
+      {
+        id: 'prefLabel',
+        label: 'Contributor',
+        // `contribution__pref_label__ilike`, `contribution__pref_label__in`. This
+        // listing shows Created by, not Contributors, so the field has no column.
+        field: 'contribution__pref_label',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a contributor name',
+      },
+    ],
+  },
+];
 
 /**
  * Shared ME-model column set. Both `memodel` and `me_model_circuit` list ME-model
@@ -89,6 +189,8 @@ export const memodelSchema: IGridSchema<IMEModel> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(memodelAdvancedFilters),
   columns: buildMemodelColumns(),
 };
 

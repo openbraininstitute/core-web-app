@@ -1,6 +1,7 @@
+import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
+import { FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
@@ -8,11 +9,125 @@ import {
   registrationDateColumn,
 } from '../columns/catalog';
 import { registerSharedRenderers } from '../renderers/register';
+import { flatAdvancedFilters, recordIdFilter } from './common-filters';
 
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
+
+/**
+ * ADVANCED FILTERS — `GET /single-neuron-synaptome` params with no column here.
+ *
+ * Everything the synaptome can be filtered by beyond its own name lives under the
+ * linked ME-model (`SingleNeuronSynaptomeFilter` nests `NestedMEModelFilter` with
+ * the `me_model` prefix), so every param below is `me_model__…`. Each was checked
+ * against the live OpenAPI spec and is named in a comment.
+ */
+const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
+  {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter],
+  },
+  {
+    id: 'meModel',
+    label: 'ME-model',
+    description: 'The ME-model the synaptome is built on.',
+    filters: [
+      {
+        id: 'validationStatus',
+        label: 'ME-model validation status',
+        // `me_model__validation_status` (exact) ONLY — no list form on this endpoint.
+        field: 'me_model__validation_status',
+        operators: [OperatorId.Eq],
+        options: {
+          kind: FilterOptionsKind.Static,
+          items: [
+            { id: ValidationStatus.Created, label: 'Created' },
+            { id: ValidationStatus.Initialized, label: 'Initialized' },
+            { id: ValidationStatus.Running, label: 'Running' },
+            { id: ValidationStatus.Done, label: 'Done' },
+            { id: ValidationStatus.Error, label: 'Error' },
+          ],
+        },
+      },
+      {
+        id: 'strainName',
+        label: 'Strain',
+        // `me_model__strain__name__ilike`, `me_model__strain__name__in`
+        field: 'me_model__strain__name',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a strain name',
+      },
+    ],
+  },
+  {
+    id: 'morphology',
+    label: 'Morphology',
+    description: "The reconstruction inside the synaptome's ME-model.",
+    filters: [
+      {
+        id: 'name',
+        label: 'Morphology name',
+        // `me_model__morphology__name__ilike`, `…__name__in`, `…__name`
+        field: 'me_model__morphology__name',
+        operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a morphology name',
+      },
+      {
+        id: 'hasSegmentedSpines',
+        label: 'Segmented spines',
+        // `me_model__morphology__has_segmented_spines` (boolean)
+        field: 'me_model__morphology__has_segmented_spines',
+        operators: [OperatorId.Bool],
+        description: 'Whether the morphology has segmented dendritic spines',
+      },
+    ],
+  },
+  {
+    id: 'emodel',
+    label: 'E-model',
+    description: "The e-model inside the synaptome's ME-model.",
+    filters: [
+      {
+        id: 'name',
+        label: 'E-model name',
+        // `me_model__emodel__name__ilike`, `…__name__in`, `…__name`
+        field: 'me_model__emodel__name',
+        operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter an e-model name',
+      },
+      {
+        id: 'score',
+        label: 'E-model score',
+        // `me_model__emodel__score__gte` / `…__score__lte`
+        field: 'me_model__emodel__score',
+        operators: [OperatorId.Range],
+        description: 'Bounds on the e-model cumulated score',
+      },
+    ],
+  },
+  {
+    id: 'contribution',
+    label: 'Contributors',
+    filters: [
+      {
+        id: 'prefLabel',
+        label: 'Contributor',
+        // `contribution__pref_label__ilike`, `contribution__pref_label__in`. This
+        // listing shows Created by, not Contributors, so the field has no column.
+        field: 'contribution__pref_label',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a contributor name',
+      },
+    ],
+  },
+];
 
 function labels(values: Array<{ pref_label?: string | null } | undefined> | null | undefined) {
   return (values ?? [])
@@ -45,6 +160,8 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(singleNeuronSynaptomeAdvancedFilters),
   columns: [
     nameColumn<ISingleNeuronSynaptome>(),
     {

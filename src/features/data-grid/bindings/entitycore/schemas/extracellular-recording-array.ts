@@ -5,10 +5,11 @@ import {
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import { Align, SortDirection } from '../../../core';
+import { Align, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import { createdByColumn, nameColumn, registrationDateColumn } from '../columns/catalog';
+import { flatAdvancedFilters, recordIdFilter, staticOptions } from './common-filters';
 
-import type { IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
 import type { IEntityGridDefinition } from '../registry';
 
 // The hand-written entity type omits nothing we read, but `created_by` lives on
@@ -20,6 +21,63 @@ type Row = ISimulatableExtracellularRecordingArray;
 function electrodeTypeLabel(value: string | null | undefined): string {
   return Object.values(ElectrodeTypeDict).find((t) => t.key === value)?.label ?? '';
 }
+
+/**
+ * ADVANCED FILTERS — `GET /simulatable-extracellular-recording-array` params with no
+ * column filter in this grid. `SimulatableExtracellularRecordingArrayFilter` is a
+ * small class: beyond name/id/timestamps it declares exactly `electrode_type` and
+ * `circuit_id`, both BARE (no `__in`, no `__ilike`), which is why the Electrode type
+ * and Circuit columns stayed display-only and the two land here as exact matches.
+ *
+ * The endpoint accepts no brain-region params at all, and the entity's domain config
+ * discards brain-region filters before the call — nothing region-shaped is offered.
+ */
+const extracellularRecordingArrayAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
+  {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter],
+  },
+  {
+    id: 'array',
+    label: 'Array',
+    filters: [
+      {
+        id: 'electrodeType',
+        label: 'Electrode type',
+        // `electrode_type` (exact) ONLY — no list form on this endpoint.
+        field: 'electrode_type',
+        operators: [OperatorId.Eq],
+        options: staticOptions(ElectrodeTypeDict),
+        description: 'Electrode geometry the array uses',
+      },
+      {
+        id: 'circuitId',
+        label: 'Circuit ID',
+        // `circuit_id` (exact UUID) ONLY — no list form.
+        field: 'circuit_id',
+        operators: [OperatorId.Eq],
+        description: 'The circuit the array is placed in',
+      },
+    ],
+  },
+  {
+    id: 'contribution',
+    label: 'Contributors',
+    filters: [
+      {
+        id: 'prefLabel',
+        label: 'Contributor',
+        // `contribution__pref_label__ilike`, `contribution__pref_label__in`. This
+        // listing shows Created by, not Contributors.
+        field: 'contribution__pref_label',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a contributor name',
+      },
+    ],
+  },
+];
 
 /**
  * Extracellular recording array listing — a plain text listing (mirrors
@@ -41,6 +99,8 @@ export const extracellularRecordingArraySchema: IGridSchema<Row> = {
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: EntityCoreFields.RegistrationDate, direction: SortDirection.Desc }],
   selection: { enabled: true },
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(extracellularRecordingArrayAdvancedFilters),
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
     {

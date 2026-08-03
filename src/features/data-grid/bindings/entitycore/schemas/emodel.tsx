@@ -1,6 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { Align, FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
+import { Align, FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -12,11 +12,78 @@ import {
 } from '../columns/catalog';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
+import { flatAdvancedFilters, recordIdFilter } from './common-filters';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
+
+/**
+ * ADVANCED FILTERS — `GET /emodel` params with no column in this grid.
+ *
+ * Every field/operator pair below was checked against the live OpenAPI spec; the
+ * emitted param is named in each comment. Nothing here is inferred from a naming
+ * convention.
+ *
+ * `EModelFilter` composes `SpeciesFilterMixin`, so strain sits at the TOP level
+ * (`strain__*`), not under `subject__*` — the shared `subjectAdvancedGroup` would
+ * emit params this endpoint does not accept, so the strain filter is spelled out
+ * here instead.
+ */
+const emodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
+  {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter],
+  },
+  {
+    id: 'exemplarMorphology',
+    label: 'Exemplar morphology',
+    description: 'The reconstruction the e-model was fitted on.',
+    filters: [
+      {
+        id: 'hasSegmentedSpines',
+        label: 'Segmented spines',
+        // `exemplar_morphology__has_segmented_spines` (boolean)
+        field: 'exemplar_morphology__has_segmented_spines',
+        operators: [OperatorId.Bool],
+        description: 'Whether the exemplar morphology has segmented dendritic spines',
+      },
+    ],
+  },
+  {
+    id: 'ionChannelModel',
+    label: 'Ion channel model',
+    description: 'Ion channel models the e-model is built from. No column shows them.',
+    filters: [
+      {
+        id: 'name',
+        label: 'Ion channel model name',
+        // `ion_channel_model__name__ilike`, `…__name__in`, `…__name` (exact)
+        field: 'ion_channel_model__name',
+        operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter an ion channel model name',
+      },
+    ],
+  },
+  {
+    id: 'strain',
+    label: 'Strain',
+    filters: [
+      {
+        id: 'name',
+        label: 'Strain',
+        // `strain__name__ilike`, `strain__name__in` (top level, NOT `subject__strain__*`)
+        field: 'strain__name',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a strain name',
+      },
+    ],
+  },
+];
 
 /**
  * E-model listing (curated). Column order mirrors the legacy `ViewDefForEmodel`
@@ -41,6 +108,8 @@ export const emodelSchema: IGridSchema<IEModel> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(emodelAdvancedFilters),
   columns: [
     nameColumn<IEModel>(),
     previewColumn<IEModel>({

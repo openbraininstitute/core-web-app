@@ -1,6 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
+import { FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   nameColumn,
@@ -9,11 +9,89 @@ import {
 } from '../columns/catalog';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
+import { flatAdvancedFilters, recordIdFilter, subjectAdvancedGroup } from './common-filters';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
+
+/**
+ * ADVANCED FILTERS — `GET /ion-channel-model` params with no column in this grid.
+ *
+ * Every field/operator pair below was checked against the live OpenAPI spec; the
+ * emitted param is named in each comment. The four NMODL-level scalars
+ * (`nmodl_suffix`, `conductance_name`, `max_permeability_name`, `is_stochastic`)
+ * are declared bare on `IonChannelModelFilter` — no `__in`, no `__ilike` — so they
+ * are offered as exact matches only. Their `__isnull` companions have no operator
+ * in the grid's registry and are deliberately left out.
+ */
+const ionChannelModelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
+  {
+    id: 'common',
+    label: 'Common',
+    filters: [recordIdFilter],
+  },
+  {
+    id: 'mechanism',
+    label: 'Mechanism',
+    description: 'How the channel is implemented in NMODL.',
+    filters: [
+      {
+        id: 'nmodlSuffix',
+        label: 'NMODL suffix',
+        // `nmodl_suffix` (exact) ONLY.
+        field: 'nmodl_suffix',
+        operators: [OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a full NMODL suffix',
+      },
+      {
+        id: 'conductanceName',
+        label: 'Conductance name',
+        // `conductance_name` (exact) ONLY.
+        field: 'conductance_name',
+        operators: [OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a full conductance name',
+      },
+      {
+        id: 'maxPermeabilityName',
+        label: 'Max permeability name',
+        // `max_permeability_name` (exact) ONLY.
+        field: 'max_permeability_name',
+        operators: [OperatorId.Eq],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a full permeability name',
+      },
+      {
+        id: 'isStochastic',
+        label: 'Stochastic',
+        // `is_stochastic` (boolean)
+        field: 'is_stochastic',
+        operators: [OperatorId.Bool],
+        description: 'Whether the channel model is stochastic',
+      },
+    ],
+  },
+  subjectAdvancedGroup('The animal the channel model was characterised in.'),
+  {
+    id: 'contribution',
+    label: 'Contributors',
+    filters: [
+      {
+        id: 'prefLabel',
+        label: 'Contributor',
+        // `contribution__pref_label__ilike`, `contribution__pref_label__in`. This
+        // listing shows no Contributors column.
+        field: 'contribution__pref_label',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter a contributor name',
+      },
+    ],
+  },
+];
 
 /**
  * Ion-channel model listing (curated). Column order mirrors the legacy
@@ -42,6 +120,8 @@ export const ionChannelModelSchema: IGridSchema<IonChannelModel> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
+  // flat list, no group tabs — see `flatAdvancedFilters`
+  advancedFilters: flatAdvancedFilters(ionChannelModelAdvancedFilters),
   columns: [
     previewColumn<IonChannelModel>({
       cellRenderer: ENTITY_PREVIEW_RENDERER,

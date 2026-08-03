@@ -125,57 +125,30 @@ const SUBJECT_CASES: ReadonlyArray<TCase> = [
     set('C57BL/6J'),
     { subject__strain__name__in: ['C57BL/6J'] },
   ],
-  ['subject', 'strainId', OperatorId.In, set(UUID), { subject__strain__id__in: [UUID] }],
   ['subject', 'subjectName', OperatorId.Ilike, text('rat'), { subject__name__ilike: '%rat%' }],
   ['subject', 'subjectName', OperatorId.In, set('Rat 12'), { subject__name__in: ['Rat 12'] }],
-  ['subject', 'subjectId', OperatorId.In, set(UUID), { subject__id__in: [UUID] }],
 ];
 
-const RECORD_ID_CASES: ReadonlyArray<TCase> = [
-  ['record', 'id', OperatorId.In, set(UUID), { id__in: [UUID] }],
-  ['record', 'id', OperatorId.Eq, text(UUID), { id: UUID }],
-];
+/**
+ * The record's own `id`. Schemas disagree on which GROUP it is declared under —
+ * `common` for the listings that have no other record-level filter, `record` for the
+ * two morphology subtypes that also declare `has_segmented_spines` — so the group is
+ * a parameter here. The wire params are the same either way.
+ */
+function idCases(groupId: string): ReadonlyArray<TCase> {
+  return [
+    [groupId, 'id', OperatorId.In, set(UUID), { id__in: [UUID] }],
+    [groupId, 'id', OperatorId.Eq, text(UUID), { id: UUID }],
+  ];
+}
 
-const LAST_UPDATED_CASE: TCase = [
-  'record',
-  'lastUpdated',
-  OperatorId.DateRange,
-  dates(FROM, TO),
-  { update_date__gte: FROM, update_date__lte: TO },
-];
+const RECORD_ID_CASES: ReadonlyArray<TCase> = idCases('common');
 
-/** ScientificArtifact endpoints only — the density endpoints accept none of these. */
-const ARTIFACT_RECORD_CASES: ReadonlyArray<TCase> = [
-  [
-    'record',
-    'experimentDate',
-    OperatorId.DateRange,
-    dates(FROM, TO),
-    { experiment_date__gte: FROM, experiment_date__lte: TO },
-  ],
-  [
-    'record',
-    'publishedIn',
-    OperatorId.Ilike,
-    text('J Neuro'),
-    { published_in__ilike: '%J Neuro%' },
-  ],
-  ['record', 'publishedIn', OperatorId.Eq, text('J Neuro'), { published_in: 'J Neuro' }],
-  ['record', 'contactEmail', OperatorId.Eq, text('a@b.org'), { contact_email: 'a@b.org' }],
-];
-
-/** Name + registration date, for the grids that show neither as a column. */
-const NAME_AND_DATE_CASES: ReadonlyArray<TCase> = [
-  ['record', 'name', OperatorId.Ilike, text('L5'), { name__ilike: '%L5%' }],
-  ['record', 'name', OperatorId.In, set('L5 TPC'), { name__in: ['L5 TPC'] }],
-  ['record', 'name', OperatorId.Eq, text('L5 TPC'), { name: 'L5 TPC' }],
-  [
-    'record',
-    'registrationDate',
-    OperatorId.DateRange,
-    dates(FROM, TO),
-    { creation_date__gte: FROM, creation_date__lte: TO },
-  ],
+/** `name*`, for the grids that show no Name column. */
+const NAME_CASES: ReadonlyArray<TCase> = [
+  ['common', 'name', OperatorId.Ilike, text('L5'), { name__ilike: '%L5%' }],
+  ['common', 'name', OperatorId.In, set('L5 TPC'), { name__in: ['L5 TPC'] }],
+  ['common', 'name', OperatorId.Eq, text('L5 TPC'), { name: 'L5 TPC' }],
 ];
 
 /** The `cell_morphology_protocol__*` params shared by the two morphology subtypes. */
@@ -296,8 +269,6 @@ describe('electrical-cell-recording advanced filters — GET /electrical-cell-re
     ],
     ...SUBJECT_CASES,
     ...RECORD_ID_CASES,
-    LAST_UPDATED_CASE,
-    ...ARTIFACT_RECORD_CASES,
   ]);
 
   it('never offers recording_origin__in — the listing pins it as a host param', () => {
@@ -354,7 +325,6 @@ describe('ion-channel-recording advanced filters — GET /ion-channel-recording'
       text('IV curve'),
       { validation_result__name: 'IV curve' },
     ],
-    ['validation', 'validationId', OperatorId.In, set(UUID), { validation_result__id__in: [UUID] }],
     [
       'recording',
       'recordingType',
@@ -371,8 +341,6 @@ describe('ion-channel-recording advanced filters — GET /ion-channel-recording'
     ],
     ...SUBJECT_CASES,
     ...RECORD_ID_CASES,
-    LAST_UPDATED_CASE,
-    ...ARTIFACT_RECORD_CASES,
   ]);
 
   it('never offers recording_origin in ANY form — the listing pins the bare param', () => {
@@ -384,7 +352,7 @@ describe('ion-channel-recording advanced filters — GET /ion-channel-recording'
 });
 
 describe('experimental-neuron-density advanced filters — GET /experimental-neuron-density', () => {
-  suite(experimentalNeuronDensitySchema, [...SUBJECT_CASES, ...RECORD_ID_CASES, LAST_UPDATED_CASE]);
+  suite(experimentalNeuronDensitySchema, [...SUBJECT_CASES, ...RECORD_ID_CASES, ...NAME_CASES]);
 
   it('offers no ScientificArtifact params — the endpoint does not accept them', () => {
     const fields = [...advancedFilterDefsByKey(experimentalNeuronDensitySchema).values()].map(
@@ -397,12 +365,7 @@ describe('experimental-neuron-density advanced filters — GET /experimental-neu
 });
 
 describe('experimental-bouton-density advanced filters — GET /experimental-bouton-density', () => {
-  suite(experimentalBoutonDensitySchema, [
-    ...SUBJECT_CASES,
-    ...NAME_AND_DATE_CASES,
-    ...RECORD_ID_CASES,
-    LAST_UPDATED_CASE,
-  ]);
+  suite(experimentalBoutonDensitySchema, [...SUBJECT_CASES, ...NAME_CASES, ...RECORD_ID_CASES]);
 });
 
 describe('synapses-per-connection advanced filters — GET /experimental-synapses-per-connection', () => {
@@ -437,9 +400,8 @@ describe('synapses-per-connection advanced filters — GET /experimental-synapse
     ],
     ['brainRegion', 'id', OperatorId.In, set(UUID), { brain_region__id__in: [UUID] }],
     ...SUBJECT_CASES,
-    ...NAME_AND_DATE_CASES,
+    ...NAME_CASES,
     ...RECORD_ID_CASES,
-    LAST_UPDATED_CASE,
   ]);
 });
 
@@ -495,13 +457,6 @@ describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
       },
     ],
     [
-      'dataset',
-      'registrationDate',
-      OperatorId.DateRange,
-      dates(FROM, null),
-      { em_dense_reconstruction_dataset__creation_date__gte: FROM },
-    ],
-    [
       'measurements',
       'structuralDomain',
       OperatorId.Eq,
@@ -526,8 +481,6 @@ describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
     ],
     ...SUBJECT_CASES,
     ...RECORD_ID_CASES,
-    LAST_UPDATED_CASE,
-    ...ARTIFACT_RECORD_CASES,
   ]);
 });
 
@@ -556,9 +509,8 @@ describe('universal-cell-morphology advanced filters — GET /cell-morphology', 
     ],
     ...PROTOCOL_TEXT_CASES,
     ...SUBJECT_CASES,
-    ...RECORD_ID_CASES,
+    ...idCases('record'),
     HAS_SEGMENTED_SPINES_CASE,
-    LAST_UPDATED_CASE,
   ]);
 
   it('offers __not_in on generation type — this listing pins no host filter', () => {
@@ -587,9 +539,8 @@ describe('synthesized-cell-morphology advanced filters — GET /cell-morphology'
     ],
     ...PROTOCOL_TEXT_CASES,
     ...SUBJECT_CASES,
-    ...RECORD_ID_CASES,
+    ...idCases('record'),
     HAS_SEGMENTED_SPINES_CASE,
-    LAST_UPDATED_CASE,
   ]);
 
   it('never offers generation_type __in — the listing pins it as a host param', () => {

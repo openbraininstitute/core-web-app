@@ -14,10 +14,7 @@ import {
 import { EM_DATASET_RENDERER, EmDatasetCell } from '../renderers/em-dataset-cell';
 import { registerSharedRenderers } from '../renderers/register';
 import {
-  contactEmailFilter,
-  experimentDateFilter,
   flatAdvancedFilters,
-  publishedInFilter,
   recordIdFilter,
   staticOptions,
   subjectAdvancedGroup,
@@ -204,11 +201,6 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
     ],
   },
   subjectAdvancedGroup('The animal the mesh was reconstructed from.'),
-  {
-    id: 'record',
-    label: 'Record',
-    filters: [experimentDateFilter, publishedInFilter, contactEmailFilter],
-  },
 ];
 
 /**

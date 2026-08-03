@@ -17,10 +17,7 @@ import {
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import {
-  contactEmailFilter,
-  experimentDateFilter,
   flatAdvancedFilters,
-  publishedInFilter,
   recordIdFilter,
   staticOptions,
   subjectAdvancedGroup,
@@ -76,11 +73,6 @@ const electricalCellRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
     ],
   },
   subjectAdvancedGroup('The animal the recording was made from.'),
-  {
-    id: 'record',
-    label: 'Record',
-    filters: [experimentDateFilter, publishedInFilter, contactEmailFilter],
-  },
 ];
 
 /**
