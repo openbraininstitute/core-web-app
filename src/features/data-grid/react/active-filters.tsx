@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
-import { GridActionType, resolveAdvancedFilterGroups, summarizeFilter } from '../core';
+import { GridActionType, resolveAdvancedFilterGroups, summarizeFilterEntry } from '../core';
 import { AdvancedFiltersMenu } from './advanced-filters';
 
 import type { GridController, IGridState, OperatorRegistry, TFacets } from '../core';
@@ -60,10 +60,19 @@ export function ActiveFiltersButton<Row>({
     return map;
   }, [controller, groups]);
 
-  // Only filters that actually narrow the grid (non-empty summary) are listed.
+  // Only filters that actually narrow the grid (non-empty summary) are listed, each
+  // paired with the summary shown under its name — resolved to OPTION LABELS, not
+  // the wire ids the entry stores (`Modified reconstruction`, not
+  // `modified_reconstruction`). Facets are threaded in for facet-sourced options.
   const active = useMemo(
-    () => Object.values(state.filters).filter((e) => summarizeFilter(e) !== ''),
-    [state.filters]
+    () =>
+      Object.values(state.filters)
+        .map((entry) => ({
+          entry,
+          summary: summarizeFilterEntry(entry, controller.schema, facets),
+        }))
+        .filter((e) => e.summary !== ''),
+    [state.filters, controller.schema, facets]
   );
 
   const hasAdvanced = groups.length > 0 && operators !== undefined;
@@ -134,7 +143,7 @@ export function ActiveFiltersButton<Row>({
                 </span>
               ) : null}
               <div className="max-h-72 overflow-auto">
-                {active.map((entry) => {
+                {active.map(({ entry, summary }) => {
                   const label = labelByKey.get(entry.columnId) ?? entry.columnId;
                   return (
                     <div
@@ -143,9 +152,7 @@ export function ActiveFiltersButton<Row>({
                     >
                       <div className="flex min-w-0 flex-col">
                         <span className="truncate text-sm text-gray-800">{label}</span>
-                        <span className="truncate text-xs text-gray-500">
-                          {summarizeFilter(entry)}
-                        </span>
+                        <span className="truncate text-xs text-gray-500">{summary}</span>
                       </div>
                       <button
                         type="button"

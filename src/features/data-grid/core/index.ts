@@ -14,6 +14,11 @@ export {
   resolveContextual,
   whenMatches,
 } from './domain/contextual';
+export {
+  filterOptionLabeler,
+  filterTargetForEntry,
+  summarizeFilterEntry,
+} from './domain/filter-labels';
 export { FilterValueKind, isEmptyFilterValue, summarizeFilter } from './domain/filter-model';
 export {
   activeFilterTarget,
@@ -76,6 +81,7 @@ export type {
   TFilterModel,
   TFilterValue,
   TFilterValueKind,
+  TFilterValueLabeler,
 } from './domain/filter-model';
 export type { IGridContext, TContextualValue, TGridContextValue } from './domain/grid-context';
 export type { TColumnOverride } from './domain/merge-column';

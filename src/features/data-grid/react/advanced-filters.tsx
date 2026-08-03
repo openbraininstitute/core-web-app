@@ -5,7 +5,7 @@ import { useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import { resolveAdvancedFilterGroups, summarizeFilter } from '../core';
+import { filterOptionLabeler, resolveAdvancedFilterGroups, summarizeFilter } from '../core';
 import { FilterEditor } from './filters/filter-editor';
 
 import type { KeyboardEvent } from 'react';
@@ -129,7 +129,7 @@ export function AdvancedFiltersMenu<Row>({
           onClose={onClose}
         />
       ) : (
-        <AdvancedFilterList group={group} state={state} onOpen={setOpenFilterId} />
+        <AdvancedFilterList group={group} state={state} facets={facets} onOpen={setOpenFilterId} />
       )}
     </div>
   );
@@ -139,10 +139,12 @@ export function AdvancedFiltersMenu<Row>({
 function AdvancedFilterList({
   group,
   state,
+  facets,
   onOpen,
 }: {
   group: IResolvedAdvancedFilterGroup;
   state: IGridState;
+  facets?: TFacets;
   onOpen: (filterId: string) => void;
 }) {
   return (
@@ -153,7 +155,8 @@ function AdvancedFilterList({
       <div className="max-h-72 overflow-auto">
         {group.filters.map((f) => {
           const entry = state.filters[f.key];
-          const summary = entry ? summarizeFilter(entry) : '';
+          // an advanced filter IS its own target, so its labeler is direct
+          const summary = entry ? summarizeFilter(entry, filterOptionLabeler(f.def, facets)) : '';
           return (
             <button
               key={f.key}
