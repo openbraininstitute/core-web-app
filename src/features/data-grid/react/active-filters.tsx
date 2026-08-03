@@ -9,6 +9,7 @@ import { cn } from '@/utils/css-class';
 import { GridActionType, resolveAdvancedFilterGroups, summarizeFilterEntry } from '../core';
 import { AdvancedFiltersMenu } from './advanced-filters';
 import { ExpandingToolbarButton } from './expanding-toolbar-button';
+import { GRID_OVERLAY_Z_CLASS } from './molecules-theme';
 
 import type { GridController, IFilterEntry, IGridState, OperatorRegistry, TFacets } from '../core';
 
@@ -110,6 +111,7 @@ export function ActiveFiltersButton<Row>({
         sideOffset={1}
         arrowPadding={12}
         className={cn(
+          GRID_OVERLAY_Z_CLASS,
           'rounded-2xl border-gray-100 bg-white p-3 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]',
           // TWO PANES when there are advanced filters (editor | applied), one when
           // the popover is only the applied list. `max-w` keeps it inside the

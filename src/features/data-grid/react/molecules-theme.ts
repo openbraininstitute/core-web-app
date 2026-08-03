@@ -7,11 +7,42 @@
  * appearance without touching the shared component.
  */
 
+/**
+ * STACKING — the grid must work inside a modal.
+ *
+ * Every floating grid surface (the toolbar's advanced-filters popover, a column
+ * header's filter popover, the column chooser) is PORTALLED to `document.body`, and
+ * so is `ui/molecules/modal` — whose dialog is `zIndex: zIndex + 1`, i.e. **1001**
+ * with the default `zIndex = 1000` (`ui/molecules/modal/index.tsx`). Two body-level
+ * siblings order by z-index alone, and `ui/molecules/popover` ships `z-50`, so inside
+ * a modal (the workflow entity pickers) the popover opened BEHIND the dialog and read
+ * as "the button does nothing".
+ *
+ * These two ranks put the grid's surfaces above that dialog. `1002` is not invented
+ * here: it is the number `PortalRegionBanner` already uses for exactly this reason
+ * (`features/brain-region-hierarchy/components/region-banner.tsx`). Nothing in the app
+ * occupies 1002–99998, so elevating unconditionally costs nothing outside a modal —
+ * and the alternatives are worse: portalling into `#modal-dialog` would clip the
+ * popover inside the modal body's `overflow-auto`, and raising `ui/molecules/popover`
+ * itself would move every popover in the app.
+ *
+ * TWO ranks, because these surfaces NEST: the operator/option `Select` and the date
+ * calendar inside a filter editor portal to the body too, so they must clear the
+ * panel that opened them, not just the modal.
+ */
+export const GRID_OVERLAY_Z_CLASS = 'z-1002';
+
+/** Numeric twin of {@link GRID_OVERLAY_Z_CLASS}, for APIs taking a `zIndex` (antd). */
+export const GRID_OVERLAY_Z_INDEX = 1002;
+
+/** Overlays opened from INSIDE a grid overlay (operator Select, date calendar). */
+export const GRID_NESTED_OVERLAY_Z_CLASS = 'z-1003';
+
 /** Trigger button: hairline border, white surface, rounded-xl. */
 export const GRID_SELECT_TRIGGER_CLASS = 'rounded-xl border-gray-200 bg-white text-sm shadow-none';
 
 /** Dropdown panel: hairline border, white surface, soft elevation, generous radius. */
-export const GRID_SELECT_CONTENT_CLASS = 'rounded-xl border-gray-200 bg-white p-1.5 shadow-lg';
+export const GRID_SELECT_CONTENT_CLASS = `rounded-xl border-gray-200 bg-white p-1.5 shadow-lg ${GRID_NESTED_OVERLAY_Z_CLASS}`;
 
 /**
  * Dropdown panel pinned to EXACTLY the trigger's width. Radix publishes the measured

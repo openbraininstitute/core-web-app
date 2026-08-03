@@ -64,6 +64,13 @@ export interface DateRangePickerProps {
   onChange?: (range: DateRange | undefined) => void;
   placeholder?: string;
   className?: string;
+  /**
+   * Extra classes for the CALENDAR PANEL, which is portalled to `document.body` and
+   * so is out of reach of `className` (that styles the trigger). Callers that open
+   * this inside another body-level layer — a modal, another popover — need it to set
+   * a stacking rank the panel would otherwise not inherit.
+   */
+  contentClassName?: string;
   /** month panes in the calendar popover (default 1, so it fits compact panels) */
   numberOfMonths?: number;
   disabled?: ComponentProps<typeof Calendar>['disabled'];
@@ -80,6 +87,7 @@ export function DateRangePicker({
   onChange,
   placeholder = 'Pick a date range',
   className,
+  contentClassName,
   numberOfMonths = 1,
   disabled,
 }: DateRangePickerProps) {
@@ -101,7 +109,7 @@ export function DateRangePicker({
           <span className="truncate">{label}</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className={POPOVER_CLASS} align="end" side="bottom">
+      <PopoverContent className={cn(POPOVER_CLASS, contentClassName)} align="end" side="bottom">
         <Calendar
           mode="range"
           selected={value}

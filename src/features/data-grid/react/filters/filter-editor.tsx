@@ -31,6 +31,7 @@ import {
 } from '../../core';
 import {
   GRID_INPUT_CLASS,
+  GRID_NESTED_OVERLAY_Z_CLASS,
   GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS,
   GRID_SELECT_ITEM_CLASS,
   GRID_SELECT_TRIGGER_CLASS,
@@ -425,6 +426,9 @@ export function FilterEditor({
         <DateRangePicker
           value={pendingDateRange}
           onChange={(dr) => change(dateRangeToFilterValue(dr))}
+          // the calendar portals to the body: it has to clear the popover that
+          // opened it (and the modal that popover may itself live in)
+          contentClassName={GRID_NESTED_OVERLAY_Z_CLASS}
         />
       )}
 

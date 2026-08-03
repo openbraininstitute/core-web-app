@@ -11,6 +11,7 @@ import { cn } from '@/utils/css-class';
 
 import { GridActionType, SortDirection } from '../../core';
 import { FilterEditor } from '../../react/filters/filter-editor';
+import { GRID_OVERLAY_Z_CLASS } from '../../react/molecules-theme';
 import { useGridState } from '../../react/use-grid-state';
 import { summarizeFilter } from './filters/summary';
 
@@ -124,7 +125,10 @@ export function AgHeader(props: CustomHeaderProps) {
             align="end"
             side="bottom"
             sideOffset={6}
-            className="w-72 rounded-2xl border-gray-100 bg-white p-4 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]"
+            className={cn(
+              GRID_OVERLAY_Z_CLASS,
+              'w-72 rounded-2xl border-gray-100 bg-white p-4 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]'
+            )}
             // The operator/facet Selects and the date-picker calendar portal their
             // content outside this popover; don't let interacting with those (a
             // dropdown option, a calendar day) dismiss the filter panel.

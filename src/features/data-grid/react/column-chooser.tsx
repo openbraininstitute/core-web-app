@@ -6,6 +6,7 @@ import { cn } from '@/utils/css-class';
 
 import { GridActionType } from '../core';
 import { ExpandingToolbarButton } from './expanding-toolbar-button';
+import { GRID_OVERLAY_Z_INDEX } from './molecules-theme';
 
 import type { GridController, IGridState } from '../core';
 
@@ -53,7 +54,15 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
   );
 
   return (
-    <Popover trigger="click" placement="bottomLeft" content={content}>
+    // `zIndex` is PINNED, not left to antd's default (1030): the grid renders inside
+    // `ui/molecules/modal` too, whose dialog sits at 1001. One number for every grid
+    // overlay keeps the chooser and the filters popover on the same rank.
+    <Popover
+      trigger="click"
+      placement="bottomRight"
+      content={content}
+      zIndex={GRID_OVERLAY_Z_INDEX}
+    >
       <ExpandingToolbarButton icon={<RiTable3 size={18} />} label="Columns" className={className} />
     </Popover>
   );
