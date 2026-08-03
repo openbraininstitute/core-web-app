@@ -1,7 +1,12 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ExpandingToolbarButton } from '@/features/data-grid/react/expanding-toolbar-button';
+import {
+  EXPANDING_PILL_BASE_CLASS,
+  ExpandingPillContent,
+  ExpandingToolbarButton,
+} from '@/features/data-grid/react/expanding-toolbar-button';
+import { Button } from '@/ui/molecules/button';
 
 describe('ExpandingToolbarButton', () => {
   it('keeps one accessible name in both states — the label, never doubled', () => {
@@ -100,5 +105,52 @@ describe('ExpandingToolbarButton', () => {
   it('renders no badge anchor at all when there is no badge', () => {
     const { queryByTestId } = render(<ExpandingToolbarButton icon={null} label="Columns" />);
     expect(queryByTestId('toolbar-pill-badge-anchor')).toBeNull();
+  });
+});
+
+/**
+ * REGRESSION — collapsed must be a CIRCLE, not a squashed rectangle.
+ *
+ * The footer's bulk actions build the pill on `ui/molecules/button` so they can keep
+ * their own primary/destructive palette. That component's cva base contributes
+ * `gap-2` and `has-[>svg]:px-3`, which used not to collide with anything the pill
+ * recipe declared — so tailwind-merge kept them and a 40px-tall pill came out ~48px
+ * wide. The recipe now pins both, and this asserts the resolved class list rather than
+ * a computed width, which jsdom does not have.
+ */
+describe('expanding pill geometry on a Button base', () => {
+  const resolved = () => {
+    const { getByRole } = render(
+      <Button rounded variant="default" aria-label="Download" className={EXPANDING_PILL_BASE_CLASS}>
+        <ExpandingPillContent icon={null} label="Download" />
+      </Button>
+    );
+    return getByRole('button').className;
+  };
+
+  it('resolves to a 40x40 box: h-10, px-2.5, no inherited gap', () => {
+    const cls = resolved();
+    expect(cls).toContain('h-10');
+    expect(cls).toContain('min-w-10');
+    expect(cls).toContain('px-2.5');
+    expect(cls).toContain('gap-0');
+    // the two declarations that used to survive from the Button base
+    expect(cls).not.toContain('gap-2');
+    expect(cls).not.toContain('has-[>svg]:px-3');
+  });
+
+  it('is fully rounded in both states', () => {
+    const cls = resolved();
+    expect(cls).toContain('rounded-full');
+    expect(cls).not.toContain('rounded-md');
+  });
+
+  it('keeps the accessible name while collapsed', () => {
+    const { getByRole } = render(
+      <Button rounded variant="default" aria-label="Download" className={EXPANDING_PILL_BASE_CLASS}>
+        <ExpandingPillContent icon={null} label="Download" />
+      </Button>
+    );
+    expect(getByRole('button', { name: 'Download' })).toHaveAttribute('aria-label', 'Download');
   });
 });

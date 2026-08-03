@@ -26,7 +26,15 @@ export interface IExpandingToolbarButtonProps extends ComponentPropsWithRef<'but
  * actions, which must stay recognisably primary and destructive).
  */
 export const EXPANDING_PILL_BASE_CLASS = cn(
-  'group/toolbar-pill relative flex h-10 shrink-0 items-center rounded-full px-2.5',
+  // COLLAPSED IS A CIRCLE, and the arithmetic has to survive whatever element carries
+  // this: 10px + a 20px icon + 10px = 40px, exactly `h-10`. `gap-0` and the explicit
+  // `has-[>svg]` padding are not redundant — `ui/molecules/button`'s cva base ships
+  // `gap-2` and `has-[>svg]:px-3`, neither of which collides with anything this recipe
+  // used to declare, so a pill built on `Button` came out ~48px wide against a 40px
+  // height and read as a squashed rectangle. `min-w-10` is the floor if some other
+  // base ever pads it less.
+  'group/toolbar-pill relative flex h-10 min-w-10 shrink-0 items-center justify-center',
+  'gap-0 rounded-full px-2.5 has-[>svg]:px-2.5',
   'outline-none hover:pr-3.5',
   // never animate `width` off a content-driven layout: only paint properties here
   'transition-[box-shadow,background-color] duration-300 ease-in-out active:scale-95',
