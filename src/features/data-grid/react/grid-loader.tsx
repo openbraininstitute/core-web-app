@@ -25,7 +25,7 @@ export function GridLoader({ label = 'entities', className }: IGridLoaderProps) 
       )}
     >
       <LoadingOutlined className="text-primary-7 text-2xl" aria-hidden />
-      <span className="text-neutral-4 text-sm">loading {label}</span>
+      <span className="text-neutral-4 text-sm">Loading {label}</span>
     </div>
   );
 }

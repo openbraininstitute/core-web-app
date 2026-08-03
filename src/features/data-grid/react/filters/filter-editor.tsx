@@ -36,6 +36,7 @@ import {
   GRID_SELECT_TRIGGER_CLASS,
 } from '../molecules-theme';
 import { useGridState } from '../use-grid-state';
+import { dateRangeToFilterValue } from './date-range-value';
 import { splitIdTokens } from './id-tokens';
 import { FREE_ENTRY_SEPARATOR_HINT, resolveFilterPlaceholder } from './placeholder';
 import { useSetOptions } from './use-set-options';
@@ -423,13 +424,7 @@ export function FilterEditor({
       {uiKind === OperatorUiKind.DateRange && (
         <DateRangePicker
           value={pendingDateRange}
-          onChange={(dr) =>
-            change({
-              kind: FilterValueKind.DateRange,
-              from: dr?.from ? dr.from.toISOString() : null,
-              to: dr?.to ? dr.to.toISOString() : null,
-            })
-          }
+          onChange={(dr) => change(dateRangeToFilterValue(dr))}
         />
       )}
 
