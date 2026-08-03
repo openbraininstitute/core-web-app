@@ -10,8 +10,11 @@ export interface IExpandingToolbarButtonProps extends ComponentPropsWithRef<'but
   /** sentence-case name — the accessible name AND the text revealed on hover/focus */
   label: string;
   /**
-   * Optional overlay pinned to the ICON (e.g. the active-filter count), so it stays
-   * put while the button widens instead of sliding out with the trailing edge.
+   * Optional count overlay (e.g. the number of active filters). At rest it sits on
+   * the ICON; while the pill is open it rides out to the pill's top-right corner.
+   * Positioned by the consumer against a 20px-tall, zero-width anchor — the same
+   * geometry the icon box used to give it — so `-right-2 -top-1.5` still lands where
+   * it always did.
    */
   badge?: ReactNode;
 }
@@ -29,6 +32,16 @@ export interface IExpandingToolbarButtonProps extends ComponentPropsWithRef<'but
  * The accessible name is the `aria-label`, present in BOTH states; the revealed text
  * is `aria-hidden` so a screen reader never hears the name twice and the name never
  * depends on hover.
+ *
+ * THE BADGE TRAVELS. Its horizontal journey costs nothing: the badge anchor is a
+ * ZERO-WIDTH flex item sitting after the label, so it is carried by the very same
+ * `grid-template-columns` growth — one animation, never two racing each other, and no
+ * layout the anchor itself has to do. Only the constant offset onto the corner (10px
+ * out, 10px up) is a `translate`, which makes it label-length-independent and keeps
+ * the whole trip on the compositor. Matching `duration-300 ease-in-out` locks it to
+ * the reveal; a CSS transition reverses from wherever it currently is, so pulling the
+ * pointer away mid-flight glides back instead of snapping or queueing. The anchor is
+ * `pointer-events-none`, so the badge can never swallow a click or flicker the hover.
  */
 export function ExpandingToolbarButton({
   icon,
@@ -53,10 +66,7 @@ export function ExpandingToolbarButton({
         className
       )}
     >
-      <span className="relative flex size-5 shrink-0 items-center justify-center">
-        {icon}
-        {badge}
-      </span>
+      <span className="relative flex size-5 shrink-0 items-center justify-center">{icon}</span>
       <span
         aria-hidden
         className={cn(
@@ -69,6 +79,27 @@ export function ExpandingToolbarButton({
           <span className="block whitespace-nowrap pl-1.5 text-[13px] font-medium">{label}</span>
         </span>
       </span>
+      {badge ? (
+        <span
+          data-testid="toolbar-pill-badge-anchor"
+          className={cn(
+            // zero-width: it is a bookmark at the end of the content, not a box in it,
+            // so nothing in the pill or the toolbar shifts when the badge moves
+            'pointer-events-none relative z-10 h-5 w-0 shrink-0',
+            'transition-transform duration-300 ease-in-out',
+            'group-hover/toolbar-pill:translate-x-2.5 group-hover/toolbar-pill:-translate-y-2.5',
+            'group-focus-visible/toolbar-pill:translate-x-2.5',
+            'group-focus-visible/toolbar-pill:-translate-y-2.5',
+            // reduced motion: same destination, no journey
+            'motion-reduce:transition-none',
+            // the badge overlaps the pill's edge at the corner — a white halo keeps it
+            // readable against both the pill and whatever the page puts behind it
+            '[&>*]:ring-2 [&>*]:ring-white'
+          )}
+        >
+          {badge}
+        </span>
+      ) : null}
     </button>
   );
 }

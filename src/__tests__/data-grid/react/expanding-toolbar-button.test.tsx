@@ -35,13 +35,70 @@ describe('ExpandingToolbarButton', () => {
     expect(getByRole('button')).toHaveAttribute('data-testid', 'pill');
   });
 
-  it('pins the badge to the icon so it does not travel with the widening edge', () => {
+  it('keeps the badge count rendered and inside the button, with the name unchanged', () => {
     const { getByText, getByRole } = render(
       <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
     );
     const badge = getByText('3');
-    // the badge sits inside the fixed-size icon box, not in the growing text wrapper
-    expect(badge.parentElement?.className).toContain('size-5');
     expect(getByRole('button', { name: 'Advanced filters' })).toContainElement(badge);
+    // the count must never leak into the accessible name, in either state
+    expect(getByRole('button', { name: 'Advanced filters' })).toHaveAttribute(
+      'aria-label',
+      'Advanced filters'
+    );
+  });
+
+  it('anchors the badge after the label so it rides the pill open, without layout cost', () => {
+    const { getByTestId, getByText } = render(
+      <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
+    );
+    const anchor = getByTestId('toolbar-pill-badge-anchor');
+    expect(anchor).toContainElement(getByText('3'));
+    // zero-width bookmark: it cannot shift the pill or the toolbar as it travels
+    expect(anchor.className).toContain('w-0');
+    // it is the LAST child — after the growing label — so the existing
+    // grid-template-columns animation carries it out; nothing races it
+    expect(anchor.previousElementSibling).toHaveAttribute('aria-hidden', 'true');
+    expect(anchor.nextElementSibling).toBeNull();
+  });
+
+  it('never lets the travelling badge intercept the pointer', () => {
+    const { getByTestId } = render(
+      <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
+    );
+    expect(getByTestId('toolbar-pill-badge-anchor').className).toContain('pointer-events-none');
+  });
+
+  it('moves the badge to the corner by transform, on hover AND on focus-visible', () => {
+    const { getByTestId } = render(
+      <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
+    );
+    const cls = getByTestId('toolbar-pill-badge-anchor').className;
+    // transform only — no width/margin/inset animation to shift the toolbar
+    expect(cls).toContain('transition-transform');
+    // in lockstep with the label reveal, so the two cannot stutter against each other
+    expect(cls).toContain('duration-300');
+    expect(cls).toContain('ease-in-out');
+    // up and to the right, keyboard users included
+    expect(cls).toContain('group-hover/toolbar-pill:translate-x-2.5');
+    expect(cls).toContain('group-hover/toolbar-pill:-translate-y-2.5');
+    expect(cls).toContain('group-focus-visible/toolbar-pill:translate-x-2.5');
+    expect(cls).toContain('group-focus-visible/toolbar-pill:-translate-y-2.5');
+  });
+
+  it('reduced motion keeps the destination and drops the journey', () => {
+    const { getByTestId } = render(
+      <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
+    );
+    const cls = getByTestId('toolbar-pill-badge-anchor').className;
+    // only the transition goes away: the hover/focus translate still applies, so the
+    // badge is still at the corner — it just gets there instantly
+    expect(cls).toContain('motion-reduce:transition-none');
+    expect(cls).not.toContain('motion-reduce:translate-x-0');
+  });
+
+  it('renders no badge anchor at all when there is no badge', () => {
+    const { queryByTestId } = render(<ExpandingToolbarButton icon={null} label="Columns" />);
+    expect(queryByTestId('toolbar-pill-badge-anchor')).toBeNull();
   });
 });
