@@ -1,9 +1,8 @@
 /**
- * The toolbar is one row of two clusters: the workspace the listing is read through on
- * the left (scope → brain region), everything that narrows the current view on the
- * right (entity type → search → filters → columns). Callers hand over named slots and
- * the toolbar decides the order, so this pins the order HERE rather than in every host
- * that fills the slots.
+ * The toolbar is one row of two clusters: WHAT you are looking at on the left (entity
+ * type → scope → brain region), what you DO to it on the right (search → filters →
+ * columns). Callers hand over named slots and the toolbar decides the order, so this
+ * pins the order HERE rather than in every host that fills the slots.
  */
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -19,7 +18,7 @@ function order(testIds: string[]): string[] {
 }
 
 describe('DataGridToolbar', () => {
-  it('lays out scope → brain region, then entity type → search → filters → columns', () => {
+  it('lays out entity type → scope → brain region, then search → filters → columns', () => {
     render(
       <DataGridToolbar
         slots={{
@@ -35,19 +34,19 @@ describe('DataGridToolbar', () => {
     );
 
     expect(
-      order(['scope', 'brain-region', 'extra-left', 'entity-type', 'search', 'filters', 'columns'])
+      order(['entity-type', 'scope', 'brain-region', 'extra-left', 'search', 'filters', 'columns'])
     ).toEqual([
+      'entity-type',
       'scope',
       'brain-region',
       'extra-left',
-      'entity-type',
       'search',
       'filters',
       'columns',
     ]);
   });
 
-  it('puts the entity-type selector in the RIGHT cluster, with the search', () => {
+  it('puts the entity-type selector FIRST in the left cluster, ahead of the scope tabs', () => {
     render(
       <DataGridToolbar
         slots={{
@@ -60,9 +59,16 @@ describe('DataGridToolbar', () => {
     const scope = screen.getByTestId('scope');
     const entityType = screen.getByTestId('entity-type');
     const search = screen.getByTestId('search');
-    // same cluster as the search, a different one from the scope tabs
-    expect(entityType.parentElement).toBe(search.parentElement);
-    expect(entityType.parentElement).not.toBe(scope.parentElement);
+    // same cluster as the scope tabs, a different one from the search
+    expect(entityType.parentElement).toBe(scope.parentElement);
+    expect(entityType.parentElement).not.toBe(search.parentElement);
+    // and it comes first within it
+    expect(entityType.previousElementSibling).toBeNull();
+  });
+
+  it('still renders the left cluster when the entity selector is its only occupant', () => {
+    render(<DataGridToolbar slots={{ entityType: <div data-testid="entity-type" /> }} />);
+    expect(screen.getByTestId('entity-type')).toBeInTheDocument();
   });
 
   it('renders each cluster only when a slot fills it', () => {

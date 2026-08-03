@@ -9,15 +9,15 @@ import type { ReactNode } from 'react';
  * count; a listing with no hierarchy has no brain region).
  */
 export interface IDataGridToolbarSlots {
-  /** scope (Public / Project) selector — left cluster, first */
+  /** entity-type count selector — left cluster, first */
+  entityType?: ReactNode;
+  /** scope (Public / Project) selector — left cluster, second */
   scope?: ReactNode;
-  /** brain-region tree selector — left cluster, second */
+  /** brain-region tree selector — left cluster, third */
   brainRegion?: ReactNode;
   /** anything else the host contributes to the left cluster (e.g. a view toggle) */
   left?: ReactNode;
-  /** entity-type count selector — right cluster, first */
-  entityType?: ReactNode;
-  /** quick-search input — right cluster, second */
+  /** quick-search input — right cluster, first */
   search?: ReactNode;
 }
 
@@ -33,12 +33,12 @@ export interface IDataGridToolbarProps {
 /**
  * Thin toolbar shell, one row, two clusters.
  *
- * LEFT is the WORKSPACE the listing is read through — the scope and the brain region,
- * which outlive any one listing. RIGHT is everything that narrows what you are looking
- * at right now — the entity type, then search, filters, columns — grouped at the far
- * edge so the controls that change the view sit together under one hand instead of
- * being split across the bar. Bulk actions and the results/selection counts are not
- * here: they live in the footer, beside the rows they talk about.
+ * LEFT is WHAT you are looking at — the entity type first, because it names the rows,
+ * then the scope and brain region that qualify them. RIGHT is what you DO to that —
+ * search, filter, choose columns — grouped at the far edge so the controls that change
+ * the view sit together under one hand instead of being split across the bar. Bulk
+ * actions and the results/selection counts are not here: they live in the footer,
+ * beside the rows they talk about.
  *
  * `flex-wrap` is the narrow-width behaviour: the right cluster drops to its own line
  * rather than crushing the left pickers.
@@ -49,8 +49,8 @@ export function DataGridToolbar({
   columnChooser,
   className,
 }: IDataGridToolbarProps) {
-  const hasLeft = slots?.scope || slots?.brainRegion || slots?.left;
-  const hasRight = slots?.entityType || slots?.search || filters || columnChooser;
+  const hasLeft = slots?.entityType || slots?.scope || slots?.brainRegion || slots?.left;
+  const hasRight = slots?.search || filters || columnChooser;
   if (!hasLeft && !hasRight) return null;
 
   return (
@@ -60,6 +60,7 @@ export function DataGridToolbar({
     >
       {hasLeft ? (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {slots?.entityType}
           {slots?.scope}
           {slots?.brainRegion}
           {slots?.left}
@@ -67,7 +68,6 @@ export function DataGridToolbar({
       ) : null}
       {hasRight ? (
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {slots?.entityType}
           {slots?.search}
           {filters}
           {columnChooser}
