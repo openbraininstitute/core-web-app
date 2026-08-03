@@ -31,7 +31,7 @@ import {
 } from '../../core';
 import {
   GRID_INPUT_CLASS,
-  GRID_SELECT_CONTENT_CLASS,
+  GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS,
   GRID_SELECT_ITEM_CLASS,
   GRID_SELECT_TRIGGER_CLASS,
 } from '../molecules-theme';
@@ -306,7 +306,7 @@ export function FilterEditor({
           <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
             <SelectValue>{ctx.operators.get(operator).label}</SelectValue>
           </SelectTrigger>
-          <SelectContent className={GRID_SELECT_CONTENT_CLASS}>
+          <SelectContent className={GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS}>
             {operatorIds.map((id) => (
               <SelectItem key={id} value={id} className={GRID_SELECT_ITEM_CLASS}>
                 {ctx.operators.get(id).label}
@@ -335,7 +335,7 @@ export function FilterEditor({
                 )?.label ?? placeholder}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className={GRID_SELECT_CONTENT_CLASS}>
+            <SelectContent className={GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS}>
               {optionsSource.items.map((item) => (
                 <SelectItem key={item.id} value={item.id} className={GRID_SELECT_ITEM_CLASS}>
                   {item.label}
@@ -451,7 +451,7 @@ export function FilterEditor({
               <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
                 <SelectValue>{{ any: 'Any', yes: 'Yes', no: 'No' }[boolValue]}</SelectValue>
               </SelectTrigger>
-              <SelectContent className={GRID_SELECT_CONTENT_CLASS}>
+              <SelectContent className={GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS}>
                 <SelectItem value="any" className={GRID_SELECT_ITEM_CLASS}>
                   Any
                 </SelectItem>

@@ -13,6 +13,16 @@ export const GRID_SELECT_TRIGGER_CLASS = 'rounded-xl border-gray-200 bg-white te
 /** Dropdown panel: hairline border, white surface, soft elevation, generous radius. */
 export const GRID_SELECT_CONTENT_CLASS = 'rounded-xl border-gray-200 bg-white p-1.5 shadow-lg';
 
+/**
+ * Dropdown panel pinned to EXACTLY the trigger's width. Radix publishes the measured
+ * trigger width as `--radix-select-trigger-width` on the content element; the molecule
+ * only uses it as a `min-w` (so a long option makes the panel wider than its trigger).
+ * Filter editors render full-width triggers inside a fixed-width popover, where a panel
+ * that outgrows its trigger looks broken — this pins width (and overrides the molecule's
+ * `min-w-[8rem]` via tailwind-merge) instead of hardcoding a px value.
+ */
+export const GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS = `${GRID_SELECT_CONTENT_CLASS} w-(--radix-select-trigger-width) min-w-(--radix-select-trigger-width)`;
+
 /** Dropdown row: rounded hover/active highlight in a calm gray. */
 export const GRID_SELECT_ITEM_CLASS =
   'rounded-lg py-1.5 focus:bg-gray-100 focus:text-primary-8 data-[state=checked]:font-medium';
