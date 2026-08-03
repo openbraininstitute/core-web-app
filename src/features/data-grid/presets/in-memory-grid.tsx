@@ -33,6 +33,7 @@ import { useGridState } from '../react/use-grid-state';
 import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
 import { isExpanderClick } from '../renderers/aggrid/expand-cell';
 import { AgHeader } from '../renderers/aggrid/header';
+import { isInteractiveClick } from '../renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
 import { dataGridTheme, SINGLE_SELECT_RADIO_CLASS } from '../renderers/aggrid/theme';
 
@@ -712,12 +713,7 @@ export function InMemoryGrid<Row>({
             // clicks on interactive cell content (per-row download button, links, …)
             // never open the row. AG's own listener fires BEFORE any React handler,
             // so a stopPropagation inside the cell can't protect us — guard here.
-            const target = e.event?.target;
-            if (
-              target instanceof HTMLElement &&
-              target.closest('button, a, input, [role="button"]')
-            )
-              return;
+            if (isInteractiveClick(e.event)) return;
             const colId = e.column.getColId();
             if (SYNTHETIC_COL_IDS.has(colId)) return;
             // the column hosting the in-cell expander never opens the row
