@@ -101,10 +101,11 @@ describe('ActiveFiltersButton — two-pane popover', () => {
     expect(screen.getByRole('button', { name: /Reset all filters/ })).toBeInTheDocument();
   });
 
-  it('keeps the applied pane (and so the popover width) when nothing is applied', () => {
+  it('drops the applied pane entirely when nothing is applied', () => {
     openPopover(oneGroup, false);
-    expect(screen.getByText('Applied Filters')).toBeInTheDocument();
-    expect(screen.getByText('No filters applied yet.')).toBeInTheDocument();
+    // the filter list is still there; the second column is not
+    expect(screen.getByRole('menuitem', { name: /Generation type/ })).toBeInTheDocument();
+    expect(screen.queryByText('Applied Filters')).toBeNull();
     expect(screen.queryByRole('button', { name: /Reset all filters/ })).toBeNull();
   });
 

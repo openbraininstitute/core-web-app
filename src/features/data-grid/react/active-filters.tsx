@@ -84,6 +84,8 @@ export function ActiveFiltersButton<Row>({
 
   const hasAdvanced = groups.length > 0 && operators !== undefined;
   if (active.length === 0 && !hasAdvanced) return null;
+  /** the applied pane earns its column only once something is in it */
+  const twoPane = hasAdvanced && active.length > 0;
 
   const clearOne = (columnId: string) =>
     controller.store.dispatch({ type: GridActionType.SetFilter, columnId, entry: null });
@@ -106,17 +108,30 @@ export function ActiveFiltersButton<Row>({
         />
       </PopoverTrigger>
       <PopoverContent
-        align="start"
+        // The trigger now lives in the toolbar's RIGHT cluster, so the panel hangs
+        // inward from that edge; anchoring it `start` would push a 2xl-wide popover
+        // off the right of the viewport.
+        align="end"
         side="bottom"
         sideOffset={1}
-        arrowPadding={12}
+        // ≥ the panel's `rounded-2xl` (16px): floating-ui clamps the arrow to this
+        // distance from the content's edge, so anything smaller parks the tip on the
+        // corner's CURVE, where it reads as detached from the panel.
+        arrowPadding={16}
         className={cn(
           GRID_OVERLAY_Z_CLASS,
           'rounded-2xl border-gray-100 bg-white p-3 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]',
-          // TWO PANES when there are advanced filters (editor | applied), one when
-          // the popover is only the applied list. `max-w` keeps it inside the
+          'max-w-[calc(100vw-1.5rem)]',
+          // TWO PANES only when there is something in BOTH of them: the filter list
+          // and at least one applied filter. An empty "Applied filters" column is
+          // 350px of the panel spent saying nothing, so the popover is the single
+          // narrow column until the first filter lands. `max-w` keeps it inside the
           // viewport on a narrow window; the panes shrink, they never overflow.
-          hasAdvanced ? 'w-2xl max-w-[calc(100vw-1.5rem)]' : 'w-80 max-w-[calc(100vw-1.5rem)]'
+          twoPane ? 'w-2xl' : 'w-80',
+          // width is the ONLY thing that moves between the two shapes, and it moves
+          // over 200ms rather than snapping (Radix re-runs positioning on the resize,
+          // so the anchored edge stays put throughout)
+          'transition-[width] duration-200 ease-out motion-reduce:transition-none'
         )}
         // The operator/option Selects and the date picker portal their content
         // outside this popover; interacting with those must not dismiss it.
@@ -133,15 +148,21 @@ export function ActiveFiltersButton<Row>({
       >
         <PopoverArrow className="-translate-y-0.75" />
         {/*
-          LEFT: the filter list / the open filter's editor (with its own Reset +
-          Apply). RIGHT: everything already applied, with the global reset. The two
-          concerns used to be stacked, which meant applying a filter pushed the
-          applied list out of view; side by side, choosing and reviewing are visible
-          at once. Without advanced filters there is only one concern, so the
-          popover stays the single narrow column it has always been.
+          The filter list (or the open filter's editor, with its own Reset + Apply)
+          and everything already applied, side by side — stacked, applying a filter
+          used to push the applied list out of view; side by side, choosing and
+          reviewing are visible at once.
+
+          `flex-row-reverse` is what keeps the second pane from being disruptive. The
+          popover is anchored `align="end"`, so its RIGHT edge is pinned to the
+          trigger and all growth happens leftward. Painting the filter list against
+          that pinned edge means the rows under the pointer do not move a pixel when
+          the applied pane appears or disappears — the panel simply grows or shrinks
+          away from the hand. DOM order is unchanged (list first, applied second), so
+          tab order and screen-reader order still read "choose, then review".
         */}
         {hasAdvanced && operators ? (
-          <div className="flex items-stretch gap-3">
+          <div className="flex flex-row-reverse items-stretch gap-3">
             <div className="flex min-w-0 flex-1 flex-col">
               <AdvancedFiltersMenu
                 controller={controller}
@@ -151,14 +172,16 @@ export function ActiveFiltersButton<Row>({
                 onClose={() => setOpen(false)}
               />
             </div>
-            <div className="flex min-w-0 shrink basis-80 flex-col border-l border-gray-100 pl-3">
-              <AppliedFilters
-                active={active}
-                labelByKey={labelByKey}
-                onClearOne={clearOne}
-                onClearAll={clearAll}
-              />
-            </div>
+            {twoPane ? (
+              <div className="flex min-w-0 shrink basis-80 flex-col border-r border-gray-100 pr-3">
+                <AppliedFilters
+                  active={active}
+                  labelByKey={labelByKey}
+                  onClearOne={clearOne}
+                  onClearAll={clearAll}
+                />
+              </div>
+            ) : null}
           </div>
         ) : (
           <AppliedFilters
@@ -182,12 +205,13 @@ interface IAppliedFilter {
 
 /**
  * The APPLIED pane: every filter currently narrowing the grid, each with its own
- * clear, plus the global reset. It is the popover's right column when the grid has
- * advanced filters and its only content otherwise (`headless`, which drops the
+ * clear, plus the global reset. It is one of the popover's two columns when the grid
+ * has advanced filters and its only content otherwise (`headless`, which drops the
  * section title because there is nothing to distinguish it from).
  *
- * The pane renders even when nothing is applied so the popover keeps ONE width —
- * clearing the last filter must not make the panel jump narrower under the pointer.
+ * Renders NOTHING when nothing is applied — an empty column has no content to justify
+ * it, and the popover narrows to a single pane instead (see the `flex-row-reverse`
+ * note above for why that costs no movement under the pointer).
  */
 function AppliedFilters({
   active,
@@ -202,7 +226,7 @@ function AppliedFilters({
   onClearAll: () => void;
   headless?: boolean;
 }) {
-  if (headless && active.length === 0) return null;
+  if (active.length === 0) return null;
 
   return (
     <div className="flex min-h-0 flex-col h-full">
@@ -211,55 +235,47 @@ function AppliedFilters({
           Applied Filters
         </span>
       )}
-      {active.length === 0 ? (
-        <span className="px-1 py-1.5 text-xs text-gray-400 h-full w-full flex items-center justify-center">
-          No filters applied yet.
-        </span>
-      ) : (
-        // scrolls on its own: a long applied list must not stretch the popover
-        // past the viewport, nor drag the editor pane down with it
-        <div className="max-h-72 min-h-0 overflow-y-auto">
-          {active.map(({ entry, summary }) => {
-            const label = labelByKey.get(entry.columnId) ?? entry.columnId;
-            return (
-              <div
-                key={entry.columnId}
-                className="flex items-center justify-between gap-2 rounded px-1 py-1.5 hover:bg-gray-50"
-              >
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm text-gray-800" title={label}>
-                    {label}
-                  </span>
-                  <span className="truncate text-xs text-gray-500" title={summary}>
-                    {summary}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  aria-label={`Clear ${label} filter`}
-                  onClick={() => onClearOne(entry.columnId)}
-                  className="flex size-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-primary-8 hover:text-white"
-                >
-                  <RiCloseLine size={14} />
-                </button>
+      {/* scrolls on its own: a long applied list must not stretch the popover past
+          the viewport, nor drag the editor pane down with it */}
+      <div className="max-h-72 min-h-0 overflow-y-auto">
+        {active.map(({ entry, summary }) => {
+          const label = labelByKey.get(entry.columnId) ?? entry.columnId;
+          return (
+            <div
+              key={entry.columnId}
+              className="flex items-center justify-between gap-2 rounded px-1 py-1.5 hover:bg-gray-50"
+            >
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-sm text-gray-800" title={label}>
+                  {label}
+                </span>
+                <span className="truncate text-xs text-gray-500" title={summary}>
+                  {summary}
+                </span>
               </div>
-            );
-          })}
-        </div>
-      )}
-      {active.length > 0 && (
-        <button
-          type="button"
-          onClick={onClearAll}
-          className={cn(
-            'flex items-center justify-center gap-1.5 border-t border-gray-100 py-2 text-sm text-primary-8 transition-colors hover:text-primary-9 mt-auto',
-            'hover:bg-gray-50'
-          )}
-        >
-          <RiRestartLine size={14} />
-          Reset all filters
-        </button>
-      )}
+              <button
+                type="button"
+                aria-label={`Clear ${label} filter`}
+                onClick={() => onClearOne(entry.columnId)}
+                className="flex size-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-primary-8 hover:text-white"
+              >
+                <RiCloseLine size={14} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={onClearAll}
+        className={cn(
+          'flex items-center justify-center gap-1.5 border-t border-gray-100 py-2 text-sm text-primary-8 transition-colors hover:text-primary-9 mt-auto',
+          'hover:bg-gray-50'
+        )}
+      >
+        <RiRestartLine size={14} />
+        Reset all filters
+      </button>
     </div>
   );
 }
