@@ -736,11 +736,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Lifecycle status',
     },
     defaultConstraint: 'lifecycle_status',
-    isSortable: true,
-    order: {
-      property: 'order_by',
-      value: 'lifecycle_status',
-    },
+    isSortable: false,
     isDisplayable: true,
     isFilterable: true,
     presentation: {
