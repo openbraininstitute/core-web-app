@@ -280,6 +280,8 @@ describe('simulatable_extracellular_recording_array parity', () => {
       EntityCoreFields.ElectrodeType,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'contributions',
     ]);
   });
   it('name ilike + createdBy facet + registration DateRange serialize to legacy keys', () => {
@@ -296,13 +298,47 @@ describe('simulatable_extracellular_recording_array parity', () => {
     );
     expect(dated.creation_date__gte).toBe('2026-01-01');
   });
-  it('Description / Circuit / Electrode type are display-only; createdBy not sortable', () => {
+  it('Description / Circuit stay display-only; createdBy not sortable', () => {
     expect(col(s, EntityCoreFields.Description)?.filter).toBeUndefined();
     expect(col(s, EntityCoreFields.RecordingArrayCircuit)?.filter).toBeUndefined();
-    expect(col(s, EntityCoreFields.ElectrodeType)?.filter).toBeUndefined();
-    expect(col(s, EntityCoreFields.ElectrodeType)?.sortable).toBeFalsy();
     expect(col(s, EntityCoreFields.CreatedBy)?.sortable).toBeFalsy();
     expect(col(s, EntityCoreFields.RegistrationDate)?.sortable).toBe(true);
+  });
+
+  /**
+   * `electrode_type` used to be offered TWICE — as this display-only column and as an
+   * advanced filter. The filter moved ONTO the existing column; no second column was
+   * created for it, and it stays VISIBLE (not auxiliary).
+   */
+  it('electrode type filters on its own column, bare exact match, still unsortable', () => {
+    const column = col(s, EntityCoreFields.ElectrodeType);
+    expect(column?.auxiliary).toBeFalsy();
+    expect(column?.sortable).toBe(false);
+    expect(column?.filter?.field).toBe('electrode_type');
+    // this endpoint declares no `electrode_type__in`
+    expect(column?.filter?.operators).toEqual([OperatorId.Eq]);
+    expect(column?.filter?.targets?.[0]?.operators).toEqual([OperatorId.Eq]);
+    const eq: TFilterModel = {
+      [EntityCoreFields.ElectrodeType]: {
+        columnId: EntityCoreFields.ElectrodeType,
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: 'neuropixels_v1' },
+      },
+    };
+    expect(serializeQuery(query({ filters: eq }), s).electrode_type).toBe('neuropixels_v1');
+  });
+
+  it('the auxiliary Contributors column carries its filter and does NOT sort', () => {
+    const resolved = resolveColumns(s, dataCtx('simulatable_extracellular_recording_array'));
+    expect(resolved.filter((c) => c.auxiliary).map((c) => c.id)).toEqual(['contributions']);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual([
+      'contributions',
+    ]);
+    expect(
+      serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
+    ).toEqual(['x']);
+    // ordering_model_fields here is only ['creation_date', 'update_date', 'name']
+    expect(col(s, 'contributions')?.sortable).toBe(false);
   });
 });
 

@@ -455,17 +455,19 @@ describe('brain-region circuit advanced filters — GET /circuit', () => {
 
 describe('extracellular-recording-array — GET /simulatable-extracellular-recording-array', () => {
   suite(extracellularRecordingArraySchema, [
-    [
-      'array',
-      'electrodeType',
-      OperatorId.Eq,
-      text('neuropixels_v1'),
-      { electrode_type: 'neuropixels_v1' },
-    ],
     ['array', 'circuitId', OperatorId.Eq, text(UUID), { circuit_id: UUID }],
-    ...CONTRIBUTION_CASES,
     ...RECORD_ID_CASES,
   ]);
+
+  it('keeps only the ID-type fields — electrode type and contributors are columns now', () => {
+    const fields = [...advancedFilterDefsByKey(extracellularRecordingArraySchema).values()].map(
+      (d) => d.field
+    );
+    expect(fields).toEqual(['id', 'circuit_id']);
+    // `electrode_type` used to be offered here AND as a display-only column
+    expect(fields).not.toContain('electrode_type');
+    expect(fields).not.toContain('contribution__pref_label');
+  });
 
   it('offers nothing brain-region shaped — the endpoint accepts none', () => {
     const fields = [...advancedFilterDefsByKey(extracellularRecordingArraySchema).values()].map(
