@@ -11,7 +11,7 @@ import { detailRowId, interleaveDetailRows, isDetailRow } from './detail-rows';
 import { isExpanderClick } from './expand-cell';
 import { registerDataGridModules } from './register-modules';
 import { mergePageSelection } from './selection';
-import { dataGridTheme, SINGLE_SELECT_RADIO_CLASS } from './theme';
+import { DATA_GRID_LOCALE_TEXT, dataGridTheme, SINGLE_SELECT_RADIO_CLASS } from './theme';
 
 import type {
   CellClickedEvent,
@@ -312,6 +312,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     >
       <AgGridReact<TDisplayRow<Row>>
         theme={dataGridTheme}
+        localeText={DATA_GRID_LOCALE_TEXT}
         defaultColDef={DEFAULT_COL_DEF}
         columnDefs={colDefs as Array<ColDef<TDisplayRow<Row>>>}
         rowData={displayRows}

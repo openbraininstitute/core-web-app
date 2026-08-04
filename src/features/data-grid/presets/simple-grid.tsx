@@ -8,7 +8,7 @@ import { cn } from '@/utils/css-class';
 import { Align, SelectionMode } from '../core';
 import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
-import { dataGridTheme } from '../renderers/aggrid/theme';
+import { DATA_GRID_LOCALE_TEXT, dataGridTheme } from '../renderers/aggrid/theme';
 import { InMemoryGrid } from './in-memory-grid';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
@@ -367,6 +367,7 @@ function SimpleGridBasic<Row>({
     <div className={simpleGridWrapperClass(className, pinnedColumnBorder)}>
       <AgGridReact<Row>
         theme={dataGridTheme}
+        localeText={DATA_GRID_LOCALE_TEXT}
         defaultColDef={DEFAULT_COL_DEF}
         columnDefs={colDefs}
         rowData={rows}

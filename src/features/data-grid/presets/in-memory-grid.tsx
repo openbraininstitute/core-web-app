@@ -36,7 +36,11 @@ import { isExpanderClick } from '../renderers/aggrid/expand-cell';
 import { AgHeader } from '../renderers/aggrid/header';
 import { isInteractiveClick } from '../renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '../renderers/aggrid/register-modules';
-import { dataGridTheme, SINGLE_SELECT_RADIO_CLASS } from '../renderers/aggrid/theme';
+import {
+  DATA_GRID_LOCALE_TEXT,
+  dataGridTheme,
+  SINGLE_SELECT_RADIO_CLASS,
+} from '../renderers/aggrid/theme';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
 import type {
@@ -691,6 +695,7 @@ export function InMemoryGrid<Row>({
       >
         <AgGridReact<TDisplayRow<Row>>
           theme={dataGridTheme}
+          localeText={DATA_GRID_LOCALE_TEXT}
           defaultColDef={IM_DEFAULT_COL_DEF}
           columnDefs={colDefs}
           rowData={displayRows}

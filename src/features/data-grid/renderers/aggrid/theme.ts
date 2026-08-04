@@ -82,6 +82,15 @@ export const dataGridTheme = themeQuartz.withParams({
 });
 
 /**
+ * AG's built-in strings are Title Case ("No Rows To Show"); the app writes UI copy
+ * in sentence case. Override the ones we actually surface — every data-grid mount
+ * passes this as `localeText` so the wording is identical across the stack.
+ */
+export const DATA_GRID_LOCALE_TEXT = {
+  noRowsToShow: 'No rows to show',
+} as const;
+
+/**
  * Single-select styles AG's selection control as a RADIO. AG renders the same
  * checkbox widget for `singleRow` and `multiRow` row selection (there is no
  * native radio), so single mode restyles it: fully-round box, and the checked
