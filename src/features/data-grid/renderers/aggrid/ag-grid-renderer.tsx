@@ -3,7 +3,7 @@
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GridActionType } from '../../core';
+import { GridActionType, reconcileColumnOrder } from '../../core';
 import { GridLoaderOverlay } from '../../react/grid-loader';
 import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
 import { AgDetailCell, DEFAULT_DETAIL_MIN_HEIGHT } from './detail-cell';
@@ -75,12 +75,18 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
   const getRowId = controller.schema.getRowId;
 
-  // Apply the persisted column order from state.
+  // Apply the persisted column order from state. Reconciled, not sorted-by-index: a
+  // column the stored order never mentions (declared since the layout was saved, or
+  // dropped from it by a contextual gate) keeps its DECLARED slot instead of being
+  // appended after every known column.
   const orderedColumns = useMemo(() => {
-    const order = state.columnOrder;
-    if (!order?.length) return columns;
-    const idx = new Map(order.map((id, i) => [id, i] as const));
-    return [...columns].sort((a, b) => (idx.get(a.id) ?? 1e6) - (idx.get(b.id) ?? 1e6));
+    const byId = new Map(columns.map((c) => [c.id, c] as const));
+    return reconcileColumnOrder(
+      columns.map((c) => c.id),
+      state.columnOrder
+    )
+      .map((id) => byId.get(id))
+      .filter((c): c is (typeof columns)[number] => c !== undefined);
   }, [columns, state.columnOrder]);
 
   const hidden = useMemo(() => new Set(state.hiddenColumns), [state.hiddenColumns]);

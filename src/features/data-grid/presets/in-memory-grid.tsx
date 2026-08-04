@@ -20,6 +20,7 @@ import {
   type IGridPage,
   type IGridSchema,
   type OperatorRegistry,
+  reconcileColumnOrder,
   resolveFilterTargets,
   SelectionMode,
   type TFacets,
@@ -394,11 +395,19 @@ export function InMemoryGrid<Row>({
 
   // ── column defs ──────────────────────────────────────────────────────────────
   const hidden = useMemo(() => new Set(state.hiddenColumns), [state.hiddenColumns]);
+  // The store's `columnOrder` comes from the CONTEXT-RESOLVED schema, while these
+  // `columns` are the props as declared — a column dropped by a contextual gate is
+  // therefore missing from the order yet still rendered. Reconciling (rather than
+  // sorting by stored index) keeps it in its declared slot instead of appending it
+  // after every other column.
   const orderedColumns = useMemo(() => {
-    const order = state.columnOrder;
-    if (!order?.length) return columns;
-    const idx = new Map(order.map((id, i) => [id, i] as const));
-    return [...columns].sort((a, b) => (idx.get(a.id) ?? 1e6) - (idx.get(b.id) ?? 1e6));
+    const byId = new Map(columns.map((c) => [c.id, c] as const));
+    return reconcileColumnOrder(
+      columns.map((c) => c.id),
+      state.columnOrder
+    )
+      .map((id) => byId.get(id))
+      .filter((c): c is ISimpleColumn<Row> => c !== undefined);
   }, [columns, state.columnOrder]);
 
   const isExpandable = expansion?.isExpandable ?? (() => true);

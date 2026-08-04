@@ -6,6 +6,7 @@ export {
   pruneAdvancedFilters,
   resolveAdvancedFilterGroups,
 } from './domain/advanced-filters';
+export { reconcileColumnOrder } from './domain/column-layout';
 export { Align, FilterOptionsKind, FreeEntryKind } from './domain/column-model';
 export {
   byContext,
