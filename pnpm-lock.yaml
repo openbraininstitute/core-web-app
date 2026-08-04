@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@openbraininstitute/morphoviewer': file:vendor/openbraininstitute-morphoviewer-0.31.1.tgz
+
 importers:
 
   .:
@@ -57,8 +60,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: 0.31.0
-        version: 0.31.0(react@19.2.6)
+        specifier: file:vendor/openbraininstitute-morphoviewer-0.31.1.tgz
+        version: file:vendor/openbraininstitute-morphoviewer-0.31.1.tgz(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -2748,8 +2751,9 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@0.31.0':
-    resolution: {integrity: sha512-caC+mYRm6KJbjeYeNePSaHM1Z5rMEkcDlEOrDnBS/NMQX5Kyey9F5yhA84JhBjqrEpODvaW8dbxMbFvS+GTYQw==}
+  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.31.1.tgz':
+    resolution: {integrity: sha512-4AgY8cC/llVZtqWPG/SJtgvlMDLEA/WJ0j0T6UafDa/faUxSPhHmHaIodMXGSsTZwWvF0ARK4CJCKbJUqSlLrQ==, tarball: file:vendor/openbraininstitute-morphoviewer-0.31.1.tgz}
+    version: 0.31.1
     peerDependencies:
       react: ^19.2.5
 
@@ -3240,6 +3244,7 @@ packages:
   '@plotly/mapbox-gl@1.13.4':
     resolution: {integrity: sha512-sR3/Pe5LqT/fhYgp4rT4aSFf1rTsxMbGiH6Hojc7PH36ny5Bn17iVFUjpzycafETURuFbLZUfjODO8LvSI+5zQ==}
     engines: {node: '>=6.4.0'}
+    deprecated: This package is deprecated as of August 2026. plotly.js v4 uses MapLibre for map traces — see https://github.com/maplibre/maplibre-gl-js.
 
   '@plotly/point-cluster@3.1.9':
     resolution: {integrity: sha512-MwaI6g9scKf68Orpr1pHZ597pYx9uP8UEFXLPbsCmuw3a84obwz6pnMXGc90VhgDNeNiLEdlmuK7CPo+5PIxXw==}
@@ -13182,7 +13187,7 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@0.31.0(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.31.1.tgz(react@19.2.6)':
     dependencies:
       '@tolokoban/tgd': 2.4.0
       fflate: 0.8.3
