@@ -430,7 +430,8 @@ export interface IBlockDictionary extends TRootElement {
 
 export type ConfigSchema = {
   additionalProperties: false;
-  default_block_reference_labels: Record<string, string>;
+  /** optional: a config that names its defaults by reference tag need not also list them here */
+  default_block_reference_labels?: Record<string, string>;
   /**
    * the name each unset reference resolves to, keyed by the field's `reference_tag`. preferred
    * over `default_block_reference_labels`, which is keyed by reference type and so cannot

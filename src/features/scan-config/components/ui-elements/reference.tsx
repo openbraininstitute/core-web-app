@@ -10,7 +10,7 @@ import {
   useBlockTypeToConfigKey,
   useReferenceTypeDict,
 } from '../hooks/schema';
-import { resolveDefaultReferenceLabel } from './resolve-default-reference-label';
+import { findDefaultReferenceLabel } from './resolve-default-reference-label';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -33,8 +33,9 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  *
  * the default option is labelled with the block the backend resolves this field to when it is left
  * unset: the schema's `reference_tag_defaults` keyed by the field's own `reference_tag`, falling
- * back to `default_block_reference_labels` keyed by reference type. visibility still keys off the
- * latter, which doubles as the declaration of which reference types a config supports.
+ * back to `default_block_reference_labels` keyed by reference type. either source is enough on
+ * its own; a field the schema names no default for is hidden, since its default option would
+ * have no label.
  *
  * @param schema           the full scan-config schema (source of the reference/variant lookups)
  * @param referenceSchema  the field's own schema; only `reference_types` is read
@@ -43,7 +44,7 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  * @param onChange         called with `(block_name, block_dict_name)` — both `null` for default
  * @param disabled         disables the select
  * @param omit             block names to hide (e.g. a combined set excluding itself)
- * @returns the select, or `null` when the field is hidden (no reference type has a default label)
+ * @returns the select, or `null` when the field is hidden (the schema names no default for it)
  *
  * @example
  * // combined (Virtual): reference_types = ["VirtualNeuronSetReference"]
@@ -116,12 +117,11 @@ export default function Reference({
     if (configKey) matchingConfigKeys.add(configKey);
   }
 
-  // check visibility: at least one reference type must have a default label
-  const hasDefaultLabel = referenceSchema.reference_types.some(
-    (refType) => schema?.default_block_reference_labels?.[refType]
-  );
+  // the field is renderable only if the schema names what its default resolves to, from either
+  // source: its role (`reference_tag_defaults`) or, failing that, its reference type.
+  const defaultLabel = schema ? findDefaultReferenceLabel(referenceSchema, schema) : undefined;
 
-  if (!schema || !hasDefaultLabel) return null;
+  if (!schema || !defaultLabel) return null;
 
   // build dropdown options from all matching dictionaries
   const options: Array<{ label: string; value: string }> = [];
@@ -143,9 +143,6 @@ export default function Reference({
       options.push({ label: k, value: k });
     }
   }
-
-  // label the default option with the name the backend will actually resolve this field to
-  const defaultLabel = resolveDefaultReferenceLabel(referenceSchema, schema);
 
   options.unshift({
     label: defaultLabel,

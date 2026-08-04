@@ -6,6 +6,7 @@ import {
   SweepIconButton,
   sweepSingleValue,
 } from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import { findDefaultReferenceLabel } from '@/features/scan-config/components/ui-elements/resolve-default-reference-label';
 import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
@@ -97,9 +98,7 @@ export default function Block({
                 !isType(paramSchema) &&
                 !paramSchema.ui_hidden &&
                 (paramSchema.ui_element !== ScanConfigUIElementDict.Reference ||
-                  paramSchema.reference_types.some(
-                    (refType) => !!schema.default_block_reference_labels?.[refType]
-                  ))
+                  !!findDefaultReferenceLabel(paramSchema, schema))
             )
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;
