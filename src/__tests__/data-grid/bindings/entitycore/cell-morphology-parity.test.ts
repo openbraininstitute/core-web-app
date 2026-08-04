@@ -7,7 +7,7 @@ import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/s
 import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-import type { IGridQuery, TFilterModel } from '@/features/data-grid/core';
+import type { IGridQuery, TFilterModel, TFilterValue } from '@/features/data-grid/core';
 
 /**
  * Per-entity parity harness for cell_morphology. Locks the AG Grid grid's serialized
@@ -21,11 +21,13 @@ function query(over: Partial<IGridQuery> = {}): IGridQuery {
 }
 
 describe('cell_morphology — column parity with the legacy view-def', () => {
-  it('exposes the same columns in the same order (Preview, BrainRegion, Species, M-type, Name, Contributors, Registration date)', () => {
-    // Legacy field enum values map 1:1 to the grid schema column ids below.
+  it('exposes the same VISIBLE columns in the same order (Preview, BrainRegion, Species, M-type, Name, Contributors, Registration date)', () => {
+    // Legacy field enum values map 1:1 to the grid schema column ids below. Only the
+    // non-auxiliary columns are compared: an auxiliary column is hidden until ticked,
+    // so it adds a filter surface, never a column the legacy listing lacked.
     const legacyOrder = viewDefForCellMorphology.columns;
-    const gridOrder = cellMorphologySchema.columns.map((c) => c.id);
-    expect(gridOrder).toEqual([
+    const visible = cellMorphologySchema.columns.filter((c) => !c.auxiliary).map((c) => c.id);
+    expect(visible).toEqual([
       'preview',
       'brainRegion',
       'species',
@@ -34,7 +36,101 @@ describe('cell_morphology — column parity with the legacy view-def', () => {
       'contributions',
       'registrationDate',
     ]);
-    expect(legacyOrder).toHaveLength(gridOrder.length);
+    expect(legacyOrder).toHaveLength(visible.length);
+  });
+
+  /**
+   * The `cell_morphology_protocol__*` family, both `subject__*` fields and
+   * `has_segmented_spines` moved off the advanced-filters panel and onto AUXILIARY
+   * columns, so every backend-filterable field sits on exactly one surface.
+   */
+  it('declares the seven auxiliary columns after the visible ones', () => {
+    const auxiliary = cellMorphologySchema.columns.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(auxiliary).toEqual([
+      'generationType',
+      'protocolDesign',
+      'protocolName',
+      'protocolDocument',
+      'strainName',
+      'subjectName',
+      'hasSegmentedSpines',
+    ]);
+  });
+
+  it('the auxiliary columns carry the wire params of the filters they replaced', () => {
+    const one = (columnId: string, operator: string, value: TFilterValue) =>
+      serializeQuery(
+        query({ filters: { [columnId]: { columnId, operator, value } } }),
+        cellMorphologySchema
+      );
+
+    expect(
+      one('generationType', OperatorId.In, {
+        kind: FilterValueKind.Set,
+        values: ['digital_reconstruction'],
+      }).cell_morphology_protocol__generation_type__in
+    ).toEqual(['digital_reconstruction']);
+    expect(
+      one('protocolDesign', OperatorId.NotIn, {
+        kind: FilterValueKind.Set,
+        values: ['topological_synthesis'],
+      }).cell_morphology_protocol__protocol_design__not_in
+    ).toEqual(['topological_synthesis']);
+    expect(
+      one('protocolName', OperatorId.Ilike, { kind: FilterValueKind.Text, text: 'patch' })
+        .cell_morphology_protocol__name__ilike
+    ).toBe('%patch%');
+    expect(
+      one('protocolDocument', OperatorId.Ilike, { kind: FilterValueKind.Text, text: 'doi.org' })
+        .cell_morphology_protocol__protocol_document__ilike
+    ).toBe('%doi.org%');
+    expect(
+      one('strainName', OperatorId.Ilike, { kind: FilterValueKind.Text, text: 'C57' })
+        .subject__strain__name__ilike
+    ).toBe('%C57%');
+    expect(
+      one('subjectName', OperatorId.Ilike, { kind: FilterValueKind.Text, text: 'rat' })
+        .subject__name__ilike
+    ).toBe('%rat%');
+    expect(
+      one('hasSegmentedSpines', OperatorId.Bool, { kind: FilterValueKind.Boolean, value: true })
+        .has_segmented_spines
+    ).toBe(true);
+  });
+
+  /**
+   * `CellMorphologyFilter.Constants.ordering_model_fields` (entitycore
+   * `app/filters/cell_morphology.py`) is the allowlist; an `order_by` outside it is a
+   * 422, so sortability is pinned field by field. Note this is the one endpoint seen
+   * so far that DOES sort `subject__name`.
+   */
+  it.each([
+    ['generationType', 'cell_morphology_protocol__generation_type'],
+    ['protocolName', 'cell_morphology_protocol__name'],
+    ['strainName', 'subject__strain__name'],
+    ['subjectName', 'subject__name'],
+    ['hasSegmentedSpines', 'has_segmented_spines'],
+  ])('%s is in ordering_model_fields and sorts on %s', (columnId, field) => {
+    expect(cellMorphologySchema.columns.find((c) => c.id === columnId)?.sortable).toBe(true);
+    expect(
+      serializeQuery(
+        query({ sort: [{ columnId, direction: SortDirection.Desc }] }),
+        cellMorphologySchema
+      ).order_by
+    ).toEqual([`-${field}`]);
+  });
+
+  it.each([
+    'protocolDesign',
+    'protocolDocument',
+  ])('%s is NOT in ordering_model_fields, so it does not sort', (columnId) => {
+    expect(cellMorphologySchema.columns.find((c) => c.id === columnId)?.sortable).toBe(false);
+  });
+
+  it('generation type offers no __not_in — the listing pins that param', () => {
+    const column = cellMorphologySchema.columns.find((c) => c.id === 'generationType');
+    expect(column?.filter?.operators).toEqual([OperatorId.In, OperatorId.Eq]);
+    expect(column?.filter?.targets?.[0]?.operators).not.toContain(OperatorId.NotIn);
   });
 });
 

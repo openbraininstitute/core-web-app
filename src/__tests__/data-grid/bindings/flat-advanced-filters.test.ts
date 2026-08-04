@@ -5,6 +5,7 @@ import {
   FLAT_ADVANCED_FILTER_GROUP_ID,
   flatAdvancedFilters,
 } from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { universalCellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/universal-cell-morphology';
 import {
   advancedFilterKey,
   byContext,
@@ -70,14 +71,29 @@ describe('flatAdvancedFilters', () => {
 });
 
 describe('experimental entity schemas', () => {
-  it('cell morphology resolves to a single group, so its popover has no tabs', () => {
-    const resolved = resolveAdvancedFilterGroups(cellMorphologySchema as IGridSchema<unknown>, {
-      dataType: 'cell-morphology',
-    });
+  it('universal cell morphology resolves to a single group, so its popover has no tabs', () => {
+    const resolved = resolveAdvancedFilterGroups(
+      universalCellMorphologySchema as IGridSchema<unknown>,
+      { dataType: 'universal_cell_morphology' }
+    );
     expect(resolved).toHaveLength(1);
     // every filter of every declared group survived the merge
     expect(resolved[0].filters.length).toBeGreaterThan(5);
     expect(resolved[0].filters.map((f) => f.def.label)).toContain('Generation type');
     expect(resolved[0].filters.map((f) => f.def.label)).toContain('Strain');
+  });
+
+  /**
+   * `cell_morphology` moved its protocol/subject/spines filters onto AUXILIARY
+   * columns, leaving ONE declared group — so `flatAdvancedFilters` short-circuits and
+   * the filter keeps its own `adv:common:id` key rather than a re-namespaced one.
+   */
+  it('cell morphology is down to one declared group, so the ids are not re-namespaced', () => {
+    const resolved = resolveAdvancedFilterGroups(cellMorphologySchema as IGridSchema<unknown>, {
+      dataType: 'cell_morphology',
+    });
+    expect(resolved).toHaveLength(1);
+    expect(resolved[0].id).toBe('common');
+    expect(resolved[0].filters.map((f) => f.key)).toEqual([advancedFilterKey('common', 'id')]);
   });
 });

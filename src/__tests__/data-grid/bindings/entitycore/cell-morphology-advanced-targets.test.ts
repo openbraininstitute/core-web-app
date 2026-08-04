@@ -2,22 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
-import {
-  FLAT_ADVANCED_FILTER_GROUP_ID,
-  flatAdvancedFilterId,
-} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
 import { advancedFilterKey, FilterValueKind, OperatorId } from '@/features/data-grid/core';
 
 /**
- * The schema collapses its groups for display (`flatAdvancedFilters`), so the filter
- * declared as `common · id` lives under the flat group's key. Spelled out here so
- * the assertions below still read in the schema's own vocabulary.
+ * `common · id` is now the schema's ONLY advanced filter — everything else moved onto
+ * auxiliary columns — so `flatAdvancedFilters` short-circuits on the single group and
+ * the key is the plain `adv:common:id`, not a re-namespaced one.
  */
-const RECORD_ID_KEY = advancedFilterKey(
-  FLAT_ADVANCED_FILTER_GROUP_ID,
-  flatAdvancedFilterId('common', 'id')
-);
-const RECORD_ID_TARGET = flatAdvancedFilterId('common', 'id');
+const RECORD_ID_KEY = advancedFilterKey('common', 'id');
+const RECORD_ID_TARGET = 'id';
 
 import type { IGridQuery, TFilterValue } from '@/features/data-grid/core';
 

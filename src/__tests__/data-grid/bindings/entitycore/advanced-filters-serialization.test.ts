@@ -14,12 +14,10 @@ import {
   resolveAdvancedFilterGroups,
 } from '@/features/data-grid/core';
 
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type {
   IFilterEntry,
   IGridContext,
   IGridQuery,
-  IGridSchema,
   TFilterValue,
 } from '@/features/data-grid/core';
 
@@ -83,116 +81,16 @@ function serializeOne(
   return rest;
 }
 
+/**
+ * The `cell_morphology_protocol__*` family, both `subject__*` fields and
+ * `has_segmented_spines` are AUXILIARY COLUMNS now, not advanced filters — their
+ * wire params are pinned in `cell-morphology-parity.test.ts` alongside the columns
+ * that own them. What remains on this surface is the record's own entity id, which
+ * has no useful column.
+ */
 describe('cell-morphology advanced filters — operator → spec param', () => {
   it.each([
     // [group, filter, operator, value, expected params]
-    [
-      'protocol',
-      'generationType',
-      OperatorId.In,
-      set('digital_reconstruction'),
-      { cell_morphology_protocol__generation_type__in: ['digital_reconstruction'] },
-    ],
-    [
-      'protocol',
-      'generationType',
-      OperatorId.Eq,
-      text('digital_reconstruction'),
-      { cell_morphology_protocol__generation_type: 'digital_reconstruction' },
-    ],
-    [
-      'protocol',
-      'protocolDesign',
-      OperatorId.In,
-      set('cell_patch', 'fluorophore'),
-      { cell_morphology_protocol__protocol_design__in: ['cell_patch', 'fluorophore'] },
-    ],
-    [
-      'protocol',
-      'protocolDesign',
-      OperatorId.NotIn,
-      set('topological_synthesis'),
-      { cell_morphology_protocol__protocol_design__not_in: ['topological_synthesis'] },
-    ],
-    [
-      'protocol',
-      'protocolDesign',
-      OperatorId.Eq,
-      text('electron_microscopy'),
-      { cell_morphology_protocol__protocol_design: 'electron_microscopy' },
-    ],
-    [
-      'protocol',
-      'protocolName',
-      OperatorId.Ilike,
-      text('patch'),
-      { cell_morphology_protocol__name__ilike: '%patch%' },
-    ],
-    [
-      'protocol',
-      'protocolName',
-      OperatorId.In,
-      set('Patch-clamp'),
-      { cell_morphology_protocol__name__in: ['Patch-clamp'] },
-    ],
-    [
-      'protocol',
-      'protocolName',
-      OperatorId.Eq,
-      text('Patch-clamp'),
-      { cell_morphology_protocol__name: 'Patch-clamp' },
-    ],
-    [
-      'protocol',
-      'protocolDocument',
-      OperatorId.Ilike,
-      text('doi.org'),
-      { cell_morphology_protocol__protocol_document__ilike: '%doi.org%' },
-    ],
-    [
-      'protocol',
-      'protocolDocument',
-      OperatorId.In,
-      set('https://doi.org/10.1038/x'),
-      { cell_morphology_protocol__protocol_document__in: ['https://doi.org/10.1038/x'] },
-    ],
-    [
-      'protocol',
-      'protocolDocument',
-      OperatorId.Eq,
-      text('https://doi.org/10.1038/x'),
-      { cell_morphology_protocol__protocol_document: 'https://doi.org/10.1038/x' },
-    ],
-    [
-      'subject',
-      'strainName',
-      OperatorId.Ilike,
-      text('C57'),
-      { subject__strain__name__ilike: '%C57%' },
-    ],
-    [
-      'subject',
-      'strainName',
-      OperatorId.In,
-      set('C57BL/6J'),
-      { subject__strain__name__in: ['C57BL/6J'] },
-    ],
-    ['subject', 'subjectName', OperatorId.Ilike, text('rat'), { subject__name__ilike: '%rat%' }],
-    ['subject', 'subjectName', OperatorId.In, set('Rat 12'), { subject__name__in: ['Rat 12'] }],
-    [
-      'record',
-      'hasSegmentedSpines',
-      OperatorId.Bool,
-      { kind: FilterValueKind.Boolean, value: true } satisfies TFilterValue,
-      { has_segmented_spines: true },
-    ],
-    [
-      'record',
-      'hasSegmentedSpines',
-      OperatorId.Bool,
-      { kind: FilterValueKind.Boolean, value: false } satisfies TFilterValue,
-      { has_segmented_spines: false },
-    ],
     // the morphology's own entity id, moved here from the Name column's targets
     ['common', 'id', OperatorId.In, set(PROTOCOL_ID), { id__in: [PROTOCOL_ID] }],
     ['common', 'id', OperatorId.Eq, text(PROTOCOL_ID), { id: PROTOCOL_ID }],
@@ -203,21 +101,21 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
   it('every declared operator is exercised above', () => {
     const groups = resolveAdvancedFilterGroups(cellMorphologySchema, CTX);
     const declared = groups.flatMap((g) => g.filters.flatMap((f) => f.def.operators));
-    // Bool appears twice (true/false); the rest map 1:1 onto a case above.
-    expect(declared).toHaveLength(18);
+    expect(declared).toEqual([OperatorId.In, OperatorId.Eq]);
   });
 
   it('composes with column filters into ONE request', () => {
-    const key = declaredKey('protocol', 'protocolDesign');
+    const key = declaredKey('common', 'id');
     const params = serializeQuery(
       query({
         filters: {
-          [key]: entry(
-            key,
-            OperatorId.In,
-            set('cell_patch'),
-            flatAdvancedFilterId('protocol', 'protocolDesign')
-          ),
+          [key]: entry(key, OperatorId.In, set(PROTOCOL_ID), 'id'),
+          // an auxiliary column's filter is keyed by its COLUMN id on both surfaces
+          protocolDesign: {
+            columnId: 'protocolDesign',
+            operator: OperatorId.In,
+            value: set('cell_patch'),
+          },
           species: {
             columnId: 'species',
             operator: OperatorId.In,
@@ -228,6 +126,7 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
       }),
       cellMorphologySchema
     );
+    expect(params.id__in).toEqual([PROTOCOL_ID]);
     expect(params.cell_morphology_protocol__protocol_design__in).toEqual(['cell_patch']);
     expect(params.subject__species__name__in).toEqual(['Mus musculus']);
   });
@@ -243,7 +142,7 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
   });
 
   it('a schema without advancedFilters is untouched', () => {
-    const bare: IGridSchema<ICellMorphology> = {
+    const bare: typeof cellMorphologySchema = {
       ...cellMorphologySchema,
       advancedFilters: undefined,
     };
