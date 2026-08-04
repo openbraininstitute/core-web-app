@@ -153,11 +153,30 @@ export class GridController<Row> {
     return buildGridQuery(this.store.getSnapshot(), params);
   }
 
-  /** Reset to initial defaults (used on species/scope change). */
+  /**
+   * Reset the BROWSE state to the schema's defaults (used on species/scope change).
+   *
+   * The user's column LAYOUT — order, visibility, widths — is deliberately carried
+   * over. It is a lasting preference (persisted to localStorage, see the layout
+   * slice) rather than part of the transient browse state this reset exists for, so
+   * dropping it here would not merely re-show the columns: the reset dispatch runs
+   * through the persistence subscription, which would then write the schema
+   * defaults OVER the saved layout — destroying it for every future session and
+   * every other tab. Which columns are AVAILABLE in the new context is not this
+   * method's business either; that comes from re-resolving the schema against the
+   * new context (the host rebuilds the controller when the context changes) and
+   * from `reconcileHiddenColumns` on the way back in.
+   */
   resetState(): void {
+    const { columnOrder, hiddenColumns, columnWidths } = this.store.getSnapshot();
     this.store.dispatch({
       type: GridActionType.Reset,
-      state: createInitialState(this.schema, this.context, this.defaultPageSize),
+      state: {
+        ...createInitialState(this.schema, this.context, this.defaultPageSize),
+        columnOrder,
+        hiddenColumns,
+        columnWidths,
+      },
     });
   }
 
