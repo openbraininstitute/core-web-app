@@ -6,7 +6,7 @@ export {
   pruneAdvancedFilters,
   resolveAdvancedFilterGroups,
 } from './domain/advanced-filters';
-export { reconcileColumnOrder } from './domain/column-layout';
+export { reconcileColumnOrder, reconcileHiddenColumns } from './domain/column-layout';
 export { Align, FilterOptionsKind, FreeEntryKind } from './domain/column-model';
 export {
   byContext,
@@ -60,6 +60,7 @@ export type {
   IResolvedAdvancedFilterGroup,
   TAdvancedFilterDef,
 } from './domain/advanced-filters';
+export type { IColumnVisibilityDefault, IStoredColumnLayout } from './domain/column-layout';
 export type {
   IColumnFilter,
   IColumnModel,

@@ -1,9 +1,11 @@
 import { pruneAdvancedFilters } from './domain/advanced-filters';
+import { reconcileHiddenColumns } from './domain/column-layout';
 import { hydrateFilterTargetIds } from './domain/filter-targets';
 import { resolveColumns } from './domain/resolve-schema';
 import { GridActionType } from './state/grid-state';
 import { GridStateStore } from './state/grid-state-store';
 
+import type { IStoredColumnLayout } from './domain/column-layout';
 import type { IGridContext } from './domain/grid-context';
 import type { IGridQuery } from './domain/query';
 import type { IResolvedColumn } from './domain/resolve-schema';
@@ -92,10 +94,28 @@ export class GridController<Row> {
 
     let hydrated = initial;
     if (instanceKey && persistence?.length) {
+      // The RAW stored layout is kept aside: once merged, a stored `hiddenColumns`
+      // is indistinguishable from the schema's defaults, and the stored
+      // `columnOrder` — which is what tells us WHICH columns that snapshot knew
+      // about — has already been overwritten.
+      const storedLayout: IStoredColumnLayout = {};
       for (const p of persistence) {
         const slice = p.load(instanceKey);
-        if (slice) hydrated = { ...hydrated, ...slice };
+        if (!slice) continue;
+        if (Array.isArray(slice.hiddenColumns)) storedLayout.hiddenColumns = slice.hiddenColumns;
+        if (Array.isArray(slice.columnOrder)) storedLayout.columnOrder = slice.columnOrder;
+        hydrated = { ...hydrated, ...slice };
       }
+      // A column the stored snapshot never saw falls back to its resolved
+      // `hiddenByDefault` — otherwise a newly-declared hidden-by-default column
+      // would show up for every user who already has a saved layout.
+      hydrated = {
+        ...hydrated,
+        hiddenColumns: reconcileHiddenColumns(
+          resolveColumns(options.schema, options.context),
+          storedLayout
+        ),
+      };
       // Stored entries predate filter targets: default a missing/stale `targetId`
       // to the column's first target so old snapshots keep resolving to a field.
       // Advanced-filter entries are pruned in the same pass — an orphaned `adv:…`

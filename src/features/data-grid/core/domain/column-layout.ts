@@ -77,3 +77,61 @@ export function reconcileColumnOrder(
 
   return result;
 }
+
+/** The visibility default a column resolves to in the current context. */
+export interface IColumnVisibilityDefault {
+  id: string;
+  /** `hiddenByDefault` resolved against the context (see `resolveColumns`). */
+  hiddenByDefaultResolved: boolean;
+}
+
+/** The persisted local layout slice, as loaded — both fields may be absent. */
+export interface IStoredColumnLayout {
+  hiddenColumns?: ReadonlyArray<string> | null;
+  /**
+   * The stored `columnOrder`. It doubles as the set of columns the saved layout
+   * KNOWS ABOUT: it is always written as a COMPLETE list of the columns that
+   * existed at save time (the initial state writes every resolved id; a drag writes
+   * AG Grid's full column state, hidden columns included), and it is written to the
+   * same storage slice, in the same pass, as `hiddenColumns`.
+   */
+  columnOrder?: ReadonlyArray<string> | null;
+}
+
+/**
+ * Merge the declared per-column `hiddenByDefault` with a persisted visibility list.
+ *
+ * The stored `hiddenColumns` is a FULL SNAPSHOT — the chooser rewrites it as "every
+ * resolved column the user did not tick" — but only over the columns that existed
+ * when it was written. So absence from the list means "the user left this visible"
+ * ONLY for an id the snapshot knew about; for an id it never saw, absence means
+ * nothing at all and the schema's `hiddenByDefault` decides.
+ *
+ * Without that distinction a newly-declared `hiddenByDefault: true` column would be
+ * VISIBLE for every user with saved state and hidden for everyone else. Merging
+ * naively the other way (union the stored list with the defaults) would instead
+ * resurrect a column the user deliberately un-hid, on every schema change.
+ *
+ * "Known at save time" is read off the stored `columnOrder` (see
+ * {@link IStoredColumnLayout.columnOrder}), so no extra persisted field is needed
+ * and a column the user deliberately hid stays hidden across schema changes.
+ */
+export function reconcileHiddenColumns(
+  columns: ReadonlyArray<IColumnVisibilityDefault>,
+  stored: IStoredColumnLayout | null | undefined
+): string[] {
+  const storedHidden = stored?.hiddenColumns;
+  if (!storedHidden) return columns.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id);
+
+  const hidden = new Set(storedHidden);
+  // No stored order (the two are written together, so this is defensive): treat only
+  // the hidden ids as known, leaving every other column on its declared default.
+  const known = new Set(stored?.columnOrder ?? storedHidden);
+
+  return columns
+    .filter((c) => {
+      if (hidden.has(c.id)) return true;
+      return known.has(c.id) ? false : c.hiddenByDefaultResolved;
+    })
+    .map((c) => c.id);
+}
