@@ -314,7 +314,89 @@ describe('ion_channel_model parity', () => {
       'isTemperatureDependent',
       'isLjpCorrected',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'nmodlSuffix',
+      'conductanceName',
+      'maxPermeabilityName',
+      'isStochastic',
+      'strainName',
+      'subjectName',
+      'contributions',
     ]);
+  });
+
+  it('the auxiliary columns carry the filters they replaced', () => {
+    const resolved = resolveColumns(s, ctx('ion_channel_model'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual([
+      'nmodlSuffix',
+      'conductanceName',
+      'maxPermeabilityName',
+      'isStochastic',
+      'strainName',
+      'subjectName',
+      'contributions',
+    ]);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    // the three NMODL text scalars are BARE exact matches — no `__in`, no `__ilike`
+    for (const [id, field] of [
+      ['nmodlSuffix', 'nmodl_suffix'],
+      ['conductanceName', 'conductance_name'],
+      ['maxPermeabilityName', 'max_permeability_name'],
+    ] as const) {
+      const column = s.columns.find((c) => c.id === id);
+      expect(column?.filter?.operators).toEqual([OperatorId.Eq]);
+      const eq: TFilterModel = {
+        [id]: {
+          columnId: id,
+          operator: OperatorId.Eq,
+          value: { kind: FilterValueKind.Text, text: 'v' },
+        },
+      };
+      expect(serializeQuery(query({ filters: eq }), s)[field]).toBe('v');
+    }
+    expect(serializeQuery(query({ filters: boolTrue('isStochastic') }), s).is_stochastic).toBe(
+      true
+    );
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+    expect(serializeQuery(query({ filters: ilike('subjectName') }), s).subject__name__ilike).toBe(
+      '%foo%'
+    );
+    expect(
+      serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
+    ).toEqual(['x']);
+  });
+
+  it('only Contributors is non-sortable — the other six ARE in ordering_model_fields', () => {
+    for (const id of [
+      'nmodlSuffix',
+      'conductanceName',
+      'maxPermeabilityName',
+      'isStochastic',
+      'strainName',
+      'subjectName',
+    ]) {
+      expect(s.columns.find((c) => c.id === id)?.sortable).toBe(true);
+    }
+    expect(s.columns.find((c) => c.id === 'contributions')?.sortable).toBe(false);
+    // `subject__name` IS listed here — one of the few endpoints that sorts it
+    expect(serializeQuery(query(sortDesc('subjectName')), s).order_by).toEqual(['-subject__name']);
+    expect(serializeQuery(query(sortDesc('nmodlSuffix')), s).order_by).toEqual(['-nmodl_suffix']);
+  });
+
+  /**
+   * The `subject__*` filter params address the NESTED subject the list response
+   * carries (`IonChannelModelExpanded` → `ScientificArtifactRead` → `SubjectReadMixin`),
+   * so the two subject cells must read `subject.…`, not the hand-written TS type's
+   * top-level `strain`. Reading the wrong one would ship two blank columns.
+   */
+  it('the subject cells read the NESTED subject the list response actually returns', () => {
+    const row = { subject: { name: 'Rat 12', strain: { name: 'C57BL/6J' } } } as never;
+    expect(s.columns.find((c) => c.id === 'subjectName')?.getValue?.(row)).toBe('Rat 12');
+    expect(s.columns.find((c) => c.id === 'strainName')?.getValue?.(row)).toBe('C57BL/6J');
   });
   it('species uses the subject__species__name facet; temperature range-serializes', () => {
     expect(

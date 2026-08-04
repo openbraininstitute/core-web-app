@@ -317,31 +317,24 @@ describe('single-neuron-synaptome advanced filters — GET /single-neuron-synapt
   ]);
 });
 
+/**
+ * The four NMODL scalars, both `subject__*` fields and `contribution__pref_label` are
+ * AUXILIARY COLUMNS here — their wire params are pinned in `model-parity.test.ts`
+ * alongside the columns that now own them. Only the record's own `id` is left.
+ */
 describe('ion-channel-model advanced filters — GET /ion-channel-model', () => {
-  suite(ionChannelModelSchema, [
-    ['mechanism', 'nmodlSuffix', OperatorId.Eq, text('Kv1'), { nmodl_suffix: 'Kv1' }],
-    [
-      'mechanism',
-      'conductanceName',
-      OperatorId.Eq,
-      text('gKv1bar'),
-      { conductance_name: 'gKv1bar' },
-    ],
-    [
-      'mechanism',
-      'maxPermeabilityName',
-      OperatorId.Eq,
-      text('pmax'),
-      { max_permeability_name: 'pmax' },
-    ],
-    ['mechanism', 'isStochastic', OperatorId.Bool, bool(true), { is_stochastic: true }],
-    ...SUBJECT_CASES,
-    ...CONTRIBUTION_CASES,
-    ...RECORD_ID_CASES,
-  ]);
+  suite(ionChannelModelSchema, [...RECORD_ID_CASES]);
 
-  it('offers no __isnull companions — the grid has no operator for them', () => {
+  it('keeps only `id` — the NMODL, subject and contributor fields are columns now', () => {
     const fields = [...advancedFilterDefsByKey(ionChannelModelSchema).values()].map((d) => d.field);
+    expect(fields).toEqual(['id']);
+  });
+
+  it('offers no __isnull companions — the grid has no operator for them, on EITHER surface', () => {
+    const fields = [
+      ...[...advancedFilterDefsByKey(ionChannelModelSchema).values()].map((d) => d.field),
+      ...ionChannelModelSchema.columns.map((c) => c.filter?.field),
+    ];
     expect(fields).not.toContain('conductance_name__isnull');
     expect(fields).not.toContain('max_permeability_name__isnull');
   });
