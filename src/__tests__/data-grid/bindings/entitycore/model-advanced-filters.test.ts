@@ -188,39 +188,32 @@ const CIRCUIT_COMMON_CASES: ReadonlyArray<TCase> = [
   ...CIRCUIT_PROVENANCE_CASES,
 ];
 
+/**
+ * The exemplar-morphology spines flag, the ion-channel-model name and the top-level
+ * strain name are AUXILIARY COLUMNS here — their wire params are pinned in
+ * `model-parity.test.ts` alongside the columns that now own them. Only the record's
+ * own `id` has no column to move onto.
+ */
 describe('emodel advanced filters — GET /emodel', () => {
-  suite(emodelSchema, [
-    [
-      'exemplarMorphology',
-      'hasSegmentedSpines',
-      OperatorId.Bool,
-      bool(true),
-      { exemplar_morphology__has_segmented_spines: true },
-    ],
-    [
-      'ionChannelModel',
-      'name',
-      OperatorId.Ilike,
-      text('Kv1'),
-      { ion_channel_model__name__ilike: '%Kv1%' },
-    ],
-    [
-      'ionChannelModel',
-      'name',
-      OperatorId.In,
-      set('Kv1.1'),
-      { ion_channel_model__name__in: ['Kv1.1'] },
-    ],
-    ['ionChannelModel', 'name', OperatorId.Eq, text('Kv1.1'), { ion_channel_model__name: 'Kv1.1' }],
-    ['strain', 'name', OperatorId.Ilike, text('C57'), { strain__name__ilike: '%C57%' }],
-    ['strain', 'name', OperatorId.In, set('C57BL/6J'), { strain__name__in: ['C57BL/6J'] }],
-    ...RECORD_ID_CASES,
-  ]);
+  suite(emodelSchema, [...RECORD_ID_CASES]);
+
+  it('keeps only `id` — spines / ion channel model / strain are columns now', () => {
+    const fields = [...advancedFilterDefsByKey(emodelSchema).values()].map((d) => d.field);
+    expect(fields).toEqual(['id']);
+  });
 
   it('spells strain at the top level — /emodel accepts no subject__ params', () => {
-    const fields = [...advancedFilterDefsByKey(emodelSchema).values()].map((d) => d.field);
-    expect(fields).toContain('strain__name');
-    expect(fields.some((f) => f?.startsWith('subject__'))).toBe(false);
+    // the field moved onto a column, but it must STILL be `strain__name`, not
+    // `subject__strain__name`: EModelFilter composes SpeciesFilterMixin, not
+    // SubjectFilterMixin
+    const columnFields = emodelSchema.columns.map((c) => c.filter?.field);
+    expect(columnFields).toContain('strain__name');
+    expect(columnFields.some((f) => f?.startsWith('subject__'))).toBe(false);
+    expect(
+      [...advancedFilterDefsByKey(emodelSchema).values()].some((d) =>
+        d.field?.startsWith('subject__')
+      )
+    ).toBe(false);
   });
 });
 

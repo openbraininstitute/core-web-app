@@ -107,7 +107,50 @@ describe('emodel parity', () => {
       'eModelScore',
       'contributions',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'exemplarHasSegmentedSpines',
+      'ionChannelModels',
+      'strainName',
     ]);
+  });
+
+  it('the auxiliary columns carry the filters they replaced, with the right sortability', () => {
+    const resolved = resolveColumns(s, ctx('emodel'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual(['exemplarHasSegmentedSpines', 'ionChannelModels', 'strainName']);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    expect(
+      serializeQuery(query({ filters: boolTrue('exemplarHasSegmentedSpines') }), s)
+        .exemplar_morphology__has_segmented_spines
+    ).toBe(true);
+    expect(
+      serializeQuery(query({ filters: ilike('ionChannelModels') }), s)
+        .ion_channel_model__name__ilike
+    ).toBe('%foo%');
+    expect(serializeQuery(query({ filters: ilike('strainName') }), s).strain__name__ilike).toBe(
+      '%foo%'
+    );
+
+    // Only `ion_channel_model__name` is in EModelFilter.Constants.ordering_model_fields
+    expect(s.columns.find((c) => c.id === 'ionChannelModels')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('ionChannelModels')), s).order_by).toEqual([
+      '-ion_channel_model__name',
+    ]);
+    expect(s.columns.find((c) => c.id === 'exemplarHasSegmentedSpines')?.sortable).toBe(false);
+    expect(s.columns.find((c) => c.id === 'strainName')?.sortable).toBe(false);
+  });
+
+  it('the ion-channel-model cell joins the to-many relation the row actually carries', () => {
+    const column = s.columns.find((c) => c.id === 'ionChannelModels');
+    // `EModelReadExpanded` (the list response) carries `ion_channel_models`, so this
+    // is a real value, not a blank column over a filter-only field.
+    expect(
+      column?.getValue?.({
+        ion_channel_models: [{ name: 'Kv1.1' }, { name: 'Nav1.6' }],
+      } as never)
+    ).toBe('Kv1.1, Nav1.6');
+    expect(column?.getValue?.({} as never)).toBe('');
   });
   it('name ilike + mtype/etype/species/contribution facets serialize to legacy keys', () => {
     expect(serializeQuery(query({ filters: ilike('name') }), s).name__ilike).toBe('%foo%');

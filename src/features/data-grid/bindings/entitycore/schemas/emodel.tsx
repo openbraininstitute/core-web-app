@@ -9,27 +9,42 @@ import {
   nameColumn,
   previewColumn,
   registrationDateColumn,
+  yesNo,
 } from '../columns/catalog';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import { flatAdvancedFilters, recordIdFilter } from './common-filters';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * ADVANCED FILTERS — `GET /emodel` params with no column in this grid.
+ * `IEModel` types `exemplar_morphology` with a hand-written shape that stops at
+ * name/description/location/legacy_id, but the wire carries the whole
+ * `CellMorphologyBaseMixin` — `ExemplarMorphology` in `app/schemas/emodel.py` extends
+ * it, so `has_segmented_spines` really is on the row.
  *
- * Every field/operator pair below was checked against the live OpenAPI spec; the
- * emitted param is named in each comment. Nothing here is inferred from a naming
- * convention.
+ * `ion_channel_models` and `strain` need NO augmentation: both are already typed on
+ * `IEModel`, and the list endpoint really returns them — `_read_many` in
+ * `app/service/emodel.py` responds with `EModelReadExpanded` (which adds
+ * `ion_channel_models`) and eager-loads `EModel.ion_channel_models` and `EModel.strain`.
  *
- * `EModelFilter` composes `SpeciesFilterMixin`, so strain sits at the TOP level
- * (`strain__*`), not under `subject__*` — the shared `subjectAdvancedGroup` would
- * emit params this endpoint does not accept, so the strain filter is spelled out
- * here instead.
+ * Optional on purpose, so `IEModel` stays assignable to `Row`.
+ */
+type Row = IEModel & {
+  exemplar_morphology?: { has_segmented_spines?: boolean | null };
+};
+
+/**
+ * ADVANCED FILTERS — `GET /emodel` params with no column in this grid: the record's
+ * own `id`, which has no useful column to show.
+ *
+ * `exemplar_morphology__has_segmented_spines`, `ion_channel_model__name` and
+ * `strain__name` used to live here; all three are AUXILIARY columns below (hidden
+ * until ticked), so each field stays on exactly one surface and the panel still
+ * offers it while it is hidden.
  */
 const emodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -37,30 +52,67 @@ const emodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
     label: 'Common',
     filters: [recordIdFilter],
   },
-  {
-    id: 'exemplarMorphology',
-    label: 'Exemplar morphology',
-    description: 'The reconstruction the e-model was fitted on.',
-    filters: [
+];
+
+/**
+ * AUXILIARY COLUMNS — each carries the operators, free-entry kind and placeholder of
+ * the advanced filter it replaces.
+ *
+ * SORT SAFETY (`EModelFilter.Constants.ordering_model_fields`, `app/filters/emodel.py`
+ * — a flat list, no parent spread): `ion_channel_model__name` IS in the allowlist and
+ * sorts. `exemplar_morphology__has_segmented_spines` and `strain__name` are NOT, so
+ * both are non-sortable; offering them would 422 the whole listing.
+ */
+const exemplarSegmentedSpinesColumn: IColumnModel<Row> = {
+  id: 'exemplarHasSegmentedSpines',
+  header: 'Segmented spines',
+  auxiliary: true,
+  sortable: false,
+  getValue: (r) => yesNo(r.exemplar_morphology?.has_segmented_spines),
+  width: { minWidth: 150 },
+  filter: {
+    // `exemplar_morphology__has_segmented_spines` (bare boolean, no `__op` suffix)
+    operators: [OperatorId.Bool],
+    field: 'exemplar_morphology__has_segmented_spines',
+    targets: [
       {
         id: 'hasSegmentedSpines',
         label: 'Segmented spines',
-        // `exemplar_morphology__has_segmented_spines` (boolean)
         field: 'exemplar_morphology__has_segmented_spines',
         operators: [OperatorId.Bool],
         description: 'Whether the exemplar morphology has segmented dendritic spines',
       },
     ],
   },
-  {
-    id: 'ionChannelModel',
-    label: 'Ion channel model',
-    description: 'Ion channel models the e-model is built from. No column shows them.',
-    filters: [
+};
+
+/**
+ * `ion_channel_model` is a TO-MANY relation: the filter is existential over the join
+ * (one matching channel model qualifies the e-model), and the row carries the whole
+ * `ion_channel_models` array — so the cell JOINS the names rather than reading a
+ * scalar. Sorting is the backend's business (`ion_channel_model__name` sorts on the
+ * joined column), which is why `sortField` differs in shape from what the cell shows.
+ */
+const ionChannelModelsColumn: IColumnModel<Row> = {
+  id: 'ionChannelModels',
+  header: 'Ion channel models',
+  auxiliary: true,
+  sortable: true,
+  sortField: 'ion_channel_model__name',
+  getValue: (r) =>
+    (r.ion_channel_models ?? [])
+      .map((m) => m?.name ?? '')
+      .filter(Boolean)
+      .join(', '),
+  width: { minWidth: 180, flex: 1 },
+  filter: {
+    // `ion_channel_model__name__ilike`, `…__name__in`, `…__name` (exact)
+    operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+    field: 'ion_channel_model__name',
+    targets: [
       {
         id: 'name',
         label: 'Ion channel model name',
-        // `ion_channel_model__name__ilike`, `…__name__in`, `…__name` (exact)
         field: 'ion_channel_model__name',
         operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
         freeEntry: FreeEntryKind.Text,
@@ -68,14 +120,29 @@ const emodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       },
     ],
   },
-  {
-    id: 'strain',
-    label: 'Strain',
-    filters: [
+};
+
+/**
+ * Strain, spelled at the TOP level. `EModelFilter` composes `SpeciesFilterMixin`, not
+ * `SubjectFilterMixin`, so the param is `strain__name*` and the catalog's
+ * `subjectStrainColumn` (which emits `subject__strain__name*`) would send params this
+ * endpoint does not accept.
+ */
+const strainNameColumn: IColumnModel<Row> = {
+  id: 'strainName',
+  header: 'Strain',
+  auxiliary: true,
+  sortable: false,
+  getValue: (r) => r.strain?.name ?? '',
+  width: { minWidth: 140 },
+  filter: {
+    // `strain__name__ilike`, `strain__name__in` (NOT `subject__strain__*`)
+    operators: [OperatorId.Ilike, OperatorId.In],
+    field: 'strain__name',
+    targets: [
       {
         id: 'name',
         label: 'Strain',
-        // `strain__name__ilike`, `strain__name__in` (top level, NOT `subject__strain__*`)
         field: 'strain__name',
         operators: [OperatorId.Ilike, OperatorId.In],
         freeEntry: FreeEntryKind.Text,
@@ -83,7 +150,7 @@ const emodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       },
     ],
   },
-];
+};
 
 /**
  * E-model listing (curated). Column order mirrors the legacy `ViewDefForEmodel`
@@ -102,7 +169,7 @@ const emodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
  *    `exemplar_morphology` facet (`exemplar_morphology__name__in` / `__ilike`).
  *  - Model score sorts on `score` and range-filters to `score__gte` / `score__lte`.
  */
-export const emodelSchema: IGridSchema<IEModel> = {
+export const emodelSchema: IGridSchema<Row> = {
   id: 'emodel',
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
@@ -111,14 +178,14 @@ export const emodelSchema: IGridSchema<IEModel> = {
   // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(emodelAdvancedFilters),
   columns: [
-    nameColumn<IEModel>(),
-    previewColumn<IEModel>({
+    nameColumn<Row>(),
+    previewColumn<Row>({
       id: 'eModelResponse',
       header: 'Response',
       cellRenderer: ENTITY_PREVIEW_RENDERER,
       width: { width: 184, minWidth: 120, resizable: true },
     }),
-    brainRegionColumn<IEModel>(),
+    brainRegionColumn<Row>(),
     {
       id: 'species',
       header: 'Species',
@@ -134,8 +201,8 @@ export const emodelSchema: IGridSchema<IEModel> = {
         options: { kind: FilterOptionsKind.Facets },
       },
     },
-    mtypeColumn<IEModel>(),
-    etypeColumn<IEModel>(),
+    mtypeColumn<Row>(),
+    etypeColumn<Row>(),
     {
       id: 'exemplarMorphology',
       header: 'Morphology',
@@ -161,12 +228,16 @@ export const emodelSchema: IGridSchema<IEModel> = {
       width: { minWidth: 150 },
       filter: { operators: [OperatorId.Range], field: 'score' },
     },
-    contributionsColumn<IEModel>({ sortable: true, sortField: 'contribution__pref_label' }),
-    registrationDateColumn<IEModel>(),
+    contributionsColumn<Row>({ sortable: true, sortField: 'contribution__pref_label' }),
+    registrationDateColumn<Row>(),
+    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    exemplarSegmentedSpinesColumn,
+    ionChannelModelsColumn,
+    strainNameColumn,
   ],
 };
 
-export const emodelGridDefinition: IEntityGridDefinition<IEModel> = {
+export const emodelGridDefinition: IEntityGridDefinition<Row> = {
   dataType: ExtendedEntitiesTypeDict.Emodel,
   schema: emodelSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
