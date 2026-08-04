@@ -1,5 +1,11 @@
 # Contextual column presentation
 
+> New to this feature? Start at
+> [`features/data-grid/GUIDE.md`](../../../GUIDE.md) — task-oriented recipes for
+> adding a table, a column, a filter, or a contextual gate (including the
+> `available` vs `hiddenByDefault` decision and the circuit Subcircuits example).
+> This file is the rule ENGINE those recipes link to.
+
 Entity tables adapt to the runtime **context** — which `dataType`, `section`,
 `scope`, `species`, and any host-supplied **factor** (role, feature flag, view
 variant, device…) the table renders under. A schema declares, per column, *whether*
@@ -90,6 +96,11 @@ drag-reorder / chooser layout is applied on top. All resolution is pure and unit
 tested (`core/domain/contextual.test.ts`, `resolve-schema.test.ts`).
 
 ## See also
+
+`features/data-grid/GUIDE.md` — how-do-I recipes: add an entity table (schema →
+registry → parity test), add a column, add a filter, gate either by context, plus the
+migration gotchas (wire-param verification, sort safety, host-param collisions,
+persistence reconciliation).
 
 `features/data-grid/FILTERS.md` — the filter model shared by column filters and the
 schema's `advancedFilters`, how an operator becomes a query param, and how to verify a

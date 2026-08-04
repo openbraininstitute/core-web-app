@@ -1,5 +1,10 @@
 # Filters — one model, two surfaces
 
+> New to this feature? Start at [`GUIDE.md`](./GUIDE.md) — task-oriented recipes for
+> adding a table, a column, a filter, or a contextual gate. This file is the filter
+> MODEL it links to; `bindings/entitycore/schemas/CONTEXTUAL.md` is the contextual
+> rule engine.
+
 A grid filter is always the same thing: a **target** (which backend field), an
 **operator** (how to match), and a **value**. That triple is edited by one component,
 stored in one record, and serialized by one strategy table. What differs between the

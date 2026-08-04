@@ -6,6 +6,8 @@ other antd `Table` surfaces) to the new `src/features/data-grid` architecture
 losing a single feature and without regressions**.
 
 - Branch: `bx93tn/antd-to-aggrid-migration-0b9d90`
+- Developer guide (add a table / column / filter, contextual gating, gotchas):
+  `src/features/data-grid/GUIDE.md`
 - Architecture & contextual-rules authoring: `src/features/data-grid/bindings/entitycore/schemas/CONTEXTUAL.md`
 - Flip mechanism: `src/features/views/listing/browse-entity.tsx` routes a dataType to
   the new grid **iff** it is registered in
