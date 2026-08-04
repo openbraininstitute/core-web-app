@@ -138,6 +138,20 @@ export const circuitSchema: IGridSchema<Row> = {
   id: 'circuit',
   getRowId: (row) => row.id,
   selection: { enabled: true },
+  // Sorting is off in the HIERARCHY view: rows there are a derivation tree whose
+  // order is structural, and the view-aware data source ignores `order_by`, so a
+  // sortable header would be a control that does nothing. The legacy listing did the
+  // same by withholding `sortState`/`setSortState` from `useDataTableColumns`. Flat
+  // view keeps every column's declared `sortable` untouched.
+  sortable: byContext<boolean>({
+    default: true,
+    rules: [
+      {
+        when: { [CIRCUIT_VIEW_FACTOR]: CircuitRepresentationView.Hierarchy },
+        value: false,
+      },
+    ],
+  }),
   // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(circuitAdvancedFilters),
   // Detail rows host the recursive subcircuit grid (hierarchy view). The runtime is

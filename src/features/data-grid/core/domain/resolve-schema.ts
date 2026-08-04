@@ -35,6 +35,10 @@ export function resolveColumns<Row>(
   schema: IGridSchema<Row>,
   ctx: IGridContext
 ): Array<IResolvedColumn<Row>> {
+  // Whole-grid sort gate (see `IGridSchema.sortable`): when a context makes sorting
+  // meaningless — row order fixed by structure, not by a field — no column sorts,
+  // whatever it declares.
+  const gridSortable = resolveContextual(schema.sortable ?? true, ctx);
   return schema.columns
     .map((column, declarationIndex) => ({ column, declarationIndex }))
     .filter(({ column }) => resolveContextual(column.available ?? true, ctx))
@@ -51,6 +55,7 @@ export function resolveColumns<Row>(
     })
     .map(({ column }) => ({
       ...column,
+      sortable: gridSortable ? column.sortable : false,
       filterAvailable: column.filter
         ? resolveContextual(column.filter.available ?? true, ctx)
         : false,

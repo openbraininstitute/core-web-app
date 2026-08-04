@@ -47,6 +47,19 @@ export interface IGridSchema<Row = unknown> {
   advancedFilters?: ReadonlyArray<IAdvancedFilterGroup>;
   /** default sort applied when state carries none */
   defaultSort?: TSortModel;
+  /**
+   * Whether the grid SORTS AT ALL in the current context (default: true).
+   *
+   * The per-column {@link IColumnModel.sortable} says which columns *can* sort; this
+   * says whether sorting is meaningful for this listing right now. Contextual, so a
+   * view whose row order is structural rather than field-derived — the circuit
+   * hierarchy view, where rows are a derivation tree and the data source ignores
+   * `order_by` — can turn every header's sort affordance off with ONE declaration
+   * instead of annotating each column. Resolved in `resolveColumns`, which forces
+   * `sortable: false` on every column when this resolves false, so no surface
+   * (header arrows, click handler, query serialization) sees a sortable column.
+   */
+  sortable?: TContextualValue<boolean>;
   /** row height in px (e.g. taller rows for preview thumbnails); default 44 */
   rowHeight?: number;
   /** page-size choices offered by the pagination size changer */
