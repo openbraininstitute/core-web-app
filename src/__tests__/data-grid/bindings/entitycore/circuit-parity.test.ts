@@ -38,11 +38,74 @@ describe('circuit — column set/order parity with the legacy view-def', () => {
       EntityCoreFields.CircuitDerivationType,
       EntityCoreFields.ArtifactPublishedIn,
       EntityCoreFields.ArtifactExperimentDate,
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'hasMorphologies',
+      'hasPointNeurons',
+      'hasElectricalCellModels',
+      'hasSpines',
+      'strainName',
+      'subjectName',
+      'contributions',
     ]);
   });
 
   it('the Subcircuits column id matches EntityCoreFields.CircuitSubCircuit (the expander host)', () => {
     expect(circuitSchema.columns[1]?.id).toBe(EntityCoreFields.CircuitSubCircuit);
+  });
+
+  it('every auxiliary column is hidden by default and carries the filter it replaced', () => {
+    const aux = circuitSchema.columns.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual([
+      'hasMorphologies',
+      'hasPointNeurons',
+      'hasElectricalCellModels',
+      'hasSpines',
+      'strainName',
+      'subjectName',
+      'contributions',
+    ]);
+
+    const wire: Record<string, string> = {
+      hasMorphologies: 'has_morphologies',
+      hasPointNeurons: 'has_point_neurons',
+      hasElectricalCellModels: 'has_electrical_cell_models',
+      hasSpines: 'has_spines',
+      strainName: 'subject__strain__name',
+      subjectName: 'subject__name',
+      contributions: 'contribution__pref_label',
+    };
+    for (const [id, field] of Object.entries(wire)) {
+      expect(circuitSchema.columns.find((c) => c.id === id)?.filter?.field).toBe(field);
+    }
+  });
+
+  it('EVERY auxiliary column sorts — all seven fields are in CircuitFilter ordering_model_fields', () => {
+    for (const column of circuitSchema.columns.filter((c) => c.auxiliary)) {
+      expect(column.sortable).toBe(true);
+    }
+    expect(
+      serializeQuery(
+        query({ sort: [{ columnId: 'hasSpines', direction: SortDirection.Desc }] }),
+        circuitSchema
+      ).order_by
+    ).toEqual(['-has_spines']);
+    expect(
+      serializeQuery(
+        query({ sort: [{ columnId: 'subjectName', direction: SortDirection.Asc }] }),
+        circuitSchema
+      ).order_by
+    ).toEqual(['+subject__name']);
+  });
+
+  it('the four content flags serialize to the BARE boolean param', () => {
+    const filters: TFilterModel = {
+      hasMorphologies: {
+        columnId: 'hasMorphologies',
+        operator: OperatorId.Bool,
+        value: { kind: FilterValueKind.Boolean, value: true },
+      },
+    };
+    expect(serializeQuery(query({ filters }), circuitSchema).has_morphologies).toBe(true);
   });
 });
 

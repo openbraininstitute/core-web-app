@@ -17,21 +17,59 @@ import {
   countDeepSubCircuits,
 } from '@/ui/segments/explore/circuit/helpers';
 
-import { Align, byContext, FilterOptionsKind, OperatorId } from '../../../core';
-import { descriptionColumn, nameColumn, speciesColumn } from '../columns/catalog';
+import { Align, byContext, FilterOptionsKind, FreeEntryKind, OperatorId } from '../../../core';
+import {
+  contributionsColumn,
+  descriptionColumn,
+  nameColumn,
+  speciesColumn,
+  subjectNameColumn,
+  subjectStrainColumn,
+  yesNo,
+} from '../columns/catalog';
 import { buildCircuitAdvancedFilters } from './circuit-models';
 import { flatAdvancedFilters, staticOptions } from './common-filters';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { IColumnModel, IGridSchema } from '../../../core';
+import type { IHasContributions } from '../columns/catalog';
 import type { IEntityGridDefinition } from '../registry';
+
+/**
+ * `ICircuit` declares only ONE of the four `has_*` content flags
+ * (`has_electrical_cell_models`) and omits `contributions` altogether, but the wire
+ * carries all five: `CircuitRead` = `CircuitBaseMixin` (all four booleans, non-null,
+ * default `false`) + `ScientificArtifactRead` → `EntityRead` →
+ * `ContributionReadWithoutEntityMixin`, and the list loader eager-loads
+ * `Circuit.contributions → Contribution.agent` (`app/service/circuit.py`).
+ *
+ * Every augmented member is OPTIONAL on purpose: that keeps `ICircuit` assignable to
+ * `Row`, so `IGridSchema<Row>` stays interchangeable with `IGridSchema<Row>` for
+ * the nested `CircuitRecursiveGrid` and `RELATED_CIRCUIT_COLUMNS` consumers. Same
+ * local-augmentation pattern as `schemas/cell-morphology.ts`.
+ *
+ * (`subject` IS declared on `ICircuit`, and `ISubject` carries `name` and
+ * `strain.name`, so the two subject columns need no augmentation.)
+ */
+type Row = ICircuit &
+  IHasContributions & {
+    has_morphologies?: boolean | null;
+    has_point_neurons?: boolean | null;
+    has_spines?: boolean | null;
+  };
 
 /**
  * ADVANCED FILTERS — `GET /circuit` params with no column in this grid. The whole
  * circuit family shares one declaration ({@link buildCircuitAdvancedFilters}); this
  * listing is the one that shows Build category and Target simulator COLUMNS, so both
  * are excluded here.
+ *
+ * The four `has_*` flags, both `subject__*` fields and `contribution__pref_label` are
+ * excluded too — they are AUXILIARY COLUMNS below (hidden until ticked), which keeps
+ * each field on exactly one surface. The panel still offers them for as long as they
+ * stay hidden. What is left is the record's own `id` and the two provenance UUIDs,
+ * none of which has a useful column to show.
  *
  * `scale` is deliberately absent too: the base circuit listing narrows `scale__in` in
  * its domain config (`narrowFilters`, everything except Single) and the Scale column
@@ -40,7 +78,46 @@ import type { IEntityGridDefinition } from '../registry';
 const circuitAdvancedFilters = buildCircuitAdvancedFilters({
   includeBuildCategory: false,
   includeTargetSimulator: false,
+  includeContents: false,
+  includeSubject: false,
+  includeContribution: false,
 });
+
+/**
+ * The four `has_*` content flags of `CircuitFilterMixin`'s host, as AUXILIARY columns.
+ *
+ * SORT SAFETY: all four ARE in `CircuitFilter.Constants.ordering_model_fields`
+ * (`app/filters/circuit.py`), so every one of them sorts — this listing has no sort
+ * offender among the fields moved off the panel.
+ *
+ * The filter is declared as an explicit TARGET rather than flat props: the synthesised
+ * legacy target reads "no options" as "use the grid's facets", which for a boolean the
+ * server computes no bucket for is an empty picker instead of the Yes/No control.
+ */
+function circuitFlagColumn(
+  id: string,
+  header: string,
+  field: string,
+  description: string,
+  get: (row: Row) => boolean | null | undefined
+): IColumnModel<Row> {
+  return {
+    id,
+    header,
+    auxiliary: true,
+    sortable: true,
+    sortField: field,
+    align: Align.Left,
+    width: { minWidth: 150 },
+    getValue: (row) => yesNo(get(row)),
+    filter: {
+      // the bare boolean param — `has_morphologies=true`, no `__op` suffix
+      operators: [OperatorId.Bool],
+      field,
+      targets: [{ id, label: header, field, operators: [OperatorId.Bool], description }],
+    },
+  };
+}
 
 /** Localized integer, matching the legacy `renderLocalizedNumber`. */
 function localizedNumber(value: number | null | undefined): string {
@@ -56,7 +133,7 @@ function localizedNumber(value: number | null | undefined): string {
  * bulk download). Per-column server filters/sorts are locked to the legacy
  * `transformFiltersToQuery` oracle by the circuit parity test.
  */
-export const circuitSchema: IGridSchema<ICircuit> = {
+export const circuitSchema: IGridSchema<Row> = {
   id: 'circuit',
   getRowId: (row) => row.id,
   selection: { enabled: true },
@@ -73,7 +150,7 @@ export const circuitSchema: IGridSchema<ICircuit> = {
     minHeight: 120,
   },
   columns: [
-    nameColumn<ICircuit>({ id: EntityCoreFields.Name }),
+    nameColumn<Row>({ id: EntityCoreFields.Name }),
     // Hosts the expand chevron (right-aligned), and only ever means something in the
     // Data → Circuit HIERARCHY listing: the count describes a subtree the flat listing
     // does not render, and the expander only exists when the plugin supplies its
@@ -105,8 +182,8 @@ export const circuitSchema: IGridSchema<ICircuit> = {
         const enriched = row as ICircuitEnriched;
         return 'sub_circuits' in row ? countDeepSubCircuits(enriched) || '' : '';
       },
-    } satisfies IColumnModel<ICircuit>,
-    descriptionColumn<ICircuit>({ id: EntityCoreFields.Description }),
+    } satisfies IColumnModel<Row>,
+    descriptionColumn<Row>({ id: EntityCoreFields.Description }),
     // ICircuit's type omits `brain_region` (present on the wire); read it via a cast —
     // same shape/filter binding as the catalog `brainRegionColumn`. The hierarchy
     // selector's `within_brain_region_*` gating still applies on top.
@@ -125,8 +202,8 @@ export const circuitSchema: IGridSchema<ICircuit> = {
         description: 'Brain region',
         options: { kind: FilterOptionsKind.Facets },
       },
-    } satisfies IColumnModel<ICircuit>,
-    speciesColumn<ICircuit>({ id: EntityCoreFields.SpeciesName }),
+    } satisfies IColumnModel<Row>,
+    speciesColumn<Row>({ id: EntityCoreFields.SpeciesName }),
     {
       id: EntityCoreFields.CircuitScale,
       header: 'Scale',
@@ -146,7 +223,7 @@ export const circuitSchema: IGridSchema<ICircuit> = {
             .map((s) => ({ id: s.key, label: s.label })),
         },
       },
-    } satisfies IColumnModel<ICircuit>,
+    } satisfies IColumnModel<Row>,
     numberColumn(EntityCoreFields.CircuitNumberNeurons, 'Number of neurons', 'number_neurons'),
     numberColumn(EntityCoreFields.CircuitNumberSynapses, 'Number of synapses', 'number_synapses'),
     numberColumn(
@@ -168,7 +245,7 @@ export const circuitSchema: IGridSchema<ICircuit> = {
         field: 'build_category',
         options: staticOptions(CircuitBuildCategory),
       },
-    } satisfies IColumnModel<ICircuit>,
+    } satisfies IColumnModel<Row>,
     {
       id: EntityCoreFields.CircuitTargetSimulator,
       header: 'Target simulator',
@@ -186,7 +263,7 @@ export const circuitSchema: IGridSchema<ICircuit> = {
         field: 'target_simulator',
         options: staticOptions(CircuitTargetSimulator),
       },
-    } satisfies IColumnModel<ICircuit>,
+    } satisfies IColumnModel<Row>,
     {
       id: EntityCoreFields.CircuitDerivationType,
       header: 'Derivation type',
@@ -207,7 +284,7 @@ export const circuitSchema: IGridSchema<ICircuit> = {
           items: CircuitDerivationFilterOptions.map((o) => ({ id: o.value, label: o.label })),
         },
       },
-    } satisfies IColumnModel<ICircuit>,
+    } satisfies IColumnModel<Row>,
     {
       id: EntityCoreFields.ArtifactPublishedIn,
       header: 'Published in',
@@ -218,7 +295,7 @@ export const circuitSchema: IGridSchema<ICircuit> = {
       getValue: (row) => row.published_in ?? '',
       // /circuit exposes `published_in` + `published_in__ilike` (no `__in`).
       filter: { operators: [OperatorId.Ilike], field: 'published_in' },
-    } satisfies IColumnModel<ICircuit>,
+    } satisfies IColumnModel<Row>,
     {
       id: EntityCoreFields.ArtifactExperimentDate,
       header: 'Experiment date',
@@ -230,12 +307,77 @@ export const circuitSchema: IGridSchema<ICircuit> = {
       width: { minWidth: 140 },
       getValue: (row) => formatDate(row.experiment_date),
       filter: { operators: [OperatorId.DateRange], field: 'experiment_date' },
-    } satisfies IColumnModel<ICircuit>,
+    } satisfies IColumnModel<Row>,
+    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one.
+    // ZERO SORT OFFENDERS here: every field below is in
+    // `CircuitFilter.Constants.ordering_model_fields`, which SPREADS
+    // `ScientificArtifactFilter.Constants.ordering_model_fields` and adds the four
+    // `has_*` flags, `subject__name`, `subject__strain__name` and
+    // `contribution__pref_label` explicitly (`app/filters/circuit.py`).
+    circuitFlagColumn(
+      'hasMorphologies',
+      'Has morphologies',
+      'has_morphologies',
+      'Circuits whose cells carry reconstructed morphologies',
+      (row) => row.has_morphologies
+    ),
+    circuitFlagColumn(
+      'hasPointNeurons',
+      'Has point neurons',
+      'has_point_neurons',
+      'Circuits containing point-neuron models',
+      (row) => row.has_point_neurons
+    ),
+    circuitFlagColumn(
+      'hasElectricalCellModels',
+      'Has electrical cell models',
+      'has_electrical_cell_models',
+      'Circuits with electrical cell models are the simulatable ones',
+      (row) => row.has_electrical_cell_models
+    ),
+    circuitFlagColumn(
+      'hasSpines',
+      'Has spines',
+      'has_spines',
+      'Circuits whose morphologies carry segmented dendritic spines',
+      (row) => row.has_spines
+    ),
+    // Both subject fields ARE in CircuitFilter's ordering fields — `subject__name` is
+    // one of the few endpoints that sorts it, so the catalog default (never sortable)
+    // is overridden deliberately here.
+    subjectStrainColumn<Row>({ sortable: true }),
+    subjectNameColumn<Row>({ sortable: true, sortField: 'subject__name' }),
+    // No circuit listing shows Contributors as a regular column; auxiliary keeps the
+    // field on one surface without changing the default layout. `contribution__pref_label`
+    // IS in CircuitFilter's ordering fields.
+    contributionsColumn<Row>({
+      auxiliary: true,
+      sortable: true,
+      sortField: 'contribution__pref_label',
+      filter: {
+        // `contribution__pref_label__ilike`, `contribution__pref_label__in` — the
+        // operators (and free-entry kind) of the advanced filter this replaces. An
+        // explicit target because the field has no server-computed facet bucket on
+        // /circuit, and a target with no options would render an empty picker.
+        operators: [OperatorId.Ilike, OperatorId.In],
+        field: 'contribution__pref_label',
+        targets: [
+          {
+            id: 'prefLabel',
+            label: 'Contributor',
+            field: 'contribution__pref_label',
+            operators: [OperatorId.Ilike, OperatorId.In],
+            freeEntry: FreeEntryKind.Text,
+            placeholder: 'Enter a contributor name',
+          },
+        ],
+      },
+    }),
   ],
 };
 
 /** ValueRange number column (localized display, `field__gte`/`field__lte` filter). */
-function numberColumn(id: string, header: string, field: string): IColumnModel<ICircuit> {
+function numberColumn(id: string, header: string, field: string): IColumnModel<Row> {
   return {
     id,
     header,
@@ -265,7 +407,7 @@ function formatDate(iso?: string | null): string {
     : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export const circuitGridDefinition: IEntityGridDefinition<ICircuit> = {
+export const circuitGridDefinition: IEntityGridDefinition<Row> = {
   dataType: ExtendedEntitiesTypeDict.Circuit,
   schema: circuitSchema,
   plugin: { Body: CircuitGridBody },

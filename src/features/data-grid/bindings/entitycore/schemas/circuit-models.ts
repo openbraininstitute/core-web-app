@@ -74,11 +74,20 @@ import type { IEntityGridDefinition } from '../registry';
 export function buildCircuitAdvancedFilters({
   includeBuildCategory,
   includeTargetSimulator,
+  includeContents = true,
+  includeSubject = true,
+  includeContribution = true,
 }: {
   /** true where the listing shows NO Build category column */
   includeBuildCategory: boolean;
   /** true where the listing shows NO Target simulator column (brain-region browse) */
   includeTargetSimulator: boolean;
+  /** true where the listing shows NO column for the four `has_*` content flags */
+  includeContents?: boolean;
+  /** true where the listing shows NO Strain / Subject name column */
+  includeSubject?: boolean;
+  /** true where the listing shows NO Contributors column */
+  includeContribution?: boolean;
 }): ReadonlyArray<IAdvancedFilterGroup> {
   const classification: Array<IAdvancedFilterGroup> = [];
   const classificationFilters: Array<TAdvancedFilterDef> = [];
@@ -110,6 +119,47 @@ export function buildCircuitAdvancedFilters({
     });
   }
 
+  const contents: Array<IAdvancedFilterGroup> = includeContents
+    ? [
+        {
+          id: 'contents',
+          label: 'Contents',
+          description: 'What the circuit is built out of. No column shows these.',
+          filters: [
+            {
+              id: 'hasMorphologies',
+              label: 'Has morphologies',
+              // `has_morphologies` (boolean)
+              field: 'has_morphologies',
+              operators: [OperatorId.Bool],
+            },
+            {
+              id: 'hasPointNeurons',
+              label: 'Has point neurons',
+              // `has_point_neurons` (boolean)
+              field: 'has_point_neurons',
+              operators: [OperatorId.Bool],
+            },
+            {
+              id: 'hasElectricalCellModels',
+              label: 'Has electrical cell models',
+              // `has_electrical_cell_models` (boolean)
+              field: 'has_electrical_cell_models',
+              operators: [OperatorId.Bool],
+              description: 'Circuits with electrical cell models are the simulatable ones',
+            },
+            {
+              id: 'hasSpines',
+              label: 'Has spines',
+              // `has_spines` (boolean)
+              field: 'has_spines',
+              operators: [OperatorId.Bool],
+            },
+          ],
+        },
+      ]
+    : [];
+
   return [
     {
       id: 'common',
@@ -117,42 +167,7 @@ export function buildCircuitAdvancedFilters({
       filters: [recordIdFilter],
     },
     ...classification,
-    {
-      id: 'contents',
-      label: 'Contents',
-      description: 'What the circuit is built out of. No column shows these.',
-      filters: [
-        {
-          id: 'hasMorphologies',
-          label: 'Has morphologies',
-          // `has_morphologies` (boolean)
-          field: 'has_morphologies',
-          operators: [OperatorId.Bool],
-        },
-        {
-          id: 'hasPointNeurons',
-          label: 'Has point neurons',
-          // `has_point_neurons` (boolean)
-          field: 'has_point_neurons',
-          operators: [OperatorId.Bool],
-        },
-        {
-          id: 'hasElectricalCellModels',
-          label: 'Has electrical cell models',
-          // `has_electrical_cell_models` (boolean)
-          field: 'has_electrical_cell_models',
-          operators: [OperatorId.Bool],
-          description: 'Circuits with electrical cell models are the simulatable ones',
-        },
-        {
-          id: 'hasSpines',
-          label: 'Has spines',
-          // `has_spines` (boolean)
-          field: 'has_spines',
-          operators: [OperatorId.Bool],
-        },
-      ],
-    },
+    ...contents,
     {
       id: 'provenance',
       label: 'Provenance',
@@ -175,23 +190,27 @@ export function buildCircuitAdvancedFilters({
         },
       ],
     },
-    subjectAdvancedGroup('The animal the circuit models.'),
-    {
-      id: 'contribution',
-      label: 'Contributors',
-      filters: [
-        {
-          id: 'prefLabel',
-          label: 'Contributor',
-          // `contribution__pref_label__ilike`, `contribution__pref_label__in`. No
-          // circuit listing shows a Contributors column.
-          field: 'contribution__pref_label',
-          operators: [OperatorId.Ilike, OperatorId.In],
-          freeEntry: FreeEntryKind.Text,
-          placeholder: 'Enter a contributor name',
-        },
-      ],
-    },
+    ...(includeSubject ? [subjectAdvancedGroup('The animal the circuit models.')] : []),
+    ...(includeContribution
+      ? [
+          {
+            id: 'contribution',
+            label: 'Contributors',
+            filters: [
+              {
+                id: 'prefLabel',
+                label: 'Contributor',
+                // `contribution__pref_label__ilike`, `contribution__pref_label__in`. The
+                // circuit-family listings show no Contributors column.
+                field: 'contribution__pref_label',
+                operators: [OperatorId.Ilike, OperatorId.In],
+                freeEntry: FreeEntryKind.Text,
+                placeholder: 'Enter a contributor name',
+              },
+            ],
+          } satisfies IAdvancedFilterGroup,
+        ]
+      : []),
   ];
 }
 
@@ -235,7 +254,7 @@ function buildCircuitModelDefinition({
   includeTargetSimulator,
 }: BuildOptions): IEntityGridDefinition<ICircuit> {
   const columns: Array<IColumnModel<ICircuit>> = [
-    nameColumn<ICircuit>({ id: EntityCoreFields.Name }),
+    nameColumn<ICircuit>({ id: EntityCoreFields.Name, essential: true }),
     // Description is display-only: /circuit exposes no `description` query param at all
     // (free-text description search goes through the quick-search box).
     {

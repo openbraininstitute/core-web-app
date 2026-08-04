@@ -155,7 +155,23 @@ const SUBJECT_CASES: ReadonlyArray<TCase> = [
   ['subject', 'subjectName', OperatorId.In, set('Rat 12'), { subject__name__in: ['Rat 12'] }],
 ];
 
-/** Everything the whole circuit family shares — `/circuit`, one `CircuitFilter`. */
+/**
+ * The two ID-type provenance params plus the record's own `id` — what stays on the
+ * PANEL for every circuit listing, base included.
+ */
+const CIRCUIT_PROVENANCE_CASES: ReadonlyArray<TCase> = [
+  ['provenance', 'atlasId', OperatorId.Eq, text(UUID), { atlas_id: UUID }],
+  ['provenance', 'rootCircuitId', OperatorId.Eq, text(UUID), { root_circuit_id: UUID }],
+  ...RECORD_ID_CASES,
+];
+
+/**
+ * Everything the circuit FAMILY listings share — `/circuit`, one `CircuitFilter`.
+ * The base `circuit` schema is deliberately NOT in this set: it moved the four
+ * `has_*` flags, both `subject__*` fields and `contribution__pref_label` onto
+ * auxiliary COLUMNS (pinned in `circuit-parity.test.ts`), so its panel keeps only
+ * {@link CIRCUIT_PROVENANCE_CASES}.
+ */
 const CIRCUIT_COMMON_CASES: ReadonlyArray<TCase> = [
   ['contents', 'hasMorphologies', OperatorId.Bool, bool(true), { has_morphologies: true }],
   ['contents', 'hasPointNeurons', OperatorId.Bool, bool(false), { has_point_neurons: false }],
@@ -167,11 +183,9 @@ const CIRCUIT_COMMON_CASES: ReadonlyArray<TCase> = [
     { has_electrical_cell_models: true },
   ],
   ['contents', 'hasSpines', OperatorId.Bool, bool(true), { has_spines: true }],
-  ['provenance', 'atlasId', OperatorId.Eq, text(UUID), { atlas_id: UUID }],
-  ['provenance', 'rootCircuitId', OperatorId.Eq, text(UUID), { root_circuit_id: UUID }],
   ...SUBJECT_CASES,
   ...CONTRIBUTION_CASES,
-  ...RECORD_ID_CASES,
+  ...CIRCUIT_PROVENANCE_CASES,
 ];
 
 describe('emodel advanced filters — GET /emodel', () => {
@@ -341,7 +355,23 @@ describe('ion-channel-model advanced filters — GET /ion-channel-model', () => 
 });
 
 describe('circuit advanced filters — GET /circuit', () => {
-  suite(circuitSchema, CIRCUIT_COMMON_CASES);
+  suite(circuitSchema, CIRCUIT_PROVENANCE_CASES);
+
+  it('keeps only the ID-type fields — the rest are auxiliary columns now', () => {
+    const fields = [...advancedFilterDefsByKey(circuitSchema).values()].map((d) => d.field);
+    expect(fields).toEqual(['id', 'atlas_id', 'root_circuit_id']);
+    for (const moved of [
+      'has_morphologies',
+      'has_point_neurons',
+      'has_electrical_cell_models',
+      'has_spines',
+      'subject__strain__name',
+      'subject__name',
+      'contribution__pref_label',
+    ]) {
+      expect(fields).not.toContain(moved);
+    }
+  });
 
   it('never offers scale — the Scale column and the host narrowing own it', () => {
     const fields = [...advancedFilterDefsByKey(circuitSchema).values()].map((d) => d.field);
