@@ -22,6 +22,7 @@ import {
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
+import { FilterOptionsSourceKind } from '@/entity-configuration/definitions/types';
 import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -719,7 +720,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   },
   [EntityCoreFields.LifecycleStatus]: {
     title: 'Lifecycle status',
-    filter: CoreFieldFilterTypeEnum.CheckList,
+    filter: CoreFieldFilterTypeEnum.DropdownList,
     render: (r) => {
       if (!('lifecycle_status' in r) || !r.lifecycle_status) return EmptyValue;
       const colorMap: Record<string, string> = {
@@ -734,7 +735,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Lifecycle statuses',
       singular: 'Lifecycle status',
     },
-    defaultConstraint: 'lifecycle_status__in',
+    defaultConstraint: 'lifecycle_status',
     isSortable: true,
     order: {
       property: 'order_by',
@@ -742,6 +743,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isDisplayable: true,
     isFilterable: true,
+    presentation: {
+      filter: {
+        allowMultiple: false,
+        options: {
+          kind: FilterOptionsSourceKind.Static,
+          items: [
+            { label: 'Draft', value: 'draft' },
+            { label: 'Active', value: 'active' },
+            { label: 'Disqualified', value: 'disqualified' },
+          ],
+        },
+      },
+    },
     style: { width: 140 },
   },
   [EntityCoreFields.IonChannel]: {

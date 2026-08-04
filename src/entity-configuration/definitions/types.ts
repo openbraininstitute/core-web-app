@@ -201,6 +201,7 @@ export interface IFieldFilterPresentation {
   available?: TContextualValue<boolean>;
   constraint?: TContextualValue<string | Record<string, string>>;
   options?: TFilterOptionsSource;
+  allowMultiple?: boolean;
 }
 
 /**
