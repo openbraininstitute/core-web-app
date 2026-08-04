@@ -46,22 +46,11 @@ function subCircuitsOf(row: EntityCoreIdentifiableNamed): ICircuitEnriched[] | u
 }
 
 /**
- * The circuit PLUGIN body (registered on `circuitGridDefinition.plugin`). Owns the
+ * The circuit plugin body (registered on `circuitGridDefinition.plugin`). Owns the
  * flat↔hierarchy view atom and wraps the shared {@link EntityDataGrid} template with
- * circuit-only strategy overrides:
- *
- * - `dataSourceOverride` — the view-aware source (flat delegates to the shared paged
- *   source; hierarchy runs the imperative 3-fetch tree build).
- * - `extraParams={{ __view }}` — makes the view part of the query key so toggling
- *   refetches through the same store-driven pipeline as a filter change.
- * - `extraToolbarSlots` — contributes the `CircuitViewToggle`.
- * - `getRowClass` — hierarchy gray-out (reusing `circuitListingRowClass`).
- * - `detailOverride` — a recursive detail that mounts `CircuitRecursiveGrid` for the
- *   row's `sub_circuits` (data already in hand; no per-level round-trip), threading
- *   the parent's hidden columns so nested levels stay column-consistent.
- * - `expandColumn` — hosts the chevron inside the Subcircuits column, right-aligned.
- *
- * All circuit specifics live here; the shared template stays circuit-agnostic.
+ * circuit-only overrides: a view-aware data source, the view as an `extraParams` key
+ * so toggling refetches, the view toggle slot, hierarchy row gray-out, and a
+ * recursive detail rendering the row's already-fetched `sub_circuits`.
  */
 export function CircuitGridBody(props: IBrowseEntityGridProps) {
   const { definition, dataType, section = WorkspaceSection.Data, id, scope: defaultScope } = props;
@@ -72,11 +61,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
 
-  // Subcircuit expansion is a HIERARCHY-view concept only. In flat view the listing
-  // is a plain server page (no tree, no expander) — so the plugin simply withholds
-  // the detail runtime + expand column. Generic: EntityDataGrid renders an expander
-  // iff a `detailOverride`/`expandColumn` is supplied; nothing circuit-specific leaks
-  // into the shared host.
+  // Subcircuit expansion is hierarchy-only; in flat view the plugin withholds the
+  // detail runtime and expand column, and EntityDataGrid renders no expander.
   const isHierarchy = view === CircuitRepresentationView.Hierarchy;
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
@@ -90,10 +76,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
     [definition.schema, workspace, queryClient]
   );
 
-  // Columns for the NESTED recursive grid = the SAME schema columns the parent server
-  // grid renders (ISimpleColumn extends IColumnModel, so schema columns pass straight
-  // through). This is what keeps the expanded subcircuit rows column-identical to the
-  // parent — no separate antd column set.
+  // The nested recursive grid reuses the parent's schema columns (ISimpleColumn
+  // extends IColumnModel), keeping expanded rows column-identical to the parent.
   const schemaColumns = definition.schema.columns as unknown as ISimpleColumn<ICircuit>[];
 
   const onCellClick = useCallback(
@@ -110,13 +94,13 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
     () => ({
       provider: {
         canExpand: (row) => Boolean(subCircuitsOf(row)),
-        // no async fetch: subcircuits ride along on the hierarchy row.
+        // No async fetch: subcircuits ride along on the hierarchy row.
       },
       render: ({ row, state }) => {
         const children = subCircuitsOf(row);
         if (!children) return null;
-        // Thread the parent's hidden columns onto the nested grid (by column id) so
-        // every depth stays column-consistent with the chooser.
+        // Thread the parent's hidden columns down so every depth stays consistent
+        // with the chooser.
         const hidden = new Set(state?.hiddenColumns ?? []);
         const visibleColumns = schemaColumns.filter((c) => !hidden.has(c.id));
         return (
@@ -129,7 +113,7 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
               dataType={dataType}
               onCellClick={onCellClick}
               rowClassName={(record) => circuitListingRowClass(record, view)}
-              // top server grid is level 0; the first expanded subcircuit grid is level 1
+              // the top server grid is level 0
               depth={1}
               parentId={row.id}
             />
@@ -140,17 +124,13 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
     [schemaColumns, dataType, onCellClick, view]
   );
 
-  // `left`: the view toggle says WHAT this listing is showing, so it belongs with the
-  // scope/region/type pickers — the right cluster is reserved for search/filter/columns.
   const toolbarSlots = useMemo(
     () => ({ left: <CircuitViewToggle dataKey={dataKey} /> }),
     [dataKey]
   );
 
-  // Publish the view as a grid-context FACTOR so the schema's contextual rules can
-  // gate hierarchy-only columns (the Subcircuits expander host). Only this plugin
-  // supplies it, so every other mount of the circuit schema (workflow pickers, any
-  // non-Data surface) resolves the rule to its `false` default.
+  // Publish the view as a grid-context factor so the schema can gate hierarchy-only
+  // columns. Only this plugin supplies it, so other mounts get the rule's default.
   const gridFactors = useMemo(() => ({ [CIRCUIT_VIEW_FACTOR]: view }), [view]);
 
   return (

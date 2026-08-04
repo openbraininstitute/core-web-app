@@ -12,11 +12,8 @@ import type { ICellRendererProps } from '../../../react';
 export const ENTITY_PREVIEW_RENDERER = 'entityPreview';
 
 /**
- * Shared preview-thumbnail cell for any entity that carries assets. Reuses the
- * same lazy `PreviewThumbnail` (asset / thumbnail-service backed) the legacy
- * listing used, so previews stay fully functional — not placeholders. Entities
- * register it under {@link ENTITY_PREVIEW_RENDERER} and reference it from their
- * preview column's `cellRenderer`.
+ * Shared preview-thumbnail cell for any entity carrying assets. Entities register it
+ * under {@link ENTITY_PREVIEW_RENDERER} and reference that key from a preview column.
  */
 export function EntityPreview({ row }: ICellRendererProps<EntityCoreIdentifiable>) {
   if (!row || !hasAssets(row as unknown as EntityCoreObjectTypes)) {

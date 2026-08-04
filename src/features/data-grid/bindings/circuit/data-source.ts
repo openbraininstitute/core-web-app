@@ -48,24 +48,19 @@ function withoutViewParam(params: Record<string, unknown> | undefined): Record<s
 }
 
 /**
- * View-aware circuit {@link IGridDataSource}. Reads the view from
- * `query.params.__view`:
+ * View-aware circuit {@link IGridDataSource}, branching on `query.params.__view`:
  *
- * - **flat** delegates to {@link createEntitycorePagedDataSource} (→ `serializeQuery`
- *   → `Circuit.api.query.list`), so the server params are byte-for-byte identical to
- *   every standard entity — and to the legacy flat circuit list.
- * - **hierarchy** runs an imperative version of `use-hierarchy` (3 fetches via
- *   `queryClient.fetchQuery`, reusing the SAME cache keys and the pure tree-builders
- *   `getAllCircuitIds` / `buildFilteredHierarchyTree`) and returns the enriched root
- *   nodes as rows (their `sub_circuits` ride along for the recursive detail). Sorting
- *   is ignored in hierarchy (tree order is fixed), matching legacy.
+ * - **flat** delegates to {@link createEntitycorePagedDataSource}, so server params are
+ *   identical to every standard entity.
+ * - **hierarchy** does 3 fetches (reusing the `use-hierarchy` cache keys) and returns the
+ *   root nodes as a single page, `sub_circuits` riding along for the recursive detail.
+ *   `order_by` is ignored — tree order is fixed.
  */
 export function createCircuitDataSource(
   options: ICircuitDataSourceOptions
 ): IGridDataSource<ICircuit> {
   const { schema, workspace, queryClient } = options;
 
-  // Flat delegates to the shared paged source — identical params to standard entities.
   const flatSource = createEntitycorePagedDataSource<ICircuit>({
     dataType: ExtendedEntitiesTypeDict.Circuit,
     schema,
@@ -75,7 +70,7 @@ export function createCircuitDataSource(
   async function fetchHierarchy(query: IGridQuery): Promise<IGridPage<ICircuit>> {
     const { virtualLabId, projectId } = workspace;
 
-    // 1. derivation tree (circuit-extraction) — shared cache key with the hooks.
+    // 1. derivation tree
     const tree = await queryClient.fetchQuery<HierarchyTreeResponse>({
       queryKey: keyBuilder.circuitsByDerivationTree({
         virtualLabId,
@@ -90,7 +85,7 @@ export function createCircuitDataSource(
       staleTime: Number.POSITIVE_INFINITY,
     });
 
-    // 2. full raw hierarchy — every circuit in the tree, enriched with derivations.
+    // 2. every circuit in the tree, enriched with derivations
     const ids = getAllCircuitIds(tree);
     const idChunks = chunk(ids, HIERARCHY_CHUNK_SIZE);
     const fullResponses = await pMap(
@@ -128,9 +123,8 @@ export function createCircuitDataSource(
       pagination: { page: 1, page_size: DEFAULT_PAGE_SIZE, total_items: ids.length },
     };
 
-    // 3. filtered subset — the current header filters/search, across all pages, so
-    //    `buildFilteredHierarchyTree` can mark the filtered-in (vs gray-out) nodes.
-    //    order_by is dropped (tree order is fixed).
+    // 3. current filters across ALL pages, so the tree builder can mark filtered-in
+    //    vs grayed-out nodes. order_by is dropped: tree order is fixed.
     const serialized = serializeQuery(
       { ...query, params: withoutViewParam(query.params) },
       schema,
@@ -202,8 +196,6 @@ export function createCircuitDataSource(
       },
     };
 
-    // Reuse the pure tree-builder unchanged. Roots (with `sub_circuits`) are the rows;
-    // a single page → `GridPagination` auto-hides for the (small) top-level root set.
     const roots = buildFilteredHierarchyTree(
       tree,
       fullResult,
@@ -218,7 +210,6 @@ export function createCircuitDataSource(
       if (view === CircuitRepresentationView.Hierarchy) {
         return fetchHierarchy(query);
       }
-      // flat: strip the view marker, then delegate to the shared paged source.
       return flatSource.fetch({ ...query, params: withoutViewParam(query.params) }, signal);
     },
   };

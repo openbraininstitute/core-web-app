@@ -1,8 +1,6 @@
 /**
- * The toolbar is one row of two clusters: WHAT you are looking at on the left (entity
- * type → scope → brain region), what you DO to it on the right (search → filters →
- * columns). Callers hand over named slots and the toolbar decides the order, so this
- * pins the order HERE rather than in every host that fills the slots.
+ * Pins the toolbar's two clusters and their order here, since callers hand over named
+ * slots and the toolbar — not the host — decides the arrangement.
  */
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -59,10 +57,8 @@ describe('DataGridToolbar', () => {
     const scope = screen.getByTestId('scope');
     const entityType = screen.getByTestId('entity-type');
     const search = screen.getByTestId('search');
-    // same cluster as the scope tabs, a different one from the search
     expect(entityType.parentElement).toBe(scope.parentElement);
     expect(entityType.parentElement).not.toBe(search.parentElement);
-    // and it comes first within it
     expect(entityType.previousElementSibling).toBeNull();
   });
 

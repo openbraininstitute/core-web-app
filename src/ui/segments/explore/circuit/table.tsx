@@ -67,11 +67,7 @@ export type Props<T> = {
   queryKeyHash?: string;
   expandableConfig?: ExpandableConfig<T>;
   searchOpenOnMount?: boolean;
-  /**
-   * Render the listing body on the AG-Grid-based {@link CircuitListingGrid} (T-08).
-   * Defaults to `true`. Set `false` to fall back to the legacy antd `WrapperTable`
-   * path, which is retained intact.
-   */
+  /** Render the body on {@link CircuitListingGrid} (default) instead of the antd `WrapperTable`. */
   useGridRenderer?: boolean;
 };
 

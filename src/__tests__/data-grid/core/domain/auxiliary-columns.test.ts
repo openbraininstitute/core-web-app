@@ -21,18 +21,10 @@ import type { IGridContext } from '@/features/data-grid/core/domain/grid-context
 import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 /**
- * THE AUXILIARY-COLUMN MECHANISM.
- *
- * An auxiliary column is a backend-filterable field the grid can show but hides
- * until the user ticks it. The rule it implements — every filterable field is
- * represented exactly once, as a column or as an advanced filter — makes the toolbar
- * panel DERIVED: `schema.advancedFilters` + the auxiliary columns currently hidden.
- *
- * The tests below pin the three things that rule depends on: `auxiliary` implying
- * default-hidden (rather than competing with `hiddenByDefault`), the panel following
- * visibility in both directions, and — the one that would silently corrupt a
- * request if it broke — an applied filter surviving the move between surfaces
- * untouched, because both key it by the COLUMN ID.
+ * Pins the auxiliary-column mechanism: `auxiliary` implies default-hidden, the advanced
+ * panel is derived from visibility, and an applied filter survives the move between
+ * panel and header untouched (both key it by column id) — breaking that last one would
+ * silently corrupt the request.
  */
 
 interface Row {
@@ -87,7 +79,6 @@ describe('the advanced-filters panel is derived from visibility', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].id).toBe(AUXILIARY_FILTER_GROUP_ID);
     expect(groups[0].filters.map((f) => [f.key, f.label])).toEqual([['strainName', 'Strain']]);
-    // its own targets, so the panel offers the same "match by" the header would
     expect(groups[0].filters[0].targets.map((t) => t.field)).toEqual(['subject__strain__name']);
   });
 
@@ -135,7 +126,7 @@ describe('filter-state continuity across the tick', () => {
       defaultPageSize: 20,
     });
 
-    // 1. the column starts hidden, so the PANEL owns its filter — under its column id
+    // 1. the column starts hidden, so the panel owns its filter
     const key = resolveFilterPanelGroups(
       SCHEMA,
       CTX,
@@ -156,17 +147,14 @@ describe('filter-state continuity across the tick', () => {
     const applied = controller.store.getSnapshot().filters;
     const beforeParams = serializeQuery(buildGridQuery(controller.store.getSnapshot()), SCHEMA);
 
-    // 3. tick the column in the chooser — a VISIBILITY action, nothing else
+    // 3. tick the column in the chooser
     controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });
     const after = controller.store.getSnapshot();
 
-    // the entry is byte-identical, still keyed by the column id, and the panel has
-    // handed the filter over to the column header
     expect(after.filters).toEqual(applied);
     expect(Object.keys(after.filters)).toEqual(['strainName']);
     expect(panelKeys(after.hiddenColumns)).toEqual([]);
 
-    // and the request is unchanged: one param, no duplicate, no `adv:` shadow
     const afterParams = serializeQuery(buildGridQuery(after), SCHEMA);
     expect(afterParams).toEqual(beforeParams);
     expect(afterParams.subject__strain__name__ilike).toBe('%C57%');
@@ -175,7 +163,7 @@ describe('filter-state continuity across the tick', () => {
     ).toHaveLength(1);
     expect(Object.keys(afterParams).some((k) => k.startsWith('adv:'))).toBe(false);
 
-    // 4. untick it: the filter goes back to the panel, still applied
+    // 4. untick it
     controller.store.dispatch({
       type: GridActionType.SetHiddenColumns,
       hidden: ['strainName'],
@@ -188,11 +176,6 @@ describe('filter-state continuity across the tick', () => {
   });
 });
 
-/**
- * `essential` is `auxiliary`'s counterpart: the columns a BULK deselect keeps, so the
- * chooser's "Select all" can never empty the grid in one click. It binds that action
- * only — individual checkboxes stay unrestricted.
- */
 describe('essentialColumnIds', () => {
   it('returns the marked columns, in declaration order', () => {
     expect(

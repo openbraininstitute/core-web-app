@@ -1,16 +1,8 @@
 /**
- * Regression: switching species must NOT destroy the user's saved column layout.
- *
- * The listing resets its browse state when the workspace species identity changes
- * (`EntityDataGrid`'s species effect → `GridController.resetState`). That reset
- * runs through the persistence subscription, so a reset that also dropped the
- * column layout would write the schema's DEFAULTS over the localStorage layout
- * slice — the user's unticked columns come back on the next refresh, in this tab
- * and every other one, and the loss is permanent.
- *
- * Driven through the real `EntityDataGrid` (the actual wiring: chooser → store →
- * persistence) rather than a controller in isolation, because the defect was in
- * what the HOST does to a correctly-persisting controller.
+ * Regression: switching species resets the listing's browse state, and a reset that also
+ * dropped the column layout wrote the schema defaults over the durable localStorage
+ * slice — permanently losing the user's unticked columns. Driven through the real
+ * `EntityDataGrid` because the defect was in the host, not the controller.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
@@ -57,9 +49,8 @@ const SESSION_KEY = `data-grid:v1:s:vl/pr/data/${DATA_TYPE}/${WorkspaceScope.Pub
 const HIDDEN_COLUMN_ID = 'brainRegion';
 
 /**
- * This environment ships no `window.localStorage`/`sessionStorage`, so install a
- * minimal in-memory `Storage` — the adapters only use get/set/removeItem, and
- * reading the raw entries back is what makes the assertions meaningful.
+ * This environment ships no `window.localStorage`/`sessionStorage`, so install a minimal
+ * in-memory `Storage`; reading the raw entries back is what makes the assertions real.
  */
 function installStorage(name: 'localStorage' | 'sessionStorage') {
   const map = new Map<string, string>();
@@ -132,20 +123,18 @@ describe('species switch vs the saved column layout', () => {
 
     mountListing(store);
 
-    // the user unticks a column in the chooser → written to the layout slice
+    // the user unticks a column in the chooser
     fireEvent.click(await screen.findByRole('button', { name: 'Columns' }));
     const checkboxes = await screen.findAllByRole('checkbox');
     fireEvent.click(checkboxes[2]);
     expect(readSlice(local, LAYOUT_KEY).hiddenColumns).toContain(HIDDEN_COLUMN_ID);
 
-    // …then switches the workspace species, which resets the listing's browse state
+    // …then switches species, which resets the browse state
     await act(async () => {
       store.set(speciesSelectionModeAtom, SpeciesSelectionMode.All);
     });
 
-    // the durable layout survives the reset — in the store AND in localStorage
     expect(readSlice(local, LAYOUT_KEY).hiddenColumns).toContain(HIDDEN_COLUMN_ID);
-    // …while the transient session slice is back on the schema's defaults
     expect(readSlice(session, SESSION_KEY).page).toBe(1);
     expect(readSlice(session, SESSION_KEY).filters).toEqual({});
   });
@@ -168,7 +157,7 @@ describe('species switch vs the saved column layout', () => {
     });
     unmount();
 
-    // "the user refreshes the page": a brand-new listing over the same storage
+    // "the user refreshes the page"
     mountListing(store);
     fireEvent.click(await screen.findByRole('button', { name: 'Columns' }));
     const restored = await screen.findAllByRole('checkbox');

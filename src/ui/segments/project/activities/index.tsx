@@ -55,9 +55,8 @@ export function ProjectActivities({
     throw new Error(`No entity found for type: ${entityType}`);
   }
 
-  // Changing the category/type resets to page 1: the SimpleGrid below is keyed on
-  // `${activity}-${entityType}`, so a change remounts it with a fresh page-1 store
-  // (parity with the legacy `setPage(1)` on selector change).
+  // the SimpleGrid below is keyed on `${activity}-${entityType}`, so a selector change
+  // remounts it with a fresh page-1 store
   const onActivityChange = (next: TActivityValue | null) => {
     if (next) setActivity(next);
   };
@@ -66,8 +65,7 @@ export function ProjectActivities({
     if (next) setEntityType(next);
   };
 
-  // Server data source: the grid owns paging; each page fetches via the entity's
-  // list query (same call the legacy `useQueryActivity` made).
+  // server data source: the grid owns paging, each page fetches via the entity list query
   const listQuery = entity.api.query?.list;
   const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
     () => ({
@@ -84,8 +82,7 @@ export function ProjectActivities({
           },
         });
         return {
-          // the per-entity list queries return a union of entity arrays; the table is
-          // entity-agnostic (legacy typed this response as `EntityCoreResponse<any>`).
+          // per-entity list queries return a union of entity arrays; the table is entity-agnostic
           rows: (response?.data ?? []) as EntityCoreObjectTypes[],
           total: response?.pagination?.total_items ?? 0,
         };
@@ -103,8 +100,7 @@ export function ProjectActivities({
     {
       id: 'status',
       header: 'Status',
-      // per-type aggregated status (badge + scan-cards popover), same as the workflows
-      // activity table — differs by record.type (simulation campaign / task / etc.)
+      // per-type aggregated status (badge + scan-cards popover)
       renderCell: (record) => (
         <WorkflowStatusCell record={record} workspace={{ virtualLabId, projectId }} />
       ),
@@ -122,7 +118,7 @@ export function ProjectActivities({
       header: 'Actions',
       align: 'center',
       pinned: 'right',
-      // action column: fixed width, not resizable (so only Date shows a resize handle)
+      // fixed width, not resizable
       width: { width: 96, resizable: false },
       renderCell: (record) => {
         const status = get(record, 'status', 'default');
@@ -166,7 +162,7 @@ export function ProjectActivities({
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="secondary-scrollbar flex-1 overflow-auto">
             <SimpleGrid<EntityCoreObjectTypes>
-              // remount on category/type change → fresh page-1 store (legacy setPage(1))
+              // remount on category/type change → fresh page-1 store
               key={`${activity}-${entityType}`}
               columns={columns}
               getRowId={(o) => o.id}

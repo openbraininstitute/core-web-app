@@ -17,25 +17,12 @@ import type { IEntityGridDefinition } from '../registry';
 type Row = ISingleNeuronSynaptomeSimulation;
 
 /**
- * Single-neuron synaptome simulation listing — a PLAIN listing (no expandable detail row).
- * Column order follows the legacy `view-defs/simulation/single-neuron-synaptome-simulation.ts`.
+ * Single-neuron synaptome simulation listing
+ * (`GET /single-neuron-synaptome-simulation`), with no expandable detail row.
  *
- * Display-only columns (legacy field metadata):
- *  - Description: `isFilterable: false` (search-box constraint) → no column filter.
- *  - Stimulus / Response: preview-thumbnail cells in the legacy; the thumbnail renderer is
- *    deferred (renderers fence), so these are display-only placeholders preserving column
- *    identity/order. `filter: null` either way.
- *
- * Synaptome name (SynaptomeModelName) renders `synaptome.name`. The legacy field-def is
- * `filter: null`, but `/single-neuron-synaptome-simulation` exposes
- * `synaptome__name__in` / `synaptome__name__ilike` and serves a `synaptome` facet
- * bucket, so the column now carries that filter. Still not sortable
- * (`synaptome__name` is absent from SingleNeuronSynaptomeSimulationFilter's ordering
- * fields).
- *
- * Brain region (no filter; sortable — SingleNeuronSynaptomeSimulation is in `brain_region`'s
- * `order.types`), Created by (facet filter + server-sortable), and Registration date
- * (DateRange filter + sortable) carry the legacy filter/sort metadata.
+ * Synaptome name filters via the `synaptome` facet but is not sortable —
+ * `synaptome__name` is absent from this endpoint's ordering fields. Description,
+ * Stimulus and Response are display-only.
  */
 export const singleNeuronSynaptomeSimulationSchema: IGridSchema<Row> = {
   id: 'single-neuron-synaptome-simulation',

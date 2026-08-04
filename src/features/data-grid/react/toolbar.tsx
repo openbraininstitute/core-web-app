@@ -3,10 +3,8 @@ import { cn } from '@/utils/css-class';
 import type { ReactNode } from 'react';
 
 /**
- * Host-owned controls, named by WHAT THEY ARE rather than by where they sit, so the
- * toolbar — not each caller — decides the order. Every one is optional: a surface
- * renders only the pickers it actually needs (a workflow picker has no entity-type
- * count; a listing with no hierarchy has no brain region).
+ * Host-owned controls, named by what they are rather than where they sit, so the toolbar
+ * decides the order. All optional — a surface renders only the pickers it needs.
  */
 export interface IDataGridToolbarSlots {
   /** entity-type count selector — left cluster, first */
@@ -31,17 +29,9 @@ export interface IDataGridToolbarProps {
 }
 
 /**
- * Thin toolbar shell, one row, two clusters.
- *
- * LEFT is WHAT you are looking at — the entity type first, because it names the rows,
- * then the scope and brain region that qualify them. RIGHT is what you DO to that —
- * search, filter, choose columns — grouped at the far edge so the controls that change
- * the view sit together under one hand instead of being split across the bar. Bulk
- * actions and the results/selection counts are not here: they live in the footer,
- * beside the rows they talk about.
- *
- * `flex-wrap` is the narrow-width behaviour: the right cluster drops to its own line
- * rather than crushing the left pickers.
+ * Thin toolbar shell: one row, two clusters — what you are looking at on the left, what
+ * you do to it on the right. `flex-wrap` drops the right cluster to its own line when
+ * narrow rather than crushing the left pickers.
  */
 export function DataGridToolbar({
   slots,

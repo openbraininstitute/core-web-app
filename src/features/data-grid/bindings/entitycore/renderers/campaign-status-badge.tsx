@@ -31,10 +31,8 @@ export interface ICampaignStatusBadgeSpec {
 }
 
 /**
- * Static status → badge presentation map. Every status follows the SAME shape (the
- * "Done" green template): a LIGHT background, a FULL-colour border + text, and the
- * icon glyph white inside a full-colour chip. Only the hue changes per status — no
- * status is a solid fill. Pure/data-only (the unit under test).
+ * Status → badge presentation. Every status shares one shape — light background,
+ * full-colour border/text, white glyph on a full-colour chip — only the hue changes.
  */
 const STATUS_BADGE: Record<ActivityStatus, ICampaignStatusBadgeSpec> = {
   [ActivityStatus.DONE]: {
@@ -97,8 +95,8 @@ const FALLBACK_BADGE: ICampaignStatusBadgeSpec = {
 };
 
 /**
- * Resolve the {@link Badge} presentation for a single {@link ActivityStatus}. Unknown
- * values degrade to a neutral outline pill rather than throwing.
+ * Resolve the badge presentation for an {@link ActivityStatus}; unknown values degrade
+ * to a neutral pill.
  */
 export function getCampaignStatusBadgeSpec(
   status: ActivityStatus | undefined
@@ -108,10 +106,8 @@ export function getCampaignStatusBadgeSpec(
 }
 
 /**
- * Precedence for collapsing a multi-status count map into a single headline status.
- * Active work (running → pending → queued) surfaces first, then failures, then done —
- * so an in-flight campaign reads "Running", and a finished one with a failed member
- * reads "Error" rather than "Done".
+ * Headline-status precedence: active work first, then failures, then done — so a
+ * finished campaign with one failed member reads "Error", not "Done".
  */
 const STATUS_PRECEDENCE: ActivityStatus[] = [
   ActivityStatus.RUNNING,
@@ -123,9 +119,8 @@ const STATUS_PRECEDENCE: ActivityStatus[] = [
 ];
 
 /**
- * Collapse an aggregated status count map (status → number of member simulations) into
- * the single headline {@link ActivityStatus} shown by the badge. Returns `undefined`
- * when the campaign has no members.
+ * Collapse a status → member-count map into the single headline status shown by the
+ * badge; `undefined` when the campaign has no members.
  */
 export function aggregateCampaignStatus(
   statusCountMap: Map<ActivityStatus, number> | undefined | null
@@ -145,7 +140,7 @@ interface CampaignStatusBadgeProps {
   className?: string;
 }
 
-/** Presentational status pill — the new default look for the campaign "Status" column. */
+/** Presentational status pill for the campaign "Status" column. */
 export function CampaignStatusBadge({
   status,
   count,
@@ -163,19 +158,15 @@ export function CampaignStatusBadge({
       variant="outline"
       className={cn(
         'select-none border',
-        // light bg + full-colour border + full-colour text (the Done-green template for all)
         spec.bg,
         spec.border,
         spec.text,
-        // compact = smaller footprint + lighter weight (for the card headers)
         compact ? 'h-[18px] gap-1 px-1.5 py-0 text-[9px] font-medium' : 'gap-1.5 font-semibold',
-        // uniform width across statuses so the centred cell column isn't ragged
         fixedWidth ? 'min-w-[7.5rem] justify-center' : '',
         className
       )}
     >
       {icon ? (
-        // full-colour chip with a WHITE glyph (the status icons are `currentColor`)
         <span
           className={cn(
             'inline-flex shrink-0 items-center justify-center rounded-full text-white',
@@ -194,7 +185,7 @@ export function CampaignStatusBadge({
   );
 }
 
-/** Rounded skeleton matching the (fixed-width) badge footprint — no loader icon. */
+/** Skeleton matching the fixed-width badge footprint. */
 export function CampaignStatusBadgeSkeleton(): ReactNode {
   return <span className="inline-block h-6 w-[7.5rem] animate-pulse rounded-full bg-neutral-200" />;
 }

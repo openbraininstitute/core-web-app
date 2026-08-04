@@ -15,12 +15,7 @@ import type { TWorkspaceSection } from '@/constants';
 import type { OnCellClick } from '@/ui/segments/data-table/table';
 import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 
-/**
- * Per-row class for the AG-Grid-based circuit listing. Mirrors the legacy
- * `WrapperTable` `rowClassName` in `MainTable`, but targets `.ag-cell` instead of
- * antd `td` (same styling intent: highlight filtered-in rows, dim filtered-out
- * hierarchy rows). Pure so the flat/hierarchy branching is unit-testable.
- */
+/** Per-row class for the circuit listing: highlight filtered-in rows, dim filtered-out hierarchy rows. */
 export function circuitListingRowClass(
   record: ICircuit,
   view: TCircuitRepresentationView | null
@@ -48,23 +43,15 @@ export type CircuitListingGridProps = {
     pagination: EntitycorePagination;
     totalData: number;
   };
-  /**
-   * React key forwarded to the grid so subcircuit expansion state resets when the
-   * underlying (hierarchy) data changes — mirrors the legacy `WrapperTable` key.
-   */
+  /** React key forwarded to the grid so expansion state resets when the data changes. */
   gridKey?: string;
   className?: ComponentProps<'div'>['className'];
 };
 
 /**
- * Grid render path for the MAIN circuit listing, built on {@link CircuitRecursiveGrid}.
- *
- * Server pagination/facets/filters/search stay external (owned by `MainTable` /
- * `BrowseCircuit`); this only swaps the inner table body. Flat rows carry no
- * `sub_circuits`, so the grid shows no expander; hierarchy rows are enriched, so
- * the grid renders the subcircuit expansion — preserving the flat/hierarchy toggle
- * without any extra branching here. Cell clicks flow through to detail navigation
- * via `onCellClick`.
+ * Grid render path for the main circuit listing. Pagination, facets, filters and search stay
+ * server-owned; the flat/hierarchy toggle needs no branching here because only hierarchy rows
+ * carry `sub_circuits` and therefore an expander.
  */
 export function CircuitListingGrid({
   columns,
@@ -81,8 +68,7 @@ export function CircuitListingGrid({
 }: CircuitListingGridProps) {
   const isEmpty = !loading && dataSource.length === 0;
 
-  // Host the expander inside the "Subcircuits" column (right-aligned, centred) when
-  // that column is active; otherwise the grid falls back to a leading expander.
+  // host the expander in the Subcircuits column when present, else a leading expander
   const expandColumnId = columns.some((c) => String(c.key) === EntityCoreFields.CircuitSubCircuit)
     ? EntityCoreFields.CircuitSubCircuit
     : undefined;
@@ -98,9 +84,8 @@ export function CircuitListingGrid({
           onCellClick={onCellClick}
           loading={loading}
           expandColumnId={expandColumnId}
-          // Column chooser + resize only — filter/sort/pagination stay server-owned
-          // (MainTable/BrowseCircuit), so the hierarchy gray-out and server paging
-          // aren't overridden by client-side controls.
+          // chooser + resize only: client-side filter/sort/pagination would override
+          // the server paging and hierarchy gray-out
           showColumnChooser
           rowClassName={(record) => circuitListingRowClass(record, view)}
         />

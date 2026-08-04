@@ -103,9 +103,8 @@ export function useTableQueryCount({
 
   const legacyCount = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
 
-  // The AG Grid listing publishes its FILTERED total under the same dataKey (the
-  // legacy table's count lives in its query cache instead). Grid total wins when
-  // present — a flipped entity never writes the legacy cache entry.
+  // the grid publishes its filtered total under the same dataKey and wins when present;
+  // a grid-backed entity never writes the legacy query-cache count
   const gridTotal = useAtomValue(gridFilteredTotalAtom(dataKey));
   const count = isActiveEntity ? (gridTotal ?? legacyCount) : legacyCount;
 

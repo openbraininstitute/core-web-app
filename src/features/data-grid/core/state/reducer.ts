@@ -8,7 +8,7 @@ function sameIds(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
-/** Cyclic single-column sort: none → desc → asc → none (matches the legacy table). */
+/** Cyclic single-column sort: none → desc → asc → none. */
 function toggleSort(sort: TSortModel, columnId: string, allowMulti: boolean): TSortModel {
   const existing = sort.find((s) => s.columnId === columnId);
   const rest = sort.filter((s) => s.columnId !== columnId);
@@ -22,10 +22,9 @@ function toggleSort(sort: TSortModel, columnId: string, allowMulti: boolean): TS
 }
 
 /**
- * Pure state transitions. Returns the SAME reference when nothing changes so that
- * `useSyncExternalStore` consumers don't re-render needlessly. Filter / sort /
- * page-size / quick-filter changes reset the page to 1; data-changing transitions
- * also clear the row selection (the selected rows may no longer be in view).
+ * Pure state transitions. Returns the same reference when nothing changes, so
+ * `useSyncExternalStore` consumers don't re-render. Filter/sort/page-size/quick-filter
+ * changes reset the page to 1; data-changing transitions also clear the selection.
  */
 export function reducer(state: IGridState, action: TGridAction): IGridState {
   switch (action.type) {

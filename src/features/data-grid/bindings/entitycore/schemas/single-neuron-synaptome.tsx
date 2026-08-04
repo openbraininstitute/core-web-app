@@ -24,32 +24,11 @@ import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * FILTERABLE ≠ RETURNED — the rule that decides this schema's shape.
- *
- * `SingleNeuronSynaptomeFilter` nests the FULL `NestedMEModelFilter` under the
- * `me_model` prefix, so the endpoint accepts `me_model__strain__name*`,
- * `me_model__morphology__*` and `me_model__emodel__*`. The RESPONSE is far smaller:
- * `SingleNeuronSynaptomeRead.me_model` is typed `NestedMEModel`
- * (`app/schemas/me_model.py`) = `MEModelBaseMixin` + `NestedEntityRead` + `mtypes` +
- * `etypes`. That is name, description, validation_status, id, type, mtypes, etypes —
- * and NOTHING else. `_load` in `app/service/single_neuron_synaptome.py` confirms it:
- * it joinedloads only `me_model → mtypes` and `me_model → etypes`, then `raiseload("*")`.
- *
- * So of the seven candidates, only TWO can become columns without rendering blank for
- * every row: `me_model__validation_status` and `contribution__pref_label`. The other
- * five stay advanced filters below — the filter works, the value is simply not on the
- * row, and a shipped blank column is worse than a filter left where it is.
- *
- * (`ISingleNeuronSynaptome` types `me_model` as the full `IMEModel`, which OVERSTATES
- * the wire. Do not trust it when deciding what a cell can read.)
- *
- * THE ONE EXCEPTION is the VISIBLE Species column, inherited from the legacy view-def:
- * it reads `me_model.species.name`, which `NestedMEModel` does not carry, so it shows
- * the shared empty placeholder on every row while its `me_model__species__name` filter
- * works normally. It is kept for parity rather than removed — see the column itself for
- * the full evidence. Every OTHER `me_model.…` read here is safe: `name` (via
- * `NameDescriptionMixin`), `validation_status` (via `MEModelBaseMixin`), `mtypes` and
- * `etypes` are all on `NestedMEModel` and all eager-loaded.
+ * Filterable ≠ returned. The endpoint accepts the full `NestedMEModelFilter` under the
+ * `me_model` prefix, but the response only carries `NestedMEModel`: name, description,
+ * validation_status, id, type, mtypes, etypes. `ISingleNeuronSynaptome` types
+ * `me_model` as the full `IMEModel`, which overstates the wire — do not trust it when
+ * deciding what a cell can read. Fields not on that list stay advanced filters.
  */
 const VALIDATION_STATUS_OPTIONS: TFilterOptionsSource = {
   kind: FilterOptionsKind.Static,
@@ -69,13 +48,9 @@ const VALIDATION_STATUS_LABELS: ReadonlyMap<string, string> = new Map(
 );
 
 /**
- * ADVANCED FILTERS — `GET /single-neuron-synaptome` params with no column here.
- *
- * `me_model__validation_status` and `contribution__pref_label` moved onto AUXILIARY
- * columns. What is left is the record's own `id` (an ID-type field with no useful
- * column) and the five `me_model__{strain,morphology,emodel}__*` params, which stay
- * HERE deliberately: the list response does not carry those nested values, so a
- * column for any of them would be empty on every row. See the note above.
+ * `GET /single-neuron-synaptome` params with no column. The
+ * `me_model__{strain,morphology,emodel}__*` params stay here because the list response
+ * does not carry those nested values — a column for any of them would render blank.
  */
 const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -91,8 +66,7 @@ const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> 
       {
         id: 'strainName',
         label: 'Strain',
-        // `me_model__strain__name__ilike`, `me_model__strain__name__in`.
-        // NO COLUMN: `NestedMEModel` carries no `strain`.
+        // No column: `NestedMEModel` carries no `strain`.
         field: 'me_model__strain__name',
         operators: [OperatorId.Ilike, OperatorId.In],
         freeEntry: FreeEntryKind.Text,
@@ -108,8 +82,7 @@ const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> 
       {
         id: 'name',
         label: 'Morphology name',
-        // `me_model__morphology__name__ilike`, `…__name__in`, `…__name`.
-        // NO COLUMN: `NestedMEModel` carries no `morphology`.
+        // No column: `NestedMEModel` carries no `morphology`.
         field: 'me_model__morphology__name',
         operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
         freeEntry: FreeEntryKind.Text,
@@ -118,7 +91,6 @@ const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> 
       {
         id: 'hasSegmentedSpines',
         label: 'Segmented spines',
-        // `me_model__morphology__has_segmented_spines` (boolean). NO COLUMN, same reason.
         field: 'me_model__morphology__has_segmented_spines',
         operators: [OperatorId.Bool],
         description: 'Whether the morphology has segmented dendritic spines',
@@ -133,8 +105,7 @@ const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> 
       {
         id: 'name',
         label: 'E-model name',
-        // `me_model__emodel__name__ilike`, `…__name__in`, `…__name`.
-        // NO COLUMN: `NestedMEModel` carries no `emodel`.
+        // No column: `NestedMEModel` carries no `emodel`.
         field: 'me_model__emodel__name',
         operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
         freeEntry: FreeEntryKind.Text,
@@ -143,7 +114,6 @@ const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> 
       {
         id: 'score',
         label: 'E-model score',
-        // `me_model__emodel__score__gte` / `…__score__lte`. NO COLUMN, same reason.
         field: 'me_model__emodel__score',
         operators: [OperatorId.Range],
         description: 'Bounds on the e-model cumulated score',
@@ -153,31 +123,21 @@ const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> 
 ];
 
 /**
- * The two candidates the row DOES carry, as AUXILIARY columns.
- *
- * SORT SAFETY: BOTH ARE NON-SORTABLE.
- * `SingleNeuronSynaptomeFilter.Constants.ordering_model_fields`
- * (`app/filters/single_neuron_synaptome.py`) is creation_date, update_date, name,
- * brain_region__name, brain_region__acronym, created_by__pref_label,
- * me_model__etype__pref_label, me_model__mtype__pref_label — neither
- * `me_model__validation_status` nor `contribution__pref_label` is in it, and an
- * `order_by` outside that allowlist is a hard 422.
+ * ME-model validation status, as an auxiliary column. Not in the endpoint's
+ * `ordering_model_fields`, hence `sortable: false` — entitycore 422s otherwise.
  */
 const meModelValidationStatusColumn: IColumnModel<ISingleNeuronSynaptome> = {
   id: 'meModelValidationStatus',
   header: 'ME-model validation status',
   auxiliary: true,
   sortable: false,
-  // `validation_status` IS on `NestedMEModel` (via `MEModelBaseMixin`)
   getValue: (r) => VALIDATION_STATUS_LABELS.get(r.me_model?.validation_status ?? '') ?? '',
   width: { minWidth: 180 },
   filter: {
-    // `me_model__validation_status` (exact) ONLY — no list form on this endpoint.
+    // Exact only — no list form on this endpoint.
     operators: [OperatorId.Eq],
     field: 'me_model__validation_status',
-    // an explicit TARGET, not flat props alone: the synthesised legacy target reads
-    // "no options" as "use the grid's facets", and pinning the static source here
-    // keeps the picker the advanced filter had
+    // Explicit target: a flat filter with no options falls back to facets.
     targets: [
       {
         id: 'validationStatus',
@@ -198,22 +158,12 @@ function labels(values: Array<{ pref_label?: string | null } | undefined> | null
 }
 
 /**
- * Single-neuron synaptome listing. Column order mirrors the legacy
- * `ViewDefForSingleNeuronSynaptome`: Name, Description, ME-model, M-type, E-type,
- * Brain region, Species, Created by, Registration date.
+ * Single-neuron synaptome listing (`GET /single-neuron-synaptome`).
  *
- * Per the legacy field-defs:
- *  - M-type / E-type are sourced from the linked ME-model, so both sort AND filter
- *    on the `me_model__…` relation keys (`me_model__mtype__pref_label` /
- *    `me_model__etype__pref_label`) — the synaptome-specific `perTypeConstraint`.
- *  - Created by sorts + facet-filters on `created_by__pref_label`.
- *  - ME-model name filters via the `me_model` facet (`me_model__name__in` /
- *    `me_model__name__ilike`); it is not server-sortable (absent from
- *    SingleNeuronSynaptomeFilter's ordering fields).
- *  - Species reads from the linked ME-model and filters on `me_model__species__name`.
- *    `me_model.species` is a filter key but NOT a facet key server-side, so this is a
- *    free-text ilike filter with no option list; it is not server-sortable either.
- *  - Description is DISPLAY-ONLY: no entitycore endpoint accepts a `description` param.
+ * M-type/E-type come from the linked ME-model, so they sort and filter on the
+ * `me_model__…` keys. ME-model name and Species are not in the endpoint's ordering
+ * fields, hence non-sortable. Description is display-only — no endpoint accepts a
+ * `description` param.
  */
 export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = {
   id: 'single-neuron-synaptome',
@@ -221,7 +171,6 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(singleNeuronSynaptomeAdvancedFilters),
   columns: [
     nameColumn<ISingleNeuronSynaptome>(),
@@ -278,30 +227,10 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
     {
       id: 'species',
       header: 'Species',
-      // KNOWN-EMPTY VALUE, WORKING FILTER — open question for the listing's owner.
-      //
-      // The FILTER below is real: `me_model.species` is in this endpoint's
-      // `filter_keys` (app/service/single_neuron_synaptome.py:171) and the backend
-      // exercises `me_model__species__name` directly
-      // (tests/test_single_neuron_synaptome.py:463).
-      //
-      // The VALUE is not on the row. `SingleNeuronSynaptomeRead.me_model` is typed
-      // `NestedMEModel` (app/schemas/synaptome.py:44), and `NestedMEModel`
-      // (app/schemas/me_model.py:22) = `MEModelBaseMixin` + `NestedEntityRead` +
-      // `mtypes` + `etypes` — no `species`. `_load`
-      // (app/service/single_neuron_synaptome.py:36) joinedloads only
-      // `me_model → mtypes` / `me_model → etypes` before `raiseload("*")`, and the
-      // backend's own assertions on the payload cover exactly `me_model.id`,
-      // `me_model.mtypes`, `me_model.etypes`
-      // (tests/test_single_neuron_synaptome.py:64-68). `ISingleNeuronSynaptome` types
-      // `me_model` as the full `IMEModel`, which OVERSTATES the wire — see the note
-      // at the top of this file.
-      //
-      // The column is deliberately NOT removed: it is visible in the legacy
-      // `ViewDefForSingleNeuronSynaptome` and dropping it would diverge from the
-      // parity target. It renders the shared em-dash placeholder (`''` ⇒
-      // `EMPTY_PLACEHOLDER`) until either the backend nests `species` on
-      // `NestedMEModel` or the listing's owner decides to drop the column.
+      // Known-empty value, working filter — open question for the listing's owner.
+      // `me_model__species__name` is a real filter key, but `NestedMEModel` carries no
+      // `species`, so every cell renders the empty placeholder. Kept for parity with
+      // the legacy view-def until the backend nests `species` or the column is dropped.
       getValue: (r) => r.me_model?.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: { operators: [OperatorId.Ilike], field: 'me_model__species__name' },
@@ -312,21 +241,15 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
       sortField: 'created_by__pref_label',
     }),
     registrationDateColumn<ISingleNeuronSynaptome>(),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     meModelValidationStatusColumn,
-    // This listing shows Created by, not Contributors, so `contribution__pref_label`
-    // gets an auxiliary column rather than the visible one. The row DOES carry the
-    // list: `SingleNeuronSynaptomeRead` extends `EntityRead`, and `_load` eager-loads
-    // `contributions → agent`.
     contributionsColumn<ISingleNeuronSynaptome>({
       auxiliary: true,
       sortable: false,
       filter: {
-        // `contribution__pref_label__ilike`, `contribution__pref_label__in`
         operators: [OperatorId.Ilike, OperatorId.In],
         field: 'contribution__pref_label',
-        // explicit target: this endpoint computes no `contribution` facet bucket, so
-        // the synthesised "no options ⇒ use facets" target would be an empty picker
+        // Explicit target: this endpoint computes no `contribution` facet bucket.
         targets: [
           {
             id: 'prefLabel',

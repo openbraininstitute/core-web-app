@@ -14,11 +14,9 @@ export type TCircuitRepresentationView =
   (typeof CircuitRepresentationView)[keyof typeof CircuitRepresentationView];
 
 /**
- * Grid-context FACTOR key under which the circuit plugin publishes its current
- * representation view. Only the circuit plugin body supplies it, so a listing that
- * is not the circuit plugin (workflow picker, any non-Data surface) simply has no
- * such factor — which is what lets the schema's contextual `available` rules gate
- * hierarchy-only columns without the shared host knowing anything about circuits.
+ * Grid-context factor key under which the circuit plugin publishes its representation view.
+ * Only the circuit plugin supplies it, so contextual `available` rules can gate hierarchy-only
+ * columns without the shared host knowing about circuits.
  */
 export const CIRCUIT_VIEW_FACTOR = 'circuitView';
 

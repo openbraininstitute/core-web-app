@@ -10,29 +10,17 @@ export interface IExpandingToolbarButtonProps extends ComponentPropsWithRef<'but
   /** sentence-case name — the accessible name AND the text revealed on hover/focus */
   label: string;
   /**
-   * Optional count overlay (e.g. the number of active filters). At rest it sits on
-   * the ICON; while the pill is open it rides out to the pill's top-right corner.
-   * Positioned by the consumer against a 20px-tall, zero-width anchor — the same
-   * geometry the icon box used to give it — so `-right-2 -top-1.5` still lands where
-   * it always did.
+   * Optional count overlay. Positioned by the consumer against a 20px-tall, zero-width
+   * anchor, so absolute offsets like `-right-2 -top-1.5` are relative to that.
    */
   badge?: ReactNode;
 }
 
-/**
- * STRUCTURE ONLY — the pill's geometry, the group name the reveal hangs off, and the
- * paint-property transitions. No colours: it is what a caller reuses when it wants the
- * expanding BEHAVIOUR under a palette of its own (the footer's download/delete
- * actions, which must stay recognisably primary and destructive).
- */
+/** Structure only — geometry, the group name the reveal hangs off, paint transitions. */
 export const EXPANDING_PILL_BASE_CLASS = cn(
-  // COLLAPSED IS A CIRCLE, and the arithmetic has to survive whatever element carries
-  // this: 10px + a 20px icon + 10px = 40px, exactly `h-10`. `gap-0` and the explicit
-  // `has-[>svg]` padding are not redundant — `ui/molecules/button`'s cva base ships
-  // `gap-2` and `has-[>svg]:px-3`, neither of which collides with anything this recipe
-  // used to declare, so a pill built on `Button` came out ~48px wide against a 40px
-  // height and read as a squashed rectangle. `min-w-10` is the floor if some other
-  // base ever pads it less.
+  // Collapsed is a circle: 10px + a 20px icon + 10px = 40px, exactly `h-10`. `gap-0` and
+  // the explicit `has-[>svg]` padding override `ui/molecules/button`'s cva base, whose
+  // `gap-2`/`has-[>svg]:px-3` otherwise make a 48px-wide pill against a 40px height.
   'group/toolbar-pill relative flex h-10 min-w-10 shrink-0 items-center justify-center',
   'gap-0 rounded-full px-2.5 has-[>svg]:px-2.5',
   'outline-none hover:pr-3.5',
@@ -48,13 +36,9 @@ export const EXPANDING_PILL_SURFACE_CLASS = cn(
 );
 
 /**
- * The pill's INSIDES: the resting icon, the label that grows out of it, and the
- * travelling badge. Split from {@link ExpandingToolbarButton} so a caller that must
- * own its own `<button>` (an antd `Popconfirm` child, a `Button` molecule carrying a
- * variant) still gets exactly the same reveal — one implementation, not two.
- *
- * The consumer's element MUST carry {@link EXPANDING_PILL_BASE_CLASS}: the reveal is
- * driven by `group-hover/toolbar-pill`, which needs that group name on the ancestor.
+ * The pill's insides, split out so a caller that must own its own `<button>` gets the
+ * same reveal. The consumer's element MUST carry {@link EXPANDING_PILL_BASE_CLASS}: the
+ * reveal is driven by `group-hover/toolbar-pill`, which needs that group name.
  */
 export function ExpandingPillContent({ icon, label, badge }: IExpandingPillContentProps) {
   return (
@@ -76,17 +60,14 @@ export function ExpandingPillContent({ icon, label, badge }: IExpandingPillConte
         <span
           data-testid="toolbar-pill-badge-anchor"
           className={cn(
-            // zero-width: it is a bookmark at the end of the content, not a box in it,
-            // so nothing in the pill or the toolbar shifts when the badge moves
+            // zero-width, so nothing in the pill shifts when the badge moves
             'pointer-events-none relative z-10 h-5 w-0 shrink-0',
             'transition-transform duration-300 ease-in-out',
             'group-hover/toolbar-pill:translate-x-2.5 group-hover/toolbar-pill:-translate-y-2.5',
             'group-focus-visible/toolbar-pill:translate-x-2.5',
             'group-focus-visible/toolbar-pill:-translate-y-2.5',
-            // reduced motion: same destination, no journey
             'motion-reduce:transition-none',
-            // the badge overlaps the pill's edge at the corner — a white halo keeps it
-            // readable against both the pill and whatever the page puts behind it
+            // white halo: the badge overlaps the pill's edge at the corner
             '[&>*]:ring-2 [&>*]:ring-white'
           )}
         >
@@ -104,28 +85,11 @@ export interface IExpandingPillContentProps {
 }
 
 /**
- * THE toolbar pill used by every icon-only grid control (column chooser, filters).
- *
- * At rest it is exactly the 40px circle the toolbar has always shown; on hover and
- * on `:focus-visible` it grows to `icon + label`. The growth animates
- * `grid-template-columns` (`0fr → 1fr`) on a wrapper whose child clips its overflow
- * — `display` cannot be animated, and an explicit width would have to be guessed per
- * label. `prefers-reduced-motion` drops the transition: the label still appears, it
- * just no longer slides.
- *
- * The accessible name is the `aria-label`, present in BOTH states; the revealed text
- * is `aria-hidden` so a screen reader never hears the name twice and the name never
- * depends on hover.
- *
- * THE BADGE TRAVELS. Its horizontal journey costs nothing: the badge anchor is a
- * ZERO-WIDTH flex item sitting after the label, so it is carried by the very same
- * `grid-template-columns` growth — one animation, never two racing each other, and no
- * layout the anchor itself has to do. Only the constant offset onto the corner (10px
- * out, 10px up) is a `translate`, which makes it label-length-independent and keeps
- * the whole trip on the compositor. Matching `duration-300 ease-in-out` locks it to
- * the reveal; a CSS transition reverses from wherever it currently is, so pulling the
- * pointer away mid-flight glides back instead of snapping or queueing. The anchor is
- * `pointer-events-none`, so the badge can never swallow a click or flicker the hover.
+ * The toolbar pill used by every icon-only grid control. A 40px circle at rest, growing
+ * to `icon + label` on hover/`:focus-visible` by animating `grid-template-columns`
+ * (`0fr → 1fr`) — `display` cannot be animated and a width would have to be guessed per
+ * label. The accessible name is the `aria-label`; the revealed text is `aria-hidden` so
+ * it is never announced twice. The badge rides along on the same growth.
  */
 export function ExpandingToolbarButton({
   icon,

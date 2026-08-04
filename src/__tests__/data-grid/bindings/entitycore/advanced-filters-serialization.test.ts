@@ -24,10 +24,9 @@ import type {
 const CTX: IGridContext = { dataType: 'cell_morphology', section: 'data', scope: 'project' };
 
 /**
- * ORACLE: every param asserted below was read out of the live entitycore OpenAPI
- * spec (`paths['/cell-morphology'].get.parameters`, `in == 'query'`). A param not in
- * that list must never be produced — the backend silently ignores unknown query
- * params, so a typo here would look like "the filter does nothing".
+ * Pins the wire params of the cell-morphology advanced filters. Every expected param was
+ * read out of the live entitycore OpenAPI spec; the backend silently ignores unknown
+ * params, so a typo would look like "the filter does nothing".
  */
 
 const PROTOCOL_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
@@ -49,10 +48,8 @@ function text(value: string): TFilterValue {
 }
 
 /**
- * The state key a filter DECLARED as `groupId · filterId` actually occupies. The
- * schema collapses its groups for display (`flatAdvancedFilters`), which
- * re-namespaces the filter ids; the case table below stays in the schema's own
- * vocabulary and resolves through here.
+ * The state key a filter declared as `groupId · filterId` actually occupies: the schema
+ * collapses its groups (`flatAdvancedFilters`), which re-namespaces the filter ids.
  */
 function declaredKey(groupId: string, filterId: string): string {
   const flat = advancedFilterKey(
@@ -81,17 +78,9 @@ function serializeOne(
   return rest;
 }
 
-/**
- * The `cell_morphology_protocol__*` family, both `subject__*` fields and
- * `has_segmented_spines` are AUXILIARY COLUMNS now, not advanced filters — their
- * wire params are pinned in `cell-morphology-parity.test.ts` alongside the columns
- * that own them. What remains on this surface is the record's own entity id, which
- * has no useful column.
- */
 describe('cell-morphology advanced filters — operator → spec param', () => {
   it.each([
     // [group, filter, operator, value, expected params]
-    // the morphology's own entity id, moved here from the Name column's targets
     ['common', 'id', OperatorId.In, set(PROTOCOL_ID), { id__in: [PROTOCOL_ID] }],
     ['common', 'id', OperatorId.Eq, text(PROTOCOL_ID), { id: PROTOCOL_ID }],
   ])('%s · %s + %s', (groupId, filterId, operator, value, expected) => {
@@ -110,7 +99,6 @@ describe('cell-morphology advanced filters — operator → spec param', () => {
       query({
         filters: {
           [key]: entry(key, OperatorId.In, set(PROTOCOL_ID), 'id'),
-          // an auxiliary column's filter is keyed by its COLUMN id on both surfaces
           protocolDesign: {
             columnId: 'protocolDesign',
             operator: OperatorId.In,

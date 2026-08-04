@@ -45,8 +45,7 @@ describe('buildColDefs — filter targets', () => {
   it('offers every target a column declares — no opt-in needed', () => {
     const declared = [NAME_TARGET, ID_TARGET];
     const [def] = buildColDefs([speciesColumn({ filterTargets: declared })], OPTIONS);
-    // ALL declared targets reach the header, verbatim — there is no per-target
-    // gate. ("Advanced filters" means `IGridSchema.advancedFilters`, not this.)
+    // there is no per-target gate: every declared target reaches the header verbatim
     expect(headerFilter(def)?.targets).toEqual(declared);
   });
 

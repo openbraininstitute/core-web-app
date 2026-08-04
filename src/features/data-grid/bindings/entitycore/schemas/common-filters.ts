@@ -3,17 +3,9 @@ import { FilterOptionsKind, FreeEntryKind, OperatorId } from '../../../core';
 import type { IAdvancedFilterGroup, TAdvancedFilterDef, TFilterOptionsSource } from '../../../core';
 
 /**
- * ADVANCED FILTERS shared by several entitycore listings.
- *
- * The `subject__*`, `id`, `name` and timestamp params come from mixins that many
- * endpoints compose (`SubjectFilterMixin`, `IdFilterMixin`, `NameFilterMixin`,
- * `CreationFilterMixin`, `ScientificArtifactFilterBase`), so the SAME target
- * declaration is correct on every endpoint that composes them — but only there.
- * Nothing in this file is applied automatically: each schema opts in explicitly,
- * after its own endpoint's `paths[…].get.parameters` was checked for the param.
- *
- * The emitted param is named in a comment next to every operator list. Nothing here
- * is inferred from a naming convention.
+ * Advanced filters shared by several entitycore listings. These come from backend
+ * filter mixins many endpoints compose, so each schema must opt in explicitly — a
+ * mixin's params are only valid on endpoints that actually compose it.
  */
 
 /**
@@ -23,23 +15,10 @@ import type { IAdvancedFilterGroup, TAdvancedFilterDef, TFilterOptionsSource } f
 export const FLAT_ADVANCED_FILTER_GROUP_ID = 'filters';
 
 /**
- * COLLAPSE a schema's advanced-filter groups into ONE, so its popover shows a flat
- * filter list instead of group tabs.
- *
- * The grouping capability stays in the model ({@link IAdvancedFilterGroup} and the
- * menubar that renders it are untouched) — this is a per-schema presentation choice
- * that today's entity listings all make, and reverting one is a matter of dropping
- * this wrapper from its `advancedFilters`.
- *
- * Two details matter:
- * - filter ids are re-namespaced to `<groupId>_<filterId>`, so two groups that both
- *   declare e.g. `name` cannot collide on one state key once merged. Ids are
- *   internal (the wire param comes from `field`), so nothing about serialization
- *   changes — but the key does, and a previously persisted `adv:<group>:<filter>`
- *   entry is dropped by `pruneAdvancedFilters` rather than mis-applied.
- * - a group-level `available` is pushed down onto the filters that declare none.
- *   A filter that declares its own keeps it: the two cannot be AND-ed in the
- *   contextual model, and no schema currently declares both.
+ * Collapse a schema's advanced-filter groups into one, so its popover shows a flat
+ * list instead of group tabs. Filter ids are re-namespaced to `<groupId>_<filterId>`
+ * so merged groups cannot collide on a state key; a group-level `available` is pushed
+ * down onto filters that declare none.
  */
 export function flatAdvancedFilters(
   groups: ReadonlyArray<IAdvancedFilterGroup>
@@ -79,12 +58,8 @@ export function staticOptions(
 }
 
 /**
- * `{ key → label }` from the same `{ Foo: { key, label } }` enum dict
- * {@link staticOptions} builds its items from.
- *
- * A filter stores the WIRE value (`in_vitro`), a cell must show the label a user
- * picked it by (`in vitro`). Pairing this with `staticOptions(dict)` keeps a column's
- * display and its filter options reading off one dict, so they cannot drift.
+ * `{ key → label }` from a `{ Foo: { key, label } }` enum dict. A filter stores the
+ * wire value (`in_vitro`); a cell must show the label (`in vitro`).
  */
 export function dictLabelByKey(
   dict: Record<string, { key: string; label: string }>
@@ -101,10 +76,7 @@ export const recordIdFilter: TAdvancedFilterDef = {
   description: 'The entity id of the record itself',
 };
 
-/**
- * `name__ilike` / `name__in` / `name` — ONLY for grids with no Name column. Where a
- * Name column exists it already owns this field.
- */
+/** `name` — only for grids with no Name column, which otherwise owns this field. */
 export const recordNameFilter: TAdvancedFilterDef = {
   id: 'name',
   label: 'Name',
@@ -114,10 +86,7 @@ export const recordNameFilter: TAdvancedFilterDef = {
   placeholder: 'Enter a name',
 };
 
-/**
- * `creation_date__gte` / `creation_date__lte` — ONLY for grids with no Registration
- * date column (that column already filters this field as a date range).
- */
+/** `creation_date` range — only for grids with no Registration date column. */
 export const registrationDateFilter: TAdvancedFilterDef = {
   id: 'registrationDate',
   label: 'Registration date',
@@ -136,8 +105,8 @@ export const lastUpdatedFilter: TAdvancedFilterDef = {
 };
 
 /**
- * `experiment_date__gte` / `experiment_date__lte`. ScientificArtifact endpoints only
- * — the density/synapse endpoints do NOT accept it.
+ * `experiment_date` range. ScientificArtifact endpoints only — the density/synapse
+ * endpoints do not accept it.
  */
 export const experimentDateFilter: TAdvancedFilterDef = {
   id: 'experimentDate',
@@ -157,7 +126,7 @@ export const publishedInFilter: TAdvancedFilterDef = {
   placeholder: 'Enter part of a publication reference',
 };
 
-/** `contact_email` (bare only — the spec exposes no suffixed form). */
+/** `contact_email`, bare only — the spec exposes no suffixed form. */
 export const contactEmailFilter: TAdvancedFilterDef = {
   id: 'contactEmail',
   label: 'Contact email',
@@ -168,13 +137,9 @@ export const contactEmailFilter: TAdvancedFilterDef = {
 };
 
 /**
- * The `subject__*` family from `SubjectFilterMixin`. Species is deliberately absent:
- * every grid that uses this group already has a Species column, which owns
- * `subject__species__name` / `subject__species__id` through its own targets.
- *
- * `subject__age_value` is also absent — the backend types it as a `timedelta` with
- * no range form (`app/filters/subject.py`), so the only possible filter is an exact
- * ISO-duration match, which no user can be expected to type.
+ * The `subject__*` family from `SubjectFilterMixin`. Species is absent because the
+ * Species column owns it. `subject__age_value` is absent because the backend types it
+ * as a `timedelta` with no range form — only an exact ISO-duration match is possible.
  */
 export function subjectAdvancedGroup(description: string): IAdvancedFilterGroup {
   return {
@@ -185,7 +150,6 @@ export function subjectAdvancedGroup(description: string): IAdvancedFilterGroup 
       {
         id: 'strainName',
         label: 'Strain',
-        // `subject__strain__name__ilike`, `subject__strain__name__in`
         field: 'subject__strain__name',
         operators: [OperatorId.Ilike, OperatorId.In],
         freeEntry: FreeEntryKind.Text,
@@ -194,7 +158,6 @@ export function subjectAdvancedGroup(description: string): IAdvancedFilterGroup 
       {
         id: 'subjectName',
         label: 'Subject name',
-        // `subject__name__ilike`, `subject__name__in`
         field: 'subject__name',
         operators: [OperatorId.Ilike, OperatorId.In],
         freeEntry: FreeEntryKind.Text,

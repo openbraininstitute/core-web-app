@@ -137,9 +137,8 @@ vi.mock('next/dynamic', async () => {
   };
 });
 
-// Exercises the legacy antd listing (column/filter atoms + MainTable). Migrated
-// dataTypes route through BrowseEntityGrid via next/dynamic; that path would
-// otherwise receive this file's data-table stub without a `dataKey`.
+// exercises the legacy antd listing; migrated dataTypes route through BrowseEntityGrid
+// via next/dynamic, which would otherwise receive this file's stub without a `dataKey`
 import { BrowseEntityScopeLegacy as BrowseEntityScope } from '@/features/views/listing/browse-entity-legacy';
 
 type BrowseEntityProps = ComponentProps<typeof BrowseEntityScope>;

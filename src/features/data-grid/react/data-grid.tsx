@@ -32,14 +32,9 @@ import type { IDataGridToolbarSlots } from './toolbar';
 import type { TDataGridQueryOptions } from './use-data-grid';
 
 /**
- * Picker selection mode. When present, the grid renders a single (radio) / multi
- * (checkbox) selection column INDEPENDENT of the schema's bulk-action `selection`,
- * and emits the selected rows to `onChange` (single = one row, replace; multi =
- * accumulate across pages). Optional `selectedRows` makes selection CONTROLLED: the
- * parent owns the picks, the grid mirrors them (checked state survives page/tab
- * switches) and seeds them into the row cache so cross-page ids always resolve to
- * full rows. Bulk actions + the selection-count footer are suppressed in this mode —
- * a picker selects INTO a form, it does not bulk-act.
+ * Picker selection: renders a selection column independent of the schema's bulk-action
+ * `selection` and emits chosen rows to `onChange`. Bulk actions and the selection-count
+ * footer are suppressed in this mode.
  */
 export interface IDataGridSelection<Row> {
   mode: TSelectionMode;
@@ -79,8 +74,7 @@ export interface IDataGridProps<Row> {
   /** bulk actions rendered in the toolbar while rows are selected */
   renderBulkActions?: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
   renderCount?: (info: { total: number; loading: boolean; error: unknown }) => ReactNode;
-  /** effect-time notification of the fetched total (e.g. to publish the filtered
-   * count to chrome outside the grid, like the data sidebar's "x of y"). */
+  /** effect-time notification of the fetched total, for chrome outside the grid */
   onTotalChange?: (info: { total: number; loading: boolean }) => void;
   /** replaces the grid body when the fetch fails (host-owned error UI) */
   renderError?: (error: unknown) => ReactNode;
@@ -92,9 +86,8 @@ export interface IDataGridProps<Row> {
 }
 
 /**
- * Generic, API-agnostic grid. Composes the headless controller (state + query
- * building), the data port (via React Query), and a rendering strategy. Knows
- * nothing about entitycore or AG Grid.
+ * Generic, API-agnostic grid: composes the headless controller, the data port (React
+ * Query) and a rendering strategy. Knows nothing about entitycore or AG Grid.
  */
 export function DataGrid<Row>(props: IDataGridProps<Row>) {
   const {
@@ -136,28 +129,23 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
 
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
 
-  // effect-time (never during render) so a host can safely publish the total
-  // into external state (jotai/query cache) without render-phase side effects.
+  // Effect-time, never during render, so a host can publish the total into external state.
   useEffect(() => {
     onTotalChange?.({ total, loading });
   }, [total, loading, onTotalChange]);
 
-  // Picker mode forces the selection column ON (regardless of the schema's opt-in
-  // bulk-action selection) and drives the mode from the picker's single/multi.
+  // Picker mode forces the selection column on regardless of the schema's opt-in.
   const pickerMode = Boolean(selection);
   const selectionEnabled = pickerMode || isSelectionEnabled(controller.schema, controller.context);
-  // EXPLICIT mapping: the picker's `SelectionMode` (single/multi) is a different
-  // vocabulary from the renderer's schema-level mode ('single' radio / 'multiRow'
-  // checkboxes, which itself maps onto AG Grid's 'singleRow'/'multiRow').
+  // The picker's `SelectionMode` is a different vocabulary from the renderer's mode.
   const selectionModeOverride = selection
     ? selection.mode === SelectionMode.Single
       ? ('single' as const)
       : ('multiRow' as const)
     : undefined;
 
-  // Full-row cache keyed by row id, accumulated as pages load and seeded with any
-  // CONTROLLED picks. Lets the store's id-only selection resolve back to whole rows
-  // for `onChange`, even for rows selected on a page that is no longer visible.
+  // Lets the store's id-only selection resolve back to whole rows for `onChange`, even
+  // for rows selected on a page that is no longer visible.
   const getRowId = controller.schema.getRowId;
   const rowCacheRef = useRef(new Map<string, Row>());
   const controlledRows = selection?.selectedRows;
@@ -170,9 +158,8 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     for (const r of controlledRows) rowCacheRef.current.set(getRowId(r), r);
   }, [controlledRows, getRowId]);
 
-  // CONTROLLED sync: mirror the parent's picks into the store so the grid shows them
-  // checked. Only dispatch when they diverge — after a user action the store already
-  // matches what the parent will set, so this is a no-op and no loop forms.
+  // Controlled sync: mirror the parent's picks into the store. Dispatch only when they
+  // diverge, otherwise a user action loops back through here.
   const controlledIds = useMemo(() => controlledRows?.map(getRowId), [controlledRows, getRowId]);
   useEffect(() => {
     if (!controlledIds) return;
@@ -182,19 +169,11 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     if (!same) controller.store.dispatch({ type: GridActionType.SetSelection, ids: controlledIds });
   }, [controlledIds, controller]);
 
-  // store → parent: emit the selected rows on every user-driven change. The mount
-  // baseline is captured WITHOUT emitting (parity with the legacy table, which fires
-  // `onRowsSelected` only on user action), so a restored/empty selection never wipes
-  // the host form on first render.
-  //
-  // A CONTROLLER SWAP (the host rebuilds its `GridController` when the listing key
-  // changes — scope, species, dataType) restarts the store on a fresh, usually empty
-  // selection while this component instance — and with it `lastEmittedRef` — survives.
-  // That is not a user action either, so it re-baselines exactly like a mount. Without
-  // that, the two selection effects fight: this one reports the new store's empty
-  // selection to the host, the CONTROLLED sync above pushes the host's picks back into
-  // the store, each reading the other's pre-swap value — an unbounded ping-pong that
-  // React reports as "Maximum update depth exceeded".
+  // store → parent, on user-driven changes only. The mount baseline is captured without
+  // emitting, so a restored/empty selection never wipes the host form on first render.
+  // A CONTROLLER SWAP re-baselines the same way: it restarts the store on a fresh, empty
+  // selection while this component (and `lastEmittedRef`) survives. Without that, this
+  // effect and the controlled sync above ping-pong into "Maximum update depth exceeded".
   const onPickerChange = selection?.onChange;
   const lastEmittedRef = useRef<string | null>(null);
   const emitBaselineControllerRef = useRef<GridController<Row> | null>(null);
@@ -243,8 +222,6 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     );
   }
 
-  // Bulk actions are a browse-mode affordance; a picker routes selection to the host
-  // form instead, so they (and the "N selected" footer below) are suppressed there.
   const bulkActions =
     !pickerMode && selectionEnabled && renderBulkActions ? (
       <BulkActions controller={controller} rows={rows} selection={state.selection}>
@@ -258,8 +235,6 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
       <DataGridToolbar
         slots={toolbarSlots}
-        // the schema's advanced filters + every applied filter; self-hiding when the
-        // grid has neither
         filters={
           <ActiveFiltersButton
             controller={controller}
@@ -274,15 +249,8 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       />
       <div className={cn('min-h-0 flex-1', gridClassName)}>{renderer(rendererProps)}</div>
       {/*
-        FOOTER — what you can DO with the selection on the left, what the grid IS
-        showing on the right, paging between them.
-
-        Three flex items rather than absolutely-positioned corners: `flex-1 basis-0`
-        makes the two side cells share the leftover width equally, which centres the
-        pagination exactly, while `min-w-fit` stops either of them collapsing under
-        its own content. Together with `flex-wrap` that is the narrow-width answer —
-        the row breaks into stacked lines instead of the two ends sliding under the
-        pagination, which is what the previous `absolute` corners did.
+        Footer: `flex-1 basis-0` on the two side cells centres the pagination exactly,
+        `min-w-fit` stops them collapsing, and `flex-wrap` stacks the row when narrow.
       */}
       <div className="flex min-h-13 flex-wrap items-center gap-x-3 gap-y-2 border-t border-gray-100 px-3 py-2">
         <div className="flex min-w-fit flex-1 basis-0 items-center gap-2">{bulkActions}</div>
@@ -291,7 +259,6 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
           total={total}
           page={state.page}
           pageSize={state.pageSize}
-          // holds its size: the two side cells give way first, then the row wraps
           className="shrink-0"
         />
         <div className="flex min-w-fit flex-1 basis-0 items-center justify-end gap-3">

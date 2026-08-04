@@ -21,10 +21,7 @@ import {
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import type { IGridQuery } from '@/features/data-grid/core';
 
-/**
- * Every dataType with a registered grid definition. Mirrors `registry.ts`; a new
- * listing added there must be added here, which is what forces it to carry the column.
- */
+/** Mirrors `registry.ts`; a new listing added there must be added here too. */
 const REGISTERED_DATA_TYPES: ReadonlyArray<string> = [
   'cell_morphology',
   'electrical_cell_recording',
@@ -78,8 +75,6 @@ describe('lifecycle status — coverage across every registered listing', () => 
     const { schema } = definitionFor(dataType);
     const column = schema.columns.find((c) => c.id === 'lifecycleStatus');
     expect(column).toBeDefined();
-    // visible by default — NOT auxiliary, matching the legacy view-defs (PR #1850),
-    // which add it to each entity's `columns`
     expect(column?.auxiliary).toBeFalsy();
     expect(column?.hiddenByDefault).toBeUndefined();
   });
@@ -89,7 +84,6 @@ describe('lifecycle status — coverage across every registered listing', () => 
     const resolved = resolveColumns(schema, { dataType, section: WorkspaceSection.Data });
     const column = resolved.find((c) => c.id === 'lifecycleStatus');
     expect(column).toBeDefined();
-    // it must actually render, not merely be declared
     expect(column?.hiddenByDefaultResolved).toBe(false);
   });
 
@@ -114,7 +108,6 @@ describe('lifecycle status — coverage across every registered listing', () => 
       schema
     );
     expect(params.lifecycle_status).toBe('active');
-    // no endpoint declares a list form; emitting one would be silently ignored
     expect(params.lifecycle_status__in).toBeUndefined();
   });
 
@@ -125,8 +118,7 @@ describe('lifecycle status — coverage across every registered listing', () => 
     const target = column?.filter?.targets?.[0];
     expect(target?.field).toBe('lifecycle_status');
     expect(target?.operators).toEqual([OperatorId.Eq]);
-    // an explicit STATIC source, not "no options ⇒ use the grid's facets": no endpoint
-    // computes a `lifecycle_status` facet bucket, so that would be an empty picker
+    // no endpoint computes a `lifecycle_status` facet bucket, so facets would be empty
     expect(target?.options?.kind).toBe(FilterOptionsKind.Static);
     expect(
       target?.options?.kind === FilterOptionsKind.Static ? target.options.items : undefined
@@ -148,7 +140,6 @@ describe('lifecycle status — coverage across every registered listing', () => 
       const { schema } = definitionFor(dataType);
       const column = schema.columns.find((c) => c.id === 'lifecycleStatus');
       expect(column?.sortField).toBeUndefined();
-      // and asking for it anyway produces no order_by entry
       const params = serializeQuery(
         query({ sort: [{ columnId: 'lifecycleStatus', direction: SortDirection.Desc }] }),
         schema
@@ -159,12 +150,7 @@ describe('lifecycle status — coverage across every registered listing', () => 
 });
 
 describe('lifecycle status — the pill renderer is available everywhere', () => {
-  /**
-   * `buildCellRenderers` registers the pill unconditionally, BEFORE the definition's
-   * own hook — several definitions (the circuit family, the simulation campaigns)
-   * declare no `registerCellRenderers` at all, and an unregistered key silently
-   * degrades the cell to plain text.
-   */
+  /** An unregistered renderer key silently degrades the cell to plain text. */
   it.each(REGISTERED_DATA_TYPES)('%s resolves the lifecycleStatus renderer key', (dataType) => {
     const registry = buildCellRenderers(definitionFor(dataType));
     expect(registry.has(LIFECYCLE_STATUS_RENDERER)).toBe(true);
@@ -207,7 +193,6 @@ describe('lifecycle status — cell value and pill', () => {
   });
 
   it('degrades a status the frontend does not know to a neutral pill, never nothing', () => {
-    // the backend can add an EntityLifecycleStatus member before we do
     expect(getLifecycleStatusBadgeSpec('archived')).toMatchObject({
       label: 'archived',
       tone: 'neutral',

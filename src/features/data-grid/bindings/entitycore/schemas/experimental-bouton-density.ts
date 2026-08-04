@@ -39,16 +39,9 @@ type Row = IExperimentalBoutonDensity &
   IHasContributions;
 
 /**
- * ADVANCED FILTERS — what is left once every filterable field that CAN be a column
- * is one: the record's own `id`.
- *
- * `name`, `subject__strain__name` and `subject__name` used to live here; they are now
- * AUXILIARY columns below (hidden until ticked), which keeps each field on exactly
- * one surface — the panel still offers them for as long as they stay hidden. `id` has
- * no useful column to show, so it stays an advanced filter.
- *
- * A density is not a ScientificArtifact, so `experiment_date__*`, `published_in*`
- * and `contact_email` do not exist on this endpoint at all.
+ * Filterable fields with no column: just the record's own `id`. A density is not a
+ * ScientificArtifact, so `experiment_date__*`, `published_in*` and `contact_email` do
+ * not exist on this endpoint.
  */
 const experimentalBoutonDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -59,20 +52,8 @@ const experimentalBoutonDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGro
 ];
 
 /**
- * Experimental bouton density listing. Column order matches the legacy
- * `experimental-bouton-density` view-def (Brain region, Species, M-type, Mean ± STD,
- * SEM, N° of measurements, Contributors). The three measurement columns sort on the
- * backend's `measurement_*__value` scalars.
- *
- * Then three AUXILIARY columns — Name, Strain, Subject name — hidden until the user
- * ticks them under "More columns", each carrying the filter it took over from the
- * advanced-filters panel. Name is legitimate here precisely because this listing has
- * no Name column of its own.
- *
- * SORT SAFETY (`ExperimentalBoutonDensityFilter.Constants.ordering_model_fields` in
- * entitycore's `app/filters/density.py`): `name` and `subject__strain__name` ARE in
- * the allowlist and sort; `subject__name` is NOT, so Subject name is non-sortable —
- * offering it would 422 the whole listing.
+ * Experimental bouton density listing (`GET /experimental-bouton-density`). The three
+ * measurement columns sort on the backend's `measurement_*__value` scalars.
  */
 export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
   id: 'experimental-bouton-density',
@@ -80,7 +61,6 @@ export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
   defaultSort: [],
   rowHeight: 56,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(experimentalBoutonDensityAdvancedFilters),
   columns: [
     brainRegionColumn<Row>(),
@@ -94,11 +74,10 @@ export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
     }),
     lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     nameColumn<Row>({
       auxiliary: true,
       filter: {
-        // carried over from `recordNameFilter`: `name__ilike` / `name__in` / `name`
         operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
         field: 'name',
         targets: [
@@ -113,9 +92,9 @@ export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
         ],
       },
     }),
-    // `subject__strain__name` IS in this endpoint's ordering_model_fields
+    // `subject__strain__name` is in this endpoint's ordering fields; `subject__name`
+    // is not, so Subject name stays non-sortable.
     subjectStrainColumn<Row>({ sortable: true }),
-    // `subject__name` is NOT — see the sort-safety note above
     subjectNameColumn<Row>(),
   ],
 };

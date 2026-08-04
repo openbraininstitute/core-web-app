@@ -20,26 +20,17 @@ export interface IEntitycorePagedDataSourceOptions<Row> {
   /** schema, used to resolve column ids → backend fields for sort/filter */
   schema: IGridSchema<Row>;
   context: WorkspaceContext;
-  /**
-   * loader-scoped override replacing the entity's domain `query.list` (the legacy
-   * `listQueryFn` prop). Must return rows in the standard entity shape with
-   * server-side pagination.
-   */
+  /** overrides the entity's domain `query.list`; must be server-side paginated */
   listQueryFn?: TListQueryFn<Row>;
   withFacets?: boolean;
-  /**
-   * host-level post-processing of the serialized params (e.g. merging an
-   * `extraQueryParams.order_by` override with the grid's sort). Applied last.
-   */
+  /** post-processes the serialized params (applied last) */
   transformParams?: (params: TEntitycoreParams) => TEntitycoreParams;
 }
 
 /**
  * The default {@link IGridDataSource}: one server page per request, delegating to the
- * entity's DOMAIN config (`api.query.list`). The endpoint, query narrowing
- * (`narrowFilters`), `ilikeSearchEnabled` and facets therefore stay a single source
- * of truth in `entity-configuration` — the grid only contributes the page / sort /
- * filter / search params built from its own state.
+ * entity's domain config (`api.query.list`), which owns endpoint, `narrowFilters`,
+ * `ilikeSearchEnabled` and facets. The grid contributes only page/sort/filter/search.
  */
 export function createEntitycorePagedDataSource<Row>(
   options: IEntitycorePagedDataSourceOptions<Row>

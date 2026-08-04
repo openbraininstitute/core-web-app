@@ -112,9 +112,7 @@ describe('mergeContextual', () => {
       rules: [{ when: { scope: 'public', section: 'data' }, value: true }],
     });
     const merged = mergeContextual(base, override) ?? true;
-    // base hides in public…
     expect(resolveContextual(merged, ctx({ scope: 'public', section: 'build' }))).toBe(false);
-    // …but the override re-enables it for public+data (evaluated after → wins)
     expect(resolveContextual(merged, ctx({ scope: 'public', section: 'data' }))).toBe(true);
   });
 

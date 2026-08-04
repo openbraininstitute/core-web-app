@@ -7,26 +7,14 @@ import type { IGridContext } from './grid-context';
 import type { IGridSchema } from './schema';
 
 /**
- * THE ADVANCED-FILTERS PANEL IS DERIVED, NOT DECLARED.
+ * The advanced-filters panel is derived, not declared:
+ * `panel = schema.advancedFilters + auxiliary columns currently hidden`. Ticking an
+ * auxiliary column moves its filter into the column header and out of the panel, so
+ * a field is offered by exactly one surface at a time.
  *
- * Every backend-filterable field is represented exactly once in a schema — as a
- * column (visible or {@link IColumnModel.auxiliary}) or as an entry in
- * {@link IGridSchema.advancedFilters}, never both. The toolbar panel is then a
- * function of that declaration plus the CURRENT column visibility:
- *
- *     panel = schema.advancedFilters + auxiliary columns currently hidden
- *
- * Ticking an auxiliary column in the chooser therefore takes it OUT of the panel
- * (its filter now lives in the column header) and unticking puts it back. The field
- * is offered by exactly one surface at any moment, and the user never has to guess
- * which of two places a filter they applied is now hiding in.
- *
- * FILTER-STATE CONTINUITY is what makes that safe: an auxiliary column's entry is
- * keyed by its COLUMN ID in both surfaces (advanced filters use the disjoint
- * `adv:…` namespace), so ticking/unticking moves only the editor, never the state.
- * The applied entry keeps its key, its `targetId` and its value; the serializer
- * resolves it through the column lookup regardless of visibility, so it is never
- * dropped, never duplicated, and never emitted twice.
+ * An auxiliary column's entry is keyed by its COLUMN ID in both surfaces (advanced
+ * filters use the disjoint `adv:…` namespace), so ticking moves only the editor and
+ * an applied filter keeps its key, `targetId` and value.
  */
 
 /** Group id for the auxiliary columns' filters when they need a group of their own. */
@@ -56,12 +44,11 @@ function hiddenAuxiliaryFilters<Row>(
       : resolveFilterTargets(column);
     if (targets.length === 0) continue;
     out.push({
-      // THE COLUMN ID, not an `adv:` key — see the continuity note above.
+      // The column id, not an `adv:` key — see the continuity note above.
       key: column.id,
       groupId,
       groupLabel,
-      // the column's header, not the target's label: the panel row and the column
-      // the user ticks to move it must read as the same thing
+      // The column's header, so the panel row and the chooser entry read alike.
       label: column.header,
       def: targets[0],
       targets,
@@ -73,14 +60,10 @@ function hiddenAuxiliaryFilters<Row>(
 
 /**
  * The groups the advanced-filters panel shows right now: the schema's own advanced
- * filters, plus the auxiliary columns that are currently hidden.
- *
- * WHERE the auxiliary entries land is a presentation choice made here so the panel
- * stays simple: a schema whose advanced filters resolve to at most ONE group keeps a
- * FLAT list (the entries are appended to it), because a two-tab menubar whose second
- * tab appears and disappears with a checkbox is worse than a slightly longer list.
- * A genuinely grouped schema gets a dedicated {@link AUXILIARY_FILTER_GROUP_LABEL}
- * group instead, so its existing groups keep their meaning.
+ * filters, plus the auxiliary columns that are currently hidden. A schema resolving
+ * to at most one group stays flat (auxiliary entries are appended to it), avoiding a
+ * second menubar tab that blinks in and out with a checkbox; a grouped schema gets a
+ * dedicated {@link AUXILIARY_FILTER_GROUP_LABEL} group.
  */
 export function resolveFilterPanelGroups<Row>(
   schema: IGridSchema<Row>,

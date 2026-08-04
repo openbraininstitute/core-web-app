@@ -11,8 +11,7 @@ import { type ReactNode, useMemo } from 'react';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-// direct module import (not the react barrel) — this file is reachable from the
-// grid host, and the barrel would close a module-init cycle
+// direct module import: the react barrel would close a module-init cycle via the grid host
 import {
   EXPANDING_PILL_BASE_CLASS,
   ExpandingPillContent,
@@ -139,11 +138,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   children?: ReactNode;
   workspace?: WorkspaceContext;
   className?: string;
-  /**
-   * Render as the grid's EXPANDING pill (icon at rest, label on hover/focus-visible)
-   * instead of the wide labelled button — same reveal as every other grid pill, but
-   * keeping the destructive palette. See the download button's twin prop.
-   */
+  /** Render as the grid's expanding pill (icon at rest, label on hover/focus-visible). */
   expanding?: boolean;
 }) {
   const notify = useAppNotification();
@@ -273,7 +268,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   if (!permissions.delete) return null;
 
   const buttonLabel = getButtonLabel();
-  /** the gradient + chrome that make this button READ as destructive */
+  /** gradient + chrome marking this as destructive */
   const destructivePalette = cn(
     'overflow-hidden border border-white/20 font-semibold text-white',
     'bg-linear-to-r from-destructive via-destructive/80 to-destructive bg-size-[200%_100%]',

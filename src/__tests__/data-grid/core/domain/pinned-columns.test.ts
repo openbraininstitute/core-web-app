@@ -8,10 +8,9 @@ import { buildColDefs } from '@/features/data-grid/renderers/aggrid/col-def-mapp
 import type { IResolvedColumn } from '@/features/data-grid/core';
 
 /**
- * REGRESSION — the Subcircuits column hosts the expand chevron, so it must not be
- * drag-reorderable: a moved chevron detaches the expander from the hierarchy it opens.
- * Expressed as the generic `IColumnModel.movable` flag, honoured by the AG Grid mapper
- * (`suppressMovable`) AND by the stored-order reconciliation (the declared slot wins).
+ * Regression: the Subcircuits column hosts the expand chevron, so it must not be
+ * drag-reorderable. Pinned via `IColumnModel.movable`, honoured by both the AG Grid
+ * mapper and the stored-order reconciliation.
  */
 interface Row {
   id: string;
@@ -37,8 +36,7 @@ describe('dropPinnedColumns — a pinned column keeps its declared slot', () => 
   const declared = columns.map((c) => c.id);
 
   it('ignores a stored position for the pinned column', () => {
-    // a layout that parked the pinned column last (saved before it was pinned, or
-    // written after neighbours were dragged past it)
+    // a layout that parked the pinned column last
     const stored = ['name', 'scale', 'subcircuit'];
     const order = reconcileColumnOrder(declared, dropPinnedColumns(columns, stored));
     expect(order).toEqual(['name', 'subcircuit', 'scale']);
@@ -47,7 +45,6 @@ describe('dropPinnedColumns — a pinned column keeps its declared slot', () => 
   it('still honours the stored order of the MOVABLE columns', () => {
     const stored = ['scale', 'subcircuit', 'name'];
     const order = reconcileColumnOrder(declared, dropPinnedColumns(columns, stored));
-    // scale before name (the user's drag), subcircuit back at its declared slot
     expect(order).toEqual(['scale', 'name', 'subcircuit']);
   });
 

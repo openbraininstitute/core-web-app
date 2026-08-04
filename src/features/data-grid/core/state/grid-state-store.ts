@@ -5,9 +5,8 @@ import type { IGridState, TGridAction } from './grid-state';
 export type TUnsubscribe = () => void;
 
 /**
- * Framework-agnostic observable store (Observer pattern). Designed for React's
- * `useSyncExternalStore`: {@link getSnapshot} returns a stable reference that only
- * changes when the state actually changes.
+ * Framework-agnostic observable store for `useSyncExternalStore`:
+ * {@link getSnapshot} returns a reference that changes only when the state does.
  */
 export class GridStateStore {
   private state: IGridState;

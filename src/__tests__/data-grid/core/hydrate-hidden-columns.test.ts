@@ -67,7 +67,6 @@ describe('reconcileHiddenColumns', () => {
         ],
         { hiddenColumns: ['a'], columnOrder: ['a', 'aux'] }
       )
-      // `aux` was known and left visible: the user un-hid it, and it stays visible
     ).toEqual(['a']);
   });
 
@@ -116,9 +115,8 @@ describe('GridController hydration — column visibility', () => {
     ]);
   });
 
-  // The bug: an auxiliary column declared AFTER the user saved a layout is absent
-  // from the stored `hiddenColumns` and used to hydrate as VISIBLE — the opposite of
-  // `hiddenByDefault: true`, and different for users with and without saved state.
+  // regression: an auxiliary column declared after the user saved a layout is absent
+  // from the stored `hiddenColumns` and used to hydrate as visible
   it('hides a NEWLY-declared hiddenByDefault column for a user with stored state', () => {
     expect(hydrate(COLUMNS, { hiddenColumns: [], columnOrder: ['a', 'b'] })).toEqual(['aux']);
   });

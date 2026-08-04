@@ -38,9 +38,8 @@ type EntryTabProps = Omit<React.ComponentProps<'div'>, 'onClick'> & {
 };
 
 /**
- * Renders the tab element itself. It accepts (and forwards) `ref` plus arbitrary
- * DOM props so it can be used as the child of an `asChild` Radix trigger — the
- * trigger then *is* this element instead of wrapping it in its own `<button>`.
+ * The tab element. Forwards `ref` and arbitrary DOM props so it can be the child of an
+ * `asChild` Radix trigger rather than being wrapped in the trigger's own `<button>`.
  */
 function EntryTab({
   entryKey,
@@ -147,10 +146,8 @@ export default function BlockDictionaryEntries({
   const fieldErrors = useFieldErrors();
 
   const renameInputRef = useRef<InputRef>(null);
-  // The entry whose rename <Input> is currently rendered below (null when no
-  // entry of this root element is being renamed). Keying the effect off it
-  // focuses the input on the first commit after edit mode opens — and again when
-  // a different entry starts being renamed — instead of on every commit.
+  // Keying the focus effect off the renamed entry (not `isEditingKey`) refocuses only
+  // when rename mode opens or moves to a different entry, not on every commit.
   const renamingEntryKey =
     isEditingKey && !readOnly && selectedRootElement === rootElement ? selectedEntry : null;
 

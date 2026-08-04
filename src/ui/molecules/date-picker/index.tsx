@@ -25,11 +25,7 @@ export interface DatePickerProps {
   disabled?: ComponentProps<typeof Calendar>['disabled'];
 }
 
-/**
- * Single-date picker: a click-to-open trigger showing the selected date, opening the
- * {@link Calendar} (month/year dropdowns) in a popover. Selection is calendar-only —
- * no typeable input. Picking a day does not close the popover.
- */
+/** Single-date picker: a trigger showing the selected date, opening {@link Calendar} in a popover. */
 export function DatePicker({
   value,
   onChange,
@@ -65,10 +61,8 @@ export interface DateRangePickerProps {
   placeholder?: string;
   className?: string;
   /**
-   * Extra classes for the CALENDAR PANEL, which is portalled to `document.body` and
-   * so is out of reach of `className` (that styles the trigger). Callers that open
-   * this inside another body-level layer — a modal, another popover — need it to set
-   * a stacking rank the panel would otherwise not inherit.
+   * Extra classes for the calendar panel, which is portalled to `document.body` and so out of
+   * reach of `className`. Needed to set a stacking rank when opened inside another body-level layer.
    */
   contentClassName?: string;
   /** month panes in the calendar popover (default 1, so it fits compact panels) */
@@ -77,10 +71,8 @@ export interface DateRangePickerProps {
 }
 
 /**
- * Range date picker: a click-to-open trigger showing "from – to", opening the
- * {@link Calendar} (month/year dropdowns) in a popover. Selection is calendar-only —
- * no typeable input. Picking days does not close the popover, so a full range can be
- * built before the caller commits.
+ * Range date picker: a trigger showing "from – to", opening {@link Calendar} in a popover.
+ * Picking days does not close the popover, so a full range can be built first.
  */
 export function DateRangePicker({
   value,

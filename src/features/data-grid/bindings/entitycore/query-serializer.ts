@@ -23,10 +23,8 @@ export function toContainsPattern(input: string): string {
 }
 
 /**
- * Per-operator serialization strategies (Strategy pattern). This is the single
- * entitycore-specific place that knows the `field__op` convention, replacing the
- * legacy `transformFiltersToQuery`. Adding an operator = add a strategy here +
- * declare it on a column.
+ * Per-operator serialization strategies. The only place that knows entitycore's
+ * `field__op` param convention; a new operator needs a strategy here.
  */
 type Strategy = (field: string, entry: IFilterEntry) => TEntitycoreParams;
 
@@ -47,8 +45,8 @@ const STRATEGIES: Record<string, Strategy> = {
     e.value.kind === FilterValueKind.Set && e.value.values.length
       ? { [`${field}__in`]: e.value.values }
       : {},
-  // Single-underscore `_in` — see OperatorId.InSingleUnderscore (backend spells a
-  // handful of relation filters this way, e.g. `post_region__name_in`).
+  // A handful of backend relation filters spell this `field_in`, not `field__in`
+  // (e.g. `post_region__name_in`).
   [OperatorId.InSingleUnderscore]: (field, e) =>
     e.value.kind === FilterValueKind.Set && e.value.values.length
       ? { [`${field}_in`]: e.value.values }
@@ -93,21 +91,18 @@ interface ColumnLookup {
 
 export function buildColumnLookup<Row>(schema: IGridSchema<Row>): ColumnLookup {
   const byId = new Map(schema.columns.map((c) => [c.id, c] as const));
-  // Advanced filters share the `filters` record with column filters, keyed by their
-  // namespaced `adv:<group>:<filter>` id. They resolve to a field the same way — an
-  // advanced filter IS a filter target — so a single strategy table serves both.
+  // Advanced filters share the `filters` record, keyed by `adv:<group>:<filter>`, and
+  // resolve to a field the same way — one strategy table serves both.
   const advanced = advancedFilterDefsByKey(schema);
   return {
     filterField(columnId, targetId) {
       if (isAdvancedFilterKey(columnId)) {
-        // An orphaned key (schema edited after the state was persisted) must NOT be
-        // emitted as a param literally named `adv:…`; it is dropped instead.
+        // An orphaned key (schema changed after state was persisted) resolves to '' so
+        // it is dropped, never emitted as a param literally named `adv:…`.
         return advanced.get(columnId)?.field ?? '';
       }
       const c = byId.get(columnId);
       if (!c) return columnId;
-      // A single-target (legacy) column synthesises exactly one target whose field is
-      // `filter.field ?? column.field ?? column.id` — byte-identical to before.
       const target = activeFilterTarget(resolveFilterTargets(c), targetId);
       return target?.field ?? c.field ?? columnId;
     },
@@ -125,8 +120,8 @@ function serializeFilters(filters: TFilterModel, lookup: ColumnLookup): TEntityc
     const strategy = STRATEGIES[entry.operator];
     if (!strategy) continue;
     const field = lookup.filterField(entry.columnId, entry.targetId);
-    // An empty field means the entry no longer resolves to anything (a pruned
-    // advanced filter) — emitting `__in` on an empty name would corrupt the request.
+    // Unresolvable entry (pruned advanced filter); `__in` on an empty name would
+    // corrupt the request.
     if (!field) continue;
     Object.assign(out, strategy(field, entry));
   }

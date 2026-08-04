@@ -13,12 +13,7 @@ interface Props {
   className?: string;
   onValueChange: (value: string) => void;
   items?: Array<{ key: string; title: string; icon?: ReactNode; disabled?: boolean }>;
-  /**
-   * TOOLBAR SIZING — pin the pill to h-10 instead of growing to h-12 on `xl`, and
-   * size the tabs to their labels rather than to the default 3.5rem-a-side padding.
-   * Opt-in, for callers that sit in a row of 40px controls (the data-grid toolbar);
-   * every other caller keeps the roomy, responsive original.
-   */
+  /** Pin the pill to h-10 and size tabs to their labels, for callers in a row of 40px controls. */
   compact?: boolean;
 }
 
@@ -82,11 +77,7 @@ export function TabsSelector({
             className={cn(
               'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 py-3 min-w-0',
               'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white shrink-0',
-              // The 3.5rem-a-side padding is what makes each tab as wide as the whole
-              // species+region group beside it — nothing else stretches the control
-              // (`PillTabs` already shrink-wraps under the caller's `max-w-max`). In a
-              // toolbar row the tabs size to their labels instead; every other surface
-              // keeps the roomy original.
+              // the 3.5rem-a-side padding is the only thing stretching these tabs
               compact ? 'px-6' : 'px-14!',
               { 'h-12': tall }
             )}

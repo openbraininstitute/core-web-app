@@ -163,9 +163,8 @@ export type BrowseEntityScopeProps = {
 };
 
 /**
- * The original antd `MainTable` listing, unchanged. Rendered by the
- * `BrowseEntityScope` router for every dataType that has no AG Grid definition
- * yet; deleted once the last entity is migrated.
+ * The original antd `MainTable` listing. Rendered by `BrowseEntityScope` for every
+ * dataType with no AG Grid definition yet.
  */
 export function BrowseEntityScopeLegacy({
   id,

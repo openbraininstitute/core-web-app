@@ -16,18 +16,15 @@ export const DEFAULT_DETAIL_MIN_HEIGHT = 160;
 export function AgDetailCell(props: CustomCellRendererProps) {
   const ctx = props.context as IAgGridContext;
   const row = props.data;
-  // Subscribe to the live parent state so the detail render can stay
-  // column-consistent (forwarded as an optional, additive arg).
+  // live parent state, so the detail render can stay column-consistent
   const state = useGridState(ctx.controller);
 
   if (!ctx.detail || !isDetailRow(row)) return null;
 
   const minHeight = ctx.controller.schema.detail?.minHeight ?? DEFAULT_DETAIL_MIN_HEIGHT;
 
-  // A full-width detail row spans the whole grid, starting under the pinned-left
-  // columns (selection checkbox, and a leading expander when present). Inset the
-  // content by their total width so nested content lines up with the DATA columns
-  // instead of the far-left edge. General across grids — no per-entity offset.
+  // A full-width row starts under the pinned-left columns, so inset the content by their
+  // total width to line it up with the data columns.
   const pinnedLeftWidth = (props.api.getAllDisplayedColumns?.() ?? [])
     .filter((c) => c.getPinned() === 'left')
     .reduce((sum, c) => sum + c.getActualWidth(), 0);

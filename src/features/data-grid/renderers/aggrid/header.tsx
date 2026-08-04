@@ -24,26 +24,18 @@ interface HeaderParams {
   columnId: string;
   unit?: string;
   sortable?: boolean;
-  /**
-   * Rich header node (multi-line labels, icons, tooltips) rendered in place of the
-   * plain `displayName` string. Backward-compatible: omit it for a text header.
-   */
+  /** rich header node rendered in place of the plain `displayName` string */
   headerNode?: ReactNode;
-  /**
-   * filter configuration, present when the column is filterable in this context.
-   * `targets` are the fields it can be matched by (one for a classic column).
-   */
+  /** present when the column is filterable in this context */
   filter?: {
     targets: ReadonlyArray<IFilterTarget>;
   };
 }
 
 /**
- * Custom header. Sorting is server-side (AG Grid's own sort disabled): clicking the
- * label dispatches `toggleSort`; the icon reflects the store (unsorted → up/down
- * chevron, asc → up, desc → down, plus a multi-sort rank badge). Filtering lives in
- * a compact round icon-button that opens the app's Radix popover anchored to it —
- * no AG floating-filter row, so the grid saves vertical space.
+ * Custom header. Sorting is server-side (AG Grid's own sort is disabled): clicking the
+ * label dispatches `toggleSort` and the icon reflects the store. Filtering opens a Radix
+ * popover from an icon button, so there is no AG floating-filter row.
  */
 export function AgHeader(props: CustomHeaderProps) {
   const ctx = props.context as IAgGridContext;
@@ -110,7 +102,6 @@ export function AgHeader(props: CustomHeaderProps) {
               aria-label={`Filter ${props.displayName}`}
               className={cn(
                 'flex size-7 shrink-0 items-center justify-center rounded-full transition-colors',
-                // open panel: raised white pill with a primary-8 icon
                 open
                   ? 'bg-white text-primary-8 shadow-sm ring-1 ring-gray-200'
                   : filterActive
@@ -129,9 +120,8 @@ export function AgHeader(props: CustomHeaderProps) {
               GRID_OVERLAY_Z_CLASS,
               'w-72 rounded-2xl border-gray-100 bg-white p-4 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]'
             )}
-            // The operator/facet Selects and the date-picker calendar portal their
-            // content outside this popover; don't let interacting with those (a
-            // dropdown option, a calendar day) dismiss the filter panel.
+            // the Selects and date picker portal outside this popover; using them must not
+            // dismiss it
             onInteractOutside={(e) => {
               const target = e.target as Element | null;
               if (

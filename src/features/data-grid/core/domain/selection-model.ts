@@ -1,12 +1,7 @@
 /**
- * PICKER selection mode: how many rows a host form may pick.
- *
- * `Single` renders a radio column (one winner, replaces), `Multi` renders
- * checkboxes (accumulates across pages).
- *
- * NOTE: this is NOT AG Grid's `rowSelection.mode` (`'singleRow' | 'multiRow'`),
- * nor the schema's `ISelectionSpec.mode` — renderers map this dict onto those
- * explicitly.
+ * Picker selection mode: `Single` renders a radio column, `Multi` renders checkboxes
+ * accumulating across pages. Not AG Grid's `rowSelection.mode` nor the schema's
+ * `ISelectionSpec.mode` — renderers map onto those explicitly.
  */
 export const SelectionMode = {
   Single: 'single',

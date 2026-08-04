@@ -1,19 +1,11 @@
 /**
- * Regression: picking TODAY in a date filter used to send YESTERDAY.
- *
- * `react-day-picker` hands back a LOCAL-midnight `Date`; serializing it with
- * `toISOString()` converts to UTC, which rolls the calendar day back for every
- * UTC+ timezone (3 Aug 00:00 +02:00 → `2026-08-02T22:00:00.000Z`). The same
- * conversion also made `__lte` the START of the end day, so "today → today"
- * matched an empty instant range and returned nothing.
- *
- * The suite pins `TZ=Europe/Zurich` (UTC+2 in August) so it cannot pass by
- * accident on a UTC CI machine.
+ * Regression: picking today in a date filter sent yesterday — `toISOString()` on the
+ * local-midnight `Date` from react-day-picker rolls the day back in every UTC+ zone. The
+ * suite pins `TZ=Europe/Zurich` so it cannot pass by accident on a UTC CI machine.
  */
 import { beforeAll, describe, expect, it } from 'vitest';
 
-// pinned BEFORE any Date is constructed — Node re-reads TZ per call, so this makes
-// the expectations deterministic on a UTC machine.
+// must be set before any Date is constructed
 process.env.TZ = 'Europe/Zurich';
 
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
@@ -62,7 +54,6 @@ function paramsFor(range: DateRange) {
 
 describe('date-range filter value (local calendar day → __gte/__lte)', () => {
   beforeAll(() => {
-    // guard: the whole point is a non-UTC offset
     expect(new Date(2026, 7, 3).getTimezoneOffset()).not.toBe(0);
   });
 
@@ -74,7 +65,7 @@ describe('date-range filter value (local calendar day → __gte/__lte)', () => {
 
   it('emits TIMEZONE-AWARE datetimes (entitycore params are `AwareDatetime`)', () => {
     const day = pickedDay();
-    // ISO-8601 with an explicit offset (or Z) — a naive datetime is rejected.
+    // the backend rejects a naive datetime — an explicit offset (or Z) is required
     expect(calendarDayToParam(day, DateRangeBound.From)).toMatch(/(Z|[+-]\d{2}:\d{2})$/);
     expect(calendarDayToParam(day, DateRangeBound.To)).toMatch(/(Z|[+-]\d{2}:\d{2})$/);
   });

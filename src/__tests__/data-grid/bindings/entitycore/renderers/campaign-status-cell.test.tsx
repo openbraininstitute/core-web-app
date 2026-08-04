@@ -25,7 +25,6 @@ describe('CampaignStatusBadgePopover fetcher injection', () => {
     );
 
     await waitFor(() => expect(container.textContent).toContain('Done'));
-    // the ×N suffix reflects the injected member count
     expect(container.textContent).toContain('×3');
     // a provided map wins → the async fetcher is never invoked
     expect(fetchStatus).not.toHaveBeenCalled();
@@ -47,7 +46,6 @@ describe('CampaignStatusBadgePopover fetcher injection', () => {
     );
 
     await waitFor(() => expect(container.textContent).toContain('Done'));
-    // no scan fetcher → no popover trigger button
     expect(container.querySelector('button[type="button"]')).toBeNull();
   });
 
@@ -62,7 +60,6 @@ describe('CampaignStatusBadgePopover fetcher injection', () => {
     );
 
     await waitFor(() => expect(container.textContent).toContain('Done'));
-    // scan fetcher present → the badge is wrapped in the popover trigger button…
     expect(container.querySelector('button[type="button"]')).not.toBeNull();
     // …but scan rows are fetched lazily (only on open), so nothing is requested yet
     expect(fetchScanRows).not.toHaveBeenCalled();

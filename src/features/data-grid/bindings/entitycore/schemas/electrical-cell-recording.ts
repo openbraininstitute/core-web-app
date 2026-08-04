@@ -44,14 +44,7 @@ type Row = IElectricalCellRecording &
   IHasRecordingOrigin &
   IHasContributions;
 
-/**
- * ADVANCED FILTERS — what is left once every filterable field that CAN be a column
- * is one: the record's own `id`, which has no useful column to show.
- *
- * `recording_type`, `recording_origin`, `subject__strain__name` and `subject__name`
- * used to live here; they are AUXILIARY columns below, so each field stays on
- * exactly one surface — the panel still offers them while they are hidden.
- */
+/** `GET /electrical-cell-recording` params with no column: just the record's own `id`. */
 const electricalCellRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
     id: 'common',
@@ -61,18 +54,11 @@ const electricalCellRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
 ];
 
 /**
- * Electrical cell recording listing — cell-morphology-shaped, with E-type instead
- * of M-type. Column order matches the legacy `electrical-cell-recording` view-def.
- * The `recording_origin` narrow filter lives in the entity domain config, so the
- * delegating data source applies it automatically.
+ * Electrical cell recording listing (`GET /electrical-cell-recording`). The
+ * `recording_origin` narrowing lives in the entity domain config.
  *
- * Then four AUXILIARY columns, each carrying the filter it took over from the panel.
- *
- * SORT SAFETY (`ElectricalCellRecordingFilter.Constants.ordering_model_fields`,
- * `app/filters/electrical_cell_recording.py`): that list is
- * creation_date/update_date/name/subject__species__name/brain_region__{name,acronym}/
- * etype__pref_label — NONE of the four converted fields is in it, so all four are
- * non-sortable. An `order_by` outside the allowlist is a 422 that fails the listing.
+ * None of the four auxiliary fields is in the endpoint's ordering fields, so all four
+ * are non-sortable — entitycore 422s otherwise.
  */
 export const electricalCellRecordingSchema: IGridSchema<Row> = {
   id: 'electrical-cell-recording',
@@ -80,7 +66,6 @@ export const electricalCellRecordingSchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(electricalCellRecordingAdvancedFilters),
   columns: [
     previewColumn<Row>({
@@ -90,18 +75,15 @@ export const electricalCellRecordingSchema: IGridSchema<Row> = {
     brainRegionColumn<Row>(),
     speciesColumn<Row>(),
     etypeColumn<Row>(),
-    // the identifying column: kept visible by the chooser's bulk deselect
     nameColumn<Row>({ essential: true }),
     lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>({ essential: true }),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     recordingTypeColumn<Row>(),
-    // `recording_origin` (exact) ONLY. `recording_origin__in` exists on the endpoint
-    // but the entity domain config pins it for this listing (`recordingOriginFilter`,
-    // everything except in-silico) and host params are merged AFTER filters — an `In`
-    // here would be silently overwritten. The bare param is a DIFFERENT name, so it
-    // composes as an intersection. This is exactly what the advanced filter offered.
+    // Exact only: the domain config pins `recording_origin__in` as a host param, and
+    // host params merge after filters, so a user `In` would be overwritten. The bare
+    // param is a different name and composes as an intersection.
     recordingOriginColumn<Row>({
       filter: {
         operators: [OperatorId.Eq],

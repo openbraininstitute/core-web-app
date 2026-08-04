@@ -9,8 +9,7 @@ import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/
 import type { QueryClient } from '@tanstack/react-query';
 import type { IGridQuery } from '@/features/data-grid/core';
 
-// Mock the entitycore circuit queries so the FLAT branch never hits the network; the
-// flat path delegates through `Circuit.api.query.list` → `getCircuits`.
+// mock the entitycore circuit queries so the flat branch never hits the network
 const getCircuits = vi.fn(async (_args: { filters?: Record<string, unknown> }) => ({
   data: [],
   facets: undefined,
@@ -47,9 +46,7 @@ describe('createCircuitDataSource — flat branch', () => {
 
     expect(getCircuits).toHaveBeenCalledTimes(1);
     const filters = (getCircuits.mock.calls[0]?.[0]?.filters ?? {}) as Record<string, unknown>;
-    // the internal view marker must never reach the server
     expect(filters).not.toHaveProperty(CIRCUIT_VIEW_PARAM);
-    // host params (brain region) and paging pass through unchanged
     expect(filters.within_brain_region_brain_region_id).toBe('br-1');
     expect(filters.page).toBe(2);
     expect(filters.page_size).toBe(20);
@@ -70,15 +67,13 @@ describe('createCircuitDataSource — hierarchy branch (gray-out tree)', () => {
     facets: undefined,
     pagination: { page: 1, page_size: 20, total_items: 3 },
   };
-  // Only B matches the current filters → A is kept (filtered descendant), C is dropped.
   const filteredSubset = {
     data: [circuit('B', 'Beta')],
     facets: undefined,
     pagination: { page: 1, page_size: 20, total_items: 1 },
   };
 
-  // A fake query client that returns fixtures per cache key, never invoking queryFn
-  // (so no network) — mirrors the shared cache the hooks would populate.
+  // a fake query client returning fixtures per cache key, never invoking queryFn
   const fakeQueryClient = {
     fetchQuery: vi.fn(async ({ queryKey }: { queryKey: [string, Record<string, unknown>] }) => {
       const [name, params] = queryKey;
@@ -100,7 +95,6 @@ describe('createCircuitDataSource — hierarchy branch (gray-out tree)', () => {
 
     const page = await source.fetch(baseQuery({ params: { [CIRCUIT_VIEW_PARAM]: 'hierarchy' } }));
 
-    // Root A survives (has a filtered descendant); root C is pruned.
     expect(page.rows.map((r) => r.id)).toEqual(['A']);
     expect(page.total).toBe(1);
 
@@ -109,7 +103,6 @@ describe('createCircuitDataSource — hierarchy branch (gray-out tree)', () => {
       isFiltered: boolean;
       sub_circuits: Array<{ id: string; isFiltered: boolean }>;
     };
-    // A itself is NOT a filter match → grayed out; its child B IS a match.
     expect(rootA.isFiltered).toBe(false);
     expect(rootA.sub_circuits.map((c) => c.id)).toEqual(['B']);
     expect(rootA.sub_circuits[0].isFiltered).toBe(true);

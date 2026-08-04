@@ -32,21 +32,11 @@ export const CAMPAIGN_STATUS_RENDERER = 'campaignStatus';
 const ACTIVE_STATUSES = [ActivityStatus.PENDING, ActivityStatus.RUNNING];
 
 /**
- * Props for the GENERALIZED status-badge popover. Both data sources are INJECTED so
- * the same cell works for ANY activity/campaign type (simulation campaigns, task
- * campaigns, ion-channel modeling, …), not just the hard-wired simulation-campaign:
- *
- * Status source — supply exactly one:
- *  - {@link statusCountMap}: a pre-resolved `status → count` map (SYNC sources that
- *    already have the aggregate in hand, e.g. task/ion-channel campaign rows); OR
- *  - {@link fetchStatus}: an async fetcher, polled while a member is PENDING/RUNNING
- *    (ASYNC sources that resolve the aggregate over the network).
- *
- * Scan source (optional) — {@link fetchScanRows} lazily loads the scan-parameter sets
- * shown as hover cards. When omitted the cell renders a plain badge with NO popover
- * (types that have no per-member scan parameters). The fetcher must return rows in the
- * loose `{ id, name, status, scan_parameters }` shape that {@link CampaignScanCards}
- * (via `toScanCardData`) consumes.
+ * Props for the status-badge popover. Both data sources are injected, so one cell serves
+ * any campaign/activity type. Supply exactly one status source — `statusCountMap` (sync)
+ * or `fetchStatus` (async, polled). `fetchScanRows` is optional; without it the cell is
+ * a plain badge with no popover, and its rows must be in the loose
+ * `{ id, name, status, scan_parameters }` shape.
  */
 export interface ICampaignStatusBadgePopoverProps {
   /** Pre-resolved aggregated status counts (SYNC sources). Wins over {@link fetchStatus}. */
@@ -65,26 +55,16 @@ export interface ICampaignStatusBadgePopoverProps {
   enabled?: boolean;
 }
 
-/**
- * New default "Status" cell renderer for the simulation-campaign listings. Binds the
- * workspace and the simulation-campaign status/scan fetchers into the generalized
- * {@link CampaignStatusBadgePopover}, preserving the original behaviour for every
- * registered circuit-sim schema (badge polled while active + hover cards of the
- * campaign's scan-parameter sets, fetched lazily on first open).
- */
+/** "Status" cell renderer for the simulation-campaign listings. */
 export function CampaignStatusCell({
   row,
 }: ICellRendererProps<{ id?: string | null; name?: string | null }>): ReactNode {
   const campaignId = row?.id ?? undefined;
-  // no campaign id → no status to aggregate; show the shared placeholder, not a blank
   if (!campaignId) return <span className="text-gray-300">{EMPTY_PLACEHOLDER}</span>;
   return <SimulationCampaignStatusCell campaignId={campaignId} simName={row?.name ?? undefined} />;
 }
 
-/**
- * Simulation-campaign binding of the generalized cell: wires `useWorkspace` +
- * `simulation-campaign`'s `status` / `rows` domain fetchers into the shared popover.
- */
+/** Wires `useWorkspace` and the simulation-campaign fetchers into the shared popover. */
 function SimulationCampaignStatusCell({
   campaignId,
   simName,
@@ -109,18 +89,10 @@ function SimulationCampaignStatusCell({
 }
 
 /**
- * The generalized status badge + hover-cards popover. Renders the aggregated activity
- * status as a coloured {@link CampaignStatusBadge} and, when a scan fetcher is
- * supplied, reveals the scan-parameter sets as a responsive grid of {@link CampaignScanCards}
- * on hover. Neither the status source nor the scan source is hard-wired — the caller
- * injects them (see {@link ICampaignStatusBadgePopoverProps}), so this single component
- * serves every campaign/activity type.
- *
- * - SYNC status (`statusCountMap`): rendered immediately, no polling, no skeleton.
- * - ASYNC status (`fetchStatus`): polled while a member is PENDING/RUNNING; shows a
- *   {@link CampaignStatusBadgeSkeleton} until the first result resolves.
- * - Scan rows are fetched lazily on first popover open (React-Query cached); the
- *   popover content is not mounted until the badge is hovered.
+ * Aggregated status badge with a hover popover of scan-parameter cards. A sync
+ * `statusCountMap` renders immediately; `fetchStatus` is polled while a member is
+ * PENDING/RUNNING and shows a skeleton until the first result. Scan rows are fetched
+ * lazily on first popover open.
  */
 export function CampaignStatusBadgePopover({
   statusCountMap: providedMap,
@@ -135,8 +107,7 @@ export function CampaignStatusBadgePopover({
   const hasProvidedMap = providedMap !== undefined;
   const isAsync = !hasProvidedMap && Boolean(fetchStatus);
 
-  // Aggregated status — polled while active (ASYNC sources). Always called (rules of
-  // hooks); disabled for SYNC sources so it never touches the network.
+  // Always called (rules of hooks); disabled for sync sources so it never fetches.
   const { data: fetchedMap, isLoading } = useQuery({
     queryKey: statusQueryKey ?? ['campaign-status', title],
     queryFn: () =>
@@ -150,7 +121,6 @@ export function CampaignStatusBadgePopover({
     },
   });
 
-  // Scan-parameter sets — fetched lazily, only once the popover has been opened.
   const {
     data: scanRows,
     isLoading: scanLoading,
@@ -164,7 +134,6 @@ export function CampaignStatusBadgePopover({
 
   const statusCountMap = hasProvidedMap ? providedMap : fetchedMap;
 
-  // ASYNC sources show a skeleton until the first aggregate resolves.
   if (isAsync && (isLoading || !statusCountMap)) {
     return <CampaignStatusBadgeSkeleton />;
   }
@@ -176,7 +145,6 @@ export function CampaignStatusBadgePopover({
 
   const badge = <CampaignStatusBadge status={headline} count={count} fixedWidth />;
 
-  // No scan fetcher → plain badge, no hover popover (types without scan parameters).
   if (!fetchScanRows) {
     return <div className="flex w-full items-center justify-center">{badge}</div>;
   }

@@ -1,14 +1,8 @@
 import { themeQuartz } from 'ag-grid-community';
 
 /**
- * AG Grid v35 Theming API — an elegant, Airbnb-flavoured look driven by the app's
- * design tokens (CSS variables) so light/dark mode flows through automatically.
- *
- * Design intent: whisper-soft hairline borders, generous cell padding, a quiet
- * transparent header with a semibold label, a warm hover, and — crucially — a
- * self-contained filter popover with a soft elevation, rounded corners and a
- * hairline border (so it reads as a floating card, not a raw menu). Filter inputs
- * get rounded corners, a calm resting border and a branded focus ring.
+ * AG Grid v35 theme, driven by the app's design tokens (CSS variables) so light/dark
+ * mode flows through automatically.
  */
 export const dataGridTheme = themeQuartz.withParams({
   // palette
@@ -51,7 +45,7 @@ export const dataGridTheme = themeQuartz.withParams({
   selectedRowBackgroundColor: 'color-mix(in srgb, var(--color-primary-6, #1668dc) 8%, transparent)',
   oddRowBackgroundColor: 'transparent',
 
-  // filter popover — a floating card, not a raw menu
+  // filter popover
   menuBackgroundColor: 'var(--color-background, #ffffff)',
   menuBorder: {
     style: 'solid',
@@ -81,22 +75,14 @@ export const dataGridTheme = themeQuartz.withParams({
   checkboxCheckedBackgroundColor: 'var(--color-primary-9, #101828)',
 });
 
-/**
- * AG's built-in strings are Title Case ("No Rows To Show"); the app writes UI copy
- * in sentence case. Override the ones we actually surface — every data-grid mount
- * passes this as `localeText` so the wording is identical across the stack.
- */
+/** AG's built-in strings are Title Case; the app writes UI copy in sentence case. */
 export const DATA_GRID_LOCALE_TEXT = {
   noRowsToShow: 'No entities to show',
 } as const;
 
 /**
- * Single-select styles AG's selection control as a RADIO. AG renders the same
- * checkbox widget for `singleRow` and `multiRow` row selection (there is no
- * native radio), so single mode restyles it: fully-round box, and the checked
- * glyph becomes a centred dot (the tick mask is dropped; the ::after — which
- * already carries the checked shape color — is shrunk and rounded). Multi-select
- * checkboxes keep `checkboxBorderRadius` above. Apply on the grid wrapper.
+ * Restyles AG's selection control as a radio: AG renders the same checkbox widget for
+ * `singleRow` and `multiRow`, with no native radio. Apply on the grid wrapper.
  */
 export const SINGLE_SELECT_RADIO_CLASS = [
   '[&_.ag-selection-checkbox_.ag-checkbox-input-wrapper]:rounded-full!',

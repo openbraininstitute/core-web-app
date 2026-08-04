@@ -10,8 +10,7 @@ import type { ReactElement } from 'react';
 import type { IBrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
 import type { BrowseEntityScopeProps } from './browse-entity-legacy';
 
-// AG Grid is client-only; loaded lazily like the legacy MainTable so neither
-// path pays for the other's bundle.
+// AG Grid is client-only, and lazy so neither path pays for the other's bundle.
 const BrowseEntityGrid = dynamic(
   () => import('@/features/data-grid/host/browse-entity-grid').then((m) => m.BrowseEntityGrid),
   { ssr: false }
@@ -20,10 +19,8 @@ const BrowseEntityGrid = dynamic(
 export type { BrowseEntityScopeProps };
 
 /**
- * Per-entity migration router (antd → AG Grid). A dataType registered in the
- * data-grid entitycore registry renders the new AG Grid listing; everything else
- * renders the untouched legacy antd table. Flipping an entity is one registry
- * entry; rolling it back is deleting that entry.
+ * Per-entity router: a dataType registered in the data-grid entitycore registry renders
+ * the AG Grid listing, everything else the legacy antd table.
  */
 export function BrowseEntityScope(props: BrowseEntityScopeProps) {
   const definition = getEntityGridDefinition(props.dataType);

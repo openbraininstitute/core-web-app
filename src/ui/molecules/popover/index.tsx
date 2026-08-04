@@ -43,11 +43,9 @@ function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitiv
 }
 
 /**
- * The popover's tip, pointing back at the trigger. Radix renders it as an `<svg>`
- * polygon positioned/rotated for the resolved side, so callers only pick a size and
- * a fill matching their `PopoverContent` background (there is no `--color-popover`
- * token in this theme — panels set `bg-white` explicitly, so the arrow does too).
- * Must be a direct child of `PopoverContent`.
+ * The popover's tip, pointing back at the trigger. Must be a direct child of
+ * `PopoverContent`; its fill has to match that panel's background (this theme has no
+ * `--color-popover` token, so panels set `bg-white` explicitly and so does the arrow).
  */
 function PopoverArrow({
   className,

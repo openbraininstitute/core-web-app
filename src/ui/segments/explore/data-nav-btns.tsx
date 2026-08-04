@@ -181,10 +181,8 @@ export function DataBreadcrumb({
   const onLinkClick = () => {
     if (isBrowser()) {
       runStorageReset();
-      // ALSO clear the AG Grid listing's transient session slice (filters/sort/
-      // page/search) for this dataKey — legacy parity: breadcrumb = fresh listing,
-      // close (X) = state kept. The durable column-layout slice is left intact,
-      // matching legacy (its reset never wiped column layout either).
+      // breadcrumb = fresh listing, so clear the grid's transient session slice
+      // (filters/sort/page/search); the durable column-layout slice is left intact
       createSessionStatePersistence().clear?.(dataKey);
     }
   };

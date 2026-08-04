@@ -5,9 +5,8 @@ import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/
 import { RELATED_CIRCUIT_COLUMNS } from '@/ui/segments/explore/circuit/elements/related-circuits/columns';
 
 /**
- * These tabs render the circuit schema's own column order (`Name, Subcircuits, …`)
- * behind a leading download action — no reordering, so the count and the expander
- * it hosts sit directly after Name, exactly as on the Data → Circuit listing.
+ * These tabs render the circuit schema's own column order behind a leading download
+ * action, so Subcircuits stays directly after Name.
  */
 describe('RELATED_CIRCUIT_COLUMNS ordering', () => {
   it('puts Subcircuits directly after Name', () => {
@@ -25,10 +24,8 @@ describe('RELATED_CIRCUIT_COLUMNS ordering', () => {
     expect(relatedIds).toEqual(schemaIds);
   });
 
-  // Regression: the schema gates Subcircuits behind a contextual `available` rule.
-  // InMemoryGrid resolves columns against its own generic context, so a surviving
-  // gate drops the column from the controller's `columnOrder` — and an unordered id
-  // sorts LAST, pushing Subcircuits past Experiment date on screen.
+  // regression: InMemoryGrid resolves columns against its own generic context, so a
+  // surviving `available` gate drops Subcircuits from `columnOrder` and it sorts last
   it('carries no contextual availability gate', () => {
     for (const column of RELATED_CIRCUIT_COLUMNS) {
       expect(column.available).toBeUndefined();

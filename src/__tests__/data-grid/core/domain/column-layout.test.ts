@@ -3,9 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { reconcileColumnOrder } from '@/features/data-grid/core/domain/column-layout';
 
 /**
- * The persisted `columnOrder` is a snapshot of the columns that existed when the
- * user saved it. Reconciliation answers the only interesting question: what does
- * that snapshot say about an id it never mentions? Nothing — the declaration wins.
+ * Pins how a persisted `columnOrder` reconciles with an id it never mentions: the
+ * declaration wins.
  */
 describe('reconcileColumnOrder', () => {
   it('keeps the declared order when nothing is stored', () => {
@@ -18,7 +17,7 @@ describe('reconcileColumnOrder', () => {
     expect(reconcileColumnOrder(['a', 'b', 'c'], ['c', 'a', 'b'])).toEqual(['c', 'a', 'b']);
   });
 
-  // The bug: with an index-lookup sort the missing id gets a sentinel and lands LAST.
+  // with an index-lookup sort the missing id gets a sentinel and lands last
   it('slots a declared id MISSING from the stored order at its declared position', () => {
     expect(reconcileColumnOrder(['a', 'b', 'c', 'd'], ['a', 'c', 'd'])).toEqual([
       'a',
@@ -42,7 +41,6 @@ describe('reconcileColumnOrder', () => {
   });
 
   it('anchors a missing id to its neighbour, not to its declared index', () => {
-    // stored moved `a` behind `c`; `b` follows `a` because that is where it is declared
     expect(reconcileColumnOrder(['a', 'b', 'c'], ['c', 'a'])).toEqual(['c', 'a', 'b']);
   });
 

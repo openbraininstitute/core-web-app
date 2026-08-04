@@ -3,12 +3,9 @@ export type TGridContextValue = string | number | boolean;
 
 /**
  * Runtime inputs used to resolve contextual schema rules (column availability,
- * order, filter availability, selection/detail enablement, …).
- *
- * Known keys are typed; `factors` is an open, forward-compatible bag so a host can
- * supply ANY additional dimension (user role, feature flag, view variant, device,
- * …) that rules can match on WITHOUT touching the core. Kept flat and scalar so
- * `when` matching and query-key memoisation stay cheap.
+ * order, filter availability, selection/detail enablement, …). Known keys are typed;
+ * `factors` is an open bag of host-defined dimensions. Kept flat and scalar so `when`
+ * matching and query-key memoisation stay cheap.
  */
 export interface IGridContext {
   dataType: string;
@@ -28,8 +25,7 @@ export {
   whenMatches,
 } from './contextual';
 
-// Re-exported so existing `./grid-context` importers keep working; the engine
-// itself lives in ./contextual.
+// Re-exported for convenience; the engine itself lives in ./contextual.
 export type {
   IContextRule,
   IContextualSpec,

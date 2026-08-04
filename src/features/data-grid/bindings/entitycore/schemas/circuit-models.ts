@@ -31,46 +31,18 @@ import type {
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * Re-authored grid schemas for the "circuit-family" plain models (micro-, small-micro-,
- * paired-neuron-, whole-brain, single-neuron circuits and the brain-region browse). These
- * mirror the shared circuit column presentation (`schemas/circuit.tsx`) MINUS the flat↔
- * hierarchy plugin — they are flat listings with no recursive subcircuit expansion.
- *
- * The collapsed columns follow each entity's legacy `view-defs/model/*` order. Filters and
- * sorts are bound to what the BACKEND accepts, not to the legacy per-type field metadata:
- * every family member is served by `GET /circuit` through the same `CircuitFilter`, so the
- * accepted query params and `CircuitFilter.Constants.ordering_model_fields` are identical
- * across all six. The legacy `order.types` / per-type filter rules were a UI-side
- * restriction, so brain region, species, scale, the three counters, target simulator and
- * created-by are sortable — and species filterable — for ALL of them.
- *
- * The one deliberate omission is the Scale column filter: each of these dataTypes narrows
- * `scale__in` to its own scale in the entity domain config (`circuitScaleFilter`), and a
- * user-supplied `scale__in` would override that narrowing and dissolve the listing's
- * identity. Only the base `circuit` dataType (`schemas/circuit.tsx`) exposes it.
- *
- * Legacy view-def column order (per `view-defs/model/*`):
- *   Name, Description, Brain region, Species, Scale, N° neurons, N° synapses, N° connections,
- *   [Target simulator — every family member except brain_region], Created by, Registration date
+ * Grid schemas for the circuit-family plain models (micro-, small-micro-, paired-neuron-,
+ * whole-brain, single-neuron circuits and the brain-region browse). All six are served by
+ * `GET /circuit` through the same `CircuitFilter`, so accepted params and ordering fields
+ * are identical across them.
  */
 
 /**
- * ADVANCED FILTERS for the WHOLE circuit family — `GET /circuit` params that no
- * circuit listing shows a column for. Every family member is served by the same
- * `CircuitFilter`, so one declaration covers them all; the two flags carve out the
- * fields a given listing DOES show as a column (`filter.targets` already own those).
+ * `GET /circuit` params with no column, shared by the whole circuit family; the flags
+ * carve out the fields a given listing already shows as a column.
  *
- * Every field/operator pair was checked against the live OpenAPI spec; the emitted
- * param is named in each comment.
- *
- * Two deliberate omissions:
- *  - `scale` — every dataType in this module pins `scale__in` to its own scale in the
- *    entity domain config (`circuitScaleFilter`). For `paired_neuron_circuit` and
- *    `single_neuron_circuit` the host spread wins outright (`{...filters, ...scale}`),
- *    and for the others a user-supplied scale would dissolve the listing's identity.
- *  - `published_in*`, `experiment_date__*`, `contact_email`, `lifecycle_status` —
- *    record metadata the advanced-filter surface does not carry (see the sibling
- *    schemas); registration date already has a column.
+ * `scale` is deliberately absent: each dataType pins `scale__in` to its own scale in
+ * the entity domain config, and a user-supplied scale would dissolve that narrowing.
  */
 export function buildCircuitAdvancedFilters({
   includeBuildCategory,
@@ -96,7 +68,6 @@ export function buildCircuitAdvancedFilters({
     classificationFilters.push({
       id: 'buildCategory',
       label: 'Build category',
-      // `build_category__in`, `build_category` (exact). No `__not_in`.
       field: 'build_category',
       operators: [OperatorId.In, OperatorId.Eq],
       options: staticOptions(CircuitBuildCategory),
@@ -106,7 +77,6 @@ export function buildCircuitAdvancedFilters({
     classificationFilters.push({
       id: 'targetSimulator',
       label: 'Target simulator',
-      // `target_simulator__in`, `target_simulator` (exact). No `__not_in`.
       field: 'target_simulator',
       operators: [OperatorId.In, OperatorId.Eq],
       options: staticOptions(CircuitTargetSimulator),
@@ -130,21 +100,18 @@ export function buildCircuitAdvancedFilters({
             {
               id: 'hasMorphologies',
               label: 'Has morphologies',
-              // `has_morphologies` (boolean)
               field: 'has_morphologies',
               operators: [OperatorId.Bool],
             },
             {
               id: 'hasPointNeurons',
               label: 'Has point neurons',
-              // `has_point_neurons` (boolean)
               field: 'has_point_neurons',
               operators: [OperatorId.Bool],
             },
             {
               id: 'hasElectricalCellModels',
               label: 'Has electrical cell models',
-              // `has_electrical_cell_models` (boolean)
               field: 'has_electrical_cell_models',
               operators: [OperatorId.Bool],
               description: 'Circuits with electrical cell models are the simulatable ones',
@@ -152,7 +119,6 @@ export function buildCircuitAdvancedFilters({
             {
               id: 'hasSpines',
               label: 'Has spines',
-              // `has_spines` (boolean)
               field: 'has_spines',
               operators: [OperatorId.Bool],
             },
@@ -176,7 +142,7 @@ export function buildCircuitAdvancedFilters({
         {
           id: 'atlasId',
           label: 'Atlas ID',
-          // `atlas_id` (exact UUID) ONLY — no list form.
+          // Exact UUID only — no list form.
           field: 'atlas_id',
           operators: [OperatorId.Eq],
           description: 'The brain atlas the circuit was built against',
@@ -184,7 +150,7 @@ export function buildCircuitAdvancedFilters({
         {
           id: 'rootCircuitId',
           label: 'Root circuit ID',
-          // `root_circuit_id` (exact UUID) ONLY — no list form.
+          // Exact UUID only — no list form.
           field: 'root_circuit_id',
           operators: [OperatorId.Eq],
           description: 'Circuits belonging to one root circuit, subcircuits included',
@@ -201,8 +167,6 @@ export function buildCircuitAdvancedFilters({
               {
                 id: 'prefLabel',
                 label: 'Contributor',
-                // `contribution__pref_label__ilike`, `contribution__pref_label__in`. The
-                // circuit-family listings show no Contributors column.
                 field: 'contribution__pref_label',
                 operators: [OperatorId.Ilike, OperatorId.In],
                 freeEntry: FreeEntryKind.Text,
@@ -220,7 +184,7 @@ function localizedNumber(value: number | null | undefined): string {
   return value == null || Number.isNaN(value) ? '' : value.toLocaleString();
 }
 
-/** Reverse-lookup a dictionary's enum KEY from a stored value `key` (matches circuit.tsx). */
+/** Reverse-lookup a dictionary's enum key from a stored value `key`. */
 function keyByValue<T extends Record<string, { key: string }>>(
   dict: T,
   value: string | null | undefined
@@ -245,7 +209,7 @@ function numberColumn(id: string, header: string, field: string): IColumnModel<I
 interface BuildOptions {
   dataType: string;
   id: string;
-  /** brain_region's legacy view-def omits the Target simulator column */
+  /** false only for the brain-region browse, which has no Target simulator column */
   includeTargetSimulator: boolean;
 }
 
@@ -256,18 +220,14 @@ function buildCircuitModelDefinition({
 }: BuildOptions): IEntityGridDefinition<ICircuit> {
   const columns: Array<IColumnModel<ICircuit>> = [
     nameColumn<ICircuit>({ id: EntityCoreFields.Name, essential: true }),
-    // Description is display-only: /circuit exposes no `description` query param at all
-    // (free-text description search goes through the quick-search box).
+    // Display-only: /circuit exposes no `description` query param.
     {
       id: EntityCoreFields.Description,
       header: 'Description',
       getValue: (row) => row.description ?? '',
       width: { minWidth: 200, flex: 2 },
     },
-    // Brain region: `brain_region__name__in` / `__ilike` + the `brain_region` facet come
-    // from the shared catalog factory; region gating (`within_brain_region_*`) still applies
-    // on top. ICircuit's type omits `brain_region` (present on the wire) — read it via a
-    // cast, same as circuit.tsx.
+    // `brain_region` is on the wire but missing from `ICircuit`, hence the cast.
     {
       id: EntityCoreFields.BrainRegion,
       header: 'Brain region',
@@ -285,8 +245,8 @@ function buildCircuitModelDefinition({
       },
     },
     speciesColumn<ICircuit>({ id: EntityCoreFields.SpeciesName }),
-    // Scale: sortable, but NOT filterable — see the module doc (the dataType's own
-    // `scale__in` narrowing would be overridden by a user-supplied scale filter).
+    // Sortable but not filterable: a user `scale__in` would override the dataType's
+    // own narrowing.
     {
       id: EntityCoreFields.CircuitScale,
       header: 'Scale',
@@ -342,10 +302,9 @@ function buildCircuitModelDefinition({
   const schema: IGridSchema<ICircuit> = {
     id,
     getRowId: (row) => row.id,
-    // Shared row selection + bulk download replace the legacy antd per-row Download action.
     selection: { enabled: true },
-    // flat list, no group tabs — see `flatAdvancedFilters`. Build category has no
-    // column here; Target simulator only lacks one on the brain-region browse.
+    // Build category has no column here; Target simulator only lacks one on the
+    // brain-region browse.
     advancedFilters: flatAdvancedFilters(
       buildCircuitAdvancedFilters({
         includeBuildCategory: true,
@@ -391,8 +350,7 @@ export const singleNeuronCircuitGridDefinition = buildCircuitModelDefinition({
 export const brainRegionGridDefinition = buildCircuitModelDefinition({
   dataType: ExtendedEntitiesTypeDict.BrainRegion,
   id: 'brain-region',
-  // The brain-region browse is the only family member whose legacy view-def omits the
-  // Target simulator column.
+  // The only family member without a Target simulator column.
   includeTargetSimulator: false,
 });
 

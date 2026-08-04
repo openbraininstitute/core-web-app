@@ -24,19 +24,10 @@ export interface IActiveFiltersButtonProps<Row> {
 }
 
 /**
- * Toolbar filter control. It owns BOTH filter concerns that live outside a column
- * header:
- *
- * 1. ADVANCED FILTERS — every filter with no VISIBLE column: the schema's
- *    `advancedFilters` groups PLUS the auxiliary columns the user has not ticked,
- *    offered as a menubar (see {@link AdvancedFiltersMenu}). The toolbar is their
- *    only surface for exactly as long as they have no column header of their own.
- * 2. ACTIVE FILTERS — every applied filter, column or advanced, each with its own
- *    reset, plus a global "reset all".
- *
- * Renders whenever the grid HAS advanced filters or IS filtered, so a grid with
- * neither keeps the toolbar clean. Renderer-agnostic: it reads and dispatches only
- * through the controller store, so it works for every grid type.
+ * Toolbar filter control, owning both filter concerns outside a column header: the
+ * advanced-filters menubar ({@link AdvancedFiltersMenu}) and the list of applied filters.
+ * Renders only when the grid has advanced filters or is filtered. Renderer-agnostic — it
+ * reads and dispatches solely through the controller store.
  */
 export function ActiveFiltersButton<Row>({
   controller,
@@ -47,18 +38,14 @@ export function ActiveFiltersButton<Row>({
 }: IActiveFiltersButtonProps<Row>) {
   const [open, setOpen] = useState(false);
 
-  // The panel is DERIVED: the schema's advanced filters plus the auxiliary columns
-  // currently hidden (see `resolveFilterPanelGroups`). Keyed on the reactive
-  // `hiddenColumns` so ticking an auxiliary column removes it from here at once.
+  // Keyed on the reactive `hiddenColumns` so ticking an auxiliary column removes it here.
   const groups = useMemo(
     () => resolveFilterPanelGroups(controller.schema, controller.context, state.hiddenColumns),
     [controller, state.hiddenColumns]
   );
 
-  // Label per state key: column headers, plus the advanced filter's own label —
-  // qualified as "Group · Filter" ONLY when the schema actually groups, where a bare
-  // "Design" would be ambiguous. A flat schema has one meaningless group name and
-  // prefixing every row with it is pure noise.
+  // Advanced filters are qualified as "Group · Filter" only when the schema has more
+  // than one group; a flat schema's single group name would be pure noise.
   const labelByKey = useMemo(() => {
     const map = new Map<string, string>();
     const grouped = groups.length > 1;
@@ -67,17 +54,14 @@ export function ActiveFiltersButton<Row>({
         map.set(f.key, grouped ? `${g.label} · ${f.label}` : f.label);
       }
     }
-    // Columns LAST, so a hidden auxiliary column — which is in `groups` too — is
-    // named by its header alone. Its identity does not change with the surface that
-    // happens to be editing it.
+    // Columns last, so a hidden auxiliary column (also in `groups`) is named by its
+    // header alone, whichever surface is editing it.
     for (const c of controller.resolvedColumns()) map.set(c.id, c.header);
     return map;
   }, [controller, groups]);
 
-  // Only filters that actually narrow the grid (non-empty summary) are listed, each
-  // paired with the summary shown under its name — resolved to OPTION LABELS, not
-  // the wire ids the entry stores (`Modified reconstruction`, not
-  // `modified_reconstruction`). Facets are threaded in for facet-sourced options.
+  // Only filters that actually narrow the grid (non-empty summary), each with its summary
+  // resolved to option LABELS rather than the wire ids the entry stores.
   const active = useMemo(
     () =>
       Object.values(state.filters)
@@ -115,33 +99,25 @@ export function ActiveFiltersButton<Row>({
         />
       </PopoverTrigger>
       <PopoverContent
-        // The trigger now lives in the toolbar's RIGHT cluster, so the panel hangs
-        // inward from that edge; anchoring it `start` would push a 2xl-wide popover
-        // off the right of the viewport.
+        // the trigger sits in the toolbar's right cluster; `start` would push a 2xl-wide
+        // popover off the right of the viewport
         align="end"
         side="bottom"
         sideOffset={1}
-        // ≥ the panel's `rounded-2xl` (16px): floating-ui clamps the arrow to this
-        // distance from the content's edge, so anything smaller parks the tip on the
-        // corner's CURVE, where it reads as detached from the panel.
+        // must be ≥ the panel's `rounded-2xl` (16px), or floating-ui parks the arrow tip
+        // on the corner's curve, where it reads as detached
         arrowPadding={16}
         className={cn(
           GRID_OVERLAY_Z_CLASS,
           'rounded-2xl border-gray-100 bg-white p-3 shadow-[0_10px_34px_-8px_rgba(16,24,40,0.28)]',
           'max-w-[calc(100vw-1.5rem)]',
-          // TWO PANES only when there is something in BOTH of them: the filter list
-          // and at least one applied filter. An empty "Applied filters" column is
-          // 350px of the panel spent saying nothing, so the popover is the single
-          // narrow column until the first filter lands. `max-w` keeps it inside the
-          // viewport on a narrow window; the panes shrink, they never overflow.
           twoPane ? 'w-2xl' : 'w-80',
-          // width is the ONLY thing that moves between the two shapes, and it moves
-          // over 200ms rather than snapping (Radix re-runs positioning on the resize,
-          // so the anchored edge stays put throughout)
+          // width is the only thing that moves between the two shapes; Radix re-runs
+          // positioning on the resize, so the anchored edge stays put throughout
           'transition-[width] duration-200 ease-out motion-reduce:transition-none'
         )}
-        // The operator/option Selects and the date picker portal their content
-        // outside this popover; interacting with those must not dismiss it.
+        // the Selects and date picker portal outside this popover; using them must not
+        // dismiss it
         onInteractOutside={(e) => {
           const target = e.target as Element | null;
           if (
@@ -154,23 +130,7 @@ export function ActiveFiltersButton<Row>({
         }}
       >
         <PopoverArrow className="-translate-y-0.75" />
-        {/*
-          LEFT: the filter list, or the open filter's editor with its own Reset +
-          Apply. RIGHT: everything already applied, with the global reset, behind a
-          hairline divider. Stacked, applying a filter pushed the applied list out of
-          view; side by side, choosing and reviewing are visible at once, and the
-          reading order matches the doing order — pick on the left, review on the
-          right.
-
-          The panel is anchored `align="end"`, so its right edge is pinned to the
-          trigger and the second pane arrives by growing the panel leftward: the
-          filter list shifts left as it appears. That is why the width is
-          TRANSITIONED rather than snapped (see the content class above) — the list
-          glides under the pointer over 200ms instead of teleporting. Paying that to
-          keep "applied" on the right is the deliberate trade: an applied list that
-          reads left of the thing it was applied from is more confusing than a
-          200ms slide.
-        */}
+        {/* Left: the filter list or the open editor. Right: everything already applied. */}
         {hasAdvanced && operators ? (
           <div className="flex items-stretch gap-3">
             <div className="flex min-w-0 flex-1 flex-col" data-testid="advanced-filters-pane">
@@ -217,14 +177,9 @@ interface IAppliedFilter {
 }
 
 /**
- * The APPLIED pane: every filter currently narrowing the grid, each with its own
- * clear, plus the global reset. It is one of the popover's two columns when the grid
- * has advanced filters and its only content otherwise (`headless`, which drops the
- * section title because there is nothing to distinguish it from).
- *
- * Renders NOTHING when nothing is applied — an empty column has no content to justify
- * it, and the popover narrows to a single pane instead (see the `flex-row-reverse`
- * note above for why that costs no movement under the pointer).
+ * Every filter currently narrowing the grid, each with its own clear, plus the global
+ * reset. `headless` drops the section title, for when this is the popover's only content.
+ * Renders nothing when nothing is applied, so the popover narrows to a single pane.
  */
 function AppliedFilters({
   active,
@@ -248,8 +203,8 @@ function AppliedFilters({
           Applied Filters
         </span>
       )}
-      {/* scrolls on its own: a long applied list must not stretch the popover past
-          the viewport, nor drag the editor pane down with it */}
+      {/* scrolls on its own so a long list neither stretches the popover nor drags the
+          editor pane down */}
       <div className="max-h-72 min-h-0 overflow-y-auto">
         {active.map(({ entry, summary }) => {
           const label = labelByKey.get(entry.columnId) ?? entry.columnId;

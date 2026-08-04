@@ -18,10 +18,8 @@ import type { IGridContext, IGridDataSource, IGridPage } from '@/features/data-g
 import type { IGridRendererProps, TGridRenderer } from '@/features/data-grid/react/renderer';
 
 /**
- * REGRESSION — the Data → Circuit listing must have NO checkboxes: no selection column
- * and no bulk-action selection (the page passes `selectionType: undefined`, but the
- * schema was opting selection in on its own). The workflow PICKERS that legitimately
- * pick circuits pass a `selection` prop, and that path must keep forcing selection on.
+ * Regression: the Data → Circuit listing must have no checkboxes — the schema was opting
+ * selection in on its own — while the workflow pickers' `selection` prop still forces it on.
  */
 // biome-ignore lint/suspicious/noExplicitAny: the schema's Row is the augmented circuit row; the harness only needs an id
 type Row = any;

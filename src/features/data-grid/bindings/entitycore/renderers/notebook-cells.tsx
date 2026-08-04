@@ -6,13 +6,8 @@ import type { ICellRendererProps } from '../../../react';
 /** Cell-renderer registry key for the notebook-result image preview. */
 export const NOTEBOOK_IMAGE_PREVIEW_RENDERER = 'notebookImagePreview';
 
-/**
- * Notebook-result image preview. Reuses the legacy {@link NotebookPreviewThumbnail}
- * (lazy, in-view figure loader) exactly as the `NotebookImagePreview` field-def did,
- * so the AG Grid listing shows the same notebook figures as the antd table.
- */
+/** Notebook-result image preview, backed by the lazy {@link NotebookPreviewThumbnail}. */
 export function NotebookImagePreview({ row }: ICellRendererProps<IAnalysisNotebookResult>) {
-  // same empty state the other preview cells use — a preview column never goes blank
   if (!row) {
     return (
       <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-300">

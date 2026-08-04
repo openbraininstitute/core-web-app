@@ -25,10 +25,8 @@ function isPerson(agent: Agent): boolean {
 }
 
 /**
- * Contributors cell: shows the first name inline, then a "+N" pill for the rest
- * (`total - 1`). Hovering the pill reveals a tooltip listing every contributor
- * split into People and Institutions. Institutions sort before people (matching the
- * legacy `transformAgentToNames` ordering).
+ * Contributors cell: first name inline, a "+N" pill for the rest, and a hover tooltip
+ * listing everyone split into Institutions (first) then People.
  */
 export function ContributorsCell({ row }: ICellRendererProps<ContributorsRow>) {
   const agents = (row?.contributions ?? [])
@@ -55,7 +53,6 @@ export function ContributorsCell({ row }: ICellRendererProps<ContributorsRow>) {
             <button
               type="button"
               className={cn(
-                // fully-round pill that never squishes, with a soft raised shadow
                 'inline-flex h-6 min-w-6 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-2',
                 'bg-gray-100 text-[11px] font-medium text-gray-600 shadow-sm ring-1 ring-gray-200/70',
                 'transition-colors hover:bg-primary-8 hover:text-white'
@@ -65,7 +62,6 @@ export function ContributorsCell({ row }: ICellRendererProps<ContributorsRow>) {
               +{rest.length}
             </button>
           </TooltipTrigger>
-          {/* full list — including the names shown inline — grouped by kind */}
           <TooltipContent
             showArrow
             side="left"
@@ -74,7 +70,6 @@ export function ContributorsCell({ row }: ICellRendererProps<ContributorsRow>) {
             arrowClassName="bg-white"
             className="w-64 border border-gray-100 bg-white p-0 text-primary-8 shadow-lg"
           >
-            {/* fixed-height, scrollable body so long lists never overflow the viewport */}
             <div className="max-h-56 overflow-y-auto p-2">
               <ContributorGroup title="Institutions" agents={institutions} />
               <ContributorGroup title="People" agents={people} />

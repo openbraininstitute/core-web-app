@@ -42,20 +42,9 @@ type Row = IExperimentalNeuronDensity &
   IHasContributions;
 
 /**
- * ADVANCED FILTERS — `GET /experimental-neuron-density` params with no column at all:
- * just the record's own `id`, which has nothing useful to show in a cell.
- *
- * `subject__strain__name` and `subject__name` are now AUXILIARY columns below, so the
- * panel offers them only while they are hidden. `name` was ALSO declared here, as a
- * `recordNameFilter`, while this listing has always had a visible Name column that
- * owns `name` — a duplicate of the same field on two surfaces. It is gone: the Name
- * column is the one representation of that field, and there is no auxiliary column
- * for it.
- *
- * A density is NOT a ScientificArtifact (`app/filters/density.py` composes
- * `EntityFilterMixin` + `SubjectFilterMixin`, not `ScientificArtifactFilter`), so
- * this endpoint accepts none of `experiment_date__*`, `published_in*` or
- * `contact_email` — they are absent here on purpose, not by oversight.
+ * `GET /experimental-neuron-density` params with no column: just the record's own `id`.
+ * A density is not a ScientificArtifact, so this endpoint accepts none of
+ * `experiment_date__*`, `published_in*` or `contact_email`.
  */
 const experimentalNeuronDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -66,20 +55,9 @@ const experimentalNeuronDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGro
 ];
 
 /**
- * Experimental neuron density listing. Column order matches the legacy
- * `experimental-neuron-density` view-def (Brain region, Species, M-type, E-type,
- * Density, N° of measurements, Name, Age, Contributors, Registration date). The
- * "Density" value is the mean of the `measurements` array (not a queryable scalar),
- * so it is neither sortable nor filterable — matching legacy.
- *
- * Then two AUXILIARY columns — Strain, Subject name — hidden until the user ticks
- * them under "More columns", each carrying the filter it took over from the
- * advanced-filters panel.
- *
- * SORT SAFETY (`ExperimentalNeuronDensityFilter.Constants.ordering_model_fields` in
- * entitycore's `app/filters/density.py`): `subject__strain__name` IS in the allowlist
- * and sorts; `subject__name` is NOT, so Subject name is non-sortable — offering it
- * would 422 the whole listing.
+ * Experimental neuron density listing (`GET /experimental-neuron-density`). Density is
+ * the mean of the `measurements` array, not a queryable scalar, so it is neither
+ * sortable nor filterable.
  */
 export const experimentalNeuronDensitySchema: IGridSchema<Row> = {
   id: 'experimental-neuron-density',
@@ -87,7 +65,6 @@ export const experimentalNeuronDensitySchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 56,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(experimentalNeuronDensityAdvancedFilters),
   columns: [
     brainRegionColumn<Row>(),
@@ -101,7 +78,8 @@ export const experimentalNeuronDensitySchema: IGridSchema<Row> = {
     lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked. `subject__strain__name` is in this endpoint's
+    // ordering fields; `subject__name` is not.
     subjectStrainColumn<Row>({ sortable: true }),
     subjectNameColumn<Row>(),
   ],

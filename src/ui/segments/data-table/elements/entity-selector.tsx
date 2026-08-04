@@ -18,12 +18,7 @@ export type EntityTypeSelectorProps = {
   options: readonly EntityTypeSelectorOption[];
   value: TExtendedEntitiesTypeDict;
   onSelect: (value: TExtendedEntitiesTypeDict) => void;
-  /**
-   * TOOLBAR SIZING — 40px instead of the default 48px trigger, to sit level with the
-   * other controls in the data-grid toolbar (search pill, scope tabs, region banner,
-   * toolbar buttons — all h-10). Opt-in: the legacy table tools keep the taller
-   * original. The count badge is 28px and unaffected either way.
-   */
+  /** Use a 40px trigger instead of 48px, to sit level with the other h-10 toolbar controls. */
   compact?: boolean;
 };
 
@@ -72,13 +67,10 @@ export function EntityTypeSelector({
         className={cn(
           'min-w-36 rounded-full text-primary-9! border-neutral-2 bg-white text-base shadow-none py-0! px-6 pl-2 ring-0',
           'focus-visible:ring-0',
-          // BOUNDED, not content-driven: `max-w-max` let a long entity name stretch
-          // the control (and with it the whole left cluster). A ceiling turns that
-          // into the `truncate` below, and keeps the menu — which mirrors this width
-          // — a predictable size.
+          // bounded, not content-driven: a long entity name truncates instead of
+          // stretching the control (and the menu, which mirrors this width)
           'max-w-64',
-          // the trigger's OWN height — the molecule's `data-[size=default]:h-9` is
-          // overridden here, so this pair is the only thing that sizes the control
+          // overrides the molecule's `data-[size=default]:h-9`
           compact ? 'max-h-10! min-h-10!' : 'max-h-12! min-h-12!'
         )}
       >
@@ -91,20 +83,15 @@ export function EntityTypeSelector({
         </span>
       </SelectTrigger>
       <SelectContent
-        // opens from the trigger's LEFT edge and runs rightward: this control is the
-        // first thing in the toolbar's left cluster, so an `end`-aligned menu hung
-        // off the wrong side of it
+        // first control in the toolbar's left cluster, so the menu must run rightward
         align="start"
         alignOffset={0}
         sideOffset={2}
         avoidCollisions
         className={cn(
           'rounded-2xl border-white bg-white shadow-xl',
-          // EXACTLY the trigger's width. Radix publishes the measured trigger width as
-          // `--radix-select-trigger-width` on the content; the molecule only uses it as
-          // a `min-w` (so a long option can outgrow its trigger), which reads as broken
-          // under a pill trigger. Same technique the grid's filter Selects use — see
-          // `GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS` — rather than a hardcoded px.
+          // pin to exactly the trigger's width; the molecule only applies Radix's
+          // measured width as a `min-w`, which reads as broken under a pill trigger
           'w-(--radix-select-trigger-width) min-w-(--radix-select-trigger-width)'
         )}
       >
@@ -117,8 +104,7 @@ export function EntityTypeSelector({
               className={cn(
                 'text-primary-8! text-lg font-light cursor-pointer rounded-xl gap-5',
                 'data-highlighted:text-primary-7!',
-                // the menu is pinned to the trigger's width, so a long option name
-                // ellipses here too instead of wrapping to a second line
+                // menu is pinned to the trigger width, so long names ellipse here too
                 'overflow-hidden [&>span]:min-w-0 [&>span]:truncate'
               )}
             >

@@ -6,21 +6,14 @@ import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycor
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 /**
- * MIGRATION GUARDRAIL (backlog T-07).
- *
- * Every dataType that can reach `BrowseEntityScope` must be registered, otherwise
- * that listing silently falls back to the legacy antd table (`BrowseEntityScopeLegacy`)
- * — a regression that is invisible in code review and easy to introduce by adding a
- * new entity type to a route or workflow without authoring its grid schema.
- *
- * The lists below MIRROR the real call sites. When you add an entity there, add it
- * here too; this test then forces the schema to exist before the listing can ship.
+ * Migration guardrail: an unregistered dataType silently falls back to the legacy antd
+ * table, which code review cannot see. The lists below mirror the real call sites — add
+ * an entity there, add it here.
  */
 
 /**
- * Mirrors `AllowedEntities` in
- * `src/app/app/virtual-lab/[virtualLabId]/[projectId]/data/(browse)/browse/entity/[type]/page.tsx`.
- * Anything absent from that list 404s, so this IS the data-browse surface.
+ * Mirrors `AllowedEntities` in the data-browse `entity/[type]/page.tsx`; anything absent
+ * from that list 404s.
  */
 const DATA_BROWSE_ENTITIES: ReadonlyArray<TExtendedEntitiesTypeDict> = [
   ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
@@ -57,10 +50,9 @@ const NOTEBOOK_BROWSE_ENTITIES: ReadonlyArray<TExtendedEntitiesTypeDict> = [
 ];
 
 /**
- * Union of every `configurationInputs[].type` / `sourceType` across the workflow
- * descriptors (`src/ui/segments/workflows/config/activities/*.ts`) — these reach
- * `BrowseEntityScope` through the workflow `/new` picker, plus the build-page and
- * detail-view pickers that name a type directly.
+ * Every type reachable through the workflow `/new` picker (union of the workflow
+ * descriptors' `configurationInputs[].type` / `sourceType`), plus the build-page and
+ * detail-view pickers.
  */
 const PICKER_ENTITIES: ReadonlyArray<TExtendedEntitiesTypeDict> = [
   ExtendedEntitiesTypeDict.EMCellMesh,

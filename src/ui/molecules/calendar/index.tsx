@@ -11,10 +11,8 @@ import type { ComponentProps } from 'react';
 export type CalendarProps = ComponentProps<typeof DayPicker>;
 
 /**
- * Calendar primitive built on `react-day-picker` (v10), styled to the app's design
- * language (rounded days, gray-200 chrome, primary-8 selection, light range fill).
- * Backs {@link DatePicker} and {@link DateRangePicker}. Layout is fully expressed
- * through `classNames`, so no react-day-picker base stylesheet import is needed.
+ * Calendar primitive on `react-day-picker`. Layout is fully expressed through `classNames`,
+ * so no react-day-picker base stylesheet import is needed.
  */
 const DEFAULT_START_YEAR = 2000;
 const DEFAULT_END_YEAR_OFFSET = 5;
@@ -29,8 +27,6 @@ export function Calendar({
   ...props
 }: CalendarProps) {
   const d = getDefaultClassNames();
-  // A wide, dropdown-navigable year range so users can jump to any year directly
-  // instead of stepping month-by-month with the arrows.
   const now = new Date();
   const resolvedStart = startMonth ?? new Date(DEFAULT_START_YEAR, 0);
   const resolvedEnd = endMonth ?? new Date(now.getFullYear() + DEFAULT_END_YEAR_OFFSET, 11);
@@ -49,7 +45,7 @@ export function Calendar({
           'flex items-center gap-1 text-sm font-medium text-primary-8',
           d.caption_label
         ),
-        // month / year dropdowns for fast navigation (native selects, overlaid)
+        // native selects, overlaid on the caption label
         dropdowns: cn('flex items-center justify-center gap-1.5', d.dropdowns),
         dropdown_root: cn(
           'relative inline-flex items-center rounded-lg border border-gray-200 px-2 py-1 text-sm font-medium text-primary-8 transition-colors hover:bg-gray-50',

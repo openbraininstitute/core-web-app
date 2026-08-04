@@ -1,17 +1,8 @@
 /**
- * REGRESSION — the grid must work inside a modal.
- *
- * `ui/molecules/modal` portals its dialog to `document.body` at `zIndex + 1` (1001 by
- * default); the toolbar's advanced-filters popover portals to the SAME parent. Two
- * body-level siblings order by z-index alone, so while the popover kept the
- * `ui/molecules/popover` default of `z-50` it opened BEHIND the dialog and the button
- * read as dead (the workflow entity pickers — "Select ion channel recording").
- *
- * Painted stacking cannot be observed in jsdom, so the assertion is on the thing that
- * decides it: the popover's own stacking RANK must exceed the dialog's. The rank is
- * read from whichever channel the element uses — an inline `z-index` (the modal) or a
- * `z-<n>` utility (the popover) — so the test survives a rename of the constant and
- * fails the moment either surface drifts back below the other.
+ * Regression: the advanced-filters popover opened behind the modal dialog it was
+ * launched from (both portal to `document.body`, so z-index alone orders them) and the
+ * button read as dead. jsdom cannot observe painted stacking, so the assertion is on the
+ * stacking rank each surface contributes.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -57,9 +48,8 @@ const schema: IGridSchema<Row> = {
 };
 
 /**
- * The z-index an element actually contributes, from either channel: the inline style
- * the modal sets, or the `z-<n>` / `z-[<n>]` utility a Tailwind surface carries (class
- * names have no computed style in jsdom, so they must be read literally).
+ * The z-index an element contributes, from either channel: the modal's inline style, or a
+ * `z-<n>` utility read literally (class names have no computed style in jsdom).
  */
 function stackingRank(el: Element | null): number {
   if (!(el instanceof HTMLElement)) return Number.NaN;
@@ -95,12 +85,10 @@ describe('ActiveFiltersButton inside a modal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Advanced filters' }));
 
-    // the popover is REACHABLE — its content mounted, with the filter list in it
     const content = document.querySelector('[data-slot="popover-content"]');
     expect(content).not.toBeNull();
     expect(screen.getByRole('menuitem', { name: /Generation type/ })).toBeInTheDocument();
 
-    // …and it is not buried under the dialog it was opened from
     const dialog = document.getElementById('modal-dialog');
     expect(dialog).not.toBeNull();
     expect(stackingRank(content)).toBeGreaterThan(stackingRank(dialog));

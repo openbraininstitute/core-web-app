@@ -6,19 +6,10 @@ import type { IGridContext, TContextualValue } from './grid-context';
 import type { IGridSchema } from './schema';
 
 /**
- * ADVANCED FILTERS — schema-level filters that have NO column in the grid.
- *
- * Many entitycore endpoints accept whole families of query params that never appear
- * as a column (`GET /cell-morphology` takes the entire `cell_morphology_protocol__*`
- * family). Those are declared on {@link IGridSchema.advancedFilters} and surfaced by
- * the toolbar's filter menubar instead of a column header.
- *
- * ONE FILTER MODEL, TWO SURFACES: an advanced filter IS an {@link IFilterTarget} —
- * the exact vocabulary a column's "match by" target uses (`id`, `label`, `field`,
- * `operators`, `options`, `facetKey`, `description`, `freeEntry`, `available`). The
- * same operator registry, the same value editors, the same serializer strategies
- * apply; only the surface that opens the editor differs. There is deliberately no
- * parallel type hierarchy.
+ * A schema-level filter with no column in the grid, declared on
+ * {@link IGridSchema.advancedFilters} and surfaced by the toolbar's filter menubar.
+ * It IS an {@link IFilterTarget}, so the same operators, editors and serializers
+ * apply — deliberately no parallel type hierarchy.
  */
 export type TAdvancedFilterDef = IFilterTarget;
 
@@ -36,14 +27,9 @@ export interface IAdvancedFilterGroup {
 }
 
 /**
- * NAMESPACE for advanced-filter entries in {@link IGridState.filters}.
- *
- * Advanced filters live in the SAME `filters` record as column filters so they
- * serialize, persist, reset and list in the active-filters popover through the
- * existing paths untouched. To guarantee they can never collide with a column id,
- * their key is `adv:<groupId>:<filterId>` — a column id containing `:` has never
- * been legal (ids are used verbatim as AG Grid col ids and as backend field
- * fallbacks), so the prefix is unambiguous in both directions.
+ * Namespace for advanced-filter entries, which share the `filters` record with
+ * column filters. A column id may never contain `:` (ids are used verbatim as AG
+ * Grid col ids and backend field fallbacks), so the prefix cannot collide.
  */
 export const ADVANCED_FILTER_KEY_PREFIX = 'adv:';
 
@@ -58,10 +44,9 @@ export function isAdvancedFilterKey(key: string): boolean {
 }
 
 /**
- * One entry of the advanced-filters panel, paired with its state key and owning
- * group. Its two producers are {@link resolveAdvancedFilterGroups} (a schema-level
- * advanced filter) and `resolveFilterPanelGroups` (a currently-hidden AUXILIARY
- * column, whose key is the COLUMN ID) — the panel treats them identically.
+ * One entry of the advanced-filters panel, with its state key and owning group.
+ * Produced either from a schema-level advanced filter or from a currently-hidden
+ * auxiliary column (whose key is the column id); the panel treats both identically.
  */
 export interface IResolvedAdvancedFilter {
   /** key into {@link IGridState.filters} — `adv:<group>:<filter>`, or a column id */
@@ -72,11 +57,7 @@ export interface IResolvedAdvancedFilter {
   label: string;
   /** the primary/default target — `targets[0]` */
   def: TAdvancedFilterDef;
-  /**
-   * Every field this entry can be matched by. Exactly one for a schema-level
-   * advanced filter; an auxiliary column contributes all of ITS targets, so the
-   * panel offers the same "match by" switch its header would.
-   */
+  /** Every field this entry can be matched by; one for a schema-level advanced filter. */
   targets: ReadonlyArray<TAdvancedFilterDef>;
 }
 
@@ -117,11 +98,8 @@ export function resolveAdvancedFilterGroups<Row>(
 }
 
 /**
- * Every declared advanced filter keyed by its state key, CONTEXT-FREE.
- *
- * Serialization and hydration must not depend on the UI context: a persisted entry
- * for a filter that is merely unavailable right now must still resolve to its field
- * (and must not be silently re-pointed at another one).
+ * Every declared advanced filter keyed by its state key. Deliberately context-free:
+ * a persisted entry for a currently-unavailable filter must still resolve to its field.
  */
 export function advancedFilterDefsByKey<Row>(
   schema: IGridSchema<Row>
@@ -135,12 +113,8 @@ export function advancedFilterDefsByKey<Row>(
 
 /**
  * Drop advanced-filter entries whose definition no longer exists in the schema, and
- * pin the rest to their def's target id.
- *
- * This is a CORRECTNESS guard, not tidiness: an orphaned `adv:…` key would fall
- * through the serializer's column lookup and be emitted as a query param literally
- * named `adv:group:filter__in`. Persisted state outlives schema edits, so the entry
- * has to go.
+ * pin the rest to their def's target id. An orphaned `adv:…` key would otherwise fall
+ * through the serializer's column lookup and be emitted as a literal query param.
  */
 export function pruneAdvancedFilters<Row>(
   filters: TFilterModel,

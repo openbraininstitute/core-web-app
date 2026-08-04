@@ -1,17 +1,9 @@
 /**
- * Regression: switching the browse scope while the picker holds selections used to
- * blow up with React's "Maximum update depth exceeded".
- *
- * A scope switch rebuilds the host's `GridController` (its `dataKey` contains the
- * scope), so the grid gets a BRAND NEW, empty store while the `<DataGrid>` component
- * instance — and its `lastEmittedRef` baseline — survives. The store→host emit effect
- * then reported the fresh store's empty selection to the host at the same time as the
- * host→store CONTROLLED sync pushed the host's picks back into the store, each acting
- * on the other's pre-swap value: an unbounded ping-pong.
- *
- * The crash surfaced in whichever `setState` happened to trip React's nested-update
- * limit — in the app that was Radix's Select trigger ref inside the grid toolbar — so
- * these tests assert the loop itself (bounded emits, no throw), not the symptom.
+ * Regression: switching the browse scope while the picker held selections blew up with
+ * "Maximum update depth exceeded" — the swap gives the grid a new store while `<DataGrid>`
+ * and its `lastEmittedRef` baseline survive, so the store→host emit and the host→store
+ * controlled sync each acted on the other's pre-swap value. Asserts the loop itself
+ * (bounded emits, no throw), not the symptom.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -40,9 +32,8 @@ import type {
 } from '@/features/data-grid/core';
 import type { TGridRenderer } from '@/features/data-grid/react/renderer';
 
-// A shared "?scope=" query param: every `useScope()` reads and writes the same value,
-// exactly like the real nuqs-backed hook, so clicking the scope tab moves the whole
-// tree (host grid + tab strip) to the new scope.
+// a shared "?scope=" query param, like the real nuqs-backed hook, so clicking the scope
+// tab moves the whole tree
 let scopeValue: string = WorkspaceScope.Public;
 const scopeListeners = new Set<() => void>();
 
@@ -155,10 +146,8 @@ describe('DataGrid picker selection survives a controller swap', () => {
       await new Promise((r) => setTimeout(r, 200));
     });
 
-    // Before the fix this never converged — the store and the host echoed each other
-    // until React threw "Maximum update depth exceeded".
+    // before the fix this never converged
     expect(emitted.length - before).toBeLessThanOrEqual(1);
-    // and the pick is not silently dropped by the swap
     expect(emitted.at(-1) ?? [PICKED]).toEqual([PICKED]);
   });
 });

@@ -14,15 +14,11 @@ import type { IHasEmDataset } from '../columns/catalog';
 
 /** Cell-renderer registry key for the EM dense-reconstruction dataset name cell. */
 export const EM_DATASET_RENDERER = 'emDataset';
-/** …and for the two ScientificArtifact fields of that same dataset. */
+/** Registry keys for the two ScientificArtifact fields of that same dataset. */
 export const EM_DATASET_PUBLISHED_IN_RENDERER = 'emDatasetPublishedIn';
 export const EM_DATASET_EXPERIMENT_DATE_RENDERER = 'emDatasetExperimentDate';
 
-/**
- * The dataset fields the mesh list row does NOT carry. `EMDenseReconstructionDataset`
- * is a ScientificArtifact, so `published_in` and `experiment_date` are on its own read
- * schema — they are simply absent from the hand-written TS type.
- */
+/** Dataset fields absent from the hand-written TS type but present on the wire. */
 type TDatasetFields = {
   name?: string | null;
   published_in?: string | null;
@@ -30,14 +26,9 @@ type TDatasetFields = {
 };
 
 /**
- * EM-cell-mesh list rows carry only the dataset's `{ id }` — `em_cell_mesh.py`
- * serializes it as a `BasicEntityRead`, which is id + type and nothing else — so every
- * dataset field is fetched lazily per cell. Keyed by dataset id, rows sharing a dataset
- * (the common case — a few datasets back many meshes) dedupe to ONE request via
- * react-query, and the three cells below share that same request rather than each
- * making their own. The result is treated as immutable
- * (`staleTime`/`gcTime: Infinity`): a dataset's publication details do not change
- * within a session.
+ * Mesh rows carry only the dataset's `{ id }`, so dataset fields are fetched lazily.
+ * Keyed by dataset id so rows (and all three cells) sharing a dataset dedupe to one
+ * request, cached forever — publication details don't change within a session.
  */
 function useEmDataset(row?: IHasEmDataset) {
   const datasetId = row?.em_dense_reconstruction_dataset?.id ?? '';
@@ -62,7 +53,6 @@ function DatasetField({ row, read }: { row?: IHasEmDataset; read: (d: TDatasetFi
   if (!datasetId) return <span className="text-gray-300">{EMPTY_PLACEHOLDER}</span>;
   if (isLoading) return <Skeleton className="h-4 w-24" />;
   const value = dataset ? read(dataset) : '';
-  // min-w-0 lets the span shrink-and-ellipsize inside the flex cell wrapper
   return <span className="min-w-0 truncate text-primary-8">{value || EMPTY_PLACEHOLDER}</span>;
 }
 

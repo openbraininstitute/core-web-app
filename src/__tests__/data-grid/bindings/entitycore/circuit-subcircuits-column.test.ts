@@ -13,12 +13,9 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IGridContext } from '@/features/data-grid/core';
 
 /**
- * The Subcircuits column is a HIERARCHY affordance: it hosts the expand chevron and
- * counts a subtree only the Data → Circuit hierarchy listing renders. It must resolve
- * away everywhere else — the flat view, and every workflow/picker mount of the same
- * schema (e.g. the circuit-extraction campaign picker) — while STAYING in
- * `circuitSchema.columns`, which is what the nested `CircuitRecursiveGrid` and the
- * detail view's `RELATED_CIRCUIT_COLUMNS` render from.
+ * The Subcircuits column must resolve away outside the Data → Circuit hierarchy listing,
+ * while staying in `circuitSchema.columns`, which the nested grid and the detail view's
+ * `RELATED_CIRCUIT_COLUMNS` render from.
  */
 function context(over: Partial<IGridContext> = {}): IGridContext {
   return { dataType: 'circuit', section: WorkspaceSection.Data, scope: 'public', ...over };
@@ -67,9 +64,7 @@ describe('circuit — Subcircuits column availability', () => {
   });
 
   it('stays in the raw schema columns, so the nested recursive grid keeps the expander host', () => {
-    // `CircuitGridBody` hands `definition.schema.columns` straight to
-    // `CircuitRecursiveGrid` (and `RELATED_CIRCUIT_COLUMNS` spreads the same list);
-    // neither runs `resolveColumns`, so the contextual gate must not touch them.
+    // neither consumer runs `resolveColumns`, so the contextual gate must not touch them
     expect(circuitSchema.columns.map((c) => c.id)).toContain(EntityCoreFields.CircuitSubCircuit);
   });
 });

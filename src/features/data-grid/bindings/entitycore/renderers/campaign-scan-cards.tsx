@@ -48,12 +48,7 @@ export function formatScanValue(value: unknown): string {
   return String(value);
 }
 
-/**
- * Shape the expand-payload records (the same scan-parameter sets the legacy nested
- * table listed) into card view-models: a title (the simulation name/identifier) plus a
- * flat list of formatted scan-parameter rows. Non-object / empty payloads yield `[]`.
- * This is the unit under test for the "records → cards" shaping.
- */
+/** Shape expand-payload records into card view-models; non-array payloads yield `[]`. */
 export function toScanCardData(records: unknown): IScanCard[] {
   if (!Array.isArray(records)) return [];
   return records.map((raw, index) => {
@@ -70,26 +65,23 @@ export function toScanCardData(records: unknown): IScanCard[] {
   });
 }
 
-/** Per-card column width (rem) + inter-card gap; popover width = cols × card + gaps. */
 const CARD_W_REM = 14; // w-56
 const GAP_REM = 0.5; // gap-2
 const MAX_COLS = 3;
 
-/** Columns for N cards: 1 → 1 (single card fills the popover), capped at {@link MAX_COLS}. */
+/** Columns for N cards, capped at {@link MAX_COLS}. */
 function scanCardColumns(count: number): number {
   return Math.min(Math.max(count, 1), MAX_COLS);
 }
 
-/** Popover content width for a given column count — driven by the cards, NOT the title. */
+/** Popover content width for a column count — driven by the cards, not the title. */
 function scanCardsWidth(cols: number): string {
   return `${cols * CARD_W_REM + (cols - 1) * GAP_REM}rem`;
 }
 
 function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
   return (
-    // fills its grid column (single card → full popover width); hover greys the whole card
     <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">
-      {/* header — title + status, separated from the body by a border (image style) */}
       <div className="flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2">
         <span
           title={card.title}
@@ -99,7 +91,6 @@ function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
         </span>
         {card.status ? <CampaignStatusBadge status={card.status} compact /> : null}
       </div>
-      {/* body — scan parameters shown IN FULL (wrap) without widening the fixed card */}
       <div className="p-1.5">
         {card.params.length > 0 ? (
           <dl className="flex flex-col gap-0.5">
@@ -132,10 +123,8 @@ interface CampaignScanCardsProps {
 }
 
 /**
- * Scan-parameter cards for the status popover. The popover WIDTH is set from the card
- * count (1 → one card wide, up to {@link MAX_COLS} across) — NOT from the title, so a
- * long `{sim_name} execution status` heading wraps instead of stretching a one-card
- * popover. Height is capped (`max-h-80`) with a secondary scrollbar for long campaigns.
+ * Scan-parameter cards for the status popover. Width comes from the card count, not the
+ * title, so a long heading wraps instead of stretching a one-card popover.
  */
 export function CampaignScanCards({
   records,
@@ -144,7 +133,6 @@ export function CampaignScanCards({
   error,
 }: CampaignScanCardsProps): ReactNode {
   const cards = loading || error ? [] : toScanCardData(records);
-  // loading shows just 2 skeleton cards (not the 3-wide final state)
   const cols = scanCardColumns(loading ? 2 : cards.length);
   const gridStyle = { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` };
 

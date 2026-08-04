@@ -18,11 +18,7 @@ export interface IBuildColDefsOptions {
   columnWidths: Record<string, number>;
   /** prepend the expand-chevron column (grids with a detail runtime) */
   withExpandColumn?: boolean;
-  /**
-   * optional placement of the expander. When `columnId` matches a data column the
-   * chevron hosts inside that cell and no leading column is prepended; otherwise
-   * (default) the fixed leading `__expand` column is used.
-   */
+  /** when `columnId` matches a data column the chevron hosts inside that cell instead */
   expandColumn?: IExpandColumnConfig;
 }
 
@@ -53,8 +49,6 @@ export function buildColDefs<Row>(
 ): Array<ColDef<Row>> {
   const { hidden, columnWidths, withExpandColumn, expandColumn } = options;
 
-  // Host the expander inside a named column only when a detail runtime exists AND a
-  // matching column id was supplied; otherwise fall back to the leading column.
   const hostColumnId =
     withExpandColumn && expandColumn?.columnId
       ? columns.some((c) => c.id === expandColumn.columnId)
@@ -67,10 +61,8 @@ export function buildColDefs<Row>(
     const getValue = c.getValue;
     const userWidth = columnWidths[c.id];
 
-    // the whole filter UI now lives in the custom header (round icon-button +
-    // popover), so there is no AG floating-filter row — the header just needs the
-    // column's filter targets (a legacy flat filter resolves to exactly one) to
-    // render it. A column that declares targets always offers them.
+    // the whole filter UI lives in the custom header, so there is no AG floating-filter
+    // row — the header only needs the column's targets (a flat filter resolves to one)
     const targets = c.filterTargets ?? resolveFilterTargets(c);
     const filterParams = c.filterAvailable && targets.length > 0 ? { targets } : undefined;
 
@@ -110,8 +102,6 @@ export function buildColDefs<Row>(
     }
 
     if (c.id === hostColumnId) {
-      // Host the expander inside this column's cell; the host renderer also draws
-      // the column's normal content (via `rendererKey` or the plain value).
       colDef.cellRenderer = AgExpandHostCell;
       colDef.cellRendererParams = {
         rendererKey: c.cellRenderer,
@@ -128,14 +118,10 @@ export function buildColDefs<Row>(
       colDef.suppressHeaderMenuButton = true;
     }
 
-    // Columns the grid prints itself show the shared placeholder when the value is
-    // missing/empty, so a cell is never silently blank.
     if (!keepsBlankWhenEmpty(c, hostColumnId)) withEmptyPlaceholder(colDef);
 
     return colDef;
   });
 
-  // Prepend the fixed leading expander only when the expander is NOT hosted inside
-  // a data column — preserving the historical default for every existing entity.
   return withExpandColumn && !hostColumnId ? [expandColDef<Row>(), ...defs] : defs;
 }

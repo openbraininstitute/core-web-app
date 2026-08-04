@@ -17,7 +17,6 @@ const schema: IGridSchema<Row> = {
     speciesColumn<Row>(),
     // legacy single-field column (no `targets`) — the back-compat baseline
     { id: 'name', header: 'Name', filter: { operators: [OperatorId.Ilike], field: 'name' } },
-    // filtered column with no filter declaration at all
     { id: 'weight', header: 'Weight', field: 'weight' },
   ],
 };

@@ -38,20 +38,9 @@ import type { IHasContributions } from '../columns/catalog';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * `ICircuit` declares only ONE of the four `has_*` content flags
- * (`has_electrical_cell_models`) and omits `contributions` altogether, but the wire
- * carries all five: `CircuitRead` = `CircuitBaseMixin` (all four booleans, non-null,
- * default `false`) + `ScientificArtifactRead` → `EntityRead` →
- * `ContributionReadWithoutEntityMixin`, and the list loader eager-loads
- * `Circuit.contributions → Contribution.agent` (`app/service/circuit.py`).
- *
- * Every augmented member is OPTIONAL on purpose: that keeps `ICircuit` assignable to
- * `Row`, so `IGridSchema<Row>` stays interchangeable with `IGridSchema<ICircuit>` for
- * the nested `CircuitRecursiveGrid` and `RELATED_CIRCUIT_COLUMNS` consumers. Same
- * local-augmentation pattern as `schemas/cell-morphology.ts`.
- *
- * (`subject` IS declared on `ICircuit`, and `ISubject` carries `name` and
- * `strain.name`, so the two subject columns need no augmentation.)
+ * The wire carries all four `has_*` flags and `contributions`, but `ICircuit` declares
+ * only `has_electrical_cell_models`. Members stay optional so `ICircuit` remains
+ * assignable to `Row`.
  */
 type Row = ICircuit &
   IHasContributions & {
@@ -61,20 +50,9 @@ type Row = ICircuit &
   };
 
 /**
- * ADVANCED FILTERS — `GET /circuit` params with no column in this grid. The whole
- * circuit family shares one declaration ({@link buildCircuitAdvancedFilters}); this
- * listing is the one that shows Build category and Target simulator COLUMNS, so both
- * are excluded here.
- *
- * The four `has_*` flags, both `subject__*` fields and `contribution__pref_label` are
- * excluded too — they are AUXILIARY COLUMNS below (hidden until ticked), which keeps
- * each field on exactly one surface. The panel still offers them for as long as they
- * stay hidden. What is left is the record's own `id` and the two provenance UUIDs,
- * none of which has a useful column to show.
- *
- * `scale` is deliberately absent too: the base circuit listing narrows `scale__in` in
- * its domain config (`narrowFilters`, everything except Single) and the Scale column
- * already owns that param.
+ * `GET /circuit` params with no column here. Everything excluded is a column or
+ * auxiliary column below, so each field lives on exactly one surface. `scale` is
+ * omitted because the domain config narrows `scale__in` and the Scale column owns it.
  */
 const circuitAdvancedFilters = buildCircuitAdvancedFilters({
   includeBuildCategory: false,
@@ -85,15 +63,10 @@ const circuitAdvancedFilters = buildCircuitAdvancedFilters({
 });
 
 /**
- * The four `has_*` content flags of `CircuitFilterMixin`'s host, as AUXILIARY columns.
- *
- * SORT SAFETY: all four ARE in `CircuitFilter.Constants.ordering_model_fields`
- * (`app/filters/circuit.py`), so every one of them sorts — this listing has no sort
- * offender among the fields moved off the panel.
- *
- * The filter is declared as an explicit TARGET rather than flat props: the synthesised
- * legacy target reads "no options" as "use the grid's facets", which for a boolean the
- * server computes no bucket for is an empty picker instead of the Yes/No control.
+ * A `has_*` content flag as an auxiliary column. All four are in
+ * `CircuitFilter.ordering_model_fields`, so they sort. The filter needs an explicit
+ * target: with no options a flat filter falls back to facets, and the server computes
+ * no facet bucket for these booleans.
  */
 function circuitFlagColumn(
   id: string,
@@ -112,7 +85,7 @@ function circuitFlagColumn(
     width: { minWidth: 150 },
     getValue: (row) => yesNo(get(row)),
     filter: {
-      // the bare boolean param — `has_morphologies=true`, no `__op` suffix
+      // Bare boolean param — `has_morphologies=true`, no `__op` suffix.
       operators: [OperatorId.Bool],
       field,
       targets: [{ id, label: header, field, operators: [OperatorId.Bool], description }],
@@ -126,28 +99,16 @@ function localizedNumber(value: number | null | undefined): string {
 }
 
 /**
- * Re-authored circuit grid schema. Column ids equal the legacy antd column keys
- * (the {@link EntityCoreFields} values) so the top-level controller's hidden-column
- * set maps 1:1 onto the nested `CircuitRecursiveGrid`'s antd columns (see
- * {@link CircuitGridBody}). Column order mirrors the legacy `ViewDefForCircuit`
- * (minus the antd-only Download action column, replaced by the shared selection +
- * bulk download). Per-column server filters/sorts are locked to the legacy
- * `transformFiltersToQuery` oracle by the circuit parity test.
+ * Circuit grid schema (`GET /circuit`). Column ids equal the {@link EntityCoreFields}
+ * keys so the hidden-column set maps 1:1 onto the nested `CircuitRecursiveGrid`.
  */
 export const circuitSchema: IGridSchema<Row> = {
   id: 'circuit',
   getRowId: (row) => row.id,
-  // NO selection: the circuit listing has no checkboxes and no bulk-action selection
-  // (parity with the legacy antd listing, whose per-row Download action column stood
-  // in for them). Selection is opt-in, so omitting the spec IS the opt-out. The
-  // workflow PICKERS are unaffected: a picker supplies its own `selectionType` /
-  // `onRowsSelected` through `mainTableProps`, which `<DataGrid>` honours
-  // independently of the schema (see `pickerMode` in `react/data-grid.tsx`).
-  // Sorting is off in the HIERARCHY view: rows there are a derivation tree whose
-  // order is structural, and the view-aware data source ignores `order_by`, so a
-  // sortable header would be a control that does nothing. The legacy listing did the
-  // same by withholding `sortState`/`setSortState` from `useDataTableColumns`. Flat
-  // view keeps every column's declared `sortable` untouched.
+  // No selection spec: this listing has no checkboxes. Pickers are unaffected — they
+  // supply their own `selectionType` through `mainTableProps`.
+  // Sorting is off in the hierarchy view: rows there are a derivation tree and the
+  // view-aware data source ignores `order_by`.
   sortable: byContext<boolean>({
     default: true,
     rules: [
@@ -157,10 +118,9 @@ export const circuitSchema: IGridSchema<Row> = {
       },
     ],
   }),
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(circuitAdvancedFilters),
-  // Detail rows host the recursive subcircuit grid (hierarchy view). The runtime is
-  // supplied by the plugin body (`detailOverride`); this only sizes the detail row.
+  // Detail rows host the recursive subcircuit grid; the plugin body supplies the
+  // runtime via `detailOverride`.
   detail: {
     rendererKey: 'circuit-subcircuits',
     isExpandable: (row) => {
@@ -171,16 +131,9 @@ export const circuitSchema: IGridSchema<Row> = {
   },
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
-    // Hosts the expand chevron (right-aligned), and only ever means something in the
-    // Data → Circuit HIERARCHY listing: the count describes a subtree the flat listing
-    // does not render, and the expander only exists when the plugin supplies its
-    // recursive detail. So availability is contextual and DENY-BY-DEFAULT — it turns on
-    // only for the Data section AND the circuit plugin's hierarchy view (published as
-    // the `CIRCUIT_VIEW_FACTOR` grid-context factor by `CircuitGridBody`). Every other
-    // mount of this schema (workflow/extract pickers, any non-Data surface) never sets
-    // that factor, so the column resolves away. NB: `resolveColumns` is what applies
-    // this, so `circuitSchema.columns` still carries the column for the NESTED
-    // `CircuitRecursiveGrid` and `RELATED_CIRCUIT_COLUMNS`, which need the expander.
+    // Deny-by-default: only the Data section's hierarchy view renders the subtree this
+    // counts, so availability turns on for `section: Data` + `CIRCUIT_VIEW_FACTOR:
+    // Hierarchy` (published by `CircuitGridBody`). Other mounts resolve it away.
     {
       id: EntityCoreFields.CircuitSubCircuit,
       header: 'Subcircuits',
@@ -197,9 +150,8 @@ export const circuitSchema: IGridSchema<Row> = {
         ],
       }),
       align: Align.Left,
-      // Pinned: this column HOSTS the expand chevron, so its position is part of how
-      // the tree reads — dragging it elsewhere leaves the chevron detached from the
-      // hierarchy it opens.
+      // Pinned: this column hosts the tree's expand chevron, so its position is
+      // load-bearing.
       movable: false,
       width: { width: 110, minWidth: 90 },
       getValue: (row) => {
@@ -208,9 +160,7 @@ export const circuitSchema: IGridSchema<Row> = {
       },
     } satisfies IColumnModel<Row>,
     descriptionColumn<Row>({ id: EntityCoreFields.Description }),
-    // ICircuit's type omits `brain_region` (present on the wire); read it via a cast —
-    // same shape/filter binding as the catalog `brainRegionColumn`. The hierarchy
-    // selector's `within_brain_region_*` gating still applies on top.
+    // `brain_region` is on the wire but missing from `ICircuit`, hence the cast.
     {
       id: EntityCoreFields.BrainRegion,
       header: 'Brain region',
@@ -239,7 +189,7 @@ export const circuitSchema: IGridSchema<Row> = {
       filter: {
         operators: [OperatorId.In],
         field: 'scale',
-        // options mirror the legacy dropdown (all scales except "Single").
+        // All scales except "Single".
         options: {
           kind: FilterOptionsKind.Static,
           items: Object.values(CircuitScale)
@@ -299,7 +249,7 @@ export const circuitSchema: IGridSchema<Row> = {
         const labels = derivations ? getCircuitDerivationColumnLabels(derivations) : [];
         return labels.length ? labels.join(', ') : '';
       },
-      // Static enum filter (backend exposes a plain enum, not a facet). Not sortable.
+      // Plain enum on the backend, not a facet. Not in the ordering fields.
       filter: {
         operators: [OperatorId.In],
         field: 'generated_derivation__derivation_type',
@@ -317,29 +267,22 @@ export const circuitSchema: IGridSchema<Row> = {
       sortField: 'published_in',
       width: { minWidth: 150, flex: 1 },
       getValue: (row) => row.published_in ?? '',
-      // /circuit exposes `published_in` + `published_in__ilike` (no `__in`).
+      // /circuit exposes `published_in__ilike` only, no `__in`.
       filter: { operators: [OperatorId.Ilike], field: 'published_in' },
     } satisfies IColumnModel<Row>,
     {
       id: EntityCoreFields.ArtifactExperimentDate,
       header: 'Experiment date',
       align: Align.Left,
-      // `experiment_date` is in CircuitFilter's ordering fields, and /circuit exposes
-      // `experiment_date__gte` / `experiment_date__lte`.
       sortable: true,
       sortField: 'experiment_date',
       width: { minWidth: 140 },
       getValue: (row) => formatDate(row.experiment_date),
       filter: { operators: [OperatorId.DateRange], field: 'experiment_date' },
     } satisfies IColumnModel<Row>,
-    // Visible, matching the legacy view-def (PR #1850 appends it after Experiment date).
     lifecycleStatusColumn<Row>(),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one.
-    // ZERO SORT OFFENDERS here: every field below is in
-    // `CircuitFilter.Constants.ordering_model_fields`, which SPREADS
-    // `ScientificArtifactFilter.Constants.ordering_model_fields` and adds the four
-    // `has_*` flags, `subject__name`, `subject__strain__name` and
-    // `contribution__pref_label` explicitly (`app/filters/circuit.py`).
+    // Auxiliary — hidden until ticked; each replaces an advanced filter. Every field
+    // below is in `CircuitFilter.ordering_model_fields`, so all of them sort.
     circuitFlagColumn(
       'hasMorphologies',
       'Has morphologies',
@@ -368,23 +311,17 @@ export const circuitSchema: IGridSchema<Row> = {
       'Circuits whose morphologies carry segmented dendritic spines',
       (row) => row.has_spines
     ),
-    // Both subject fields ARE in CircuitFilter's ordering fields — `subject__name` is
-    // one of the few endpoints that sorts it, so the catalog default (never sortable)
-    // is overridden deliberately here.
+    // /circuit is one of the few endpoints that sorts `subject__name`, so the catalog
+    // default of non-sortable is overridden here.
     subjectStrainColumn<Row>({ sortable: true }),
     subjectNameColumn<Row>({ sortable: true, sortField: 'subject__name' }),
-    // No circuit listing shows Contributors as a regular column; auxiliary keeps the
-    // field on one surface without changing the default layout. `contribution__pref_label`
-    // IS in CircuitFilter's ordering fields.
     contributionsColumn<Row>({
       auxiliary: true,
       sortable: true,
       sortField: 'contribution__pref_label',
       filter: {
-        // `contribution__pref_label__ilike`, `contribution__pref_label__in` — the
-        // operators (and free-entry kind) of the advanced filter this replaces. An
-        // explicit target because the field has no server-computed facet bucket on
-        // /circuit, and a target with no options would render an empty picker.
+        // Explicit target: /circuit computes no facet bucket for this field, and a
+        // target with no options renders an empty picker.
         operators: [OperatorId.Ilike, OperatorId.In],
         field: 'contribution__pref_label',
         targets: [

@@ -16,10 +16,8 @@ const rows: Row[] = [
 ];
 
 /**
- * A per-row action button whose ENTIRE hit area is an inline SVG icon — exactly how
- * the related-circuits download action renders. Clicking it lands on the `<svg>`
- * (an `SVGElement`, NOT an `HTMLElement`), which is what used to slip past the
- * grid's interactive-target guard and open the row.
+ * A per-row action button whose whole hit area is an inline SVG, so the click lands on an
+ * `SVGElement` (not an `HTMLElement`) — what used to slip past the interactive-target guard.
  */
 const columns: Array<ISimpleColumn<Row>> = [
   {
@@ -49,10 +47,9 @@ function renderGrid(onRowClick: (row: Row) => void) {
 }
 
 /**
- * AG Grid dispatches `cellClicked` asynchronously, so a bare `expect(...).not
- * .toHaveBeenCalled()` right after a click passes even when the row DOES open.
- * Every test therefore clicks a plain cell LAST and waits for that (legitimate)
- * row-open to arrive — by then any earlier, illegitimate one has flushed too.
+ * AG Grid dispatches `cellClicked` asynchronously, so a bare `not.toHaveBeenCalled()`
+ * passes even when the row does open. Each test therefore clicks a plain cell last and
+ * waits for that legitimate row-open — by then any earlier one has flushed too.
  */
 async function clickPlainCellAndFlush(
   container: HTMLElement,
@@ -75,7 +72,6 @@ describe('InMemoryGrid row-open guard', () => {
     fireEvent.click(buttons[0]);
 
     await clickPlainCellAndFlush(container, onRowClick);
-    // only the plain-cell click opened a row
     expect(onRowClick).toHaveBeenCalledTimes(1);
     expect(onRowClick.mock.calls[0][0]).toMatchObject({ id: 'b' });
   });
@@ -84,7 +80,6 @@ describe('InMemoryGrid row-open guard', () => {
     const onRowClick = vi.fn();
     const { container, findAllByTestId } = renderGrid(onRowClick);
 
-    // the real-world path: the icon fills the button, so the click target is the SVG
     const icons = await findAllByTestId('row-action-icon');
     fireEvent.click(icons[0]);
 

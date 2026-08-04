@@ -30,9 +30,8 @@ export interface IGridPaginationProps<Row> {
 }
 
 /**
- * Renderer-agnostic server pagination, centered on the page: fully-rounded page
- * buttons (antd Pagination) with the page-size selector supplied by the app's
- * `ui/molecules` Select (rounded-xl), not antd's built-in size changer.
+ * Renderer-agnostic server pagination: antd `Pagination` for the page buttons, with the
+ * page-size selector supplied by the app's `ui/molecules` Select rather than antd's.
  */
 export function GridPagination<Row>({
   controller,
@@ -50,13 +49,10 @@ export function GridPagination<Row>({
       <Pagination
         className={cn(
           'flex items-center gap-1',
-          // fully-rounded page items + quiet hover
           '[&_.ant-pagination-item]:rounded-full [&_.ant-pagination-item]:border-transparent [&_.ant-pagination-item]:transition-colors',
           '[&_.ant-pagination-item>a]:text-primary-8 [&_.ant-pagination-item:hover]:bg-gray-100',
-          // active: filled dark circle
           '[&_.ant-pagination-item-active]:border-transparent [&_.ant-pagination-item-active]:bg-primary-8',
           '[&_.ant-pagination-item-active:hover]:bg-primary-9 [&_.ant-pagination-item-active>a]:font-semibold [&_.ant-pagination-item-active>a]:text-white!',
-          // fully-rounded prev / next
           '[&_.ant-pagination-prev_.ant-pagination-item-link]:rounded-full [&_.ant-pagination-next_.ant-pagination-item-link]:rounded-full',
           '[&_.ant-pagination-prev:hover_.ant-pagination-item-link]:bg-gray-100 [&_.ant-pagination-next:hover_.ant-pagination-item-link]:bg-gray-100'
         )}

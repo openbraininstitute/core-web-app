@@ -1,8 +1,6 @@
 /**
- * The grid's FOOTER: bulk actions on the left, pagination in the middle, the results
- * count and the selection status on the right. Asserted as DOM order inside the one
- * footer row — the visual arrangement is flexbox on that same order, so order is the
- * honest thing to pin in jsdom, and it is what a keyboard user traverses.
+ * Pins the footer's arrangement as DOM order within the footer row — the visual layout is
+ * flexbox over that same order, which is also what a keyboard user traverses.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
@@ -85,10 +83,8 @@ describe('DataGrid footer', () => {
     expect(footer).not.toBeNull();
     expect(footer?.contains(bulk)).toBe(true);
 
-    // bulk actions come before the count in document order (left → right)
     expect(bulk.compareDocumentPosition(count) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    // the selection status sits with the count on the right, not with the actions
     const selected = screen.getByText('1 selected');
     expect(selected.compareDocumentPosition(bulk) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });

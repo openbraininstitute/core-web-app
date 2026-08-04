@@ -1,8 +1,6 @@
 /**
- * The detail port for expandable rows. The schema's `detail.rendererKey` selects
- * the React renderer; this provider supplies the behaviour (whether a row can
- * expand and how to fetch its detail payload). Nested expansion is realised by a
- * provider whose renderer mounts a child grid (Composite).
+ * The detail port for expandable rows: whether a row can expand and how to fetch its
+ * payload. The schema's `detail.rendererKey` selects the React renderer.
  */
 export interface IDetailProvider<Row, Detail = unknown> {
   canExpand(row: Row): boolean;

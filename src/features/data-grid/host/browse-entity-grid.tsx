@@ -70,13 +70,10 @@ export interface IBrowseEntityGridProps extends BrowseEntityScopeProps {
 }
 
 /**
- * Strategy overrides accepted by {@link EntityDataGrid} (Template Method). Each
- * defaults to the current shared behavior, so an `EntityDataGrid` rendered with NO
- * overrides is byte-for-byte equivalent to the pre-refactor grid. Custom entity
- * bodies (registered via `definition.plugin`) supply overrides to specialize the
- * shared template without leaking entity specifics into it. Row callbacks are typed
- * to the host's `EntityCoreIdentifiableNamed` row; plugins narrow via a cast (same
- * pattern the host already uses for `expandRow`).
+ * Optional strategy overrides accepted by {@link EntityDataGrid}, supplied by custom
+ * entity bodies (registered via `definition.plugin`) to specialize the shared
+ * template. Row callbacks are typed to `EntityCoreIdentifiableNamed`; plugins narrow
+ * via a cast.
  */
 export interface IEntityDataGridOverrides {
   /** replaces the default entitycore paged data source (e.g. a view-aware source). */
@@ -94,10 +91,8 @@ export interface IEntityDataGridOverrides {
   /** extra AND-ed enable gate on top of the shared species/scope gate. */
   extraEnabled?: boolean;
   /**
-   * Extra host-defined factors merged into the controller's {@link IGridContext},
-   * so a plugin can publish a dimension only IT knows (e.g. the circuit flat↔
-   * hierarchy view) and the entity's schema can gate columns/filters on it through
-   * the standard contextual `available` rules. Memoise it in the plugin: a new
+   * Extra host-defined factors merged into the controller's {@link IGridContext}, so a
+   * schema can gate columns/filters on a plugin-only dimension. Memoise it: a new
    * object identity rebuilds the controller.
    */
   extraFactors?: Readonly<Record<string, TGridContextValue>>;
@@ -106,16 +101,11 @@ export interface IEntityDataGridOverrides {
 export type TEntityDataGridProps = IBrowseEntityGridProps & IEntityDataGridOverrides;
 
 /**
- * The reusable TEMPLATE body behind the AG Grid listing. Owns all SHARED workspace
+ * The reusable template body behind the AG Grid listing. Owns the shared workspace
  * integration — brain-region/species gating + reset, scope/params, `MiniDetailView`,
- * download/delete bulk actions, error UX, toolbar assembly, and the `<DataGrid>`
- * render — and hands the API-agnostic grid its request params + `enabled` gate.
- * Columns, filters, sort and paging live in the entity's authored `IGridSchema`.
- *
- * Accepts optional {@link IEntityDataGridOverrides}, all defaulting to today's
- * behavior, so with no overrides it is byte-for-byte equivalent to the previous
- * grid (every already-flipped entity is untouched). A custom-entity plugin body
- * wraps this with its own state + overrides; see {@link BrowseEntityGrid}.
+ * bulk actions, error UX, toolbar assembly — and hands the grid its request params
+ * and `enabled` gate. Columns, filters, sort and paging live in the entity's
+ * `IGridSchema`; a plugin body wraps this with {@link IEntityDataGridOverrides}.
  */
 export function EntityDataGrid({
   definition,
@@ -139,7 +129,6 @@ export function EntityDataGrid({
   extraQueryParams,
   listQueryFn,
   facetsQueryFn,
-  // strategy overrides (all optional; defaults preserve current behavior)
   dataSourceOverride,
   extraParams,
   extraToolbarSlots,
@@ -178,10 +167,9 @@ export function EntityDataGrid({
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
 
-  // Publish the grid's FILTERED total under this listing's dataKey so the data
-  // sidebar's "x of y" counters follow the grid's filters/search (parity with the
-  // legacy table, whose query cache `useTableQueryCount` read). Cleared on
-  // unmount/key change so a stale count never survives the listing it came from.
+  // Publish the grid's filtered total under this dataKey so the data sidebar's
+  // "x of y" counters follow the grid's filters/search. Cleared on unmount so a
+  // stale count never survives the listing it came from.
   const setGridTotal = useSetAtom(gridFilteredTotalAtom(dataKey));
   const handleTotalChange = useCallback(
     ({ total, loading }: { total: number; loading: boolean }) => {
@@ -199,12 +187,8 @@ export function EntityDataGrid({
     []
   );
 
-  // PICKER selection contract (same surface the legacy `MainTable` reads from
-  // `mainTableProps`): `selectionType` 'radio'|'checkbox' → single|multi, optional
-  // controlled `selectedRows`, and `onRowsSelected` as the host-form callback. When
-  // both a type and a callback are present the grid renders the selection column and
-  // propagates picks to the form; otherwise selection stays schema-driven (bulk
-  // actions) — never regressing already-flipped browse entities.
+  // Picker selection is opt-in: only when `mainTableProps` supplies both a type and
+  // an `onRowsSelected` callback. Otherwise selection stays schema-driven (bulk actions).
   const selectionType = mainTableProps?.selectionType;
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
@@ -213,7 +197,6 @@ export function EntityDataGrid({
   >(() => {
     if (!selectionType || !onRowsSelected) return undefined;
     return {
-      // legacy antd `RowSelectionType` ('radio'|'checkbox') → picker SelectionMode
       mode: selectionType === 'radio' ? SelectionMode.Single : SelectionMode.Multi,
       selectedRows: controlledSelectedRows,
       onChange: onRowsSelected,
@@ -227,10 +210,8 @@ export function EntityDataGrid({
         schema: definition.schema,
         context: { dataType, section, scope, species: speciesKey, factors: extraFactors },
         instanceKey: dataKey,
-        // The session slice (filters/sort/page) is keyed by the full `dataKey`, but
-        // the LAYOUT slice is keyed by section + entity type only: how a circuit
-        // grid should look is decided by "Data → circuit", not by which project or
-        // scope you reached it from.
+        // The session slice is keyed by the full `dataKey`, but the layout slice by
+        // section + entity type only, so a layout is shared across projects/scopes.
         persistence: createDefaultPersistence(layoutKeyFor(section, dataType)),
         defaultPageSize: DEFAULT_PAGE_SIZE,
       }),
@@ -262,13 +243,10 @@ export function EntityDataGrid({
       }),
     [dataType, definition, virtualLabId, projectId, listQueryFn, facetsQueryFn, extraOrderBy]
   );
-  // A plugin may swap the data source entirely (e.g. circuit's view-aware source);
-  // default is the shared entitycore paged source above.
   const dataSource = dataSourceOverride ?? defaultDataSource;
 
-  // Parity with the legacy listing: reset grid state when the species identity
-  // (`all` vs a hierarchy id) changes — but not on the initial mount, so a
-  // persisted snapshot survives navigation.
+  // Reset grid state when the species identity changes — but not on the initial
+  // mount, so a persisted snapshot survives navigation.
   const prevSpeciesKeyRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     const speciesKey = isAllSpeciesMode
@@ -297,8 +275,7 @@ export function EntityDataGrid({
       ...brainRegionQuery,
       ...extras,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
-      // plugin-supplied params (e.g. `__view`) participate in the query key so
-      // changing them refetches; merged last so a plugin can override.
+      // Merged last so a plugin can override; these participate in the query key.
       ...extraParams,
     };
   }, [
@@ -318,20 +295,14 @@ export function EntityDataGrid({
     (isAllSpeciesMode || !requireBrainRegion || hasBrainRegion) &&
     (extraEnabled ?? true);
 
-  // External facets. When a loader-scoped `facetsQueryFn` override is present the
-  // data source runs with `withFacets: false` (facets are NOT in the list response),
-  // so set/facet filters would otherwise show "No options". Mirror the legacy
-  // listing by fetching facets separately and handing them to `<DataGrid facets>`.
-  // Same request scope the grid uses (brain-region + scope + extra params, minus the
-  // grid's own column filters — parity with `useQueryExtendedEntityTypeFacets`);
-  // `order_by` is irrelevant to facet buckets so it stays out of `params`.
+  // With a `facetsQueryFn` override the data source runs `withFacets: false`, so
+  // facets must be fetched separately or set filters show "No options". Same request
+  // scope as the grid, minus the grid's own column filters.
   const facetsQuery = useQuery({
     queryKey: ['data-grid', 'facets', dataType, dataKey, params],
     queryFn: () => facetsQueryFn?.({ filters: params, context: { virtualLabId, projectId } }),
     enabled: enabled && Boolean(facetsQueryFn),
   });
-  // Only override when a `facetsQueryFn` exists; otherwise facets keep coming from
-  // the list response and this stays `undefined` (unchanged behavior).
   const externalFacets = facetsQueryFn ? (facetsQuery.data as TFacets | undefined) : undefined;
 
   const schemaDetail = useMemo<IDetailRuntime<EntityCoreIdentifiableNamed> | undefined>(() => {
@@ -350,14 +321,10 @@ export function EntityDataGrid({
       render: definition.renderDetail,
     };
   }, [definition, entity, virtualLabId, projectId]);
-  // A plugin may supply a bespoke detail runtime (e.g. circuit's recursive
-  // subcircuit grid); default is the schema-derived detail above.
   const detail = detailOverride ?? schemaDetail;
 
-  // LEFT CLUSTER — scope, then brain region, then entity type (the toolbar owns the
-  // order; these only say what exists). `compact` is the grid-scoped height opt-in:
-  // both pickers are taller than the h-10 search pill everywhere else they are used,
-  // and inside one toolbar row they have to agree with it.
+  // `compact` is the grid-scoped height opt-in: both pickers are taller than the
+  // h-10 search pill elsewhere, and inside one toolbar row they must agree with it.
   const toolbarScope = useMemo<ReactNode>(
     () => (requireScopeSelector ? <WorkflowScopeTabs compact className="max-w-max" /> : undefined),
     [requireScopeSelector]
@@ -414,15 +381,11 @@ export function EntityDataGrid({
               />
             ) : undefined,
             search: allowSearch ? <GridSearch onSearch={handleSearch} openOnMount /> : undefined,
-            // plugin-contributed slots (e.g. the circuit view toggle) are merged
-            // last so a plugin can add without disturbing the shared controls.
+            // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
           }}
           renderBulkActions={({ selectedRows, clearSelection }) => (
-            // Buttons only — the "N selected" count + Clear live in the footer. Both
-            // are EXPANDING pills (icon at rest, label on hover/focus) like the rest
-            // of the grid's controls, but they keep their own primary/destructive
-            // colors: a bulk action is not chrome.
+            // Buttons only — the "N selected" count and Clear live in the footer.
             <div className="flex items-center gap-2">
               {allowDownload && (
                 <EntityDownloadButton<EntityCoreIdentifiableNamed>
@@ -446,8 +409,6 @@ export function EntityDataGrid({
           )}
           renderCount={({ total, loading }) =>
             loading ? (
-              // two fully-rounded skeleton pills (the number + the word "results"),
-              // no "Loading…" text
               <span
                 role="status"
                 aria-label="Loading results count"
@@ -486,19 +447,12 @@ export function EntityDataGrid({
 }
 
 /**
- * Router (registry-driven Strategy): renders the entity's PLUGIN body when its
- * definition registers one, else the shared {@link EntityDataGrid} template. The
- * component type is selected by STABLE per-mount inputs (`definition.plugin` is
- * fixed per dataType; `section`/picker mode are fixed per page), so there is no
- * rules-of-hooks hazard and entities stay independent. A plugin body (e.g.
- * `CircuitGridBody`) owns its own state and wraps `EntityDataGrid` with strategy
- * overrides. This is the AG Grid replacement for `BrowseEntityScopeLegacy`.
+ * Renders the entity's plugin body when its definition registers one, else the shared
+ * {@link EntityDataGrid} template. The component type is selected by stable per-mount
+ * inputs, so there is no rules-of-hooks hazard.
  *
- * A plugin is an EXPLORE affordance: it mounts only on the Data browse listing
- * (section `data`, no picker selection). Workflow surfaces (extract/simulate/build
- * `/new` pages pass their own section) and checkbox pickers get the plain shared
- * template — matching the legacy tables, where the bespoke pages were Data-only
- * and workflow pickers always listed entities flat.
+ * A plugin mounts only on the Data browse listing (section `data`, no picker
+ * selection); workflow surfaces and pickers get the plain shared template.
  */
 export function BrowseEntityGrid(props: IBrowseEntityGridProps) {
   const { plugin } = props.definition;
@@ -509,7 +463,7 @@ export function BrowseEntityGrid(props: IBrowseEntityGridProps) {
   return <Body {...props} />;
 }
 
-/** Same error UX as the legacy listing, including the NOT_AUTHORIZED case. */
+/** Listing-level error UX, with a dedicated NOT_AUTHORIZED message. */
 function renderListingError(error: unknown, entityTitle?: string): ReactNode {
   log('error', error);
   let content: ReactNode = `An error occurred while fetching "${entityTitle ?? 'entities'}" data for this region. We are sorry about the inconvenience. Please contact support.`;

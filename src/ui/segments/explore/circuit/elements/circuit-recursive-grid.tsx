@@ -23,11 +23,7 @@ export type CircuitCellClick = (
   type: TExtendedEntitiesTypeDict
 ) => void;
 
-/**
- * Hard recursion guard: subcircuit trees are theoretically acyclic but the data
- * comes from the API, so a runaway (or cyclic) tree must never mount grids
- * forever. Beyond this depth the expander is hidden and rows can no longer open.
- */
+/** Recursion guard against cyclic API data: beyond this depth rows can no longer expand. */
 export const MAX_CIRCUIT_DEPTH = 6;
 
 /** Subcircuits attached to a circuit record (enriched hierarchy nodes), or `[]`. */
@@ -46,12 +42,7 @@ interface CircuitDetailRow {
 
 type TDisplayRow = ICircuit | CircuitDetailRow;
 
-/**
- * Interleave a synthetic full-width detail row after each expanded circuit that
- * has subcircuits. Pure (no React) so the recursion/expansion bookkeeping is
- * unit-testable in isolation. Retained for its unit tests and as the reference
- * model for the shared engine's own interleaving.
- */
+/** Interleave a synthetic full-width detail row after each expanded circuit that has subcircuits. */
 export function interleaveCircuitRows(
   circuits: ReadonlyArray<ICircuit>,
   expandedIds: ReadonlyArray<string>,
@@ -83,12 +74,8 @@ function humanizeColumnId(id: string): string {
 }
 
 /**
- * Adapt the antd `ColumnProps` produced by `useDataTableColumns` to the
- * renderer-agnostic {@link ISimpleColumn}s consumed by the shared grid engine. The
- * antd `render(value, record, index)` becomes an inline `renderCell(row)`; the
- * rich `title` node becomes `headerNode`. A best-effort text `filter` + `getValue`
- * (from the record's like-named field) are attached so the shared header filter /
- * sort work over the values that back simple text columns. Pure — no hooks.
+ * Adapt antd `ColumnProps` to the renderer-agnostic {@link ISimpleColumn}s used by the
+ * shared grid engine, attaching a best-effort text filter and value accessor per column.
  */
 export function adaptCircuitColumns(
   columns: ReadonlyArray<ColumnProps<ICircuit>>
@@ -123,18 +110,11 @@ export function adaptCircuitColumns(
   });
 }
 
-/**
- * The shared "↳ SUBCIRCUITS" detail wrapper. One component → one style + one indent
- * for every expanded level (top-level plugin detail AND the deeper recursion), so the
- * heading never drifts between levels. Content is inset (`ml-4`) so each nested table
- * shifts right of its DIRECT parent.
- */
+/** The "↳ SUBCIRCUITS" detail wrapper shared by every expanded level. */
 export function SubcircuitsDetail({ children }: { children: ReactNode }) {
   return (
-    // Each nested SubcircuitsDetail adds this step (margin + guide line + padding) ON
-    // TOP of its parent's — because the deeper grid is DOM-nested inside this one — so
-    // the tree visibly shifts right one level at a time. The left border is the tree
-    // guide line.
+    // Nested wrappers are DOM-nested, so this indent step compounds per level; the left
+    // border is the tree guide line.
     <div className="border-neutral-3 ml-5 flex w-full flex-col items-start gap-3 border-l-2 py-3 pl-4">
       <div className="flex flex-row items-center gap-2">
         <ArrowReturnRight className="text-neutral-4 text-2xl" />
@@ -148,17 +128,11 @@ export function SubcircuitsDetail({ children }: { children: ReactNode }) {
 export type CircuitRecursiveGridProps = {
   /** Circuits (possibly enriched with `sub_circuits`) to render at this level. */
   circuits: ReadonlyArray<ICircuit> | undefined;
-  /**
-   * antd column defs from `useDataTableColumns` (adapted internally). Ignored when
-   * {@link simpleColumns} is supplied. Optional so a caller can drive the grid purely
-   * from pre-built {@link ISimpleColumn}s.
-   */
+  /** antd column defs, adapted internally. Ignored when {@link simpleColumns} is supplied. */
   columns?: ReadonlyArray<ColumnProps<ICircuit>>;
   /**
-   * Pre-built {@link ISimpleColumn}s, used verbatim (skips `adaptCircuitColumns`). This
-   * is how the circuit PLUGIN feeds the nested subcircuit grid the SAME schema columns
-   * the parent server grid renders, so every depth is column-identical. When set,
-   * `columns` is ignored. Recursion forwards these (filtered by the hidden set) down.
+   * Pre-built {@link ISimpleColumn}s used verbatim, so every depth is column-identical.
+   * Takes precedence over `columns`.
    */
   simpleColumns?: ReadonlyArray<ISimpleColumn<ICircuit>>;
   dataType: TExtendedEntitiesTypeDict;
@@ -167,15 +141,11 @@ export type CircuitRecursiveGridProps = {
   rowClassName?: (record: ICircuit) => string;
   /** Nesting depth; 0 at the top level. Recursion stops at {@link MAX_CIRCUIT_DEPTH}. */
   depth?: number;
-  /** Circuit id of the DIRECT parent whose subcircuits this grid renders (for the
-   * container's `data-parent-id`). Undefined at the outermost level. */
+  /** Circuit id of the parent whose subcircuits this grid renders; undefined at the top level. */
   parentId?: string;
   /** Show a loading spinner instead of the (empty) grid. */
   loading?: boolean;
-  /**
-   * Column id whose cell hosts the expander (right-aligned, vertically centred).
-   * Omit for a fixed leading expander column. Only honoured at the top level.
-   */
+  /** Column id whose cell hosts the expander; omit for a fixed leading expander column. */
   expandColumnId?: string;
   /** Enable per-column custom header filters (top level only). */
   filterable?: boolean;
@@ -190,12 +160,8 @@ export type CircuitRecursiveGridProps = {
 };
 
 /**
- * A depth-limited, self-recursive grid for circuit subcircuit trees, built on the
- * SHARED {@link InMemoryGrid} engine — so it inherits the entity grid's custom
- * header filters, column chooser, sorting, resizing and pagination while keeping
- * its recursive expandable subcircuit rows. Expanding a row interleaves a
- * full-width detail row that mounts another `CircuitRecursiveGrid` for the
- * children. Filters/chooser/sort/pagination are enabled at the top level only.
+ * Depth-limited, self-recursive grid for circuit subcircuit trees on top of {@link InMemoryGrid}.
+ * Filters, chooser, sort and pagination are enabled at the top level only.
  */
 export function CircuitRecursiveGrid({
   circuits,
@@ -221,9 +187,6 @@ export function CircuitRecursiveGrid({
   const canExpand = depth < MAX_CIRCUIT_DEPTH;
   const isTop = depth === 0;
 
-  // Column source: pre-built `simpleColumns` verbatim (the plugin path — identical to
-  // the parent's schema columns), else adapt the antd `columns` (legacy path). Enable
-  // interactive resize on every column either way.
   const adaptedColumns = useMemo<ISimpleColumn<ICircuit>[]>(
     () =>
       (simpleColumns ? [...simpleColumns] : adaptCircuitColumns(columns)).map((c) => ({
@@ -233,9 +196,8 @@ export function CircuitRecursiveGrid({
     [simpleColumns, columns]
   );
 
-  // The chooser lives on the top-level grid, but nested subcircuit grids are separate
-  // grid instances — so mirror the hidden set down the tree (by column id) to keep
-  // every depth column-consistent. Recursion is always driven by `simpleColumns`.
+  // Nested grids are separate instances, so the top-level chooser's hidden set must be
+  // mirrored down the tree to keep every depth column-consistent.
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const visibleColumns = useMemo<ISimpleColumn<ICircuit>[]>(() => {
     if (hiddenColumns.length === 0) return adaptedColumns;
@@ -248,9 +210,7 @@ export function CircuitRecursiveGrid({
     () =>
       canExpand
         ? {
-            // host the chevron in the same (Subcircuits) column at every depth. The
-            // default remixicon chevron is used (visible, follows currentColor → white
-            // on hover) — no custom glyph.
+            // same host column at every depth, so the chevron never shifts
             columnId: expandColumnId,
             align: 'right' as const,
             isExpandable: (row: ICircuit) => subCircuitsOf(row).length > 0,
@@ -283,8 +243,7 @@ export function CircuitRecursiveGrid({
   }
 
   return (
-    // Container carries the hierarchy level in its id + the direct parent circuit id
-    // (`data-parent-id`), so any depth of the subcircuit tree is addressable in the DOM.
+    // level + parent id make any depth of the tree addressable in the DOM
     <div
       id={`circuit-grid-level-${depth}${parentId ? `-${parentId}` : ''}`}
       data-grid-level={depth}

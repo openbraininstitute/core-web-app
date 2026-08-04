@@ -29,11 +29,9 @@ import type {
 } from '@/features/data-grid/core';
 
 /**
- * Parity harness for the 9 model/simulation schemas flipped to AG Grid. Locks (a) the
- * context-resolved column set/order to the legacy `view-defs/*`, (b) the serialized filter
- * params (`field__op`) to the legacy field-def constraints, and (c) each column's declared
- * sortability to its field-def `order.types` membership — the invariants that guarantee no
- * regression when the router flips these dataTypes.
+ * Parity harness for the 9 model/simulation schemas: locks the resolved column set/order,
+ * the serialized filter params and each column's sortability to the legacy view-defs and
+ * field-defs.
  */
 
 function query(over: Partial<IGridQuery> = {}): IGridQuery {
@@ -104,21 +102,17 @@ const CIRCUIT_FAMILY_COLUMNS = [
 
 /** Filters shared by every circuit-family listing (independent of per-type sortability). */
 function assertCircuitFamilyFilters(schema: IGridSchema<unknown>) {
-  // Name ilike, Description display-only (legacy `isFilterable: false`).
   expect(serializeQuery(query({ filters: ilike(EntityCoreFields.Name) }), schema).name__ilike).toBe(
     '%foo%'
   );
   expect(col(schema, EntityCoreFields.Description)?.filter).toBeUndefined();
-  // Brain region filters by name on top of the hierarchy gating (`brain_region__name__in`
-  // / `__ilike` are accepted by /circuit and `brain_region` is one of its facet keys).
   expect(
     serializeQuery(query({ filters: setIn(EntityCoreFields.BrainRegion) }), schema)
       .brain_region__name__in
   ).toEqual(['x']);
-  // Scale stays unfiltered: each of these dataTypes narrows `scale__in` to its own scale in
-  // the domain config, and a user-supplied scale would override that narrowing.
+  // scale stays unfiltered: each dataType narrows `scale__in` in the domain config, and a
+  // user-supplied scale would override that narrowing
   expect(col(schema, EntityCoreFields.CircuitScale)?.filter).toBeUndefined();
-  // Number-of-* ValueRange → field__gte/__lte.
   const neurons = serializeQuery(
     query({ filters: range(EntityCoreFields.CircuitNumberNeurons, 10, 1000) }),
     schema
@@ -135,12 +129,10 @@ function assertCircuitFamilyFilters(schema: IGridSchema<unknown>) {
       schema
     ).number_connections__lte
   ).toBe(2);
-  // Created by facet → created_by__pref_label__in.
   expect(
     serializeQuery(query({ filters: setIn(EntityCoreFields.CreatedBy) }), schema)
       .created_by__pref_label__in
   ).toEqual(['x']);
-  // Registration date DateRange → creation_date__gte/__lte.
   const dated = serializeQuery(
     query({ filters: dateRange(EntityCoreFields.RegistrationDate, '2026-01-01', '2026-02-01') }),
     schema
@@ -283,7 +275,7 @@ describe('simulatable_extracellular_recording_array parity', () => {
       'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'contributions',
     ]);
   });
@@ -308,17 +300,11 @@ describe('simulatable_extracellular_recording_array parity', () => {
     expect(col(s, EntityCoreFields.RegistrationDate)?.sortable).toBe(true);
   });
 
-  /**
-   * `electrode_type` used to be offered TWICE — as this display-only column and as an
-   * advanced filter. The filter moved ONTO the existing column; no second column was
-   * created for it, and it stays VISIBLE (not auxiliary).
-   */
   it('electrode type filters on its own column, bare exact match, still unsortable', () => {
     const column = col(s, EntityCoreFields.ElectrodeType);
     expect(column?.auxiliary).toBeFalsy();
     expect(column?.sortable).toBe(false);
     expect(column?.filter?.field).toBe('electrode_type');
-    // this endpoint declares no `electrode_type__in`
     expect(column?.filter?.operators).toEqual([OperatorId.Eq]);
     expect(column?.filter?.targets?.[0]?.operators).toEqual([OperatorId.Eq]);
     const eq: TFilterModel = {
@@ -340,7 +326,6 @@ describe('simulatable_extracellular_recording_array parity', () => {
     expect(
       serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
     ).toEqual(['x']);
-    // ordering_model_fields here is only ['creation_date', 'update_date', 'name']
     expect(col(s, 'contributions')?.sortable).toBe(false);
   });
 });
@@ -378,7 +363,6 @@ describe('single_neuron_simulation parity', () => {
       expect(col(s, id)?.filter).toBeUndefined();
       expect(col(s, id)?.sortable).toBeFalsy();
     }
-    // ME-model is filterable (`me_model__name__in` + the `me_model` facet) but not sortable.
     expect(
       serializeQuery(query({ filters: setIn(EntityCoreFields.SimulationModel) }), s)
         .me_model__name__in
@@ -428,7 +412,6 @@ describe('single_neuron_synaptome_simulation parity', () => {
     ]) {
       expect(col(s, id)?.filter).toBeUndefined();
     }
-    // Synaptome is filterable (`synaptome__name__in` + the `synaptome` facet), not sortable.
     expect(
       serializeQuery(query({ filters: setIn(EntityCoreFields.SynaptomeModelName) }), s)
         .synaptome__name__in

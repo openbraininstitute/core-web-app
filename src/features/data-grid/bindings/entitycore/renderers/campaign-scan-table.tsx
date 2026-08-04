@@ -22,10 +22,8 @@ function resolveStatus(row: SimulationRow): ActivityStatus {
 }
 
 /**
- * Flag-ON nested-table detail renderer. Keeps the legacy expanded scan-parameter table
- * (Name + one column per scan parameter + Status) but swaps the status cell to the new
- * {@link CampaignStatusBadge}. The expand payload (`data`) is the same
- * {@link SimulationRow}[] the popover-cards mode consumes, so both modes stay in sync.
+ * Nested-table detail renderer: Name + one column per scan parameter + Status. Consumes
+ * the same {@link SimulationRow}[] expand payload as the popover-cards mode.
  */
 export function makeCampaignScanTableRenderDetail(): TDetailRenderFn<{ id: string }> {
   return ({ data, loading, error }): ReactNode => {

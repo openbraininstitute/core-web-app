@@ -23,17 +23,8 @@ import type { IEntityGridDefinition } from '../registry';
 
 /**
  * `IonChannelModel` omits two NMODL scalars the wire carries (`conductance_name`,
- * `max_permeability_name` — both on `IonChannelModelBaseMixin`) and models the animal
- * as top-level `species`/`strain`, whereas the list response nests it:
- * `_read_many` in `app/service/ion_channel_model.py` responds with
- * `IonChannelModelExpanded` = `IonChannelModelBaseMixin` + `ScientificArtifactRead`,
- * whose `SubjectReadMixin` supplies `subject.{name, species.name, strain.name}` —
- * eager-loaded by `_load_minimal`, which is exactly the shape the
- * `subject__strain__name` / `subject__name` filter params address.
- *
- * `contributions` needs no augmentation (already typed, and `_load_expanded`
- * eager-loads `contributions → agent`). All members optional, so `IonChannelModel`
- * stays assignable to `Row`.
+ * `max_permeability_name`) and models the animal as top-level `species`/`strain`,
+ * whereas the wire nests it under `subject.{name, species.name, strain.name}`.
  */
 type Row = IonChannelModel & {
   conductance_name?: string | null;
@@ -46,15 +37,8 @@ type Row = IonChannelModel & {
 };
 
 /**
- * ADVANCED FILTERS — `GET /ion-channel-model` params with no column in this grid: the
- * record's own `id`, which has no useful column to show.
- *
- * The four NMODL-level scalars, both `subject__*` fields and
- * `contribution__pref_label` used to live here; all seven are AUXILIARY columns below
- * (hidden until ticked), so each field stays on exactly one surface.
- *
- * The `__isnull` companions of `conductance_name` / `max_permeability_name` have no
- * operator in the grid's registry and are still deliberately left out.
+ * `GET /ion-channel-model` params with no column: just the record's own `id`. The
+ * `__isnull` companions have no operator in the grid's registry and are left out.
  */
 const ionChannelModelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -65,16 +49,8 @@ const ionChannelModelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
 ];
 
 /**
- * The NMODL-level scalars of `IonChannelModelBaseMixin`, as AUXILIARY columns. All
- * three are declared BARE on `IonChannelModelFilter` — no `__in`, no `__ilike` — so
- * they are offered as exact matches only, exactly as the advanced filters were.
- *
- * SORT SAFETY (`IonChannelModelFilter.Constants.ordering_model_fields`,
- * `app/filters/ion_channel_model.py`): `nmodl_suffix`, `conductance_name`,
- * `max_permeability_name`, `is_stochastic`, `subject__name` and
- * `subject__strain__name` ARE all in the allowlist — this is one of the few endpoints
- * that sorts `subject__name`. `contribution__pref_label` is NOT, so the Contributors
- * column below is the only non-sortable one of the seven.
+ * An NMODL scalar as an auxiliary column. These are declared bare on
+ * `IonChannelModelFilter` — no `__in`, no `__ilike` — so exact match only.
  */
 function nmodlTextColumn(
   id: string,
@@ -117,7 +93,7 @@ const isStochasticColumn: IColumnModel<Row> = {
   getValue: (r) => yesNo(r.is_stochastic),
   width: { minWidth: 130 },
   filter: {
-    // `is_stochastic` (bare boolean, no `__op` suffix)
+    // Bare boolean, no `__op` suffix.
     operators: [OperatorId.Bool],
     field: 'is_stochastic',
     targets: [
@@ -132,37 +108,13 @@ const isStochasticColumn: IColumnModel<Row> = {
   },
 };
 
-/**
- * Ion-channel model listing (curated). Column order mirrors the legacy
- * `ViewDefForIonChannelModel`: Preview, Name, Brain region, Species, Temperature,
- * Temperature dependent, LJP corrected, Registration date. The view-def's
- * `filterableFields` (Name, BrainRegion, Species, Temperature, IsTemperatureDependent,
- * IsLjpCorrected, RegistrationDate) drive which columns carry filters.
- *
- * Per the legacy field-defs:
- *  - Species carries `subject__species__name` sort + `subject__species__name__in`
- *    facet (the ion-channel-model `perTypeConstraint`). The VALUE is read from
- *    `subject.species.name` — the shape the wire actually has — with the legacy
- *    top-level `species.name` kept only as a fallback; see the column below. The
- *    Strain auxiliary column already reads `subject.strain.name` via the catalog's
- *    `subjectStrainColumn`, so it never had this problem.
- *  - Temperature (°C) sorts on `temperature_celsius` and range-filters to
- *    `temperature_celsius__gte/__lte`.
- *  - The two boolean facets sort on / filter by their bare field name
- *    (`is_temperature_dependent`, `is_ljp_corrected`) — matching the legacy boolean
- *    constraint, which is the field itself with no `__op` suffix.
- *  - Brain region sorts on `brain_region__name`; column-level filtering is via the
- *    brain-region hierarchy selector (no facet on the column). The preview reuses the
- *    shared entity-preview thumbnail (see note in the report re: the
- *    `ion_channel_model_thumbnail` asset label the legacy renderer selected).
- */
+/** Ion-channel model listing (`GET /ion-channel-model`). */
 export const ionChannelModelSchema: IGridSchema<Row> = {
   id: 'ion-channel-model',
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(ionChannelModelAdvancedFilters),
   columns: [
     previewColumn<Row>({
@@ -176,19 +128,8 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       header: 'Species',
       sortable: true,
       sortField: 'subject__species__name',
-      // NESTED FIRST — `IonChannelModelExpanded` (app/schemas/ion_channel_model.py:72)
-      // = `IonChannelModelBaseMixin` + `ScientificArtifactRead`, and
-      // `ScientificArtifactRead` (app/schemas/scientific_artifact.py:46) composes
-      // `SubjectReadMixin` → `subject: NestedSubjectRead`
-      // (app/schemas/subject.py:86), whose `SpeciesStrainReadMixin`
-      // (app/schemas/species.py:57) is what carries `species`/`strain`. There is NO
-      // top-level `species` on the wire; `_load_minimal`
-      // (app/service/ion_channel_model.py:43) eager-loads only `subject → species` /
-      // `subject → strain`, and the backend's own test asserts the nested shape
-      // (`data["subject"]["id"]`, tests/test_ion_channel_model.py:84).
-      // The top-level fallback is kept only because the hand-written
-      // `IonChannelModel` TS type still declares it, so the accessor stays correct
-      // whichever shape a caller hands it. Empty string ⇒ shared em-dash placeholder.
+      // Nested first: the wire has no top-level `species`, only `subject.species`.
+      // The top-level fallback exists only because the TS type still declares it.
       getValue: (r) => r.subject?.species?.name ?? r.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
@@ -229,7 +170,7 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
     },
     lifecycleStatusColumn<Row>(),
     registrationDateColumn<Row>(),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     nmodlTextColumn(
       'nmodlSuffix',
       'NMODL suffix',
@@ -252,22 +193,18 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       (r) => r.max_permeability_name
     ),
     isStochasticColumn,
-    // BOTH subject fields are in IonChannelModelFilter's ordering_model_fields, so the
-    // catalog's never-sortable default for `subject__name` is overridden deliberately.
+    // Both subject fields are in this endpoint's ordering fields, so the catalog's
+    // never-sortable default for `subject__name` is overridden here.
     subjectStrainColumn<Row>({ sortable: true }),
     subjectNameColumn<Row>({ sortable: true, sortField: 'subject__name' }),
-    // The ONLY non-sortable one: `contribution__pref_label` is absent from this
-    // endpoint's ordering_model_fields, and an order_by outside it is a hard 422.
+    // `contribution__pref_label` is absent from this endpoint's ordering fields.
     contributionsColumn<Row>({
       auxiliary: true,
       sortable: false,
       filter: {
-        // `contribution__pref_label__ilike`, `contribution__pref_label__in`
         operators: [OperatorId.Ilike, OperatorId.In],
         field: 'contribution__pref_label',
-        // explicit target: this endpoint's facet keys are brain_region / subject /
-        // subject.species / subject.strain — no `contribution` bucket, so the
-        // synthesised "no options ⇒ use facets" target would be an empty picker
+        // Explicit target: this endpoint computes no `contribution` facet bucket.
         targets: [
           {
             id: 'prefLabel',

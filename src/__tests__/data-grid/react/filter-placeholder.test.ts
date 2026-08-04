@@ -36,7 +36,6 @@ describe('resolveFilterPlaceholder', () => {
       'Paste one or more ids, like 3fa85f64-5717-4562-b3fc-2c963f66afa6'
     );
 
-    // a text free-entry target must NOT claim ids
     const strains = target({ freeEntry: FreeEntryKind.Text });
     expect(resolveFilterPlaceholder(strains, operators.get(OperatorId.In))).toBe(
       'Enter one or more values'
@@ -45,7 +44,6 @@ describe('resolveFilterPlaceholder', () => {
       'Enter one or more values'
     );
 
-    // a facet picker is not free entry either
     const faceted = target({ options: { kind: FilterOptionsKind.Facets } });
     expect(resolveFilterPlaceholder(faceted, operators.get(OperatorId.In))).toBe(
       'Enter one or more values'
@@ -95,7 +93,6 @@ describe('resolveFilterPlaceholder', () => {
 });
 
 describe('FREE_ENTRY_SEPARATOR_HINT matches what the parser accepts', () => {
-  // The hint claims spaces, commas, semicolons and new lines. Each must really split.
   it.each([
     ['spaces', 'a b c'],
     ['commas', 'a,b,c'],

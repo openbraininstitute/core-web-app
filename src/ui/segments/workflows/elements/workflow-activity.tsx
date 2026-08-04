@@ -113,8 +113,8 @@ export function WorkflowActivity() {
   }>({ total: 0, status: 'idle' });
   const [isResolvingResults, setIsResolvingResults] = useState(false);
 
-  // Changing category/type resets selection + the empty/loading meta and (via the
-  // SimpleGrid `key`) remounts the grid with a fresh page-1 store (legacy `setPage(1)`).
+  // changing category/type resets selection + meta; the SimpleGrid `key` remounts the
+  // grid with a fresh page-1 store
   const updateActivity = (activity: TActivityValue | null) => {
     setSelectedRow(undefined);
     setGridMeta({ total: 0, status: 'idle' });
@@ -127,9 +127,8 @@ export function WorkflowActivity() {
     updateActivityState({ entityType: et });
   };
 
-  // Server data source: the grid owns paging; each page fetches via the entity's list
-  // query (the SAME call the legacy `useQueryActivity` made). The fetch also surfaces
-  // total/loading into `gridMeta` so the empty + loading states are preserved.
+  // server data source: the grid owns paging; each fetch also surfaces total/loading
+  // into `gridMeta` for the empty and loading states
   const entity = getEntityByExtendedType({ type: resolvedEntityType });
   const listQuery = entity?.api.query?.list;
   const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
@@ -152,8 +151,7 @@ export function WorkflowActivity() {
         });
         const total = response?.pagination?.total_items ?? 0;
         setGridMeta({ total, status: 'loaded' });
-        // the per-entity list queries return a union of entity arrays; the table is
-        // entity-agnostic (legacy typed this response as `EntityCoreResponse<any>`).
+        // per-entity list queries return a union of entity arrays; the table is entity-agnostic
         return { rows: (response?.data ?? []) as EntityCoreObjectTypes[], total };
       },
     }),
@@ -381,7 +379,7 @@ export function WorkflowActivity() {
             <div className="relative min-h-0 flex-1">
               <div className="secondary-scrollbar h-full max-h-[calc(100%-4rem)] overflow-auto">
                 <SimpleGrid<EntityCoreObjectTypes>
-                  // remount on category/type change → fresh page-1 store (legacy setPage(1))
+                  // remount on category/type change → fresh page-1 store
                   key={`${resolvedActivityType}-${resolvedEntityType}`}
                   columns={columns}
                   getRowId={(o) => o.id}

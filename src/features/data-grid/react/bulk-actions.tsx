@@ -10,7 +10,7 @@ import type { GridController } from '../core';
 export interface IBulkActionsRenderArgs<Row> {
   /** ids of the currently selected rows (across pages) */
   selectedIds: string[];
-  /** full selected rows, including rows selected on OTHER pages (legacy parity) */
+  /** full selected rows, including rows selected on other pages */
   selectedRows: Row[];
   clearSelection: () => void;
 }
@@ -25,10 +25,8 @@ export interface IBulkActionsProps<Row> {
 }
 
 /**
- * Merge the rows seen on the current page into the cross-page cache, pruning
- * entries that are neither selected nor on the page (bounded memory). Pure, so the
- * accumulation semantics — the legacy `use-row-selection` behavior of keeping full
- * row objects for selections made on other pages — stay unit-testable.
+ * Merge the current page's rows into the cross-page cache, pruning entries that are
+ * neither selected nor on the page so memory stays bounded. Pure, hence testable.
  */
 export function accumulateSeenRows<Row>(
   cache: ReadonlyMap<string, Row>,
@@ -48,11 +46,9 @@ export function accumulateSeenRows<Row>(
 }
 
 /**
- * Bridges the store's selection to host-owned bulk-action buttons. Selection is
- * cross-page (ids live in the store); this component keeps an id→row cache of the
- * pages it has seen so the buttons receive FULL rows for every selected id — the
- * same semantics as the legacy antd `use-row-selection`. Renders nothing until at
- * least one row is selected, keeping the toolbar quiet by default.
+ * Bridges the store's id-only, cross-page selection to host-owned bulk-action buttons,
+ * keeping an id→row cache so they receive full rows. Renders nothing until a row is
+ * selected.
  */
 export function BulkActions<Row>({
   controller,
@@ -63,8 +59,7 @@ export function BulkActions<Row>({
 }: IBulkActionsProps<Row>) {
   const getRowId = controller.schema.getRowId;
 
-  // Canonical "derive state from props during render" pattern: when the page's
-  // rows change, fold them into the cache (and prune) before the next paint.
+  // "Derive state from props during render": fold new rows into the cache before paint.
   const [cache, setCache] = useState<ReadonlyMap<string, Row>>(() => new Map());
   const [prevRows, setPrevRows] = useState<Row[]>();
   if (prevRows !== rows) {

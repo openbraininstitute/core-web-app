@@ -39,9 +39,8 @@ const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 const DEFAULT_ROW_HEIGHT = 44;
 
 /**
- * Vertically centre every cell's content. AG Grid otherwise top-aligns text in tall
- * rows (e.g. preview rows), which reads inconsistently next to our flex-centred custom
- * renderers. `justify-content` is left to the per-column `ag-*-aligned-cell` classes.
+ * Vertically centre every cell's content; AG Grid otherwise top-aligns text in tall rows.
+ * `justify-content` is left to the per-column `ag-*-aligned-cell` classes.
  */
 const DEFAULT_COL_DEF: ColDef = {
   cellStyle: { display: 'flex', alignItems: 'center' },
@@ -67,19 +66,16 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     loadingLabel,
   } = props;
 
-  // AG Grid is client-only (mirrors the legacy table's ssr:false). Render a sized
-  // placeholder until mounted to avoid SSR/hydration issues.
+  // AG Grid is client-only: render a sized placeholder until mounted, or hydration breaks.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
   const getRowId = controller.schema.getRowId;
 
-  // Apply the persisted column order from state. Reconciled, not sorted-by-index: a
-  // column the stored order never mentions (declared since the layout was saved, or
-  // dropped from it by a contextual gate) keeps its DECLARED slot instead of being
-  // appended after every known column. A NON-MOVABLE column (`movable: false`) is
-  // dropped from the stored order for exactly that reason: its declared slot wins.
+  // Reconciled, not sorted-by-index: a column the stored order never mentions keeps its
+  // DECLARED slot rather than being appended last. Non-movable columns are dropped from
+  // the stored order for the same reason — their declared slot wins.
   const orderedColumns = useMemo(() => {
     const byId = new Map(columns.map((c) => [c.id, c] as const));
     return reconcileColumnOrder(
@@ -107,23 +103,20 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [controller, operators, facets, cellRenderers, detail]
   );
 
-  // AG Grid does not re-render header components when the `context` object changes,
-  // so the header (and its filter popover) would read a stale, facet-less context.
-  // Refresh headers whenever facets arrive so set-filter options are live.
+  // AG Grid does not re-render header components when `context` changes, so headers would
+  // read a stale, facet-less context. Refresh them whenever facets arrive.
   useEffect(() => {
     const api = apiRef.current;
     if (facets && api && !api.isDestroyed()) api.refreshHeader();
   }, [facets]);
 
-  // Re-apply row styles when the mini-detail-view's active row changes, so the
-  // highlight follows the open row (getRowStyle is only re-evaluated on redraw).
+  // `getRowStyle` is only re-evaluated on redraw, so force one when the active row changes.
   // biome-ignore lint/correctness/useExhaustiveDependencies: activeRowId is the trigger, not read in the body
   useEffect(() => {
     const api = apiRef.current;
     if (api && !api.isDestroyed()) api.redrawRows();
   }, [activeRowId]);
 
-  // Interleave synthetic full-width detail rows after expanded data rows.
   const displayRows = useMemo<Array<TDisplayRow<Row>>>(
     () => interleaveDetailRows(rows, detail ? state.expanded : [], getRowId),
     [rows, detail, state.expanded, getRowId]
@@ -164,8 +157,6 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     };
   }, [selectionEnabled, effectiveSelectionMode, selectionSpec?.headerCheckbox]);
 
-  // the checkbox column is pinned first, fixed width and non-movable — a clean,
-  // high-quality selection affordance (AG Grid inserts it before all data columns).
   const selectionColumnDef = useMemo(
     () =>
       selectionEnabled
@@ -176,8 +167,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
             resizable: false,
             suppressMovable: true,
             lockPosition: 'left' as const,
-            // center the checkbox both axes so it lines up with the flex-centered
-            // data cells (the default col def doesn't reach the selection column)
+            // DEFAULT_COL_DEF does not reach the selection column, so centre it here
             cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
             headerClass: 'flex items-center justify-center',
           }
@@ -185,9 +175,8 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [selectionEnabled, selectionSpec?.columnWidth]
   );
 
-  // grid → store. Selection is cross-page: `mergePageSelection` reconciles this
-  // page's checkboxes with the ids selected on other pages (which the grid cannot
-  // see). `single` (radio) replaces; `multiRow` accumulates.
+  // grid → store. Selection is cross-page, so this page's checkboxes must be merged with
+  // ids selected on other pages, which the grid cannot see.
   const onSelectionChanged = useCallback(
     (e: SelectionChangedEvent<TDisplayRow<Row>>) => {
       if (e.source === 'api') return; // our own store → grid sync
@@ -206,8 +195,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [controller, rows, getRowId, effectiveSelectionMode]
   );
 
-  // store → grid. Re-applied when the store selection changes (effect below) and
-  // when the page's rows update (onRowDataUpdated).
+  // store → grid; re-applied on store selection change and on `onRowDataUpdated`.
   const stateSelection = state.selection;
   const applySelection = useCallback(() => {
     const api = apiRef.current;
@@ -227,7 +215,6 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     applySelection();
   }, [applySelection]);
 
-  // Persist drag-and-drop column reordering into the store (→ IStatePersistence).
   const onColumnMoved = useCallback(
     (e: ColumnMovedEvent) => {
       if (!e.finished) return;
@@ -240,7 +227,6 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [controller]
   );
 
-  // Persist interactive column resizes into the store (→ IStatePersistence).
   const onColumnResized = useCallback(
     (e: ColumnResizedEvent) => {
       if (!e.finished || e.source !== 'uiColumnResized') return;
@@ -264,8 +250,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       if (isExpanderClick(e.event)) return;
       const colId = e.column.getColId();
       if (SYNTHETIC_COL_IDS.has(colId)) return;
-      // the column that HOSTS the in-cell expander never opens the row (reliable even
-      // if the native click target check above is defeated by event retargeting)
+      // belt-and-braces for event retargeting defeating the check above
       if (expandColumn?.columnId && colId === expandColumn.columnId) return;
       if (e.data == null || isDetailRow(e.data)) return;
       onRowClick(e.data);
@@ -273,15 +258,12 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [onRowClick, expandColumn]
   );
 
-  // Row styling: pointer cursor when clickable, plus a primary tint + left accent on
-  // the row whose mini-detail view is currently open.
   const getRowStyle = useCallback(
     (p: RowClassParams<TDisplayRow<Row>>): RowStyle | undefined => {
       const isActive =
         !!activeRowId && !!p.data && !isDetailRow(p.data) && getRowId(p.data) === activeRowId;
       if (isActive) {
-        // background tint only — no border/shadow (it bled into the pinned
-        // selection cell's edges); kept light so it reads as a gentle highlight
+        // background tint only: a border/shadow bleeds into the pinned selection cell
         return {
           cursor: 'pointer',
           backgroundColor: 'color-mix(in srgb, var(--color-primary-6, #1668dc) 7%, transparent)',
@@ -292,8 +274,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [activeRowId, onRowClick, getRowId]
   );
 
-  // Optional per-row class (e.g. hierarchy gray-out). Never applied to synthetic
-  // detail rows. `undefined` when the host supplies no hook = unchanged behavior.
+  // Optional per-row class (e.g. hierarchy gray-out); never applied to detail rows.
   const rowClass = useCallback(
     (p: RowClassParams<TDisplayRow<Row>>): string | undefined =>
       getRowClass && p.data != null && !isDetailRow(p.data) ? getRowClass(p.data) : undefined,
@@ -303,11 +284,9 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   if (!mounted) return <div className="ag-data-grid h-full min-h-0 w-full" />;
 
   return (
-    // strip the AG overlay's default card so GridLoader blends in; and make center/right
-    // aligned cells actually justify (our cells are flex, so text-align alone won't center)
+    // our cells are flex, so text-align alone won't centre/right-align them
     <div
       className={`ag-data-grid h-full min-h-0 w-full [&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none! [&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end! ${
-        // single-select (picker radio / schema single mode) renders as a radio control
         effectiveSelectionMode === 'single' ? SINGLE_SELECT_RADIO_CLASS : ''
       }`}
     >
@@ -324,16 +303,10 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         loadingOverlayComponentParams={{ label: loadingLabel ?? 'entities' }}
         suppressCellFocus
         suppressDragLeaveHidesColumns
-        // NB: `maintainColumnOrder` is deliberately NOT set. The STORE owns column
-        // order — `colDefs` is always emitted in the reconciled order above, and a
-        // user drag round-trips through `onColumnMoved` → store → `colDefs`, so
-        // nothing is lost by letting each refresh re-assert that order. With the flag
-        // ON, AG Grid's own internal order wins over the one we just computed: a
-        // column re-added by a CONTEXT change (e.g. the circuit "Subcircuits" column
-        // when the listing returns to hierarchy view) is unknown to that internal
-        // order and gets appended AFTER every other column — off-screen, i.e. "gone"
-        // — until the page is reloaded. It would equally defeat `movable: false`,
-        // whose whole point is that the DECLARED slot wins on every refresh.
+        // NB: `maintainColumnOrder` is deliberately NOT set. The store owns column order.
+        // With the flag ON, AG Grid's internal order wins and a column re-added by a
+        // context change is appended after every other column (off-screen, i.e. "gone")
+        // until reload. It would equally defeat `movable: false`.
         animateRows={false}
         headerHeight={48}
         getRowHeight={getRowHeight}
@@ -358,9 +331,8 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
 }
 
 /**
- * The AG Grid rendering strategy. The only module that imports `ag-grid-*`. A thin
- * wrapper so the impl (which uses hooks) mounts as a real component when the generic
- * `TGridRenderer` is invoked.
+ * The AG Grid rendering strategy — the only module that imports `ag-grid-*`. Wraps the
+ * hook-using impl so it mounts as a real component when `TGridRenderer` is invoked.
  */
 export function AgGridRenderer<Row>(props: IGridRendererProps<Row>) {
   return <AgGridRendererImpl {...props} />;

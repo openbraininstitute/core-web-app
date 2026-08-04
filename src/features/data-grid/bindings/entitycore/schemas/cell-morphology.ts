@@ -28,17 +28,9 @@ import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * `ICellMorphology.cell_morphology_protocol` IS declared (and the backend's
- * `NestedCellMorphologyProtocolRead` really does carry `name`, `generation_type`,
- * `protocol_design` and `protocol_document`, via `CellMorphologyProtocolBaseMixin`),
- * but it is a DISCRIMINATED UNION whose Placeholder arm has neither
- * `protocol_design` nor `protocol_document`, and whose TS type omits `name`
- * altogether. Reading those four through the union needs narrowing at every call
- * site; this flat, all-optional view says the same thing once — the same local
- * augmentation `universal-cell-morphology` already declares for its two columns.
- *
- * (This listing pins `generation_type__not_in: [synthesized, modified, placeholder]`
- * in its domain config, so the Placeholder arm never actually reaches a row here.)
+ * `ICellMorphology.cell_morphology_protocol` is a discriminated union whose
+ * Placeholder arm lacks `protocol_design`/`protocol_document` and whose TS type omits
+ * `name`; this flat view avoids narrowing at every accessor.
  */
 type Row = ICellMorphology & {
   cell_morphology_protocol?: {
@@ -52,14 +44,7 @@ type Row = ICellMorphology & {
 const GENERATION_TYPE_LABELS = dictLabelByKey(CellMorphologyGenerationType);
 const PROTOCOL_DESIGN_LABELS = dictLabelByKey(CellMorphologyProtocolDesign);
 
-/**
- * ADVANCED FILTERS — what is left once every filterable field that CAN be a column is
- * one: the record's own `id`, which has no useful column to show.
- *
- * The whole `cell_morphology_protocol__*` family, both `subject__*` fields and
- * `has_segmented_spines` used to live here; they are AUXILIARY columns below, so
- * each field stays on exactly one surface.
- */
+/** `GET /cell-morphology` params with no column: just the record's own `id`. */
 const cellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
     id: 'common',
@@ -76,13 +61,9 @@ const cellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
 ];
 
 /**
- * PROTOCOL — the `cell_morphology_protocol__*` family, each carrying the operators,
- * options and free-entry kind of the advanced filter it replaces.
- *
- * SORT SAFETY (`CellMorphologyFilter.Constants.ordering_model_fields`,
- * `app/filters/cell_morphology.py`): `cell_morphology_protocol__generation_type` and
- * `…__name` ARE in the allowlist; `…__protocol_design` and `…__protocol_document` are
- * NOT, so those two are non-sortable — an `order_by` outside the list is a 422.
+ * The `cell_morphology_protocol__*` family as auxiliary columns. `generation_type` and
+ * `name` are in this endpoint's ordering fields; `protocol_design` and
+ * `protocol_document` are not, hence `sortable: false` on those two.
  */
 const generationTypeColumn: IColumnModel<Row> = {
   id: 'generationType',
@@ -94,10 +75,8 @@ const generationTypeColumn: IColumnModel<Row> = {
     GENERATION_TYPE_LABELS.get(r.cell_morphology_protocol?.generation_type ?? '') ?? '',
   width: { minWidth: 160 },
   filter: {
-    // `…__in` and `…` (exact) ONLY. The domain config pins `…__not_in` as a host
-    // param and host params merge AFTER the user's filters, so a `NotIn` here would
-    // collide on that param name and be silently overwritten; `__in` is a different
-    // name and composes as an intersection. See FILTERS.md.
+    // No `NotIn`: the domain config pins `…__not_in` as a host param, and host params
+    // merge after the user's filters, so a user `NotIn` would be overwritten.
     operators: [OperatorId.In, OperatorId.Eq],
     field: 'cell_morphology_protocol__generation_type',
     targets: [
@@ -125,7 +104,6 @@ const protocolDesignColumn: IColumnModel<Row> = {
     PROTOCOL_DESIGN_LABELS.get(r.cell_morphology_protocol?.protocol_design ?? '') ?? '',
   width: { minWidth: 160 },
   filter: {
-    // `…__in`, `…__not_in`, `…` (exact) — nothing pins protocol_design
     operators: [OperatorId.In, OperatorId.NotIn, OperatorId.Eq],
     field: 'cell_morphology_protocol__protocol_design',
     targets: [
@@ -150,7 +128,6 @@ const protocolNameColumn: IColumnModel<Row> = {
   getValue: (r) => r.cell_morphology_protocol?.name ?? '',
   width: { minWidth: 160 },
   filter: {
-    // `…__ilike`, `…__in`, `…` (exact)
     operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
     field: 'cell_morphology_protocol__name',
     targets: [
@@ -174,7 +151,6 @@ const protocolDocumentColumn: IColumnModel<Row> = {
   getValue: (r) => r.cell_morphology_protocol?.protocol_document ?? '',
   width: { minWidth: 180 },
   filter: {
-    // `…__ilike`, `…__in`, `…` (exact)
     operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
     field: 'cell_morphology_protocol__protocol_document',
     targets: [
@@ -191,7 +167,7 @@ const protocolDocumentColumn: IColumnModel<Row> = {
   },
 };
 
-/** `has_segmented_spines` — boolean, and IS in this endpoint's ordering fields. */
+/** `has_segmented_spines`. In this endpoint's ordering fields, so it sorts. */
 const hasSegmentedSpinesColumn: IColumnModel<Row> = {
   id: 'hasSegmentedSpines',
   header: 'Segmented spines',
@@ -221,7 +197,6 @@ export const cellMorphologySchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(cellMorphologyAdvancedFilters),
   columns: [
     previewColumn<Row>({
@@ -253,8 +228,7 @@ export const cellMorphologySchema: IGridSchema<Row> = {
             label: 'Acronym',
             field: 'brain_region__acronym',
             operators: [OperatorId.In],
-            // Acronyms are not ids: without this the free-entry editor would reject
-            // every token as a malformed UUID.
+            // Acronyms are not UUIDs; the free-entry editor would reject them.
             freeEntry: FreeEntryKind.Text,
             description: 'Brain region acronym',
             placeholder: 'Paste one or more acronyms, like SSp-bfd',
@@ -293,7 +267,6 @@ export const cellMorphologySchema: IGridSchema<Row> = {
         ],
       },
     }),
-    // the identifying column: kept visible by the chooser's bulk deselect
     nameColumn<Row>({
       essential: true,
       filter: {
@@ -334,14 +307,13 @@ export const cellMorphologySchema: IGridSchema<Row> = {
       },
     }),
     registrationDateColumn<Row>({ essential: true }),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     generationTypeColumn,
     protocolDesignColumn,
     protocolNameColumn,
     protocolDocumentColumn,
-    // BOTH subject fields are in CellMorphologyFilter's ordering_model_fields — this
-    // is the one endpoint so far that sorts `subject__name`, so the catalog default
-    // (never sortable) is overridden deliberately here.
+    // Both subject fields are in this endpoint's ordering fields, so the catalog's
+    // never-sortable default for `subject__name` is overridden here.
     subjectStrainColumn<Row>({ sortable: true }),
     subjectNameColumn<Row>({ sortable: true, sortField: 'subject__name' }),
     hasSegmentedSpinesColumn,

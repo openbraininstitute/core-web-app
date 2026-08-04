@@ -7,20 +7,13 @@ import type { IGridContext } from './grid-context';
 import type { IGridSchema } from './schema';
 
 /**
- * Filter TARGETS — the "which backend field" axis of a column filter, orthogonal to
- * the operator axis. One grid column (Species) can be filtered by several fields
- * (`subject__species__name`, `subject__species__id`), each with its own operators
- * and option source.
- *
- * Back-compat is the whole point of this module: a column that declares no
- * {@link IColumnFilter.targets} still has exactly ONE target, synthesised from the
- * flat `{ field, operators, options, facetKey, description }` props, with the same
- * field-resolution order the serializer has always used
- * (`filter.field ?? column.field ?? column.id`). Nothing about such a column's
- * serialization changes.
+ * Filter targets — the "which backend field" axis of a column filter, orthogonal to
+ * the operator axis (Species can filter by `…species__name` or `…species__id`).
+ * A column declaring no {@link IColumnFilter.targets} gets exactly one synthesised
+ * from its flat props, resolving the field as `filter.field ?? column.field ?? column.id`.
  */
 
-/** id of the target synthesised from a legacy single-field `filter` declaration. */
+/** id of the target synthesised from a flat single-field `filter` declaration. */
 export const DEFAULT_FILTER_TARGET_ID = 'default';
 
 /**
@@ -67,13 +60,10 @@ export function activeFilterTarget(
 
 /**
  * What a free-entry (paste-a-list) target collects, or `null` when the target is not
- * free-entry at all. A target with an option source is a picker, never free entry;
- * the synthesised legacy target is never free entry either, because its missing
- * `options` has always meant "fall back to the grid's facets".
- *
- * The default for a declared target with no options is {@link FreeEntryKind.Uuid} —
- * every such target predating this function was an id target — so a target that
- * collects plain strings must say so with {@link IFilterTarget.freeEntry}.
+ * free-entry at all. A target with an option source is a picker; the synthesised
+ * default target never is either, since its missing `options` means "use the grid's
+ * facets". A declared optionless target defaults to {@link FreeEntryKind.Uuid}, so one
+ * collecting plain strings must set {@link IFilterTarget.freeEntry}.
  */
 export function freeEntryKind(target: IFilterTarget): TFreeEntryKind | null {
   if (target.options) return null;
@@ -82,19 +72,17 @@ export function freeEntryKind(target: IFilterTarget): TFreeEntryKind | null {
 }
 
 /**
- * A target with no option source is a FREE-ENTRY target (paste ids/values) rather
- * than a facet picker. Never true for the synthesised legacy target, whose missing
- * `options` has always meant "fall back to the grid's facets".
+ * Whether a target collects pasted ids/values rather than offering a facet picker.
+ * Never true for the synthesised default target.
  */
 export function isFreeEntryTarget(target: IFilterTarget): boolean {
   return freeEntryKind(target) !== null;
 }
 
 /**
- * Persisted filter entries predate `targetId`. Fill in the default target (and
- * repair an entry naming a target that no longer exists) so an old sessionStorage
- * snapshot still resolves to a field. Returns the SAME reference when nothing
- * needed fixing.
+ * Fill in the default `targetId` on entries lacking one, and repair entries naming a
+ * target that no longer exists, so an old persisted snapshot still resolves to a
+ * field. Returns the same reference when nothing needed fixing.
  */
 export function hydrateFilterTargetIds<Row>(
   filters: TFilterModel,

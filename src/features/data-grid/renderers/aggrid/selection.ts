@@ -1,22 +1,12 @@
 import type { ISelectionSpec } from '../../core';
 
-/**
- * Effective SCHEMA-level selection mode ('single' radio / 'multiRow' checkboxes),
- * overridable per render by the picker (see `SelectionMode` in core, a separate
- * single/multi vocabulary that the grid maps onto this one).
- */
+/** Schema-level selection mode, overridable per render by the picker. */
 export type TSchemaSelectionMode = NonNullable<ISelectionSpec['mode']>;
 
 /**
- * Merge the checkboxes toggled on the CURRENT page into the cross-page selection.
- *
- * - `single` (radio picker): the current page's single pick REPLACES everything —
- *   including any id selected earlier on another page. Radio has one winner.
- * - `multiRow` (default / bulk-actions / multi picker): selection ACCUMULATES across
- *   pages. Ids from other pages (which the grid cannot see) are preserved; this
- *   page's checkboxes are the authority for its own rows.
- *
- * Pure so it is unit-testable without a live AG Grid.
+ * Merge the current page's checkboxes into the cross-page selection: `single` replaces
+ * everything, `multiRow` preserves ids from pages the grid cannot see. Pure, so it is
+ * testable without a live AG Grid.
  */
 export function mergePageSelection(
   mode: TSchemaSelectionMode | undefined,

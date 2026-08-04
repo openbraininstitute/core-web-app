@@ -103,7 +103,6 @@ describe('resolveAdvancedFilterGroups', () => {
   it('drops filters and whole groups the context excludes', () => {
     const resolved = resolveAdvancedFilterGroups(schema, ctx());
     expect(resolved.map((g) => g.id)).toEqual(['protocol', 'subject']);
-    // `doc` is build-workflow only
     expect(resolved[0].filters.map((f) => f.def.id)).toEqual(['design']);
 
     const inBuild = resolveAdvancedFilterGroups(schema, ctx({ section: 'build' }));

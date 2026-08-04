@@ -32,36 +32,22 @@ import type { IColumnModel, IGridSchema } from '../../../core';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * Re-authored grid schemas for the expandable circuit-simulation dataTypes (T-05).
- * Each flips its legacy antd expandable table to an AG Grid listing with a full-width
- * DETAIL row: the collapsed columns mirror the entity's legacy view-def order, and the
- * `detail` spec + `renderDetail` reuse the entity's registered
- * {@link ListExpandedViewConfig} so the expanded content is byte-for-byte the legacy
- * SimpleGrid table. Column order is the parity contract locked by the tests.
- *
- * Legacy view-def column order (per `view-defs/simulation/*`):
- *   Name, Description, Circuit, Created by, [Species — memodel only], Registration date, Status
+ * Grid schemas for the expandable circuit-simulation dataTypes. Each pairs collapsed
+ * columns with a full-width detail row driven by the entity's registered
+ * {@link ListExpandedViewConfig}.
  */
 
 interface BuildOptions {
   dataType: string;
   id: string;
-  /**
-   * Legacy expanded-view config for this dataType. Retained so the nested-table
-   * byte-parity renderer (`makeCampaignRenderDetail`) stays available for rollback;
-   * the default popover-cards mode does not consume it.
-   */
+  /** Expanded-view config; consumed only in nested mode. */
   // biome-ignore lint/suspicious/noExplicitAny: viewConfig row type is entity-specific; forwarded verbatim to render
   viewConfig: ListExpandedViewConfig<any>;
-  /** the circuit-simulation variants all show a "Circuit" column except ion-channel */
+  /** every variant shows a Circuit column except ion-channel */
   withCircuit?: boolean;
   /** memodel circuit simulation adds a Species column */
   withSpecies?: boolean;
-  /**
-   * Presentation mode for the Status column. `false` (default) → popover-cards; `true`
-   * → also wire the full-width nested scan-parameter table (see
-   * {@link CAMPAIGN_NESTED_MODE_DEFAULT}). Exposed so tests can build a nested variant.
-   */
+  /** see {@link CAMPAIGN_NESTED_MODE_DEFAULT} */
   nestedMode?: boolean;
 }
 
@@ -76,16 +62,11 @@ export function buildSimulationCampaignDefinition({
     campaignNameColumn<ICampaignRow>({ essential: true }),
     campaignDescriptionColumn<ICampaignRow>(),
     ...(withCircuit ? [circuitNameColumn<ICampaignRow>()] : []),
-    // `created_by__pref_label` is in SimulationCampaignFilter's ordering fields.
     campaignCreatedByColumn<ICampaignRow>({
       sortable: true,
       sortField: 'created_by__pref_label',
     }),
     ...(withSpecies ? [campaignSpeciesColumn<ICampaignRow>()] : []),
-    // Visible on every campaign listing, matching the legacy view-defs (PR #1850). The
-    // PR's slot varies slightly per variant (after Circuit / Created by / Species); one
-    // shared builder needs one slot, so it sits at the end of that same trailing block,
-    // just before Registration date.
     lifecycleStatusColumn<ICampaignRow>(),
     campaignRegistrationDateColumn<ICampaignRow>({ essential: true }),
     campaignStatusColumn<ICampaignRow>({ essential: true }),
@@ -96,16 +77,12 @@ export function buildSimulationCampaignDefinition({
     getRowId: (row) => row.id,
     defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
     columns,
-    // Popover-cards mode (default) wires NO full-width detail row, so the legacy
-    // nested-table expander is not shown; nested mode restores it.
     ...(nestedMode ? { detail: campaignDetailSpec<ICampaignRow>() } : {}),
   };
 
   return {
     dataType,
     schema,
-    // Nested mode swaps the expanded table's status cell to the new badge; popover-cards
-    // mode needs no detail renderer.
     ...(nestedMode ? { renderDetail: makeCampaignScanTableRenderDetail() } : {}),
     registerCellRenderers: registerCampaignRenderers,
   };
@@ -161,7 +138,7 @@ export const ionChannelModelSimulationGridDefinition = buildSimulationCampaignDe
   withCircuit: false,
 });
 
-/** All circuit-simulation grid definitions flipped in T-05, keyed by dataType. */
+/** All circuit-simulation grid definitions, keyed by dataType. */
 export const circuitSimulationGridDefinitions: Array<IEntityGridDefinition<ICampaignRow>> = [
   regionCircuitSimulationGridDefinition,
   wholeBrainCircuitSimulationGridDefinition,

@@ -8,11 +8,8 @@ import type { ICellRendererProps } from '../../../react';
 export const MEMODEL_MORPHOLOGY_PREVIEW_RENDERER = 'memodelMorphologyPreview';
 
 /**
- * ME-model morphology preview. Unlike the shared {@link EntityPreview} (which
- * previews the row entity itself), the ME-model listing's "Morphology" column
- * previews the NESTED `morphology` sub-entity (an `ICellMorphology`), mirroring the
- * legacy `MEModelMorphologyPreview` field-def. Reuses the same lazy, asset-backed
- * {@link PreviewThumbnail} so previews stay fully functional, not placeholders.
+ * ME-model morphology preview. Unlike the shared {@link EntityPreview}, this previews
+ * the nested `morphology` sub-entity, not the row entity itself.
  */
 export function MEModelMorphologyPreview({ row }: ICellRendererProps<IMEModel>) {
   const morphology = row?.morphology;

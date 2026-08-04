@@ -139,7 +139,6 @@ describe('DataGrid picker selection', () => {
     });
     await waitFor(() => expect(getReceived()).toBeDefined());
     await waitFor(() => expect(controller.store.getSnapshot().selection).toEqual(['a']));
-    // a later user-driven change still resolves BOTH rows (controlled row seeded the cache)
     act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a', 'b'] }));
     await waitFor(() =>
       expect(onChange).toHaveBeenLastCalledWith([

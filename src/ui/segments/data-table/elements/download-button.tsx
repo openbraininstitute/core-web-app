@@ -7,8 +7,7 @@ import { type ReactNode, useCallback, useState } from 'react';
 
 import { useAppNotification } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-// direct module import (not the react barrel) — this file is reachable from the
-// grid host, and the barrel would close a module-init cycle
+// direct module import: the react barrel would close a module-init cycle via the grid host
 import {
   EXPANDING_PILL_BASE_CLASS,
   ExpandingPillContent,
@@ -43,12 +42,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   children?: ReactNode;
   workspace?: WorkspaceContext;
   className?: string;
-  /**
-   * Render as the grid's EXPANDING pill — the icon alone at rest, the label revealed
-   * on hover/focus-visible — instead of the wide labelled button. Same behaviour as
-   * every other grid pill (it reuses `ExpandingPillContent`), but this button keeps
-   * its own primary gradient: a bulk action is not toolbar chrome.
-   */
+  /** Render as the grid's expanding pill (icon at rest, label on hover/focus-visible). */
   expanding?: boolean;
 }) {
   const session = useAtomValue(sessionAtom);
@@ -151,7 +145,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   if (!session) return null;
 
   const label = getButtonLabel();
-  /** the gradient + chrome that make this button READ as the primary bulk action */
+  /** gradient + chrome marking this as the primary bulk action */
   const palette = cn(
     'overflow-hidden border border-white/20 font-semibold text-white',
     'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',

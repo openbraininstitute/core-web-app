@@ -10,10 +10,9 @@ export const OperatorId = {
   Eq: 'eq',
   In: 'in',
   /**
-   * Set membership, but serialized with a SINGLE-underscore `_in` separator instead
-   * of the usual `__in`. Semantically identical to {@link OperatorId.In}; exists only
-   * because a few entitycore relation filters are spelled that way on the backend
-   * (currently `post_region__name_in` on synapses-per-connection). Prefer `In`.
+   * Identical to {@link OperatorId.In} but serialized with a single-underscore `_in`
+   * separator, which a few entitycore relation filters require (e.g.
+   * `post_region__name_in`). Prefer `In`.
    */
   InSingleUnderscore: 'inSingleUnderscore',
   NotIn: 'notIn',

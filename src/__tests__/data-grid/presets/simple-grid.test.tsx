@@ -123,7 +123,7 @@ describe('SimpleGrid (jsdom mount)', () => {
 
     const header = container.querySelector<HTMLElement>('.ag-header');
     expect(header).not.toBeNull();
-    // headerHeight={0} → collapsed header container (AG Grid adds a 1px border)
+    // AG Grid adds a 1px border to the collapsed header container
     expect(header?.style.height).toBe('1px');
   });
 
@@ -158,7 +158,6 @@ describe('SimpleGrid row selection', () => {
     });
 
     await waitFor(() => {
-      // one selection affordance per row (single mode = no header select-all)
       expect(container.querySelectorAll('.ag-selection-checkbox').length).toBe(rows.length);
     });
     expect(container.querySelector('.ag-header-select-all')).not.toBeInTheDocument();
@@ -194,8 +193,8 @@ describe('SimpleGrid row selection', () => {
       expect(container.querySelector('.ag-row-selected')).toBeInTheDocument();
     });
 
-    // pinned-left + center + pinned-right containers each render the row, so a
-    // single selected logical row maps to several `.ag-row-selected` fragments
+    // pinned-left + center + pinned-right each render the row, so one selected logical
+    // row maps to several `.ag-row-selected` fragments
     const selectedIds = new Set(
       Array.from(container.querySelectorAll('.ag-row-selected')).map((el) =>
         el.getAttribute('row-id')
@@ -221,8 +220,6 @@ describe('SimpleGrid row selection', () => {
   });
 });
 
-// Opt-in enhanced mode: reuses the shared header filters, column chooser,
-// store-driven sorting and pagination — the same stack as the entity grid.
 const filterColumns: Array<ISimpleColumn<Row>> = [
   {
     id: 'name',
@@ -256,7 +253,6 @@ describe('SimpleGrid enhanced mode', () => {
     await waitFor(() => {
       expect(container.querySelector('[aria-label="Filter Name"]')).toBeInTheDocument();
     });
-    // the non-filterable column shows no filter icon
     expect(container.querySelector('[aria-label="Filter Seed"]')).not.toBeInTheDocument();
     expect(container.textContent).toContain('Alpha');
   });
@@ -287,8 +283,6 @@ describe('SimpleGrid enhanced mode', () => {
   });
 });
 
-// ── Server mode: the data source resolves filter/sort/pagination; store changes
-//    (page, sort) re-issue `dataSource.fetch` with the updated IGridQuery. ──────────
 interface SRow {
   id: string;
   name: string;
@@ -333,12 +327,10 @@ describe('SimpleGrid server mode', () => {
     );
 
     await waitFor(() => expect(container.textContent).toContain('One'));
-    // server-paginated page 1 (size 2) = One, Two — Three is on page 2
     expect(container.textContent).toContain('Two');
     expect(container.textContent).not.toContain('Three');
     expect(fetch).toHaveBeenCalled();
     expect(fetch.mock.calls[0][0]).toMatchObject({ page: 1, pageSize: 2 });
-    // total (3) > pageSize (2) → the pager is shown
     await waitFor(() => expect(container.querySelector('.ant-pagination')).toBeInTheDocument());
   });
 
@@ -360,7 +352,6 @@ describe('SimpleGrid server mode', () => {
     if (!page2) throw new Error('expected a page-2 control in the pager');
     fireEvent.click(page2);
 
-    // page 2 (size 2) = Three
     await waitFor(() => expect(container.textContent).toContain('Three'));
     expect(fetch.mock.calls.some(([q]) => q.page === 2)).toBe(true);
   });
@@ -379,14 +370,12 @@ describe('SimpleGrid server mode', () => {
 
     await waitFor(() => expect(container.textContent).toContain('One'));
 
-    // the custom header's sort control is the label button carrying the column name
     const sortButton = Array.from(container.querySelectorAll('button')).find((b) =>
       b.textContent?.includes('Name')
     );
     if (!sortButton) throw new Error('expected a sortable header button for "Name"');
     fireEvent.click(sortButton);
 
-    // first click → descending sort on 'name' → a fresh fetch with the new query
     await waitFor(() =>
       expect(
         fetch.mock.calls.some(
@@ -394,7 +383,6 @@ describe('SimpleGrid server mode', () => {
         )
       ).toBe(true)
     );
-    // desc: server page 1 (size 2) now = Three, Two
     await waitFor(() => expect(container.textContent).toContain('Three'));
   });
 

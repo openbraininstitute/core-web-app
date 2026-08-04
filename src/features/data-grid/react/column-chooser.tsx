@@ -17,20 +17,10 @@ export interface IColumnChooserProps<Row> {
 }
 
 /**
- * Renderer-agnostic column visibility control: reads the resolved columns and the
- * `hiddenColumns` state, dispatches `setHiddenColumns`. The legacy "active columns"
- * feature, re-expressed against the new store.
- *
- * A tri-state "Select all" heads the list, above its own hairline separator; it
- * writes the same `hiddenColumns` state as the per-column checkboxes, so one click
- * reveals every auxiliary column and the next collapses back to the schema's
- * essential columns.
- *
- * AUXILIARY columns are listed apart, below a hairline separator: they are backend-
- * filterable fields the grid CAN show but does not by default, and folding them into
- * the main list would bury the columns the grid is actually about. Ticking one also
- * moves its filter out of the advanced-filters panel and into its column header (see
- * `resolveFilterPanelGroups`) — the checkbox is the single control for both.
+ * Renderer-agnostic column visibility control: reads the resolved columns and
+ * `hiddenColumns`, dispatches `setHiddenColumns`. Auxiliary columns are listed below a
+ * separator; ticking one also moves its filter from the advanced-filters panel into its
+ * column header (see `resolveFilterPanelGroups`) — one checkbox controls both.
  */
 export function ColumnChooser<Row>({ controller, state, className }: IColumnChooserProps<Row>) {
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
@@ -50,16 +40,9 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
   const mixed = !allVisible && !noneVisible;
 
   /**
-   * EMPTY-GRID GUARD: unticking "Select all" keeps the ESSENTIAL columns visible
-   * rather than hiding everything (see `essentialColumnIds` — a schema names them,
-   * and the fallback is the first non-auxiliary column). A grid emptied in one click
-   * reads as broken, and disabling the control instead would make the one-click
-   * collapse unreachable exactly when it is most useful.
-   *
-   * The guard binds the BULK action ONLY. An essential column's own checkbox still
-   * hides it, so a genuinely empty grid stays reachable — deliberately, never by
-   * accident. The tri-state keeps telling the truth about actual visibility, so after
-   * a bulk deselect the control reads INDETERMINATE, not unchecked.
+   * Unticking "Select all" keeps the essential columns visible rather than emptying the
+   * grid. Binds the bulk action only — an essential column's own checkbox still hides it.
+   * The tri-state still reports actual visibility, so a bulk deselect reads indeterminate.
    */
   const onToggleAll = (checked: boolean) => {
     setVisible(checked ? columns.map((c) => c.id) : essentialColumnIds(columns));
@@ -81,20 +64,15 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
         <Checkbox
           checked={allVisible}
           indeterminate={mixed}
-          // antd renders the mixed state VISUALLY (the dash) but sets no ARIA for it,
-          // and a native checkbox input has no `mixed` value — so the tri-state has to
-          // be announced explicitly or a screen reader hears "unchecked" for a
-          // partially-selected list.
+          // antd draws the mixed state but sets no ARIA for it, so a screen reader would
+          // hear "unchecked" for a partially-selected list
           aria-checked={mixed ? 'mixed' : allVisible}
           onChange={(e) => onToggleAll(e.target.checked)}
         >
           Select all
         </Checkbox>
         {separator}
-        {/*
-          The per-column group starts BELOW the select-all: that control is not one of
-          the values, it writes the same `hiddenColumns` state from the outside.
-        */}
+        {/* select-all is outside the group: it is not one of the values */}
         <Checkbox.Group
           value={value}
           onChange={(v) => setVisible(v as Array<string>)}
@@ -107,12 +85,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
           ))}
           {auxiliary.length > 0 ? (
             <>
-              {/*
-                A hairline, not a label: the auxiliary columns are ordinary checkboxes
-                that happen to be opt-in, and naming the section made the chooser read
-                as two features. An `<hr>` carries the implicit `separator` role, so
-                the break is still announced without an ARIA opt-in.
-              */}
+              {/* `<hr>` carries the implicit `separator` role, so the break is announced */}
               {separator}
               {auxiliary.map((c) => (
                 <Checkbox key={c.id} value={c.id}>
@@ -127,9 +100,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
   );
 
   return (
-    // `zIndex` is PINNED, not left to antd's default (1030): the grid renders inside
-    // `ui/molecules/modal` too, whose dialog sits at 1001. One number for every grid
-    // overlay keeps the chooser and the filters popover on the same rank.
+    // `zIndex` pinned rather than antd's 1030, so every grid overlay shares one rank
     <Popover
       trigger="click"
       placement="bottomRight"

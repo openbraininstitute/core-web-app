@@ -28,9 +28,8 @@ export interface IFilterEntry {
   /** chosen operator id (must be one of the column's declared operators) */
   operator: string;
   /**
-   * id of the {@link IFilterTarget} this entry filters by (which backend field).
-   * Absent on entries written before targets existed (and on single-target columns
-   * set programmatically) — consumers fall back to the column's first target.
+   * id of the {@link IFilterTarget} this entry filters by. May be absent; consumers
+   * then fall back to the column's first target.
    */
   targetId?: string;
   value: TFilterValue;
@@ -44,13 +43,9 @@ function formatIsoDate(iso: string | null): string {
 }
 
 /**
- * Turns ONE stored filter value (the wire id — `'modified_reconstruction'`, a facet
- * label, a UUID) into the human label the user picked it by. Returns `undefined`
- * when this value is not one of the target's known options, so the caller can fall
- * back to the raw value rather than inventing one.
- *
- * Built by `filterOptionLabeler` (`domain/filter-labels.ts`), which is where the
- * option sources — static items, facet buckets — are read.
+ * Turns one stored filter value (a wire id, facet label or UUID) into its human
+ * label, or `undefined` when it is not a known option so callers can show the raw
+ * value. Built by `filterOptionLabeler` in `domain/filter-labels.ts`.
  */
 export type TFilterValueLabeler = (rawValue: string) => string | undefined;
 
@@ -61,19 +56,14 @@ const MAX_LISTED_SET_VALUES = 3;
  * Short, human-readable summary of an active filter's value (e.g.
  * `"Modified reconstruction"`, `"2024-01-01 – *"`). Renderer-agnostic — used by the
  * header's active-state test, the advanced-filter list and the applied-filters pane.
- * Returns `''` for an empty/no-op value.
- *
- * `labelOf` resolves stored values back to the LABEL the user picked. Pass it
- * whenever the filter's target is known: without it a set summarizes as
- * `"3 selected"` (the right answer for a free-entry list of UUIDs, which no label
- * could improve), with it as the joined option labels.
+ * Returns `''` for an empty/no-op value. Without `labelOf` a set summarizes as
+ * `"3 selected"`; with it, as the joined option labels.
  */
 export function summarizeFilter(entry: IFilterEntry, labelOf?: TFilterValueLabeler): string {
   const v = entry.value;
   switch (v.kind) {
     case 'text': {
-      // A text operator on a target with a static option list is an exact-match enum
-      // (`…__protocol_design`): the stored text IS the option id, never free text.
+      // On a target with a static option list the stored text IS the option id.
       const text = v.text.trim();
       return text === '' ? '' : (labelOf?.(text) ?? text);
     }

@@ -12,11 +12,7 @@ import type {
   TSortModel,
 } from '../../core';
 
-/**
- * The subset of a {@link IColumnModel} the in-memory engine needs to read/compare a
- * cell value and know how a column filters. `ISimpleColumn` (and every schema
- * `IColumnModel`) already satisfies this, so callers pass their columns straight in.
- */
+/** The subset of {@link IColumnModel} the in-memory engine reads. */
 export type TInMemoryColumn<Row> = Pick<IColumnModel<Row>, 'id' | 'field' | 'getValue' | 'filter'>;
 
 /** Read a (possibly dotted) field path off a row without throwing on nullish links. */
@@ -57,11 +53,7 @@ function asTime(value: TCellValue): number | null {
   return Number.isFinite(t) ? t : null;
 }
 
-/**
- * Per-operator in-memory predicates (Strategy pattern), mirroring the entitycore
- * `query-serializer` semantics but evaluated against the row value instead of
- * serialized to request params. Adding an operator = add a predicate here.
- */
+/** Per-operator predicates mirroring the entitycore `query-serializer` semantics. */
 type Predicate = (value: TCellValue, entry: IFilterEntry) => boolean;
 
 const PREDICATES: Record<string, Predicate> = {
@@ -175,9 +167,8 @@ function compareBySort<Row>(
 }
 
 /**
- * TFacets computed from the FULL (unfiltered) row set, so a set/facet filter's
- * options stay stable while the user narrows the grid. One bucket per distinct
- * value; the value doubles as both `id` and `label` (there are no UUIDs here).
+ * Facets computed from the FULL (unfiltered) row set, so options stay stable while the
+ * user narrows the grid. Each distinct value doubles as `id` and `label`.
  */
 export function computeInMemoryFacets<Row>(
   rows: ReadonlyArray<Row>,
@@ -215,8 +206,7 @@ export interface IRunInMemoryOptions<Row> {
 
 /**
  * Apply a {@link IGridQuery} (filters → sort → pagination) to an in-memory array.
- * Pure and synchronous, so a static grid can derive its page in a `useMemo`
- * without React Query. The same engine backs {@link createInMemoryDataSource}.
+ * Pure and synchronous, so a static grid can derive its page in a `useMemo`.
  */
 export function runInMemoryQuery<Row>(
   rows: ReadonlyArray<Row>,
@@ -256,9 +246,8 @@ export interface IInMemoryDataSourceOptions<Row> {
 }
 
 /**
- * Wrap an in-memory array as a {@link IGridDataSource}, so a static list can flow
- * through the exact same controller/`useDataGrid`/renderer stack as an entitycore
- * REST source. Resolves synchronously (the Promise is immediate).
+ * Wrap an in-memory array as a {@link IGridDataSource} so a static list flows through
+ * the same controller/renderer stack as a REST source. Resolves immediately.
  */
 export function createInMemoryDataSource<Row>(
   rows: ReadonlyArray<Row>,

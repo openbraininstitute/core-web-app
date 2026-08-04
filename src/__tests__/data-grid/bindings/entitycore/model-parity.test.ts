@@ -24,12 +24,8 @@ import type {
 } from '@/features/data-grid/core';
 
 /**
- * Per-entity parity harness for the model + notebook batch (Groups 2/3/7). Locks the
- * serialized query params (filters → `field__op`, sort → order_by) and the
- * context-resolved column set/order to the legacy listing — the two invariants that
- * guarantee no regression. Legacy constraint keys come from the field-defs
- * (`fields-defs/{common,model,experimental,analysis-notebook-template}`), which are
- * the source of truth.
+ * Parity harness for the model + notebook schemas: locks the serialized query params
+ * and the context-resolved column set/order to the legacy listing's field-defs.
  */
 
 function query(over: Partial<IGridQuery> = {}): IGridQuery {
@@ -108,7 +104,7 @@ describe('emodel parity', () => {
       'lifecycleStatus',
       'contributions',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'exemplarHasSegmentedSpines',
       'ionChannelModels',
       'strainName',
@@ -133,7 +129,7 @@ describe('emodel parity', () => {
       '%foo%'
     );
 
-    // Only `ion_channel_model__name` is in EModelFilter.Constants.ordering_model_fields
+    // only `ion_channel_model__name` is in EModelFilter's ordering_model_fields
     expect(s.columns.find((c) => c.id === 'ionChannelModels')?.sortable).toBe(true);
     expect(serializeQuery(query(sortDesc('ionChannelModels')), s).order_by).toEqual([
       '-ion_channel_model__name',
@@ -144,8 +140,6 @@ describe('emodel parity', () => {
 
   it('the ion-channel-model cell joins the to-many relation the row actually carries', () => {
     const column = s.columns.find((c) => c.id === 'ionChannelModels');
-    // `EModelReadExpanded` (the list response) carries `ion_channel_models`, so this
-    // is a real value, not a blank column over a filter-only field.
     expect(
       column?.getValue?.({
         ion_channel_models: [{ name: 'Kv1.1' }, { name: 'Nav1.6' }],
@@ -169,7 +163,6 @@ describe('emodel parity', () => {
     ).toEqual(['x']);
   });
   it('sorts: species/morphology/score/contributions bind their EModelFilter order keys', () => {
-    // `species__name` IS in EModelFilter.Constants.ordering_model_fields.
     expect(s.columns.find((c) => c.id === 'species')?.sortable).toBe(true);
     expect(serializeQuery(query(sortDesc('species')), s).order_by).toEqual(['-species__name']);
     expect(serializeQuery(query(sortDesc('exemplarMorphology')), s).order_by).toEqual([
@@ -210,7 +203,7 @@ describe('memodel parity', () => {
       'lifecycleStatus',
       'createdBy',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'morphologyName',
       'morphologyHasSegmentedSpines',
       'emodelName',
@@ -253,17 +246,12 @@ describe('memodel parity', () => {
       serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
     ).toEqual(['x']);
 
-    // MEModelFilter.Constants.ordering_model_fields lists none of these six
+    // MEModelFilter's ordering_model_fields lists none of these six
     for (const id of aux) {
       expect(s.columns.find((c) => c.id === id)?.sortable).toBe(false);
     }
   });
 
-  /**
-   * `MEModelRead` embeds the FULL `CellMorphologyRead` / `EModelRead` (not a nested
-   * minimal read) and carries `strain`, so these are real values — not blank columns
-   * over filter-only fields.
-   */
   it('the nested cells read values the list response actually returns', () => {
     const row = {
       morphology: { name: 'L5 TPC', has_segmented_spines: true },
@@ -334,18 +322,12 @@ describe('single_neuron_synaptome parity', () => {
       'lifecycleStatus',
       'createdBy',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'meModelValidationStatus',
       'contributions',
     ]);
   });
 
-  /**
-   * ONLY these two of the seven candidates became columns. `SingleNeuronSynaptomeRead`
-   * embeds `NestedMEModel`, which carries validation_status but NOT strain, morphology
-   * or emodel — so those five stay advanced filters rather than ship blank columns
-   * (asserted in `model-advanced-filters.test.ts`).
-   */
   it('the two auxiliary columns carry their filters, and NEITHER sorts', () => {
     const resolved = resolveColumns(s, ctx('single_neuron_synaptome'));
     const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
@@ -360,7 +342,6 @@ describe('single_neuron_synaptome parity', () => {
       },
     };
     expect(serializeQuery(query({ filters: status }), s).me_model__validation_status).toBe('done');
-    // exact match only — this endpoint declares no `me_model__validation_status__in`
     expect(s.columns.find((c) => c.id === 'meModelValidationStatus')?.filter?.operators).toEqual([
       OperatorId.Eq,
     ]);
@@ -368,7 +349,6 @@ describe('single_neuron_synaptome parity', () => {
       serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
     ).toEqual(['x']);
 
-    // SingleNeuronSynaptomeFilter's ordering_model_fields lists neither
     for (const id of aux) {
       expect(s.columns.find((c) => c.id === id)?.sortable).toBe(false);
     }
@@ -402,7 +382,6 @@ describe('single_neuron_synaptome parity', () => {
     expect(
       serializeQuery(query({ filters: ilike('species') }), s).me_model__species__name__ilike
     ).toBe('%foo%');
-    // Neither is in SingleNeuronSynaptomeFilter's ordering fields.
     expect(s.columns.find((c) => c.id === 'me_model')?.sortable).toBeFalsy();
     expect(s.columns.find((c) => c.id === 'species')?.sortable).toBeFalsy();
   });
@@ -429,7 +408,7 @@ describe('ion_channel_model parity', () => {
       'isLjpCorrected',
       'lifecycleStatus',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'nmodlSuffix',
       'conductanceName',
       'maxPermeabilityName',
@@ -454,7 +433,7 @@ describe('ion_channel_model parity', () => {
     ]);
     expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
 
-    // the three NMODL text scalars are BARE exact matches — no `__in`, no `__ilike`
+    // the three NMODL text scalars are bare exact matches — no `__in`, no `__ilike`
     for (const [id, field] of [
       ['nmodlSuffix', 'nmodl_suffix'],
       ['conductanceName', 'conductance_name'],
@@ -497,17 +476,11 @@ describe('ion_channel_model parity', () => {
       expect(s.columns.find((c) => c.id === id)?.sortable).toBe(true);
     }
     expect(s.columns.find((c) => c.id === 'contributions')?.sortable).toBe(false);
-    // `subject__name` IS listed here — one of the few endpoints that sorts it
     expect(serializeQuery(query(sortDesc('subjectName')), s).order_by).toEqual(['-subject__name']);
     expect(serializeQuery(query(sortDesc('nmodlSuffix')), s).order_by).toEqual(['-nmodl_suffix']);
   });
 
-  /**
-   * The `subject__*` filter params address the NESTED subject the list response
-   * carries (`IonChannelModelExpanded` → `ScientificArtifactRead` → `SubjectReadMixin`),
-   * so the two subject cells must read `subject.…`, not the hand-written TS type's
-   * top-level `strain`. Reading the wrong one would ship two blank columns.
-   */
+  /** Reading the top-level `strain` instead of the nested `subject` ships two blank columns. */
   it('the subject cells read the NESTED subject the list response actually returns', () => {
     const row = { subject: { name: 'Rat 12', strain: { name: 'C57BL/6J' } } } as never;
     expect(s.columns.find((c) => c.id === 'subjectName')?.getValue?.(row)).toBe('Rat 12');

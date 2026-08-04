@@ -10,10 +10,8 @@ import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 import type { IGridQuery, TFilterModel, TFilterValue } from '@/features/data-grid/core';
 
 /**
- * Per-entity parity harness for cell_morphology. Locks the AG Grid grid's serialized
- * request params to the legacy `transformFiltersToQuery` oracle for representative
- * filter/sort/page states, and the visible column set/order to the legacy view-def —
- * the two invariants that guarantee no query or presentation regression on flip.
+ * Parity harness for cell_morphology: locks the serialized request params to the legacy
+ * `transformFiltersToQuery` oracle and the visible column set/order to the legacy view-def.
  */
 
 function query(over: Partial<IGridQuery> = {}): IGridQuery {
@@ -22,9 +20,8 @@ function query(over: Partial<IGridQuery> = {}): IGridQuery {
 
 describe('cell_morphology — column parity with the legacy view-def', () => {
   it('exposes the same VISIBLE columns in the same order (Preview, BrainRegion, Species, M-type, Name, Contributors, Registration date)', () => {
-    // Legacy field enum values map 1:1 to the grid schema column ids below. Only the
-    // non-auxiliary columns are compared: an auxiliary column is hidden until ticked,
-    // so it adds a filter surface, never a column the legacy listing lacked.
+    // only the non-auxiliary columns are compared — an auxiliary column adds a filter
+    // surface, never a column the legacy listing lacked
     const legacyOrder = viewDefForCellMorphology.columns;
     const visible = cellMorphologySchema.columns.filter((c) => !c.auxiliary).map((c) => c.id);
     expect(visible).toEqual([
@@ -37,18 +34,10 @@ describe('cell_morphology — column parity with the legacy view-def', () => {
       'contributions',
       'registrationDate',
     ]);
-    // Lifecycle status is the ONE column the grid has and this branch's legacy view-def
-    // does not: PR #1850 adds `EntityCoreFields.LifecycleStatus` to every view-def and
-    // is not merged here, so the oracle is one short until it lands. Everything else
-    // still has to match 1:1 — this stays an equality check, not a loosened length.
+    // lifecycle status is the one column the legacy view-def lacks until PR #1850 lands
     expect(legacyOrder).toHaveLength(visible.filter((id) => id !== 'lifecycleStatus').length);
   });
 
-  /**
-   * The `cell_morphology_protocol__*` family, both `subject__*` fields and
-   * `has_segmented_spines` moved off the advanced-filters panel and onto AUXILIARY
-   * columns, so every backend-filterable field sits on exactly one surface.
-   */
   it('declares the seven auxiliary columns after the visible ones', () => {
     const auxiliary = cellMorphologySchema.columns.filter((c) => c.auxiliary).map((c) => c.id);
     expect(auxiliary).toEqual([
@@ -103,12 +92,7 @@ describe('cell_morphology — column parity with the legacy view-def', () => {
     ).toBe(true);
   });
 
-  /**
-   * `CellMorphologyFilter.Constants.ordering_model_fields` (entitycore
-   * `app/filters/cell_morphology.py`) is the allowlist; an `order_by` outside it is a
-   * 422, so sortability is pinned field by field. Note this is the one endpoint seen
-   * so far that DOES sort `subject__name`.
-   */
+  /** `order_by` outside `CellMorphologyFilter`'s allowlist is a 422, so pin it field by field. */
   it.each([
     ['generationType', 'cell_morphology_protocol__generation_type'],
     ['protocolName', 'cell_morphology_protocol__name'],

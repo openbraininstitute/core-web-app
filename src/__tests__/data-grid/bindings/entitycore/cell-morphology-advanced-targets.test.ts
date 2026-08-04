@@ -5,9 +5,8 @@ import { cellMorphologySchema } from '@/features/data-grid/bindings/entitycore/s
 import { advancedFilterKey, FilterValueKind, OperatorId } from '@/features/data-grid/core';
 
 /**
- * `common · id` is now the schema's ONLY advanced filter — everything else moved onto
- * auxiliary columns — so `flatAdvancedFilters` short-circuits on the single group and
- * the key is the plain `adv:common:id`, not a re-namespaced one.
+ * `common · id` is the schema's only advanced filter, so `flatAdvancedFilters`
+ * short-circuits and the key stays the plain `adv:common:id`.
  */
 const RECORD_ID_KEY = advancedFilterKey('common', 'id');
 const RECORD_ID_TARGET = 'id';
@@ -27,9 +26,8 @@ function text(t: string): TFilterValue {
 }
 
 /**
- * The advanced ID targets are additive: selecting one must hit the `__id__in`
- * param, and NOT selecting one must leave the historical wire params untouched.
- * Every param asserted here is a real `GET /cell-morphology` query parameter.
+ * Pins the advanced ID targets as additive; every expected param is a real
+ * `GET /cell-morphology` query parameter.
  */
 describe('cell_morphology — advanced ID filter targets', () => {
   it.each([
@@ -48,11 +46,6 @@ describe('cell_morphology — advanced ID filter targets', () => {
     expect(params[param]).toEqual([UUID]);
   });
 
-  /**
-   * The morphology's OWN entity id is no longer a target on the Name column — it
-   * lives in the `Common` advanced group (`adv:common:id`). Same capability, same
-   * wire param: a pasted id from a link or a report still resolves in the listing.
-   */
   it('record ID advanced filter serializes to id__in', () => {
     const key = RECORD_ID_KEY;
     const params = serializeQuery(
@@ -106,8 +99,7 @@ describe('cell_morphology — advanced ID filter targets', () => {
       }),
       cellMorphologySchema
     );
-    // the Name column's default target must stay `name` — declaring a filter on a
-    // factory that had none previously relied on the serializer's columnId fallback
+    // the Name column's default target must stay `name`
     expect(params.name__ilike).toBe('%foo%');
     expect(params.brain_region__name__in).toEqual(['SSp']);
     expect(params).not.toHaveProperty('id__in');

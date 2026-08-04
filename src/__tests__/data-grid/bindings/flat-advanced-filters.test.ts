@@ -65,7 +65,6 @@ describe('flatAdvancedFilters', () => {
       { ...groups[1], filters: [{ ...groups[1].filters[0], available: true }] },
     ]);
     expect(flat[0].filters[0].available).toBe(gated);
-    // a filter's own rule wins over the group's
     expect(flat[0].filters[1].available).toBe(true);
   });
 });
@@ -77,17 +76,12 @@ describe('experimental entity schemas', () => {
       { dataType: 'universal_cell_morphology' }
     );
     expect(resolved).toHaveLength(1);
-    // every filter of every declared group survived the merge
     expect(resolved[0].filters.length).toBeGreaterThan(5);
     expect(resolved[0].filters.map((f) => f.def.label)).toContain('Generation type');
     expect(resolved[0].filters.map((f) => f.def.label)).toContain('Strain');
   });
 
-  /**
-   * `cell_morphology` moved its protocol/subject/spines filters onto AUXILIARY
-   * columns, leaving ONE declared group — so `flatAdvancedFilters` short-circuits and
-   * the filter keeps its own `adv:common:id` key rather than a re-namespaced one.
-   */
+  /** With one declared group `flatAdvancedFilters` short-circuits: keys are not re-namespaced. */
   it('cell morphology is down to one declared group, so the ids are not re-namespaced', () => {
     const resolved = resolveAdvancedFilterGroups(cellMorphologySchema as IGridSchema<unknown>, {
       dataType: 'cell_morphology',

@@ -19,13 +19,8 @@ type Row = IAnalysisNotebookTemplate & IHasContributions;
 const SCALE_LABEL = new Map(Object.values(AnalysisScaleDict).map((s) => [s.key, s.label] as const));
 
 /**
- * Analysis-notebook template listing. Column order mirrors the legacy
- * `viewDefForNotebook`: Name, Description, Scale, Contributors, Registration date.
- *
- * Per the legacy field-defs, Description (no column filter — `isFilterable: false`)
- * and Scale (`filter: null`) are DISPLAY-ONLY; Scale is also non-sortable. Name and
- * Registration date keep their standard filter+sort; Contributors facet-filters on
- * `contribution__pref_label__in` but is not server-sortable for notebooks.
+ * Analysis-notebook template listing (`GET /analysis-notebook-template`). Description
+ * and Scale are display-only; Contributors is not server-sortable for notebooks.
  */
 export const analysisNotebookTemplateSchema: IGridSchema<Row> = {
   id: 'analysis-notebook-template',

@@ -39,25 +39,16 @@ export interface IGridSchema<Row = unknown> {
   id: string;
   columns: Array<IColumnModel<Row>>;
   /**
-   * Backend filters this entity accepts that have NO column in the grid — grouped
-   * for the toolbar's filter menubar. Each entry is an ordinary
-   * {@link IFilterTarget}, so advanced and column filters share one model, one
-   * operator registry, one set of value editors and one serializer.
+   * Backend filters with no column in the grid, grouped for the toolbar's filter
+   * menubar. Each entry is an ordinary {@link IFilterTarget}.
    */
   advancedFilters?: ReadonlyArray<IAdvancedFilterGroup>;
   /** default sort applied when state carries none */
   defaultSort?: TSortModel;
   /**
-   * Whether the grid SORTS AT ALL in the current context (default: true).
-   *
-   * The per-column {@link IColumnModel.sortable} says which columns *can* sort; this
-   * says whether sorting is meaningful for this listing right now. Contextual, so a
-   * view whose row order is structural rather than field-derived — the circuit
-   * hierarchy view, where rows are a derivation tree and the data source ignores
-   * `order_by` — can turn every header's sort affordance off with ONE declaration
-   * instead of annotating each column. Resolved in `resolveColumns`, which forces
-   * `sortable: false` on every column when this resolves false, so no surface
-   * (header arrows, click handler, query serialization) sees a sortable column.
+   * Whether the grid sorts at all in the current context (default: true), for views
+   * whose row order is structural rather than field-derived. `resolveColumns` forces
+   * `sortable: false` on every column when this resolves false.
    */
   sortable?: TContextualValue<boolean>;
   /** row height in px (e.g. taller rows for preview thumbnails); default 44 */

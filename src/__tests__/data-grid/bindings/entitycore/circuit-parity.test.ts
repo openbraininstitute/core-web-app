@@ -10,11 +10,8 @@ import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 import type { IGridQuery, TFilterModel } from '@/features/data-grid/core';
 
 /**
- * Golden parity for the circuit FLAT branch. The circuit data source's flat view
- * delegates to `createEntitycorePagedDataSource` → `serializeQuery(circuitSchema)`,
- * so locking `serializeQuery` to the legacy `transformFiltersToQuery` oracle proves
- * the flat request params are byte-for-byte identical to the legacy circuit list.
- * Constraints mirror the circuit field-defs (`fields-defs/model.tsx`).
+ * Golden parity for the circuit flat branch: locks `serializeQuery(circuitSchema)` to the
+ * legacy `transformFiltersToQuery` oracle, whose constraints mirror the circuit field-defs.
  */
 function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
@@ -39,7 +36,7 @@ describe('circuit — column set/order parity with the legacy view-def', () => {
       EntityCoreFields.ArtifactPublishedIn,
       EntityCoreFields.ArtifactExperimentDate,
       'lifecycleStatus',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'hasMorphologies',
       'hasPointNeurons',
       'hasElectricalCellModels',

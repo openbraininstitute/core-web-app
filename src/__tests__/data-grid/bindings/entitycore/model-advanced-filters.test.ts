@@ -26,19 +26,10 @@ import {
 import type { IGridQuery, IGridSchema, TFilterValue } from '@/features/data-grid/core';
 
 /**
- * ORACLE: every param asserted below was read out of the live entitycore OpenAPI
- * spec — `paths['/<endpoint>'].get.parameters`, entries with `in == 'query'` — for
- * the endpoint named in each `describe`, and cross-checked against the filter class
- * in the entitycore source (`app/filters/*.py`) that declares the suffix. The backend
- * silently IGNORES unknown query params, so an invented param would look like "the
- * filter does nothing"; these tables are the record that each one exists.
- *
- * Every case is `[groupId, filterId, operator, value, expected params]`, and each
- * suite ends with an exhaustiveness check: the set of (filter, operator) pairs
- * exercised must equal the set the schema declares. A new operator on a schema fails
- * that check until its wire param is pinned here.
- *
- * This is the MODEL-group companion to `experimental-advanced-filters.test.ts`.
+ * Pins the wire params of each model listing's advanced filters — the model-group
+ * companion to `experimental-advanced-filters.test.ts`. Every expected param was read
+ * out of the live entitycore OpenAPI spec; the backend silently ignores unknown params,
+ * so an invented one would look like "the filter does nothing".
  */
 
 const UUID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
@@ -155,23 +146,13 @@ const SUBJECT_CASES: ReadonlyArray<TCase> = [
   ['subject', 'subjectName', OperatorId.In, set('Rat 12'), { subject__name__in: ['Rat 12'] }],
 ];
 
-/**
- * The two ID-type provenance params plus the record's own `id` — what stays on the
- * PANEL for every circuit listing, base included.
- */
 const CIRCUIT_PROVENANCE_CASES: ReadonlyArray<TCase> = [
   ['provenance', 'atlasId', OperatorId.Eq, text(UUID), { atlas_id: UUID }],
   ['provenance', 'rootCircuitId', OperatorId.Eq, text(UUID), { root_circuit_id: UUID }],
   ...RECORD_ID_CASES,
 ];
 
-/**
- * Everything the circuit FAMILY listings share — `/circuit`, one `CircuitFilter`.
- * The base `circuit` schema is deliberately NOT in this set: it moved the four
- * `has_*` flags, both `subject__*` fields and `contribution__pref_label` onto
- * auxiliary COLUMNS (pinned in `circuit-parity.test.ts`), so its panel keeps only
- * {@link CIRCUIT_PROVENANCE_CASES}.
- */
+/** Shared by the circuit family listings; the base `circuit` schema is deliberately excluded. */
 const CIRCUIT_COMMON_CASES: ReadonlyArray<TCase> = [
   ['contents', 'hasMorphologies', OperatorId.Bool, bool(true), { has_morphologies: true }],
   ['contents', 'hasPointNeurons', OperatorId.Bool, bool(false), { has_point_neurons: false }],
@@ -188,12 +169,6 @@ const CIRCUIT_COMMON_CASES: ReadonlyArray<TCase> = [
   ...CIRCUIT_PROVENANCE_CASES,
 ];
 
-/**
- * The exemplar-morphology spines flag, the ion-channel-model name and the top-level
- * strain name are AUXILIARY COLUMNS here — their wire params are pinned in
- * `model-parity.test.ts` alongside the columns that now own them. Only the record's
- * own `id` has no column to move onto.
- */
 describe('emodel advanced filters — GET /emodel', () => {
   suite(emodelSchema, [...RECORD_ID_CASES]);
 
@@ -203,9 +178,6 @@ describe('emodel advanced filters — GET /emodel', () => {
   });
 
   it('spells strain at the top level — /emodel accepts no subject__ params', () => {
-    // the field moved onto a column, but it must STILL be `strain__name`, not
-    // `subject__strain__name`: EModelFilter composes SpeciesFilterMixin, not
-    // SubjectFilterMixin
     const columnFields = emodelSchema.columns.map((c) => c.filter?.field);
     expect(columnFields).toContain('strain__name');
     expect(columnFields.some((f) => f?.startsWith('subject__'))).toBe(false);
@@ -217,12 +189,7 @@ describe('emodel advanced filters — GET /emodel', () => {
   });
 });
 
-/**
- * `memodel` and `me_model_circuit` share one declaration — assert both. Both
- * `morphology__*` fields, both `emodel__*` fields, `strain__name` and
- * `contribution__pref_label` are AUXILIARY COLUMNS now; their wire params are pinned
- * in `model-parity.test.ts`. Only the record's own `id` is left on the panel.
- */
+/** `memodel` and `me_model_circuit` share one declaration — assert both. */
 const MEMODEL_CASES: ReadonlyArray<TCase> = [...RECORD_ID_CASES];
 
 describe('memodel advanced filters — GET /memodel', () => {
@@ -243,12 +210,9 @@ describe('me-model-circuit advanced filters — GET /memodel', () => {
 });
 
 /**
- * FILTERABLE ≠ RETURNED. `SingleNeuronSynaptomeRead.me_model` is `NestedMEModel` —
- * name, description, validation_status, id, type, mtypes, etypes and nothing else —
- * so the five `me_model__{strain,morphology,emodel}__*` params below stay ADVANCED
- * FILTERS: a column for any of them would be blank on every row. Only
- * `me_model__validation_status` and `contribution__pref_label` moved onto columns
- * (pinned in `model-parity.test.ts`).
+ * The five nested `me_model__*` params stay advanced filters because
+ * `SingleNeuronSynaptomeRead.me_model` is `NestedMEModel` and carries none of them —
+ * a column for any would be blank on every row.
  */
 describe('single-neuron-synaptome advanced filters — GET /single-neuron-synaptome', () => {
   suite(singleNeuronSynaptomeSchema, [
@@ -307,24 +271,17 @@ describe('single-neuron-synaptome advanced filters — GET /single-neuron-synapt
     );
     expect(fields).toEqual([
       'id',
-      // NestedMEModel carries none of these — a column would be blank on every row
       'me_model__strain__name',
       'me_model__morphology__name',
       'me_model__morphology__has_segmented_spines',
       'me_model__emodel__name',
       'me_model__emodel__score',
     ]);
-    // …and the two that ARE returned left the panel for their columns
     expect(fields).not.toContain('me_model__validation_status');
     expect(fields).not.toContain('contribution__pref_label');
   });
 });
 
-/**
- * The four NMODL scalars, both `subject__*` fields and `contribution__pref_label` are
- * AUXILIARY COLUMNS here — their wire params are pinned in `model-parity.test.ts`
- * alongside the columns that now own them. Only the record's own `id` is left.
- */
 describe('ion-channel-model advanced filters — GET /ion-channel-model', () => {
   suite(ionChannelModelSchema, [...RECORD_ID_CASES]);
 
@@ -453,7 +410,6 @@ describe('extracellular-recording-array — GET /simulatable-extracellular-recor
       (d) => d.field
     );
     expect(fields).toEqual(['id', 'circuit_id']);
-    // `electrode_type` used to be offered here AND as a display-only column
     expect(fields).not.toContain('electrode_type');
     expect(fields).not.toContain('contribution__pref_label');
   });

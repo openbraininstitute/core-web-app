@@ -44,11 +44,7 @@ type RegionBannerProps = {
   view: TExploreLeftMenuContext;
   onSwitchView: (_view: TExploreLeftMenuContext) => void;
   classNames?: TRegionBannerClassNames;
-  /**
-   * Pin the banner to a 40px pill instead of its default 50px. Opt-in, for callers
-   * that put it in a row of h-10 controls (the data-grid toolbar, alongside the
-   * search pill); every other caller keeps the roomier default.
-   */
+  /** Pin the banner to a 40px pill instead of the default 50px, for rows of h-10 controls. */
   compact?: boolean;
 };
 
@@ -100,12 +96,8 @@ export function RegionBanner({ view, onSwitchView, classNames, compact }: Region
         data-label="brain-region-banner"
         className={cn(
           'border-gray-100 border borders relative flex w-full items-center justify-between gap-2 rounded-full',
-          // COMPACT: the pill is only 2px taller than the segments inside it, so a
-          // hover fill that misses the inner box by a pixel reads as bleed over the
-          // border and the rounded ends. `overflow-hidden` clips every child to the
-          // pill's own radius, and `items-stretch` below makes each segment's
-          // background EXACTLY the box it reacts to. Neither is applied to the roomy
-          // default, where the segments float inside a much taller pill.
+          // Compact leaves only 2px around the segments, so hover fills bleed past the
+          // rounded ends unless children are clipped and stretched to the inner box.
           compact ? 'h-10 overflow-hidden' : 'h-12.5',
           !isAllMode && 'cursor-pointer',
           !isAllMode && view === ExploreLeftMenuContext.DataGroup && 'hover:bg-background',
@@ -121,8 +113,6 @@ export function RegionBanner({ view, onSwitchView, classNames, compact }: Region
           <div
             className={cn(
               'pr-3 pl-4 hover:bg-gray-100 min-w-0',
-              // the hover fill IS this element; stretched, it is exactly the pill's
-              // inner box — same bounds as the click target, no pixel of overhang
               compact && 'flex items-center',
               isAllMode ? 'w-full rounded-full' : 'flex-1 rounded-l-full'
             )}
@@ -167,15 +157,14 @@ export function FocusedModeContent({
 }) {
   return (
     <>
-      {/* `self-center`: the compact row is `items-stretch`, and a fixed-height child
-          would otherwise hang from the top of it */}
+      {/* `self-center`: the compact row is `items-stretch`, which would otherwise hang
+          this fixed-height divider from the top */}
       <div className="h-6 w-px bg-gray-200 shrink-0 self-center" />
       <div
         className={cn(
           'items-stretch w-full flex-1 rounded-r-full pl-3 pr-10 hover:bg-gray-100 min-w-0 overflow-hidden',
-          // same rule as the species segment: compact stretches the hover fill to the
-          // pill's inner box instead of giving it a height of its own, which at h-10
-          // was 2px taller than the box and spilled over the border and the corner
+          // as above: compact stretches the hover fill to the pill's inner box rather
+          // than giving it a height of its own
           compact ? 'h-full py-0' : 'h-12 py-2'
         )}
       >

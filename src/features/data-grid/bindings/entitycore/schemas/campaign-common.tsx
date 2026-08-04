@@ -13,10 +13,8 @@ import type { IColumnModel, IDetailSpec, TColumnOverride } from '../../../core';
 import type { CellRendererRegistry, TDetailRenderFn } from '../../../react';
 
 /**
- * Minimal row shape shared by the simulation-campaign listings flipped to AG Grid
- * detail rows (T-05). Every field is optional/nullable so a single set of column
- * factories works across the circuit-simulation variants regardless of which
- * columns a given entity's legacy view-def surfaces.
+ * Row shape shared by the simulation-campaign listings. Every field is optional so one
+ * set of column factories works across all circuit-simulation variants.
  */
 export interface ICampaignRow {
   id: string;
@@ -32,11 +30,8 @@ export interface ICampaignRow {
 }
 
 /**
- * "Circuit" column — the campaign's source circuit name (legacy
- * `EntityCoreFields.CircuitName`). The legacy field-def declared `filter: null`, but
- * `/simulation-campaign` exposes `circuit__name__in` / `circuit__name__ilike`, serves
- * a `circuit` facet bucket, and lists `circuit__name` in
- * SimulationCampaignFilter's ordering fields — so it is both filterable and sortable.
+ * The campaign's source circuit name. `/simulation-campaign` serves a `circuit` facet
+ * bucket and lists `circuit__name` in its ordering fields, so it filters and sorts.
  */
 export function circuitNameColumn<Row extends { circuit?: { name?: string | null } | null }>(
   o?: TColumnOverride<Row>
@@ -62,11 +57,7 @@ export function circuitNameColumn<Row extends { circuit?: { name?: string | null
   );
 }
 
-/**
- * "Description" column with NO filter — legacy `EntityCoreFields.Description` is
- * `isFilterable: false`, and no entitycore list endpoint exposes a `description`
- * query param either, so there is nothing to bind.
- */
+/** Description column, unfiltered: no entitycore endpoint exposes a `description` param. */
 export function campaignDescriptionColumn<Row extends { description?: string | null }>(
   o?: TColumnOverride<Row>
 ): IColumnModel<Row> {
@@ -82,14 +73,8 @@ export function campaignDescriptionColumn<Row extends { description?: string | n
 }
 
 /**
- * "Species" column for memodel circuit simulations. The row carries a top-level
- * `species` array (legacy renders `r.species`).
- *
- * DISPLAY-ONLY. The legacy field-def bound the default `species__name__in`
- * constraint, but `/simulation-campaign` exposes NO species query param at all
- * (nothing matching `species*`), `species` is not one of its facet keys, and
- * `species__name` is absent from SimulationCampaignFilter's ordering fields — so the
- * filter was silently dropped by the API and has been removed rather than reworded.
+ * Species column for memodel circuit simulations. Display-only:
+ * `/simulation-campaign` exposes no species query param, facet key, or ordering field.
  */
 export function campaignSpeciesColumn<Row extends ICampaignRow>(
   o?: TColumnOverride<Row>
@@ -111,11 +96,7 @@ export function campaignSpeciesColumn<Row extends ICampaignRow>(
   );
 }
 
-/**
- * "Status" column — the aggregated campaign activity status (legacy
- * `EntityCoreFields.LegacyActivityStatus`). Display-only, rendered by
- * {@link CampaignStatusCell}.
- */
+/** Aggregated campaign activity status. Display-only, rendered by {@link CampaignStatusCell}. */
 export function campaignStatusColumn<Row extends { id: string }>(
   o?: TColumnOverride<Row>
 ): IColumnModel<Row> {
@@ -141,26 +122,13 @@ export const campaignRegistrationDateColumn = registrationDateColumn;
 export const CAMPAIGN_DETAIL_RENDERER = 'campaignDetail';
 
 /**
- * Presentation flag for the campaign "Status" column.
- *
- * - `false` (DEFAULT): popover-cards mode. The status cell shows a {@link CampaignStatusBadge}
- *   that reveals the scan-parameter sets as cards on hover; NO full-width detail row is wired,
- *   so the legacy nested-table expander is not shown.
- * - `true`: nested-table mode. Restores the full-width expandable detail row (scan-parameter
- *   table) alongside the badge — kept for parity/rollback. The nested table's status cell uses
- *   the new badge too (see {@link makeCampaignScanTableRenderDetail}).
- *
- * The badge-in-status-cell expander relocation for nested mode is DEFERRED: a cell renderer
- * receives no expand handle (`ICellRendererProps` has row/value/rowIndex/params only), so wiring
- * the expander into the status cell needs a shared-host `expandColumn` change (out of fence).
+ * Presentation flag for the campaign Status column. `false` (default) shows scan
+ * parameters as hover cards with no detail row; `true` also wires the full-width
+ * expandable scan-parameter table.
  */
 export const CAMPAIGN_NESTED_MODE_DEFAULT = false;
 
-/**
- * The `schema.detail` spec shared by every flipped simulation campaign: all rows are
- * expandable (parity with the legacy `isExpandable: () => true`), and the full-width
- * detail row starts at `minHeight` while the nested SimpleGrid measures itself.
- */
+/** The `schema.detail` spec shared by every simulation campaign; all rows are expandable. */
 export function campaignDetailSpec<Row>(minHeight = 220): IDetailSpec<Row> {
   return {
     rendererKey: CAMPAIGN_DETAIL_RENDERER,
@@ -170,11 +138,8 @@ export function campaignDetailSpec<Row>(minHeight = 220): IDetailSpec<Row> {
 }
 
 /**
- * Adapts a legacy {@link ListExpandedViewConfig} into a data-grid {@link TDetailRenderFn}.
- * The host's IDetailRuntime lazily fetches the expand payload via `entity.api.expandRow`
- * (the array of nested rows) and hands it back as `data`; we forward it to the legacy
- * `viewConfig.render(originalRecord, records)` — the SAME SimpleGrid content the legacy
- * expandable table drew — guaranteeing pixel/behaviour parity of the expanded view.
+ * Adapts a {@link ListExpandedViewConfig} into a {@link TDetailRenderFn}. The host
+ * lazily fetches the nested rows via `entity.api.expandRow` and passes them as `data`.
  */
 export function makeCampaignRenderDetail(
   // biome-ignore lint/suspicious/noExplicitAny: viewConfig row type is entity-specific; the row is forwarded verbatim

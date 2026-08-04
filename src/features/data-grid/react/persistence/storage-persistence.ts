@@ -3,16 +3,9 @@ import { PERSIST_COLUMN_LAYOUT } from '../../config';
 import type { IGridState, IStatePersistence } from '../../core';
 
 /**
- * Two persistence slices, deliberately stored apart:
- * - the SESSION slice is the transient browse state (filters/sort/page/search) that
- *   should reset when the tab closes — matching the legacy sessionStorage snapshots;
- * - the LOCAL slice is the user's durable view layout (column order/visibility/
- *   widths) that should survive across sessions.
- * Selection and expansion are intentionally never persisted.
- *
- * Keys are namespaced `data-grid:v1:*` so legacy table snapshots are never touched
- * (rollback to the antd table stays safe), and versioned so a future breaking state
- * shape can simply bump the namespace.
+ * Two slices stored apart: session = transient browse state, cleared with the tab;
+ * local = durable view layout. Selection and expansion are never persisted. Keys are
+ * namespaced `data-grid:v1:*`, versioned so a breaking state shape can bump it.
  */
 const SESSION_KEYS = [
   'filters',
@@ -39,11 +32,7 @@ function createStoragePersistence(
   getStorage: () => Storage | undefined,
   namespace: string,
   keys: ReadonlyArray<keyof IGridState>,
-  /**
-   * When set, this slice ignores the controller's `instanceKey` and stores under
-   * its own key instead. That lets one controller scope its slices differently —
-   * see {@link createLocalLayoutPersistence}.
-   */
+  /** when set, this slice ignores the controller's `instanceKey` and stores under this */
   fixedKey?: string
 ): IStatePersistence {
   const storage = (): Storage | undefined => {
@@ -96,10 +85,7 @@ export function createSessionStatePersistence(): IStatePersistence {
   );
 }
 
-/**
- * A persistence adapter that remembers nothing — used when a slice is switched off,
- * so callers keep a uniform adapter list instead of branching on the flag.
- */
+/** A persistence adapter that remembers nothing, for when a slice is switched off. */
 const NO_PERSISTENCE: IStatePersistence = {
   load: () => null,
   save: () => {},
@@ -107,13 +93,9 @@ const NO_PERSISTENCE: IStatePersistence = {
 };
 
 /**
- * Local slice: durable column layout (order, visibility, widths), surviving across
- * browser sessions.
- *
- * Gated by {@link PERSIST_COLUMN_LAYOUT}. When that flag is off this returns the
- * no-op adapter, so nothing is written AND nothing already written is read back —
- * the grid always opens on the schema's defaults. Stored layouts are left in place
- * rather than deleted, so turning the flag back on restores them.
+ * Local slice: durable column layout, gated by {@link PERSIST_COLUMN_LAYOUT}. With the
+ * flag off nothing is written and nothing already written is read back, but stored
+ * layouts are left in place so turning it back on restores them.
  */
 export function createLocalLayoutPersistence(layoutKey?: string): IStatePersistence {
   if (!PERSIST_COLUMN_LAYOUT) return NO_PERSISTENCE;
@@ -126,30 +108,19 @@ export function createLocalLayoutPersistence(layoutKey?: string): IStatePersiste
 }
 
 /**
- * The standard pair used by entity listings: the always-on session slice plus the
- * flag-gated layout slice.
- *
- * `layoutKey` scopes the LAYOUT slice independently of the controller's
- * `instanceKey`. Entity listings pass {@link layoutKeyFor} so a user's column
- * layout follows the THING they are looking at (section + entity type) rather than
- * the place they happen to be looking from — see that function for the reasoning.
+ * The standard pair for entity listings: always-on session slice plus flag-gated layout
+ * slice. `layoutKey` scopes the layout slice independently of the controller's
+ * `instanceKey` — see {@link layoutKeyFor}.
  */
 export function createDefaultPersistence(layoutKey?: string): IStatePersistence[] {
   return [createSessionStatePersistence(), createLocalLayoutPersistence(layoutKey)];
 }
 
 /**
- * The layout key for an entity listing: **section + entity type, and nothing else.**
- *
- * Deliberately NARROWER than the controller's `instanceKey` (which also carries the
- * virtual lab, project and scope). "Data → circuit" alone decides how that grid
- * should look: a user who hides three columns on circuits means it for circuits, not
- * for circuits-in-this-one-project-while-scoped-to-private. Keeping the lab/project/
- * scope in the key would silently give them a different layout per project and per
- * public/private toggle, and they would have to re-hide the same columns each time.
- *
- * The SESSION slice keeps the full `instanceKey`: filters are about the particular
- * listing you are browsing, so they should NOT leak across projects or scopes.
+ * Layout key for an entity listing: section + entity type and nothing else. Deliberately
+ * narrower than `instanceKey`, which also carries lab/project/scope — including those
+ * would give the user a different column layout per project and per scope toggle. The
+ * session slice keeps the full `instanceKey`, since filters should not leak across them.
  */
 export function layoutKeyFor(section: string, dataType: string): string {
   return `${section}/${dataType}`;

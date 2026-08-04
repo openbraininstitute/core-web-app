@@ -1,11 +1,7 @@
 /**
- * Token parsing for free-entry filters — an `id` filter target, or any advanced
- * filter that collects a LIST of values. Users paste one or many values from
- * anywhere: a spreadsheet column, a comma-separated list, a JSON array — so tokens
- * are split on any run of whitespace, commas or semicolons, and incidental
- * quotes/brackets are trimmed off each token.
- *
- * Kept free of React so it can be unit-tested on its own.
+ * Token parsing for free-entry filters. Pasted values come from spreadsheet columns,
+ * comma-separated lists and JSON arrays alike, so tokens split on any run of whitespace,
+ * commas or semicolons, with incidental quotes/brackets trimmed. Kept free of React.
  */
 
 import { FreeEntryKind } from '../../core';
@@ -45,10 +41,8 @@ export interface IIdTokenSplit {
 }
 
 /**
- * Split pasted text and validate it for the target's {@link TFreeEntryKind}.
- * `uuid` (the default, and the only historical behaviour) rejects anything that is
- * not a canonical UUID; `text` accepts every non-empty token, because a list of
- * exact names or document URLs has nothing to validate against.
+ * Split pasted text and validate for the target's {@link TFreeEntryKind}: `uuid` (the
+ * default) rejects non-canonical UUIDs, `text` accepts every non-empty token.
  */
 export function splitIdTokens(
   input: string,

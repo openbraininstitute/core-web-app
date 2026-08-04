@@ -13,9 +13,9 @@ export interface IGridSearchProps {
 }
 
 /**
- * The listing quick-search — the legacy data-table search, enhanced: a round search
- * button that expands into a rounded-full pill input with a live clear affordance.
- * Debounced text is pushed to the grid store's quick filter via {@link onSearch}.
+ * The listing quick-search: a round button that expands into a pill input with a
+ * clear affordance. Debounced text is pushed to the grid store's quick filter via
+ * {@link onSearch}.
  */
 export function GridSearch({ onSearch, openOnMount = false, className }: IGridSearchProps) {
   const [open, setOpen] = useState(openOnMount);
@@ -60,7 +60,6 @@ export function GridSearch({ onSearch, openOnMount = false, className }: IGridSe
   return (
     <div
       className={cn(
-        // only the quiet chrome (bg/border/shadow) cross-fades here — never width
         'flex min-w-0 items-center rounded-full border transition-[background-color,border-color,box-shadow] duration-200 ease-out',
         open ? 'border-gray-100 bg-white shadow-sm' : 'border-transparent',
         className
@@ -72,7 +71,6 @@ export function GridSearch({ onSearch, openOnMount = false, className }: IGridSe
         aria-label={open ? 'Close search' : 'Open search'}
         className={cn(
           'flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-primary-8',
-          // instant press feedback; no layout animation on the button itself
           'transition-transform duration-150 ease-out active:scale-95',
           open ? '' : 'shadow-sm hover:scale-105'
         )}
@@ -80,13 +78,8 @@ export function GridSearch({ onSearch, openOnMount = false, className }: IGridSe
         <RiSearchLine size={18} />
       </button>
 
-      {/*
-       * A single clip wrapper animates `width` (0 → SEARCH_WIDTH) with an
-       * ease-out-expo curve and `will-change`, revealing an input that is ALREADY
-       * laid out at its full width — so the content never reflows mid-animation
-       * (the classic source of the jank). Width is the only layout property that
-       * moves, on one element. `motion-reduce` collapses it to an instant change.
-       */}
+      {/* Clip wrapper: animating only its width reveals an input already laid out at
+        full width, so the content never reflows mid-animation. */}
       <div
         className={cn(
           'overflow-hidden opacity-0 [transition:width_360ms_cubic-bezier(0.22,1,0.36,1),opacity_220ms_ease-out]',

@@ -42,10 +42,8 @@ interface ScanCardRow {
 }
 
 /**
- * Project the task-campaign expand payload (`expandRow` → execution rows) into the loose
- * card-row shape the scan-cards popover reads: one card per distinct config (latest
- * execution status wins), surfacing that config's `meta.scan_parameters`. Replaces the
- * legacy nested scan-parameter table with the shared badge + hover cards popover.
+ * Project task-campaign execution rows into the scan-cards shape: one card per distinct
+ * config (latest execution status wins), surfacing its `meta.scan_parameters`.
  */
 export function toTaskScanCardRows(
   rows: TTaskCampaignExecutionRow<{ scan_parameters?: Record<string, unknown> }>[]
@@ -72,12 +70,9 @@ export function toTaskScanCardRows(
 }
 
 /**
- * The generalized status cell for the activity listings (workflows activity table AND
- * the project activities table). Resolves each row's aggregated `status → count` map the
- * SAME way the legacy status column did (by `record.type`) and, for the expandable
- * campaign types, supplies the matching scan-rows fetcher so the badge's hover popover
- * shows the scan-parameter CARDS (replacing the old expandable rows). Non-campaign rows
- * keep the legacy single-status presentation.
+ * Status cell for the activity listings. Resolves each row's aggregated `status → count` map
+ * by `record.type`; campaign types also get a scan-rows fetcher so the badge's popover shows
+ * scan-parameter cards.
  */
 export function WorkflowStatusCell({
   record,

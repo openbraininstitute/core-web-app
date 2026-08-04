@@ -5,8 +5,7 @@ import BlockDictionaryEntries from '@/features/scan-config/components/block-dict
 
 import type { Config, IBlockDictionary } from '@/features/scan-config/types';
 
-// The component only reads `additionalProperties.oneOf` off the schema (to build
-// the tooltip body), so a stub is enough here.
+// the component only reads `additionalProperties.oneOf` off the schema, so a stub does
 const ROOT_ELEMENT_SCHEMA = {
   additionalProperties: { oneOf: [] },
 } as unknown as IBlockDictionary;
@@ -73,9 +72,7 @@ describe('BlockDictionaryEntries', () => {
     expect(renameInput).not.toBeNull();
     expect(document.activeElement).toBe(renameInput);
 
-    // Focus moves elsewhere, then something unrelated re-renders the tree: the
-    // input must NOT grab focus again (regression for the inline `ref` callback
-    // that re-ran `.focus()` on every commit).
+    // regression: an inline `ref` callback re-ran `.focus()` on every commit
     const outside = screen.getByTestId('outside');
     outside.focus();
     expect(document.activeElement).toBe(outside);
@@ -88,16 +85,13 @@ describe('BlockDictionaryEntries', () => {
   });
 
   it('renders the tooltip trigger as the tab itself, without nesting a button', () => {
-    // `campaignId` hides the "Add stimulus" button so any <button> left in the
-    // tree would come from the tooltip trigger.
+    // `campaignId` hides the "Add stimulus" button, so any <button> left is the trigger
     const { container } = renderEntries({ campaignId: 'campaign-1' });
 
     const tab = container.querySelector(
       `#${ENTRY.replace(/_/g, '-')}-menu-block-dictionary-sub-entry__item`
     );
     expect(tab).not.toBeNull();
-    // The trigger props land on the tab element itself (asChild), instead of an
-    // extra <button> wrapping it.
     expect(tab).toHaveAttribute('data-slot', 'tooltip-trigger');
     expect(container.querySelectorAll('button')).toHaveLength(0);
   });

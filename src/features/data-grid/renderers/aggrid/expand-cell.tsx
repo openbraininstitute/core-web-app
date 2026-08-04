@@ -13,10 +13,8 @@ import type { IDetailRuntime } from '../../react';
 import type { IAgGridContext } from './ag-context';
 
 /**
- * The reusable expand/collapse toggle. Reads the expanded set from the headless
- * store, respects the detail provider's `canExpand`, and dispatches
- * `toggleExpanded` on click. Shared by the fixed leading {@link AgExpandCell} and
- * the in-column {@link AgExpandHostCell} so both placements behave identically.
+ * The expand/collapse toggle, shared by the leading {@link AgExpandCell} and the
+ * in-column {@link AgExpandHostCell} so both placements behave identically.
  */
 export function ExpandToggleButton<Row>({
   controller,
@@ -44,25 +42,21 @@ export function ExpandToggleButton<Row>({
   return (
     <button
       type="button"
-      // marks this control so grids' `onCellClicked` ignore the click (no row-open /
-      // mini-detail). Nested grids bubble the native click up to ancestor grids, so
-      // every grid checks for this attribute — see `isExpanderClick`.
+      // makes `onCellClicked` skip this click; nested grids bubble up, so EVERY ancestor
+      // grid checks for this attribute — see `isExpanderClick`
       data-grid-expander=""
       aria-label={expanded ? 'Collapse row' : 'Expand row'}
       aria-expanded={expanded}
       className={cn(
-        // fully-rounded icon button; on hover/focus it fills primary-8 with a white glyph.
-        // Forcing `fill` on the descendant svg (via CSS, which beats the icon's own
-        // `fill="currentColor"` attribute and any AG-cell color inheritance) is what
-        // actually turns the glyph white — plain text-white was being overridden.
+        // CSS `fill` on the svg, not `text-white`: it must beat the icon's own
+        // `fill="currentColor"` attribute and AG-cell colour inheritance
         'flex items-center justify-center rounded-full text-gray-500 outline-none transition-colors',
         'hover:bg-primary-8 focus-visible:bg-primary-8',
         '[&_svg]:transition-colors [&:hover_svg]:fill-white [&:focus-visible_svg]:fill-white',
         fill ? 'size-7' : 'size-6'
       )}
       onClick={(e) => {
-        // stop React + native bubbling so a click on a DEEP grid's expander never
-        // reaches an ancestor grid (which would otherwise open/collapse a parent row).
+        // stop React AND native bubbling, or a nested grid's expander toggles a parent row
         e.stopPropagation();
         e.nativeEvent.stopImmediatePropagation();
         controller.store.dispatch({ type: GridActionType.ToggleExpanded, id: rowId });
@@ -80,21 +74,15 @@ export function ExpandToggleButton<Row>({
 }
 
 /**
- * True when a grid click originated on an expand/collapse toggle (marked with
- * `data-grid-expander`). A grid's `onCellClicked` uses this to skip row-open /
- * mini-detail for expander clicks — including clicks that bubbled up from a nested
- * grid's expander (which is why the ancestor grid must check too).
+ * True when a grid click originated on an expand/collapse toggle, including one that
+ * bubbled up from a nested grid — which is why every ancestor grid must check.
  */
 export function isExpanderClick(event: Event | null | undefined): boolean {
   const target = event?.target;
   return target instanceof Element && Boolean(target.closest('[data-grid-expander]'));
 }
 
-/**
- * Expand/collapse chevron for rows with detail content. Dispatches
- * `toggleExpanded`; the renderer reacts by (de)interleaving the synthetic
- * full-width detail row. The fixed leading-column placement (default).
- */
+/** Expand/collapse chevron in the fixed leading column (the default placement). */
 export function AgExpandCell(props: CustomCellRendererProps) {
   const ctx = props.context as IAgGridContext;
   return <ExpandToggleButton controller={ctx.controller} detail={ctx.detail} row={props.data} />;

@@ -52,7 +52,6 @@ describe('runInMemoryQuery — filtering', () => {
       }),
       { columns }
     );
-    // Alpha, Beta, Gamma all contain "a" (case-insensitive)
     expect(page.rows.map((r) => r.id)).toEqual(['a', 'b', 'c']);
 
     const page2 = runInMemoryQuery(

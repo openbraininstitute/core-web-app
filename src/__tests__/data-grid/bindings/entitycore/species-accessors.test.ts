@@ -7,21 +7,10 @@ import { isEmptyCellValue } from '@/features/data-grid/renderers/aggrid/empty-ce
 import type { IColumnModel } from '@/features/data-grid/core';
 
 /**
- * Species accessors vs. what the LIST endpoints actually return.
- *
- * ION CHANNEL MODEL — `GET /ion-channel-model` responds with
- * `IonChannelModelExpanded` = `IonChannelModelBaseMixin` + `ScientificArtifactRead`,
- * and `ScientificArtifactRead` composes `SubjectReadMixin` → `subject:
- * NestedSubjectRead`, whose `SpeciesStrainReadMixin` carries `species`/`strain`.
- * `_load_minimal` eager-loads `subject → species` / `subject → strain` and nothing
- * top-level. So the accessor must read the NESTED value; the legacy top-level one is
- * only a fallback (the hand-written `IonChannelModel` TS type still declares it).
- *
- * SINGLE NEURON SYNAPTOME — `SingleNeuronSynaptomeRead.me_model` is `NestedMEModel`,
- * which has no `species` at all, so that column is known-empty by construction. What
- * is pinned here is that it DEGRADES to the shared placeholder instead of throwing,
- * and that its filter — which does work server-side — stays wired to
- * `me_model__species__name`.
+ * Pins the species accessors against what the list endpoints actually return: ion channel
+ * model carries species under the nested `subject` (the top-level one is only a legacy
+ * fallback), and single-neuron-synaptome's `NestedMEModel` carries none at all, so that
+ * column must degrade to the placeholder rather than throw.
  */
 
 function column<Row>(columns: ReadonlyArray<IColumnModel<Row>>, id: string): IColumnModel<Row> {

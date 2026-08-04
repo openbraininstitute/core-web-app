@@ -67,8 +67,7 @@ import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-ent
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
 
-// AG Grid is client-only; load it lazily (like `BrowseEntityScope`) so the legacy
-// path never pays for the AG Grid bundle and vice-versa.
+// AG Grid is client-only; load it lazily so the legacy path never pays for its bundle
 const BrowseEntityGrid = dynamic(
   () => import('@/features/data-grid/host/browse-entity-grid').then((m) => m.BrowseEntityGrid),
   { ssr: false }
@@ -463,17 +462,13 @@ function BrowseCircuitLegacy({
 }
 
 /**
- * Circuit listing router (mirrors `BrowseEntityScope`). When the circuit dataType is
- * registered in the data-grid registry, render it on the shared AG Grid stack via
- * the `circuitGridDefinition` PLUGIN body (`CircuitGridBody`); otherwise fall back to
- * the bespoke antd listing, preserved verbatim as {@link BrowseCircuitLegacy}. The
- * circuit `page.tsx` import is unchanged, so rollback = remove the registry entry.
+ * Circuit listing router: renders the shared AG Grid stack when the circuit dataType is in
+ * the data-grid registry, else falls back to {@link BrowseCircuitLegacy}.
  */
 export function BrowseCircuit(props: Props) {
   const definition = getEntityGridDefinition(props.dataType);
   if (definition) {
-    // The AG Grid host reads only the shared listing props; `mainTableProps` is
-    // antd-`CircuitTable`-shaped and unused there, so it is dropped.
+    // `mainTableProps` is antd-shaped and unused by the AG Grid host, so it is dropped
     const { mainTableProps: _mainTableProps, ...rest } = props;
     return <BrowseEntityGrid {...(rest as BrowseEntityScopeProps)} definition={definition} />;
   }

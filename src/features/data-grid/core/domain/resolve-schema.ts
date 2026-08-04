@@ -11,9 +11,8 @@ export interface IResolvedColumn<Row> extends IColumnModel<Row> {
   /** whether this column starts hidden in the current context */
   hiddenByDefaultResolved: boolean;
   /**
-   * The filter targets available in this context (a legacy flat filter resolves to
-   * exactly one). Optional so hand-built resolved columns stay valid; consumers
-   * fall back to `resolveFilterTargets(column)`.
+   * Filter targets available in this context (a flat filter resolves to exactly one).
+   * Optional; consumers fall back to `resolveFilterTargets(column)`.
    */
   filterTargets?: ReadonlyArray<IFilterTarget>;
 }
@@ -23,21 +22,17 @@ export interface IResolvedColumn<Row> extends IColumnModel<Row> {
  * (availability, order, filter availability, default visibility) are evaluated:
  *
  * 1. drop columns whose `available` resolves to `false` for this context;
- * 2. order the survivors by their resolved `order` weight ("where"), keeping
- *    declaration order for ties and for columns without an explicit order (so a
- *    schema that declares no `order` is unchanged — no regression);
+ * 2. order the survivors by their resolved `order` weight, keeping declaration order
+ *    for ties and for columns without an explicit order;
  * 3. surface per-column `filterAvailable` and `hiddenByDefaultResolved`.
  *
- * The result is the canonical, context-resolved column list; the persisted
- * user layout (drag reorder / chooser) is applied on top of it by the renderer.
+ * The persisted user layout (drag reorder / chooser) is applied on top by the renderer.
  */
 export function resolveColumns<Row>(
   schema: IGridSchema<Row>,
   ctx: IGridContext
 ): Array<IResolvedColumn<Row>> {
-  // Whole-grid sort gate (see `IGridSchema.sortable`): when a context makes sorting
-  // meaningless — row order fixed by structure, not by a field — no column sorts,
-  // whatever it declares.
+  // Whole-grid sort gate: when it resolves false, no column sorts whatever it declares.
   const gridSortable = resolveContextual(schema.sortable ?? true, ctx);
   return schema.columns
     .map((column, declarationIndex) => ({ column, declarationIndex }))
@@ -48,7 +43,6 @@ export function resolveColumns<Row>(
       order: column.order === undefined ? undefined : resolveContextual(column.order, ctx),
     }))
     .sort((a, b) => {
-      // columns with an explicit order sort by it; the rest hold their slot
       const ao = a.order ?? a.declarationIndex;
       const bo = b.order ?? b.declarationIndex;
       return ao === bo ? a.declarationIndex - b.declarationIndex : ao - bo;
@@ -60,9 +54,7 @@ export function resolveColumns<Row>(
         ? resolveContextual(column.filter.available ?? true, ctx)
         : false,
       filterTargets: availableFilterTargets(column, ctx),
-      // `auxiliary` IMPLIES hidden-by-default — one mechanism, not two: an auxiliary
-      // column is opt-in by definition. An explicit `hiddenByDefault` still wins, so
-      // a schema can declare an auxiliary column that starts visible if it must.
+      // `auxiliary` implies hidden-by-default; an explicit `hiddenByDefault` wins.
       hiddenByDefaultResolved: resolveContextual(
         column.hiddenByDefault ?? column.auxiliary ?? false,
         ctx

@@ -7,18 +7,10 @@ import type { IColumnModel } from '@/features/data-grid/core/domain/column-model
 import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 /**
- * The DURABLE half of grid persistence: a user's column layout (visibility, order,
- * widths) must survive closing the browser, while the transient browse state
- * (filters/sort/page/search) must not leak out of the tab's sessionStorage.
- *
- * These drive a real {@link GridController} against a live storage and then build a
- * SECOND controller — standing in for "the user comes back tomorrow" — so the
- * assertions cover the whole save → load → reconcile round trip rather than the
- * storage adapter in isolation.
- *
- * The two slices are scoped DIFFERENTLY on purpose: the layout by section + entity
- * type, the session state by the full `instanceKey` (lab/project/scope included).
- * Several tests below exist to pin exactly that difference.
+ * Pins grid persistence: the column layout is durable (localStorage) while browse state
+ * stays in the tab's sessionStorage. The two slices are scoped DIFFERENTLY on purpose —
+ * layout by section + entity type, session state by the full `instanceKey` — and
+ * several tests below exist to pin exactly that difference.
  */
 
 interface Row {
@@ -56,10 +48,9 @@ async function makeController(instanceKey: string = KEY, layoutKey: string = LAY
 }
 
 /**
- * This environment does not supply `window.localStorage`/`sessionStorage`, so the
- * suite installs a minimal in-memory `Storage`. The adapters only use
- * getItem/setItem/removeItem, and driving those against a real map is what makes
- * the "second session" assertions meaningful.
+ * This environment supplies no `window.localStorage`/`sessionStorage`, so install a
+ * minimal in-memory `Storage`; a real map is what makes the "second session" assertions
+ * meaningful.
  */
 function installStorage(name: 'localStorage' | 'sessionStorage') {
   const map = new Map<string, string>();
@@ -144,13 +135,10 @@ describe('column layout persistence (flag ON)', () => {
 
     const local = JSON.parse(window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`) as string);
     expect(local).not.toHaveProperty('filters');
-    // …while the session slice does carry them, so a tab-local filter still survives
-    // a soft navigation.
     expect(window.sessionStorage.getItem(`data-grid:v1:s:${KEY}`)).toBeTruthy();
   });
 
   it('remembers an AUXILIARY column the user switched on', async () => {
-    // `aux` is hidden by default; revealing it means removing it from hiddenColumns.
     const first = await makeController();
     expect(first.store.getSnapshot().hiddenColumns).toContain('aux');
     first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });
@@ -172,8 +160,6 @@ describe('column layout persistence (flag ON)', () => {
   });
 
   it('hides an auxiliary column added AFTER the layout was saved', async () => {
-    // a saved layout predates every column declared since; a new auxiliary column
-    // must not appear for users who already have saved state.
     const first = await makeController();
     first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });
     first.dispose();
@@ -196,13 +182,10 @@ describe('column layout persistence (flag ON)', () => {
   });
 
   it('follows the entity type across projects and scopes', async () => {
-    // hide a column while in one project, scoped to private…
     const first = await makeController('vlab/proj-a/data/test-entity/private');
     first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
     first.dispose();
 
-    // …and it is still hidden in another project, scoped to public: the layout is a
-    // property of "Data → this entity type", not of where you reached it from.
     const elsewhere = await makeController('vlab/proj-b/data/test-entity/public');
     expect(elsewhere.store.getSnapshot().hiddenColumns).toContain('species');
     elsewhere.dispose();
@@ -261,12 +244,10 @@ describe('column layout persistence (flag OFF)', () => {
     window.localStorage.setItem(`data-grid:v1:l:${LAYOUT_KEY}`, stored);
 
     const controller = await makeController();
-    // opens on the schema defaults…
     expect(controller.store.getSnapshot().hiddenColumns).not.toContain('species');
     expect(controller.store.getSnapshot().columnOrder).toEqual(COLUMNS.map((c) => c.id));
     controller.dispose();
 
-    // …and the saved layout is still there for when the flag flips back on.
     expect(window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`)).toBe(stored);
   });
 

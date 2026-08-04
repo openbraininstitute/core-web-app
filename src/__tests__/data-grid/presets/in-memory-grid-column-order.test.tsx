@@ -15,15 +15,12 @@ interface Row {
 const rows: Row[] = [{ id: 'a', name: 'Alpha', count: 2, date: '2024-01-01' }];
 
 /**
- * Regression for the circuit Subcircuits column: `InMemoryGrid` builds its store
- * from the CONTEXT-RESOLVED schema, so a column behind a contextual `available`
- * gate is dropped from `columnOrder` while still being rendered from the props —
- * and an id missing from the stored order used to sort LAST, pushing the column
- * past every other one instead of leaving it in its declared slot.
+ * Regression: `InMemoryGrid` builds its store from the context-resolved schema, so a
+ * gated-out column is dropped from `columnOrder` while still rendered from the props —
+ * and an id missing from that order used to sort last instead of keeping its slot.
  */
 const columns: Array<ISimpleColumn<Row>> = [
   { id: 'name', header: 'Name', field: 'name' },
-  // gated OUT of the resolved schema (and therefore out of `columnOrder`)
   { id: 'count', header: 'Subcircuits', field: 'count', available: false },
   { id: 'date', header: 'Experiment date', field: 'date' },
 ];

@@ -70,9 +70,8 @@ function optionsFromValues(values: ReadonlyArray<string>, humanise = false): TFi
 }
 
 /**
- * The `StructuralDomain` enum as `GET /em-cell-mesh` declares it. The app's own
- * `StructuralDomain` TS enum is missing `not_applicable`, so the spec is the source
- * here — an option the endpoint accepts must be offerable.
+ * `StructuralDomain` as `GET /em-cell-mesh` declares it. The app's own TS enum is
+ * missing `not_applicable`, so the spec is the source here.
  */
 const STRUCTURAL_DOMAINS = [
   'apical_dendrite',
@@ -84,21 +83,9 @@ const STRUCTURAL_DOMAINS = [
 ] as const;
 
 /**
- * ADVANCED FILTERS — what is left once every filterable field that CAN be a column is
- * one. Every field/operator pair was checked against the live OpenAPI spec; the
- * emitted param is named in each comment.
- *
- * Two families stay here DELIBERATELY, not by omission:
- *
- * - the ID-type fields (`id`, `mtype__id`, `em_dense_reconstruction_dataset__id`, and
- *   `dense_reconstruction_cell_id` — a numeric id inside the EM volume). There is no
- *   useful column to show for an identifier.
- * - the MEASUREMENT family. `measurement_kind__*` / `measurement_item__*` are
- *   EXISTENTIAL filters over an annotation array — "has some annotation whose kind is
- *   X and whose value is in [a,b]" — and an array of annotations has no single scalar
- *   a column could display. Splitting it across five columns would also break the
- *   conjunction: the five params are AND-ed over ONE annotation, which a per-column
- *   filter cannot express.
+ * Filterable fields with no column. The measurement family stays here because the five
+ * `measurement_kind__*` / `measurement_item__*` params are AND-ed over ONE annotation
+ * of an array — a conjunction per-column filters cannot express.
  */
 const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -114,8 +101,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'denseReconstructionCellId',
         label: 'Source cell ID',
-        // `dense_reconstruction_cell_id` (bare integer — the cell id INSIDE the EM
-        // dataset, not an entitycore UUID)
+        // Bare integer: the cell id inside the EM dataset, not an entitycore UUID.
         field: 'dense_reconstruction_cell_id',
         operators: [OperatorId.Eq],
         description: 'Numeric cell id inside the EM dataset',
@@ -130,7 +116,6 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'id',
         label: 'M-type ID',
-        // `mtype__id__in`
         field: 'mtype__id',
         operators: [OperatorId.In],
       },
@@ -144,8 +129,6 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'id',
         label: 'Dataset ID',
-        // `em_dense_reconstruction_dataset__id__in`. The dataset NAME is the
-        // Dataset column's own field.
         field: 'em_dense_reconstruction_dataset__id',
         operators: [OperatorId.In],
       },
@@ -159,7 +142,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'structuralDomain',
         label: 'Structural domain',
-        // `measurement_kind__structural_domain` (exact) ONLY — no list form.
+        // Exact only; no list form.
         field: 'measurement_kind__structural_domain',
         operators: [OperatorId.Eq],
         options: optionsFromValues(STRUCTURAL_DOMAINS, true),
@@ -168,7 +151,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'kindLabel',
         label: 'Measurement label',
-        // `measurement_kind__pref_label` (exact) ONLY.
+        // Exact only.
         field: 'measurement_kind__pref_label',
         operators: [OperatorId.Eq],
         description: 'Exact name of the measured quantity',
@@ -177,7 +160,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'statistic',
         label: 'Measurement statistic',
-        // `measurement_item__name` (exact) ONLY.
+        // Exact only.
         field: 'measurement_item__name',
         operators: [OperatorId.Eq],
         options: optionsFromValues(Object.values(MeasurementStatistic), true),
@@ -185,7 +168,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'unit',
         label: 'Measurement unit',
-        // `measurement_item__unit` (exact) ONLY.
+        // Exact only.
         field: 'measurement_item__unit',
         operators: [OperatorId.Eq],
         options: optionsFromValues(Object.values(MeasurementUnit)),
@@ -193,7 +176,6 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'value',
         label: 'Measurement value',
-        // `measurement_item__value__gte` / `measurement_item__value__lte`
         field: 'measurement_item__value',
         operators: [OperatorId.Range],
         description: 'Bounds on the measured value, in the unit selected above',
@@ -202,10 +184,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   },
 ];
 
-/**
- * MESH — the two acquisition scalars. Both ARE in
- * `EMCellMeshFilter.Constants.ordering_model_fields`, so both sort.
- */
+/** Mesh type. In `EMCellMeshFilter.ordering_model_fields`, so it sorts. */
 const meshTypeColumn: IColumnModel<Row> = {
   id: 'meshType',
   header: 'Mesh type',
@@ -215,7 +194,7 @@ const meshTypeColumn: IColumnModel<Row> = {
   getValue: (r) => MESH_TYPE_LABELS.get(r.mesh_type ?? '') ?? '',
   width: { minWidth: 130 },
   filter: {
-    // `mesh_type` (exact) ONLY — this endpoint declares no `mesh_type__in`.
+    // Exact only — this endpoint declares no `mesh_type__in`.
     operators: [OperatorId.Eq],
     field: 'mesh_type',
     targets: [
@@ -241,7 +220,7 @@ const levelOfDetailColumn: IColumnModel<Row> = {
   getValue: (r) => (r.level_of_detail == null ? '' : String(r.level_of_detail)),
   width: { minWidth: 130 },
   filter: {
-    // `level_of_detail` (bare integer; no range or list form on this endpoint)
+    // Bare integer; no range or list form on this endpoint.
     operators: [OperatorId.Eq],
     field: 'level_of_detail',
     targets: [
@@ -257,10 +236,8 @@ const levelOfDetailColumn: IColumnModel<Row> = {
 };
 
 /**
- * M-type. Free-entry rather than a facet picker, exactly as the advanced filter it
- * replaces — this listing computes no `mtype` facet bucket, and a facet source with
- * no bucket renders an empty picker. That is why the shared `mtypeColumn` factory,
- * whose whole point is the bucket, is not used here.
+ * M-type. Free-entry, not the shared `mtypeColumn`: this listing computes no `mtype`
+ * facet bucket, so a facet picker would render empty.
  */
 const mtypePrefLabelColumn: IColumnModel<Row> = {
   id: 'mtype',
@@ -275,7 +252,6 @@ const mtypePrefLabelColumn: IColumnModel<Row> = {
       .join(', '),
   width: { minWidth: 150 },
   filter: {
-    // `mtype__pref_label__ilike`, `mtype__pref_label__in`
     operators: [OperatorId.Ilike, OperatorId.In],
     field: 'mtype__pref_label',
     targets: [
@@ -292,13 +268,9 @@ const mtypePrefLabelColumn: IColumnModel<Row> = {
 };
 
 /**
- * DATASET — two ScientificArtifact fields of the mesh's dense-reconstruction dataset.
- *
- * The list row carries only the dataset's `{ id }` (`em_cell_mesh.py` serializes it as
- * a `BasicEntityRead`), so both cells resolve their value through the SAME lazy,
- * id-keyed fetch the Dataset name column already makes — one request per distinct
- * dataset, shared by all three cells. Sort is impossible either way: neither field is
- * in `ordering_model_fields`, so both are non-sortable.
+ * Dataset fields. The row carries only the dataset's `{ id }`, so these cells resolve
+ * their value through the same lazy id-keyed fetch as the Dataset name column. Neither
+ * field is in `ordering_model_fields`, hence `sortable: false`.
  */
 const datasetPublishedInColumn: IColumnModel<Row> = {
   id: 'datasetPublishedIn',
@@ -309,7 +281,6 @@ const datasetPublishedInColumn: IColumnModel<Row> = {
   cellRenderer: EM_DATASET_PUBLISHED_IN_RENDERER,
   width: { minWidth: 180 },
   filter: {
-    // `em_dense_reconstruction_dataset__published_in__ilike`, `…__published_in`
     operators: [OperatorId.Ilike, OperatorId.Eq],
     field: 'em_dense_reconstruction_dataset__published_in',
     targets: [
@@ -333,7 +304,6 @@ const datasetExperimentDateColumn: IColumnModel<Row> = {
   cellRenderer: EM_DATASET_EXPERIMENT_DATE_RENDERER,
   width: { minWidth: 190 },
   filter: {
-    // `em_dense_reconstruction_dataset__experiment_date__gte` / `…__lte`
     operators: [OperatorId.DateRange],
     field: 'em_dense_reconstruction_dataset__experiment_date',
     targets: [
@@ -348,18 +318,8 @@ const datasetExperimentDateColumn: IColumnModel<Row> = {
 };
 
 /**
- * EM cell mesh listing (curated). Column order matches the legacy `em-cell-mesh`
- * view-def (Name, Brain region, Species, Version, Dataset, Registration date).
- * The "Dataset" column resolves the dense-reconstruction dataset name lazily via
- * {@link EM_DATASET_RENDERER}.
- *
- * Then seven AUXILIARY columns, each carrying the filter it took over from the panel.
- *
- * SORT SAFETY (`EMCellMeshFilter.Constants.ordering_model_fields`,
- * `app/filters/em_cell_mesh.py`): `mesh_type`, `level_of_detail`, `mtype__pref_label`,
- * `subject__name` and `subject__strain__name` are all in that list and sort; the two
- * `em_dense_reconstruction_dataset__{published_in,experiment_date}` fields are NOT, so
- * those two are non-sortable — an `order_by` outside the allowlist is a 422.
+ * EM cell mesh listing (`GET /em-cell-mesh`). The Dataset column resolves its name
+ * lazily via {@link EM_DATASET_RENDERER}.
  */
 export const emCellMeshSchema: IGridSchema<Row> = {
   id: 'em-cell-mesh',
@@ -367,28 +327,24 @@ export const emCellMeshSchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 56,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(emCellMeshAdvancedFilters),
   columns: [
-    // the identifying column: kept visible by the chooser's bulk deselect
     nameColumn<Row>({ essential: true }),
     brainRegionColumn<Row>(),
-    // `subject__species__name` is in EMCellMeshFilter.Constants.ordering_model_fields,
-    // so species IS server-sortable here. Legacy gates the species *filter* to the
-    // Simulate/Process/Extract workflows; we keep it filterable in every section — an
-    // additive, backend-supported capability, not a parity regression.
+    // `subject__species__name` is in this endpoint's ordering fields, so species is
+    // server-sortable here.
     speciesColumn<Row>(),
     releaseVersionColumn<Row>(),
     emDatasetColumn<Row>(),
     lifecycleStatusColumn<Row>(),
     registrationDateColumn<Row>(),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     meshTypeColumn,
     levelOfDetailColumn,
     mtypePrefLabelColumn,
     datasetPublishedInColumn,
     datasetExperimentDateColumn,
-    // both subject fields ARE in EMCellMeshFilter's ordering_model_fields
+    // Both subject fields are in this endpoint's ordering fields.
     subjectStrainColumn<Row>({ sortable: true }),
     subjectNameColumn<Row>({ sortable: true, sortField: 'subject__name' }),
   ],

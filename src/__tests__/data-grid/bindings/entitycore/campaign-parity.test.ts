@@ -32,11 +32,9 @@ import type {
 } from '@/features/data-grid/core';
 
 /**
- * T-05 parity harness for the expandable circuit-simulation dataTypes. Locks (a) the
- * collapsed-row column set/order to the legacy view-def, (b) the presence + wiring of
- * the full-width detail spec (isExpandable honored, renderDetail supplied), and (c) the
- * serialized filter/sort params to the legacy `field__op` keys — the invariants that
- * guarantee no regression when the router flips these dataTypes to AG Grid detail rows.
+ * Parity harness for the expandable circuit-simulation dataTypes: locks the collapsed-row
+ * column set/order, the detail-spec wiring and the serialized filter/sort params to the
+ * legacy view-defs and field-defs.
  */
 
 function query(over: Partial<IGridQuery> = {}): IGridQuery {
@@ -79,8 +77,7 @@ const STANDARD_COLUMNS = [
 /** Shared assertions common to every flipped simulation-campaign definition. */
 function assertCampaignDetail(def: IEntityGridDefinition<ICampaignRow>, dataType: string) {
   it('defaults to popover-cards mode: no full-width detail row is wired', () => {
-    // The new default (flag OFF) presents the status as a badge + hover popover of cards,
-    // so the collapsed listing no longer wires the nested-table detail spec/renderer.
+    // with the flag off the status is a badge + hover popover, so no detail spec is wired
     expect(def.schema.detail).toBeUndefined();
     expect(def.renderDetail).toBeUndefined();
   });
@@ -144,8 +141,8 @@ describe('me_model_circuit_simulation parity', () => {
     ]);
   });
   it('species is display-only — /simulation-campaign exposes no species query param', () => {
-    // The legacy field-def bound `species__name__in`, but the endpoint accepts nothing
-    // matching `species*`, so the filter was silently dropped by the API.
+    // the endpoint accepts nothing matching `species*`, so the legacy binding was
+    // silently dropped by the API
     expect(def.schema.columns.find((c) => c.id === 'species')?.filter).toBeUndefined();
     const p = serializeQuery(query({ filters: setIn('species') }), def.schema);
     expect(p.species__name__in).toBeUndefined();
@@ -174,8 +171,6 @@ describe('simulation_campaign parity (generic Data → Simulations listing)', ()
   const dataType = 'simulation_campaign';
 
   it('columns match the legacy view-def order (no Created by, no Species)', () => {
-    // view-defs/simulation/simulation-campaign.ts:
-    //   Name, Description, CircuitName, RegistrationDate, LegacyActivityStatus
     expect(ids(def.schema, dataCtx(dataType))).toEqual([
       'name',
       'description',

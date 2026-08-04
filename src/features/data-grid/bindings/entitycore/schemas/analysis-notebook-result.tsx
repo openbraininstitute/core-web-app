@@ -12,18 +12,10 @@ import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * Analysis-notebook result listing. Column order mirrors the legacy
- * `viewDefForNotebookResult`: Preview (image), Name, Description, Contributors,
- * Update date. Notebook results surface the last-update date instead of the
- * registration date.
- *
- * Per the legacy field-defs: the preview renders notebook figures via the shared
- * `NotebookPreviewThumbnail`; Description is DISPLAY-ONLY (no entitycore endpoint
- * accepts a `description` param); Update date sorts on `update_date` (the backend
- * ordering field — `updated_at` is rejected as an invalid ordering field) and
- * date-range-filters to `update_date__gte` / `update_date__lte`; Contributors
- * facet-filters on `contribution__pref_label__in` (plus `__ilike`) but is not
- * server-sortable for notebooks.
+ * Analysis-notebook result listing (`GET /analysis-notebook-result`). Results surface
+ * the last-update date instead of the registration date. Description is display-only:
+ * no entitycore endpoint accepts a `description` param. The sort field is
+ * `update_date` — `updated_at` is rejected as an invalid ordering field.
  */
 export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> = {
   id: 'analysis-notebook-result',

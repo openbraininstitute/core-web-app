@@ -23,16 +23,10 @@ import {
 import type { IGridQuery, IGridSchema, TFilterValue } from '@/features/data-grid/core';
 
 /**
- * ORACLE: every param asserted below was read out of the live entitycore OpenAPI
- * spec — `paths['/<endpoint>'].get.parameters`, entries with `in == 'query'` — for
- * the endpoint named in each `describe`. The backend silently ignores unknown query
- * params, so an invented param would look like "the filter does nothing"; these
- * tables are the record that each one exists.
- *
- * Every case is `[groupId, filterId, operator, value, expected params]`, and each
- * suite ends with an exhaustiveness check: the set of (filter, operator) pairs
- * exercised must equal the set the schema declares. A new operator on a schema fails
- * that check until its wire param is pinned here.
+ * Pins the wire params of each experimental listing's advanced filters. Every expected
+ * param was read out of the live entitycore OpenAPI spec (`in == 'query'` parameters of
+ * the endpoint named in each `describe`) — the backend silently ignores unknown params,
+ * so an invented one would look like "the filter does nothing".
  */
 
 const UUID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
@@ -56,12 +50,8 @@ function range(min: number | null, max: number | null): TFilterValue {
   return { kind: FilterValueKind.Range, min, max };
 }
 /**
- * The state key a filter DECLARED as `groupId · filterId` actually occupies.
- *
- * The case tables below are written in the schema's own vocabulary (the group and
- * filter a maintainer reads in the schema file), but a schema whose groups are
- * collapsed by `flatAdvancedFilters` stores that filter under the flat group's key.
- * Resolving through the schema keeps the tables readable AND correct either way.
+ * The state key a filter declared as `groupId · filterId` actually occupies: a schema
+ * collapsed by `flatAdvancedFilters` stores it under the flat group's key instead.
  */
 function declaredKey<Row>(schema: IGridSchema<Row>, groupId: string, filterId: string): string {
   const flat = advancedFilterKey(
@@ -122,12 +112,7 @@ const SUBJECT_CASES: ReadonlyArray<TCase> = [
   ['subject', 'subjectName', OperatorId.In, set('Rat 12'), { subject__name__in: ['Rat 12'] }],
 ];
 
-/**
- * The record's own `id`. Schemas disagree on which GROUP it is declared under —
- * `common` for the listings that have no other record-level filter, `record` for the
- * two morphology subtypes that also declare `has_segmented_spines` — so the group is
- * a parameter here. The wire params are the same either way.
- */
+/** The record's own `id`; schemas disagree on the group it is declared under. */
 function idCases(groupId: string): ReadonlyArray<TCase> {
   return [
     [groupId, 'id', OperatorId.In, set(UUID), { id__in: [UUID] }],
@@ -230,11 +215,6 @@ function suite<Row>(schema: IGridSchema<Row>, cases: ReadonlyArray<TCase>) {
   });
 }
 
-/**
- * `recording_type`, `recording_origin` and the two `subject__*` fields are AUXILIARY
- * COLUMNS here — their wire params are pinned in `experimental-parity.test.ts`. Only
- * the record's `id` has no column to move onto.
- */
 describe('electrical-cell-recording advanced filters — GET /electrical-cell-recording', () => {
   suite(electricalCellRecordingSchema, [...RECORD_ID_CASES]);
 
@@ -246,11 +226,6 @@ describe('electrical-cell-recording advanced filters — GET /electrical-cell-re
   });
 });
 
-/**
- * The channel label/gene, both validation fields, recording type and the two
- * `subject__*` fields are AUXILIARY COLUMNS here — their wire params are pinned in
- * `experimental-parity.test.ts`. Only the two ID-type fields have no column.
- */
 describe('ion-channel-recording advanced filters — GET /ion-channel-recording', () => {
   suite(ionChannelRecordingSchema, [
     ['ionChannel', 'ionChannelId', OperatorId.In, set(UUID), { ion_channel__id__in: [UUID] }],
@@ -269,21 +244,12 @@ describe('ion-channel-recording advanced filters — GET /ion-channel-recording'
       (d) => d.field
     );
     expect(fields).not.toContain('recording_origin');
-    // …and it did not simply move onto a column either
     expect(ionChannelRecordingSchema.columns.map((c) => c.filter?.field)).not.toContain(
       'recording_origin'
     );
   });
 });
 
-/**
- * THE TWO DENSITY LISTINGS ARE THE AUXILIARY-COLUMN PILOT: `subject__strain__name`,
- * `subject__name` (both) and `name` (bouton only) are no longer advanced filters —
- * they are auxiliary COLUMNS, offered by this panel only while they stay hidden and
- * by their own header once ticked. The panel therefore declares only `id`, and the
- * wire params for the moved fields are pinned in `experimental-parity.test.ts`
- * alongside the columns that now own them.
- */
 describe('experimental-neuron-density advanced filters — GET /experimental-neuron-density', () => {
   suite(experimentalNeuronDensitySchema, [...RECORD_ID_CASES]);
 
@@ -292,7 +258,6 @@ describe('experimental-neuron-density advanced filters — GET /experimental-neu
       (d) => d.field
     );
     expect(fields).toEqual(['id']);
-    // `name` had a visible Name column AND this filter — the same field twice
     expect(fields).not.toContain('name');
     expect(fields).not.toContain('subject__strain__name');
     expect(fields).not.toContain('subject__name');
@@ -319,13 +284,6 @@ describe('experimental-bouton-density advanced filters — GET /experimental-bou
   });
 });
 
-/**
- * `name`, `brain_region__name`, `brain_region__acronym`, `subject__strain__name` and
- * `subject__name` are AUXILIARY COLUMNS here, not advanced filters — the panel offers
- * them only while they stay hidden, and their wire params are pinned in
- * `experimental-parity.test.ts` alongside the columns that own them. What is left is
- * the two ID-type fields, which have no useful column.
- */
 describe('synapses-per-connection advanced filters — GET /experimental-synapses-per-connection', () => {
   suite(experimentalSynapsesPerConnectionSchema, [
     ['brainRegion', 'id', OperatorId.In, set(UUID), { brain_region__id__in: [UUID] }],
@@ -341,13 +299,8 @@ describe('synapses-per-connection advanced filters — GET /experimental-synapse
 });
 
 /**
- * `mesh_type`, `level_of_detail`, `mtype__pref_label`, the two dataset
- * ScientificArtifact fields and the two `subject__*` fields are AUXILIARY COLUMNS now
- * — their wire params are pinned in `experimental-parity.test.ts`.
- *
- * Two families stay HERE deliberately: the ID-type fields, and the MEASUREMENT family
- * (existential filters over an annotation array, with no single scalar to display and
- * a five-param conjunction a per-column filter cannot express).
+ * The measurement family stays an advanced filter deliberately: it is a five-param
+ * conjunction over an annotation array that a per-column filter cannot express.
  */
 describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
   suite(emCellMeshSchema, [
@@ -445,12 +398,6 @@ describe('universal-cell-morphology advanced filters — GET /cell-morphology', 
   });
 });
 
-/**
- * The rest of the `cell_morphology_protocol__*` family, both `subject__*` fields and
- * `has_segmented_spines` are AUXILIARY COLUMNS here — their wire params are pinned in
- * `experimental-parity.test.ts` alongside the columns that now own them. What is left
- * is the two ID-type fields, which have no useful column.
- */
 describe('synthesized-cell-morphology advanced filters — GET /cell-morphology', () => {
   suite(synthesizedCellMorphologySchema, [
     [

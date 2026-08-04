@@ -7,10 +7,8 @@ import type { UseQueryOptions } from '@tanstack/react-query';
 import type { GridController, IGridDataSource, IGridPage, IGridState, TFacets } from '../core';
 
 /**
- * Extra React Query knobs a host may pass through to the grid's list query — e.g.
- * `refetchOnWindowFocus`, `staleTime`, `gcTime`, `retry`, `refetchInterval`. The grid
- * always owns `queryKey`/`queryFn` (and its own `enabled`/`placeholderData` defaults,
- * which a caller can still override here).
+ * Extra React Query knobs a host may pass through to the grid's list query. The grid
+ * always owns `queryKey`/`queryFn`; its other defaults can be overridden here.
  */
 export type TDataGridQueryOptions<Row> = Omit<
   UseQueryOptions<IGridPage<Row>, unknown, IGridPage<Row>, ReadonlyArray<unknown>>,
@@ -42,9 +40,9 @@ export interface IUseDataGridResult<Row> {
 }
 
 /**
- * Bridges the headless store to React (via `useSyncExternalStore`) and the data
- * port to React Query. Data fetching/caching lives here — the controller stays
- * pure. State changes rebuild the query, which changes the query key and refetches.
+ * Bridges the headless store to React (`useSyncExternalStore`) and the data port to
+ * React Query, so the controller stays pure. A state change rebuilds the query, which
+ * changes the query key and refetches.
  */
 export function useDataGrid<Row>(args: IUseDataGridArgs<Row>): IUseDataGridResult<Row> {
   const {
@@ -63,10 +61,9 @@ export function useDataGrid<Row>(args: IUseDataGridArgs<Row>): IUseDataGridResul
     controller.store.getSnapshot
   );
 
-  // Derive the query from the REACTIVE `state` value, not via
-  // `controller.buildQuery()`: that method reads the store invisibly, so the React
-  // Compiler memoizes its result against the stable `controller` reference and the
-  // query (and with it every refetch) freezes at page 1.
+  // Derive from the reactive `state`, never `controller.buildQuery()`: that reads the
+  // store invisibly, so the React Compiler memoizes it against the stable `controller`
+  // reference and every refetch freezes at page 1.
   const query = buildGridQuery(state, params);
 
   const result = useQuery({

@@ -29,24 +29,11 @@ export interface IAdvancedFiltersMenuProps<Row> {
 }
 
 /**
- * ADVANCED FILTERS MENUBAR — the surface for every filter whose field has no
- * VISIBLE column right now: the schema's `advancedFilters`, plus the auxiliary
- * columns the user has not ticked in the column chooser (see
- * `resolveFilterPanelGroups`, which derives the list). Tick an auxiliary column and
- * its filter leaves this panel for the column header; untick it and it comes back,
- * with any applied value intact — both surfaces key it by the column id.
- *
- * The interaction model is a menubar → menu → submenu: the top row is the groups
- * (roving focus, ←/→ between them), the panel below is that group's menu of filter
- * NAMES, and choosing one opens a submenu holding the operator picker and the value
- * editor (→/Enter in, ←/Escape back). Only ONE panel is mounted at a time, so the
- * popover never grows unboundedly and an abandoned draft is discarded rather than
- * lingering behind a closed menu.
- *
- * The editor is the SAME {@link FilterEditor} the column headers use — an advanced
- * filter IS an `IFilterTarget` — and it commits into the same `GridState.filters`
- * record under the filter's namespaced `adv:<group>:<filter>` key, so persistence,
- * reset and the active-filters list need no special case.
+ * Menubar → menu → submenu surface for every filter with no visible column right now:
+ * the schema's `advancedFilters` plus unticked auxiliary columns. Uses the same
+ * {@link FilterEditor} as column headers and commits into the same `GridState.filters`
+ * under the filter's `adv:<group>:<filter>` key, so persistence needs no special case.
+ * Only one panel is mounted at a time, so an abandoned draft is discarded.
  */
 export function AdvancedFiltersMenu<Row>({
   controller,
@@ -55,20 +42,16 @@ export function AdvancedFiltersMenu<Row>({
   facets,
   onClose,
 }: IAdvancedFiltersMenuProps<Row>) {
-  // Derived from the REACTIVE hidden-column state, not from the controller alone:
-  // an auxiliary column joins/leaves this list as the chooser toggles it, and a
-  // memo keyed only on `controller` would freeze the panel at its first shape.
+  // Must depend on the reactive hidden-column state: a memo keyed only on `controller`
+  // freezes the panel at its first shape as the chooser toggles auxiliary columns.
   const groups = useMemo(
     () => resolveFilterPanelGroups(controller.schema, controller.context, state.hiddenColumns),
     [controller, state.hiddenColumns]
   );
 
-  // `openFilterId` is scoped to the open group: changing group always clears it, so
-  // the submenu can never be stranded on a filter the current group doesn't own.
   const [groupId, setGroupId] = useState<string>(() => groups[0]?.id ?? '');
-  // Identified by state KEY, not by `def.id`: two auxiliary columns with legacy flat
-  // filters both synthesise a target named `default`, so the def id is not unique
-  // across a group — the key always is.
+  // Keyed by state key, not `def.id`: two flat-filter auxiliary columns both synthesise
+  // a target named `default`, so def ids are not unique within a group.
   const [openFilterKey, setOpenFilterKey] = useState<string | null>(null);
   const menubarRef = useRef<HTMLDivElement>(null);
 
@@ -99,13 +82,7 @@ export function AdvancedFiltersMenu<Row>({
 
   return (
     <div className="flex w-full flex-col gap-2">
-      {/*
-        GROUP TABS ONLY WHEN GROUPING SAYS SOMETHING. A schema that resolves to a
-        single group renders a FLAT filter list: a one-tab menubar is a control with
-        no choice in it, and the roving-focus keyboard model it brings costs a tab
-        stop for nothing. The grouped path below is untouched and is what a schema
-        with two or more resolved groups still gets.
-      */}
+      {/* A single group renders a flat list: a one-tab menubar costs a tab stop for nothing. */}
       {groups.length > 1 && (
         <div
           ref={menubarRef}
@@ -120,7 +97,7 @@ export function AdvancedFiltersMenu<Row>({
               role="menuitem"
               aria-haspopup="menu"
               aria-expanded={g.id === group.id}
-              // roving tabindex: one stop for the whole menubar, arrows move within
+              // roving tabindex: one stop for the whole menubar
               tabIndex={g.id === group.id ? 0 : -1}
               onKeyDown={onMenubarKeyDown}
               onClick={() => openGroup(g.id)}
@@ -181,9 +158,8 @@ function AdvancedFilterList<Row>({
       <div className="max-h-72 overflow-auto secondary-scrollbar">
         {group.filters.map((f) => {
           const entry = state.filters[f.key];
-          // Resolved THROUGH THE SCHEMA rather than off `f.def`: an auxiliary
-          // column's entry names one of several targets, and only the schema lookup
-          // knows which one it is currently matching by.
+          // Resolved through the schema, not `f.def`: only the schema lookup knows which
+          // of an auxiliary column's targets the entry is currently matching by.
           const summary = entry ? summarizeFilterEntry(entry, schema, facets) : '';
           return (
             <button
@@ -218,15 +194,9 @@ function AdvancedFilterList<Row>({
 }
 
 /**
- * `<input>` types for which ArrowLeft is INERT — no caret to move (the checkbox and
- * the button-like types), nothing to step. Every other input type is assumed to own
- * the key: the text-entry types move the caret, `range` steps the value and `radio`
- * moves the selection inside its group.
- *
- * Defaulting to "the control owns ArrowLeft" is deliberate. Stealing the key from a
- * value editor backs out of the submenu and DISCARDS the draft — real data loss —
- * whereas leaving it with an exotic control merely costs one keyboard shortcut that
- * the back chevron, Escape and Shift+Tab all still provide.
+ * `<input>` types for which ArrowLeft is inert. Every other type is assumed to own the
+ * key: stealing it from a value editor backs out of the submenu and discards the draft,
+ * whereas leaving it costs one shortcut the back chevron and Escape still provide.
  */
 const ARROW_LEFT_INERT_INPUT_TYPES: ReadonlySet<string> = new Set([
   'button',
@@ -239,12 +209,7 @@ const ARROW_LEFT_INERT_INPUT_TYPES: ReadonlySet<string> = new Set([
   'submit',
 ]);
 
-/**
- * True when ArrowLeft belongs to the focused control rather than to the menu, i.e.
- * the submenu must NOT treat it as "back": a textarea or contenteditable (caret), a
- * native `<select>` (ArrowLeft changes the selected option) or any input other than
- * the inert types above.
- */
+/** True when ArrowLeft belongs to the focused control, so the submenu must not treat it as "back". */
 function ownsArrowLeft(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
@@ -254,13 +219,8 @@ function ownsArrowLeft(target: EventTarget | null): boolean {
 }
 
 /**
- * One filter's submenu: the shared operator/value editor, with its heading replaced
- * by a back control.
- *
- * The chevron is not a separate button next to a separate heading — the whole
- * "‹ Generation type" line IS the title AND the way back to the group's list, so the
- * panel never shows the filter's name twice. `aria-label` opens with that same
- * visible text (WCAG 2.5.3) and then says where "back" leads.
+ * One filter's submenu: the shared operator/value editor with its heading replaced by a
+ * back control, so the filter's name is not shown twice.
  */
 function AdvancedFilterSubmenu<Row>({
   controller,
@@ -289,21 +249,16 @@ function AdvancedFilterSubmenu<Row>({
       className="flex flex-col"
       onKeyDown={(e) => {
         if (e.key !== 'Escape' && e.key !== 'ArrowLeft') return;
-        // ArrowLeft is "back" only from the menu's OWN rows — inside the editor's
-        // value controls it is caret movement, and hijacking it there threw the
-        // draft away (see `ownsArrowLeft`). Escape is unconditional: unlike an
-        // arrow it means "dismiss this layer" everywhere, including in a text box,
-        // and NOT handling it here would simply let it bubble to the popover and
-        // close the whole surface — the same lost draft plus the lost surface.
+        // ArrowLeft is "back" only from the menu's own rows; see `ownsArrowLeft`.
         if (e.key === 'ArrowLeft' && ownsArrowLeft(e.target)) return;
-        // Escape backs out of the SUBMENU first; it must not close the popover too.
+        // Escape backs out of the submenu first; it must not close the popover too.
         e.stopPropagation();
         onBack();
       }}
     >
       <FilterEditor
-        // Remount per filter: the editor holds a draft keyed to ONE slot, and
-        // carrying it across filters would leak a value into the wrong param.
+        // Remount per filter: carrying the editor's draft across filters would leak a
+        // value into the wrong param.
         key={filter.key}
         ctx={ctx}
         filterKey={filter.key}

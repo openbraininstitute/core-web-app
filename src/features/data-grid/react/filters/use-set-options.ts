@@ -24,14 +24,10 @@ export interface ISetOptionsResult {
 const FIVE_MINUTES = 5 * 60 * 1000;
 
 /**
- * Resolves options for a set/facet filter across all three sources:
- * - `facets` → server-computed buckets from the current fetch (id + label + count + type)
- * - `static` → declared inline in the schema
- * - `async`  → lazily loaded via React Query (cached, with a loading state)
- *
- * For facets the API `__in` value is the **label** (matching the legacy CheckList
- * behaviour — bucket ids are UUIDs the API does not filter by), while `id` is kept
- * for per-option definition lookups.
+ * Resolves options for a set/facet filter from all three sources: server-computed
+ * `facets`, `static` schema items, or `async` loading via React Query. For facets the
+ * API `__in` value is the LABEL — bucket ids are UUIDs the API does not filter by —
+ * while `id` is kept for per-option definition lookups.
  */
 export function useSetOptions(
   source: TFilterOptionsSource | undefined,

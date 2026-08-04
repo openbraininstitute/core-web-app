@@ -21,9 +21,7 @@ const groups: ReadonlyArray<IAdvancedFilterGroup> = [
     id: 'protocol',
     label: 'Protocol',
     filters: [
-      // free text → a single <input> value box
       { id: 'doc', label: 'Document', field: 'proto__doc', operators: [OperatorId.Ilike] },
-      // set WITH options → search box + option checkboxes
       {
         id: 'design',
         label: 'Design',
@@ -34,7 +32,6 @@ const groups: ReadonlyArray<IAdvancedFilterGroup> = [
           items: [{ id: 'patch', label: 'Patch clamp' }],
         },
       },
-      // set WITHOUT options → the free-entry <textarea>
       { id: 'ids', label: 'Ids', field: 'proto__id', operators: [OperatorId.In] },
     ],
   },
@@ -50,9 +47,8 @@ const schema: IGridSchema<Row> = {
 };
 
 /**
- * Renders the menu, opens one filter's submenu, and exposes a spy on the keydown
- * events that make it PAST the submenu — i.e. the ones the surrounding popover
- * would see and close itself on.
+ * Renders the menu, opens one filter's submenu, and spies on the keydown events that get
+ * past the submenu — the ones the surrounding popover would close itself on.
  */
 function openFilter(name: string) {
   const controller = new GridController<Row>({
@@ -76,7 +72,6 @@ function openFilter(name: string) {
     </QueryClientProvider>
   );
   fireEvent.click(utils.getByRole('menuitem', { name: new RegExp(name) }));
-  // the submenu replaced the list — no menu rows are mounted while it is open
   expect(utils.queryByRole('menuitem')).toBeNull();
   return { ...utils, escaped };
 }
@@ -89,10 +84,8 @@ describe('AdvancedFiltersMenu — ArrowLeft/Escape in the filter submenu', () =>
 
     fireEvent.keyDown(input, { key: 'ArrowLeft' });
 
-    // still in the submenu, draft intact
     expect(queryByRole('menuitem')).toBeNull();
     expect((getByRole('textbox') as HTMLInputElement).value).toBe('abc');
-    // and the key was left alone rather than swallowed
     expect(escaped).toHaveBeenCalledTimes(1);
   });
 
@@ -114,10 +107,8 @@ describe('AdvancedFiltersMenu — ArrowLeft/Escape in the filter submenu', () =>
 
     fireEvent.keyDown(getByRole('button', { name: /back to Protocol/ }), { key: 'ArrowLeft' });
 
-    // back on the group's filter list
     expect(getByRole('menuitem', { name: /Document/ })).toBeTruthy();
     expect(queryByRole('textbox')).toBeNull();
-    // consumed here, so the popover behind never sees it
     expect(escaped).not.toHaveBeenCalled();
   });
 
@@ -134,7 +125,6 @@ describe('AdvancedFiltersMenu — ArrowLeft/Escape in the filter submenu', () =>
 
     expect(getByRole('menuitem', { name: /Document/ })).toBeTruthy();
     expect(queryByRole('textbox')).toBeNull();
-    // one layer per press: the surrounding popover must not close too
     expect(escaped).not.toHaveBeenCalled();
   });
 });

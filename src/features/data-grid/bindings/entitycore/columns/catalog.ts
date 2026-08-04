@@ -8,22 +8,11 @@ import type { TMeasurementStatistic } from '@/api/entitycore/types/shared/global
 import type { IColumnModel, TColumnOverride } from '../../../core';
 
 /**
- * Reusable entitycore column factories. Each is structurally typed to the minimal
- * row shape it reads (e.g. {@link IHasName}), so it works for ANY entity that exposes
- * that shape — which most do, since entitycore entities share base interfaces
- * (name, Timestamps, Subject, brain_region, …). Every factory takes an optional
- * override so a schema can customize per use:
- *
- *   nameColumn<ICellMorphology>({ width: { flex: 3 } })
- *   speciesColumn<IEModel>({ filter: { field: 'species__name' } })
+ * Reusable entitycore column factories, each structurally typed to the minimal row
+ * shape it reads, so it works for any entity exposing that shape. Every factory takes
+ * an optional override, e.g. `nameColumn<ICellMorphology>({ width: { flex: 3 } })`.
  */
 
-/**
- * Shared placeholder shown when a cell value is empty/absent (em dash).
- * Declared in the renderer ring (which cannot import this module — bindings sit
- * above it, and catalog already cycles with its own renderers), re-exported here
- * so bindings keep one import site and there is a single source of truth.
- */
 import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 
 export { EMPTY_PLACEHOLDER };
@@ -128,10 +117,8 @@ function ageInDays(seconds: Nullable<number>): string {
 }
 
 /**
- * A nullable backend boolean as a cell value. `null`/`undefined` renders as the empty
- * cell (the shared em-dash placeholder), NOT as "No" — "we did not record this" and
- * "we recorded that it is false" are different facts, and a `field=false` filter
- * matches only the second.
+ * A nullable backend boolean as a cell value. `null` renders empty, NOT "No": a
+ * `field=false` filter matches only recorded-false, not unrecorded.
  */
 export function yesNo(value: Nullable<boolean>): string {
   if (value == null) return '';
@@ -184,10 +171,8 @@ export function nameColumn<Row extends IHasName>(o?: TColumnOverride<Row>): ICol
 }
 
 /**
- * Description is DISPLAY-ONLY: no entitycore list endpoint exposes a `description`
- * query param (verified against the OpenAPI spec — zero paths accept `description`,
- * `description__ilike` or `description__in`). Free-text description search is served
- * by the quick-search box (`search` / `ilike_search`), not a column filter.
+ * Display-only: no entitycore list endpoint accepts a `description` query param.
+ * Free-text description search goes through the quick-search box instead.
  */
 export function descriptionColumn<Row extends IHasDescription>(
   o?: TColumnOverride<Row>
@@ -204,10 +189,8 @@ export function descriptionColumn<Row extends IHasDescription>(
 }
 
 /**
- * Brain region. The brain-region hierarchy selector filters by ascendants
- * (`within_brain_region_*`); this column adds the orthogonal per-name filter the
- * backend also accepts (`brain_region__name__in` / `brain_region__name__ilike`),
- * with options from the server-computed `brain_region` facet bucket.
+ * Brain region. Orthogonal to the hierarchy selector (which filters by ascendants via
+ * `within_brain_region_*`); this filters on `brain_region__name`.
  */
 export function brainRegionColumn<Row extends IHasBrainRegion>(
   o?: TColumnOverride<Row>
@@ -244,10 +227,8 @@ export function speciesColumn<Row extends IHasSpecies>(
       getValue: (r) => r.subject?.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
-        // The flat props stay as the single source of truth for the DEFAULT target;
-        // `targets[0]` mirrors them, so overrides and non-target-aware readers are
-        // unaffected. `subject__species__id__in` is a documented entitycore query
-        // param on every endpoint that accepts `subject__species__name__in`.
+        // Flat props define the DEFAULT target; `targets[0]` mirrors them so
+        // overrides and non-target-aware readers keep working.
         operators: [OperatorId.In, OperatorId.Ilike],
         field: 'subject__species__name',
         facetKey: 'species',
@@ -477,14 +458,10 @@ export function subjectAgeColumn<Row extends IHasSubjectAge>(
 }
 
 /**
- * Strain — an AUXILIARY column by default (`subject__strain__name`, from
- * `SubjectFilterMixin`): the name of the inbred line the subject belongs to, which
- * matters to the handful of users comparing strains and to nobody else.
- *
- * Free-entry `__ilike` / `__in`, exactly as the advanced filter it replaces. Every
- * endpoint composing `SubjectFilterMixin` accepts the param, but only SOME list
- * `subject__strain__name` in their `ordering_model_fields`, so `sortable` is opt-in
- * per schema — see {@link subjectNameColumn} for what enabling it wrongly costs.
+ * Strain (`subject__strain__name`), auxiliary by default. Every endpoint composing
+ * `SubjectFilterMixin` accepts the filter param, but only some list it in
+ * `ordering_model_fields`, so `sortable` stays opt-in per schema — entitycore 422s on
+ * an `order_by` outside that allowlist.
  */
 export function subjectStrainColumn<Row extends IHasSubjectStrain>(
   o?: TColumnOverride<Row>
@@ -498,13 +475,11 @@ export function subjectStrainColumn<Row extends IHasSubjectStrain>(
       getValue: (r) => r.subject?.strain?.name ?? '',
       width: { minWidth: 140 },
       filter: {
-        // `subject__strain__name__ilike`, `subject__strain__name__in`
         operators: [OperatorId.Ilike, OperatorId.In],
         field: 'subject__strain__name',
-        // Declared as an explicit TARGET, not flat props alone: only a target can
-        // carry `freeEntry`/`placeholder`, and the synthesised legacy target reads
-        // "no options" as "use the grid's facets" — which for a field the server
-        // computes no bucket for is an empty picker instead of a paste-a-list box.
+        // Explicit target, not flat props alone: only a target carries
+        // `freeEntry`/`placeholder`, and a synthesised one reads "no options" as
+        // "use facets" — an empty picker for a field with no server facet bucket.
         targets: [
           {
             id: 'name',
@@ -522,14 +497,9 @@ export function subjectStrainColumn<Row extends IHasSubjectStrain>(
 }
 
 /**
- * Subject name — an AUXILIARY column by default (`subject__name`, from
- * `SubjectFilterMixin`): the label of the individual animal, useful when tracing
- * records back to one subject.
- *
- * NEVER SORTABLE unless a specific endpoint proves otherwise: no entitycore filter
- * seen so far lists `subject__name` in `ordering_model_fields`, and an `order_by`
- * outside that allowlist is a 422 — the listing fails to load rather than sorting
- * badly. Hence no `sortField` here at all.
+ * Subject name (`subject__name`), auxiliary by default. Deliberately has no
+ * `sortField`: no known endpoint lists it in `ordering_model_fields`, and entitycore
+ * 422s on an `order_by` outside that allowlist, breaking the whole listing.
  */
 export function subjectNameColumn<Row extends IHasSubjectName>(
   o?: TColumnOverride<Row>
@@ -543,11 +513,9 @@ export function subjectNameColumn<Row extends IHasSubjectName>(
       getValue: (r) => r.subject?.name ?? '',
       width: { minWidth: 150 },
       filter: {
-        // `subject__name__ilike`, `subject__name__in`
         operators: [OperatorId.Ilike, OperatorId.In],
         field: 'subject__name',
-        // an explicit target, for the free-entry reason spelled out in
-        // `subjectStrainColumn`
+        // explicit target, for the free-entry reason in `subjectStrainColumn`
         targets: [
           {
             id: 'name',
@@ -617,9 +585,8 @@ export function standardErrorValue(row: IHasMeasurements): string {
 }
 
 /**
- * Mean density value column (e.g. neuron density's "Density [1/mm³]"). Not sortable
- * or filterable in the legacy listing — the mean lives in the `measurements` array,
- * not a queryable scalar column.
+ * Mean density value column. Neither sortable nor filterable: the mean lives in the
+ * `measurements` array, not a queryable scalar field.
  */
 export function densityColumn<Row extends IHasMeasurements>(
   o?: TColumnOverride<Row>
@@ -638,9 +605,8 @@ export function densityColumn<Row extends IHasMeasurements>(
 }
 
 /**
- * "Mean ± STD" measurement column. Sortability differs per entity (bouton density
- * sorts on `measurement_mean__value`; synapses-per-connection isn't sortable), so it
- * defaults to unsortable — enable with `{ sortable: true }` where the entity binds it.
+ * "Mean ± STD" measurement column. Sortability differs per entity, so it defaults to
+ * unsortable — enable with `{ sortable: true }` where the endpoint supports it.
  */
 export function meanStdColumn<Row extends IHasMeasurements>(
   o?: TColumnOverride<Row>
@@ -701,14 +667,9 @@ export function preSynapticRegionColumn<Row extends IHasPreRegion>(
 }
 
 /**
- * Post-synaptic brain region ("Brain Region [To]").
- *
- * This used to serialize to the single-underscore `post_region__name_in`
- * ({@link OperatorId.InSingleUnderscore}), copied from the legacy field-def. The
- * current entitycore spec does NOT expose that param at all — the only set filter on
- * `/experimental-synapses-per-connection` is the standard `post_region__name__in`
- * (plus `post_region__name__ilike`), so the single-underscore filter was silently
- * dropped by the API. Now spelled like every sibling relation filter.
+ * Post-synaptic brain region ("Brain Region [To]"). Uses the standard double-underscore
+ * `post_region__name__in`; the single-underscore spelling is not exposed by entitycore
+ * and gets silently dropped.
  */
 export function postSynapticRegionColumn<Row extends IHasPostRegion>(
   o?: TColumnOverride<Row>
@@ -779,9 +740,8 @@ export function postSynapticCellTypeColumn<Row extends IHasPostMtype>(
 }
 
 /**
- * EM dense-reconstruction dataset name ("Dataset") for em-cell-mesh. The list row
- * carries only the dataset's `{ id }`, so the NAME is fetched lazily by the
- * {@link EM_DATASET_RENDERER} cell; sort/filter operate on the backend scalar
+ * EM dense-reconstruction dataset name. The row carries only `{ id }`, so the name is
+ * fetched lazily by {@link EM_DATASET_RENDERER}; sort/filter use the backend scalar
  * `em_dense_reconstruction_dataset__name`.
  */
 export function emDatasetColumn<Row extends IHasEmDataset>(

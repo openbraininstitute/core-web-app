@@ -12,16 +12,10 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IGridContext, IGridSchema } from '@/features/data-grid/core';
 
 /**
- * REGRESSION — sorting in the circuit HIERARCHY view.
- *
- * The hierarchy rows are a derivation TREE (roots carrying `sub_circuits`) whose order
- * is structural, and the view-aware data source ignores `order_by` there. The legacy
- * antd listing therefore withheld `sortState`/`setSortState` from `useDataTableColumns`
- * in hierarchy view, so the headers offered no sort at all. The migrated grid kept the
- * headers sortable, so a click changed sort state without changing a single row.
- *
- * The fix is the schema-level contextual `IGridSchema.sortable` gate, resolved by
- * `resolveColumns`. FLAT view must be untouched.
+ * Regression: hierarchy-view row order is structural and the data source ignores
+ * `order_by` there, but the migrated grid kept its headers sortable — a click changed
+ * sort state without changing a row. Fixed by the contextual `IGridSchema.sortable` gate;
+ * flat view must be untouched.
  */
 function context(over: Partial<IGridContext> = {}): IGridContext {
   return { dataType: 'circuit', section: WorkspaceSection.Data, scope: 'public', ...over };
@@ -62,7 +56,6 @@ describe('circuit — sorting is off in hierarchy view', () => {
       .filter((c) => c.filterAvailable)
       .map((c) => c.id);
     expect(ids.length).toBeGreaterThan(0);
-    // filtering is a server concern in BOTH views, so the gate must not touch it
     expect(filterable).toEqual(expect.arrayContaining(flatFilterable));
   });
 });

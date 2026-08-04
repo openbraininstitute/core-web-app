@@ -38,7 +38,7 @@ type UniversalRow = ICellMorphology & {
   } | null;
 };
 
-/** {key → label} from a `{ Foo: { key, label } }` dict, for value display + static filter options. */
+/** `{key → label}` plus static filter options from a `{ Foo: { key, label } }` dict. */
 function dictEntries(dict: Record<string, { key: string; label: string }>) {
   const values = Object.values(dict);
   const labelByKey = new Map(values.map((v) => [v.key, v.label] as const));
@@ -52,21 +52,15 @@ function dictEntries(dict: Record<string, { key: string; label: string }>) {
 const generation = dictEntries(CellMorphologyGenerationType);
 const protocol = dictEntries(CellMorphologyProtocolDesign);
 
-/**
- * The generation-type / protocol-design columns are contextual: the legacy listing
- * only shows them for `universal_cell_morphology` in the build-workflow section, so
- * they are dropped from the data-browse listing. Modelled here with the contextual
- * `available` rule — the data section resolves them away, matching legacy.
- */
+/** Turns the generation-type / protocol-design columns on in the build-workflow section only. */
 const availableInBuildWorkflow = byContext<boolean>({
   default: false,
   rules: [{ when: { section: WorkspaceSection.BuildWorkflow }, value: true }],
 });
 
 /**
- * The mirror image of {@link availableInBuildWorkflow}: an advanced filter that
- * duplicates a contextual COLUMN must disappear exactly where that column appears,
- * or the same field would be offered twice in the same view.
+ * The mirror of {@link availableInBuildWorkflow}: an advanced filter duplicating a
+ * contextual column must disappear exactly where that column appears.
  */
 const availableOutsideBuildWorkflow = byContext<boolean>({
   default: true,
@@ -74,15 +68,10 @@ const availableOutsideBuildWorkflow = byContext<boolean>({
 });
 
 /**
- * ADVANCED FILTERS — `GET /cell-morphology` params with no column in this grid.
- * Every field/operator pair was checked against the live OpenAPI spec; the emitted
- * param is named in each comment.
- *
- * Unlike the `cell_morphology` and `synthesized_cell_morphology` listings, the
- * universal one applies NO narrow filter in its entity domain config
- * (`UniversalCellMorphology.api.query.list` forwards `filters` untouched), so the
- * whole `cell_morphology_protocol__generation_type` family is safe to offer,
- * `__not_in` included — nothing pins it as a host param.
+ * `GET /cell-morphology` params with no column. Unlike the sibling morphology
+ * listings, this one pins no narrow filter in its domain config, so the whole
+ * `cell_morphology_protocol__generation_type` family is safe to offer, `__not_in`
+ * included.
  */
 const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -94,7 +83,6 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
         id: 'generationType',
         label: 'Generation type',
         field: 'cell_morphology_protocol__generation_type',
-        // `…__in`, `…__not_in`, `…` (exact)
         operators: [OperatorId.In, OperatorId.NotIn, OperatorId.Eq],
         options: generation.options,
         // has its own column in the build workflow
@@ -104,7 +92,6 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
         id: 'protocolDesign',
         label: 'Protocol design',
         field: 'cell_morphology_protocol__protocol_design',
-        // `…__in`, `…__not_in`, `…` (exact)
         operators: [OperatorId.In, OperatorId.NotIn, OperatorId.Eq],
         options: protocol.options,
         description: 'Experimental or computational design of the protocol',
@@ -115,7 +102,6 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
         id: 'protocolName',
         label: 'Protocol name',
         field: 'cell_morphology_protocol__name',
-        // `…__ilike`, `…__in`, `…` (exact)
         operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
         freeEntry: FreeEntryKind.Text,
         placeholder: 'Enter a protocol name',
@@ -124,7 +110,6 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
         id: 'protocolDocument',
         label: 'Protocol document',
         field: 'cell_morphology_protocol__protocol_document',
-        // `…__ilike`, `…__in`, `…` (exact)
         operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
         freeEntry: FreeEntryKind.Text,
         description: 'Reference document describing the protocol',
@@ -134,7 +119,6 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
         id: 'protocolId',
         label: 'Protocol ID',
         field: 'cell_morphology_protocol__id',
-        // `…__id__in`
         operators: [OperatorId.In],
         description: 'Exact protocol entity id',
       },
@@ -149,7 +133,6 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
       {
         id: 'hasSegmentedSpines',
         label: 'Segmented spines',
-        // `has_segmented_spines` (boolean)
         field: 'has_segmented_spines',
         operators: [OperatorId.Bool],
         description: 'Whether dendritic spines are segmented in the reconstruction',
@@ -159,10 +142,8 @@ const universalCellMorphologyAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup
 ];
 
 /**
- * Universal cell morphology listing. Same base columns as cell_morphology (but
- * M-type is not server-sortable here, matching the legacy order binding, and there
- * is NO generation-type narrow filter). Adds the two build-workflow-only dropdown
- * columns.
+ * Universal cell morphology listing (`GET /cell-morphology`, unnarrowed). Adds two
+ * build-workflow-only columns; see {@link availableInBuildWorkflow}.
  */
 export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
   id: 'universal-cell-morphology',
@@ -170,7 +151,6 @@ export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(universalCellMorphologyAdvancedFilters),
   columns: [
     previewColumn<UniversalRow>({
@@ -179,8 +159,7 @@ export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
     }),
     brainRegionColumn<UniversalRow>(),
     speciesColumn<UniversalRow>(),
-    // `mtype__pref_label` is in CellMorphologyFilter.Constants.ordering_model_fields,
-    // which /cell-morphology serves for universal too — so it IS server-sortable.
+    // `mtype__pref_label` is in this endpoint's ordering fields, so M-type sorts.
     mtypeColumn<UniversalRow>(),
     nameColumn<UniversalRow>(),
     {

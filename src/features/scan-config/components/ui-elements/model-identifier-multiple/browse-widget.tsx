@@ -273,15 +273,6 @@ export function ModelIdentifierBrowseWidget({
         />
       ) : null}
 
-      {/*
-        NO FLOATING CLOSE HERE. This column's first child is the browse grid, so an
-        `absolute top-1 right-0 z-20` button landed on top of the grid TOOLBAR's
-        right-hand controls — a stray X drawn over the column-chooser pill. It was
-        also redundant: `SelectionConfirmActions` renders a visible **Cancel** wired
-        to this same `onCancel` on BOTH branches below — in the cart footer when
-        `showCart`, in the inline action bar when not — so cancelling is always one
-        click away from a control that has a place in the layout.
-      */}
       <div className="relative flex min-h-0 flex-col overflow-hidden bg-white pl-0">
         <div
           className={cn('grid min-h-0 flex-1 gap-2 overflow-hidden', {

@@ -1,8 +1,6 @@
 /**
- * The column chooser lists AUXILIARY columns apart, below a hairline SEPARATOR (no
- * label), after the regular ones — they are opt-in fields, not columns the grid is
- * about — and ticking one is an ordinary visibility change (it just also moves that
- * field's filter out of the advanced-filters panel; see `resolveFilterPanelGroups`).
+ * Pins how the column chooser presents auxiliary columns: below a hairline separator,
+ * after the regular ones, and ticking one is an ordinary visibility change.
  */
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useSyncExternalStore } from 'react';
@@ -34,9 +32,8 @@ const COLUMNS: Array<IColumnModel<Row>> = [
 const SCHEMA: IGridSchema<Row> = { id: 'test', getRowId: (r) => r.id, columns: COLUMNS };
 
 /**
- * The chooser is a controlled view of the store, so the harness SUBSCRIBES rather
- * than passing a frozen snapshot: a click has to be observable as re-rendered
- * checkboxes, not only as a dispatched action.
+ * The chooser is a controlled view of the store, so the harness subscribes rather than
+ * passing a frozen snapshot — a click must be observable as re-rendered checkboxes.
  */
 function Harness({ controller }: { controller: GridController<Row> }) {
   const state = useSyncExternalStore(
@@ -67,14 +64,11 @@ describe('column chooser — auxiliary columns', () => {
     expect(separators).toHaveLength(2);
     const separator = separators[1];
 
-    // no heading text — the break is purely visual
     expect(screen.queryByText('More columns')).not.toBeInTheDocument();
 
-    // the regular columns are ticked, the auxiliary one is not
     expect(screen.getByRole('checkbox', { name: 'Brain region' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Strain' })).not.toBeChecked();
 
-    // …and the auxiliary checkbox comes AFTER the separator in document order
     expect(
       separator.compareDocumentPosition(screen.getByRole('checkbox', { name: 'Strain' }))
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
@@ -93,14 +87,9 @@ describe('column chooser — auxiliary columns', () => {
 });
 
 /**
- * "Select all" is a TRI-STATE control over the same `hiddenColumns` state the
- * per-column checkboxes write — there is no second source of truth.
- *
- * The BULK deselect is conservative: it keeps the schema's ESSENTIAL columns (or, when
- * a schema marks none, the first non-auxiliary one). The INDIVIDUAL checkboxes are
- * unrestricted, so an empty grid stays reachable deliberately but never in one click.
- * The tri-state always reports ACTUAL visibility, which is why a bulk deselect lands
- * on indeterminate rather than unchecked.
+ * "Select all" is a tri-state control over the same `hiddenColumns` state the per-column
+ * checkboxes write; its bulk deselect keeps the essential columns, so it reports
+ * indeterminate rather than unchecked.
  */
 describe('column chooser — select all', () => {
   const selectAll = () => screen.getByRole('checkbox', { name: 'Select all' });
@@ -114,7 +103,6 @@ describe('column chooser — select all', () => {
 
   it('is indeterminate while the auxiliary column is hidden', async () => {
     await open();
-    // the auxiliary column starts hidden ⇒ mixed
     expect(selectAll()).not.toBeChecked();
     expect(selectAll()).toHaveAttribute('aria-checked', 'mixed');
   });
@@ -137,7 +125,6 @@ describe('column chooser — select all', () => {
     expect(controller.store.getSnapshot().hiddenColumns).toEqual(['species', 'strainName']);
     expect(screen.getByRole('checkbox', { name: 'Brain region' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Species' })).not.toBeChecked();
-    // something is still visible ⇒ mixed, not unchecked
     expect(selectAll()).toHaveAttribute('aria-checked', 'mixed');
   });
 
@@ -154,7 +141,6 @@ describe('column chooser — select all', () => {
     fireEvent.click(selectAll());
     fireEvent.click(selectAll());
 
-    // the marked set wins over the fallback — even the auxiliary one, if marked
     expect(controller.store.getSnapshot().hiddenColumns).toEqual(['brainRegion']);
     expect(screen.getByRole('checkbox', { name: 'Species' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Strain' })).toBeChecked();
@@ -165,7 +151,6 @@ describe('column chooser — select all', () => {
     fireEvent.click(selectAll()); // → all visible
     fireEvent.click(selectAll()); // → Brain region only, the fallback essential
 
-    // the guard binds the BULK action only: its own checkbox still hides it
     fireEvent.click(screen.getByRole('checkbox', { name: 'Brain region' }));
 
     expect(controller.store.getSnapshot().hiddenColumns).toEqual([

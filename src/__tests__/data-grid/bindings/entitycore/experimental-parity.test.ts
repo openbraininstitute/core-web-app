@@ -25,10 +25,8 @@ import type {
 } from '@/features/data-grid/core';
 
 /**
- * Per-entity parity harness for the experimental batch: locks the serialized query
- * params (filters → `field__op`, sort → order_by) and the context-resolved column
- * set/order to the legacy listing, the two invariants that guarantee no regression.
- * The exact legacy constraint keys are the source of truth (from the field-defs).
+ * Parity harness for the experimental schemas: locks the serialized query params and the
+ * context-resolved column set/order to the legacy field-defs and view-defs.
  */
 
 function query(over: Partial<IGridQuery> = {}): IGridQuery {
@@ -82,7 +80,7 @@ describe('electrical_cell_recording parity', () => {
       'lifecycleStatus',
       'contributions',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser
+      // auxiliary — hidden until ticked in the chooser
       'recordingType',
       'recordingOrigin',
       'strainName',
@@ -105,7 +103,6 @@ describe('electrical_cell_recording parity', () => {
       '%foo%'
     );
 
-    // ElectricalCellRecordingFilter.Constants.ordering_model_fields lists none of them
     for (const id of aux) {
       expect(s.columns.find((c) => c.id === id)?.sortable).toBe(false);
     }
@@ -160,7 +157,7 @@ describe('ion_channel_recording parity', () => {
       'lifecycleStatus',
       'contributions',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser
+      // auxiliary — hidden until ticked in the chooser
       'ionChannelLabel',
       'ionChannelGene',
       'validationPassed',
@@ -311,7 +308,7 @@ describe('experimental_neuron_density parity', () => {
       'lifecycleStatus',
       'contributions',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'strainName',
       'subjectName',
     ]);
@@ -383,7 +380,7 @@ describe('synthesized_cell_morphology parity', () => {
       'lifecycleStatus',
       'contributions',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'generationType',
       'protocolDesign',
       'protocolName',
@@ -433,7 +430,6 @@ describe('synthesized_cell_morphology parity', () => {
   });
 
   it('sortability follows CellMorphologyFilter ordering_model_fields exactly', () => {
-    // IN the allowlist
     for (const id of [
       'generationType',
       'protocolName',
@@ -443,7 +439,7 @@ describe('synthesized_cell_morphology parity', () => {
     ]) {
       expect(s.columns.find((c) => c.id === id)?.sortable).toBe(true);
     }
-    // NOT in it — an order_by outside the list is a hard 422
+    // an order_by outside the allowlist is a hard 422
     expect(s.columns.find((c) => c.id === 'protocolDesign')?.sortable).toBe(false);
     expect(s.columns.find((c) => c.id === 'protocolDocument')?.sortable).toBe(false);
     expect(serializeQuery(query(sortDesc('protocolName')), s).order_by).toEqual([
@@ -493,7 +489,7 @@ describe('experimental_bouton_density parity', () => {
       'numberOfMeasurements',
       'lifecycleStatus',
       'contributions',
-      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      // auxiliary — hidden until ticked in the chooser
       'name',
       'strainName',
       'subjectName',
@@ -549,7 +545,7 @@ describe('experimental_synapses_per_connection parity', () => {
       'subjectAge',
       'lifecycleStatus',
       'contributions',
-      // AUXILIARY — declared, hidden until ticked in the chooser
+      // auxiliary — hidden until ticked in the chooser
       'name',
       'brainRegionName',
       'brainRegionAcronym',
@@ -572,7 +568,6 @@ describe('experimental_synapses_per_connection parity', () => {
     // `name` is legitimate as a column HERE: this listing has no Name column
     expect(serializeQuery(query({ filters: ilike('name') }), s).name__ilike).toBe('%foo%');
     expect(serializeQuery(query({ filters: setIn('name') }), s).name__in).toEqual(['x']);
-    // the record's OWN brain region, free-entry (the facets here are the pre/post ones)
     expect(
       serializeQuery(query({ filters: ilike('brainRegionName') }), s).brain_region__name__ilike
     ).toBe('%foo%');
@@ -618,7 +613,6 @@ describe('experimental_synapses_per_connection parity', () => {
   });
   it('mean ± std is not sortable, but subject age is', () => {
     expect(s.columns.find((c) => c.id === 'meanStd')?.sortable).toBeFalsy();
-    // `subject__age_value` IS in ExperimentalSynapsesPerConnectionFilter's ordering fields.
     expect(s.columns.find((c) => c.id === 'subjectAge')?.sortable).toBe(true);
     expect(serializeQuery(query(sortDesc('subjectAge')), s).order_by).toEqual([
       '-subject__age_value',
@@ -637,7 +631,7 @@ describe('em_cell_mesh parity', () => {
       'emDataset',
       'lifecycleStatus',
       'registrationDate',
-      // AUXILIARY — declared, hidden until ticked in the chooser
+      // auxiliary — hidden until ticked in the chooser
       'meshType',
       'levelOfDetail',
       'mtype',
@@ -722,7 +716,6 @@ describe('em_cell_mesh parity', () => {
       serializeQuery(query({ filters: setIn('emDataset') }), s)
         .em_dense_reconstruction_dataset__name__in
     ).toEqual(['x']);
-    // `subject__species__name` is in EMCellMeshFilter.Constants.ordering_model_fields.
     expect(s.columns.find((c) => c.id === 'species')?.sortable).toBe(true);
     expect(serializeQuery(query(sortDesc('species')), s).order_by).toEqual([
       '-subject__species__name',

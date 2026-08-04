@@ -28,10 +28,9 @@ import type { IBrowseEntityGridProps } from '../../host/browse-entity-grid';
 import type { CellRendererRegistry, TDetailRenderFn } from '../../react';
 
 /**
- * An entity grid definition pairs a re-authored {@link IGridSchema} (table
- * presentation) with a `dataType`. The query layer (endpoint, narrowFilters,
- * search mode, facets) is NOT duplicated here — the data source reads it from the
- * entity's domain config via `dataType`, keeping a single source of truth.
+ * Pairs an {@link IGridSchema} with a `dataType`. The query layer (endpoint,
+ * narrowFilters, search mode, facets) is not duplicated here: the data source reads it
+ * from the entity's domain config via `dataType`.
  */
 export interface IEntityGridDefinition<Row> {
   /** ExtendedEntitiesTypeDict value; routes the host AND keys the domain config */
@@ -42,10 +41,8 @@ export interface IEntityGridDefinition<Row> {
   /** renderer for the schema's `detail` spec (full-width expanded rows) */
   renderDetail?: TDetailRenderFn<Row>;
   /**
-   * Optional custom-entity PLUGIN body. When present, `BrowseEntityGrid` renders it
-   * instead of the shared `EntityDataGrid`; the body owns its own state and wraps
-   * `EntityDataGrid` with strategy overrides (e.g. circuit's flat↔hierarchy toggle
-   * + recursive subcircuit expansion). Absent for standard entities (unchanged).
+   * Custom plugin body rendered instead of the shared `EntityDataGrid`; it owns its own
+   * state and wraps `EntityDataGrid` with strategy overrides.
    */
   plugin?: { Body: FC<IBrowseEntityGridProps> };
 }
@@ -54,10 +51,9 @@ export interface IEntityGridDefinition<Row> {
 export type TAnyEntityGridDefinition = IEntityGridDefinition<any>;
 
 /**
- * dataType → grid definition, built statically from the authored schema modules.
- * This is THE per-entity flip switch: a registered dataType routes
- * `BrowseEntityScope` to the AG Grid host; removing the entry rolls it back to the
- * legacy antd table. Grows one entry per re-authored entity.
+ * dataType → grid definition. Per-entity flip switch: a registered dataType routes
+ * `BrowseEntityScope` to the AG Grid host, removing the entry falls back to the legacy
+ * antd table.
  */
 const definitions: Record<string, TAnyEntityGridDefinition> = {
   [cellMorphologyGridDefinition.dataType]: cellMorphologyGridDefinition,
@@ -70,30 +66,20 @@ const definitions: Record<string, TAnyEntityGridDefinition> = {
   [experimentalSynapsesPerConnectionGridDefinition.dataType]:
     experimentalSynapsesPerConnectionGridDefinition,
   [emCellMeshGridDefinition.dataType]: emCellMeshGridDefinition,
-  // Group 2 — ME/E-model + synaptome model listings (preview-heavy).
   [emodelGridDefinition.dataType]: emodelGridDefinition,
   [memodelGridDefinition.dataType]: memodelGridDefinition,
   [meModelCircuitGridDefinition.dataType]: meModelCircuitGridDefinition,
   [singleNeuronSynaptomeGridDefinition.dataType]: singleNeuronSynaptomeGridDefinition,
-  // Group 3 — ion-channel model (boolean/temperature facets).
   [ionChannelModelGridDefinition.dataType]: ionChannelModelGridDefinition,
-  // Group 7 — analysis-notebook template + result listings.
   [analysisNotebookTemplateGridDefinition.dataType]: analysisNotebookTemplateGridDefinition,
   [analysisNotebookResultGridDefinition.dataType]: analysisNotebookResultGridDefinition,
   [extracellularRecordingArrayGridDefinition.dataType]: extracellularRecordingArrayGridDefinition,
   [singleNeuronSimulationGridDefinition.dataType]: singleNeuronSimulationGridDefinition,
   [singleNeuronSynaptomeSimulationGridDefinition.dataType]:
     singleNeuronSynaptomeSimulationGridDefinition,
-  // Circuit-family plain models (micro/small-micro/paired-neuron/whole-brain/single-neuron
-  // circuits + the brain-region browse) flipped to the shared AG Grid stack. Flat listings,
-  // NO recursive-subcircuit plugin. Rollback = remove this spread.
   ...Object.fromEntries(circuitModelGridDefinitions.map((def) => [def.dataType, def])),
-  // T-05: expandable circuit-simulation dataTypes flipped to full-width detail rows.
   ...Object.fromEntries(circuitSimulationGridDefinitions.map((def) => [def.dataType, def])),
-  // Generic simulation_campaign listing (Data → Simulations): badge + scan-cards popover.
   [simulationCampaignGridDefinition.dataType]: simulationCampaignGridDefinition,
-  // Circuit listing flipped onto the shared stack via a PLUGIN body (flat↔hierarchy
-  // toggle + recursive subcircuit expansion). Rollback = remove this one line.
   [circuitGridDefinition.dataType]: circuitGridDefinition,
 };
 

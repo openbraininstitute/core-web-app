@@ -69,9 +69,8 @@ const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 const EMPTY_CELL_RENDERERS = new CellRendererRegistry();
 
 /**
- * Vertically-centre cells (parity with the server `AgGridRenderer`). Making cells flex
- * is ALSO what lets `justify-content` (the center/right alignment classes) work — a
- * plain block cell ignores `justify-content`, so aligned cells would read left.
+ * Vertically-centre cells. Making them flex is also what lets `justify-content` (the
+ * center/right alignment classes) work — a plain block cell ignores it.
  */
 const IM_DEFAULT_COL_DEF: ColDef = {
   cellStyle: { display: 'flex', alignItems: 'center' },
@@ -81,10 +80,9 @@ const IM_DEFAULT_COL_DEF: ColDef = {
 const EMPTY_QUERY_KEY: ReadonlyArray<unknown> = [];
 
 /**
- * Fallback React Query client used ONLY in client mode, so the always-called
- * `useQuery` (rules of hooks) never requires a `QueryClientProvider` in the tree —
- * keeping every existing client-mode consumer working unchanged. Server mode uses
- * the app's real provider client (passing `undefined` reads it from context).
+ * Fallback client used only in client mode, so the always-called `useQuery` (rules of
+ * hooks) never requires a `QueryClientProvider`. Server mode passes `undefined` and
+ * reads the app's real client from context.
  */
 let fallbackQueryClient: QueryClient | undefined;
 function getFallbackQueryClient(): QueryClient {
@@ -110,9 +108,8 @@ function isDetailRow<Row>(row: unknown): row is InMemoryDetailRow<Row> {
 }
 
 /**
- * Configurable expander. When {@link columnId} is given the chevron renders INSIDE
- * that column's cell (right by default, vertically centred); otherwise it falls
- * back to a fixed leading column. `render` overrides the default chevron.
+ * Configurable expander: with {@link columnId} the chevron renders inside that
+ * column's cell, otherwise in a fixed leading column.
  */
 export interface IExpandColumnConfig<Row> {
   /** id of the data column that hosts the expander; omit for a leading column. */
@@ -136,11 +133,9 @@ export interface IInMemoryGridProps<Row> {
   getRowId?: (row: Row) => string;
   // ── server mode (opt-in) ──────────────────────────────────────────────────────
   /**
-   * When provided, the grid switches to SERVER mode: sort/filter/pagination
-   * dispatch to the store → the serialized {@link IGridQuery} changes → React Query
-   * refetches via `dataSource.fetch(query, signal)`. The data source owns
-   * filtering/sorting/paging; `rows` is ignored and `computeInMemoryFacets`/
-   * `runInMemoryQuery` are NOT run. Absent → the existing client behavior.
+   * Switches the grid to server mode: sort/filter/pagination changes the serialized
+   * {@link IGridQuery} and React Query refetches via `dataSource.fetch`. `rows` is
+   * ignored and the in-memory query/facet helpers are not run.
    */
   dataSource?: IGridDataSource<Row>;
   /** Stable base React Query key; the built query is appended so changes refetch. */
@@ -160,9 +155,8 @@ export interface IInMemoryGridProps<Row> {
   /** show the column show/hide chooser control (default: false). */
   showColumnChooser?: boolean;
   /**
-   * Notified whenever the user shows/hides columns (via the chooser). Lets a host
-   * (e.g. a recursive grid) mirror the hidden set into nested grids so the whole
-   * tree stays column-consistent.
+   * Notified when the user shows/hides columns, so a host can mirror the hidden set
+   * into nested grids and keep the tree column-consistent.
    */
   onHiddenColumnsChange?: (hidden: string[]) => void;
   /** enable store-driven sorting via the custom header (default: false). */
@@ -211,9 +205,9 @@ interface InMemoryDetailContext<Row> {
 }
 
 /**
- * Full-width detail cell (module-level so its hooks are top-level). Reads its
- * render fn from `context.imDetail`, mounts the content and forwards the measured
- * height to the AG Grid row node so nested grids never clip or jitter.
+ * Full-width detail cell (module-level so its hooks are top-level). Reads its render
+ * fn from `context.imDetail` and forwards the measured height to the AG Grid row
+ * node so nested grids never clip.
  */
 function InMemoryDetailCell<Row>(props: ICellRendererParams<TDisplayRow<Row>>) {
   const ref = useRef<HTMLDivElement>(null);
@@ -239,11 +233,10 @@ function InMemoryDetailCell<Row>(props: ICellRendererParams<TDisplayRow<Row>>) {
 }
 
 /**
- * A depth-limited, headless in-memory grid engine shared by `SimpleGrid`'s
- * enhanced mode and `CircuitRecursiveGrid`. Builds a {@link GridController} + an
- * in-memory query over `rows` and renders through AG Grid with the SAME custom
- * header filters, column chooser, sorting, resizing and pagination as the
- * entity grid — no AG-native filter/menu UI.
+ * A headless in-memory grid engine shared by `SimpleGrid`'s enhanced mode and
+ * `CircuitRecursiveGrid`. Builds a {@link GridController} plus an in-memory query over
+ * `rows` and renders through AG Grid with the entity grid's own header filters,
+ * column chooser, sorting, resizing and pagination — no AG-native filter/menu UI.
  */
 export function InMemoryGrid<Row>({
   columns,
@@ -301,8 +294,8 @@ export function InMemoryGrid<Row>({
     [getRowId]
   );
 
-  // Structural signature: rebuild the controller (and reset its state) only when the
-  // columns' identity/order or the sort/page config change — not on every render.
+  // Rebuild the controller only when the columns' identity/order or the sort/page
+  // config change — not on every render.
   const signature = useMemo(
     () =>
       [
@@ -335,13 +328,11 @@ export function InMemoryGrid<Row>({
   const isServerMode = Boolean(dataSource);
   const query = buildGridQuery(state, serverParams);
 
-  // Server mode: fetch via React Query keyed on the serialized query so sort/filter/
-  // page changes refetch. The hook is ALWAYS called (rules of hooks) and gated by
-  // `enabled`; in client mode it stays disabled and never touches the network. The
-  // fallback client (client mode) means no `QueryClientProvider` is required.
+  // Keyed on the serialized query so sort/filter/page changes refetch. Always called
+  // (rules of hooks) and gated by `enabled`; in client mode it stays disabled.
   const serverResult = useQuery(
     {
-      // host overrides first; the grid's key/fn + enabled/placeholder defaults win
+      // host overrides first; the grid's key/fn and enabled default must win
       placeholderData: keepPreviousData,
       ...serverQueryOptions,
       queryKey: [...(queryKey ?? EMPTY_QUERY_KEY), query],
@@ -352,7 +343,7 @@ export function InMemoryGrid<Row>({
     isServerMode ? undefined : getFallbackQueryClient()
   );
 
-  // TFacets: client mode computes from the FULL row set so set-filter options stay
+  // Client mode computes facets from the full row set so set-filter options stay
   // stable as the grid narrows; server mode reads them off the fetched page.
   const clientFacets = useMemo(
     () => (filterable && !isServerMode ? computeInMemoryFacets(rows, columns) : undefined),
@@ -360,8 +351,7 @@ export function InMemoryGrid<Row>({
   );
   const facets: TFacets | undefined = isServerMode ? serverResult.data?.facets : clientFacets;
 
-  // Page: client mode filters/sorts/paginates in memory; server mode uses the
-  // fetched page (the data source already did it) with a `total` fallback.
+  // Client mode filters/sorts/paginates in memory; server mode uses the fetched page.
   const clientPage = useMemo(
     () => runInMemoryQuery(rows, query, { columns, disablePagination: !pagination }),
     [rows, query, columns, pagination]
@@ -387,7 +377,6 @@ export function InMemoryGrid<Row>({
     if (facets && api && !api.isDestroyed()) api.refreshHeader();
   }, [facets]);
 
-  // Report column show/hide changes so a host can mirror them into nested grids.
   // Guard on the serialized set so we don't re-notify (or loop) on unrelated renders.
   const lastHiddenKey = useRef<string | null>(null);
   useEffect(() => {
@@ -400,15 +389,11 @@ export function InMemoryGrid<Row>({
 
   // ── column defs ──────────────────────────────────────────────────────────────
   const hidden = useMemo(() => new Set(state.hiddenColumns), [state.hiddenColumns]);
-  // The store's `columnOrder` comes from the CONTEXT-RESOLVED schema, while these
-  // `columns` are the props as declared — a column dropped by a contextual gate is
-  // therefore missing from the order yet still rendered. Reconciling (rather than
-  // sorting by stored index) keeps it in its declared slot instead of appending it
-  // after every other column. A NON-MOVABLE column (`movable: false`) is dropped from
-  // the stored order first, for the same reason as in `ag-grid-renderer`: AG Grid
-  // still reports a position for it whenever a neighbour is dragged past it, and its
-  // DECLARED slot has to win. The nested circuit grid renders exactly such a column
-  // (the Subcircuits expander host), so this is not hypothetical here.
+  // The store's `columnOrder` comes from the context-resolved schema while `columns`
+  // are the props as declared, so a contextually-dropped column is missing from the
+  // order yet still rendered; reconciling keeps it in its declared slot rather than
+  // appended last. Non-movable columns are dropped from the stored order first
+  // because AG Grid reports a position for them when a neighbour is dragged past.
   const orderedColumns = useMemo(() => {
     const byId = new Map(columns.map((c) => [c.id, c] as const));
     return reconcileColumnOrder(
@@ -434,8 +419,6 @@ export function InMemoryGrid<Row>({
       return (
         <button
           type="button"
-          // same rounded pill + hover/focus (primary-8 bg, white glyph) as the shared
-          // ExpandToggleButton, so the expander looks identical at every table level.
           data-grid-expander=""
           aria-label={open ? 'Collapse row' : 'Expand row'}
           aria-expanded={open}
@@ -465,8 +448,6 @@ export function InMemoryGrid<Row>({
 
     const defs = orderedColumns.map((c) => {
       const userWidth = state.columnWidths[c.id];
-      // Every target the column declares is offered (a legacy flat filter resolves
-      // to exactly one target).
       const targets = filterable ? resolveFilterTargets(c) : [];
       const filterParams = targets.length > 0 ? { targets } : undefined;
 
@@ -486,7 +467,6 @@ export function InMemoryGrid<Row>({
         width: userWidth ?? c.width?.width,
         minWidth: c.width?.minWidth,
         flex: userWidth != null || c.width?.width != null ? undefined : c.width?.flex,
-        // resizable by default (parity with the legacy table + the basic path); opt out per column
         resizable: c.width?.resizable ?? true,
         pinned: c.pinned,
         autoHeight: c.autoHeight,
@@ -537,8 +517,7 @@ export function InMemoryGrid<Row>({
         colDef.field = (c.field ?? c.id) as ColDef<TDisplayRow<Row>>['field'];
       }
 
-      // Plain-value columns show the shared placeholder instead of a blank cell;
-      // inline-rendered, expander-host and deliberately-blank columns are left alone.
+      // Inline-rendered, expander-host and deliberately-blank columns are left alone.
       if (!baseRender && !isHost && !keepsBlankWhenEmpty(c)) withEmptyPlaceholder(colDef);
 
       return colDef;
@@ -588,8 +567,7 @@ export function InMemoryGrid<Row>({
 
   const initialDetailHeight = expansion?.initialHeight ?? 96;
   const detailRender = expansion?.renderDetail;
-  // Thread the detail config through AG Grid's context so the module-level
-  // full-width cell (with its own hooks) can read it.
+  // Threaded through AG Grid's context so the module-level full-width cell reads it.
   const gridContext = useMemo(
     () => ({
       ...agContext,
@@ -673,8 +651,7 @@ export function InMemoryGrid<Row>({
   );
 
   const showChooser = showColumnChooser;
-  // server mode paginates via the data source → always show the pager; client mode
-  // keeps the opt-in `pagination` flag.
+  // Server mode paginates via the data source, so the pager always shows.
   const showPagination = pagination || isServerMode;
 
   if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
@@ -693,7 +670,6 @@ export function InMemoryGrid<Row>({
           '[&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none!',
           // center/right aligned cells must justify (flex cells ignore text-align)
           '[&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end!',
-          // single-select renders the selection control as a radio (round + dot)
           rowSelection?.mode === SelectionMode.Single && SINGLE_SELECT_RADIO_CLASS,
           gridClassName
         )}
@@ -713,12 +689,9 @@ export function InMemoryGrid<Row>({
           loadingOverlayComponentParams={{ label: loadingLabel ?? 'entities' }}
           suppressCellFocus
           suppressDragLeaveHidesColumns
-          // NB: `maintainColumnOrder` is deliberately NOT set — see the same note in
-          // `ag-grid-renderer`. It matters even more here: the nested circuit grid is
-          // handed the PARENT's visible columns, so its column set changes every time
-          // the user ticks a box in the chooser, and AG Grid would append each
-          // re-shown column after all the others — knocking every nested level out of
-          // alignment with the parent listing it is supposed to mirror.
+          // `maintainColumnOrder` is deliberately NOT set: this grid's column set
+          // changes whenever the chooser is ticked, and AG Grid would append each
+          // re-shown column after all the others.
           animateRows={false}
           isFullWidthRow={(p) => isDetailRow(p.rowNode.data)}
           fullWidthCellRenderer={InMemoryDetailCell}
@@ -732,11 +705,9 @@ export function InMemoryGrid<Row>({
           onColumnResized={onColumnResized}
           onCellClicked={(e) => {
             if (!onRowClick) return;
-            // expander click (here or bubbled from a nested grid) must not open the row
             if (isExpanderClick(e.event)) return;
-            // clicks on interactive cell content (per-row download button, links, …)
-            // never open the row. AG's own listener fires BEFORE any React handler,
-            // so a stopPropagation inside the cell can't protect us — guard here.
+            // AG's own listener fires BEFORE any React handler, so a stopPropagation
+            // inside an interactive cell can't protect us — guard here.
             if (isInteractiveClick(e.event)) return;
             const colId = e.column.getColId();
             if (SYNTHETIC_COL_IDS.has(colId)) return;

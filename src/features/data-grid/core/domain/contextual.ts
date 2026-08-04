@@ -1,25 +1,10 @@
 import type { IGridContext, TGridContextValue } from './grid-context';
 
 /**
- * Context-aware presentation resolution.
+ * Context-aware presentation resolution: any schema facet (column availability,
+ * order, default visibility, …) may vary with the runtime {@link IGridContext}.
  *
- * A {@link TContextualValue} lets any schema facet (column availability, order,
- * default visibility, filter availability, …) vary with the runtime
- * {@link IGridContext} — the successor to the legacy `matchesFieldApiWhen` /
- * `resolveContextualValue` engine, generalised so it is:
- *
- * - **extensible** — `when` matches ANY context key, including forward-compatible
- *   {@link IGridContext.factors} (role, feature flag, view variant, device…), so a
- *   new factor needs no change here: add it to the context and rules can match it.
- * - **declarative & inspectable** — the rule form is plain data (serialisable,
- *   debuggable, diffable), not an opaque closure.
- * - **composable** — {@link mergeContextual} layers a per-use override on a shared
- *   catalog default, so the column catalog can ship sensible defaults that a
- *   specific entity schema refines.
- * - **efficient** — resolution is a linear scan of a column's own rules; no
- *   allocation beyond the flattened context, and callers resolve once per context.
- *
- * Three authoring forms, in increasing power (all interchangeable):
+ * Three interchangeable authoring forms, in increasing power:
  * 1. a constant `T` — `available: true`
  * 2. a predicate `(ctx) => T` — imperative escape hatch
  * 3. a {@link IContextualSpec} via {@link byContext} — declarative rules
@@ -146,14 +131,9 @@ export function resolveContextual<T>(value: TContextualValue<T>, ctx: IGridConte
 }
 
 /**
- * Layer an override contextual value on top of a base one. Used so a shared column
- * catalog can declare a default rule set that a specific entity schema extends:
- * the override's rules are evaluated AFTER the base's, so they win on conflict,
- * while the base's rules still apply where the override is silent.
- *
- * - both declarative → merged spec (base rules then override rules; override
- *   `default` wins if set)
- * - override constant/function → replaces the base outright (explicit intent)
+ * Layer an override contextual value on top of a base one, so a shared column catalog
+ * default can be refined per schema. Both declarative → merged spec, override rules
+ * last so they win. An override constant/function replaces the base outright.
  */
 export function mergeContextual<T>(
   base: TContextualValue<T> | undefined,

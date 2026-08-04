@@ -15,10 +15,8 @@ import type { CellRendererRegistry } from '../../../react';
 import type { IEntityGridDefinition } from '../registry';
 
 /**
- * ME-model-circuit listing. `me_model_circuit` reuses the ME-model view-def
- * (`ViewDefForMemodel`) verbatim — same rows (`IMEModel`), same columns, filters and
- * sorts — differing only in `dataType`. The shared {@link buildMemodelColumns} and
- * {@link memodelAdvancedFilters} keep the two in lockstep.
+ * ME-model-circuit listing. Identical to the ME-model listing but for `dataType`, so it
+ * reuses {@link buildMemodelColumns} and {@link memodelAdvancedFilters}.
  */
 export const meModelCircuitSchema: IGridSchema<IMEModel> = {
   id: 'me-model-circuit',
@@ -26,7 +24,6 @@ export const meModelCircuitSchema: IGridSchema<IMEModel> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(memodelAdvancedFilters),
   columns: buildMemodelColumns(),
 };

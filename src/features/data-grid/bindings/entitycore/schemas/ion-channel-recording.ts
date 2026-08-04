@@ -37,13 +37,8 @@ import type { IHasRecordingType } from './recording-columns';
 
 /**
  * The hand-written entity type omits subject/temperature/cell_line/contributions and
- * `recording_type` (all present at runtime); augment locally so the column factories
- * stay type-safe.
- *
- * `validation_result` is a different case and NOT a runtime omission: it is a
- * RELATION filtered existentially (`NestedValidationResultFilter`), and
- * `IonChannelRecordingRead` serializes no such field — see the note on the two
- * validation columns below.
+ * `recording_type`, all present at runtime. `validation_result` is different: it is a
+ * relation filtered existentially and is NOT serialized — see the columns below.
  */
 type Row = IIonChannelRecording &
   IHasSpecies &
@@ -57,14 +52,9 @@ type Row = IIonChannelRecording &
   };
 
 /**
- * ADVANCED FILTERS — what is left once every filterable field that CAN be a column is
- * one: the two ID-type fields, which have no useful column to show.
- *
- * `recording_origin` is deliberately absent in EVERY form, and is NOT a candidate for
- * a column either: the entity domain config pins the BARE param
- * (`recording_origin: in_vitro`), so `Eq` would be silently overwritten, and the only
- * non-colliding form (`recording_origin__in`) could merely re-intersect a listing
- * that is already exactly the in-vitro recordings.
+ * Filterable fields with no column: the two ID-type fields. `recording_origin` is
+ * absent in every form because the domain config pins the bare param to `in_vitro`,
+ * which would silently overwrite a user filter.
  */
 const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -80,7 +70,6 @@ const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = 
       {
         id: 'ionChannelId',
         label: 'Ion channel ID',
-        // `ion_channel__id__in`. The channel's NAME is the Ion channel column's field.
         field: 'ion_channel__id',
         operators: [OperatorId.In],
       },
@@ -89,9 +78,8 @@ const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = 
 ];
 
 /**
- * The channel's controlled label and gene symbol. Both are `Eq` ONLY — the endpoint
- * exposes no ilike/in form for either — and both ARE in
- * `IonChannelRecordingFilter.Constants.ordering_model_fields`, so both sort.
+ * The channel's controlled label and gene symbol. `Eq` only — the endpoint exposes no
+ * ilike/in form — and both are in this endpoint's ordering fields, so both sort.
  */
 const ionChannelLabelColumn: IColumnModel<Row> = {
   id: 'ionChannelLabel',
@@ -141,26 +129,18 @@ const ionChannelGeneColumn: IColumnModel<Row> = {
 };
 
 /**
- * VALIDATION — `validation_result__*` filters the recording by whether a related
- * ValidationResult matches, an EXISTENTIAL filter over a relation.
- *
- * ROW-DATA GAP: `IonChannelRecordingRead` (`app/schemas/ion_channel_recording.py`)
- * serializes no `validation_result` field, so these two cells are empty for every row
- * until the list response carries one. The FILTERS are correct and unchanged — only
- * the display half is missing. If that stays true, the honest fix is to move both
- * back to `advancedFilters`, exactly as the em-cell-mesh measurement family was left
- * there for the same reason.
+ * `validation_result__*` filters existentially over a relation the list response does
+ * NOT serialize, so both cells render blank for every row while the filters work.
+ * Neither field is in the endpoint's ordering fields, hence `sortable: false`.
  */
 const validationPassedColumn: IColumnModel<Row> = {
   id: 'validationPassed',
   header: 'Validation passed',
   auxiliary: true,
-  // not in ordering_model_fields
   sortable: false,
   getValue: (r) => yesNo(r.validation_result?.passed),
   width: { minWidth: 150 },
   filter: {
-    // `validation_result__passed` (boolean)
     operators: [OperatorId.Bool],
     field: 'validation_result__passed',
     targets: [
@@ -182,7 +162,6 @@ const validationNameColumn: IColumnModel<Row> = {
   getValue: (r) => r.validation_result?.name ?? '',
   width: { minWidth: 160 },
   filter: {
-    // `validation_result__name__ilike`, `validation_result__name__in`, `…__name`
     operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
     field: 'validation_result__name',
     targets: [
@@ -199,18 +178,11 @@ const validationNameColumn: IColumnModel<Row> = {
 };
 
 /**
- * Ion channel recording listing. Column order matches the legacy view-def; the
- * `recording_origin = in_vitro` narrow filter is applied by the entity domain
- * config. Ion channel filters as `ion_channel__name__ilike`, temperature as a
- * `temperature__gte/__lte` range, cell line as `cell_line__ilike`.
+ * Ion channel recording listing (`GET /ion-channel-recording`). The
+ * `recording_origin = in_vitro` narrowing is applied by the entity domain config.
  *
- * Then seven AUXILIARY columns, each carrying the filter it took over from the panel.
- *
- * SORT SAFETY (`IonChannelRecordingFilter.Constants.ordering_model_fields`,
- * `app/filters/ion_channel_recording.py`): only `ion_channel__label` and
- * `ion_channel__gene` are in that list. Recording type, both validation fields and
- * both subject fields are not, so they are non-sortable — an `order_by` outside the
- * allowlist is a 422 that fails the whole listing.
+ * Of the auxiliary fields only `ion_channel__label` and `ion_channel__gene` are in the
+ * endpoint's ordering fields; the rest are non-sortable.
  */
 export const ionChannelRecordingSchema: IGridSchema<Row> = {
   id: 'ion-channel-recording',
@@ -218,7 +190,6 @@ export const ionChannelRecordingSchema: IGridSchema<Row> = {
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
   selection: { enabled: true },
-  // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(ionChannelRecordingAdvancedFilters),
   columns: [
     previewColumn<Row>({
@@ -230,12 +201,11 @@ export const ionChannelRecordingSchema: IGridSchema<Row> = {
     ionChannelColumn<Row>(),
     temperatureColumn<Row>(),
     cellLineColumn<Row>(),
-    // the identifying column: kept visible by the chooser's bulk deselect
     nameColumn<Row>({ essential: true }),
     lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),
-    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    // Auxiliary — hidden until ticked; each replaces an advanced filter.
     ionChannelLabelColumn,
     ionChannelGeneColumn,
     validationPassedColumn,

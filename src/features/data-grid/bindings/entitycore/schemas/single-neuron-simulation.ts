@@ -16,31 +16,18 @@ import type { IEntityGridDefinition } from '../registry';
 
 type Row = ISingleNeuronSimulation;
 
-/** Join a string-array location field, matching the legacy `renderArray`. */
+/** Join a string-array location field. */
 function joinLocations(values: Array<string> | null | undefined): string {
   return (values ?? []).filter(Boolean).join(', ');
 }
 
 /**
- * Single-neuron simulation listing — a PLAIN listing (no expandable detail row; unlike the
- * circuit-simulation campaigns, an individual simulation has no nested scan table). Column
- * order follows the legacy `view-defs/simulation/single-neuron-simulation.ts`.
+ * Single-neuron simulation listing (`GET /single-neuron-simulation`), with no
+ * expandable detail row.
  *
- * Every simulation-specific column is display-only (all `fields-defs/experiment.tsx` entries
- * are `filter: null`):
- *  - ME-model (SimulationModel): renders `me_model.name`. The legacy field-def is
- *    `filter: null`, but `/single-neuron-simulation` exposes `me_model__name__in` /
- *    `me_model__name__ilike` and serves a `me_model` facet bucket, so the column now
- *    carries that filter. Still not sortable (`me_model__name` is absent from
- *    SingleNeuronSimulationFilter's ordering fields).
- *  - Stimulus / Response: the legacy renders preview thumbnails; the thumbnail cell renderer
- *    is deferred (out of the renderers fence), so these are display-only placeholders that
- *    preserve column identity/order. No filter/sort either way.
- *  - Injection / Recording location: joined string arrays, display-only.
- *
- * Brain region (no filter; sortable — SingleNeuronSimulation is in `brain_region`'s
- * `order.types`), Created by (facet filter + server-sortable), and Registration date
- * (DateRange filter + sortable) carry the legacy filter/sort metadata.
+ * ME-model filters via the `me_model` facet but is not sortable — `me_model__name` is
+ * absent from this endpoint's ordering fields. Stimulus and Response are placeholders
+ * pending a thumbnail renderer; the location columns are display-only.
  */
 export const singleNeuronSimulationSchema: IGridSchema<Row> = {
   id: 'single-neuron-simulation',

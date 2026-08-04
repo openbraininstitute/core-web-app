@@ -79,10 +79,7 @@ export function ListingMembers({
           </Button>
         </div>
       </div>
-      {/* A member row is an avatar block + a role control, not tabular data — a list
-          fits it better than a grid (no headers, sorting, resizing or column model
-          to justify). Borderless + transparent so the parent panel shows through,
-          matching the original antd table. */}
+      {/* a member row is an avatar block + a role control, not tabular data — a list, not a grid */}
       <div className="secondary-scrollbar h-full grow overflow-y-auto py-5 pr-3">
         <List
           split={false}

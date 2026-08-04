@@ -16,13 +16,12 @@ import type { IGridState } from './state/grid-state';
 export interface IGridControllerOptions<Row> {
   schema: IGridSchema<Row>;
   context: IGridContext;
-  /** stable key for persistence (the clean successor to the old `dataKey`) */
+  /** stable key for persistence */
   instanceKey?: string;
   /**
-   * Persistence adapters, applied in order. Each adapter owns a SLICE of state
-   * (e.g. session: filters/sort/page/search; local: column layout) — on load the
-   * slices are merged over the schema defaults, on save each adapter extracts its
-   * own slice from the full state.
+   * Persistence adapters, applied in order. Each owns a slice of state (session:
+   * filters/sort/page/search; local: column layout), merged over the schema defaults
+   * on load.
    */
   persistence?: IStatePersistence[];
   defaultPageSize: number;
@@ -30,11 +29,10 @@ export interface IGridControllerOptions<Row> {
 
 /**
  * Pure derivation of the transport-agnostic request from a state snapshot.
- * Kept as a standalone function (not only a controller method) so React code can
- * express the real data flow — `query` derives from the reactive `state` — which
- * matters under the React Compiler: a method call like `controller.buildQuery()`
- * reads the store invisibly and gets memoized against the stable `controller`
- * reference, freezing the query at its first value.
+ *
+ * Standalone rather than only a controller method because of the React Compiler:
+ * `controller.buildQuery()` reads the store invisibly and gets memoized against the
+ * stable `controller` reference, freezing the query at its first value.
  */
 export function buildGridQuery(state: IGridState, params?: Record<string, unknown>): IGridQuery {
   return {
@@ -52,9 +50,8 @@ export function createInitialState<Row>(
   context: IGridContext,
   defaultPageSize: number
 ): IGridState {
-  // Default column order & visibility come from the CONTEXT-RESOLVED columns, so
-  // contextual `order`/`available`/`hiddenByDefault` are honoured before any
-  // persisted user layout is merged on top.
+  // Resolve first, so contextual order/availability is honoured before any persisted
+  // layout is merged on top.
   const resolved = resolveColumns(schema, context);
   return {
     filters: {},
@@ -71,10 +68,9 @@ export function createInitialState<Row>(
 }
 
 /**
- * The headless "brain": owns the state store, resolves the schema against the
- * context, builds the abstract {@link IGridQuery}, and wires persistence. It holds
- * NO data-fetching logic (that lives in the React ring via React Query) and NO
- * rendering — keeping it pure and unit-testable.
+ * Headless owner of the state store: resolves the schema against the context, builds
+ * the abstract {@link IGridQuery}, and wires persistence. No data fetching, no
+ * rendering.
  */
 export class GridController<Row> {
   readonly store: GridStateStore;
@@ -94,10 +90,9 @@ export class GridController<Row> {
 
     let hydrated = initial;
     if (instanceKey && persistence?.length) {
-      // The RAW stored layout is kept aside: once merged, a stored `hiddenColumns`
-      // is indistinguishable from the schema's defaults, and the stored
-      // `columnOrder` — which is what tells us WHICH columns that snapshot knew
-      // about — has already been overwritten.
+      // Keep the raw stored layout aside: once merged it is indistinguishable from
+      // the schema defaults, and `columnOrder` (which columns the snapshot knew
+      // about) has already been overwritten.
       const storedLayout: IStoredColumnLayout = {};
       for (const p of persistence) {
         const slice = p.load(instanceKey);
@@ -106,9 +101,7 @@ export class GridController<Row> {
         if (Array.isArray(slice.columnOrder)) storedLayout.columnOrder = slice.columnOrder;
         hydrated = { ...hydrated, ...slice };
       }
-      // A column the stored snapshot never saw falls back to its resolved
-      // `hiddenByDefault` — otherwise a newly-declared hidden-by-default column
-      // would show up for every user who already has a saved layout.
+      // A column the snapshot never saw falls back to its resolved `hiddenByDefault`.
       hydrated = {
         ...hydrated,
         hiddenColumns: reconcileHiddenColumns(
@@ -116,10 +109,8 @@ export class GridController<Row> {
           storedLayout
         ),
       };
-      // Stored entries predate filter targets: default a missing/stale `targetId`
-      // to the column's first target so old snapshots keep resolving to a field.
-      // Advanced-filter entries are pruned in the same pass — an orphaned `adv:…`
-      // key would otherwise be serialized verbatim as a bogus query param.
+      // Repair missing/stale `targetId`s and prune orphaned `adv:…` keys, which
+      // would otherwise serialize verbatim as bogus query params.
       hydrated = {
         ...hydrated,
         filters: pruneAdvancedFilters(
@@ -145,27 +136,20 @@ export class GridController<Row> {
   }
 
   /**
-   * Build the transport-agnostic request from current state + host params.
-   * Non-React callers only — React code must use {@link buildGridQuery} with the
-   * state from `useSyncExternalStore` (see its doc for the React Compiler pitfall).
+   * Build the transport-agnostic request from current state + host params. Non-React
+   * callers only — React code must use {@link buildGridQuery} with the state from
+   * `useSyncExternalStore`.
    */
   buildQuery(params?: Record<string, unknown>): IGridQuery {
     return buildGridQuery(this.store.getSnapshot(), params);
   }
 
   /**
-   * Reset the BROWSE state to the schema's defaults (used on species/scope change).
+   * Reset the browse state to the schema's defaults (used on species/scope change).
    *
-   * The user's column LAYOUT — order, visibility, widths — is deliberately carried
-   * over. It is a lasting preference (persisted to localStorage, see the layout
-   * slice) rather than part of the transient browse state this reset exists for, so
-   * dropping it here would not merely re-show the columns: the reset dispatch runs
-   * through the persistence subscription, which would then write the schema
-   * defaults OVER the saved layout — destroying it for every future session and
-   * every other tab. Which columns are AVAILABLE in the new context is not this
-   * method's business either; that comes from re-resolving the schema against the
-   * new context (the host rebuilds the controller when the context changes) and
-   * from `reconcileHiddenColumns` on the way back in.
+   * The column layout (order, visibility, widths) is deliberately carried over: the
+   * reset dispatch runs through the persistence subscription, so dropping it here
+   * would write the schema defaults over the user's saved localStorage layout.
    */
   resetState(): void {
     const { columnOrder, hiddenColumns, columnWidths } = this.store.getSnapshot();

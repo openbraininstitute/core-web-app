@@ -1,11 +1,6 @@
 /**
- * Regression: the workflow PICKER listing (e.g. "Select ion channel recording")
- * must offer the same toolbar controls as the Data browse listing — the column
- * chooser and the advanced-filters button.
- *
- * The picker mounts the shared `EntityDataGrid` with a WORKFLOW section and a
- * `mainTableProps.selectionType`, which is exactly the shape that used to lose the
- * controls. Asserted through accessible names only — never layout.
+ * Regression: a workflow picker listing (workflow section + `mainTableProps.selectionType`)
+ * lost the column chooser and advanced-filters buttons the Data browse listing offers.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';

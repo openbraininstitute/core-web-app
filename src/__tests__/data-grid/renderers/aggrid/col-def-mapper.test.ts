@@ -23,7 +23,6 @@ describe('buildColDefs — expander placement (backward-compatible default)', ()
     const defs = buildColDefs(columns, { ...OPTIONS, withExpandColumn: true });
     expect(defs[0]?.colId).toBe(EXPAND_COL_ID);
     expect(defs).toHaveLength(columns.length + 1);
-    // the leading column is fixed/non-movable
     expect(defs[0]?.lockPosition).toBe('left');
   });
 
@@ -48,7 +47,6 @@ describe('buildColDefs — expander placement (backward-compatible default)', ()
     // the host column still carries its normal renderer key for its content
     expect((host?.cellRendererParams as { rendererKey?: string }).rendererKey).toBe('count');
 
-    // sibling columns keep the standard cell host (unchanged)
     const sibling = defs.find((d) => d.colId === 'name');
     expect(sibling?.cellRenderer).not.toBe(AgExpandHostCell);
   });

@@ -1,18 +1,9 @@
 /**
- * Regression: a CONTEXTUALLY-GATED column must come back at its DECLARED slot when
- * the context that gates it is switched away and back.
- *
- * The circuit listing gates its "Subcircuits" column on the hierarchy view (see
- * `circuitSchema`). Switching to flat drops the column from the resolved set;
- * switching back re-adds it, and the host rebuilds the `GridController`, so the
- * renderer hands AG Grid a correctly-ordered column list either way. AG Grid,
- * however, OUTLIVES that swap — same grid instance — and with `maintainColumnOrder`
- * it keeps its own order and appends any column it has not seen before AFTER every
- * other one (`restoreColOrder` in ag-grid-community). On a wide listing that is
- * off-screen: the column reads as GONE until the page is reloaded.
- *
- * Driven through the real `AgGridRenderer` because the defect is entirely in what AG
- * Grid does with a correct column list — every layer above it is already right.
+ * Regression: a contextually-gated column must come back at its declared slot when the
+ * gating context is switched away and back. AG Grid outlives that swap, and with
+ * `maintainColumnOrder` it appended the re-added column after every other one — on a
+ * wide listing, off-screen and reading as gone. Driven through the real renderer
+ * because the defect is entirely in what AG Grid does with a correct column list.
  */
 import { act, render, waitFor } from '@testing-library/react';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -78,11 +69,9 @@ function renderGrid(controller: GridController<Row>) {
 }
 
 /**
- * The columns AG Grid actually laid out, left to right.
- *
- * Ordered by `aria-colindex`, NOT by DOM position: AG Grid absolutely-positions header
- * cells and appends a newly-added one to the end of the DOM regardless of where it
- * ends up on screen, so document order says nothing about the visual order.
+ * The columns AG Grid laid out, left to right. Ordered by `aria-colindex`, not DOM
+ * position: AG Grid absolutely-positions header cells, so document order says nothing
+ * about the visual order.
  */
 function headerIds(container: HTMLElement): string[] {
   return Array.from(container.querySelectorAll('.ag-header-cell[col-id]'))
@@ -94,8 +83,8 @@ function headerIds(container: HTMLElement): string[] {
 }
 
 /**
- * jsdom measures every element as 0x0, and AG Grid then lays out no columns at all —
- * so the header assertions would be vacuously empty. Give it a viewport.
+ * jsdom measures every element as 0x0 and AG Grid then lays out no columns at all, so
+ * the header assertions would be vacuously empty. Give it a viewport.
  */
 function installLayout(width = 1200, height = 600) {
   for (const [prop, value] of [
@@ -115,23 +104,20 @@ describe('a contextually-gated column across a context switch', () => {
 
   it('comes back at its declared slot, not appended after every other column', async () => {
     const { container, rerender } = render(renderGrid(makeController(HIERARCHY)));
-    // AG Grid mounts (and lays out its header) a tick after the React render
+    // AG Grid lays out its header a tick after the React render
     await waitFor(() =>
       expect(headerIds(container)).toEqual(['name', GATED, 'description', 'region'])
     );
 
-    // …the user switches to flat: the gate resolves false and the column resolves away
     await act(async () => rerender(renderGrid(makeController(FLAT))));
     expect(headerIds(container)).toEqual(['name', 'description', 'region']);
 
-    // …and back to hierarchy, on the SAME AG Grid instance
+    // back to hierarchy, on the SAME AG Grid instance
     await act(async () => rerender(renderGrid(makeController(HIERARCHY))));
     expect(headerIds(container)).toEqual(['name', GATED, 'description', 'region']);
   });
 
   it('still honours a user-reordered column layout on a plain refresh', async () => {
-    // The store owns the order; without `maintainColumnOrder` every colDefs refresh
-    // re-asserts it, so a drag (→ `setColumnOrder`) must survive the next re-render.
     const controller = makeController(HIERARCHY);
     const { container, rerender } = render(renderGrid(controller));
     await waitFor(() => expect(headerIds(container).length).toBe(4));
@@ -144,8 +130,7 @@ describe('a contextually-gated column across a context switch', () => {
       rerender(renderGrid(controller));
     });
 
-    // `region` moved to the front; the PINNED gated column keeps its declared slot
-    // (right after `name`) rather than the position the stored order records for it.
+    // the pinned gated column keeps its declared slot, not the stored order's position
     expect(headerIds(container)).toEqual(['region', 'name', GATED, 'description']);
   });
 });

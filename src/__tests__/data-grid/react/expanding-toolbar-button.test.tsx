@@ -13,7 +13,6 @@ describe('ExpandingToolbarButton', () => {
     const { getByRole } = render(<ExpandingToolbarButton icon={null} label="Advanced filters" />);
     const button = getByRole('button', { name: 'Advanced filters' });
     expect(button).toHaveAttribute('aria-label', 'Advanced filters');
-    // the revealed text is decorative: it repeats the aria-label
     expect(button.querySelector('[aria-hidden="true"]')?.textContent).toBe('Advanced filters');
   });
 
@@ -25,7 +24,6 @@ describe('ExpandingToolbarButton', () => {
     expect(cls).toContain('group-hover/toolbar-pill:grid-cols-[1fr]');
     expect(cls).toContain('group-focus-visible/toolbar-pill:grid-cols-[1fr]');
     expect(cls).toContain('transition-[grid-template-columns]');
-    // reduced motion keeps the reveal, drops the animation
     expect(cls).toContain('motion-reduce:transition-none');
     expect(cls).not.toContain('hidden');
   });
@@ -46,7 +44,6 @@ describe('ExpandingToolbarButton', () => {
     );
     const badge = getByText('3');
     expect(getByRole('button', { name: 'Advanced filters' })).toContainElement(badge);
-    // the count must never leak into the accessible name, in either state
     expect(getByRole('button', { name: 'Advanced filters' })).toHaveAttribute(
       'aria-label',
       'Advanced filters'
@@ -59,10 +56,7 @@ describe('ExpandingToolbarButton', () => {
     );
     const anchor = getByTestId('toolbar-pill-badge-anchor');
     expect(anchor).toContainElement(getByText('3'));
-    // zero-width bookmark: it cannot shift the pill or the toolbar as it travels
     expect(anchor.className).toContain('w-0');
-    // it is the LAST child — after the growing label — so the existing
-    // grid-template-columns animation carries it out; nothing races it
     expect(anchor.previousElementSibling).toHaveAttribute('aria-hidden', 'true');
     expect(anchor.nextElementSibling).toBeNull();
   });
@@ -79,12 +73,9 @@ describe('ExpandingToolbarButton', () => {
       <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
     );
     const cls = getByTestId('toolbar-pill-badge-anchor').className;
-    // transform only — no width/margin/inset animation to shift the toolbar
     expect(cls).toContain('transition-transform');
-    // in lockstep with the label reveal, so the two cannot stutter against each other
     expect(cls).toContain('duration-300');
     expect(cls).toContain('ease-in-out');
-    // up and to the right, keyboard users included
     expect(cls).toContain('group-hover/toolbar-pill:translate-x-2.5');
     expect(cls).toContain('group-hover/toolbar-pill:-translate-y-2.5');
     expect(cls).toContain('group-focus-visible/toolbar-pill:translate-x-2.5');
@@ -96,8 +87,6 @@ describe('ExpandingToolbarButton', () => {
       <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
     );
     const cls = getByTestId('toolbar-pill-badge-anchor').className;
-    // only the transition goes away: the hover/focus translate still applies, so the
-    // badge is still at the corner — it just gets there instantly
     expect(cls).toContain('motion-reduce:transition-none');
     expect(cls).not.toContain('motion-reduce:translate-x-0');
   });
@@ -109,14 +98,9 @@ describe('ExpandingToolbarButton', () => {
 });
 
 /**
- * REGRESSION — collapsed must be a CIRCLE, not a squashed rectangle.
- *
- * The footer's bulk actions build the pill on `ui/molecules/button` so they can keep
- * their own primary/destructive palette. That component's cva base contributes
- * `gap-2` and `has-[>svg]:px-3`, which used not to collide with anything the pill
- * recipe declared — so tailwind-merge kept them and a 40px-tall pill came out ~48px
- * wide. The recipe now pins both, and this asserts the resolved class list rather than
- * a computed width, which jsdom does not have.
+ * Regression: collapsed must be a circle. The Button cva base contributes `gap-2` and
+ * `has-[>svg]:px-3`, which tailwind-merge kept, widening a 40px pill to ~48px. Asserts
+ * the resolved class list because jsdom has no computed width.
  */
 describe('expanding pill geometry on a Button base', () => {
   const resolved = () => {
@@ -134,7 +118,6 @@ describe('expanding pill geometry on a Button base', () => {
     expect(cls).toContain('min-w-10');
     expect(cls).toContain('px-2.5');
     expect(cls).toContain('gap-0');
-    // the two declarations that used to survive from the Button base
     expect(cls).not.toContain('gap-2');
     expect(cls).not.toContain('has-[>svg]:px-3');
   });
