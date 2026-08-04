@@ -1,3 +1,5 @@
+import { PERSIST_COLUMN_LAYOUT } from '../../config';
+
 import type { IGridState, IStatePersistence } from '../../core';
 
 /**
@@ -88,8 +90,27 @@ export function createSessionStatePersistence(): IStatePersistence {
   );
 }
 
-/** Local slice: durable column layout (order, visibility, widths). */
+/**
+ * A persistence adapter that remembers nothing — used when a slice is switched off,
+ * so callers keep a uniform adapter list instead of branching on the flag.
+ */
+const NO_PERSISTENCE: IStatePersistence = {
+  load: () => null,
+  save: () => {},
+  clear: () => {},
+};
+
+/**
+ * Local slice: durable column layout (order, visibility, widths), surviving across
+ * browser sessions.
+ *
+ * Gated by {@link PERSIST_COLUMN_LAYOUT}. When that flag is off this returns the
+ * no-op adapter, so nothing is written AND nothing already written is read back —
+ * the grid always opens on the schema's defaults. Stored layouts are left in place
+ * rather than deleted, so turning the flag back on restores them.
+ */
 export function createLocalLayoutPersistence(): IStatePersistence {
+  if (!PERSIST_COLUMN_LAYOUT) return NO_PERSISTENCE;
   return createStoragePersistence(
     () => (typeof window !== 'undefined' ? window.localStorage : undefined),
     'data-grid:v1:l:',
@@ -97,7 +118,10 @@ export function createLocalLayoutPersistence(): IStatePersistence {
   );
 }
 
-/** The standard pair used by entity listings. */
+/**
+ * The standard pair used by entity listings: the always-on session slice plus the
+ * flag-gated layout slice.
+ */
 export function createDefaultPersistence(): IStatePersistence[] {
   return [createSessionStatePersistence(), createLocalLayoutPersistence()];
 }

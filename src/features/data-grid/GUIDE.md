@@ -473,7 +473,30 @@ filter to a column.** Live examples:
   the cells resolve through a lazy, id-keyed fetch shared by all three dataset cells
   (`renderers/em-dataset-cell.tsx`).
 
-### 5.5 Persistence reconciliation
+### 5.5 Persistence: two slices, one flag
+
+State is persisted in **two deliberately separate slices** (`react/persistence/storage-persistence.ts`):
+
+| slice | storage | keeps | lifetime |
+| --- | --- | --- | --- |
+| session | `sessionStorage`, `data-grid:v1:s:<instanceKey>` | `filters`, `sort`, `page`, `pageSize`, `quickFilter` | the browser tab |
+| layout | `localStorage`, `data-grid:v1:l:<instanceKey>` | `columnOrder`, `hiddenColumns`, `columnWidths` | across sessions |
+
+The split is a product decision, not an implementation detail: a saved **layout** is a
+lasting preference ("I never want to see these columns"), whereas a **filter** is a
+transient act of browsing that should not silently still be applied a week later.
+Selection and expansion are never persisted.
+
+`instanceKey` is the `dataKey` (vlab / project / section / dataType / scope), so each
+listing is remembered independently and nothing leaks between projects.
+
+**The dev switch.** `config.ts` exports `PERSIST_COLUMN_LAYOUT`. Set it to `false` and
+`createLocalLayoutPersistence()` returns a no-op adapter: nothing is written, and
+anything already written is ignored rather than deleted — so flipping it back on
+restores the layouts users already had. The session slice is unaffected either way.
+There is no user-facing setting; this is a build-time constant.
+
+#### Reconciliation
 
 A stored `columnOrder` / `hiddenColumns` predates any column you add today.
 `core/domain/column-layout.ts` is the single place that reconciliation lives:
