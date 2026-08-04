@@ -253,75 +253,33 @@ describe('electrical-cell-recording advanced filters — GET /electrical-cell-re
   });
 });
 
+/**
+ * The channel label/gene, both validation fields, recording type and the two
+ * `subject__*` fields are AUXILIARY COLUMNS here — their wire params are pinned in
+ * `experimental-parity.test.ts`. Only the two ID-type fields have no column.
+ */
 describe('ion-channel-recording advanced filters — GET /ion-channel-recording', () => {
   suite(ionChannelRecordingSchema, [
     ['ionChannel', 'ionChannelId', OperatorId.In, set(UUID), { ion_channel__id__in: [UUID] }],
-    [
-      'ionChannel',
-      'ionChannelLabel',
-      OperatorId.Eq,
-      text('Kv1.1'),
-      { ion_channel__label: 'Kv1.1' },
-    ],
-    ['ionChannel', 'ionChannelGene', OperatorId.Eq, text('KCNA1'), { ion_channel__gene: 'KCNA1' }],
-    [
-      'validation',
-      'validationPassed',
-      OperatorId.Bool,
-      bool(true),
-      { validation_result__passed: true },
-    ],
-    [
-      'validation',
-      'validationPassed',
-      OperatorId.Bool,
-      bool(false),
-      { validation_result__passed: false },
-    ],
-    [
-      'validation',
-      'validationName',
-      OperatorId.Ilike,
-      text('iv curve'),
-      { validation_result__name__ilike: '%iv curve%' },
-    ],
-    [
-      'validation',
-      'validationName',
-      OperatorId.In,
-      set('IV curve'),
-      { validation_result__name__in: ['IV curve'] },
-    ],
-    [
-      'validation',
-      'validationName',
-      OperatorId.Eq,
-      text('IV curve'),
-      { validation_result__name: 'IV curve' },
-    ],
-    [
-      'recording',
-      'recordingType',
-      OperatorId.In,
-      set('intracellular'),
-      { recording_type__in: ['intracellular'] },
-    ],
-    [
-      'recording',
-      'recordingType',
-      OperatorId.Eq,
-      text('intracellular'),
-      { recording_type: 'intracellular' },
-    ],
-    ...SUBJECT_CASES,
     ...RECORD_ID_CASES,
   ]);
+
+  it('keeps only the ID-type fields — everything else is a column now', () => {
+    const fields = [...advancedFilterDefsByKey(ionChannelRecordingSchema).values()].map(
+      (d) => d.field
+    );
+    expect(fields).toEqual(['id', 'ion_channel__id']);
+  });
 
   it('never offers recording_origin in ANY form — the listing pins the bare param', () => {
     const fields = [...advancedFilterDefsByKey(ionChannelRecordingSchema).values()].map(
       (d) => d.field
     );
     expect(fields).not.toContain('recording_origin');
+    // …and it did not simply move onto a column either
+    expect(ionChannelRecordingSchema.columns.map((c) => c.filter?.field)).not.toContain(
+      'recording_origin'
+    );
   });
 });
 

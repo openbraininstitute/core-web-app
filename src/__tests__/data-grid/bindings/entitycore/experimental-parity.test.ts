@@ -158,7 +158,80 @@ describe('ion_channel_recording parity', () => {
       'name',
       'contributions',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser
+      'ionChannelLabel',
+      'ionChannelGene',
+      'validationPassed',
+      'validationName',
+      'recordingType',
+      'strainName',
+      'subjectName',
     ]);
+  });
+  it('the auxiliary columns carry the filters they replaced', () => {
+    const resolved = resolveColumns(s, dataCtx('ion_channel_recording'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual([
+      'ionChannelLabel',
+      'ionChannelGene',
+      'validationPassed',
+      'validationName',
+      'recordingType',
+      'strainName',
+      'subjectName',
+    ]);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    const eq = (columnId: string, value: string): TFilterModel => ({
+      [columnId]: {
+        columnId,
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: value },
+      },
+    });
+    expect(
+      serializeQuery(query({ filters: eq('ionChannelLabel', 'Kv1.1') }), s).ion_channel__label
+    ).toBe('Kv1.1');
+    expect(
+      serializeQuery(query({ filters: eq('ionChannelGene', 'KCNA1') }), s).ion_channel__gene
+    ).toBe('KCNA1');
+    const passed: TFilterModel = {
+      validationPassed: {
+        columnId: 'validationPassed',
+        operator: OperatorId.Bool,
+        value: { kind: FilterValueKind.Boolean, value: true },
+      },
+    };
+    expect(serializeQuery(query({ filters: passed }), s).validation_result__passed).toBe(true);
+    expect(
+      serializeQuery(query({ filters: ilike('validationName') }), s).validation_result__name__ilike
+    ).toBe('%foo%');
+    expect(
+      serializeQuery(query({ filters: setIn('recordingType') }), s).recording_type__in
+    ).toEqual(['x']);
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+    expect(serializeQuery(query({ filters: ilike('subjectName') }), s).subject__name__ilike).toBe(
+      '%foo%'
+    );
+  });
+  it('only the ion-channel scalars are in ordering_model_fields', () => {
+    expect(serializeQuery(query(sortDesc('ionChannelLabel')), s).order_by).toEqual([
+      '-ion_channel__label',
+    ]);
+    expect(serializeQuery(query(sortDesc('ionChannelGene')), s).order_by).toEqual([
+      '-ion_channel__gene',
+    ]);
+    for (const id of [
+      'validationPassed',
+      'validationName',
+      'recordingType',
+      'strainName',
+      'subjectName',
+    ]) {
+      expect(s.columns.find((c) => c.id === id)?.sortable).toBe(false);
+    }
   });
   it('ion channel / cell line ilike + temperature range serialize to legacy keys', () => {
     expect(

@@ -1,4 +1,3 @@
-import { RecordingType } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 import { FreeEntryKind, OperatorId, SortDirection } from '../../../core';
@@ -11,41 +10,60 @@ import {
   previewColumn,
   registrationDateColumn,
   speciesColumn,
+  subjectNameColumn,
+  subjectStrainColumn,
   temperatureColumn,
+  yesNo,
 } from '../columns/catalog';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
-import {
-  flatAdvancedFilters,
-  recordIdFilter,
-  staticOptions,
-  subjectAdvancedGroup,
-} from './common-filters';
+import { flatAdvancedFilters, recordIdFilter } from './common-filters';
+import { recordingTypeColumn } from './recording-columns';
 
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
-import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
 import type {
   IHasCellLine,
   IHasContributions,
   IHasSpecies,
+  IHasSubjectName,
+  IHasSubjectStrain,
   IHasTemperature,
 } from '../columns/catalog';
 import type { IEntityGridDefinition } from '../registry';
-
-// The hand-written entity type omits subject/temperature/cell_line/contributions
-// (present at runtime); augment locally so the catalog factories stay type-safe.
-type Row = IIonChannelRecording & IHasSpecies & IHasTemperature & IHasCellLine & IHasContributions;
+import type { IHasRecordingType } from './recording-columns';
 
 /**
- * ADVANCED FILTERS — `GET /ion-channel-recording` params with no column here.
- * Every field/operator pair was checked against the live OpenAPI spec; the emitted
- * param is named in each comment.
+ * The hand-written entity type omits subject/temperature/cell_line/contributions and
+ * `recording_type` (all present at runtime); augment locally so the column factories
+ * stay type-safe.
  *
- * `recording_origin` is deliberately absent in EVERY form: the entity domain config
- * pins the BARE param (`recording_origin: in_vitro`), so `Eq` would be silently
- * overwritten, and the only non-colliding form (`recording_origin__in`) could merely
- * re-intersect a listing that is already exactly the in-vitro recordings.
+ * `validation_result` is a different case and NOT a runtime omission: it is a
+ * RELATION filtered existentially (`NestedValidationResultFilter`), and
+ * `IonChannelRecordingRead` serializes no such field — see the note on the two
+ * validation columns below.
+ */
+type Row = IIonChannelRecording &
+  IHasSpecies &
+  IHasTemperature &
+  IHasCellLine &
+  IHasSubjectName &
+  IHasSubjectStrain &
+  IHasRecordingType &
+  IHasContributions & {
+    validation_result?: { passed?: boolean | null; name?: string | null } | null;
+  };
+
+/**
+ * ADVANCED FILTERS — what is left once every filterable field that CAN be a column is
+ * one: the two ID-type fields, which have no useful column to show.
+ *
+ * `recording_origin` is deliberately absent in EVERY form, and is NOT a candidate for
+ * a column either: the entity domain config pins the BARE param
+ * (`recording_origin: in_vitro`), so `Eq` would be silently overwritten, and the only
+ * non-colliding form (`recording_origin__in`) could merely re-intersect a listing
+ * that is already exactly the in-vitro recordings.
  */
 const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -65,18 +83,53 @@ const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = 
         field: 'ion_channel__id',
         operators: [OperatorId.In],
       },
+    ],
+  },
+];
+
+/**
+ * The channel's controlled label and gene symbol. Both are `Eq` ONLY — the endpoint
+ * exposes no ilike/in form for either — and both ARE in
+ * `IonChannelRecordingFilter.Constants.ordering_model_fields`, so both sort.
+ */
+const ionChannelLabelColumn: IColumnModel<Row> = {
+  id: 'ionChannelLabel',
+  header: 'Ion channel label',
+  auxiliary: true,
+  sortable: true,
+  sortField: 'ion_channel__label',
+  getValue: (r) => r.ion_channel?.label ?? '',
+  width: { minWidth: 150 },
+  filter: {
+    operators: [OperatorId.Eq],
+    field: 'ion_channel__label',
+    targets: [
       {
         id: 'ionChannelLabel',
         label: 'Ion channel label',
-        // `ion_channel__label` (exact) ONLY — the endpoint exposes no ilike/in form.
         field: 'ion_channel__label',
         operators: [OperatorId.Eq],
         placeholder: 'Enter a full channel label',
       },
+    ],
+  },
+};
+
+const ionChannelGeneColumn: IColumnModel<Row> = {
+  id: 'ionChannelGene',
+  header: 'Gene',
+  auxiliary: true,
+  sortable: true,
+  sortField: 'ion_channel__gene',
+  getValue: (r) => r.ion_channel?.gene ?? '',
+  width: { minWidth: 130 },
+  filter: {
+    operators: [OperatorId.Eq],
+    field: 'ion_channel__gene',
+    targets: [
       {
         id: 'ionChannelGene',
         label: 'Gene',
-        // `ion_channel__gene` (exact) ONLY — no ilike/in form on this endpoint.
         field: 'ion_channel__gene',
         operators: [OperatorId.Eq],
         description: 'Gene encoding the channel',
@@ -84,22 +137,57 @@ const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = 
       },
     ],
   },
-  {
-    id: 'validation',
-    label: 'Validation',
-    description: 'Validation results attached to the recording.',
-    filters: [
+};
+
+/**
+ * VALIDATION — `validation_result__*` filters the recording by whether a related
+ * ValidationResult matches, an EXISTENTIAL filter over a relation.
+ *
+ * ROW-DATA GAP: `IonChannelRecordingRead` (`app/schemas/ion_channel_recording.py`)
+ * serializes no `validation_result` field, so these two cells are empty for every row
+ * until the list response carries one. The FILTERS are correct and unchanged — only
+ * the display half is missing. If that stays true, the honest fix is to move both
+ * back to `advancedFilters`, exactly as the em-cell-mesh measurement family was left
+ * there for the same reason.
+ */
+const validationPassedColumn: IColumnModel<Row> = {
+  id: 'validationPassed',
+  header: 'Validation passed',
+  auxiliary: true,
+  // not in ordering_model_fields
+  sortable: false,
+  getValue: (r) => yesNo(r.validation_result?.passed),
+  width: { minWidth: 150 },
+  filter: {
+    // `validation_result__passed` (boolean)
+    operators: [OperatorId.Bool],
+    field: 'validation_result__passed',
+    targets: [
       {
         id: 'validationPassed',
         label: 'Validation passed',
-        // `validation_result__passed` (boolean)
         field: 'validation_result__passed',
         operators: [OperatorId.Bool],
       },
+    ],
+  },
+};
+
+const validationNameColumn: IColumnModel<Row> = {
+  id: 'validationName',
+  header: 'Validation name',
+  auxiliary: true,
+  sortable: false,
+  getValue: (r) => r.validation_result?.name ?? '',
+  width: { minWidth: 160 },
+  filter: {
+    // `validation_result__name__ilike`, `validation_result__name__in`, `…__name`
+    operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+    field: 'validation_result__name',
+    targets: [
       {
         id: 'validationName',
         label: 'Validation name',
-        // `validation_result__name__ilike`, `validation_result__name__in`, `…__name`
         field: 'validation_result__name',
         operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
         freeEntry: FreeEntryKind.Text,
@@ -107,28 +195,21 @@ const ionChannelRecordingAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = 
       },
     ],
   },
-  {
-    id: 'recording',
-    label: 'Recording',
-    filters: [
-      {
-        id: 'recordingType',
-        label: 'Recording type',
-        field: 'recording_type',
-        // `recording_type__in`, `recording_type` (exact). No `__not_in` here.
-        operators: [OperatorId.In, OperatorId.Eq],
-        options: staticOptions(RecordingType),
-      },
-    ],
-  },
-  subjectAdvancedGroup('The animal the recording was made from.'),
-];
+};
 
 /**
  * Ion channel recording listing. Column order matches the legacy view-def; the
  * `recording_origin = in_vitro` narrow filter is applied by the entity domain
  * config. Ion channel filters as `ion_channel__name__ilike`, temperature as a
  * `temperature__gte/__lte` range, cell line as `cell_line__ilike`.
+ *
+ * Then seven AUXILIARY columns, each carrying the filter it took over from the panel.
+ *
+ * SORT SAFETY (`IonChannelRecordingFilter.Constants.ordering_model_fields`,
+ * `app/filters/ion_channel_recording.py`): only `ion_channel__label` and
+ * `ion_channel__gene` are in that list. Recording type, both validation fields and
+ * both subject fields are not, so they are non-sortable — an `order_by` outside the
+ * allowlist is a 422 that fails the whole listing.
  */
 export const ionChannelRecordingSchema: IGridSchema<Row> = {
   id: 'ion-channel-recording',
@@ -151,6 +232,14 @@ export const ionChannelRecordingSchema: IGridSchema<Row> = {
     nameColumn<Row>(),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),
+    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    ionChannelLabelColumn,
+    ionChannelGeneColumn,
+    validationPassedColumn,
+    validationNameColumn,
+    recordingTypeColumn<Row>(),
+    subjectStrainColumn<Row>({ sortable: false }),
+    subjectNameColumn<Row>(),
   ],
 };
 

@@ -127,6 +127,17 @@ function ageInDays(seconds: Nullable<number>): string {
   return seconds == null ? '' : `${Math.floor(seconds / 86_400)} days`;
 }
 
+/**
+ * A nullable backend boolean as a cell value. `null`/`undefined` renders as the empty
+ * cell (the shared em-dash placeholder), NOT as "No" — "we did not record this" and
+ * "we recorded that it is false" are different facts, and a `field=false` filter
+ * matches only the second.
+ */
+export function yesNo(value: Nullable<boolean>): string {
+  if (value == null) return '';
+  return value ? 'Yes' : 'No';
+}
+
 export function formatDate(iso?: Nullable<string>): string {
   if (!iso) return '';
   const d = new Date(iso);
