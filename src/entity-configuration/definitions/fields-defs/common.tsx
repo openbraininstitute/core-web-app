@@ -1,4 +1,4 @@
-import { Button } from 'antd';
+import { Button, Tag } from 'antd';
 import { get, isNil } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 
@@ -716,6 +716,33 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     defaultConstraint: 'updated_by__pref_label__in',
     isDisplayable: true,
+  },
+  [EntityCoreFields.LifecycleStatus]: {
+    title: 'Lifecycle status',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => {
+      if (!('lifecycle_status' in r) || !r.lifecycle_status) return EmptyValue;
+      const colorMap: Record<string, string> = {
+        draft: 'default',
+        active: 'success',
+        disqualified: 'error',
+      };
+      const status = r.lifecycle_status as string;
+      return <Tag color={colorMap[status] ?? 'default'}>{status}</Tag>;
+    },
+    vocabulary: {
+      plural: 'Lifecycle statuses',
+      singular: 'Lifecycle status',
+    },
+    defaultConstraint: 'lifecycle_status__in',
+    isSortable: true,
+    order: {
+      property: 'order_by',
+      value: 'lifecycle_status',
+    },
+    isDisplayable: true,
+    isFilterable: true,
+    style: { width: 140 },
   },
   [EntityCoreFields.IonChannel]: {
     title: 'Ion Channel',

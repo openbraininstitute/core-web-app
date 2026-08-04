@@ -14,6 +14,7 @@ export const viewDefForSimulationCampaign: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.CircuitName,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.RegistrationDate,
     EntityCoreFields.LegacyActivityStatus,
   ],

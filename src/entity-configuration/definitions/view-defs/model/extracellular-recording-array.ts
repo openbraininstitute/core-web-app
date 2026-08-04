@@ -12,6 +12,7 @@ export const ViewDefForExtracellularRecordingArray: ViewDefinitionConfig = {
     EntityCoreFields.Description,
     EntityCoreFields.RecordingArrayCircuit,
     EntityCoreFields.ElectrodeType,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],

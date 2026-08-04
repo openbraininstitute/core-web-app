@@ -17,6 +17,7 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
     EntityCoreFields.NumberOfMeasurements,
     EntityCoreFields.Name,
     EntityCoreFields.SubjectAge,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],

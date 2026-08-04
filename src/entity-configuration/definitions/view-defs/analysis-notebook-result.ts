@@ -11,6 +11,7 @@ export const viewDefForNotebookResult: ViewDefinitionConfig = {
     EntityCoreFields.NotebookImagePreview,
     EntityCoreFields.Name,
     EntityCoreFields.Description,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
     EntityCoreFields.UpdateDate,
   ],

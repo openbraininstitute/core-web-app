@@ -1,9 +1,9 @@
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   DataTypeGroup,
   type ViewDefinitionConfig,
 } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export const viewDefForSingleNeuronSynaptomeSimulation: ViewDefinitionConfig = {
   title: 'Synaptome simulations',
@@ -17,6 +17,7 @@ export const viewDefForSingleNeuronSynaptomeSimulation: ViewDefinitionConfig = {
     EntityCoreFields.SimulationResponse,
     EntityCoreFields.SynaptomeModelName,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],

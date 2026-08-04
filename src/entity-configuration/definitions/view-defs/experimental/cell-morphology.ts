@@ -14,6 +14,7 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
     EntityCoreFields.SpeciesName,
     EntityCoreFields.MType,
     EntityCoreFields.Name,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],

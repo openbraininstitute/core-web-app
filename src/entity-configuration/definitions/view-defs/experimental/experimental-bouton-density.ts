@@ -15,6 +15,7 @@ export const viewDefForExperimentalBoutonDensity: ViewDefinitionConfig = {
     EntityCoreFields.MeanSTD,
     EntityCoreFields.Sem,
     EntityCoreFields.NumberOfMeasurements,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
   ],
   summaryViewFields: [

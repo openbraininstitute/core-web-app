@@ -16,6 +16,7 @@ export const viewDefForIonChannelRecording: ViewDefinitionConfig = {
     EntityCoreFields.Temperature,
     EntityCoreFields.CellLine,
     EntityCoreFields.Name,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],

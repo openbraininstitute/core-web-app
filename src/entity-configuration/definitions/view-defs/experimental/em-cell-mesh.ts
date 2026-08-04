@@ -14,6 +14,7 @@ export const viewDefForEMCellMesh: ViewDefinitionConfig = {
     EntityCoreFields.SpeciesName,
     EntityCoreFields.ReleaseVersion,
     EntityCoreFields.EmDenseReconstructionDatasetName,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.RegistrationDate,
   ],
   curated: true,

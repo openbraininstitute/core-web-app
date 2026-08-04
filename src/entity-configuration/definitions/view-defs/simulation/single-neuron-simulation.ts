@@ -18,6 +18,7 @@ export const viewDefForSingleNeuronSimulation: ViewDefinitionConfig = {
     EntityCoreFields.InjectionLocation,
     EntityCoreFields.RecordingLocation,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],

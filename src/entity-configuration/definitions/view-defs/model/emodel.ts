@@ -16,6 +16,7 @@ export const ViewDefForEmodel: ViewDefinitionConfig = {
     EntityCoreFields.EType,
     EntityCoreFields.EModelExemplarMorphology,
     EntityCoreFields.EModelScore,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],
