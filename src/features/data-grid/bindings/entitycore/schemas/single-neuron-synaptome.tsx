@@ -42,6 +42,14 @@ import type { IEntityGridDefinition } from '../registry';
  *
  * (`ISingleNeuronSynaptome` types `me_model` as the full `IMEModel`, which OVERSTATES
  * the wire. Do not trust it when deciding what a cell can read.)
+ *
+ * THE ONE EXCEPTION is the VISIBLE Species column, inherited from the legacy view-def:
+ * it reads `me_model.species.name`, which `NestedMEModel` does not carry, so it shows
+ * the shared empty placeholder on every row while its `me_model__species__name` filter
+ * works normally. It is kept for parity rather than removed — see the column itself for
+ * the full evidence. Every OTHER `me_model.…` read here is safe: `name` (via
+ * `NameDescriptionMixin`), `validation_status` (via `MEModelBaseMixin`), `mtypes` and
+ * `etypes` are all on `NestedMEModel` and all eager-loaded.
  */
 const VALIDATION_STATUS_OPTIONS: TFilterOptionsSource = {
   kind: FilterOptionsKind.Static,
@@ -270,6 +278,30 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
     {
       id: 'species',
       header: 'Species',
+      // KNOWN-EMPTY VALUE, WORKING FILTER — open question for the listing's owner.
+      //
+      // The FILTER below is real: `me_model.species` is in this endpoint's
+      // `filter_keys` (app/service/single_neuron_synaptome.py:171) and the backend
+      // exercises `me_model__species__name` directly
+      // (tests/test_single_neuron_synaptome.py:463).
+      //
+      // The VALUE is not on the row. `SingleNeuronSynaptomeRead.me_model` is typed
+      // `NestedMEModel` (app/schemas/synaptome.py:44), and `NestedMEModel`
+      // (app/schemas/me_model.py:22) = `MEModelBaseMixin` + `NestedEntityRead` +
+      // `mtypes` + `etypes` — no `species`. `_load`
+      // (app/service/single_neuron_synaptome.py:36) joinedloads only
+      // `me_model → mtypes` / `me_model → etypes` before `raiseload("*")`, and the
+      // backend's own assertions on the payload cover exactly `me_model.id`,
+      // `me_model.mtypes`, `me_model.etypes`
+      // (tests/test_single_neuron_synaptome.py:64-68). `ISingleNeuronSynaptome` types
+      // `me_model` as the full `IMEModel`, which OVERSTATES the wire — see the note
+      // at the top of this file.
+      //
+      // The column is deliberately NOT removed: it is visible in the legacy
+      // `ViewDefForSingleNeuronSynaptome` and dropping it would diverge from the
+      // parity target. It renders the shared em-dash placeholder (`''` ⇒
+      // `EMPTY_PLACEHOLDER`) until either the backend nests `species` on
+      // `NestedMEModel` or the listing's owner decides to drop the column.
       getValue: (r) => r.me_model?.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: { operators: [OperatorId.Ilike], field: 'me_model__species__name' },
