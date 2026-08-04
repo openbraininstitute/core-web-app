@@ -50,7 +50,8 @@ vi.mock('@/features/brain-region-hierarchy/components/region-banner', () => ({
 }));
 
 const DATA_TYPE = ExtendedEntitiesTypeDict.IonChannelRecording;
-const LAYOUT_KEY = `data-grid:v1:l:vl/pr/data/${DATA_TYPE}/${WorkspaceScope.Public}`;
+// the layout slice is scoped to section + entity type only (no lab/project/scope)
+const LAYOUT_KEY = `data-grid:v1:l:${WorkspaceSection.Data}/${DATA_TYPE}`;
 const SESSION_KEY = `data-grid:v1:s:vl/pr/data/${DATA_TYPE}/${WorkspaceScope.Public}`;
 /** the third checkbox in the chooser (after "Select all" and "Preview") */
 const HIDDEN_COLUMN_ID = 'brainRegion';

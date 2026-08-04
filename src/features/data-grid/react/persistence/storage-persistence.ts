@@ -38,7 +38,13 @@ function pick(state: IGridState, keys: ReadonlyArray<keyof IGridState>): Partial
 function createStoragePersistence(
   getStorage: () => Storage | undefined,
   namespace: string,
-  keys: ReadonlyArray<keyof IGridState>
+  keys: ReadonlyArray<keyof IGridState>,
+  /**
+   * When set, this slice ignores the controller's `instanceKey` and stores under
+   * its own key instead. That lets one controller scope its slices differently —
+   * see {@link createLocalLayoutPersistence}.
+   */
+  fixedKey?: string
 ): IStatePersistence {
   const storage = (): Storage | undefined => {
     try {
@@ -47,7 +53,7 @@ function createStoragePersistence(
       return undefined;
     }
   };
-  const storageKey = (key: string) => `${namespace}${key}`;
+  const storageKey = (key: string) => `${namespace}${fixedKey ?? key}`;
 
   return {
     load(key) {
@@ -109,19 +115,42 @@ const NO_PERSISTENCE: IStatePersistence = {
  * the grid always opens on the schema's defaults. Stored layouts are left in place
  * rather than deleted, so turning the flag back on restores them.
  */
-export function createLocalLayoutPersistence(): IStatePersistence {
+export function createLocalLayoutPersistence(layoutKey?: string): IStatePersistence {
   if (!PERSIST_COLUMN_LAYOUT) return NO_PERSISTENCE;
   return createStoragePersistence(
     () => (typeof window !== 'undefined' ? window.localStorage : undefined),
     'data-grid:v1:l:',
-    LOCAL_KEYS
+    LOCAL_KEYS,
+    layoutKey
   );
 }
 
 /**
  * The standard pair used by entity listings: the always-on session slice plus the
  * flag-gated layout slice.
+ *
+ * `layoutKey` scopes the LAYOUT slice independently of the controller's
+ * `instanceKey`. Entity listings pass {@link layoutKeyFor} so a user's column
+ * layout follows the THING they are looking at (section + entity type) rather than
+ * the place they happen to be looking from — see that function for the reasoning.
  */
-export function createDefaultPersistence(): IStatePersistence[] {
-  return [createSessionStatePersistence(), createLocalLayoutPersistence()];
+export function createDefaultPersistence(layoutKey?: string): IStatePersistence[] {
+  return [createSessionStatePersistence(), createLocalLayoutPersistence(layoutKey)];
+}
+
+/**
+ * The layout key for an entity listing: **section + entity type, and nothing else.**
+ *
+ * Deliberately NARROWER than the controller's `instanceKey` (which also carries the
+ * virtual lab, project and scope). "Data → circuit" alone decides how that grid
+ * should look: a user who hides three columns on circuits means it for circuits, not
+ * for circuits-in-this-one-project-while-scoped-to-private. Keeping the lab/project/
+ * scope in the key would silently give them a different layout per project and per
+ * public/private toggle, and they would have to re-hide the same columns each time.
+ *
+ * The SESSION slice keeps the full `instanceKey`: filters are about the particular
+ * listing you are browsing, so they should NOT leak across projects or scopes.
+ */
+export function layoutKeyFor(section: string, dataType: string): string {
+  return `${section}/${dataType}`;
 }

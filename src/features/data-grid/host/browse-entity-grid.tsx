@@ -32,7 +32,7 @@ import {
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
-import { createDefaultPersistence, DataGrid } from '@/features/data-grid/react';
+import { createDefaultPersistence, DataGrid, layoutKeyFor } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -227,7 +227,11 @@ export function EntityDataGrid({
         schema: definition.schema,
         context: { dataType, section, scope, species: speciesKey, factors: extraFactors },
         instanceKey: dataKey,
-        persistence: createDefaultPersistence(),
+        // The session slice (filters/sort/page) is keyed by the full `dataKey`, but
+        // the LAYOUT slice is keyed by section + entity type only: how a circuit
+        // grid should look is decided by "Data → circuit", not by which project or
+        // scope you reached it from.
+        persistence: createDefaultPersistence(layoutKeyFor(section, dataType)),
         defaultPageSize: DEFAULT_PAGE_SIZE,
       }),
     [definition, dataKey, dataType, section, scope, speciesKey, extraFactors]

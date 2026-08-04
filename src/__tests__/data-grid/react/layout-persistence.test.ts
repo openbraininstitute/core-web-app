@@ -12,9 +12,13 @@ import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
  * (filters/sort/page/search) must not leak out of the tab's sessionStorage.
  *
  * These drive a real {@link GridController} against a live storage and then build a
- * SECOND controller with the same `instanceKey` — standing in for "the user comes
- * back tomorrow" — so the assertions cover the whole save → load → reconcile round
- * trip rather than the storage adapter in isolation.
+ * SECOND controller — standing in for "the user comes back tomorrow" — so the
+ * assertions cover the whole save → load → reconcile round trip rather than the
+ * storage adapter in isolation.
+ *
+ * The two slices are scoped DIFFERENTLY on purpose: the layout by section + entity
+ * type, the session state by the full `instanceKey` (lab/project/scope included).
+ * Several tests below exist to pin exactly that difference.
  */
 
 interface Row {
@@ -37,13 +41,16 @@ async function persistenceModule() {
   return import('@/features/data-grid/react/persistence/storage-persistence');
 }
 
-async function makeController() {
+/** The layout slice is scoped to section + entity type only. */
+const LAYOUT_KEY = 'data/test-entity';
+
+async function makeController(instanceKey: string = KEY, layoutKey: string = LAYOUT_KEY) {
   const { createDefaultPersistence } = await persistenceModule();
   return new GridController<Row>({
     schema: SCHEMA,
     context: { dataType: 'test' },
-    instanceKey: KEY,
-    persistence: createDefaultPersistence(),
+    instanceKey,
+    persistence: createDefaultPersistence(layoutKey),
     defaultPageSize: 10,
   });
 }
@@ -120,10 +127,10 @@ describe('column layout persistence (flag ON)', () => {
     controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
     controller.dispose();
 
-    const local = window.localStorage.getItem(`data-grid:v1:l:${KEY}`);
+    const local = window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`);
     expect(local).toBeTruthy();
     expect(JSON.parse(local as string)).toMatchObject({ hiddenColumns: ['species'] });
-    expect(window.sessionStorage.getItem(`data-grid:v1:l:${KEY}`)).toBeNull();
+    expect(window.sessionStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`)).toBeNull();
   });
 
   it('keeps filters OUT of the durable layout slice', async () => {
@@ -135,28 +142,104 @@ describe('column layout persistence (flag ON)', () => {
     });
     controller.dispose();
 
-    const local = JSON.parse(window.localStorage.getItem(`data-grid:v1:l:${KEY}`) as string);
+    const local = JSON.parse(window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`) as string);
     expect(local).not.toHaveProperty('filters');
     // …while the session slice does carry them, so a tab-local filter still survives
     // a soft navigation.
     expect(window.sessionStorage.getItem(`data-grid:v1:s:${KEY}`)).toBeTruthy();
   });
 
-  it('keeps each listing independent — one grid’s layout never reaches another', async () => {
+  it('remembers an AUXILIARY column the user switched on', async () => {
+    // `aux` is hidden by default; revealing it means removing it from hiddenColumns.
+    const first = await makeController();
+    expect(first.store.getSnapshot().hiddenColumns).toContain('aux');
+    first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });
+    first.dispose();
+
+    const next = await makeController();
+    expect(next.store.getSnapshot().hiddenColumns).not.toContain('aux');
+    next.dispose();
+  });
+
+  it('leaves an untouched auxiliary column hidden in a later session', async () => {
+    const first = await makeController();
+    first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['aux', 'species'] });
+    first.dispose();
+
+    const next = await makeController();
+    expect(next.store.getSnapshot().hiddenColumns).toContain('aux');
+    next.dispose();
+  });
+
+  it('hides an auxiliary column added AFTER the layout was saved', async () => {
+    // a saved layout predates every column declared since; a new auxiliary column
+    // must not appear for users who already have saved state.
+    const first = await makeController();
+    first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });
+    first.dispose();
+
     const { createDefaultPersistence } = await persistenceModule();
+    const withNewColumn = new GridController<Row>({
+      schema: {
+        ...SCHEMA,
+        columns: [...COLUMNS, { id: 'newAux', header: 'New aux', auxiliary: true }],
+      },
+      context: { dataType: 'test' },
+      instanceKey: KEY,
+      persistence: createDefaultPersistence(LAYOUT_KEY),
+      defaultPageSize: 10,
+    });
+    const hidden = withNewColumn.store.getSnapshot().hiddenColumns;
+    expect(hidden).toContain('newAux');
+    expect(hidden).not.toContain('aux'); // …without undoing the user's own choice
+    withNewColumn.dispose();
+  });
+
+  it('follows the entity type across projects and scopes', async () => {
+    // hide a column while in one project, scoped to private…
+    const first = await makeController('vlab/proj-a/data/test-entity/private');
+    first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
+    first.dispose();
+
+    // …and it is still hidden in another project, scoped to public: the layout is a
+    // property of "Data → this entity type", not of where you reached it from.
+    const elsewhere = await makeController('vlab/proj-b/data/test-entity/public');
+    expect(elsewhere.store.getSnapshot().hiddenColumns).toContain('species');
+    elsewhere.dispose();
+  });
+
+  it('keeps a different entity type on its own layout', async () => {
     const first = await makeController();
     first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
     first.dispose();
 
-    const other = new GridController<Row>({
-      schema: SCHEMA,
-      context: { dataType: 'test' },
-      instanceKey: 'vlab/proj/data/other-entity',
-      persistence: createDefaultPersistence(),
-      defaultPageSize: 10,
-    });
+    const other = await makeController(KEY, 'data/other-entity');
     expect(other.store.getSnapshot().hiddenColumns).not.toContain('species');
     other.dispose();
+  });
+
+  it('keeps the same entity type on separate layouts per section', async () => {
+    const inData = await makeController(KEY, 'data/test-entity');
+    inData.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
+    inData.dispose();
+
+    const inBuild = await makeController(KEY, 'build/test-entity');
+    expect(inBuild.store.getSnapshot().hiddenColumns).not.toContain('species');
+    inBuild.dispose();
+  });
+
+  it('keeps FILTERS per listing even though the layout is shared', async () => {
+    const first = await makeController('vlab/proj-a/data/test-entity/private');
+    first.store.dispatch({
+      type: GridActionType.SetFilter,
+      columnId: 'name',
+      filter: { operator: 'contains', value: 'x' },
+    });
+    first.dispose();
+
+    const elsewhere = await makeController('vlab/proj-b/data/test-entity/public');
+    expect(elsewhere.store.getSnapshot().filters).toEqual({});
+    elsewhere.dispose();
   });
 });
 
@@ -170,12 +253,12 @@ describe('column layout persistence (flag OFF)', () => {
     controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
     controller.dispose();
 
-    expect(window.localStorage.getItem(`data-grid:v1:l:${KEY}`)).toBeNull();
+    expect(window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`)).toBeNull();
   });
 
   it('ignores a layout saved while the flag was on, without deleting it', async () => {
     const stored = JSON.stringify({ hiddenColumns: ['species'], columnOrder: ['species', 'name'] });
-    window.localStorage.setItem(`data-grid:v1:l:${KEY}`, stored);
+    window.localStorage.setItem(`data-grid:v1:l:${LAYOUT_KEY}`, stored);
 
     const controller = await makeController();
     // opens on the schema defaults…
@@ -184,7 +267,7 @@ describe('column layout persistence (flag OFF)', () => {
     controller.dispose();
 
     // …and the saved layout is still there for when the flag flips back on.
-    expect(window.localStorage.getItem(`data-grid:v1:l:${KEY}`)).toBe(stored);
+    expect(window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`)).toBe(stored);
   });
 
   it('leaves the session slice (filters/sort/page) working', async () => {

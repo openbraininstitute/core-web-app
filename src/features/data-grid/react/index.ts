@@ -15,6 +15,7 @@ export {
   createDefaultPersistence,
   createLocalLayoutPersistence,
   createSessionStatePersistence,
+  layoutKeyFor,
 } from './persistence/storage-persistence';
 export { DataGridToolbar } from './toolbar';
 export { useDataGrid } from './use-data-grid';

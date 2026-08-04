@@ -477,18 +477,26 @@ filter to a column.** Live examples:
 
 State is persisted in **two deliberately separate slices** (`react/persistence/storage-persistence.ts`):
 
-| slice | storage | keeps | lifetime |
-| --- | --- | --- | --- |
-| session | `sessionStorage`, `data-grid:v1:s:<instanceKey>` | `filters`, `sort`, `page`, `pageSize`, `quickFilter` | the browser tab |
-| layout | `localStorage`, `data-grid:v1:l:<instanceKey>` | `columnOrder`, `hiddenColumns`, `columnWidths` | across sessions |
+| slice | storage | key | keeps | lifetime |
+| --- | --- | --- | --- | --- |
+| session | `sessionStorage` | `data-grid:v1:s:<instanceKey>` | `filters`, `sort`, `page`, `pageSize`, `quickFilter` | the browser tab |
+| layout | `localStorage` | `data-grid:v1:l:<section>/<dataType>` | `columnOrder`, `hiddenColumns`, `columnWidths` | across sessions |
 
 The split is a product decision, not an implementation detail: a saved **layout** is a
 lasting preference ("I never want to see these columns"), whereas a **filter** is a
 transient act of browsing that should not silently still be applied a week later.
 Selection and expansion are never persisted.
 
-`instanceKey` is the `dataKey` (vlab / project / section / dataType / scope), so each
-listing is remembered independently and nothing leaks between projects.
+**The two slices are scoped differently, on purpose.** The session slice uses the full
+`instanceKey` (the `dataKey`: vlab / project / section / dataType / scope), so filters
+never leak between projects or between public and private. The layout slice uses
+`layoutKeyFor(section, dataType)` — **section + entity type and nothing else**. A user
+who hides three columns on Data → circuit means it for circuits; keeping the lab,
+project or scope in that key would hand them a different layout per project and per
+public/private toggle, and make them re-hide the same columns over and over.
+
+Pass the layout key at the host: `createDefaultPersistence(layoutKeyFor(section, dataType))`.
+The adapter ignores the controller's `instanceKey` when given one.
 
 **The dev switch.** `config.ts` exports `PERSIST_COLUMN_LAYOUT`. Set it to `false` and
 `createLocalLayoutPersistence()` returns a no-op adapter: nothing is written, and
