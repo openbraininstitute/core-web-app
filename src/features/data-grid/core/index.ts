@@ -22,6 +22,11 @@ export {
 } from './domain/filter-labels';
 export { FilterValueKind, isEmptyFilterValue, summarizeFilter } from './domain/filter-model';
 export {
+  AUXILIARY_FILTER_GROUP_ID,
+  AUXILIARY_FILTER_GROUP_LABEL,
+  resolveFilterPanelGroups,
+} from './domain/filter-panel';
+export {
   activeFilterTarget,
   availableFilterTargets,
   DEFAULT_FILTER_TARGET_ID,

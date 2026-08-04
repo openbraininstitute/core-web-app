@@ -142,10 +142,42 @@ export const cellMorphologySchema: IGridSchema<ICellMorphology> = {
 };
 ```
 
-That is the whole integration. The toolbar button renders itself as soon as
-`schema.advancedFilters` is non-empty (`react/data-grid.tsx`), the menubar builds
-itself from `resolveAdvancedFilterGroups(schema, ctx)`, and the entry serializes
+That is the whole integration. The toolbar button renders itself as soon as the
+panel has anything in it, the menubar builds itself from
+`resolveFilterPanelGroups(schema, ctx, hiddenColumns)`, and the entry serializes
 through the same strategy table as any column filter.
+
+## Auxiliary columns — the panel is DERIVED
+
+Every backend-filterable field is represented **exactly once**: as a column (visible
+or auxiliary) OR as an entry in `schema.advancedFilters`, never both. ID-type fields
+(`id`, `*__id`) stay advanced filters — there is no useful column to show for them.
+
+An **auxiliary column** (`IColumnModel.auxiliary`) is a filterable field the grid can
+show but hides until the user ticks it in the column chooser's "More columns"
+section. `auxiliary` IMPLIES `hiddenByDefault` (an explicit `hiddenByDefault` still
+wins), so there is one default-visibility mechanism, not two. What the toolbar panel
+offers then follows from visibility:
+
+    panel = schema.advancedFilters + auxiliary columns currently hidden
+
+Tick an auxiliary column and its filter leaves the panel for the column header;
+untick it and it comes back. `resolveFilterPanelGroups`
+(`core/domain/filter-panel.ts`) is the single place that derivation lives; it appends
+the auxiliary entries to a flat schema's one group, and gives them a `Columns` group
+of their own only when the schema is genuinely grouped.
+
+**Filter-state continuity** is what makes the move safe: an auxiliary column's entry
+is keyed by its **column id** in both surfaces (advanced filters use the disjoint
+`adv:…` namespace), and the serializer resolves it through the column lookup
+regardless of visibility. Ticking is therefore purely presentational — the applied
+entry keeps its key, its `targetId` and its value, and is never dropped, duplicated
+or serialized twice.
+
+**Sort safety**: entitycore 422s on an `order_by` outside the endpoint's
+`ordering_model_fields`, so an auxiliary column must stay `sortable: false` unless its
+field is in that allowlist (`app/filters/*.py`; note a list can SPREAD its parent's
+via `*ParentFilter.Constants.ordering_model_fields`).
 
 ## Groups, and why today's schemas show none
 

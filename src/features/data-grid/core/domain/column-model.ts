@@ -157,7 +157,37 @@ export interface IColumnModel<Row = unknown> {
   /**
    * Start hidden — present in the grid and offered by the column chooser, but not
    * shown until the user enables it. Contextual (default: false).
+   *
+   * Leave it undefined on an {@link auxiliary} column: `auxiliary` IMPLIES
+   * hidden-by-default (see `resolveColumns`). Declaring it explicitly is the escape
+   * hatch — it always wins — not the normal way to hide an auxiliary column.
    */
   hiddenByDefault?: TContextualValue<boolean>;
+  /**
+   * AUXILIARY COLUMN — a backend-filterable field the grid can show, but does not
+   * show until the user asks for it in the column chooser's "More columns" section.
+   *
+   * It is the presentation half of one organising rule: every backend-filterable
+   * field is represented EXACTLY ONCE — as a column (visible or auxiliary) or as an
+   * entry in {@link IGridSchema.advancedFilters}, never both. Which surface offers
+   * its FILTER is then derived, not declared:
+   *
+   *     advanced panel = schema.advancedFilters + auxiliary columns currently hidden
+   *
+   * so ticking an auxiliary column moves its filter from the toolbar panel into the
+   * column header and unticking moves it back (see `resolveFilterPanelGroups`).
+   * Because both surfaces key the filter by this column's `id`, that move is purely
+   * presentational: an applied filter survives it untouched.
+   *
+   * NOT contextual, unlike {@link hiddenByDefault}: "this column is auxiliary" is a
+   * statement about the schema's shape, not about one view. It implies
+   * `hiddenByDefault: true` unless the column declares `hiddenByDefault` itself, so
+   * there is one default-visibility mechanism, not two competing ones.
+   *
+   * SORT SAFETY: entitycore rejects an `order_by` outside the endpoint's
+   * `ordering_model_fields` with a 422, so an auxiliary column must stay
+   * `sortable: false` unless its field is in that allowlist.
+   */
+  auxiliary?: boolean;
   filter?: IColumnFilter;
 }

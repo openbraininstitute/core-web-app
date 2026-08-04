@@ -20,11 +20,19 @@ export interface IColumnChooserProps<Row> {
  * Renderer-agnostic column visibility control: reads the resolved columns and the
  * `hiddenColumns` state, dispatches `setHiddenColumns`. The legacy "active columns"
  * feature, re-expressed against the new store.
+ *
+ * AUXILIARY columns are listed apart, under "More columns": they are backend-
+ * filterable fields the grid CAN show but does not by default, and folding them into
+ * the main list would bury the columns the grid is actually about. Ticking one also
+ * moves its filter out of the advanced-filters panel and into its column header (see
+ * `resolveFilterPanelGroups`) — the checkbox is the single control for both.
  */
 export function ColumnChooser<Row>({ controller, state, className }: IColumnChooserProps<Row>) {
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
   const hidden = useMemo(() => new Set(state.hiddenColumns), [state.hiddenColumns]);
   const value = columns.filter((c) => !hidden.has(c.id)).map((c) => c.id);
+  const regular = columns.filter((c) => !c.auxiliary);
+  const auxiliary = columns.filter((c) => c.auxiliary);
 
   const onChange = (checked: Array<string>) => {
     const checkedSet = new Set(checked);
@@ -44,11 +52,23 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
       )}
     >
       <div className="flex flex-col gap-1">
-        {columns.map((c) => (
+        {regular.map((c) => (
           <Checkbox key={c.id} value={c.id}>
             {c.header}
           </Checkbox>
         ))}
+        {auxiliary.length > 0 ? (
+          <>
+            <span className="mt-2 border-t border-gray-100 px-0.5 pt-2 text-[11px] font-bold uppercase tracking-wide text-primary-8">
+              More columns
+            </span>
+            {auxiliary.map((c) => (
+              <Checkbox key={c.id} value={c.id}>
+                {c.header}
+              </Checkbox>
+            ))}
+          </>
+        ) : null}
       </div>
     </Checkbox.Group>
   );

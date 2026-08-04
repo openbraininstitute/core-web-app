@@ -55,7 +55,13 @@ export function resolveColumns<Row>(
         ? resolveContextual(column.filter.available ?? true, ctx)
         : false,
       filterTargets: availableFilterTargets(column, ctx),
-      hiddenByDefaultResolved: resolveContextual(column.hiddenByDefault ?? false, ctx),
+      // `auxiliary` IMPLIES hidden-by-default — one mechanism, not two: an auxiliary
+      // column is opt-in by definition. An explicit `hiddenByDefault` still wins, so
+      // a schema can declare an auxiliary column that starts visible if it must.
+      hiddenByDefaultResolved: resolveContextual(
+        column.hiddenByDefault ?? column.auxiliary ?? false,
+        ctx
+      ),
     }));
 }
 

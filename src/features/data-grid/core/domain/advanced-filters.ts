@@ -57,13 +57,27 @@ export function isAdvancedFilterKey(key: string): boolean {
   return key.startsWith(ADVANCED_FILTER_KEY_PREFIX);
 }
 
-/** One advanced filter, paired with its state key and owning group. */
+/**
+ * One entry of the advanced-filters panel, paired with its state key and owning
+ * group. Its two producers are {@link resolveAdvancedFilterGroups} (a schema-level
+ * advanced filter) and `resolveFilterPanelGroups` (a currently-hidden AUXILIARY
+ * column, whose key is the COLUMN ID) — the panel treats them identically.
+ */
 export interface IResolvedAdvancedFilter {
-  /** key into {@link IGridState.filters} */
+  /** key into {@link IGridState.filters} — `adv:<group>:<filter>`, or a column id */
   key: string;
   groupId: string;
   groupLabel: string;
+  /** name shown in the panel: the filter's label, or an auxiliary column's header */
+  label: string;
+  /** the primary/default target — `targets[0]` */
   def: TAdvancedFilterDef;
+  /**
+   * Every field this entry can be matched by. Exactly one for a schema-level
+   * advanced filter; an auxiliary column contributes all of ITS targets, so the
+   * panel offers the same "match by" switch its header would.
+   */
+  targets: ReadonlyArray<TAdvancedFilterDef>;
 }
 
 /** A group whose filters have been resolved against the context. */
@@ -94,7 +108,9 @@ export function resolveAdvancedFilterGroups<Row>(
           key: advancedFilterKey(group.id, def.id),
           groupId: group.id,
           groupLabel: group.label,
+          label: def.label,
           def,
+          targets: [def],
         })),
     }))
     .filter((group) => group.filters.length > 0);

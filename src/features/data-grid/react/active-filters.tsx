@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
-import { GridActionType, resolveAdvancedFilterGroups, summarizeFilterEntry } from '../core';
+import { GridActionType, resolveFilterPanelGroups, summarizeFilterEntry } from '../core';
 import { AdvancedFiltersMenu } from './advanced-filters';
 import { ExpandingToolbarButton } from './expanding-toolbar-button';
 import { GRID_OVERLAY_Z_CLASS } from './molecules-theme';
@@ -27,9 +27,10 @@ export interface IActiveFiltersButtonProps<Row> {
  * Toolbar filter control. It owns BOTH filter concerns that live outside a column
  * header:
  *
- * 1. ADVANCED FILTERS — the schema's `advancedFilters` groups, offered as a menubar
- *    (see {@link AdvancedFiltersMenu}). These are backend filters with no column, so
- *    the toolbar is their only surface.
+ * 1. ADVANCED FILTERS — every filter with no VISIBLE column: the schema's
+ *    `advancedFilters` groups PLUS the auxiliary columns the user has not ticked,
+ *    offered as a menubar (see {@link AdvancedFiltersMenu}). The toolbar is their
+ *    only surface for exactly as long as they have no column header of their own.
  * 2. ACTIVE FILTERS — every applied filter, column or advanced, each with its own
  *    reset, plus a global "reset all".
  *
@@ -46,9 +47,12 @@ export function ActiveFiltersButton<Row>({
 }: IActiveFiltersButtonProps<Row>) {
   const [open, setOpen] = useState(false);
 
+  // The panel is DERIVED: the schema's advanced filters plus the auxiliary columns
+  // currently hidden (see `resolveFilterPanelGroups`). Keyed on the reactive
+  // `hiddenColumns` so ticking an auxiliary column removes it from here at once.
   const groups = useMemo(
-    () => resolveAdvancedFilterGroups(controller.schema, controller.context),
-    [controller]
+    () => resolveFilterPanelGroups(controller.schema, controller.context, state.hiddenColumns),
+    [controller, state.hiddenColumns]
   );
 
   // Label per state key: column headers, plus the advanced filter's own label —
@@ -57,13 +61,16 @@ export function ActiveFiltersButton<Row>({
   // prefixing every row with it is pure noise.
   const labelByKey = useMemo(() => {
     const map = new Map<string, string>();
-    for (const c of controller.resolvedColumns()) map.set(c.id, c.header);
     const grouped = groups.length > 1;
     for (const g of groups) {
       for (const f of g.filters) {
-        map.set(f.key, grouped ? `${g.label} · ${f.def.label}` : f.def.label);
+        map.set(f.key, grouped ? `${g.label} · ${f.label}` : f.label);
       }
     }
+    // Columns LAST, so a hidden auxiliary column — which is in `groups` too — is
+    // named by its header alone. Its identity does not change with the surface that
+    // happens to be editing it.
+    for (const c of controller.resolvedColumns()) map.set(c.id, c.header);
     return map;
   }, [controller, groups]);
 
