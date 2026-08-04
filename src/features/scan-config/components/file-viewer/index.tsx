@@ -11,8 +11,12 @@ import { cn } from '@/utils/css-class';
 
 import { jsonFileAtomFamily } from '../atoms';
 import { CodeFileViewer } from './code-viewer';
+import { isDirectoryAsset } from './directory-entries';
+import { DirectoryFileViewer } from './directory-viewer';
 import { ImageFileViewer } from './image-viewer';
+import { PdfFileViewer } from './pdf-viewer';
 
+import type { ReactNode } from 'react';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -34,19 +38,29 @@ function isImageFile(file: TActivityCustomFile): boolean {
   return IMAGE_CONTENT_TYPES.has(file.asset.content_type);
 }
 
-export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
-  const [displayFile, setDisplayFile] = useState<TActivityCustomFile | undefined>(file);
-
-  const isFilePreloading = file && file !== displayFile;
-
-  const isJson =
-    displayFile?.asset.content_type === AssetContentType.json ||
-    file?.enforcedRenderType === AssetContentType.json;
-  const isImage = !!displayFile && isImageFile(displayFile);
-  const edgeToEdge = isJson || isImage;
-
-  const viewerContent = match(displayFile)
+/**
+ * The viewer a file's content type calls for.
+ *
+ * Kept as a function so the directory viewer can render the file the user opened from its listing
+ * through the very same dispatch, instead of duplicating the content-type branching.
+ */
+function renderFileContent(
+  file: TActivityCustomFile | undefined,
+  context: WorkspaceContext
+): ReactNode {
+  return match(file)
     .with(undefined, () => null)
+    .with(
+      P.when((f) => isDirectoryAsset(f.asset)),
+      (f) => (
+        <DirectoryFileViewer
+          key={f.asset.id}
+          file={f}
+          context={context}
+          renderChild={(child) => renderFileContent(child, context)}
+        />
+      )
+    )
     .with(
       P.when(
         (f) =>
@@ -56,6 +70,14 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
       (f) => <JsonFileViewer file={f} context={context} />
     )
     .with(P.when(isImageFile), (f) => <ImageFileViewer file={f} context={context} />)
+    .with(
+      P.when(
+        (f) =>
+          f.asset.content_type === AssetContentType.pdf ||
+          f.enforcedRenderType === AssetContentType.pdf
+      ),
+      (f) => <PdfFileViewer file={f} context={context} />
+    )
     .with({ asset: { content_type: AssetContentType.nwb } }, (f) => (
       <NwbFileViewer file={f} context={context} />
     ))
@@ -71,6 +93,26 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
       (f) => <H5SonataFileViewer file={f} context={context} />
     )
     .otherwise((f) => <PlaceholderFileViewer file={f} />);
+}
+
+export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
+  const [displayFile, setDisplayFile] = useState<TActivityCustomFile | undefined>(file);
+
+  const isFilePreloading = file && file !== displayFile;
+
+  const isJson =
+    displayFile?.asset.content_type === AssetContentType.json ||
+    file?.enforcedRenderType === AssetContentType.json;
+  const isImage = !!displayFile && isImageFile(displayFile);
+  // the directory grid and the paged document lay out their own padding and scrolling, and the
+  // file a directory opens should fill the pane
+  const isDirectory = !!displayFile && isDirectoryAsset(displayFile.asset);
+  const isPdf =
+    displayFile?.asset.content_type === AssetContentType.pdf ||
+    displayFile?.enforcedRenderType === AssetContentType.pdf;
+  const edgeToEdge = isJson || isImage || isDirectory || isPdf;
+
+  const viewerContent = renderFileContent(displayFile, context);
 
   return (
     <div

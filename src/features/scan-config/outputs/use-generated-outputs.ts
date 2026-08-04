@@ -1,40 +1,54 @@
-import { useQueries } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef } from 'react';
 
+import { invalidateDataListings } from '@/features/scan-config/outputs/invalidate-listings';
 import {
   getOutputStrategyById,
   resolveStrategyForRef,
 } from '@/features/scan-config/outputs/registry';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TResolvedOutput } from '@/features/scan-config/outputs/types';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Args = {
+  /** Task activity whose `generated` refs are resolved; `undefined` while the run is unknown. */
   execution?: ITaskActivity;
+  /** Virtual lab and project the entities are read from. */
   context: WorkspaceContext;
   /**
-   * Whether strategies may poll for assets written after a run finishes. Off when viewing a past
-   * campaign, where nothing new is coming.
+   * Whether strategies may poll for assets written after a run finishes.
+   *
+   * @defaultValue true
    */
   pollingEnabled?: boolean;
 };
 
 type Result = {
+  /** One row per file the resolved outputs expose, in `generated` order. */
   files: TActivityCustomFile[];
+  /** `true` while at least one generated ref is still resolving. */
   isLoading: boolean;
 };
 
 /**
- * The output files of a run, whatever it generated.
+ * Resolves a run's `generated` refs into the output files its panel lists.
  *
- * Every entry of the activity's `generated` array is resolved through the output strategy that
- * claims it, so a run that produces several entities lists all of them — reading only the first
- * hides the rest, and a workflow that generates a shape the caller did not anticipate shows
- * nothing at all.
+ * @param args - See {@link Args}.
+ * @returns The resolved files and their loading state; see {@link Result}.
+ *
+ * @remarks
+ * Each ref is resolved through the output strategy that claims it, so a run producing several
+ * entities lists all of them, and a workflow producing an unanticipated shape still renders once a
+ * strategy is registered for it.
+ *
+ * As a side effect, the Data listings the resolved entities belong to are refetched once every ref
+ * has settled — see {@link invalidateDataListings}.
  */
 export function useGeneratedOutputs({ execution, context, pollingEnabled = true }: Args): Result {
+  const queryClient = useQueryClient();
   const refs = useMemo(() => execution?.generated ?? [], [execution?.generated]);
 
   const queries = useQueries({
@@ -71,6 +85,34 @@ export function useGeneratedOutputs({ execution, context, pollingEnabled = true 
       }),
     [queries]
   );
+
+  // Settled means no query is in flight, not that every ref produced data: a ref with no id keeps
+  // its query disabled and therefore pending forever, which must not block the rest of the run.
+  const settled = queries.every((query) => !query.isFetching);
+  const listingTypes = settled
+    ? [
+        ...new Set(
+          queries
+            .map((query) => query.data?.extendedType)
+            .filter((type): type is TExtendedEntitiesTypeDict => !!type)
+        ),
+      ].sort()
+    : [];
+  // Identifies the run as well as its types: two configs of one campaign feed the same listing,
+  // and selecting the second must refresh it again rather than read as already handled.
+  const invalidation = listingTypes.length
+    ? `${execution?.id ?? ''}|${listingTypes.join(',')}`
+    : '';
+  const invalidated = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Runs once per (run, types) pair, so a strategy polling for a late asset does not
+    // re-invalidate on every poll tick.
+    if (!invalidation || invalidated.current === invalidation) return;
+
+    invalidated.current = invalidation;
+    invalidateDataListings({ queryClient, listingTypes });
+  }, [invalidation, listingTypes, queryClient]);
 
   return { files, isLoading: queries.some((query) => query.isLoading) };
 }

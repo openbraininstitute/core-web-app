@@ -1,3 +1,4 @@
+import { isDirectoryAsset } from '@/features/scan-config/components/file-viewer/directory-entries';
 import { classNames } from '@/util/utils';
 
 import type { ReactNode } from 'react';
@@ -15,7 +16,9 @@ type Props = {
 export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
   const displayName = name ?? fileName;
-  const badgeContent = label ?? fileName?.split('.').at(-1);
+  // a directory asset has no extension to fall back on, and "figures" is not a format
+  const badgeContent =
+    label ?? (isDirectoryAsset(file.asset) ? 'folder' : fileName?.split('.').at(-1));
 
   return (
     <button
