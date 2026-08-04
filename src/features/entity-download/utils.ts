@@ -23,6 +23,56 @@ import type { WorkspaceContext } from '@/types/common';
 
 const README_TEMPLATE_DIR = './src/features/entity-download/readme-templates';
 
+/** Extension of every entity archive: a tar stream piped through gzip. */
+const ARCHIVE_EXTENSION = 'tar.gz';
+
+/** Longest name segment kept in an archive file name. */
+const MAX_ARCHIVE_NAME_LENGTH = 100;
+
+/**
+ * Makes an entity name safe to use inside a file name and a `Content-Disposition` header.
+ *
+ * @param name - Entity name as registered.
+ * @returns The name with unsupported characters replaced by `-`, or `''` when nothing is left.
+ *
+ * @remarks
+ * Deliberately not `kebabCase`: that splits on case and digit boundaries, turning
+ * `EFeature … op3` into `e-feature … op-3`. Only characters that would break a header (quotes,
+ * newlines, `;`) or read as a path (`/`, `\`) are replaced, so the name stays recognisable.
+ */
+function sanitizeArchiveName(name: string): string {
+  return name
+    .replace(/[^\w.-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '')
+    .slice(0, MAX_ARCHIVE_NAME_LENGTH);
+}
+
+/**
+ * Names the archive of an entity batch.
+ *
+ * @param params - Naming inputs.
+ * @param params.entityType - Entitycore type of the downloaded entities.
+ * @param params.name - Name of the single selected entity, when there is exactly one.
+ * @returns `<type>__<name>.tar.gz`, or `<type>.tar.gz` when no usable name was given.
+ *
+ * @example
+ * getEntityArchiveFilename({ entityType: 'task_result', name: 'EFeature Result — op3' });
+ * // 'task-result__EFeature-Result-op3.tar.gz'
+ */
+export function getEntityArchiveFilename({
+  entityType,
+  name,
+}: {
+  entityType: TEntityTypeDict;
+  name?: string | null;
+}): string {
+  const type = kebabCase(entityType);
+  const safeName = name ? sanitizeArchiveName(name) : '';
+
+  return safeName ? `${type}__${safeName}.${ARCHIVE_EXTENSION}` : `${type}.${ARCHIVE_EXTENSION}`;
+}
+
 /**
  * Generates headers for a file download stream.
  *

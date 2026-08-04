@@ -59,10 +59,13 @@ describe('DataActions download (mini-detail-view, section: Data)', () => {
     fireEvent.click(screen.getByTitle('download'));
 
     await waitFor(() => {
-      expect(downloadArchive).toHaveBeenCalledWith(record.type, [record.id], {
-        virtualLabId: 'vl-1',
-        projectId: 'proj-1',
-      });
+      // the record's name travels with it, so the archive is named after the entity
+      expect(downloadArchive).toHaveBeenCalledWith(
+        record.type,
+        [record.id],
+        { virtualLabId: 'vl-1', projectId: 'proj-1' },
+        record.name
+      );
     });
   });
 

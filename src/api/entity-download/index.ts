@@ -11,17 +11,21 @@ export default async function createDownloadTicket({
   virtualLabId,
   projectId,
   entityIds,
+  name,
 }: {
   entityType: TEntityTypeDict;
   virtualLabId?: string;
   projectId?: string;
   entityIds: string[];
+  /** name of the single selected entity; names the archive when present */
+  name?: string | null;
 }): Promise<CreateTicketResponse> {
   const url = `${window.location.origin}/api/entity-download/${kebabCase(entityType)}/ticket`;
   const downloadTicketRequest = {
     virtualLabId,
     projectId,
     entityIds,
+    name,
   };
   const response = await fetch(url, {
     method: 'post',
