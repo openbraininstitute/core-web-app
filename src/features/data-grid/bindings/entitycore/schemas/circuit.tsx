@@ -137,7 +137,12 @@ function localizedNumber(value: number | null | undefined): string {
 export const circuitSchema: IGridSchema<Row> = {
   id: 'circuit',
   getRowId: (row) => row.id,
-  selection: { enabled: true },
+  // NO selection: the circuit listing has no checkboxes and no bulk-action selection
+  // (parity with the legacy antd listing, whose per-row Download action column stood
+  // in for them). Selection is opt-in, so omitting the spec IS the opt-out. The
+  // workflow PICKERS are unaffected: a picker supplies its own `selectionType` /
+  // `onRowsSelected` through `mainTableProps`, which `<DataGrid>` honours
+  // independently of the schema (see `pickerMode` in `react/data-grid.tsx`).
   // Sorting is off in the HIERARCHY view: rows there are a derivation tree whose
   // order is structural, and the view-aware data source ignores `order_by`, so a
   // sortable header would be a control that does nothing. The legacy listing did the
