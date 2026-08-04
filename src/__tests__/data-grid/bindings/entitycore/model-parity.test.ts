@@ -208,8 +208,75 @@ describe('memodel parity', () => {
       'etype',
       'createdBy',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'morphologyName',
+      'morphologyHasSegmentedSpines',
+      'emodelName',
+      'emodelScore',
+      'strainName',
+      'contributions',
     ]);
   });
+
+  it('the auxiliary columns carry the filters they replaced, and NONE of them sorts', () => {
+    const resolved = resolveColumns(s, ctx('memodel'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual([
+      'morphologyName',
+      'morphologyHasSegmentedSpines',
+      'emodelName',
+      'emodelScore',
+      'strainName',
+      'contributions',
+    ]);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    expect(
+      serializeQuery(query({ filters: ilike('morphologyName') }), s).morphology__name__ilike
+    ).toBe('%foo%');
+    expect(
+      serializeQuery(query({ filters: boolTrue('morphologyHasSegmentedSpines') }), s)
+        .morphology__has_segmented_spines
+    ).toBe(true);
+    expect(serializeQuery(query({ filters: ilike('emodelName') }), s).emodel__name__ilike).toBe(
+      '%foo%'
+    );
+    const scored = serializeQuery(query({ filters: range('emodelScore', 0, 10) }), s);
+    expect(scored.emodel__score__gte).toBe(0);
+    expect(scored.emodel__score__lte).toBe(10);
+    expect(serializeQuery(query({ filters: ilike('strainName') }), s).strain__name__ilike).toBe(
+      '%foo%'
+    );
+    expect(
+      serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
+    ).toEqual(['x']);
+
+    // MEModelFilter.Constants.ordering_model_fields lists none of these six
+    for (const id of aux) {
+      expect(s.columns.find((c) => c.id === id)?.sortable).toBe(false);
+    }
+  });
+
+  /**
+   * `MEModelRead` embeds the FULL `CellMorphologyRead` / `EModelRead` (not a nested
+   * minimal read) and carries `strain`, so these are real values — not blank columns
+   * over filter-only fields.
+   */
+  it('the nested cells read values the list response actually returns', () => {
+    const row = {
+      morphology: { name: 'L5 TPC', has_segmented_spines: true },
+      emodel: { name: 'cADpyr', score: 42 },
+      strain: { name: 'C57BL/6J' },
+    } as never;
+    expect(s.columns.find((c) => c.id === 'morphologyName')?.getValue?.(row)).toBe('L5 TPC');
+    expect(s.columns.find((c) => c.id === 'morphologyHasSegmentedSpines')?.getValue?.(row)).toBe(
+      'Yes'
+    );
+    expect(s.columns.find((c) => c.id === 'emodelName')?.getValue?.(row)).toBe('cADpyr');
+    expect(s.columns.find((c) => c.id === 'emodelScore')?.getValue?.(row)).toBe('42');
+    expect(s.columns.find((c) => c.id === 'strainName')?.getValue?.(row)).toBe('C57BL/6J');
+  });
+
   it('mtype/etype/species facets + createdBy serialize to legacy keys', () => {
     expect(serializeQuery(query({ filters: setIn('mtype') }), s).mtype__pref_label__in).toEqual([
       'x',

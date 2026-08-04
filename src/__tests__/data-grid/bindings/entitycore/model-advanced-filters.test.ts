@@ -217,36 +217,21 @@ describe('emodel advanced filters — GET /emodel', () => {
   });
 });
 
-/** `memodel` and `me_model_circuit` share one declaration — assert both. */
-const MEMODEL_CASES: ReadonlyArray<TCase> = [
-  ['morphology', 'name', OperatorId.Ilike, text('L5'), { morphology__name__ilike: '%L5%' }],
-  ['morphology', 'name', OperatorId.In, set('L5 TPC'), { morphology__name__in: ['L5 TPC'] }],
-  ['morphology', 'name', OperatorId.Eq, text('L5 TPC'), { morphology__name: 'L5 TPC' }],
-  [
-    'morphology',
-    'hasSegmentedSpines',
-    OperatorId.Bool,
-    bool(true),
-    { morphology__has_segmented_spines: true },
-  ],
-  ['emodel', 'name', OperatorId.Ilike, text('cADpyr'), { emodel__name__ilike: '%cADpyr%' }],
-  ['emodel', 'name', OperatorId.In, set('cADpyr'), { emodel__name__in: ['cADpyr'] }],
-  ['emodel', 'name', OperatorId.Eq, text('cADpyr'), { emodel__name: 'cADpyr' }],
-  [
-    'emodel',
-    'score',
-    OperatorId.Range,
-    range(0, 10),
-    { emodel__score__gte: 0, emodel__score__lte: 10 },
-  ],
-  ['strain', 'name', OperatorId.Ilike, text('C57'), { strain__name__ilike: '%C57%' }],
-  ['strain', 'name', OperatorId.In, set('C57BL/6J'), { strain__name__in: ['C57BL/6J'] }],
-  ...CONTRIBUTION_CASES,
-  ...RECORD_ID_CASES,
-];
+/**
+ * `memodel` and `me_model_circuit` share one declaration — assert both. Both
+ * `morphology__*` fields, both `emodel__*` fields, `strain__name` and
+ * `contribution__pref_label` are AUXILIARY COLUMNS now; their wire params are pinned
+ * in `model-parity.test.ts`. Only the record's own `id` is left on the panel.
+ */
+const MEMODEL_CASES: ReadonlyArray<TCase> = [...RECORD_ID_CASES];
 
 describe('memodel advanced filters — GET /memodel', () => {
   suite(memodelSchema, MEMODEL_CASES);
+
+  it('keeps only `id` — morphology / e-model / strain / contributor are columns now', () => {
+    const fields = [...advancedFilterDefsByKey(memodelSchema).values()].map((d) => d.field);
+    expect(fields).toEqual(['id']);
+  });
 });
 
 describe('me-model-circuit advanced filters — GET /memodel', () => {
