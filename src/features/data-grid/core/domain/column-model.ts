@@ -38,12 +38,7 @@ export type TFilterOptionsSource =
       load: () => Promise<Array<{ id: string; label: string }>>;
     };
 
-/**
- * How a SET filter with no {@link TFilterOptionsSource} collects its values, i.e.
- * what the free-entry (paste-a-list) editor accepts and validates:
- * - `uuid` — canonical UUIDs only; malformed tokens are flagged and block Apply.
- * - `text` — arbitrary strings (exact names, document URLs, …); nothing to validate.
- */
+/** What a free-entry (paste-a-list) filter editor accepts. `uuid` is validated; `text` is not. */
 export const FreeEntryKind = {
   Uuid: 'uuid',
   Text: 'text',
@@ -53,14 +48,8 @@ export type TFreeEntryKind = (typeof FreeEntryKind)[keyof typeof FreeEntryKind];
 
 /**
  * One backend field a column can be filtered BY ("match by name" vs "match by id").
- * A column declares its targets on {@link IColumnFilter.targets}; the filter editor
- * renders a segmented switch when more than one is visible, and the active target's
- * {@link field} is what the binding serializes.
- *
- * The legacy flat `{ field, operators, options, facetKey, description }` on
- * {@link IColumnFilter} IS an implicit single target — see `resolveFilterTargets`,
- * which synthesises it when {@link IColumnFilter.targets} is absent, so every
- * pre-existing schema keeps working untouched.
+ * The editor shows a switch when a column declares more than one; the active
+ * target's {@link field} is what gets serialized.
  */
 export interface IFilterTarget {
   /** stable id, persisted on the filter entry (`'name'`, `'id'`, `'acronym'`, …) */
@@ -77,18 +66,9 @@ export interface IFilterTarget {
   facetKey?: string;
   /** short help text shown at the top of the filter popup for this target */
   description?: string;
-  /**
-   * Placeholder for this target's value input, overriding the one derived from the
-   * active operator (see `resolveFilterPlaceholder`). Declare it whenever the
-   * generic wording would mislead — the editor is shared by every filter, so it
-   * cannot know that a field wants an acronym, a URL or an annotation value.
-   */
+  /** overrides the placeholder derived from the active operator */
   placeholder?: string;
-  /**
-   * For a set target WITHOUT {@link options} (a free-entry, paste-a-list target):
-   * what its tokens are. Defaults to {@link FreeEntryKind.Uuid} — the historical
-   * behaviour, since every free-entry target so far has been an id target.
-   */
+  /** token kind for a free-entry target (no {@link options}); defaults to UUID */
   freeEntry?: TFreeEntryKind;
   /** contextual availability (default: true) */
   available?: TContextualValue<boolean>;
@@ -101,21 +81,13 @@ export interface IColumnFilter {
   field?: string;
   /** option source for set/facet operators */
   options?: TFilterOptionsSource;
-  /**
-   * key under which facet options are returned (when it differs from the
-   * serialization {@link field} — e.g. options under `mtype` but filtered as
-   * `mtype__pref_label__in`). Defaults to {@link field}.
-   */
+  /** key facet options are returned under, when it differs from {@link field} */
   facetKey?: string;
   /** short help text shown at the top of the filter popup */
   description?: string;
   /** contextual availability (default: true) */
   available?: TContextualValue<boolean>;
-  /**
-   * The fields this column can be filtered BY. Omit for the classic single-field
-   * column: the flat props above are then synthesised into a single target (see
-   * `resolveFilterTargets`), so existing schemas need no migration.
-   */
+  /** fields this column can be filtered by; omit and the flat props above become one target */
   targets?: ReadonlyArray<IFilterTarget>;
 }
 
@@ -141,95 +113,47 @@ export interface IColumnModel<Row = unknown> {
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */
   cellRenderer?: string;
   cellRendererParams?: Record<string, unknown>;
-  /**
-   * Whether the column exists at all in the current context (default: true). A
-   * column that resolves to `false` is dropped entirely — not offered by the
-   * column chooser. Contextual, so a column can appear only in certain
-   * sections/scopes/species/etc.
-   */
+  /** whether the column exists at all here (default: true); `false` drops it, chooser included */
   available?: TContextualValue<boolean>;
-  /**
-   * Position weight ("where") — columns are ordered by ascending resolved value,
-   * ties keeping declaration order. Contextual, so a column can move position by
-   * context. Columns without an explicit order keep their declaration slot.
-   */
+  /** position weight, ascending; ties keep declaration order */
   order?: TContextualValue<number>;
   /**
-   * Start hidden — present in the grid and offered by the column chooser, but not
-   * shown until the user enables it. Contextual (default: false).
-   *
-   * Leave it undefined on an {@link auxiliary} column: `auxiliary` IMPLIES
-   * hidden-by-default (see `resolveColumns`). Declaring it explicitly is the escape
-   * hatch — it always wins — not the normal way to hide an auxiliary column.
+   * Start hidden but offered by the column chooser (default: false). Leave undefined
+   * on an {@link auxiliary} column, which already implies it; setting it always wins.
    */
   hiddenByDefault?: TContextualValue<boolean>;
   /**
-   * AUXILIARY COLUMN — a backend-filterable field the grid can show, but does not
-   * show until the user asks for it in the column chooser, below the separator that
-   * closes the regular columns.
+   * Hidden until the user ticks it in the column chooser, below the separator.
    *
-   * It is the presentation half of one organising rule: every backend-filterable
-   * field is represented EXACTLY ONCE — as a column (visible or auxiliary) or as an
-   * entry in {@link IGridSchema.advancedFilters}, never both. Which surface offers
-   * its FILTER is then derived, not declared:
+   * Every backend-filterable field is represented exactly once — as a column or as an
+   * entry in `schema.advancedFilters`, never both — so the advanced panel is derived:
+   * `advancedFilters + auxiliary columns currently hidden`. Ticking one therefore moves
+   * its filter from the panel into the column header; both key it by column id, so an
+   * applied filter survives the move.
    *
-   *     advanced panel = schema.advancedFilters + auxiliary columns currently hidden
-   *
-   * so ticking an auxiliary column moves its filter from the toolbar panel into the
-   * column header and unticking moves it back (see `resolveFilterPanelGroups`).
-   * Because both surfaces key the filter by this column's `id`, that move is purely
-   * presentational: an applied filter survives it untouched.
-   *
-   * NOT contextual, unlike {@link hiddenByDefault}: "this column is auxiliary" is a
-   * statement about the schema's shape, not about one view. It implies
-   * `hiddenByDefault: true` unless the column declares `hiddenByDefault` itself, so
-   * there is one default-visibility mechanism, not two competing ones.
-   *
-   * SORT SAFETY: entitycore rejects an `order_by` outside the endpoint's
-   * `ordering_model_fields` with a 422, so an auxiliary column must stay
-   * `sortable: false` unless its field is in that allowlist.
+   * Implies {@link hiddenByDefault}. Keep `sortable: false` unless the field is in the
+   * endpoint's `ordering_model_fields` — entitycore 422s on anything else.
    */
   auxiliary?: boolean;
   /**
-   * ESSENTIAL COLUMN — the counterpart of {@link auxiliary} at the other end of the
-   * chooser: the column a BULK deselect keeps, so "Select all" can never leave the
-   * grid with nothing in it.
-   *
-   * It is a statement about the BULK action only, never a lock. The user can still
-   * hide an essential column through its own checkbox; conservative in one click,
-   * unrestricted deliberately. Naming it after `auxiliary` is the point — the two say
-   * "supplementary" and "necessary" about the same axis, so a schema reads as one
-   * ordering rather than two unrelated flags.
-   *
-   * When a schema marks nothing, {@link essentialColumnIds} falls back to the FIRST
-   * non-auxiliary column, which in practice is the identifying one (Preview, Name).
-   * That keeps every grid safe without annotating all of them up front.
+   * Kept visible by a BULK deselect, so "Select all" can never empty the grid. Not a
+   * lock: the user can still hide it via its own checkbox. When a schema marks none,
+   * {@link essentialColumnIds} falls back to the first non-auxiliary column.
    */
   essential?: boolean;
   /**
-   * Whether the user may DRAG this column to another position (default: true).
-   *
-   * `false` pins the column to its declared slot: the renderer suppresses the drag
-   * handle AND ignores any position the persisted `columnOrder` records for it, so a
-   * layout saved before the flag (or written while neighbours were dragged around
-   * it) can never park it somewhere odd either.
-   *
-   * Declare it for a column whose position carries MEANING rather than preference —
-   * the column hosting the expand chevron of a tree listing (Subcircuits), where a
-   * moved chevron makes the hierarchy unreadable. Not contextual: like
-   * {@link auxiliary}, it is a statement about the column's role in the schema.
+   * Whether the user may drag this column elsewhere (default: true). `false` pins it to
+   * its declared slot: no drag handle, and any position a persisted `columnOrder`
+   * records for it is ignored. For columns whose position carries meaning — e.g. the
+   * one hosting a tree's expand chevron.
    */
   movable?: boolean;
   filter?: IColumnFilter;
 }
 
 /**
- * The columns a BULK deselect keeps visible: those marked {@link IColumnModel.essential},
- * or — when a schema marks none — the first non-auxiliary column, falling back to the
- * very first column if every column is auxiliary.
- *
- * Returned in the columns' own order, and EMPTY only for an empty column list: the
- * whole point is that the result is never empty for a grid that has columns.
+ * The columns a bulk deselect keeps visible: those marked `essential`, else the first
+ * non-auxiliary one. In declaration order, and empty only for an empty column list.
  */
 export function essentialColumnIds(
   columns: ReadonlyArray<{ id: string; auxiliary?: boolean; essential?: boolean }>
