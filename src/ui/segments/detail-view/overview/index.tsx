@@ -40,6 +40,7 @@ import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { CircuitDetailViewer } from '@/features/entities/circuit/detail-view';
 import { EmCellMeshMetadata } from '@/features/entities/em-cell-mesh';
+import { ElectrodeArrayImage } from '@/features/entities/extracellular-recording-array/array-image';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
@@ -66,6 +67,7 @@ import { cn } from '@/utils/css-class';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
@@ -546,6 +548,13 @@ export default async function Overview({
       <EmCellMeshMetadata id={entity.id} ctx={context} variant={fieldVariant} />
     ) : null;
 
+  // The rendered schematic of the array; the circuit + contacts in 3D live in
+  // the "3D view" tab.
+  const electrodeArraySection =
+    extendedType === ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray ? (
+      <ElectrodeArrayImage record={entity as ISimulatableExtracellularRecordingArray} />
+    ) : null;
+
   const morphometricsSection = includes(morphologyTypes, extendedType) ? (
     <Morphometrics
       className="mb-8"
@@ -573,6 +582,7 @@ export default async function Overview({
       {circuitViewerSection}
       {visualizations}
       {metadataGrid}
+      {electrodeArraySection}
       {subjectSection}
       {meModelSection}
       {synaptomeSection}

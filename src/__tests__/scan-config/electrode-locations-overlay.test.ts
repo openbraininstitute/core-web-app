@@ -16,6 +16,7 @@ import {
   mergeElectrodeOverlays,
   resolveElectrodeScanSelection,
   resolveScanIndex,
+  scopeOverlaysToSelection,
   seedElectrodeInitialOrigin,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 
@@ -111,6 +112,32 @@ describe('hasElectrodeLocationsDictionary', () => {
     expect(hasElectrodeLocationsDictionary({})).toBe(false);
     expect(hasElectrodeLocationsDictionary(null)).toBe(false);
     expect(hasElectrodeLocationsDictionary([])).toBe(false);
+  });
+});
+
+describe('scopeOverlaysToSelection', () => {
+  const overlays = electrodeSummaryToOverlays({
+    probe_a: { locations: [[1, 2, 3]] },
+    probe_b: { locations: [[4, 5, 6]] },
+  });
+
+  it('draws nothing while no electrode is ticked', () => {
+    expect(scopeOverlaysToSelection(overlays, [])).toEqual([]);
+  });
+
+  it('draws only the ticked electrodes', () => {
+    const scoped = scopeOverlaysToSelection(overlays, ['probe_b']);
+    expect(scoped.length).toBeGreaterThan(0);
+    expect(scoped.every((group) => group.id === 'probe_b')).toBe(true);
+  });
+
+  it('draws several at once', () => {
+    const scoped = scopeOverlaysToSelection(overlays, ['probe_a', 'probe_b']);
+    expect(new Set(scoped.map((group) => group.id))).toEqual(new Set(['probe_a', 'probe_b']));
+  });
+
+  it('leaves every overlay in place for scan-config', () => {
+    expect(scopeOverlaysToSelection(overlays, undefined)).toBe(overlays);
   });
 });
 

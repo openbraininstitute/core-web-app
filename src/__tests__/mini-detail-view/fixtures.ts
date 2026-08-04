@@ -62,7 +62,6 @@ export function makeCellMorphology(
   } as unknown as EntityCoreObjectTypes;
 }
 
-/** an entity type whose domain config declares no `detailViewSections` (no details page yet) */
 export function makeExtracellularRecordingArray(
   overrides: Partial<EntityCoreObjectTypes> = {}
 ): EntityCoreObjectTypes {
@@ -70,6 +69,18 @@ export function makeExtracellularRecordingArray(
     id: 'ext-recording-array-1',
     name: 'Test extracellular recording array',
     type: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+    ...overrides,
+  } as unknown as EntityCoreObjectTypes;
+}
+
+/** a type absent from the domain registry, so nothing declares `detailViewSections` for it */
+export function makeUnregisteredEntity(
+  overrides: Partial<EntityCoreObjectTypes> = {}
+): EntityCoreObjectTypes {
+  return {
+    id: 'unregistered-1',
+    name: 'Test unregistered entity',
+    type: 'not_a_registered_entity_type',
     ...overrides,
   } as unknown as EntityCoreObjectTypes;
 }
