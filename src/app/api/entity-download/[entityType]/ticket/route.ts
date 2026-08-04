@@ -12,6 +12,7 @@ const createTicketSchema = z.object({
   virtualLabId: z.uuid().optional().nullable(),
   projectId: z.uuid().optional().nullable(),
   entityIds: z.uuid().array().max(100),
+  name: z.string().max(200).optional().nullable(),
 });
 
 /**
@@ -23,7 +24,8 @@ const createTicketSchema = z.object({
  * {
  *   virtualLabId?: string | null,  // Optional UUID of virtual lab context
  *   projectId?: string | null,     // Optional UUID of project context
- *   entityIds: string[]            // Array of entity UUIDs to download (max 100)
+ *   entityIds: string[],           // Array of entity UUIDs to download (max 100)
+ *   name?: string | null           // Name of the single selected entity, used to name the archive
  * }
  */
 export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
       virtualLabId: reqData.virtualLabId,
       projectId: reqData.projectId,
       entityIds: reqData.entityIds,
+      name: reqData.name,
     });
 
     return NextResponse.json({ ticketId });

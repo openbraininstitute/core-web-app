@@ -31,8 +31,8 @@ vi.mock('@/services/entity-download', () => ({
 
 const workspace = { virtualLabId: 'vl-1', projectId: 'proj-1' };
 
-function makeRow(id: string): EntityCoreIdentifiable {
-  return { id } as EntityCoreIdentifiable;
+function makeRow(id: string, name?: string): EntityCoreIdentifiable {
+  return { id, ...(name ? { name } : {}) } as EntityCoreIdentifiable;
 }
 
 function renderTableControls({
@@ -119,10 +119,27 @@ describe('TableControls bulk download (data listing selection)', () => {
     fireEvent.click(screen.getByTestId('bulk-download-button'));
 
     await waitFor(() => {
+      // no single name to name the archive after when several rows are selected
       expect(downloadArchive).toHaveBeenCalledWith(
         EntityTypeDict.CellMorphology,
         ['m1', 'm2'],
-        workspace
+        workspace,
+        undefined
+      );
+    });
+  });
+
+  it('passes the entity name along when a single row is selected', async () => {
+    renderTableControls({ selectedRows: [makeRow('m1', 'Morph A')] });
+
+    fireEvent.click(screen.getByTestId('bulk-download-button'));
+
+    await waitFor(() => {
+      expect(downloadArchive).toHaveBeenCalledWith(
+        EntityTypeDict.CellMorphology,
+        ['m1'],
+        workspace,
+        'Morph A'
       );
     });
   });
