@@ -324,7 +324,16 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         loadingOverlayComponentParams={{ label: loadingLabel ?? 'entities' }}
         suppressCellFocus
         suppressDragLeaveHidesColumns
-        maintainColumnOrder
+        // NB: `maintainColumnOrder` is deliberately NOT set. The STORE owns column
+        // order — `colDefs` is always emitted in the reconciled order above, and a
+        // user drag round-trips through `onColumnMoved` → store → `colDefs`, so
+        // nothing is lost by letting each refresh re-assert that order. With the flag
+        // ON, AG Grid's own internal order wins over the one we just computed: a
+        // column re-added by a CONTEXT change (e.g. the circuit "Subcircuits" column
+        // when the listing returns to hierarchy view) is unknown to that internal
+        // order and gets appended AFTER every other column — off-screen, i.e. "gone"
+        // — until the page is reloaded. It would equally defeat `movable: false`,
+        // whose whole point is that the DECLARED slot wins on every refresh.
         animateRows={false}
         headerHeight={48}
         getRowHeight={getRowHeight}

@@ -12,6 +12,7 @@ import {
   Align,
   buildGridQuery,
   createDefaultOperatorRegistry,
+  dropPinnedColumns,
   GridActionType,
   GridController,
   type IColumnModel,
@@ -403,12 +404,16 @@ export function InMemoryGrid<Row>({
   // `columns` are the props as declared — a column dropped by a contextual gate is
   // therefore missing from the order yet still rendered. Reconciling (rather than
   // sorting by stored index) keeps it in its declared slot instead of appending it
-  // after every other column.
+  // after every other column. A NON-MOVABLE column (`movable: false`) is dropped from
+  // the stored order first, for the same reason as in `ag-grid-renderer`: AG Grid
+  // still reports a position for it whenever a neighbour is dragged past it, and its
+  // DECLARED slot has to win. The nested circuit grid renders exactly such a column
+  // (the Subcircuits expander host), so this is not hypothetical here.
   const orderedColumns = useMemo(() => {
     const byId = new Map(columns.map((c) => [c.id, c] as const));
     return reconcileColumnOrder(
       columns.map((c) => c.id),
-      state.columnOrder
+      dropPinnedColumns(columns, state.columnOrder)
     )
       .map((id) => byId.get(id))
       .filter((c): c is ISimpleColumn<Row> => c !== undefined);
@@ -708,7 +713,12 @@ export function InMemoryGrid<Row>({
           loadingOverlayComponentParams={{ label: loadingLabel ?? 'entities' }}
           suppressCellFocus
           suppressDragLeaveHidesColumns
-          maintainColumnOrder
+          // NB: `maintainColumnOrder` is deliberately NOT set — see the same note in
+          // `ag-grid-renderer`. It matters even more here: the nested circuit grid is
+          // handed the PARENT's visible columns, so its column set changes every time
+          // the user ticks a box in the chooser, and AG Grid would append each
+          // re-shown column after all the others — knocking every nested level out of
+          // alignment with the parent listing it is supposed to mirror.
           animateRows={false}
           isFullWidthRow={(p) => isDetailRow(p.rowNode.data)}
           fullWidthCellRenderer={InMemoryDetailCell}
