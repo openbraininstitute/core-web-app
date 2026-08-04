@@ -559,7 +559,78 @@ describe('em_cell_mesh parity', () => {
       'releaseVersion',
       'emDataset',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser
+      'meshType',
+      'levelOfDetail',
+      'mtype',
+      'datasetPublishedIn',
+      'datasetExperimentDate',
+      'strainName',
+      'subjectName',
     ]);
+  });
+  it('the auxiliary columns carry the filters they replaced', () => {
+    const resolved = resolveColumns(s, dataCtx('em_cell_mesh'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual([
+      'meshType',
+      'levelOfDetail',
+      'mtype',
+      'datasetPublishedIn',
+      'datasetExperimentDate',
+      'strainName',
+      'subjectName',
+    ]);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    const eq = (columnId: string, value: string): TFilterModel => ({
+      [columnId]: {
+        columnId,
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: value },
+      },
+    });
+    expect(serializeQuery(query({ filters: eq('meshType', 'static') }), s).mesh_type).toBe(
+      'static'
+    );
+    expect(serializeQuery(query({ filters: eq('levelOfDetail', '2') }), s).level_of_detail).toBe(
+      '2'
+    );
+    expect(serializeQuery(query({ filters: setIn('mtype') }), s).mtype__pref_label__in).toEqual([
+      'x',
+    ]);
+    expect(
+      serializeQuery(query({ filters: ilike('datasetPublishedIn') }), s)
+        .em_dense_reconstruction_dataset__published_in__ilike
+    ).toBe('%foo%');
+    const range: TFilterModel = {
+      datasetExperimentDate: {
+        columnId: 'datasetExperimentDate',
+        operator: OperatorId.DateRange,
+        value: { kind: FilterValueKind.DateRange, from: '2024-01-01', to: '2024-12-31' },
+      },
+    };
+    const dateParams = serializeQuery(query({ filters: range }), s);
+    expect(dateParams.em_dense_reconstruction_dataset__experiment_date__gte).toBe('2024-01-01');
+    expect(dateParams.em_dense_reconstruction_dataset__experiment_date__lte).toBe('2024-12-31');
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+  });
+  it('everything but the two dataset fields is in ordering_model_fields', () => {
+    for (const [columnId, field] of [
+      ['meshType', 'mesh_type'],
+      ['levelOfDetail', 'level_of_detail'],
+      ['mtype', 'mtype__pref_label'],
+      ['strainName', 'subject__strain__name'],
+      ['subjectName', 'subject__name'],
+    ]) {
+      expect(s.columns.find((c) => c.id === columnId)?.sortable).toBe(true);
+      expect(serializeQuery(query(sortDesc(columnId)), s).order_by).toEqual([`-${field}`]);
+    }
+    for (const columnId of ['datasetPublishedIn', 'datasetExperimentDate']) {
+      expect(s.columns.find((c) => c.id === columnId)?.sortable).toBe(false);
+    }
   });
   it('version facet + dataset filters serialize to the backend keys; species IS sortable', () => {
     expect(

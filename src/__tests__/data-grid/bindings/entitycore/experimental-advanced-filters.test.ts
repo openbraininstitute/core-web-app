@@ -55,13 +55,6 @@ function bool(value: boolean): TFilterValue {
 function range(min: number | null, max: number | null): TFilterValue {
   return { kind: FilterValueKind.Range, min, max };
 }
-function dates(from: string | null, to: string | null): TFilterValue {
-  return { kind: FilterValueKind.DateRange, from, to };
-}
-
-const FROM = '2024-01-01';
-const TO = '2024-12-31';
-
 /**
  * The state key a filter DECLARED as `groupId · filterId` actually occupies.
  *
@@ -347,10 +340,17 @@ describe('synapses-per-connection advanced filters — GET /experimental-synapse
   });
 });
 
+/**
+ * `mesh_type`, `level_of_detail`, `mtype__pref_label`, the two dataset
+ * ScientificArtifact fields and the two `subject__*` fields are AUXILIARY COLUMNS now
+ * — their wire params are pinned in `experimental-parity.test.ts`.
+ *
+ * Two families stay HERE deliberately: the ID-type fields, and the MEASUREMENT family
+ * (existential filters over an annotation array, with no single scalar to display and
+ * a five-param conjunction a per-column filter cannot express).
+ */
 describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
   suite(emCellMeshSchema, [
-    ['mesh', 'meshType', OperatorId.Eq, text('static'), { mesh_type: 'static' }],
-    ['mesh', 'levelOfDetail', OperatorId.Eq, text('2'), { level_of_detail: '2' }],
     [
       'mesh',
       'denseReconstructionCellId',
@@ -358,14 +358,6 @@ describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
       text('864691135'),
       { dense_reconstruction_cell_id: '864691135' },
     ],
-    [
-      'mtype',
-      'prefLabel',
-      OperatorId.Ilike,
-      text('L5_TPC'),
-      { mtype__pref_label__ilike: '%L5\\_TPC%' },
-    ],
-    ['mtype', 'prefLabel', OperatorId.In, set('L5_TPC:A'), { mtype__pref_label__in: ['L5_TPC:A'] }],
     ['mtype', 'id', OperatorId.In, set(UUID), { mtype__id__in: [UUID] }],
     [
       'dataset',
@@ -373,30 +365,6 @@ describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
       OperatorId.In,
       set(UUID, OTHER_UUID),
       { em_dense_reconstruction_dataset__id__in: [UUID, OTHER_UUID] },
-    ],
-    [
-      'dataset',
-      'publishedIn',
-      OperatorId.Ilike,
-      text('Nature'),
-      { em_dense_reconstruction_dataset__published_in__ilike: '%Nature%' },
-    ],
-    [
-      'dataset',
-      'publishedIn',
-      OperatorId.Eq,
-      text('Nature'),
-      { em_dense_reconstruction_dataset__published_in: 'Nature' },
-    ],
-    [
-      'dataset',
-      'experimentDate',
-      OperatorId.DateRange,
-      dates(FROM, TO),
-      {
-        em_dense_reconstruction_dataset__experiment_date__gte: FROM,
-        em_dense_reconstruction_dataset__experiment_date__lte: TO,
-      },
     ],
     [
       'measurements',
@@ -421,9 +389,23 @@ describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
       range(10, 100),
       { measurement_item__value__gte: 10, measurement_item__value__lte: 100 },
     ],
-    ...SUBJECT_CASES,
     ...RECORD_ID_CASES,
   ]);
+
+  it('keeps the ID-type and measurement families, and nothing a column now owns', () => {
+    const fields = [...advancedFilterDefsByKey(emCellMeshSchema).values()].map((d) => d.field);
+    expect(fields).toEqual([
+      'id',
+      'dense_reconstruction_cell_id',
+      'mtype__id',
+      'em_dense_reconstruction_dataset__id',
+      'measurement_kind__structural_domain',
+      'measurement_kind__pref_label',
+      'measurement_item__name',
+      'measurement_item__unit',
+      'measurement_item__value',
+    ]);
+  });
 });
 
 describe('universal-cell-morphology advanced filters — GET /cell-morphology', () => {

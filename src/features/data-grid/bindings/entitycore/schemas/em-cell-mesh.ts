@@ -2,7 +2,7 @@ import { EMCellMeshTypeDict } from '@/api/entitycore/types/entities/em-cell-mesh
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { MeasurementStatistic, MeasurementUnit } from '@/api/entitycore/types/shared/global';
 
-import { FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
+import { Align, FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   emDatasetColumn,
@@ -10,23 +10,52 @@ import {
   registrationDateColumn,
   releaseVersionColumn,
   speciesColumn,
+  subjectNameColumn,
+  subjectStrainColumn,
 } from '../columns/catalog';
-import { EM_DATASET_RENDERER, EmDatasetCell } from '../renderers/em-dataset-cell';
+import {
+  EM_DATASET_EXPERIMENT_DATE_RENDERER,
+  EM_DATASET_PUBLISHED_IN_RENDERER,
+  EM_DATASET_RENDERER,
+  EmDatasetCell,
+  EmDatasetExperimentDateCell,
+  EmDatasetPublishedInCell,
+} from '../renderers/em-dataset-cell';
 import { registerSharedRenderers } from '../renderers/register';
 import {
+  dictLabelByKey,
   flatAdvancedFilters,
   recordIdFilter,
   staticOptions,
-  subjectAdvancedGroup,
 } from './common-filters';
 
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
-import type { IAdvancedFilterGroup, IGridSchema, TFilterOptionsSource } from '../../../core';
+import type {
+  IAdvancedFilterGroup,
+  IColumnModel,
+  IGridSchema,
+  TFilterOptionsSource,
+} from '../../../core';
 import type { CellRendererRegistry } from '../../../react';
-import type { IHasEmDataset, IHasReleaseVersion, IHasSpecies } from '../columns/catalog';
+import type {
+  IHasEmDataset,
+  IHasMtypes,
+  IHasReleaseVersion,
+  IHasSpecies,
+  IHasSubjectName,
+  IHasSubjectStrain,
+} from '../columns/catalog';
 import type { IEntityGridDefinition } from '../registry';
 
-type Row = IEMCellMesh & IHasSpecies & IHasReleaseVersion & IHasEmDataset;
+type Row = IEMCellMesh &
+  IHasSpecies &
+  IHasMtypes &
+  IHasSubjectName &
+  IHasSubjectStrain &
+  IHasReleaseVersion &
+  IHasEmDataset;
+
+const MESH_TYPE_LABELS = dictLabelByKey(EMCellMeshTypeDict);
 
 /** Options from a plain `{ Name: value }` string dict, labelled by a humanised value. */
 function optionsFromValues(values: ReadonlyArray<string>, humanise = false): TFilterOptionsSource {
@@ -54,9 +83,21 @@ const STRUCTURAL_DOMAINS = [
 ] as const;
 
 /**
- * ADVANCED FILTERS — `GET /em-cell-mesh` params with no column here. Every
- * field/operator pair was checked against the live OpenAPI spec; the emitted param
- * is named in each comment.
+ * ADVANCED FILTERS — what is left once every filterable field that CAN be a column is
+ * one. Every field/operator pair was checked against the live OpenAPI spec; the
+ * emitted param is named in each comment.
+ *
+ * Two families stay here DELIBERATELY, not by omission:
+ *
+ * - the ID-type fields (`id`, `mtype__id`, `em_dense_reconstruction_dataset__id`, and
+ *   `dense_reconstruction_cell_id` — a numeric id inside the EM volume). There is no
+ *   useful column to show for an identifier.
+ * - the MEASUREMENT family. `measurement_kind__*` / `measurement_item__*` are
+ *   EXISTENTIAL filters over an annotation array — "has some annotation whose kind is
+ *   X and whose value is in [a,b]" — and an array of annotations has no single scalar
+ *   a column could display. Splitting it across five columns would also break the
+ *   conjunction: the five params are AND-ed over ONE annotation, which a per-column
+ *   filter cannot express.
  */
 const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
@@ -69,23 +110,6 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
     label: 'Mesh',
     description: 'How the mesh itself was produced.',
     filters: [
-      {
-        id: 'meshType',
-        label: 'Mesh type',
-        // `mesh_type` (exact) ONLY — this endpoint declares no `mesh_type__in`.
-        field: 'mesh_type',
-        operators: [OperatorId.Eq],
-        options: staticOptions(EMCellMeshTypeDict),
-        description: 'Precomputed (static) or generated at query time (dynamic)',
-      },
-      {
-        id: 'levelOfDetail',
-        label: 'Level of detail',
-        // `level_of_detail` (bare integer; no range or list form on this endpoint)
-        field: 'level_of_detail',
-        operators: [OperatorId.Eq],
-        placeholder: 'Enter a level of detail, like 2',
-      },
       {
         id: 'denseReconstructionCellId',
         label: 'Source cell ID',
@@ -101,17 +125,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
     id: 'mtype',
     label: 'M-type',
-    description: 'Morphological type classification. This listing shows no M-type column.',
     filters: [
-      {
-        id: 'prefLabel',
-        label: 'M-type name',
-        // `mtype__pref_label__ilike`, `mtype__pref_label__in`
-        field: 'mtype__pref_label',
-        operators: [OperatorId.Ilike, OperatorId.In],
-        freeEntry: FreeEntryKind.Text,
-        placeholder: 'Enter an M-type name, like L5_TPC:A',
-      },
       {
         id: 'id',
         label: 'M-type ID',
@@ -133,21 +147,6 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
         // Dataset column's own field.
         field: 'em_dense_reconstruction_dataset__id',
         operators: [OperatorId.In],
-      },
-      {
-        id: 'publishedIn',
-        label: 'Dataset published in',
-        // `em_dense_reconstruction_dataset__published_in__ilike`, `…__published_in`
-        field: 'em_dense_reconstruction_dataset__published_in',
-        operators: [OperatorId.Ilike, OperatorId.Eq],
-        placeholder: 'Enter part of a publication reference',
-      },
-      {
-        id: 'experimentDate',
-        label: 'Dataset experiment date',
-        // `em_dense_reconstruction_dataset__experiment_date__gte` / `…__lte`
-        field: 'em_dense_reconstruction_dataset__experiment_date',
-        operators: [OperatorId.DateRange],
       },
     ],
   },
@@ -200,14 +199,166 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       },
     ],
   },
-  subjectAdvancedGroup('The animal the mesh was reconstructed from.'),
 ];
+
+/**
+ * MESH — the two acquisition scalars. Both ARE in
+ * `EMCellMeshFilter.Constants.ordering_model_fields`, so both sort.
+ */
+const meshTypeColumn: IColumnModel<Row> = {
+  id: 'meshType',
+  header: 'Mesh type',
+  auxiliary: true,
+  sortable: true,
+  sortField: 'mesh_type',
+  getValue: (r) => MESH_TYPE_LABELS.get(r.mesh_type ?? '') ?? '',
+  width: { minWidth: 130 },
+  filter: {
+    // `mesh_type` (exact) ONLY — this endpoint declares no `mesh_type__in`.
+    operators: [OperatorId.Eq],
+    field: 'mesh_type',
+    targets: [
+      {
+        id: 'meshType',
+        label: 'Mesh type',
+        field: 'mesh_type',
+        operators: [OperatorId.Eq],
+        options: staticOptions(EMCellMeshTypeDict),
+        description: 'Precomputed (static) or generated at query time (dynamic)',
+      },
+    ],
+  },
+};
+
+const levelOfDetailColumn: IColumnModel<Row> = {
+  id: 'levelOfDetail',
+  header: 'Level of detail',
+  auxiliary: true,
+  sortable: true,
+  sortField: 'level_of_detail',
+  align: Align.Right,
+  getValue: (r) => (r.level_of_detail == null ? '' : String(r.level_of_detail)),
+  width: { minWidth: 130 },
+  filter: {
+    // `level_of_detail` (bare integer; no range or list form on this endpoint)
+    operators: [OperatorId.Eq],
+    field: 'level_of_detail',
+    targets: [
+      {
+        id: 'levelOfDetail',
+        label: 'Level of detail',
+        field: 'level_of_detail',
+        operators: [OperatorId.Eq],
+        placeholder: 'Enter a level of detail, like 2',
+      },
+    ],
+  },
+};
+
+/**
+ * M-type. Free-entry rather than a facet picker, exactly as the advanced filter it
+ * replaces — this listing computes no `mtype` facet bucket, and a facet source with
+ * no bucket renders an empty picker. That is why the shared `mtypeColumn` factory,
+ * whose whole point is the bucket, is not used here.
+ */
+const mtypePrefLabelColumn: IColumnModel<Row> = {
+  id: 'mtype',
+  header: 'M-type',
+  auxiliary: true,
+  sortable: true,
+  sortField: 'mtype__pref_label',
+  getValue: (r) =>
+    (r.mtypes ?? [])
+      .map((m) => m?.pref_label ?? '')
+      .filter(Boolean)
+      .join(', '),
+  width: { minWidth: 150 },
+  filter: {
+    // `mtype__pref_label__ilike`, `mtype__pref_label__in`
+    operators: [OperatorId.Ilike, OperatorId.In],
+    field: 'mtype__pref_label',
+    targets: [
+      {
+        id: 'prefLabel',
+        label: 'M-type name',
+        field: 'mtype__pref_label',
+        operators: [OperatorId.Ilike, OperatorId.In],
+        freeEntry: FreeEntryKind.Text,
+        placeholder: 'Enter an M-type name, like L5_TPC:A',
+      },
+    ],
+  },
+};
+
+/**
+ * DATASET — two ScientificArtifact fields of the mesh's dense-reconstruction dataset.
+ *
+ * The list row carries only the dataset's `{ id }` (`em_cell_mesh.py` serializes it as
+ * a `BasicEntityRead`), so both cells resolve their value through the SAME lazy,
+ * id-keyed fetch the Dataset name column already makes — one request per distinct
+ * dataset, shared by all three cells. Sort is impossible either way: neither field is
+ * in `ordering_model_fields`, so both are non-sortable.
+ */
+const datasetPublishedInColumn: IColumnModel<Row> = {
+  id: 'datasetPublishedIn',
+  header: 'Dataset published in',
+  auxiliary: true,
+  sortable: false,
+  getValue: (r) => r.em_dense_reconstruction_dataset?.id ?? '',
+  cellRenderer: EM_DATASET_PUBLISHED_IN_RENDERER,
+  width: { minWidth: 180 },
+  filter: {
+    // `em_dense_reconstruction_dataset__published_in__ilike`, `…__published_in`
+    operators: [OperatorId.Ilike, OperatorId.Eq],
+    field: 'em_dense_reconstruction_dataset__published_in',
+    targets: [
+      {
+        id: 'publishedIn',
+        label: 'Dataset published in',
+        field: 'em_dense_reconstruction_dataset__published_in',
+        operators: [OperatorId.Ilike, OperatorId.Eq],
+        placeholder: 'Enter part of a publication reference',
+      },
+    ],
+  },
+};
+
+const datasetExperimentDateColumn: IColumnModel<Row> = {
+  id: 'datasetExperimentDate',
+  header: 'Dataset experiment date',
+  auxiliary: true,
+  sortable: false,
+  getValue: (r) => r.em_dense_reconstruction_dataset?.id ?? '',
+  cellRenderer: EM_DATASET_EXPERIMENT_DATE_RENDERER,
+  width: { minWidth: 190 },
+  filter: {
+    // `em_dense_reconstruction_dataset__experiment_date__gte` / `…__lte`
+    operators: [OperatorId.DateRange],
+    field: 'em_dense_reconstruction_dataset__experiment_date',
+    targets: [
+      {
+        id: 'experimentDate',
+        label: 'Dataset experiment date',
+        field: 'em_dense_reconstruction_dataset__experiment_date',
+        operators: [OperatorId.DateRange],
+      },
+    ],
+  },
+};
 
 /**
  * EM cell mesh listing (curated). Column order matches the legacy `em-cell-mesh`
  * view-def (Name, Brain region, Species, Version, Dataset, Registration date).
  * The "Dataset" column resolves the dense-reconstruction dataset name lazily via
  * {@link EM_DATASET_RENDERER}.
+ *
+ * Then seven AUXILIARY columns, each carrying the filter it took over from the panel.
+ *
+ * SORT SAFETY (`EMCellMeshFilter.Constants.ordering_model_fields`,
+ * `app/filters/em_cell_mesh.py`): `mesh_type`, `level_of_detail`, `mtype__pref_label`,
+ * `subject__name` and `subject__strain__name` are all in that list and sort; the two
+ * `em_dense_reconstruction_dataset__{published_in,experiment_date}` fields are NOT, so
+ * those two are non-sortable — an `order_by` outside the allowlist is a 422.
  */
 export const emCellMeshSchema: IGridSchema<Row> = {
   id: 'em-cell-mesh',
@@ -228,6 +379,15 @@ export const emCellMeshSchema: IGridSchema<Row> = {
     releaseVersionColumn<Row>(),
     emDatasetColumn<Row>(),
     registrationDateColumn<Row>(),
+    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    meshTypeColumn,
+    levelOfDetailColumn,
+    mtypePrefLabelColumn,
+    datasetPublishedInColumn,
+    datasetExperimentDateColumn,
+    // both subject fields ARE in EMCellMeshFilter's ordering_model_fields
+    subjectStrainColumn<Row>({ sortable: true }),
+    subjectNameColumn<Row>({ sortable: true, sortField: 'subject__name' }),
   ],
 };
 
@@ -237,5 +397,7 @@ export const emCellMeshGridDefinition: IEntityGridDefinition<Row> = {
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
     registry.register(EM_DATASET_RENDERER, EmDatasetCell);
+    registry.register(EM_DATASET_PUBLISHED_IN_RENDERER, EmDatasetPublishedInCell);
+    registry.register(EM_DATASET_EXPERIMENT_DATE_RENDERER, EmDatasetExperimentDateCell);
   },
 };
