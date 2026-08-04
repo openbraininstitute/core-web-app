@@ -40,6 +40,7 @@ type Row = IonChannelModel & {
   max_permeability_name?: string | null;
   subject?: {
     name?: string | null;
+    species?: { name?: string | null } | null;
     strain?: { name?: string | null } | null;
   } | null;
 };
@@ -140,8 +141,11 @@ const isStochasticColumn: IColumnModel<Row> = {
  *
  * Per the legacy field-defs:
  *  - Species carries `subject__species__name` sort + `subject__species__name__in`
- *    facet (the ion-channel-model `perTypeConstraint`), though the value is read from
- *    the top-level `species`.
+ *    facet (the ion-channel-model `perTypeConstraint`). The VALUE is read from
+ *    `subject.species.name` — the shape the wire actually has — with the legacy
+ *    top-level `species.name` kept only as a fallback; see the column below. The
+ *    Strain auxiliary column already reads `subject.strain.name` via the catalog's
+ *    `subjectStrainColumn`, so it never had this problem.
  *  - Temperature (°C) sorts on `temperature_celsius` and range-filters to
  *    `temperature_celsius__gte/__lte`.
  *  - The two boolean facets sort on / filter by their bare field name
@@ -172,7 +176,20 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       header: 'Species',
       sortable: true,
       sortField: 'subject__species__name',
-      getValue: (r) => r.species?.name ?? '',
+      // NESTED FIRST — `IonChannelModelExpanded` (app/schemas/ion_channel_model.py:72)
+      // = `IonChannelModelBaseMixin` + `ScientificArtifactRead`, and
+      // `ScientificArtifactRead` (app/schemas/scientific_artifact.py:46) composes
+      // `SubjectReadMixin` → `subject: NestedSubjectRead`
+      // (app/schemas/subject.py:86), whose `SpeciesStrainReadMixin`
+      // (app/schemas/species.py:57) is what carries `species`/`strain`. There is NO
+      // top-level `species` on the wire; `_load_minimal`
+      // (app/service/ion_channel_model.py:43) eager-loads only `subject → species` /
+      // `subject → strain`, and the backend's own test asserts the nested shape
+      // (`data["subject"]["id"]`, tests/test_ion_channel_model.py:84).
+      // The top-level fallback is kept only because the hand-written
+      // `IonChannelModel` TS type still declares it, so the accessor stays correct
+      // whichever shape a caller hands it. Empty string ⇒ shared em-dash placeholder.
+      getValue: (r) => r.subject?.species?.name ?? r.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
         operators: [OperatorId.In, OperatorId.Ilike],
