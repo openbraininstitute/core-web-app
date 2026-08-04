@@ -445,32 +445,41 @@ describe('universal-cell-morphology advanced filters — GET /cell-morphology', 
   });
 });
 
+/**
+ * The rest of the `cell_morphology_protocol__*` family, both `subject__*` fields and
+ * `has_segmented_spines` are AUXILIARY COLUMNS here — their wire params are pinned in
+ * `experimental-parity.test.ts` alongside the columns that now own them. What is left
+ * is the two ID-type fields, which have no useful column.
+ */
 describe('synthesized-cell-morphology advanced filters — GET /cell-morphology', () => {
   suite(synthesizedCellMorphologySchema, [
     [
       'protocol',
-      'generationType',
-      OperatorId.NotIn,
-      set('placeholder'),
-      { cell_morphology_protocol__generation_type__not_in: ['placeholder'] },
+      'protocolId',
+      OperatorId.In,
+      set(UUID),
+      { cell_morphology_protocol__id__in: [UUID] },
     ],
-    [
-      'protocol',
-      'generationType',
-      OperatorId.Eq,
-      text('computationally_synthesized'),
-      { cell_morphology_protocol__generation_type: 'computationally_synthesized' },
-    ],
-    ...PROTOCOL_TEXT_CASES,
-    ...SUBJECT_CASES,
-    ...idCases('record'),
-    HAS_SEGMENTED_SPINES_CASE,
+    ...RECORD_ID_CASES,
   ]);
 
-  it('never offers generation_type __in — the listing pins it as a host param', () => {
-    const def = advancedFilterDefsByKey(synthesizedCellMorphologySchema).get(
-      declaredKey(synthesizedCellMorphologySchema, 'protocol', 'generationType')
+  it('keeps only the ID-type fields — everything else is a column now', () => {
+    const fields = [...advancedFilterDefsByKey(synthesizedCellMorphologySchema).values()].map(
+      (d) => d.field
     );
-    expect(def?.operators).not.toContain(OperatorId.In);
+    expect(fields).toEqual(['id', 'cell_morphology_protocol__id']);
+  });
+
+  /**
+   * The listing pins `cell_morphology_protocol__generation_type__in` as a HOST param
+   * (`protocolTypeFilter`), and host params merge after the user's filters — so the
+   * `__in` operator must stay unoffered even now that the field owns a column.
+   */
+  it('never offers generation_type __in — the listing pins it as a host param', () => {
+    const column = synthesizedCellMorphologySchema.columns.find((c) => c.id === 'generationType');
+    expect(column?.filter?.field).toBe('cell_morphology_protocol__generation_type');
+    expect(column?.filter?.operators).toEqual([OperatorId.NotIn, OperatorId.Eq]);
+    expect(column?.filter?.targets?.[0]?.operators).toEqual([OperatorId.NotIn, OperatorId.Eq]);
+    expect(column?.filter?.operators).not.toContain(OperatorId.In);
   });
 });

@@ -378,7 +378,77 @@ describe('synthesized_cell_morphology parity', () => {
       'name',
       'contributions',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'generationType',
+      'protocolDesign',
+      'protocolName',
+      'protocolDocument',
+      'strainName',
+      'subjectName',
+      'hasSegmentedSpines',
     ]);
+  });
+
+  it('the auxiliary columns carry the filters they replaced', () => {
+    const resolved = resolveColumns(s, dataCtx('synthesized_cell_morphology'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual([
+      'generationType',
+      'protocolDesign',
+      'protocolName',
+      'protocolDocument',
+      'strainName',
+      'subjectName',
+      'hasSegmentedSpines',
+    ]);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    expect(
+      serializeQuery(query({ filters: ilike('protocolName') }), s)
+        .cell_morphology_protocol__name__ilike
+    ).toBe('%foo%');
+    expect(
+      serializeQuery(query({ filters: setIn('protocolDesign') }), s)
+        .cell_morphology_protocol__protocol_design__in
+    ).toEqual(['x']);
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+    expect(serializeQuery(query({ filters: ilike('subjectName') }), s).subject__name__ilike).toBe(
+      '%foo%'
+    );
+    const spines: TFilterModel = {
+      hasSegmentedSpines: {
+        columnId: 'hasSegmentedSpines',
+        operator: OperatorId.Bool,
+        value: { kind: FilterValueKind.Boolean, value: true },
+      },
+    };
+    expect(serializeQuery(query({ filters: spines }), s).has_segmented_spines).toBe(true);
+  });
+
+  it('sortability follows CellMorphologyFilter ordering_model_fields exactly', () => {
+    // IN the allowlist
+    for (const id of [
+      'generationType',
+      'protocolName',
+      'strainName',
+      'subjectName',
+      'hasSegmentedSpines',
+    ]) {
+      expect(s.columns.find((c) => c.id === id)?.sortable).toBe(true);
+    }
+    // NOT in it — an order_by outside the list is a hard 422
+    expect(s.columns.find((c) => c.id === 'protocolDesign')?.sortable).toBe(false);
+    expect(s.columns.find((c) => c.id === 'protocolDocument')?.sortable).toBe(false);
+    expect(serializeQuery(query(sortDesc('protocolName')), s).order_by).toEqual([
+      '-cell_morphology_protocol__name',
+    ]);
+    expect(serializeQuery(query(sortDesc('subjectName')), s).order_by).toEqual(['-subject__name']);
+  });
+
+  it('Name is essential — the first column is a thumbnail, not an identifier', () => {
+    expect(s.columns.find((c) => c.id === 'name')?.essential).toBe(true);
   });
   it('species/mtype/contribution facets serialize to legacy __in keys', () => {
     expect(
