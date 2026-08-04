@@ -78,6 +78,20 @@ export function staticOptions(
   };
 }
 
+/**
+ * `{ key → label }` from the same `{ Foo: { key, label } }` enum dict
+ * {@link staticOptions} builds its items from.
+ *
+ * A filter stores the WIRE value (`in_vitro`), a cell must show the label a user
+ * picked it by (`in vitro`). Pairing this with `staticOptions(dict)` keeps a column's
+ * display and its filter options reading off one dict, so they cannot drift.
+ */
+export function dictLabelByKey(
+  dict: Record<string, { key: string; label: string }>
+): ReadonlyMap<string, string> {
+  return new Map(Object.values(dict).map((v) => [v.key, v.label] as const));
+}
+
 /** `id__in` / `id` — the record's own entity id. */
 export const recordIdFilter: TAdvancedFilterDef = {
   id: 'id',

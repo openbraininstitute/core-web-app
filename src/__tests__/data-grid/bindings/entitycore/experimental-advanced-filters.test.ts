@@ -237,38 +237,19 @@ function suite<Row>(schema: IGridSchema<Row>, cases: ReadonlyArray<TCase>) {
   });
 }
 
+/**
+ * `recording_type`, `recording_origin` and the two `subject__*` fields are AUXILIARY
+ * COLUMNS here — their wire params are pinned in `experimental-parity.test.ts`. Only
+ * the record's `id` has no column to move onto.
+ */
 describe('electrical-cell-recording advanced filters — GET /electrical-cell-recording', () => {
-  suite(electricalCellRecordingSchema, [
-    [
-      'recording',
-      'recordingType',
-      OperatorId.In,
-      set('intracellular'),
-      { recording_type__in: ['intracellular'] },
-    ],
-    [
-      'recording',
-      'recordingType',
-      OperatorId.Eq,
-      text('intracellular'),
-      { recording_type: 'intracellular' },
-    ],
-    [
-      'recording',
-      'recordingOrigin',
-      OperatorId.Eq,
-      text('in_vivo'),
-      { recording_origin: 'in_vivo' },
-    ],
-    ...SUBJECT_CASES,
-    ...RECORD_ID_CASES,
-  ]);
+  suite(electricalCellRecordingSchema, [...RECORD_ID_CASES]);
 
-  it('never offers recording_origin__in — the listing pins it as a host param', () => {
-    const def = advancedFilterDefsByKey(electricalCellRecordingSchema).get(
-      declaredKey(electricalCellRecordingSchema, 'recording', 'recordingOrigin')
+  it('keeps only `id` — recording type/origin and the subject fields are columns now', () => {
+    const fields = [...advancedFilterDefsByKey(electricalCellRecordingSchema).values()].map(
+      (d) => d.field
     );
-    expect(def?.operators).toEqual([OperatorId.Eq]);
+    expect(fields).toEqual(['id']);
   });
 });
 

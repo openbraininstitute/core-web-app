@@ -81,7 +81,48 @@ describe('electrical_cell_recording parity', () => {
       'name',
       'contributions',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser
+      'recordingType',
+      'recordingOrigin',
+      'strainName',
+      'subjectName',
     ]);
+  });
+  it('the auxiliary columns carry the filters they replaced, and NONE of them sorts', () => {
+    const resolved = resolveColumns(s, dataCtx('electrical_cell_recording'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual(['recordingType', 'recordingOrigin', 'strainName', 'subjectName']);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    expect(
+      serializeQuery(query({ filters: setIn('recordingType') }), s).recording_type__in
+    ).toEqual(['x']);
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+    expect(serializeQuery(query({ filters: ilike('subjectName') }), s).subject__name__ilike).toBe(
+      '%foo%'
+    );
+
+    // ElectricalCellRecordingFilter.Constants.ordering_model_fields lists none of them
+    for (const id of aux) {
+      expect(s.columns.find((c) => c.id === id)?.sortable).toBe(false);
+    }
+  });
+  it('recording origin offers ONLY the bare param — the listing pins recording_origin__in', () => {
+    const origin = s.columns.find((c) => c.id === 'recordingOrigin');
+    expect(origin?.filter?.operators).toEqual([OperatorId.Eq]);
+    expect(origin?.filter?.targets?.[0]?.operators).toEqual([OperatorId.Eq]);
+    const eq: TFilterModel = {
+      recordingOrigin: {
+        columnId: 'recordingOrigin',
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: 'in_vivo' },
+      },
+    };
+    const params = serializeQuery(query({ filters: eq }), s);
+    expect(params.recording_origin).toBe('in_vivo');
+    expect(params.recording_origin__in).toBeUndefined();
   });
   it('etype/species/contribution facets serialize to the legacy __in keys', () => {
     expect(serializeQuery(query({ filters: setIn('etype') }), s).etype__pref_label__in).toEqual([
