@@ -358,6 +358,27 @@ export function electrodeDictionaryToPlaceholderOverlays(
 }
 
 /**
+ * Narrow the drawn overlays to the ones the host wants visible.
+ *
+ * Why: read-only hosts (the data detail view) let the user tick electrodes on
+ * and off, starting from an empty scene so a stored array does not dump every
+ * probe into the viewer at once. Scan-config omits `visibleIds` and keeps
+ * showing the whole array while it is built.
+ *
+ * @param overlays - Every overlay group for the array
+ * @param visibleIds - Electrode ids to draw; omit to draw all, `[]` to draw none
+ * @returns The groups to draw
+ */
+export function scopeOverlaysToSelection(
+  overlays: CircuitOverlayGroup[],
+  visibleIds: readonly string[] | undefined
+): CircuitOverlayGroup[] {
+  if (!visibleIds) return overlays;
+  const allowed = new Set(visibleIds);
+  return overlays.filter((group) => allowed.has(group.id));
+}
+
+/**
  * Merge placeholder + API overlays by electrode id.
  *
  * How: API wins for any id it already has; placeholders fill only missing ids.

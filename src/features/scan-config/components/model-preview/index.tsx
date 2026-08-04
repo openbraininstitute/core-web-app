@@ -7,7 +7,10 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
-import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
+import {
+  CircuitPreview,
+  type ElectrodeOverlayOptions,
+} from '@/features/scan-config/components/model-preview/circuit-preview';
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
@@ -15,14 +18,11 @@ import {
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
-import type { Config, TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
+import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 export function ModelPreview({
   model,
-  config,
-  setConfig,
-  selectedRootElement,
-  selectedEntry,
+  electrodes,
   defaultNeuronOpacity,
   /**
    * When set, overrides the feature flag for electrode overlays.
@@ -33,14 +33,8 @@ export function ModelPreview({
   viewerFeatures,
 }: {
   model: TSupportedEntitiesForScanConfiguration;
-  /** Live scan-config (used for electrode_locations overlays). */
-  config?: Config;
-  /** When set, electrode drag/rotate in the 3D view writes back to the form. */
-  setConfig?: (newConfig: Config | ((prev: Config) => Config)) => void;
-  /** Schema root currently selected in the form (e.g. `electrode_locations`). */
-  selectedRootElement?: string;
-  /** Dictionary entry name currently selected (overlay id when electrodes). */
-  selectedEntry?: string;
+  /** The electrode-overlay layer; omit for a plain circuit viewer. */
+  electrodes?: ElectrodeOverlayOptions;
   /**
    * Initial neuron opacity for the circuit viewer. Host-owned (scan-config,
    * details, …). Omit for 100%; pass e.g. 0.2 when electrodes should dominate.
@@ -107,10 +101,7 @@ export function ModelPreview({
         (circuit) => (
           <CircuitPreview
             circuit={circuit as ICircuit}
-            config={config}
-            setConfig={setConfig}
-            selectedRootElement={selectedRootElement}
-            selectedEntry={selectedEntry}
+            electrodes={electrodes}
             enableVisualization
             features={featuresForSmall(circuit as ICircuit)}
             defaultNeuronOpacity={defaultNeuronOpacity}
@@ -120,10 +111,7 @@ export function ModelPreview({
       .with({ type: EntityTypeDict.Circuit }, () => (
         <CircuitPreview
           circuit={model as ICircuit}
-          config={config}
-          setConfig={setConfig}
-          selectedRootElement={selectedRootElement}
-          selectedEntry={selectedEntry}
+          electrodes={electrodes}
           enableVisualization
           largeCircuit
           features={featuresForLarge}

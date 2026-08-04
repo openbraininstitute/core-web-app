@@ -26,8 +26,12 @@ import { applyElectrodeOverlayTransform } from '@/features/scan-config/component
 import {
   type CircuitOverlayGroup,
   ELECTRODE_LOCATIONS_CONFIG_KEY,
+  scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import { useElectrodeLocationsOverlay } from '@/features/scan-config/components/model-preview/use-electrode-locations-overlay';
+import {
+  type ElectrodeArrayEntity,
+  useElectrodeLocationsOverlay,
+} from '@/features/scan-config/components/model-preview/use-electrode-locations-overlay';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
@@ -66,14 +70,40 @@ interface CircuitPreviewProps {
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when electrodes should dominate.
    */
   defaultNeuronOpacity?: number;
+  /**
+   * The electrode-overlay layer. Omit entirely for a plain circuit viewer.
+   *
+   * Grouped rather than spread across the prop list so the overlay concern can
+   * grow (new sources, new selection modes) without every host and intermediate
+   * component re-declaring another optional prop.
+   */
+  electrodes?: ElectrodeOverlayOptions;
+}
+
+/** Everything the electrode-overlay layer needs, in one place. */
+export interface ElectrodeOverlayOptions {
   /** Live scan-config; when it contains `electrode_locations`, overlays are fetched. */
   config?: Config;
-  /** When set, electrode drag/rotate in 3D writes origin/rotation back into the form. */
-  setConfig?: (newConfig: Config | ((prev: Config) => Config)) => void;
+  /**
+   * Enables drag/rotate in 3D, writing origin/rotation back into the form.
+   * Omit for read-only hosts — its absence is what makes overlays static.
+   */
+  onConfigChange?: (newConfig: Config | ((prev: Config) => Config)) => void;
+  /**
+   * Stored recording array whose `electrode_locations` asset supplies the
+   * overlays when there is no live `config` (read-only detail views).
+   */
+  arrayEntity?: ElectrodeArrayEntity | null;
   /** Schema root currently selected in the form (e.g. `electrode_locations`). */
   selectedRootElement?: string;
   /** Dictionary entry name currently selected (matches overlay `id`). */
   selectedEntry?: string;
+  /**
+   * Electrode ids to draw. Omit to draw every overlay (scan-config behaviour);
+   * pass an explicit list — `[]` included — to hand visibility to the host, which
+   * then also owns it: the viewer's own show/hide toggle stops gating them.
+   */
+  visibleIds?: readonly string[];
 }
 
 /**
@@ -95,11 +125,16 @@ export function CircuitPreview({
   largeCircuit = false,
   features,
   defaultNeuronOpacity,
-  config: scanConfig,
-  setConfig,
-  selectedRootElement,
-  selectedEntry,
+  electrodes,
 }: CircuitPreviewProps) {
+  const {
+    config: scanConfig,
+    onConfigChange: setConfig,
+    arrayEntity,
+    selectedRootElement,
+    selectedEntry,
+    visibleIds: visibleOverlayIds,
+  } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
   const enableColorBy = features?.colorBy ?? true;
   const enableCellHover = features?.cellHover ?? true;
@@ -138,6 +173,7 @@ export function CircuitPreview({
 
   const { overlays, available: electrodesAvailable } = useElectrodeLocationsOverlay({
     config: enableElectrodes ? scanConfig : undefined,
+    arrayEntity: enableElectrodes ? arrayEntity : undefined,
   });
 
   const handleOverlayTransform = useCallback(
@@ -159,11 +195,21 @@ export function CircuitPreview({
       population,
     });
 
-  const visibleOverlays = enableElectrodes && config.showElectrodes ? overlays : undefined;
   const highlightedOverlayId =
     enableElectrodes && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY && selectedEntry
       ? selectedEntry
       : null;
+  const scopedOverlays = useMemo(
+    () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
+    [overlays, visibleOverlayIds]
+  );
+  // When the host supplies `visibleIds` it owns visibility outright. Letting the
+  // viewer's own show/hide toggle also gate them strands the host control: with
+  // the toggle off, ticking an electrode draws nothing and the auto-enable effect
+  // below cannot recover (it reads `styledOverlays`, which is already empty).
+  const hostOwnsVisibility = visibleOverlayIds !== undefined;
+  const visibleOverlays =
+    enableElectrodes && (hostOwnsVisibility || config.showElectrodes) ? scopedOverlays : undefined;
   const styledOverlays = useMemo(
     () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId, config.backgroundColor),
     [visibleOverlays, highlightedOverlayId, config.backgroundColor]
@@ -288,7 +334,11 @@ export function CircuitPreview({
           onModeChange={hasDesignerImage ? setMode : undefined}
           theme={theme}
           table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
-          viz={{ menu, colorBy: enableColorBy ? colorBy : undefined }}
+          viz={{
+            menu,
+            colorBy: enableColorBy ? colorBy : undefined,
+            electrodesInteractive: overlaysInteractive,
+          }}
         />
       )}
 

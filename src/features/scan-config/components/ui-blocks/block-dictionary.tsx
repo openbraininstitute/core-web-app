@@ -214,10 +214,16 @@ export default function BlockDictionary({
                       initial[subkey] = subValue.default ?? null;
                     });
 
-                  // Seed origin at the loaded circuit centre so new probes appear in view
-                  // (only when electrode overlays are feature-flagged on).
+                  // Seed origin at the loaded circuit centre rather than the schema default
+                  // (0,0,0), which can sit millimetres away from the circuit.
+                  //
+                  // Deliberately NOT gated on `electrodeOverlaysEnabled`: that flag governs the
+                  // interactive overlays in the viewer, while this writes the persisted origin.
+                  // Tying the two meant every array built where the flag is off — it defaults
+                  // off outside local/preview — was stored at (0,0,0), and those are exactly the
+                  // deployments where the drag-in-3D path is unavailable and the typed inputs
+                  // are the only way in.
                   const seededInitial =
-                    electrodeOverlaysEnabled &&
                     selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY
                       ? (seedElectrodeInitialOrigin(initial, circuitSceneAnchor) as Record<
                           string,

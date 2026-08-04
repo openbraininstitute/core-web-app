@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { match } from 'ts-pattern';
 
 import { ViewVariant, WorkspaceSection } from '@/constants';
@@ -152,15 +152,24 @@ function CircuitModelPreviewPane({
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
 }) {
+  // Memoised so the grouped prop does not hand ModelPreview a fresh object every
+  // render; `config` already changes on each form edit, the rest rarely.
+  const electrodes = useMemo(
+    () => ({
+      config,
+      onConfigChange: setConfig,
+      selectedRootElement,
+      selectedEntry,
+    }),
+    [config, setConfig, selectedRootElement, selectedEntry]
+  );
+
   return (
     <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
       <div className="rounded-lg h-full" id="scan-config-right-model-preview">
         <ModelPreview
           model={entity}
-          config={config}
-          setConfig={setConfig}
-          selectedRootElement={selectedRootElement}
-          selectedEntry={selectedEntry}
+          electrodes={electrodes}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
         />
