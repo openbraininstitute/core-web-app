@@ -27,6 +27,7 @@ import {
   subjectStrainColumn,
   yesNo,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { buildCircuitAdvancedFilters } from './circuit-models';
 import { flatAdvancedFilters, staticOptions } from './common-filters';
 
@@ -45,7 +46,7 @@ import type { IEntityGridDefinition } from '../registry';
  * `Circuit.contributions → Contribution.agent` (`app/service/circuit.py`).
  *
  * Every augmented member is OPTIONAL on purpose: that keeps `ICircuit` assignable to
- * `Row`, so `IGridSchema<Row>` stays interchangeable with `IGridSchema<Row>` for
+ * `Row`, so `IGridSchema<Row>` stays interchangeable with `IGridSchema<ICircuit>` for
  * the nested `CircuitRecursiveGrid` and `RELATED_CIRCUIT_COLUMNS` consumers. Same
  * local-augmentation pattern as `schemas/cell-morphology.ts`.
  *
@@ -308,6 +309,8 @@ export const circuitSchema: IGridSchema<Row> = {
       getValue: (row) => formatDate(row.experiment_date),
       filter: { operators: [OperatorId.DateRange], field: 'experiment_date' },
     } satisfies IColumnModel<Row>,
+    // Visible, matching the legacy view-def (PR #1850 appends it after Experiment date).
+    lifecycleStatusColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one.
     // ZERO SORT OFFENDERS here: every field below is in
     // `CircuitFilter.Constants.ordering_model_fields`, which SPREADS

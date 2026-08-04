@@ -1,6 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import { SortDirection } from '../../../core';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import {
   campaignDescriptionColumn,
   campaignNameColumn,
@@ -31,6 +32,7 @@ const columns: Array<IColumnModel<ICampaignRow>> = [
   campaignNameColumn<ICampaignRow>(),
   campaignDescriptionColumn<ICampaignRow>(),
   circuitNameColumn<ICampaignRow>(),
+  lifecycleStatusColumn<ICampaignRow>(),
   campaignRegistrationDateColumn<ICampaignRow>(),
   campaignStatusColumn<ICampaignRow>(),
 ];

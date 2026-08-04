@@ -11,6 +11,7 @@ import {
   registrationDateColumn,
   yesNo,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import { flatAdvancedFilters, recordIdFilter } from './common-filters';
@@ -228,6 +229,7 @@ export const emodelSchema: IGridSchema<Row> = {
       width: { minWidth: 150 },
       filter: { operators: [OperatorId.Range], field: 'score' },
     },
+    lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>({ sortable: true, sortField: 'contribution__pref_label' }),
     registrationDateColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one

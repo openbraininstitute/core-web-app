@@ -14,6 +14,7 @@ import {
   subjectNameColumn,
   subjectStrainColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { registerSharedRenderers } from '../renderers/register';
 import { flatAdvancedFilters, recordIdFilter } from './common-filters';
 
@@ -177,6 +178,7 @@ export const experimentalSynapsesPerConnectionSchema: IGridSchema<Row> = {
     meanStdColumn<Row>(),
     speciesColumn<Row>(),
     subjectAgeColumn<Row>({ sortable: true }),
+    lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
     nameColumn<Row>({

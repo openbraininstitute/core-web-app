@@ -13,6 +13,7 @@ import {
   subjectNameColumn,
   subjectStrainColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import {
   EM_DATASET_EXPERIMENT_DATE_RENDERER,
   EM_DATASET_PUBLISHED_IN_RENDERER,
@@ -379,6 +380,7 @@ export const emCellMeshSchema: IGridSchema<Row> = {
     speciesColumn<Row>(),
     releaseVersionColumn<Row>(),
     emDatasetColumn<Row>(),
+    lifecycleStatusColumn<Row>(),
     registrationDateColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
     meshTypeColumn,

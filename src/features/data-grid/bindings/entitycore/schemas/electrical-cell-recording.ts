@@ -13,6 +13,7 @@ import {
   subjectNameColumn,
   subjectStrainColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import { flatAdvancedFilters, recordIdFilter, staticOptions } from './common-filters';
@@ -91,8 +92,9 @@ export const electricalCellRecordingSchema: IGridSchema<Row> = {
     etypeColumn<Row>(),
     // the identifying column: kept visible by the chooser's bulk deselect
     nameColumn<Row>({ essential: true }),
+    lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
-    registrationDateColumn<Row>(),
+    registrationDateColumn<Row>({ essential: true }),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
     recordingTypeColumn<Row>(),
     // `recording_origin` (exact) ONLY. `recording_origin__in` exists on the endpoint

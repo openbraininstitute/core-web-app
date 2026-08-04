@@ -79,6 +79,7 @@ describe('electrical_cell_recording parity', () => {
       'species',
       'etype',
       'name',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser
@@ -156,6 +157,7 @@ describe('ion_channel_recording parity', () => {
       'temperature',
       'cellLine',
       'name',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser
@@ -260,6 +262,7 @@ describe('universal_cell_morphology parity', () => {
       'species',
       'mtype',
       'name',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
     ]);
@@ -305,6 +308,7 @@ describe('experimental_neuron_density parity', () => {
       'numberOfMeasurements',
       'name',
       'subjectAge',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
@@ -376,6 +380,7 @@ describe('synthesized_cell_morphology parity', () => {
       'species',
       'mtype',
       'name',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
@@ -486,6 +491,7 @@ describe('experimental_bouton_density parity', () => {
       'meanStd',
       'sem',
       'numberOfMeasurements',
+      'lifecycleStatus',
       'contributions',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
       'name',
@@ -541,6 +547,7 @@ describe('experimental_synapses_per_connection parity', () => {
       'meanStd',
       'species',
       'subjectAge',
+      'lifecycleStatus',
       'contributions',
       // AUXILIARY — declared, hidden until ticked in the chooser
       'name',
@@ -628,6 +635,7 @@ describe('em_cell_mesh parity', () => {
       'species',
       'releaseVersion',
       'emDataset',
+      'lifecycleStatus',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser
       'meshType',

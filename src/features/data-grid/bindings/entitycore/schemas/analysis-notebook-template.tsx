@@ -3,6 +3,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import { SortDirection } from '../../../core';
 import { contributionsColumn, nameColumn, registrationDateColumn } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { registerSharedRenderers } from '../renderers/register';
 
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
@@ -33,7 +34,7 @@ export const analysisNotebookTemplateSchema: IGridSchema<Row> = {
   rowHeight: 118,
   selection: { enabled: true },
   columns: [
-    nameColumn<Row>(),
+    nameColumn<Row>({ essential: true }),
     {
       id: 'description',
       header: 'Description',
@@ -46,8 +47,9 @@ export const analysisNotebookTemplateSchema: IGridSchema<Row> = {
       getValue: (r) => (r.scale ? (SCALE_LABEL.get(r.scale) ?? '') : ''),
       width: { minWidth: 120 },
     },
+    lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
-    registrationDateColumn<Row>(),
+    registrationDateColumn<Row>({ essential: true }),
   ],
 };
 

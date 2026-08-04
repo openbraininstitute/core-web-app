@@ -56,6 +56,7 @@ export function circuitNameColumn<Row extends { circuit?: { name?: string | null
         description: 'Circuit',
         options: { kind: FilterOptionsKind.Facets },
       },
+      essential: true,
     },
     o
   );

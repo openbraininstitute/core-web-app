@@ -17,6 +17,7 @@ import {
   subjectStrainColumn,
   yesNo,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { CellMorphologyPreview } from '../renderers/cell-morphology-cells';
 import { registerSharedRenderers } from '../renderers/register';
 import { dictLabelByKey, flatAdvancedFilters, staticOptions } from './common-filters';
@@ -226,6 +227,7 @@ export const cellMorphologySchema: IGridSchema<Row> = {
     previewColumn<Row>({
       cellRenderer: 'cellMorphologyPreview',
       width: { width: 184, minWidth: 120, resizable: true },
+      essential: true,
     }),
     brainRegionColumn<Row>({
       filter: {
@@ -309,6 +311,7 @@ export const cellMorphologySchema: IGridSchema<Row> = {
         ],
       },
     }),
+    lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>({
       filter: {
         targets: [
@@ -330,7 +333,7 @@ export const cellMorphologySchema: IGridSchema<Row> = {
         ],
       },
     }),
-    registrationDateColumn<Row>(),
+    registrationDateColumn<Row>({ essential: true }),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
     generationTypeColumn,
     protocolDesignColumn,

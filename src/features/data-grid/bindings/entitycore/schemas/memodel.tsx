@@ -13,6 +13,7 @@ import {
   registrationDateColumn,
   yesNo,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import {
   MEMODEL_MORPHOLOGY_PREVIEW_RENDERER,
@@ -264,6 +265,7 @@ export function buildMemodelColumns(): Array<IColumnModel<IMEModel>> {
     },
     mtypeColumn<IMEModel>(),
     etypeColumn<IMEModel>(),
+    lifecycleStatusColumn<IMEModel>(),
     createdByColumn<IMEModel>({ sortable: true, sortField: 'created_by__pref_label' }),
     registrationDateColumn<IMEModel>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one

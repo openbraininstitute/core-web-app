@@ -21,6 +21,7 @@ import {
   registrationDateColumn,
   speciesColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import { flatAdvancedFilters, recordIdFilter, subjectAdvancedGroup } from './common-filters';
@@ -210,6 +211,7 @@ export const universalCellMorphologySchema: IGridSchema<UniversalRow> = {
         options: protocol.options,
       },
     },
+    lifecycleStatusColumn<UniversalRow>(),
     contributionsColumn<UniversalRow>(),
     registrationDateColumn<UniversalRow>(),
   ],

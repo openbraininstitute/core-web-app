@@ -13,6 +13,7 @@ import {
   registrationDateColumn,
   speciesColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import {
   flatAdvancedFilters,
   recordIdFilter,
@@ -329,6 +330,7 @@ function buildCircuitModelDefinition({
   }
 
   columns.push(
+    lifecycleStatusColumn<ICircuit>(),
     createdByColumn<ICircuit>({
       id: EntityCoreFields.CreatedBy,
       sortable: true,

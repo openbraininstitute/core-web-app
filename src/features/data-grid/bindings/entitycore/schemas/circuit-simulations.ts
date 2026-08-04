@@ -11,6 +11,7 @@ import {
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
 
 import { SortDirection } from '../../../core';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { makeCampaignScanTableRenderDetail } from '../renderers/campaign-scan-table';
 import {
   CAMPAIGN_NESTED_MODE_DEFAULT,
@@ -72,7 +73,7 @@ export function buildSimulationCampaignDefinition({
   nestedMode = CAMPAIGN_NESTED_MODE_DEFAULT,
 }: BuildOptions): IEntityGridDefinition<ICampaignRow> {
   const columns: Array<IColumnModel<ICampaignRow>> = [
-    campaignNameColumn<ICampaignRow>(),
+    campaignNameColumn<ICampaignRow>({ essential: true }),
     campaignDescriptionColumn<ICampaignRow>(),
     ...(withCircuit ? [circuitNameColumn<ICampaignRow>()] : []),
     // `created_by__pref_label` is in SimulationCampaignFilter's ordering fields.
@@ -81,8 +82,13 @@ export function buildSimulationCampaignDefinition({
       sortField: 'created_by__pref_label',
     }),
     ...(withSpecies ? [campaignSpeciesColumn<ICampaignRow>()] : []),
-    campaignRegistrationDateColumn<ICampaignRow>(),
-    campaignStatusColumn<ICampaignRow>(),
+    // Visible on every campaign listing, matching the legacy view-defs (PR #1850). The
+    // PR's slot varies slightly per variant (after Circuit / Created by / Species); one
+    // shared builder needs one slot, so it sits at the end of that same trailing block,
+    // just before Registration date.
+    lifecycleStatusColumn<ICampaignRow>(),
+    campaignRegistrationDateColumn<ICampaignRow>({ essential: true }),
+    campaignStatusColumn<ICampaignRow>({ essential: true }),
   ];
 
   const schema: IGridSchema<ICampaignRow> = {

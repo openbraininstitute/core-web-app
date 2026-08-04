@@ -2,6 +2,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import { OperatorId, SortDirection } from '../../../core';
 import { contributionsColumn, formatDate, nameColumn, previewColumn } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { NOTEBOOK_IMAGE_PREVIEW_RENDERER, NotebookImagePreview } from '../renderers/notebook-cells';
 import { registerSharedRenderers } from '../renderers/register';
 
@@ -36,13 +37,14 @@ export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> 
       cellRenderer: NOTEBOOK_IMAGE_PREVIEW_RENDERER,
       width: { width: 194, minWidth: 120, resizable: true },
     }),
-    nameColumn<IAnalysisNotebookResult>(),
+    nameColumn<IAnalysisNotebookResult>({ essential: true }),
     {
       id: 'description',
       header: 'Description',
       getValue: (r) => r.description ?? '',
       width: { minWidth: 200, flex: 2 },
     },
+    lifecycleStatusColumn<IAnalysisNotebookResult>(),
     contributionsColumn<IAnalysisNotebookResult>(),
     {
       id: 'updateDate',
@@ -52,6 +54,7 @@ export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> 
       getValue: (r) => formatDate(r.update_date),
       width: { minWidth: 150 },
       filter: { operators: [OperatorId.DateRange], field: 'update_date' },
+      essential: true,
     },
   ],
 };

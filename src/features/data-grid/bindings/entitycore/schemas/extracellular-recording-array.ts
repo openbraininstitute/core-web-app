@@ -12,6 +12,7 @@ import {
   nameColumn,
   registrationDateColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { flatAdvancedFilters, recordIdFilter, staticOptions } from './common-filters';
 
 import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
@@ -137,6 +138,7 @@ export const extracellularRecordingArraySchema: IGridSchema<Row> = {
         ],
       },
     },
+    lifecycleStatusColumn<Row>(),
     createdByColumn<Row>({ id: EntityCoreFields.CreatedBy }),
     registrationDateColumn<Row>({ id: EntityCoreFields.RegistrationDate }),
     // AUXILIARY — hidden until ticked; replaces the `contribution` advanced filter.

@@ -11,6 +11,7 @@ import {
   subjectStrainColumn,
   yesNo,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import { flatAdvancedFilters, recordIdFilter } from './common-filters';
@@ -209,6 +210,7 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       width: { minWidth: 140 },
       filter: { operators: [OperatorId.Bool], field: 'is_ljp_corrected' },
     },
+    lifecycleStatusColumn<Row>(),
     registrationDateColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
     nmodlTextColumn(

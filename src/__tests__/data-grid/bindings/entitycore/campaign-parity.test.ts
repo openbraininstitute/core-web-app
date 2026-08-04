@@ -71,6 +71,7 @@ const STANDARD_COLUMNS = [
   'description',
   'circuitName',
   'createdBy',
+  'lifecycleStatus',
   'registrationDate',
   'status',
 ];
@@ -137,6 +138,7 @@ describe('me_model_circuit_simulation parity', () => {
       'circuitName',
       'createdBy',
       'species',
+      'lifecycleStatus',
       'registrationDate',
       'status',
     ]);
@@ -159,6 +161,7 @@ describe('ion_channel_model_simulation parity', () => {
       'name',
       'description',
       'createdBy',
+      'lifecycleStatus',
       'registrationDate',
       'status',
     ]);
@@ -177,6 +180,7 @@ describe('simulation_campaign parity (generic Data → Simulations listing)', ()
       'name',
       'description',
       'circuitName',
+      'lifecycleStatus',
       'registrationDate',
       'status',
     ]);

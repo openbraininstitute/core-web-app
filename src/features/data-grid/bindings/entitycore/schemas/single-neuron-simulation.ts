@@ -8,6 +8,7 @@ import {
   nameColumn,
   registrationDateColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 
 import type { ISingleNeuronSimulation } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { IGridSchema } from '../../../core';
@@ -96,6 +97,7 @@ export const singleNeuronSimulationSchema: IGridSchema<Row> = {
       width: { minWidth: 160, flex: 1 },
     },
     brainRegionColumn<Row>({ id: EntityCoreFields.BrainRegion }),
+    lifecycleStatusColumn<Row>(),
     createdByColumn<Row>({
       id: EntityCoreFields.CreatedBy,
       sortable: true,

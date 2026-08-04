@@ -8,6 +8,7 @@ import {
   nameColumn,
   registrationDateColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { IGridSchema } from '../../../core';
@@ -78,6 +79,7 @@ export const singleNeuronSynaptomeSimulationSchema: IGridSchema<Row> = {
       },
     },
     brainRegionColumn<Row>({ id: EntityCoreFields.BrainRegion }),
+    lifecycleStatusColumn<Row>(),
     createdByColumn<Row>({
       id: EntityCoreFields.CreatedBy,
       sortable: true,

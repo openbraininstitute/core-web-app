@@ -97,6 +97,7 @@ const CIRCUIT_FAMILY_COLUMNS = [
   EntityCoreFields.CircuitNumberSynapses,
   EntityCoreFields.CircuitNumberConnections,
   EntityCoreFields.CircuitTargetSimulator,
+  'lifecycleStatus',
   EntityCoreFields.CreatedBy,
   EntityCoreFields.RegistrationDate,
 ];
@@ -248,6 +249,7 @@ describe('brain_region parity', () => {
       EntityCoreFields.CircuitNumberNeurons,
       EntityCoreFields.CircuitNumberSynapses,
       EntityCoreFields.CircuitNumberConnections,
+      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
     ]);
@@ -278,6 +280,7 @@ describe('simulatable_extracellular_recording_array parity', () => {
       EntityCoreFields.Description,
       EntityCoreFields.RecordingArrayCircuit,
       EntityCoreFields.ElectrodeType,
+      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
@@ -353,6 +356,7 @@ describe('single_neuron_simulation parity', () => {
       EntityCoreFields.InjectionLocation,
       EntityCoreFields.RecordingLocation,
       EntityCoreFields.BrainRegion,
+      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
     ]);
@@ -404,6 +408,7 @@ describe('single_neuron_synaptome_simulation parity', () => {
       EntityCoreFields.SimulationResponse,
       EntityCoreFields.SynaptomeModelName,
       EntityCoreFields.BrainRegion,
+      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
     ]);

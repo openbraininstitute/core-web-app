@@ -9,6 +9,7 @@ import {
   nameColumn,
   registrationDateColumn,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { registerSharedRenderers } from '../renderers/register';
 import { flatAdvancedFilters, recordIdFilter } from './common-filters';
 
@@ -273,6 +274,7 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
       width: { minWidth: 140, flex: 1 },
       filter: { operators: [OperatorId.Ilike], field: 'me_model__species__name' },
     },
+    lifecycleStatusColumn<ISingleNeuronSynaptome>(),
     createdByColumn<ISingleNeuronSynaptome>({
       sortable: true,
       sortField: 'created_by__pref_label',

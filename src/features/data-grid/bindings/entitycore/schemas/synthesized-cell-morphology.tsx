@@ -17,6 +17,7 @@ import {
   subjectStrainColumn,
   yesNo,
 } from '../columns/catalog';
+import { lifecycleStatusColumn } from '../columns/lifecycle-status';
 import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
 import { registerSharedRenderers } from '../renderers/register';
 import {
@@ -265,6 +266,7 @@ export const synthesizedCellMorphologySchema: IGridSchema<Row> = {
     // the identifying column: the first column is a thumbnail, so Name is what the
     // chooser's bulk deselect must keep
     nameColumn<Row>({ essential: true }),
+    lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one

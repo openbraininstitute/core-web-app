@@ -38,6 +38,7 @@ describe('circuit — column set/order parity with the legacy view-def', () => {
       EntityCoreFields.CircuitDerivationType,
       EntityCoreFields.ArtifactPublishedIn,
       EntityCoreFields.ArtifactExperimentDate,
+      'lifecycleStatus',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
       'hasMorphologies',
       'hasPointNeurons',

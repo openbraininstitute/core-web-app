@@ -33,10 +33,15 @@ describe('cell_morphology — column parity with the legacy view-def', () => {
       'species',
       'mtype',
       'name',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
     ]);
-    expect(legacyOrder).toHaveLength(visible.length);
+    // Lifecycle status is the ONE column the grid has and this branch's legacy view-def
+    // does not: PR #1850 adds `EntityCoreFields.LifecycleStatus` to every view-def and
+    // is not merged here, so the oracle is one short until it lands. Everything else
+    // still has to match 1:1 — this stays an equality check, not a loosened length.
+    expect(legacyOrder).toHaveLength(visible.filter((id) => id !== 'lifecycleStatus').length);
   });
 
   /**

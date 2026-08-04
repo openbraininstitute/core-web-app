@@ -105,6 +105,7 @@ describe('emodel parity', () => {
       'etype',
       'exemplarMorphology',
       'eModelScore',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
@@ -206,6 +207,7 @@ describe('memodel parity', () => {
       'species',
       'mtype',
       'etype',
+      'lifecycleStatus',
       'createdBy',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
@@ -329,6 +331,7 @@ describe('single_neuron_synaptome parity', () => {
       'etype',
       'brainRegion',
       'species',
+      'lifecycleStatus',
       'createdBy',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
@@ -424,6 +427,7 @@ describe('ion_channel_model parity', () => {
       'temperatureCelsius',
       'isTemperatureDependent',
       'isLjpCorrected',
+      'lifecycleStatus',
       'registrationDate',
       // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
       'nmodlSuffix',
@@ -551,6 +555,7 @@ describe('analysis_notebook_template parity', () => {
       'name',
       'description',
       'notebook_scale',
+      'lifecycleStatus',
       'contributions',
       'registrationDate',
     ]);
@@ -574,6 +579,7 @@ describe('analysis_notebook_result parity', () => {
       'notebook_image_preview',
       'name',
       'description',
+      'lifecycleStatus',
       'contributions',
       'updateDate',
     ]);
