@@ -7,7 +7,12 @@ export {
   resolveAdvancedFilterGroups,
 } from './domain/advanced-filters';
 export { reconcileColumnOrder, reconcileHiddenColumns } from './domain/column-layout';
-export { Align, FilterOptionsKind, FreeEntryKind } from './domain/column-model';
+export {
+  Align,
+  essentialColumnIds,
+  FilterOptionsKind,
+  FreeEntryKind,
+} from './domain/column-model';
 export {
   byContext,
   matchesRule,

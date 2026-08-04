@@ -369,7 +369,8 @@ export const emCellMeshSchema: IGridSchema<Row> = {
   // flat list, no group tabs — see `flatAdvancedFilters`
   advancedFilters: flatAdvancedFilters(emCellMeshAdvancedFilters),
   columns: [
-    nameColumn<Row>(),
+    // the identifying column: kept visible by the chooser's bulk deselect
+    nameColumn<Row>({ essential: true }),
     brainRegionColumn<Row>(),
     // `subject__species__name` is in EMCellMeshFilter.Constants.ordering_model_fields,
     // so species IS server-sortable here. Legacy gates the species *filter* to the

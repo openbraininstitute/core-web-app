@@ -190,5 +190,38 @@ export interface IColumnModel<Row = unknown> {
    * `sortable: false` unless its field is in that allowlist.
    */
   auxiliary?: boolean;
+  /**
+   * ESSENTIAL COLUMN — the counterpart of {@link auxiliary} at the other end of the
+   * chooser: the column a BULK deselect keeps, so "Select all" can never leave the
+   * grid with nothing in it.
+   *
+   * It is a statement about the BULK action only, never a lock. The user can still
+   * hide an essential column through its own checkbox; conservative in one click,
+   * unrestricted deliberately. Naming it after `auxiliary` is the point — the two say
+   * "supplementary" and "necessary" about the same axis, so a schema reads as one
+   * ordering rather than two unrelated flags.
+   *
+   * When a schema marks nothing, {@link essentialColumnIds} falls back to the FIRST
+   * non-auxiliary column, which in practice is the identifying one (Preview, Name).
+   * That keeps every grid safe without annotating all of them up front.
+   */
+  essential?: boolean;
   filter?: IColumnFilter;
+}
+
+/**
+ * The columns a BULK deselect keeps visible: those marked {@link IColumnModel.essential},
+ * or — when a schema marks none — the first non-auxiliary column, falling back to the
+ * very first column if every column is auxiliary.
+ *
+ * Returned in the columns' own order, and EMPTY only for an empty column list: the
+ * whole point is that the result is never empty for a grid that has columns.
+ */
+export function essentialColumnIds(
+  columns: ReadonlyArray<{ id: string; auxiliary?: boolean; essential?: boolean }>
+): Array<string> {
+  const marked = columns.filter((c) => c.essential);
+  if (marked.length > 0) return marked.map((c) => c.id);
+  const fallback = columns.find((c) => !c.auxiliary) ?? columns[0];
+  return fallback ? [fallback.id] : [];
 }

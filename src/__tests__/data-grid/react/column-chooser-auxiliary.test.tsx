@@ -47,9 +47,9 @@ function Harness({ controller }: { controller: GridController<Row> }) {
   return <ColumnChooser controller={controller} state={state} />;
 }
 
-function mount() {
+function mount(schema: IGridSchema<Row> = SCHEMA) {
   const controller = new GridController<Row>({
-    schema: SCHEMA,
+    schema,
     context: { dataType: 'test' },
     defaultPageSize: 20,
   });
@@ -94,15 +94,19 @@ describe('column chooser — auxiliary columns', () => {
 
 /**
  * "Select all" is a TRI-STATE control over the same `hiddenColumns` state the
- * per-column checkboxes write — there is no second source of truth. Unticking it
- * keeps the FIRST column visible (see the empty-grid guard in `column-chooser.tsx`),
- * so the toggle cycles all ⇄ first-only and never produces a columnless grid.
+ * per-column checkboxes write — there is no second source of truth.
+ *
+ * The BULK deselect is conservative: it keeps the schema's ESSENTIAL columns (or, when
+ * a schema marks none, the first non-auxiliary one). The INDIVIDUAL checkboxes are
+ * unrestricted, so an empty grid stays reachable deliberately but never in one click.
+ * The tri-state always reports ACTUAL visibility, which is why a bulk deselect lands
+ * on indeterminate rather than unchecked.
  */
 describe('column chooser — select all', () => {
   const selectAll = () => screen.getByRole('checkbox', { name: 'Select all' });
 
-  async function open() {
-    const mounted = mount();
+  async function open(schema?: IGridSchema<Row>) {
+    const mounted = mount(schema);
     fireEvent.click(screen.getByRole('button', { name: 'Columns' }));
     await screen.findByRole('checkbox', { name: 'Select all' });
     return mounted;
@@ -125,16 +129,52 @@ describe('column chooser — select all', () => {
     expect(selectAll()).not.toHaveAttribute('aria-checked', 'mixed');
   });
 
-  it('unticking keeps the first column visible rather than emptying the grid', async () => {
+  it('with nothing marked, the bulk deselect falls back to the first non-auxiliary column', async () => {
     const { controller } = await open();
     fireEvent.click(selectAll()); // → all visible
-    fireEvent.click(selectAll()); // → first only
+    fireEvent.click(selectAll()); // → essential only
 
     expect(controller.store.getSnapshot().hiddenColumns).toEqual(['species', 'strainName']);
     expect(screen.getByRole('checkbox', { name: 'Brain region' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Species' })).not.toBeChecked();
-    // one column still visible ⇒ mixed, not unchecked
+    // something is still visible ⇒ mixed, not unchecked
     expect(selectAll()).toHaveAttribute('aria-checked', 'mixed');
+  });
+
+  it('a schema that marks its own essential columns keeps exactly those', async () => {
+    const marked: IGridSchema<Row> = {
+      ...SCHEMA,
+      columns: [
+        { ...COLUMNS[0] },
+        { ...COLUMNS[1], essential: true },
+        { ...COLUMNS[2], essential: true },
+      ],
+    };
+    const { controller } = await open(marked);
+    fireEvent.click(selectAll());
+    fireEvent.click(selectAll());
+
+    // the marked set wins over the fallback — even the auxiliary one, if marked
+    expect(controller.store.getSnapshot().hiddenColumns).toEqual(['brainRegion']);
+    expect(screen.getByRole('checkbox', { name: 'Species' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Strain' })).toBeChecked();
+  });
+
+  it('an essential column can still be hidden one at a time, all the way to empty', async () => {
+    const { controller } = await open();
+    fireEvent.click(selectAll()); // → all visible
+    fireEvent.click(selectAll()); // → Brain region only, the fallback essential
+
+    // the guard binds the BULK action only: its own checkbox still hides it
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Brain region' }));
+
+    expect(controller.store.getSnapshot().hiddenColumns).toEqual([
+      'brainRegion',
+      'species',
+      'strainName',
+    ]);
+    expect(selectAll()).not.toBeChecked();
+    expect(selectAll()).not.toHaveAttribute('aria-checked', 'mixed');
   });
 
   it('reads unchecked only when the per-column checkboxes hid everything', async () => {

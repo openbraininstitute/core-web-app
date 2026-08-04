@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import { essentialColumnIds } from '@/features/data-grid/core/domain/column-model';
 import { FilterValueKind } from '@/features/data-grid/core/domain/filter-model';
 import {
   AUXILIARY_FILTER_GROUP_ID,
@@ -184,5 +185,41 @@ describe('filter-state continuity across the tick', () => {
     expect(panelKeys(back.hiddenColumns)).toEqual(['strainName']);
 
     controller.dispose();
+  });
+});
+
+/**
+ * `essential` is `auxiliary`'s counterpart: the columns a BULK deselect keeps, so the
+ * chooser's "Select all" can never empty the grid in one click. It binds that action
+ * only — individual checkboxes stay unrestricted.
+ */
+describe('essentialColumnIds', () => {
+  it('returns the marked columns, in declaration order', () => {
+    expect(
+      essentialColumnIds([
+        { id: 'a' },
+        { id: 'b', essential: true },
+        { id: 'c', auxiliary: true, essential: true },
+      ])
+    ).toEqual(['b', 'c']);
+  });
+
+  it('falls back to the first NON-auxiliary column when a schema marks nothing', () => {
+    expect(essentialColumnIds([{ id: 'aux', auxiliary: true }, { id: 'a' }, { id: 'b' }])).toEqual([
+      'a',
+    ]);
+  });
+
+  it('falls back to the first column when every column is auxiliary', () => {
+    expect(
+      essentialColumnIds([
+        { id: 'a', auxiliary: true },
+        { id: 'b', auxiliary: true },
+      ])
+    ).toEqual(['a']);
+  });
+
+  it('is empty only for an empty column list', () => {
+    expect(essentialColumnIds([])).toEqual([]);
   });
 });

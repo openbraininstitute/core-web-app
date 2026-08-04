@@ -174,6 +174,12 @@ regardless of visibility. Ticking is therefore purely presentational — the app
 entry keeps its key, its `targetId` and its value, and is never dropped, duplicated
 or serialized twice.
 
+`essential` is the marker at the other end of the same axis: the columns the chooser's
+"Select all" keeps when it is UNticked, so a bulk deselect cannot empty the grid. It
+binds that one action — an essential column's own checkbox still hides it — and when a
+schema marks nothing, `essentialColumnIds` falls back to the first non-auxiliary
+column.
+
 **Sort safety**: entitycore 422s on an `order_by` outside the endpoint's
 `ordering_model_fields`, so an auxiliary column must stay `sortable: false` unless its
 field is in that allowlist (`app/filters/*.py`; note a list can SPREAD its parent's

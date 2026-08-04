@@ -229,7 +229,8 @@ export const ionChannelRecordingSchema: IGridSchema<Row> = {
     ionChannelColumn<Row>(),
     temperatureColumn<Row>(),
     cellLineColumn<Row>(),
-    nameColumn<Row>(),
+    // the identifying column: kept visible by the chooser's bulk deselect
+    nameColumn<Row>({ essential: true }),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one

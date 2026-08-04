@@ -291,7 +291,9 @@ export const cellMorphologySchema: IGridSchema<Row> = {
         ],
       },
     }),
+    // the identifying column: kept visible by the chooser's bulk deselect
     nameColumn<Row>({
+      essential: true,
       filter: {
         operators: [OperatorId.Ilike, OperatorId.In],
         field: 'name',

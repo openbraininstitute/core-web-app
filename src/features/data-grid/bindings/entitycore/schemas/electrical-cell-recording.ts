@@ -89,7 +89,8 @@ export const electricalCellRecordingSchema: IGridSchema<Row> = {
     brainRegionColumn<Row>(),
     speciesColumn<Row>(),
     etypeColumn<Row>(),
-    nameColumn<Row>(),
+    // the identifying column: kept visible by the chooser's bulk deselect
+    nameColumn<Row>({ essential: true }),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),
     // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one

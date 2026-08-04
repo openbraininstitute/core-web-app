@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import { GridActionType } from '../core';
+import { essentialColumnIds, GridActionType } from '../core';
 import { ExpandingToolbarButton } from './expanding-toolbar-button';
 import { GRID_OVERLAY_Z_INDEX } from './molecules-theme';
 
@@ -23,7 +23,8 @@ export interface IColumnChooserProps<Row> {
  *
  * A tri-state "Select all" heads the list, above its own hairline separator; it
  * writes the same `hiddenColumns` state as the per-column checkboxes, so one click
- * reveals every auxiliary column and the next collapses back.
+ * reveals every auxiliary column and the next collapses back to the schema's
+ * essential columns.
  *
  * AUXILIARY columns are listed apart, below a hairline separator: they are backend-
  * filterable fields the grid CAN show but does not by default, and folding them into
@@ -49,15 +50,19 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
   const mixed = !allVisible && !noneVisible;
 
   /**
-   * EMPTY-GRID GUARD: unticking "Select all" keeps the FIRST column visible rather
-   * than hiding everything — a grid with no columns is not a state a user can
-   * recover from through this popover, and disabling the control instead would make
-   * the one-click collapse (the whole point of the toggle) unreachable exactly when
-   * it is most useful. The toggle therefore cycles all ⇄ first-only, and the
-   * first-only state renders honestly as INDETERMINATE, not unchecked.
+   * EMPTY-GRID GUARD: unticking "Select all" keeps the ESSENTIAL columns visible
+   * rather than hiding everything (see `essentialColumnIds` — a schema names them,
+   * and the fallback is the first non-auxiliary column). A grid emptied in one click
+   * reads as broken, and disabling the control instead would make the one-click
+   * collapse unreachable exactly when it is most useful.
+   *
+   * The guard binds the BULK action ONLY. An essential column's own checkbox still
+   * hides it, so a genuinely empty grid stays reachable — deliberately, never by
+   * accident. The tri-state keeps telling the truth about actual visibility, so after
+   * a bulk deselect the control reads INDETERMINATE, not unchecked.
    */
   const onToggleAll = (checked: boolean) => {
-    setVisible(checked ? columns.map((c) => c.id) : columns.slice(0, 1).map((c) => c.id));
+    setVisible(checked ? columns.map((c) => c.id) : essentialColumnIds(columns));
   };
 
   const separator = <hr className="my-2 border-t border-gray-100" />;
