@@ -30,8 +30,7 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';
-import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
-import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -254,16 +253,7 @@ export default function BlockDictionary({
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >
                 <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
-                <span className="mt-3 block">
-                  <TextPatternTransformer
-                    regex={urlRegex}
-                    component={(match) => (
-                      <TransformedLink url={match} className="wrap-break-word text-primary-6" />
-                    )}
-                  >
-                    {o.description}
-                  </TextPatternTransformer>
-                </span>
+                <MarkdownDescription className="mt-3">{o.description}</MarkdownDescription>
               </button>
             </TooltipTrigger>
             {disable && (

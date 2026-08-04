@@ -17,8 +17,7 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
-import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -64,29 +63,15 @@ export default function Block({
       {!hideTitle && (
         <>
           <div className="text-lg text-gray-500 uppercase wrap-break-word">{blockSchema.title}</div>
-          <div className="mb-6 text-gray-500">
-            <TextPatternTransformer
-              regex={urlRegex}
-              component={(match) => (
-                <TransformedLink url={match} className="wrap-break-word text-primary-6" />
-              )}
-            >
-              {blockSchema.description}
-            </TextPatternTransformer>
-          </div>
+          <MarkdownDescription className="mb-6 text-gray-500">
+            {blockSchema.description}
+          </MarkdownDescription>
         </>
       )}
-      {hideTitle && blockSchema.description && (
-        <div className="mb-6 text-gray-500">
-          <TextPatternTransformer
-            regex={urlRegex}
-            component={(match) => (
-              <TransformedLink url={match} className="wrap-break-word text-primary-6" />
-            )}
-          >
-            {blockSchema.description}
-          </TextPatternTransformer>
-        </div>
+      {hideTitle && (
+        <MarkdownDescription className="mb-6 text-gray-500">
+          {blockSchema.description}
+        </MarkdownDescription>
       )}
 
       <div className="flex flex-col gap-5">
