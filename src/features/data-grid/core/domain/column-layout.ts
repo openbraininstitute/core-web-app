@@ -78,6 +78,27 @@ export function reconcileColumnOrder(
   return result;
 }
 
+/**
+ * Strip every NON-MOVABLE column (`movable: false`) from a stored order, so
+ * {@link reconcileColumnOrder} re-inserts it at its DECLARED slot.
+ *
+ * A pinned column has no drag handle, but AG Grid still reports a position for it
+ * whenever a NEIGHBOUR is dragged past it, and that position is what gets persisted.
+ * Dropping the id at READ time (rather than refusing to write it) is what makes the
+ * flag total: a layout saved before the column was pinned, or written while other
+ * columns moved around it, still cannot park it somewhere odd. Reading — not
+ * writing — also keeps the stored `columnOrder` a COMPLETE list of the columns the
+ * layout knew about, which {@link reconcileHiddenColumns} depends on.
+ */
+export function dropPinnedColumns(
+  columns: ReadonlyArray<{ id: string; movable?: boolean }>,
+  storedOrder: ReadonlyArray<string> | null | undefined
+): ReadonlyArray<string> | null | undefined {
+  if (!storedOrder?.length) return storedOrder;
+  const pinned = new Set(columns.filter((c) => c.movable === false).map((c) => c.id));
+  return pinned.size === 0 ? storedOrder : storedOrder.filter((id) => !pinned.has(id));
+}
+
 /** The visibility default a column resolves to in the current context. */
 export interface IColumnVisibilityDefault {
   id: string;

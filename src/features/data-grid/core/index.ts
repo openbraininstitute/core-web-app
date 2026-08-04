@@ -6,7 +6,11 @@ export {
   pruneAdvancedFilters,
   resolveAdvancedFilterGroups,
 } from './domain/advanced-filters';
-export { reconcileColumnOrder, reconcileHiddenColumns } from './domain/column-layout';
+export {
+  dropPinnedColumns,
+  reconcileColumnOrder,
+  reconcileHiddenColumns,
+} from './domain/column-layout';
 export {
   Align,
   essentialColumnIds,

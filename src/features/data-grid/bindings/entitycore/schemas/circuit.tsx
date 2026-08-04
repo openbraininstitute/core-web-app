@@ -192,6 +192,10 @@ export const circuitSchema: IGridSchema<Row> = {
         ],
       }),
       align: Align.Left,
+      // Pinned: this column HOSTS the expand chevron, so its position is part of how
+      // the tree reads — dragging it elsewhere leaves the chevron detached from the
+      // hierarchy it opens.
+      movable: false,
       width: { width: 110, minWidth: 90 },
       getValue: (row) => {
         const enriched = row as ICircuitEnriched;

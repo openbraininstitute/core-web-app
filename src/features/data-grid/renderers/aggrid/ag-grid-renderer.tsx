@@ -3,7 +3,7 @@
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GridActionType, reconcileColumnOrder } from '../../core';
+import { dropPinnedColumns, GridActionType, reconcileColumnOrder } from '../../core';
 import { GridLoaderOverlay } from '../../react/grid-loader';
 import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
 import { AgDetailCell, DEFAULT_DETAIL_MIN_HEIGHT } from './detail-cell';
@@ -78,12 +78,13 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   // Apply the persisted column order from state. Reconciled, not sorted-by-index: a
   // column the stored order never mentions (declared since the layout was saved, or
   // dropped from it by a contextual gate) keeps its DECLARED slot instead of being
-  // appended after every known column.
+  // appended after every known column. A NON-MOVABLE column (`movable: false`) is
+  // dropped from the stored order for exactly that reason: its declared slot wins.
   const orderedColumns = useMemo(() => {
     const byId = new Map(columns.map((c) => [c.id, c] as const));
     return reconcileColumnOrder(
       columns.map((c) => c.id),
-      state.columnOrder
+      dropPinnedColumns(columns, state.columnOrder)
     )
       .map((id) => byId.get(id))
       .filter((c): c is (typeof columns)[number] => c !== undefined);

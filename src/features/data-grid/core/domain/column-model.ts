@@ -206,6 +206,20 @@ export interface IColumnModel<Row = unknown> {
    * That keeps every grid safe without annotating all of them up front.
    */
   essential?: boolean;
+  /**
+   * Whether the user may DRAG this column to another position (default: true).
+   *
+   * `false` pins the column to its declared slot: the renderer suppresses the drag
+   * handle AND ignores any position the persisted `columnOrder` records for it, so a
+   * layout saved before the flag (or written while neighbours were dragged around
+   * it) can never park it somewhere odd either.
+   *
+   * Declare it for a column whose position carries MEANING rather than preference —
+   * the column hosting the expand chevron of a tree listing (Subcircuits), where a
+   * moved chevron makes the hierarchy unreadable. Not contextual: like
+   * {@link auxiliary}, it is a statement about the column's role in the schema.
+   */
+  movable?: boolean;
   filter?: IColumnFilter;
 }
 
