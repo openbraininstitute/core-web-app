@@ -70,7 +70,14 @@ import { cn } from '@/utils/css-class';
 import type { ColumnsType } from 'antd/es/table/interface';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
+/**
+ * Campaign and simulation types whose row offers no "View results" action.
+ *
+ * Their results are not reachable from a single generated entity — an e-feature extraction, for
+ * instance, registers one task result per config rather than one entity for the campaign — so the
+ * detail results route has nothing to open.
+ */
+export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
   ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
@@ -81,6 +88,7 @@ const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+  ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
 ];
 
 export interface WorkflowActivityRef {
