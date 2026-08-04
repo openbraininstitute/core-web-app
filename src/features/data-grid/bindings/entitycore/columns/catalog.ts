@@ -572,7 +572,7 @@ export function numberOfMeasurementsColumn<Row extends IHasMeasurements>(
       id: 'numberOfMeasurements',
       header: 'N° of Measurements',
       getValue: (r) => measurementCount(r),
-      align: Align.Right,
+      align: Align.Left,
       width: { minWidth: 150 },
     },
     o
@@ -630,7 +630,7 @@ export function densityColumn<Row extends IHasMeasurements>(
       header: 'Density',
       unit: '1/mm³',
       getValue: (r) => meanValue(r),
-      align: Align.Right,
+      align: Align.Left,
       width: { minWidth: 130 },
     },
     o
@@ -652,7 +652,7 @@ export function meanStdColumn<Row extends IHasMeasurements>(
       unit: 'µm⁻¹',
       sortField: 'measurement_mean__value',
       getValue: (r) => meanStd(r),
-      align: Align.Right,
+      align: Align.Left,
       width: { minWidth: 150 },
     },
     o
@@ -670,7 +670,7 @@ export function standardErrorColumn<Row extends IHasMeasurements>(
       sortable: true,
       sortField: 'measurement_standard_error__value',
       getValue: (r) => standardErrorValue(r),
-      align: Align.Right,
+      align: Align.Left,
       width: { minWidth: 110 },
     },
     o

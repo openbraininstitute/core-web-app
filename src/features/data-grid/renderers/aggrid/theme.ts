@@ -87,7 +87,7 @@ export const dataGridTheme = themeQuartz.withParams({
  * passes this as `localeText` so the wording is identical across the stack.
  */
 export const DATA_GRID_LOCALE_TEXT = {
-  noRowsToShow: 'No rows to show',
+  noRowsToShow: 'No entities to show',
 } as const;
 
 /**

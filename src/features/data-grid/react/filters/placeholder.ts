@@ -1,4 +1,10 @@
-import { FreeEntryKind, freeEntryKind, OperatorId, OperatorUiKind } from '../../core';
+import {
+  FilterOptionsKind,
+  FreeEntryKind,
+  freeEntryKind,
+  OperatorId,
+  OperatorUiKind,
+} from '../../core';
 
 import type { IFilterTarget, IOperatorDef } from '../../core';
 
@@ -26,6 +32,12 @@ const SAMPLE_ID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
  */
 export function resolveFilterPlaceholder(target: IFilterTarget, operator: IOperatorDef): string {
   if (target.placeholder) return target.placeholder;
+
+  // Static option lists render a Select (`lifecycle_status`, protocol design, …),
+  // not a free-text field — "Enter" would be wrong.
+  if (target.options?.kind === FilterOptionsKind.Static) {
+    return 'Select a value';
+  }
 
   switch (operator.uiKind) {
     case OperatorUiKind.Set:

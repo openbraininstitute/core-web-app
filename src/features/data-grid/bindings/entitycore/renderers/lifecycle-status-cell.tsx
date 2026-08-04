@@ -3,6 +3,8 @@
 import { Badge } from '@/ui/molecules/badge';
 import { cn } from '@/utils/css-class';
 
+import { EMPTY_PLACEHOLDER } from '../columns/catalog';
+
 import type { ReactNode } from 'react';
 import type { ICellRendererProps } from '../../../react';
 
@@ -108,14 +110,14 @@ export function LifecycleStatusCell({
   row,
 }: ICellRendererProps<ILifecycleStatusRow>): ReactNode | null {
   const spec = getLifecycleStatusBadgeSpec(row?.lifecycle_status);
-  if (!spec) return null;
+  if (!spec) return EMPTY_PLACEHOLDER;
 
   return (
     <Badge
       rounded
       size="sm"
       variant="outline"
-      className={cn('select-none border font-semibold', spec.bg, spec.border, spec.text)}
+      className={cn('select-none border font-semibold h-6!', spec.bg, spec.border, spec.text)}
     >
       {spec.label}
     </Badge>

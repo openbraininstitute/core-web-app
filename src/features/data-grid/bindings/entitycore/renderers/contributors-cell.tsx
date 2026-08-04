@@ -10,7 +10,7 @@ import type { ICellRendererProps } from '../../../react';
 export const CONTRIBUTORS_RENDERER = 'contributors';
 
 /** How many contributor names show inline before collapsing the rest behind "+N". */
-const MAX_INLINE = 2;
+const MAX_INLINE = 1;
 
 interface Agent {
   type?: string | null;
@@ -25,8 +25,8 @@ function isPerson(agent: Agent): boolean {
 }
 
 /**
- * Contributors cell: shows the first two names inline, then a "+N" pill when there
- * are more. Hovering the pill reveals a tooltip listing the remaining contributors
+ * Contributors cell: shows the first name inline, then a "+N" pill for the rest
+ * (`total - 1`). Hovering the pill reveals a tooltip listing every contributor
  * split into People and Institutions. Institutions sort before people (matching the
  * legacy `transformAgentToNames` ordering).
  */

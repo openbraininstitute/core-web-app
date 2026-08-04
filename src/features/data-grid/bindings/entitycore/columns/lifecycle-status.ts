@@ -1,4 +1,4 @@
-import { FilterOptionsKind, mergeColumnDef, OperatorId } from '../../../core';
+import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '../../../core';
 import {
   EntityLifecycleStatus,
   LIFECYCLE_STATUS_RENDERER,
@@ -66,8 +66,8 @@ export function lifecycleStatusColumn<Row>(o?: TColumnOverride<Row>): IColumnMod
         );
       },
       cellRenderer: LIFECYCLE_STATUS_RENDERER,
-      // matches the legacy field-def's `style: { width: 140 }`
       width: { width: 140, minWidth: 120 },
+      align: Align.Center,
       filter: {
         operators: [OperatorId.Eq],
         field: 'lifecycle_status',

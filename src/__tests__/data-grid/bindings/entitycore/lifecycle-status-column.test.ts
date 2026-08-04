@@ -22,24 +22,6 @@ import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/ent
 import type { IGridQuery } from '@/features/data-grid/core';
 
 /**
- * LIFECYCLE STATUS — one visible column on every registered listing.
- *
- * ORACLE (both checked before the column was authored):
- *  - the live entitycore OpenAPI spec. Every endpoint behind a registered schema
- *    declares exactly ONE query param matching `lifecycle_status`: the bare
- *    `lifecycle_status`, typed `EntityLifecycleStatus | None`. There is NO
- *    `lifecycle_status__in` on any of them, which is why `OperatorId.Eq` is the only
- *    operator offered.
- *  - `app/filters/entity.py`, where `lifecycle_status` is declared once on
- *    `EntityFilterMixin`, and NO `Constants.ordering_model_fields` anywhere lists it —
- *    hence `sortable: false` everywhere. An `order_by` outside that allowlist is a 422.
- *
- * The value is RETURNED on every row: `lifecycle_status` sits on `EntityBaseReadMixin`
- * (`app/schemas/entity.py`), inherited by `EntityRead`, `EntityReadWoutAssets` and
- * `NestedEntityRead`, and is non-nullable. So this is never a blank column.
- */
-
-/**
  * Every dataType with a registered grid definition. Mirrors `registry.ts`; a new
  * listing added there must be added here, which is what forces it to carry the column.
  */

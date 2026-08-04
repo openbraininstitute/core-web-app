@@ -39,7 +39,8 @@ export const GRID_OVERLAY_Z_INDEX = 1002;
 export const GRID_NESTED_OVERLAY_Z_CLASS = 'z-1003';
 
 /** Trigger button: hairline border, white surface, rounded-xl. */
-export const GRID_SELECT_TRIGGER_CLASS = 'rounded-xl border-gray-200 bg-white text-sm shadow-none';
+export const GRID_SELECT_TRIGGER_CLASS =
+  'rounded-xl border-gray-200 bg-white text-sm shadow-none data-placeholder:text-gray-400';
 
 /** Dropdown panel: hairline border, white surface, soft elevation, generous radius. */
 export const GRID_SELECT_CONTENT_CLASS = `rounded-xl border-gray-200 bg-white p-1.5 shadow-lg ${GRID_NESTED_OVERLAY_Z_CLASS}`;

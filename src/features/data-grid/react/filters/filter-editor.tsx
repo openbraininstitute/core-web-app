@@ -330,7 +330,13 @@ export function FilterEditor({
             value={pending.kind === FilterValueKind.Text ? pending.text : ''}
             onValueChange={(v) => change({ kind: FilterValueKind.Text, text: v })}
           >
-            <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
+            <SelectTrigger
+              className={cn(
+                'h-9 w-full',
+                GRID_SELECT_TRIGGER_CLASS,
+                !(pending.kind === FilterValueKind.Text && pending.text) && 'text-gray-300'
+              )}
+            >
               <SelectValue placeholder={placeholder}>
                 {optionsSource.items.find(
                   (i) => pending.kind === FilterValueKind.Text && i.id === pending.text

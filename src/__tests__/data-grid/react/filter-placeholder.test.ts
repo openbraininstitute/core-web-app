@@ -69,6 +69,22 @@ describe('resolveFilterPlaceholder', () => {
     );
   });
 
+  it('a static option list asks the user to select, not type', () => {
+    const lifecycle = target({
+      id: 'lifecycleStatus',
+      options: {
+        kind: FilterOptionsKind.Static,
+        items: [
+          { id: 'draft', label: 'Draft' },
+          { id: 'created', label: 'Active' },
+        ],
+      },
+    });
+    expect(resolveFilterPlaceholder(lifecycle, operators.get(OperatorId.Eq))).toBe(
+      'Select a value'
+    );
+  });
+
   it('never restates the field label and never uses an "e.g." prefix', () => {
     for (const op of [OperatorId.In, OperatorId.Eq, OperatorId.Ilike, OperatorId.Gte]) {
       const text = resolveFilterPlaceholder(target(), operators.get(op));
