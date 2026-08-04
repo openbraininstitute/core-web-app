@@ -1,8 +1,8 @@
 /**
- * The column chooser lists AUXILIARY columns apart, under "More columns", below the
- * regular ones — they are opt-in fields, not columns the grid is about — and ticking
- * one is an ordinary visibility change (it just also moves that field's filter out of
- * the advanced-filters panel; see `resolveFilterPanelGroups`).
+ * The column chooser lists AUXILIARY columns apart, below a hairline SEPARATOR (no
+ * label), after the regular ones — they are opt-in fields, not columns the grid is
+ * about — and ticking one is an ordinary visibility change (it just also moves that
+ * field's filter out of the advanced-filters panel; see `resolveFilterPanelGroups`).
  */
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -45,23 +45,26 @@ function mount() {
 }
 
 describe('column chooser — auxiliary columns', () => {
-  it('groups them under a "More columns" heading, after the regular ones', async () => {
+  it('separates them from the regular ones with a hairline, not a label', async () => {
     mount();
     fireEvent.click(screen.getByRole('button', { name: 'Columns' }));
 
-    const heading = await screen.findByText('More columns');
+    const separator = await screen.findByRole('separator');
+
+    // no heading text — the break is purely visual
+    expect(screen.queryByText('More columns')).not.toBeInTheDocument();
 
     // the regular columns are ticked, the auxiliary one is not
     expect(screen.getByRole('checkbox', { name: 'Brain region' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Strain' })).not.toBeChecked();
 
-    // …and the auxiliary checkbox comes AFTER the heading in document order
-    expect(heading.compareDocumentPosition(screen.getByRole('checkbox', { name: 'Strain' }))).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
-    expect(heading.compareDocumentPosition(screen.getByRole('checkbox', { name: 'Species' }))).toBe(
-      Node.DOCUMENT_POSITION_PRECEDING
-    );
+    // …and the auxiliary checkbox comes AFTER the separator in document order
+    expect(
+      separator.compareDocumentPosition(screen.getByRole('checkbox', { name: 'Strain' }))
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(
+      separator.compareDocumentPosition(screen.getByRole('checkbox', { name: 'Species' }))
+    ).toBe(Node.DOCUMENT_POSITION_PRECEDING);
   });
 
   it('ticking one is a plain visibility change', async () => {

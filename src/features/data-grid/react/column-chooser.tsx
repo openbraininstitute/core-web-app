@@ -21,7 +21,7 @@ export interface IColumnChooserProps<Row> {
  * `hiddenColumns` state, dispatches `setHiddenColumns`. The legacy "active columns"
  * feature, re-expressed against the new store.
  *
- * AUXILIARY columns are listed apart, under "More columns": they are backend-
+ * AUXILIARY columns are listed apart, below a hairline separator: they are backend-
  * filterable fields the grid CAN show but does not by default, and folding them into
  * the main list would bury the columns the grid is actually about. Ticking one also
  * moves its filter out of the advanced-filters panel and into its column header (see
@@ -59,9 +59,13 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
         ))}
         {auxiliary.length > 0 ? (
           <>
-            <span className="mt-2 border-t border-gray-100 px-0.5 pt-2 text-[11px] font-bold uppercase tracking-wide text-primary-8">
-              More columns
-            </span>
+            {/*
+              A hairline, not a label: the auxiliary columns are ordinary checkboxes
+              that happen to be opt-in, and naming the section made the chooser read
+              as two features. An `<hr>` carries the implicit `separator` role, so the
+              break is still announced without an ARIA opt-in.
+            */}
+            <hr className="my-2 border-t border-gray-100" />
             {auxiliary.map((c) => (
               <Checkbox key={c.id} value={c.id}>
                 {c.header}

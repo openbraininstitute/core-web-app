@@ -165,7 +165,8 @@ export interface IColumnModel<Row = unknown> {
   hiddenByDefault?: TContextualValue<boolean>;
   /**
    * AUXILIARY COLUMN — a backend-filterable field the grid can show, but does not
-   * show until the user asks for it in the column chooser's "More columns" section.
+   * show until the user asks for it in the column chooser, below the separator that
+   * closes the regular columns.
    *
    * It is the presentation half of one organising rule: every backend-filterable
    * field is represented EXACTLY ONCE — as a column (visible or auxiliary) or as an

@@ -154,8 +154,8 @@ or auxiliary) OR as an entry in `schema.advancedFilters`, never both. ID-type fi
 (`id`, `*__id`) stay advanced filters — there is no useful column to show for them.
 
 An **auxiliary column** (`IColumnModel.auxiliary`) is a filterable field the grid can
-show but hides until the user ticks it in the column chooser's "More columns"
-section. `auxiliary` IMPLIES `hiddenByDefault` (an explicit `hiddenByDefault` still
+show but hides until the user ticks it in the column chooser, below the hairline
+separator that closes the regular columns. `auxiliary` IMPLIES `hiddenByDefault` (an explicit `hiddenByDefault` still
 wins), so there is one default-visibility mechanism, not two. What the toolbar panel
 offers then follows from visibility:
 
