@@ -331,8 +331,52 @@ describe('single_neuron_synaptome parity', () => {
       'species',
       'createdBy',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'meModelValidationStatus',
+      'contributions',
     ]);
   });
+
+  /**
+   * ONLY these two of the seven candidates became columns. `SingleNeuronSynaptomeRead`
+   * embeds `NestedMEModel`, which carries validation_status but NOT strain, morphology
+   * or emodel — so those five stay advanced filters rather than ship blank columns
+   * (asserted in `model-advanced-filters.test.ts`).
+   */
+  it('the two auxiliary columns carry their filters, and NEITHER sorts', () => {
+    const resolved = resolveColumns(s, ctx('single_neuron_synaptome'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual(['meModelValidationStatus', 'contributions']);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    const status: TFilterModel = {
+      meModelValidationStatus: {
+        columnId: 'meModelValidationStatus',
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: 'done' },
+      },
+    };
+    expect(serializeQuery(query({ filters: status }), s).me_model__validation_status).toBe('done');
+    // exact match only — this endpoint declares no `me_model__validation_status__in`
+    expect(s.columns.find((c) => c.id === 'meModelValidationStatus')?.filter?.operators).toEqual([
+      OperatorId.Eq,
+    ]);
+    expect(
+      serializeQuery(query({ filters: setIn('contributions') }), s).contribution__pref_label__in
+    ).toEqual(['x']);
+
+    // SingleNeuronSynaptomeFilter's ordering_model_fields lists neither
+    for (const id of aux) {
+      expect(s.columns.find((c) => c.id === id)?.sortable).toBe(false);
+    }
+  });
+
+  it('the validation-status cell reads the value NestedMEModel actually returns', () => {
+    const column = s.columns.find((c) => c.id === 'meModelValidationStatus');
+    expect(column?.getValue?.({ me_model: { validation_status: 'done' } } as never)).toBe('Done');
+    expect(column?.getValue?.({} as never)).toBe('');
+  });
+
   it('m-type/e-type filter+sort through the me_model relation keys', () => {
     expect(
       serializeQuery(query({ filters: setIn('mtype') }), s).me_model__mtype__pref_label__in

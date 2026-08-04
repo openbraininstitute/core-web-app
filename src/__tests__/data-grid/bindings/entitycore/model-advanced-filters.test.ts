@@ -242,15 +242,16 @@ describe('me-model-circuit advanced filters — GET /memodel', () => {
   });
 });
 
+/**
+ * FILTERABLE ≠ RETURNED. `SingleNeuronSynaptomeRead.me_model` is `NestedMEModel` —
+ * name, description, validation_status, id, type, mtypes, etypes and nothing else —
+ * so the five `me_model__{strain,morphology,emodel}__*` params below stay ADVANCED
+ * FILTERS: a column for any of them would be blank on every row. Only
+ * `me_model__validation_status` and `contribution__pref_label` moved onto columns
+ * (pinned in `model-parity.test.ts`).
+ */
 describe('single-neuron-synaptome advanced filters — GET /single-neuron-synaptome', () => {
   suite(singleNeuronSynaptomeSchema, [
-    [
-      'meModel',
-      'validationStatus',
-      OperatorId.Eq,
-      text('done'),
-      { me_model__validation_status: 'done' },
-    ],
     [
       'meModel',
       'strainName',
@@ -297,9 +298,26 @@ describe('single-neuron-synaptome advanced filters — GET /single-neuron-synapt
     ['emodel', 'name', OperatorId.In, set('cADpyr'), { me_model__emodel__name__in: ['cADpyr'] }],
     ['emodel', 'name', OperatorId.Eq, text('cADpyr'), { me_model__emodel__name: 'cADpyr' }],
     ['emodel', 'score', OperatorId.Range, range(null, 10), { me_model__emodel__score__lte: 10 }],
-    ...CONTRIBUTION_CASES,
     ...RECORD_ID_CASES,
   ]);
+
+  it('keeps exactly the five nested fields the list response does NOT return, plus id', () => {
+    const fields = [...advancedFilterDefsByKey(singleNeuronSynaptomeSchema).values()].map(
+      (d) => d.field
+    );
+    expect(fields).toEqual([
+      'id',
+      // NestedMEModel carries none of these — a column would be blank on every row
+      'me_model__strain__name',
+      'me_model__morphology__name',
+      'me_model__morphology__has_segmented_spines',
+      'me_model__emodel__name',
+      'me_model__emodel__score',
+    ]);
+    // …and the two that ARE returned left the panel for their columns
+    expect(fields).not.toContain('me_model__validation_status');
+    expect(fields).not.toContain('contribution__pref_label');
+  });
 });
 
 /**
