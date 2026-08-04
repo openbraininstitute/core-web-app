@@ -10,6 +10,7 @@ import {
   useBlockTypeToConfigKey,
   useReferenceTypeDict,
 } from '../hooks/schema';
+import { resolveDefaultReferenceLabel } from './resolve-default-reference-label';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -29,6 +30,11 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  *
  * `reference_types` are reference-class names (e.g. `BiophysicalNeuronSetReference`), not entry
  * `type`s (e.g. `BiophysicalPopulationNeuronSet`); `allowed_block_types` is the bridge between them
+ *
+ * the default option is labelled with the block the backend resolves this field to when it is left
+ * unset: the schema's `reference_tag_defaults` keyed by the field's own `reference_tag`, falling
+ * back to `default_block_reference_labels` keyed by reference type. visibility still keys off the
+ * latter, which doubles as the declaration of which reference types a config supports.
  *
  * @param schema           the full scan-config schema (source of the reference/variant lookups)
  * @param referenceSchema  the field's own schema; only `reference_types` is read
@@ -138,11 +144,8 @@ export default function Reference({
     }
   }
 
-  // find the first available default label across accepted reference types
-  const defaultLabel =
-    referenceSchema.reference_types
-      .map((refType) => schema.default_block_reference_labels?.[refType])
-      .find(Boolean) ?? 'Default';
+  // label the default option with the name the backend will actually resolve this field to
+  const defaultLabel = resolveDefaultReferenceLabel(referenceSchema, schema);
 
   options.unshift({
     label: defaultLabel,

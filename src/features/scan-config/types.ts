@@ -219,6 +219,11 @@ export interface IntParameterSweep extends TBlockElement {
 export interface Reference extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.Reference;
   reference_types: Array<string>;
+  /**
+   * the role this reference plays, e.g. `stimulus_target`. looked up in the config schema's
+   * `reference_tag_defaults` to label the default option. absent on older schemas.
+   */
+  reference_tag?: string;
   anyOf?: Array<
     | {
         title?: string;
@@ -352,6 +357,8 @@ export interface NeuronPropertyFilter extends TBlockElement {
 export interface NeuronSetCombination extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronSetCombination;
   reference_types: Array<string>;
+  /** the role each operand plays; see `Reference.reference_tag` */
+  reference_tag?: string;
 }
 
 export interface IBlockUnion extends TRootElement {
@@ -424,6 +431,14 @@ export interface IBlockDictionary extends TRootElement {
 export type ConfigSchema = {
   additionalProperties: false;
   default_block_reference_labels: Record<string, string>;
+  /**
+   * the name each unset reference resolves to, keyed by the field's `reference_tag`. preferred
+   * over `default_block_reference_labels`, which is keyed by reference type and so cannot
+   * distinguish two fields of the same type that mean different things (a Brian2 stimulus target
+   * defaults to the `sugar` node set, while the simulation itself runs all point neurons -- both
+   * are PointNeuronSetReference). absent on older schemas.
+   */
+  reference_tag_defaults?: Record<string, string>;
   description: string;
   group_order: string[];
   properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {
