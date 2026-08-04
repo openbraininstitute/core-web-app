@@ -144,13 +144,6 @@ function idCases(groupId: string): ReadonlyArray<TCase> {
 
 const RECORD_ID_CASES: ReadonlyArray<TCase> = idCases('common');
 
-/** `name*`, for the grids that show no Name column. */
-const NAME_CASES: ReadonlyArray<TCase> = [
-  ['common', 'name', OperatorId.Ilike, text('L5'), { name__ilike: '%L5%' }],
-  ['common', 'name', OperatorId.In, set('L5 TPC'), { name__in: ['L5 TPC'] }],
-  ['common', 'name', OperatorId.Eq, text('L5 TPC'), { name: 'L5 TPC' }],
-];
-
 /** The `cell_morphology_protocol__*` params shared by the two morphology subtypes. */
 const PROTOCOL_TEXT_CASES: ReadonlyArray<TCase> = [
   [
@@ -394,41 +387,25 @@ describe('experimental-bouton-density advanced filters — GET /experimental-bou
   });
 });
 
+/**
+ * `name`, `brain_region__name`, `brain_region__acronym`, `subject__strain__name` and
+ * `subject__name` are AUXILIARY COLUMNS here, not advanced filters — the panel offers
+ * them only while they stay hidden, and their wire params are pinned in
+ * `experimental-parity.test.ts` alongside the columns that own them. What is left is
+ * the two ID-type fields, which have no useful column.
+ */
 describe('synapses-per-connection advanced filters — GET /experimental-synapses-per-connection', () => {
   suite(experimentalSynapsesPerConnectionSchema, [
-    [
-      'brainRegion',
-      'name',
-      OperatorId.Ilike,
-      text('Isocortex'),
-      { brain_region__name__ilike: '%Isocortex%' },
-    ],
-    [
-      'brainRegion',
-      'name',
-      OperatorId.In,
-      set('Isocortex'),
-      { brain_region__name__in: ['Isocortex'] },
-    ],
-    [
-      'brainRegion',
-      'acronym',
-      OperatorId.In,
-      set('SSp-bfd'),
-      { brain_region__acronym__in: ['SSp-bfd'] },
-    ],
-    [
-      'brainRegion',
-      'acronym',
-      OperatorId.Eq,
-      text('SSp-bfd'),
-      { brain_region__acronym: 'SSp-bfd' },
-    ],
     ['brainRegion', 'id', OperatorId.In, set(UUID), { brain_region__id__in: [UUID] }],
-    ...SUBJECT_CASES,
-    ...NAME_CASES,
     ...RECORD_ID_CASES,
   ]);
+
+  it('declares no filter for a field an auxiliary column now owns', () => {
+    const fields = [
+      ...advancedFilterDefsByKey(experimentalSynapsesPerConnectionSchema).values(),
+    ].map((d) => d.field);
+    expect(fields).toEqual(['id', 'brain_region__id']);
+  });
 });
 
 describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {

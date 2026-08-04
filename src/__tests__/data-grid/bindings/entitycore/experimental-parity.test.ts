@@ -358,7 +358,53 @@ describe('experimental_synapses_per_connection parity', () => {
       'species',
       'subjectAge',
       'contributions',
+      // AUXILIARY — declared, hidden until ticked in the chooser
+      'name',
+      'brainRegionName',
+      'brainRegionAcronym',
+      'strainName',
+      'subjectName',
     ]);
+  });
+  it('the auxiliary columns are hidden by default and carry the filters they replaced', () => {
+    const resolved = resolveColumns(s, dataCtx('experimental_synapses_per_connection'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual([
+      'name',
+      'brainRegionName',
+      'brainRegionAcronym',
+      'strainName',
+      'subjectName',
+    ]);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    // `name` is legitimate as a column HERE: this listing has no Name column
+    expect(serializeQuery(query({ filters: ilike('name') }), s).name__ilike).toBe('%foo%');
+    expect(serializeQuery(query({ filters: setIn('name') }), s).name__in).toEqual(['x']);
+    // the record's OWN brain region, free-entry (the facets here are the pre/post ones)
+    expect(
+      serializeQuery(query({ filters: ilike('brainRegionName') }), s).brain_region__name__ilike
+    ).toBe('%foo%');
+    expect(
+      serializeQuery(query({ filters: setIn('brainRegionAcronym') }), s).brain_region__acronym__in
+    ).toEqual(['x']);
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+    expect(serializeQuery(query({ filters: ilike('subjectName') }), s).subject__name__ilike).toBe(
+      '%foo%'
+    );
+  });
+  it('name and the brain-region scalars sort; neither subject field is in ordering_model_fields', () => {
+    expect(serializeQuery(query(sortDesc('name')), s).order_by).toEqual(['-name']);
+    expect(serializeQuery(query(sortDesc('brainRegionName')), s).order_by).toEqual([
+      '-brain_region__name',
+    ]);
+    expect(serializeQuery(query(sortDesc('brainRegionAcronym')), s).order_by).toEqual([
+      '-brain_region__acronym',
+    ]);
+    expect(s.columns.find((c) => c.id === 'strainName')?.sortable).toBe(false);
+    expect(s.columns.find((c) => c.id === 'subjectName')?.sortable).toBe(false);
   });
   it('pre/post region + cell-type filters serialize to the backend keys', () => {
     expect(serializeQuery(query({ filters: setIn('preRegion') }), s).pre_region__name__in).toEqual([
