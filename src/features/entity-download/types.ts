@@ -68,3 +68,7 @@ export type NotebookJsonMetadata = {
 export type EMCellMeshJsonMetadata = {
   [key: string]: unknown;
 };
+
+export type TaskResultJsonMetadata = {
+  [key: string]: unknown;
+};

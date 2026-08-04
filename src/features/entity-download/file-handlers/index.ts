@@ -18,6 +18,7 @@ import { getSimulatableExtracellularRecordingArrayFiles } from './simulatable-ex
 import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
 import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
+import { getTaskResultFiles } from './task-result';
 
 import type { FileEntry } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -36,6 +37,8 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.ExperimentalNeuronDensity]: getExperimentalNeuronDensityFiles,
   [EntityTypeDict.ExperimentalSynapsesPerConnection]: getExperimentalSynapsesPerConnectionFiles,
   [EntityTypeDict.CellMorphology]: getCellMorphologyFiles,
+  // every workflow result shares the `task_result` type; the handler works off the record's assets
+  [EntityTypeDict.TaskResult]: getTaskResultFiles,
   [EntityTypeDict.EMCellMesh]: getEMCellMeshFiles,
   // Model data
   [EntityTypeDict.Emodel]: getEmodelFiles,
