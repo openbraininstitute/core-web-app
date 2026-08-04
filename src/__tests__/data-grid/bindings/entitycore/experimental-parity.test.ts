@@ -193,7 +193,36 @@ describe('experimental_neuron_density parity', () => {
       'subjectAge',
       'contributions',
       'registrationDate',
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'strainName',
+      'subjectName',
     ]);
+  });
+  it('the auxiliary columns are hidden by default and carry the subject filters', () => {
+    const resolved = resolveColumns(s, dataCtx('experimental_neuron_density'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual(['strainName', 'subjectName']);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+    expect(
+      serializeQuery(query({ filters: setIn('strainName') }), s).subject__strain__name__in
+    ).toEqual(['x']);
+    expect(serializeQuery(query({ filters: ilike('subjectName') }), s).subject__name__ilike).toBe(
+      '%foo%'
+    );
+    expect(serializeQuery(query({ filters: setIn('subjectName') }), s).subject__name__in).toEqual([
+      'x',
+    ]);
+  });
+  it('only subject__strain__name is sortable — subject__name is not in ordering_model_fields', () => {
+    expect(s.columns.find((c) => c.id === 'strainName')?.sortable).toBe(true);
+    expect(serializeQuery(query(sortDesc('strainName')), s).order_by).toEqual([
+      '-subject__strain__name',
+    ]);
+    expect(s.columns.find((c) => c.id === 'subjectName')?.sortable).toBe(false);
   });
   it('species/mtype/etype/contribution facets serialize to legacy __in keys', () => {
     expect(
@@ -274,7 +303,34 @@ describe('experimental_bouton_density parity', () => {
       'sem',
       'numberOfMeasurements',
       'contributions',
+      // AUXILIARY — declared, hidden until ticked in the chooser's "More columns"
+      'name',
+      'strainName',
+      'subjectName',
     ]);
+  });
+  it('the auxiliary columns are hidden by default and carry the filters they replaced', () => {
+    const resolved = resolveColumns(s, dataCtx('experimental_bouton_density'));
+    const aux = resolved.filter((c) => c.auxiliary).map((c) => c.id);
+    expect(aux).toEqual(['name', 'strainName', 'subjectName']);
+    expect(resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id)).toEqual(aux);
+
+    // `name` is legitimate as a column HERE: this listing has no Name column
+    expect(serializeQuery(query({ filters: ilike('name') }), s).name__ilike).toBe('%foo%');
+    expect(serializeQuery(query({ filters: setIn('name') }), s).name__in).toEqual(['x']);
+    expect(
+      serializeQuery(query({ filters: ilike('strainName') }), s).subject__strain__name__ilike
+    ).toBe('%foo%');
+    expect(serializeQuery(query({ filters: ilike('subjectName') }), s).subject__name__ilike).toBe(
+      '%foo%'
+    );
+  });
+  it('name and strain sort; subject__name is not in ordering_model_fields', () => {
+    expect(serializeQuery(query(sortDesc('name')), s).order_by).toEqual(['-name']);
+    expect(serializeQuery(query(sortDesc('strainName')), s).order_by).toEqual([
+      '-subject__strain__name',
+    ]);
+    expect(s.columns.find((c) => c.id === 'subjectName')?.sortable).toBe(false);
   });
   it('measurement columns sort on the legacy measurement_*__value keys', () => {
     expect(s.columns.find((c) => c.id === 'meanStd')?.sortable).toBe(true);

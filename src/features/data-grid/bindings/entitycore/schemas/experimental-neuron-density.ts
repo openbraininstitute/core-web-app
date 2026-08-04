@@ -12,14 +12,11 @@ import {
   registrationDateColumn,
   speciesColumn,
   subjectAgeColumn,
+  subjectNameColumn,
+  subjectStrainColumn,
 } from '../columns/catalog';
 import { registerSharedRenderers } from '../renderers/register';
-import {
-  flatAdvancedFilters,
-  recordIdFilter,
-  recordNameFilter,
-  subjectAdvancedGroup,
-} from './common-filters';
+import { flatAdvancedFilters, recordIdFilter } from './common-filters';
 
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
 import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
@@ -29,6 +26,8 @@ import type {
   IHasMeasurements,
   IHasSpecies,
   IHasSubjectAge,
+  IHasSubjectName,
+  IHasSubjectStrain,
 } from '../columns/catalog';
 import type { IEntityGridDefinition } from '../registry';
 
@@ -36,11 +35,21 @@ import type { IEntityGridDefinition } from '../registry';
 type Row = IExperimentalNeuronDensity &
   IHasSpecies &
   IHasSubjectAge &
+  IHasSubjectName &
+  IHasSubjectStrain &
   IHasMeasurements &
   IHasContributions;
 
 /**
- * ADVANCED FILTERS — `GET /experimental-neuron-density` params with no column here.
+ * ADVANCED FILTERS — `GET /experimental-neuron-density` params with no column at all:
+ * just the record's own `id`, which has nothing useful to show in a cell.
+ *
+ * `subject__strain__name` and `subject__name` are now AUXILIARY columns below, so the
+ * panel offers them only while they are hidden. `name` was ALSO declared here, as a
+ * `recordNameFilter`, while this listing has always had a visible Name column that
+ * owns `name` — a duplicate of the same field on two surfaces. It is gone: the Name
+ * column is the one representation of that field, and there is no auxiliary column
+ * for it.
  *
  * A density is NOT a ScientificArtifact (`app/filters/density.py` composes
  * `EntityFilterMixin` + `SubjectFilterMixin`, not `ScientificArtifactFilter`), so
@@ -51,9 +60,8 @@ const experimentalNeuronDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGro
   {
     id: 'common',
     label: 'Common',
-    filters: [recordIdFilter, recordNameFilter],
+    filters: [recordIdFilter],
   },
-  subjectAdvancedGroup('The animal the density was measured in.'),
 ];
 
 /**
@@ -62,6 +70,15 @@ const experimentalNeuronDensityAdvancedFilters: ReadonlyArray<IAdvancedFilterGro
  * Density, N° of measurements, Name, Age, Contributors, Registration date). The
  * "Density" value is the mean of the `measurements` array (not a queryable scalar),
  * so it is neither sortable nor filterable — matching legacy.
+ *
+ * Then two AUXILIARY columns — Strain, Subject name — hidden until the user ticks
+ * them under "More columns", each carrying the filter it took over from the
+ * advanced-filters panel.
+ *
+ * SORT SAFETY (`ExperimentalNeuronDensityFilter.Constants.ordering_model_fields` in
+ * entitycore's `app/filters/density.py`): `subject__strain__name` IS in the allowlist
+ * and sorts; `subject__name` is NOT, so Subject name is non-sortable — offering it
+ * would 422 the whole listing.
  */
 export const experimentalNeuronDensitySchema: IGridSchema<Row> = {
   id: 'experimental-neuron-density',
@@ -82,6 +99,9 @@ export const experimentalNeuronDensitySchema: IGridSchema<Row> = {
     subjectAgeColumn<Row>({ sortable: true }),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),
+    // AUXILIARY — hidden until ticked; each replaces an advanced filter one-for-one
+    subjectStrainColumn<Row>({ sortable: true }),
+    subjectNameColumn<Row>(),
   ],
 };
 

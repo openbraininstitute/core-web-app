@@ -1,6 +1,6 @@
 import { MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 
-import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '../../../core';
+import { Align, FilterOptionsKind, FreeEntryKind, mergeColumnDef, OperatorId } from '../../../core';
 import { CONTRIBUTORS_RENDERER } from '../renderers/contributors-cell';
 import { EM_DATASET_RENDERER } from '../renderers/em-dataset-cell';
 
@@ -74,6 +74,12 @@ export interface IHasCellLine {
 }
 export interface IHasSubjectAge {
   subject?: Nullable<{ age_value?: Nullable<number> }>;
+}
+export interface IHasSubjectName {
+  subject?: Nullable<{ name?: Nullable<string> }>;
+}
+export interface IHasSubjectStrain {
+  subject?: Nullable<{ strain?: Nullable<{ name?: Nullable<string> }> }>;
 }
 export interface IMeasurement {
   name?: Nullable<TMeasurementStatistic>;
@@ -454,6 +460,94 @@ export function subjectAgeColumn<Row extends IHasSubjectAge>(
       sortField: 'subject__age_value',
       getValue: (r) => ageInDays(r.subject?.age_value),
       width: { minWidth: 110 },
+    },
+    o
+  );
+}
+
+/**
+ * Strain — an AUXILIARY column by default (`subject__strain__name`, from
+ * `SubjectFilterMixin`): the name of the inbred line the subject belongs to, which
+ * matters to the handful of users comparing strains and to nobody else.
+ *
+ * Free-entry `__ilike` / `__in`, exactly as the advanced filter it replaces. Every
+ * endpoint composing `SubjectFilterMixin` accepts the param, but only SOME list
+ * `subject__strain__name` in their `ordering_model_fields`, so `sortable` is opt-in
+ * per schema — see {@link subjectNameColumn} for what enabling it wrongly costs.
+ */
+export function subjectStrainColumn<Row extends IHasSubjectStrain>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'strainName',
+      header: 'Strain',
+      auxiliary: true,
+      sortField: 'subject__strain__name',
+      getValue: (r) => r.subject?.strain?.name ?? '',
+      width: { minWidth: 140 },
+      filter: {
+        // `subject__strain__name__ilike`, `subject__strain__name__in`
+        operators: [OperatorId.Ilike, OperatorId.In],
+        field: 'subject__strain__name',
+        // Declared as an explicit TARGET, not flat props alone: only a target can
+        // carry `freeEntry`/`placeholder`, and the synthesised legacy target reads
+        // "no options" as "use the grid's facets" — which for a field the server
+        // computes no bucket for is an empty picker instead of a paste-a-list box.
+        targets: [
+          {
+            id: 'name',
+            label: 'Strain',
+            field: 'subject__strain__name',
+            operators: [OperatorId.Ilike, OperatorId.In],
+            freeEntry: FreeEntryKind.Text,
+            placeholder: 'Enter a strain name',
+          },
+        ],
+      },
+    },
+    o
+  );
+}
+
+/**
+ * Subject name — an AUXILIARY column by default (`subject__name`, from
+ * `SubjectFilterMixin`): the label of the individual animal, useful when tracing
+ * records back to one subject.
+ *
+ * NEVER SORTABLE unless a specific endpoint proves otherwise: no entitycore filter
+ * seen so far lists `subject__name` in `ordering_model_fields`, and an `order_by`
+ * outside that allowlist is a 422 — the listing fails to load rather than sorting
+ * badly. Hence no `sortField` here at all.
+ */
+export function subjectNameColumn<Row extends IHasSubjectName>(
+  o?: TColumnOverride<Row>
+): IColumnModel<Row> {
+  return mergeColumnDef<Row>(
+    {
+      id: 'subjectName',
+      header: 'Subject name',
+      auxiliary: true,
+      sortable: false,
+      getValue: (r) => r.subject?.name ?? '',
+      width: { minWidth: 150 },
+      filter: {
+        // `subject__name__ilike`, `subject__name__in`
+        operators: [OperatorId.Ilike, OperatorId.In],
+        field: 'subject__name',
+        // an explicit target, for the free-entry reason spelled out in
+        // `subjectStrainColumn`
+        targets: [
+          {
+            id: 'name',
+            label: 'Subject name',
+            field: 'subject__name',
+            operators: [OperatorId.Ilike, OperatorId.In],
+            freeEntry: FreeEntryKind.Text,
+            placeholder: 'Enter a subject name',
+          },
+        ],
+      },
     },
     o
   );

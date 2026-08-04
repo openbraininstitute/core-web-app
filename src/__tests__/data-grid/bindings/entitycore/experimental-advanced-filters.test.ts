@@ -351,8 +351,27 @@ describe('ion-channel-recording advanced filters — GET /ion-channel-recording'
   });
 });
 
+/**
+ * THE TWO DENSITY LISTINGS ARE THE AUXILIARY-COLUMN PILOT: `subject__strain__name`,
+ * `subject__name` (both) and `name` (bouton only) are no longer advanced filters —
+ * they are auxiliary COLUMNS, offered by this panel only while they stay hidden and
+ * by their own header once ticked. The panel therefore declares only `id`, and the
+ * wire params for the moved fields are pinned in `experimental-parity.test.ts`
+ * alongside the columns that now own them.
+ */
 describe('experimental-neuron-density advanced filters — GET /experimental-neuron-density', () => {
-  suite(experimentalNeuronDensitySchema, [...SUBJECT_CASES, ...RECORD_ID_CASES, ...NAME_CASES]);
+  suite(experimentalNeuronDensitySchema, [...RECORD_ID_CASES]);
+
+  it('declares no filter for a field a column already owns', () => {
+    const fields = [...advancedFilterDefsByKey(experimentalNeuronDensitySchema).values()].map(
+      (d) => d.field
+    );
+    expect(fields).toEqual(['id']);
+    // `name` had a visible Name column AND this filter — the same field twice
+    expect(fields).not.toContain('name');
+    expect(fields).not.toContain('subject__strain__name');
+    expect(fields).not.toContain('subject__name');
+  });
 
   it('offers no ScientificArtifact params — the endpoint does not accept them', () => {
     const fields = [...advancedFilterDefsByKey(experimentalNeuronDensitySchema).values()].map(
@@ -365,7 +384,14 @@ describe('experimental-neuron-density advanced filters — GET /experimental-neu
 });
 
 describe('experimental-bouton-density advanced filters — GET /experimental-bouton-density', () => {
-  suite(experimentalBoutonDensitySchema, [...SUBJECT_CASES, ...NAME_CASES, ...RECORD_ID_CASES]);
+  suite(experimentalBoutonDensitySchema, [...RECORD_ID_CASES]);
+
+  it('keeps only `id` — name/strain/subject name are auxiliary columns now', () => {
+    const fields = [...advancedFilterDefsByKey(experimentalBoutonDensitySchema).values()].map(
+      (d) => d.field
+    );
+    expect(fields).toEqual(['id']);
+  });
 });
 
 describe('synapses-per-connection advanced filters — GET /experimental-synapses-per-connection', () => {
