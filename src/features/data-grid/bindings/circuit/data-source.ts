@@ -40,6 +40,24 @@ export interface ICircuitDataSourceOptions {
   queryClient: QueryClient;
 }
 
+/**
+ * Circuits the current filters actually MATCH, across the whole tree.
+ *
+ * The tree keeps a non-matching node only as a path to a matching descendant — those
+ * carry `isFiltered: false` and must not be counted. With no filter applied every node
+ * matches, so this is simply "every circuit in the hierarchy": the roots alone are not a
+ * comparable number, since the tree shows their whole subtree too.
+ */
+function countMatchingNodes(nodes: ReadonlyArray<unknown>): number {
+  return nodes.reduce<number>((acc, node) => {
+    const { isFiltered, sub_circuits: children } = node as {
+      isFiltered?: boolean;
+      sub_circuits?: ReadonlyArray<unknown>;
+    };
+    return acc + (isFiltered ? 1 : 0) + countMatchingNodes(children ?? []);
+  }, 0);
+}
+
 /** Drop the internal view marker so it never leaks into an entitycore request. */
 function withoutViewParam(params: Record<string, unknown> | undefined): Record<string, unknown> {
   if (!params) return {};
@@ -185,7 +203,7 @@ export function createCircuitDataSource(
       filteredResult
     ) as unknown as ICircuit[];
 
-    return { rows: roots, total: roots.length };
+    return { rows: roots, total: countMatchingNodes(roots), singlePage: true };
   }
 
   return {

@@ -33,7 +33,11 @@ export interface IGridQuery {
 
 export interface IGridPage<Row> {
   rows: Row[];
-  /** total number of matching rows (drives pagination) */
+  /** total number of matching rows (drives pagination, and any count shown outside) */
   total: number;
+  /**
+   * `true` when the source ignores `page`/`pageSize` and returns everything in one go
+   */
+  singlePage?: boolean;
   facets?: TFacets;
 }

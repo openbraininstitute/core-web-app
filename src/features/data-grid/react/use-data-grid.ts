@@ -38,6 +38,8 @@ export interface IUseDataGridResult<Row> {
   state: IGridState;
   rows: Row[];
   total: number;
+  /** see {@link IGridPage.singlePage} — the source returned everything at once. */
+  singlePage: boolean;
   facets?: TFacets;
   loading: boolean;
   error: unknown;
@@ -85,6 +87,7 @@ export function useDataGrid<Row>(args: IUseDataGridArgs<Row>): IUseDataGridResul
     state,
     rows: result.data?.rows ?? [],
     total: result.data?.total ?? 0,
+    singlePage: result.data?.singlePage ?? false,
     facets: result.data?.facets,
     loading: result.isFetching,
     error: result.error,

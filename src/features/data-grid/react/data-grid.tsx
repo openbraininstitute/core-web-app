@@ -117,7 +117,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     selection,
   } = props;
 
-  const { state, rows, total, facets, loading, error } = useDataGrid<Row>({
+  const { state, rows, total, singlePage, facets, loading, error } = useDataGrid<Row>({
     controller,
     dataSource,
     params,
@@ -253,13 +253,16 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       */}
       <div className="flex min-h-13 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-gray-100 px-3 py-2">
         <div className="flex min-w-fit flex-1 basis-0 items-center gap-2">{bulkActions}</div>
-        <GridPagination
-          controller={controller}
-          total={total}
-          page={state.page}
-          pageSize={state.pageSize}
-          className="shrink-0"
-        />
+        {/* a single-page source honours no page number, so the pager would be inert */}
+        {singlePage ? null : (
+          <GridPagination
+            controller={controller}
+            total={total}
+            page={state.page}
+            pageSize={state.pageSize}
+            className="shrink-0"
+          />
+        )}
         <div className="flex min-w-fit flex-1 basis-0 items-center justify-end gap-3">
           {renderCount?.({ total, loading, error })}
           {!pickerMode && selectionEnabled && selectionCount > 0 ? (

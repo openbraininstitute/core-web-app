@@ -96,7 +96,10 @@ describe('createCircuitDataSource — hierarchy branch (gray-out tree)', () => {
     const page = await source.fetch(baseQuery({ params: { [CIRCUIT_VIEW_PARAM]: 'hierarchy' } }));
 
     expect(page.rows.map((r) => r.id)).toEqual(['A']);
+    // only B matches; A is kept solely as the path to it, so it is not counted
     expect(page.total).toBe(1);
+    // the tree is returned whole — a page number would cut through it
+    expect(page.singlePage).toBe(true);
 
     const rootA = page.rows[0] as unknown as {
       id: string;
@@ -106,5 +109,28 @@ describe('createCircuitDataSource — hierarchy branch (gray-out tree)', () => {
     expect(rootA.isFiltered).toBe(false);
     expect(rootA.sub_circuits.map((c) => c.id)).toEqual(['B']);
     expect(rootA.sub_circuits[0].isFiltered).toBe(true);
+  });
+
+  // regression: `total` used to be `roots.length`, so an unfiltered tree holding every
+  // circuit reported only its top level — "2 of 3" against the sidebar's flat count
+  it('counts every circuit in the tree, not just the roots, when nothing is filtered out', async () => {
+    const unfilteredClient = {
+      fetchQuery: vi.fn(async ({ queryKey }: { queryKey: [string, Record<string, unknown>] }) => {
+        const [name] = queryKey;
+        if (name.includes('circuit-derivation')) return tree;
+        if (name.includes('many-circuits')) return fullList;
+        throw new Error(`unexpected key ${name}`);
+      }),
+    } as unknown as QueryClient;
+
+    const page = await createCircuitDataSource({
+      schema: circuitSchema,
+      workspace: WORKSPACE,
+      queryClient: unfilteredClient,
+    }).fetch(baseQuery({ params: { [CIRCUIT_VIEW_PARAM]: 'hierarchy' } }));
+
+    // 2 roots on screen (A, C), but A carries B — 3 circuits in all
+    expect(page.rows.map((r) => r.id)).toEqual(['A', 'C']);
+    expect(page.total).toBe(3);
   });
 });
