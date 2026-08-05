@@ -17,7 +17,6 @@ export const viewDefForSingleNeuronCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
     EntityCoreFields.LegacyActivityStatus,
-    EntityCoreFields.LifecycleStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,

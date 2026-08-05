@@ -16,8 +16,8 @@ export const viewDefForWholeBrainCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.CircuitName,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
-    EntityCoreFields.LegacyActivityStatus,
     EntityCoreFields.LifecycleStatus,
+    EntityCoreFields.LegacyActivityStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,
