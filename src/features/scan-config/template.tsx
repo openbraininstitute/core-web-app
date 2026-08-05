@@ -19,6 +19,7 @@ import {
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
+import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import {
   type Config,
   type ConfigSchema,
@@ -125,6 +126,8 @@ function ScanConfigTemplateContent({
     resolveFromIdType: resolveSessionFromIdType,
   });
 
+  const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
+
   const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
@@ -132,6 +135,7 @@ function ScanConfigTemplateContent({
   const clearDiffState = useSetAtom(clearDiffStateAtom);
   const clearScanValueSelection = useSetAtom(clearScanValueSelectionAtom);
   const previousSchemaName = usePrevious(schemaName);
+
   useEffect(() => {
     // reset the global sidebar expansion/highlight state back to its idle default ("Info")
     clearDiffState();
@@ -334,6 +338,7 @@ function ScanConfigTemplateContent({
               selectedRootElement={selectedRootElement}
               config={config}
               setConfig={setConfig}
+              locked={editingLocked}
             />
           </div>
         </div>
