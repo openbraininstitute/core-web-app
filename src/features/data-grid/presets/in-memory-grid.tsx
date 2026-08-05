@@ -111,7 +111,7 @@ function isDetailRow<Row>(row: unknown): row is InMemoryDetailRow<Row> {
  * Configurable expander: with {@link columnId} the chevron renders inside that
  * column's cell, otherwise in a fixed leading column.
  */
-export interface IExpandColumnConfig<Row> {
+export interface IExpansionConfig<Row> {
   /** id of the data column that hosts the expander; omit for a leading column. */
   columnId?: string;
   /** within-cell alignment when {@link columnId} is set (default: 'right'). */
@@ -173,7 +173,7 @@ export interface IInMemoryGridProps<Row> {
   /** operator catalog for the filter editors (default: the standard registry). */
   operators?: OperatorRegistry;
   /** expandable detail rows + configurable expander position. */
-  expansion?: IExpandColumnConfig<Row>;
+  expansion?: IExpansionConfig<Row>;
   /** per-row class hook (e.g. hierarchy filtered-in/out styling). */
   getRowClass?: (row: Row) => string | undefined;
   onRowClick?: (row: Row) => void;
