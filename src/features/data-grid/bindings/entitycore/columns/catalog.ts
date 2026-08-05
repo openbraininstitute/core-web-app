@@ -1,4 +1,5 @@
 import { MeasurementStatistic } from '@/api/entitycore/types/shared/global';
+import { toSentenceCase } from '@/utils/format';
 
 import { Align, FilterOptionsKind, FreeEntryKind, mergeColumnDef, OperatorId } from '../../../core';
 import { CONTRIBUTORS_RENDERER } from '../renderers/contributors-cell';
@@ -199,7 +200,9 @@ export function brainRegionColumn<Row extends IHasBrainRegion>(
       header: 'Brain region',
       sortable: true,
       sortField: 'brain_region__name',
-      getValue: (r) => r.brain_region?.name ?? '',
+      // Entitycore returns these in mixed casing; normalise for display only. Sort and
+      // filter still run on the raw `brain_region__name` server-side.
+      getValue: (r) => toSentenceCase(r.brain_region?.name),
       width: { minWidth: 150, flex: 1 },
       filter: {
         operators: [OperatorId.In, OperatorId.Ilike],
