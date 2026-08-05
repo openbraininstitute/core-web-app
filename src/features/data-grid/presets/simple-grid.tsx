@@ -106,6 +106,16 @@ export interface ISimpleGridProps<Row> {
   sortable?: boolean;
   /** Hide the column header row. */
   hideHeader?: boolean;
+  /**
+   * AG Grid `domLayout` (default: `true`, i.e. `autoHeight` — the grid grows to fit
+   * every row, which is what lets it embed inside an expanded detail row).
+   *
+   * Pass `false` for a grid in a FIXED-HEIGHT container: it then fills that container,
+   * pins the header and scrolls its rows internally, keeping the pagination in view.
+   * Leaving it on inside a bounded box makes the whole grid overflow — header scrolled
+   * away, pager below the fold, and anything rendered after the grid pushed off-screen.
+   */
+  autoHeight?: boolean;
   /** Enable a pinned checkbox/radio selection column. Omit to disable selection. */
   rowSelection?: ISimpleRowSelection<Row>;
   /** Draw the divider border on pinned columns (default: true). */
@@ -390,6 +400,7 @@ export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
       pageSize={props.pageSize}
       pageSizeOptions={props.pageSizeOptions}
       hideHeader={props.hideHeader}
+      autoHeight={props.autoHeight}
       rowSelection={props.rowSelection}
       operators={props.operators}
       className={cn(

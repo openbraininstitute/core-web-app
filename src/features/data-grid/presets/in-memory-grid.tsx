@@ -666,15 +666,20 @@ export function InMemoryGrid<Row>({
   if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
 
   return (
-    <div className={cn('flex w-full flex-col', className)}>
+    // `autoHeight` grows to fit every row, so the wrapper is content-sized. Without it
+    // AG Grid needs a DEFINITE height: the wrapper fills its container and the grid
+    // cell takes the space the chooser and pager leave, so the pager stays in view and
+    // the rows scroll inside the grid.
+    <div className={cn('flex w-full flex-col', !autoHeight && 'h-full min-h-0', className)}>
       {showChooser && (
-        <div className="mb-2 flex items-center justify-end">
+        <div className="mb-2 flex shrink-0 items-center justify-end">
           <ColumnChooser controller={controller} state={state} />
         </div>
       )}
       <div
         className={cn(
           'ag-data-grid w-full',
+          !autoHeight && 'min-h-0 flex-1',
           // strip the AG overlay's default card so our GridLoader blends in
           '[&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none!',
           // center/right aligned cells must justify (flex cells ignore text-align)
@@ -733,7 +738,7 @@ export function InMemoryGrid<Row>({
         />
       </div>
       {showPagination && (
-        <div className="flex w-full items-center justify-center pt-3">
+        <div className="flex w-full shrink-0 items-center justify-center pt-3">
           <GridPagination
             controller={controller}
             total={page.total}

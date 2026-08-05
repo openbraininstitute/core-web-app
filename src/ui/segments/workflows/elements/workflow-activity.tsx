@@ -377,15 +377,13 @@ export function WorkflowActivity() {
             data-testid="workflow-activities-full-table"
           >
             <div className="relative min-h-0 flex-1">
-              {/* The action row below is a sibling with its own `h-15`, so the space it
-                  needs is already reserved — a `max-h` here subtracted it a second time
-                  and pushed the grid's pagination below the fold. */}
-              <div className="secondary-scrollbar h-full overflow-auto">
+              <div className="h-full overflow-hidden">
                 <SimpleGrid<EntityCoreObjectTypes>
                   // remount on category/type change → fresh page-1 store
                   key={`${resolvedActivityType}-${resolvedEntityType}`}
                   columns={columns}
                   getRowId={(o) => o.id}
+                  autoHeight={false}
                   pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
                   loadingLabel="activities"
                   className={cn('[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4')}
