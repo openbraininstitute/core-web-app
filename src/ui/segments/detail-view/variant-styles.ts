@@ -42,6 +42,21 @@ export function detailViewInsetPanelClass(variant: TViewVariant) {
   return cn({ 'rounded-lg': variant === ViewVariant.Default });
 }
 
+/**
+ * Container classes for a DATA-GRID embedded in the detail view.
+ *
+ * AG Grid paints its rows white but leaves the toolbar and footer transparent, so on
+ * the blue panel those controls — gray hovers, a white select — sit on dark blue and
+ * read as broken. An explicit surface here fixes them without giving every grid in the
+ * app a background it does not want.
+ */
+export function detailViewGridContainerClass(variant: TViewVariant) {
+  return cn(
+    'max-h-none!',
+    variant === ViewVariant.Default && cn(detailViewInsetPanelClass(variant), 'bg-white')
+  );
+}
+
 /** Ant Design simple pagination on the blue detail-view panel */
 export function detailViewPaginationClass(variant: TViewVariant) {
   if (variant !== ViewVariant.Default) return '';
