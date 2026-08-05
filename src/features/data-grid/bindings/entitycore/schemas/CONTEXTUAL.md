@@ -1,107 +1,107 @@
-# Contextual column presentation
+# Contextual rules
 
-> New to this feature? Start at
-> [`features/data-grid/GUIDE.md`](../../../GUIDE.md) — task-oriented recipes for
-> adding a table, a column, a filter, or a contextual gate (including the
-> `available` vs `hiddenByDefault` decision and the circuit Subcircuits example).
-> This file is the rule ENGINE those recipes link to.
+> Recipes live in [`features/data-grid/GUIDE.md`](../../../GUIDE.md). This file is the
+> rule engine those recipes link to.
 
-Entity tables adapt to the runtime **context** — which `dataType`, `section`,
-`scope`, `species`, and any host-supplied **factor** (role, feature flag, view
-variant, device…) the table renders under. A schema declares, per column, *whether*
-it appears (`available`), *where* it sits (`order`), *whether* it starts hidden
-(`hiddenByDefault`), and *whether* its filter is offered (`filter.available`).
+A grid renders under a **context**, and a schema can make almost any presentation
+decision depend on it — so one schema serves the browse listing, the workflow picker
+and the detail tab without forking.
 
-This is the successor to the legacy `matchesFieldApiWhen` / `resolveContextualValue`
-engine (`entity-configuration/definitions/listing.ts`), generalised to be extensible
-(any factor), composable (catalog default + schema override), and declarative
-(plain, inspectable data).
+## The context
 
-## The three authoring forms
+```ts
+interface IGridContext {
+  dataType: string;
+  section?: string;   // 'data' | 'build' | 'workflows' | …
+  scope?: string;     // 'public' | 'project'
+  species?: string;   // 'all' or a hierarchy id
+  factors?: Record<string, string | number | boolean>; // open, host-defined
+}
+```
 
-Every contextual facet accepts one of three interchangeable forms:
+Flat and scalar on purpose: `when` matching and query-key memoisation stay cheap.
+
+## What is contextual
+
+| Field | On | Meaning |
+| --- | --- | --- |
+| `available` | column | whether the column exists at all; `false` drops it, chooser included |
+| `order` | column | position weight, ascending; no value keeps the declaration slot |
+| `hiddenByDefault` | column | present but unticked until the user asks for it |
+| `filter.available` | column filter | whether the filter is offered |
+| `available` | filter target | whether one "match by" target is offered |
+| `available` | advanced filter | whether a panel entry is offered |
+| `sortable` | **schema** | whole-grid gate; `false` forces `sortable: false` on every column |
+| `selection.enabled` | **schema** | whether the grid offers row selection |
+
+**Not contextual, by design:** `auxiliary`, `essential`, `movable`. These describe the
+column's role in the schema, not one view of it, so they take a plain boolean. Passing
+`byContext` to them will not work.
+
+## The three forms
 
 ```ts
 import { byContext } from '@/features/data-grid/core';
 
-// 1) constant — the common case
-nameColumn({ available: true })
-
-// 2) predicate — imperative escape hatch
-nameColumn({ available: (ctx) => ctx.scope === 'project' })
-
-// 3) declarative rules — preferred for anything non-trivial
-speciesColumn({
-  available: byContext({
-    default: true,
-    rules: [
-      { when: { section: 'build' }, value: false },              // hide while building
-      { when: { section: 'build', scope: 'project' }, value: true }, // …except project builds
-    ],
-  }),
+available: true                                   // constant — the common case
+available: (ctx) => ctx.scope === 'project'       // predicate — escape hatch
+available: byContext({                            // rules — preferred when non-trivial
+  default: true,
+  rules: [
+    { when: { section: 'build' }, value: false },
+    { when: { section: 'build', scope: 'project' }, value: true },
+  ],
 })
 ```
 
-**Rule semantics** (identical to the legacy engine):
+**Resolution:** start at `default`, then apply every matching rule **in order** —
+**last match wins**, so put specific rules after general ones.
 
-- a rule's `when` keys are **AND**-ed; a list value inside a key is **OR**-ed; an
-  omitted key does not constrain.
-- resolution starts at `default`, then each matching rule applies **in order** — the
-  **last matching rule wins**, so put specific rules after general ones.
-- an optional `matches: (ctx) => boolean` on a rule is an extra imperative gate,
-  evaluated only when `when` already matched.
+**Matching:** keys inside one `when` are AND-ed; an array value inside a key is OR-ed;
+an omitted key does not constrain. An optional `matches: (ctx) => boolean` is an extra
+gate, evaluated only once `when` has matched.
 
-## "Where" — contextual order
+## Factors
 
-`order` is a position weight; columns sort by ascending resolved `order`, and columns
-without one keep their declaration slot. A column can therefore move by context:
+`factors` is an open bag — the host passes whatever dimensions it has, and rules match
+them by name with no core change:
 
 ```ts
-contributionsColumn({
-  order: byContext({ default: 6, rules: [{ when: { section: 'explore' }, value: 0 }] }),
-})
+// host
+new GridController({ schema, context: { dataType, section, factors: { view: 'hierarchy' } } })
+
+// schema
+available: byContext({ default: false, rules: [{ when: { view: 'hierarchy' }, value: true }] })
 ```
 
-## Extensibility — new factors, no core change
+A plugin body can inject factors via `extraFactors` — memoise it, since a new object
+identity rebuilds the controller. `CircuitGridBody` does this to publish the
+flat↔hierarchy view.
 
-`GridContext.factors` is an open bag. The host passes whatever dimensions it has:
+## Composition
 
-```ts
-new GridController({
-  schema,
-  context: { dataType, section, scope, species, factors: { role, betaTables: true } },
-  ...
-})
-```
+A catalog factory can ship default rules; a schema layers more on top with
+`mergeColumnDef` — the override's rules evaluate after the base's, so they win on
+conflict while the base still applies elsewhere. A constant or function override
+replaces the base outright.
 
-Rules match factors by name with zero core changes:
+## Where it runs
 
-```ts
-available: byContext({ rules: [{ when: { role: 'admin', betaTables: true }, value: true }] })
-```
+`core/domain/resolve-schema.ts#resolveColumns(schema, ctx)` is the only place these
+rules resolve. It returns the context-resolved, ordered column list; the controller
+seeds column order and the default-hidden set from it, then applies the user's
+persisted layout on top.
 
-## Composition — catalog default + schema override
+Pure and unit tested: `src/__tests__/data-grid/core/domain/contextual.test.ts` and
+`resolve-schema.test.ts`.
 
-Column-catalog factories can ship a sensible default rule set; a specific schema
-layers extra rules on top via `mergeColumnDef` (the override's rules evaluate after
-the catalog's, so they win on conflict while the base still applies elsewhere). A
-constant/function override replaces the base outright — explicit intent.
+## Gotcha
 
-## Where it's resolved
-
-`core/domain/resolve-schema.ts#resolveColumns(schema, ctx)` is the single place these
-rules run; it returns the context-resolved, ordered column list. The controller seeds
-the initial column order + default-hidden set from it, and the user's persisted
-drag-reorder / chooser layout is applied on top. All resolution is pure and unit
-tested (`core/domain/contextual.test.ts`, `resolve-schema.test.ts`).
+A column gated off in one context is **absent from that context's stored
+`columnOrder`**. Reconciliation re-inserts it at its declared slot when it comes back
+(`core/domain/column-layout.ts`) — do not assume a stored order lists every column.
 
 ## See also
 
-`features/data-grid/GUIDE.md` — how-do-I recipes: add an entity table (schema →
-registry → parity test), add a column, add a filter, gate either by context, plus the
-migration gotchas (wire-param verification, sort safety, host-param collisions,
-persistence reconciliation).
-
-`features/data-grid/FILTERS.md` — the filter model shared by column filters and the
-schema's `advancedFilters`, how an operator becomes a query param, and how to verify a
-param exists before declaring it.
+- [`GUIDE.md`](../../../GUIDE.md) — add an entity, column, filter, or gate; migration gotchas
+- [`FILTERS.md`](../../../FILTERS.md) — the filter model and how an operator becomes a query param
