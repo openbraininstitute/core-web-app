@@ -346,10 +346,7 @@ export function EntityDataGrid({
       <div
         id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
-        className={cn(
-          'h-full max-h-[calc(100vh-10.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
-          classNames?.container
-        )}
+        className={cn('bg-white', classNames?.container)}
       >
         <DataGrid<EntityCoreIdentifiableNamed>
           controller={controller}

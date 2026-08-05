@@ -5,11 +5,7 @@
  */
 
 /**
- * Grid overlays portal to `document.body`, as does `ui/molecules/modal` — whose dialog
- * sits at 1001. Popover's own `z-50` therefore opens BEHIND the dialog inside a modal.
- * 1002 matches what `PortalRegionBanner` already uses; nothing occupies 1002–99998.
- * Two ranks because these surfaces nest: a filter editor's Select portals to the body
- * too, so it must clear the panel that opened it, not just the modal.
+ * Grid overlays portal to `document.body`
  */
 export const GRID_OVERLAY_Z_CLASS = 'z-1002';
 
@@ -19,9 +15,8 @@ export const GRID_OVERLAY_Z_INDEX = 1002;
 /** Overlays opened from INSIDE a grid overlay (operator Select, date calendar). */
 export const GRID_NESTED_OVERLAY_Z_CLASS = 'z-1003';
 
-/** Trigger button: hairline border, white surface, rounded-xl. */
 export const GRID_SELECT_TRIGGER_CLASS =
-  'rounded-xl border-gray-200 bg-white text-sm shadow-none data-placeholder:text-gray-400';
+  'rounded-xl border-gray-200 bg-white text-sm text-primary-8 shadow-none data-placeholder:text-gray-400';
 
 /** Dropdown panel: hairline border, white surface, soft elevation, generous radius. */
 export const GRID_SELECT_CONTENT_CLASS = `rounded-xl border-gray-200 bg-white p-1.5 shadow-lg ${GRID_NESTED_OVERLAY_Z_CLASS}`;

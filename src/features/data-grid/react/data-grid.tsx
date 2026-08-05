@@ -251,7 +251,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
         Footer: `flex-1 basis-0` on the two side cells centres the pagination exactly,
         `min-w-fit` stops them collapsing, and `flex-wrap` stacks the row when narrow.
       */}
-      <div className="flex min-h-13 flex-wrap items-center gap-x-3 gap-y-2 border-t border-gray-100 px-3 py-2">
+      <div className="flex min-h-13 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-gray-100 px-3 py-2">
         <div className="flex min-w-fit flex-1 basis-0 items-center gap-2">{bulkActions}</div>
         <GridPagination
           controller={controller}
