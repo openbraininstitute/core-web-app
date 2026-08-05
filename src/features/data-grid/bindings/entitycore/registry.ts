@@ -1,31 +1,31 @@
-import { analysisNotebookResultGridDefinition } from './schemas/analysis-notebook-result';
-import { analysisNotebookTemplateGridDefinition } from './schemas/analysis-notebook-template';
-import { cellMorphologyGridDefinition } from './schemas/cell-morphology';
-import { circuitGridDefinition } from './schemas/circuit';
-import { circuitModelGridDefinitions } from './schemas/circuit-models';
-import { circuitSimulationGridDefinitions } from './schemas/circuit-simulations';
-import { electricalCellRecordingGridDefinition } from './schemas/electrical-cell-recording';
-import { emCellMeshGridDefinition } from './schemas/em-cell-mesh';
-import { emodelGridDefinition } from './schemas/emodel';
-import { experimentalBoutonDensityGridDefinition } from './schemas/experimental-bouton-density';
-import { experimentalNeuronDensityGridDefinition } from './schemas/experimental-neuron-density';
-import { experimentalSynapsesPerConnectionGridDefinition } from './schemas/experimental-synapses-per-connection';
-import { extracellularRecordingArrayGridDefinition } from './schemas/extracellular-recording-array';
-import { ionChannelModelGridDefinition } from './schemas/ion-channel-model';
-import { ionChannelRecordingGridDefinition } from './schemas/ion-channel-recording';
-import { meModelCircuitGridDefinition } from './schemas/me-model-circuit';
-import { memodelGridDefinition } from './schemas/memodel';
-import { simulationCampaignGridDefinition } from './schemas/simulation-campaign';
-import { singleNeuronSimulationGridDefinition } from './schemas/single-neuron-simulation';
-import { singleNeuronSynaptomeGridDefinition } from './schemas/single-neuron-synaptome';
-import { singleNeuronSynaptomeSimulationGridDefinition } from './schemas/single-neuron-synaptome-simulation';
-import { synthesizedCellMorphologyGridDefinition } from './schemas/synthesized-cell-morphology';
-import { universalCellMorphologyGridDefinition } from './schemas/universal-cell-morphology';
+import { analysisNotebookResultGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-result';
+import { analysisNotebookTemplateGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-template';
+import { cellMorphologyGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
+import { circuitGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
+import { circuitModelGridDefinitions } from '@/features/data-grid/bindings/entitycore/schemas/circuit-models';
+import { circuitSimulationGridDefinitions } from '@/features/data-grid/bindings/entitycore/schemas/circuit-simulations';
+import { electricalCellRecordingGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/electrical-cell-recording';
+import { emCellMeshGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/em-cell-mesh';
+import { emodelGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/emodel';
+import { experimentalBoutonDensityGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-bouton-density';
+import { experimentalNeuronDensityGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-neuron-density';
+import { experimentalSynapsesPerConnectionGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-synapses-per-connection';
+import { extracellularRecordingArrayGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/extracellular-recording-array';
+import { ionChannelModelGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/ion-channel-model';
+import { ionChannelRecordingGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/ion-channel-recording';
+import { meModelCircuitGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/me-model-circuit';
+import { memodelGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/memodel';
+import { simulationCampaignGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/simulation-campaign';
+import { singleNeuronSimulationGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/single-neuron-simulation';
+import { singleNeuronSynaptomeGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/single-neuron-synaptome';
+import { singleNeuronSynaptomeSimulationGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/single-neuron-synaptome-simulation';
+import { synthesizedCellMorphologyGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/synthesized-cell-morphology';
+import { universalCellMorphologyGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/universal-cell-morphology';
 
 import type { FC } from 'react';
-import type { IGridSchema } from '../../core';
-import type { IBrowseEntityGridProps } from '../../host/browse-entity-grid';
-import type { CellRendererRegistry, TDetailRenderFn } from '../../react';
+import type { IGridSchema } from '@/features/data-grid/core';
+import type { IBrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid.tsx';
+import type { CellRendererRegistry, TDetailRenderFn } from '@/features/data-grid/react';
 
 /**
  * Pairs an {@link IGridSchema} with a `dataType`. The query layer (endpoint,

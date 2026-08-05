@@ -1,5 +1,5 @@
-import type { CellRendererRegistry, IDetailRuntime } from '../../react';
-import type { IFilterEditorContext } from '../../react/filters/context';
+import type { CellRendererRegistry, IDetailRuntime } from '@/features/data-grid/react';
+import type { IFilterEditorContext } from '@/features/data-grid/react/filters/context';
 
 /**
  * Object handed to AG Grid as `context`, forwarded to every custom sub-component

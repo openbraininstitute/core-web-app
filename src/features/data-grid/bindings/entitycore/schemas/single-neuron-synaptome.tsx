@@ -1,27 +1,34 @@
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
   createdByColumn,
   nameColumn,
   registrationDateColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters, recordIdFilter } from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import {
+  FilterOptionsKind,
+  FreeEntryKind,
+  OperatorId,
+  SortDirection,
+} from '@/features/data-grid/core';
 
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import type {
   IAdvancedFilterGroup,
   IColumnModel,
   IGridSchema,
   TFilterOptionsSource,
-} from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
-import type { IEntityGridDefinition } from '../registry';
+} from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
  * Filterable ≠ returned. The endpoint accepts the full `NestedMEModelFilter` under the

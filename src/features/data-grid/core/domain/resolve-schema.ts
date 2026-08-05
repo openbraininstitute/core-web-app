@@ -1,9 +1,9 @@
-import { resolveContextual } from './contextual';
-import { availableFilterTargets } from './filter-targets';
+import { resolveContextual } from '@/features/data-grid/core/domain/contextual';
+import { availableFilterTargets } from '@/features/data-grid/core/domain/filter-targets';
 
-import type { IColumnModel, IFilterTarget } from './column-model';
-import type { IGridContext } from './grid-context';
-import type { IGridSchema } from './schema';
+import type { IColumnModel, IFilterTarget } from '@/features/data-grid/core/domain/column-model';
+import type { IGridContext } from '@/features/data-grid/core/domain/grid-context';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 export interface IResolvedColumn<Row> extends IColumnModel<Row> {
   /** whether this column exposes a filter in the current context */

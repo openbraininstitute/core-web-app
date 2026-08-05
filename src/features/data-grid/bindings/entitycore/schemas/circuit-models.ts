@@ -5,30 +5,29 @@ import {
 } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import { Align, FilterOptionsKind, FreeEntryKind, OperatorId } from '../../../core';
 import {
   createdByColumn,
   nameColumn,
   registrationDateColumn,
   speciesColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
 import {
   flatAdvancedFilters,
   recordIdFilter,
   staticOptions,
   subjectAdvancedGroup,
-} from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { Align, FilterOptionsKind, FreeEntryKind, OperatorId } from '@/features/data-grid/core';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import type {
   IAdvancedFilterGroup,
   IColumnModel,
   IGridSchema,
   TAdvancedFilterDef,
-} from '../../../core';
-import type { IEntityGridDefinition } from '../registry';
+} from '@/features/data-grid/core';
 
 /**
  * Grid schemas for the circuit-family plain models (micro-, small-micro-, paired-neuron-,

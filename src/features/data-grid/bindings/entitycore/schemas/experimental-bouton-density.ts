@@ -1,6 +1,4 @@
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-
-import { FreeEntryKind, OperatorId } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -12,14 +10,16 @@ import {
   standardErrorColumn,
   subjectNameColumn,
   subjectStrainColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters, recordIdFilter } from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { FreeEntryKind, OperatorId } from '@/features/data-grid/core';
 
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
-import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
 import type {
   IHasContributions,
   IHasMeasurements,
@@ -27,8 +27,10 @@ import type {
   IHasSpecies,
   IHasSubjectName,
   IHasSubjectStrain,
-} from '../columns/catalog';
-import type { IEntityGridDefinition } from '../registry';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IAdvancedFilterGroup, IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 type Row = IExperimentalBoutonDensity &
   IHasName &

@@ -1,9 +1,9 @@
-import { resolveContextual } from './contextual';
+import { resolveContextual } from '@/features/data-grid/core/domain/contextual';
 
-import type { IFilterTarget } from './column-model';
-import type { TFilterModel } from './filter-model';
-import type { IGridContext, TContextualValue } from './grid-context';
-import type { IGridSchema } from './schema';
+import type { IFilterTarget } from '@/features/data-grid/core/domain/column-model';
+import type { TFilterModel } from '@/features/data-grid/core/domain/filter-model';
+import type { IGridContext, TContextualValue } from '@/features/data-grid/core/domain/grid-context';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 /**
  * A schema-level filter with no column in the grid, declared on

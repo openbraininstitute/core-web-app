@@ -4,9 +4,9 @@ import {
   freeEntryKind,
   OperatorId,
   OperatorUiKind,
-} from '../../core';
+} from '@/features/data-grid/core';
 
-import type { IFilterTarget, IOperatorDef } from '../../core';
+import type { IFilterTarget, IOperatorDef } from '@/features/data-grid/core';
 
 /**
  * Prose form of the separators {@link parseIdTokens} splits on. Must be kept in step

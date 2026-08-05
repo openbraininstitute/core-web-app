@@ -1,6 +1,4 @@
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-
-import { FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   cellLineColumn,
@@ -14,16 +12,18 @@ import {
   subjectStrainColumn,
   temperatureColumn,
   yesNo,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters, recordIdFilter } from './common-filters';
-import { recordingTypeColumn } from './recording-columns';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { recordingTypeColumn } from '@/features/data-grid/bindings/entitycore/schemas/recording-columns';
+import { FreeEntryKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
-import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
 import type {
   IHasCellLine,
   IHasContributions,
@@ -31,9 +31,11 @@ import type {
   IHasSubjectName,
   IHasSubjectStrain,
   IHasTemperature,
-} from '../columns/catalog';
-import type { IEntityGridDefinition } from '../registry';
-import type { IHasRecordingType } from './recording-columns';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IHasRecordingType } from '@/features/data-grid/bindings/entitycore/schemas/recording-columns';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
  * The hand-written entity type omits subject/temperature/cell_line/contributions and

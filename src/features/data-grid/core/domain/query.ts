@@ -1,5 +1,5 @@
-import type { TFilterModel } from './filter-model';
-import type { TSortModel } from './sort-model';
+import type { TFilterModel } from '@/features/data-grid/core/domain/filter-model';
+import type { TSortModel } from '@/features/data-grid/core/domain/sort-model';
 
 export interface IFacetBucket {
   id: string;

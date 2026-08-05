@@ -1,5 +1,11 @@
 import { Pagination } from 'antd';
 
+import { GridActionType } from '@/features/data-grid/core';
+import {
+  GRID_SELECT_CONTENT_CLASS,
+  GRID_SELECT_ITEM_CLASS,
+  GRID_SELECT_TRIGGER_CLASS,
+} from '@/features/data-grid/react/molecules-theme';
 import {
   Select,
   SelectContent,
@@ -9,14 +15,7 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
-import { GridActionType } from '../core';
-import {
-  GRID_SELECT_CONTENT_CLASS,
-  GRID_SELECT_ITEM_CLASS,
-  GRID_SELECT_TRIGGER_CLASS,
-} from './molecules-theme';
-
-import type { GridController } from '../core';
+import type { GridController } from '@/features/data-grid/core';
 
 // includes 30 — the app-wide DEFAULT_PAGE_SIZE — so the selector shows the active value
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100];

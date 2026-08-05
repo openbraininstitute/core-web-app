@@ -4,18 +4,19 @@
  * commas or semicolons, with incidental quotes/brackets trimmed. Kept free of React.
  */
 
-import { FreeEntryKind } from '../../core';
+import z from 'zod';
 
-import type { TFreeEntryKind } from '../../core';
+import { FreeEntryKind } from '@/features/data-grid/core';
+
+import type { TFreeEntryKind } from '@/features/data-grid/core';
 
 const SEPARATORS = /[\s,;]+/;
 const TRIMMABLE = /^["'[\]()]+|["'[\]()]+$/g;
 
 /** Canonical UUID (any version), case-insensitive. */
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isUuid(token: string): boolean {
-  return UUID_PATTERN.test(token);
+  return z.uuid().safeParse(token).success;
 }
 
 /** Split pasted text into de-duplicated, order-preserving tokens. */

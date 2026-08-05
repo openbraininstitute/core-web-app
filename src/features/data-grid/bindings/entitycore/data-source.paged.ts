@@ -1,12 +1,16 @@
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-
-import { serializeQuery } from './query-serializer';
+import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TEntitycoreParams } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import type {
+  IGridDataSource,
+  IGridPage,
+  IGridQuery,
+  IGridSchema,
+} from '@/features/data-grid/core';
 import type { WorkspaceContext } from '@/types/common';
-import type { IGridDataSource, IGridPage, IGridQuery, IGridSchema } from '../../core';
-import type { TEntitycoreParams } from './query-serializer';
 
 export type TListQueryFn<Row> = (args: {
   filters: Record<string, unknown>;

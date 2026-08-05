@@ -1,15 +1,22 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { OperatorId, SortDirection } from '../../../core';
-import { contributionsColumn, formatDate, nameColumn, previewColumn } from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { NOTEBOOK_IMAGE_PREVIEW_RENDERER, NotebookImagePreview } from '../renderers/notebook-cells';
-import { registerSharedRenderers } from '../renderers/register';
+import {
+  contributionsColumn,
+  formatDate,
+  nameColumn,
+  previewColumn,
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import {
+  NOTEBOOK_IMAGE_PREVIEW_RENDERER,
+  NotebookImagePreview,
+} from '@/features/data-grid/bindings/entitycore/renderers/notebook-cells';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import { OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { IAnalysisNotebookResult } from '@/api/entitycore/types/entities/analysis-notebook-result';
-import type { IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
-import type { IEntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
  * Analysis-notebook result listing (`GET /analysis-notebook-result`). Results surface

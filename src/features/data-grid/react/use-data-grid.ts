@@ -1,10 +1,16 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useSyncExternalStore } from 'react';
 
-import { buildGridQuery } from '../core';
+import { buildGridQuery } from '@/features/data-grid/core';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
-import type { GridController, IGridDataSource, IGridPage, IGridState, TFacets } from '../core';
+import type {
+  GridController,
+  IGridDataSource,
+  IGridPage,
+  IGridState,
+  TFacets,
+} from '@/features/data-grid/core';
 
 /**
  * Extra React Query knobs a host may pass through to the grid's list query. The grid

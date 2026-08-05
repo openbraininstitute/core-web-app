@@ -1,9 +1,9 @@
-import { DetailRowHost } from '../../react';
-import { useGridState } from '../../react/use-grid-state';
-import { isDetailRow } from './detail-rows';
+import { DetailRowHost } from '@/features/data-grid/react';
+import { useGridState } from '@/features/data-grid/react/use-grid-state';
+import { isDetailRow } from '@/features/data-grid/renderers/aggrid/detail-rows';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
-import type { IAgGridContext } from './ag-context';
+import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 /** Fallback height for a detail row while its content is measuring itself. */
 export const DEFAULT_DETAIL_MIN_HEIGHT = 160;

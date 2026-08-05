@@ -5,6 +5,31 @@ import { useMemo, useState } from 'react';
 
 import { getEtype } from '@/api/entitycore/queries/annotations/etype';
 import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
+import {
+  DEFAULT_FILTER_COMMIT_MODE,
+  FilterCommitMode,
+  FilterOptionsKind,
+  FilterValueKind,
+  freeEntryKind,
+  GridActionType,
+  isEmptyFilterValue,
+  OperatorUiKind,
+} from '@/features/data-grid/core';
+import { dateRangeToFilterValue } from '@/features/data-grid/react/filters/date-range-value';
+import { splitIdTokens } from '@/features/data-grid/react/filters/id-tokens';
+import {
+  FREE_ENTRY_SEPARATOR_HINT,
+  resolveFilterPlaceholder,
+} from '@/features/data-grid/react/filters/placeholder';
+import { useSetOptions } from '@/features/data-grid/react/filters/use-set-options';
+import {
+  GRID_INPUT_CLASS,
+  GRID_NESTED_OVERLAY_Z_CLASS,
+  GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS,
+  GRID_SELECT_ITEM_CLASS,
+  GRID_SELECT_TRIGGER_CLASS,
+} from '@/features/data-grid/react/molecules-theme';
+import { useGridState } from '@/features/data-grid/react/use-grid-state';
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { Checkbox } from '@/ui/molecules/checkbox';
 import { DateRangePicker } from '@/ui/molecules/date-picker';
@@ -19,34 +44,11 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
-import {
-  DEFAULT_FILTER_COMMIT_MODE,
-  FilterCommitMode,
-  FilterOptionsKind,
-  FilterValueKind,
-  freeEntryKind,
-  GridActionType,
-  isEmptyFilterValue,
-  OperatorUiKind,
-} from '../../core';
-import {
-  GRID_INPUT_CLASS,
-  GRID_NESTED_OVERLAY_Z_CLASS,
-  GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS,
-  GRID_SELECT_ITEM_CLASS,
-  GRID_SELECT_TRIGGER_CLASS,
-} from '../molecules-theme';
-import { useGridState } from '../use-grid-state';
-import { dateRangeToFilterValue } from './date-range-value';
-import { splitIdTokens } from './id-tokens';
-import { FREE_ENTRY_SEPARATOR_HINT, resolveFilterPlaceholder } from './placeholder';
-import { useSetOptions } from './use-set-options';
-
 import type { ReactNode } from 'react';
 import type { DateRange } from 'react-day-picker';
+import type { IFilterEditorContext } from '@/features/data-grid/react/filters/context';
+import type { IIdTokenSplit } from '@/features/data-grid/react/filters/id-tokens';
 import type { IFilterTarget, TFilterOptionsSource, TFilterValue } from '../../core';
-import type { IFilterEditorContext } from './context';
-import type { IIdTokenSplit } from './id-tokens';
 
 const COMMIT_DEBOUNCE_MS = 250;
 

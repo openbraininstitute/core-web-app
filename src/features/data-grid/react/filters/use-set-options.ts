@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { FilterOptionsKind } from '../../core';
+import { FilterOptionsKind } from '@/features/data-grid/core';
 
-import type { TFilterOptionsSource } from '../../core';
-import type { IFilterEditorContext } from './context';
+import type { TFilterOptionsSource } from '@/features/data-grid/core';
+import type { IFilterEditorContext } from '@/features/data-grid/react/filters/context';
 
 export interface ISetOption {
   id: string;

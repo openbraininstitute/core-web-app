@@ -2,11 +2,13 @@ import {
   ElectricalRecordingOrigin,
   RecordingType,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import {
+  dictLabelByKey,
+  staticOptions,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { mergeColumnDef, OperatorId } from '@/features/data-grid/core';
 
-import { mergeColumnDef, OperatorId } from '../../../core';
-import { dictLabelByKey, staticOptions } from './common-filters';
-
-import type { IColumnModel, TColumnOverride } from '../../../core';
+import type { IColumnModel, TColumnOverride } from '@/features/data-grid/core';
 
 /**
  * The `recording_type` / `recording_origin` columns, shared by

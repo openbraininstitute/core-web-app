@@ -3,10 +3,9 @@
 import { RiArrowLeftSLine, RiArrowRightSLine, RiCheckLine } from '@remixicon/react';
 import { useMemo, useRef, useState } from 'react';
 
+import { resolveFilterPanelGroups, summarizeFilterEntry } from '@/features/data-grid/core';
+import { FilterEditor } from '@/features/data-grid/react/filters/filter-editor';
 import { cn } from '@/utils/css-class';
-
-import { resolveFilterPanelGroups, summarizeFilterEntry } from '../core';
-import { FilterEditor } from './filters/filter-editor';
 
 import type { KeyboardEvent } from 'react';
 import type {
@@ -17,7 +16,7 @@ import type {
   IResolvedAdvancedFilterGroup,
   OperatorRegistry,
   TFacets,
-} from '../core';
+} from '@/features/data-grid/core';
 
 export interface IAdvancedFiltersMenuProps<Row> {
   controller: GridController<Row>;

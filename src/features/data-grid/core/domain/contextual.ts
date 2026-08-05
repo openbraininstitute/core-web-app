@@ -1,4 +1,7 @@
-import type { IGridContext, TGridContextValue } from './grid-context';
+import type {
+  IGridContext,
+  TGridContextValue,
+} from '@/features/data-grid/core/domain/grid-context';
 
 /**
  * Context-aware presentation resolution: any schema facet (column availability,

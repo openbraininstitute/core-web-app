@@ -1,18 +1,20 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { SortDirection } from '../../../core';
 import {
   MEMODEL_MORPHOLOGY_PREVIEW_RENDERER,
   MEModelMorphologyPreview,
-} from '../renderers/me-model-cells';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters } from './common-filters';
-import { buildMemodelColumns, memodelAdvancedFilters } from './memodel';
+} from '@/features/data-grid/bindings/entitycore/renderers/me-model-cells';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import { flatAdvancedFilters } from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import {
+  buildMemodelColumns,
+  memodelAdvancedFilters,
+} from '@/features/data-grid/bindings/entitycore/schemas/memodel';
+import { SortDirection } from '@/features/data-grid/core';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
-import type { IEntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
  * ME-model-circuit listing. Identical to the ME-model listing but for `dataType`, so it

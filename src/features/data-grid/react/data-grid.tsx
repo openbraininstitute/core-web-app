@@ -2,15 +2,14 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 
+import { GridActionType, isSelectionEnabled, SelectionMode } from '@/features/data-grid/core';
+import { ActiveFiltersButton } from '@/features/data-grid/react/active-filters';
+import { BulkActions } from '@/features/data-grid/react/bulk-actions';
+import { ColumnChooser } from '@/features/data-grid/react/column-chooser';
+import { GridPagination } from '@/features/data-grid/react/pagination';
+import { DataGridToolbar } from '@/features/data-grid/react/toolbar';
+import { useDataGrid } from '@/features/data-grid/react/use-data-grid';
 import { cn } from '@/utils/css-class';
-
-import { GridActionType, isSelectionEnabled, SelectionMode } from '../core';
-import { ActiveFiltersButton } from './active-filters';
-import { BulkActions } from './bulk-actions';
-import { ColumnChooser } from './column-chooser';
-import { GridPagination } from './pagination';
-import { DataGridToolbar } from './toolbar';
-import { useDataGrid } from './use-data-grid';
 
 import type { ReactNode } from 'react';
 import type {
@@ -19,17 +18,17 @@ import type {
   OperatorRegistry,
   TFacets,
   TSelectionMode,
-} from '../core';
-import type { IBulkActionsRenderArgs } from './bulk-actions';
-import type { CellRendererRegistry } from './cell-renderer-registry';
+} from '@/features/data-grid/core';
+import type { IBulkActionsRenderArgs } from '@/features/data-grid/react/bulk-actions';
+import type { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 import type {
   IDetailRuntime,
   IExpandColumnConfig,
   IGridRendererProps,
   TGridRenderer,
-} from './renderer';
-import type { IDataGridToolbarSlots } from './toolbar';
-import type { TDataGridQueryOptions } from './use-data-grid';
+} from '@/features/data-grid/react/renderer';
+import type { IDataGridToolbarSlots } from '@/features/data-grid/react/toolbar';
+import type { TDataGridQueryOptions } from '@/features/data-grid/react/use-data-grid';
 
 /**
  * Picker selection: renders a selection column independent of the schema's bulk-action

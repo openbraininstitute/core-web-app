@@ -1,16 +1,15 @@
 import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
 
+import { GridActionType } from '@/features/data-grid/core';
+import { useGridState } from '@/features/data-grid/react/use-grid-state';
+import { isDetailRow } from '@/features/data-grid/renderers/aggrid/detail-rows';
 import { cn } from '@/utils/css-class';
-
-import { GridActionType } from '../../core';
-import { useGridState } from '../../react/use-grid-state';
-import { isDetailRow } from './detail-rows';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { ReactNode } from 'react';
-import type { GridController } from '../../core';
-import type { IDetailRuntime } from '../../react';
-import type { IAgGridContext } from './ag-context';
+import type { GridController } from '@/features/data-grid/core';
+import type { IDetailRuntime } from '@/features/data-grid/react';
+import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 /**
  * The expand/collapse toggle, shared by the leading {@link AgExpandCell} and the

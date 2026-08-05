@@ -1,6 +1,6 @@
-import { reducer } from './reducer';
+import { reducer } from '@/features/data-grid/core/state/reducer';
 
-import type { IGridState, TGridAction } from './grid-state';
+import type { IGridState, TGridAction } from '@/features/data-grid/core/state/grid-state';
 
 export type TUnsubscribe = () => void;
 

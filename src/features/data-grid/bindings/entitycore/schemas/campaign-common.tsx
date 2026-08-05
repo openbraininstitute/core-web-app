@@ -1,16 +1,17 @@
-import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '../../../core';
 import {
   createdByColumn,
-  EMPTY_PLACEHOLDER,
   nameColumn,
   registrationDateColumn,
-} from '../columns/catalog';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '@/features/data-grid/core';
+import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
+
 import { CAMPAIGN_STATUS_RENDERER, CampaignStatusCell } from '../renderers/campaign-status-cell';
 
 import type { ReactNode } from 'react';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
-import type { IColumnModel, IDetailSpec, TColumnOverride } from '../../../core';
-import type { CellRendererRegistry, TDetailRenderFn } from '../../../react';
+import type { IColumnModel, IDetailSpec, TColumnOverride } from '@/features/data-grid/core';
+import type { CellRendererRegistry, TDetailRenderFn } from '@/features/data-grid/react';
 
 /**
  * Row shape shared by the simulation-campaign listings. Every field is optional so one

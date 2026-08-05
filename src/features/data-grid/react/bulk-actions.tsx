@@ -1,11 +1,10 @@
 import { useState } from 'react';
 
+import { GridActionType } from '@/features/data-grid/core';
 import { cn } from '@/utils/css-class';
 
-import { GridActionType } from '../core';
-
 import type { ReactNode } from 'react';
-import type { GridController } from '../core';
+import type { GridController } from '@/features/data-grid/core';
 
 export interface IBulkActionsRenderArgs<Row> {
   /** ids of the currently selected rows (across pages) */

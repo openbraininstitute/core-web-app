@@ -1,6 +1,6 @@
-import { PERSIST_COLUMN_LAYOUT } from '../../config';
+import { PERSIST_COLUMN_LAYOUT } from '@/features/data-grid/config';
 
-import type { IGridState, IStatePersistence } from '../../core';
+import type { IGridState, IStatePersistence } from '@/features/data-grid/core';
 
 /**
  * Two slices stored apart: session = transient browse state, cleared with the tab;

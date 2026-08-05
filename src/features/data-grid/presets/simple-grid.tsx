@@ -3,13 +3,15 @@
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Align, SelectionMode } from '@/features/data-grid/core';
+import { InMemoryGrid } from '@/features/data-grid/presets/in-memory-grid';
+import {
+  keepsBlankWhenEmpty,
+  withEmptyPlaceholder,
+} from '@/features/data-grid/renderers/aggrid/empty-cell';
+import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
+import { DATA_GRID_LOCALE_TEXT, dataGridTheme } from '@/features/data-grid/renderers/aggrid/theme';
 import { cn } from '@/utils/css-class';
-
-import { Align, SelectionMode } from '../core';
-import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
-import { registerDataGridModules } from '../renderers/aggrid/register-modules';
-import { DATA_GRID_LOCALE_TEXT, dataGridTheme } from '../renderers/aggrid/theme';
-import { InMemoryGrid } from './in-memory-grid';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
 import type {
@@ -30,7 +32,7 @@ import type {
   OperatorRegistry,
   TSelectionMode,
   TSortModel,
-} from '../core';
+} from '@/features/data-grid/core';
 
 registerDataGridModules();
 

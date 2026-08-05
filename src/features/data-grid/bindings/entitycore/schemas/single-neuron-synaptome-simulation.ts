@@ -1,18 +1,17 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import { Align, FilterOptionsKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   createdByColumn,
   nameColumn,
   registrationDateColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { Align, FilterOptionsKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
-import type { IGridSchema } from '../../../core';
-import type { IEntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IGridSchema } from '@/features/data-grid/core';
 
 type Row = ISingleNeuronSynaptomeSimulation;
 

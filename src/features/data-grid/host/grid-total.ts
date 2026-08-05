@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
 /**
  * Filtered total of the active browse grid, keyed by the listing `dataKey`. The host

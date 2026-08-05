@@ -3,15 +3,26 @@
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { dropPinnedColumns, GridActionType, reconcileColumnOrder } from '../../core';
-import { GridLoaderOverlay } from '../../react/grid-loader';
-import { buildColDefs, EXPAND_COL_ID } from './col-def-mapper';
-import { AgDetailCell, DEFAULT_DETAIL_MIN_HEIGHT } from './detail-cell';
-import { detailRowId, interleaveDetailRows, isDetailRow } from './detail-rows';
-import { isExpanderClick } from './expand-cell';
-import { registerDataGridModules } from './register-modules';
-import { mergePageSelection } from './selection';
-import { DATA_GRID_LOCALE_TEXT, dataGridTheme, SINGLE_SELECT_RADIO_CLASS } from './theme';
+import { dropPinnedColumns, GridActionType, reconcileColumnOrder } from '@/features/data-grid/core';
+import { GridLoaderOverlay } from '@/features/data-grid/react/grid-loader';
+import { buildColDefs, EXPAND_COL_ID } from '@/features/data-grid/renderers/aggrid/col-def-mapper';
+import {
+  AgDetailCell,
+  DEFAULT_DETAIL_MIN_HEIGHT,
+} from '@/features/data-grid/renderers/aggrid/detail-cell';
+import {
+  detailRowId,
+  interleaveDetailRows,
+  isDetailRow,
+} from '@/features/data-grid/renderers/aggrid/detail-rows';
+import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-cell';
+import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
+import { mergePageSelection } from '@/features/data-grid/renderers/aggrid/selection';
+import {
+  DATA_GRID_LOCALE_TEXT,
+  dataGridTheme,
+  SINGLE_SELECT_RADIO_CLASS,
+} from '@/features/data-grid/renderers/aggrid/theme';
 
 import type {
   CellClickedEvent,

@@ -1,10 +1,4 @@
 /**
- * Build-time switches for the data-grid feature. These are DEVELOPER controls, not
- * user settings — there is no UI for them; flipping one here changes the behaviour
- * for everybody on the next deploy.
- */
-
-/**
  * Should a user's column layout — which columns are shown (the column chooser),
  * the order they were dragged into, and their resized widths — survive closing the
  * browser?

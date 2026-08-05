@@ -1,6 +1,10 @@
-import { FilterOptionsKind, FreeEntryKind, OperatorId } from '../../../core';
+import { FilterOptionsKind, FreeEntryKind, OperatorId } from '@/features/data-grid/core';
 
-import type { IAdvancedFilterGroup, TAdvancedFilterDef, TFilterOptionsSource } from '../../../core';
+import type {
+  IAdvancedFilterGroup,
+  TAdvancedFilterDef,
+  TFilterOptionsSource,
+} from '@/features/data-grid/core';
 
 /**
  * Advanced filters shared by several entitycore listings. These come from backend

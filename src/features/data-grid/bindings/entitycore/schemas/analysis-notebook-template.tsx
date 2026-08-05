@@ -1,16 +1,19 @@
 import { AnalysisScaleDict } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { SortDirection } from '../../../core';
-import { contributionsColumn, nameColumn, registrationDateColumn } from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { registerSharedRenderers } from '../renderers/register';
+import {
+  contributionsColumn,
+  nameColumn,
+  registrationDateColumn,
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import { SortDirection } from '@/features/data-grid/core';
 
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
-import type { IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
-import type { IHasContributions } from '../columns/catalog';
-import type { IEntityGridDefinition } from '../registry';
+import type { IHasContributions } from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 // The hand-written template type omits `contributions` (present at runtime); augment
 // locally so the shared contributions factory stays type-safe.

@@ -1,7 +1,10 @@
-import { CellRendererRegistry } from '../../react';
-import { LIFECYCLE_STATUS_RENDERER, LifecycleStatusCell } from './renderers/lifecycle-status-cell';
+import {
+  LIFECYCLE_STATUS_RENDERER,
+  LifecycleStatusCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
+import { CellRendererRegistry } from '@/features/data-grid/react';
 
-import type { TAnyEntityGridDefinition } from './registry';
+import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 
 /**
  * Build a cell-renderer registry populated with a definition's renderers.

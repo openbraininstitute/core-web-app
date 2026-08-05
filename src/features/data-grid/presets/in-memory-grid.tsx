@@ -5,9 +5,10 @@ import { keepPreviousData, QueryClient, useQuery } from '@tanstack/react-query';
 import { AgGridReact } from 'ag-grid-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { cn } from '@/utils/css-class';
-
-import { computeInMemoryFacets, runInMemoryQuery } from '../bindings/inmemory/data-source';
+import {
+  computeInMemoryFacets,
+  runInMemoryQuery,
+} from '@/features/data-grid/bindings/inmemory/data-source';
 import {
   Align,
   buildGridQuery,
@@ -26,22 +27,26 @@ import {
   SelectionMode,
   type TFacets,
   type TSortModel,
-} from '../core';
-import { CellRendererRegistry } from '../react/cell-renderer-registry';
-import { ColumnChooser } from '../react/column-chooser';
-import { GridLoaderOverlay } from '../react/grid-loader';
-import { GridPagination } from '../react/pagination';
-import { useGridState } from '../react/use-grid-state';
-import { keepsBlankWhenEmpty, withEmptyPlaceholder } from '../renderers/aggrid/empty-cell';
-import { isExpanderClick } from '../renderers/aggrid/expand-cell';
-import { AgHeader } from '../renderers/aggrid/header';
-import { isInteractiveClick } from '../renderers/aggrid/interactive-target';
-import { registerDataGridModules } from '../renderers/aggrid/register-modules';
+} from '@/features/data-grid/core';
+import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
+import { ColumnChooser } from '@/features/data-grid/react/column-chooser';
+import { GridLoaderOverlay } from '@/features/data-grid/react/grid-loader';
+import { GridPagination } from '@/features/data-grid/react/pagination';
+import { useGridState } from '@/features/data-grid/react/use-grid-state';
+import {
+  keepsBlankWhenEmpty,
+  withEmptyPlaceholder,
+} from '@/features/data-grid/renderers/aggrid/empty-cell';
+import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-cell';
+import { AgHeader } from '@/features/data-grid/renderers/aggrid/header';
+import { isInteractiveClick } from '@/features/data-grid/renderers/aggrid/interactive-target';
+import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
 import {
   DATA_GRID_LOCALE_TEXT,
   dataGridTheme,
   SINGLE_SELECT_RADIO_CLASS,
-} from '../renderers/aggrid/theme';
+} from '@/features/data-grid/renderers/aggrid/theme';
+import { cn } from '@/utils/css-class';
 
 import type { UseQueryOptions } from '@tanstack/react-query';
 import type {
@@ -56,8 +61,8 @@ import type {
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
-import type { IAgGridContext } from '../renderers/aggrid/ag-context';
-import type { ISimpleColumn, ISimpleRowSelection } from './simple-grid';
+import type { ISimpleColumn, ISimpleRowSelection } from '@/features/data-grid/presets/simple-grid';
+import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 registerDataGridModules();
 

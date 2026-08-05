@@ -1,6 +1,10 @@
-import { mergeContextual } from './contextual';
+import { mergeContextual } from '@/features/data-grid/core/domain/contextual';
 
-import type { IColumnFilter, IColumnModel, IWidthSpec } from './column-model';
+import type {
+  IColumnFilter,
+  IColumnModel,
+  IWidthSpec,
+} from '@/features/data-grid/core/domain/column-model';
 
 /**
  * A partial override applied on top of a reusable column factory's defaults.

@@ -1,4 +1,4 @@
-import type { GridController, OperatorRegistry, TFacets } from '../../core';
+import type { GridController, OperatorRegistry, TFacets } from '@/features/data-grid/core';
 
 /**
  * The MINIMUM a filter value editor needs: the headless store to commit into, the

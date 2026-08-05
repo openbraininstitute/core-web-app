@@ -1,6 +1,5 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import { isDetailRow } from './detail-rows';
+import { isDetailRow } from '@/features/data-grid/renderers/aggrid/detail-rows';
 
 import type { CellClassParams, ColDef, ValueFormatterParams } from 'ag-grid-community';
 import type { ReactNode } from 'react';

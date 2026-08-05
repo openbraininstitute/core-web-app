@@ -6,19 +6,17 @@ import {
 } from '@remixicon/react';
 import { useState } from 'react';
 
+import { GridActionType, SortDirection, summarizeFilter } from '@/features/data-grid/core';
+import { FilterEditor } from '@/features/data-grid/react/filters/filter-editor';
+import { GRID_OVERLAY_Z_CLASS } from '@/features/data-grid/react/molecules-theme';
+import { useGridState } from '@/features/data-grid/react/use-grid-state';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
-import { GridActionType, SortDirection } from '../../core';
-import { FilterEditor } from '../../react/filters/filter-editor';
-import { GRID_OVERLAY_Z_CLASS } from '../../react/molecules-theme';
-import { useGridState } from '../../react/use-grid-state';
-import { summarizeFilter } from './filters/summary';
-
 import type { CustomHeaderProps } from 'ag-grid-react';
 import type { MouseEvent, ReactNode } from 'react';
-import type { IFilterTarget } from '../../core';
-import type { IAgGridContext } from './ag-context';
+import type { IFilterTarget } from '@/features/data-grid/core';
+import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 interface HeaderParams {
   columnId: string;

@@ -3,15 +3,24 @@
 import { RiCloseLine, RiFilter3Line, RiRestartLine } from '@remixicon/react';
 import { useMemo, useState } from 'react';
 
+import {
+  GridActionType,
+  resolveFilterPanelGroups,
+  summarizeFilterEntry,
+} from '@/features/data-grid/core';
+import { AdvancedFiltersMenu } from '@/features/data-grid/react/advanced-filters';
+import { ExpandingToolbarButton } from '@/features/data-grid/react/expanding-toolbar-button';
+import { GRID_OVERLAY_Z_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
-import { GridActionType, resolveFilterPanelGroups, summarizeFilterEntry } from '../core';
-import { AdvancedFiltersMenu } from './advanced-filters';
-import { ExpandingToolbarButton } from './expanding-toolbar-button';
-import { GRID_OVERLAY_Z_CLASS } from './molecules-theme';
-
-import type { GridController, IFilterEntry, IGridState, OperatorRegistry, TFacets } from '../core';
+import type {
+  GridController,
+  IFilterEntry,
+  IGridState,
+  OperatorRegistry,
+  TFacets,
+} from '@/features/data-grid/core';
 
 export interface IActiveFiltersButtonProps<Row> {
   controller: GridController<Row>;

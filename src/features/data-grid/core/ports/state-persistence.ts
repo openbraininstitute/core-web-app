@@ -1,4 +1,4 @@
-import type { IGridState } from '../state/grid-state';
+import type { IGridState } from '@/features/data-grid/core/state/grid-state';
 
 /**
  * The persistence port: implementations decide which slice of state to persist (the

@@ -1,10 +1,14 @@
-import { FreeEntryKind } from './column-model';
-import { resolveContextual } from './contextual';
+import { FreeEntryKind } from '@/features/data-grid/core/domain/column-model';
+import { resolveContextual } from '@/features/data-grid/core/domain/contextual';
 
-import type { IColumnModel, IFilterTarget, TFreeEntryKind } from './column-model';
-import type { TFilterModel } from './filter-model';
-import type { IGridContext } from './grid-context';
-import type { IGridSchema } from './schema';
+import type {
+  IColumnModel,
+  IFilterTarget,
+  TFreeEntryKind,
+} from '@/features/data-grid/core/domain/column-model';
+import type { TFilterModel } from '@/features/data-grid/core/domain/filter-model';
+import type { IGridContext } from '@/features/data-grid/core/domain/grid-context';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 /**
  * Filter targets — the "which backend field" axis of a column filter, orthogonal to

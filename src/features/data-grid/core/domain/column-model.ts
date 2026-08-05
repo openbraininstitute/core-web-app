@@ -1,4 +1,4 @@
-import type { TContextualValue } from './grid-context';
+import type { TContextualValue } from '@/features/data-grid/core/domain/grid-context';
 
 export const Align = {
   Left: 'left',

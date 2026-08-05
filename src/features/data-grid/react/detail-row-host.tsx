@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import type { ReactNode } from 'react';
-import type { IGridState } from '../core';
-import type { IDetailRuntime } from './renderer';
+import type { IGridState } from '@/features/data-grid/core';
+import type { IDetailRuntime } from '@/features/data-grid/react/renderer';
 
 export interface IDetailRowHostProps<Row> {
   row: Row;

@@ -1,4 +1,4 @@
-import type { IGridPage, IGridQuery } from '../domain/query';
+import type { IGridPage, IGridQuery } from '@/features/data-grid/core/domain/query';
 
 /**
  * The data port: implementations resolve an abstract {@link IGridQuery} into a real

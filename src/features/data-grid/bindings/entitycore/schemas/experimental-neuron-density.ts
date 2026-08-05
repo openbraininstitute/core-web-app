@@ -1,6 +1,4 @@
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-
-import { SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -14,14 +12,16 @@ import {
   subjectAgeColumn,
   subjectNameColumn,
   subjectStrainColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters, recordIdFilter } from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { SortDirection } from '@/features/data-grid/core';
 
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
-import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
 import type {
   IHasContributions,
   IHasMeasurements,
@@ -29,8 +29,10 @@ import type {
   IHasSubjectAge,
   IHasSubjectName,
   IHasSubjectStrain,
-} from '../columns/catalog';
-import type { IEntityGridDefinition } from '../registry';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IAdvancedFilterGroup, IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 // The hand-written entity type omits runtime-present contributions; augment locally.
 type Row = IExperimentalNeuronDensity &

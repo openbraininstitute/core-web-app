@@ -1,7 +1,7 @@
-import type { IAdvancedFilterGroup } from './advanced-filters';
-import type { IColumnModel } from './column-model';
-import type { TContextualValue } from './grid-context';
-import type { TSortModel } from './sort-model';
+import type { IAdvancedFilterGroup } from '@/features/data-grid/core/domain/advanced-filters';
+import type { IColumnModel } from '@/features/data-grid/core/domain/column-model';
+import type { TContextualValue } from '@/features/data-grid/core/domain/grid-context';
+import type { TSortModel } from '@/features/data-grid/core/domain/sort-model';
 
 /**
  * Expandable full-width detail rows. The `rendererKey` selects a React renderer

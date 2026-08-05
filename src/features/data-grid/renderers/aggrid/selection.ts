@@ -1,4 +1,4 @@
-import type { ISelectionSpec } from '../../core';
+import type { ISelectionSpec } from '@/features/data-grid/core';
 
 /** Schema-level selection mode, overridable per render by the picker. */
 export type TSchemaSelectionMode = NonNullable<ISelectionSpec['mode']>;

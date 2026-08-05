@@ -4,19 +4,22 @@ import {
 } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import { Align, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   contributionsColumn,
   createdByColumn,
   nameColumn,
   registrationDateColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { flatAdvancedFilters, recordIdFilter, staticOptions } from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+  staticOptions,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { Align, FreeEntryKind, OperatorId, SortDirection } from '@/features/data-grid/core';
 
-import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
-import type { IEntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IAdvancedFilterGroup, IGridSchema } from '@/features/data-grid/core';
 
 type Row = ISimulatableExtracellularRecordingArray;
 

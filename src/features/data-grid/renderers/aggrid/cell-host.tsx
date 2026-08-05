@@ -1,8 +1,8 @@
-import { renderCellValue } from './empty-cell';
+import { renderCellValue } from '@/features/data-grid/renderers/aggrid/empty-cell';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
-import type { ICellRendererProps } from '../../react';
-import type { IAgGridContext } from './ag-context';
+import type { ICellRendererProps } from '@/features/data-grid/react';
+import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 interface CellHostParams {
   rendererKey?: string;

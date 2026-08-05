@@ -1,10 +1,13 @@
-import { resolveAdvancedFilterGroups } from './advanced-filters';
-import { resolveFilterTargets } from './filter-targets';
-import { resolveColumns } from './resolve-schema';
+import { resolveAdvancedFilterGroups } from '@/features/data-grid/core/domain/advanced-filters';
+import { resolveFilterTargets } from '@/features/data-grid/core/domain/filter-targets';
+import { resolveColumns } from '@/features/data-grid/core/domain/resolve-schema';
 
-import type { IResolvedAdvancedFilter, IResolvedAdvancedFilterGroup } from './advanced-filters';
-import type { IGridContext } from './grid-context';
-import type { IGridSchema } from './schema';
+import type {
+  IResolvedAdvancedFilter,
+  IResolvedAdvancedFilterGroup,
+} from '@/features/data-grid/core/domain/advanced-filters';
+import type { IGridContext } from '@/features/data-grid/core/domain/grid-context';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 /**
  * The advanced-filters panel is derived, not declared:

@@ -2,13 +2,12 @@ import { RiTable3 } from '@remixicon/react';
 import { Checkbox, Popover } from 'antd';
 import { useMemo } from 'react';
 
+import { essentialColumnIds, GridActionType } from '@/features/data-grid/core';
+import { ExpandingToolbarButton } from '@/features/data-grid/react/expanding-toolbar-button';
+import { GRID_OVERLAY_Z_INDEX } from '@/features/data-grid/react/molecules-theme';
 import { cn } from '@/utils/css-class';
 
-import { essentialColumnIds, GridActionType } from '../core';
-import { ExpandingToolbarButton } from './expanding-toolbar-button';
-import { GRID_OVERLAY_Z_INDEX } from './molecules-theme';
-
-import type { GridController, IGridState } from '../core';
+import type { GridController, IGridState } from '@/features/data-grid/core';
 
 export interface IColumnChooserProps<Row> {
   controller: GridController<Row>;

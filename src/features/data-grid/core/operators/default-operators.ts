@@ -1,7 +1,10 @@
-import { FilterValueKind } from '../domain/filter-model';
-import { OperatorRegistry, OperatorUiKind } from './operator-registry';
+import { FilterValueKind } from '@/features/data-grid/core/domain/filter-model';
+import {
+  OperatorRegistry,
+  OperatorUiKind,
+} from '@/features/data-grid/core/operators/operator-registry';
 
-import type { IOperatorDef } from './operator-registry';
+import type { IOperatorDef } from '@/features/data-grid/core/operators/operator-registry';
 
 /** Stable operator ids. Bindings map these to transport-specific params. */
 export const OperatorId = {

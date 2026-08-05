@@ -10,14 +10,6 @@ import {
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { CircuitGridBody } from '@/features/data-grid/host/circuit-grid-body';
-import {
-  CIRCUIT_VIEW_FACTOR,
-  CircuitRepresentationView,
-  countDeepSubCircuits,
-} from '@/ui/segments/explore/circuit/helpers';
-
-import { Align, byContext, FilterOptionsKind, FreeEntryKind, OperatorId } from '../../../core';
 import {
   contributionsColumn,
   descriptionColumn,
@@ -26,16 +18,32 @@ import {
   subjectNameColumn,
   subjectStrainColumn,
   yesNo,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { buildCircuitAdvancedFilters } from './circuit-models';
-import { flatAdvancedFilters, staticOptions } from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { buildCircuitAdvancedFilters } from '@/features/data-grid/bindings/entitycore/schemas/circuit-models';
+import {
+  flatAdvancedFilters,
+  staticOptions,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import {
+  Align,
+  byContext,
+  FilterOptionsKind,
+  FreeEntryKind,
+  OperatorId,
+} from '@/features/data-grid/core';
+import { CircuitGridBody } from '@/features/data-grid/host/circuit-grid-body';
+import {
+  CIRCUIT_VIEW_FACTOR,
+  CircuitRepresentationView,
+  countDeepSubCircuits,
+} from '@/ui/segments/explore/circuit/helpers';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IHasContributions } from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IColumnModel, IGridSchema } from '@/features/data-grid/core';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { IColumnModel, IGridSchema } from '../../../core';
-import type { IHasContributions } from '../columns/catalog';
-import type { IEntityGridDefinition } from '../registry';
 
 /**
  * The wire carries all four `has_*` flags and `contributions`, but `ICircuit` declares

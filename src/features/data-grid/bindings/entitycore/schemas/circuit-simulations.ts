@@ -9,10 +9,8 @@ import {
   smallMicrocircuitSimulationExpandedViewConfig,
   wholeBrainCircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
-
-import { SortDirection } from '../../../core';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { makeCampaignScanTableRenderDetail } from '../renderers/campaign-scan-table';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { makeCampaignScanTableRenderDetail } from '@/features/data-grid/bindings/entitycore/renderers/campaign-scan-table';
 import {
   CAMPAIGN_NESTED_MODE_DEFAULT,
   campaignCreatedByColumn,
@@ -25,11 +23,12 @@ import {
   circuitNameColumn,
   type ICampaignRow,
   registerCampaignRenderers,
-} from './campaign-common';
+} from '@/features/data-grid/bindings/entitycore/schemas/campaign-common';
+import { SortDirection } from '@/features/data-grid/core';
 
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
-import type { IColumnModel, IGridSchema } from '../../../core';
-import type { IEntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IColumnModel, IGridSchema } from '@/features/data-grid/core';
 
 /**
  * Grid schemas for the expandable circuit-simulation dataTypes. Each pairs collapsed

@@ -1,17 +1,17 @@
-import { pruneAdvancedFilters } from './domain/advanced-filters';
-import { reconcileHiddenColumns } from './domain/column-layout';
-import { hydrateFilterTargetIds } from './domain/filter-targets';
-import { resolveColumns } from './domain/resolve-schema';
-import { GridActionType } from './state/grid-state';
-import { GridStateStore } from './state/grid-state-store';
+import { pruneAdvancedFilters } from '@/features/data-grid/core/domain/advanced-filters';
+import { reconcileHiddenColumns } from '@/features/data-grid/core/domain/column-layout';
+import { hydrateFilterTargetIds } from '@/features/data-grid/core/domain/filter-targets';
+import { resolveColumns } from '@/features/data-grid/core/domain/resolve-schema';
+import { GridActionType } from '@/features/data-grid/core/state/grid-state';
+import { GridStateStore } from '@/features/data-grid/core/state/grid-state-store';
 
-import type { IStoredColumnLayout } from './domain/column-layout';
-import type { IGridContext } from './domain/grid-context';
-import type { IGridQuery } from './domain/query';
-import type { IResolvedColumn } from './domain/resolve-schema';
-import type { IGridSchema } from './domain/schema';
-import type { IStatePersistence } from './ports/state-persistence';
-import type { IGridState } from './state/grid-state';
+import type { IStoredColumnLayout } from '@/features/data-grid/core/domain/column-layout';
+import type { IGridContext } from '@/features/data-grid/core/domain/grid-context';
+import type { IGridQuery } from '@/features/data-grid/core/domain/query';
+import type { IResolvedColumn } from '@/features/data-grid/core/domain/resolve-schema';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
+import type { IStatePersistence } from '@/features/data-grid/core/ports/state-persistence';
+import type { IGridState } from '@/features/data-grid/core/state/grid-state';
 
 export interface IGridControllerOptions<Row> {
   schema: IGridSchema<Row>;

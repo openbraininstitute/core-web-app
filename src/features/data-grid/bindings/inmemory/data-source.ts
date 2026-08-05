@@ -1,4 +1,9 @@
-import { FilterOptionsKind, FilterValueKind, OperatorId, SortDirection } from '../../core';
+import {
+  FilterOptionsKind,
+  FilterValueKind,
+  OperatorId,
+  SortDirection,
+} from '@/features/data-grid/core';
 
 import type {
   IColumnModel,
@@ -10,7 +15,7 @@ import type {
   TFacets,
   TFilterModel,
   TSortModel,
-} from '../../core';
+} from '@/features/data-grid/core';
 
 /** The subset of {@link IColumnModel} the in-memory engine reads. */
 export type TInMemoryColumn<Row> = Pick<IColumnModel<Row>, 'id' | 'field' | 'getValue' | 'filter'>;

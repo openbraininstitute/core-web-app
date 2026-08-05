@@ -1,9 +1,9 @@
 import { endOfDay, format, startOfDay } from 'date-fns';
 
-import { FilterValueKind } from '../../core';
+import { FilterValueKind } from '@/features/data-grid/core';
 
 import type { DateRange } from 'react-day-picker';
-import type { TFilterValue } from '../../core';
+import type { TFilterValue } from '@/features/data-grid/core';
 
 /** Which end of a date-range filter a picked calendar day represents. */
 export const DateRangeBound = {

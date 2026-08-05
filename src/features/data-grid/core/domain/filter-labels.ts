@@ -1,12 +1,22 @@
-import { advancedFilterDefsByKey, isAdvancedFilterKey } from './advanced-filters';
-import { FilterOptionsKind } from './column-model';
-import { summarizeFilter } from './filter-model';
-import { activeFilterTarget, isFreeEntryTarget, resolveFilterTargets } from './filter-targets';
+import {
+  advancedFilterDefsByKey,
+  isAdvancedFilterKey,
+} from '@/features/data-grid/core/domain/advanced-filters';
+import { FilterOptionsKind } from '@/features/data-grid/core/domain/column-model';
+import { summarizeFilter } from '@/features/data-grid/core/domain/filter-model';
+import {
+  activeFilterTarget,
+  isFreeEntryTarget,
+  resolveFilterTargets,
+} from '@/features/data-grid/core/domain/filter-targets';
 
-import type { IFilterTarget } from './column-model';
-import type { IFilterEntry, TFilterValueLabeler } from './filter-model';
-import type { TFacets } from './query';
-import type { IGridSchema } from './schema';
+import type { IFilterTarget } from '@/features/data-grid/core/domain/column-model';
+import type {
+  IFilterEntry,
+  TFilterValueLabeler,
+} from '@/features/data-grid/core/domain/filter-model';
+import type { TFacets } from '@/features/data-grid/core/domain/query';
+import type { IGridSchema } from '@/features/data-grid/core/domain/schema';
 
 /**
  * Wire value → display label for one target, or `undefined` when the target has no

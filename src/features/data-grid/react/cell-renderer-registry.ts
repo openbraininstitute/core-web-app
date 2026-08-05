@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { TCellValue } from '../core';
+import type { TCellValue } from '@/features/data-grid/core';
 
 export interface ICellRendererProps<Row = unknown> {
   row: Row;

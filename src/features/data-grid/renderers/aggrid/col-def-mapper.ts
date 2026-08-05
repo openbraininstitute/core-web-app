@@ -1,14 +1,17 @@
-import { Align, resolveFilterTargets } from '../../core';
-import { AgCellHost } from './cell-host';
-import { isDetailRow } from './detail-rows';
-import { keepsBlankWhenEmpty, withEmptyPlaceholder } from './empty-cell';
-import { AgExpandCell } from './expand-cell';
-import { AgExpandHostCell } from './expand-host-cell';
-import { AgHeader } from './header';
+import { Align, resolveFilterTargets } from '@/features/data-grid/core';
+import { AgCellHost } from '@/features/data-grid/renderers/aggrid/cell-host';
+import { isDetailRow } from '@/features/data-grid/renderers/aggrid/detail-rows';
+import {
+  keepsBlankWhenEmpty,
+  withEmptyPlaceholder,
+} from '@/features/data-grid/renderers/aggrid/empty-cell';
+import { AgExpandCell } from '@/features/data-grid/renderers/aggrid/expand-cell';
+import { AgExpandHostCell } from '@/features/data-grid/renderers/aggrid/expand-host-cell';
+import { AgHeader } from '@/features/data-grid/renderers/aggrid/header';
 
 import type { ColDef } from 'ag-grid-community';
-import type { IResolvedColumn } from '../../core';
-import type { IExpandColumnConfig } from '../../react';
+import type { IResolvedColumn } from '@/features/data-grid/core';
+import type { IExpandColumnConfig } from '@/features/data-grid/react';
 
 export const EXPAND_COL_ID = '__expand';
 

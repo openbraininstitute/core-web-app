@@ -1,4 +1,4 @@
-import type { TFilterValueKind } from '../domain/filter-model';
+import type { TFilterValueKind } from '@/features/data-grid/core/domain/filter-model';
 
 /** How an operator is presented/edited in the filter UI. */
 export const OperatorUiKind = {

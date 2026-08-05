@@ -6,8 +6,8 @@ import type {
   IResolvedColumn,
   OperatorRegistry,
   TFacets,
-} from '../core';
-import type { CellRendererRegistry } from './cell-renderer-registry';
+} from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 
 export type TDetailRenderFn<Row> = (args: {
   row: Row;

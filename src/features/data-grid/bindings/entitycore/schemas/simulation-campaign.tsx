@@ -1,7 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { SortDirection } from '../../../core';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
 import {
   campaignDescriptionColumn,
   campaignNameColumn,
@@ -10,10 +8,11 @@ import {
   circuitNameColumn,
   type ICampaignRow,
   registerCampaignRenderers,
-} from './campaign-common';
+} from '@/features/data-grid/bindings/entitycore/schemas/campaign-common';
+import { SortDirection } from '@/features/data-grid/core';
 
-import type { IColumnModel, IGridSchema } from '../../../core';
-import type { IEntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IColumnModel, IGridSchema } from '@/features/data-grid/core';
 
 /**
  * Columns for the generic `simulation_campaign` dataType (Data → Simulations). Status

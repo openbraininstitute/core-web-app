@@ -10,6 +10,8 @@ import {
   CIRCUIT_VIEW_PARAM,
   createCircuitDataSource,
 } from '@/features/data-grid/bindings/circuit/data-source';
+import { Align } from '@/features/data-grid/core';
+import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
@@ -26,16 +28,13 @@ import {
 } from '@/ui/segments/explore/circuit/helpers';
 import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 
-import { Align } from '../core';
-import { EntityDataGrid } from './browse-entity-grid';
-
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IGridDataSource } from '@/features/data-grid/core';
+import type { IBrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { IDetailRuntime } from '@/features/data-grid/react';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { IBrowseEntityGridProps } from './browse-entity-grid';
 
 /** Subcircuits attached to an enriched hierarchy node, or `undefined`. */
 function subCircuitsOf(row: EntityCoreIdentifiableNamed): ICircuitEnriched[] | undefined {

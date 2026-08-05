@@ -1,6 +1,4 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { Align, FilterOptionsKind, FreeEntryKind, OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -10,16 +8,26 @@ import {
   previewColumn,
   registrationDateColumn,
   yesNo,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters, recordIdFilter } from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import {
+  Align,
+  FilterOptionsKind,
+  FreeEntryKind,
+  OperatorId,
+  SortDirection,
+} from '@/features/data-grid/core';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
-import type { IEntityGridDefinition } from '../registry';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
  * `IEModel` types `exemplar_morphology` as a narrower shape than the wire, which

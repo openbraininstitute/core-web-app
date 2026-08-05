@@ -4,14 +4,6 @@ import {
 } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
-
-import {
-  byContext,
-  FilterOptionsKind,
-  FreeEntryKind,
-  OperatorId,
-  SortDirection,
-} from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -20,16 +12,27 @@ import {
   previewColumn,
   registrationDateColumn,
   speciesColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters, recordIdFilter, subjectAdvancedGroup } from './common-filters';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+  subjectAdvancedGroup,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import {
+  byContext,
+  FilterOptionsKind,
+  FreeEntryKind,
+  OperatorId,
+  SortDirection,
+} from '@/features/data-grid/core';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 import type { IAdvancedFilterGroup, IGridSchema, TFilterOptionsSource } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
-import type { IEntityGridDefinition } from '../registry';
 
 type UniversalRow = ICellMorphology & {
   cell_morphology_protocol?: {

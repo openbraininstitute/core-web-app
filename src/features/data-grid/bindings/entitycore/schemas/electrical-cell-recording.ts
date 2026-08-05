@@ -1,7 +1,5 @@
 import { ElectricalRecordingOrigin } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-
-import { OperatorId, SortDirection } from '../../../core';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -12,25 +10,36 @@ import {
   speciesColumn,
   subjectNameColumn,
   subjectStrainColumn,
-} from '../columns/catalog';
-import { lifecycleStatusColumn } from '../columns/lifecycle-status';
-import { ENTITY_PREVIEW_RENDERER } from '../renderers/entity-preview';
-import { registerSharedRenderers } from '../renderers/register';
-import { flatAdvancedFilters, recordIdFilter, staticOptions } from './common-filters';
-import { recordingOriginColumn, recordingTypeColumn } from './recording-columns';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
+import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  flatAdvancedFilters,
+  recordIdFilter,
+  staticOptions,
+} from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import {
+  recordingOriginColumn,
+  recordingTypeColumn,
+} from '@/features/data-grid/bindings/entitycore/schemas/recording-columns';
+import { OperatorId, SortDirection } from '@/features/data-grid/core';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import type { IAdvancedFilterGroup, IGridSchema } from '../../../core';
-import type { CellRendererRegistry } from '../../../react';
 import type {
   IHasContributions,
   IHasEtypes,
   IHasSpecies,
   IHasSubjectName,
   IHasSubjectStrain,
-} from '../columns/catalog';
-import type { IEntityGridDefinition } from '../registry';
-import type { IHasRecordingOrigin, IHasRecordingType } from './recording-columns';
+} from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type {
+  IHasRecordingOrigin,
+  IHasRecordingType,
+} from '@/features/data-grid/bindings/entitycore/schemas/recording-columns';
+import type { IAdvancedFilterGroup, IGridSchema } from '@/features/data-grid/core';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 // The hand-written entity type omits subject/etypes/contributions and the
 // `recording_*` scalars of `ElectricalCellRecordingBaseMixin` (all present at

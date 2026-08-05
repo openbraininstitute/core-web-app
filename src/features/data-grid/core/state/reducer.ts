@@ -1,8 +1,8 @@
-import { SortDirection } from '../domain/sort-model';
-import { GridActionType } from './grid-state';
+import { SortDirection } from '@/features/data-grid/core/domain/sort-model';
+import { GridActionType } from '@/features/data-grid/core/state/grid-state';
 
-import type { TSortDirection, TSortModel } from '../domain/sort-model';
-import type { IGridState, TGridAction } from './grid-state';
+import type { TSortDirection, TSortModel } from '@/features/data-grid/core/domain/sort-model';
+import type { IGridState, TGridAction } from '@/features/data-grid/core/state/grid-state';
 
 function sameIds(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);

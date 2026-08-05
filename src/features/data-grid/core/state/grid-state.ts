@@ -1,5 +1,5 @@
-import type { IFilterEntry, TFilterModel } from '../domain/filter-model';
-import type { TSortModel } from '../domain/sort-model';
+import type { IFilterEntry, TFilterModel } from '@/features/data-grid/core/domain/filter-model';
+import type { TSortModel } from '@/features/data-grid/core/domain/sort-model';
 
 export interface IGridState {
   filters: TFilterModel;

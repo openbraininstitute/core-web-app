@@ -1,11 +1,11 @@
-import { Align } from '../../core';
-import { isDetailRow } from './detail-rows';
-import { ExpandToggleButton } from './expand-cell';
+import { Align } from '@/features/data-grid/core';
+import { isDetailRow } from '@/features/data-grid/renderers/aggrid/detail-rows';
+import { ExpandToggleButton } from '@/features/data-grid/renderers/aggrid/expand-cell';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { ReactNode } from 'react';
-import type { ICellRendererProps } from '../../react';
-import type { IAgGridContext } from './ag-context';
+import type { ICellRendererProps } from '@/features/data-grid/react';
+import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 /** Params threaded onto the host column by the col-def mapper. */
 export interface IExpandHostCellParams {

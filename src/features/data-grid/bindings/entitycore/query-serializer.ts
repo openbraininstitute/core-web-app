@@ -6,9 +6,15 @@ import {
   OperatorId,
   resolveFilterTargets,
   SortDirection,
-} from '../../core';
+} from '@/features/data-grid/core';
 
-import type { IFilterEntry, IGridQuery, IGridSchema, TFilterModel, TSortModel } from '../../core';
+import type {
+  IFilterEntry,
+  IGridQuery,
+  IGridSchema,
+  TFilterModel,
+  TSortModel,
+} from '@/features/data-grid/core';
 
 export type TEntitycoreParams = Record<string, unknown>;
 
