@@ -32,6 +32,29 @@ const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Build]: 'build the model',
 };
 
+type ObiOneErrorBody = {
+  detail?: unknown;
+  error_code?: unknown;
+  message?: unknown;
+  details?: Array<{ msg?: unknown }> | null;
+} | null;
+
+/**
+ * Pull the human-readable reason out of an obi-one error body.
+ *
+ * The service answers in two different shapes. FastAPI's `HTTPException` gives `{ detail }`,
+ * while its own error envelope — used for rejected configs and for request validation failures —
+ * gives `{ error_code, message, details }`, where the specific reason is in `details[0].msg` and
+ * `message` may just be a generic "Validation error". Reading only one of the two is why a
+ * rejected config surfaced as a bare "Unknown error".
+ */
+export function errorReason(body: ObiOneErrorBody): string {
+  if (isString(body?.detail)) return body.detail;
+  if (isString(body?.details?.[0]?.msg)) return body.details[0].msg;
+  if (isString(body?.message)) return body.message;
+  return 'Unknown error';
+}
+
 export default function GenerateConfigButton({
   loading,
   errors,
@@ -131,13 +154,12 @@ export default function GenerateConfigButton({
             );
 
             if (!coordinateCountRes.ok) {
-              const message = await coordinateCountRes.json();
-              if (reportLowCredits(message)) return;
+              const errorRes = await coordinateCountRes.json();
+              if (reportLowCredits(errorRes)) return;
 
-              const detailStr = typeof message?.detail === 'string' ? message.detail : '';
               notification.error({
                 message: get(messages, `${activity}.CoordinateCountFailed`),
-                description: detailStr || (message?.detail ?? 'Unknown error'),
+                description: errorReason(errorRes),
               });
               return;
             }
@@ -157,11 +179,9 @@ export default function GenerateConfigButton({
               const errorRes = await res.json();
               if (reportLowCredits(errorRes)) return;
 
-              const details =
-                res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
               notification.error({
                 message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
-                description: details,
+                description: errorReason(errorRes),
               });
               return;
             }
