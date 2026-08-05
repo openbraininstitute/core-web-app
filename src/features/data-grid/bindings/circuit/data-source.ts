@@ -134,25 +134,20 @@ export function createCircuitDataSource(
     );
     const { page: _page, page_size: _pageSize, order_by: _orderBy, ...filterParams } = serialized;
 
+    const pageFilters = (page: number) => ({
+      ...circuitScaleFilter,
+      ...filterParams,
+      page,
+      page_size: DEFAULT_PAGE_SIZE,
+    });
+
     const first = await queryClient.fetchQuery<EntityCoreResponse<ICircuit>>({
-      queryKey: keyBuilder.manyCircuits({
-        ...filterParams,
-        ...circuitScaleFilter,
-        page: 1,
-        page_size: DEFAULT_PAGE_SIZE,
-        virtualLabId,
-        projectId,
-      }),
+      queryKey: keyBuilder.manyCircuits({ ...pageFilters(1), virtualLabId, projectId }),
       queryFn: () =>
         getCircuits({
           withFacets: false,
           context: workspace,
-          filters: {
-            ...circuitScaleFilter,
-            ...filterParams,
-            page: 1,
-            page_size: DEFAULT_PAGE_SIZE,
-          },
+          filters: pageFilters(1),
         }),
     });
     const totalPages = Math.max(
@@ -164,24 +159,12 @@ export function createCircuitDataSource(
       pages,
       (page) =>
         queryClient.fetchQuery<EntityCoreResponse<ICircuit>>({
-          queryKey: keyBuilder.manyCircuits({
-            ...filterParams,
-            ...circuitScaleFilter,
-            page,
-            page_size: DEFAULT_PAGE_SIZE,
-            virtualLabId,
-            projectId,
-          }),
+          queryKey: keyBuilder.manyCircuits({ ...pageFilters(page), virtualLabId, projectId }),
           queryFn: () =>
             getCircuits({
               withFacets: false,
               context: workspace,
-              filters: {
-                ...circuitScaleFilter,
-                ...filterParams,
-                page,
-                page_size: DEFAULT_PAGE_SIZE,
-              },
+              filters: pageFilters(page),
             }),
         }),
       { concurrency: HIERARCHY_CONCURRENCY }
@@ -201,6 +184,7 @@ export function createCircuitDataSource(
       fullResult,
       filteredResult
     ) as unknown as ICircuit[];
+
     return { rows: roots, total: roots.length };
   }
 
