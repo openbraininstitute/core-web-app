@@ -22,6 +22,7 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -281,12 +282,13 @@ export function BrowseEntityScope({
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
       ) => expandedViewConfig.render(originalRecord, records),
-      expandIconColumnIndex: expandedViewConfig.expandIconColumnIndex,
+      expandIconColumnIndex:
+        columns.findIndex((c) => c.key === EntityCoreFields.LegacyActivityStatus) + 1,
       expandIcon: expandedViewConfig.expandIcon,
       isRowExpandable: expandedViewConfig.isExpandable,
       isTopLevel: true,
     };
-  }, [dataType, virtualLabId, projectId, entity]);
+  }, [dataType, virtualLabId, projectId, entity, columns.findIndex]);
 
   useEffect(() => {
     // allow restoring the data table state snapshot when the section is "Data" only.
