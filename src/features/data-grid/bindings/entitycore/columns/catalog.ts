@@ -1,5 +1,5 @@
 import { MeasurementStatistic } from '@/api/entitycore/types/shared/global';
-import { toSentenceCase } from '@/utils/format';
+import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 
 import { Align, FilterOptionsKind, FreeEntryKind, mergeColumnDef, OperatorId } from '../../../core';
 import { CONTRIBUTORS_RENDERER } from '../renderers/contributors-cell';
@@ -200,9 +200,9 @@ export function brainRegionColumn<Row extends IHasBrainRegion>(
       header: 'Brain region',
       sortable: true,
       sortField: 'brain_region__name',
-      // Entitycore returns these in mixed casing; normalise for display only. Sort and
-      // filter still run on the raw `brain_region__name` server-side.
-      getValue: (r) => toSentenceCase(r.brain_region?.name),
+      // Same normalisation the hierarchy tree and region dropdown use, so a region
+      // reads identically wherever it appears.
+      getValue: (r) => normalizeBrainRegionName(r.brain_region?.name ?? ''),
       width: { minWidth: 150, flex: 1 },
       filter: {
         operators: [OperatorId.In, OperatorId.Ilike],
