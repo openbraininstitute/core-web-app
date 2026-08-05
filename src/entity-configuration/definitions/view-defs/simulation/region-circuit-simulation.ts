@@ -14,10 +14,10 @@ export const viewDefForRegionCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.CircuitName,
-    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
     EntityCoreFields.LegacyActivityStatus,
+    EntityCoreFields.LifecycleStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,
