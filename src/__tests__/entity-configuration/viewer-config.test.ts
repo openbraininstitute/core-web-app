@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import {
+  circuitElectrodesViewerPolicy,
   DEFAULT_ENTITY_VIEWER_FEATURES,
   isViewerBuildContext,
   isViewerDataContext,
+  isViewerSimulateContext,
   isViewerTarget,
   resolveEntityViewerConfig,
 } from '@/entity-configuration/domain/viewer-config';
@@ -90,5 +92,41 @@ describe('viewer context helpers', () => {
         ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign
       )
     ).toBe(true);
+  });
+
+  it('detects simulate contexts', () => {
+    expect(isViewerSimulateContext({ activity: ScanConfigActivity.Simulate })).toBe(true);
+    expect(isViewerSimulateContext({ section: WorkspaceSection.SimulateWorkflow })).toBe(true);
+    expect(isViewerSimulateContext({ activity: ScanConfigActivity.Build })).toBe(false);
+    expect(isViewerSimulateContext({ section: WorkspaceSection.Data })).toBe(false);
+  });
+});
+
+describe('circuitElectrodesViewerPolicy', () => {
+  it('allows electrodes while building an extracellular recording array', () => {
+    expect(
+      circuitElectrodesViewerPolicy({
+        activity: ScanConfigActivity.Build,
+        targetType: ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign,
+      })
+    ).toBe(true);
+  });
+
+  it('allows electrodes while simulating — recordings may reference stored arrays', () => {
+    expect(circuitElectrodesViewerPolicy({ activity: ScanConfigActivity.Simulate })).toBe(true);
+    expect(circuitElectrodesViewerPolicy({ section: WorkspaceSection.SimulateWorkflow })).toBe(
+      true
+    );
+  });
+
+  it('keeps electrodes off elsewhere', () => {
+    expect(circuitElectrodesViewerPolicy({ section: WorkspaceSection.Data })).toBe(false);
+    expect(
+      circuitElectrodesViewerPolicy({
+        activity: ScanConfigActivity.Build,
+        targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+      })
+    ).toBe(false);
+    expect(circuitElectrodesViewerPolicy({ activity: ScanConfigActivity.Extract })).toBe(false);
   });
 });

@@ -5,6 +5,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { circuitElectrodesViewerPolicy } from '@/entity-configuration/domain/viewer-config';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -48,6 +49,9 @@ export const WholeBrain: EntityCoreTypeConfig<ICircuit> = {
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
+  viewer: (ctx) => ({
+    electrodes: circuitElectrodesViewerPolicy(ctx),
+  }),
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,

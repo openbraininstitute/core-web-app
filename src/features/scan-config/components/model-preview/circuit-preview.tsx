@@ -24,14 +24,13 @@ import { useFullscreenElement } from '@/features/scan-config/components/color-by
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
 import {
-  type CircuitOverlayGroup,
-  ELECTRODE_LOCATIONS_CONFIG_KEY,
+  type ICircuitOverlayGroup,
   scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import {
-  type ElectrodeArrayEntity,
-  useElectrodeLocationsOverlay,
-} from '@/features/scan-config/components/model-preview/use-electrode-locations-overlay';
+  electrodeBlockPath,
+  useElectrodeOverlays,
+} from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
@@ -39,6 +38,7 @@ import { LargeCircuitPreview } from './large-circuit-preview';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import type { Config } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
@@ -93,10 +93,10 @@ export interface ElectrodeOverlayOptions {
    * Stored recording array whose `electrode_locations` asset supplies the
    * overlays when there is no live `config` (read-only detail views).
    */
-  arrayEntity?: ElectrodeArrayEntity | null;
-  /** Schema root currently selected in the form (e.g. `electrode_locations`). */
+  arrayEntity?: TElectrodeArrayEntity | null;
+  /** Schema root currently selected in the form (`electrode_locations`, `recordings`, …). */
   selectedRootElement?: string;
-  /** Dictionary entry name currently selected (matches overlay `id`). */
+  /** Dictionary entry name currently selected; highlights the overlay it produced. */
   selectedEntry?: string;
   /**
    * Electrode ids to draw. Omit to draw every overlay (scan-config behaviour);
@@ -111,12 +111,14 @@ export interface ElectrodeOverlayOptions {
  * color-by dropdown/key, nodes table).
  *
  * How electrode sync works here:
- * - {@link useElectrodeLocationsOverlay} → coloured overlays
+ * - {@link useElectrodeOverlays} → coloured overlays from every source
  * - form selection → `highlightedOverlayId` + selection styling
  * - morphoviewer `onOverlayTransform` (phase `end`) →
  *   {@link applyElectrodeOverlayTransform} → `setConfig`
  *
  * Why: keep 3D↔form bidirectional without pushing config on every pointer move.
+ * Only overlays the form owns take part in that write-back — see
+ * `draggableOverlayIds`.
  */
 export function CircuitPreview({
   className,
@@ -171,7 +173,12 @@ export function CircuitPreview({
   const supportsAxons =
     !largeCircuit && loaderSupportsAxonToggle(resolveSmallCircuitLoaderKind(circuit.scale));
 
-  const { overlays, available: electrodesAvailable } = useElectrodeLocationsOverlay({
+  const {
+    overlays,
+    available: electrodesAvailable,
+    draggableOverlayIds,
+    overlayIdByBlockPath,
+  } = useElectrodeOverlays({
     config: enableElectrodes ? scanConfig : undefined,
     arrayEntity: enableElectrodes ? arrayEntity : undefined,
   });
@@ -179,12 +186,15 @@ export function CircuitPreview({
   const handleOverlayTransform = useCallback(
     (event: MorphoViewerOverlayTransformEvent) => {
       if (!setConfig || !enableElectrodes) return;
+      // Overlays the form does not own (arrays a simulation only references)
+      // have nowhere to write back to.
+      if (!draggableOverlayIds.has(event.id)) return;
       // 3D already updates optimistically during the gesture; write the form
       // only on drop so React/config churn does not lag the drag.
       if (event.phase !== 'end') return;
       setConfig((prev) => applyElectrodeOverlayTransform(prev, event));
     },
-    [setConfig, enableElectrodes]
+    [setConfig, enableElectrodes, draggableOverlayIds]
   );
 
   const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
@@ -195,9 +205,12 @@ export function CircuitPreview({
       population,
     });
 
+  // Selecting the block an overlay came from highlights it, whichever root
+  // element that block lives under (`electrode_locations` while building an
+  // array, `recordings` while configuring a simulation).
   const highlightedOverlayId =
-    enableElectrodes && selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY && selectedEntry
-      ? selectedEntry
+    enableElectrodes && selectedRootElement && selectedEntry
+      ? (overlayIdByBlockPath.get(electrodeBlockPath(selectedRootElement, selectedEntry)) ?? null)
       : null;
   const scopedOverlays = useMemo(
     () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
@@ -214,8 +227,13 @@ export function CircuitPreview({
     () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId, config.backgroundColor),
     [visibleOverlays, highlightedOverlayId, config.backgroundColor]
   );
+  // Handles appear only when something drawn can actually be moved: a scene of
+  // referenced-only arrays (a simulation's recordings) stays static even though
+  // the host passed a write path for the rest of the form.
   const overlaysInteractive = Boolean(
-    enableElectrodes && setConfig && styledOverlays && styledOverlays.length > 0
+    enableElectrodes &&
+      setConfig &&
+      styledOverlays?.some((group) => draggableOverlayIds.has(group.id))
   );
 
   // Selecting an electrode (or having overlays) turns the toggle on so markers
@@ -486,10 +504,10 @@ export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
  * opacity — translucent rgba let the circuit show through the markers.
  */
 function styleOverlaysForSelection(
-  overlays: CircuitOverlayGroup[] | undefined,
+  overlays: ICircuitOverlayGroup[] | undefined,
   selectedId: string | null,
   background: string
-): CircuitOverlayGroup[] | undefined {
+): ICircuitOverlayGroup[] | undefined {
   if (!overlays?.length) return overlays;
   return overlays.map((group) => {
     const legible = forceOpaqueRgb(adaptColorToBackground(group.color, background));
