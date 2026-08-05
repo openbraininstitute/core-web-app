@@ -22,7 +22,6 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -282,10 +281,7 @@ export function BrowseEntityScope({
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
       ) => expandedViewConfig.render(originalRecord, records),
-      expandIconColumnIndex: (() => {
-        const idx = columns.findIndex((c) => c.key === EntityCoreFields.LegacyActivityStatus);
-        return idx === -1 ? columns.length : idx + 1;
-      })(),
+      expandIconColumnIndex: columns.length,
       expandIcon: expandedViewConfig.expandIcon,
       isRowExpandable: expandedViewConfig.isExpandable,
       isTopLevel: true,
