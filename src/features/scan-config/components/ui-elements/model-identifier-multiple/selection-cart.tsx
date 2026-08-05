@@ -95,6 +95,7 @@ export function ModelIdentifierSelectionCart({
                   instanceId={`${entityType}-${entity.id}`}
                   key={`${entityType}-${entity.id}`}
                   variant="selection"
+                  collapsibleBadge
                   entityName={entity.name}
                   typeLabel={getEntityTypeTagLabel(entityType as TExtendedEntitiesTypeDict)}
                   disabled={disabled}
