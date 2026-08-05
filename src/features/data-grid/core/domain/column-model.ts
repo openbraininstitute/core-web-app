@@ -136,6 +136,11 @@ export interface IColumnModel<Row = unknown> {
    */
   auxiliary?: boolean;
   /**
+   * The user may never hide this column: its checkbox is disabled in the chooser, a bulk
+   * deselect keeps it, and a persisted layout that hides it is repaired on load.
+   */
+  alwaysVisible?: boolean;
+  /**
    * Kept visible by a BULK deselect, so "Select all" can never empty the grid. Not a
    * lock: the user can still hide it via its own checkbox. When a schema marks none,
    * {@link essentialColumnIds} falls back to the first non-auxiliary column.

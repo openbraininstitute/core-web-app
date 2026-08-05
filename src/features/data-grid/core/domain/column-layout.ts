@@ -88,6 +88,8 @@ export interface IColumnVisibilityDefault {
   id: string;
   /** `hiddenByDefault` resolved against the context (see `resolveColumns`). */
   hiddenByDefaultResolved: boolean;
+  /** see {@link IColumnModel.alwaysVisible} — never hidden, whatever the stored layout says. */
+  alwaysVisible?: boolean;
 }
 
 /** The persisted local layout slice, as loaded — both fields may be absent. */
@@ -115,7 +117,8 @@ export function reconcileHiddenColumns(
   stored: IStoredColumnLayout | null | undefined
 ): string[] {
   const storedHidden = stored?.hiddenColumns;
-  if (!storedHidden) return columns.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id);
+  if (!storedHidden)
+    return columns.filter((c) => c.hiddenByDefaultResolved && !c.alwaysVisible).map((c) => c.id);
 
   const hidden = new Set(storedHidden);
   // Defensive: the two are written together, so a missing order means only the
@@ -124,6 +127,8 @@ export function reconcileHiddenColumns(
 
   return columns
     .filter((c) => {
+      // Repairs a layout saved before the column became `alwaysVisible`.
+      if (c.alwaysVisible) return false;
       if (hidden.has(c.id)) return true;
       return known.has(c.id) ? false : c.hiddenByDefaultResolved;
     })

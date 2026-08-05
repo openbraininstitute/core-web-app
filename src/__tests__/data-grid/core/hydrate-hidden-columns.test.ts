@@ -102,6 +102,20 @@ describe('reconcileHiddenColumns', () => {
       )
     ).toEqual(['a', 'aux']);
   });
+
+  // an `alwaysVisible` column is load-bearing (e.g. the circuit tree's expand-chevron
+  // host), so a layout saved before it became un-hideable is repaired on load
+  it('never hides an alwaysVisible column, whatever the stored layout says', () => {
+    expect(
+      reconcileHiddenColumns(
+        [
+          { id: 'a', hiddenByDefaultResolved: false },
+          { id: 'tree', hiddenByDefaultResolved: false, alwaysVisible: true },
+        ],
+        { hiddenColumns: ['tree'], columnOrder: ['a', 'tree'] }
+      )
+    ).toEqual([]);
+  });
 });
 
 describe('GridController hydration — column visibility', () => {

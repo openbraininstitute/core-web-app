@@ -158,9 +158,8 @@ export const circuitSchema: IGridSchema<Row> = {
         ],
       }),
       align: Align.Left,
-      // Pinned: this column hosts the tree's expand chevron, so its position is
-      // load-bearing.
       movable: false,
+      alwaysVisible: true,
       width: { width: 110, minWidth: 90 },
       getValue: (row) => {
         const enriched = row as ICircuitEnriched;

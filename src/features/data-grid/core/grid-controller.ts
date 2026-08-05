@@ -59,7 +59,9 @@ export function createInitialState<Row>(
     page: 1,
     pageSize: defaultPageSize,
     columnOrder: resolved.map((c) => c.id),
-    hiddenColumns: resolved.filter((c) => c.hiddenByDefaultResolved).map((c) => c.id),
+    hiddenColumns: resolved
+      .filter((c) => c.hiddenByDefaultResolved && !c.alwaysVisible)
+      .map((c) => c.id),
     columnWidths: {},
     selection: [],
     expanded: [],

@@ -30,7 +30,9 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
 
   const setVisible = (visibleIds: Array<string>) => {
     const visible = new Set(visibleIds);
-    const nextHidden = columns.filter((c) => !visible.has(c.id)).map((c) => c.id);
+    const nextHidden = columns
+      .filter((c) => !visible.has(c.id) && !c.alwaysVisible)
+      .map((c) => c.id);
     controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: nextHidden });
   };
 
@@ -56,7 +58,13 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
         // checked state uses primary-9 (not antd's default blue)
         '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-9! [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-9!',
         '[&_.ant-checkbox-checked:after]:border-primary-9! [&_.ant-checkbox:hover_.ant-checkbox-inner]:border-primary-9!',
-        '[&_.ant-checkbox-indeterminate_.ant-checkbox-inner:after]:bg-primary-9!'
+        '[&_.ant-checkbox-indeterminate_.ant-checkbox-inner:after]:bg-primary-9!',
+        // the override above also paints the DISABLED checked box primary-9 while antd
+        // keeps the tick its grey disabled colour — dark on dark, i.e. invisible. Same
+        // treatment as the scan-config selection lists: lighter fill, white tick.
+        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
+        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-6!',
+        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
       )}
     >
       <div className="flex flex-col gap-1">
@@ -78,7 +86,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
           className="flex flex-col gap-1"
         >
           {regular.map((c) => (
-            <Checkbox key={c.id} value={c.id}>
+            <Checkbox key={c.id} value={c.id} disabled={c.alwaysVisible}>
               {c.header}
             </Checkbox>
           ))}
@@ -87,7 +95,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
               {/* `<hr>` carries the implicit `separator` role, so the break is announced */}
               {separator}
               {auxiliary.map((c) => (
-                <Checkbox key={c.id} value={c.id}>
+                <Checkbox key={c.id} value={c.id} disabled={c.alwaysVisible}>
                   {c.header}
                 </Checkbox>
               ))}
