@@ -282,13 +282,15 @@ export function BrowseEntityScope({
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
       ) => expandedViewConfig.render(originalRecord, records),
-      expandIconColumnIndex:
-        columns.findIndex((c) => c.key === EntityCoreFields.LegacyActivityStatus) + 1,
+      expandIconColumnIndex: (() => {
+        const idx = columns.findIndex((c) => c.key === EntityCoreFields.LegacyActivityStatus);
+        return idx === -1 ? columns.length : idx + 1;
+      })(),
       expandIcon: expandedViewConfig.expandIcon,
       isRowExpandable: expandedViewConfig.isExpandable,
       isTopLevel: true,
     };
-  }, [dataType, virtualLabId, projectId, entity, columns.findIndex]);
+  }, [dataType, virtualLabId, projectId, entity, columns]);
 
   useEffect(() => {
     // allow restoring the data table state snapshot when the section is "Data" only.
