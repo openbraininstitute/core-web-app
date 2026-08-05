@@ -68,27 +68,18 @@ describe('ExpandingToolbarButton', () => {
     expect(getByTestId('toolbar-pill-badge-anchor').className).toContain('pointer-events-none');
   });
 
-  it('moves the badge to the corner by transform, on hover AND on focus-visible', () => {
+  // regression: the corner offset used to be hover/focus-only, so the collapsed circle
+  // showed the badge ~10px inside its own edge
+  it('offsets the badge to the corner in BOTH the collapsed and expanded states', () => {
     const { getByTestId } = render(
       <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
     );
     const cls = getByTestId('toolbar-pill-badge-anchor').className;
-    expect(cls).toContain('transition-transform');
-    expect(cls).toContain('duration-300');
-    expect(cls).toContain('ease-in-out');
-    expect(cls).toContain('group-hover/toolbar-pill:translate-x-2.5');
-    expect(cls).toContain('group-hover/toolbar-pill:-translate-y-2.5');
-    expect(cls).toContain('group-focus-visible/toolbar-pill:translate-x-2.5');
-    expect(cls).toContain('group-focus-visible/toolbar-pill:-translate-y-2.5');
-  });
-
-  it('reduced motion keeps the destination and drops the journey', () => {
-    const { getByTestId } = render(
-      <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
-    );
-    const cls = getByTestId('toolbar-pill-badge-anchor').className;
-    expect(cls).toContain('motion-reduce:transition-none');
-    expect(cls).not.toContain('motion-reduce:translate-x-0');
+    // the exact distance is tuning; what must hold is that it is unconditional
+    expect(cls).toMatch(/(^|\s)translate-x-[\d.]+/);
+    expect(cls).toMatch(/(^|\s)-translate-y-[\d.]+/);
+    expect(cls).not.toContain('group-hover/toolbar-pill:translate-x');
+    expect(cls).not.toContain('group-focus-visible/toolbar-pill:translate-x');
   });
 
   it('renders no badge anchor at all when there is no badge', () => {

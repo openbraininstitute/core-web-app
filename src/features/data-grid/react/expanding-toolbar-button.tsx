@@ -52,7 +52,7 @@ export function ExpandingPillContent({ icon, label, badge }: IExpandingPillConte
           'motion-reduce:transition-none'
         )}
       >
-        <span className="overflow-hidden">
+        <span className="overflow-hidden select-none">
           <span className="block whitespace-nowrap pl-1.5 text-[13px] font-medium">{label}</span>
         </span>
       </span>
@@ -60,15 +60,9 @@ export function ExpandingPillContent({ icon, label, badge }: IExpandingPillConte
         <span
           data-testid="toolbar-pill-badge-anchor"
           className={cn(
-            // zero-width, so nothing in the pill shifts when the badge moves
             'pointer-events-none relative z-10 h-5 w-0 shrink-0',
-            'transition-transform duration-300 ease-in-out',
-            'group-hover/toolbar-pill:translate-x-2.5 group-hover/toolbar-pill:-translate-y-2.5',
-            'group-focus-visible/toolbar-pill:translate-x-2.5',
-            'group-focus-visible/toolbar-pill:-translate-y-2.5',
-            'motion-reduce:transition-none',
-            // white halo: the badge overlaps the pill's edge at the corner
-            '[&>*]:ring-2 [&>*]:ring-white'
+            'translate-x-1.5 -translate-y-1.5',
+            '*:ring-2 *:ring-white'
           )}
         >
           {badge}
