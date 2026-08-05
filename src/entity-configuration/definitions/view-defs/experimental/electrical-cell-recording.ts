@@ -14,9 +14,9 @@ export const viewDefForElectricalCellRecording: ViewDefinitionConfig = {
     EntityCoreFields.SpeciesName,
     EntityCoreFields.EType,
     EntityCoreFields.Name,
-    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },

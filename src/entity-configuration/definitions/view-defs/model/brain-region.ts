@@ -17,9 +17,9 @@ export const ViewDefForBrainRegion: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
-    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },

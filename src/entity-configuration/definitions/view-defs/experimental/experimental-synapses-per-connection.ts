@@ -16,8 +16,8 @@ export const viewDefForExperimentalSynapsesPerConnection: ViewDefinitionConfig =
     EntityCoreFields.MeanSTD,
     EntityCoreFields.SpeciesName,
     EntityCoreFields.SubjectAge,
-    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.Contributions,
+    EntityCoreFields.LifecycleStatus,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.PreSynapticBrainRegion },
