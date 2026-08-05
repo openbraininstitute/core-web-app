@@ -416,7 +416,7 @@ export function WorkflowActivity() {
                     size={breakpoint === 'l' ? 'md' : 'lg'}
                     className="select-none"
                   >
-                    <Link href={configurationHref} className="text-primary-9!">
+                    <Link href={configurationHref} className="text-primary-9! hover:text-white!">
                       View configuration
                     </Link>
                   </Button>
@@ -432,7 +432,7 @@ export function WorkflowActivity() {
                         className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
                       >
                         {isResolvingResults && <LoadingOutlined />}
-                        <span className="text-primary-9!">View results</span>
+                        <span>View results</span>
                       </Button>
                     ) : (
                       <Button
@@ -446,7 +446,7 @@ export function WorkflowActivity() {
                         <Link
                           href={resultsActionLink}
                           aria-disabled={isBuildActivity}
-                          className="text-primary-9!"
+                          className="text-primary-9! hover:text-white!"
                         >
                           View results
                         </Link>
@@ -457,7 +457,7 @@ export function WorkflowActivity() {
                     variant="outline"
                     size={breakpoint === 'l' ? 'md' : 'lg'}
                     onClick={onDuplicate}
-                    className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9!"
+                    className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9! hover:text-white!"
                     disabled={!canDuplicate}
                   >
                     Duplicate
