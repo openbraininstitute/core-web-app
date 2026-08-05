@@ -99,8 +99,14 @@ function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
                 key={param.name}
                 className="flex items-baseline justify-between gap-3 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-gray-50"
               >
+                {/* The label may wrap; the VALUE must stay on one line — a number
+                    broken across two lines reads as two numbers. It keeps its natural
+                    width (so the label wraps first) and only ellipsizes past the cap. */}
                 <dt className="min-w-0 break-words text-neutral-6">{param.label}</dt>
-                <dd className="min-w-0 [overflow-wrap:anywhere] text-right font-semibold text-primary-8">
+                <dd
+                  title={param.value}
+                  className="max-w-[70%] shrink-0 truncate text-right font-semibold text-primary-8"
+                >
                   {param.value}
                 </dd>
               </div>
