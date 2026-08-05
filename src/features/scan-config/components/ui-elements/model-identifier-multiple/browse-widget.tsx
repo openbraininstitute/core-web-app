@@ -341,6 +341,7 @@ export function ModelIdentifierBrowseWidget({
               {stagedSingle ? (
                 <ModelIdentifierEntityCard
                   variant="selection"
+                  collapsibleBadge
                   className="w-auto max-w-md"
                   blockElement={`${ScanConfigUIElementDict.ModelSelectorSingle}-selection`}
                   instanceId={`action-bar-${stagedSingle.entity.id}`}

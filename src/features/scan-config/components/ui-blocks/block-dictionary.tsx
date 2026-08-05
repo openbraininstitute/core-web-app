@@ -17,6 +17,7 @@ import {
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
@@ -125,7 +126,13 @@ export default function BlockDictionary({
       <Block
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
+        disabled={resolveScanConfigEditingLocked({
+          campaignId,
+          loading,
+          aiConfig,
+          isChatReady,
+          showingDiffs,
+        })}
         config={config}
         blockSchema={selectedBlockSchema}
         state={state}

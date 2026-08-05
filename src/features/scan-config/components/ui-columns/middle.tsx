@@ -1,6 +1,7 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
+import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
@@ -95,7 +96,13 @@ export default function Middle({
         isPlainObject(config[selectedRootElement]) && (
           <Block
             schema={schema}
-            disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
+            disabled={resolveScanConfigEditingLocked({
+              campaignId,
+              loading,
+              aiConfig,
+              isChatReady,
+              showingDiffs,
+            })}
             config={config}
             blockSchema={selectedSchema}
             state={preview ?? config[selectedRootElement] ?? {}}
