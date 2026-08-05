@@ -281,7 +281,7 @@ export function BrowseEntityScope({
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
       ) => expandedViewConfig.render(originalRecord, records),
-      expandIconColumnIndex: columns.length,
+      expandIconColumnIndex: columns.length + 1,
       expandIcon: expandedViewConfig.expandIcon,
       isRowExpandable: expandedViewConfig.isExpandable,
       isTopLevel: true,

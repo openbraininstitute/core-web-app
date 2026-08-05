@@ -168,7 +168,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.LegacyActivityStatus]: {
     title: 'Status',
     filter: null,
-    style: { width: 100 },
+    style: { width: 60 },
     render: (r) => {
       return <LegacyCampaignStatusCell campaignId={r.id} />;
     },
