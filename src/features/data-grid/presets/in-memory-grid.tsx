@@ -582,9 +582,10 @@ export function InMemoryGrid<Row>({
   );
 
   // ── selection ──────────────────────────────────────────────────────────────
+  const selectionMode = rowSelection?.mode;
   const agRowSelection = useMemo<RowSelectionOptions<TDisplayRow<Row>> | undefined>(() => {
-    if (!rowSelection) return undefined;
-    if (rowSelection.mode === SelectionMode.Single) {
+    if (!selectionMode) return undefined;
+    if (selectionMode === SelectionMode.Single) {
       return {
         mode: 'singleRow',
         checkboxes: (p) => !isDetailRow(p.data),
@@ -598,7 +599,10 @@ export function InMemoryGrid<Row>({
       selectAll: 'currentPage',
       enableClickSelection: false,
     };
-  }, [rowSelection]);
+    // Depend on the MODE, not the object. Callers pass an inline literal, so a new
+    // identity every render would hand AG Grid a "changed" rowSelection config, which
+    // re-initialises its selection service and drops the user's selection.
+  }, [selectionMode]);
 
   const onSelectionChange = rowSelection?.onSelectionChange;
   const onSelectionChanged = useCallback(
