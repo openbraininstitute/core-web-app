@@ -7,7 +7,8 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import { EMPTY_PLACEHOLDER, formatDate } from '../columns/catalog';
+import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
+import { formatDate } from '../columns/catalog';
 
 import type { ICellRendererProps } from '../../../react';
 import type { IHasEmDataset } from '../columns/catalog';

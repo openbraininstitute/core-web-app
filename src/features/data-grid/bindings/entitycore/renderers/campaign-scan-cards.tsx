@@ -2,7 +2,7 @@
 
 import { getParamLabel } from '@/features/task-runner/expanded-view';
 
-import { EMPTY_PLACEHOLDER } from '../columns/catalog';
+import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 import { CampaignStatusBadge } from './campaign-status-badge';
 
 import type { ReactNode } from 'react';

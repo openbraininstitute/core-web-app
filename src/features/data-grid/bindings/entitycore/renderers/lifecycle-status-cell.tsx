@@ -3,7 +3,7 @@
 import { Badge } from '@/ui/molecules/badge';
 import { cn } from '@/utils/css-class';
 
-import { EMPTY_PLACEHOLDER } from '../columns/catalog';
+import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 
 import type { ReactNode } from 'react';
 import type { ICellRendererProps } from '../../../react';

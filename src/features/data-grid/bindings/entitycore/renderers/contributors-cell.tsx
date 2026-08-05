@@ -2,7 +2,7 @@ import { AgentType } from '@/api/entitycore/types/shared/global';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { EMPTY_PLACEHOLDER } from '../columns/catalog';
+import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 
 import type { ICellRendererProps } from '../../../react';
 

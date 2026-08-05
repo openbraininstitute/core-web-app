@@ -15,7 +15,7 @@ import {
 } from '@/features/task-runner/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-import { EMPTY_PLACEHOLDER } from '../columns/catalog';
+import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 import { CampaignScanCards } from './campaign-scan-cards';
 import {
   aggregateCampaignStatus,

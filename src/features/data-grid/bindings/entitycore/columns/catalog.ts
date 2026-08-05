@@ -15,8 +15,6 @@ import type { IColumnModel, TColumnOverride } from '../../../core';
 
 import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 
-export { EMPTY_PLACEHOLDER };
-
 type Nullable<T> = T | null | undefined;
 
 export interface IHasName {
