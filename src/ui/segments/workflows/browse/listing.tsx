@@ -38,6 +38,7 @@ import {
 } from '@/ui/segments/workflows/config/types';
 import { cn } from '@/utils/css-class';
 import { resolveExtendedTypeFromPathParamUrl } from '@/utils/url-builder';
+import { WORKFLOW_NAV_DOWN, WORKFLOW_NAV_UP } from '@/utils/workflow-view-transition';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -341,7 +342,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         activity,
         targetType,
         workspace: { virtualLabId, projectId },
-      })
+      }),
+      { transitionTypes: [WORKFLOW_NAV_UP] }
     );
   };
 
@@ -395,7 +397,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         workspace: { virtualLabId, projectId },
         sessionId,
         standalone: workflow.configureRouting === WorkflowConfigureRoutingDict.Standalone,
-      })
+      }),
+      { transitionTypes: [WORKFLOW_NAV_DOWN] }
     );
   }, [
     activity,
@@ -482,7 +485,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         workspace: { virtualLabId, projectId },
         selection: Object.keys(prerequisites).length > 0 ? { ...payload, prerequisites } : payload,
         standalone: workflow?.configureRouting === WorkflowConfigureRoutingDict.Standalone,
-      })
+      }),
+      { transitionTypes: [WORKFLOW_NAV_DOWN] }
     );
   }, [
     activity,

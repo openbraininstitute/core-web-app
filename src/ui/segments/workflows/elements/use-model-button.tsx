@@ -5,6 +5,7 @@ import { useRouter } from '@bprogress/next';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { buildConfigureUrlForEntity } from '@/ui/segments/workflows/config/routes';
+import { WORKFLOW_NAV_DOWN } from '@/utils/workflow-view-transition';
 
 import type { ComponentProps, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -47,7 +48,8 @@ export function WorkflowUseModelButton({
             entityId,
             entityType,
             query,
-          })
+          }),
+          { transitionTypes: [WORKFLOW_NAV_DOWN] }
         );
       }}
       rounded={rounded}

@@ -13,6 +13,12 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
+import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
+import {
+  buildConfigDraftKey,
+  readConfigDraft,
+  writeConfigDraft,
+} from '@/features/scan-config/components/hooks/config-draft';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type Config,
@@ -438,17 +444,29 @@ export function useConfig({
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 }) {
-  const [configState, setConfigState] = useState<Config>(() =>
-    buildConfigState(
-      schema,
-      initialConfig,
-      model,
-      workflowSessionSelection,
-      resolveFromIdType,
-      origin
-    )
+  const draftKey = buildConfigDraftKey(
+    useScanConfigWorkflowEditorField()?.workflowSessionId,
+    origin
   );
+
+  const [configState, setConfigState] = useState<Config>(() => {
+    const draft = draftKey ? readConfigDraft(draftKey) : undefined;
+    return (
+      draft ??
+      buildConfigState(
+        schema,
+        initialConfig,
+        model,
+        workflowSessionSelection,
+        resolveFromIdType,
+        origin
+      )
+    );
+  });
   const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
+  // a restored draft is newer than any server-provided origin config, so let it
+  // survive `initialConfig` settling once after the remount that restored it
+  const restoredDraftRef = useRef(Boolean(draftKey && readConfigDraft(draftKey)));
 
   useEffect(() => {
     if (appliedInitialConfigRef.current === initialConfig) {
@@ -456,6 +474,12 @@ export function useConfig({
     }
 
     appliedInitialConfigRef.current = initialConfig;
+
+    if (restoredDraftRef.current) {
+      restoredDraftRef.current = false;
+      return;
+    }
+
     setConfigState(
       buildConfigState(
         schema,
@@ -467,6 +491,11 @@ export function useConfig({
       )
     );
   }, [initialConfig, model, origin, resolveFromIdType, schema, workflowSessionSelection]);
+
+  useEffect(() => {
+    if (!draftKey) return;
+    writeConfigDraft(draftKey, configState);
+  }, [draftKey, configState]);
 
   return [configState, setConfigState] as const;
 }

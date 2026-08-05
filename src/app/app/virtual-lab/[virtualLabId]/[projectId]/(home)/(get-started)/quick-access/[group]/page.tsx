@@ -20,6 +20,7 @@ import {
 import { getWorkflowEntityLabel } from '@/ui/segments/workflows/config';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { unlessWorkspaceNav } from '@/utils/workspace-view-transition';
 
 import type { Metadata } from 'next';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -132,7 +133,10 @@ export default async function Page({
   if (!virtualLab) return null;
 
   return (
-    <ViewTransition enter="vt-slide-up-enter" exit="vt-fade-exit">
+    <ViewTransition
+      enter={unlessWorkspaceNav('vt-slide-up-enter')}
+      exit={unlessWorkspaceNav('vt-fade-exit')}
+    >
       <div
         id={`quick-access-${group}`}
         data-testid={`quick-access-${group}`}
