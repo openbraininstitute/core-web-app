@@ -1,10 +1,10 @@
 import { kebabCase } from 'es-toolkit/compat';
 
-import { entityCoreApi, getEntityCoreContext, entityAssetsPath } from '@/api/entitycore/utils';
 import {
   MULTIPART_UPLOAD_THRESHOLD,
   uploadAssetMultipart,
 } from '@/api/entitycore/queries/assets/multipart';
+import { entityAssetsPath, entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { compactRecord } from '@/utils/dictionary';
