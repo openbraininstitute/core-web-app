@@ -87,3 +87,21 @@ export async function deleteAnalysisNotebookTemplate({
     },
   });
 }
+
+export async function createAnalysisNotebookTemplate({
+  payload,
+  context,
+}: {
+  payload: IAnalysisNotebookTemplate;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IAnalysisNotebookTemplate>('/analysis-notebook-template', {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
+  });
+}

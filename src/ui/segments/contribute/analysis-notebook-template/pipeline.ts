@@ -132,6 +132,7 @@ export function useAnalysisNotebookTemplatePipeline({
             })
           )
       ),
+    onSettled: invalidateNotebookQueries,
   });
 
   return {
@@ -154,7 +155,7 @@ export function useAnalysisNotebookTemplatePipeline({
         throw error;
       }
 
-      return entityId;
+      return notebook;
     },
 
     loading:

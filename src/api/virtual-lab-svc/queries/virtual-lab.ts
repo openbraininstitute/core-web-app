@@ -31,6 +31,7 @@ export function virtualLabServiceRowToClient(row: TVirtualLab): TVirtualLab {
     updated_at: row.updated_at ?? row.created_at,
     projects_count: row.projects_count ?? null,
     created_by: null,
+    course: null,
   };
 }
 

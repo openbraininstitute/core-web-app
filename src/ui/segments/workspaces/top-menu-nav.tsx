@@ -1,11 +1,17 @@
+'use client';
+
 import { MenuOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import {
+  CourseIcon,
   ExploreIcon,
   HelpIcon,
   Home,
@@ -26,6 +32,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 
@@ -102,6 +110,18 @@ const links: LinkItem[] = [
       `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/browse/${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}`,
   },
   {
+    id: 'workspace-course',
+    key: 'course',
+    title: 'Course',
+    url: 'course',
+    icon: <CourseIcon className="group-hover:text-primary-3 !size-5" />,
+    allowText: true,
+    className: 'px-6 gap-2',
+    hasAction: true,
+    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/course`,
+  },
+  {
     id: 'workspace-reports',
     key: 'reports',
     title: 'Reports',
@@ -140,7 +160,41 @@ export function TopMenuNavigation() {
   const activeSection = getActiveSection(pathname);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
-  const hashedLinks = links.map((link) => ({
+  const { data: virtualLabData } = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
+    enabled: Boolean(virtualLabId),
+  });
+
+  const { data: userGroups } = useQuery({
+    queryKey: userKeyBuilder.groups(),
+    queryFn: () => getUserGroups(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const hasCourse = virtualLabData?.course;
+  const isVlabAdmin = useMemo(
+    () =>
+      !!userGroups?.data?.groups.find(
+        (group) => group.role === 'admin' && group.virtual_lab_id === virtualLabId
+      ),
+    [userGroups, virtualLabId]
+  );
+
+  const filteredLinks = useMemo(
+    () =>
+      links.filter((link) => {
+        if (link.id === 'workspace-course') {
+          return (
+            hasCourse && isVlabAdmin && projectId === virtualLabData?.course?.template_project_id
+          );
+        }
+        return true;
+      }),
+    [hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
+  );
+
+  const hashedLinks = filteredLinks.map((link) => ({
     ...link,
     baseUrl: link.url,
     url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,

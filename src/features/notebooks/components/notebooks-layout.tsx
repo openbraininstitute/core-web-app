@@ -4,19 +4,24 @@ import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Image from 'next/image';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useCallback, useRef, useState } from 'react';
 
+import { isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import { NotebookLeftMenu } from '@/features/notebooks/components/notebook-left-menu';
+import { SyncNotebookModal } from '@/features/notebooks/components/update-notebook-modal';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
+import {
+  makeSelectContributionEntityClickEvent,
+  useContributionEntityClickEvent,
+} from '@/ui/segments/contribute/event';
 import { ContributionModal } from '@/ui/segments/contribute/modal';
 import {
   makeSelectEntityClickEvent,
@@ -26,6 +31,8 @@ import {
 import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 type Props = {
   children: ReactNode;
@@ -96,6 +103,26 @@ export function NotebooksLayout({ children }: Props) {
     setLoading(false);
   }
 
+  const course = virtualLabData?.course;
+
+  const [syncRecord, setSyncRecord] = useState<EntityCoreObjectTypes | null>(null);
+  const pendingSyncRef = useRef<EntityCoreObjectTypes | null>(null);
+
+  useContributionEntityClickEvent(({ detail }) => {
+    if (!detail.display && pendingSyncRef.current) {
+      setSyncRecord(pendingSyncRef.current);
+      pendingSyncRef.current = null;
+    }
+  });
+
+  const onNotebookCreateSuccess = useCallback(
+    async (notebook: EntityCoreObjectTypes) => {
+      if (!isNotebook(notebook) || course?.template_project_id !== projectId) return;
+      pendingSyncRef.current = notebook;
+    },
+    [projectId, course]
+  );
+
   return (
     <LazyMotion features={domAnimation}>
       <div
@@ -109,25 +136,28 @@ export function NotebooksLayout({ children }: Props) {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button
-              rounded
-              variant="success"
-              size={breakpoint === 'xl' ? 'lg' : 'md'}
-              type="button"
-              onClick={handleUploadData}
-              className={cn(
-                'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
-                'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
-                'transition-all duration-300 ease-out',
-                'hover:scale-[1.02] active:scale-[0.98]',
-                'disabled:cursor-not-allowed disabled:opacity-70'
+            {scope === WorkspaceScope.Project &&
+              (!course || course.template_project_id === projectId) && (
+                <Button
+                  rounded
+                  variant="success"
+                  size={breakpoint === 'xl' ? 'lg' : 'md'}
+                  type="button"
+                  onClick={handleUploadData}
+                  className={cn(
+                    'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+                    'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+                    'transition-all duration-300 ease-out',
+                    'hover:scale-[1.02] active:scale-[0.98]',
+                    'disabled:cursor-not-allowed disabled:opacity-70'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-5">
+                    <span>Upload notebook</span>
+                    <PlusOutlined className="ml-auto text-sm" />
+                  </div>
+                </Button>
               )}
-            >
-              <div className="flex items-center justify-between gap-5">
-                <span>Upload notebook</span>
-                <PlusOutlined className="ml-auto text-sm" />
-              </div>
-            </Button>
 
             <button
               disabled={loading}
@@ -177,7 +207,17 @@ export function NotebooksLayout({ children }: Props) {
           {children}
         </m.div>
 
-        <ContributionModal />
+        <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
+        {syncRecord && course && (
+          <SyncNotebookModal
+            open
+            onClose={() => setSyncRecord(null)}
+            record={syncRecord}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            courseId={course.id}
+          />
+        )}
       </div>
     </LazyMotion>
   );

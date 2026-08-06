@@ -54,6 +54,18 @@ export function ReportsIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function CourseIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <title>Course</title>
+      <path
+        fill="currentColor"
+        d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3m6.82 6L12 12.72L5.18 9L12 5.28L18.82 9M17 15.99l-5 2.73l-5-2.73v-3.72L12 15l5-2.73v3.72Z"
+      />
+    </svg>
+  );
+}
+
 export function WorkflowIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>

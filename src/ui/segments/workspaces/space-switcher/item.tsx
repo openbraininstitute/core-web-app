@@ -7,11 +7,13 @@ import {
   RiHome8Line,
   RiSettings3Line,
 } from '@remixicon/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { authFetch } from '@/auth-fetch';
+import { useConfig } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -130,6 +132,47 @@ export function Item({
     });
   };
 
+  const config = useConfig();
+  const queryClient = useQueryClient();
+  const [activationError, setActivationError] = useState<Error | null>(null);
+  if (activationError) throw activationError;
+  const courseStartDate = lab.course?.start_date ? new Date(lab.course.start_date) : null;
+  const courseNotStarted = courseStartDate !== null && courseStartDate > new Date();
+
+  const activatingRef = useRef(false);
+
+  const activateWaitlistedProject = useCallback(
+    (onSuccess: () => void) => {
+      const courseId = lab.course?.id;
+      if (!courseId || activatingRef.current) return;
+      activatingRef.current = true;
+
+      authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/${courseId}/enrolment/activate`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body?.message ?? 'An error occurred');
+          }
+          queryClient.invalidateQueries({ queryKey: keyBuilder.membership() });
+          queryClient.invalidateQueries({
+            queryKey: keyBuilder.listWorkspaceProjects({
+              virtualLabId: lab.id,
+              filter: { order_by: 'updated_at', order_direction: 'desc' },
+            }),
+          });
+          onSuccess();
+        })
+        .catch((err: unknown) => {
+          activatingRef.current = false;
+          setActivationError(err instanceof Error ? err : new Error('An error occurred'));
+        });
+    },
+    [config.VIRTUAL_LAB_API_URL, lab.course?.id, lab.id, queryClient]
+  );
+
   const projectRows = projects?.data ?? [];
   const hasProjects = projectRows.length > 0;
   const isExpanded = expandedLabs.has(lab.id);
@@ -202,6 +245,11 @@ export function Item({
             <h4 className="text-primary-9 text-md line-clamp-1 truncate font-bold" title={lab.name}>
               {lab.name}
             </h4>
+            {courseNotStarted && courseStartDate && (
+              <span className="mt-0.5 truncate text-[11px] text-amber-600">
+                Course starts {courseStartDate.toLocaleDateString()}
+              </span>
+            )}
           </div>
         </div>
         <div className="ml-auto flex items-center gap-1">
@@ -270,6 +318,10 @@ export function Item({
               projectRows.map((project, projectIndex) => {
                 const isProjectActive = project.id === activeProjectId;
                 const isProjectSelected = project.id === selectedProjectId;
+                const isWaitlisted = project.is_waitlisted;
+                // admins/owners can always click; students can click if course started or not waitlisted
+                const isDisabled = isWaitlisted && courseNotStarted && !canCreateProject;
+
                 return (
                   <motion.div
                     key={project.id}
@@ -277,7 +329,8 @@ export function Item({
                     animate={{ opacity: 1 }}
                     transition={{ delay: projectIndex * 0.01, duration: 0.1 }}
                     className={cn(
-                      'flex w-full cursor-pointer items-center justify-between transition-colors duration-150'
+                      'flex w-full items-center justify-between transition-colors duration-150',
+                      isDisabled ? 'cursor-default' : 'cursor-pointer'
                     )}
                   >
                     <Button
@@ -286,20 +339,25 @@ export function Item({
                       variant="outline"
                       className={cn(
                         'w-full justify-start bg-white! border shadow-none border-gray-200',
-                        'hover:bg-gray-100!',
+                        isDisabled
+                          ? 'pointer-events-none opacity-50 text-gray-400! hover:bg-white!'
+                          : 'hover:bg-gray-100!',
                         {
                           'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
-                            isProjectActive,
+                            isProjectActive && !isDisabled,
                         },
                         { 'border-3! border-gray-200! bg-gray-50!': isProjectSelected }
                       )}
                       title={project.name}
-                      onClick={() =>
-                        onProjectClick({
-                          virtualLabId: lab.id,
-                          project,
-                        })
-                      }
+                      onClick={() => {
+                        if (isWaitlisted && !courseNotStarted) {
+                          activateWaitlistedProject(() =>
+                            onProjectClick({ virtualLabId: lab.id, project })
+                          );
+                        } else {
+                          onProjectClick({ virtualLabId: lab.id, project });
+                        }
+                      }}
                       id={`project-item-${project.id}`}
                       data-testid="project-item-selector"
                     >

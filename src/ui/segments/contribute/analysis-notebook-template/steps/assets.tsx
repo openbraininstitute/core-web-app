@@ -68,13 +68,7 @@ const FILE_CONFIGS = [
   },
 ];
 
-function HiddenSentinel({
-  value,
-  onChange,
-}: {
-  value?: unknown;
-  onChange?: (val: unknown) => void;
-}) {
+function HiddenSentinel({ value }: { value?: unknown; onChange?: (val: unknown) => void }) {
   return (
     <input type="hidden" value={value === true ? 'true' : ''} onChange={() => {}} aria-hidden />
   );

@@ -1,10 +1,14 @@
 'use client';
 
 import { Form, Input, Select } from 'antd';
+import { useCallback } from 'react';
 
+import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   AnalysisNotebookTemplateSchema,
   ScaleEnum,
+  type TAnalysisNotebookTemplateForm,
 } from '@/ui/segments/contribute/analysis-notebook-template/schema';
 import {
   createZodFieldValidator,
@@ -18,17 +22,38 @@ const SCALE_OPTIONS = ScaleEnum.options.map((value) => ({
 }));
 
 export function Setup() {
-  const form = Form.useFormInstance();
+  const form = Form.useFormInstance<TAnalysisNotebookTemplateForm>();
+  const { projectId, virtualLabId } = useWorkspace();
+
+  const validateNameUniqueness = useCallback(
+    async (_: unknown, value: string) => {
+      if (!value) return;
+
+      const response = await getAnalysisNotebookTemplates({
+        filters: { name: value },
+        context: { projectId, virtualLabId },
+      });
+
+      if (response.data && response.data.length > 0) {
+        throw new Error('A notebook template with this name already exists');
+      }
+    },
+    [projectId, virtualLabId]
+  );
 
   return (
     <div className="h-full w-full">
       <Form.Item
         name={['setup', 'name']}
         label={renderLabel('Name', 'main', RequiredFieldMarker)}
+        validateDebounce={500}
         rules={[
           {
             required: true,
             validator: createZodFieldValidator(AnalysisNotebookTemplateSchema, 'setup.name', form),
+          },
+          {
+            validator: validateNameUniqueness,
           },
         ]}
       >

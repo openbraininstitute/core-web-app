@@ -1,6 +1,7 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import { get, uniqBy } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
@@ -21,7 +22,14 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { ApiError } from '@/api/error';
-import { DEFAULT_PAGE_NUMBER, type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import {
+  DEFAULT_PAGE_NUMBER,
+  type TViewVariant,
+  ViewVariant,
+  WorkspaceScope,
+  WorkspaceSection,
+} from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -56,6 +64,7 @@ import {
   useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
+import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
@@ -187,6 +196,14 @@ export function BrowseEntityScope({
   const scopeFilter = getWorkspaceScopeFilters(scope, {
     virtualLabId,
     projectId,
+  });
+
+  // Fetch virtual lab data for delete button logic
+  const { data: virtualLabData } = useQuery({
+    queryKey: workspaceKeyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
+    enabled: !!virtualLabId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
@@ -509,7 +526,13 @@ export function BrowseEntityScope({
             classNames?.miniView
           )}
         >
-          <MiniDetailView section={section} {...miniViewProps} dataType={dataType} />
+          <MiniDetailView
+            section={section}
+            {...miniViewProps}
+            dataType={dataType}
+            isPrivate={scope === WorkspaceScope.Project}
+            virtualLabData={virtualLabData}
+          />
         </div>
       )}
       <DownloadPanel />

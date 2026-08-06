@@ -1,6 +1,7 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TUserRole } from '../validation';
+import type { Course } from './course';
 
 interface VlmResponse<T> {
   message: string;
@@ -95,6 +96,7 @@ export interface IProject {
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
   virtual_lab_id: string;
+  is_waitlisted: boolean;
 }
 
 export interface IProjectExpandedResponse extends IProject, IProjectExtra {
@@ -113,6 +115,7 @@ export type TVirtualLab = {
   projects_count: number | null;
   created_by: string | null;
   compute_cell: string;
+  course: Course | null;
 };
 
 export interface IVirtualLabExpandedResponse extends TVirtualLab {

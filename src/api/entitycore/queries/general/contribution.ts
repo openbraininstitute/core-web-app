@@ -1,8 +1,6 @@
 import z from 'zod';
 
-import { authApiClient } from '@/api/api-client';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { config } from '@/config';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type { IPersonFilter } from '@/api/entitycore/types/entities/agent';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
@@ -20,9 +18,11 @@ export async function getContributions({
   filters,
 }: {
   context: WorkspaceContext;
-  filters: Partial<IPersonFilter>;
+  filters: Partial<IPersonFilter> & {
+    entity__id: string;
+  };
 }) {
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IContributor>>(baseUri, {
     queryParams: {
       ...filters,
@@ -41,8 +41,28 @@ export async function getContributions({
  * @returns {Promise<IContributor>} A promise that resolves to the single person
  */
 export async function getContribution({ id, context }: { id: string; context: WorkspaceContext }) {
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
   return await api.get<IContributor>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
+/**
+ * Deletes a specific contribution by its ID from the EntityCoreAPI.
+ */
+export async function deleteContribution({
+  id,
+  context,
+}: {
+  id: string;
+  context: WorkspaceContext;
+}) {
+  const api = await entityCoreApi();
+  return await api.delete<void>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -72,7 +92,7 @@ export async function createContribution({
   context: WorkspaceContext;
   contributor: IContributorPayload;
 }) {
-  const api = await authApiClient(config.ENTITY_CORE_URL);
+  const api = await entityCoreApi();
 
   return await api.post<IContributor>(baseUri, {
     headers: {

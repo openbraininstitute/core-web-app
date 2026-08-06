@@ -67,8 +67,6 @@ export async function parseApiError(
   status: number,
   apiClientResponseData: any
 ): Promise<ApiError> {
-  const errMessage = `Error while fetching ${url}`;
-
   try {
     const responseData =
       apiClientResponseData instanceof Response
@@ -83,8 +81,9 @@ export async function parseApiError(
       get(responseData, path)
     );
 
+    const errMessage = message || `Error while fetching ${url}`;
     return new ApiError(errMessage, { code, message, details, status });
   } catch {
-    return new ApiError(errMessage, { status });
+    return new ApiError(`Error while fetching ${url}`, { status });
   }
 }

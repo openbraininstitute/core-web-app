@@ -75,3 +75,4 @@ export type TWorkspaceMainPages = (typeof WorkspaceMainPages)[keyof typeof Works
 export const DATA_GROUP_QUERY_PARAM = 'group';
 // use in data page to select the workspace scope (public, project)
 export const SCOPE_QUERY_PARAMS = 'scope';
+export const RECOVERABLE_SEAT_MAX_SPEND = 50;

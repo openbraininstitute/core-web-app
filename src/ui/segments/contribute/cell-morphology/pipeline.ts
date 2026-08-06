@@ -11,6 +11,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
+import type { EntityCoreObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import type {
@@ -157,7 +158,11 @@ export function useCellMorphologyPipeline({
     },
   });
 
-  async function createEntity({ values }: { values: TCellMorphologyForm }): Promise<string> {
+  async function createEntity({
+    values,
+  }: {
+    values: TCellMorphologyForm;
+  }): Promise<EntityCoreObjectTypes> {
     const cellMorphology = await createCellMorphologyAsync.mutateAsync(values);
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -169,7 +174,7 @@ export function useCellMorphologyPipeline({
         mtype_class_id: values.mtype_class_id,
       }),
     ]);
-    return cellMorphology.id;
+    return cellMorphology as ICellMorphology;
   }
 
   const loading =

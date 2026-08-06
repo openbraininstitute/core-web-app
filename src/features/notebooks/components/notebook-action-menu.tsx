@@ -43,6 +43,7 @@ export function NotebookActionMenu({
   isPrivate,
   parentLink,
   variant = ViewVariant.Light,
+  hideDelete,
 }: {
   entity: NotebookEntityLike;
   ctx: WorkspaceContext;
@@ -50,6 +51,7 @@ export function NotebookActionMenu({
   isPrivate: boolean;
   parentLink: string;
   variant?: TViewVariant;
+  hideDelete?: boolean;
 }) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
@@ -231,7 +233,7 @@ export function NotebookActionMenu({
         </>
       )}
 
-      {isPrivate ? (
+      {isPrivate && !hideDelete ? (
         <Popconfirm
           autoAdjustOverflow
           destroyOnHidden

@@ -1,3 +1,5 @@
+import { ExtendedEntitiesTypeDict } from './extended-entity-type';
+
 import type { ISingleNeuronSimulation } from 'src/api/entitycore/types/entities/single-neuron-simulation';
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
 import type {
@@ -18,6 +20,7 @@ import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
+import type { IAnalysisNotebookTemplate } from './entities/analysis-notebook-template';
 
 export * from '@/api/entitycore/types/entity-type';
 
@@ -65,4 +68,9 @@ export type EntityCoreObjectTypes =
   | IonChannelModel
   | IIonChannelModelingCampaign
   | IEMCellMesh
+  | IAnalysisNotebookTemplate
   | ISimulatableExtracellularRecordingArray;
+
+export function isNotebook(entity: EntityCoreObjectTypes): entity is IAnalysisNotebookTemplate {
+  return entity.type === ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
+}

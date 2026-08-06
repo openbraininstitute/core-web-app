@@ -13,6 +13,7 @@ import {
 } from '@/ui/segments/contribute/analysis-notebook-template/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TAnalysisNotebookTemplateForm } from '@/ui/segments/contribute/analysis-notebook-template/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
@@ -45,10 +46,15 @@ const AnalysisNotebookTemplateConfig = createAnalysisNotebookTemplateConfig(
 
 interface IAnalysisNotebookTemplateProps {
   sessionId: string;
+  onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
   onClose: () => void;
 }
 
-export function AnalysisNotebookTemplate({ sessionId, onClose }: IAnalysisNotebookTemplateProps) {
+export function AnalysisNotebookTemplate({
+  sessionId,
+  onCreateSuccess,
+  onClose,
+}: IAnalysisNotebookTemplateProps) {
   const { projectId, virtualLabId } = useWorkspace();
 
   return (
@@ -59,6 +65,7 @@ export function AnalysisNotebookTemplate({ sessionId, onClose }: IAnalysisNotebo
       progressSteps={ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      onCreateSuccess={onCreateSuccess}
       brainRegionId={null}
       onDone={onClose}
     />

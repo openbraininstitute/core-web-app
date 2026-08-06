@@ -1,6 +1,7 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type {
   IProject,
@@ -120,6 +121,15 @@ export async function listProjects({
       ...filter,
     },
   });
+}
+
+export async function listAllProjectIds(virtualLabId: string) {
+  const projects = await fetchAllPaginatedData<IProject>({
+    fn: (page, pageSize) =>
+      listProjects({ virtualLabId, pagination: { page, page_size: pageSize } }),
+    pageSize: 100,
+  });
+  return projects.map((p) => p.id);
 }
 
 /**

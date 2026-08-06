@@ -10,4 +10,5 @@ export const keyBuilder = {
     { page, pageSize },
   ],
   person: ({ userId }: { userId?: string }) => [`${prefix}/person`, { userId }],
+  groups: () => [`${prefix}/groups`],
 };

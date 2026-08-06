@@ -357,7 +357,10 @@ export function useHierarchyAllLevels({ entityId }: WorkspaceContext & { entityI
     combine: (
       results
     ): {
-      derivedTrees: Array<{ derivationType: TDerivationType; tree: HierarchyTreeResponse | undefined }>;
+      derivedTrees: Array<{
+        derivationType: TDerivationType;
+        tree: HierarchyTreeResponse | undefined;
+      }>;
       isLoadingDerived: boolean;
     } => ({
       derivedTrees: results.map((result, index) => ({

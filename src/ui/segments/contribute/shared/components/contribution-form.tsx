@@ -16,6 +16,7 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type { ZodObject, ZodRawShape } from 'zod';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   IContributionFormConfig,
@@ -36,6 +37,7 @@ interface IContributionFormProps<
     readonly label: string;
     readonly mutationKey: string;
   }>;
+  onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
   onDone?: () => void;
 }
 
@@ -47,6 +49,7 @@ interface IFormContentProps<
   sessionId: string;
   pipeline: TPipelineHookFactory<TFormValues>;
   progressSteps: Array<{ key: string; label: string; mutationKey: string }>;
+  onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
   onDone?: () => void;
 }
 
@@ -60,6 +63,7 @@ function FormContent<
   progressSteps,
   virtualLabId,
   projectId,
+  onCreateSuccess,
   onDone,
 }: IFormContentProps<TFormValues, TSchema>) {
   const {
@@ -88,10 +92,11 @@ function FormContent<
       await form.validateFields();
       setIsSubmitting(true);
       const values = form.getFieldsValue(true) as TFormValues;
-      const id = await createEntity({ values });
-      setCreatedEntityId(id);
+      const entity = await createEntity({ values });
+      setCreatedEntityId(entity.id);
+      await onCreateSuccess?.(entity);
     } catch (error) {
-      console.error('Final validation failed', error);
+      console.error('On Create Success failed', error);
     }
   };
 
@@ -214,6 +219,7 @@ export function ContributionForm<
     virtualLabId,
     projectId,
     onDone,
+    onCreateSuccess,
   } = props;
 
   return (
@@ -229,6 +235,7 @@ export function ContributionForm<
         progressSteps={progressSteps}
         virtualLabId={virtualLabId}
         projectId={projectId}
+        onCreateSuccess={onCreateSuccess}
         onDone={onDone}
       />
     </ContributionPipelineProvider>

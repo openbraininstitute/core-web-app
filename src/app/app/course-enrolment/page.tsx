@@ -1,0 +1,191 @@
+'use client';
+
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+
+import { authFetch } from '@/auth-fetch';
+import { ErrorComponent } from '@/components/GenericErrorFallback';
+import { useConfig } from '@/config';
+import { Button } from '@/ui/molecules/button';
+
+import type { ClaimResponse } from '@/api/virtual-lab-svc/queries/course';
+
+interface ClaimError {
+  message: string;
+  display: string;
+}
+
+interface ClaimSuccessData {
+  virtual_lab_id: string;
+  project_id: string;
+  course_name?: string;
+  start_date?: string;
+}
+
+export default function CourseEnrolmentPage() {
+  const config = useConfig();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const enrolmentId = searchParams.get('enrolment_id');
+  const [error, setError] = useState<ClaimError | null>(null);
+  const [success, setSuccess] = useState<ClaimSuccessData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const claimed = useRef(false);
+
+  useEffect(() => {
+    if (claimed.current) return;
+    claimed.current = true;
+
+    const claim = async () => {
+      if (!enrolmentId) {
+        setError({
+          message: 'Missing enrolment ID',
+          display: 'Invalid link. Please check your enrolment link.',
+        });
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/claim`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({ enrolment_id: enrolmentId }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const displayMsg = errorData.message || 'Failed to claim enrolment';
+
+          setError({ message: displayMsg, display: displayMsg });
+          setLoading(false);
+          return;
+        }
+
+        const responseData: ClaimResponse = await response.json();
+        const data = responseData.data;
+
+        // Check if course has started
+        const courseStartDate = data.course?.start_date ? new Date(data.course.start_date) : null;
+        const now = new Date();
+        const courseHasStarted = courseStartDate && now >= courseStartDate;
+
+        if (courseHasStarted && data.project_id) {
+          // Course already started - activate then redirect to project
+          try {
+            await authFetch(`${config.VIRTUAL_LAB_API_URL}/courses/activate-enrolments`, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+              },
+            });
+          } catch (_) {
+            // Activation failure is non-blocking; user is redirected regardless.
+          }
+          router.push(`${config.ROOT_ROUTE}/${data.course?.virtual_lab_id}/${data.project_id}`);
+        } else {
+          // Course hasn't started yet - show success message
+          setSuccess({
+            virtual_lab_id: data.course?.virtual_lab_id ?? '',
+            project_id: data.project_id ?? '',
+            course_name: data.course?.virtual_lab_name || 'Course',
+            start_date: data.course?.start_date,
+          });
+          setLoading(false);
+        }
+      } catch (err) {
+        setError({
+          message: err instanceof Error ? err.message : 'Unknown error',
+          display: 'An unexpected error occurred. Please try again.',
+        });
+        setLoading(false);
+      }
+    };
+
+    claim();
+  }, [enrolmentId, config.VIRTUAL_LAB_API_URL, config.ROOT_ROUTE, router]);
+
+  if (loading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-primary-9">Claiming enrolment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="mx-auto w-full max-w-md text-center">
+          <ErrorComponent
+            error={new Error(error.display)}
+            customError={error.display}
+            showButtons={false}
+          />
+          <div className="mt-6">
+            <Button
+              onClick={() => {
+                router.push(`${config.ROOT_ROUTE}/sync`);
+              }}
+            >
+              Go to home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="mx-auto w-full max-w-md text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <svg
+                className="h-8 w-8 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <title>Enrolment confirmed</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          </div>
+          <h2 className="mb-2 text-2xl font-bold text-primary-9">Enrolment confirmed!</h2>
+          <p className="mb-6 text-gray-600">
+            You've been enrolled to <span className="font-semibold">{success.course_name}</span>
+          </p>
+          {success.start_date && (
+            <p className="mb-6 text-sm text-gray-500">
+              Course starts on{' '}
+              <span className="font-semibold">
+                {new Date(success.start_date).toLocaleDateString()}
+              </span>
+            </p>
+          )}
+          <Button
+            onClick={() => {
+              router.push(`${config.ROOT_ROUTE}/sync`);
+            }}
+          >
+            Go to home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
