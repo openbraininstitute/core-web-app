@@ -20,6 +20,7 @@ export type {
   MorphoViewerOverlayTransformEvent,
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
+  MorphoViewerSmallCircuitProps,
   MorphoViewerSnapshotOptions,
   MorphoViewerSynapsesGroup,
   MorphoViewerTree,

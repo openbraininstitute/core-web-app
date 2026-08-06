@@ -91,7 +91,7 @@ export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Synaptome (beta)',
+  title: 'Synaptome',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SingleNeuronCircuitSimulation,

@@ -28,8 +28,8 @@ export function makeCircuit(overrides: Partial<ICircuit> = {}): ICircuit {
 }
 
 /**
- * a circuit built at single-neuron scale from an EM dense reconstruction (the "em-circuit
- * (beta)" build) — its details page is `single-neuron-circuit/{id}` ("Synaptome (beta)"),
+ * a circuit built at single-neuron scale from an EM dense reconstruction (the "em-circuit"
+ * build) — its details page is `single-neuron-circuit/{id}` ("Synaptome"),
  * not the generic `circuit/{id}` page
  */
 export function makeSingleNeuronScaleCircuit(overrides: Partial<ICircuit> = {}): ICircuit {
@@ -62,7 +62,6 @@ export function makeCellMorphology(
   } as unknown as EntityCoreObjectTypes;
 }
 
-/** an entity type whose domain config declares no `detailViewSections` (no details page yet) */
 export function makeExtracellularRecordingArray(
   overrides: Partial<EntityCoreObjectTypes> = {}
 ): EntityCoreObjectTypes {
@@ -70,6 +69,18 @@ export function makeExtracellularRecordingArray(
     id: 'ext-recording-array-1',
     name: 'Test extracellular recording array',
     type: ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
+    ...overrides,
+  } as unknown as EntityCoreObjectTypes;
+}
+
+/** a type absent from the domain registry, so nothing declares `detailViewSections` for it */
+export function makeUnregisteredEntity(
+  overrides: Partial<EntityCoreObjectTypes> = {}
+): EntityCoreObjectTypes {
+  return {
+    id: 'unregistered-1',
+    name: 'Test unregistered entity',
+    type: 'not_a_registered_entity_type',
     ...overrides,
   } as unknown as EntityCoreObjectTypes;
 }

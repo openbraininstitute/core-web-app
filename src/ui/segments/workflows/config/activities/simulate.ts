@@ -22,41 +22,20 @@ import type { IWorkflowDescriptor } from '../types';
 
 const simulatableCircuitFilters = { has_electrical_cell_models: true } as const;
 
+/**
+ * Array order drives the grouped type filter dropdown; `order` drives the flat type carousel.
+ * Both are kept in sync, and the two superseded single-neuron/synaptome workflows sort last so
+ * they stay at the end of their (Cellular) group as well as at the end of the carousel.
+ */
 export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.BrowseFirst,
-    sourceType: ExtendedEntitiesTypeDict.Memodel,
-    targetType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
-    breadcrumb: {
-      root: 'Single neuron simulation',
-      steps: { selection: 'Select single neuron' },
-    },
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Memodel }],
-    order: 1,
-    disabled: false,
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.BrowseFirst,
-    sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
-    breadcrumb: {
-      root: 'Synaptome simulation',
-      steps: { selection: 'Select synaptome' },
-    },
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome }],
-    order: 2,
-    disabled: false,
-  },
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
     targetType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
     breadcrumb: {
-      root: 'Ion channel (beta) simulation',
-      steps: { selection: 'Select ion channel (beta)' },
+      root: 'Ion channel simulation',
+      steps: { selection: 'Select ion channel' },
     },
     scanConfig: {
       definition: simulateIonChannelWorkflow,
@@ -64,8 +43,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
       configureBinding: ionChannelSimulationConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.IonChannelModel }],
-    label: 'Ion channel (beta)',
-    order: 3,
+    order: 1,
     disabled: false,
   },
   {
@@ -74,8 +52,8 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
     targetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
     breadcrumb: {
-      root: 'Single neuron (beta) simulation',
-      steps: { selection: 'Select single neuron (beta)' },
+      root: 'Single neuron simulation',
+      steps: { selection: 'Select single neuron' },
     },
     scanConfig: {
       definition: simulateMemodelCircuitWorkflow,
@@ -83,7 +61,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
       configureBinding: memodelCircuitSimulationConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.MemodelCircuit }],
-    order: 4,
+    order: 2,
     disabled: false,
   },
   {
@@ -92,8 +70,8 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
     breadcrumb: {
-      root: 'Synaptome (beta) simulation',
-      steps: { selection: 'Select synaptome (beta)' },
+      root: 'Synaptome simulation',
+      steps: { selection: 'Select synaptome' },
     },
     scanConfig: {
       definition: simulateMEModelWithSynapsesCircuitWorkflow,
@@ -108,7 +86,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
         filters: simulatableCircuitFilters,
       },
     ],
-    order: 5,
+    order: 3,
     disabled: false,
   },
   {
@@ -117,8 +95,8 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
     breadcrumb: {
-      root: 'Paired neurons (beta) simulation',
-      steps: { selection: 'Select paired neurons (beta)' },
+      root: 'Paired neurons simulation',
+      steps: { selection: 'Select paired neurons' },
     },
     scanConfig: {
       definition: simulatePairedNeuronCircuitWorkflow,
@@ -133,7 +111,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
         filters: simulatableCircuitFilters,
       },
     ],
-    order: 6,
+    order: 4,
     disabled: false,
   },
   {
@@ -142,8 +120,8 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
     targetType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
     breadcrumb: {
-      root: 'Small microcircuit (beta) simulation',
-      steps: { selection: 'Select small microcircuit (beta)' },
+      root: 'Small microcircuit simulation',
+      steps: { selection: 'Select small microcircuit' },
     },
     scanConfig: {
       definition: simulateSmallMicrocircuitWorkflow,
@@ -158,7 +136,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
         filters: simulatableCircuitFilters,
       },
     ],
-    order: 7,
+    order: 5,
     disabled: false,
   },
   {
@@ -167,8 +145,8 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.Microcircuit,
     targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
     breadcrumb: {
-      root: 'Microcircuit (beta) simulation',
-      steps: { selection: 'Select microcircuit (beta)' },
+      root: 'Microcircuit simulation',
+      steps: { selection: 'Select microcircuit' },
     },
     scanConfig: {
       definition: simulateMicrocircuitWorkflow,
@@ -181,8 +159,8 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
         filters: simulatableCircuitFilters,
       },
     ],
+    order: 6,
     disabled: false,
-    order: 8,
   },
   {
     ...WorkflowBrowseDefaults,
@@ -190,8 +168,8 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.BrainRegion,
     targetType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
     breadcrumb: {
-      root: 'Brain region (beta) simulation',
-      steps: { selection: 'Select brain region (beta)' },
+      root: 'Brain region simulation',
+      steps: { selection: 'Select brain region' },
     },
     scanConfig: {
       definition: simulateRegionCircuitWorkflow,
@@ -205,8 +183,57 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
       },
     ],
     requiredFeatures: [brainRegionSimulationFlag.key],
+    order: 7,
     disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.ScanConfig,
+    sourceType: ExtendedEntitiesTypeDict.WholeBrain,
+    targetType: ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
+    breadcrumb: {
+      root: 'Whole brain simulation',
+      steps: { selection: 'Select whole brain' },
+    },
+    scanConfig: {
+      definition: simulateWholeBrainCircuitWorkflow,
+      // Default schema/endpoint; Brian2 is selected from `target_simulator` at configure time.
+      schemaName: SchemaNameDict.CircuitSimulationScanConfig,
+      configureBinding: wholeBrainCircuitSimulationConfigureBinding(),
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.WholeBrain }],
+    order: 8,
+    disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.BrowseFirst,
+    sourceType: ExtendedEntitiesTypeDict.Memodel,
+    targetType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+    breadcrumb: {
+      root: 'Single neuron (legacy) simulation',
+      steps: { selection: 'Select single neuron (legacy)' },
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Memodel }],
+    // Memodel is only superseded on Simulate: the MemodelCircuit *build* workflow is still
+    // disabled, so Build keeps the plain `Single neuron` label from the entity catalog.
+    label: 'Single neuron (legacy)',
+    legacy: true,
     order: 9,
+    disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.BrowseFirst,
+    sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+    targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+    breadcrumb: {
+      root: 'Synaptome (legacy) simulation',
+      steps: { selection: 'Select synaptome (legacy)' },
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome }],
+    order: 10,
+    disabled: false,
   },
   {
     ...WorkflowBrowseDefaults,
@@ -235,24 +262,5 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.BrainSystems,
     targetType: ExtendedEntitiesTypeDict.BrainSystems,
     disabled: true,
-  },
-  {
-    ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.ScanConfig,
-    sourceType: ExtendedEntitiesTypeDict.WholeBrain,
-    targetType: ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
-    breadcrumb: {
-      root: 'Whole brain simulation',
-      steps: { selection: 'Select whole brain' },
-    },
-    scanConfig: {
-      definition: simulateWholeBrainCircuitWorkflow,
-      // Default schema/endpoint; Brian2 is selected from `target_simulator` at configure time.
-      schemaName: SchemaNameDict.CircuitSimulationScanConfig,
-      configureBinding: wholeBrainCircuitSimulationConfigureBinding(),
-    },
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.WholeBrain }],
-    order: 10,
-    disabled: false,
   },
 ];

@@ -14,6 +14,7 @@ import {
   type IQuickAccessList,
   QuickAccessGroupDict,
 } from '@/ui/segments/project/get-started/query';
+import { getWorkflowEntityLabel } from '@/ui/segments/workflows/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { WorkspaceContext } from '@/types/common';
@@ -75,7 +76,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
       return {
         preview: p,
         call,
-        artifactTitle: entityConfig?.title ?? null,
+        artifactTitle: getWorkflowEntityLabel(p.extendedType),
         entityId: p.entityId,
       };
     })

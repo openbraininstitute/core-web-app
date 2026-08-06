@@ -14,7 +14,7 @@ export const circuitScaleFilter = {
 
 export const WholeBrain: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Whole brain (beta)',
+  title: 'Whole brain',
   extendedType: ExtendedEntitiesTypeDict.WholeBrain,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.WholeBrain,

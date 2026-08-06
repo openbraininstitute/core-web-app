@@ -1,7 +1,8 @@
 import * as Comlink from 'comlink';
 
-import { fetchToFS, unlinkFromFS } from '@/features/circuit-nodes/worker/fetch-and-cache';
+import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
 import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
+import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
 import type {
   ColumnKind,
@@ -28,6 +29,7 @@ const api = {
       url: opts.url,
       headers: opts.headers,
       fileKey: opts.fileKey,
+      cacheName: CIRCUIT_H5_CACHE,
       onProgress,
     });
     session = new NodesSession(filename, opts.populationKey);

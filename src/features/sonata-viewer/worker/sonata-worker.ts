@@ -1,6 +1,8 @@
 import { expose } from 'comlink';
 import { Dataset, File, Group, ready } from 'h5wasm';
 
+import { lttbDownsample } from '@/utils/lttb';
+
 import type {
   DownsampleRequest,
   NodeTraceData,
@@ -10,77 +12,6 @@ import type {
 } from '../types';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
-
-/**
- * Streamlined LTTB (Largest Triangle Three Buckets) for typed arrays.
- * Adapted from src/util/explore-section/LTTB.ts but optimized
- * for Float32Array/number[] without object allocations.
- */
-function lttbDownsample(
-  x: number[],
-  y: number[],
-  desiredLength: number
-): { x: number[]; y: number[] } {
-  const length = x.length;
-  if (length <= desiredLength) return { x, y };
-  if (desiredLength < 2) return { x: [x[0]], y: [y[0]] };
-
-  const outX: number[] = new Array(desiredLength);
-  const outY: number[] = new Array(desiredLength);
-
-  // Always include first point
-  outX[0] = x[0];
-  outY[0] = y[0];
-
-  const bucketSize = (length - 2) / (desiredLength - 2);
-  let prevSelectedX = x[0];
-  let prevSelectedY = y[0];
-
-  for (let i = 1; i < desiredLength - 1; i++) {
-    const bucketStart = Math.floor((i - 1) * bucketSize) + 1;
-    const bucketEnd = Math.min(Math.floor(i * bucketSize) + 1, length - 1);
-    const nextBucketStart = Math.min(Math.floor(i * bucketSize) + 1, length - 1);
-    const nextBucketEnd = Math.min(Math.floor((i + 1) * bucketSize) + 1, length - 1);
-
-    // Average of next bucket
-    let avgX = 0;
-    let avgY = 0;
-    const nextLen = nextBucketEnd - nextBucketStart;
-    if (nextLen > 0) {
-      for (let j = nextBucketStart; j < nextBucketEnd; j++) {
-        avgX += x[j];
-        avgY += y[j];
-      }
-      avgX /= nextLen;
-      avgY /= nextLen;
-    }
-
-    // Find point with max triangle area in current bucket
-    let maxArea = -1;
-    let maxIdx = bucketStart;
-    for (let j = bucketStart; j < bucketEnd; j++) {
-      const area = Math.abs(
-        (prevSelectedX - avgX) * (y[j] - prevSelectedY) -
-          (prevSelectedX - x[j]) * (avgY - prevSelectedY)
-      );
-      if (area > maxArea) {
-        maxArea = area;
-        maxIdx = j;
-      }
-    }
-
-    outX[i] = x[maxIdx];
-    outY[i] = y[maxIdx];
-    prevSelectedX = x[maxIdx];
-    prevSelectedY = y[maxIdx];
-  }
-
-  // Always include last point
-  outX[desiredLength - 1] = x[length - 1];
-  outY[desiredLength - 1] = y[length - 1];
-
-  return { x: outX, y: outY };
-}
 
 class SonataWorkerImpl {
   private file: File | null = null;

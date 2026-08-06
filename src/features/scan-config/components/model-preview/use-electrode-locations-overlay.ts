@@ -49,7 +49,8 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-type ArrayEntity = EntityCoreIdentifiable &
+/** Any entity carrying an `electrode_locations` asset. */
+export type ElectrodeArrayEntity = EntityCoreIdentifiable &
   EntityCoreBaseAsset & {
     type?: string;
   };
@@ -61,7 +62,7 @@ interface Options {
    * Existing simulatable extracellular recording array (or any entity carrying
    * an `electrode_locations` asset). Used when config has no live dictionary.
    */
-  arrayEntity?: ArrayEntity | null;
+  arrayEntity?: ElectrodeArrayEntity | null;
 }
 
 /**
@@ -165,12 +166,17 @@ export function useElectrodeLocationsOverlay({ config, arrayEntity }: Options = 
       if (!arrayEntity?.id || !asset?.id) {
         throw new Error('Missing electrode_locations asset');
       }
-      return downloadAsset<ElectrodeLocationsDictionarySummary>({
+      // read as a raw Response: the storage layer does not always label the
+      // download `application/json`, and the api client would then hand back an
+      // ArrayBuffer instead of the parsed dictionary
+      const response = await downloadAsset({
         ctx,
         entityType: entityType as typeof EntityTypeDict.SimulatableExtracellularRecordingArray,
         entityId: arrayEntity.id,
         id: asset.id,
+        asRawResponse: true,
       });
+      return (await response.json()) as ElectrodeLocationsDictionarySummary;
     },
     enabled: !hasLive && !!arrayEntity?.id && !!asset?.id && !!ctx.virtualLabId && !!ctx.projectId,
     staleTime: 5 * 60_000,

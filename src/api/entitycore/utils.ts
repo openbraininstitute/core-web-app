@@ -1,4 +1,4 @@
-import { find, snakeCase } from 'es-toolkit/compat';
+import { find, kebabCase, snakeCase } from 'es-toolkit/compat';
 
 import { authApiClient } from '@/api/api-client';
 import { config as appConfig } from '@/config';
@@ -32,6 +32,11 @@ export async function entityCoreApi(url?: string) {
   if (!baseUrl) throw new Error('ENTITY_CORE_URL not configured');
   const api = await authApiClient(baseUrl);
   return api;
+}
+
+/** Builds the `/{entity-route}/{entityId}/assets` URI prefix shared by all asset endpoints. */
+export function entityAssetsPath(entityType: string, entityId: string): string {
+  return `/${kebabCase(entityType)}/${entityId}/assets`;
 }
 
 export function getAssetElement(

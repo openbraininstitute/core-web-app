@@ -43,7 +43,7 @@ describe('WorkflowBuildActions "View details" link (mini-detail-view, section: B
     );
   });
 
-  it('routes an em-circuit (beta) build output (single-neuron-scale circuit) to Synaptome (beta), not circuit', () => {
+  it('routes an em-circuit build output (single-neuron-scale circuit) to Synaptome, not circuit', () => {
     renderBuildActions({ record: makeSingleNeuronScaleCircuit() });
 
     expect(screen.getByRole('button', { name: 'View details' })).toHaveAttribute(

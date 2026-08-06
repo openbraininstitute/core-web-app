@@ -1,11 +1,16 @@
 import { kebabCase } from 'es-toolkit/compat';
 
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext, entityAssetsPath } from '@/api/entitycore/utils';
+import {
+  MULTIPART_UPLOAD_THRESHOLD,
+  uploadAssetMultipart,
+} from '@/api/entitycore/queries/assets/multipart';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { CacheConfiguration } from '@/api/cache-storage';
+import type { IUploadProgress } from '@/api/entitycore/queries/assets/multipart';
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   AssetLabel,
@@ -15,6 +20,18 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
+
+export {
+  completeMultipartUpload,
+  initiateMultipartUpload,
+  MULTIPART_UPLOAD_THRESHOLD,
+  uploadAssetMultipart,
+} from '@/api/entitycore/queries/assets/multipart';
+
+export type {
+  IMultipartUploadInitiatePayload,
+  IUploadProgress,
+} from '@/api/entitycore/queries/assets/multipart';
 
 /**
  * Retrieves assets for a specific entity from the EntityCoreAPI.
@@ -85,7 +102,7 @@ export async function buildAssetDownloadRequest({
 }): Promise<{ url: string; headers: Record<string, string> }> {
   const session = await getSession();
   const url = new URL(
-    `${config.ENTITY_CORE_URL}/${kebabCase(entityType)}/${entityId}/assets/${id}/download`
+    `${config.ENTITY_CORE_URL}${entityAssetsPath(entityType, entityId)}/${id}/download`
   );
   if (assetPath) url.searchParams.append('asset_path', assetPath);
 
@@ -153,7 +170,7 @@ export async function downloadAsset<T>({
 }): Promise<T | Response> {
   const api = await entityCoreApi();
   return await api.get<T>(
-    `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,
+    `${entityAssetsPath(entityType, entityId)}/${id}/download`,
     {
       ...getEntityCoreContext(ctx),
       queryParams: compactRecord({ asset_path: assetPath }),
@@ -205,7 +222,6 @@ export async function createJsonAsset({
   if (jsonFile) formData.append('file', jsonFile);
   if (label) formData.append('label', label);
   if (meta) formData.append('meta', JSON.stringify(meta));
-  if (label) formData.append('label', label);
 
   const api = await entityCoreApi();
   return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
@@ -243,7 +259,7 @@ export async function listDirectoryOfAssets({
 }): Promise<DirectoryListContent> {
   const api = await entityCoreApi();
   return await api.get<DirectoryListContent>(
-    `/${kebabCase(entityType)}/${entityId}/assets/${id}/list`,
+    `${entityAssetsPath(entityType, entityId)}/${id}/list`,
     {
       headers: {
         ...getEntityCoreContext(ctx).headers,
@@ -284,6 +300,8 @@ export async function createAsset({
   meta,
   label,
   mimeType,
+  onProgress,
+  signal,
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityCoreDataType;
@@ -293,9 +311,28 @@ export async function createAsset({
   payload: BlobPart;
   meta?: Record<string, any>;
   label?: AssetLabel;
+  /** Only reported by the multipart flow, i.e. for files at or above the threshold. */
+  onProgress?: (progress: IUploadProgress) => void;
+  signal?: AbortSignal;
 }): Promise<IAsset> {
-  const blob = new Blob([payload], { type: mimeType });
-  const file = new File([blob], fileName, { type: mimeType });
+  const file = new File([payload], fileName, { type: mimeType });
+  const thresholdMb = MULTIPART_UPLOAD_THRESHOLD / (1024 * 1024);
+
+  if (file.size >= MULTIPART_UPLOAD_THRESHOLD) {
+    if (!label) {
+      throw new Error(
+        `Uploading ${fileName}: files of ${thresholdMb}MB and above require an asset label`
+      );
+    }
+    if (meta) {
+      throw new Error(
+        `Uploading ${fileName}: meta is not supported for files of ${thresholdMb}MB and above ` +
+          '(the multipart initiate endpoint does not accept it)'
+      );
+    }
+    return uploadAssetMultipart({ ctx, entityType, entityId, file, label, onProgress, signal });
+  }
+
   const formData = new FormData();
 
   if (file) formData.append('file', file);
@@ -311,5 +348,6 @@ export async function createAsset({
       'Content-Type': undefined,
     },
     body: formData,
+    signal,
   });
 }

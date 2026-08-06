@@ -54,7 +54,7 @@ describe.each([
     );
   });
 
-  it('routes a single-neuron-scale circuit to the Synaptome (beta) page, not circuit', () => {
+  it('routes a single-neuron-scale circuit to the Synaptome page, not circuit', () => {
     renderWorkflowActions({ section, record: makeSingleNeuronScaleCircuit() });
 
     expect(screen.getByRole('button', { name: 'View details' })).toHaveAttribute(

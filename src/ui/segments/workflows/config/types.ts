@@ -60,6 +60,12 @@ export type TEntityTypeMeta = {
   tags?: readonly string[];
   icon?: ComponentType;
   requiredFeatures?: readonly FlagKey[];
+  /**
+   * The type is superseded by a newer implementation. Machine-readable counterpart of the
+   * `(legacy)` suffix in {@link label}: menus read it to sort these entries last and render
+   * them de-emphasised. `workflow-labels.test.ts` asserts flag and suffix stay in step.
+   */
+  legacy?: boolean;
 };
 
 /**
@@ -169,6 +175,12 @@ export type IWorkflowDescriptor = {
   tags?: readonly string[];
   filters?: Record<string, unknown>;
   disabled?: boolean;
+  /**
+   * Per-activity override of {@link TEntityTypeMeta.legacy}, resolved the same way `label` is.
+   * Needed because a source type can be superseded on one activity and not another — `Memodel`
+   * is legacy on Simulate while Build still has no newer alternative to distinguish it from.
+   */
+  legacy?: boolean;
   order?: number;
   requiredFeatures?: readonly FlagKey[];
   /** when true, browse table shows species / brain region selector */
@@ -254,6 +266,7 @@ export type ResolvedWorkflow = IWorkflowDescriptor & {
   entity: TEntityTypeMeta;
   disabled: boolean;
   label: string;
+  legacy: boolean;
 };
 
 export type TGroupedWorkflows<T> = Array<{

@@ -1,10 +1,10 @@
 'use client';
 
-import type { ComponentProps } from 'react';
-
 import { ArrowOpenRight } from '@/components/icons/buttons';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
+
+import type { ComponentProps } from 'react';
 
 type Props<T> = {
   title: string;
@@ -12,6 +12,8 @@ type Props<T> = {
   group?: string;
   active: boolean;
   disabled: boolean;
+  /** superseded by a newer workflow — drops the title to normal weight, card stays fully usable */
+  legacy?: boolean;
   onClick: (v: T) => void;
   className?: ComponentProps<'div'>['className'];
 };
@@ -22,6 +24,7 @@ export function MenuItem<T>({
   value,
   disabled,
   active,
+  legacy,
   className,
   onClick,
 }: Props<T>) {
@@ -56,7 +59,14 @@ export function MenuItem<T>({
             {group}
           </div>
         )}
-        {title}
+        {/*
+          Superseded is marked by weight and never by opacity — that is what keeps it reading as
+          "older" rather than "unavailable". Disabled already fades this same title
+          (`text-primary-9/50`) and greys the card, so putting both in one channel made legacy
+          cards look broken. Kept in separate channels the two compose, and weight holds through
+          hover and selection. The type dropdown and the Data nav apply the same rule.
+        */}
+        <span className={cn({ 'font-normal': legacy })}>{title}</span>
       </CardTitle>
       {!disabled && (
         <div

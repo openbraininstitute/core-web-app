@@ -96,7 +96,7 @@ export const RegionCircuitSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Region circuit (beta)',
+  title: 'Region circuit',
   extendedType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   requiredFeatures: [brainRegionSimulationFlag.key],
   discriminator: { key: 'scale', value: [SCALE] },

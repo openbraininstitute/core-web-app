@@ -28,6 +28,16 @@ import type { SmallCircuitSource } from './sources';
 
 import styles from './circuit-viz.module.css';
 
+/**
+ * Synapse marker radius in world units. Much smaller than an electrode contact:
+ * a single neuron carries thousands of them, so anything larger reads as a
+ * crust over the morphology instead of discrete contact points.
+ */
+const SYNAPSE_RADIUS = 0.5;
+
+/** Per-pixel floor so synapses stay visible once the camera pulls back. */
+const SYNAPSE_MIN_RADIUS_IN_PIXELS = 2;
+
 interface CircuitVizProps {
   circuit: ICircuit;
   /** per-node colors aligned by node index; undefined → viewer default (blue). */
@@ -142,7 +152,7 @@ function CircuitVizView({
   // Stay covered for a paint frame after morphoviewer reports 100%, so the
   // neurite mesh replaces the soma placeholder before the overlay lifts.
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
-  const { cells, isLoading, error, loadCell } = source;
+  const { cells, isLoading, error, loadCell, synapses } = source;
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
 
   // Publish circuit centre so Add-electrode can seed origin_* in-view.
@@ -266,6 +276,9 @@ function CircuitVizView({
           onOverlayTransform={onOverlayTransform}
           highlightedOverlayId={highlightedOverlayId}
           neuronOpacity={neuronOpacity}
+          synapses={synapses}
+          synapsesRadius={SYNAPSE_RADIUS}
+          synapsesMinRadiusInPixels={SYNAPSE_MIN_RADIUS_IN_PIXELS}
         />
       )}
       {loading && <VisualizationLoadingIndicator progress={progress} />}

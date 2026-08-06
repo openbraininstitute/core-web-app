@@ -1,12 +1,23 @@
 'use client';
 
-import { capitalize } from 'es-toolkit/compat';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 import { type TViewVariant, ViewVariant } from '@/constants';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import Tab from '@/ui/molecules/tab';
 
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
+
+const SECTION_LABELS: Record<TDetailViewSectionDict, string> = {
+  [DetailViewSectionsDict.Overview]: 'Overview',
+  [DetailViewSectionsDict.MeshViewer]: 'Mesh viewer',
+  [DetailViewSectionsDict.ThreeDView]: '3D view',
+  [DetailViewSectionsDict.Results]: 'Results',
+  [DetailViewSectionsDict.Analysis]: 'Analysis',
+  [DetailViewSectionsDict.RelatedPublications]: 'Related publications',
+  [DetailViewSectionsDict.RelatedArtifacts]: 'Related artifacts',
+  [DetailViewSectionsDict.Configuration]: 'Configuration',
+};
 
 export default function DetailMenu({
   sections,
@@ -24,7 +35,7 @@ export default function DetailMenu({
     const url = `${parentPath}/${s}?${query.toString()}`;
     return (
       <Tab key={s} highlight={page === s} href={url} variant={variant}>
-        {capitalize(s.replaceAll('-', ' '))}
+        {SECTION_LABELS[s]}
       </Tab>
     );
   });
