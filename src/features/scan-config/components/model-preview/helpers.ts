@@ -70,6 +70,7 @@ export const RightPreviewModeDict = {
   Settings: 'settings',
   EntityPreview: 'entity-preview',
   IonChannel: 'ion-channel',
+  EFeatures: 'efeatures',
   CircuitModel: 'circuit-model',
   Empty: 'empty',
 } as const;
@@ -99,6 +100,15 @@ export function resolveRightPreviewMode(options: {
           entityType: ExtendedEntitiesTypeDict.IonChannelModel,
         },
         () => RightPreviewModeDict.IonChannel
+      )
+      // e-feature extraction reads its recordings from the config, not from a resolved route
+      // entity, so this mode does not wait on `hasEntity` — the pane handles the empty selection
+      .with(
+        {
+          activity: ScanConfigActivity.Extract,
+          entityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+        },
+        () => RightPreviewModeDict.EFeatures
       )
       .when(
         (state) => shouldShowCircuitModelPreview(state),

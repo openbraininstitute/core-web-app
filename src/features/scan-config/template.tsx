@@ -352,6 +352,7 @@ function ScanConfigTemplateContent({
               selectedRootElement={selectedRootElement}
               config={config}
               setConfig={setConfig}
+              schema={schema}
               locked={editingLocked}
             />
           </div>
