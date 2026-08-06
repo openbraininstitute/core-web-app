@@ -3,8 +3,10 @@
 import { Alert, Checkbox, Empty } from 'antd';
 import { useMemo, useState } from 'react';
 
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { useElectricalCellRecordingProperties } from '@/features/scan-config/components/hooks/electrical-cell-recording-properties';
+import {
+  extractRecordingIds,
+  useElectricalCellRecordingProperties,
+} from '@/features/scan-config/components/hooks/electrical-cell-recording-properties';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -20,15 +22,7 @@ import {
 } from './helpers';
 import { ProtocolCard, type TRenderField } from './protocol-card';
 
-import type { IElectricalCellRecording } from '@/api/entitycore/types';
-import type {
-  Config,
-  ConfigSchema,
-  ConfigValue,
-  ParamSchema,
-  TSupportedEntitiesForScanConfiguration,
-} from '@/features/scan-config/types';
-import type { Nullish } from '@/utils/type';
+import type { Config, ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-config/types';
 import type { TFeatureDef, TProtocolDef, TProtocolValue } from './types';
 
 /**
@@ -88,7 +82,6 @@ export function SelectEFeaturesByProtocol({
   config,
   disabled,
   renderField,
-  entity,
   errorPathPrefix,
 }: {
   fieldKey: string;
@@ -100,7 +93,6 @@ export function SelectEFeaturesByProtocol({
   config: Config;
   disabled: boolean;
   renderField: TRenderField;
-  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   errorPathPrefix?: string;
 }) {
   const workspace = useWorkspace();
@@ -114,6 +106,11 @@ export function SelectEFeaturesByProtocol({
     isLoading,
     isError,
   } = useElectricalCellRecordingProperties({ config, schema, workspace });
+
+  // recordings are chosen in this editor, not on a browse page before it, so the selection lives
+  // in the config rather than in the route's session entity
+  const selectedRecordingIds = useMemo(() => extractRecordingIds(config), [config]);
+  const hasSelectedRecordings = selectedRecordingIds.length > 0;
 
   const discoveredProtocols = recordingProperties?.Protocols;
 
@@ -202,12 +199,6 @@ export function SelectEFeaturesByProtocol({
     setExpandedProtocols(new Set(offeredDefs.map((def) => def.typeName)));
   };
 
-  // the editor resolves one primary entity; the traces preview only applies when it is a recording
-  const recording =
-    entity && entity.type === EntityTypeDict.ElectricalCellRecording
-      ? (entity as IElectricalCellRecording)
-      : null;
-
   const docUrlFor = (feature: TFeatureDef) => efelDocUrl(schema, feature.efelName);
   const figureUrlFor = (feature: TFeatureDef) => efelFigureUrl(schema, feature.schema);
 
@@ -243,7 +234,11 @@ export function SelectEFeaturesByProtocol({
       {!isLoading && !isError && offeredDefs.length === 0 && (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="No protocols found in the selected recordings."
+          description={
+            hasSelectedRecordings
+              ? 'No protocols found in the selected recordings.'
+              : 'Select electrophysiology recordings to discover the protocols they contain.'
+          }
         />
       )}
 
@@ -257,7 +252,6 @@ export function SelectEFeaturesByProtocol({
                 expanded={expandedProtocols.has(def.typeName)}
                 disabled={disabled}
                 discoveredAmplitudes={amplitudesFor(def)}
-                entity={recording}
                 docUrlFor={docUrlFor}
                 figureUrlFor={figureUrlFor}
                 renderField={renderField}
