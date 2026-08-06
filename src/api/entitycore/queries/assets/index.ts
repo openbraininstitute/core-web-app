@@ -51,7 +51,7 @@ export async function getAssets({
   ctx?: WorkspaceContext;
 }): Promise<EntityCoreResponse<IAsset>> {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IAsset>>(`/${kebabCase(entityType)}/${entityId}/assets`, {
+  return await api.get<EntityCoreResponse<IAsset>>(entityAssetsPath(entityType, entityId), {
     ...getEntityCoreContext(ctx),
   });
 }
@@ -224,7 +224,7 @@ export async function createJsonAsset({
   if (meta) formData.append('meta', JSON.stringify(meta));
 
   const api = await entityCoreApi();
-  return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
+  return await api.post<IAsset>(entityAssetsPath(entityType, entityId), {
     headers: {
       ...getEntityCoreContext(ctx).headers,
       // This is required due apiClient is using "application/json" as default content-type
