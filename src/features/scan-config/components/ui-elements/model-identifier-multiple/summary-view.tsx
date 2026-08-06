@@ -187,6 +187,7 @@ export function ModelIdentifierSummaryView({
 
       return (
         <ModelIdentifierEntityCard
+          collapsibleBadge
           instanceId={ref.id_str}
           key={ref.id_str}
           entityName={entity.name}

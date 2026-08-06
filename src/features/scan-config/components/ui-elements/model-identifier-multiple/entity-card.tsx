@@ -105,7 +105,7 @@ export function ModelIdentifierEntityCard({
     // biome-ignore lint/a11y/noStaticElementInteractions: button cannot be a descendant of button
     <div
       ref={cardRef}
-      id={`model-identifier-entity-card-${entityName}_${instanceId}`}
+      id={`model-identifier-entity-card__${entityName}_${instanceId}`}
       data-testid={`model-identifier-entity-card`}
       role={isInteractive ? 'button' : undefined}
       tabIndex={isInteractive ? 0 : undefined}
