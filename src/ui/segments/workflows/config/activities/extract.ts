@@ -11,7 +11,11 @@ import {
   extractCircuitConfigureBinding,
   extractEFeaturesConfigureBinding,
 } from '../scan-config-binding';
-import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
+import {
+  WorkflowBrowseDefaults,
+  WorkflowConfigureRoutingDict,
+  WorkflowStagePresets,
+} from '../types';
 
 import type { IWorkflowDescriptor } from '../types';
 
@@ -37,13 +41,13 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
   },
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.ScanConfig,
+    ...WorkflowStagePresets.ScanConfigInEditorSelection,
     sourceType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
     targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
     breadcrumb: {
       root: 'Intracellular EFeatures',
-      steps: { selection: 'Select electrophysiology recordings' },
     },
+    configureRouting: WorkflowConfigureRoutingDict.Standalone,
     scanConfig: {
       definition: extractEFeaturesWorkflow,
       schemaName: SchemaNameDict.EModelEFeatureExtractionScanConfig,

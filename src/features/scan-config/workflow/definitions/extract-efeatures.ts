@@ -11,7 +11,10 @@ export const extractEFeaturesWorkflow = defineScanConfigWorkflow({
   id: 'extract-efeatures',
   activity: ScanConfigActivity.Extract,
   entity: {
+    // recordings are picked in the editor's own browse widget, so configure opens on an
+    // empty session instead of being routed through `/new` first
     mode: ScanConfigEntitySourceMode.Session,
+    picksEntitiesInEditor: true,
   },
   campaign: {
     resolve: async ({ id, context }) => {
