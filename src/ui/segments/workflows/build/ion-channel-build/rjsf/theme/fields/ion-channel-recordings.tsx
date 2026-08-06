@@ -162,7 +162,7 @@ function RecordingsArrayFieldContent({
         }}
       >
         <Button
-          variant="outline"
+          variant="field"
           className={cn(
             'border-label relative h-auto min-h-10 w-full justify-start p-1 focus-within:bg-white lg:min-h-12',
             'active:border-primary-8 active:border-2! active:bg-white',

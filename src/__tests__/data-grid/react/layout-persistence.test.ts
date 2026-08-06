@@ -159,6 +159,51 @@ describe('column layout persistence (flag ON)', () => {
     next.dispose();
   });
 
+  it('keeps saving after a disconnect/reconnect cycle', async () => {
+    const first = await makeController();
+    const disconnect = first.connect();
+    disconnect();
+    first.connect();
+
+    first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });
+    first.dispose();
+
+    const next = await makeController();
+    expect(next.store.getSnapshot().hiddenColumns).not.toContain('aux');
+    next.dispose();
+  });
+
+  /**
+   * The stored `columnOrder` doubles as "the columns this layout knows about". A
+   * layout saved before a column existed must widen to include it, or the next save
+   * writes the short list straight back and the user's tick reverts on the reload
+   * after that.
+   */
+  it('remembers a column ticked on top of a layout saved before it existed', async () => {
+    const { createDefaultPersistence } = await persistenceModule();
+    // A layout from an older schema: no `aux` in either list.
+    window.localStorage.setItem(
+      `data-grid:v1:l:${LAYOUT_KEY}`,
+      JSON.stringify({ hiddenColumns: [], columnOrder: ['name', 'species', 'region'] })
+    );
+
+    const first = await makeController();
+    expect(first.store.getSnapshot().hiddenColumns).toContain('aux'); // unknown → schema default
+    expect(first.store.getSnapshot().columnOrder).toContain('aux');
+    first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });
+    first.dispose();
+
+    const next = new GridController<Row>({
+      schema: SCHEMA,
+      context: { dataType: 'test' },
+      instanceKey: KEY,
+      persistence: createDefaultPersistence(LAYOUT_KEY),
+      defaultPageSize: 10,
+    });
+    expect(next.store.getSnapshot().hiddenColumns).not.toContain('aux');
+    next.dispose();
+  });
+
   it('hides an auxiliary column added AFTER the layout was saved', async () => {
     const first = await makeController();
     first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: [] });

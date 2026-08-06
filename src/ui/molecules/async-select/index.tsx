@@ -1,4 +1,3 @@
-import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -8,11 +7,12 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
@@ -156,12 +156,9 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
     return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current?.get(selectedValue);
   }, [currentOptionsMap, selectedValue]);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = useCallback((el: HTMLDivElement) => {
+    setParent(el);
+  }, []);
 
   useEffect(() => {
     if (!open || !parent) return;
@@ -207,7 +204,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           clsx?.trigger
         )}
       >
-        <Button variant="outline" role="combobox" disabled={isLoading} className="select-none">
+        <Button variant="field" role="combobox" disabled={isLoading} className="select-none">
           <div
             id={`async-select-label-${id}`}
             className={cn('line-clamp-1 w-full truncate text-left', clsx?.label, {
@@ -220,6 +217,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           {isLoading || isFetching ? (
             <LoadingOutlined className="opacity-50 [&_svg]:size-3!" spin />
           ) : selectedValue ? (
+            // biome-ignore lint/a11y/useSemanticElements: a button cannot nest in the trigger button
             <div
               className={cn(
                 'group-hover:bg-neutral-1 group-hover:text-primary-8',

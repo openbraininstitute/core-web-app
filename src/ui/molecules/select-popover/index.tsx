@@ -1,5 +1,3 @@
-import { ComponentProps, useCallback, useMemo, useState } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -7,10 +5,12 @@ import {
   LoadingOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { type ComponentProps, useCallback, useMemo, useState } from 'react';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 export type SelectPopoverOption<T = unknown> = {
@@ -55,12 +55,9 @@ export function SelectPopover<T = unknown>({
     );
   }, [options, searchTerm]);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = useCallback((el: HTMLDivElement) => {
+    setParent(el);
+  }, []);
 
   const rowVirtualizer = useVirtualizer({
     count: filteredOptions.length,
@@ -100,7 +97,7 @@ export function SelectPopover<T = unknown>({
           clsx?.trigger
         )}
       >
-        <Button variant="outline" role="combobox" className="select-none">
+        <Button variant="field" role="combobox" className="select-none">
           <div
             className={cn('line-clamp-1 w-full truncate text-left', clsx?.label, {
               'text-neutral-2 placeholder:text-sm': !selectedOption?.label,
@@ -109,6 +106,7 @@ export function SelectPopover<T = unknown>({
             {selectedOption?.label || placeholder}
           </div>
           {selectedValue ? (
+            // biome-ignore lint/a11y/useSemanticElements: a button cannot nest in the trigger button
             <div
               role="button"
               className="group-hover:bg-neutral-1 group-hover:text-primary-8 flex cursor-pointer items-center justify-center rounded-full p-1"

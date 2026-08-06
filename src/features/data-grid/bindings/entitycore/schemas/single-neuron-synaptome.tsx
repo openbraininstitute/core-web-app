@@ -1,4 +1,3 @@
-import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   brainRegionColumn,
@@ -8,6 +7,10 @@ import {
   registrationDateColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import {
+  VALIDATION_STATUS_LABELS,
+  validationStatusFilter,
+} from '@/features/data-grid/bindings/entitycore/columns/validation-status';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
   flatAdvancedFilters,
@@ -22,12 +25,7 @@ import {
 
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
-import type {
-  IAdvancedFilterGroup,
-  IColumnModel,
-  IGridSchema,
-  TFilterOptionsSource,
-} from '@/features/data-grid/core';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
 import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
@@ -36,25 +34,7 @@ import type { CellRendererRegistry } from '@/features/data-grid/react';
  * validation_status, id, type, mtypes, etypes. `ISingleNeuronSynaptome` types
  * `me_model` as the full `IMEModel`, which overstates the wire — do not trust it when
  * deciding what a cell can read. Fields not on that list stay advanced filters.
- */
-const VALIDATION_STATUS_OPTIONS: TFilterOptionsSource = {
-  kind: FilterOptionsKind.Static,
-  items: [
-    { id: ValidationStatus.Created, label: 'Created' },
-    { id: ValidationStatus.Initialized, label: 'Initialized' },
-    { id: ValidationStatus.Running, label: 'Running' },
-    { id: ValidationStatus.Done, label: 'Done' },
-    { id: ValidationStatus.Error, label: 'Error' },
-  ],
-};
-
-const VALIDATION_STATUS_LABELS: ReadonlyMap<string, string> = new Map(
-  VALIDATION_STATUS_OPTIONS.kind === FilterOptionsKind.Static
-    ? VALIDATION_STATUS_OPTIONS.items.map((i) => [i.id, i.label] as const)
-    : []
-);
-
-/**
+ *
  * `GET /single-neuron-synaptome` params with no column. The
  * `me_model__{strain,morphology,emodel}__*` params stay here because the list response
  * does not carry those nested values — a column for any of them would render blank.
@@ -140,21 +120,10 @@ const meModelValidationStatusColumn: IColumnModel<ISingleNeuronSynaptome> = {
   sortable: false,
   getValue: (r) => VALIDATION_STATUS_LABELS.get(r.me_model?.validation_status ?? '') ?? '',
   width: { minWidth: 180 },
-  filter: {
-    // Exact only — no list form on this endpoint.
-    operators: [OperatorId.Eq],
+  filter: validationStatusFilter({
     field: 'me_model__validation_status',
-    // Explicit target: a flat filter with no options falls back to facets.
-    targets: [
-      {
-        id: 'validationStatus',
-        label: 'ME-model validation status',
-        field: 'me_model__validation_status',
-        operators: [OperatorId.Eq],
-        options: VALIDATION_STATUS_OPTIONS,
-      },
-    ],
-  },
+    label: 'ME-model validation status',
+  }),
 };
 
 function labels(values: Array<{ pref_label?: string | null } | undefined> | null | undefined) {

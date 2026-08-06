@@ -1,5 +1,9 @@
 import { pruneAdvancedFilters } from '@/features/data-grid/core/domain/advanced-filters';
-import { reconcileHiddenColumns } from '@/features/data-grid/core/domain/column-layout';
+import {
+  dropPinnedColumns,
+  reconcileColumnOrder,
+  reconcileHiddenColumns,
+} from '@/features/data-grid/core/domain/column-layout';
 import { hydrateFilterTargetIds } from '@/features/data-grid/core/domain/filter-targets';
 import { resolveColumns } from '@/features/data-grid/core/domain/resolve-schema';
 import { GridActionType } from '@/features/data-grid/core/state/grid-state';
@@ -80,6 +84,8 @@ export class GridController<Row> {
   readonly context: IGridContext;
 
   private readonly defaultPageSize: number;
+  private readonly instanceKey?: string;
+  private readonly persistence?: IStatePersistence[];
   private unsubscribePersistence?: () => void;
 
   constructor(options: IGridControllerOptions<Row>) {
@@ -103,12 +109,16 @@ export class GridController<Row> {
         if (Array.isArray(slice.columnOrder)) storedLayout.columnOrder = slice.columnOrder;
         hydrated = { ...hydrated, ...slice };
       }
-      // A column the snapshot never saw falls back to its resolved `hiddenByDefault`.
+      // Both read the RAW `storedLayout`: its `columnOrder` is what says which columns
+      // the snapshot knew about, so it must not be widened before `hiddenColumns` is
+      // derived from it.
+      const declared = resolveColumns(options.schema, options.context);
       hydrated = {
         ...hydrated,
-        hiddenColumns: reconcileHiddenColumns(
-          resolveColumns(options.schema, options.context),
-          storedLayout
+        hiddenColumns: reconcileHiddenColumns(declared, storedLayout),
+        columnOrder: reconcileColumnOrder(
+          declared.map((c) => c.id),
+          dropPinnedColumns(declared, storedLayout.columnOrder)
         ),
       };
       // Repair missing/stale `targetId`s and prune orphaned `adv:…` keys, which
@@ -123,13 +133,26 @@ export class GridController<Row> {
     }
 
     this.store = new GridStateStore(hydrated);
+    this.instanceKey = instanceKey;
+    this.persistence = persistence;
+    this.connect();
+  }
 
-    if (instanceKey && persistence?.length) {
+  /**
+   * Start persisting state changes; returns the teardown. Idempotent and callable again
+   * after {@link dispose}, so a React host can use it as an effect body — StrictMode's
+   * setup → cleanup → setup would otherwise leave a memoised controller disconnected.
+   */
+  connect(): () => void {
+    const instanceKey = this.instanceKey;
+    const persistence = this.persistence;
+    if (!this.unsubscribePersistence && instanceKey && persistence?.length) {
       this.unsubscribePersistence = this.store.subscribe(() => {
         const snapshot = this.store.getSnapshot();
         for (const p of persistence) p.save(instanceKey, snapshot);
       });
     }
+    return () => this.dispose();
   }
 
   /** Columns visible/filterable in the current context, in canonical order. */
@@ -166,7 +189,9 @@ export class GridController<Row> {
     });
   }
 
+  /** Stop persisting. {@link connect} can be called again afterwards. */
   dispose(): void {
     this.unsubscribePersistence?.();
+    this.unsubscribePersistence = undefined;
   }
 }

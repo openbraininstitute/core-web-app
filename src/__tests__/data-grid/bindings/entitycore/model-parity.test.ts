@@ -281,6 +281,22 @@ describe('memodel parity', () => {
       serializeQuery(query({ filters: setIn('createdBy') }), s).created_by__pref_label__in
     ).toEqual(['x']);
   });
+  it('Validated is display-only; /memodel exposes no validation_status param', () => {
+    const column = s.columns.find((c) => c.id === 'validationStatus');
+    expect(column?.filter).toBeUndefined();
+    expect(column?.getValue?.({ validation_status: 'done' } as never)).toBe('True');
+    expect(column?.getValue?.({ validation_status: 'error' } as never)).toBe('False');
+  });
+
+  it('Trace previews the row itself, ungated by hasAssets', () => {
+    expect(s.columns.find((c) => c.id === 'meModelTracePreview')?.cellRenderer).toBe(
+      'memodelTracePreview'
+    );
+    expect(s.columns.find((c) => c.id === 'meModelMorphologyPreview')?.cellRenderer).toBe(
+      'memodelMorphologyPreview'
+    );
+  });
+
   it('sorts: species/validation are NOT sortable; brainRegion/createdBy bind legacy keys', () => {
     expect(s.columns.find((c) => c.id === 'species')?.sortable).toBeFalsy();
     expect(s.columns.find((c) => c.id === 'validationStatus')?.sortable).toBeFalsy();

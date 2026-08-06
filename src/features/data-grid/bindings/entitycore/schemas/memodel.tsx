@@ -12,10 +12,11 @@ import {
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
-import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
 import {
   MEMODEL_MORPHOLOGY_PREVIEW_RENDERER,
+  MEMODEL_TRACE_PREVIEW_RENDERER,
   MEModelMorphologyPreview,
+  MEModelTracePreview,
 } from '@/features/data-grid/bindings/entitycore/renderers/me-model-cells';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
@@ -211,7 +212,7 @@ export function buildMemodelColumns(): Array<IColumnModel<IMEModel>> {
     previewColumn<IMEModel>({
       id: 'meModelTracePreview',
       header: 'Trace',
-      cellRenderer: ENTITY_PREVIEW_RENDERER,
+      cellRenderer: MEMODEL_TRACE_PREVIEW_RENDERER,
       width: { width: 184, minWidth: 120, resizable: true },
     }),
     {
@@ -260,5 +261,6 @@ export const memodelGridDefinition: IEntityGridDefinition<IMEModel> = {
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
     registry.register(MEMODEL_MORPHOLOGY_PREVIEW_RENDERER, MEModelMorphologyPreview);
+    registry.register(MEMODEL_TRACE_PREVIEW_RENDERER, MEModelTracePreview);
   },
 };

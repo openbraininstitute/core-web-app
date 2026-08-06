@@ -1,7 +1,9 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   MEMODEL_MORPHOLOGY_PREVIEW_RENDERER,
+  MEMODEL_TRACE_PREVIEW_RENDERER,
   MEModelMorphologyPreview,
+  MEModelTracePreview,
 } from '@/features/data-grid/bindings/entitycore/renderers/me-model-cells';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import { flatAdvancedFilters } from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
@@ -36,5 +38,6 @@ export const meModelCircuitGridDefinition: IEntityGridDefinition<IMEModel> = {
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
     registry.register(MEMODEL_MORPHOLOGY_PREVIEW_RENDERER, MEModelMorphologyPreview);
+    registry.register(MEMODEL_TRACE_PREVIEW_RENDERER, MEModelTracePreview);
   },
 };

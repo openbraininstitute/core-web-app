@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { getEtype } from '@/api/entitycore/queries/annotations/etype';
 import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
@@ -636,9 +636,9 @@ function SetEditor({
                 )}
               </label>
               {(o.type === 'mtype' || o.type === 'etype') && (
-                <span className="block pl-6 text-[11px] text-gray-400">
+                <div className="pl-6 text-[11px] text-gray-400">
                   <CheckListDescription id={o.id} type={o.type} />
-                </span>
+                </div>
               )}
             </div>
           ))
@@ -648,6 +648,7 @@ function SetEditor({
   );
 }
 
+/** An m-type/e-type definition, clamped to two lines behind a See more/See less toggle. */
 export function CheckListDescription({ id, type }: { id: string; type: 'mtype' | 'etype' }) {
   const { data } = useQuery({
     queryKey: keyBuilder.annotation({ entityId: id }),
@@ -662,7 +663,49 @@ export function CheckListDescription({ id, type }: { id: string; type: 'mtype' |
     gcTime: Infinity,
   });
 
+  const definition = data?.definition ?? '';
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the ref is null until the definition arrives
+  useLayoutEffect(() => {
+    const element = textRef.current;
+    if (!element || expanded) {
+      return undefined;
+    }
+    const measure = () => setOverflows(element.scrollHeight - element.clientHeight > 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [definition, expanded]);
+
+  if (!definition) {
+    return null;
+  }
+
   return (
-    <span className="text-gray-600 text-left wrap-break-word hyphens-auto">{data?.definition}</span>
+    <>
+      <span
+        ref={textRef}
+        className={cn(
+          'block text-left text-gray-600 hyphens-auto wrap-break-word',
+          !expanded && 'line-clamp-2'
+        )}
+      >
+        {definition}
+      </span>
+      {(overflows || expanded) && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          className="mt-0.5 font-medium text-primary-6 hover:text-primary-7"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? 'See less' : 'See more'}
+        </button>
+      )}
+    </>
   );
 }

@@ -217,7 +217,7 @@ export function EntityDataGrid({
       }),
     [definition, dataKey, dataType, section, scope, speciesKey, extraFactors]
   );
-  useEffect(() => () => controller.dispose(), [controller]);
+  useEffect(() => controller.connect(), [controller]);
 
   const handleSearch = useCallback(
     (text: string) => controller.store.dispatch({ type: GridActionType.SetQuickFilter, text }),
