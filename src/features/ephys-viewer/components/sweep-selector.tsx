@@ -56,7 +56,7 @@ function SweepSelector({
       <div
         key={label}
         className={classNames(
-          'px-1 pb-1 last:pr-0',
+          'last:pr-0',
           styles.main,
           preview ? styles.previewOn : styles.previewOff,
           selectedSweeps.length > 0 ? styles.selectionOn : styles.selectionOff
@@ -66,7 +66,7 @@ function SweepSelector({
       >
         <label
           className={classNames(
-            'flex h-[32px] w-[32px] cursor-pointer items-center rounded border hover:opacity-85',
+            'flex h-10 w-10 cursor-pointer items-center rounded border hover:opacity-85',
             isSelected && styles.selected
           )}
           style={{
@@ -97,7 +97,7 @@ function SweepSelector({
             ({sweepOptions.length} available)
           </small>
         </span>
-        <div className="flex flex-wrap items-center">{sweeps}</div>
+        <div className="flex flex-wrap items-center gap-1">{sweeps}</div>
       </div>
       {selectedSweeps.length > 0 && (
         <Button

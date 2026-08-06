@@ -1,6 +1,7 @@
-import { CSSProperties } from 'react';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
-import { Config, Font, Layout } from 'plotly.js-dist-min';
+
+import type { Config, Font, Layout } from 'plotly.js-dist-min';
+import type { CSSProperties } from 'react';
 
 interface UseConfigResponse {
   layout: Partial<Layout>;
@@ -30,7 +31,7 @@ export const useInteractivePlotConfig = (): UseConfigResponse => {
             xanchor: 'right',
             y: 1,
           },
-      margin: antBreakpoints.md ? { l: 55, r: 0, t: 50, b: 50 } : { l: 45, r: 0, t: 30, b: 35 },
+      margin: antBreakpoints.md ? { l: 64, r: 16, t: 56, b: 56 } : { l: 52, r: 12, t: 36, b: 40 },
     },
     font: antBreakpoints.md
       ? {}
@@ -40,6 +41,9 @@ export const useInteractivePlotConfig = (): UseConfigResponse => {
     style: {
       width: '100%',
       height: '40vh',
+      borderRadius: '0.2rem',
+      overflow: 'hidden',
+      clipPath: 'inset(0 round 0.3rem)',
     },
   };
 };

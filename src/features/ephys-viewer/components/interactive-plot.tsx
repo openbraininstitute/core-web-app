@@ -102,6 +102,7 @@ export default function InteractivePlot({
 
   return (
     <Plot
+      divId={`interactive-plot-${recordingType}-${recordingIndex}`}
       data={plotData}
       onLegendClick={handleClick}
       onDoubleClick={() => false}
