@@ -17,8 +17,10 @@ import { TraceProvider } from '@/features/ephys-viewer/trace-context';
 import { cn } from '@/utils/css-class';
 import { formatBytes } from '@/utils/format';
 
+import type { ReactNode } from 'react';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
+import type { TEphysControlsVariant } from '@/features/ephys-viewer/components/option-select';
 import type { TTraceViewMode } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
 import type { WorkspaceContext } from '@/types/common';
 import type { DownloadProgress } from '@/utils/h5/fs';
@@ -82,6 +84,9 @@ export default function EphysViewer({
   defaultToInteractiveDetails = true,
   variant = ViewVariant.Light,
   protocol: protocolOverride,
+  showViewModeToggle = true,
+  detailControls,
+  controlsVariant = 'page',
 }: {
   entity: IElectricalCellRecording | ISimulationResult;
   assetId?: string;
@@ -94,6 +99,20 @@ export default function EphysViewer({
    * capitalised it. Omit to let the viewer manage its own selection, as the detail pages do.
    */
   protocol?: string;
+  /**
+   * Whether the Overview / Interactive Details switch is offered.
+   *
+   * A detail page presents both readings of the same trace and lets the reader choose. A host
+   * embedding the viewer as one panel among several has usually already made that choice — the
+   * e-feature editor wants the interactive plots and nothing else — and a two-item switch with
+   * one real destination is a control that asks a question it does not mean. Off pins the view
+   * to the interactive details.
+   */
+  showViewModeToggle?: boolean;
+  /** Extra controls for the interactive details' control row. See `leadingControls` there. */
+  detailControls?: ReactNode;
+  /** Look and layout of that control row. See {@link TEphysControlsVariant}. */
+  controlsVariant?: TEphysControlsVariant;
 }) {
   const { index, progress, error, getSweepSeries, getCachedSweepSeries } = useTrace({
     entity,
@@ -108,6 +127,8 @@ export default function EphysViewer({
     repetition: undefined,
   });
 
+  // with no switch on screen there is no way back from the overview, so the view is pinned
+  const view = showViewModeToggle ? state.view : TraceViewMode.Detailed;
   const protocol = protocolOverride ?? state.protocol;
   const requestedProtocol = protocol === NONE || protocol === ALL ? undefined : protocol;
 
@@ -126,7 +147,13 @@ export default function EphysViewer({
     return (
       <div className="relative">
         <div className={cn(download && 'pointer-events-none opacity-70 blur-[2px]')}>
-          <EphysViewerSkeleton view={state.view} variant={variant} />
+          <EphysViewerSkeleton
+            view={view}
+            variant={variant}
+            showViewModeToggle={showViewModeToggle}
+            detailControls={detailControls}
+            controlsVariant={controlsVariant}
+          />
         </div>
         {download && (
           // Centred within the first 70vh rather than over the whole skeleton, which runs long
@@ -147,13 +174,15 @@ export default function EphysViewer({
       getCachedSweepSeries={getCachedSweepSeries}
     >
       <div className="@container flex flex-col gap-6">
-        <TraceViewModeToggle
-          value={state.view}
-          onChange={(e) => dispatch({ type: 'setView', view: e.target.value as TTraceViewMode })}
-          variant={variant}
-        />
+        {showViewModeToggle && (
+          <TraceViewModeToggle
+            value={view}
+            onChange={(e) => dispatch({ type: 'setView', view: e.target.value as TTraceViewMode })}
+            variant={variant}
+          />
+        )}
 
-        {state.view === TraceViewMode.Overview && (
+        {view === TraceViewMode.Overview && (
           <ErrorBoundary
             FallbackComponent={TraceErrorFallback}
             resetKeys={[index, state.cellId, protocol]}
@@ -175,7 +204,7 @@ export default function EphysViewer({
           </ErrorBoundary>
         )}
 
-        {state.view === TraceViewMode.Detailed && (
+        {view === TraceViewMode.Detailed && (
           <ErrorBoundary
             FallbackComponent={TraceErrorFallback}
             resetKeys={[index, state.cellId, protocol, state.repetition]}
@@ -184,6 +213,8 @@ export default function EphysViewer({
               defaultProtocol={requestedProtocol}
               defaultRepetition={state.repetition}
               variant={variant}
+              leadingControls={detailControls}
+              controlsVariant={controlsVariant}
             />
           </ErrorBoundary>
         )}

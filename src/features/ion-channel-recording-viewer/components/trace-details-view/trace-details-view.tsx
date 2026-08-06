@@ -64,7 +64,7 @@ export function TraceDetailsView({
           label={{ title: 'Protocol', numberOfAvailable: protocolsNames.length }}
           value={protocolName}
           onChange={setProtocolName}
-          options={protocolsNames.map((name) => <div key={name}>{name}</div>)}
+          items={protocolsNames.map((name) => ({ value: name, label: name }))}
           variant={variant}
         />
         {repetitionsNames.length > 1 && (
@@ -72,7 +72,7 @@ export function TraceDetailsView({
             label={{ title: 'Repetition', numberOfAvailable: repetitionsNames.length }}
             value={repetitionName}
             onChange={setRepetitionName}
-            options={repetitionsNames.map((name) => <div key={name}>{name}</div>)}
+            items={repetitionsNames.map((name) => ({ value: name, label: name }))}
             variant={variant}
           />
         )}
