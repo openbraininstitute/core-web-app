@@ -12,6 +12,7 @@ import {
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
 import { presignedUrlCache } from '@/features/ai-assistant/message-item/storage-image-part';
 import { atomRateLimit } from '@/features/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
@@ -44,6 +45,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const setRateLimit = useSetAtom(atomRateLimit);
+  const setShowRestore = useSetAtom(showRestoreAtom);
 
   // Keep a ref to the latest token so the transport headers function
   // always sends the freshest token without needing to recreate the Chat instance.
@@ -253,6 +255,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const sendMessage = useCallback(
     async (text: string, files?: File[]) => {
       AiAssistant.isEmptyThread.set(false);
+      setShowRestore(true);
 
       let fileUIParts: FileUIPart[] | undefined;
       if (files && files.length > 0 && accessToken && threadId) {
@@ -318,7 +321,7 @@ export function useServiceAiAgentChat(threadId: string) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [chat, accessToken, threadId, queryClient, virtualLabId, projectId]
+    [chat, accessToken, threadId, queryClient, virtualLabId, projectId, setShowRestore]
   );
   const stop = useCallback(async () => {
     chat.stop();
