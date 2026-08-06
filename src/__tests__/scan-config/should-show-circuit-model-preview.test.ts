@@ -181,9 +181,51 @@ describe('RightPreviewModeDict', () => {
       Settings: 'settings',
       EntityPreview: 'entity-preview',
       IonChannel: 'ion-channel',
+      EFeatures: 'efeatures',
       CircuitModel: 'circuit-model',
       Empty: 'empty',
     });
+  });
+});
+
+/**
+ * The e-feature traces are the right column's *default* for an extraction — they must not wait on
+ * a resolved route entity, because the recordings are picked in the editor and live in the config.
+ */
+describe('resolveRightPreviewMode for e-feature extraction', () => {
+  const efeatureState = {
+    entityPreviewActive: false,
+    activity: ScanConfigActivity.Extract,
+    entityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  } as const;
+
+  it('shows the traces panel with no entity resolved', () => {
+    expect(resolveRightPreviewMode({ ...efeatureState, hasEntity: false })).toBe(
+      RightPreviewModeDict.EFeatures
+    );
+  });
+
+  it('still yields to an explicitly opened settings form', () => {
+    expect(
+      resolveRightPreviewMode({ ...efeatureState, hasEntity: false, settingsPanelActive: true })
+    ).toBe(RightPreviewModeDict.Settings);
+  });
+
+  it('still yields to a browse entity preview', () => {
+    expect(
+      resolveRightPreviewMode({ ...efeatureState, hasEntity: false, entityPreviewActive: true })
+    ).toBe(RightPreviewModeDict.EntityPreview);
+  });
+
+  it('leaves circuit extraction on the model preview', () => {
+    expect(
+      resolveRightPreviewMode({
+        entityPreviewActive: false,
+        activity: ScanConfigActivity.Extract,
+        entityType: ExtendedEntitiesTypeDict.Circuit,
+        hasEntity: true,
+      })
+    ).toBe(RightPreviewModeDict.CircuitModel);
   });
 });
 

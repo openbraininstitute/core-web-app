@@ -13,7 +13,7 @@ import type { WorkspaceContext } from '@/types/common';
 const RECORDING_PROPERTIES_STALE_TIME_MS = 5 * 60 * 1000;
 
 /** obi-one FromID const written under `initialize` for an ElectricalCellRecording selection. */
-const ELECTRICAL_CELL_RECORDING_FROM_ID = 'ElectricalCellRecordingFromID';
+export const ELECTRICAL_CELL_RECORDING_FROM_ID = 'ElectricalCellRecordingFromID';
 
 /**
  * `/declared/mapped-electrical-cell-recording-properties`.

@@ -34,6 +34,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type {
   Config,
+  ConfigSchema,
   TScanConfigActivity,
   TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -52,6 +53,14 @@ const IonChannelModelRecordingRender = dynamic(
   { ssr: false }
 );
 
+const EFeaturesPreviewPanel = dynamic(
+  () =>
+    import(
+      '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol/preview-panel'
+    ).then((m) => m.EFeaturesPreviewPanel),
+  { ssr: false }
+);
+
 type RightProps = {
   activity: TScanConfigActivity;
   entityType: TExtendedEntitiesTypeDict;
@@ -60,6 +69,8 @@ type RightProps = {
   selectedRootElement: string;
   config: Config;
   setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
+  /** Root scan-config schema; previews that describe the whole configuration read it. */
+  schema: ConfigSchema;
   /**
    * The config can no longer be edited (campaign generated, generation in
    * flight, read-only host, …). Electrode overlays then render static: without
@@ -233,7 +244,7 @@ function SettingsPane({ panel }: { panel: TScanConfigSettingsPanel }) {
 
 /**
  * Scan-config right column: exclusive preview variants (entity mini-detail,
- * ion-channel figure, or circuit model). Mode is derived during render.
+ * ion-channel figure, e-feature traces, or circuit model). Mode is derived during render.
  */
 export function Right({
   activity,
@@ -243,6 +254,7 @@ export function Right({
   selectedRootElement,
   config,
   setConfig,
+  schema,
   locked,
 }: RightProps) {
   useClearEntityPreviewOnNavigation(entity?.id);
@@ -295,6 +307,14 @@ export function Right({
         selectedEntry={selectedEntry}
         config={config}
       />
+    ))
+    .with(RightPreviewModeDict.EFeatures, () => (
+      <div
+        id="scan-config-controls-right-efeatures"
+        className="h-full bg-white min-h-0 overflow-y-auto secondary-scrollbar rounded-xl px-0.5"
+      >
+        <EFeaturesPreviewPanel config={config} schema={schema} />
+      </div>
     ))
     .with(RightPreviewModeDict.CircuitModel, () =>
       entity ? (
