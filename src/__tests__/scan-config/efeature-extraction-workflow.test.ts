@@ -6,16 +6,29 @@ import {
   extractionActivityFlag,
   flags,
 } from '@/features/feature-flags/flags';
-import { SchemaNameDict } from '@/features/scan-config/types';
+import { ScanConfigUIElementDict, SchemaNameDict } from '@/features/scan-config/types';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
-import { entityTypeForScanConfigFromIdType } from '@/features/scan-config/workflow/workflow-schema-selection';
+import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
+import {
+  entityTypeForScanConfigFromIdType,
+  WorkflowSchemaSelectionMode,
+} from '@/features/scan-config/workflow/workflow-schema-selection';
 import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
-import { listActivities, listWorkflows } from '@/ui/segments/workflows/config/helpers';
+import {
+  getWorkflow,
+  listActivities,
+  listWorkflows,
+  resolveWorkflowRouteStage,
+} from '@/ui/segments/workflows/config/helpers';
 import { ScanConfigFromIdType } from '@/ui/segments/workflows/config/scan-config-binding';
 import {
   findScanConfigRegistryByDefinition,
   findScanConfigRegistryByTargetType,
 } from '@/ui/segments/workflows/config/scan-config-registry';
+import {
+  WorkflowInitialStageDict,
+  WorkflowInitialStagePolicyDict,
+} from '@/ui/segments/workflows/config/types';
 
 import type { FeatureFlags } from '@/features/feature-flags/flags';
 
@@ -121,5 +134,50 @@ describe('intracellular efeatures workflow registration', () => {
     const registry = findScanConfigRegistryByDefinition(extractEFeaturesWorkflow);
 
     expect(registry?.schemaName).toBe(SchemaNameDict.EModelEFeatureExtractionScanConfig);
+  });
+});
+
+/**
+ * Recordings are picked inside the editor, from the `model_identifier_multiple` field's own
+ * browse widget. Two things have to agree for that: routing must not send the user to `/new`
+ * first, and configure must accept a session with nothing selected in it.
+ */
+describe('intracellular efeatures selects entities in the editor', () => {
+  const workflow = getWorkflow({
+    activity: 'extract',
+    targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+  });
+
+  it('starts on configure, not on the browse page', () => {
+    expect(workflow?.initialStage).toBe(WorkflowInitialStagePolicyDict.Configure);
+    expect(workflow?.isScanConfig).toBe(true);
+  });
+
+  it('stays on configure even when the schema declares a multi-entity selection', () => {
+    const selection = {
+      schemaName: SchemaNameDict.EModelEFeatureExtractionScanConfig,
+      uiElement: ScanConfigUIElementDict.ModelIdentifierMultiple,
+      selectionMode: WorkflowSchemaSelectionMode.Multiple,
+      acceptedFromIdTypes: [ScanConfigFromIdType.ElectricalCellRecordingFromID],
+      acceptedEntityTypes: [ExtendedEntitiesTypeDict.ElectricalCellRecording],
+      tableSelectionType: 'checkbox',
+    } as const;
+
+    expect(resolveWorkflowRouteStage({ workflow, selection })).toBe(
+      WorkflowInitialStageDict.Configure
+    );
+  });
+
+  it('opens configure on an empty session instead of 404ing', () => {
+    expect(extractEFeaturesWorkflow.entity).toMatchObject({
+      mode: ScanConfigEntitySourceMode.Session,
+      picksEntitiesInEditor: true,
+    });
+  });
+
+  it('keeps the recording browse type so the in-editor picker lists recordings', () => {
+    expect(workflow?.configurationInputs).toEqual([
+      { type: ExtendedEntitiesTypeDict.ElectricalCellRecording },
+    ]);
   });
 });

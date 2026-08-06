@@ -61,7 +61,9 @@ function ScanConfigWorkflowContextValueProvider({
     searchParams,
   });
 
-  const needsSelection = definition.entity.mode === ScanConfigEntitySourceMode.Session;
+  const needsSelection =
+    definition.entity.mode === ScanConfigEntitySourceMode.Session &&
+    !definition.entity.picksEntitiesInEditor;
   const status = resolveWorkflowStatus({ entity, campaign, needsSelection });
 
   // the configure route is shared by view and duplicate actions; the duplicate flow flags

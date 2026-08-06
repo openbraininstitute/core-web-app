@@ -211,20 +211,121 @@ export type TResolvedWorkflowInitialStage = {
   schemaSelection?: TWorkflowSchemaSelection | null;
 };
 
-/** shared {@link IWorkflowDescriptor} fragments for activity registry entries */
+/**
+ * Shared {@link IWorkflowDescriptor} fragments for activity registry entries.
+ *
+ * Every registry entry in `activities/*.ts` spreads exactly one of these. The pair it sets —
+ * {@link IWorkflowDescriptor.initialStage} and {@link IWorkflowDescriptor.isScanConfig} — is
+ * what decides where picking a workflow on `/workflows` lands the user, and which configure UI
+ * that destination renders. Both are read together by `resolveWorkflowRouteStage` and
+ * `buildWorkflowStartingPageUrl`, which is why they are set as a unit rather than field by field.
+ *
+ * The workflows named below are examples current at the time of writing, not an exhaustive
+ * index — `activities/*.ts` is the source of truth.
+ *
+ * | Preset | First route | Configure UI |
+ * |--------|-------------|--------------|
+ * | {@link WorkflowStagePresets.DirectConfigure} | `/configure/{targetType}` | bespoke page |
+ * | {@link WorkflowStagePresets.BrowseFirst} | `/new/{targetType}` | bespoke page |
+ * | {@link WorkflowStagePresets.ScanConfig} | schema decides | scan-config editor |
+ * | {@link WorkflowStagePresets.ScanConfigInEditorSelection} | `/configure/{targetType}/{session}` | scan-config editor |
+ * | {@link WorkflowStagePresets.Disabled} | never routed | none |
+ */
 export const WorkflowStagePresets = {
+  /**
+   * Straight to a hand-written configure page — no entity browse, no scan-config editor.
+   *
+   * The URL carries no entity id (`buildLegacyConfigureUrl` emits
+   * `/workflows/{activity}/configure/{targetType}`), so the page owns its own entity picking.
+   *
+   * Reach for it when the workflow ships a purpose-built configuration screen rather than one
+   * generated from an ObiOne schema.
+   *
+   * @example Build activity
+   * - Ion channel → ion-channel modeling campaign
+   * - Single neuron (ME-model)
+   * - Synaptome (legacy)
+   */
   DirectConfigure: {
     initialStage: WorkflowInitialStagePolicyDict.Configure,
     isScanConfig: false,
   },
+
+  /**
+   * Always opens the `/new/{targetType}` browse table first, then a hand-written configure page.
+   *
+   * Unlike {@link WorkflowStagePresets.ScanConfig} the browse step is unconditional: there is no
+   * schema to ask, so the descriptor's own {@link IWorkflowDescriptor.configurationInputs} drive
+   * the table.
+   *
+   * Reach for it for pre-scan-config workflows that still need an entity chosen before their
+   * bespoke configure page can render.
+   *
+   * @example Simulate activity
+   * - Single neuron (legacy) — ME-model → single neuron simulation
+   * - Synaptome simulation (legacy)
+   */
   BrowseFirst: {
     initialStage: WorkflowInitialStagePolicyDict.Browse,
     isScanConfig: false,
   },
+
+  /**
+   * Scan-config workflow whose first route is decided by its ObiOne schema.
+   *
+   * `inferWorkflowStartingPageRemoteSchemaBased` fetches the schema and inspects the `initialize`
+   * block: a `model_identifier` / `model_identifier_multiple` field means entities are collected
+   * on `/new` first, and its absence means configure opens straight away. That resolution is why
+   * the same preset serves both single-entity and grouped multi-entity workflows.
+   *
+   * This is the default for new scan-config workflows.
+   *
+   * @example
+   * - Simulate: circuit simulation at every scale, ME-model circuit, synaptome, ion channel
+   * - Build: electron microscopy circuit, extracellular recording array
+   * - Extract: circuit extraction campaign
+   * - Process: EM mesh skeletonization
+   */
   ScanConfig: {
     initialStage: WorkflowInitialStagePolicyDict.Schema,
     isScanConfig: true,
   },
+
+  /**
+   * Scan-config workflow that never shows `/new`, even though its schema declares a
+   * `model_identifier*` field.
+   *
+   * Configure is the first and only stage: it opens on an empty workflow session
+   * (`/configure/{targetType}/{sessionId}`) and the entities are picked inside the editor, from
+   * that field's own browse widget. Skipping the schema probe also means the hub navigates
+   * without waiting on a schema fetch.
+   *
+   * Reach for it when the rest of the configuration only makes sense next to the selection —
+   * e-feature extraction discovers its protocols from the chosen recordings, so picking them on a
+   * separate page ahead of the editor would strand the user one screen away from the consequence.
+   *
+   * The paired scan-config workflow definition must set `entity.picksEntitiesInEditor`,
+   * otherwise configure reads the empty session as a skipped browse step and 404s.
+   *
+   * @example Extract activity
+   * - Intracellular EFeatures → e-feature extraction campaign
+   */
+  ScanConfigInEditorSelection: {
+    initialStage: WorkflowInitialStagePolicyDict.Configure,
+    isScanConfig: true,
+  },
+
+  /**
+   * Placeholder for a workflow that is listed but not yet implemented.
+   *
+   * The stage fields are inert — entries using this also set `disabled: true`, so the menu
+   * renders them greyed out and never routes anywhere. `Configure` / `false` are here only
+   * because {@link IWorkflowDescriptor} requires them.
+   *
+   * @example
+   * - Build: metabolism, NGV unit, NGV circuit, brain region, brain system, whole brain
+   * - Simulate: metabolism, NGV unit, NGV circuit, brain system
+   */
   Disabled: {
     initialStage: WorkflowInitialStagePolicyDict.Configure,
     isScanConfig: false,

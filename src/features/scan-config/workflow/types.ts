@@ -41,6 +41,18 @@ export type TScanConfigEntitySource =
       mode: typeof ScanConfigEntitySourceMode.Session;
       /** Route param holding the workflow session id (`wf_…`). Defaults to `id`. */
       param?: string;
+      /**
+       * When `true`, configure opens on an empty session instead of 404ing.
+       *
+       * Session workflows normally reach configure from `/new`, so an empty session means the
+       * user skipped the browse step. Workflows that do their entity picking inside the editor
+       * (the `model_identifier*` field's own browse widget) have no `/new` step to skip, so an
+       * empty session is their starting state, not a broken route.
+       *
+       * Pair it with the `ScanConfigInEditorSelection` stage preset on the registry entry, which
+       * is what keeps the hub from routing through `/new` in the first place.
+       */
+      picksEntitiesInEditor?: boolean;
     };
 
 export type TScanConfigCampaignSource = {
