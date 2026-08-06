@@ -25,12 +25,10 @@ import {
   fieldUnsetValue,
   isFieldSet,
   makeFeatureValue,
-  makeProtocolValue,
+  makeFilledProtocolValue,
   mergeAmplitudeOptions,
 } from './helpers';
-import { ProtocolPreviewPanel } from './preview-panel';
 
-import type { IElectricalCellRecording } from '@/api/entitycore/types';
 import type { ConfigValue, ParamSchema } from '@/features/scan-config/types';
 import type {
   TExtractionAmplitude,
@@ -517,13 +515,10 @@ export function ProtocolCard({
   docUrlFor,
   figureUrlFor,
   renderField,
-  entity,
 }: {
   def: TProtocolDef;
   /** undefined when the protocol is not part of the selection */
   value: TProtocolValue | undefined;
-  /** recording backing the traces preview, when the config resolved to one */
-  entity: IElectricalCellRecording | null;
   expanded: boolean;
   onToggleSelected: (selected: boolean) => void;
   onToggleExpanded: () => void;
@@ -536,8 +531,6 @@ export function ProtocolCard({
   renderField: TRenderField;
 }) {
   const [featuresOpen, setFeaturesOpen] = useState(true);
-  // the card itself opens the traces and feature figures; the `≡` stays reserved for editing
-  const previewPanel = usePanel(`${def.typeName}:preview`);
   const settingsOpen = useIsSettingsPanelOpen(def.typeName);
   const selected = value !== undefined;
 
@@ -556,14 +549,14 @@ export function ProtocolCard({
           ? 'border-primary-9 bg-primary-9 text-white hover:shadow-md'
           : 'border-neutral-2 hover:border-primary-8 bg-white hover:bg-gray-50 hover:shadow-sm',
         // which card the right column is currently editing
-        (settingsOpen || previewPanel.isOpen) && 'ring-primary-8 shadow-md ring-2'
+        settingsOpen && 'ring-primary-8 shadow-md ring-2'
       )}
     >
       <header className="flex items-start gap-2 px-3 py-2.5">
         <button
           type="button"
-          onClick={() => previewPanel.toggle(def.label)}
-          aria-expanded={previewPanel.isOpen}
+          onClick={onToggleExpanded}
+          aria-expanded={expanded}
           className="min-w-0 flex-1 text-left"
         >
           <h4 className={cn('truncate font-bold', selected ? 'text-white' : 'text-primary-9')}>
@@ -575,16 +568,6 @@ export function ProtocolCard({
             </p>
           )}
         </button>
-
-        {previewPanel.portal(
-          <ProtocolPreviewPanel
-            def={def}
-            value={value}
-            entity={entity}
-            figureUrlFor={figureUrlFor}
-            featureLabelFor={featureLabel}
-          />
-        )}
 
         {selected && value && (
           <SettingsButton
@@ -615,7 +598,16 @@ export function ProtocolCard({
                 setState={(next) => onChange(next as TProtocolValue)}
                 renderField={renderField}
                 disabled={disabled}
-                onReset={() => onChange(makeProtocolValue(def))}
+                // only what this form owns — the timings, the detection knobs and the
+                // amplitudes above them. The feature list belongs to the card in the middle
+                // column and has its own "Reset features list"; wiping it from here read as
+                // the settings form silently deleting the user's selection
+                onReset={() =>
+                  onChange({
+                    ...makeFilledProtocolValue(def, discoveredAmplitudes),
+                    features: value.features,
+                  })
+                }
               />
             </SettingsForm>
           </SettingsButton>
@@ -642,6 +634,26 @@ export function ProtocolCard({
           )}
         </button>
       </header>
+
+      {expanded && !(selected && value) && (
+        <div className="px-3 pb-3">
+          <div className="border-neutral-2 rounded-md border px-3 py-2">
+            <p className="pb-1.5 text-xs text-gray-500">
+              Features extracted once this protocol is selected
+            </p>
+            <ul className="flex flex-wrap gap-1">
+              {def.featureDefs.map((feature) => (
+                <li
+                  key={feature.typeName}
+                  className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                >
+                  {featureLabel(feature)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {selected && value && expanded && (
         <div className="px-3 pb-3">

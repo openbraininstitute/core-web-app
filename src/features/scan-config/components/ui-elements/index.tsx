@@ -181,7 +181,6 @@ export function UIElementRender({
           schema={schema}
           config={config}
           disabled={disabled}
-          entity={entity}
           errorPathPrefix={errorPathPrefix}
           // the shared renderer is defined in this module; passing it down keeps the widget
           // from importing its own barrel

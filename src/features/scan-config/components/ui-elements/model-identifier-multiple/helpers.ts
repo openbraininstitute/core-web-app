@@ -22,7 +22,7 @@ import {
   type TWorkflowSessionSelectionRef,
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
-import { getEntityMeta } from '@/ui/segments/workflows/config/helpers';
+import { getWorkflowEntityLabel } from '@/ui/segments/workflows/config/helpers';
 import { resolveScanConfigFromIdType } from '@/ui/segments/workflows/config/scan-config-binding';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -189,7 +189,12 @@ export function entityRowToFromIdRef(
  * merges schema `accepted_input_types` with workflow registry configuration inputs
  *
  * schema types take precedence when present; labels/filters come from the registry
- * or {@link getEntityMeta} fallback
+ * or {@link getWorkflowEntityLabel} fallback
+ *
+ * the label is user-facing (entity pills, "Add … to scan"), so the raw type is a last resort
+ * rather than a fallback — {@link getWorkflowEntityLabel} reads the workflow entity catalog and
+ * then the entity-configuration title, which covers the types the catalog does not list because
+ * no workflow *targets* them (an electrical cell recording is only ever an input)
  */
 export function mergeConfigurationInputs(opts: {
   paramSchema: Record<string, unknown>;
@@ -206,7 +211,7 @@ export function mergeConfigurationInputs(opts: {
 
     return {
       type,
-      label: registryInput?.label ?? getEntityMeta(type)?.label ?? type,
+      label: registryInput?.label ?? getWorkflowEntityLabel(type) ?? type,
       filters: registryInput?.filters,
     };
   });
