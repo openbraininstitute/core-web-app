@@ -20,6 +20,7 @@ export const ViewDefForMemodel: ViewDefinitionConfig = {
     EntityCoreFields.EType,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   curated: false,
   summaryViewFields: [

@@ -18,6 +18,7 @@ export const viewDefForIonChannelRecording: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },

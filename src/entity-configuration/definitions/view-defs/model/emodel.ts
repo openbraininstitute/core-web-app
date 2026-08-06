@@ -18,6 +18,7 @@ export const ViewDefForEmodel: ViewDefinitionConfig = {
     EntityCoreFields.EModelScore,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   curated: true,
   summaryViewFields: [

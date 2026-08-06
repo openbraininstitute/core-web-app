@@ -1,4 +1,4 @@
-import { Button } from 'antd';
+import { Button, Tag } from 'antd';
 import { get, isNil } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 
@@ -22,6 +22,7 @@ import {
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
+import { FilterOptionsSourceKind } from '@/entity-configuration/definitions/types';
 import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -716,6 +717,42 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     defaultConstraint: 'updated_by__pref_label__in',
     isDisplayable: true,
+  },
+  [EntityCoreFields.LifecycleStatus]: {
+    title: 'Lifecycle status',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    render: (r) => {
+      if (!('lifecycle_status' in r) || !r.lifecycle_status) return EmptyValue;
+      const colorMap: Record<string, string> = {
+        draft: 'default',
+        active: 'success',
+        disqualified: 'error',
+      };
+      const status = r.lifecycle_status as string;
+      return <Tag color={colorMap[status] ?? 'default'}>{status}</Tag>;
+    },
+    vocabulary: {
+      plural: 'Lifecycle statuses',
+      singular: 'Lifecycle status',
+    },
+    defaultConstraint: 'lifecycle_status',
+    isSortable: false,
+    isDisplayable: true,
+    isFilterable: true,
+    presentation: {
+      filter: {
+        allowMultiple: false,
+        options: {
+          kind: FilterOptionsSourceKind.Static,
+          items: [
+            { label: 'Draft', value: 'draft' },
+            { label: 'Active', value: 'active' },
+            { label: 'Disqualified', value: 'disqualified' },
+          ],
+        },
+      },
+    },
+    style: { width: 140 },
   },
   [EntityCoreFields.IonChannel]: {
     title: 'Ion Channel',

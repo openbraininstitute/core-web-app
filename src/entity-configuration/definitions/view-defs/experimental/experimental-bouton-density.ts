@@ -16,6 +16,7 @@ export const viewDefForExperimentalBoutonDensity: ViewDefinitionConfig = {
     EntityCoreFields.Sem,
     EntityCoreFields.NumberOfMeasurements,
     EntityCoreFields.Contributions,
+    EntityCoreFields.LifecycleStatus,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },

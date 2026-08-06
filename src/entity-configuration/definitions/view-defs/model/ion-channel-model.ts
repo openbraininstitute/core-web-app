@@ -16,6 +16,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     EntityCoreFields.IsTemperatureDependent,
     EntityCoreFields.IsLjpCorrected,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   curated: true,
   summaryViewFields: [

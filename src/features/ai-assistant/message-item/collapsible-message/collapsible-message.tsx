@@ -2,7 +2,7 @@
 
 import { RiCheckLine, RiCloseLine, RiResetLeftLine } from '@remixicon/react';
 import { getToolName, isToolUIPart } from 'ai';
-import { useAtomValue } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import React from 'react';
 
 import { isChatReadyAtom } from '@/services/ai-agent/hooks/chat';
@@ -71,6 +71,8 @@ function hasCompletedEditState(parts: UIMessage['parts']): boolean {
   );
 }
 
+export const showRestoreAtom = atom(false);
+
 export function CollapsibleMessage({
   message,
   status,
@@ -81,6 +83,7 @@ export function CollapsibleMessage({
   hasEditStateCalls = false,
 }: CollapsibleMessageProps) {
   const mountedAsReady = React.useRef(status === 'ready');
+  const [showRestore, setShowRestore] = useAtom(showRestoreAtom);
 
   // Boundary between collapsed (prior steps) and visible (current/last step).
   // Only advances once the new step has produced visible content (text/tool),
@@ -139,11 +142,6 @@ export function CollapsibleMessage({
       setIsConfirmingRestore(false);
     }
   }, [restorePreviewMessageId, isConfirmingRestore, message.id]);
-
-  const showRestore = React.useMemo(
-    () => hasEditStateCalls && isChatReady && hasCompletedEditState(message.parts),
-    [hasEditStateCalls, isChatReady, message.parts]
-  );
 
   // ── Layout ───────────────────────────────────────────────────────────────
   const stepCount = React.useMemo(
@@ -232,55 +230,58 @@ export function CollapsibleMessage({
                     {isExpanded ? `Hide reasoning (${stepCount})` : `Show reasoning (${stepCount})`}
                   </span>
                 </div>
-                {showRestore && (
-                  <div className={styles.headerActions}>
-                    {isConfirmingRestore ? (
-                      <>
+                {showRestore &&
+                  hasEditStateCalls &&
+                  isChatReady &&
+                  hasCompletedEditState(message.parts) && (
+                    <div className={styles.headerActions}>
+                      {isConfirmingRestore ? (
+                        <>
+                          <button
+                            type="button"
+                            className={cn(styles.confirmBtn, styles.confirmBtnYes)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsConfirmingRestore(false);
+                              onConfirmRestore?.();
+                            }}
+                            aria-label="Confirm restore"
+                          >
+                            <RiCheckLine size={13} />
+                            <span>Yes, restore</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={cn(styles.confirmBtn, styles.confirmBtnNo)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsConfirmingRestore(false);
+                              onCancelRestore?.();
+                            }}
+                            aria-label="Cancel restore"
+                          >
+                            <RiCloseLine size={13} />
+                            <span>Cancel</span>
+                          </button>
+                        </>
+                      ) : (
                         <button
                           type="button"
-                          className={cn(styles.confirmBtn, styles.confirmBtnYes)}
+                          className={styles.restoreBtn}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsConfirmingRestore(false);
-                            onConfirmRestore?.();
+                            setIsConfirmingRestore(true);
+                            onPreviewRestore?.();
                           }}
-                          aria-label="Confirm restore"
+                          aria-label="Restore state"
+                          title="Restore to this state"
                         >
-                          <RiCheckLine size={13} />
-                          <span>Yes, restore</span>
+                          <RiResetLeftLine size={14} />
+                          <span>Restore</span>
                         </button>
-                        <button
-                          type="button"
-                          className={cn(styles.confirmBtn, styles.confirmBtnNo)}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsConfirmingRestore(false);
-                            onCancelRestore?.();
-                          }}
-                          aria-label="Cancel restore"
-                        >
-                          <RiCloseLine size={13} />
-                          <span>Cancel</span>
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        className={styles.restoreBtn}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsConfirmingRestore(true);
-                          onPreviewRestore?.();
-                        }}
-                        aria-label="Restore state"
-                        title="Restore to this state"
-                      >
-                        <RiResetLeftLine size={14} />
-                        <span>Restore</span>
-                      </button>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
             <div
