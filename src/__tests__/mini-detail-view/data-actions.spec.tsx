@@ -11,6 +11,7 @@ import {
   makeCircuit,
   makeExtracellularRecordingArray,
   makeSingleNeuronScaleCircuit,
+  makeUnregisteredEntity,
 } from './fixtures';
 
 import type { ComponentProps } from 'react';
@@ -72,8 +73,17 @@ describe('DataActions "View details" link (mini-detail-view, section: Data)', ()
     );
   });
 
-  it('hides "View details" for entity types with no detail view page (e.g. extracellular recording array)', () => {
+  it('routes an extracellular recording array to its own details page', () => {
     renderDataActions({ record: makeExtracellularRecordingArray() });
+
+    expect(screen.getByRole('button', { name: 'View details' })).toHaveAttribute(
+      'href',
+      `${ROOT_ROUTE}/vl-1/proj-1/data/view/simulatable-extracellular-recording-array/ext-recording-array-1`
+    );
+  });
+
+  it('hides "View details" for entity types with no detail view page', () => {
+    renderDataActions({ record: makeUnregisteredEntity() });
 
     expect(screen.queryByRole('button', { name: 'View details' })).not.toBeInTheDocument();
   });

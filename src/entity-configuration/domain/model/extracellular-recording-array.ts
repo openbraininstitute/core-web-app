@@ -5,6 +5,7 @@ import {
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { extracellularRecordingArrayBuildFlag } from '@/features/feature-flags/flags';
@@ -42,10 +43,11 @@ export const ExtracellularRecordingArray: EntityCoreTypeConfig<ISimulatableExtra
     asset: {
       extension: 'application/json',
     },
-    // this entity has no full detail page yet, so the data browse only opens the mini-detail panel
-    // the "View details" action is hidden for entities without detail sections,
-    // see `mini-detail-view/actions/data.tsx`
-    detailViewSections: [],
+    detailViewSections: [DetailViewSectionsDict.Overview, DetailViewSectionsDict.ThreeDView],
+    // the 3D tab draws this array's parent circuit and overlays the electrode
+    // locations stored on the entity, so electrodes are on wherever the array
+    // itself is the subject — unlike `circuit`, which only opts in during build
+    viewer: { electrodes: true },
     isBookmarkable: false,
     isDownloadable: true,
     isCopyable: true,

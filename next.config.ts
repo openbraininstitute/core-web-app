@@ -30,13 +30,12 @@ const SentryOptions: SentryBuildOptions = {
   },
 };
 
-const config = {
+const config: NextConfig = {
   env: {
     APP_BUILD_TIME: new Date().toISOString(),
   },
   productionBrowserSourceMaps: !isPreviewBuild,
   experimental: {
-    viewTransition: true,
     turbopackFileSystemCacheForDev: true,
     serverSourceMaps: !isPreviewBuild,
   },

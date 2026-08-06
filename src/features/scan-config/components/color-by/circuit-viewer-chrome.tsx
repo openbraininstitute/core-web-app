@@ -33,6 +33,11 @@ export interface CircuitViewerChromeProps {
     menu: ViewerControlsMenuProps;
     /** Omit to hide the color-by dropdown + legend. */
     colorBy?: ColorByControls;
+    /**
+     * Whether electrodes can actually be dragged/rotated. Read-only hosts pass
+     * false so the interaction help does not advertise gestures that do nothing.
+     */
+    electrodesInteractive?: boolean;
   };
 }
 
@@ -125,9 +130,11 @@ export function CircuitViewerChrome({
               container={portalContainer}
               isFullscreen={isFullscreen}
             />
-            {viz.menu.onToggleElectrodes && viz.menu.showElectrodes !== false && (
-              <ElectrodeInteractionHelp container={portalContainer} />
-            )}
+            {viz.menu.onToggleElectrodes &&
+              viz.menu.showElectrodes !== false &&
+              viz.electrodesInteractive !== false && (
+                <ElectrodeInteractionHelp container={portalContainer} />
+              )}
           </div>
         )}
       </div>

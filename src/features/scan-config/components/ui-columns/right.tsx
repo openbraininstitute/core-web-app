@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { match } from 'ts-pattern';
 
 import { ViewVariant, WorkspaceSection } from '@/constants';
@@ -53,6 +53,12 @@ type RightProps = {
   selectedRootElement: string;
   config: Config;
   setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
+  /**
+   * The config can no longer be edited (campaign generated, generation in
+   * flight, read-only host, …). Electrode overlays then render static: without
+   * a write path the viewer offers no drag/rotate handles at all.
+   */
+  locked?: boolean;
 };
 
 /**
@@ -143,6 +149,7 @@ function CircuitModelPreviewPane({
   selectedEntry,
   defaultNeuronOpacity,
   viewerFeatures,
+  locked,
 }: {
   entity: TSupportedEntitiesForScanConfiguration;
   config: Config;
@@ -151,16 +158,29 @@ function CircuitModelPreviewPane({
   selectedEntry: string;
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
+  locked?: boolean;
 }) {
+  // Memoised so the grouped prop does not hand ModelPreview a fresh object every
+  // render; `config` already changes on each form edit, the rest rarely.
+  //
+  // Omitting `onConfigChange` while locked is what makes the overlays static —
+  // the viewer keys its drag/rotate gizmo off the presence of a write path.
+  const electrodes = useMemo(
+    () => ({
+      config,
+      onConfigChange: locked ? undefined : setConfig,
+      selectedRootElement,
+      selectedEntry,
+    }),
+    [config, setConfig, selectedRootElement, selectedEntry, locked]
+  );
+
   return (
     <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
       <div className="rounded-lg h-full" id="scan-config-right-model-preview">
         <ModelPreview
           model={entity}
-          config={config}
-          setConfig={setConfig}
-          selectedRootElement={selectedRootElement}
-          selectedEntry={selectedEntry}
+          electrodes={electrodes}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
         />
@@ -185,6 +205,7 @@ export function Right({
   selectedRootElement,
   config,
   setConfig,
+  locked,
 }: RightProps) {
   useClearEntityPreviewOnNavigation(entity?.id);
   const defaultNeuronOpacity = useHostNeuronOpacity();
@@ -241,6 +262,7 @@ export function Right({
           selectedEntry={selectedEntry}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
+          locked={locked}
         />
       ) : (
         <EmptyPreviewPane />

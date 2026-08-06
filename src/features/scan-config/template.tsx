@@ -19,6 +19,7 @@ import {
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
+import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import {
   type Config,
   type ConfigSchema,
@@ -127,6 +128,8 @@ function ScanConfigTemplateContent({
     workflowSessionSelection,
     resolveFromIdType: resolveSessionFromIdType,
   });
+
+  const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
 
   const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
@@ -349,6 +352,7 @@ function ScanConfigTemplateContent({
               selectedRootElement={selectedRootElement}
               config={config}
               setConfig={setConfig}
+              locked={editingLocked}
             />
           </div>
         </div>

@@ -17,6 +17,7 @@ import {
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
@@ -30,8 +31,7 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';
-import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
-import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -126,7 +126,13 @@ export default function BlockDictionary({
       <Block
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
+        disabled={resolveScanConfigEditingLocked({
+          campaignId,
+          loading,
+          aiConfig,
+          isChatReady,
+          showingDiffs,
+        })}
         config={config}
         blockSchema={selectedBlockSchema}
         state={state}
@@ -214,10 +220,16 @@ export default function BlockDictionary({
                       initial[subkey] = subValue.default ?? null;
                     });
 
-                  // Seed origin at the loaded circuit centre so new probes appear in view
-                  // (only when electrode overlays are feature-flagged on).
+                  // Seed origin at the loaded circuit centre rather than the schema default
+                  // (0,0,0), which can sit millimetres away from the circuit.
+                  //
+                  // Deliberately NOT gated on `electrodeOverlaysEnabled`: that flag governs the
+                  // interactive overlays in the viewer, while this writes the persisted origin.
+                  // Tying the two meant every array built where the flag is off — it defaults
+                  // off outside local/preview — was stored at (0,0,0), and those are exactly the
+                  // deployments where the drag-in-3D path is unavailable and the typed inputs
+                  // are the only way in.
                   const seededInitial =
-                    electrodeOverlaysEnabled &&
                     selectedRootElement === ELECTRODE_LOCATIONS_CONFIG_KEY
                       ? (seedElectrodeInitialOrigin(initial, circuitSceneAnchor) as Record<
                           string,
@@ -254,16 +266,7 @@ export default function BlockDictionary({
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >
                 <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
-                <span className="mt-3 block">
-                  <TextPatternTransformer
-                    regex={urlRegex}
-                    component={(match) => (
-                      <TransformedLink url={match} className="wrap-break-word text-primary-6" />
-                    )}
-                  >
-                    {o.description}
-                  </TextPatternTransformer>
-                </span>
+                <MarkdownDescription className="mt-3">{o.description}</MarkdownDescription>
               </button>
             </TooltipTrigger>
             {disable && (
