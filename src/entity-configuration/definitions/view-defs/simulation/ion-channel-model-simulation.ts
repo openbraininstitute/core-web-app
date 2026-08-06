@@ -15,6 +15,7 @@ export const viewDefForIonChannelModelSimulation: ViewDefinitionConfig = {
     EntityCoreFields.Description,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.LegacyActivityStatus,
   ],
   filterableFields: [

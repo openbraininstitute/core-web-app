@@ -16,6 +16,7 @@ export const viewDefForMicrocircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.CircuitName,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
     EntityCoreFields.LegacyActivityStatus,
   ],
   filterableFields: [

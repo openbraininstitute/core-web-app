@@ -281,12 +281,12 @@ export function BrowseEntityScope({
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
       ) => expandedViewConfig.render(originalRecord, records),
-      expandIconColumnIndex: expandedViewConfig.expandIconColumnIndex,
+      expandIconColumnIndex: columns.length + 1,
       expandIcon: expandedViewConfig.expandIcon,
       isRowExpandable: expandedViewConfig.isExpandable,
       isTopLevel: true,
     };
-  }, [dataType, virtualLabId, projectId, entity]);
+  }, [dataType, virtualLabId, projectId, entity, columns]);
 
   useEffect(() => {
     // allow restoring the data table state snapshot when the section is "Data" only.

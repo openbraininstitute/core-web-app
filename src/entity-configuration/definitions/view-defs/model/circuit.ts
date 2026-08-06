@@ -24,6 +24,7 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitDerivationType,
     EntityCoreFields.ArtifactPublishedIn,
     EntityCoreFields.ArtifactExperimentDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   miniDetailView: [
     { field: EntityCoreFields.SpeciesName },

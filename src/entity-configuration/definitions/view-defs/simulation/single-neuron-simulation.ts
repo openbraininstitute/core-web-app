@@ -20,6 +20,7 @@ export const viewDefForSingleNeuronSimulation: ViewDefinitionConfig = {
     EntityCoreFields.BrainRegion,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.CreatedBy },

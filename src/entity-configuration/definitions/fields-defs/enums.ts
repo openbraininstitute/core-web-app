@@ -112,6 +112,7 @@ export enum EntityCoreFields {
   RecordingArrayCircuit = 'circuit_id',
   ReleaseVersion = 'release_version',
   EmDenseReconstructionDatasetName = 'em_dense_reconstruction_dataset_name',
+  LifecycleStatus = 'lifecycle_status',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

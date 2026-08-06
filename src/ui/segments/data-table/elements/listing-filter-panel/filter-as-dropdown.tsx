@@ -125,7 +125,7 @@ export function DropdownList({
           );
         }}
       />
-      {selectedValues.length > 0 && (
+      {allowMultiple && selectedValues.length > 0 && (
         <div className="text-primary-3! text-xs">
           {selectedValues.length} item{selectedValues.length !== 1 ? 's' : ''} selected
         </div>

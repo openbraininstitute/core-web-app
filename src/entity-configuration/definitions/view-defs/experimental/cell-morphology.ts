@@ -16,6 +16,7 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   curated: true,
   cardViewFields: [

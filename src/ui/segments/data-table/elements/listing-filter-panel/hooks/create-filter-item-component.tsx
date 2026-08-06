@@ -65,7 +65,9 @@ export function createFilterItemComponent(
             filter={filter}
             data={items}
             onChange={(values: string[]) => updateFilterValues(filter.field, values)}
-            allowMultiple
+            allowMultiple={
+              getFieldDefinition(filter.field)?.presentation?.filter?.allowMultiple ?? true
+            }
           />
         );
       case CoreFieldFilterTypeEnum.CheckList: {

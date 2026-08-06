@@ -14,6 +14,7 @@ export const ViewDefForExtracellularRecordingArray: ViewDefinitionConfig = {
     EntityCoreFields.ElectrodeType,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.RecordingArrayCircuit },

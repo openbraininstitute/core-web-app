@@ -16,6 +16,7 @@ export const ViewDefForSynthesizedCellMorphology: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   curated: true,
   cardViewFields: [

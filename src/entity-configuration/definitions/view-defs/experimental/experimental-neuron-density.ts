@@ -19,6 +19,7 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
     EntityCoreFields.SubjectAge,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   cardViewFields: [
     { field: EntityCoreFields.Name, className: 'col-span-2' },

@@ -20,6 +20,7 @@ export const ViewDefForMicrocircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitTargetSimulator,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   miniDetailView: [
     { field: EntityCoreFields.SpeciesName },

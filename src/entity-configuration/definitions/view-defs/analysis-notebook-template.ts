@@ -13,6 +13,7 @@ export const viewDefForNotebook: ViewDefinitionConfig = {
     EntityCoreFields.NotebookScale,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LifecycleStatus,
   ],
   miniDetailView: [
     { field: EntityCoreFields.NotebookScale },
