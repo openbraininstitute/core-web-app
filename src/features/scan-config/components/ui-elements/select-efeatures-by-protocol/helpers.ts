@@ -98,12 +98,14 @@ export function efelDocUrl(schema: ConfigSchema, efelName: string | null): strin
 }
 
 /**
- * Illustration for a feature.
+ * Illustration for one feature, addressed by its eFEL key.
  *
- * The schema declares `efel_figures_base_url` but no per-feature file name — `efel_feature_image`
- * is defined as a schema key upstream yet never set on any feature class — so the file is
- * addressed by the eFEL key, which is how the eFEL docs name its figures. The caller renders the
- * result with an error fallback, since not every feature has one.
+ * Mostly a miss, and knowingly so: the figures directory holds a handful of illustrations that
+ * each cover a *family* of features (one `AHP.png` for every AHP measure), so only
+ * `AP_duration_half_width` is named after the key of the feature it depicts. `efel_feature_image`
+ * is a schema key upstream but is never set on any feature class, so there is nothing better to
+ * go on. The caller renders through {@link EFeatureFigure}, which collapses on a 404 — the
+ * whole directory is what the preview panel's Features tab shows instead.
  */
 export function efelFigureUrl(
   schema: ConfigSchema,
