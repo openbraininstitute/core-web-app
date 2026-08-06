@@ -1,9 +1,10 @@
-import { Radio, Select, Spin } from 'antd';
+import { Spin } from 'antd';
 import DistinctColors from 'distinct-colors';
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type TViewVariant, ViewVariant } from '@/constants';
+import { EphysSelect } from '@/features/ephys-viewer/components/ephys-select';
 import InteractivePlot, {
   currentUnitAtom,
   DEFAULT_CURRENT_UNIT,
@@ -12,11 +13,7 @@ import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
 import { DETAIL_PLOT_POINTS } from '@/features/ephys-viewer/constants';
 import { useSweepSeries } from '@/features/ephys-viewer/hooks/use-sweep-series';
-import {
-  ephysHeadingClass,
-  ephysSectionLabelClass,
-  ephysSelectClass,
-} from '@/features/ephys-viewer/label-styles';
+import { ephysHeadingClass, ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
 import { useTraceContext } from '@/features/ephys-viewer/trace-context';
 import {
   getCellIds,
@@ -28,13 +25,28 @@ import {
   isMultiRecordingLayout,
 } from '@/features/ephys-viewer/trace-index';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
+import { MotionTabs, MotionTabsList, MotionTabsTrigger } from '@/ui/molecules/motion-tabs';
+import { ensureCurrentUnit } from '@/util/explore-section/plotHelpers';
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
+import type { TEphysControlsVariant } from '@/features/ephys-viewer/components/option-select';
 
 interface TraceDetailsViewProps {
   defaultCellId?: string;
   defaultProtocol?: string;
   defaultRepetition?: string;
   variant?: TViewVariant;
+  /**
+   * Host-supplied controls, rendered at the head of the Protocol / Repetition / Sweep row.
+   *
+   * A host that decides *which* trace is loaded — the e-feature editor picks one of the
+   * recordings being extracted — has a control that belongs beside these, not stacked above
+   * them in a second row of its own. Rendered once, against the first cell, so a multi-cell
+   * trace does not repeat it.
+   */
+  leadingControls?: ReactNode;
+  controlsVariant?: TEphysControlsVariant;
 }
 
 interface CellDetailsProps {
@@ -43,6 +55,8 @@ interface CellDetailsProps {
   defaultProtocol?: string;
   defaultRepetition?: string;
   variant?: TViewVariant;
+  leadingControls?: ReactNode;
+  controlsVariant?: TEphysControlsVariant;
 }
 
 function CellDetails({
@@ -51,6 +65,8 @@ function CellDetails({
   defaultProtocol,
   defaultRepetition,
   variant = ViewVariant.Light,
+  leadingControls,
+  controlsVariant = 'page',
 }: CellDetailsProps) {
   const { index } = useTraceContext();
   const [reset, setReset] = useState<boolean>(false);
@@ -62,9 +78,6 @@ function CellDetails({
 
   const protocols = useMemo(() => getProtocols(index, cellId), [index, cellId]);
 
-  // `defaultProtocol` may come from a caller that knows the eCode by a different casing (or one
-  // this cell does not have at all), so it is resolved against what the trace really contains
-  // instead of being trusted verbatim
   const [selectedProtocol, setSelectedDataSet] = useState<string>(() => {
     const match =
       defaultProtocol &&
@@ -134,20 +147,15 @@ function CellDetails({
       protocols.map((protocol) => {
         const repetitionNum = getRepetitions(index, cellId, protocol).length;
 
-        return (
-          <Select.Option key={protocol} value={protocol}>
-            {protocol} {repetitionNum > 1 && `(${repetitionNum})`}
-          </Select.Option>
-        );
+        return {
+          value: protocol,
+          label: repetitionNum > 1 ? `${protocol} (${repetitionNum})` : protocol,
+        };
       }),
     [protocols, index, cellId]
   );
 
-  const repetitionOptions = repetitions.map((v) => (
-    <Select.Option key={v} value={v}>
-      {v}
-    </Select.Option>
-  ));
+  const repetitionOptions = repetitions.map((v) => ({ value: v, label: v }));
 
   const sweepOptions = sweeps.map((sweep) => ({ label: sweep, value: sweep }));
 
@@ -178,46 +186,81 @@ function CellDetails({
     [selectedProtocol, selectedRepetition, selectedSweeps, updatePlots]
   );
 
+  const isPanel = controlsVariant === 'panel';
+
+  const protocolSelect = (
+    <OptionSelect
+      label={{ title: 'Protocol', numberOfAvailable: protocols.length }}
+      items={dataSetOptions}
+      value={selectedProtocol}
+      onChange={handleProtocolChange}
+      variant={variant}
+      fluid={isPanel}
+    />
+  );
+
+  const repetitionSelect = (
+    <OptionSelect
+      label={{ title: 'Repetition', numberOfAvailable: repetitions.length }}
+      items={repetitionOptions}
+      value={selectedRepetition}
+      onChange={handleRepetitionChange}
+      hideWhenSingle
+      variant={variant}
+      fluid={isPanel}
+    />
+  );
+
+  const sweepSelector = (
+    <SweepSelector
+      onPreviewSweep={handlePreviewSweep}
+      colorMap={colorMap}
+      selectedSweeps={selectedSweeps}
+      previewItem={previewItem}
+      setSelectedSweeps={setSelectedSweeps}
+      sweepOptions={sweepOptions}
+      variant={variant}
+    />
+  );
+
+  const currentUnitToggle = showCurrentUnitToggle ? (
+    <MotionTabs
+      value={currentUnit}
+      onValueChange={(next) => setCurrentUnit(ensureCurrentUnit(next, DEFAULT_CURRENT_UNIT))}
+      variant="segment"
+      className="ml-auto mt-9.5 self-start shrink-0"
+    >
+      <MotionTabsList className="w-auto">
+        <MotionTabsTrigger value={DEFAULT_CURRENT_UNIT}>{DEFAULT_CURRENT_UNIT}</MotionTabsTrigger>
+        <MotionTabsTrigger value="nA">nA</MotionTabsTrigger>
+      </MotionTabsList>
+    </MotionTabs>
+  ) : null;
+
   return (
     <div className="flex flex-col gap-10">
       {showCellLabel && <div className={ephysHeadingClass(variant)}>{cellId}</div>}
-      <div className="flex flex-wrap gap-8">
-        <OptionSelect
-          label={{ title: 'Protocol', numberOfAvailable: protocols.length }}
-          options={dataSetOptions}
-          value={selectedProtocol}
-          onChange={handleProtocolChange}
-          variant={variant}
-        />
-        <OptionSelect
-          label={{ title: 'Repetition', numberOfAvailable: repetitions.length }}
-          options={repetitionOptions}
-          value={selectedRepetition}
-          onChange={handleRepetitionChange}
-          hideWhenSingle
-          variant={variant}
-        />
-        <SweepSelector
-          onPreviewSweep={handlePreviewSweep}
-          colorMap={colorMap}
-          selectedSweeps={selectedSweeps}
-          previewItem={previewItem}
-          setSelectedSweeps={setSelectedSweeps}
-          sweepOptions={sweepOptions}
-          variant={variant}
-        />
-        {showCurrentUnitToggle && (
-          <Radio.Group
-            onChange={(e) => setCurrentUnit(e.target.value)}
-            value={currentUnit}
-            size="small"
-            className="ml-auto self-center"
-          >
-            <Radio.Button value={DEFAULT_CURRENT_UNIT}>{DEFAULT_CURRENT_UNIT}</Radio.Button>
-            <Radio.Button value="nA">nA</Radio.Button>
-          </Radio.Group>
-        )}
-      </div>
+      {isPanel ? (
+        <div className="flex flex-col gap-5">
+          <div className="grid auto-cols-fr grid-flow-col items-end gap-3">
+            {leadingControls}
+            {protocolSelect}
+            {repetitionSelect}
+          </div>
+          <div className="flex flex-nowrap items-start gap-6">
+            {sweepSelector}
+            {currentUnitToggle}
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-nowrap items-start gap-8">
+          {leadingControls}
+          {protocolSelect}
+          {repetitionSelect}
+          {sweepSelector}
+          {currentUnitToggle}
+        </div>
+      )}
 
       {error ? (
         <div className={ephysSectionLabelClass(variant)}>
@@ -229,11 +272,8 @@ function CellDetails({
             ref={plotContainerRef}
             className={cn(
               hasMultipleRecordings
-                ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
-                : 'flex flex-col gap-10 2xl:flex-row',
-              // How many plots there are, and how tall each one is, are both known from the
-              // index — so the area is laid out before the series arrives and only dimmed while
-              // it does. Swapping it for a bare spinner collapsed the page and jumped it back.
+                ? 'grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
+                : 'flex flex-col gap-5 2xl:flex-row',
               awaitingFirstSeries && 'pointer-events-none opacity-40'
             )}
           >
@@ -255,8 +295,6 @@ function CellDetails({
           </div>
 
           {awaitingFirstSeries && (
-            // Centred within the first 70vh rather than over the whole area, which runs several
-            // screens long once a repetition has more than two recordings.
             <div className="absolute inset-x-0 top-0 flex h-full max-h-[70vh] items-center justify-center">
               <Spin />
             </div>
@@ -272,6 +310,8 @@ function TraceDetailsView({
   defaultProtocol,
   defaultRepetition,
   variant = ViewVariant.Light,
+  leadingControls,
+  controlsVariant = 'page',
 }: TraceDetailsViewProps) {
   const { index } = useTraceContext();
 
@@ -292,34 +332,31 @@ function TraceDetailsView({
           <div className={ephysSectionLabelClass(variant)}>
             Select cell ({cellIds.length} available)
           </div>
-          <Select
-            className={ephysSelectClass(variant, 'cell-select w-48')}
+          <EphysSelect
+            className="cell-select w-48"
             placeholder="Select a cell"
             value={selectedCellId}
             onChange={setSelectedCellId}
-          >
-            <Select.Option value="All">All Cells</Select.Option>
-            {cellIds.map((cId: string) => (
-              <Select.Option value={cId} key={cId}>
-                {cId}
-              </Select.Option>
-            ))}
-          </Select>
+            variant={variant}
+            items={[
+              { value: 'All', label: 'All Cells' },
+              ...cellIds.map((cId: string) => ({ value: cId, label: cId })),
+            ]}
+          />
         </div>
       )}
 
       <div className="flex flex-col gap-16">
-        {selectedCellIds.map((cellId: string) => (
+        {selectedCellIds.map((cellId: string, cellIndex: number) => (
           <CellDetails
-            // CellDetails seeds its protocol and repetition once, so a newly requested protocol
-            // has to remount it. Keyed here rather than on the view as a whole so changing
-            // protocol does not also throw away the cell selection above.
             key={`${cellId}:${defaultProtocol ?? ''}`}
             cellId={cellId}
             showCellLabel={cellIds.length > 1}
             defaultProtocol={defaultProtocol}
             defaultRepetition={defaultRepetition}
             variant={variant}
+            leadingControls={cellIndex === 0 ? leadingControls : undefined}
+            controlsVariant={controlsVariant}
           />
         ))}
       </div>

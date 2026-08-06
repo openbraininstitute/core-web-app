@@ -1,4 +1,3 @@
-import { Select } from 'antd';
 import startCase from 'es-toolkit/compat/startCase';
 import Plotly from 'plotly.js-dist-min';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -6,15 +5,12 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { type TViewVariant, ViewVariant } from '@/constants';
+import { EphysSelect } from '@/features/ephys-viewer/components/ephys-select';
 import { CHART_LINE_COLOR, OVERVIEW_PLOT_POINTS } from '@/features/ephys-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
 import { usePlotRevision } from '@/features/ephys-viewer/hooks/use-plot-revision';
 import { useSweepSeries } from '@/features/ephys-viewer/hooks/use-sweep-series';
-import {
-  ephysHeadingClass,
-  ephysSectionLabelClass,
-  ephysSelectClass,
-} from '@/features/ephys-viewer/label-styles';
+import { ephysHeadingClass, ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
 import { toPlotTraces, yAxisTitle } from '@/features/ephys-viewer/plot-traces';
 import { useTraceContext } from '@/features/ephys-viewer/trace-context';
 import {
@@ -34,8 +30,6 @@ import type { RecordingSeries, RecordingSlot } from '@/features/ephys-viewer/tra
 import type { CurrentUnit } from '@/util/explore-section/plotHelpers';
 
 const Plot = createPlotlyComponent(Plotly);
-
-const { Option } = Select;
 
 const GRID_CLASS_NAME =
   'grid gap-7 pt-5 @max-xs:grid-cols-1 @lg:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6';
@@ -339,38 +333,37 @@ export default function TraceOverview({
       {cellIds.length > 1 && (
         <div className={cn('flex flex-col gap-2', ephysSectionLabelClass(variant))}>
           Select cell ({cellIds.length} available)
-          <Select
-            className={ephysSelectClass(variant, 'cell-select')}
+          <EphysSelect
+            className="cell-select w-48"
             placeholder="Select a cell"
             value={cellId}
             onChange={onCellIdChange}
-          >
-            <Option value="All">All Cells</Option>
-            {cellIds.map((cId) => (
-              <Option value={cId} key={cId}>
-                {cId}
-              </Option>
-            ))}
-          </Select>
+            variant={variant}
+            items={[
+              { value: 'All', label: 'All Cells' },
+              ...cellIds.map((cId) => ({ value: cId, label: cId })),
+            ]}
+          />
         </div>
       )}
 
       {allProtocols.length > 1 && (
         <div className={cn('flex flex-col gap-2', ephysSectionLabelClass(variant))}>
           Select Stimulus ({allProtocols.length} available)
-          <Select
-            className={ephysSelectClass(variant, 'stimulus-select')}
+          <EphysSelect
+            className="stimulus-select w-48"
             placeholder="Select a stimulus"
             value={protocol}
             onChange={onProtocolChange}
-          >
-            <Option value="All">All</Option>
-            {allProtocols.map((protocolItem) => (
-              <Option value={protocolItem} key={protocolItem}>
-                {protocolItem}
-              </Option>
-            ))}
-          </Select>
+            variant={variant}
+            items={[
+              { value: 'All', label: 'All' },
+              ...allProtocols.map((protocolItem) => ({
+                value: protocolItem,
+                label: protocolItem,
+              })),
+            ]}
+          />
         </div>
       )}
 

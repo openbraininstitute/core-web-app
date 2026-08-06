@@ -50,3 +50,24 @@ describe('viewerReducer', () => {
     expect(initial).toEqual(before);
   });
 });
+
+/**
+ * `showViewModeToggle: false` pins the view rather than seeding it, because a host that hides the
+ * switch leaves no way back from the overview. The reducer still accepts `setView` — the overview's
+ * repetition tiles dispatch through it — so pinning has to happen at the read, not the write.
+ */
+describe('pinned view with the mode toggle hidden', () => {
+  const resolveView = (state: TViewerState, showViewModeToggle: boolean) =>
+    showViewModeToggle ? state.view : TraceViewMode.Detailed;
+
+  it('reads as detailed even when the state says overview', () => {
+    expect(resolveView(initial, false)).toBe(TraceViewMode.Detailed);
+  });
+
+  it('survives a setView that would otherwise strand the host on the overview', () => {
+    const next = viewerReducer(initial, { type: 'setView', view: TraceViewMode.Overview });
+
+    expect(resolveView(next, false)).toBe(TraceViewMode.Detailed);
+    expect(resolveView(next, true)).toBe(TraceViewMode.Overview);
+  });
+});
