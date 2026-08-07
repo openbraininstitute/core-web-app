@@ -95,9 +95,9 @@ const CIRCUIT_FAMILY_COLUMNS = [
   EntityCoreFields.CircuitNumberSynapses,
   EntityCoreFields.CircuitNumberConnections,
   EntityCoreFields.CircuitTargetSimulator,
-  'lifecycleStatus',
   EntityCoreFields.CreatedBy,
   EntityCoreFields.RegistrationDate,
+  'lifecycleStatus',
 ];
 
 /** Filters shared by every circuit-family listing (independent of per-type sortability). */
@@ -241,9 +241,9 @@ describe('brain_region parity', () => {
       EntityCoreFields.CircuitNumberNeurons,
       EntityCoreFields.CircuitNumberSynapses,
       EntityCoreFields.CircuitNumberConnections,
-      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      'lifecycleStatus',
     ]);
     expect(col(s, EntityCoreFields.CircuitTargetSimulator)).toBeUndefined();
   });
@@ -272,11 +272,11 @@ describe('simulatable_extracellular_recording_array parity', () => {
       EntityCoreFields.Description,
       EntityCoreFields.RecordingArrayCircuit,
       EntityCoreFields.ElectrodeType,
-      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
       // auxiliary — hidden until ticked in the chooser
       'contributions',
+      'lifecycleStatus',
     ]);
   });
   it('name ilike + createdBy facet + registration DateRange serialize to legacy keys', () => {
@@ -341,9 +341,9 @@ describe('single_neuron_simulation parity', () => {
       EntityCoreFields.InjectionLocation,
       EntityCoreFields.RecordingLocation,
       EntityCoreFields.BrainRegion,
-      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      'lifecycleStatus',
     ]);
   });
   it('name/createdBy/registration serialize; simulation columns are display-only', () => {
@@ -392,9 +392,9 @@ describe('single_neuron_synaptome_simulation parity', () => {
       EntityCoreFields.SimulationResponse,
       EntityCoreFields.SynaptomeModelName,
       EntityCoreFields.BrainRegion,
-      'lifecycleStatus',
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      'lifecycleStatus',
     ]);
   });
   it('name/createdBy serialize; description + synaptome + stimulus/response display-only', () => {

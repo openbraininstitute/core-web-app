@@ -87,6 +87,12 @@ describe('lifecycle status — coverage across every registered listing', () => 
     expect(column?.hiddenByDefaultResolved).toBe(false);
   });
 
+  it.each(REGISTERED_DATA_TYPES)('%s renders the column LAST', (dataType) => {
+    const { schema } = definitionFor(dataType);
+    const resolved = resolveColumns(schema, { dataType, section: WorkspaceSection.Data });
+    expect(resolved.at(-1)?.id).toBe('lifecycleStatus');
+  });
+
   it.each(REGISTERED_DATA_TYPES)('%s never sorts on lifecycle_status', (dataType) => {
     const { schema } = definitionFor(dataType);
     expect(schema.columns.find((c) => c.id === 'lifecycleStatus')?.sortable).toBe(false);

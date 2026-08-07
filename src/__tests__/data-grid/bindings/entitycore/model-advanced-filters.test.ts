@@ -51,6 +51,9 @@ function bool(value: boolean): TFilterValue {
 function range(min: number | null, max: number | null): TFilterValue {
   return { kind: FilterValueKind.Range, min, max };
 }
+function number(value: number): TFilterValue {
+  return { kind: FilterValueKind.Number, value };
+}
 
 /** The state key a filter DECLARED as `groupId · filterId` actually occupies. */
 function declaredKey<Row>(schema: IGridSchema<Row>, groupId: string, filterId: string): string {
@@ -262,6 +265,13 @@ describe('single-neuron-synaptome advanced filters — GET /single-neuron-synapt
     ['emodel', 'name', OperatorId.In, set('cADpyr'), { me_model__emodel__name__in: ['cADpyr'] }],
     ['emodel', 'name', OperatorId.Eq, text('cADpyr'), { me_model__emodel__name: 'cADpyr' }],
     ['emodel', 'score', OperatorId.Range, range(null, 10), { me_model__emodel__score__lte: 10 }],
+    [
+      'emodel',
+      'score',
+      OperatorId.NumberEq,
+      number(10),
+      { me_model__emodel__score__gte: 10, me_model__emodel__score__lte: 10 },
+    ],
     ...RECORD_ID_CASES,
   ]);
 

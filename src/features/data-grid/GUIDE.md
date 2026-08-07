@@ -225,6 +225,193 @@ hide one. Leave `hiddenByDefault` undefined on auxiliary columns unless you mean
 `essential` is orthogonal to both: it says nothing about the default state, only about
 what the bulk action keeps.
 
+### 2.5 `order` — pinning a column to the front or the back
+
+`resolveColumns` sorts by the resolved `order` weight and falls back to the declaration
+index for columns that declare none. Because the fallback is an array index, it is
+bounded by the schema's column count, so a large constant parks a column **last across
+every listing at once**:
+
+```ts
+const LAST_COLUMN_ORDER = 10_000;
+
+export function lifecycleStatusColumn<Row>(o?: TColumnOverride<Row>): IColumnModel<Row> {
+  return mergeColumnDef<Row>({ id: 'lifecycleStatus', order: LAST_COLUMN_ORDER, /* … */ }, o);
+}
+```
+
+Use the weight rather than moving the factory call to the bottom of each `columns`
+array. Auxiliary columns are declared last, so declaration order alone would place the
+pinned column *ahead* of any auxiliary column the user ticks. `mergeColumnDef` composes
+`order` through `mergeContextual`, so a schema can still override it per listing.
+
+**This does not reach users with a saved layout.** `reconcileColumnOrder` treats a
+stored `columnOrder` as the user's own arrangement and keeps the stored relative order
+for any id present in both (§5.5). Changing a declared `order` therefore only affects
+users with no persisted layout, until they use the chooser's "Reset to default" (§2.6).
+Bumping the `data-grid:v1:l:` namespace would force it, at the cost of discarding every
+genuine customisation — rarely the right trade for one column.
+
+### 2.6 Resetting the layout to the schema defaults
+
+The chooser's "Reset to default" restores order, visibility **and** widths, and is
+disabled while the layout already matches the schema. `core/domain/column-layout.ts`
+owns the derivation; `createInitialState` uses the same function, so there is one
+definition of "default".
+
+```typescript
+/**
+ * The layout slice of `IGridState` — the part the chooser, column drag and column
+ * resize own. The browse slice (filters/sort/page) is deliberately not included.
+ */
+export interface IColumnLayout {
+  columnOrder: string[];
+  hiddenColumns: string[];
+  columnWidths: Record<string, number>;
+}
+
+/**
+ * Builds the layout a schema resolves to with nothing persisted.
+ *
+ * @param {ReadonlyArray<IColumnVisibilityDefault>} columns - Context-resolved columns,
+ *   i.e. the output of `resolveColumns`; the order of this array becomes `columnOrder`.
+ * @returns {IColumnLayout} Declared order, declared visibility, no user widths. A
+ *   column is hidden when `hiddenByDefaultResolved` is true and `alwaysVisible` is not.
+ *
+ * @example
+ * const layout = defaultColumnLayout(resolveColumns(schema, ctx));
+ * // { columnOrder: ['name', 'species', 'aux'], hiddenColumns: ['aux'], columnWidths: {} }
+ */
+export function defaultColumnLayout(
+  columns: ReadonlyArray<IColumnVisibilityDefault>
+): IColumnLayout;
+
+/**
+ * Whether a layout already equals the schema default, i.e. a reset would be a no-op.
+ * Backs the disabled state of the chooser's reset control.
+ *
+ * @param {ReadonlyArray<IColumnVisibilityDefault>} columns - Context-resolved columns.
+ * @param {IColumnLayout} layout - The live layout, normally the grid state snapshot.
+ * @returns {boolean} True when widths are empty, `columnOrder` matches element for
+ *   element, and `hiddenColumns` matches as a **set** — a persisted list may have been
+ *   written in any order, so it is compared sorted.
+ */
+export function isDefaultColumnLayout(
+  columns: ReadonlyArray<IColumnVisibilityDefault>,
+  layout: IColumnLayout
+): boolean;
+```
+
+```typescript
+/**
+ * Restores column order, visibility and widths to the schema defaults for the current
+ * context, leaving filters, sort, page and selection untouched.
+ *
+ * The mirror image of `resetState`, which resets the browse state and carries the
+ * layout over. Dispatches `GridActionType.Hydrate`, so the write **does** reach the
+ * persistence subscription and overwrites the saved localStorage layout — without
+ * that, the discarded layout would be rehydrated on the next mount.
+ *
+ * @returns {void}
+ *
+ * @example
+ * <button onClick={() => controller.resetColumnLayout()}>Reset to default</button>
+ */
+resetColumnLayout(): void;
+```
+
+### 2.7 Render a cell
+
+`cellRenderer` is a **string key**, resolved by the React ring's `CellRendererRegistry`
+(`react/cell-renderer-registry.ts`). The core ring never imports React, so a schema
+names a renderer and the binding supplies the component.
+
+Registration has two routes, and the choice matters:
+
+- `definition.registerCellRenderers` — per listing, for a renderer only that entity uses.
+- `buildCellRenderers` (`bindings/entitycore/cell-renderers.ts`) — registered
+  **unconditionally for every listing**. Use this for a renderer that any schema may
+  reference, because many definitions declare no `registerCellRenderers` at all and an
+  unregistered key silently degrades the cell to plain text. `LIFECYCLE_STATUS_RENDERER`
+  and `DESCRIPTION_RENDERER` are registered this way.
+
+A column with a `cellRenderer` is excluded from `withEmptyPlaceholder`
+(`keepsBlankWhenEmpty`), so the component owns its own empty state — render
+`EMPTY_PLACEHOLDER` yourself rather than returning `null`.
+
+#### Passing params to a shared renderer
+
+`cellRendererParams` reaches the component as `props.params`, which is how one renderer
+serves several entities. The preview cell uses it to choose its image source:
+
+```typescript
+/**
+ * `cellRendererParams` accepted by `EntityPreview`, selecting where its image is
+ * fetched from.
+ *
+ * @property {TThumbnailServiceTarget | TEntityAssetTarget} [target] - Omit for the
+ *   thumbnail service, which derives the asset from the entity type's configured
+ *   extension. Pass `'assetLabel'` to download a ready-made image off the record.
+ * @property {AssetLabel} [assetLabel] - Which labelled asset to download. Required
+ *   when `target` is `'assetLabel'`; without it the cell falls back to the service
+ *   rather than downloading an arbitrary asset.
+ */
+export interface IEntityPreviewParams {
+  target?: TThumbnailServiceTarget | TEntityAssetTarget;
+  assetLabel?: AssetLabel;
+}
+```
+
+Ion channel models need the asset route — the thumbnail service has no renderer for
+that type and `buildAssetUrl` throws `NoAssetFound`, which surfaces as a permanent
+"thumbnail generation in progress":
+
+```ts
+previewColumn<Row>({
+  cellRenderer: ENTITY_PREVIEW_RENDERER,
+  cellRendererParams: {
+    target: 'assetLabel',
+    assetLabel: AssetLabel.ion_channel_model_thumbnail,
+  } satisfies IEntityPreviewParams,
+  width: { width: 184, minWidth: 120, resizable: true },
+})
+```
+
+#### Long prose: the description cell
+
+```typescript
+/**
+ * Registry key for `DescriptionCell`, which clamps prose to two lines and puts the rest
+ * behind a popover. Registered for every listing by `buildCellRenderers`.
+ *
+ * The component reads `props.value`, not a row field, so it serves any column whose
+ * `getValue` produces the text — which is why all eight description columns route
+ * through the single `descriptionColumn` factory in `columns/catalog.ts`.
+ *
+ * @type {string}
+ */
+export const DESCRIPTION_RENDERER: string;
+```
+
+Two constraints are load-bearing if you write another clamped cell:
+
+- **`whitespace-normal` is required.** AG Grid's cell CSS sets `nowrap`, and
+  `line-clamp-*` does not undo it — the text stays on one line and the clamp never
+  triggers. The same applies to the header (§2c).
+- **Measure with a tolerance of half a line, not a pixel.** A tight `leading-[…]` makes
+  the font's natural line box overshoot, so an unclipped single line still reports
+  `scrollHeight` 1–2px over `clientHeight` (measured: 20 vs 18). A pixel-level test
+  reads that as overflow and shows the affordance on every row. Also treat a
+  zero-width or zero-height box as "no answer" — AG Grid builds cells before column
+  widths settle — and keep the affordance out of flow so revealing it cannot narrow the
+  text it just measured.
+
+#### Header text
+
+Column headers clamp to two lines (`line-clamp-2 whitespace-normal`) with the full name
+on `title`, rather than truncating to one. Nothing to declare per column; a long
+`header` simply wraps within the 48px header row.
+
 ---
 
 ## 3. Add a filter
@@ -520,6 +707,13 @@ A stored `columnOrder` / `hiddenColumns` predates any column you add today.
 
 Practical upshot: adding an auxiliary column is safe for existing users, and renaming a
 column id is not (the old id is dropped, the new one takes its declared default).
+Changing a declared `order` is in the same bucket: reconciliation preserves the stored
+positions, so the new weight reaches a user only via "Reset to default" (§2.6).
+
+Anything that resets the layout must dispatch through the store rather than mutating
+the snapshot, so the persistence subscription writes the defaults out. A reset that
+skips persistence leaves the discarded layout in `localStorage` to be rehydrated on the
+next mount — `resetColumnLayout` exists to get this right in one place.
 
 ### 5.6 Ring / import discipline
 
@@ -574,6 +768,29 @@ The suites that fail loudest when a param or sort field is wrong are the
 
 ---
 
+### 5.10 Interactive cell content vs the row click
+
+A control inside a cell — a popover trigger, an action button, a link — must not also
+open the row. `stopPropagation` inside the cell **cannot** achieve this: AG Grid's own
+DOM listener runs before any React synthetic handler, so the grid has to inspect the
+click target itself.
+
+Both grids call `isInteractiveClick` (`renderers/aggrid/interactive-target.ts`) from
+their `onCellClicked`, alongside the expander check:
+
+```ts
+if (isExpanderClick(e.event)) return;
+if (isInteractiveClick(e.event)) return;
+```
+
+It matches `button, a, input, select, textarea, label, [role="button"]` via `closest`,
+and is narrowed to `Element` rather than `HTMLElement` on purpose — an icon-only button
+is clicked on its `<svg>` glyph, and `SVGElement` is not an `HTMLElement`.
+
+Corollary: an in-cell control is **never** a way to open the row. If a cell should both
+show an affordance and open the row on click, put the affordance outside the row-click
+path or handle navigation in the control itself.
+
 ## Where things live
 
 | concern | file |
@@ -581,7 +798,11 @@ The suites that fail loudest when a param or sort field is wrong are the
 | schema / column / filter types | `core/domain/schema.ts`, `core/domain/column-model.ts` |
 | contextual resolution | `core/domain/contextual.ts`, `core/domain/resolve-schema.ts` |
 | derived filter panel | `core/domain/filter-panel.ts` |
-| persisted-layout reconciliation | `core/domain/column-layout.ts` |
+| persisted-layout reconciliation, defaults, reset comparison | `core/domain/column-layout.ts` |
+| shared cell renderers registered for every listing | `bindings/entitycore/cell-renderers.ts` |
+| entity cell components (preview, description, lifecycle pill) | `bindings/entitycore/renderers/` |
+| numeric operator set (`Range` + `NumberEq`) | `bindings/entitycore/columns/numeric-filter.ts` |
+| row-click guard for interactive cell content | `renderers/aggrid/interactive-target.ts` |
 | controller + state | `core/grid-controller.ts`, `core/state/` |
 | column chooser, filter editors, toolbar | `react/` |
 | AG Grid adapter | `renderers/aggrid/` |

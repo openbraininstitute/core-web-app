@@ -3,10 +3,12 @@ import {
   brainRegionColumn,
   contributionsColumn,
   createdByColumn,
+  descriptionColumn,
   nameColumn,
   registrationDateColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import {
   VALIDATION_STATUS_LABELS,
   validationStatusFilter,
@@ -102,7 +104,7 @@ const singleNeuronSynaptomeAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> 
         id: 'score',
         label: 'E-model score',
         field: 'me_model__emodel__score',
-        operators: [OperatorId.Range],
+        operators: NUMERIC_FILTER_OPERATORS,
         description: 'Bounds on the e-model cumulated score',
       },
     ],
@@ -150,12 +152,7 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
   advancedFilters: flatAdvancedFilters(singleNeuronSynaptomeAdvancedFilters),
   columns: [
     nameColumn<ISingleNeuronSynaptome>(),
-    {
-      id: 'description',
-      header: 'Description',
-      getValue: (r) => r.description ?? '',
-      width: { minWidth: 200, flex: 2 },
-    },
+    descriptionColumn<ISingleNeuronSynaptome>(),
     {
       id: 'me_model',
       header: 'ME-model',

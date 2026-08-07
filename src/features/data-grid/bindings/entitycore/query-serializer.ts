@@ -69,6 +69,13 @@ const STRATEGIES: Record<string, Strategy> = {
     e.value.kind === FilterValueKind.Number && e.value.value != null
       ? { [`${field}__lte`]: e.value.value }
       : {},
+  /**
+   * Exact numeric match as a degenerate range.
+   */
+  [OperatorId.NumberEq]: (field, e) =>
+    e.value.kind === FilterValueKind.Number && e.value.value != null
+      ? { [`${field}__gte`]: e.value.value, [`${field}__lte`]: e.value.value }
+      : {},
   [OperatorId.Range]: (field, e) => {
     if (e.value.kind !== FilterValueKind.Range) return {};
     const out: TEntitycoreParams = {};

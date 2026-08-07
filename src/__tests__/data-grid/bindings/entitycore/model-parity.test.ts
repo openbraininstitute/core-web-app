@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { WorkspaceSection } from '@/constants';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
+import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
 import { analysisNotebookResultSchema } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-result';
 import { analysisNotebookTemplateSchema } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-template';
 import { emodelSchema } from '@/features/data-grid/bindings/entitycore/schemas/emodel';
@@ -101,13 +103,13 @@ describe('emodel parity', () => {
       'etype',
       'exemplarMorphology',
       'eModelScore',
-      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
       'exemplarHasSegmentedSpines',
       'ionChannelModels',
       'strainName',
+      'lifecycleStatus',
     ]);
   });
 
@@ -200,7 +202,6 @@ describe('memodel parity', () => {
       'species',
       'mtype',
       'etype',
-      'lifecycleStatus',
       'createdBy',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
@@ -210,6 +211,7 @@ describe('memodel parity', () => {
       'emodelScore',
       'strainName',
       'contributions',
+      'lifecycleStatus',
     ]);
   });
 
@@ -335,12 +337,12 @@ describe('single_neuron_synaptome parity', () => {
       'etype',
       'brainRegion',
       'species',
-      'lifecycleStatus',
       'createdBy',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
       'meModelValidationStatus',
       'contributions',
+      'lifecycleStatus',
     ]);
   });
 
@@ -422,7 +424,6 @@ describe('ion_channel_model parity', () => {
       'temperatureCelsius',
       'isTemperatureDependent',
       'isLjpCorrected',
-      'lifecycleStatus',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
       'nmodlSuffix',
@@ -432,7 +433,37 @@ describe('ion_channel_model parity', () => {
       'strainName',
       'subjectName',
       'contributions',
+      'lifecycleStatus',
     ]);
+  });
+
+  it('reads its preview from the ion_channel_model_thumbnail asset, not the service', () => {
+    const preview = s.columns.find((c) => c.id === 'preview');
+    expect(preview?.cellRenderer).toBe(ENTITY_PREVIEW_RENDERER);
+    expect(preview?.cellRendererParams).toEqual({
+      target: 'assetLabel',
+      assetLabel: AssetLabel.ion_channel_model_thumbnail,
+    });
+  });
+
+  it('temperature filters by an exact value as well as a range', () => {
+    const column = s.columns.find((c) => c.id === 'temperatureCelsius');
+    expect(column?.filter?.operators).toEqual([OperatorId.Range, OperatorId.NumberEq]);
+
+    const exact = serializeQuery(
+      query({
+        filters: {
+          temperatureCelsius: {
+            columnId: 'temperatureCelsius',
+            operator: OperatorId.NumberEq,
+            value: { kind: FilterValueKind.Number, value: 34 },
+          },
+        },
+      }),
+      s
+    );
+    expect(exact.temperature_celsius__gte).toBe(34);
+    expect(exact.temperature_celsius__lte).toBe(34);
   });
 
   it('the auxiliary columns carry the filters they replaced', () => {
@@ -544,9 +575,9 @@ describe('analysis_notebook_template parity', () => {
       'name',
       'description',
       'notebook_scale',
-      'lifecycleStatus',
       'contributions',
       'registrationDate',
+      'lifecycleStatus',
     ]);
   });
   it('name ilike + contribution facet serialize to legacy keys; scale/description display-only', () => {
@@ -568,9 +599,9 @@ describe('analysis_notebook_result parity', () => {
       'notebook_image_preview',
       'name',
       'description',
-      'lifecycleStatus',
       'contributions',
       'updateDate',
+      'lifecycleStatus',
     ]);
   });
   it('update date sorts on update_date and date-range-filters on update_date__gte/__lte', () => {

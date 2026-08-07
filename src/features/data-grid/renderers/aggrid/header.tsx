@@ -70,7 +70,12 @@ export function AgHeader(props: CustomHeaderProps) {
         {headerNode !== undefined ? (
           <span className="flex min-w-0 flex-1 items-center">{headerNode}</span>
         ) : (
-          <span className="truncate font-light text-gray-500">{props.displayName}</span>
+          <span
+            title={props.displayName}
+            className="line-clamp-2 min-w-0 font-light whitespace-normal text-gray-500 wrap-break-word"
+          >
+            {props.displayName}
+          </span>
         )}
         {unit ? <span className="text-xs font-light text-gray-500">[{unit}]</span> : null}
         {sortable && (

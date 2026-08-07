@@ -2,6 +2,7 @@ import { AnalysisScaleDict } from '@/api/entitycore/types/entities/analysis-note
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   contributionsColumn,
+  descriptionColumn,
   nameColumn,
   registrationDateColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
@@ -33,12 +34,7 @@ export const analysisNotebookTemplateSchema: IGridSchema<Row> = {
   selection: { enabled: true },
   columns: [
     nameColumn<Row>({ essential: true }),
-    {
-      id: 'description',
-      header: 'Description',
-      getValue: (r) => r.description ?? '',
-      width: { minWidth: 200, flex: 2 },
-    },
+    descriptionColumn<Row>(),
     {
       id: 'notebook_scale',
       header: 'Scale',

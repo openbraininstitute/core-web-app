@@ -20,6 +20,7 @@ import {
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import { buildCircuitAdvancedFilters } from '@/features/data-grid/bindings/entitycore/schemas/circuit-models';
 import {
   flatAdvancedFilters,
@@ -351,12 +352,12 @@ function numberColumn(id: string, header: string, field: string): IColumnModel<R
   return {
     id,
     header,
-    align: Align.Right,
+    align: Align.Left,
     sortable: true,
     sortField: field,
     width: { minWidth: 130 },
     getValue: (row) => localizedNumber((row as unknown as Record<string, number>)[field]),
-    filter: { operators: [OperatorId.Range], field },
+    filter: { operators: NUMERIC_FILTER_OPERATORS, field },
   };
 }
 

@@ -1,5 +1,6 @@
 import {
   createdByColumn,
+  descriptionColumn,
   nameColumn,
   registrationDateColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
@@ -58,19 +59,10 @@ export function circuitNameColumn<Row extends { circuit?: { name?: string | null
   );
 }
 
-/** Description column, unfiltered: no entitycore endpoint exposes a `description` param. */
 export function campaignDescriptionColumn<Row extends { description?: string | null }>(
   o?: TColumnOverride<Row>
 ): IColumnModel<Row> {
-  return mergeColumnDef<Row>(
-    {
-      id: 'description',
-      header: 'Description',
-      getValue: (r) => r.description ?? '',
-      width: { minWidth: 200, flex: 2 },
-    },
-    o
-  );
+  return descriptionColumn<Row>(o);
 }
 
 /**

@@ -3,6 +3,7 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import {
   brainRegionColumn,
   createdByColumn,
+  descriptionColumn,
   nameColumn,
   registrationDateColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
@@ -30,12 +31,7 @@ export const singleNeuronSynaptomeSimulationSchema: IGridSchema<Row> = {
   selection: { enabled: true },
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
-    {
-      id: EntityCoreFields.Description,
-      header: 'Description',
-      getValue: (row) => row.description ?? '',
-      width: { minWidth: 200, flex: 2 },
-    },
+    descriptionColumn<Row>({ id: EntityCoreFields.Description }),
     {
       id: EntityCoreFields.SimulationStimulus,
       header: 'Stimulus',

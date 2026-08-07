@@ -103,6 +103,41 @@ export interface IStoredColumnLayout {
   columnOrder?: ReadonlyArray<string> | null;
 }
 
+/** The layout slice of {@link IGridState} — what the column chooser and drag/resize own. */
+export interface IColumnLayout {
+  columnOrder: string[];
+  hiddenColumns: string[];
+  columnWidths: Record<string, number>;
+}
+
+/** The layout a schema resolves to with nothing persisted. */
+export function defaultColumnLayout(
+  columns: ReadonlyArray<IColumnVisibilityDefault>
+): IColumnLayout {
+  return {
+    columnOrder: columns.map((c) => c.id),
+    hiddenColumns: columns
+      .filter((c) => c.hiddenByDefaultResolved && !c.alwaysVisible)
+      .map((c) => c.id),
+    columnWidths: {},
+  };
+}
+
+/** Whether a layout is already the schema's default, i.e. a reset would change nothing. */
+export function isDefaultColumnLayout(
+  columns: ReadonlyArray<IColumnVisibilityDefault>,
+  layout: IColumnLayout
+): boolean {
+  const defaults = defaultColumnLayout(columns);
+  const sameList = (a: ReadonlyArray<string>, b: ReadonlyArray<string>) =>
+    a.length === b.length && a.every((v, i) => v === b[i]);
+  return (
+    Object.keys(layout.columnWidths).length === 0 &&
+    sameList(defaults.columnOrder, layout.columnOrder) &&
+    sameList([...defaults.hiddenColumns].sort(), [...layout.hiddenColumns].sort())
+  );
+}
+
 /**
  * Merge the declared per-column `hiddenByDefault` with a persisted visibility list.
  *

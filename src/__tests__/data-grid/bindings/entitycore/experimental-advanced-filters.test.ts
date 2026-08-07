@@ -49,6 +49,9 @@ function bool(value: boolean): TFilterValue {
 function range(min: number | null, max: number | null): TFilterValue {
   return { kind: FilterValueKind.Range, min, max };
 }
+function number(value: number): TFilterValue {
+  return { kind: FilterValueKind.Number, value };
+}
 /**
  * The state key a filter declared as `groupId · filterId` actually occupies: a schema
  * collapsed by `flatAdvancedFilters` stores it under the flat group's key instead.
@@ -341,6 +344,13 @@ describe('em-cell-mesh advanced filters — GET /em-cell-mesh', () => {
       OperatorId.Range,
       range(10, 100),
       { measurement_item__value__gte: 10, measurement_item__value__lte: 100 },
+    ],
+    [
+      'measurements',
+      'value',
+      OperatorId.NumberEq,
+      number(42),
+      { measurement_item__value__gte: 42, measurement_item__value__lte: 42 },
     ],
     ...RECORD_ID_CASES,
   ]);

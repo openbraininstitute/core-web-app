@@ -10,6 +10,7 @@ import {
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
@@ -191,9 +192,9 @@ export const emodelSchema: IGridSchema<Row> = {
       sortable: true,
       sortField: 'score',
       getValue: (r) => (r.score == null ? '' : String(r.score)),
-      align: Align.Right,
+      align: Align.Left,
       width: { minWidth: 150 },
-      filter: { operators: [OperatorId.Range], field: 'score' },
+      filter: { operators: NUMERIC_FILTER_OPERATORS, field: 'score' },
     },
     lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>({ sortable: true, sortField: 'contribution__pref_label' }),

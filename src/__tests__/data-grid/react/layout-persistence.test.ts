@@ -308,3 +308,52 @@ describe('column layout persistence (flag OFF)', () => {
     expect(window.sessionStorage.getItem(`data-grid:v1:s:${KEY}`)).toBeTruthy();
   });
 });
+
+describe('resetColumnLayout — the column chooser\'s "Reset to default"', () => {
+  it('restores the schema defaults for order, visibility and widths', async () => {
+    const controller = await makeController();
+    controller.store.dispatch({
+      type: GridActionType.SetColumnOrder,
+      order: ['region', 'name', 'species', 'aux'],
+    });
+    controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
+    controller.store.dispatch({
+      type: GridActionType.SetColumnWidth,
+      columnId: 'name',
+      width: 400,
+    });
+
+    controller.resetColumnLayout();
+
+    const state = controller.store.getSnapshot();
+    expect(state.columnOrder).toEqual(COLUMNS.map((c) => c.id));
+    expect(state.hiddenColumns).toEqual(['aux']);
+    expect(state.columnWidths).toEqual({});
+    controller.dispose();
+  });
+
+  it('leaves browse state alone — only the layout resets', async () => {
+    const controller = await makeController();
+    controller.store.dispatch({ type: GridActionType.SetQuickFilter, text: 'abc' });
+    controller.store.dispatch({ type: GridActionType.SetPageSize, pageSize: 50 });
+    controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
+
+    controller.resetColumnLayout();
+
+    const state = controller.store.getSnapshot();
+    expect(state.quickFilter).toBe('abc');
+    expect(state.pageSize).toBe(50);
+    controller.dispose();
+  });
+
+  it('overwrites the saved layout instead of leaving it to be restored', async () => {
+    const first = await makeController();
+    first.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species', 'aux'] });
+    first.resetColumnLayout();
+    first.dispose();
+
+    const second = await makeController();
+    expect(second.store.getSnapshot().hiddenColumns).toEqual(['aux']);
+    second.dispose();
+  });
+});

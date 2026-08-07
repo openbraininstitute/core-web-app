@@ -22,6 +22,8 @@ export const OperatorId = {
   Gte: 'gte',
   Lte: 'lte',
   Range: 'range',
+  /** Exact match on a numeric field; {@link OperatorId.Eq} is its string counterpart. */
+  NumberEq: 'numberEq',
   DateRange: 'dateRange',
   Bool: 'bool',
 } as const;
@@ -82,6 +84,12 @@ export const DEFAULT_OPERATORS: ReadonlyArray<IOperatorDef> = [
     label: 'Between',
     uiKind: OperatorUiKind.Range,
     valueKind: FilterValueKind.Range,
+  },
+  {
+    id: OperatorId.NumberEq,
+    label: 'Equals',
+    uiKind: OperatorUiKind.Number,
+    valueKind: FilterValueKind.Number,
   },
   {
     id: OperatorId.DateRange,

@@ -175,3 +175,67 @@ describe('column chooser — select all', () => {
     expect(selectAll()).not.toHaveAttribute('aria-checked', 'mixed');
   });
 });
+
+describe('column chooser — reset to default', () => {
+  async function open() {
+    const mounted = mount();
+    fireEvent.click(screen.getByRole('button', { name: 'Columns' }));
+    await screen.findByRole('checkbox', { name: 'Select all' });
+    return mounted;
+  }
+
+  const resetButton = () => screen.getByRole('button', { name: 'Reset to default' });
+
+  it('is disabled while the layout is already the schema default', async () => {
+    await open();
+    expect(resetButton()).toBeDisabled();
+  });
+
+  it('restores the default visibility after the user changed it', async () => {
+    const { controller } = await open();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Species' })); // hide a regular one
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Strain' })); // reveal the auxiliary one
+    expect(controller.store.getSnapshot().hiddenColumns).toEqual(['species']);
+    expect(resetButton()).toBeEnabled();
+
+    fireEvent.click(resetButton());
+
+    expect(controller.store.getSnapshot().hiddenColumns).toEqual(['strainName']);
+    expect(screen.getByRole('checkbox', { name: 'Species' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Strain' })).not.toBeChecked();
+    expect(resetButton()).toBeDisabled();
+  });
+
+  it('stays enabled for an order or width change the checkboxes cannot show', async () => {
+    const { controller } = await open();
+
+    act(() => {
+      controller.store.dispatch({
+        type: GridActionType.SetColumnOrder,
+        order: ['species', 'brainRegion', 'strainName'],
+      });
+    });
+    expect(resetButton()).toBeEnabled();
+
+    fireEvent.click(resetButton());
+    expect(controller.store.getSnapshot().columnOrder).toEqual([
+      'brainRegion',
+      'species',
+      'strainName',
+    ]);
+
+    act(() => {
+      controller.store.dispatch({
+        type: GridActionType.SetColumnWidth,
+        columnId: 'species',
+        width: 300,
+      });
+    });
+    expect(resetButton()).toBeEnabled();
+
+    fireEvent.click(resetButton());
+    expect(controller.store.getSnapshot().columnWidths).toEqual({});
+    expect(resetButton()).toBeDisabled();
+  });
+});

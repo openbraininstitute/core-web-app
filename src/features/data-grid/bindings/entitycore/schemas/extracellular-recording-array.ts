@@ -7,6 +7,7 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import {
   contributionsColumn,
   createdByColumn,
+  descriptionColumn,
   nameColumn,
   registrationDateColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
@@ -69,12 +70,7 @@ export const extracellularRecordingArraySchema: IGridSchema<Row> = {
   advancedFilters: flatAdvancedFilters(extracellularRecordingArrayAdvancedFilters),
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
-    {
-      id: EntityCoreFields.Description,
-      header: 'Description',
-      getValue: (row) => row.description ?? '',
-      width: { minWidth: 200, flex: 2 },
-    },
+    descriptionColumn<Row>({ id: EntityCoreFields.Description }),
     {
       id: EntityCoreFields.RecordingArrayCircuit,
       header: 'Circuit',

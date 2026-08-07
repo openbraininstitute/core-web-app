@@ -7,7 +7,9 @@ export {
   resolveAdvancedFilterGroups,
 } from './domain/advanced-filters';
 export {
+  defaultColumnLayout,
   dropPinnedColumns,
+  isDefaultColumnLayout,
   reconcileColumnOrder,
   reconcileHiddenColumns,
 } from './domain/column-layout';
@@ -74,7 +76,11 @@ export type {
   IResolvedAdvancedFilterGroup,
   TAdvancedFilterDef,
 } from './domain/advanced-filters';
-export type { IColumnVisibilityDefault, IStoredColumnLayout } from './domain/column-layout';
+export type {
+  IColumnLayout,
+  IColumnVisibilityDefault,
+  IStoredColumnLayout,
+} from './domain/column-layout';
 export type {
   IColumnFilter,
   IColumnModel,

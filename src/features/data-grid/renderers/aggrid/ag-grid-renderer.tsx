@@ -16,6 +16,7 @@ import {
   isDetailRow,
 } from '@/features/data-grid/renderers/aggrid/detail-rows';
 import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-cell';
+import { isInteractiveClick } from '@/features/data-grid/renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
 import { mergePageSelection } from '@/features/data-grid/renderers/aggrid/selection';
 import {
@@ -259,6 +260,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       if (!onRowClick) return;
       // an expander click (here or bubbled up from a nested grid) must not open the row
       if (isExpanderClick(e.event)) return;
+      if (isInteractiveClick(e.event)) return;
       const colId = e.column.getColId();
       if (SYNTHETIC_COL_IDS.has(colId)) return;
       // belt-and-braces for event retargeting defeating the check above

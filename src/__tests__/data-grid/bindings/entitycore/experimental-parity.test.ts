@@ -77,7 +77,6 @@ describe('electrical_cell_recording parity', () => {
       'species',
       'etype',
       'name',
-      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
@@ -85,6 +84,7 @@ describe('electrical_cell_recording parity', () => {
       'recordingOrigin',
       'strainName',
       'subjectName',
+      'lifecycleStatus',
     ]);
   });
   it('the auxiliary columns carry the filters they replaced, and NONE of them sorts', () => {
@@ -154,7 +154,6 @@ describe('ion_channel_recording parity', () => {
       'temperature',
       'cellLine',
       'name',
-      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
@@ -165,6 +164,7 @@ describe('ion_channel_recording parity', () => {
       'recordingType',
       'strainName',
       'subjectName',
+      'lifecycleStatus',
     ]);
   });
   it('the auxiliary columns carry the filters they replaced', () => {
@@ -259,9 +259,9 @@ describe('universal_cell_morphology parity', () => {
       'species',
       'mtype',
       'name',
-      'lifecycleStatus',
       'contributions',
       'registrationDate',
+      'lifecycleStatus',
     ]);
   });
   it('build-workflow section reveals generation type + protocol design', () => {
@@ -305,12 +305,12 @@ describe('experimental_neuron_density parity', () => {
       'numberOfMeasurements',
       'name',
       'subjectAge',
-      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
       'strainName',
       'subjectName',
+      'lifecycleStatus',
     ]);
   });
   it('the auxiliary columns are hidden by default and carry the subject filters', () => {
@@ -377,7 +377,6 @@ describe('synthesized_cell_morphology parity', () => {
       'species',
       'mtype',
       'name',
-      'lifecycleStatus',
       'contributions',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
@@ -388,6 +387,7 @@ describe('synthesized_cell_morphology parity', () => {
       'strainName',
       'subjectName',
       'hasSegmentedSpines',
+      'lifecycleStatus',
     ]);
   });
 
@@ -487,12 +487,12 @@ describe('experimental_bouton_density parity', () => {
       'meanStd',
       'sem',
       'numberOfMeasurements',
-      'lifecycleStatus',
       'contributions',
       // auxiliary — hidden until ticked in the chooser
       'name',
       'strainName',
       'subjectName',
+      'lifecycleStatus',
     ]);
   });
   it('the auxiliary columns are hidden by default and carry the filters they replaced', () => {
@@ -543,7 +543,6 @@ describe('experimental_synapses_per_connection parity', () => {
       'meanStd',
       'species',
       'subjectAge',
-      'lifecycleStatus',
       'contributions',
       // auxiliary — hidden until ticked in the chooser
       'name',
@@ -551,6 +550,7 @@ describe('experimental_synapses_per_connection parity', () => {
       'brainRegionAcronym',
       'strainName',
       'subjectName',
+      'lifecycleStatus',
     ]);
   });
   it('the auxiliary columns are hidden by default and carry the filters they replaced', () => {
@@ -629,7 +629,6 @@ describe('em_cell_mesh parity', () => {
       'species',
       'releaseVersion',
       'emDataset',
-      'lifecycleStatus',
       'registrationDate',
       // auxiliary — hidden until ticked in the chooser
       'meshType',
@@ -639,6 +638,7 @@ describe('em_cell_mesh parity', () => {
       'datasetExperimentDate',
       'strainName',
       'subjectName',
+      'lifecycleStatus',
     ]);
   });
   it('the auxiliary columns carry the filters they replaced', () => {

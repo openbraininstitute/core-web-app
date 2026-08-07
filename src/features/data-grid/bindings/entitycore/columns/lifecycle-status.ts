@@ -11,22 +11,16 @@ export interface IHasLifecycleStatus {
 }
 
 /**
- * Lifecycle status column, rendered as the shared {@link LifecycleStatusCell} pill.
- *
- * Never sortable: `lifecycle_status` is in no endpoint's `ordering_model_fields`, and
- * entitycore 422s on an `order_by` outside that allowlist. Filtering uses the bare
- * single-select `lifecycle_status` param (no `__in` companion exists), with an explicit
- * target pinning the static options — no endpoint computes a facet bucket for it.
- *
- * `Row` is unconstrained on purpose: {@link IHasLifecycleStatus} has only optional
- * members, so using it as a constraint is a weak type and fails TS2559 for every row
- * type. The wire always carries the field; the read is narrowed here instead.
+ * Order weight that parks a column after every column declaring none.
  */
+const LAST_COLUMN_ORDER = 10_000;
+
 export function lifecycleStatusColumn<Row>(o?: TColumnOverride<Row>): IColumnModel<Row> {
   return mergeColumnDef<Row>(
     {
       id: 'lifecycleStatus',
       header: 'Lifecycle status',
+      order: LAST_COLUMN_ORDER,
       sortable: false,
       // label, not the wire value: also feeds quick filter, export and the fallback
       getValue: (r) => {

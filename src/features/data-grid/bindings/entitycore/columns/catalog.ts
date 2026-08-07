@@ -3,7 +3,9 @@ import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/help
 
 import { Align, FilterOptionsKind, FreeEntryKind, mergeColumnDef, OperatorId } from '../../../core';
 import { CONTRIBUTORS_RENDERER } from '../renderers/contributors-cell';
+import { DESCRIPTION_RENDERER } from '../renderers/description-cell';
 import { EM_DATASET_RENDERER } from '../renderers/em-dataset-cell';
+import { NUMERIC_FILTER_OPERATORS } from './numeric-filter';
 
 import type { TMeasurementStatistic } from '@/api/entitycore/types/shared/global';
 import type { IColumnModel, TColumnOverride } from '../../../core';
@@ -181,7 +183,8 @@ export function descriptionColumn<Row extends IHasDescription>(
       id: 'description',
       header: 'Description',
       getValue: (r) => r.description ?? '',
-      width: { minWidth: 200, flex: 2 },
+      cellRenderer: DESCRIPTION_RENDERER,
+      width: { minWidth: 200, width: 350 },
     },
     o
   );
@@ -366,7 +369,7 @@ export function registrationDateColumn<Row extends IHasCreationDate>(
       sortable: true,
       sortField: 'creation_date',
       getValue: (r) => formatDate(r.creation_date),
-      width: { minWidth: 150 },
+      width: { minWidth: 150, width: 185 },
       filter: { operators: [OperatorId.DateRange], field: 'creation_date' },
     },
     o
@@ -419,7 +422,7 @@ export function temperatureColumn<Row extends IHasTemperature>(
       sortField: 'temperature',
       getValue: (r) => (r.temperature == null ? '' : `${r.temperature} °C`),
       width: { minWidth: 130 },
-      filter: { operators: [OperatorId.Range], field: 'temperature' },
+      filter: { operators: NUMERIC_FILTER_OPERATORS, field: 'temperature' },
     },
     o
   );

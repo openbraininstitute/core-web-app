@@ -252,11 +252,48 @@ strategy there **and** declare it on a target.
 | `OperatorId.Bool` | boolean | `field: true \| false` (bare) |
 | `OperatorId.Gte` / `Lte` | number | `field__gte` / `field__lte` |
 | `OperatorId.Range` | range | `field__gte` and/or `field__lte` (only the bounds that are set) |
+| `OperatorId.NumberEq` | number | `field__gte` **and** `field__lte`, both the same value |
 | `OperatorId.DateRange` | dateRange | `field__gte` / `field__lte`, ISO strings |
 
 An empty value emits **nothing** — every strategy returns `{}` rather than a param
 with an empty argument. Sort is separate: `order_by: ['+field', '-field']`, built from
 `sortField ?? field ?? id`.
+
+### Numeric fields: range *or* one exact value
+
+A numeric field takes `NUMERIC_FILTER_OPERATORS` rather than a bare `[OperatorId.Range]`,
+so the editor offers "Between" (the default) and "Equals" in its operator switch:
+
+```ts
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
+
+filter: { operators: NUMERIC_FILTER_OPERATORS, field: 'temperature_celsius' }
+```
+
+```typescript
+/**
+ * Operators every numeric entitycore field accepts, in switch order: `Range` first
+ * (the default, since index 0 wins) then `NumberEq`.
+ *
+ * @type {string[]}
+ *
+ * @example
+ * // temperature_celsius__gte=20 & temperature_celsius__lte=40
+ * { operators: NUMERIC_FILTER_OPERATORS, field: 'temperature_celsius' }
+ */
+export const NUMERIC_FILTER_OPERATORS: string[];
+```
+
+`NumberEq` serializes to `gte === lte` rather than a bare `field=`. That is deliberate
+and is what makes it safe on **every** numeric field: only `temperature_celsius` and
+`temperature` expose a bare equality param in the OpenAPI spec, while `score`,
+`emodel__score`, `me_model__emodel__score`, `measurement_item__value`, `number_neurons`,
+`number_synapses` and `number_connections` are bounds-only. Where the bare param does
+exist, the degenerate range is exactly equivalent.
+
+Do not reach for `OperatorId.Eq` on a number. It edits and serializes a **string**, so
+pairing the two on one column yields two "Equals" entries in the switch, one of which
+sends the value as text.
 
 ## Verify the param exists before exposing it
 
@@ -352,6 +389,7 @@ reach the wire.
 | advanced-filter types, key namespacing, group resolution, pruning | `core/domain/advanced-filters.ts` |
 | filter values, summaries, emptiness | `core/domain/filter-model.ts` |
 | operator catalog and UI kinds | `core/operators/` |
+| numeric operator set (`Range` + `NumberEq`) | `bindings/entitycore/columns/numeric-filter.ts` |
 | the editor (both surfaces) | `react/filters/filter-editor.tsx` |
 | advanced-filter menubar | `react/advanced-filters.tsx` |
 | toolbar button + applied list | `react/active-filters.tsx` |

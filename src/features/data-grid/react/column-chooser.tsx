@@ -2,7 +2,11 @@ import { RiTable3 } from '@remixicon/react';
 import { Checkbox, Popover } from 'antd';
 import { useMemo } from 'react';
 
-import { essentialColumnIds, GridActionType } from '@/features/data-grid/core';
+import {
+  essentialColumnIds,
+  GridActionType,
+  isDefaultColumnLayout,
+} from '@/features/data-grid/core';
 import { ExpandingToolbarButton } from '@/features/data-grid/react/expanding-toolbar-button';
 import { GRID_OVERLAY_Z_INDEX } from '@/features/data-grid/react/molecules-theme';
 import { cn } from '@/utils/css-class';
@@ -49,6 +53,8 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
     setVisible(checked ? columns.map((c) => c.id) : essentialColumnIds(columns));
   };
 
+  const atDefaults = isDefaultColumnLayout(columns, state);
+
   const separator = <hr className="my-2 border-t border-gray-100" />;
 
   const content = (
@@ -68,16 +74,31 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
       )}
     >
       <div className="flex flex-col gap-1">
-        <Checkbox
-          checked={allVisible}
-          indeterminate={mixed}
-          // antd draws the mixed state but sets no ARIA for it, so a screen reader would
-          // hear "unchecked" for a partially-selected list
-          aria-checked={mixed ? 'mixed' : allVisible}
-          onChange={(e) => onToggleAll(e.target.checked)}
-        >
-          Select all
-        </Checkbox>
+        <div className="flex items-center justify-between gap-4">
+          <Checkbox
+            checked={allVisible}
+            indeterminate={mixed}
+            // antd draws the mixed state but sets no ARIA for it, so a screen reader would
+            // hear "unchecked" for a partially-selected list
+            aria-checked={mixed ? 'mixed' : allVisible}
+            onChange={(e) => onToggleAll(e.target.checked)}
+          >
+            Select all
+          </Checkbox>
+          <button
+            type="button"
+            disabled={atDefaults}
+            onClick={() => controller.resetColumnLayout()}
+            className={cn(
+              'shrink-0 text-xs font-medium underline-offset-2',
+              atDefaults
+                ? 'cursor-not-allowed text-gray-300'
+                : 'text-primary-6 hover:text-primary-8 hover:underline'
+            )}
+          >
+            Reset to default
+          </button>
+        </div>
         {separator}
         {/* select-all is outside the group: it is not one of the values */}
         <Checkbox.Group

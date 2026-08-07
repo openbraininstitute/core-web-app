@@ -69,9 +69,9 @@ const STANDARD_COLUMNS = [
   'description',
   'circuitName',
   'createdBy',
-  'lifecycleStatus',
   'registrationDate',
   'status',
+  'lifecycleStatus',
 ];
 
 /** Shared assertions common to every flipped simulation-campaign definition. */
@@ -135,9 +135,9 @@ describe('me_model_circuit_simulation parity', () => {
       'circuitName',
       'createdBy',
       'species',
-      'lifecycleStatus',
       'registrationDate',
       'status',
+      'lifecycleStatus',
     ]);
   });
   it('species is display-only — /simulation-campaign exposes no species query param', () => {
@@ -158,9 +158,9 @@ describe('ion_channel_model_simulation parity', () => {
       'name',
       'description',
       'createdBy',
-      'lifecycleStatus',
       'registrationDate',
       'status',
+      'lifecycleStatus',
     ]);
   });
   assertCampaignDetail(def, 'ion_channel_model_simulation');
@@ -175,9 +175,9 @@ describe('simulation_campaign parity (generic Data → Simulations listing)', ()
       'name',
       'description',
       'circuitName',
-      'lifecycleStatus',
       'registrationDate',
       'status',
+      'lifecycleStatus',
     ]);
   });
 

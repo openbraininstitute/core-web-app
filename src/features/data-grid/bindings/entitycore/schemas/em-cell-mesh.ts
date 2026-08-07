@@ -12,6 +12,7 @@ import {
   subjectStrainColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import {
   EM_DATASET_EXPERIMENT_DATE_RENDERER,
   EM_DATASET_PUBLISHED_IN_RENDERER,
@@ -182,7 +183,7 @@ const emCellMeshAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
         id: 'value',
         label: 'Measurement value',
         field: 'measurement_item__value',
-        operators: [OperatorId.Range],
+        operators: NUMERIC_FILTER_OPERATORS,
         description: 'Bounds on the measured value, in the unit selected above',
       },
     ],
@@ -221,7 +222,7 @@ const levelOfDetailColumn: IColumnModel<Row> = {
   auxiliary: true,
   sortable: true,
   sortField: 'level_of_detail',
-  align: Align.Right,
+  align: Align.Left,
   getValue: (r) => (r.level_of_detail == null ? '' : String(r.level_of_detail)),
   width: { minWidth: 130 },
   filter: {

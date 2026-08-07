@@ -1,5 +1,6 @@
 import { pruneAdvancedFilters } from '@/features/data-grid/core/domain/advanced-filters';
 import {
+  defaultColumnLayout,
   dropPinnedColumns,
   reconcileColumnOrder,
   reconcileHiddenColumns,
@@ -62,11 +63,7 @@ export function createInitialState<Row>(
     sort: schema.defaultSort ? [...schema.defaultSort] : [],
     page: 1,
     pageSize: defaultPageSize,
-    columnOrder: resolved.map((c) => c.id),
-    hiddenColumns: resolved
-      .filter((c) => c.hiddenByDefaultResolved && !c.alwaysVisible)
-      .map((c) => c.id),
-    columnWidths: {},
+    ...defaultColumnLayout(resolved),
     selection: [],
     expanded: [],
     quickFilter: '',
@@ -186,6 +183,14 @@ export class GridController<Row> {
         hiddenColumns,
         columnWidths,
       },
+    });
+  }
+
+  /** Restore column order, visibility and widths to the schema defaults, and persist that. */
+  resetColumnLayout(): void {
+    this.store.dispatch({
+      type: GridActionType.Hydrate,
+      state: defaultColumnLayout(this.resolvedColumns()),
     });
   }
 

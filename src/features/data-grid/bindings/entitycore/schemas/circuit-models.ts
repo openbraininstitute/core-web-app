@@ -7,11 +7,13 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   createdByColumn,
+  descriptionColumn,
   nameColumn,
   registrationDateColumn,
   speciesColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import {
   flatAdvancedFilters,
   recordIdFilter,
@@ -196,12 +198,12 @@ function numberColumn(id: string, header: string, field: string): IColumnModel<I
   return {
     id,
     header,
-    align: Align.Right,
+    align: Align.Left,
     sortable: true,
     sortField: field,
     width: { minWidth: 130 },
     getValue: (row) => localizedNumber((row as unknown as Record<string, number>)[field]),
-    filter: { operators: [OperatorId.Range], field },
+    filter: { operators: NUMERIC_FILTER_OPERATORS, field },
   };
 }
 
@@ -220,12 +222,7 @@ function buildCircuitModelDefinition({
   const columns: Array<IColumnModel<ICircuit>> = [
     nameColumn<ICircuit>({ id: EntityCoreFields.Name, essential: true }),
     // Display-only: /circuit exposes no `description` query param.
-    {
-      id: EntityCoreFields.Description,
-      header: 'Description',
-      getValue: (row) => row.description ?? '',
-      width: { minWidth: 200, flex: 2 },
-    },
+    descriptionColumn<ICircuit>({ id: EntityCoreFields.Description }),
     // `brain_region` is on the wire but missing from `ICircuit`, hence the cast.
     {
       id: EntityCoreFields.BrainRegion,

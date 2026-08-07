@@ -12,6 +12,7 @@ import {
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import {
   MEMODEL_MORPHOLOGY_PREVIEW_RENDERER,
   MEMODEL_TRACE_PREVIEW_RENDERER,
@@ -133,18 +134,18 @@ function buildMemodelAuxiliaryColumns(): Array<IColumnModel<IMEModel>> {
       header: 'E-model score',
       auxiliary: true,
       sortable: false,
-      align: Align.Right,
+      align: Align.Left,
       getValue: (r) => (r.emodel?.score == null ? '' : String(r.emodel.score)),
       width: { minWidth: 150 },
       filter: {
-        operators: [OperatorId.Range],
+        operators: NUMERIC_FILTER_OPERATORS,
         field: 'emodel__score',
         targets: [
           {
             id: 'score',
             label: 'E-model score',
             field: 'emodel__score',
-            operators: [OperatorId.Range],
+            operators: NUMERIC_FILTER_OPERATORS,
             description: 'Bounds on the e-model cumulated score',
           },
         ],
@@ -219,7 +220,7 @@ export function buildMemodelColumns(): Array<IColumnModel<IMEModel>> {
       id: 'validationStatus',
       header: 'Validated',
       getValue: (r) => (r.validation_status === ValidationStatus.Done ? 'True' : 'False'),
-      width: { minWidth: 100 },
+      width: { minWidth: 60, width: 89 },
     },
     brainRegionColumn<IMEModel>(),
     {

@@ -1,6 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   contributionsColumn,
+  descriptionColumn,
   formatDate,
   nameColumn,
   previewColumn,
@@ -37,12 +38,7 @@ export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> 
       width: { width: 194, minWidth: 120, resizable: true },
     }),
     nameColumn<IAnalysisNotebookResult>({ essential: true }),
-    {
-      id: 'description',
-      header: 'Description',
-      getValue: (r) => r.description ?? '',
-      width: { minWidth: 200, flex: 2 },
-    },
+    descriptionColumn<IAnalysisNotebookResult>(),
     lifecycleStatusColumn<IAnalysisNotebookResult>(),
     contributionsColumn<IAnalysisNotebookResult>(),
     {

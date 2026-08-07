@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -10,6 +11,7 @@ import {
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
+import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
@@ -25,6 +27,7 @@ import {
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import type { IEntityPreviewParams } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
 import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
 import type { CellRendererRegistry } from '@/features/data-grid/react';
 
@@ -126,6 +129,10 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
   columns: [
     previewColumn<Row>({
       cellRenderer: ENTITY_PREVIEW_RENDERER,
+      cellRendererParams: {
+        target: 'assetLabel',
+        assetLabel: AssetLabel.ion_channel_model_thumbnail,
+      } satisfies IEntityPreviewParams,
       width: { width: 184, minWidth: 120, resizable: true },
     }),
     nameColumn<Row>(),
@@ -135,8 +142,6 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       header: 'Species',
       sortable: true,
       sortField: 'subject__species__name',
-      // Nested first: the wire has no top-level `species`, only `subject.species`.
-      // The top-level fallback exists only because the TS type still declares it.
       getValue: (r) => r.subject?.species?.name ?? r.species?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
@@ -155,7 +160,7 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       sortField: 'temperature_celsius',
       getValue: (r) => (r.temperature_celsius == null ? '' : `${r.temperature_celsius} °C`),
       width: { minWidth: 130 },
-      filter: { operators: [OperatorId.Range], field: 'temperature_celsius' },
+      filter: { operators: NUMERIC_FILTER_OPERATORS, field: 'temperature_celsius' },
     },
     {
       id: 'isTemperatureDependent',
