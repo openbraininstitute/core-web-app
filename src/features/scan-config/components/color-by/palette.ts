@@ -12,6 +12,22 @@ import type { CategoricalLegendEntry, ColorMapping, ContinuousLegend } from './t
 export const DEFAULT_NEURON_COLOR = '#2b5cd9';
 
 /**
+ * Per-section-type neuron colors, for a cell shown on its own.
+ *
+ * With one cell on screen there is nothing to tell apart, so color carries which part of the
+ * neuron a branch belongs to. Several cells use a flat color each instead. Values match the
+ * SONATA circuit loader.
+ */
+export const SECTION_TYPE_COLORS = {
+  soma: '#aaa',
+  axon: '#39F',
+  apicalDendrite: '#b2f',
+  basalDendrite: '#f55',
+  myelin: '#ff0',
+  unknown: '#f80',
+} as const;
+
+/**
  * colorblind-safe categorical palette: the Okabe–Ito set (minus black, which
  * disappears on dark backgrounds) extended with a few Tableau-10 hues. Ordering
  * is fixed so the same category always maps to the same color across sessions

@@ -8,7 +8,10 @@ import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/colo
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
-import { MorphoViewerSomasOnly, useMorphoViewerDebugMode } from '@/morpho-viewer';
+import {
+  MorphoViewerCircuitMultipleNeuronsSomaOnly,
+  useMorphoViewerDebugMode,
+} from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { isType } from '@/util/type-guards';
 import { cn } from '@/utils/css-class';
@@ -138,9 +141,9 @@ export function LargeCircuitPreview({
             <ErrorDetail cause={nodes.cause} />
           </div>
         ) : (
-          <MorphoViewerSomasOnly
-            somaRadius={somaRadius}
+          <MorphoViewerCircuitMultipleNeuronsSomaOnly
             gizmo
+            somaRadius={somaRadius}
             scalebar={scalebar}
             cellInfos={cellInfos}
             backgroundColor={backgroundColor}

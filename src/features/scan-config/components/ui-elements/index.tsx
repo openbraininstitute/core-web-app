@@ -11,6 +11,7 @@ import { Range } from '@/features/scan-config/components/ui-elements/ion-channel
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
+import MorphologyLocationSelection from '@/features/scan-config/components/ui-elements/morphology-location-selection';
 import MorphologySectionTypeSelection from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import NeuronPropertyFilter, {
@@ -469,6 +470,19 @@ export function UIElementRender({
           value={value}
           disabled={disabled}
           onChange={(newValue) => setState({ ...state, [k]: newValue })}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.MorphologyLocationSelection },
+      },
+      ({ paramSchema }) => (
+        <MorphologyLocationSelection
+          value={value}
+          paramSchema={paramSchema}
+          disabled={disabled}
+          onChange={(newValue) => setState({ ...state, [k]: newValue as unknown as ConfigValue })}
         />
       )
     )

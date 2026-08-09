@@ -75,6 +75,13 @@ export interface ViewerConfig {
    * Defaults to {@link DEFAULT_ELECTRODE_RADIUS}.
    */
   electrodeRadius: number;
+  /**
+   * World-space radius of the morphology-location markers.
+   * Defaults to {@link DEFAULT_MORPHOLOGY_LOCATION_RADIUS}.
+   */
+  morphologyLocationRadius: number;
+  /** Show a `Type[section]` tag beside each selected morphology location. */
+  showMorphologyLocationLabels: boolean;
   /** per-property, per-value color overrides chosen by the user */
   colorOverrides: ColorOverrides;
 }

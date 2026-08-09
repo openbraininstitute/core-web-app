@@ -4,7 +4,7 @@ import { SectionsArraySchema } from '@/features/scan-config/types';
 import { type MorphoViewerSmallCircuitCellData, MorphoViewerTreeItemType } from '@/morpho-viewer';
 import { logError } from '@/utils/logger';
 
-import { buildMorphoTree } from './circuit-viz';
+import { buildMorphoTree } from './build-morpho-tree';
 
 class SequentialLoader<Input, Output> {
   private isLoading = false;

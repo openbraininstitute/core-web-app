@@ -1,5 +1,6 @@
-import { RefObject, useEffect } from 'react';
-import {
+import { type RefObject, useEffect } from 'react';
+
+import type {
   NeuronViewerRenderer,
   TNeuronViewerClickData,
   TNeuronViewerHoverData,
