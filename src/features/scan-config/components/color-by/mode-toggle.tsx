@@ -1,11 +1,14 @@
-import { RiBox3Line, RiImageLine } from '@remixicon/react';
+import { RiImageLine } from '@remixicon/react';
 
+import { GameIconsFamilyTree } from '@/components/icons/FamilyTree';
+import { F7View3d } from '@/components/icons/View3d';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 export const ViewerModeDict = {
   Visualization: 'viz',
   Image: 'image',
+  Dendrogram: 'dendrogram',
 } as const;
 export type ViewerMode = (typeof ViewerModeDict)[keyof typeof ViewerModeDict];
 
@@ -13,10 +16,20 @@ interface ModeToggleProps {
   mode: ViewerMode;
   onChange: (mode: ViewerMode) => void;
   className?: string;
+  /** Show the dendrogram tab. Off unless the host can supply a section tree. */
+  showDendrogram?: boolean;
+  /** Show the image tab. Off when the entity carries no designer image. */
+  showImage?: boolean;
 }
 
 /** toggle switching the viewer between the 3D visualization and the image. */
-export function ModeToggle({ mode, onChange, className }: ModeToggleProps) {
+export function ModeToggle({
+  mode,
+  onChange,
+  className,
+  showDendrogram = false,
+  showImage = true,
+}: ModeToggleProps) {
   return (
     <div
       id="preview-mode-toggle"
@@ -29,15 +42,25 @@ export function ModeToggle({ mode, onChange, className }: ModeToggleProps) {
       <ModeButton
         active={mode === ViewerModeDict.Visualization}
         label="3D visualization"
-        icon={<RiBox3Line className="size-4" />}
+        icon={<F7View3d className="size-4" />}
         onClick={() => onChange(ViewerModeDict.Visualization)}
       />
-      <ModeButton
-        active={mode === ViewerModeDict.Image}
-        label="Image"
-        icon={<RiImageLine className="size-4" />}
-        onClick={() => onChange(ViewerModeDict.Image)}
-      />
+      {showImage && (
+        <ModeButton
+          active={mode === ViewerModeDict.Image}
+          label="Image"
+          icon={<RiImageLine className="size-4" />}
+          onClick={() => onChange(ViewerModeDict.Image)}
+        />
+      )}
+      {showDendrogram && (
+        <ModeButton
+          active={mode === ViewerModeDict.Dendrogram}
+          label="Dendrogram"
+          icon={<GameIconsFamilyTree className="size-4" />}
+          onClick={() => onChange(ViewerModeDict.Dendrogram)}
+        />
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
+import { MorphologyLocationHelp } from '../circuit-viz/morphology-location-help';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { ModeToggle, type ViewerMode, ViewerModeDict } from './mode-toggle';
@@ -21,6 +22,10 @@ export interface CircuitViewerChromeProps {
   /** Current viewer mode. Omit with `onModeChange` when image mode is unavailable. */
   mode?: ViewerMode;
   onModeChange?: (mode: ViewerMode) => void;
+  /** Offer the dendrogram tab alongside 3D and image. */
+  showDendrogram?: boolean;
+  /** Offer the image tab. */
+  showImageMode?: boolean;
   /** background-derived theme (adaptive mode), or null for the fixed default */
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
@@ -49,6 +54,8 @@ export interface CircuitViewerChromeProps {
 export function CircuitViewerChrome({
   mode,
   onModeChange,
+  showDendrogram,
+  showImageMode,
   theme,
   table,
   viz,
@@ -101,7 +108,14 @@ export function CircuitViewerChrome({
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        {mode != null && onModeChange && <ModeToggle mode={mode} onChange={onModeChange} />}
+        {mode != null && onModeChange && (
+          <ModeToggle
+            mode={mode}
+            onChange={onModeChange}
+            showDendrogram={showDendrogram}
+            showImage={showImageMode}
+          />
+        )}
         {table && (
           <ChromeButton
             label={table.active ? 'Hide nodes table' : 'Show nodes table'}
@@ -135,6 +149,11 @@ export function CircuitViewerChrome({
               viz.electrodesInteractive !== false && (
                 <ElectrodeInteractionHelp container={portalContainer} />
               )}
+            {/* Present exactly when locations can be picked — the same condition that puts the
+                marker-size slider in the menu. */}
+            {viz.menu.onMorphologyLocationRadiusChange && (
+              <MorphologyLocationHelp container={portalContainer} />
+            )}
           </div>
         )}
       </div>

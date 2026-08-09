@@ -12,7 +12,7 @@ import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 import { MorphologyLocationLabels } from './morphology-location-labels';
 import { MorphologyLocationPopover } from './morphology-location-popover';
 import { sequentialCellLoader } from './sequential-loader';
-import { useCircuitSynapses, useObiOneVizSource } from './sources';
+import { useCircuitSynapses, useMemodelVizSource, useObiOneVizSource } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -81,6 +81,15 @@ interface CircuitVizProps {
    * need the loaded cells, which only this component has.
    */
   morphologyLocations?: IMorphologyLocationsBinding;
+  /** Morph the cell into a dendrogram of the same segments. */
+  dendrogram?: boolean;
+  /**
+   * Draw the soma as one fitted sphere instead of the contour chain the file records.
+   *
+   * Only safe where no synapses are drawn: their positions are recorded against the file's
+   * geometry, so replacing the soma moves the surface out from under them.
+   */
+  somaAsSphere?: boolean;
 }
 
 export interface IMorphologyLocationsBinding {
@@ -134,7 +143,7 @@ function sourceOptions(props: CircuitVizProps) {
   };
 }
 
-/** The view reads no entity fields, so it serves any small-circuit source. */
+/** The view reads no entity fields, so it serves circuits and MEModels alike. */
 type TCircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
   source: SmallCircuitSource;
   /** OBI-One axon toggle remounts morph keys — clear the sequential morphology cache. */
@@ -158,6 +167,8 @@ function CircuitVizView({
   clearSequentialOnAxonToggle = false,
   errorActions,
   morphologyLocations,
+  dendrogram = false,
+  somaAsSphere = false,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -279,6 +290,8 @@ function CircuitVizView({
       {cells.length > 0 && (
         <MorphoViewerCircuitMultipleNeurons
           className={styles.morphoViewer}
+          somaAsSphere={somaAsSphere}
+          dendrogram={dendrogram}
           gizmo
           scalebar={scalebar}
           backgroundColor={backgroundColor}
@@ -321,3 +334,22 @@ function CircuitVizView({
 }
 
 export default CircuitViz;
+
+type MemodelVizProps = Omit<TCircuitVizViewProps, 'source'> & {
+  memodelId: string;
+};
+
+/**
+ * Single-neuron GPU surface, on the same viewer as single/pair/small circuits.
+ *
+ * An MEModel is not a Circuit, so it is served from its cell morphology instead — same section
+ * shape, same nrn_order, so a click becomes a morphology location here too.
+ */
+export function MemodelViz({ memodelId, ...props }: MemodelVizProps) {
+  const source = useMemodelVizSource({
+    memodelId,
+    showAxons: props.showAxons,
+    colorsByNode: props.colorsByNode,
+  });
+  return <CircuitVizView {...props} source={source} somaAsSphere />;
+}
