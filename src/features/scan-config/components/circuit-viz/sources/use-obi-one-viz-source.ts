@@ -37,7 +37,9 @@ export function useObiOneVizSource({
   const cells: MorphoViewerSmallCircuitCell[] = useMemo(() => {
     return (
       nodes?.map((node, i) => ({
-        id: makeNodeKey(circuitId, showAxons, i),
+        // The query part is the viewer's reload key: flipping the axon toggle reloads the
+        // morphology without moving the cell, so the camera keeps the user's zoom.
+        id: `${makeNodeKey(circuitId, i)}?axons=${showAxons}`,
         center: node.position,
         orientation: node.orientation,
         somaRadius: 8,
@@ -47,10 +49,11 @@ export function useObiOneVizSource({
     );
   }, [circuitId, showAxons, nodes, colorsByNode, defaultColor]);
 
+  // Keyed by the id's path part, which is what the viewer hands back to `loadCell`.
   const nodesById = useMemo(() => {
     if (!nodes) return new Map<string, NonNullable<typeof nodes>[number]>();
-    return new Map(nodes.map((node, i) => [makeNodeKey(circuitId, showAxons, i), node]));
-  }, [circuitId, showAxons, nodes]);
+    return new Map(nodes.map((node, i) => [makeNodeKey(circuitId, i), node]));
+  }, [circuitId, nodes]);
 
   const loadCell = useCallback(
     async (cellId: string) => {
@@ -107,6 +110,6 @@ function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
   });
 }
 
-function makeNodeKey(circuitId: string, showAxon: boolean, index: number) {
-  return `${circuitId} / ${showAxon} #${index}`;
+function makeNodeKey(circuitId: string, index: number) {
+  return `${circuitId} #${index}`;
 }
