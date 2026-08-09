@@ -108,3 +108,15 @@ function addToCache(key: string, promise: Promise<MorphoViewerSmallCircuitCellDa
 }
 
 export const sequentialCellLoader = new SequentialLoader(actualLoad);
+
+/**
+ * Load one morphology tree immediately, bypassing the sequential queue.
+ *
+ * Synapse projection needs the full tree regardless of the axon toggle, and it must not sit
+ * in the queue: `sequentialCellLoader.clear()` drops queued tasks without settling their
+ * promises, which would leave a projection hanging forever. The URL-keyed promise cache is
+ * still shared, so a morphology the viewer already fetched is not fetched again.
+ */
+export function loadMorphologyTree(input: Parameters<typeof actualLoad>[0]) {
+  return actualLoad(input);
+}

@@ -560,6 +560,28 @@ export type Sections = z.infer<typeof SectionsArraySchema>;
 export type Node = z.infer<typeof NodeSchema>;
 export type Nodes = z.infer<typeof NodesSchema>;
 
+/**
+ * One edge population from OBI-One `/circuit/viz/{id}/synapses`.
+ *
+ * Coordinates are the raw `afferent_surface_{x,y,z}` triplets, flattened, in world frame.
+ * They are not directly drawable: SONATA computes somatic synapses against a spherical soma
+ * while the viewer draws a capsule stack, so somatic points must be projected onto the drawn
+ * surface first — see `use-circuit-synapses.ts`.
+ */
+export const SynapseGroupSchema = z.object({
+  population_name: z.string(),
+  /** Flat `[x0, y0, z0, x1, …]` afferent surface positions. */
+  coordinates: z.array(z.number()),
+  /** SONATA `afferent_section_id` per synapse; `0` is the soma. */
+  section_ids: z.array(z.number().int()),
+  /** Index of the cell each synapse lands on, within the target node population. */
+  target_node_ids: z.array(z.number().int()),
+});
+
+export const SynapseGroupsArraySchema = z.array(SynapseGroupSchema);
+export type SynapseGroup = z.infer<typeof SynapseGroupSchema>;
+export type SynapseGroups = z.infer<typeof SynapseGroupsArraySchema>;
+
 export type Cell = {
   id: string;
   center: [number, number, number];

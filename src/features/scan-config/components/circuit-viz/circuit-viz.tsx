@@ -12,7 +12,7 @@ import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 import { MorphologyLocationLabels } from './morphology-location-labels';
 import { MorphologyLocationPopover } from './morphology-location-popover';
 import { sequentialCellLoader } from './sequential-loader';
-import { useObiOneVizSource, useSonataSynapses } from './sources';
+import { useCircuitSynapses, useObiOneVizSource } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -99,8 +99,8 @@ export interface MorphologyLocationsBinding {
  *
  * The morphology comes from OBI-One `/circuit/viz`, whose sections carry the
  * `sonata_section_id` a click needs to become a morphology location. A single circuit also
- * draws its synapses, which are read client-side because they have to be projected onto the
- * surface being drawn.
+ * draws its synapses, fetched from `/circuit/viz/{id}/synapses` and projected client-side
+ * onto the surface being drawn.
  *
  * Split into child components to keep the Rules of Hooks.
  */
@@ -115,7 +115,7 @@ const CircuitViz = (props: CircuitVizProps) =>
 
 function CircuitVizWithSynapses(props: CircuitVizProps) {
   const source = useObiOneVizSource(sourceOptions(props));
-  const synapses = useSonataSynapses(props.circuit);
+  const synapses = useCircuitSynapses(props.circuit);
   const withSynapses = useMemo(() => ({ ...source, synapses }), [source, synapses]);
   return <CircuitVizView {...props} source={withSynapses} clearSequentialOnAxonToggle />;
 }
