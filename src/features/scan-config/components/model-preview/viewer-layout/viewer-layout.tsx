@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { LoadingNeuronSpinner } from '@/components/neuron-viewer';
-import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
+import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -54,12 +54,12 @@ export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
         ) : (
           <>
             {loaded && (
-              <MorphoViewerSmallCircuit
+              <MorphoViewerCircuitMultipleNeurons
+                gizmo
+                scalebar
                 circuit={circuitLoader.circuit}
                 loadCell={circuitLoader.loadCell}
                 onLoadProgress={setProgress}
-                gizmo
-                scalebar
               />
             )}
             {!ready && (

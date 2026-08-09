@@ -40,6 +40,12 @@ export interface ViewerControlsMenuProps {
   /** electrode marker radius (world units); omit when electrodes unavailable */
   electrodeRadius?: number;
   onElectrodeRadiusChange?: (value: number) => void;
+  /** morphology-location marker radius (world units); omit when picking is not active */
+  morphologyLocationRadius?: number;
+  onMorphologyLocationRadiusChange?: (value: number) => void;
+  /** `Type[section]` tags beside each location; omit when picking is not active */
+  showMorphologyLocationLabels?: boolean;
+  onToggleMorphologyLocationLabels?: (value: boolean) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
@@ -67,6 +73,10 @@ export function ViewerControlsMenu({
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
+  morphologyLocationRadius,
+  onMorphologyLocationRadiusChange,
+  showMorphologyLocationLabels,
+  onToggleMorphologyLocationLabels,
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
@@ -193,6 +203,31 @@ export function ViewerControlsMenu({
                 onChange={onElectrodeRadiusChange}
                 tooltip={{ formatter: null }}
                 disabled={showElectrodes === false}
+              />
+            </div>
+          )}
+          {onToggleMorphologyLocationLabels && (
+            <MenuRow label="Location labels">
+              <Switch
+                size="small"
+                checked={!!showMorphologyLocationLabels}
+                onChange={onToggleMorphologyLocationLabels}
+              />
+            </MenuRow>
+          )}
+          {onMorphologyLocationRadiusChange && morphologyLocationRadius !== undefined && (
+            <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
+              <div className="flex items-center justify-between gap-2">
+                <span>Location marker size</span>
+                <span className="tabular-nums text-neutral-500">{morphologyLocationRadius}</span>
+              </div>
+              <Slider
+                min={1}
+                max={30}
+                step={1}
+                value={morphologyLocationRadius}
+                onChange={onMorphologyLocationRadiusChange}
+                tooltip={{ formatter: null }}
               />
             </div>
           )}

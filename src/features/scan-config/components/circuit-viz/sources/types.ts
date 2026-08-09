@@ -15,8 +15,8 @@ export type SmallCircuitSynapseGroup = NonNullable<
 /**
  * Normalized data contract for {@link MorphoViewerSmallCircuit}.
  *
- * Why a shared type: pair/small load via OBI-One `/circuit/viz`, singles load
- * via the client SONATA asset. The GPU surface must not know which.
+ * Shared so the GPU surface does not know where its cells came from: a circuit is served by
+ * OBI-One `/circuit/viz`, an MEModel by `/memodel/viz`.
  */
 export type SmallCircuitSource = {
   cells: MorphoViewerSmallCircuitCell[];
@@ -24,17 +24,8 @@ export type SmallCircuitSource = {
   isLoading: boolean;
   error: Error | null;
   /**
-   * Afferent synapses, one group per edge population. Optional: only the SONATA
-   * source reads edge files — OBI-One `/circuit/viz` returns nodes only.
+   * Afferent synapses, one group per edge population. Optional: only a single-scale circuit
+   * has them, and an MEModel is not stored as a circuit at all.
    */
   synapses?: SmallCircuitSynapseGroup[];
 };
-
-/** Strategies that can satisfy {@link SmallCircuitSource}. */
-export const SmallCircuitLoaderKind = {
-  ObiOneVisualization: 'obi-one-viz',
-  SonataAsset: 'sonata-asset',
-} as const;
-
-export type TSmallCircuitLoaderKind =
-  (typeof SmallCircuitLoaderKind)[keyof typeof SmallCircuitLoaderKind];

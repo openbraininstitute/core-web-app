@@ -9,10 +9,7 @@ import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
-import CircuitViz, {
-  loaderSupportsAxonToggle,
-  resolveSmallCircuitLoaderKind,
-} from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
 import {
@@ -27,6 +24,7 @@ import {
   type ICircuitOverlayGroup,
   scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-key';
 import {
   electrodeBlockPath,
   useElectrodeOverlays,
@@ -170,8 +168,9 @@ export function CircuitPreview({
     setPopulationName(name);
   }, []);
 
-  const supportsAxons =
-    !largeCircuit && loaderSupportsAxonToggle(resolveSmallCircuitLoaderKind(circuit.scale));
+  // Every small-circuit source filters axon sections, so the toggle is offered wherever the
+  // morphology itself is drawn.
+  const supportsAxons = !largeCircuit;
 
   const {
     overlays,
@@ -201,6 +200,9 @@ export function CircuitPreview({
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
       supportsAxons,
       supportsElectrodes: enableElectrodes && electrodesAvailable,
+      // The marker slider is only meaningful while the form is editing morphology locations,
+      // which is also the only time markers are on screen.
+      supportsMorphologyLocations: selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY,
       defaultNeuronOpacity,
       population,
     });
@@ -319,6 +321,14 @@ export function CircuitPreview({
             neuronOpacity={config.neuronOpacity}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
+            morphologyLocations={{
+              config: scanConfig,
+              onConfigChange: setConfig,
+              selectedRootElement,
+              selectedEntry,
+              markerRadius: config.morphologyLocationRadius,
+              showLabels: config.showMorphologyLocationLabels,
+            }}
           />
         </div>
       )}
@@ -438,8 +448,8 @@ function TableResizeHandle({
   );
 }
 
-export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
-  const { data, isLoading, error } = useCircuitImageURL(circuit?.id);
+export function CircuitImage({ className, circuit }: { className?: string; circuit: ICircuit }) {
+  const { data, isLoading, error } = useCircuitImageURL(circuit.id);
   const [loaded, setLoaded] = useState(false);
 
   useLayoutEffect(() => {

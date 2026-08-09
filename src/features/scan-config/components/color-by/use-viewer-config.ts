@@ -31,6 +31,15 @@ export const ELECTRODE_FOCUSED_NEURON_OPACITY = 0.2;
  */
 export const DEFAULT_ELECTRODE_RADIUS = 5;
 
+/**
+ * Default radius of a morphology-location marker, in world units.
+ *
+ * Matches morphoviewer's own default. Small on purpose: a marker sits on a neurite, and one
+ * much larger than the branch hides the thing it is pointing at. The per-pixel floor keeps it
+ * visible when the camera pulls back, so this controls prominence rather than visibility.
+ */
+export const DEFAULT_MORPHOLOGY_LOCATION_RADIUS = 3;
+
 /** Baseline viewer defaults (full neuron opacity, electrode size 5). */
 export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   colorByProperty: null,
@@ -39,6 +48,11 @@ export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   neuronOpacity: DEFAULT_NEURON_OPACITY,
   showElectrodes: true,
   electrodeRadius: DEFAULT_ELECTRODE_RADIUS,
+  morphologyLocationRadius: DEFAULT_MORPHOLOGY_LOCATION_RADIUS,
+  // Off by default: the tags are useful when reading a selection back, and clutter while
+  // placing one. Re-projecting them costs a little work on every frame, so leaving them off
+  // also keeps orbiting free for anyone who does not want them.
+  showMorphologyLocationLabels: false,
   colorOverrides: {},
 };
 

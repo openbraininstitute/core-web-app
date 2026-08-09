@@ -4,7 +4,10 @@ import { useCallback, useMemo } from 'react';
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
 import { sequentialCellLoader } from '@/features/scan-config/components/circuit-viz/sequential-loader';
-import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
+import {
+  DEFAULT_NEURON_COLOR,
+  SECTION_TYPE_COLORS,
+} from '@/features/scan-config/components/color-by/palette';
 import { NodesSchema } from '@/features/scan-config/types';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -20,10 +23,7 @@ type Options = {
 };
 
 /**
- * Pair / small-microcircuit source: OBI-One `/circuit/viz` nodes + morphologies.
- *
- * Hard backend constraint: OBI-One rejects `scale=single` — do not use this
- * adapter for singles ({@link useSonataAssetSource} instead).
+ * Single / pair / small-microcircuit source: OBI-One `/circuit/viz` nodes + morphologies.
  */
 export function useObiOneVizSource({
   circuitId,
@@ -41,7 +41,8 @@ export function useObiOneVizSource({
         center: node.position,
         orientation: node.orientation,
         somaRadius: 8,
-        color: colorsByNode?.[i] ?? defaultColor,
+        // Colour-by wins; else a lone cell reads by section type, a crowd by cell.
+        color: colorsByNode?.[i] ?? (nodes.length === 1 ? SECTION_TYPE_COLORS : defaultColor),
       })) ?? []
     );
   }, [circuitId, showAxons, nodes, colorsByNode, defaultColor]);

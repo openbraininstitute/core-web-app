@@ -26,6 +26,8 @@ interface Options {
   supportsAxons?: boolean;
   /** whether electrode overlays are available for this preview */
   supportsElectrodes?: boolean;
+  /** whether morphology locations can be picked, which is what the marker slider sizes */
+  supportsMorphologyLocations?: boolean;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
@@ -64,7 +66,13 @@ export interface ColorByControls {
  */
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
-  { supportsAxons, supportsElectrodes, defaultNeuronOpacity, population }: Options = {}
+  {
+    supportsAxons,
+    supportsElectrodes,
+    supportsMorphologyLocations,
+    defaultNeuronOpacity,
+    population,
+  }: Options = {}
 ) {
   const circuitId = circuit?.id ?? '';
   const { config, hasSavedConfig, update, reset } = useViewerConfig(circuitId, {
@@ -167,6 +175,20 @@ export function useCircuitColorBy(
       onElectrodeRadiusChange: supportsElectrodes
         ? (value) => update({ electrodeRadius: value })
         : undefined,
+      // Only offered while locations can actually be picked, so the menu does not carry a
+      // control for something not on screen.
+      morphologyLocationRadius: supportsMorphologyLocations
+        ? config.morphologyLocationRadius
+        : undefined,
+      onMorphologyLocationRadiusChange: supportsMorphologyLocations
+        ? (value: number) => update({ morphologyLocationRadius: value })
+        : undefined,
+      showMorphologyLocationLabels: supportsMorphologyLocations
+        ? config.showMorphologyLocationLabels
+        : undefined,
+      onToggleMorphologyLocationLabels: supportsMorphologyLocations
+        ? (value: boolean) => update({ showMorphologyLocationLabels: value })
+        : undefined,
       hasSavedConfig,
       onResetConfig: reset,
     }),
@@ -179,8 +201,11 @@ export function useCircuitColorBy(
       config.neuronOpacity,
       config.showElectrodes,
       config.electrodeRadius,
+      config.morphologyLocationRadius,
+      config.showMorphologyLocationLabels,
       supportsAxons,
       supportsElectrodes,
+      supportsMorphologyLocations,
       hasSavedConfig,
       update,
       reset,
