@@ -82,7 +82,8 @@ export function useObiOneVizSource({
   };
 }
 
-function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
+/** OBI-One `/circuit/viz/{id}/nodes`, cached per circuit. Shared with synapse projection. */
+export function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
   return useQuery({
     queryKey: keyBuilder.circuitNodes(id),
     queryFn: async () => {
