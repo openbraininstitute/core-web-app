@@ -80,9 +80,16 @@ export async function parseApiError(
     const details = findMappedEntry<string>(API_ERROR_DETAILS_PATHS, (path) =>
       get(responseData, path)
     );
+    const detail = get(responseData, 'detail');
 
     const errMessage = message || `Error while fetching ${url}`;
-    return new ApiError(errMessage, { code, message, details, status });
+    return new ApiError(errMessage, {
+      code,
+      message,
+      details,
+      status,
+      ...(typeof detail === 'string' ? { detail } : {}),
+    });
   } catch {
     return new ApiError(`Error while fetching ${url}`, { status });
   }
