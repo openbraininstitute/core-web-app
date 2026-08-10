@@ -404,7 +404,13 @@ export function ionChannelColumn<Row extends IHasIonChannel>(
       sortField: 'ion_channel__name',
       getValue: (r) => r.ion_channel?.name ?? EMPTY_PLACEHOLDER,
       width: { minWidth: 140, flex: 1 },
-      filter: { operators: [OperatorId.Ilike], field: 'ion_channel__name' },
+      filter: {
+        operators: [OperatorId.In, OperatorId.Ilike],
+        field: 'ion_channel__name',
+        facetKey: 'ion_channel',
+        description: 'The channel the recording targets',
+        options: { kind: FilterOptionsKind.Facets },
+      },
     },
     o
   );

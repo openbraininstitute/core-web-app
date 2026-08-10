@@ -15,6 +15,10 @@ import {
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
 import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
+import {
+  MARKUP_LABEL_RENDERER,
+  MarkupLabelCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/markup-label-cell';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
   flatAdvancedFilters,
@@ -90,6 +94,7 @@ const ionChannelLabelColumn: IColumnModel<Row> = {
   sortable: true,
   sortField: 'ion_channel__label',
   getValue: (r) => r.ion_channel?.label ?? '',
+  cellRenderer: MARKUP_LABEL_RENDERER,
   width: { minWidth: 150 },
   filter: {
     operators: [OperatorId.Eq],
@@ -223,5 +228,6 @@ export const ionChannelRecordingGridDefinition: IEntityGridDefinition<Row> = {
   schema: ionChannelRecordingSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
+    registry.register(MARKUP_LABEL_RENDERER, MarkupLabelCell);
   },
 };

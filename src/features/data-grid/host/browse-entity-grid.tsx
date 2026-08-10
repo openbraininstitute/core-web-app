@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { ApiError } from '@/api/error';
-import { DEFAULT_PAGE_SIZE, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PortalRegionBanner } from '@/features/brain-region-hierarchy/components/region-banner';
@@ -300,7 +300,11 @@ export function EntityDataGrid({
   // scope as the grid, minus the grid's own column filters.
   const facetsQuery = useQuery({
     queryKey: ['data-grid', 'facets', dataType, dataKey, params],
-    queryFn: () => facetsQueryFn?.({ filters: params, context: { virtualLabId, projectId } }),
+    queryFn: () =>
+      facetsQueryFn?.({
+        filters: { ...params, ...FACETS_ONLY_PAGE },
+        context: { virtualLabId, projectId },
+      }),
     enabled: enabled && Boolean(facetsQueryFn),
   });
   const externalFacets = facetsQueryFn ? (facetsQuery.data as TFacets | undefined) : undefined;

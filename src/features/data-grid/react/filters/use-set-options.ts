@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { FilterOptionsKind } from '@/features/data-grid/core';
+import { stripHtmlTags } from '@/utils/safe-html-markup';
 
 import type { TFilterOptionsSource } from '@/features/data-grid/core';
 import type { IFilterEditorContext } from '@/features/data-grid/react/filters/context';
@@ -9,7 +10,7 @@ import type { IFilterEditorContext } from '@/features/data-grid/react/filters/co
 export interface ISetOption {
   id: string;
   label: string;
-  /** value sent to the API `__in` filter — the facet label (e.g. pref_label), not the id */
+  /** value sent to the API `__in` filter — the facet label with any markup stripped, not the id */
   value: string;
   count?: number;
   /** facet type hint ('mtype'/'etype'/…) used to fetch a per-option definition */
@@ -51,7 +52,9 @@ export function useSetOptions(
         options: buckets.map((b) => ({
           id: b.id,
           label: b.label,
-          value: b.label,
+          // some buckets carry IUPHAR markup (`K<SUB>v</SUB>10.1`); the wire value is the
+          // tag-stripped form, which is what the matching `name` field holds
+          value: stripHtmlTags(b.label),
           count: b.count,
           type: b.type,
         })),

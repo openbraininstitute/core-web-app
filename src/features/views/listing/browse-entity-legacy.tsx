@@ -25,6 +25,7 @@ import { ApiError } from '@/api/error';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import {
   DEFAULT_PAGE_NUMBER,
+  FACETS_ONLY_PAGE,
   type TViewVariant,
   ViewVariant,
   WorkspaceScope,
@@ -388,7 +389,7 @@ export function BrowseEntityScopeLegacy({
     queryFnOverride: facetsQueryFn
       ? () =>
           facetsQueryFn({
-            filters: queryFilters,
+            filters: { ...queryFilters, ...FACETS_ONLY_PAGE },
             context: { virtualLabId, projectId },
           })
       : undefined,

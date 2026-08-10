@@ -31,6 +31,7 @@ import {
 } from '@/features/data-grid/react/molecules-theme';
 import { useGridState } from '@/features/data-grid/react/use-grid-state';
 import { useDebouncedCallback } from '@/hooks/hooks';
+import { SafeSubSupHtml } from '@/ui/atoms/safe-sub-sup-html';
 import { Checkbox } from '@/ui/molecules/checkbox';
 import { DateRangePicker } from '@/ui/molecules/date-picker';
 import { Input } from '@/ui/molecules/input';
@@ -43,6 +44,7 @@ import {
 } from '@/ui/molecules/select';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+import { hasSubSupMarkup, stripHtmlTags } from '@/utils/safe-html-markup';
 
 import type { ReactNode } from 'react';
 import type { DateRange } from 'react-day-picker';
@@ -621,14 +623,18 @@ function SetEditor({
               {/* biome-ignore lint/a11y/noLabelWithoutControl: the checkbox is nested as the control */}
               <label
                 className={cn('flex cursor-pointer items-center gap-2 text-sm')}
-                title={o.label}
+                title={stripHtmlTags(o.label)}
               >
                 <Checkbox
                   checked={selectedSet.has(o.value)}
                   onCheckedChange={(checked) => toggle(o.value, checked === true)}
                   className="shrink-0 **:data-[slot=checkbox-indicator]:text-white!"
                 />
-                <span className="flex-1 truncate text-primary-8">{o.label}</span>
+                {hasSubSupMarkup(o.label) ? (
+                  <SafeSubSupHtml html={o.label} className="flex-1 truncate text-primary-8" />
+                ) : (
+                  <span className="flex-1 truncate text-primary-8">{o.label}</span>
+                )}
                 {o.count != null && (
                   <span className="shrink-0 rounded-full bg-gray-100 px-1.5 text-[11px] text-gray-500">
                     {o.count}
