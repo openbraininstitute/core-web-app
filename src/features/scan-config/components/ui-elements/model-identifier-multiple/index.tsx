@@ -4,7 +4,10 @@ import { useCallback, useMemo } from 'react';
 
 import { WorkspaceSection } from '@/constants';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
-import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
+import {
+  ScanConfigEntityPreviewOrigin,
+  useSetScanConfigEntityPreview,
+} from '@/features/scan-config/bridge/entity-preview';
 import { useScanConfigMainOverlay } from '@/features/scan-config/bridge/main-overlay-context';
 import { ModelIdentifierBrowseWidget } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/browse-widget';
 import {
@@ -199,7 +202,8 @@ export function ModelIdentifierMultiple({
   );
 
   // select an entity in the central column from its ref (id-only preview; the
-  // right column resolves the record itself)
+  // right column resolves the record itself). Flagged as a selection so a workflow that owns its
+  // right column keeps its own preview — see `resolveRightPreviewMode`.
   const selectPreviewFromRef = useCallback(
     (ref: TFromIdRef | undefined) => {
       if (!ref) {
@@ -207,7 +211,11 @@ export function ModelIdentifierMultiple({
       }
       const target = resolveEntityFetchTarget(ref);
       if (target) {
-        setEntityPreview({ dataType: target.entityType, id: target.id });
+        setEntityPreview({
+          dataType: target.entityType,
+          id: target.id,
+          origin: ScanConfigEntityPreviewOrigin.Selection,
+        });
       }
     },
     [setEntityPreview]

@@ -12,6 +12,7 @@ import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
+  ScanConfigEntityPreviewOrigin,
   usePreviewRecord,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
@@ -282,6 +283,7 @@ export function Right({
   const mode = resolveRightPreviewMode({
     settingsPanelActive: Boolean(settingsPanel),
     entityPreviewActive: Boolean(entityPreview && (previewRecord || isPreviewLoading)),
+    entityPreviewFromSelection: entityPreview?.origin === ScanConfigEntityPreviewOrigin.Selection,
     activity,
     entityType,
     hasEntity: Boolean(entity),

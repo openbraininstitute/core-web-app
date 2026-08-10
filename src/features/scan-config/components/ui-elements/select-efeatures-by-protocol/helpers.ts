@@ -56,12 +56,13 @@ function objectProperties(schema: Record<string, unknown>): Array<[string, Param
 }
 
 /**
- * "VoltageBaseFeature" -> "Voltage base", "AP1AmpFeature" -> "AP1 amp".
+ * "VoltageBaseFeature" -> "Voltage base", "AP1AmpFeature" -> "AP 1 amp".
  *
  * Class names are the only human-facing text the schema gives us for a feature, so they are
- * split on case boundaries while keeping acronym runs (AP, ISI) intact.
+ * split on case boundaries while keeping acronym runs (AP, ISI) intact. Digit runs split off as
+ * their own word. Protocols are *not* humanized — see {@link ecodeNameFromTypeName}.
  */
-export function humanizeTypeName(typeName: string, suffix: 'Feature' | 'Protocol'): string {
+export function humanizeTypeName(typeName: string, suffix: 'Feature'): string {
   const base = typeName.endsWith(suffix) ? typeName.slice(0, -suffix.length) : typeName;
   const words = base.match(/[A-Z]+(?![a-z])|[A-Z][a-z0-9]*|[0-9]+/g);
   if (!words || words.length === 0) return base;
@@ -146,7 +147,9 @@ export function buildProtocolDef(variant: Record<string, unknown>): TProtocolDef
 
   return {
     typeName,
-    label: humanizeTypeName(typeName, 'Protocol'),
+    // The eCode name, unreformatted: a protocol is named by the recording it reads (`IDRest`,
+    // `APWaveform`), so splitting it into words would stop it matching the traces and the config.
+    label: ecodeNameFromTypeName(typeName),
     description: typeof variant.description === 'string' ? variant.description : null,
     timingFields: properties.filter(
       ([key]) =>
