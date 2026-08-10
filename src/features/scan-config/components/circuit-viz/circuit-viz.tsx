@@ -83,13 +83,6 @@ interface CircuitVizProps {
   morphologyLocations?: IMorphologyLocationsBinding;
   /** Morph the cell into a dendrogram of the same segments. */
   dendrogram?: boolean;
-  /**
-   * Draw the soma as one fitted sphere instead of the contour chain the file records.
-   *
-   * Only safe where no synapses are drawn: their positions are recorded against the file's
-   * geometry, so replacing the soma moves the surface out from under them.
-   */
-  somaAsSphere?: boolean;
 }
 
 export interface IMorphologyLocationsBinding {
@@ -168,7 +161,6 @@ function CircuitVizView({
   errorActions,
   morphologyLocations,
   dendrogram = false,
-  somaAsSphere = false,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -290,7 +282,6 @@ function CircuitVizView({
       {cells.length > 0 && (
         <MorphoViewerCircuitMultipleNeurons
           className={styles.morphoViewer}
-          somaAsSphere={somaAsSphere}
           dendrogram={dendrogram}
           gizmo
           scalebar={scalebar}
@@ -351,5 +342,5 @@ export function MemodelViz({ memodelId, ...props }: TMemodelVizProps) {
     showAxons: props.showAxons,
     colorsByNode: props.colorsByNode,
   });
-  return <CircuitVizView {...props} source={source} somaAsSphere />;
+  return <CircuitVizView {...props} source={source} />;
 }
