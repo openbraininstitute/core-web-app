@@ -3,6 +3,8 @@ export interface ApiErrorCause {
   message?: string;
   status?: number;
   details?: any;
+  /** FastAPI `HTTPException` reason, from a `{ detail }` body. */
+  detail?: string;
 }
 
 /*
