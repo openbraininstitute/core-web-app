@@ -80,10 +80,10 @@ interface CircuitVizProps {
    * Resolved here rather than in the parent because both the markers and the pick handler
    * need the loaded cells, which only this component has.
    */
-  morphologyLocations?: MorphologyLocationsBinding;
+  morphologyLocations?: IMorphologyLocationsBinding;
 }
 
-export interface MorphologyLocationsBinding {
+export interface IMorphologyLocationsBinding {
   config?: Config | null;
   onConfigChange?: (updater: (previous: Config) => Config) => void;
   selectedRootElement?: string;
@@ -135,7 +135,7 @@ function sourceOptions(props: CircuitVizProps) {
 }
 
 /** The view reads no entity fields, so it serves any small-circuit source. */
-type CircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
+type TCircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
   source: SmallCircuitSource;
   /** OBI-One axon toggle remounts morph keys — clear the sequential morphology cache. */
   clearSequentialOnAxonToggle?: boolean;
@@ -158,7 +158,7 @@ function CircuitVizView({
   clearSequentialOnAxonToggle = false,
   errorActions,
   morphologyLocations,
-}: CircuitVizViewProps) {
+}: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
     selection: locationSelection,

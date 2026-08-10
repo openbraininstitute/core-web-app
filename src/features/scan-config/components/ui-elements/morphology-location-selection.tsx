@@ -6,16 +6,16 @@ import { useId } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
-import type { MorphologyLocationSelection as MorphologyLocationSelectionSchema } from '@/features/scan-config/types';
+import type { IMorphologyLocationSelection as MorphologyLocationSelectionSchema } from '@/features/scan-config/types';
 
-/** One `MorphologyLocationPoint`: a SONATA section id plus a normalized offset along it. */
-export interface MorphologyLocationPoint {
+/** One `IMorphologyLocationPoint`: a SONATA section id plus a normalized offset along it. */
+export interface IMorphologyLocationPoint {
   section_id: number;
   offset: number;
 }
 
 /** Soma, at its origin — valid on every morphology, so it is a safe row to add. */
-const SOMA_LOCATION: MorphologyLocationPoint = { section_id: 0, offset: 0 };
+const SOMA_LOCATION: IMorphologyLocationPoint = { section_id: 0, offset: 0 };
 
 const OFFSET_STEP = 0.05;
 
@@ -24,7 +24,7 @@ const OFFSET_STEP = 0.05;
  * dropped rather than rendered as a blank row: the backend rejects partial points, so a row
  * that cannot round-trip would be a trap rather than a starting point.
  */
-function toRows(value: unknown): MorphologyLocationPoint[] {
+function toRows(value: unknown): IMorphologyLocationPoint[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((entry) => {
     if (!entry || typeof entry !== 'object') return [];
@@ -52,7 +52,7 @@ export default function MorphologyLocationSelection({
   paramSchema,
 }: {
   value: unknown;
-  onChange: (value: MorphologyLocationPoint[]) => void;
+  onChange: (value: IMorphologyLocationPoint[]) => void;
   disabled: boolean;
   paramSchema: MorphologyLocationSelectionSchema;
 }) {
@@ -62,7 +62,7 @@ export default function MorphologyLocationSelection({
   // antd renders its own inner <input>, so labels need an explicit htmlFor to bind to it.
   const fieldId = useId();
 
-  const update = (index: number, patch: Partial<MorphologyLocationPoint>) =>
+  const update = (index: number, patch: Partial<IMorphologyLocationPoint>) =>
     onChange(rows.with(index, { ...rows[index], ...patch }));
 
   return (

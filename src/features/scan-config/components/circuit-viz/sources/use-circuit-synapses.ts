@@ -34,7 +34,7 @@ import { circuitNodesQueryOptions, makeNodeKey } from './use-obi-one-viz-source'
 
 import type { ICircuit } from '@/api/entitycore/types';
 import type { Vec3 } from '@/features/scan-config/components/drawn-surface';
-import type { Node, Nodes, SynapseGroup, SynapseGroups } from '@/features/scan-config/types';
+import type { Node, Nodes, TSynapseGroup, TSynapseGroups } from '@/features/scan-config/types';
 import type { MorphoViewerTreeItem } from '@/morpho-viewer';
 import type { SmallCircuitSynapseGroup } from './types';
 
@@ -76,7 +76,7 @@ async function fetchSynapseGroups(
   circuitId: string,
   virtualLabId: string,
   projectId: string
-): Promise<SynapseGroups> {
+): Promise<TSynapseGroups> {
   const json = await fetchObiOneJson(`${config.OBI_ONE_URL}/circuit/viz/${circuitId}/synapses`, {
     virtualLabId,
     projectId,
@@ -84,10 +84,10 @@ async function fetchSynapseGroups(
   return SynapseGroupsArraySchema.parse(json);
 }
 
-type ProjectionContext = { virtualLabId: string; projectId: string; circuitId: string };
+type TProjectionContext = { virtualLabId: string; projectId: string; circuitId: string };
 
 /** The signed distance fields one cell needs, built once and shared. */
-type CellSurfaces = {
+type TCellSurfaces = {
   /** What the soma painter draws — where SONATA's soma synapses belong. */
   soma: SurfaceSdf | null;
   /** Everything the cell draws, for rescuing near-soma synapses against. */
@@ -97,10 +97,10 @@ type CellSurfaces = {
 };
 
 /** One morphology sample in local (radius decisions) and world (synapse) space. */
-type Sample = { local: Vec3; point: SurfacePoint };
+type TSample = { local: Vec3; point: SurfacePoint };
 
 /** A segment as the viewer paints it — see {@link drawnRadiusFactor} for the radii. */
-function drawnSegment(from: Sample, to: Sample): SurfaceSegment {
+function drawnSegment(from: TSample, to: TSample): SurfaceSegment {
   const factor = drawnRadiusFactor(from.local, to.local);
   return {
     from: { ...from.point, radius: from.point.radius * factor },
@@ -112,9 +112,9 @@ function drawnSegment(from: Sample, to: Sample): SurfaceSegment {
 const OFF_SURFACE_TOLERANCE = 0.5;
 
 async function projectSynapseGroups(
-  groups: SynapseGroups,
+  groups: TSynapseGroups,
   nodes: Nodes,
-  context: ProjectionContext
+  context: TProjectionContext
 ): Promise<Float32Array[]> {
   const surfaces = await buildTargetSurfaces(groups, nodes, context);
   return groups.map((group) => projectGroup(group, surfaces));
@@ -125,10 +125,10 @@ async function projectSynapseGroups(
  * on hidden axons too. A cell that fails to load keeps its synapses at raw coordinates.
  */
 async function buildTargetSurfaces(
-  groups: SynapseGroups,
+  groups: TSynapseGroups,
   nodes: Nodes,
-  { virtualLabId, projectId, circuitId }: ProjectionContext
-): Promise<Map<number, CellSurfaces>> {
+  { virtualLabId, projectId, circuitId }: TProjectionContext
+): Promise<Map<number, TCellSurfaces>> {
   const targets = new Set<number>();
   const somaTargets = new Set<number>();
   for (const group of groups) {
@@ -139,7 +139,7 @@ async function buildTargetSurfaces(
     }
   }
 
-  const surfaces = new Map<number, CellSurfaces>();
+  const surfaces = new Map<number, TCellSurfaces>();
   for (const target of targets) {
     const node = nodes[target];
     if (!node) continue;
@@ -176,18 +176,18 @@ function buildCellSurfaces(
   roots: MorphoViewerTreeItem[],
   node: Node,
   wantSoma: boolean
-): CellSurfaces {
+): TCellSurfaces {
   const placement = { center: node.position, orientation: node.orientation };
   const somaSegments: SurfaceSegment[] = [];
   const wholeSegments: SurfaceSegment[] = [];
-  const stack = roots.map((item) => ({ item, parent: null as Sample | null }));
+  const stack = roots.map((item) => ({ item, parent: null as TSample | null }));
   while (stack.length > 0) {
     const entry = stack.pop();
     if (!entry) continue;
 
     const { item, parent } = entry;
     const [x, y, z] = transform(item.x, item.y, item.z, placement);
-    const sample: Sample = {
+    const sample: TSample = {
       local: [item.x, item.y, item.z],
       point: { x, y, z, radius: item.radius },
     };
@@ -206,7 +206,7 @@ function buildCellSurfaces(
 }
 
 /** Project soma synapses onto the drawn soma, rescue near-soma strays, leave the rest raw. */
-function projectGroup(group: SynapseGroup, surfaces: Map<number, CellSurfaces>): Float32Array {
+function projectGroup(group: TSynapseGroup, surfaces: Map<number, TCellSurfaces>): Float32Array {
   const { coordinates, section_ids: sectionIds, target_node_ids: targetIds } = group;
   const count = Math.floor(coordinates.length / 3);
   if (sectionIds.length !== count || targetIds.length !== count) {

@@ -417,7 +417,7 @@ export interface VoltageDuration extends TBlockElement {
  * `section_id` is SONATA numbering (0 = soma), the same id the circuit viewer reports as
  * `sonata_section_id`, so a viewer selection can be written straight into a row.
  */
-export interface MorphologyLocationSelection extends TBlockElement {
+export interface IMorphologyLocationSelection extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.MorphologyLocationSelection;
   items: {
     properties: {
@@ -473,7 +473,7 @@ export type ParamSchema =
   | ModelSelectorSingle
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
-  | MorphologyLocationSelection
+  | IMorphologyLocationSelection
   | VoltageDuration
   | StringSelectionEnhanced
   | NeuronPropertyFilter
@@ -575,7 +575,7 @@ export const SectionSchema = z.object({
   id: z.string(),
   /**
    * SONATA global section id: 0 for the soma, then nrn_order neurites — the id
-   * `MorphologyLocationPoint.section_id` expects. `id` above is OBI-One's raw morphio id
+   * `IMorphologyLocationPoint.section_id` expects. `id` above is OBI-One's raw morphio id
    * and is only meaningful for parent/child linking within the same response.
    *
    * Optional on purpose: OBI-One only started reporting it alongside the `nrn_order`
@@ -608,8 +608,8 @@ export const SynapseGroupSchema = z.object({
 });
 
 export const SynapseGroupsArraySchema = z.array(SynapseGroupSchema);
-export type SynapseGroup = z.infer<typeof SynapseGroupSchema>;
-export type SynapseGroups = z.infer<typeof SynapseGroupsArraySchema>;
+export type TSynapseGroup = z.infer<typeof SynapseGroupSchema>;
+export type TSynapseGroups = z.infer<typeof SynapseGroupsArraySchema>;
 
 export type Cell = {
   id: string;
