@@ -16,12 +16,12 @@ import type {
 /** Only this block type stores locations outright; the others describe how to sample them. */
 const EXPLICIT_BLOCK_TYPE = 'ExplicitMorphologyLocations';
 
-interface StoredLocation {
+interface IStoredLocation {
   section_id: number;
   offset: number;
 }
 
-interface Options {
+interface IOptions {
   config?: Config | null;
   onConfigChange?: (updater: (previous: Config) => Config) => void;
   /** Which block dictionary the form is editing — picking only applies to morphology locations. */
@@ -45,7 +45,7 @@ function readEntry(config: Config | null | undefined, entry: string | undefined)
   return block as Record<string, unknown>;
 }
 
-function readLocations(block: Record<string, unknown> | null): StoredLocation[] {
+function readLocations(block: Record<string, unknown> | null): IStoredLocation[] {
   if (!block || block.type !== EXPLICIT_BLOCK_TYPE) return [];
   const locations = block.locations;
   if (!Array.isArray(locations)) return [];
@@ -81,7 +81,7 @@ export function useMorphologyLocationSelection({
   cells,
   markerRadius,
   showLabels = false,
-}: Options): {
+}: IOptions): {
   selection: MorphoViewerMorphologyLocationSelection | undefined;
   hover: MorphoViewerMorphologyLocationHover | null;
   labels: MorphoViewerMorphologyLocationLabel[];
@@ -95,7 +95,7 @@ export function useMorphologyLocationSelection({
 
   const selected = useMemo(() => {
     if (!locationsKey) return [];
-    const locations = JSON.parse(locationsKey) as StoredLocation[];
+    const locations = JSON.parse(locationsKey) as IStoredLocation[];
     // `sectionName` in the viewer is OBI-One's raw morphio id as a string, and
     // `sonata_section_id` is that plus one. Undo the shift to address the drawn section.
     return cells.flatMap((cell) =>
@@ -140,7 +140,7 @@ export function useMorphologyLocationSelection({
               {
                 section_id: pick.sonataSectionId as number,
                 offset: Number(pick.offset.toFixed(4)),
-              } satisfies StoredLocation,
+              } satisfies IStoredLocation,
             ];
 
         // The backend requires at least one location, so the last one cannot be removed this
