@@ -8,12 +8,10 @@ import {
   rescueOffSurface,
   type SurfacePoint,
   type SurfaceSegment,
-  somaEnvelopeOf,
-} from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/morphology-surface';
-import {
   sdfCapsuleWithNormal,
+  somaEnvelopeOf,
   type Vec3,
-} from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/sdf';
+} from '@/features/scan-config/components/drawn-surface';
 
 const point = (x: number, y: number, z: number, radius: number): SurfacePoint => ({
   x,

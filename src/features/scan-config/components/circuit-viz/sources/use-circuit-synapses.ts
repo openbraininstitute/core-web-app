@@ -1,9 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { loadMorphologyTree } from '@/features/scan-config/components/circuit-viz/sequential-loader';
+import {
+  fetchObiOneJson,
+  STATIC_RESOURCE_QUERY_OPTIONS,
+} from '@/features/scan-config/components/circuit-viz/obi-one-fetch';
+import {
+  projectionCellLoader,
+  SequentialLoaderClearedError,
+} from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import { categoricalColor } from '@/features/scan-config/components/color-by/palette';
 import {
   createSurfaceSdf,
@@ -16,55 +22,48 @@ import {
   type SurfaceSdf,
   type SurfaceSegment,
   somaEnvelopeOf,
-} from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/morphology-surface';
-import { transform } from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/transform';
+  transform,
+} from '@/features/scan-config/components/drawn-surface';
 import { SynapseGroupsArraySchema } from '@/features/scan-config/types';
 import { MorphoViewerTreeItemType } from '@/morpho-viewer';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { logError } from '@/utils/logger';
 
-import { useCircuitNodes } from './use-obi-one-viz-source';
+import { circuitNodesQueryOptions, makeNodeKey } from './use-obi-one-viz-source';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Vec3 } from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader/sdf';
+import type { ICircuit } from '@/api/entitycore/types';
+import type { Vec3 } from '@/features/scan-config/components/drawn-surface';
 import type { Node, Nodes, SynapseGroup, SynapseGroups } from '@/features/scan-config/types';
 import type { MorphoViewerTreeItem } from '@/morpho-viewer';
 import type { SmallCircuitSynapseGroup } from './types';
 
 /**
- * Afferent synapses for a circuit, positioned against the surface the viewer draws.
- *
- * The raw coordinates come from OBI-One `/circuit/viz/{id}/synapses` — the edge file's
- * `afferent_surface` positions. Those are not directly drawable: SONATA computes a somatic
- * synapse against a *spherical* soma while the viewer draws the soma as a capsule stack, so
- * raw somatic coordinates sink inside or float outside the rendered mesh. This hook rebuilds
- * the drawn surface from the same `/circuit/viz` morphology the viewer paints and projects
- * them onto it — the correction added in #1845, applied to the server's coordinates.
+ * Afferent synapses from OBI-One `/circuit/viz/{id}/synapses`, projected onto the drawn
+ * surface: SONATA computes somatic synapses against a spherical soma, so their raw
+ * coordinates must be snapped onto the capsule stack the viewer paints.
  *
  * @param circuit - The circuit whose afferent synapses to load.
- * @returns One group per edge population. Empty until everything has loaded, and for circuits
- * that record connectivity without geometry.
+ * @returns One coloured group per edge population; empty until loaded.
  */
 export function useCircuitSynapses(circuit: ICircuit): SmallCircuitSynapseGroup[] {
   const { virtualLabId, projectId } = useWorkspace();
+  const queryClient = useQueryClient();
   const circuitId = circuit.id;
-  const { data: nodes } = useCircuitNodes(circuitId, virtualLabId, projectId);
 
   const { data: projected } = useQuery({
     queryKey: keyBuilder.circuitSynapses(circuitId),
-    enabled: Boolean(nodes),
     queryFn: async () => {
-      const groups = await fetchSynapseGroups(circuitId, virtualLabId, projectId);
-      return projectSynapseGroups(groups, nodes ?? [], { virtualLabId, projectId, circuitId });
+      const [groups, nodes] = await Promise.all([
+        fetchSynapseGroups(circuitId, virtualLabId, projectId),
+        queryClient.ensureQueryData(circuitNodesQueryOptions(circuitId, virtualLabId, projectId)),
+      ]);
+      return projectSynapseGroups(groups, nodes, { virtualLabId, projectId, circuitId });
     },
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    ...STATIC_RESOURCE_QUERY_OPTIONS,
   });
 
-  // Offset so the first population avoids slot 0, the blue the neuron itself wears.
+  // Slot 0 is the blue the neuron itself wears; population colours start at 2.
   return useMemo(() => {
     return (projected ?? []).map((coordinates, index) => ({
       color: categoricalColor(index + 2),
@@ -78,20 +77,10 @@ async function fetchSynapseGroups(
   virtualLabId: string,
   projectId: string
 ): Promise<SynapseGroups> {
-  const res = await authFetch(`${config.OBI_ONE_URL}/circuit/viz/${circuitId}/synapses`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'virtual-lab-id': virtualLabId,
-      'project-id': projectId,
-    },
+  const json = await fetchObiOneJson(`${config.OBI_ONE_URL}/circuit/viz/${circuitId}/synapses`, {
+    virtualLabId,
+    projectId,
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch circuit synapses for id "${circuitId}"!`);
-  }
-
-  const json = await res.json();
   return SynapseGroupsArraySchema.parse(json);
 }
 
@@ -107,20 +96,10 @@ type CellSurfaces = {
   somaEnvelope: SomaEnvelope | null;
 };
 
-/**
- * One morphology sample, kept in both spaces: local because that is where the renderer
- * decides how thick to draw a segment, world because that is where the synapses are.
- */
+/** One morphology sample in local (radius decisions) and world (synapse) space. */
 type Sample = { local: Vec3; point: SurfacePoint };
 
-/**
- * The segment between two samples as the viewer paints it, radii and all.
- *
- * Passing the same sample twice gives the degenerate segment a parentless root is drawn as,
- * which the renderer draws at its true radius.
- *
- * @see drawnRadiusFactor — why the radii are not the ones the morphology states.
- */
+/** A segment as the viewer paints it — see {@link drawnRadiusFactor} for the radii. */
 function drawnSegment(from: Sample, to: Sample): SurfaceSegment {
   const factor = drawnRadiusFactor(from.local, to.local);
   return {
@@ -129,10 +108,7 @@ function drawnSegment(from: Sample, to: Sample): SurfaceSegment {
   };
 }
 
-/**
- * How far outside the drawn surface a synapse has to sit before it is worth moving. About
- * the radius the viewer gives a marker: any closer and the marker still touches its branch.
- */
+/** Distance from the drawn surface below which a synapse marker still touches its branch. */
 const OFF_SURFACE_TOLERANCE = 0.5;
 
 async function projectSynapseGroups(
@@ -145,11 +121,8 @@ async function projectSynapseGroups(
 }
 
 /**
- * Build the drawn-surface fields for every cell the synapses land on.
- *
- * Loads the *full* morphology tree (axon included) regardless of the axon toggle: synapses
- * are drawn on hidden axons too, and projecting them against a tree missing those branches
- * would rescue them onto surfaces they do not belong to.
+ * Drawn-surface fields per target cell, from the full morphology tree — synapses are drawn
+ * on hidden axons too. A cell that fails to load keeps its synapses at raw coordinates.
  */
 async function buildTargetSurfaces(
   groups: SynapseGroups,
@@ -157,44 +130,53 @@ async function buildTargetSurfaces(
   { virtualLabId, projectId, circuitId }: ProjectionContext
 ): Promise<Map<number, CellSurfaces>> {
   const targets = new Set<number>();
+  const somaTargets = new Set<number>();
   for (const group of groups) {
-    for (const target of group.target_node_ids) targets.add(target);
+    const count = Math.min(group.target_node_ids.length, group.section_ids.length);
+    for (let i = 0; i < count; i++) {
+      targets.add(group.target_node_ids[i]);
+      if (isSomaSection(group.section_ids[i])) somaTargets.add(group.target_node_ids[i]);
+    }
   }
 
   const surfaces = new Map<number, CellSurfaces>();
   for (const target of targets) {
-    // `target_node_id` indexes the target population; `nodes` holds the selected node set.
-    // Those coincide for the single-cell circuits this hook serves — hence the lookup guard.
     const node = nodes[target];
     if (!node) continue;
 
-    const tree = await loadMorphologyTree({
-      virtualLabId,
-      projectId,
-      circuitId,
-      cellId: `${circuitId} #${target}`,
-      name: node.morphology_name,
-      file: node.morphology_file,
-      showAxon: true,
-    });
-    if (!tree) continue;
+    const cellId = makeNodeKey(circuitId, target);
+    try {
+      const tree = await projectionCellLoader.load({
+        virtualLabId,
+        projectId,
+        circuitId,
+        cellId,
+        name: node.morphology_name,
+        file: node.morphology_file,
+        showAxon: true,
+      });
+      if (!tree) continue;
 
-    surfaces.set(target, buildCellSurfaces(tree.data.roots, node));
+      surfaces.set(target, buildCellSurfaces(tree.data.roots, node, somaTargets.has(target)));
+    } catch (error) {
+      if (error instanceof SequentialLoaderClearedError) continue;
+
+      logError(`Synapses of cell "${cellId}" stay unprojected:`, error);
+    }
   }
   return surfaces;
 }
 
 /**
- * Reconstruct the segments the viewer draws for one cell, in world coordinates, and turn
- * them into signed distance fields.
- *
- * Mirrors the viewer's own segment construction: a parentless root is drawn as a degenerate
- * segment (a sphere), every other sample as a cone from its parent — soma-typed ones by the
- * soma painter, the rest by the neurite painter. Reconstructing the soma any other way, by
- * chaining samples in traversal order say, invents surfaces the viewer never draws, and
- * synapses projected onto those hang off the mesh.
+ * Rebuild the segments the viewer draws for one cell, in world coordinates, as signed
+ * distance fields: a parentless root as a degenerate segment (a sphere), every other sample
+ * as a cone from its parent — soma-typed ones belong to the soma surface.
  */
-function buildCellSurfaces(roots: MorphoViewerTreeItem[], node: Node): CellSurfaces {
+function buildCellSurfaces(
+  roots: MorphoViewerTreeItem[],
+  node: Node,
+  wantSoma: boolean
+): CellSurfaces {
   const placement = { center: node.position, orientation: node.orientation };
   const somaSegments: SurfaceSegment[] = [];
   const wholeSegments: SurfaceSegment[] = [];
@@ -217,19 +199,13 @@ function buildCellSurfaces(roots: MorphoViewerTreeItem[], node: Node): CellSurfa
   }
 
   return {
-    soma: createSurfaceSdf(somaSegments),
+    soma: wantSoma ? createSurfaceSdf(somaSegments) : null,
     whole: createSurfaceSdf(wholeSegments),
     somaEnvelope: somaEnvelopeOf(somaSegments, node.position),
   };
 }
 
-/**
- * Move each synapse of one population onto the drawn surface.
- *
- * Soma synapses get projected onto the drawn soma or they float free of it. Neurite synapses
- * are left where SONATA put them, with one exception: a few arrive near the soma yet clear of
- * everything drawn, and those get pulled back onto the mesh — see {@link rescueOffSurface}.
- */
+/** Project soma synapses onto the drawn soma, rescue near-soma strays, leave the rest raw. */
 function projectGroup(group: SynapseGroup, surfaces: Map<number, CellSurfaces>): Float32Array {
   const { coordinates, section_ids: sectionIds, target_node_ids: targetIds } = group;
   const count = Math.floor(coordinates.length / 3);

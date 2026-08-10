@@ -1,12 +1,19 @@
-import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { SectionsArraySchema } from '@/features/scan-config/types';
-import { type MorphoViewerSmallCircuitCellData, MorphoViewerTreeItemType } from '@/morpho-viewer';
+import { MorphoViewerTreeItemType, SectionsArraySchema } from '@/features/scan-config/types';
 import { logError } from '@/utils/logger';
 
 import { buildMorphoTree } from './build-morpho-tree';
+import { fetchObiOneJson } from './obi-one-fetch';
 
-class SequentialLoader<Input, Output> {
+/** Settles a task dropped by {@link SequentialLoader.clear}; callers filter it out. */
+export class SequentialLoaderClearedError extends Error {
+  constructor() {
+    super('Load cancelled: the queue was cleared.');
+    this.name = 'SequentialLoaderClearedError';
+  }
+}
+
+export class SequentialLoader<Input, Output> {
   private isLoading = false;
   private queue: {
     input: Input;
@@ -23,8 +30,11 @@ class SequentialLoader<Input, Output> {
     });
   }
 
+  /** Drop queued tasks, rejecting each with {@link SequentialLoaderClearedError}. */
   clear() {
+    const dropped = this.queue;
     this.queue = [];
+    for (const task of dropped) task.reject(new SequentialLoaderClearedError());
   }
 
   private async processNextTask() {
@@ -47,17 +57,7 @@ class SequentialLoader<Input, Output> {
 
 async function loadCellAsync(virtualLabId: string, projectId: string, url: string, cellId: string) {
   try {
-    const res = await authFetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'virtual-lab-id': virtualLabId,
-        'project-id': projectId,
-      },
-    });
-
-    const json = await res.json();
-    return json;
+    return await fetchObiOneJson(url, { virtualLabId, projectId });
   } catch (error) {
     logError(`Unable to load cell "${cellId}":`, error);
     return null;
@@ -87,6 +87,8 @@ async function actualLoad({
   const promise = morphologiesCache.get(key) ?? loadCellAsync(virtualLabId, projectId, url, cellId);
   addToCache(key, promise);
   const json = await promise;
+  if (json === null) throw new Error(`Morphology "${file}" could not be loaded.`);
+
   const sections = SectionsArraySchema.parse(json);
   const filtered_sections = sections.filter(
     (s) => showAxon || s.type !== MorphoViewerTreeItemType.Axon
@@ -94,29 +96,36 @@ async function actualLoad({
   return buildMorphoTree(filtered_sections, cellId);
 }
 
-const morphologiesCache = new Map<string, Promise<MorphoViewerSmallCircuitCellData | null>>();
+const morphologiesCache = new Map<string, Promise<unknown>>();
 const morphologiesCacheGarbageCollector = new Map<string, NodeJS.Timeout>();
 
 const ONE_HOUR = 60 * 60 * 1000;
 
-function addToCache(key: string, promise: Promise<MorphoViewerSmallCircuitCellData | null>) {
+function addToCache(key: string, promise: Promise<unknown>) {
   morphologiesCache.set(key, promise);
+  // A failed load must not poison the cache for an hour — evict so the next call retries.
+  promise.then(
+    (json) => {
+      if (json === null) evictFromCache(key, promise);
+    },
+    () => evictFromCache(key, promise)
+  );
   const pendingId = morphologiesCacheGarbageCollector.get(key);
   if (pendingId) globalThis.clearTimeout(pendingId);
   const id = globalThis.setTimeout(() => morphologiesCache.delete(key), ONE_HOUR);
   morphologiesCacheGarbageCollector.set(key, id);
 }
 
+function evictFromCache(key: string, promise: Promise<unknown>) {
+  if (morphologiesCache.get(key) !== promise) return;
+
+  morphologiesCache.delete(key);
+  const pendingId = morphologiesCacheGarbageCollector.get(key);
+  if (pendingId) globalThis.clearTimeout(pendingId);
+  morphologiesCacheGarbageCollector.delete(key);
+}
+
 export const sequentialCellLoader = new SequentialLoader(actualLoad);
 
-/**
- * Load one morphology tree immediately, bypassing the sequential queue.
- *
- * Synapse projection needs the full tree regardless of the axon toggle, and it must not sit
- * in the queue: `sequentialCellLoader.clear()` drops queued tasks without settling their
- * promises, which would leave a projection hanging forever. The URL-keyed promise cache is
- * still shared, so a morphology the viewer already fetched is not fetched again.
- */
-export function loadMorphologyTree(input: Parameters<typeof actualLoad>[0]) {
-  return actualLoad(input);
-}
+/** Synapse projection's own queue: shares the URL cache, unaffected by the axon-toggle clear(). */
+export const projectionCellLoader = new SequentialLoader(actualLoad);
