@@ -12,7 +12,7 @@ import useWorkspace from '@/ui/hooks/use-workspace';
 import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
 import type { SmallCircuitSource } from './types';
 
-type Options = {
+type TOptions = {
   memodelId: string;
   showAxons?: boolean;
   /** Colour-by override; when absent the cell is coloured by section type, as legacy is. */
@@ -39,7 +39,7 @@ export function useMemodelVizSource({
   memodelId,
   showAxons = false,
   colorsByNode,
-}: Options): SmallCircuitSource {
+}: TOptions): SmallCircuitSource {
   const { data: allSections, error, isLoading } = useMemodelMorphology(memodelId);
   // The simulation replaces the axon at instantiation, so the full arbor only obscures.
   const sections = useMemo(

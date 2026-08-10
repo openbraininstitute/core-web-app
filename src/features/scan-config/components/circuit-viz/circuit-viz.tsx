@@ -335,7 +335,7 @@ function CircuitVizView({
 
 export default CircuitViz;
 
-type MemodelVizProps = Omit<TCircuitVizViewProps, 'source'> & {
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source'> & {
   memodelId: string;
 };
 
@@ -345,7 +345,7 @@ type MemodelVizProps = Omit<TCircuitVizViewProps, 'source'> & {
  * An MEModel is not a Circuit, so it is served from its cell morphology instead — same section
  * shape, same nrn_order, so a click becomes a morphology location here too.
  */
-export function MemodelViz({ memodelId, ...props }: MemodelVizProps) {
+export function MemodelViz({ memodelId, ...props }: TMemodelVizProps) {
   const source = useMemodelVizSource({
     memodelId,
     showAxons: props.showAxons,
