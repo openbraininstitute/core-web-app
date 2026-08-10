@@ -11,7 +11,7 @@ import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { WorkspaceSection } from '@/constants';
 import { resolveViewerFeaturesForEntityType } from '@/entity-configuration/domain/helpers';
 import { ELECTRODE_FOCUSED_NEURON_OPACITY } from '@/features/scan-config/components/color-by/use-viewer-config';
-import { useElectrodeLocationsOverlay } from '@/features/scan-config/components/model-preview/use-electrode-locations-overlay';
+import { usePlacedElectrodeOverlays } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { Checkbox } from '@/ui/molecules/checkbox';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -69,7 +69,7 @@ export function ElectrodeArrayViewer({
 
   // Same hook the viewer uses; react-query dedupes the asset download, so this
   // only costs the overlay projection needed to label the list.
-  const { overlays, isLoading: overlaysLoading } = useElectrodeLocationsOverlay({
+  const { overlays, isLoading: overlaysLoading } = usePlacedElectrodeOverlays({
     arrayEntity: array,
   });
   const electrodes = useMemo(() => summariseElectrodes(overlays), [overlays]);
@@ -135,7 +135,7 @@ interface ElectrodeSummary {
  * a pivot marker — so key by id and count contacts from the cloud only.
  */
 function summariseElectrodes(
-  overlays: ReturnType<typeof useElectrodeLocationsOverlay>['overlays']
+  overlays: ReturnType<typeof usePlacedElectrodeOverlays>['overlays']
 ): ElectrodeSummary[] {
   const byId = new Map<string, ElectrodeSummary>();
   for (const group of overlays) {

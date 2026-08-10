@@ -20,7 +20,7 @@ export interface ElectrodeLocationsBlockSummary {
 }
 
 /** Dictionary summary keyed by block name (additionalProperties on staging). */
-export type ElectrodeLocationsDictionarySummary = Record<string, ElectrodeLocationsBlockSummary>;
+export type TElectrodeLocationsDictionarySummary = Record<string, ElectrodeLocationsBlockSummary>;
 
 /**
  * Resolve world-coordinate electrode positions for a full
@@ -32,9 +32,9 @@ export async function extracellularLocationsBlockDictionarySummary({
 }: {
   ctx: WorkspaceContext;
   payload: Record<string, unknown>;
-}): Promise<ElectrodeLocationsDictionarySummary> {
+}): Promise<TElectrodeLocationsDictionarySummary> {
   const api = await obioneApi();
-  return await api.post<ElectrodeLocationsDictionarySummary>(baseUri, {
+  return await api.post<TElectrodeLocationsDictionarySummary>(baseUri, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

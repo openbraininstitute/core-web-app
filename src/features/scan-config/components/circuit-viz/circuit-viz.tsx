@@ -21,7 +21,7 @@ import {
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
-import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 import type { SmallCircuitSource } from './sources';
@@ -51,10 +51,10 @@ interface CircuitVizProps {
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
   /**
-   * World-coordinate electrode overlays from {@link useElectrodeLocationsOverlay}.
+   * World-coordinate electrode overlays from {@link usePlacedElectrodeOverlays}.
    * Passed through to morphoviewer as point clouds (not Three.js helpers).
    */
-  overlays?: CircuitOverlayGroup[];
+  overlays?: ICircuitOverlayGroup[];
   /**
    * Enable left-drag (translate) / right-drag or Alt/Shift (rotate) on overlays.
    * Why gated: only when `setConfig` exists so 3D edits can write the form.

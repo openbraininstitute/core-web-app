@@ -17,7 +17,7 @@ import { useCircuitNodes, useSomaRadius } from './hooks';
 
 import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
-import type { CircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
@@ -36,7 +36,7 @@ export interface LargeCircuitPreviewProps {
    * World-coordinate electrode overlays (same pipeline as CircuitViz).
    * Large circuits use MorphoViewerSomasOnly; overlay interaction is identical.
    */
-  overlays?: CircuitOverlayGroup[];
+  overlays?: ICircuitOverlayGroup[];
   /** Enable left-drag / right-drag on electrode overlays when form can write back. */
   overlaysInteractive?: boolean;
   /** Gesture-end transform → host `applyElectrodeOverlayTransform`. */

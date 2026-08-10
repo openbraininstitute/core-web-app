@@ -1,3 +1,4 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 
@@ -72,6 +73,30 @@ export function isViewerBuildContext(ctx: IEntityViewerResolveContext): boolean 
     ctx.activity === ScanConfigActivity.Build ||
     ctx.section === WorkspaceSection.ScanConfigBuildWorkflow ||
     ctx.section === WorkspaceSection.BuildWorkflow
+  );
+}
+
+/** True when the host is a scan-config simulate surface (section or activity). */
+export function isViewerSimulateContext(ctx: IEntityViewerResolveContext): boolean {
+  return (
+    ctx.activity === ScanConfigActivity.Simulate ||
+    ctx.section === WorkspaceSection.SimulateWorkflow
+  );
+}
+
+/**
+ * Electrode-overlay policy shared by every circuit-like model.
+ *
+ * On during an extracellular recording array build (the array being placed) and
+ * during simulate (recording blocks may reference stored arrays). The viewer
+ * still draws nothing until a source actually supplies overlays, so this only
+ * grants the capability.
+ */
+export function circuitElectrodesViewerPolicy(ctx: IEntityViewerResolveContext): boolean {
+  return (
+    (isViewerBuildContext(ctx) &&
+      isViewerTarget(ctx, ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign)) ||
+    isViewerSimulateContext(ctx)
   );
 }
 

@@ -4,7 +4,7 @@ import { atom } from 'jotai';
 import type {
   ElectrodeLocationPoint,
   ElectrodeLocationsBlockSummary,
-  ElectrodeLocationsDictionarySummary,
+  TElectrodeLocationsDictionarySummary,
 } from '@/api/one/generated/extracellular-locations-block-dictionary-summary';
 
 /**
@@ -21,7 +21,7 @@ export const ELECTRODE_LOCATIONS_CONFIG_KEY = 'electrode_locations';
  * Why this shape: morphoviewer paints world XYZ spheres; the host also needs
  * `id` / `origin` / `rotation` so drag-rotate can write back into the form.
  */
-export interface CircuitOverlayGroup {
+export interface ICircuitOverlayGroup {
   /** CSS colour (opaque hex/rgb). Used as the point-cloud palette entry. */
   color: string;
   /** Interleaved world XYZ for every sphere in this group. */
@@ -39,6 +39,15 @@ export interface CircuitOverlayGroup {
   origin?: [number, number, number];
   /** Absolute placement rotations in degrees (Obi-One extrinsic ZXY). */
   rotation?: { x?: number; y?: number; z?: number };
+}
+
+export interface IElectrodeOverlaySource {
+  /** Groups to draw, already coloured and keyed by their owning config block. */
+  overlays: ICircuitOverlayGroup[];
+  /** True when this source has (or is fetching) something to draw. */
+  available: boolean;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 /**
@@ -65,9 +74,7 @@ export const ELECTRODE_PALETTE: readonly string[] = [
 ];
 
 /**
- * Stable fallback slot for names with no creation index (renamed / AI-authored).
- *
- * FNV-1a: deterministic, so a renamed block keeps one colour across reloads.
+ * Deterministic hash for a block name, so a renamed block keeps one colour across reloads.
  */
 function hashName(name: string): number {
   let hash = 2166136261;
@@ -201,11 +208,11 @@ function readRotation(entry: ElectrodeLocationsBlockSummary): {
  * // → MorphoViewerSmallCircuit overlays={groups}
  */
 export function electrodeSummaryToOverlays(
-  summary: ElectrodeLocationsDictionarySummary | null | undefined
-): CircuitOverlayGroup[] {
+  summary: TElectrodeLocationsDictionarySummary | null | undefined
+): ICircuitOverlayGroup[] {
   if (!summary) return [];
 
-  const groups: CircuitOverlayGroup[] = [];
+  const groups: ICircuitOverlayGroup[] = [];
   for (const [name, entry] of Object.entries(summary)) {
     const locations = entry?.locations;
     if (!Array.isArray(locations) || locations.length === 0) continue;
@@ -303,10 +310,10 @@ function readConfigRotation(block: Record<string, unknown>): {
  */
 export function electrodeDictionaryToPlaceholderOverlays(
   dictionary: Record<string, unknown> | null | undefined
-): CircuitOverlayGroup[] {
+): ICircuitOverlayGroup[] {
   if (!dictionary) return [];
 
-  const groups: CircuitOverlayGroup[] = [];
+  const groups: ICircuitOverlayGroup[] = [];
   for (const [name, raw] of Object.entries(dictionary)) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
     const block = raw as Record<string, unknown>;
@@ -370,9 +377,9 @@ export function electrodeDictionaryToPlaceholderOverlays(
  * @returns The groups to draw
  */
 export function scopeOverlaysToSelection(
-  overlays: CircuitOverlayGroup[],
+  overlays: ICircuitOverlayGroup[],
   visibleIds: readonly string[] | undefined
-): CircuitOverlayGroup[] {
+): ICircuitOverlayGroup[] {
   if (!visibleIds) return overlays;
   const allowed = new Set(visibleIds);
   return overlays.filter((group) => allowed.has(group.id));
@@ -389,9 +396,9 @@ export function scopeOverlaysToSelection(
  * @param fromApi - From {@link electrodeSummaryToOverlays}
  */
 export function mergeElectrodeOverlays(
-  placeholders: CircuitOverlayGroup[],
-  fromApi: CircuitOverlayGroup[]
-): CircuitOverlayGroup[] {
+  placeholders: ICircuitOverlayGroup[],
+  fromApi: ICircuitOverlayGroup[]
+): ICircuitOverlayGroup[] {
   if (placeholders.length === 0) return fromApi;
   if (fromApi.length === 0) return placeholders;
 
