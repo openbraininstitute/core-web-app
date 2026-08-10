@@ -11,7 +11,10 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
-import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import {
+  getViewDefinitionByExtendedType,
+  withLifecycleStatusLast,
+} from '@/entity-configuration/definitions/view-defs';
 import { NotebookActions } from '@/features/notebooks/components/mini-detail-actions';
 import {
   NotebookCellsPreview,
@@ -131,7 +134,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
 }) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
-  const miniConfig = viewConfig?.miniDetailView;
+  const miniConfig = withLifecycleStatusLast(viewConfig?.miniDetailView);
   const preview = match({ type: record.type })
     .with({ type: P.nullish }, () => null)
     .with(

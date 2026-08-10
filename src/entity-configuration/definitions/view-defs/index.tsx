@@ -18,6 +18,21 @@ export const CommonSummaryViewFields = [
   { field: EntityCoreFields.RegistrationDate },
 ] as TypeSummaryProps[];
 
+/**
+ * Append the lifecycle status as the final field of a detail-view list.
+ *
+ * Every entity carries `lifecycle_status`, and no view definition declares it, so both
+ * detail surfaces add it here rather than in 50-odd per-entity declarations. Idempotent:
+ * a definition that starts declaring it keeps its own placement.
+ */
+export function withLifecycleStatusLast(
+  fields: ReadonlyArray<TypeSummaryProps> | undefined
+): TypeSummaryProps[] {
+  const declared = fields ?? [];
+  if (declared.some((f) => f.field === EntityCoreFields.LifecycleStatus)) return [...declared];
+  return [...declared, { field: EntityCoreFields.LifecycleStatus }];
+}
+
 export const ViewsDefinitionRegistry = {
   ...ExperimentalViewDefinition,
   ...ModelViewDefinition,

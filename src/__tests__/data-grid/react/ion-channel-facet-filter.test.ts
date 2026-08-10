@@ -22,10 +22,10 @@ const BUCKETS: IFacetBucket[] = [
 ];
 
 describe('ion channel facet filter', () => {
-  const column = ionChannelRecordingSchema.columns.find((c) => c.id === 'ionChannel');
-
   it('filters on ion_channel__name from the ion_channel facet bucket', () => {
-    const [target] = resolveFilterTargets(column!);
+    const column = ionChannelRecordingSchema.columns.find((c) => c.id === 'ionChannel');
+    if (!column) throw new Error('ionChannel column missing');
+    const [target] = resolveFilterTargets(column);
     expect(target?.field).toBe('ion_channel__name');
     expect(target?.facetKey).toBe('ion_channel');
     expect(target?.options).toEqual({ kind: FilterOptionsKind.Facets });

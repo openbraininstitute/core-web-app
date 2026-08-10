@@ -34,8 +34,7 @@ describe('cell_morphology — column parity with the legacy view-def', () => {
       'contributions',
       'registrationDate',
     ]);
-    // lifecycle status is the one column the legacy view-def lacks until PR #1850 lands
-    expect(legacyOrder).toHaveLength(visible.filter((id) => id !== 'lifecycleStatus').length);
+    expect(legacyOrder).toHaveLength(visible.length);
   });
 
   it('declares the seven auxiliary columns after the visible ones', () => {
