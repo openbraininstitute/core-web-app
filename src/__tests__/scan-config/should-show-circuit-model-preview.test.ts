@@ -211,9 +211,32 @@ describe('resolveRightPreviewMode for e-feature extraction', () => {
     ).toBe(RightPreviewModeDict.Settings);
   });
 
-  it('still yields to a browse entity preview', () => {
+  it('still yields to a browse entity preview the user clicked', () => {
     expect(
       resolveRightPreviewMode({ ...efeatureState, hasEntity: false, entityPreviewActive: true })
+    ).toBe(RightPreviewModeDict.EntityPreview);
+  });
+
+  it('keeps the traces panel when the preview came from picking recordings', () => {
+    expect(
+      resolveRightPreviewMode({
+        ...efeatureState,
+        hasEntity: false,
+        entityPreviewActive: true,
+        entityPreviewFromSelection: true,
+      })
+    ).toBe(RightPreviewModeDict.EFeatures);
+  });
+
+  it('leaves a selection preview alone in workflows that own no pane', () => {
+    expect(
+      resolveRightPreviewMode({
+        entityPreviewActive: true,
+        entityPreviewFromSelection: true,
+        activity: ScanConfigActivity.Simulate,
+        entityType: ExtendedEntitiesTypeDict.Circuit,
+        hasEntity: true,
+      })
     ).toBe(RightPreviewModeDict.EntityPreview);
   });
 

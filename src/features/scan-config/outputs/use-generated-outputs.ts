@@ -2,6 +2,7 @@ import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { invalidateDataListings } from '@/features/scan-config/outputs/invalidate-listings';
+import { orderOutputFiles } from '@/features/scan-config/outputs/order';
 import {
   getOutputStrategyById,
   resolveStrategyForRef,
@@ -27,7 +28,10 @@ type Args = {
 };
 
 type Result = {
-  /** One row per file the resolved outputs expose, in `generated` order. */
+  /**
+   * One row per file the resolved outputs expose, in `generated` order — each output's own files
+   * arranged by {@link orderOutputFiles}.
+   */
   files: TActivityCustomFile[];
   /** `true` while at least one generated ref is still resolving. */
   isLoading: boolean;
@@ -81,7 +85,9 @@ export function useGeneratedOutputs({ execution, context, pollingEnabled = true 
         if (!data) return [];
 
         const strategy = getOutputStrategyById(data.strategyId);
-        return strategy ? strategy.toFiles(data) : [];
+        if (!strategy) return [];
+
+        return orderOutputFiles(strategy.toFiles(data), data.extendedType);
       }),
     [queries]
   );

@@ -78,21 +78,44 @@ export const RightPreviewModeDict = {
 export type TRightPreviewMode = (typeof RightPreviewModeDict)[keyof typeof RightPreviewModeDict];
 
 /**
+ * Preview modes a workflow owns, which picking entities must not replace.
+ *
+ * These panes are the point of their workflow — e-feature extraction exists to read the traces of
+ * the recordings being configured — so they survive the mini-detail that confirming a browse
+ * selection opens elsewhere. A click on an entity still wins; only the selection side effect is
+ * ignored.
+ */
+const WorkflowOwnedPreviews = new Set<TRightPreviewMode>([RightPreviewModeDict.EFeatures]);
+
+/**
  * Resolve which exclusive preview the right column should show.
  *
- * Entity mini-detail wins over model previews so browse selection stays visible.
+ * Entity mini-detail wins over model previews so browse selection stays visible, except over the
+ * {@link WorkflowOwnedPreviews} when it was opened by a selection rather than a click.
  */
 export function resolveRightPreviewMode(options: {
   settingsPanelActive?: boolean;
   entityPreviewActive: boolean;
+  /** `true` when the mini-detail was opened by picking entities, not by clicking one. */
+  entityPreviewFromSelection?: boolean;
   activity: TScanConfigActivity;
   entityType: string;
   hasEntity: boolean;
 }): TRightPreviewMode {
+  const modeWithoutEntityPreview = () =>
+    resolveRightPreviewMode({ ...options, entityPreviewActive: false });
+
   return (
     match(options)
       // an explicitly opened settings form outranks any preview: it is the thing the user just asked for
       .with({ settingsPanelActive: true }, () => RightPreviewModeDict.Settings)
+      .with(
+        { entityPreviewActive: true, entityPreviewFromSelection: true },
+        (): TRightPreviewMode => {
+          const owned = modeWithoutEntityPreview();
+          return WorkflowOwnedPreviews.has(owned) ? owned : RightPreviewModeDict.EntityPreview;
+        }
+      )
       .with({ entityPreviewActive: true }, () => RightPreviewModeDict.EntityPreview)
       .with(
         {

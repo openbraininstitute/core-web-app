@@ -93,9 +93,9 @@ const selectionSchema = {
 describe('humanizeTypeName', () => {
   it('splits class names and keeps acronym runs intact', () => {
     expect(humanizeTypeName('VoltageBaseFeature', 'Feature')).toBe('Voltage base');
-    expect(humanizeTypeName('APWaveformProtocol', 'Protocol')).toBe('AP waveform');
     expect(humanizeTypeName('ISICVFeature', 'Feature')).toBe('ISICV');
-    expect(humanizeTypeName('IDRestProtocol', 'Protocol')).toBe('ID rest');
+    // digits become their own word — see the note on humanizeTypeName
+    expect(humanizeTypeName('AP1AmpFeature', 'Feature')).toBe('AP 1 amp');
   });
 });
 
@@ -140,6 +140,10 @@ describe('listProtocolDefs', () => {
 
   it('reads every protocol variant off the union', () => {
     expect(defs.map((def) => def.typeName)).toEqual(['IDRestProtocol', 'SAHPProtocol']);
+  });
+
+  it('labels a protocol with its eCode name, not a reformatted one', () => {
+    expect(defs.map((def) => def.label)).toEqual(['IDRest', 'SAHP']);
   });
 
   it('takes the timing fields from each protocol rather than assuming a shape', () => {
