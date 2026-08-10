@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ApiError } from '@/api/error';
+
 import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import type { Config, ConfigValue } from '@/features/scan-config/types';
 
@@ -35,7 +37,7 @@ function Harness({ config, state, setState }: HarnessProps) {
     setState,
     sourceField: 'neuron_set',
     fieldKey: 'manipulation',
-    endpoint: '/neuronal-manipulation',
+    endpoint: '/circuit-neuronal-manipulation-properties-by-neuron-set',
     entityId: 'circuit-1',
   });
 
@@ -78,7 +80,9 @@ describe('useCircuitManipulationData', () => {
       data: undefined,
       isLoading: false,
       isError: true,
-      error: { cause: { message: 'Neuron set "exc" has no biophysical neurons.' } },
+      error: new ApiError('request failed', {
+        message: 'Neuron set "exc" has no biophysical neurons.',
+      }),
     };
     render(
       <Harness config={makeConfig([1])} state={{ neuron_set: REFERENCE }} setState={vi.fn()} />
@@ -95,7 +99,7 @@ describe('useCircuitManipulationData', () => {
       data: undefined,
       isLoading: false,
       isError: true,
-      error: { cause: {} },
+      error: new ApiError('request failed', {}),
     };
     const { container } = render(
       <Harness config={makeConfig([1])} state={{ neuron_set: REFERENCE }} setState={vi.fn()} />

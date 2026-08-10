@@ -32,19 +32,18 @@ export interface RangeModificationBaseProps {
   fieldKey: string;
   modificationType: string;
   errorPathPrefix?: string;
-  /** circuit variant: variables are being fetched for the selected neuron set */
+  /** Whether mechanism variables are still loading. */
   loading?: boolean;
-  /** circuit variant: rendered note for why the picker is unavailable (error, no variables) */
+  /** Status note when the picker is unavailable (error / empty). */
   reason?: ReactNode | null;
 }
 
 /**
- * presentational base for the "Variable Modification by Section List"
- * (`ion_channel_variable_modification_by_section_list`) ui element.
+ * Presentational UI for `ion_channel_variable_modification_by_section_list`.
  *
- * renders the channel/variable picker and a per-section-list value editor from a
- * provided {@link MechanismVariablesRoot}. it does not fetch data; the me-model
- * and circuit wrappers each supply data (and, for circuit, loading/emptyReason respectively).
+ * Does not fetch data; MEModel/Circuit wrappers supply {@link MechanismVariablesRoot}.
+ *
+ * @param props - Mechanism variables plus form field wiring and optional gating state.
  */
 export function RangeModificationBase({
   data,

@@ -175,8 +175,10 @@ const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * True when a `neuronal_manipulations` variant `type.const` is a circuit variant
- * (endpoint-sourced), as opposed to the ME-model variant (mapped-config-sourced)
+ * Whether a `neuronal_manipulations` variant `type.const` is Circuit-scoped.
+ *
+ * @param typeConst - Variant discriminator from the block state/schema.
+ * @returns `true` for Circuit variants (neuron-set scoped); `false` for MEModel variants.
  */
 export function isCircuitNeuronalManipulationType(typeConst: string | undefined): boolean {
   return typeof typeConst === 'string' && CircuitNeuronalManipulationTypes.has(typeConst);
@@ -314,9 +316,9 @@ export interface IonChannelRangeVariableModification extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ionChannelVariableModificationBySectionList;
   description: string;
   property?: string;
-  /** maps to a `property_endpoints` key; `"NeuronalManipulation"` marks the circuit variant */
+  /** Key into `schema.property_endpoints` (typically `"NeuronalManipulation"`). */
   property_group?: string;
-  /** sibling field whose value scopes the variable fetch (circuit variant only), e.g. `neuron_set` */
+  /** Sibling field that scopes the Circuit fetch (e.g. `neuron_set`). */
   property_source_field?: string;
   title: string;
   type: 'object';
@@ -332,9 +334,9 @@ export interface IonChannelGlobalVariableModification extends TBlockElement {
   description: string;
   title: string;
   property?: string;
-  /** maps to a `property_endpoints` key; `"NeuronalManipulation"` marks the circuit variant */
+  /** Key into `schema.property_endpoints` (typically `"NeuronalManipulation"`). */
   property_group?: string;
-  /** sibling field whose value scopes the variable fetch (circuit variant only), e.g. `neuron_set` */
+  /** Sibling field that scopes the Circuit fetch (e.g. `neuron_set`). */
   property_source_field?: string;
   type: 'object';
   properties: {

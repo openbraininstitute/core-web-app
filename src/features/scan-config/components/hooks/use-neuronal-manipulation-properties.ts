@@ -13,24 +13,31 @@ import {
 
 import type { WorkspaceContext } from '@/types/common';
 
-const STALE_TIME_MS = 60 * 60 * 1000; // 1 hour
+const STALE_TIME_MS = 60 * 60 * 1000;
 
+/** Parameters for {@link useNeuronalManipulationProperties}. */
 export type TUseNeuronalManipulationPropertiesParams = {
   workspace: WorkspaceContext;
-  /** circuit entity id the manipulation targets */
+  /** Target MEModel or Circuit entity id. */
   entityId: string | undefined;
-  /** schema `property_endpoints.NeuronalManipulation` */
+  /** Schema `property_endpoints.NeuronalManipulation` path. */
   endpoint: string | undefined;
-  /** resolved neuron-set block config; null (default target) when none is selected */
-  neuronSet: unknown;
-  /** extra gate */
+  /**
+   * Circuit-only resolved neuron-set config (`null` = default target).
+   * Omit for MEModel fetches.
+   */
+  neuronSet?: unknown;
+  /** When `true`, include `neuron_set` in the POST body (Circuit endpoint). */
+  includeNeuronSet?: boolean;
+  /** Additional enable gate for the query. */
   enabled?: boolean;
 };
 
 /**
- * picks the mechanism-variables map from the neuronal-manipulation-properties
- * response. prefers PascalCase (`MechanismVariablesByIonChannel`); falls back to
- * legacy snake_case for older backends.
+ * Selects the mechanism-variables map from a neuronal-manipulation properties response.
+ *
+ * @param resp - Raw endpoint response.
+ * @returns PascalCase `MechanismVariablesByIonChannel` when present; otherwise legacy snake_case; otherwise `{}`.
  */
 export function selectMechanismVariablesRoot(
   resp: TNeuronalManipulationPropertiesResponse
@@ -40,25 +47,34 @@ export function selectMechanismVariablesRoot(
 }
 
 /**
- * loads the mechanism variables available for a circuit neuronal manipulation,
- * scoped to the selected neuron set.
- * runs once an entity id and endpoint are known; an unselected neuron set is sent to the endpoint as null (the default target).
+ * Loads mechanism variables for neuronal manipulation blocks.
+ *
+ * Circuit callers should pass `includeNeuronSet: true` and a resolved `neuronSet`
+ * (including `null` for the default target). MEModel callers omit both.
+ *
+ * @param params - Workspace, entity, endpoint, and optional neuron-set scope.
+ * @returns React Query result with selected {@link MechanismVariablesRoot}.
  */
 export function useNeuronalManipulationProperties({
   workspace,
   entityId,
   endpoint,
   neuronSet,
+  includeNeuronSet = false,
   enabled = true,
 }: TUseNeuronalManipulationPropertiesParams) {
   return useQuery({
-    queryKey: ['neuronal-manipulation-properties', { workspace, entityId, endpoint, neuronSet }],
+    queryKey: [
+      'neuronal-manipulation-properties',
+      { workspace, entityId, endpoint, neuronSet, includeNeuronSet },
+    ],
     queryFn: ({ signal }) =>
       fetchNeuronalManipulationProperties({
         ctx: workspace,
         endpoint: endpoint as string,
         entityId: entityId as string,
         neuronSet,
+        includeNeuronSet,
         signal,
       }),
     enabled: enabled && !!entityId && !!endpoint,

@@ -1,17 +1,53 @@
 'use client';
 
 import {
-  RangeModificationBase,
-  type RangeModificationBaseProps,
-} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/range-base';
+  type TUseMeModelManipulationDataParams,
+  useMeModelManipulationData,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/use-memodel-manipulation-data';
+import { RangeModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/range-base';
+
+import type { ConfigValue } from '@/features/scan-config/types';
+
+/** Props for the MEModel section-list variable modification UI. */
+export type MeModelRangeProps = TUseMeModelManipulationDataParams & {
+  disabled: boolean;
+  state: Record<string, ConfigValue>;
+  setState: (newState: Record<string, ConfigValue>) => void;
+  fieldKey: string;
+  modificationType: string;
+  errorPathPrefix?: string;
+};
 
 /**
- * MEModel (single-neuron) variant of `ion_channel_variable_modification_by_section_list`.
+ * MEModel UI for `ion_channel_variable_modification_by_section_list`.
  *
- * Variables come from the form-level mapped-circuit-properties config; there is no
- * neuron-set selection, so this is a thin pass-through to the presentational base.
- * The circuit variant lives in `../circuit/circuit-range.tsx` and must not reuse this.
+ * @param props - Endpoint/entity fetch params plus form field wiring.
+ * @returns Presentational modification UI backed by {@link useMeModelManipulationData}.
+ * @see CircuitRange
  */
-export function Range(props: Omit<RangeModificationBaseProps, 'loading' | 'reason'>) {
-  return <RangeModificationBase {...props} />;
+export function Range({
+  endpoint,
+  entityId,
+  disabled,
+  state,
+  setState,
+  fieldKey,
+  modificationType,
+  errorPathPrefix,
+}: MeModelRangeProps) {
+  const { data, loading, reason } = useMeModelManipulationData({ endpoint, entityId });
+
+  return (
+    <RangeModificationBase
+      data={data}
+      loading={loading}
+      reason={reason}
+      disabled={disabled}
+      state={state}
+      setState={setState}
+      fieldKey={fieldKey}
+      modificationType={modificationType}
+      errorPathPrefix={errorPathPrefix}
+    />
+  );
 }

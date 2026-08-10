@@ -6,6 +6,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/use-circuit-manipulation-data';
 import { RangeModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/range-base';
 
+/** Props for the Circuit section-list variable modification UI. */
 export type CircuitRangeProps = TUseCircuitManipulationDataParams & {
   disabled: boolean;
   modificationType: string;
@@ -13,10 +14,11 @@ export type CircuitRangeProps = TUseCircuitManipulationDataParams & {
 };
 
 /**
- * circuit variant of `ion_channel_variable_modification_by_section_list`.
+ * Circuit UI for `ion_channel_variable_modification_by_section_list`.
  *
- * unlike the me-model `Range`, variables are fetched per block from the selected
- * neuron set; this composes the shared data hook with the presentational base.
+ * @param props - Neuron-set source, endpoint/entity, and form field wiring.
+ * @returns Presentational modification UI backed by {@link useCircuitManipulationData}.
+ * @see Range
  */
 export function CircuitRange({
   config,

@@ -8,10 +8,6 @@ import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
 import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/range';
-import {
-  type MechanismVariablesRoot,
-  RootSelector,
-} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
@@ -48,11 +44,11 @@ import {
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { isObject } from '@/util/type-guards';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
+
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 export function UIElementRender({
@@ -308,15 +304,14 @@ export function UIElementRender({
           );
         }
 
-        // me-model variant: variables come from the form-level mapped-circuit-properties
-        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
-        const mechanismConfig: MechanismVariablesRoot | null =
-          rawMechanismConfig && isObject(rawMechanismConfig)
-            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
-            : null;
         return (
           <Global
-            data={mechanismConfig}
+            endpoint={
+              paramSchema.property_group
+                ? schema.property_endpoints?.[paramSchema.property_group]
+                : undefined
+            }
+            entityId={entity?.id}
             disabled={disabled}
             state={state}
             setState={setState}
@@ -341,7 +336,6 @@ export function UIElementRender({
         );
         const manipulationVariantType = typeof state.type === 'string' ? state.type : undefined;
 
-        // circuit variant (variant type.const prefixed with `Circuit`)
         if (isCircuitNeuronalManipulationType(manipulationVariantType)) {
           return (
             <CircuitRange
@@ -365,14 +359,14 @@ export function UIElementRender({
           );
         }
 
-        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
-        const mechanismConfig: MechanismVariablesRoot | null =
-          rawMechanismConfig && isObject(rawMechanismConfig)
-            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
-            : null;
         return (
           <Range
-            data={mechanismConfig}
+            endpoint={
+              paramSchema.property_group
+                ? schema.property_endpoints?.[paramSchema.property_group]
+                : undefined
+            }
+            entityId={entity?.id}
             disabled={disabled}
             state={state}
             setState={setState}

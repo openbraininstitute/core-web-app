@@ -6,6 +6,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/use-circuit-manipulation-data';
 import { GlobalModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/global-base';
 
+/** Props for the Circuit full-neuron variable modification UI. */
 export type CircuitGlobalProps = TUseCircuitManipulationDataParams & {
   disabled: boolean;
   modificationType: string;
@@ -13,10 +14,11 @@ export type CircuitGlobalProps = TUseCircuitManipulationDataParams & {
 };
 
 /**
- * circuit variant of `ion_channel_variable_modification_by_neuron`.
+ * Circuit UI for `ion_channel_variable_modification_by_neuron`.
  *
- * unlike the me-model `Global`, variables are fetched per block from the selected
- * neuron set; this composes the shared data hook with the presentational base
+ * @param props - Neuron-set source, endpoint/entity, and form field wiring.
+ * @returns Presentational modification UI backed by {@link useCircuitManipulationData}.
+ * @see Global
  */
 export function CircuitGlobal({
   config,
