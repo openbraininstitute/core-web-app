@@ -1,9 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
-import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { sequentialCellLoader } from '@/features/scan-config/components/circuit-viz/sequential-loader';
+import {
+  fetchObiOneJson,
+  STATIC_RESOURCE_QUERY_OPTIONS,
+} from '@/features/scan-config/components/circuit-viz/obi-one-fetch';
+import {
+  SequentialLoaderClearedError,
+  sequentialCellLoader,
+} from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import {
   DEFAULT_NEURON_COLOR,
   SECTION_TYPE_COLORS,
@@ -61,15 +67,21 @@ export function useObiOneVizSource({
       if (!node) return null;
 
       const { morphology_file: file, morphology_name: name } = node;
-      return sequentialCellLoader.load({
-        virtualLabId,
-        projectId,
-        circuitId,
-        cellId,
-        name,
-        file,
-        showAxon: showAxons,
-      });
+      try {
+        return await sequentialCellLoader.load({
+          virtualLabId,
+          projectId,
+          circuitId,
+          cellId,
+          name,
+          file,
+          showAxon: showAxons,
+        });
+      } catch (error) {
+        // An axon toggle clears the queue; a cancelled load is not a failure.
+        if (error instanceof SequentialLoaderClearedError) return null;
+        throw error;
+      }
     },
     [nodesById, virtualLabId, projectId, circuitId, showAxons]
   );
@@ -83,34 +95,25 @@ export function useObiOneVizSource({
 }
 
 /** OBI-One `/circuit/viz/{id}/nodes`, cached per circuit. Shared with synapse projection. */
-export function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
-  return useQuery({
+export function circuitNodesQueryOptions(id: string, virtualLabId: string, projectId: string) {
+  return queryOptions({
     queryKey: keyBuilder.circuitNodes(id),
-    queryFn: async () => {
-      const res = await authFetch(`${config.OBI_ONE_URL}/circuit/viz/${id}/nodes`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'virtual-lab-id': virtualLabId,
-          'project-id': projectId,
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch circuit viz for id "${id}"!`);
-      }
-
-      const json = await res.json();
-      return NodesSchema.parse(json);
-    },
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    queryFn: async () =>
+      NodesSchema.parse(
+        await fetchObiOneJson(`${config.OBI_ONE_URL}/circuit/viz/${id}/nodes`, {
+          virtualLabId,
+          projectId,
+        })
+      ),
+    ...STATIC_RESOURCE_QUERY_OPTIONS,
   });
 }
 
-function makeNodeKey(circuitId: string, index: number) {
+function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
+  return useQuery(circuitNodesQueryOptions(id, virtualLabId, projectId));
+}
+
+/** The id's path part: what the viewer hands back to `loadCell` and error logs cite. */
+export function makeNodeKey(circuitId: string, index: number) {
   return `${circuitId} #${index}`;
 }
