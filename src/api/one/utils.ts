@@ -10,6 +10,11 @@ export async function obioneApi(url?: string) {
   return api;
 }
 
+/**
+ * Normalized obi-one error payload.
+ *
+ * Supports FastAPI `{ detail }` and the envelope `{ error_code, message, details }`.
+ */
 export type TObiOneErrorBody = {
   detail?: unknown;
   error_code?: unknown;
@@ -18,13 +23,12 @@ export type TObiOneErrorBody = {
 } | null;
 
 /**
- * Pull the human-readable reason out of an obi-one error body.
+ * Returns a human-readable reason from an obi-one error body.
  *
- * The service answers in two different shapes. FastAPI's `HTTPException` gives `{ detail }`,
- * while its own error envelope — used for rejected configs and for request validation failures —
- * gives `{ error_code, message, details }`, where the specific reason is in `details[0].msg` and
- * `message` may just be a generic "Validation error". Reading only one of the two is why a
- * rejected config surfaced as a bare "Unknown error".
+ * Preference order: `detail`, `details[0].msg`, then `message`.
+ *
+ * @param body - Parsed error body, or `null`.
+ * @returns Resolved reason string, or `"Unknown error"` when none is present.
  */
 export function getObiOneErrorReason(body: TObiOneErrorBody): string {
   if (isString(body?.detail)) return body.detail;
@@ -33,7 +37,12 @@ export function getObiOneErrorReason(body: TObiOneErrorBody): string {
   return 'Unknown error';
 }
 
-/** Rebuild the obi-one error body from the fields `parseApiError` lifted into the cause. */
+/**
+ * Rebuilds an obi-one error body from fields lifted onto {@link ApiError.cause}.
+ *
+ * @param error - Caught value; only {@link ApiError} instances yield a body.
+ * @returns Normalized body, or `null` when `error` is not an {@link ApiError}.
+ */
 export function toObiOneErrorBody(error: unknown): TObiOneErrorBody {
   if (!(error instanceof ApiError)) return null;
   const { detail, code, message, details } = error.cause ?? {};
@@ -49,12 +58,21 @@ export const ScanConfigGenerationStep = {
 export type TScanConfigGenerationStep =
   (typeof ScanConfigGenerationStep)[keyof typeof ScanConfigGenerationStep];
 
-/** Carries which step of campaign generation failed and the raw obi-one error body. */
+/**
+ * Error raised when scan-config campaign generation fails.
+ *
+ * @property step - Failing generation step.
+ * @property body - Raw obi-one error body for the step, when available.
+ */
 export class ScanConfigGenerationError extends Error {
   readonly step: TScanConfigGenerationStep;
 
   readonly body: TObiOneErrorBody;
 
+  /**
+   * @param step - Failing generation step.
+   * @param body - Optional obi-one error body used to build `message`.
+   */
   constructor(step: TScanConfigGenerationStep, body: TObiOneErrorBody = null) {
     super(getObiOneErrorReason(body));
     this.name = 'ScanConfigGenerationError';

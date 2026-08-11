@@ -74,7 +74,7 @@ export function RootElement({
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
 
-  if (!schema || !schema?.properties) return;
+  if (!schema?.properties) return;
 
   const handleEntryClick = (subkey: string) => {
     setSelectedRootElement(rootElement); // Select the parent block
@@ -191,6 +191,7 @@ export function RootElement({
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         (config[rootElement] || hasHighlights) && (
           <BlockDictionaryEntries
+            schema={schema}
             config={config}
             setConfig={setConfig}
             rootElement={rootElement}

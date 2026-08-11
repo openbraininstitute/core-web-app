@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import {
   SectionListConfigEditor,
@@ -17,13 +17,14 @@ import {
   MechanismVariableTypeDict,
   type SectionListEntry,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import { ModificationShell } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/modification-shell';
 import {
   type IonChannelSelection,
   IonChannelVariableSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
-interface RangeProps {
+export interface RangeModificationBaseProps {
   data: MechanismVariablesRoot | null;
   disabled: boolean;
   state: Record<string, ConfigValue>;
@@ -31,9 +32,20 @@ interface RangeProps {
   fieldKey: string;
   modificationType: string;
   errorPathPrefix?: string;
+  /** Whether mechanism variables are still loading. */
+  loading?: boolean;
+  /** Status note when the picker is unavailable (error / empty). */
+  reason?: ReactNode | null;
 }
 
-export function Range({
+/**
+ * Presentational UI for `ion_channel_variable_modification_by_section_list`.
+ *
+ * Does not fetch data; MEModel/Circuit wrappers supply {@link MechanismVariablesRoot}.
+ *
+ * @param props - Mechanism variables plus form field wiring and optional gating state.
+ */
+export function RangeModificationBase({
   data,
   disabled,
   state,
@@ -41,7 +53,9 @@ export function Range({
   fieldKey,
   modificationType,
   errorPathPrefix,
-}: RangeProps) {
+  loading = false,
+  reason = null,
+}: RangeModificationBaseProps) {
   const currentModification = state[fieldKey];
   const isValidModification =
     !!currentModification &&
@@ -103,8 +117,6 @@ export function Range({
     return resolvedVariable.section_lists;
   }, [resolvedVariable]);
 
-  if (!data) return null;
-
   const handleVariableChange = (selection: IonChannelSelection) => {
     const sectionListModifications: Record<string, number> = {};
     for (const entry of selection.variable.section_lists) {
@@ -143,13 +155,14 @@ export function Range({
   };
 
   return (
-    <div
-      data-scan-config-block-element={
-        ScanConfigUIElementDict.ionChannelVariableModificationBySectionList
-      }
+    <ModificationShell
+      uiElement={ScanConfigUIElementDict.ionChannelVariableModificationBySectionList}
+      data={data}
+      loading={loading}
+      reason={reason}
     >
       <IonChannelVariableSelector
-        data={data}
+        data={data ?? {}}
         variableType={MechanismVariableTypeDict.Range}
         value={currentValue}
         onChange={handleVariableChange}
@@ -166,6 +179,6 @@ export function Range({
           errorPathPrefix={errorPathPrefix}
         />
       )}
-    </div>
+    </ModificationShell>
   );
 }

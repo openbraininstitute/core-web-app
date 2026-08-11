@@ -2,10 +2,9 @@ import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { Fragment, useMemo, useRef, useState } from 'react';
 
+import NumberEditor from '@/features/scan-config/components/ui-elements/neuron-ids/number-editor';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import { cn } from '@/utils/css-class';
-
-import { isPlainObject } from '../../utils';
-import NumberEditor from './number-editor';
 
 import type React from 'react';
 import type { ConfigValue } from '@/features/scan-config/types';

@@ -159,6 +159,30 @@ export const ScanConfigUIElementDict = {
 
 export type TScanConfigUIElementDict =
   (typeof ScanConfigUIElementDict)[keyof typeof ScanConfigUIElementDict];
+
+export const NeuronalManipulationTypeDict = {
+  CircuitByNeuron: 'CircuitByNeuronMechanismVariableNeuronalManipulation',
+  CircuitBySectionList: 'CircuitBySectionListMechanismVariableNeuronalManipulation',
+  ByNeuron: 'ByNeuronMechanismVariableNeuronalManipulation',
+  BySectionList: 'BySectionListMechanismVariableNeuronalManipulation',
+} as const;
+
+export const CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD = 'neuron_set';
+
+const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
+  NeuronalManipulationTypeDict.CircuitByNeuron,
+  NeuronalManipulationTypeDict.CircuitBySectionList,
+]);
+
+/**
+ * Whether a `neuronal_manipulations` variant `type.const` is Circuit-scoped.
+ *
+ * @param typeConst - Variant discriminator from the block state/schema.
+ * @returns `true` for Circuit variants (neuron-set scoped); `false` for MEModel variants.
+ */
+export function isCircuitNeuronalManipulationType(typeConst: string | undefined): boolean {
+  return typeof typeConst === 'string' && CircuitNeuronalManipulationTypes.has(typeConst);
+}
 export interface StringInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringInput;
 }
@@ -291,7 +315,11 @@ export interface MorphologySectionTypeSelection extends TBlockElement {
 export interface IonChannelRangeVariableModification extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ionChannelVariableModificationBySectionList;
   description: string;
-  property: 'IonChannelRangeVariables';
+  property?: string;
+  /** Key into `schema.property_endpoints` (typically `"NeuronalManipulation"`). */
+  property_group?: string;
+  /** Sibling field that scopes the Circuit fetch (e.g. `neuron_set`). */
+  property_source_field?: string;
   title: string;
   type: 'object';
   properties: {
@@ -305,7 +333,11 @@ export interface IonChannelGlobalVariableModification extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.IonChannelVariableModificationByNeuron;
   description: string;
   title: string;
-  property: 'IonChannelGlobalVariables';
+  property?: string;
+  /** Key into `schema.property_endpoints` (typically `"NeuronalManipulation"`). */
+  property_group?: string;
+  /** Sibling field that scopes the Circuit fetch (e.g. `neuron_set`). */
+  property_source_field?: string;
   type: 'object';
   properties: {
     modification: any;

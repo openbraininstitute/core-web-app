@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useMemo } from 'react';
 
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
+import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -22,7 +23,7 @@ import { isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
-import type { Config, IBlockDictionary, TBlock } from '@/features/scan-config/types';
+import type { Config, ConfigSchema, IBlockDictionary, TBlock } from '@/features/scan-config/types';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
@@ -51,9 +52,9 @@ function EntryTab({
       className={cn(
         'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
         'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
-        'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+        'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-primary-10 hover:text-white gap-1',
         {
-          'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb': isSelected,
+          'bg-linear-to-r from-[#003A8C] to-primary-10 text-white shadow-bnb': isSelected,
         },
         styles.entryButton,
         diffClass
@@ -101,9 +102,11 @@ export default function BlockDictionaryEntries({
   highlights = [],
   visible,
   rootElementSchema,
+  schema,
 }: {
   config: Config;
   setConfig: (newConfig: Config) => void;
+  schema: ConfigSchema;
   rootElementSchema: IBlockDictionary;
   rootElement: string;
   selectedEntry: string;
@@ -359,21 +362,19 @@ export default function BlockDictionaryEntries({
 
                                     delete targetSection[subkey];
 
-                                    const initConfig = newConfig.initialize;
-                                    if (
-                                      isPlainObject(initConfig) &&
-                                      isPlainObject(initConfig.node_set) &&
-                                      typeof initConfig.node_set.block_name === 'string' &&
-                                      initConfig.node_set.block_name === subkey
-                                    ) {
-                                      initConfig.node_set = null;
-                                    }
+                                    // Schema-aware cleanup: clear refs + dependent manipulation fields
+                                    const cleaned = clearDeletedBlockReferences(
+                                      newConfig,
+                                      schema,
+                                      rootElement,
+                                      subkey
+                                    );
 
-                                    Object.entries(newConfig).forEach(([configK, configV]) => {
+                                    // Also clear nested refs (e.g. combination tuples)
+                                    Object.entries(cleaned).forEach(([configK, configV]) => {
                                       if (configK === 'initialize' || !isPlainObject(configV))
                                         return;
 
-                                      // Clear refs in section entries (incl. nested combination tuples)
                                       Object.values(configV).forEach((entryV) => {
                                         rewriteBlockReferences(entryV, subkey, {
                                           type: RewriteBlockReferencesModeDict.Clear,
@@ -381,7 +382,7 @@ export default function BlockDictionaryEntries({
                                       });
                                     });
 
-                                    setConfig(newConfig);
+                                    setConfig(cleaned);
 
                                     setSelectedEntry('');
                                     allEntries.delete(subkey);

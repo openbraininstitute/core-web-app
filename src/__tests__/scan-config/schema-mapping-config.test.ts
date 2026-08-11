@@ -28,40 +28,24 @@ describe('parseSchemaMappingConfiguration', () => {
     });
 
     expect(parsed.NodePropertyUniqueValuesByPopulation?.L5.mtype).toEqual(['L5_PC', 'L5_NBC']);
-    expect(parsed.MechanismVariablesByIonChannel).toBeUndefined();
   });
 
-  it('accepts MEModel mapped-circuit-properties with MechanismVariablesByIonChannel only', () => {
+  it('accepts MEModel mapped-circuit-properties with usability only', () => {
     const parsed = parseSchemaMappingConfiguration({
-      MechanismVariablesByIonChannel: {
-        NaTg: {
-          section_lists: ['somatic', 'axonal'],
-          entity_id: '13c947c3-cb76-4a9a-91f4-146e95bd25f3',
-          variables: {
-            gNaTgbar_NaTg: {
-              units: '',
-              limits: [0, 10],
-              variable_type: 'RANGE',
-              section_lists_original_values: {
-                somatic: 0.21,
-                axonal: 0.42,
-              },
-            },
-          },
-        },
-      },
       usability: defaultUsability,
     });
 
-    expect(parsed.MechanismVariablesByIonChannel?.NaTg).toBeDefined();
+    expect(parsed.usability).toEqual(defaultUsability);
     expect(parsed.NodePropertyUniqueValuesByPopulation).toBeUndefined();
   });
 
-  it('accepts responses that include both circuit and memodel property groups', () => {
+  it('preserves unexpected keys via catchall without requiring MechanismVariablesByIonChannel', () => {
     const parsed = parseSchemaMappingConfiguration({
       NodePropertyUniqueValuesByPopulation: {
         L5: { mtype: ['L5_PC'] },
       },
+      // Legacy leftover: mechanism variables are no longer part of mapped-circuit-properties;
+      // neuronal manipulation uses dedicated POST endpoints instead.
       MechanismVariablesByIonChannel: {
         pas: {
           section_lists: ['somatic'],

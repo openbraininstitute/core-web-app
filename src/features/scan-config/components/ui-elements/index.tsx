@@ -4,12 +4,10 @@ import { match, P } from 'ts-pattern';
 
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
-import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/global';
-import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/range';
-import {
-  type MechanismVariablesRoot,
-  RootSelector,
-} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
+import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
+import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
+import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/range';
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
@@ -37,18 +35,20 @@ import {
   type TEntityQuery,
 } from '@/features/scan-config/helpers';
 import {
+  CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD,
   type Config,
   type ConfigSchema,
   type ConfigValue,
+  isCircuitNeuronalManipulationType,
   type ParamSchema,
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { isObject } from '@/util/type-guards';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
+
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 export function UIElementRender({
@@ -278,15 +278,40 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelVariableModificationByNeuron },
       },
       ({ paramSchema }) => {
-        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
-        const mechanismConfig: MechanismVariablesRoot | null =
-          rawMechanismConfig && isObject(rawMechanismConfig)
-            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
-            : null;
         const modificationType = get(paramSchema, 'properties.type.const', 'ByNeuronModification');
+        const manipulationVariantType = typeof state.type === 'string' ? state.type : undefined;
+
+        if (isCircuitNeuronalManipulationType(manipulationVariantType)) {
+          return (
+            <CircuitGlobal
+              config={config}
+              state={state}
+              setState={setState}
+              sourceField={
+                paramSchema.property_source_field ?? CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD
+              }
+              fieldKey={k}
+              endpoint={
+                paramSchema.property_group
+                  ? schema.property_endpoints?.[paramSchema.property_group]
+                  : undefined
+              }
+              entityId={entity?.id}
+              disabled={disabled}
+              modificationType={modificationType}
+              errorPathPrefix={errorPathPrefix}
+            />
+          );
+        }
+
         return (
           <Global
-            data={mechanismConfig}
+            endpoint={
+              paramSchema.property_group
+                ? schema.property_endpoints?.[paramSchema.property_group]
+                : undefined
+            }
+            entityId={entity?.id}
             disabled={disabled}
             state={state}
             setState={setState}
@@ -304,19 +329,44 @@ export function UIElementRender({
         },
       },
       ({ paramSchema }) => {
-        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
-        const mechanismConfig: MechanismVariablesRoot | null =
-          rawMechanismConfig && isObject(rawMechanismConfig)
-            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
-            : null;
         const modificationType = get(
           paramSchema,
           'properties.type.const',
           'BySectionListModification'
         );
+        const manipulationVariantType = typeof state.type === 'string' ? state.type : undefined;
+
+        if (isCircuitNeuronalManipulationType(manipulationVariantType)) {
+          return (
+            <CircuitRange
+              config={config}
+              state={state}
+              setState={setState}
+              sourceField={
+                paramSchema.property_source_field ?? CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD
+              }
+              fieldKey={k}
+              endpoint={
+                paramSchema.property_group
+                  ? schema.property_endpoints?.[paramSchema.property_group]
+                  : undefined
+              }
+              entityId={entity?.id}
+              disabled={disabled}
+              modificationType={modificationType}
+              errorPathPrefix={errorPathPrefix}
+            />
+          );
+        }
+
         return (
           <Range
-            data={mechanismConfig}
+            endpoint={
+              paramSchema.property_group
+                ? schema.property_endpoints?.[paramSchema.property_group]
+                : undefined
+            }
+            entityId={entity?.id}
             disabled={disabled}
             state={state}
             setState={setState}

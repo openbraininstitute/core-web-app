@@ -51,9 +51,21 @@ function findMappedEntry<T>(arr: any[], fn: (item: any) => any) {
   return undefined;
 }
 
-const API_ERROR_CODE_PATHS = ['error.code', 'error_code', 'code'];
-const API_ERROR_MESSAGE_PATHS = ['error.message', 'error_message', 'message'];
-const API_ERROR_DETAILS_PATHS = ['error.details', 'error_details', 'details', 'data'];
+const API_ERROR_CODE_PATHS = ['error.code', 'error_code', 'code', 'detail.code'];
+const API_ERROR_MESSAGE_PATHS = [
+  'error.message',
+  'error_message',
+  'message',
+  'detail.detail',
+  'detail',
+];
+const API_ERROR_DETAILS_PATHS = [
+  'error.details',
+  'error_details',
+  'details',
+  'detail.detail',
+  'data',
+];
 
 /*
  * Parse the error code from the API response.
@@ -74,9 +86,10 @@ export async function parseApiError(
         : apiClientResponseData;
 
     const code = findMappedEntry<string>(API_ERROR_CODE_PATHS, (path) => get(responseData, path));
-    const message = findMappedEntry<string>(API_ERROR_MESSAGE_PATHS, (path) =>
-      get(responseData, path)
-    );
+    const message = findMappedEntry<string>(API_ERROR_MESSAGE_PATHS, (path) => {
+      const value = get(responseData, path);
+      return typeof value === 'string' ? value : undefined;
+    });
     const details = findMappedEntry<string>(API_ERROR_DETAILS_PATHS, (path) =>
       get(responseData, path)
     );

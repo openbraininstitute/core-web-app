@@ -91,7 +91,12 @@ type NodeProperties = z.infer<typeof nodePropertyUniqueValuesSchema>;
 
 export const usabilitySchema = z.record(z.string(), z.boolean());
 
-/** obi-one `/declared/mapped-circuit-properties/{id}` — Circuit entity (combined neuron sets). */
+/**
+ * Circuit fields from `GET /declared/mapped-circuit-properties/{id}`.
+ *
+ * Mechanism variables are loaded from dedicated neuronal-manipulation POST endpoints,
+ * not from this response.
+ */
 const circuitMappedPropertiesSchema = z.object({
   NodePropertyUniqueValuesByPopulation: nodePropertyUniqueValuesSchema,
   NodeSet: z.array(z.string()).optional(),
@@ -102,25 +107,22 @@ const circuitMappedPropertiesSchema = z.object({
   NeuronalPopulation: z.array(z.string()).optional(),
 });
 
-/** obi-one `/declared/mapped-circuit-properties/{id}` — MEModel entity (single neuron beta). */
-const memodelMappedPropertiesSchema = z.object({
-  MechanismVariablesByIonChannel: z.record(z.string(), z.unknown()),
-});
-
 /**
- * Validates mapped-circuit-properties from obi-one.
- *
- * Circuit and MEModel entities return different property sets from the same endpoint;
- * both shapes must be accepted so neuron property filters and ion-channel manipulations work.
+ * Zod schema for mapped-circuit-properties responses (usability + Circuit neuron-set data).
  */
 export const configSchema = z
   .object({
     usability: usabilitySchema,
   })
   .merge(circuitMappedPropertiesSchema.partial())
-  .merge(memodelMappedPropertiesSchema.partial())
   .catchall(z.unknown());
 
+/**
+ * Parses and validates a mapped-circuit-properties response.
+ *
+ * @param resp - Raw API response.
+ * @returns Validated usability and Circuit mapping properties.
+ */
 export function parseSchemaMappingConfiguration(resp: unknown) {
   return configSchema.parse(resp);
 }
