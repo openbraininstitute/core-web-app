@@ -20,7 +20,6 @@ import {
   type TScanConfigSettingsPanel,
   useScanConfigSettingsPanel,
   useSetScanConfigSettingsPanel,
-  useSetScanConfigSettingsPanelSlot,
 } from '@/features/scan-config/bridge/settings-panel';
 import {
   RightPreviewModeDict,
@@ -219,26 +218,37 @@ function EmptyPreviewPane() {
  * reading the live schema and config rather than a snapshot taken when the panel opened.
  */
 function SettingsPane({ panel }: { panel: TScanConfigSettingsPanel }) {
-  const setSlot = useSetScanConfigSettingsPanelSlot();
   const setPanel = useSetScanConfigSettingsPanel();
 
   useEffect(() => {
-    return () => setSlot(null);
-  }, [setSlot]);
+    return () => setPanel({ slot: null, headerSlot: null });
+  }, [setPanel]);
 
   return (
     <div
       id="scan-config-controls-right-settings"
-      className="h-full min-h-0 overflow-y-auto rounded-lg bg-white px-4 py-3"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg bg-white px-4 py-3"
     >
-      <header className="mb-3 flex items-start justify-between gap-2">
-        <h3 className="text-primary-9 text-lg font-bold">{panel.title}</h3>
-        <button type="button" aria-label="Close settings" onClick={() => setPanel(null)}>
+      <header className="mb-3 flex shrink-0 items-center gap-3">
+        <h3 className="text-primary-9 shrink-0 text-lg font-bold">{panel.title}</h3>
+        <div
+          ref={(node) => setPanel({ headerSlot: node })}
+          className="flex min-w-0 flex-1 justify-center"
+        />
+        <button
+          type="button"
+          aria-label="Close settings"
+          onClick={() => setPanel({ open: null })}
+          className="shrink-0"
+        >
           <CloseOutlined className="text-primary-9!" />
         </button>
       </header>
 
-      <div ref={setSlot} />
+      <div
+        ref={(node) => setPanel({ slot: node })}
+        className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto"
+      />
     </div>
   );
 }

@@ -7,15 +7,6 @@ import { cn } from '@/utils/css-class';
 
 /**
  * The eFEL illustration for a figure, or nothing.
- *
- * Rendered through antd's `Image` so it opens full-size on click: these are annotated diagrams of
- * a voltage trace, and the details that make them worth showing — the measurement bars, the axis
- * labels — are unreadable at the width of a side panel. The preview brings zoom, rotate and the
- * dark scrim with it, so the figure gets the screen without leaving the editor.
- *
- * A missing figure collapses silently rather than showing a broken-image placeholder: the
- * directory is upstream documentation and a URL that no longer resolves is expected, not
- * exceptional.
  */
 export function EFeatureFigure({
   url,
@@ -55,8 +46,6 @@ export function EFeatureFigure({
           '[&_.ant-image-preview-img]:border-8 [&_.ant-image-preview-img]:border-white'
         ),
       }}
-      // antd renders its own placeholder into the same box, so nothing shifts while it loads
-      placeholder={<div className="h-40 w-full animate-pulse rounded bg-gray-100" />}
     />
   );
 }
