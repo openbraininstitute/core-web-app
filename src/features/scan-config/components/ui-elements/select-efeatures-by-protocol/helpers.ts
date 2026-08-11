@@ -3,6 +3,7 @@ import { isPlainObject, numericSchemaBounds } from '@/features/scan-config/compo
 import type { ConfigSchema, ConfigValue, ParamSchema } from '@/features/scan-config/types';
 import type {
   TExtractionAmplitude,
+  TFeatureCategory,
   TFeatureDef,
   TFeatureValue,
   TProtocolDef,
@@ -13,6 +14,7 @@ import type {
 /** Fields that describe the object rather than being user-editable knobs. */
 const DISCRIMINATOR_FIELD = 'type';
 const FEATURES_FIELD = 'features';
+const EXTRA_FEATURES_FIELD = 'extra_features_by_protocol';
 const AMPLITUDES_FIELD = 'extraction_amplitudes';
 
 /** Protocol fields that are eFEL detection knobs rather than stimulus timing. */
@@ -92,21 +94,16 @@ export function efelNameFromDef(variant: Record<string, unknown>): string | null
 }
 
 /** Deep-link into the eFEL feature documentation, when the root schema declares the base. */
-export function efelDocUrl(schema: ConfigSchema, efelName: string | null): string | null {
+export function efelDocUrl(schema: ConfigSchema, feature: TFeatureDef): string | null {
   const base = (schema as unknown as Record<string, unknown>).efel_doc_base_url;
-  if (typeof base !== 'string' || !base || !efelName) return null;
-  return `${base}#${efelName}`;
+  if (typeof base !== 'string' || !base) return null;
+  const fragment = feature.docAnchor ?? feature.efelName;
+  if (!fragment) return null;
+  return `${base}#${fragment}`;
 }
 
 /**
  * Illustration for one feature, addressed by its eFEL key.
- *
- * Mostly a miss, and knowingly so: the figures directory holds a handful of illustrations that
- * each cover a *family* of features (one `AHP.png` for every AHP measure), so only
- * `AP_duration_half_width` is named after the key of the feature it depicts. `efel_feature_image`
- * is a schema key upstream but is never set on any feature class, so there is nothing better to
- * go on. The caller renders through {@link EFeatureFigure}, which collapses on a 404 — the
- * whole directory is what the preview panel's Features tab shows instead.
  */
 export function efelFigureUrl(
   schema: ConfigSchema,
@@ -124,14 +121,37 @@ export function efelFigureUrl(
   return `${base.replace(/\/$/, '')}/${image}`;
 }
 
+/** The `extra` bag obi-one attaches to a schema through `json_schema_extra`. */
+function schemaExtras(variant: Record<string, unknown>): Record<string, unknown> {
+  return asRecord(variant.extra) ?? {};
+}
+
+const FEATURE_CATEGORIES = new Set<TFeatureCategory>([
+  'spike_event',
+  'spike_shape',
+  'subthreshold',
+]);
+
+/** eFEL's grouping for a feature. Falls back to `other` so an unknown value still renders. */
+function featureCategory(variant: Record<string, unknown>): TFeatureCategory {
+  const value = schemaExtras(variant).efel_feature_category;
+  return typeof value === 'string' && FEATURE_CATEGORIES.has(value as TFeatureCategory)
+    ? (value as TFeatureCategory)
+    : 'other';
+}
+
 export function buildFeatureDef(variant: Record<string, unknown>): TFeatureDef | null {
   const typeName = variantTypeName(variant);
   if (!typeName) return null;
+
+  const docAnchor = schemaExtras(variant).efel_doc_anchor;
 
   return {
     typeName,
     label: humanizeTypeName(typeName, 'Feature'),
     efelName: efelNameFromDef(variant),
+    category: featureCategory(variant),
+    docAnchor: typeof docAnchor === 'string' && docAnchor ? docAnchor : null,
     description: typeof variant.description === 'string' ? variant.description : null,
     overrideFields: objectProperties(variant).filter(([key]) => key !== DISCRIMINATOR_FIELD),
     schema: variant,
@@ -187,6 +207,19 @@ export function listProtocolDefs(paramSchema: ParamSchema): TProtocolDef[] {
     .filter((def): def is TProtocolDef => def !== null);
 }
 
+/**
+ * The full eFEL catalogue — every feature that can be added to any protocol.
+ */
+export function listCatalogueDefs(paramSchema: ParamSchema): TFeatureDef[] {
+  const properties = asRecord((paramSchema as unknown as Record<string, unknown>).properties);
+  const byProtocol = asRecord(properties?.[EXTRA_FEATURES_FIELD]);
+  const perProtocol = asRecord(byProtocol?.additionalProperties);
+
+  return unionVariants(asRecord(perProtocol?.items))
+    .map(buildFeatureDef)
+    .filter((def): def is TFeatureDef => def !== null);
+}
+
 /** Build an instance from the schema defaults, so a newly added entry matches obi-one's shape. */
 export function instanceFromDefaults(
   variant: Record<string, unknown>,
@@ -220,10 +253,6 @@ export function makeProtocolValue(def: TProtocolDef): TProtocolValue {
 
 /**
  * A protocol carrying every feature it can extract, plus every amplitude the recordings report.
- *
- * This is what "automatically fill" produces. obi-one's default protocol set is built by a
- * `default_factory`, which pydantic does not serialise, so the schema states no default features
- * at all — the full valid set is used instead, matching what obi-one's own defaults describe.
  */
 export function makeFilledProtocolValue(
   def: TProtocolDef,
@@ -251,11 +280,6 @@ export function fieldUnsetValue(paramSchema: ParamSchema): ConfigValue {
 
 /**
  * Whether the user has actually set this field.
- *
- * Drives the "add a setting / remove a setting" behaviour: a field sitting at its unset value is
- * not shown, so the form lists only the settings that are doing something. For the stimulus
- * timings that unset value is `0.0`, which is exactly what obi-one reads as "auto-detect from the
- * recording".
  */
 export function isFieldSet(paramSchema: ParamSchema, value: ConfigValue | undefined): boolean {
   if (value === undefined || value === null) return false;
@@ -292,10 +316,18 @@ function parseFeatures(value: unknown): TFeatureValue[] {
  *
  * The widget always works with fully-formed protocol entries so the rest of the component can
  * read `extraction_amplitudes` and `features` without re-checking their shape on every render.
+ *
+ * obi-one splits a protocol's features across two fields, its own narrow `features` tuple and
+ * the shared `extra_features_by_protocol` mapping — so they are merged into one `features` list
+ * here and split again in {@link serializeSelectionValue}. The rest of the widget therefore never
+ * has to care which of the two a feature came from; {@link isExtraFeature} answers that from the
+ * protocol's schema when the UI wants to label it.
  */
 export function parseSelectionValue(value: ConfigValue | undefined): TSelectEFeaturesValue {
   const record = asRecord(value);
   if (!record) return { protocols: [] };
+
+  const extrasByProtocol = asRecord(record[EXTRA_FEATURES_FIELD]) ?? {};
 
   const protocols: TProtocolValue[] = [];
   if (Array.isArray(record.protocols)) {
@@ -303,11 +335,17 @@ export function parseSelectionValue(value: ConfigValue | undefined): TSelectEFea
       const protocol = asRecord(entry);
       if (!protocol || typeof protocol.type !== 'string') continue;
 
+      const own = parseFeatures(protocol[FEATURES_FIELD]);
+      const extras = parseFeatures(extrasByProtocol[protocol.type]);
+      const ownTypes = new Set(own.map((feature) => feature.type));
+
       protocols.push({
         ...protocol,
         type: protocol.type,
         extraction_amplitudes: parseAmplitudes(protocol[AMPLITUDES_FIELD]),
-        features: parseFeatures(protocol[FEATURES_FIELD]),
+        // a stored extra that duplicates a default keeps the default, mirroring obi-one's
+        // `SelectEFeaturesByProtocol.features_for`
+        features: [...own, ...extras.filter((feature) => !ownTypes.has(feature.type))],
       } as TProtocolValue);
     }
   }
@@ -316,6 +354,48 @@ export function parseSelectionValue(value: ConfigValue | undefined): TSelectEFea
     type: typeof record.type === 'string' ? record.type : undefined,
     protocols,
   };
+}
+
+/** Whether this feature sits outside the protocol's own narrow union, i.e. came from the catalogue. */
+export function isExtraFeature(def: TProtocolDef | undefined, featureType: string): boolean {
+  if (!def) return false;
+  return !def.featureDefs.some((feature) => feature.typeName === featureType);
+}
+
+/**
+ * Turn the merged in-memory selection back into the two fields obi-one declares.
+ *
+ * The inverse of {@link parseSelectionValue}: a feature belonging to the protocol's own narrow
+ * union goes back into `features`, and everything else into `extra_features_by_protocol` under
+ * that protocol's type name. Writing an extra into `features` would fail schema validation,
+ * because that union only lists the protocol's own features.
+ */
+export function serializeSelectionValue(
+  selection: TSelectEFeaturesValue,
+  protocols: TProtocolValue[],
+  defsByType: ReadonlyMap<string, TProtocolDef>
+): Record<string, ConfigValue> {
+  const extrasByProtocol: Record<string, TFeatureValue[]> = {};
+
+  const stored = protocols.map((protocol) => {
+    const def = defsByType.get(protocol.type);
+    const own: TFeatureValue[] = [];
+    const extras: TFeatureValue[] = [];
+
+    for (const feature of protocol.features) {
+      (isExtraFeature(def, feature.type) ? extras : own).push(feature);
+    }
+    if (extras.length > 0) extrasByProtocol[protocol.type] = extras;
+
+    return { ...protocol, [FEATURES_FIELD]: own };
+  });
+
+  return {
+    // preserve the discriminator obi-one round-trips on this object
+    type: selection.type ?? 'SelectEFeaturesByProtocol',
+    protocols: stored,
+    [EXTRA_FEATURES_FIELD]: extrasByProtocol,
+  } as unknown as Record<string, ConfigValue>;
 }
 
 /**
@@ -361,7 +441,8 @@ function boundsError(paramSchema: ParamSchema, value: ConfigValue | undefined): 
  */
 export function collectSelectionErrors(
   selection: TSelectEFeaturesValue,
-  defsByType: ReadonlyMap<string, TProtocolDef>
+  defsByType: ReadonlyMap<string, TProtocolDef>,
+  catalogueByType: ReadonlyMap<string, TFeatureDef>
 ): TSelectionError[] {
   const errors: TSelectionError[] = [];
 
@@ -393,7 +474,11 @@ export function collectSelectionErrors(
     }
 
     for (const feature of protocol.features) {
-      const featureDef = def?.featureDefs.find((entry) => entry.typeName === feature.type);
+      // a feature added from the catalogue is not in the protocol's own union, so the catalogue
+      // is the authority on its fields
+      const featureDef =
+        def?.featureDefs.find((entry) => entry.typeName === feature.type) ??
+        catalogueByType.get(feature.type);
       const featureName = featureDef ? (featureDef.efelName ?? featureDef.label) : feature.type;
 
       for (const [fieldKey, fieldSchema] of featureDef?.overrideFields ?? []) {

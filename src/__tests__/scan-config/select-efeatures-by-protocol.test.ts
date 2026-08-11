@@ -12,12 +12,15 @@ import {
   efelNameFromDef,
   fieldUnsetValue,
   humanizeTypeName,
+  isExtraFeature,
   isFieldSet,
+  listCatalogueDefs,
   listProtocolDefs,
   makeFilledProtocolValue,
   makeProtocolValue,
   mergeAmplitudeOptions,
   parseSelectionValue,
+  serializeSelectionValue,
 } from '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol/helpers';
 import { numericSchemaBounds } from '@/features/scan-config/components/utils';
 import { ScanConfigActivity } from '@/features/scan-config/types';
@@ -30,6 +33,41 @@ const selectionSchema = {
   ui_element: 'select_efeatures_by_protocol',
   properties: {
     type: { const: 'SelectEFeaturesByProtocol', type: 'string' },
+    // the full catalogue, declared once for every protocol — see listCatalogueDefs
+    extra_features_by_protocol: {
+      type: 'object',
+      additionalProperties: {
+        type: 'array',
+        items: {
+          oneOf: [
+            {
+              type: 'object',
+              description: 'eFEL ``voltage_base``.',
+              extra: { efel_feature_category: 'subthreshold', efel_doc_anchor: 'voltage-base' },
+              properties: {
+                type: { const: 'VoltageBaseFeature', default: 'VoltageBaseFeature' },
+                stim_start: { type: 'number', default: 0.0 },
+              },
+            },
+            {
+              type: 'object',
+              description: 'eFEL ``ISI_CV``.',
+              extra: { efel_feature_category: 'spike_event', efel_doc_anchor: 'isi-cv' },
+              properties: { type: { const: 'ISICVFeature', default: 'ISICVFeature' } },
+            },
+            {
+              type: 'object',
+              description: 'eFEL ``sag_amplitude``.',
+              extra: { efel_feature_category: 'subthreshold', efel_doc_anchor: 'sag-amplitude' },
+              properties: {
+                type: { const: 'SagAmplitudeFeature', default: 'SagAmplitudeFeature' },
+                stim_start: { type: 'number', default: 0.0 },
+              },
+            },
+          ],
+        },
+      },
+    },
     protocols: {
       type: 'array',
       items: {
@@ -125,13 +163,27 @@ describe('efelDocUrl', () => {
     efel_doc_base_url: 'https://efel.example/eFeatures.html',
   } as unknown as ConfigSchema;
 
-  it('deep-links the feature anchor', () => {
-    expect(efelDocUrl(schema, 'ISI_CV')).toBe('https://efel.example/eFeatures.html#ISI_CV');
+  // built from the real catalogue rather than a cast, so the fixture cannot drift from the type
+  const [, isiCv] = listCatalogueDefs(selectionSchema);
+  const feature = (overrides: Partial<typeof isiCv>) => ({
+    ...isiCv,
+    docAnchor: null,
+    ...overrides,
   });
 
-  it('produces no link without a resolved efel name', () => {
-    expect(efelDocUrl(schema, null)).toBeNull();
-    expect(efelDocUrl({} as ConfigSchema, 'ISI_CV')).toBeNull();
+  it('prefers the schema anchor, which is the page fragment that actually exists', () => {
+    expect(efelDocUrl(schema, feature({ docAnchor: 'isi-cv' }))).toBe(
+      'https://efel.example/eFeatures.html#isi-cv'
+    );
+  });
+
+  it('falls back to the eFEL key when no anchor is published', () => {
+    expect(efelDocUrl(schema, feature({}))).toBe('https://efel.example/eFeatures.html#ISI_CV');
+  });
+
+  it('produces no link without a fragment or a base', () => {
+    expect(efelDocUrl(schema, feature({ efelName: null }))).toBeNull();
+    expect(efelDocUrl({} as ConfigSchema, feature({ docAnchor: 'isi-cv' }))).toBeNull();
   });
 });
 
@@ -244,6 +296,164 @@ describe('parseSelectionValue', () => {
   it('returns an empty selection for anything that is not an object', () => {
     expect(parseSelectionValue(undefined).protocols).toEqual([]);
     expect(parseSelectionValue(null).protocols).toEqual([]);
+  });
+});
+
+describe('listCatalogueDefs', () => {
+  const catalogue = listCatalogueDefs(selectionSchema);
+
+  it('reads the whole eFEL catalogue from the single place obi-one declares it', () => {
+    // not from a protocol's own union: that one is narrowed to the protocol's defaults
+    expect(catalogue.map((def) => def.typeName)).toEqual([
+      'VoltageBaseFeature',
+      'ISICVFeature',
+      'SagAmplitudeFeature',
+    ]);
+  });
+
+  it('carries the eFEL category so the catalogue can be sectioned', () => {
+    expect(catalogue.map((def) => def.category)).toEqual([
+      'subthreshold',
+      'spike_event',
+      'subthreshold',
+    ]);
+  });
+
+  it('carries the documentation anchor', () => {
+    expect(catalogue.map((def) => def.docAnchor)).toEqual([
+      'voltage-base',
+      'isi-cv',
+      'sag-amplitude',
+    ]);
+  });
+
+  it('falls back to `other` when a feature declares no category', () => {
+    const withoutExtras = listCatalogueDefs({
+      properties: {
+        extra_features_by_protocol: {
+          additionalProperties: {
+            items: { oneOf: [{ properties: { type: { const: 'MysteryFeature' } } }] },
+          },
+        },
+      },
+    } as unknown as ParamSchema);
+
+    expect(withoutExtras[0]?.category).toBe('other');
+    expect(withoutExtras[0]?.docAnchor).toBeNull();
+  });
+
+  it('returns nothing when the field is absent, rather than throwing', () => {
+    expect(listCatalogueDefs({} as ParamSchema)).toEqual([]);
+  });
+});
+
+describe('extra features', () => {
+  const defs = listProtocolDefs(selectionSchema);
+  const defsByType = new Map(defs.map((def) => [def.typeName, def]));
+  const [idRest] = defs;
+
+  it('recognises a feature outside the protocol as an extra', () => {
+    // IDrest's own union lists VoltageBase and ISI_CV; sag amplitude only exists in the catalogue
+    expect(isExtraFeature(idRest, 'SagAmplitudeFeature')).toBe(true);
+    expect(isExtraFeature(idRest, 'VoltageBaseFeature')).toBe(false);
+    expect(isExtraFeature(undefined, 'SagAmplitudeFeature')).toBe(false);
+  });
+
+  it('merges the two stored fields into one feature list on read', () => {
+    const parsed = parseSelectionValue({
+      protocols: [{ type: 'IDRestProtocol', features: [{ type: 'ISICVFeature' }] }],
+      extra_features_by_protocol: { IDRestProtocol: [{ type: 'SagAmplitudeFeature' }] },
+    } as never);
+
+    expect(parsed.protocols[0]?.features.map((feature) => feature.type)).toEqual([
+      'ISICVFeature',
+      'SagAmplitudeFeature',
+    ]);
+  });
+
+  it('keeps the default when an extra duplicates it, like obi-one features_for', () => {
+    const parsed = parseSelectionValue({
+      protocols: [
+        { type: 'IDRestProtocol', features: [{ type: 'ISICVFeature', stim_start: 100 }] },
+      ],
+      extra_features_by_protocol: { IDRestProtocol: [{ type: 'ISICVFeature', stim_start: 0 }] },
+    } as never);
+
+    expect(parsed.protocols[0]?.features).toEqual([{ type: 'ISICVFeature', stim_start: 100 }]);
+  });
+
+  it('ignores extras keyed to a protocol that is not selected', () => {
+    const parsed = parseSelectionValue({
+      protocols: [{ type: 'IDRestProtocol', features: [] }],
+      extra_features_by_protocol: { SAHPProtocol: [{ type: 'SagAmplitudeFeature' }] },
+    } as never);
+
+    expect(parsed.protocols[0]?.features).toEqual([]);
+  });
+
+  it('splits the list back apart on write, so each feature validates', () => {
+    const selection = parseSelectionValue({
+      protocols: [{ type: 'IDRestProtocol', features: [{ type: 'ISICVFeature' }] }],
+      extra_features_by_protocol: { IDRestProtocol: [{ type: 'SagAmplitudeFeature' }] },
+    } as never);
+
+    const stored = serializeSelectionValue(selection, selection.protocols, defsByType) as never as {
+      type: string;
+      protocols: Array<{ type: string; features: Array<{ type: string }> }>;
+      extra_features_by_protocol: Record<string, Array<{ type: string }>>;
+    };
+
+    expect(stored.type).toBe('SelectEFeaturesByProtocol');
+    expect(stored.protocols[0]?.features.map((feature) => feature.type)).toEqual(['ISICVFeature']);
+    expect(stored.extra_features_by_protocol.IDRestProtocol?.map((f) => f.type)).toEqual([
+      'SagAmplitudeFeature',
+    ]);
+  });
+
+  it('writes no entry for a protocol that only carries its own features', () => {
+    const selection = { protocols: [makeFilledProtocolValue(idRest, [0.1])] };
+    const stored = serializeSelectionValue(selection, selection.protocols, defsByType) as never as {
+      extra_features_by_protocol: Record<string, unknown>;
+    };
+
+    expect(stored.extra_features_by_protocol).toEqual({});
+  });
+
+  it('round-trips a merged selection unchanged', () => {
+    const original = {
+      protocols: [{ type: 'IDRestProtocol', extraction_amplitudes: [], features: [] }],
+      extra_features_by_protocol: { IDRestProtocol: [{ type: 'SagAmplitudeFeature' }] },
+    };
+    const parsed = parseSelectionValue(original as never);
+    const stored = serializeSelectionValue(parsed, parsed.protocols, defsByType);
+
+    expect(parseSelectionValue(stored as never).protocols[0]?.features).toEqual(
+      parsed.protocols[0]?.features
+    );
+  });
+
+  it('validates an extra feature field, whose schema only exists in the catalogue', () => {
+    const catalogueByType = new Map(
+      listCatalogueDefs(selectionSchema).map((def) => [def.typeName, def])
+    );
+    const protocol = {
+      ...makeFilledProtocolValue(idRest, [0.1]),
+      features: [{ type: 'SagAmplitudeFeature', stim_start: -5 }],
+    };
+    const sagAmplitude = catalogueByType.get('SagAmplitudeFeature');
+    if (!sagAmplitude) throw new Error('fixture is missing SagAmplitudeFeature');
+
+    const bounded = new Map(catalogueByType);
+    bounded.set('SagAmplitudeFeature', {
+      ...sagAmplitude,
+      overrideFields: [['stim_start', { type: 'number', minimum: 0 }]] as never,
+    });
+
+    const errors = collectSelectionErrors({ protocols: [protocol] }, defsByType, bounded);
+
+    expect(errors.map((error) => error.key)).toEqual([
+      'IDRestProtocol/SagAmplitudeFeature/stim_start',
+    ]);
   });
 });
 
@@ -362,11 +572,14 @@ describe('ecodeNameFromTypeName', () => {
 describe('collectSelectionErrors', () => {
   const defs = listProtocolDefs(selectionSchema);
   const defsByType = new Map(defs.map((def) => [def.typeName, def]));
+  const catalogueByType = new Map(
+    listCatalogueDefs(selectionSchema).map((def) => [def.typeName, def])
+  );
   const [idRest] = defs;
 
   it('flags an empty selection, which the JSON schema happily accepts', () => {
     // `protocols` has no minItems, so ajv sees nothing wrong with extracting from no protocols
-    const errors = collectSelectionErrors({ protocols: [] }, defsByType);
+    const errors = collectSelectionErrors({ protocols: [] }, defsByType, catalogueByType);
 
     expect(errors.map((error) => error.key)).toEqual(['protocols']);
   });
@@ -374,25 +587,30 @@ describe('collectSelectionErrors', () => {
   it('clears once a protocol with features is selected', () => {
     const errors = collectSelectionErrors(
       { protocols: [makeFilledProtocolValue(idRest, [0.1])] },
-      defsByType
+      defsByType,
+      catalogueByType
     );
 
     expect(errors).toEqual([]);
   });
 
   it('flags a selected protocol that has no features', () => {
-    const errors = collectSelectionErrors({ protocols: [makeProtocolValue(idRest)] }, defsByType);
+    const errors = collectSelectionErrors(
+      { protocols: [makeProtocolValue(idRest)] },
+      defsByType,
+      catalogueByType
+    );
 
     expect(errors.map((error) => error.key)).toEqual(['IDRestProtocol/features']);
   });
 
   it('reports again after the last protocol is unchecked', () => {
     const selected = { protocols: [makeFilledProtocolValue(idRest, [0.1])] };
-    expect(collectSelectionErrors(selected, defsByType)).toEqual([]);
+    expect(collectSelectionErrors(selected, defsByType, catalogueByType)).toEqual([]);
 
-    expect(collectSelectionErrors({ protocols: [] }, defsByType).map((e) => e.key)).toEqual([
-      'protocols',
-    ]);
+    expect(
+      collectSelectionErrors({ protocols: [] }, defsByType, catalogueByType).map((e) => e.key)
+    ).toEqual(['protocols']);
   });
 
   it('flags an out-of-range settings value so the left menu reacts to settings edits', () => {
@@ -412,7 +630,7 @@ describe('collectSelectionErrors', () => {
       ] as never,
     });
 
-    const errors = collectSelectionErrors({ protocols: [protocol] }, withBound);
+    const errors = collectSelectionErrors({ protocols: [protocol] }, withBound, catalogueByType);
 
     expect(errors.map((error) => error.key)).toEqual(['IDRestProtocol/trace_resampling_timestep']);
     expect(errors[0]?.message).toContain('greater than 0');

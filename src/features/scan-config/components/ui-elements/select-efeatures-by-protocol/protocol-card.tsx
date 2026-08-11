@@ -5,16 +5,25 @@ import {
   DeleteOutlined,
   InfoCircleOutlined,
   LinkOutlined,
-  PlusOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { RiArrowDownSLine, RiArrowRightSLine, RiEqualizerLine } from '@remixicon/react';
-import { Checkbox, Empty, Popover, Tooltip } from 'antd';
+import {
+  RiAddLine,
+  RiArrowDownSLine,
+  RiArrowRightSLine,
+  RiCloseCircleFill,
+  RiEqualizerLine,
+  RiSearchLine,
+  RiSubtractLine,
+} from '@remixicon/react';
+import { Checkbox, Empty, Tooltip } from 'antd';
+import { kebabCase } from 'es-toolkit/compat';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import {
   useIsSettingsPanelOpen,
+  useScanConfigSettingsPanelHeaderSlot,
   useScanConfigSettingsPanelSlot,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
@@ -32,6 +41,7 @@ import {
 import type { ConfigValue, ParamSchema } from '@/features/scan-config/types';
 import type {
   TExtractionAmplitude,
+  TFeatureCategory,
   TFeatureDef,
   TFeatureValue,
   TProtocolDef,
@@ -192,11 +202,11 @@ function usePanel(panelKey: string) {
   // would stay open with nothing left to render into it
   useEffect(() => {
     return () => {
-      setPanel((current) => (current?.key === panelKey ? null : current));
+      setPanel((current) => (current.open?.key === panelKey ? { open: null } : {}));
     };
   }, [panelKey, setPanel]);
 
-  const toggle = (title: string) => setPanel(isOpen ? null : { key: panelKey, title });
+  const toggle = (title: string) => setPanel({ open: isOpen ? null : { key: panelKey, title } });
   const portal = (children: React.ReactNode) =>
     isOpen && slot ? createPortal(children, slot) : null;
 
@@ -233,8 +243,6 @@ function SettingsButton({
           'shrink-0 transition-colors disabled:opacity-50',
           light ? 'text-white' : 'text-primary-8',
           className,
-          // the panel lives in a different column, so the trigger has to carry the open state
-          // itself — otherwise nothing on the card says which settings are being edited
           isOpen && 'bg-white text-primary-9! shadow-sm ring-2 ring-white/60'
         )}
       >
@@ -338,74 +346,334 @@ function AmplitudeSettings({
   );
 }
 
-function AddFeatureButton({
-  def,
-  value,
-  onChange,
+/** Section headings for the catalogue, in the order eFEL's own documentation presents them. */
+const CATEGORY_LABELS: Array<[TFeatureCategory, string]> = [
+  ['spike_event', 'Spike event'],
+  ['spike_shape', 'Spike shape'],
+  ['subthreshold', 'Subthreshold'],
+  ['other', 'Other'],
+];
+
+/** Rounded search field, portalled into the panel header so it sits beside the title. */
+function CatalogueSearch({
+  query,
+  onQueryChange,
+  total,
   disabled,
 }: {
-  def: TProtocolDef;
-  value: TProtocolValue;
-  onChange: (next: TProtocolValue) => void;
+  query: string;
+  onQueryChange: (next: string) => void;
+  total: number;
   disabled: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  return (
+    <div
+      className={cn(
+        'flex w-full max-w-90 min-w-48 items-center gap-2 rounded-full px-3.5 py-1.5',
+        'bg-neutral-1 focus-within:bg-white focus-within:ring-primary-8/40 focus-within:ring-2',
+        'transition-colors duration-150'
+      )}
+    >
+      <RiSearchLine aria-hidden className="size-4 shrink-0 text-gray-400" />
+      <input
+        type="search"
+        value={query}
+        disabled={disabled}
+        onChange={(event) => onQueryChange(event.target.value)}
+        placeholder={`Search ${total}`}
+        aria-label="Search features"
+        className="min-w-0 flex-1 bg-transparent text-sm text-primary-9 outline-none placeholder:text-gray-400 [&::-webkit-search-cancel-button]:hidden"
+      />
+      {query && (
+        <button
+          type="button"
+          aria-label="Clear search"
+          onClick={() => onQueryChange('')}
+          className="shrink-0 text-gray-300 transition-colors hover:text-gray-500"
+        >
+          <RiCloseCircleFill className="size-4.5" />
+        </button>
+      )}
+    </div>
+  );
+}
 
-  const available = useMemo(() => {
-    const selected = new Set(value.features.map((feature) => feature.type));
-    return def.featureDefs.filter((feature) => !selected.has(feature.typeName));
-  }, [def.featureDefs, value.features]);
+/** One catalogue row: the feature, its documentation link, and its add / remove control. */
+function CatalogueRow({
+  feature,
+  isSelected,
+  docUrl,
+  disabled,
+  onToggle,
+}: {
+  feature: TFeatureDef;
+  isSelected: boolean;
+  docUrl: string | null;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  const label = featureLabel(feature);
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-      trigger="click"
-      placement="bottomRight"
-      content={
-        <div className="max-h-80 w-72 overflow-y-auto">
-          {available.length === 0 ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="Every feature for this protocol is already selected"
-            />
-          ) : (
-            <ul className="flex flex-col">
-              {available.map((feature) => (
-                <li key={feature.typeName}>
-                  <button
-                    type="button"
-                    className="w-full truncate px-2 py-1.5 text-left hover:bg-gray-50"
-                    onClick={() => {
-                      onChange({
-                        ...value,
-                        features: [...value.features, makeFeatureValue(feature)],
-                      });
-                      setOpen(false);
-                    }}
-                  >
-                    {featureLabel(feature)}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      }
+    <li
+      id={`feature-catalogue-row-${feature.typeName}`}
+      className="group/row relative flex items-center"
     >
       <button
         type="button"
         disabled={disabled}
-        aria-label="Add feature"
-        title="Add feature"
+        aria-pressed={isSelected}
+        onClick={onToggle}
         className={cn(
-          'flex size-7 shrink-0 items-center justify-center rounded-full',
-          'bg-white/15 text-white transition-colors hover:bg-white/25 disabled:opacity-50'
+          'flex min-w-0 flex-1 items-center gap-2 rounded-r-md py-2 pr-14 pl-3 text-left',
+          // pressed feedback lands on pointer-down rather than on release
+          'transition-colors duration-100 active:scale-[0.995] disabled:opacity-50',
+          isSelected
+            ? // the left rule carries the state, so the tint can stay quiet — a run of selected
+              // rows would otherwise band into one block
+              'text-primary-9 bg-primary-0/60 border-primary-9/40 border-l-2 hover:bg-primary-0'
+            : 'border-l-2 border-transparent text-gray-600 hover:bg-neutral-1 hover:text-primary-9'
         )}
       >
-        <PlusOutlined />
+        <span className={cn('min-w-0 flex-1 truncate text-base', isSelected && 'font-semibold')}>
+          {label}
+        </span>
       </button>
-    </Popover>
+
+      {/* absolute so the row's own hit area stays one uninterrupted target for the toggle */}
+      <span className="pointer-events-none absolute right-2.5 flex items-center gap-1.5">
+        {docUrl && (
+          <Tooltip title={`eFEL documentation for ${label}`} mouseEnterDelay={0.4}>
+            <a
+              href={docUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open the eFEL documentation for ${label} in a new tab`}
+              // the same icon the card's own feature rows use, and always present: a link that
+              // only appears on hover cannot be found by someone looking for it
+              className={cn(
+                'pointer-events-auto flex size-6 items-center justify-center rounded-md',
+                'hover:text-primary-8 text-gray-400 transition-colors duration-150'
+              )}
+            >
+              <LinkOutlined />
+            </a>
+          </Tooltip>
+        )}
+        <span
+          aria-hidden
+          className={cn(
+            'flex size-6 items-center justify-center rounded-full border transition-colors',
+            'duration-150',
+            isSelected
+              ? // quiet while it is only reporting state; solid once the pointer is on the row and
+                // removal is the likely next act
+                'bg-primary-9/10 border-primary-9/20 text-primary-9 group-hover/row:border-primary-9 group-hover/row:bg-primary-9 group-hover/row:text-white'
+              : 'bg-neutral-1 border-neutral-2 text-primary-8 group-hover/row:border-primary-8 group-hover/row:bg-white'
+          )}
+        >
+          {isSelected ? <RiSubtractLine className="size-4" /> : <RiAddLine className="size-4" />}
+        </span>
+      </span>
+    </li>
+  );
+}
+
+/**
+ * The whole eFEL catalogue for one protocol, rendered into the right-hand column.
+ *
+ * Every feature is listed, grouped by `efel_feature_category`, with the ones already on this
+ * protocol marked and removable in place. The list is the catalogue rather than a picker of what
+ * is missing, so a feature does not jump out of the list the moment it is added — the same
+ * reasoning that makes the protocol cards themselves list every protocol.
+ *
+ * The category headings stay while filtering, and stick to the top of the scroll area, so a row
+ * seen in isolation is never ambiguous about which family it belongs to.
+ *
+ * It lives in the panel column, not in the card: 146 rows would push every other protocol off
+ * screen.
+ */
+function FeatureCatalogue({
+  def,
+  catalogueDefs,
+  value,
+  onChange,
+  disabled,
+  docUrlFor,
+}: {
+  def: TProtocolDef;
+  catalogueDefs: TFeatureDef[];
+  value: TProtocolValue;
+  onChange: (next: TProtocolValue) => void;
+  disabled: boolean;
+  docUrlFor: (feature: TFeatureDef) => string | null;
+}) {
+  const [query, setQuery] = useState('');
+  const headerSlot = useScanConfigSettingsPanelHeaderSlot();
+
+  const selectedTypes = useMemo(
+    () => new Set(value.features.map((feature) => feature.type)),
+    [value.features]
+  );
+
+  const groups = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const matches = catalogueDefs.filter((feature) => {
+      if (!needle) return true;
+      return (
+        featureLabel(feature).toLowerCase().includes(needle) ||
+        feature.typeName.toLowerCase().includes(needle)
+      );
+    });
+
+    return CATEGORY_LABELS.map(([category, label]) => {
+      const features = matches.filter((feature) => feature.category === category);
+      return {
+        label,
+        features,
+        selectedCount: features.filter((feature) => selectedTypes.has(feature.typeName)).length,
+      };
+    }).filter((group) => group.features.length > 0);
+  }, [catalogueDefs, query, selectedTypes]);
+
+  const matchCount = groups.reduce((total, group) => total + group.features.length, 0);
+
+  const toggle = (feature: TFeatureDef) => {
+    onChange({
+      ...value,
+      features: selectedTypes.has(feature.typeName)
+        ? value.features.filter((current) => current.type !== feature.typeName)
+        : [...value.features, makeFeatureValue(feature)],
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-3 pb-1 mr-2">
+      {headerSlot &&
+        createPortal(
+          <CatalogueSearch
+            query={query}
+            onQueryChange={setQuery}
+            total={catalogueDefs.length}
+            disabled={disabled}
+          />,
+          headerSlot
+        )}
+
+      <p className="text-sm text-gray-500">
+        Any eFEL feature can be extracted from {def.label}. The {def.featureDefs.length} it is
+        normally extracted with are selected by default.
+      </p>
+
+      <p className="border-neutral-2 border-b pb-2 text-xs text-gray-400">
+        <span className="text-primary-9 font-semibold">{selectedTypes.size} selected</span>
+        {query
+          ? ` · ${matchCount} of ${catalogueDefs.length} match`
+          : ` of ${catalogueDefs.length}`}
+      </p>
+
+      {groups.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={`No feature matches “${query.trim()}”`}
+        />
+      ) : (
+        <div id="feature-catalogue" className="flex flex-col gap-3">
+          {groups.map((group) => (
+            // one card per category, so a group stays a single readable object while filtering
+            <section
+              key={group.label}
+              id={`feature-catalogue-section__${kebabCase(group.label)}`}
+              // no overflow-hidden on the card: it clips the sticky header against the rounded
+              // corners as it moves. The header and the list round their own outer edges instead.
+              className="border-gray-100 border bg-white shadow-md"
+            >
+              {/* sticky so the group a row belongs to is readable at any scroll position */}
+              <h5
+                className={cn(
+                  'sticky top-0 z-10 flex items-baseline justify-between gap-2 px-3 py-2',
+                  // solid, not translucent: it is sticky, so rows must not read through it
+                  'border-gray-200  border-b bg-gray-100',
+                  'text-lg font-semibold tracking-wider text-gray-500 uppercase'
+                )}
+              >
+                {group.label}
+                <span className="text-lg font-normal tracking-normal text-gray-400 normal-case">
+                  {group.selectedCount}/{group.features.length}
+                </span>
+              </h5>
+              <ul
+                id={`feature-catalogue-list__${kebabCase(group.label)}`}
+                className="flex flex-col overflow-hidden rounded-b-lg py-1"
+              >
+                {group.features.map((feature) => (
+                  <CatalogueRow
+                    key={feature.typeName}
+                    feature={feature}
+                    isSelected={selectedTypes.has(feature.typeName)}
+                    docUrl={docUrlFor(feature)}
+                    disabled={disabled}
+                    onToggle={() => toggle(feature)}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Opens {@link FeatureCatalogue} in the panel column. */
+function AddFeatureButton({
+  def,
+  catalogueDefs,
+  value,
+  onChange,
+  disabled,
+  docUrlFor,
+}: {
+  def: TProtocolDef;
+  catalogueDefs: TFeatureDef[];
+  value: TProtocolValue;
+  onChange: (next: TProtocolValue) => void;
+  disabled: boolean;
+  docUrlFor: (feature: TFeatureDef) => string | null;
+}) {
+  const panelKey = `${def.typeName}:catalogue`;
+  const { isOpen, toggle, portal } = usePanel(panelKey);
+
+  return (
+    <>
+      <button
+        type="button"
+        disabled={disabled}
+        aria-label="Add features"
+        aria-expanded={isOpen}
+        title="Add features"
+        onClick={() => toggle(`${def.label} features`)}
+        className={cn(
+          'flex size-7 shrink-0 items-center justify-center rounded-full transition-colors',
+          'duration-150 disabled:opacity-50',
+          isOpen
+            ? 'text-primary-9 bg-white shadow-sm ring-2 ring-white/60'
+            : 'bg-white/15 text-white hover:bg-white/25'
+        )}
+      >
+        <RiAddLine className="size-4" />
+      </button>
+      {portal(
+        <FeatureCatalogue
+          def={def}
+          catalogueDefs={catalogueDefs}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          docUrlFor={docUrlFor}
+        />
+      )}
+    </>
   );
 }
 
@@ -504,6 +772,7 @@ function FeatureRow({
  */
 export function ProtocolCard({
   def,
+  catalogueDefs,
   value,
   expanded,
   onToggleSelected,
@@ -517,6 +786,8 @@ export function ProtocolCard({
   renderField,
 }: {
   def: TProtocolDef;
+  /** every eFEL feature, offered by the catalogue panel behind the card's plus button */
+  catalogueDefs: TFeatureDef[];
   /** undefined when the protocol is not part of the selection */
   value: TProtocolValue | undefined;
   expanded: boolean;
@@ -534,21 +805,24 @@ export function ProtocolCard({
   const settingsOpen = useIsSettingsPanelOpen(def.typeName);
   const selected = value !== undefined;
 
+  // the protocol's own features first, then the rest of the catalogue: a selection can hold a
+  // feature added from the catalogue, and its fields are only described there
   const featureDefByType = useMemo(
-    () => new Map(def.featureDefs.map((feature) => [feature.typeName, feature])),
-    [def.featureDefs]
+    () =>
+      new Map([...catalogueDefs, ...def.featureDefs].map((feature) => [feature.typeName, feature])),
+    [catalogueDefs, def.featureDefs]
   );
 
   const settingsFields = [...def.timingFields, ...def.overrideFields];
 
   return (
     <section
+      id={`protocol-card-${def.typeName}`}
       className={cn(
         'rounded-lg border transition-all duration-200',
         selected
           ? 'border-primary-9 bg-primary-9 text-white hover:shadow-md'
           : 'border-neutral-2 hover:border-primary-8 bg-white hover:bg-gray-50 hover:shadow-sm',
-        // which card the right column is currently editing
         settingsOpen && 'ring-primary-8 shadow-md ring-2'
       )}
     >
@@ -733,9 +1007,11 @@ export function ProtocolCard({
                   </button>
                   <AddFeatureButton
                     def={def}
+                    catalogueDefs={catalogueDefs}
                     value={value}
                     onChange={onChange}
                     disabled={disabled}
+                    docUrlFor={docUrlFor}
                   />
                 </div>
               </>

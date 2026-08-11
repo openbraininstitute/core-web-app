@@ -21,6 +21,9 @@ export type TSelectEFeaturesValue = {
   protocols: TProtocolValue[];
 };
 
+/** eFEL's own grouping of a feature, from the `efel_feature_category` schema extra. */
+export type TFeatureCategory = 'spike_event' | 'spike_shape' | 'subthreshold' | 'other';
+
 /** A concrete eFEL feature class, as described by the dereferenced schema. */
 export type TFeatureDef = {
   /** discriminator value, e.g. `VoltageBaseFeature` */
@@ -29,6 +32,10 @@ export type TFeatureDef = {
   label: string;
   /** the eFEL key (e.g. `ISI_CV`), when the schema lets us determine it */
   efelName: string | null;
+  /** eFEL's grouping, used to section the catalogue. `other` when the schema omits it. */
+  category: TFeatureCategory;
+  /** exact fragment for the eFEL docs page, from the `efel_doc_anchor` extra */
+  docAnchor: string | null;
   description: string | null;
   /** editable override fields (everything but the `type` discriminator) */
   overrideFields: Array<[string, ParamSchema]>;
@@ -49,6 +56,11 @@ export type TProtocolDef = {
   timingFields: Array<[string, ParamSchema]>;
   /** eFEL detection knobs the protocol may override for all of its features */
   overrideFields: Array<[string, ParamSchema]>;
+  /**
+   * The features this eCode is normally extracted with — obi-one narrows each protocol's
+   * `features` union to its own set. Anything outside it is an *extra*, added from the
+   * catalogue and stored in `extra_features_by_protocol`.
+   */
   featureDefs: TFeatureDef[];
   schema: Record<string, unknown>;
 };

@@ -87,7 +87,10 @@ export function ModelIdentifierSelectionCart({
           />
         ) : null}
 
-        <div className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto">
+        <div
+          id={`selection-cart-${instanceId}`}
+          className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto"
+        >
           <div className="flex flex-col gap-2 pr-1.5">
             {Object.entries(selectionsByType).flatMap(([entityType, rows]) =>
               (rows ?? []).map((entity) => (

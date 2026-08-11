@@ -16,9 +16,11 @@ import {
   collectSelectionErrors,
   efelDocUrl,
   efelFigureUrl,
+  listCatalogueDefs,
   listProtocolDefs,
   makeFilledProtocolValue,
   parseSelectionValue,
+  serializeSelectionValue,
 } from './helpers';
 import { ProtocolCard, type TRenderField } from './protocol-card';
 
@@ -101,6 +103,14 @@ export function SelectEFeaturesByProtocol({
   const selection = useMemo(() => parseSelectionValue(value), [value]);
   const protocolDefs = useMemo(() => listProtocolDefs(paramSchema), [paramSchema]);
 
+  // the full eFEL catalogue, read once for the whole widget rather than per protocol: obi-one
+  // declares the universal union in a single place, and every card offers the same catalogue
+  const catalogueDefs = useMemo(() => listCatalogueDefs(paramSchema), [paramSchema]);
+  const catalogueByType = useMemo(
+    () => new Map(catalogueDefs.map((def) => [def.typeName, def])),
+    [catalogueDefs]
+  );
+
   const {
     data: recordingProperties,
     isLoading,
@@ -138,8 +148,8 @@ export function SelectEFeaturesByProtocol({
   );
 
   const selectionErrors = useMemo(
-    () => collectSelectionErrors(selection, defsByType),
-    [selection, defsByType]
+    () => collectSelectionErrors(selection, defsByType, catalogueByType),
+    [selection, defsByType, catalogueByType]
   );
   const errorPrefix = errorPathPrefix ?? ScanConfigUIElementDict.SelectEFeaturesByProtocol;
 
@@ -151,14 +161,12 @@ export function SelectEFeaturesByProtocol({
   const amplitudesFor = (def: TProtocolDef) =>
     recordingProperties?.AmplitudesByProtocol?.[def.typeName];
 
+  // the widget holds one merged feature list per protocol; obi-one wants a protocol's own
+  // features and the catalogue extras in two separate fields, so every write goes through the split
   const commit = (protocols: TProtocolValue[]) => {
     setState({
       ...state,
-      [fieldKey]: {
-        // preserve the discriminator obi-one round-trips on this object
-        type: selection.type ?? 'SelectEFeaturesByProtocol',
-        protocols,
-      } as ConfigValue,
+      [fieldKey]: serializeSelectionValue(selection, protocols, defsByType) as ConfigValue,
     });
   };
 
@@ -199,7 +207,7 @@ export function SelectEFeaturesByProtocol({
     setExpandedProtocols(new Set(offeredDefs.map((def) => def.typeName)));
   };
 
-  const docUrlFor = (feature: TFeatureDef) => efelDocUrl(schema, feature.efelName);
+  const docUrlFor = (feature: TFeatureDef) => efelDocUrl(schema, feature);
   const figureUrlFor = (feature: TFeatureDef) => efelFigureUrl(schema, feature.schema);
 
   return (
@@ -245,9 +253,10 @@ export function SelectEFeaturesByProtocol({
       {offeredDefs.length > 0 && (
         <ul className="flex flex-col gap-2">
           {offeredDefs.map((def) => (
-            <li key={def.typeName}>
+            <li key={def.typeName} id={`protocol-card-list-item-${def.typeName}`}>
               <ProtocolCard
                 def={def}
+                catalogueDefs={catalogueDefs}
                 value={selectedByType.get(def.typeName)}
                 expanded={expandedProtocols.has(def.typeName)}
                 disabled={disabled}
