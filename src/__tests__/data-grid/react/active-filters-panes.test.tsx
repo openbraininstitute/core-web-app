@@ -86,7 +86,7 @@ function openPopover(advancedFilters: ReadonlyArray<IAdvancedFilterGroup>, appli
     </QueryClientProvider>
   );
   const utils = render(<Harness />);
-  fireEvent.click(utils.getByRole('button', { name: 'Advanced filters' }));
+  fireEvent.click(utils.getByRole('button', { name: 'Filters' }));
   return { ...utils, controller };
 }
 
@@ -94,9 +94,24 @@ describe('ActiveFiltersButton — two-pane popover', () => {
   it('shows the filter list AND the applied pane side by side', () => {
     openPopover(oneGroup, true);
     expect(screen.getByRole('menuitem', { name: /Generation type/ })).toBeInTheDocument();
-    expect(screen.getByText('Applied Filters')).toBeInTheDocument();
+    expect(screen.getByText('Applied filters')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Clear Name filter' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Reset all filters/ })).toBeInTheDocument();
+  });
+
+  it('titles each pane, so the left list reads as filters rather than the only ones', () => {
+    openPopover(oneGroup, true);
+    expect(screen.getByTestId('advanced-filters-pane')).toContainElement(
+      screen.getByText('Additional filters')
+    );
+    expect(screen.getByTestId('applied-filters-pane')).toContainElement(
+      screen.getByText('Applied filters')
+    );
+  });
+
+  it('keeps the left pane titled when it is the only one', () => {
+    openPopover(oneGroup, false);
+    expect(screen.getByText('Additional filters')).toBeInTheDocument();
   });
 
   it('puts the applied list in a RIGHT pane — a sibling after the filter list, not inside it', () => {
@@ -113,7 +128,7 @@ describe('ActiveFiltersButton — two-pane popover', () => {
     expect(row?.className).not.toContain('flex-row-reverse');
     expect(appliedPane.className).toContain('border-l');
 
-    const scroller = screen.getByText('Applied Filters').parentElement?.querySelector('.max-h-72');
+    const scroller = screen.getByText('Applied filters').parentElement?.querySelector('.max-h-72');
     expect(scroller?.className).toContain('overflow-y-auto');
 
     expect(listPane).toContainElement(screen.getByRole('menuitem', { name: /Generation type/ }));
@@ -126,7 +141,7 @@ describe('ActiveFiltersButton — two-pane popover', () => {
     expect(screen.getByTestId('advanced-filters-pane')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /Generation type/ })).toBeInTheDocument();
     expect(screen.queryByTestId('applied-filters-pane')).toBeNull();
-    expect(screen.queryByText('Applied Filters')).toBeNull();
+    expect(screen.queryByText('Applied filters')).toBeNull();
     expect(screen.queryByRole('button', { name: /Reset all filters/ })).toBeNull();
   });
 

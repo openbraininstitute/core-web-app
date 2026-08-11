@@ -22,6 +22,9 @@ import type {
   TFacets,
 } from '@/features/data-grid/core';
 
+/** Shared by the two pane headings, so they read as a pair. */
+const PANE_HEADING_CLASS = 'px-1 pb-1 text-[11px] font-bold tracking-wide text-primary-8 uppercase';
+
 export interface IActiveFiltersButtonProps<Row> {
   controller: GridController<Row>;
   state: IGridState;
@@ -96,7 +99,7 @@ export function ActiveFiltersButton<Row>({
       <PopoverTrigger asChild>
         <ExpandingToolbarButton
           icon={<RiFilter3Line size={18} />}
-          label={hasAdvanced ? 'Advanced filters' : 'Active filters'}
+          label="Filters"
           badge={
             active.length > 0 ? (
               <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-8 px-1 text-[10px] font-semibold text-white">
@@ -143,6 +146,7 @@ export function ActiveFiltersButton<Row>({
         {hasAdvanced && operators ? (
           <div className="flex items-stretch gap-3">
             <div className="flex min-w-0 flex-1 flex-col" data-testid="advanced-filters-pane">
+              <span className={PANE_HEADING_CLASS}>Additional filters</span>
               <AdvancedFiltersMenu
                 controller={controller}
                 state={state}
@@ -207,11 +211,7 @@ function AppliedFilters({
 
   return (
     <div className="flex min-h-0 flex-col h-full">
-      {headless ? null : (
-        <span className="px-1 pb-1 text-[11px] font-bold tracking-wide text-primary-8 uppercase">
-          Applied Filters
-        </span>
-      )}
+      {headless ? null : <span className={PANE_HEADING_CLASS}>Applied filters</span>}
       {/* scrolls on its own so a long list neither stretches the popover nor drags the
           editor pane down */}
       <div className="max-h-72 min-h-0 overflow-y-auto">

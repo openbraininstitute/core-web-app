@@ -66,6 +66,6 @@ describe('picker listing toolbar controls', () => {
     );
 
     expect(await screen.findByRole('button', { name: 'Columns' })).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: 'Advanced filters' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Filters' })).toBeInTheDocument();
   });
 });

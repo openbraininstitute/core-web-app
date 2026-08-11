@@ -83,7 +83,7 @@ describe('ActiveFiltersButton inside a modal', () => {
       </QueryClientProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Advanced filters' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
 
     const content = document.querySelector('[data-slot="popover-content"]');
     expect(content).not.toBeNull();
