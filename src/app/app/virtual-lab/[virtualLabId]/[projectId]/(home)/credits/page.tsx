@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { tryCatch } from '@/api/utils';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { DEFAULT_PAGE_SMALL_SIZE } from '@/constants';
 import { makeRoles } from '@/hooks/use-user-membership';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
@@ -53,8 +54,8 @@ export default async function CreditsPage({
       queryFn: getUserGroups,
     });
 
-    const { isProjectMember } = makeRoles(result, virtualLabId, projectId);
-    if (!isProjectMember) {
+    const { isProjectMember, isVirtualLabMember } = makeRoles(result, virtualLabId, projectId);
+    if (!isProjectMember && !isVirtualLabMember) {
       throw new Error('User not allowed to access this page');
     }
   } catch {
@@ -62,7 +63,12 @@ export default async function CreditsPage({
   }
 
   queryClient.prefetchQuery({
-    queryKey: keyBuilder.credits({ virtualLabId, projectId, page: 1, pageSize: 10 }),
+    queryKey: keyBuilder.credits({
+      virtualLabId,
+      projectId,
+      page: 1,
+      pageSize: DEFAULT_PAGE_SMALL_SIZE,
+    }),
     queryFn: () => getProjectJobReports({ virtualLabId, projectId, page: 1 }),
   });
 

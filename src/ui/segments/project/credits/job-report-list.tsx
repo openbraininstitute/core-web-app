@@ -4,6 +4,7 @@ import find from 'es-toolkit/compat/find';
 import { useCallback, useState } from 'react';
 
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+import { DEFAULT_PAGE_SMALL_SIZE } from '@/constants';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { ServiceSubtype } from '@/types/accounting';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -89,7 +90,7 @@ function costRenderFn(amount: string) {
 
 export function JobReportList() {
   const { virtualLabId, projectId } = useWorkspace();
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 8 });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: DEFAULT_PAGE_SMALL_SIZE });
 
   const { data: users, isLoading: isLoadingUsers } = useQuery({
     queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),

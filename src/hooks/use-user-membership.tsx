@@ -6,7 +6,10 @@ import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getSelfVirtualLab, getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
-import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { UserGroup, VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+
+// waitlisted groups are named "proj/{virtual_lab_id}/{project_id}/waitlisted"
+const isWaitlistedGroup = (group: UserGroup) => group.name.endsWith('/waitlisted');
 
 export function makeRoles(
   data: VlmUserGroupsResponse | undefined,
@@ -24,17 +27,26 @@ export function makeRoles(
     virtual_lab_id: virtualLabId,
     role: 'admin',
   });
-  const isProjectMember = !!find(groupedUserGroups.project, { project_id: projectId });
-  const isProjectAdmin = !!find(groupedUserGroups.project, {
-    project_id: projectId,
-    role: 'admin',
-  });
+  const isProjectMember = !!find(
+    groupedUserGroups.project,
+    (group: UserGroup) => group.project_id === projectId && !isWaitlistedGroup(group)
+  );
+  const isProjectAdmin = !!find(
+    groupedUserGroups.project,
+    (group: UserGroup) =>
+      group.project_id === projectId && group.role === 'admin' && !isWaitlistedGroup(group)
+  );
+  const isProjectWaitlisted = !!find(
+    groupedUserGroups.project,
+    (group: UserGroup) => group.project_id === projectId && isWaitlistedGroup(group)
+  );
   return {
     userGroups,
     isVirtualLabMember,
     isVirtualLabAdmin,
     isProjectMember,
     isProjectAdmin,
+    isProjectWaitlisted,
   };
 }
 
@@ -82,8 +94,14 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
   });
 
   const ownerVirtualLabId = myVirtualLab?.data?.id;
-  const { userGroups, isVirtualLabMember, isVirtualLabAdmin, isProjectMember, isProjectAdmin } =
-    makeRoles(data, virtualLabId, projectId);
+  const {
+    userGroups,
+    isVirtualLabMember,
+    isVirtualLabAdmin,
+    isProjectMember,
+    isProjectAdmin,
+    isProjectWaitlisted,
+  } = makeRoles(data, virtualLabId, projectId);
   const isVirtualLabOwner = ownerVirtualLabId === virtualLabId;
   const virtualLabAdmins = currentVirtualLab?.admins;
   const virtualLabOwnerId = currentVirtualLab?.created_by;
@@ -102,6 +120,7 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
     isVirtualLabOwner,
     isProjectMember,
     isProjectAdmin,
+    isProjectWaitlisted,
   };
 }
 
