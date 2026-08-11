@@ -12,6 +12,10 @@ import {
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
 import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import { ENTITY_PREVIEW_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/entity-preview';
+import {
+  ION_CHANNEL_MODELS_RENDERER,
+  IonChannelModelsCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/ion-channel-models-cell';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
 import {
   flatAdvancedFilters,
@@ -74,10 +78,6 @@ const exemplarSegmentedSpinesColumn: IColumnModel<Row> = {
   },
 };
 
-/**
- * `ion_channel_model` is a to-many relation: the filter is existential over the join
- * and the cell joins the names, while `sortField` sorts on the joined column.
- */
 const ionChannelModelsColumn: IColumnModel<Row> = {
   id: 'ionChannelModels',
   header: 'Ion channel models',
@@ -89,18 +89,23 @@ const ionChannelModelsColumn: IColumnModel<Row> = {
       .map((m) => m?.name ?? '')
       .filter(Boolean)
       .join(', '),
-  width: { minWidth: 180, flex: 1 },
+  cellRenderer: ION_CHANNEL_MODELS_RENDERER,
+  width: { minWidth: 220, flex: 1 },
   filter: {
-    operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
+    operators: [OperatorId.In, OperatorId.Ilike, OperatorId.Eq],
     field: 'ion_channel_model__name',
+    facetKey: 'ion_channel_model',
+    description: 'Ion channel models the e-model uses',
+    options: { kind: FilterOptionsKind.Facets },
     targets: [
       {
         id: 'name',
         label: 'Ion channel model name',
         field: 'ion_channel_model__name',
-        operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
-        freeEntry: FreeEntryKind.Text,
-        placeholder: 'Enter an ion channel model name',
+        operators: [OperatorId.In, OperatorId.Ilike, OperatorId.Eq],
+        facetKey: 'ion_channel_model',
+        description: 'Ion channel models the e-model uses',
+        options: { kind: FilterOptionsKind.Facets },
       },
     ],
   },
@@ -211,5 +216,6 @@ export const emodelGridDefinition: IEntityGridDefinition<Row> = {
   schema: emodelSchema,
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
+    registry.register(ION_CHANNEL_MODELS_RENDERER, IonChannelModelsCell);
   },
 };

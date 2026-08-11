@@ -10,7 +10,10 @@ import {
 } from '@/features/data-grid/core';
 import { AdvancedFiltersMenu } from '@/features/data-grid/react/advanced-filters';
 import { ExpandingToolbarButton } from '@/features/data-grid/react/expanding-toolbar-button';
-import { GRID_OVERLAY_Z_CLASS } from '@/features/data-grid/react/molecules-theme';
+import {
+  GRID_ICON_BUTTON_ACTIVE_CLASS,
+  GRID_OVERLAY_Z_CLASS,
+} from '@/features/data-grid/react/molecules-theme';
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
@@ -234,7 +237,10 @@ function AppliedFilters({
                 type="button"
                 aria-label={`Clear ${label} filter`}
                 onClick={() => onClearOne(entry.columnId)}
-                className="flex size-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-primary-8 hover:text-white"
+                className={cn(
+                  'flex size-6 shrink-0 items-center justify-center rounded-full text-gray-400',
+                  GRID_ICON_BUTTON_ACTIVE_CLASS
+                )}
               >
                 <RiCloseLine size={14} />
               </button>

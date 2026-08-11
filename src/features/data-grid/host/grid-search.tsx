@@ -3,6 +3,7 @@
 import { RiCloseLine, RiSearchLine } from '@remixicon/react';
 import { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
+import { GRID_ICON_BUTTON_ACTIVE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { cn } from '@/utils/css-class';
 
@@ -108,7 +109,10 @@ export function GridSearch({ onSearch, openOnMount = false, className }: IGridSe
               type="button"
               onClick={clear}
               aria-label="Clear search"
-              className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-primary-8 hover:text-white"
+              className={cn(
+                'flex size-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500',
+                GRID_ICON_BUTTON_ACTIVE_CLASS
+              )}
             >
               <RiCloseLine size={13} />
             </button>

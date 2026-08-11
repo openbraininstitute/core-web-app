@@ -32,6 +32,11 @@ export const GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS = `${GRID_SELECT_CONTENT_CL
 export const GRID_SELECT_ITEM_CLASS =
   'rounded-lg py-1.5 focus:bg-gray-100 focus:text-primary-8 data-[state=checked]:font-medium';
 
+export const GRID_ICON_BUTTON_ACTIVE_CLASS = [
+  'outline-none transition-colors hover:bg-primary-8 focus-visible:bg-primary-8',
+  '[&_svg]:transition-colors [&:hover_svg]:fill-white [&:focus-visible_svg]:fill-white',
+].join(' ');
+
 /** Text/search input: hairline border, white surface, no ring noise. */
 export const GRID_INPUT_CLASS =
   'h-9 rounded-xl border-gray-200 bg-white text-sm shadow-none! ring-0 focus-visible:border-primary-6! focus-visible:ring-0! focus-visible:shadow-none!';

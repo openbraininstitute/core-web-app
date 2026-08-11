@@ -472,6 +472,9 @@ export function subjectAgeColumn<Row extends IHasSubjectAge>(
  * `SubjectFilterMixin` accepts the filter param, but only some list it in
  * `ordering_model_fields`, so `sortable` stays opt-in per schema — entitycore 422s on
  * an `order_by` outside that allowlist.
+ *
+ * Options come from the server's `strain` facet bucket, so the picker shows the labels
+ * and counts. `Ilike` stays available for an endpoint that computes no such bucket.
  */
 export function subjectStrainColumn<Row extends IHasSubjectStrain>(
   o?: TColumnOverride<Row>
@@ -485,19 +488,20 @@ export function subjectStrainColumn<Row extends IHasSubjectStrain>(
       getValue: (r) => r.subject?.strain?.name ?? '',
       width: { minWidth: 140 },
       filter: {
-        operators: [OperatorId.Ilike, OperatorId.In],
+        operators: [OperatorId.In, OperatorId.Ilike],
         field: 'subject__strain__name',
-        // Explicit target, not flat props alone: only a target carries
-        // `freeEntry`/`placeholder`, and a synthesised one reads "no options" as
-        // "use facets" — an empty picker for a field with no server facet bucket.
+        facetKey: 'strain',
+        description: 'Strain',
+        options: { kind: FilterOptionsKind.Facets },
         targets: [
           {
             id: 'name',
             label: 'Strain',
             field: 'subject__strain__name',
-            operators: [OperatorId.Ilike, OperatorId.In],
-            freeEntry: FreeEntryKind.Text,
-            placeholder: 'Enter a strain name',
+            operators: [OperatorId.In, OperatorId.Ilike],
+            facetKey: 'strain',
+            description: 'Strain',
+            options: { kind: FilterOptionsKind.Facets },
           },
         ],
       },

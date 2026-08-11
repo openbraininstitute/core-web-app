@@ -1,7 +1,10 @@
 import { RiMoreLine } from '@remixicon/react';
 import { useLayoutEffect, useRef, useState } from 'react';
 
-import { GRID_OVERLAY_Z_CLASS } from '@/features/data-grid/react/molecules-theme';
+import {
+  GRID_ICON_BUTTON_ACTIVE_CLASS,
+  GRID_OVERLAY_Z_CLASS,
+} from '@/features/data-grid/react/molecules-theme';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
@@ -62,7 +65,7 @@ export function DescriptionCell({ value }: ICellRendererProps<unknown>) {
               className={cn(
                 'absolute right-0 inline-flex size-6 items-center justify-center rounded-full',
                 'bg-gray-100 text-gray-600 shadow-sm ring-1 ring-gray-200/70',
-                'transition-colors hover:bg-primary-8 hover:text-white'
+                GRID_ICON_BUTTON_ACTIVE_CLASS
               )}
             >
               <RiMoreLine size={14} />
