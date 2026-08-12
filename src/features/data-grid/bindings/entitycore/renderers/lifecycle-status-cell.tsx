@@ -1,15 +1,14 @@
 'use client';
 
+import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import {
   EntityLifecycleStatus,
   getLifecycleStatusBadgeSpec,
   LifecycleStatusBadge,
 } from '@/ui/molecules/lifecycle-status-badge';
 
-import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
-
 import type { ReactNode } from 'react';
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 export { EntityLifecycleStatus, getLifecycleStatusBadgeSpec };
 

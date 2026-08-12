@@ -1,8 +1,7 @@
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { FilterOptionsKind, OperatorId } from '@/features/data-grid/core';
 
-import { FilterOptionsKind, OperatorId } from '../../../core';
-
-import type { IColumnFilter, TFilterOptionsSource } from '../../../core';
+import type { IColumnFilter, TFilterOptionsSource } from '@/features/data-grid/core';
 
 export const VALIDATION_STATUS_OPTIONS: TFilterOptionsSource = {
   kind: FilterOptionsKind.Static,

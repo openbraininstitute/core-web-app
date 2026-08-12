@@ -11,7 +11,7 @@ import type {
   TEntityAssetTarget,
   TThumbnailServiceTarget,
 } from '@/entity-configuration/definitions/renderer';
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for the shared entity preview thumbnail. */
 export const ENTITY_PREVIEW_RENDERER = 'entityPreview';

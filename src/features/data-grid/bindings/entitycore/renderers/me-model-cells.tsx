@@ -3,7 +3,7 @@ import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for the ME-model morphology preview thumbnail. */
 export const MEMODEL_MORPHOLOGY_PREVIEW_RENDERER = 'memodelMorphologyPreview';

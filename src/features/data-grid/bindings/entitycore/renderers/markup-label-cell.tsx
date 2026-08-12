@@ -1,9 +1,8 @@
+import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import { SafeSubSupHtml } from '@/ui/atoms/safe-sub-sup-html';
 import { stripHtmlTags } from '@/utils/safe-html-markup';
 
-import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
-
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for IUPHAR-style sub/sup labels. */
 export const MARKUP_LABEL_RENDERER = 'markupLabel';

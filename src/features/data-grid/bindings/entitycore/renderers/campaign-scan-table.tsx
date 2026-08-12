@@ -1,6 +1,7 @@
 'use client';
 
 import { getSimulationStatus } from '@/entity-configuration/domain/simulation';
+import { CampaignStatusBadge } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
 import {
   createNameColumn,
   createScanParameterColumns,
@@ -8,12 +9,10 @@ import {
   renderExpandedTable,
 } from '@/features/task-runner/expanded-view';
 
-import { CampaignStatusBadge } from './campaign-status-badge';
-
 import type { ReactNode } from 'react';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { SimulationRow } from '@/entity-configuration/domain/simulation/simulation-campaign';
-import type { TDetailRenderFn } from '../../../react';
+import type { TDetailRenderFn } from '@/features/data-grid/react';
 
 type ScanTableRow = SimulationRow & { scan_parameters: Record<string, unknown> };
 

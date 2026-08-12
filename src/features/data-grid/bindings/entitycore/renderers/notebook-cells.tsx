@@ -1,7 +1,7 @@
 import { NotebookPreviewThumbnail } from '@/features/notebooks/components/notebook-preview-thumbnail';
 
 import type { IAnalysisNotebookResult } from '@/api/entitycore/types/entities/analysis-notebook-result';
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for the notebook-result image preview. */
 export const NOTEBOOK_IMAGE_PREVIEW_RENDERER = 'notebookImagePreview';

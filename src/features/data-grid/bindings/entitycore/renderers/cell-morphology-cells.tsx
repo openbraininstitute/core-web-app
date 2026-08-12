@@ -2,7 +2,7 @@ import { hasAssets } from '@/api/entitycore/guards';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-morphology preview thumbnail, backed by the lazy {@link PreviewThumbnail}. */
 export function CellMorphologyPreview({ row }: ICellRendererProps<ICellMorphology>) {

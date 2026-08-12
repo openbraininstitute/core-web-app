@@ -3,15 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getEmDenseReconstructionDataset } from '@/api/entitycore/queries/general/em-dense-reconstruction-dataset';
+import { formatDate } from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
-import { formatDate } from '../columns/catalog';
-
-import type { ICellRendererProps } from '../../../react';
-import type { IHasEmDataset } from '../columns/catalog';
+import type { IHasEmDataset } from '@/features/data-grid/bindings/entitycore/columns/catalog';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for the EM dense-reconstruction dataset name cell. */
 export const EM_DATASET_RENDERER = 'emDataset';

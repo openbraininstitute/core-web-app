@@ -1,10 +1,10 @@
-import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '../../../core';
 import {
   EntityLifecycleStatus,
   LIFECYCLE_STATUS_RENDERER,
-} from '../renderers/lifecycle-status-cell';
+} from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
+import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '@/features/data-grid/core';
 
-import type { IColumnModel, TColumnOverride } from '../../../core';
+import type { IColumnModel, TColumnOverride } from '@/features/data-grid/core';
 
 export interface IHasLifecycleStatus {
   lifecycle_status?: string | null;

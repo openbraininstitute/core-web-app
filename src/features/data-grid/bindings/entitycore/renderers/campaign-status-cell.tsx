@@ -9,14 +9,14 @@ import {
   rows as fetchCampaignScanRows,
   status as fetchCampaignStatus,
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { CampaignScanCards } from '@/features/data-grid/bindings/entitycore/renderers/campaign-scan-cards';
+import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import {
   TASK_STATUS_POLL_INTERVAL_MS,
   TASK_STATUS_QUERY_KEY_HEAD,
 } from '@/features/task-runner/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
-import { CampaignScanCards } from './campaign-scan-cards';
 import {
   aggregateCampaignStatus,
   CampaignStatusBadge,
@@ -24,7 +24,7 @@ import {
 } from './campaign-status-badge';
 
 import type { ReactNode } from 'react';
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for the campaign/simulation aggregated status cell. */
 export const CAMPAIGN_STATUS_RENDERER = 'campaignStatus';

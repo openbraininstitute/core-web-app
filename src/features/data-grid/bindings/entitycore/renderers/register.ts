@@ -1,7 +1,7 @@
 import { CONTRIBUTORS_RENDERER, ContributorsCell } from './contributors-cell';
 import { ENTITY_PREVIEW_RENDERER, EntityPreview } from './entity-preview';
 
-import type { CellRendererRegistry } from '../../../react';
+import type { CellRendererRegistry } from '@/features/data-grid/react';
 
 /**
  * Register the preview-thumbnail and contributors renderers shared by most listings.
