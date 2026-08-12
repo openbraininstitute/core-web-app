@@ -28,11 +28,15 @@ import {
   OperatorId,
   SortDirection,
 } from '@/features/data-grid/core';
+import {
+  EMPTY_PLACEHOLDER,
+  EMPTY_PLACEHOLDER_CLASS,
+} from '@/features/data-grid/renderers/aggrid/empty-cell';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
-import type { CellRendererRegistry } from '@/features/data-grid/react';
+import type { CellRendererRegistry, ICellRendererProps } from '@/features/data-grid/react';
 
 /**
  * `IEModel` types `exemplar_morphology` as a narrower shape than the wire, which
@@ -41,6 +45,25 @@ import type { CellRendererRegistry } from '@/features/data-grid/react';
 type Row = IEModel & {
   exemplar_morphology?: { has_segmented_spines?: boolean | null };
 };
+
+/** Display score to 3 decimal places (legacy listing); hover shows the full value. */
+const EMODEL_SCORE_RENDERER = 'emodelScore';
+
+function formatScoreDisplay(score: number | null | undefined): string {
+  if (score == null || Number.isNaN(score)) return '';
+  return score.toFixed(3);
+}
+
+function EModelScoreCell({ row, value }: ICellRendererProps<Row>) {
+  const text = typeof value === 'string' ? value : '';
+  if (!text) return <span className={EMPTY_PLACEHOLDER_CLASS}>{EMPTY_PLACEHOLDER}</span>;
+  const full = row.score == null ? text : String(row.score);
+  return (
+    <span className="text-primary-8" title={full}>
+      {text}
+    </span>
+  );
+}
 
 /** `GET /emodel` params with no column: just the record's own `id`. */
 const emodelAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
@@ -196,9 +219,10 @@ export const emodelSchema: IGridSchema<Row> = {
       header: 'Model cumulated score',
       sortable: true,
       sortField: 'score',
-      getValue: (r) => (r.score == null ? '' : String(r.score)),
+      getValue: (r) => formatScoreDisplay(r.score),
+      cellRenderer: EMODEL_SCORE_RENDERER,
       align: Align.Left,
-      width: { minWidth: 150 },
+      width: { minWidth: 150, width: 180 },
       filter: { operators: NUMERIC_FILTER_OPERATORS, field: 'score' },
     },
     lifecycleStatusColumn<Row>(),
@@ -217,5 +241,6 @@ export const emodelGridDefinition: IEntityGridDefinition<Row> = {
   registerCellRenderers: (registry: CellRendererRegistry) => {
     registerSharedRenderers(registry);
     registry.register(ION_CHANNEL_MODELS_RENDERER, IonChannelModelsCell);
+    registry.register(EMODEL_SCORE_RENDERER, EModelScoreCell);
   },
 };
