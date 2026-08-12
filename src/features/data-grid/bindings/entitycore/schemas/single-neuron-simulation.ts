@@ -32,7 +32,8 @@ export const singleNeuronSimulationSchema: IGridSchema<Row> = {
   id: 'single-neuron-simulation',
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: EntityCoreFields.RegistrationDate, direction: SortDirection.Desc }],
-  selection: { enabled: true },
+  // No selection: parity with legacy listing (no checkbox column).
+  selection: { enabled: false },
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
     {

@@ -41,10 +41,10 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
         <div className="bg-background border-neutral-2 h-full overflow-hidden rounded-2xl border">
           <WorkflowBreadcrumb />
           <motion.div
-            id="workflow-new-inner-layout"
+            id="browse-workflow-new-inner-layout"
             className={cn(
               'grid gap-2 [grid-area:main]',
-              'h-full max-h-[calc(100%-3.5rem)] px-3 py-2'
+              'h-full max-h-[calc(100%-4rem)] px-3 py-2'
             )}
             initial={gridTemplate}
             animate={gridTemplate}

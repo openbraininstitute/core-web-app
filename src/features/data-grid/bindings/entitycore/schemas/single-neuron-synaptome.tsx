@@ -148,7 +148,9 @@ export const singleNeuronSynaptomeSchema: IGridSchema<ISingleNeuronSynaptome> = 
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
-  selection: { enabled: true },
+  // No selection: workflow single-select browse has no checkboxes (parity with
+  // legacy antd). Pickers that need them pass `selectionType` via mainTableProps.
+  selection: { enabled: false },
   advancedFilters: flatAdvancedFilters(singleNeuronSynaptomeAdvancedFilters),
   columns: [
     nameColumn<ISingleNeuronSynaptome>(),

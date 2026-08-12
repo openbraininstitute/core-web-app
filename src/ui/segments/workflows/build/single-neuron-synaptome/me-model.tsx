@@ -35,7 +35,7 @@ export function MEModel({ sessionId }: Props) {
 
   return (
     <motion.div
-      id="workflow-new-inner-layout"
+      id="build-workflow-new-inner-layout"
       className={cn(
         'grid gap-4 [grid-area:body]',
         'h-full max-h-full px-3 py-2',

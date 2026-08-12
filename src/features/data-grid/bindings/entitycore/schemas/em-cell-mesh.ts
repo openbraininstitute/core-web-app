@@ -332,7 +332,9 @@ export const emCellMeshSchema: IGridSchema<Row> = {
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 56,
-  selection: { enabled: true },
+  // Schema selection off; skeletonization multi-select still gets checkboxes via
+  // `mainTableProps.selectionType` (pickerMode), independent of this flag.
+  selection: { enabled: false },
   advancedFilters: flatAdvancedFilters(emCellMeshAdvancedFilters),
   columns: [
     nameColumn<Row>({ essential: true }),

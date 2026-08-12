@@ -208,9 +208,9 @@ describe('whole_brain parity', () => {
 
 describe('single_neuron_circuit parity', () => {
   const s = singleNeuronCircuitGridDefinition.schema as IGridSchema<unknown>;
-  it('drops the legacy Download action column; starts at Name', () => {
+  it('has no checkbox selection; starts at Name (legacy Download column is gone)', () => {
     expect(ids(s, dataCtx('single_neuron_circuit'))).toEqual(CIRCUIT_FAMILY_COLUMNS);
-    expect(singleNeuronCircuitGridDefinition.schema.selection?.enabled).toBe(true);
+    expect(singleNeuronCircuitGridDefinition.schema.selection?.enabled).toBe(false);
   });
   it('serializes the legacy filters incl. species facet', () => {
     assertCircuitFamilyFilters(s);

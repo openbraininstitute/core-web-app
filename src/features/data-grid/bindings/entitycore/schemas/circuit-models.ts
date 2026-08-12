@@ -274,7 +274,9 @@ function buildCircuitModelDefinition({
     id,
     getRowId: (row) => row.id,
     rowHeight: 56,
-    selection: { enabled: true },
+    // No selection: workflow single-select browse has no checkboxes (parity with
+    // legacy antd). Pickers that need them pass `selectionType` via mainTableProps.
+    selection: { enabled: false },
     // Build category has no column here; Target simulator only lacks one on the
     // brain-region browse.
     advancedFilters: flatAdvancedFilters(
