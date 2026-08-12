@@ -1,11 +1,8 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
-import { config } from '@/config';
-import {
-  fetchObiOneJson,
-  STATIC_RESOURCE_QUERY_OPTIONS,
-} from '@/features/scan-config/components/circuit-viz/obi-one-fetch';
+import { circuitNodesPath, fetchCircuitViz } from '@/api/one/circuit-visualization';
+import { STATIC_RESOURCE_QUERY_OPTIONS } from '@/features/scan-config/components/circuit-viz/query-options';
 import {
   SequentialLoaderClearedError,
   sequentialCellLoader,
@@ -100,7 +97,7 @@ export function circuitNodesQueryOptions(id: string, virtualLabId: string, proje
     queryKey: keyBuilder.circuitNodes(id),
     queryFn: async () =>
       NodesSchema.parse(
-        await fetchObiOneJson(`${config.OBI_ONE_URL}/circuit/viz/${id}/nodes`, {
+        await fetchCircuitViz(circuitNodesPath(id), {
           virtualLabId,
           projectId,
         })

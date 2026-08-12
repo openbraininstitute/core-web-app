@@ -1,9 +1,8 @@
-import { config } from '@/config';
+import { circuitMorphologyPath, fetchCircuitViz } from '@/api/one/circuit-visualization';
 import { MorphoViewerTreeItemType, SectionsArraySchema } from '@/features/scan-config/types';
 import { logError } from '@/utils/logger';
 
 import { buildMorphoTree } from './build-morpho-tree';
-import { fetchObiOneJson } from './obi-one-fetch';
 
 /** Settles a task dropped by {@link SequentialLoader.clear}; callers filter it out. */
 export class SequentialLoaderClearedError extends Error {
@@ -55,9 +54,14 @@ export class SequentialLoader<Input, Output> {
   }
 }
 
-async function loadCellAsync(virtualLabId: string, projectId: string, url: string, cellId: string) {
+async function loadCellAsync(
+  virtualLabId: string,
+  projectId: string,
+  path: string,
+  cellId: string
+) {
   try {
-    return await fetchObiOneJson(url, { virtualLabId, projectId });
+    return await fetchCircuitViz(path, { virtualLabId, projectId });
   } catch (error) {
     logError(`Unable to load cell "${cellId}":`, error);
     return null;
@@ -81,10 +85,9 @@ async function actualLoad({
   file: string;
   showAxon: boolean;
 }) {
-  const nameParam = name ? `?name=${encodeURIComponent(name)}` : '';
-  const url = `${config.OBI_ONE_URL}/circuit/viz/${circuitId}/morphologies/${encodeURIComponent(file)}${nameParam}`;
-  const key = url;
-  const promise = morphologiesCache.get(key) ?? loadCellAsync(virtualLabId, projectId, url, cellId);
+  // The path doubles as the cache key: it already carries everything that varies.
+  const key = circuitMorphologyPath(circuitId, file, name);
+  const promise = morphologiesCache.get(key) ?? loadCellAsync(virtualLabId, projectId, key, cellId);
   addToCache(key, promise);
   const json = await promise;
   if (json === null) throw new Error(`Morphology "${file}" could not be loaded.`);
