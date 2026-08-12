@@ -6,6 +6,10 @@ import truncateText from '@/util/truncate';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { EModelsProps } from '../../type/artifactsType';
 
+/** Match entitycore e-model listing preview thumbnails (`entity-preview.tsx`). */
+const PREVIEW_WIDTH = 184;
+const PREVIEW_HEIGHT = 108;
+
 function formatDate(isoDateString: string | null) {
   if (!isoDateString) return '';
   const date = new Date(isoDateString);
@@ -26,11 +30,16 @@ const columns = (): Array<ISimpleColumn<EModelsProps>> => {
     {
       id: 'response',
       header: 'Response',
-      width: { width: 150 },
+      width: { width: 184, minWidth: 120, resizable: true },
+      autoHeight: true,
       renderCell: (record) => (
-        <div className="font-normal">
-          <Image src={record.response} alt="Response thumbnail" width="150" height="100" />
-        </div>
+        <Image
+          src={record.response}
+          alt="Response thumbnail"
+          width={PREVIEW_WIDTH}
+          height={PREVIEW_HEIGHT}
+          className="rounded border border-gray-100 bg-white object-contain"
+        />
       ),
     },
     {

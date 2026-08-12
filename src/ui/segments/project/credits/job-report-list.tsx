@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import find from 'es-toolkit/compat/find';
-import { useCallback, useMemo, } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { DEFAULT_PAGE_SMALL_SIZE } from '@/constants';
@@ -88,8 +88,6 @@ function costRenderFn(amount: string) {
   return <span>{formattedAmount}</span>;
 }
 
-const JOB_REPORTS_PAGE_SIZE = 10;
-
 export function JobReportList() {
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -156,7 +154,7 @@ export function JobReportList() {
           <SimpleGrid<JobReport>
             columns={columns}
             getRowId={(record) => record.job_id}
-            pageSize={JOB_REPORTS_PAGE_SIZE}
+            pageSize={DEFAULT_PAGE_SMALL_SIZE}
             loadingLabel="history"
             serverSide={{
               dataSource,

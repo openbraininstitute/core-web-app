@@ -5,6 +5,22 @@ import truncateText from '@/util/truncate';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
+/** Match entitycore ME-model listing preview thumbnails (`me-model-cells.tsx`). */
+const PREVIEW_WIDTH = 184;
+const PREVIEW_HEIGHT = 108;
+
+function PreviewThumbnail({ src, alt }: { src: string | null; alt: string }) {
+  return (
+    <Image
+      src={src ?? '/placeholder.png'}
+      alt={alt}
+      width={PREVIEW_WIDTH}
+      height={PREVIEW_HEIGHT}
+      className="rounded border border-gray-100 bg-white object-contain"
+    />
+  );
+}
+
 const columns = (): Array<ISimpleColumn<MEModelsProps>> => {
   return [
     {
@@ -16,39 +32,19 @@ const columns = (): Array<ISimpleColumn<MEModelsProps>> => {
     {
       id: 'morphologyThumbnail',
       header: 'Morphology',
-      width: { width: 150 },
+      width: { width: 196, minWidth: 120, resizable: true },
+      autoHeight: true,
       renderCell: (record) => (
-        <div
-          className="font-normal"
-          style={{
-            maxWidth: '150px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <Image
-            src={record.morphologyThumbnail ?? '/placeholder.png'}
-            alt="Response thumbnail"
-            width="150"
-            height="100"
-          />
-        </div>
+        <PreviewThumbnail src={record.morphologyThumbnail} alt="Morphology thumbnail" />
       ),
     },
     {
       id: 'traceThumbnail',
       header: 'Trace',
-      width: { width: 150 },
+      width: { width: 184, minWidth: 120, resizable: true },
+      autoHeight: true,
       renderCell: (record) => (
-        <div className="font-normal">
-          <Image
-            src={record.traceThumbnail ?? '/placeholder.png'}
-            alt="Response thumbnail"
-            width="150"
-            height="100"
-          />
-        </div>
+        <PreviewThumbnail src={record.traceThumbnail} alt="Trace thumbnail" />
       ),
     },
     {
