@@ -8,12 +8,13 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import {
   createdByColumn,
   descriptionColumn,
+  keyByValue,
   nameColumn,
+  numberColumn,
   registrationDateColumn,
   speciesColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
-import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import {
   flatAdvancedFilters,
   recordIdFilter,
@@ -180,33 +181,6 @@ export function buildCircuitAdvancedFilters({
   ];
 }
 
-/** Localized integer, matching the legacy `renderLocalizedNumber`. */
-function localizedNumber(value: number | null | undefined): string {
-  return value == null || Number.isNaN(value) ? '' : value.toLocaleString();
-}
-
-/** Reverse-lookup a dictionary's enum key from a stored value `key`. */
-function keyByValue<T extends Record<string, { key: string }>>(
-  dict: T,
-  value: string | null | undefined
-): keyof T {
-  return (Object.keys(dict) as Array<keyof T>).find((k) => dict[k].key === value) as keyof T;
-}
-
-/** ValueRange number column (localized display, `field__gte`/`field__lte` filter). */
-function numberColumn(id: string, header: string, field: string): IColumnModel<ICircuit> {
-  return {
-    id,
-    header,
-    align: Align.Left,
-    sortable: true,
-    sortField: field,
-    width: { minWidth: 130 },
-    getValue: (row) => localizedNumber((row as unknown as Record<string, number>)[field]),
-    filter: { operators: NUMERIC_FILTER_OPERATORS, field },
-  };
-}
-
 interface BuildOptions {
   dataType: string;
   id: string;
@@ -257,7 +231,8 @@ function buildCircuitModelDefinition({
     numberColumn(
       EntityCoreFields.CircuitNumberConnections,
       'Number of connections',
-      'number_connections'
+      'number_connections',
+      { width: { minWidth: 150, width: 150 } }
     ),
   ];
 
@@ -298,6 +273,7 @@ function buildCircuitModelDefinition({
   const schema: IGridSchema<ICircuit> = {
     id,
     getRowId: (row) => row.id,
+    rowHeight: 56,
     selection: { enabled: true },
     // Build category has no column here; Target simulator only lacks one on the
     // brain-region browse.

@@ -14,13 +14,13 @@ import {
   contributionsColumn,
   descriptionColumn,
   nameColumn,
+  numberColumn,
   speciesColumn,
   subjectNameColumn,
   subjectStrainColumn,
   yesNo,
 } from '@/features/data-grid/bindings/entitycore/columns/catalog';
 import { lifecycleStatusColumn } from '@/features/data-grid/bindings/entitycore/columns/lifecycle-status';
-import { NUMERIC_FILTER_OPERATORS } from '@/features/data-grid/bindings/entitycore/columns/numeric-filter';
 import { buildCircuitAdvancedFilters } from '@/features/data-grid/bindings/entitycore/schemas/circuit-models';
 import {
   flatAdvancedFilters,
@@ -102,11 +102,6 @@ function circuitFlagColumn(
   };
 }
 
-/** Localized integer, matching the legacy `renderLocalizedNumber`. */
-function localizedNumber(value: number | null | undefined): string {
-  return value == null || Number.isNaN(value) ? '' : value.toLocaleString();
-}
-
 /**
  * Circuit grid schema (`GET /circuit`). Column ids equal the {@link EntityCoreFields}
  * keys so the hidden-column set maps 1:1 onto the nested `CircuitRecursiveGrid`.
@@ -140,9 +135,6 @@ export const circuitSchema: IGridSchema<Row> = {
   },
   columns: [
     nameColumn<Row>({ id: EntityCoreFields.Name }),
-    // Deny-by-default: only the Data section's hierarchy view renders the subtree this
-    // counts, so availability turns on for `section: Data` + `CIRCUIT_VIEW_FACTOR:
-    // Hierarchy` (published by `CircuitGridBody`). Other mounts resolve it away.
     {
       id: EntityCoreFields.CircuitSubCircuit,
       header: 'Subcircuits',
@@ -206,12 +198,17 @@ export const circuitSchema: IGridSchema<Row> = {
         },
       },
     } satisfies IColumnModel<Row>,
-    numberColumn(EntityCoreFields.CircuitNumberNeurons, 'Number of neurons', 'number_neurons'),
-    numberColumn(EntityCoreFields.CircuitNumberSynapses, 'Number of synapses', 'number_synapses'),
+    numberColumn(EntityCoreFields.CircuitNumberNeurons, 'Number of neurons', 'number_neurons', {
+      width: { width: 130, minWidth: 130 },
+    }),
+    numberColumn(EntityCoreFields.CircuitNumberSynapses, 'Number of synapses', 'number_synapses', {
+      width: { width: 130, minWidth: 130 },
+    }),
     numberColumn(
       EntityCoreFields.CircuitNumberConnections,
       'Number of connections',
-      'number_connections'
+      'number_connections',
+      { width: { width: 150, minWidth: 150 } }
     ),
     {
       id: EntityCoreFields.CircuitBuildCategory,
@@ -273,7 +270,7 @@ export const circuitSchema: IGridSchema<Row> = {
       align: Align.Left,
       sortable: true,
       sortField: 'published_in',
-      width: { minWidth: 150, flex: 1 },
+      width: { minWidth: 155, flex: 1 },
       getValue: (row) => row.published_in ?? '',
       // /circuit exposes `published_in__ilike` only, no `__in`.
       filter: { operators: [OperatorId.Ilike], field: 'published_in' },
@@ -284,7 +281,7 @@ export const circuitSchema: IGridSchema<Row> = {
       align: Align.Left,
       sortable: true,
       sortField: 'experiment_date',
-      width: { minWidth: 140 },
+      width: { minWidth: 166, width: 177 },
       getValue: (row) => formatDate(row.experiment_date),
       filter: { operators: [OperatorId.DateRange], field: 'experiment_date' },
     } satisfies IColumnModel<Row>,
@@ -346,20 +343,6 @@ export const circuitSchema: IGridSchema<Row> = {
     }),
   ],
 };
-
-/** ValueRange number column (localized display, `field__gte`/`field__lte` filter). */
-function numberColumn(id: string, header: string, field: string): IColumnModel<Row> {
-  return {
-    id,
-    header,
-    align: Align.Left,
-    sortable: true,
-    sortField: field,
-    width: { minWidth: 130 },
-    getValue: (row) => localizedNumber((row as unknown as Record<string, number>)[field]),
-    filter: { operators: NUMERIC_FILTER_OPERATORS, field },
-  };
-}
 
 /** Reverse-lookup a dictionary's enum KEY from a stored value `key`. */
 function keyByValue<T extends Record<string, { key: string }>>(

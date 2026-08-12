@@ -18,6 +18,8 @@ import type { IColumnModel, TColumnOverride } from '../../../core';
 
 import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 
+import type { ICircuit } from '@/api/entitycore/types';
+
 type Nullable<T> = T | null | undefined;
 
 export interface IHasName {
@@ -164,8 +166,43 @@ export function nameColumn<Row extends IHasName>(o?: TColumnOverride<Row>): ICol
       sortable: true,
       sortField: 'name',
       getValue: (r) => r.name ?? '',
-      width: { minWidth: 180, flex: 2 },
+      width: { minWidth: 300, flex: 2 },
       filter: { operators: [OperatorId.Ilike, OperatorId.Eq], field: 'name' },
+    },
+    o
+  );
+}
+
+/** Reverse-lookup a dictionary's enum key from a stored value `key`. */
+export function keyByValue<T extends Record<string, { key: string }>>(
+  dict: T,
+  value: string | null | undefined
+): keyof T {
+  return (Object.keys(dict) as Array<keyof T>).find((k) => dict[k].key === value) as keyof T;
+}
+
+/** Localized integer, matching the legacy `renderLocalizedNumber`. */
+function localizedNumber(value: number | null | undefined): string {
+  return value == null || Number.isNaN(value) ? '' : value.toLocaleString();
+}
+
+/** ValueRange number column (localized display, `field__gte`/`field__lte` filter). */
+export function numberColumn(
+  id: string,
+  header: string,
+  field: string,
+  o?: TColumnOverride<ICircuit>
+): IColumnModel<ICircuit> {
+  return mergeColumnDef<ICircuit>(
+    {
+      id,
+      header,
+      align: Align.Left,
+      sortable: true,
+      sortField: field,
+      width: { minWidth: 100, width: 150 },
+      getValue: (row) => localizedNumber((row as unknown as Record<string, number>)[field]),
+      filter: { operators: NUMERIC_FILTER_OPERATORS, field },
     },
     o
   );
@@ -333,7 +370,7 @@ export function createdByColumn<Row extends IHasCreatedBy>(
       id: 'createdBy',
       header: 'Created by',
       getValue: (r) => r.created_by?.pref_label ?? '',
-      width: { minWidth: 140, flex: 1 },
+      width: { minWidth: 145, flex: 1 },
       filter: {
         operators: [OperatorId.In, OperatorId.Ilike],
         field: 'created_by__pref_label',
@@ -461,7 +498,7 @@ export function subjectAgeColumn<Row extends IHasSubjectAge>(
       // sortable only where the entity binds `subject__age_value` — enable per schema
       sortField: 'subject__age_value',
       getValue: (r) => ageInDays(r.subject?.age_value),
-      width: { minWidth: 110 },
+      width: { minWidth: 70, width: 78 },
     },
     o
   );
@@ -571,7 +608,7 @@ export function releaseVersionColumn<Row extends IHasReleaseVersion>(
       sortable: true,
       sortField: 'release_version',
       getValue: (r) => (r.release_version == null ? '' : String(r.release_version)),
-      width: { minWidth: 110 },
+      width: { minWidth: 137, width: 150, flex: 1 },
       filter: {
         operators: [OperatorId.In],
         field: 'release_version',
