@@ -8,6 +8,7 @@ import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '@/features
 import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 
 import { CAMPAIGN_STATUS_RENDERER, CampaignStatusCell } from '../renderers/campaign-status-cell';
+import { CIRCUIT_NAME_RENDERER, CircuitNameCell } from '../renderers/circuit-name-cell';
 
 import type { ReactNode } from 'react';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
@@ -22,7 +23,13 @@ export interface ICampaignRow {
   id: string;
   name?: string | null;
   description?: string | null;
-  circuit?: { name?: string | null } | null;
+  /** Nested source circuit (or ME-model for memodel campaigns), hydrated from `entity_id`. */
+  circuit?: {
+    id?: string | null;
+    name?: string | null;
+    type?: string | null;
+    scale?: string | null;
+  } | null;
   created_by?: { pref_label?: string | null } | null;
   /** memodel circuit simulations expose a top-level species array */
   species?: Array<{ name?: string | null }> | null;
@@ -34,8 +41,9 @@ export interface ICampaignRow {
 /**
  * The campaign's source circuit name. `/simulation-campaign` serves a `circuit` facet
  * bucket and lists `circuit__name` in its ordering fields, so it filters and sorts.
+ * Linked via {@link CircuitNameCell} to the circuit / ME-model detail page.
  */
-export function circuitNameColumn<Row extends { circuit?: { name?: string | null } | null }>(
+export function circuitNameColumn<Row extends ICampaignRow>(
   o?: TColumnOverride<Row>
 ): IColumnModel<Row> {
   return mergeColumnDef<Row>(
@@ -45,7 +53,8 @@ export function circuitNameColumn<Row extends { circuit?: { name?: string | null
       sortable: true,
       sortField: 'circuit__name',
       getValue: (r) => r.circuit?.name ?? EMPTY_PLACEHOLDER,
-      width: { minWidth: 160, flex: 1 },
+      cellRenderer: CIRCUIT_NAME_RENDERER,
+      width: { minWidth: 250, width: 300, flex: 1 },
       filter: {
         operators: [OperatorId.In, OperatorId.Ilike],
         field: 'circuit__name',
@@ -155,4 +164,5 @@ export function makeCampaignRenderDetail(
 /** Register the collapsed-row cell renderers used by the campaign listings. */
 export function registerCampaignRenderers(registry: CellRendererRegistry): void {
   registry.register(CAMPAIGN_STATUS_RENDERER, CampaignStatusCell);
+  registry.register(CIRCUIT_NAME_RENDERER, CircuitNameCell);
 }
