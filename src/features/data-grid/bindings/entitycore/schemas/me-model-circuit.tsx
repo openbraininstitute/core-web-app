@@ -27,7 +27,7 @@ export const meModelCircuitSchema: IGridSchema<IMEModel> = {
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
-  selection: { enabled: true },
+  selection: { enabled: false },
   advancedFilters: flatAdvancedFilters(memodelAdvancedFilters),
   columns: buildMemodelColumns(),
 };
