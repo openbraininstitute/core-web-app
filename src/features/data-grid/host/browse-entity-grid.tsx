@@ -232,7 +232,8 @@ export function EntityDataGrid({
         schema: definition.schema,
         context: { virtualLabId, projectId },
         listQueryFn,
-        // when a loader-scoped facets override exists, facets come from it instead
+        // when a loader-scoped facets override exists, facets come from it instead of
+        // the source's own facets-only request
         withFacets: !facetsQueryFn,
         transformParams: extraOrderBy
           ? (params) => ({
@@ -295,9 +296,9 @@ export function EntityDataGrid({
     (isAllSpeciesMode || !requireBrainRegion || hasBrainRegion) &&
     (extraEnabled ?? true);
 
-  // With a `facetsQueryFn` override the data source runs `withFacets: false`, so
-  // facets must be fetched separately or set filters show "No options". Same request
-  // scope as the grid, minus the grid's own column filters.
+  // A loader-scoped override replaces the source's own facets-only request, so it has
+  // to be fetched here or set filters show "No options". Same request scope as the
+  // grid, minus the grid's own column filters.
   const facetsQuery = useQuery({
     queryKey: ['data-grid', 'facets', dataType, dataKey, params],
     queryFn: () =>

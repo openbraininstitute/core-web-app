@@ -1,3 +1,4 @@
+import { FACETS_ONLY_PAGE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 
@@ -9,6 +10,7 @@ import type {
   IGridPage,
   IGridQuery,
   IGridSchema,
+  TFacets,
 } from '@/features/data-grid/core';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -43,20 +45,40 @@ export function createEntitycorePagedDataSource<Row>(
   const entity = getEntityByExtendedType({ type: dataType });
   const searchMode: 'ilike' | 'plain' = entity?.api?.config?.ilikeSearchEnabled ? 'ilike' : 'plain';
 
-  return {
-    async fetch(query: IGridQuery): Promise<IGridPage<Row>> {
-      const serialized = serializeQuery(query, schema, { searchMode });
-      const filters = transformParams ? transformParams(serialized) : serialized;
-      const args = { filters, withFacets, context };
-      const res = (await (listQueryFn ? listQueryFn(args) : entity?.api?.query?.list?.(args))) as
-        | EntityCoreResponse<Row>
-        | undefined;
-
-      return {
-        rows: res?.data ?? [],
-        total: res?.pagination?.total_items ?? 0,
-        facets: res?.facets as IGridPage<Row>['facets'],
-      };
-    },
+  const paramsFor = (query: IGridQuery): TEntitycoreParams => {
+    const serialized = serializeQuery(query, schema, { searchMode });
+    return transformParams ? transformParams(serialized) : serialized;
   };
+  const run = (args: Parameters<TListQueryFn<Row>>[0]) =>
+    (listQueryFn ? listQueryFn(args) : entity?.api?.query?.list?.(args)) as Promise<
+      EntityCoreResponse<Row> | undefined
+    >;
+
+  const fetch = async (query: IGridQuery): Promise<IGridPage<Row>> => {
+    // Never `with_facets` here: faceting the whole filtered set costs far more than
+    // the page itself, and the rows would wait on it. See `fetchFacets`.
+    const res = await run({ filters: paramsFor(query), withFacets: false, context });
+
+    return {
+      rows: res?.data ?? [],
+      total: res?.pagination?.total_items ?? 0,
+    };
+  };
+
+  // Left undefined when the host fetches facets itself, so the grid does not run a
+  // second, losing request alongside the host's own.
+  if (!withFacets) return { fetch };
+
+  const fetchFacets = async (query: IGridQuery): Promise<TFacets | undefined> => {
+    // Same filters as the rows, so counts describe exactly what is listed — but no
+    // rows, since only the buckets are read.
+    const res = await run({
+      filters: { ...paramsFor(query), ...FACETS_ONLY_PAGE },
+      withFacets: true,
+      context,
+    });
+    return res?.facets as TFacets | undefined;
+  };
+
+  return { fetch, fetchFacets };
 }

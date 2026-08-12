@@ -214,5 +214,15 @@ export function createCircuitDataSource(
       }
       return flatSource.fetch({ ...query, params: withoutViewParam(query.params) }, signal);
     },
+
+    // Flat only. The hierarchy assembles its rows client-side and the legacy listing
+    // computed no buckets for it, so this stays a parity gap rather than becoming a
+    // request the view never made.
+    async fetchFacets(query: IGridQuery, signal?: AbortSignal) {
+      if (query.params?.[CIRCUIT_VIEW_PARAM] === CircuitRepresentationView.Hierarchy) {
+        return undefined;
+      }
+      return flatSource.fetchFacets?.({ ...query, params: withoutViewParam(query.params) }, signal);
+    },
   };
 }

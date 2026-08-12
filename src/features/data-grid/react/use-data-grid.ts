@@ -8,6 +8,7 @@ import type {
   GridController,
   IGridDataSource,
   IGridPage,
+  IGridQuery,
   IGridState,
   TFacets,
 } from '@/features/data-grid/core';
@@ -83,12 +84,37 @@ export function useDataGrid<Row>(args: IUseDataGridArgs<Row>): IUseDataGridResul
     enabled,
   });
 
+  // Facets ride their own request so the rows never wait on them, and are keyed WITHOUT
+  // page/sort: those change what is shown, never which buckets exist, and refetching
+  // per page is exactly the cost this split removes.
+  const fetchFacets = dataSource.fetchFacets;
+  const facetsQuery: IGridQuery = {
+    ...query,
+    page: 1,
+    pageSize: 0,
+    sort: [],
+  };
+  // Only the error-shaped options carry over: the rest of `queryOptions` (`select`,
+  // `placeholderData`, every `refetchOn*` predicate) is generic over the ROW page and
+  // would pin this query to that type. A host wanting different facet caching has
+  // `staleTime` on its own layer.
+  const { retry, retryDelay } = queryOptions ?? {};
+  const facetsResult = useQuery({
+    retry,
+    retryDelay,
+    placeholderData: keepPrevious ? keepPreviousData : undefined,
+    queryKey: [...queryKey, 'facets', facetsQuery],
+    queryFn: ({ signal }) => fetchFacets?.(facetsQuery, signal) ?? Promise.resolve(undefined),
+    enabled: enabled && Boolean(fetchFacets),
+  });
+
   return {
     state,
     rows: result.data?.rows ?? [],
     total: result.data?.total ?? 0,
     singlePage: result.data?.singlePage ?? false,
-    facets: result.data?.facets,
+    // a source that still answers with facets on `fetch` keeps working unchanged
+    facets: result.data?.facets ?? facetsResult.data,
     loading: result.isFetching,
     error: result.error,
     status: result.status,

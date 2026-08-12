@@ -51,6 +51,40 @@ describe('createCircuitDataSource — flat branch', () => {
     expect(filters.page).toBe(2);
     expect(filters.page_size).toBe(20);
   });
+
+  it('facets the flat view from the endpoint, with no rows', async () => {
+    getCircuits.mockClear();
+    const source = createCircuitDataSource({
+      schema: circuitSchema,
+      workspace: WORKSPACE,
+      queryClient: {} as unknown as QueryClient,
+    });
+
+    await source.fetchFacets?.(baseQuery({ params: { [CIRCUIT_VIEW_PARAM]: 'flat' } }));
+
+    expect(getCircuits).toHaveBeenCalledTimes(1);
+    const filters = (getCircuits.mock.calls[0]?.[0]?.filters ?? {}) as Record<string, unknown>;
+    expect(filters).not.toHaveProperty(CIRCUIT_VIEW_PARAM);
+    expect(filters.page_size).toBe(0);
+  });
+
+  // the hierarchy builds its rows client-side and the legacy listing gave it no
+  // buckets — faceting it here would be a new request that view never made
+  it('asks for nothing at all in the hierarchy view', async () => {
+    getCircuits.mockClear();
+    const source = createCircuitDataSource({
+      schema: circuitSchema,
+      workspace: WORKSPACE,
+      queryClient: {} as unknown as QueryClient,
+    });
+
+    const facets = await source.fetchFacets?.(
+      baseQuery({ params: { [CIRCUIT_VIEW_PARAM]: 'hierarchy' } })
+    );
+
+    expect(facets).toBeUndefined();
+    expect(getCircuits).not.toHaveBeenCalled();
+  });
 });
 
 describe('createCircuitDataSource — hierarchy branch (gray-out tree)', () => {

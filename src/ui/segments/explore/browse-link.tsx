@@ -197,7 +197,7 @@ function buildQuery({
     },
     filters: {
       page: 1,
-      page_size: 1,
+      page_size: 0,
       ...brainRegionQuery,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
     },
