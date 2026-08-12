@@ -1,5 +1,6 @@
 import { Pagination } from 'antd';
 
+import { DEFAULT_PAGE_SIZE_OPTIONS } from '@/features/data-grid/config';
 import { GridActionType } from '@/features/data-grid/core';
 import {
   GRID_SELECT_CONTENT_CLASS,
@@ -16,9 +17,6 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type { GridController } from '@/features/data-grid/core';
-
-// includes 30 — the app-wide DEFAULT_PAGE_SIZE — so the selector shows the active value
-const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100];
 
 export interface IGridPaginationProps<Row> {
   controller: GridController<Row>;

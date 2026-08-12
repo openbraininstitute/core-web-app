@@ -140,6 +140,9 @@ describe('me_model_circuit_simulation parity', () => {
       'lifecycleStatus',
     ]);
   });
+  it('labels the source column ME-model (not Circuit)', () => {
+    expect(def.schema.columns.find((c) => c.id === 'circuitName')?.header).toBe('ME-model');
+  });
   it('species is display-only — /simulation-campaign exposes no species query param', () => {
     // the endpoint accepts nothing matching `species*`, so the legacy binding was
     // silently dropped by the API

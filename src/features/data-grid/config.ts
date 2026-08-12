@@ -14,3 +14,5 @@
  * a saved layout is a lasting preference, a filter is a transient act of browsing.
  */
 export const PERSIST_COLUMN_LAYOUT = true;
+
+export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 30] as const;

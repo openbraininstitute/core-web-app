@@ -10,6 +10,7 @@ import { flatAdvancedFilters } from '@/features/data-grid/bindings/entitycore/sc
 import {
   buildMemodelColumns,
   memodelAdvancedFilters,
+  memodelDataBrowseSelection,
 } from '@/features/data-grid/bindings/entitycore/schemas/memodel';
 import { SortDirection } from '@/features/data-grid/core';
 
@@ -27,7 +28,7 @@ export const meModelCircuitSchema: IGridSchema<IMEModel> = {
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
-  selection: { enabled: false },
+  selection: memodelDataBrowseSelection,
   advancedFilters: flatAdvancedFilters(memodelAdvancedFilters),
   columns: buildMemodelColumns(),
 };

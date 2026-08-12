@@ -24,11 +24,11 @@ import {
   type ICampaignRow,
   registerCampaignRenderers,
 } from '@/features/data-grid/bindings/entitycore/schemas/campaign-common';
-import { SortDirection } from '@/features/data-grid/core';
+import { mergeColumnDef, SortDirection } from '@/features/data-grid/core';
 
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
-import type { IColumnModel, IGridSchema } from '@/features/data-grid/core';
+import type { IColumnModel, IGridSchema, TColumnOverride } from '@/features/data-grid/core';
 
 /**
  * Grid schemas for the expandable circuit-simulation dataTypes. Each pairs collapsed
@@ -48,6 +48,19 @@ interface BuildOptions {
   withSpecies?: boolean;
   /** see {@link CAMPAIGN_NESTED_MODE_DEFAULT} */
   nestedMode?: boolean;
+  /** Per-column field overrides applied after the default set is composed. */
+  columnOverrides?: Partial<Record<string, TColumnOverride<ICampaignRow>>>;
+}
+
+function applyColumnOverrides(
+  columns: Array<IColumnModel<ICampaignRow>>,
+  overrides?: Partial<Record<string, TColumnOverride<ICampaignRow>>>
+): Array<IColumnModel<ICampaignRow>> {
+  if (!overrides) return columns;
+  return columns.map((column) => {
+    const override = overrides[column.id];
+    return override ? mergeColumnDef(column, override) : column;
+  });
 }
 
 export function buildSimulationCampaignDefinition({
@@ -56,20 +69,24 @@ export function buildSimulationCampaignDefinition({
   withCircuit = true,
   withSpecies = false,
   nestedMode = CAMPAIGN_NESTED_MODE_DEFAULT,
+  columnOverrides,
 }: BuildOptions): IEntityGridDefinition<ICampaignRow> {
-  const columns: Array<IColumnModel<ICampaignRow>> = [
-    campaignNameColumn<ICampaignRow>({ essential: true }),
-    campaignDescriptionColumn<ICampaignRow>(),
-    ...(withCircuit ? [circuitNameColumn<ICampaignRow>()] : []),
-    campaignCreatedByColumn<ICampaignRow>({
-      sortable: true,
-      sortField: 'created_by__pref_label',
-    }),
-    ...(withSpecies ? [campaignSpeciesColumn<ICampaignRow>()] : []),
-    lifecycleStatusColumn<ICampaignRow>(),
-    campaignRegistrationDateColumn<ICampaignRow>({ essential: true }),
-    campaignStatusColumn<ICampaignRow>({ essential: true }),
-  ];
+  const columns = applyColumnOverrides(
+    [
+      campaignNameColumn<ICampaignRow>({ essential: true }),
+      campaignDescriptionColumn<ICampaignRow>(),
+      ...(withCircuit ? [circuitNameColumn<ICampaignRow>()] : []),
+      campaignCreatedByColumn<ICampaignRow>({
+        sortable: true,
+        sortField: 'created_by__pref_label',
+      }),
+      ...(withSpecies ? [campaignSpeciesColumn<ICampaignRow>()] : []),
+      lifecycleStatusColumn<ICampaignRow>(),
+      campaignRegistrationDateColumn<ICampaignRow>({ essential: true }),
+      campaignStatusColumn<ICampaignRow>({ essential: true }),
+    ],
+    columnOverrides
+  );
 
   const schema: IGridSchema<ICampaignRow> = {
     id,
@@ -128,6 +145,12 @@ export const memodelCircuitSimulationGridDefinition = buildSimulationCampaignDef
   id: 'me-model-circuit-simulation',
   viewConfig: memodelCircuitSimulationExpandedViewConfig,
   withSpecies: true,
+  columnOverrides: {
+    circuitName: {
+      header: 'ME-model',
+      filter: { description: 'ME-model' },
+    },
+  },
 });
 
 export const ionChannelModelSimulationGridDefinition = buildSimulationCampaignDefinition({

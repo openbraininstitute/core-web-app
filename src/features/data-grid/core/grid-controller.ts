@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE_OPTIONS } from '@/features/data-grid/config';
 import { pruneAdvancedFilters } from '@/features/data-grid/core/domain/advanced-filters';
 import {
   defaultColumnLayout,
@@ -127,6 +128,13 @@ export class GridController<Row> {
           options.schema
         ),
       };
+      // Drop persisted page sizes that are no longer offered (e.g. legacy 50/100).
+      // Only after hydration so intentional preset page sizes outside the dropdown
+      // (SimpleGrid `pageSize={2}`) are left alone.
+      const pageSizeOptions = options.schema.pageSizeOptions ?? [...DEFAULT_PAGE_SIZE_OPTIONS];
+      if (!pageSizeOptions.includes(hydrated.pageSize)) {
+        hydrated = { ...hydrated, pageSize: options.defaultPageSize, page: 1 };
+      }
     }
 
     this.store = new GridStateStore(hydrated);
