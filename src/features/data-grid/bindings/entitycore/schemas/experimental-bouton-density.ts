@@ -68,11 +68,14 @@ export const experimentalBoutonDensitySchema: IGridSchema<Row> = {
     brainRegionColumn<Row>(),
     speciesColumn<Row>(),
     mtypeColumn<Row>(),
-    meanStdColumn<Row>({ sortable: true }),
-    standardErrorColumn<Row>(),
+    meanStdColumn<Row>({ sortable: true, width: { width: 160, minWidth: 155 } }),
+    standardErrorColumn<Row>({
+      width: { width: 100, minWidth: 100 },
+    }),
     numberOfMeasurementsColumn<Row>({
       sortable: true,
       sortField: 'measurement_sample_size__value',
+      width: { width: 152, minWidth: 152 },
     }),
     lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),

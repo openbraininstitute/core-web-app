@@ -208,7 +208,7 @@ export const ionChannelRecordingSchema: IGridSchema<Row> = {
     ionChannelColumn<Row>(),
     temperatureColumn<Row>(),
     cellLineColumn<Row>(),
-    nameColumn<Row>({ essential: true }),
+    nameColumn<Row>({ essential: true, width: { resizable: true, width: 200, minWidth: 150 } }),
     lifecycleStatusColumn<Row>(),
     contributionsColumn<Row>(),
     registrationDateColumn<Row>(),

@@ -5,18 +5,17 @@ import {
   GRID_ICON_BUTTON_ACTIVE_CLASS,
   GRID_OVERLAY_Z_CLASS,
 } from '@/features/data-grid/react/molecules-theme';
+import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
-import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
-
-import type { ICellRendererProps } from '../../../react';
+import type { ICellRendererProps } from '@/features/data-grid/react';
 
 /** Cell-renderer registry key for the clamped description cell. */
 export const DESCRIPTION_RENDERER = 'description';
 
-/** Half of `leading-[18px]`, used only if the computed line-height is unreadable. */
-const HALF_LINE_FALLBACK_PX = 9;
+/** Half of `leading-5.5` (22px), used only if the computed line-height is unreadable. */
+const HALF_LINE_FALLBACK_PX = 11;
 
 /** Description cell: two clamped lines, with the full text behind a popover when clipped. */
 export function DescriptionCell({ value }: ICellRendererProps<unknown>) {
@@ -52,7 +51,7 @@ export function DescriptionCell({ value }: ICellRendererProps<unknown>) {
     <div className="relative flex h-full w-full items-center">
       <p
         ref={textRef}
-        className="line-clamp-2 w-full pr-7 leading-[18px] whitespace-normal wrap-break-word"
+        className="line-clamp-2 w-full pr-7 leading-5.5 whitespace-normal wrap-break-word"
       >
         {text}
       </p>

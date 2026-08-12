@@ -150,7 +150,7 @@ export const experimentalSynapsesPerConnectionSchema: IGridSchema<Row> = {
     postSynapticRegionColumn<Row>(),
     preSynapticCellTypeColumn<Row>(),
     postSynapticCellTypeColumn<Row>(),
-    meanStdColumn<Row>(),
+    meanStdColumn<Row>({ width: { width: 160, minWidth: 151 } }),
     speciesColumn<Row>(),
     subjectAgeColumn<Row>({ sortable: true }),
     lifecycleStatusColumn<Row>(),

@@ -135,7 +135,9 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       } satisfies IEntityPreviewParams,
       width: { width: 184, minWidth: 120, resizable: true },
     }),
-    nameColumn<Row>(),
+    nameColumn<Row>({
+      width: { minWidth: 130, width: 200, flex: 2 },
+    }),
     brainRegionColumn<Row>(),
     {
       id: 'species',
@@ -159,7 +161,7 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       sortable: true,
       sortField: 'temperature_celsius',
       getValue: (r) => (r.temperature_celsius == null ? '' : `${r.temperature_celsius} °C`),
-      width: { minWidth: 130 },
+      width: { minWidth: 180, width: 180, resizable: true },
       filter: { operators: NUMERIC_FILTER_OPERATORS, field: 'temperature_celsius' },
     },
     {
@@ -168,7 +170,7 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       sortable: true,
       sortField: 'is_temperature_dependent',
       getValue: (r) => (r.is_temperature_dependent ? 'True' : 'False'),
-      width: { minWidth: 160 },
+      width: { minWidth: 160, width: 160, resizable: true },
       filter: { operators: [OperatorId.Bool], field: 'is_temperature_dependent' },
     },
     {
@@ -177,7 +179,7 @@ export const ionChannelModelSchema: IGridSchema<Row> = {
       sortable: true,
       sortField: 'is_ljp_corrected',
       getValue: (r) => (r.is_ljp_corrected ? 'True' : 'False'),
-      width: { minWidth: 140 },
+      width: { minWidth: 140, width: 140, resizable: true },
       filter: { operators: [OperatorId.Bool], field: 'is_ljp_corrected' },
     },
     lifecycleStatusColumn<Row>(),
