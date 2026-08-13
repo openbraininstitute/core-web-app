@@ -29,6 +29,12 @@ type Props = {
   sessionId: string;
   disableElectrodes?: boolean;
   disableSynapses?: boolean;
+  /**
+   * Fill the parent pane and hide the simulate-layout collapse strip.
+   * Scan-config already owns a dedicated right column; collapsing there
+   * leaves an empty white gap instead of giving the form more room.
+   */
+  fillContainer?: boolean;
 };
 
 export function NeuronViewerContainer({
@@ -36,6 +42,7 @@ export function NeuronViewerContainer({
   sessionId,
   disableElectrodes,
   disableSynapses,
+  fillContainer,
 }: Props) {
   const [collapsed, setCollapsed] = React.useState(false);
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
@@ -53,9 +60,15 @@ export function NeuronViewerContainer({
     logError('Unable to load morphology:', error);
     throw new Error('Unable to load morphology!');
   }
+  const containerClassName = cn(
+    styles.viewerContainer,
+    fillContainer && styles.fill,
+    !fillContainer && collapsed && styles.collapsed
+  );
+
   if (loading)
     return (
-      <div className={styles.viewerContainer}>
+      <div className={containerClassName}>
         <LoadingNeuronSpinner />
       </div>
     );
@@ -80,8 +93,8 @@ export function NeuronViewerContainer({
       })}
     >
       <DefaultLoadingSuspense>
-        <div className={cn(styles.viewerContainer, collapsed && styles.collapsed)}>
-          {collapsed ? (
+        <div className={containerClassName}>
+          {!fillContainer && collapsed ? (
             <CollapsedViewer onClick={() => setCollapsed(false)} />
           ) : (
             <>
@@ -95,7 +108,7 @@ export function NeuronViewerContainer({
                 disableClick={
                   disableElectrodes || simulationStatus?.status === SimulationStatus.LAUNCHED
                 }
-                onMinimize={() => setCollapsed(true)}
+                onMinimize={fillContainer ? undefined : () => setCollapsed(true)}
               />
               <DebugPanel morphology={morphology} synapses={synapses} />
             </>

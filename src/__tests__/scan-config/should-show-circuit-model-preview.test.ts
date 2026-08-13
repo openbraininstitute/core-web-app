@@ -48,7 +48,8 @@ function legacyRightPreviewMode(options: {
       entityType === ExtendedEntitiesTypeDict.Circuit) ||
     (activity === ScanConfigActivity.Build &&
       Boolean(entity) &&
-      entityType === ExtendedEntitiesTypeDict.Circuit);
+      (entityType === ExtendedEntitiesTypeDict.Circuit ||
+        entityType === ExtendedEntitiesTypeDict.Memodel));
 
   if (showIonChannel) return RightPreviewModeDict.IonChannel;
   if (showCircuit) return RightPreviewModeDict.CircuitModel;
@@ -70,6 +71,7 @@ function legacyHostNeuronOpacity(options: {
 const ACTIVITIES = Object.values(ScanConfigActivity);
 const ENTITY_TYPES = [
   ExtendedEntitiesTypeDict.Circuit,
+  ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.MemodelCircuit,
   ExtendedEntitiesTypeDict.WholeBrain,
   ExtendedEntitiesTypeDict.SingleNeuronCircuit,
@@ -113,7 +115,7 @@ describe('shouldShowCircuitModelPreview', () => {
     ).toBe(false);
   });
 
-  it('shows Circuit only for Extract and Build', () => {
+  it('shows Circuit for Extract and Build, and Memodel for Build', () => {
     for (const activity of [ScanConfigActivity.Extract, ScanConfigActivity.Build]) {
       expect(
         shouldShowCircuitModelPreview({
@@ -131,6 +133,22 @@ describe('shouldShowCircuitModelPreview', () => {
         })
       ).toBe(false);
     }
+
+    expect(
+      shouldShowCircuitModelPreview({
+        activity: ScanConfigActivity.Build,
+        entityType: ExtendedEntitiesTypeDict.Memodel,
+        hasEntity: true,
+      })
+    ).toBe(true);
+
+    expect(
+      shouldShowCircuitModelPreview({
+        activity: ScanConfigActivity.Extract,
+        entityType: ExtendedEntitiesTypeDict.Memodel,
+        hasEntity: true,
+      })
+    ).toBe(false);
   });
 
   it('hides Process (and any other non-circuit activities)', () => {

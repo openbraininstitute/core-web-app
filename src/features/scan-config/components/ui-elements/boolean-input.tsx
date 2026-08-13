@@ -9,6 +9,7 @@ import { cn } from '@/utils/css-class';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 export interface BooleanInputProps {
+  fieldKey: string;
   value: boolean | null;
   onChange: (value: boolean) => void;
   disabled?: boolean;
@@ -31,6 +32,7 @@ export interface BooleanInputProps {
  * }
  */
 export default function BooleanInput({
+  fieldKey,
   value,
   onChange,
   disabled = false,
@@ -49,19 +51,21 @@ export default function BooleanInput({
   );
 
   return (
-    <Checkbox
-      id={id}
-      data-scan-config-block-element={ScanConfigUIElementDict.BooleanInput}
-      checked={normalizedValue}
-      onChange={handleChange}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      className={cn(
-        '[&_.ant-checkbox-inner]:w-6 [&_.ant-checkbox-inner]:h-6 [&_.ant-checkbox-inner]:rounded',
-        '[&_.ant-checkbox-inner]:border-gray-300 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8 ',
-        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8',
-        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
-      )}
-    />
+    <span data-scan-config-block-element={ScanConfigUIElementDict.BooleanInput} className="ml-4">
+      <Checkbox
+        key={id}
+        id={fieldKey}
+        checked={normalizedValue}
+        onChange={handleChange}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        className={cn(
+          '[&_.ant-checkbox-inner]:w-6 [&_.ant-checkbox-inner]:h-6 [&_.ant-checkbox-inner]:rounded',
+          '[&_.ant-checkbox-inner]:border-gray-300 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8 ',
+          '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8',
+          '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
+        )}
+      />
+    </span>
   );
 }

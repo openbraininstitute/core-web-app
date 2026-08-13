@@ -7,6 +7,8 @@ type Props = {
   memodelId: string;
   disableElectrodes?: boolean;
   disableSynapses?: boolean;
+  /** Fill the parent pane and hide the collapse strip. Used by scan-config. */
+  fillContainer?: boolean;
 };
 
 export function NeuronVisualizer({
@@ -14,15 +16,19 @@ export function NeuronVisualizer({
   memodelId,
   disableElectrodes,
   disableSynapses,
+  fillContainer,
 }: Props) {
   return (
     memodelId && (
-      <NeuronViewerContainer
-        disableElectrodes={disableElectrodes}
-        disableSynapses={disableSynapses}
-        meModelId={memodelId}
-        sessionId={sessionId}
-      />
+      <div className={fillContainer ? 'h-full w-full min-h-0' : undefined}>
+        <NeuronViewerContainer
+          disableElectrodes={disableElectrodes}
+          disableSynapses={disableSynapses}
+          meModelId={memodelId}
+          sessionId={sessionId}
+          fillContainer={fillContainer}
+        />
+      </div>
     )
   );
 }
