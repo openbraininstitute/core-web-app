@@ -10,7 +10,6 @@ import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { Task, type TTaskFlowTypes } from '@/entity-configuration/domain/task-functions';
-import { buildSynaptomeFlag } from '@/features/feature-flags/flags';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -20,9 +19,6 @@ export type TBuildSynaptomeCampaignMeta = {
   scan_parameters?: Record<string, unknown>;
 };
 
-// `build_synaptome__campaign` is a placeholder task-config type: entitycore does not expose it yet
-// and obi-one's `BuildSynaptomeScanConfig` declares no `_campaign_task_config_type`, so no campaign
-// is registered by the generate endpoint today. Listing/resolving stays inert until both land.
 const TaskFlow: TTaskFlowTypes = {
   campaignConfigType: TaskConfigType.BuildSynaptomeCampaign,
 };
@@ -127,9 +123,8 @@ export const BuildSynaptomeCampaign: EntityCoreTypeConfig<
   TResolvedBuildSynaptomeByCampaigns
 > = {
   group: EntityTypeGroup.Models,
-  title: 'Single neuron synaptome (beta)',
+  title: 'Single neuron synaptome',
   extendedType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
-  requiredFeatures: [buildSynaptomeFlag.key],
   type: EntityTypeDict.TaskConfig,
   slug: EntitySlug.BuildSynaptomeCampaign,
   api: {

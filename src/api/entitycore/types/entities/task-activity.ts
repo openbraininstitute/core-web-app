@@ -44,10 +44,8 @@ export const TaskActivityType = {
     'extracellular_recording_weights_calculation__config_generation',
   ExtracellularRecordingWeightsCalculationExecution:
     'extracellular_recording_weights_calculation__execution',
-  // placeholder: not yet in entitycore (checked against staging `TaskActivityType`, 27/07/2026).
-  // See the matching note on `TaskConfigType.BuildSynaptomeCampaign`.
-  BuildSynaptomeConfigGeneration: 'build_synaptome__config_generation',
-  BuildSynaptomeExecution: 'build_synaptome__execution',
+  BuildSynaptomeConfigGeneration: 'circuit_single_build__config_generation',
+  BuildSynaptomeExecution: 'circuit_single_build__execution',
 } as const;
 
 export type TTaskActivityType = (typeof TaskActivityType)[keyof typeof TaskActivityType];

@@ -125,7 +125,7 @@ export const SchemaNameDict = {
   // build
   EMSynapseMappingScanConfig: 'EMSynapseMappingScanConfig',
   ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
-  BuildSynaptomeScanConfig: 'BuildSynaptomeScanConfig',
+  BuildSynaptomeScanConfig: 'MEModelSynapticModelPlacementScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
 } as const;
@@ -600,6 +600,7 @@ export type TSupportedEntitiesForScanConfiguration =
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
+  | typeof ExtendedEntitiesTypeDict.Memodel
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
   | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit
   | typeof ExtendedEntitiesTypeDict.IonChannelModel

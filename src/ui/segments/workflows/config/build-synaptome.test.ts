@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { buildSynaptomeFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 
@@ -18,19 +17,18 @@ const descriptor = BuildWorkflows.find(
 );
 
 describe('build synaptome workflow registration', () => {
-  it('is registered under the build activity, gated by its feature flag', () => {
+  it('is registered under the build activity', () => {
     expect(descriptor).toBeDefined();
     expect(descriptor?.sourceType).toBe(ExtendedEntitiesTypeDict.Memodel);
-    expect(descriptor?.requiredFeatures).toContain(buildSynaptomeFlag.key);
     expect(descriptor?.disabled).toBe(false);
   });
 
-  it('binds the obi-one BuildSynaptomeScanConfig schema and generate endpoint', () => {
+  it('binds the obi-one MEModelSynapticModelPlacementScanConfig schema and generate endpoint', () => {
     const registry = findScanConfigRegistryByDefinition(buildSynaptomeWorkflow);
 
     expect(registry?.schemaName).toBe(SchemaNameDict.BuildSynaptomeScanConfig);
     expect(buildGeneratedApiUrl(registry?.configureBinding.generatedApiPath ?? '')).toContain(
-      '/generated/build-synaptome-scan-config-generate-grid'
+      '/generated/me-model-synaptic-model-placement-scan-config-generate-grid'
     );
   });
 

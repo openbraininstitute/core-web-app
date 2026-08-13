@@ -1,10 +1,7 @@
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import {
-  buildSynaptomeFlag,
-  extracellularRecordingArrayBuildFlag,
-} from '@/features/feature-flags/flags';
+import { extracellularRecordingArrayBuildFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
@@ -84,9 +81,9 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.Memodel,
     targetType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
-    label: 'Single neuron synaptome (beta)',
+    label: 'Single neuron synaptome',
     breadcrumb: {
-      root: 'Single neuron synaptome (beta) build',
+      root: 'Single neuron synaptome build',
       steps: {
         selection: 'Select an ME-model',
       },
@@ -100,7 +97,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     requireFilters: true,
     order: 3,
     disabled: false,
-    requiredFeatures: [buildSynaptomeFlag.key],
   },
   {
     ...WorkflowBrowseDefaults,

@@ -8,12 +8,11 @@ import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 /**
- * Configure route for obi-one's `BuildSynaptomeScanConfig` (form groups: Info, ME-model,
- * Synaptic physiology, Synapse groups).
+ * Configure route for obi-one's `MEModelSynapticModelPlacementScanConfig`
+ * (form groups: Info, ME-model, Synaptic physiology, Synapse groups).
  *
- * `taskTypeBindings` reference placeholder entitycore/obi-one task types: obi-one currently
- * ships the ScanConfig only (no campaign task-config type, no launchable task), so the results
- * tab has nothing to poll until that lands. The workflow is gated by `buildSynaptomeFlag`.
+ * Launch and campaign types use entitycore's `circuit_single_build__*` family,
+ * which is the launchable task registered in obi-one as `circuit_single_build`.
  */
 export const buildSynaptomeWorkflow = defineScanConfigWorkflow({
   id: 'build-synaptome',

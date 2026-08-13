@@ -307,6 +307,19 @@ const cases: TCase[] = [
     href: `${base}/build/configure/extracellular-recording-array-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
+    name: 'build synaptome task config → build editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.Memodel },
+      taskConfigType: TaskConfigType.BuildSynaptomeCampaign,
+    },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
+    },
+    href: `${base}/build/configure/build-synaptome-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
     name: 'circuit simulation task config picks the workflow matching its input scale',
     fixture: {
       entity: { type: EntityTypeDict.TaskConfig },
