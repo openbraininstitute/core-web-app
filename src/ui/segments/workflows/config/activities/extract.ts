@@ -1,8 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import {
-  efeatureExtractionActivityFlag,
-  extractionActivityFlag,
-} from '@/features/feature-flags/flags';
+import { extractionActivityFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { extractCircuitWorkflow } from '@/features/scan-config/workflow/definitions/extract-circuit';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
@@ -56,6 +53,5 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }],
     label: 'Intracellular EFeatures',
     disabled: false,
-    requiredFeatures: [efeatureExtractionActivityFlag.key],
   },
 ];
