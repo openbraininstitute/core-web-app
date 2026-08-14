@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import {
-  efeatureExtractionActivityFlag,
-  extractionActivityFlag,
-  flags,
-} from '@/features/feature-flags/flags';
+import { extractionActivityFlag, flags } from '@/features/feature-flags/flags';
 import { ScanConfigUIElementDict, SchemaNameDict } from '@/features/scan-config/types';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
@@ -33,7 +29,6 @@ import {
 import type { FeatureFlags } from '@/features/feature-flags/flags';
 
 const noFlags = {} as FeatureFlags;
-const efeatureOnly = { [efeatureExtractionActivityFlag.key]: true } as unknown as FeatureFlags;
 const circuitOnly = { [extractionActivityFlag.key]: true } as unknown as FeatureFlags;
 
 function extractionActivityVisible(flags: FeatureFlags) {
@@ -82,12 +77,8 @@ describe('FromID type registries', () => {
 });
 
 describe('extraction activity gating', () => {
-  it('hides the extraction activity when no extraction flag is on', () => {
-    expect(extractionActivityVisible(noFlags)).toBe(false);
-  });
-
-  it('shows the extraction activity when only the efeature flag is on', () => {
-    expect(extractionActivityVisible(efeatureOnly)).toBe(true);
+  it('shows the extraction activity with no flags, because e-feature extraction is always on', () => {
+    expect(extractionActivityVisible(noFlags)).toBe(true);
   });
 
   it('still shows the extraction activity when only the circuit flag is on', () => {
@@ -96,8 +87,8 @@ describe('extraction activity gating', () => {
 });
 
 describe('intracellular efeatures workflow registration', () => {
-  it('is listed and enabled under extract when its own flag is on', () => {
-    const workflow = listWorkflows({ activity: 'extract', flags: efeatureOnly }).find(
+  it('is listed and enabled under extract with no flags', () => {
+    const workflow = listWorkflows({ activity: 'extract', flags: noFlags }).find(
       (entry) => entry.targetType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
     );
 
@@ -106,12 +97,12 @@ describe('intracellular efeatures workflow registration', () => {
     expect(workflow?.disabled).toBe(false);
   });
 
-  it('is disabled when only the circuit extraction flag is on', () => {
+  it('stays enabled when only the circuit extraction flag is on', () => {
     const workflow = listWorkflows({ activity: 'extract', flags: circuitOnly }).find(
       (entry) => entry.targetType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
     );
 
-    expect(workflow?.disabled).toBe(true);
+    expect(workflow?.disabled).toBe(false);
   });
 
   it('resolves its scan-config binding by target type', () => {
