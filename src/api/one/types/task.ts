@@ -11,6 +11,8 @@ export const ObiOneTaskTypeDict = {
   EmSynapseMapping: 'em_synapse_mapping',
   ExtracellularRecordingWeightsCalculation: 'extracellular_recording_weights_calculation',
   BuildSynaptome: 'circuit_single_build',
+  CircuitSynapticPhysiology: 'circuit_synaptic_physiology_assignment',
 } as const;
 
-export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];
+export type TObiOneTaskType =
+  (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];
