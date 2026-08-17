@@ -5,7 +5,11 @@ import { getTaskConfig } from '@/api/entitycore/queries/task/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkflowActivityDictValue } from '@/constants';
-import { ScanConfigOriginSearchParam } from '@/features/scan-config/helpers';
+import {
+  type ScanConfigCampaignOriginActionDict,
+  ScanConfigModeSearchParam,
+  ScanConfigOriginSearchParam,
+} from '@/features/scan-config/helpers';
 import { resolveWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
 import { listActivities, listWorkflows } from '@/ui/segments/workflows/config/helpers';
@@ -16,6 +20,7 @@ import {
 import {
   buildWorkflowActivityConfigurationHref,
   buildWorkflowActivityDetailConfigurationHref,
+  buildWorkflowActivityDuplicateHref,
 } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import {
   PanelQueryParam,
@@ -27,6 +32,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { FeatureFlags } from '@/features/feature-flags/flags';
 import type { WorkspaceContext } from '@/types/common';
 import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
+import type { TWorkflowActivityTableRow } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 
 /**
  * resolves an entity id to the workflow configuration editor that entity belongs to
@@ -49,6 +55,14 @@ import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflow
  */
 
 type TWorkflowMatch = { activity: TActivityValue; workflow: IWorkflowDescriptor };
+export type TWorkflowConfigureHrefMode = typeof ScanConfigCampaignOriginActionDict.Duplicate;
+
+export type TResolveWorkflowConfigureHrefForEntityParams = {
+  entityId: string;
+  workspace: WorkspaceContext;
+  flags?: FeatureFlags;
+  mode?: TWorkflowConfigureHrefMode;
+};
 
 /**
  * workflows the user can open, simulate first
@@ -189,11 +203,45 @@ async function resolveEntityTypeCandidates(
   return specific && specific !== extendedType ? [specific, extendedType] : [extendedType];
 }
 
+function storedConfigurationQuery(
+  entityId: string,
+  mode?: TWorkflowConfigureHrefMode
+): Record<string, string> {
+  return {
+    ...(mode ? { [ScanConfigModeSearchParam]: mode } : {}),
+    [ScanConfigOriginSearchParam]: entityId,
+  };
+}
+
+function buildActivityConfigurationHref({
+  match,
+  workspace,
+  row,
+  mode,
+}: {
+  match: TWorkflowMatch;
+  workspace: WorkspaceContext;
+  row: TWorkflowActivityTableRow;
+  mode?: TWorkflowConfigureHrefMode;
+}): string | null {
+  const request = {
+    activity: match.activity,
+    listEntityType: match.workflow.targetType,
+    workspace,
+    row,
+  };
+
+  return mode
+    ? buildWorkflowActivityDuplicateHref(request)
+    : buildWorkflowActivityConfigurationHref(request);
+}
+
 /**
  * reopens a stored configuration
  *
  * scan-config workflows get the editor with `?origin=<id>` so it loads the run's saved form,
- * legacy ones have no such editor and fall back to the entity's detail view
+ * `mode: 'duplicate'` also sets `?mode=duplicate` so the form is editable. legacy workflows have
+ * no such editor and fall back to the entity's detail view
  *
  * @param entityId: the run to reopen — a campaign, a task config, or another activity output
  * @returns the href, or `null` when the target type has no detail view to fall back to
@@ -202,10 +250,12 @@ function buildStoredConfigurationHref({
   match,
   workspace,
   entityId,
+  mode,
 }: {
   match: TWorkflowMatch;
   workspace: WorkspaceContext;
   entityId: string;
+  mode?: TWorkflowConfigureHrefMode;
 }): string | null {
   const { activity, workflow } = match;
 
@@ -223,7 +273,7 @@ function buildStoredConfigurationHref({
     workspace,
     entityId,
     skipSelectionPersist: true,
-    query: { [ScanConfigOriginSearchParam]: entityId },
+    query: storedConfigurationQuery(entityId, mode),
   });
 }
 
@@ -271,10 +321,12 @@ async function resolveSimulationCampaignHref({
   campaignId,
   workspace,
   flags,
+  mode,
 }: {
   campaignId: string;
   workspace: WorkspaceContext;
   flags?: FeatureFlags;
+  mode?: TWorkflowConfigureHrefMode;
 }): Promise<string | null> {
   const campaign = await getSimulationCampaign({ id: campaignId, context: workspace });
   if (!campaign.entity_id) return null;
@@ -285,10 +337,10 @@ async function resolveSimulationCampaignHref({
 
   if (!match) return null;
 
-  return buildWorkflowActivityConfigurationHref({
-    activity: match.activity,
-    listEntityType: match.workflow.targetType,
+  return buildActivityConfigurationHref({
+    match,
     workspace,
+    mode,
     row: {
       id: campaign.id,
       type: EntityTypeDict.SimulationCampaign,
@@ -335,10 +387,12 @@ async function resolveTaskConfigHref({
   taskConfigId,
   workspace,
   flags,
+  mode,
 }: {
   taskConfigId: string;
   workspace: WorkspaceContext;
   flags?: FeatureFlags;
+  mode?: TWorkflowConfigureHrefMode;
 }): Promise<string | null> {
   const taskConfig = await getTaskConfig({ id: taskConfigId, context: workspace });
   const match = await pickWorkflowForTaskConfig({
@@ -348,10 +402,10 @@ async function resolveTaskConfigHref({
   });
   if (!match) return null;
 
-  return buildWorkflowActivityConfigurationHref({
-    activity: match.activity,
-    listEntityType: match.workflow.targetType,
+  return buildActivityConfigurationHref({
+    match,
     workspace,
+    mode,
     row: {
       id: taskConfig.id,
       type: EntityTypeDict.TaskConfig,
@@ -372,6 +426,7 @@ async function resolveTaskConfigHref({
  * @param workspace: virtual lab and project the href is built for, and the context the entity is
  *   read with; public entities resolve from any workspace
  * @param flags: the viewer's feature flags, so a flag-gated workflow is never linked to
+ * @param mode: `'duplicate'` opens a stored campaign editable; omitted keeps the read-only view
  * @returns configure href, or `null` when no available workflow accepts the entity
  *
  * @example
@@ -379,32 +434,30 @@ async function resolveTaskConfigHref({
  *   entityId: 'a-simulation-campaign-id',
  *   workspace: { virtualLabId, projectId },
  *   flags,
+ *   mode: 'duplicate',
  * });
- * // /app/virtual-lab/{lab}/{project}/workflows/simulate/configure/me-model-circuit-simulation/wf_…?origin=a-simulation-campaign-id
+ * // /app/virtual-lab/{lab}/{project}/workflows/simulate/configure/me-model-circuit-simulation/wf_…?mode=duplicate&origin=a-simulation-campaign-id
  */
 export async function resolveWorkflowConfigureHrefForEntity({
   entityId,
   workspace,
   flags,
-}: {
-  entityId: string;
-  workspace: WorkspaceContext;
-  flags?: FeatureFlags;
-}): Promise<string | null> {
+  mode,
+}: TResolveWorkflowConfigureHrefForEntityParams): Promise<string | null> {
   const entity = await getEntity({ id: entityId, context: workspace });
 
   if (entity.type === EntityTypeDict.SimulationCampaign) {
-    return resolveSimulationCampaignHref({ campaignId: entityId, workspace, flags });
+    return resolveSimulationCampaignHref({ campaignId: entityId, workspace, flags, mode });
   }
 
   if (entity.type === EntityTypeDict.TaskConfig) {
-    return resolveTaskConfigHref({ taskConfigId: entityId, workspace, flags });
+    return resolveTaskConfigHref({ taskConfigId: entityId, workspace, flags, mode });
   }
 
   const candidates = await resolveEntityTypeCandidates(entity, workspace);
 
   const output = findWorkflowFor('targetType', candidates.filter(isActivityOutputType), flags);
-  if (output) return buildStoredConfigurationHref({ match: output, workspace, entityId });
+  if (output) return buildStoredConfigurationHref({ match: output, workspace, entityId, mode });
 
   const source = findWorkflowFor('sourceType', candidates, flags);
   if (source) return buildNewConfigurationHref({ match: source, workspace, entityId });

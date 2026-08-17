@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { useFlags } from '@/features/feature-flags';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import {
@@ -126,7 +127,12 @@ function ResourceItem({
     }
 
     setLoading(true);
-    void resolveWorkflowConfigureHrefForEntity({ entityId, workspace, flags })
+    void resolveWorkflowConfigureHrefForEntity({
+      entityId,
+      workspace,
+      flags,
+      mode: ScanConfigCampaignOriginActionDict.Duplicate,
+    })
       .then((href) => {
         if (href) {
           router.push(href);
