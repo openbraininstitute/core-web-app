@@ -359,7 +359,7 @@ operators whose param name differs from the pinned one.
 ## Orphans: what happens when a schema changes
 
 Persisted state outlives schema edits. Session storage keeps `filters` (plus sort,
-page, quick filter) under `data-grid:v1:*`, so a user can still hold an
+page, free-text search) under `data-grid:v1:*`, so a user can still hold an
 `adv:protocol:someRemovedFilter` entry after the group is renamed or the filter
 deleted. Left alone it would fall through the serializer's column lookup and be
 emitted as a query param literally named `adv:protocol:someRemovedFilter__in`.

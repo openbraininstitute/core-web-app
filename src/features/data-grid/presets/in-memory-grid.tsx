@@ -9,6 +9,7 @@ import {
   computeInMemoryFacets,
   runInMemoryQuery,
 } from '@/features/data-grid/bindings/inmemory/data-source';
+import { DEFAULT_PAGE_SIZE_OPTIONS } from '@/features/data-grid/config';
 import {
   Align,
   buildGridQuery,
@@ -20,6 +21,7 @@ import {
   type IGridContext,
   type IGridDataSource,
   type IGridPage,
+  type IGridQuery,
   type IGridSchema,
   type OperatorRegistry,
   reconcileColumnOrder,
@@ -33,6 +35,7 @@ import { ColumnChooser } from '@/features/data-grid/react/column-chooser';
 import { GridLoaderOverlay } from '@/features/data-grid/react/grid-loader';
 import { GridPagination } from '@/features/data-grid/react/pagination';
 import { useGridState } from '@/features/data-grid/react/use-grid-state';
+import { AgCellHost } from '@/features/data-grid/renderers/aggrid/cell-host';
 import {
   keepsBlankWhenEmpty,
   withEmptyPlaceholder,
@@ -62,6 +65,7 @@ import type {
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
 import type { ISimpleColumn, ISimpleRowSelection } from '@/features/data-grid/presets/simple-grid';
+import type { IServerGridState } from '@/features/data-grid/react';
 import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 registerDataGridModules();
@@ -83,6 +87,9 @@ const IM_DEFAULT_COL_DEF: ColDef = {
 
 /** Stable empty base query key so client-mode consumers add no extra key segments. */
 const EMPTY_QUERY_KEY: ReadonlyArray<unknown> = [];
+
+/** Default `expansion.isExpandable`; a module constant to keep its identity stable. */
+const ALWAYS_EXPANDABLE = (): boolean => true;
 
 /**
  * Fallback client used only in client mode, so the always-called `useQuery` (rules of
@@ -153,6 +160,16 @@ export interface IInMemoryGridProps<Row> {
   serverQueryOptions?: Omit<UseQueryOptions<IGridPage<Row>>, 'queryKey' | 'queryFn'>;
   /** Gate the server fetch (default: true when a `dataSource` is set). */
   enabled?: boolean;
+  /**
+   * Server mode only. Rendered in place of the grid when the fetch fails; omit to fall
+   * back to an empty grid, which is indistinguishable from a listing with no rows.
+   */
+  renderError?: (error: unknown) => ReactNode;
+  /**
+   * Server mode only. Notified with the fetch's status and row total, derived from React
+   * Query so a cache hit still reports. The reference need not be stable.
+   */
+  onServerStateChange?: (result: IServerGridState) => void;
   /** Total row count fallback when the data source doesn't return one. */
   total?: number;
   /** enable the per-column custom header filter popovers (default: false). */
@@ -177,6 +194,11 @@ export interface IInMemoryGridProps<Row> {
   rowSelection?: ISimpleRowSelection<Row>;
   /** operator catalog for the filter editors (default: the standard registry). */
   operators?: OperatorRegistry;
+  /**
+   * Resolves a column's `cellRenderer` key to a component, as the top-level grid's
+   * binding does. Omit for a grid whose columns render inline via `renderCell`.
+   */
+  cellRenderers?: CellRendererRegistry;
   /** expandable detail rows + configurable expander position. */
   expansion?: IExpansionConfig<Row>;
   /** per-row class hook (e.g. hierarchy filtered-in/out styling). */
@@ -253,6 +275,8 @@ export function InMemoryGrid<Row>({
   queryKey,
   serverParams,
   enabled,
+  renderError,
+  onServerStateChange,
   total,
   filterable = false,
   showColumnChooser = false,
@@ -266,6 +290,7 @@ export function InMemoryGrid<Row>({
   headerHeight = 48,
   rowSelection,
   operators,
+  cellRenderers = EMPTY_CELL_RENDERERS,
   expansion,
   getRowClass,
   onRowClick,
@@ -308,8 +333,9 @@ export function InMemoryGrid<Row>({
         sortable ? 1 : 0,
         (defaultSort ?? []).map((s) => `${s.columnId}:${s.direction}`).join(','),
         pageSize,
+        (pageSizeOptions ?? []).join(','),
       ].join('#'),
-    [columns, sortable, defaultSort, pageSize]
+    [columns, sortable, defaultSort, pageSize, pageSizeOptions]
   );
 
   const context = useMemo<IGridContext>(() => ({ dataType: 'in-memory-grid' }), []);
@@ -320,7 +346,12 @@ export function InMemoryGrid<Row>({
       getRowId: rowId,
       columns: columns.map(toColumnModel),
       defaultSort,
-      pageSizeOptions,
+      // Fold the preset size in, so the schema's own options always contain the size
+      // the grid starts on — otherwise the pager offers a list it can never return to,
+      // and the controller's hydration clamp would discard it.
+      pageSizeOptions: [
+        ...new Set([...(pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS), pageSize]),
+      ].sort((a, b) => a - b),
     };
     controllerRef.current = {
       sig: signature,
@@ -331,7 +362,17 @@ export function InMemoryGrid<Row>({
 
   const state = useGridState(controller);
   const isServerMode = Boolean(dataSource);
-  const query = buildGridQuery(state, serverParams);
+  // Keyed on the slices the query reads, NOT on `state`: selection/expansion changes
+  // must not give `query` a new identity and re-run the in-memory filter/sort/slice.
+  const { page: statePage, pageSize: statePageSize, sort, filters, freeTextSearch } = state;
+  const query = useMemo<IGridQuery>(
+    () =>
+      buildGridQuery(
+        { page: statePage, pageSize: statePageSize, sort, filters, freeTextSearch },
+        serverParams
+      ),
+    [statePage, statePageSize, sort, filters, freeTextSearch, serverParams]
+  );
 
   // Keyed on the serialized query so sort/filter/page changes refetch. Always called
   // (rules of hooks) and gated by `enabled`; in client mode it stays disabled.
@@ -365,14 +406,37 @@ export function InMemoryGrid<Row>({
     ? { rows: serverResult.data?.rows ?? [], total: serverResult.data?.total ?? total ?? 0 }
     : clientPage;
 
+  // Derived from the query, not from `dataSource.fetch`: a cache hit never calls the
+  // fetcher, so a fetcher-driven status would silently go stale.
+  const serverStatus: IServerGridState['status'] = !isServerMode
+    ? 'idle'
+    : serverResult.isError
+      ? 'error'
+      : serverResult.isLoading
+        ? 'loading'
+        : serverResult.data !== undefined
+          ? 'loaded'
+          : 'idle';
+  const serverTotal = page.total;
+  // Via a ref so the callback's identity is NOT an effect dep: hosts pass `serverSide`
+  // as an inline object, and an inline arrow setting state would loop.
+  const onServerStateChangeRef = useRef(onServerStateChange);
+  useEffect(() => {
+    onServerStateChangeRef.current = onServerStateChange;
+  }, [onServerStateChange]);
+  useEffect(() => {
+    if (!isServerMode) return;
+    onServerStateChangeRef.current?.({ status: serverStatus, total: serverTotal });
+  }, [isServerMode, serverStatus, serverTotal]);
+
   const agContext = useMemo<IAgGridContext<Row>>(
     () => ({
       controller,
       operators: operatorRegistry,
       facets,
-      cellRenderers: EMPTY_CELL_RENDERERS,
+      cellRenderers,
     }),
-    [controller, operatorRegistry, facets]
+    [controller, operatorRegistry, facets, cellRenderers]
   );
 
   // AG Grid doesn't re-render headers when `context` changes; refresh so the filter
@@ -409,7 +473,9 @@ export function InMemoryGrid<Row>({
       .filter((c): c is ISimpleColumn<Row> => c !== undefined);
   }, [columns, state.columnOrder]);
 
-  const isExpandable = expansion?.isExpandable ?? (() => true);
+  // Module constant, not an inline arrow: this feeds `renderExpander` → `colDefs`, and a
+  // fresh identity each render would rebuild every AG Grid column.
+  const isExpandable = expansion?.isExpandable ?? ALWAYS_EXPANDABLE;
   const toggleExpand = useCallback(
     (row: Row) =>
       controller.store.dispatch({ type: GridActionType.ToggleExpanded, id: rowId(row) }),
@@ -514,12 +580,24 @@ export function InMemoryGrid<Row>({
             );
           },
         };
-      } else if (c.getValue) {
-        const getValue = c.getValue;
-        colDef.valueGetter = (p) =>
-          p.data && !isDetailRow(p.data) ? (getValue(p.data as Row) ?? null) : null;
       } else {
-        colDef.field = (c.field ?? c.id) as ColDef<TDisplayRow<Row>>['field'];
+        if (c.getValue) {
+          const getValue = c.getValue;
+          colDef.valueGetter = (p) =>
+            p.data && !isDetailRow(p.data) ? (getValue(p.data as Row) ?? null) : null;
+        } else {
+          colDef.field = (c.field ?? c.id) as ColDef<TDisplayRow<Row>>['field'];
+        }
+        // Same wiring as the shared `buildColDefs`: `AgCellHost` resolves the key off
+        // the AG context's registry, so a nested grid reusing a binding's schema
+        // columns renders the same cells as the top-level grid.
+        if (c.cellRenderer) {
+          colDef.cellRenderer = AgCellHost;
+          colDef.cellRendererParams = {
+            rendererKey: c.cellRenderer,
+            ...c.cellRendererParams,
+          };
+        }
       }
 
       // Inline-rendered, expander-host and deliberately-blank columns are left alone.
@@ -664,6 +742,10 @@ export function InMemoryGrid<Row>({
   const showPagination = pagination || isServerMode;
 
   if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
+
+  if (isServerMode && serverResult.isError && renderError) {
+    return <div className={cn('w-full', className)}>{renderError(serverResult.error)}</div>;
+  }
 
   return (
     // `autoHeight` grows to fit every row, so the wrapper is content-sized. Without it

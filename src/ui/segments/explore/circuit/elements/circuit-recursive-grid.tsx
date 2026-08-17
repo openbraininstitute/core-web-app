@@ -14,6 +14,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 
 /** Cell-click callback compatible with the antd `OnCellClick` used across circuit tables. */
@@ -147,6 +148,8 @@ export type CircuitRecursiveGridProps = {
   loading?: boolean;
   /** Column id whose cell hosts the expander; omit for a fixed leading expander column. */
   expandColumnId?: string;
+  /** Resolves schema columns' `cellRenderer` keys; threaded down every level. */
+  cellRenderers?: CellRendererRegistry;
   /** Enable per-column custom header filters (top level only). */
   filterable?: boolean;
   /** Show the column show/hide chooser (top level only). */
@@ -174,6 +177,7 @@ export function CircuitRecursiveGrid({
   parentId,
   loading = false,
   expandColumnId,
+  cellRenderers,
   filterable = false,
   showColumnChooser = false,
   sortable = false,
@@ -221,6 +225,7 @@ export function CircuitRecursiveGrid({
                   circuits={subCircuitsOf(row)}
                   simpleColumns={visibleColumns}
                   expandColumnId={expandColumnId}
+                  cellRenderers={cellRenderers}
                   dataType={dataType}
                   onCellClick={onCellClick}
                   rowClassName={rowClassName}
@@ -231,7 +236,17 @@ export function CircuitRecursiveGrid({
             ),
           }
         : undefined,
-    [canExpand, isTop, expandColumnId, visibleColumns, dataType, onCellClick, rowClassName, depth]
+    [
+      canExpand,
+      isTop,
+      expandColumnId,
+      visibleColumns,
+      cellRenderers,
+      dataType,
+      onCellClick,
+      rowClassName,
+      depth,
+    ]
   );
 
   if (loading) {
@@ -262,6 +277,7 @@ export function CircuitRecursiveGrid({
         pageSize={pageSize}
         headerHeight={isTop ? 48 : 40}
         expansion={expansion}
+        cellRenderers={cellRenderers}
         getRowClass={rowClassName}
         onRowClick={(row) => onCellClick?.(pathname, row, dataType)}
         className={className}

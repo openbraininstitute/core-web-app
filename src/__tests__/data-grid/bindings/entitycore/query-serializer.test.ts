@@ -203,13 +203,13 @@ describe('serializeQuery — sort', () => {
   });
 });
 
-describe('serializeQuery — quick filter', () => {
+describe('serializeQuery — free-text search', () => {
   it('maps to ilike_search with *…* in ilike mode, plain search otherwise', () => {
-    const p1 = serializeQuery(query({ quickFilter: 'mouse' }), schema, { searchMode: 'ilike' });
+    const p1 = serializeQuery(query({ freeTextSearch: 'mouse' }), schema, { searchMode: 'ilike' });
     expect(p1.ilike_search).toBe('*mouse*');
-    const p2 = serializeQuery(query({ quickFilter: 'mouse' }), schema, { searchMode: 'plain' });
+    const p2 = serializeQuery(query({ freeTextSearch: 'mouse' }), schema, { searchMode: 'plain' });
     expect(p2.search).toBe('mouse');
-    const p3 = serializeQuery(query({ quickFilter: '  ' }), schema);
+    const p3 = serializeQuery(query({ freeTextSearch: '  ' }), schema);
     expect(p3).not.toHaveProperty('search');
   });
 });

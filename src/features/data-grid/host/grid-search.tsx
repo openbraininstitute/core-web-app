@@ -11,19 +11,29 @@ export interface IGridSearchProps {
   onSearch: (text: string) => void;
   openOnMount?: boolean;
   className?: string;
+  /** Current term from the grid store, including one hydrated from session storage. */
+  value?: string;
 }
 
 /**
- * The listing quick-search: a round button that expands into a pill input with a
- * clear affordance. Debounced text is pushed to the grid store's quick filter via
+ * The listing free-text search: a round button that expands into a pill input with a
+ * clear affordance. Debounced text is pushed to the grid store's free-text search via
  * {@link onSearch}.
  */
-export function GridSearch({ onSearch, openOnMount = false, className }: IGridSearchProps) {
-  const [open, setOpen] = useState(openOnMount);
-  const [text, setText] = useState('');
+export function GridSearch({ onSearch, openOnMount = false, className, value }: IGridSearchProps) {
+  const [open, setOpen] = useState(openOnMount || Boolean(value));
+  const [text, setText] = useState(value ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const commit = useDebouncedCallback((t: string) => onSearch(t), [onSearch], 300);
+
+  // Adopt store-driven changes (hydration on a controller swap, `resetState`). The echo
+  // of this input's own commit is a same-value set that React bails out of.
+  useEffect(() => {
+    if (value === undefined) return;
+    setText(value);
+    if (value) setOpen(true);
+  }, [value]);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();

@@ -23,7 +23,7 @@ function toggleSort(sort: TSortModel, columnId: string, allowMulti: boolean): TS
 
 /**
  * Pure state transitions. Returns the same reference when nothing changes, so
- * `useSyncExternalStore` consumers don't re-render. Filter/sort/page-size/quick-filter
+ * `useSyncExternalStore` consumers don't re-render. Filter/sort/page-size/free-text search
  * changes reset the page to 1; data-changing transitions also clear the selection.
  */
 export function reducer(state: IGridState, action: TGridAction): IGridState {
@@ -83,10 +83,10 @@ export function reducer(state: IGridState, action: TGridAction): IGridState {
           ? state.expanded.filter((id) => id !== action.id)
           : [...state.expanded, action.id],
       };
-    case GridActionType.SetQuickFilter:
-      return state.quickFilter === action.text
+    case GridActionType.SetFreeTextSearch:
+      return state.freeTextSearch === action.text
         ? state
-        : { ...state, quickFilter: action.text, page: 1, selection: [], expanded: [] };
+        : { ...state, freeTextSearch: action.text, page: 1, selection: [], expanded: [] };
     case GridActionType.Hydrate:
       return { ...state, ...action.state };
     case GridActionType.Reset:

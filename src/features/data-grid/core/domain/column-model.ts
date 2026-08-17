@@ -108,7 +108,7 @@ export interface IColumnModel<Row = unknown> {
   sortable?: boolean;
   /** backend field(s) for order_by; defaults to field ?? id */
   sortField?: string | string[];
-  /** value accessor (sort fallback, quick filter, export) */
+  /** value accessor (sort fallback, free-text search, export) */
   getValue?: (row: Row) => TCellValue;
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */
   cellRenderer?: string;

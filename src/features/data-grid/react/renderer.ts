@@ -18,6 +18,22 @@ export type TDetailRenderFn<Row> = (args: {
   state?: IGridState;
 }) => ReactNode;
 
+export const ServerGridStateStatus = {
+  Idle: 'idle',
+  Loading: 'loading',
+  Error: 'error',
+  Loaded: 'loaded',
+} as const;
+type TServerGridStateStatus = (typeof ServerGridStateStatus)[keyof typeof ServerGridStateStatus];
+/**
+ * A server-backed grid's fetch state, derived from the query rather than from the data
+ * source, so a cache hit that never runs the fetcher still reports.
+ */
+export interface IServerGridState {
+  status: TServerGridStateStatus;
+  total: number;
+}
+
 /** Behaviour (provider port) + presentation (render fn) for expandable rows. */
 export interface IDetailRuntime<Row> {
   provider: IDetailProvider<Row>;

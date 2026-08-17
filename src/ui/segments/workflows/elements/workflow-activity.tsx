@@ -19,6 +19,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
+import { ServerGridStateStatus } from '@/features/data-grid/react/renderer';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -39,6 +40,7 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { IServerGridState } from '@/features/data-grid/react';
 
 const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
@@ -107,36 +109,34 @@ export function WorkflowActivity() {
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [selectedRow, setSelectedRow] = useState<EntityCoreObjectTypes | undefined>(undefined);
-  const [gridMeta, setGridMeta] = useState<{
-    total: number;
-    status: 'idle' | 'loading' | 'loaded';
-  }>({ total: 0, status: 'idle' });
+  const [gridMeta, setGridMeta] = useState<IServerGridState>({
+    total: 0,
+    status: ServerGridStateStatus.Idle,
+  });
   const [isResolvingResults, setIsResolvingResults] = useState(false);
 
   // changing category/type resets selection + meta; the SimpleGrid `key` remounts the
   // grid with a fresh page-1 store
   const updateActivity = (activity: TActivityValue | null) => {
     setSelectedRow(undefined);
-    setGridMeta({ total: 0, status: 'idle' });
+    setGridMeta({ total: 0, status: ServerGridStateStatus.Idle });
     updateActivityState({ activityType: activity });
   };
 
   const updateEntityType = (et: TExtendedEntitiesTypeDict | null) => {
     setSelectedRow(undefined);
-    setGridMeta({ total: 0, status: 'idle' });
+    setGridMeta({ total: 0, status: ServerGridStateStatus.Idle });
     updateActivityState({ entityType: et });
   };
 
-  // server data source: the grid owns paging; each fetch also surfaces total/loading
-  // into `gridMeta` for the empty and loading states
+  // server data source: the grid owns paging and reports status/total back through
+  // `serverSide.onStateChange`, which drives the empty state
   const entity = getEntityByExtendedType({ type: resolvedEntityType });
   const listQuery = entity?.api.query?.list;
   const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
     () => ({
       fetch: async (q): Promise<IGridPage<EntityCoreObjectTypes>> => {
-        setGridMeta((m) => ({ ...m, status: 'loading' }));
         if (!listQuery) {
-          setGridMeta({ total: 0, status: 'loaded' });
           return { rows: [], total: 0 };
         }
         const response = await listQuery({
@@ -150,7 +150,6 @@ export function WorkflowActivity() {
           },
         });
         const total = response?.pagination?.total_items ?? 0;
-        setGridMeta({ total, status: 'loaded' });
         // per-entity list queries return a union of entity arrays; the table is entity-agnostic
         return { rows: (response?.data ?? []) as EntityCoreObjectTypes[], total };
       },
@@ -261,7 +260,8 @@ export function WorkflowActivity() {
     });
   }, [entityType, resolvedActivityType, selectedRow]);
 
-  const shouldShowEmptyState = gridMeta.status === 'loaded' && gridMeta.total === 0;
+  const shouldShowEmptyState =
+    gridMeta.status === ServerGridStateStatus.Loaded && gridMeta.total === 0;
 
   const columns: Array<ISimpleColumn<EntityCoreObjectTypes>> = useMemo(
     () => [
@@ -402,6 +402,7 @@ export function WorkflowActivity() {
                       resolvedEntityType,
                     ],
                     enabled: Boolean(resolvedActivityType && resolvedEntityType),
+                    onStateChange: setGridMeta,
                   }}
                 />
               </div>

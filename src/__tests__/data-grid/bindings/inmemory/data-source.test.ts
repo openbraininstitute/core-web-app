@@ -121,8 +121,8 @@ describe('runInMemoryQuery — filtering', () => {
     expect(page.rows.map((r) => r.id)).toEqual(['b']);
   });
 
-  it('quick filter matches across all columns (incl. getValue)', () => {
-    const page = runInMemoryQuery(rows, query({ quickFilter: '20' }), { columns });
+  it('free-text search matches across all columns (incl. getValue)', () => {
+    const page = runInMemoryQuery(rows, query({ freeTextSearch: '20' }), { columns });
     expect(page.rows.map((r) => r.id)).toEqual(['c']); // meta.seed === 20 via getValue
   });
 

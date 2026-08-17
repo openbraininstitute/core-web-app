@@ -7,6 +7,7 @@ import { getElectricalCellRecordings } from '@/api/entitycore/queries';
 import { getEntityDerivations } from '@/api/entitycore/queries/general/derivation';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
+import { ErrorData } from '@/components/message-banners/error';
 import { DEFAULT_PAGE_XSMALL_SIZE, type TViewVariant, ViewVariant } from '@/constants';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -82,7 +83,8 @@ export function ExemplarTraces({ source, variant = ViewVariant.Light }: Props) {
         if (total <= 0 || ids.length === 0) return { rows: [], total };
         const recordings = await getElectricalCellRecordings({
           context: { virtualLabId, projectId },
-          filters: { id__in: ids },
+          // Explicit: entitycore's default of 10 would truncate a larger page of ids.
+          filters: { id__in: ids, page_size: ids.length },
           withFacets: false,
         });
         return { rows: recordings.data, total };
@@ -102,6 +104,17 @@ export function ExemplarTraces({ source, variant = ViewVariant.Light }: Props) {
           serverSide={{
             dataSource,
             queryKey: ['emodel-exemplar-traces', virtualLabId, projectId, source.id],
+            renderError: () => (
+              <ErrorData
+                title="No exemplar traces found"
+                description="No exemplar traces found for this e-model"
+                cls={{
+                  container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full!',
+                  title: 'text-primary-9',
+                  description: 'text-primary-9',
+                }}
+              />
+            ),
           }}
         />
       </div>

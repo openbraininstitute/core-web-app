@@ -40,13 +40,17 @@ export interface IGridControllerOptions<Row> {
  * `controller.buildQuery()` reads the store invisibly and gets memoized against the
  * stable `controller` reference, freezing the query at its first value.
  */
-export function buildGridQuery(state: IGridState, params?: Record<string, unknown>): IGridQuery {
+export function buildGridQuery(
+  /** the request-bearing slices only, so a caller can memoise on exactly these */
+  state: Pick<IGridState, 'page' | 'pageSize' | 'sort' | 'filters' | 'freeTextSearch'>,
+  params?: Record<string, unknown>
+): IGridQuery {
   return {
     page: state.page,
     pageSize: state.pageSize,
     sort: state.sort,
     filters: state.filters,
-    quickFilter: state.quickFilter || undefined,
+    freeTextSearch: state.freeTextSearch || undefined,
     params,
   };
 }
@@ -67,7 +71,7 @@ export function createInitialState<Row>(
     ...defaultColumnLayout(resolved),
     selection: [],
     expanded: [],
-    quickFilter: '',
+    freeTextSearch: '',
   };
 }
 

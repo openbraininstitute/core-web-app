@@ -19,7 +19,7 @@ import type {
 export type TEntitycoreParams = Record<string, unknown>;
 
 export interface ISerializeOptions {
-  /** how the quick-filter maps to the API (entitycore `ilike_search` vs `search`) */
+  /** how the free-text search maps to the API (entitycore `ilike_search` vs `search`) */
   searchMode?: 'ilike' | 'plain';
 }
 
@@ -165,10 +165,10 @@ export function serializeQuery<Row>(
 
   if (orderBy.length > 0) params.order_by = orderBy;
 
-  const quick = query.quickFilter?.trim();
-  if (quick) {
-    if ((options.searchMode ?? 'plain') === 'ilike') params.ilike_search = `*${quick}*`;
-    else params.search = quick;
+  const term = query.freeTextSearch?.trim();
+  if (term) {
+    if ((options.searchMode ?? 'plain') === 'ilike') params.ilike_search = `*${term}*`;
+    else params.search = term;
   }
 
   return params;

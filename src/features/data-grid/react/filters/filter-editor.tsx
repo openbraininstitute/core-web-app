@@ -600,7 +600,8 @@ function SetEditor({
         <button
           type="button"
           className="text-primary-6 hover:text-primary-7"
-          onClick={() => onChange(visible.map((o) => o.value))}
+          // Accumulates like `toggle`: adds the visible matches to the current selection.
+          onClick={() => onChange([...new Set([...selectedSet, ...visible.map((o) => o.value)])])}
         >
           Select all
         </button>

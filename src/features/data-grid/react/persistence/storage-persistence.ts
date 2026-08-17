@@ -12,7 +12,7 @@ const SESSION_KEYS = [
   'sort',
   'page',
   'pageSize',
-  'quickFilter',
+  'freeTextSearch',
 ] as const satisfies ReadonlyArray<keyof IGridState>;
 const LOCAL_KEYS = [
   'columnOrder',

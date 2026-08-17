@@ -134,8 +134,12 @@ function matchesFilters<Row>(
   return true;
 }
 
-function matchesQuick<Row>(row: Row, quick: string, columns: Array<TInMemoryColumn<Row>>): boolean {
-  const needle = quick.trim().toLowerCase();
+function matchesFreeText<Row>(
+  row: Row,
+  term: string,
+  columns: Array<TInMemoryColumn<Row>>
+): boolean {
+  const needle = term.trim().toLowerCase();
   if (!needle) return true;
   return columns.some((c) => asText(cellValue(c, row)).toLowerCase().includes(needle));
 }
@@ -224,7 +228,7 @@ export function runInMemoryQuery<Row>(
   let result = rows.filter(
     (row) =>
       matchesFilters(row, query.filters, byId) &&
-      matchesQuick(row, query.quickFilter ?? '', columns)
+      matchesFreeText(row, query.freeTextSearch ?? '', columns)
   );
 
   if (query.sort.length > 0) {

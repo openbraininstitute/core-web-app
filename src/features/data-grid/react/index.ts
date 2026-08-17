@@ -19,7 +19,7 @@ export {
 } from './persistence/storage-persistence';
 export { DataGridToolbar } from './toolbar';
 export { useDataGrid } from './use-data-grid';
-export { useGridState } from './use-grid-state';
+export { useGridState, useGridStateSlice } from './use-grid-state';
 
 export type { IActiveFiltersButtonProps } from './active-filters';
 export type { IAdvancedFiltersMenuProps } from './advanced-filters';
@@ -35,6 +35,7 @@ export type {
   IDetailRuntime,
   IExpandColumnConfig,
   IGridRendererProps,
+  IServerGridState,
   TDetailRenderFn,
   TGridRenderer,
 } from './renderer';

@@ -17,7 +17,7 @@ export interface IGridState {
   selection: string[];
   /** expanded (top-level) row ids */
   expanded: string[];
-  quickFilter: string;
+  freeTextSearch: string;
 }
 
 /** Discriminants for {@link TGridAction}. */
@@ -34,7 +34,7 @@ export const GridActionType = {
   SetSelection: 'setSelection',
   SetExpanded: 'setExpanded',
   ToggleExpanded: 'toggleExpanded',
-  SetQuickFilter: 'setQuickFilter',
+  SetFreeTextSearch: 'setFreeTextSearch',
   Hydrate: 'hydrate',
   Reset: 'reset',
 } as const;
@@ -54,6 +54,6 @@ export type TGridAction =
   | { type: typeof GridActionType.SetSelection; ids: string[] }
   | { type: typeof GridActionType.SetExpanded; ids: string[] }
   | { type: typeof GridActionType.ToggleExpanded; id: string }
-  | { type: typeof GridActionType.SetQuickFilter; text: string }
+  | { type: typeof GridActionType.SetFreeTextSearch; text: string }
   | { type: typeof GridActionType.Hydrate; state: Partial<IGridState> }
   | { type: typeof GridActionType.Reset; state: IGridState };

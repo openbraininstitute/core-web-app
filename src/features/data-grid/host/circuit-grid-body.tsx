@@ -10,6 +10,8 @@ import {
   CIRCUIT_VIEW_PARAM,
   createCircuitDataSource,
 } from '@/features/data-grid/bindings/circuit/data-source';
+// Same specific-module import as the host, avoiding the entitycore barrel's init cycle.
+import { buildCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { Align } from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 import { useScope } from '@/ui/hooks/use-scope';
@@ -78,6 +80,9 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   // The nested recursive grid reuses the parent's schema columns (ISimpleColumn
   // extends IColumnModel), keeping expanded rows column-identical to the parent.
   const schemaColumns = definition.schema.columns as unknown as ISimpleColumn<ICircuit>[];
+  // Those columns name their renderers by key, so the nested grid needs the same
+  // registry the top-level grid builds or its cells fall back to plain text.
+  const cellRenderers = useMemo(() => buildCellRenderers(definition), [definition]);
 
   const onCellClick = useCallback(
     (_: string, record: ICircuit) => makeSelectEntityClickEvent({ display: true, data: record }),
@@ -108,6 +113,7 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
               key={row.id}
               circuits={children}
               simpleColumns={visibleColumns}
+              cellRenderers={cellRenderers}
               expandColumnId={EntityCoreFields.CircuitSubCircuit}
               dataType={dataType}
               onCellClick={onCellClick}
@@ -120,7 +126,7 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
         );
       },
     }),
-    [schemaColumns, dataType, onCellClick, view]
+    [schemaColumns, cellRenderers, dataType, onCellClick, view]
   );
 
   const toolbarSlots = useMemo(

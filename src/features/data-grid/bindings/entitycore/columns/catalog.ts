@@ -16,8 +16,6 @@ import type { IColumnModel, TColumnOverride } from '../../../core';
  * an optional override, e.g. `nameColumn<ICellMorphology>({ width: { flex: 3 } })`.
  */
 
-import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
-
 import type { ICircuit } from '@/api/entitycore/types';
 
 type Nullable<T> = T | null | undefined;
@@ -210,7 +208,7 @@ export function numberColumn(
 
 /**
  * Display-only: no entitycore list endpoint accepts a `description` query param.
- * Free-text description search goes through the quick-search box instead.
+ * Free-text description search goes through the free-text search box instead.
  */
 export function descriptionColumn<Row extends IHasDescription>(
   o?: TColumnOverride<Row>
@@ -439,7 +437,7 @@ export function ionChannelColumn<Row extends IHasIonChannel>(
       header: 'Ion channel',
       sortable: true,
       sortField: 'ion_channel__name',
-      getValue: (r) => r.ion_channel?.name ?? EMPTY_PLACEHOLDER,
+      getValue: (r) => r.ion_channel?.name ?? '',
       width: { minWidth: 140, flex: 1 },
       filter: {
         operators: [OperatorId.In, OperatorId.Ilike],
@@ -480,7 +478,7 @@ export function cellLineColumn<Row extends IHasCellLine>(
       header: 'Cell line',
       sortable: true,
       sortField: 'cell_line',
-      getValue: (r) => r.cell_line ?? EMPTY_PLACEHOLDER,
+      getValue: (r) => r.cell_line ?? '',
       width: { minWidth: 130, flex: 1 },
       filter: { operators: [OperatorId.Ilike], field: 'cell_line' },
     },
