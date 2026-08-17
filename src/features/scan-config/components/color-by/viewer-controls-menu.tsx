@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
+import { TooltipIcon } from '@/components/icons/Tooltip';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -207,7 +208,7 @@ export function ViewerControlsMenu({
             </div>
           )}
           {onToggleMorphologyLocationLabels && (
-            <MenuRow label="Location labels">
+            <MenuRow label="Location labels" icon={<TooltipIcon className="size-4 shrink-0" />}>
               <Switch
                 size="small"
                 checked={!!showMorphologyLocationLabels}

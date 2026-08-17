@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useAppMessage } from '@/components/notification';
+import { sectionTypeLabel } from '@/features/scan-config/components/circuit-viz/section-type-label';
 import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-key';
+import { MorphoViewerTreeItemType } from '@/features/scan-config/types';
 
 import type { Config } from '@/features/scan-config/types';
 import type {
@@ -15,6 +18,23 @@ import type {
 
 /** Only this block type stores locations outright; the others describe how to sample them. */
 const EXPLICIT_BLOCK_TYPE = 'ExplicitMorphologyLocations';
+
+/** Section types a location may sit on today. */
+const TARGETABLE_SECTION_TYPES: ReadonlySet<number> = new Set<number>([
+  MorphoViewerTreeItemType.BasalDendrite,
+  MorphoViewerTreeItemType.ApicalDendrite,
+  MorphoViewerTreeItemType.Dendrite,
+]);
+
+/**
+ * Whether a location may sit on this section.
+ *
+ * Takes `number` because the enum is declared in both the viewer package and this feature,
+ * and TypeScript treats those as different types even though the values match.
+ */
+function isTargetable(sectionType: number | undefined): boolean {
+  return sectionType !== undefined && TARGETABLE_SECTION_TYPES.has(sectionType);
+}
 
 interface IStoredLocation {
   section_id: number;
@@ -86,6 +106,7 @@ export function useMorphologyLocationSelection({
   hover: MorphoViewerMorphologyLocationHover | null;
   labels: MorphoViewerMorphologyLocationLabel[];
 } {
+  const message = useAppMessage();
   const [hover, setHover] = useState<MorphoViewerMorphologyLocationHover | null>(null);
   const [labels, setLabels] = useState<MorphoViewerMorphologyLocationLabel[]>([]);
   const isEditingMorphologyLocations = selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY;
@@ -113,6 +134,14 @@ export function useMorphologyLocationSelection({
   const onPick = useCallback(
     (pick: MorphoViewerMorphologyLocationPick) => {
       if (!onConfigChange || !selectedEntry || pick.sonataSectionId === undefined) return;
+
+      // Removing an existing marker is always allowed; only adding is restricted.
+      if (!pick.existingMarker && !isTargetable(pick.sectionType)) {
+        message.info(
+          `${sectionTypeLabel(pick.sectionType) ?? 'This section'} is not supported yet — pick a basal or apical dendrite.`
+        );
+        return;
+      }
 
       onConfigChange((previous) => {
         const dictionary = (previous as Record<string, unknown>)[MORPHOLOGY_LOCATIONS_CONFIG_KEY] as
@@ -156,7 +185,7 @@ export function useMorphologyLocationSelection({
         } as Config;
       });
     },
-    [onConfigChange, selectedEntry]
+    [onConfigChange, selectedEntry, message]
   );
 
   // Coalesced to one update per frame: the viewer republishes on every repaint, and an orbit

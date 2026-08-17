@@ -1,6 +1,6 @@
 'use client';
 
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
 import { useId } from 'react';
 
@@ -13,9 +13,6 @@ export interface IMorphologyLocationPoint {
   section_id: number;
   offset: number;
 }
-
-/** Soma, at its origin — valid on every morphology, so it is a safe row to add. */
-const SOMA_LOCATION: IMorphologyLocationPoint = { section_id: 0, offset: 0 };
 
 const OFFSET_STEP = 0.05;
 
@@ -38,9 +35,9 @@ function toRows(value: unknown): IMorphologyLocationPoint[] {
  * Renders the `morphology_location_selection` UI element: an editable list of morphology
  * locations, one row per `{ section_id, offset }`.
  *
- * Section ids use SONATA numbering — `0` is the soma, neurites follow in `nrn_order`. That is
- * the same id the circuit viewer reports as `sonata_section_id`, so a viewer selection can be
- * written into a row unchanged once picking lands.
+ * The section id is read-only: it is a SONATA index into the morphology, not something to
+ * recall or type, so a row is created by clicking the neurite in the 3D viewer. The offset
+ * along that section stays editable, since it is a fraction anyone can reason about.
  *
  * The backend requires at least one location (`min_length=1`), so the last row cannot be
  * removed; clearing the list entirely would produce a config the API rejects.
@@ -58,7 +55,6 @@ export default function MorphologyLocationSelection({
 }) {
   const rows = toRows(value);
   const offsetSchema = paramSchema.items?.properties?.offset;
-  const sectionIdSchema = paramSchema.items?.properties?.section_id;
   // antd renders its own inner <input>, so labels need an explicit htmlFor to bind to it.
   const fieldId = useId();
 
@@ -80,17 +76,14 @@ export default function MorphologyLocationSelection({
             <label className="text-neutral-3 text-xs" htmlFor={`${fieldId}-section-${index}`}>
               SECTION ID
             </label>
+            {/* Always disabled, never only when the form is: the id comes from the viewer. */}
             <InputNumber
               id={`${fieldId}-section-${index}`}
-              className="w-full"
-              disabled={disabled}
-              min={sectionIdSchema?.minimum ?? 0}
-              step={1}
-              precision={0}
+              className="w-full [&_input]:cursor-default [&_input]:font-medium [&_input]:text-neutral-1"
+              variant="filled"
+              controls={false}
+              disabled
               value={row.section_id}
-              onChange={(next) =>
-                typeof next === 'number' && update(index, { section_id: Math.round(next) })
-              }
             />
           </div>
           <div className="flex flex-1 flex-col gap-1">
@@ -122,14 +115,10 @@ export default function MorphologyLocationSelection({
       ))}
 
       {!disabled && (
-        <button
-          type="button"
-          className="mt-1 flex min-h-[40px] min-w-[150px] items-center justify-between self-end rounded-full border border-gray-200 px-3 py-2 font-bold text-primary-8"
-          onClick={() => onChange([...rows, rows.at(-1) ?? SOMA_LOCATION])}
-        >
-          Add location
-          <PlusOutlined className="text-primary-8!" />
-        </button>
+        <p className="text-neutral-3 text-xs">
+          Click a basal or apical dendrite in the 3D viewer to add a location. Click a location
+          again to remove it.
+        </p>
       )}
     </div>
   );
