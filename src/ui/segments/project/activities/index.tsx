@@ -1,27 +1,27 @@
 'use client';
 
 import { RightSquareOutlined } from '@ant-design/icons';
-import { Pagination as AntPagination, Empty, Table } from 'antd';
 import { get } from 'es-toolkit/compat';
 import Link from 'next/link';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Card, CardContent } from '@/ui/molecules/card';
 import { Header } from '@/ui/segments/project/activities/elements/header';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
-import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityValues } from '@/ui/segments/workflows/config';
+import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { ColumnsType } from 'antd/es/table';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export function ProjectActivities({
@@ -41,8 +41,6 @@ export function ProjectActivities({
   const virtualLabId = targetVirtualLabId || context.virtualLabId;
   const projectId = targetProjectId || context.projectId;
 
-  const [page, setPage] = useState(1);
-
   // Category -> Type selection, mirroring the workflows browse view:
   // `activity` is the Category (Build / Simulate / Extract / Process data) and
   // `entityType` is the Type (the target entity the activity produces).
@@ -57,89 +55,72 @@ export function ProjectActivities({
     throw new Error(`No entity found for type: ${entityType}`);
   }
 
+  // the SimpleGrid below is keyed on `${activity}-${entityType}`, so a selector change
+  // remounts it with a fresh page-1 store
   const onActivityChange = (next: TActivityValue | null) => {
     if (next) setActivity(next);
-    setPage(1);
   };
 
   const onEntityTypeChange = (next: TExtendedEntitiesTypeDict | null) => {
     if (next) setEntityType(next);
-    setPage(1);
   };
 
-  const tableSlotRef = useRef<HTMLDivElement>(null);
-  const [tableBodyScrollY, setTableBodyScrollY] = useState<number>();
-
-  useLayoutEffect(() => {
-    const el = tableSlotRef.current;
-    if (!el) return;
-
-    const measure = () => {
-      const slotHeight = el.getBoundingClientRect().height;
-      const headerHeight =
-        el.querySelector('.ant-table-thead')?.getBoundingClientRect().height ?? 0;
-      const bodyHeight = Math.floor(slotHeight - headerHeight);
-      setTableBodyScrollY(bodyHeight > 12 ? Math.max(80, bodyHeight - 4) : undefined);
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const { data, isFetching, isQueryEnabled } = useQueryActivity({
-    activity,
-    selectionType: entityType,
-    entityType: entity?.extendedType,
-    page,
-    useKeepPreviousData: true,
-    targetVirtualLabId: virtualLabId,
-    targetProjectId: projectId,
-  });
-
-  const columns: ColumnsType<EntityCoreObjectTypes> = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (_, record) => <span className="text-primary-8">{record.name}</span>,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (_, record) => {
-        const status = get(record, 'status', 'default');
-        const mapper = get(StatusMap, status, null);
-        const icon = mapper?.icon;
-        const title = mapper?.title;
-        return (
-          <span className="flex items-center capitalize" style={{ color: mapper?.color }}>
-            {icon}
-            {title}
-          </span>
-        );
+  // server data source: the grid owns paging, each page fetches via the entity list query
+  const listQuery = entity.api.query?.list;
+  const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
+    () => ({
+      fetch: async (query): Promise<IGridPage<EntityCoreObjectTypes>> => {
+        if (!listQuery) return { rows: [], total: 0 };
+        const response = await listQuery({
+          withFacets: false,
+          context: { virtualLabId, projectId },
+          filters: {
+            page: query.page,
+            page_size: query.pageSize,
+            authorized_project_id: projectId,
+            authorized_public: false,
+          },
+        });
+        return {
+          // per-entity list queries return a union of entity arrays; the table is entity-agnostic
+          rows: (response?.data ?? []) as EntityCoreObjectTypes[],
+          total: response?.pagination?.total_items ?? 0,
+        };
       },
+    }),
+    [listQuery, virtualLabId, projectId]
+  );
+
+  const columns: Array<ISimpleColumn<EntityCoreObjectTypes>> = [
+    {
+      id: 'name',
+      header: 'Name',
+      renderCell: (record) => <span className="text-primary-8">{record.name}</span>,
     },
     {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'creation_date',
-      render: (_, record) => {
-        return <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>;
-      },
+      id: 'status',
+      header: 'Status',
+      // per-type aggregated status (badge + scan-cards popover)
+      renderCell: (record) => (
+        <WorkflowStatusCell record={record} workspace={{ virtualLabId, projectId }} />
+      ),
     },
     {
-      title: '',
-      width: 'auto',
+      id: 'creation_date',
+      header: 'Date',
+      width: { flex: 1 },
+      renderCell: (record) => (
+        <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>
+      ),
     },
     {
-      title: 'Actions',
-      dataIndex: 'linkUrl',
-      key: 'linkUrl',
+      id: 'linkUrl',
+      header: 'Actions',
       align: 'center',
-      render: (_, record) => {
+      pinned: 'right',
+      // fixed width, not resizable
+      width: { width: 96, resizable: false },
+      renderCell: (record) => {
         const status = get(record, 'status', 'default');
         const color = get(StatusMap, status, null)?.color;
         const scaleType = get(record, 'type', null);
@@ -163,9 +144,6 @@ export function ProjectActivities({
     },
   ];
 
-  const shouldShowEmptyState =
-    data && !data.pagination.total_items && !isQueryEnabled && activity && entityType;
-
   return (
     <div
       className={cn(
@@ -181,69 +159,23 @@ export function ProjectActivities({
         showTitle={showTitle}
       />
       <div className="flex-1 overflow-hidden flex flex-col mt-5">
-        {shouldShowEmptyState ? (
-          <Card className="text-neutral-4 shadow-xs">
-            <CardContent>You don't have any activities yet </CardContent>
-          </Card>
-        ) : (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div ref={tableSlotRef} className="flex-1 overflow-hidden">
-              <Table
-                bordered
-                className={cn(
-                  '[&_.ant-table]:bg-zinc-100! [&_.ant-table-container]:bg-zinc-100!',
-                  '[&_.ant-table-content]:bg-zinc-100! [&_.ant-table-body]:bg-zinc-100!',
-                  '[&_.ant-table-thead_th]:bg-zinc-100! [&_.ant-table-thead_th]:text-neutral-4!',
-                  '[&_.ant-table-tbody_td]:bg-zinc-100! [&_.ant-table-cell]:bg-zinc-100!',
-                  '[&_.ant-table-cell-row-hover]:bg-zinc-100!',
-                  '[&_.ant-table-cell-fix-left]:bg-zinc-100! [&_.ant-table-cell-fix-right]:bg-zinc-100!',
-                  '[&_tr.ant-table-placeholder]:bg-zinc-100! [&_tr.ant-table-placeholder:hover_td]:bg-zinc-100!',
-                  '[&_.ant-table-summary]:bg-zinc-100!',
-                  '[&_.ant-spin-container]:bg-zinc-100! [&_.ant-spin-nested-loading]:bg-zinc-100!',
-                  '[&_.ant-table-body]:secondary-scrollbar!'
-                )}
-                scroll={{ y: tableBodyScrollY ?? 'calc(100vh - 20rem)' }}
-                loading={isFetching}
-                dataSource={data?.data}
-                columns={columns}
-                rowKey={(o) => o.id}
-                pagination={false}
-                locale={{
-                  emptyText: (
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span className="text-primary-9">
-                          No activities found for{' '}
-                          <strong>{getEntityByExtendedType({ type: entityType })?.title}</strong>.
-                        </span>
-                      }
-                    />
-                  ),
-                }}
-              />
-            </div>
-            <div className="flex shrink-0 items-center justify-end py-3">
-              <AntPagination
-                responsive
-                showLessItems
-                hideOnSinglePage
-                pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
-                defaultPageSize={DEFAULT_PAGE_MEDIUM_SIZE}
-                current={page}
-                total={data?.pagination.total_items}
-                showSizeChanger={false}
-                size="default"
-                onChange={(_page) => setPage(_page)}
-                className={cn(
-                  '[&_.ant-pagination-item]:rounded-full! [&_.ant-pagination-item-link]:rounded-full!',
-                  '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
-                  '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!'
-                )}
-              />
-            </div>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="secondary-scrollbar flex-1 overflow-auto">
+            <SimpleGrid<EntityCoreObjectTypes>
+              // remount on category/type change → fresh page-1 store
+              key={`${activity}-${entityType}`}
+              columns={columns}
+              getRowId={(o) => o.id}
+              pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+              pinnedColumnBorder={false}
+              serverSide={{
+                dataSource,
+                queryKey: ['project-activities', virtualLabId, projectId, activity, entityType],
+                enabled: Boolean(activity && entityType),
+              }}
+            />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

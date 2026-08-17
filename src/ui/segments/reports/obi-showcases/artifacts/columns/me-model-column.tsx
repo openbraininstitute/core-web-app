@@ -1,110 +1,93 @@
 import Image from 'next/image';
 
-import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 import truncateText from '@/util/truncate';
 
-const columns = () => {
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+
+/** Match entitycore ME-model listing preview thumbnails (`me-model-cells.tsx`). */
+const PREVIEW_WIDTH = 184;
+const PREVIEW_HEIGHT = 108;
+
+function PreviewThumbnail({ src, alt }: { src: string | null; alt: string }) {
+  return (
+    <Image
+      src={src ?? '/placeholder.png'}
+      alt={alt}
+      width={PREVIEW_WIDTH}
+      height={PREVIEW_HEIGHT}
+      className="rounded border border-gray-100 bg-white object-contain"
+    />
+  );
+}
+
+const columns = (): Array<ISimpleColumn<MEModelsProps>> => {
   return [
     {
-      title: 'Name',
-      key: 'name',
-      width: 150,
-      ellipsis: true,
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{truncateText(record.name, 30)}</div>
+      id: 'name',
+      header: 'Name',
+      width: { width: 150 },
+      renderCell: (record) => <div className="font-normal">{truncateText(record.name, 30)}</div>,
+    },
+    {
+      id: 'morphologyThumbnail',
+      header: 'Morphology',
+      width: { width: 196, minWidth: 120, resizable: true },
+      autoHeight: true,
+      renderCell: (record) => (
+        <PreviewThumbnail src={record.morphologyThumbnail} alt="Morphology thumbnail" />
       ),
     },
     {
-      title: 'Morphology',
-      key: 'morphologyThumbnail',
-      width: '150px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div
-          className="font-normal"
-          style={{
-            maxWidth: '150px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <Image
-            src={record.morphologyThumbnail ?? '/placeholder.png'}
-            alt="Response thumbnail"
-            width="150"
-            height="100"
-          />
-        </div>
+      id: 'traceThumbnail',
+      header: 'Trace',
+      width: { width: 184, minWidth: 120, resizable: true },
+      autoHeight: true,
+      renderCell: (record) => (
+        <PreviewThumbnail src={record.traceThumbnail} alt="Trace thumbnail" />
       ),
     },
     {
-      title: 'Trace',
-      key: 'traceThumbnail',
-      width: '150px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">
-          <Image
-            src={record.traceThumbnail ?? '/placeholder.png'}
-            alt="Response thumbnail"
-            width="150"
-            height="100"
-          />
-        </div>
-      ),
+      id: 'validated',
+      header: 'Validated',
+      width: { width: 80 },
+      renderCell: (record) => <div className="font-normal">{record.validated ? 'Yes' : 'No'}</div>,
     },
     {
-      title: 'Validated',
-      key: 'validated',
-      width: 80,
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{record.validated ? 'Yes' : 'No'}</div>
-      ),
+      id: 'brainRegion',
+      header: 'Brain region',
+      width: { width: 200 },
+      renderCell: (record) => <div className="font-normal">{record.brainRegion}</div>,
     },
     {
-      title: 'Brain region',
-      key: 'brainRegion',
-      width: '200px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{record.brainRegion}</div>
-      ),
+      id: 'mType',
+      header: 'M-type',
+      width: { width: 100 },
+      renderCell: (record) => <div className="font-normal">{record.mType}</div>,
     },
     {
-      title: 'M-type',
-      key: 'mType',
-      width: '100px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{record.mType}</div>
-      ),
+      id: 'eType',
+      header: 'E-type',
+      width: { width: 100 },
+      renderCell: (record) => <div className="font-normal">{record.eType}</div>,
     },
     {
-      title: 'E-type',
-      key: 'eType',
-      width: '100px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{record.eType}</div>
-      ),
+      id: 'species',
+      header: 'Species',
+      width: { width: 150 },
+      renderCell: (record) => <div className="font-normal">{record.species}</div>,
     },
     {
-      title: 'Species',
-      key: 'species',
-      width: '150px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{record.species}</div>
-      ),
+      id: 'createdBy',
+      header: 'Registered by',
+      width: { width: 150 },
+      renderCell: (record) => <div className="font-normal">{record.createdBy}</div>,
     },
     {
-      title: 'Registered by',
-      key: 'createdBy',
-      width: '150px',
-      render: (_value: any, record: MEModelsProps, _index: number) => (
-        <div className="font-normal">{record.createdBy}</div>
-      ),
-    },
-    {
-      title: 'Registration date',
-      key: 'creationDate',
-      width: '150px',
-      render: (_value: any, record: MEModelsProps, _index: number) => {
+      id: 'creationDate',
+      header: 'Registration date',
+      width: { width: 150 },
+      renderCell: (record) => {
         const formatDate = (dateInput: string | null) => {
           if (!dateInput) return '21.02.2024'; // Fallback date in DD.MM.YYYY
           const date = new Date(dateInput);

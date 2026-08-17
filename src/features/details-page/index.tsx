@@ -12,6 +12,7 @@ import RelatedPublications from '@/ui/segments/detail-view/related-publications'
 import Results from '@/ui/segments/detail-view/results';
 import Viewer3D from '@/ui/segments/detail-view/viewer-3d';
 
+import type { EntityTypeValue } from '@/entity-configuration/domain';
 import type { TEntityByExtendedTypeConfig } from '@/entity-configuration/domain/helpers';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { WorkspaceContext } from '@/types/common';
@@ -67,7 +68,13 @@ export function detailPageSectionRenderer({
       );
     })
     .with({ section: DetailViewSectionsDict.Results }, () => {
-      return <Results extendedType={entityType.extendedType} entity={entity} context={context} />;
+      return (
+        <Results
+          extendedType={entityType.extendedType}
+          entity={entity as EntityTypeValue}
+          context={context}
+        />
+      );
     })
     .otherwise(() => {
       return null;

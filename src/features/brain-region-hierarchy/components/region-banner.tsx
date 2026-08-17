@@ -44,6 +44,8 @@ type RegionBannerProps = {
   view: TExploreLeftMenuContext;
   onSwitchView: (_view: TExploreLeftMenuContext) => void;
   classNames?: TRegionBannerClassNames;
+  /** Pin the banner to a 40px pill instead of the default 50px, for rows of h-10 controls. */
+  compact?: boolean;
 };
 
 type TPortalRegionBannerProps = {
@@ -54,10 +56,12 @@ type TPortalRegionBannerProps = {
   className?: string;
   modalClassName?: string;
   portalContainer?: HTMLElement | null;
+  /** render the banner as a 40px pill — see {@link RegionBanner} */
+  compact?: boolean;
   onRegionSelect?: (_node: TTreeNode) => void;
 };
 
-export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerProps) {
+export function RegionBanner({ view, onSwitchView, classNames, compact }: RegionBannerProps) {
   const notifier = useAppNotification();
   const {
     changeBulkStoreHierarchySpecies,
@@ -91,20 +95,30 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
         data-testid="atlas-regions-selector"
         data-label="brain-region-banner"
         className={cn(
-          'border-gray-100 border borders relative flex h-12.5 w-full items-center justify-between gap-2 rounded-full',
+          'border-gray-100 border borders relative flex w-full items-center justify-between gap-2 rounded-full',
+          // Compact leaves only 2px around the segments, so hover fills bleed past the
+          // rounded ends unless children are clipped and stretched to the inner box.
+          compact ? 'h-10 overflow-hidden' : 'h-12.5',
           !isAllMode && 'cursor-pointer',
           !isAllMode && view === ExploreLeftMenuContext.DataGroup && 'hover:bg-background',
           classNames?.selector
         )}
       >
-        <div className="flex w-full min-w-0 items-center flex-nowrap">
+        <div
+          className={cn(
+            'flex w-full min-w-0 items-center flex-nowrap',
+            compact && 'h-full items-stretch'
+          )}
+        >
           <div
             className={cn(
               'pr-3 pl-4 hover:bg-gray-100 min-w-0',
+              compact && 'flex items-center',
               isAllMode ? 'w-full rounded-full' : 'flex-1 rounded-l-full'
             )}
           >
             <SpeciesSelector
+              className={compact ? 'py-0' : undefined}
               displaySpecies={displaySpecies}
               workspaceHierarchyId={workspaceHierarchyId}
               isAllMode={isAllMode}
@@ -118,6 +132,7 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
             <FocusedModeContent
               loading={isUiLoading}
               selectedBrainRegion={selectedBrainRegion}
+              compact={compact}
               onOpenTree={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
             />
           )}
@@ -131,16 +146,28 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
 export function FocusedModeContent({
   loading,
   selectedBrainRegion,
+  compact,
   onOpenTree,
 }: {
   loading: boolean;
   selectedBrainRegion: BrainRegionHierarchyBase | null;
+  /** match the compact banner shell — see {@link RegionBanner} */
+  compact?: boolean;
   onOpenTree: () => void;
 }) {
   return (
     <>
-      <div className="h-6 w-px bg-gray-200 shrink-0" />
-      <div className="items-stretch h-12 w-full flex-1 rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">
+      {/* `self-center`: the compact row is `items-stretch`, which would otherwise hang
+          this fixed-height divider from the top */}
+      <div className="h-6 w-px bg-gray-200 shrink-0 self-center" />
+      <div
+        className={cn(
+          'items-stretch w-full flex-1 rounded-r-full pl-3 pr-10 hover:bg-gray-100 min-w-0 overflow-hidden',
+          // as above: compact stretches the hover fill to the pill's inner box rather
+          // than giving it a height of its own
+          compact ? 'h-full py-0' : 'h-12 py-2'
+        )}
+      >
         {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
         <div
           data-label="brain-region-switcher"
@@ -240,6 +267,7 @@ export function PortalRegionBanner({
   className,
   modalClassName = 'rounded-2xl bg-white shadow-xl',
   portalContainer,
+  compact,
   onRegionSelect,
 }: TPortalRegionBannerProps) {
   const anchorRef = useRef<HTMLDivElement | null>(null);
@@ -345,6 +373,7 @@ export function PortalRegionBanner({
         <RegionBanner
           view={view}
           onSwitchView={onSwitchView}
+          compact={compact}
           classNames={{ selector: 'bg-white shadow-sm' }}
         />
       </div>

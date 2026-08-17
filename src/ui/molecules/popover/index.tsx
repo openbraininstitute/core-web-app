@@ -20,13 +20,10 @@ function PopoverContent({
   className,
   align = 'center',
   sideOffset = 4,
-  container,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content> & {
-  container?: React.ComponentProps<typeof PopoverPrimitive.Portal>['container'];
-}) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
-    <PopoverPrimitive.Portal container={container}>
+    <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
@@ -45,4 +42,26 @@ function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitiv
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
-export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
+/**
+ * The popover's tip, pointing back at the trigger. Must be a direct child of
+ * `PopoverContent`; its fill has to match that panel's background (this theme has no
+ * `--color-popover` token, so panels set `bg-white` explicitly and so does the arrow).
+ */
+function PopoverArrow({
+  className,
+  width = 14,
+  height = 7,
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Arrow>) {
+  return (
+    <PopoverPrimitive.Arrow
+      data-slot="popover-arrow"
+      width={width}
+      height={height}
+      className={cn('fill-white', className)}
+      {...props}
+    />
+  );
+}
+
+export { Popover, PopoverAnchor, PopoverArrow, PopoverContent, PopoverTrigger };

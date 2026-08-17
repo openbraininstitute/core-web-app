@@ -14,10 +14,13 @@ import type { TWorkspaceScope } from '@/constants';
 export function WorkflowScopeTabs({
   className,
   defaultScope,
+  compact,
   ref,
 }: {
   className?: string;
   defaultScope?: TWorkspaceScope;
+  /** pin to h-10 (see `TabsSelector`) — for rows of 40px controls like the grid toolbar */
+  compact?: boolean;
   ref?: React.RefObject<{ changeScope: (value: TWorkspaceScope | null) => void } | null>;
 }) {
   const { setMdv } = useMiniDetailView();
@@ -46,6 +49,7 @@ export function WorkflowScopeTabs({
       activeTab={activeTab as string}
       onValueChange={onValueChange}
       className={className}
+      compact={compact}
     />
   );
 }

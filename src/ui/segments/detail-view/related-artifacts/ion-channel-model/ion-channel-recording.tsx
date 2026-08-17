@@ -12,8 +12,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
 import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
-import { cn } from '@/utils/css-class';
+import { detailViewGridContainerClass } from '@/ui/segments/detail-view/variant-styles';
 
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -149,10 +148,7 @@ export function IonChannelRecordingRelatedArtifacts({
         detailVariant={variant}
         contentOnInsetPanel={variant === ViewVariant.Default}
         classNames={{
-          container: cn(
-            'max-h-none!',
-            variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
-          ),
+          container: detailViewGridContainerClass(variant),
         }}
         {...browseScopeProps}
       />
@@ -167,10 +163,7 @@ export function IonChannelRecordingRelatedArtifacts({
       detailVariant={variant}
       contentOnInsetPanel={variant === ViewVariant.Default}
       classNames={{
-        container: cn(
-          'max-h-none!',
-          variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
-        ),
+        container: detailViewGridContainerClass(variant),
       }}
       {...browseScopeProps}
     />

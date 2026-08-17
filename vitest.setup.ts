@@ -20,4 +20,17 @@ if (typeof window !== 'undefined') {
   Element.prototype.hasPointerCapture ??= vi.fn(() => false);
   Element.prototype.setPointerCapture ??= vi.fn();
   Element.prototype.releasePointerCapture ??= vi.fn();
+  // antd's responsive components (Pagination size changer, Grid) read matchMedia
+  // on mount; jsdom omits it.
+  window.matchMedia ??= (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }) as unknown as MediaQueryList;
 }

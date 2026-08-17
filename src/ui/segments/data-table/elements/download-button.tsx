@@ -4,15 +4,22 @@ import { CheckCircleFilled, DownloadOutlined, LoadingOutlined } from '@ant-desig
 import { useAtomValue } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useCallback, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import { useAppNotification } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+// direct module import: the react barrel would close a module-init cycle via the grid host
+import {
+  EXPANDING_PILL_BASE_CLASS,
+  ExpandingPillContent,
+} from '@/features/data-grid/react/expanding-toolbar-button';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
-import type { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 
 const DownloadStateDict = {
   idle: 'idle',
@@ -29,7 +36,15 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   dataType,
   clearSelectedRows,
   workspace,
-}: RenderButtonProps<T> & { children?: ReactNode; workspace?: WorkspaceContext }) {
+  className,
+  expanding = false,
+}: RenderButtonProps<T> & {
+  children?: ReactNode;
+  workspace?: WorkspaceContext;
+  className?: string;
+  /** Render as the grid's expanding pill (icon at rest, label on hover/focus-visible). */
+  expanding?: boolean;
+}) {
   const session = useAtomValue(sessionAtom);
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
   const notify = useAppNotification();
@@ -129,6 +144,43 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
 
   if (!session) return null;
 
+  const label = getButtonLabel();
+  /** gradient + chrome marking this as the primary bulk action */
+  const palette = cn(
+    'overflow-hidden border border-white/20 font-semibold text-white',
+    'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
+    'disabled:cursor-not-allowed disabled:opacity-70'
+  );
+
+  if (expanding) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      >
+        <Button
+          rounded
+          aria-label={label}
+          title={label}
+          variant="default"
+          disabled={downloadState === DownloadStateDict.loading}
+          className={cn(
+            EXPANDING_PILL_BASE_CLASS,
+            palette,
+            'focus-visible:ring-2 focus-visible:ring-primary-8/40',
+            className
+          )}
+          onClick={download}
+          data-testid="bulk-download-button"
+        >
+          <ExpandingPillContent icon={renderButtonIcon()} label={label} />
+        </Button>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -145,7 +197,8 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
           'transition-all duration-300 ease-out',
           'hover:scale-[1.02] active:scale-[0.98]',
-          'disabled:cursor-not-allowed disabled:opacity-70'
+          'disabled:cursor-not-allowed disabled:opacity-70',
+          className
         )}
         onClick={download}
         data-testid="bulk-download-button"

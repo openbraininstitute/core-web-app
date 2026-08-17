@@ -13,6 +13,8 @@ interface Props {
   className?: string;
   onValueChange: (value: string) => void;
   items?: Array<{ key: string; title: string; icon?: ReactNode; disabled?: boolean }>;
+  /** Pin the pill to h-10 and size tabs to their labels, for callers in a row of 40px controls. */
+  compact?: boolean;
 }
 
 export const UiDeterminedScopes = {
@@ -44,8 +46,10 @@ export function TabsSelector({
   onValueChange,
   className,
   items = tabsConfigItems,
+  compact = false,
 }: Props) {
   const breakpoint = useDefaultBreakpoint();
+  const tall = !compact && breakpoint === 'xl';
   return (
     <PillTabs
       id={id}
@@ -59,7 +63,7 @@ export function TabsSelector({
         className={cn(
           'grid h-10 w-full grid-cols-2 bg-white p-0 shadow-md ml-0.5 min-w-0 shrink-0',
           {
-            'h-12': breakpoint === 'xl',
+            'h-12': tall,
           }
         )}
       >
@@ -71,9 +75,11 @@ export function TabsSelector({
             value={tab.key}
             disabled={tab.disabled}
             className={cn(
-              'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 min-w-0',
+              'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 py-3 min-w-0',
               'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white shrink-0',
-              { 'h-12': breakpoint === 'xl' }
+              // the 3.5rem-a-side padding is the only thing stretching these tabs
+              compact ? 'px-6' : 'px-14!',
+              { 'h-12': tall }
             )}
           >
             <span className="inline-flex items-center gap-2">

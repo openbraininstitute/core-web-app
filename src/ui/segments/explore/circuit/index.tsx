@@ -5,7 +5,7 @@ import { get } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { type ComponentProps, type ReactNode, useEffect, useRef } from 'react';
+import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import ApiError from '@/api/error';
@@ -17,6 +17,7 @@ import {
   workspaceHierarchySpeciesAtom,
 } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import {
   useQueryExtendedEntityType,
   useQueryExtendedEntityTypeFacets,
@@ -34,10 +35,10 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { CircuitRecursiveGrid } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
 import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
-import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
 import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
 import {
   CircuitRepresentationView,
@@ -61,8 +62,16 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { Pagination, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { IBrowseEntityGridProps } from '@/features/data-grid/host/browse-entity-grid';
+import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
+
+// AG Grid is client-only; load it lazily so the legacy path never pays for its bundle
+const BrowseEntityGrid = dynamic(
+  () => import('@/features/data-grid/host/browse-entity-grid').then((m) => m.BrowseEntityGrid),
+  { ssr: false }
+) as (props: IBrowseEntityGridProps) => ReactElement | null;
 
 type Props = {
   id?: string;
@@ -81,7 +90,7 @@ type Props = {
   extraQueryParams?: Record<string, any>;
 };
 
-export function BrowseCircuit({
+function BrowseCircuitLegacy({
   id,
   classNames,
   section = WorkspaceSection.Data,
@@ -311,17 +320,19 @@ export function BrowseCircuit({
           </div>
           <div className="w-full">
             <div className="ml-4">
-              <RecursiveExpandableTable
+              <CircuitRecursiveGrid
                 key={queryKeyHash}
-                id={queryKeyHash}
                 circuits={records as Array<ICircuitEnriched>}
                 columns={nestedTableColumns}
                 dataType={dataType}
-                dataScope={scope}
-                workspace={{ virtualLabId, projectId }}
                 onCellClick={onCellClick}
-                view={view}
-                level={1}
+                rowClassName={(record) =>
+                  'isFiltered' in record && record.isFiltered
+                    ? '[&_.ag-cell]:text-primary-8!'
+                    : view === CircuitRepresentationView.Hierarchy
+                      ? 'opacity-60 [&_.ag-cell]:text-neutral-4!'
+                      : '[&_.ag-cell]:text-primary-8!'
+                }
               />
             </div>
           </div>
@@ -448,4 +459,18 @@ export function BrowseCircuit({
       <DownloadPanel />
     </>
   );
+}
+
+/**
+ * Circuit listing router: renders the shared AG Grid stack when the circuit dataType is in
+ * the data-grid registry, else falls back to {@link BrowseCircuitLegacy}.
+ */
+export function BrowseCircuit(props: Props) {
+  const definition = getEntityGridDefinition(props.dataType);
+  if (definition) {
+    // `mainTableProps` is antd-shaped and unused by the AG Grid host, so it is dropped
+    const { mainTableProps: _mainTableProps, ...rest } = props;
+    return <BrowseEntityGrid {...(rest as BrowseEntityScopeProps)} definition={definition} />;
+  }
+  return <BrowseCircuitLegacy {...props} />;
 }

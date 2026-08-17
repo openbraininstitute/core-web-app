@@ -137,7 +137,9 @@ vi.mock('next/dynamic', async () => {
   };
 });
 
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+// exercises the legacy antd listing; migrated dataTypes route through BrowseEntityGrid
+// via next/dynamic, which would otherwise receive this file's stub without a `dataKey`
+import { BrowseEntityScopeLegacy as BrowseEntityScope } from '@/features/views/listing/browse-entity-legacy';
 
 type BrowseEntityProps = ComponentProps<typeof BrowseEntityScope>;
 

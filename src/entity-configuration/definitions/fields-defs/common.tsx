@@ -1,4 +1,4 @@
-import { Button, Tag } from 'antd';
+import { Button } from 'antd';
 import { get, isNil } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 
@@ -25,6 +25,10 @@ import {
 import { FilterOptionsSourceKind } from '@/entity-configuration/definitions/types';
 import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import {
+  getLifecycleStatusBadgeSpec,
+  LifecycleStatusBadge,
+} from '@/ui/molecules/lifecycle-status-badge';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import {
   BrowseExperimentalDataExtendedTypes,
@@ -722,14 +726,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Lifecycle status',
     filter: CoreFieldFilterTypeEnum.DropdownList,
     render: (r) => {
-      if (!('lifecycle_status' in r) || !r.lifecycle_status) return EmptyValue;
-      const colorMap: Record<string, string> = {
-        draft: 'default',
-        active: 'success',
-        disqualified: 'error',
-      };
-      const status = r.lifecycle_status as string;
-      return <Tag color={colorMap[status] ?? 'default'}>{status}</Tag>;
+      const status = 'lifecycle_status' in r ? (r.lifecycle_status as string | null) : null;
+      return getLifecycleStatusBadgeSpec(status) ? (
+        <LifecycleStatusBadge status={status} />
+      ) : (
+        EmptyValue
+      );
     },
     vocabulary: {
       plural: 'Lifecycle statuses',

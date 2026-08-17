@@ -21,6 +21,7 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
+  withLifecycleStatusLast,
 } from '@/entity-configuration/definitions/view-defs';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
@@ -446,9 +447,15 @@ export default async function Overview({
     getEntityByExtendedType({ type: extendedType })?.group === EntityTypeGroup.Simulations;
   const fieldVariant = isSimulationPage ? ViewVariant.Light : ViewVariant.Default;
   const metadataBorderClass = isSimulationPage ? 'border-gray-300' : 'border-white/20';
-  const summaryFields: TypeSummaryProps[] = isSimulationPage
-    ? [{ field: EntityCoreFields.Description, className: 'col-span-2' }, ...commonFields, ...fields]
-    : [...commonFields, ...fields];
+  const summaryFields: TypeSummaryProps[] = withLifecycleStatusLast(
+    isSimulationPage
+      ? [
+          { field: EntityCoreFields.Description, className: 'col-span-2' },
+          ...commonFields,
+          ...fields,
+        ]
+      : [...commonFields, ...fields]
+  );
 
   const metadataGrid = (
     <div

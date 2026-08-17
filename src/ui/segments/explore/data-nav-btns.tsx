@@ -12,6 +12,7 @@ import {
   WorkspaceSection,
 } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { createSessionStatePersistence } from '@/features/data-grid/react';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
@@ -180,6 +181,9 @@ export function DataBreadcrumb({
   const onLinkClick = () => {
     if (isBrowser()) {
       runStorageReset();
+      // breadcrumb = fresh listing, so clear the grid's transient session slice
+      // (filters/sort/page/search); the durable column-layout slice is left intact
+      createSessionStatePersistence().clear?.(dataKey);
     }
   };
 

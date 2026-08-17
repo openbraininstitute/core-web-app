@@ -17,6 +17,9 @@ export const DEFAULT_PAGE_SMALL_SIZE = 10;
 export const DEFAULT_PAGE_XSMALL_SIZE = 5;
 export const DEFAULT_PAGE_NUMBER = 1;
 
+/** A facets-only request wants the buckets, never the rows. */
+export const FACETS_ONLY_PAGE = { page: 1, page_size: 0 } as const;
+
 /** Shared visual variant for detail views, mini detail views and related viewers. */
 export const ViewVariant = {
   Light: 'light',

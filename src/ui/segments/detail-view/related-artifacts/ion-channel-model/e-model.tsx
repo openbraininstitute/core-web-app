@@ -1,8 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
-import { cn } from '@/utils/css-class';
+import { detailViewGridContainerClass } from '@/ui/segments/detail-view/variant-styles';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 
@@ -23,10 +22,7 @@ export function EmodelRelatedArtifacts({
       detailVariant={variant}
       contentOnInsetPanel={variant === ViewVariant.Default}
       classNames={{
-        container: cn(
-          'max-h-none!',
-          variant === ViewVariant.Default && detailViewInsetPanelClass(variant)
-        ),
+        container: detailViewGridContainerClass(variant),
       }}
       requireMiniDetailView={false}
       requireBrainRegion={false}

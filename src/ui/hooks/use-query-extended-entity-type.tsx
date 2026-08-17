@@ -10,7 +10,7 @@ import { useAtomValue } from 'jotai';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { DEFAULT_PAGE_SIZE } from '@/constants';
+import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -267,7 +267,7 @@ export function useQueryExtendedEntityTypeFacets({
       }
       return (
         await entity?.api?.query.list?.({
-          filters: { ...queryFilters, page: 1, page_size: 1 },
+          filters: { ...queryFilters, ...FACETS_ONLY_PAGE },
           withFacets: true,
           context: workspace,
         })

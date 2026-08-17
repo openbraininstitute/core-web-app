@@ -1,6 +1,5 @@
 'use client';
 
-import { CloseOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
@@ -18,7 +17,6 @@ import { useResolvedModelIdentifierEntities } from '@/features/scan-config/compo
 import { getEntityTypeTagLabel } from '@/features/scan-config/helpers';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { Button } from '@/ui/molecules/button';
 import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 
@@ -276,16 +274,6 @@ export function ModelIdentifierBrowseWidget({
       ) : null}
 
       <div className="relative flex min-h-0 flex-col overflow-hidden bg-white pl-0">
-        <Button
-          type="button"
-          variant="ghost"
-          className="absolute top-1 right-0 z-20 size-8 rounded-full hover:bg-white"
-          onClick={onCancel}
-          aria-label="Close selection"
-        >
-          <CloseOutlined className="text-primary-8" />
-        </Button>
-
         <div
           className={cn('grid min-h-0 flex-1 gap-2 overflow-hidden', {
             "grid-cols-[minmax(0,1fr)_minmax(30rem,44rem)] [grid-template-areas:'body_mini-view']":

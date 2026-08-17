@@ -10,7 +10,7 @@ import {
 import { Input } from 'antd';
 import { kebabCase } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
-import { Fragment, memo, useMemo } from 'react';
+import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
 
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
@@ -22,33 +22,45 @@ import { RewriteBlockReferencesModeDict, rewriteBlockReferences } from './rewrit
 import { isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
+import type { InputRef } from 'antd';
 import type React from 'react';
 import type { Config, ConfigSchema, IBlockDictionary, TBlock } from '@/features/scan-config/types';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
 
+type EntryTabProps = Omit<React.ComponentProps<'div'>, 'onClick'> & {
+  entryKey: string;
+  isSelected: boolean;
+  diffClass?: string;
+  displayName: string;
+  onClick: (event?: React.MouseEvent<HTMLDivElement>) => void;
+};
+
+/**
+ * The tab element. Forwards `ref` and arbitrary DOM props so it can be the child of an
+ * `asChild` Radix trigger rather than being wrapped in the trigger's own `<button>`.
+ */
 function EntryTab({
   entryKey,
   isSelected,
   diffClass,
   displayName,
   onClick,
+  onKeyDown,
+  className,
   children,
-}: {
-  entryKey: string;
-  isSelected: boolean;
-  diffClass?: string;
-  displayName: string;
-  onClick: () => void;
-  children?: React.ReactNode;
-}) {
+  ref,
+  ...props
+}: EntryTabProps) {
   return (
     /* biome-ignore lint/a11y/useSemanticElements: input cannot be nested inside button */
     <div
       role="button"
       id={`${kebabCase(entryKey)}-menu-block-dictionary-sub-entry__item`}
-      key={entryKey}
+      tabIndex={0}
+      {...props}
+      ref={ref}
       className={cn(
         'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
         'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
@@ -57,11 +69,12 @@ function EntryTab({
           'bg-linear-to-r from-[#003A8C] to-primary-10 text-white shadow-bnb': isSelected,
         },
         styles.entryButton,
-        diffClass
+        diffClass,
+        className
       )}
-      tabIndex={0}
-      onClick={onClick}
+      onClick={(evt) => onClick(evt)}
       onKeyDown={(evt) => {
+        onKeyDown?.(evt);
         if (evt.key === ' ' || evt.key === 'Enter') {
           onClick();
         }
@@ -131,6 +144,17 @@ export default function BlockDictionaryEntries({
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
   const fieldErrors = useFieldErrors();
+
+  const renameInputRef = useRef<InputRef>(null);
+  // Keying the focus effect off the renamed entry (not `isEditingKey`) refocuses only
+  // when rename mode opens or moves to a different entry, not on every commit.
+  const renamingEntryKey =
+    isEditingKey && !readOnly && selectedRootElement === rootElement ? selectedEntry : null;
+
+  useEffect(() => {
+    if (!renamingEntryKey) return;
+    renameInputRef.current?.focus();
+  }, [renamingEntryKey]);
 
   const configKeys = useMemo(
     () => new Set(Object.keys(config[rootElement] ?? {})),
@@ -256,7 +280,7 @@ export default function BlockDictionaryEntries({
                 return (
                   <Fragment key={subkey}>
                     <Tooltip>
-                      <TooltipTrigger>
+                      <TooltipTrigger asChild>
                         <EntryTab
                           entryKey={subkey}
                           isSelected={isSelected}
@@ -273,7 +297,7 @@ export default function BlockDictionaryEntries({
                                   classNames={{
                                     input: 'border-none !bg-transparent text-white',
                                   }}
-                                  ref={(element) => element?.focus()}
+                                  ref={renameInputRef}
                                   onKeyDown={(e) => {
                                     e.stopPropagation();
                                     if (e.key === 'Enter') {

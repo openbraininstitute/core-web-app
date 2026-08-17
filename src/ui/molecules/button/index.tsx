@@ -21,7 +21,9 @@ const buttonVariants = cva(
         success:
           'bg-accent-dark text-white shadow-xs hover:bg-accent-dark/90 focus-visible:ring-accent-light/20 disabled:text-white!',
         outline:
-          'border bg-white text-primary-9 border-neutral-2 shadow-xs  hover:not(:disabled):text-white  hover:not(:disabled):bg-primary-9 active:bg-primary-9',
+          'border bg-white text-primary-9 border-neutral-2 shadow-xs hover:bg-primary-9 hover:text-white active:bg-primary-9 focus-visible:border-primary-6 focus-visible:ring-primary-6/40',
+        field:
+          'border bg-white text-primary-9 border-neutral-2 shadow-xs hover:border-primary-8 focus-visible:border-primary-6 focus-visible:ring-primary-6/40',
         ghost: 'hover:bg-neutral-1 hover:text-primary-9',
         link: 'text-primary underline-offset-4 hover:underline',
         icon: '',
