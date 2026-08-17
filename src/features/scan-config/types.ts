@@ -118,6 +118,7 @@ export const SchemaNameDict = {
   // build
   EMSynapseMappingScanConfig: 'EMSynapseMappingScanConfig',
   ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
+  SynapseParameterizationScanConfig: 'SynapseParameterizationScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
 } as const;

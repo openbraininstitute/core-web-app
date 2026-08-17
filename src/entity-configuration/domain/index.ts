@@ -11,6 +11,7 @@ import { UniversalCellMorphology } from '@/entity-configuration/domain/experimen
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain/model/circuit-synaptic-physiology-campaign';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
@@ -73,6 +74,7 @@ export const EntityCoreModelConfiguration = {
   EmSynapseMappingCampaign,
   ExtracellularRecordingArray,
   ExtracellularRecordingArrayCampaign,
+  CircuitSynapticPhysiologyCampaign,
   SingleNeuronCircuit,
   SynthesizedCellMorphology,
 } as const;
