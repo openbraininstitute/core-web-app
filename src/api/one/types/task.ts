@@ -5,6 +5,8 @@ export const ObiOneTaskTypeDict = {
   Skeletonization: 'morphology_skeletonization',
   MorphologySkeletonization: 'morphology_skeletonization',
   IonChannelModelSimulationExecution: 'ion_channel_model_simulation_execution',
+  SingleNeuronSimulationExecution: 'single_neuron_simulation_execution',
+  SingleNeuronSynaptomeSimulationExecution: 'single_neuron_synaptome_simulation_execution',
   EmSynapseMapping: 'em_synapse_mapping',
   ExtracellularRecordingWeightsCalculation: 'extracellular_recording_weights_calculation',
 } as const;

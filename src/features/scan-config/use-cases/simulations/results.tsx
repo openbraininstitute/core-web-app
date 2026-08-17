@@ -18,7 +18,7 @@ import {
 import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
 import {
   hasSimConfigAsset,
-  shouldLaunchSimulationViaTaskSystem,
+  resolveSimulationLaunchTarget,
 } from '@/entity-configuration/domain/simulation/utils';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
@@ -91,10 +91,19 @@ export default function SimulationsTab({
 
   const scale = get(model, 'scale', null);
   const targetSimulator = get(model, 'target_simulator', null);
-  const shouldTreatSimulationAsTask = shouldLaunchSimulationViaTaskSystem({
+  const launchTarget = resolveSimulationLaunchTarget({
+    entityType: entityType ?? null,
     scale,
     targetSimulator,
   });
+  // Prefer the workflow definition's resolved binding; fall back to deriving it from the model so
+  // simulate workflows without an explicit binding (me-model) keep working. `null` means the
+  // campaign is not launchable via obi-one and goes to the small-scale simulator instead.
+  const launchTaskType = taskTypeBindings?.obiOne ?? launchTarget?.taskType ?? null;
+  const shouldTreatSimulationAsTask = launchTaskType !== null;
+  // Defaults to asking while the model is still loading: an unnecessary prompt is an annoyance,
+  // whereas a launch that needs consent and doesn't have it fails at job creation.
+  const launchRequiresOfflineTokenConsent = launchTarget?.requiresOfflineTokenConsent ?? true;
 
   const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
@@ -244,27 +253,24 @@ export default function SimulationsTab({
   }, [onActiveSimulationChange, simulations]);
 
   const runViaLaunchSystem = async (simIds: string[]) => {
-    const consentResult = await ensureOfflineTokenConsent();
-    if (!consentResult.ok) {
-      if (consentResult.reason !== 'cancelled') {
-        notification.error({
-          message: 'Unexpected error occurred, please try again later',
-          duration: 10,
-        });
+    if (launchRequiresOfflineTokenConsent) {
+      const consentResult = await ensureOfflineTokenConsent();
+      if (!consentResult.ok) {
+        if (consentResult.reason !== 'cancelled') {
+          notification.error({
+            message: 'Unexpected error occurred, please try again later',
+            duration: 10,
+          });
+        }
+        setSimRequestInProgress(false);
+        return;
       }
-      return;
     }
 
     let nSubmissions = 0;
     let lowFundsError = false;
 
-    // Prefer the workflow definition's resolved binding; fall back to deriving from the model's
-    // `target_simulator` so simulate workflows without an explicit binding keep working.
-    const taskType =
-      taskTypeBindings?.obiOne ??
-      (model && 'target_simulator' in model && model.target_simulator === 'Brian2'
-        ? ObiOneTaskTypeDict.CircuitSimulationBrian2
-        : ObiOneTaskTypeDict.CircuitSimulation);
+    const taskType = launchTaskType ?? ObiOneTaskTypeDict.CircuitSimulation;
 
     for (const simId of simIds) {
       try {
@@ -358,21 +364,18 @@ export default function SimulationsTab({
     }
   };
 
-  // Resolve the obi-one task type used to estimate cost. Prefer the workflow definition's resolved
-  // binding so the estimate matches what `run` actually launches; otherwise fall back to deriving
-  // from the model (ion-channel has its own estimable type; circuit scale is resolved server-side).
+  // The obi-one task type used to estimate cost — the same one `run` launches, so the quoted price
+  // matches what is reserved. Ion-channel campaigns still launch via the small-scale simulator, so
+  // they have no launch type of their own but are estimable under their obi-one type.
   const simTaskType = useMemo(() => {
-    if (taskTypeBindings?.obiOne) {
-      return taskTypeBindings.obiOne;
+    if (launchTaskType) {
+      return launchTaskType;
     }
     if (entityType === EntityTypeDict.IonChannelModel) {
       return ObiOneTaskTypeDict.IonChannelModelSimulationExecution;
     }
-    if (model && 'target_simulator' in model && model.target_simulator === 'Brian2') {
-      return ObiOneTaskTypeDict.CircuitSimulationBrian2;
-    }
     return ObiOneTaskTypeDict.CircuitSimulation;
-  }, [taskTypeBindings, entityType, model]);
+  }, [launchTaskType, entityType]);
 
   const costModalItems = useMemo(
     () =>
@@ -389,17 +392,6 @@ export default function SimulationsTab({
     context,
     onConfirm: run,
   });
-
-  // Me-model ("Single neuron beta") campaigns have no backend cost estimator, so they skip the
-  // confirmation modal and launch directly. All other scan-config sim campaigns show the modal.
-  const isMemodelCampaign = entityType === EntityTypeDict.Memodel;
-  const onLaunch = (simIds: string[]) => {
-    if (isMemodelCampaign) {
-      run(simIds);
-      return;
-    }
-    openModal();
-  };
 
   const onToggleSelectAll = (checked: boolean) => {
     setSelectedSimulationIds(checked ? selectableSimulationIds : []);
@@ -428,7 +420,7 @@ export default function SimulationsTab({
         onActiveSimulationChange={onActiveSimulationChange}
         onSelectedForSimChange={onSelectedForSimChange}
         onSimulationStatusLoad={onSimulationStatusLoad}
-        onRun={onLaunch}
+        onRun={openModal}
         middle={
           <div className="h-full bg-background! w-full">
             {loading ? (
