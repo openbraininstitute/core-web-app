@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // biome-ignore lint/style/useImportType: biome hallucination
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
 // Past the package barrel: `SectionSchema` needs the enum as a runtime value,
 // and the barrel would cost this module a WebGL renderer.
-import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
+import { MorphoViewerTreeItemType } from "@/morpho-viewer/tree-item-type";
 
 import type {
   ICellMorphology,
@@ -13,13 +13,16 @@ import type {
   IMEModel,
   IonChannelModel,
   TEntityTypeDict,
-} from '@/api/entitycore/types';
-import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
-import type { IEntity } from '@/api/entitycore/types/entities/entity';
-import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
-import type { MorphoViewerTreeItem } from '@/morpho-viewer/tree-item-type';
-import type { Prettify } from '@/utils/type';
+} from "@/api/entitycore/types";
+import type { IEMCellMesh } from "@/api/entitycore/types/entities/em-cell-mesh";
+import type { IEntity } from "@/api/entitycore/types/entities/entity";
+import type { ActivityStatus } from "@/api/entitycore/types/shared/activity";
+import type {
+  AssetContentType,
+  IAsset,
+} from "@/api/entitycore/types/shared/global";
+import type { MorphoViewerTreeItem } from "@/morpho-viewer/tree-item-type";
+import type { Prettify } from "@/utils/type";
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
@@ -28,51 +31,57 @@ export interface ConfigObject {
   [key: string]: ConfigValue | ConfigObject;
 }
 
-export type ConfigValue = Primitive | Primitive[] | ConfigObject | ConfigValue[];
+export type ConfigValue =
+  | Primitive
+  | Primitive[]
+  | ConfigObject
+  | ConfigValue[];
 export type Config = Record<string, ConfigValue>;
 
 export const SchemaMappingKeyDict = {
-  Circuit: 'Circuit',
-  IonChannelModel: 'IonChannelModel',
-  ElectricalCellRecordings: 'ElectricalCellRecordings',
+  Circuit: "Circuit",
+  IonChannelModel: "IonChannelModel",
+  ElectricalCellRecordings: "ElectricalCellRecordings",
 } as const;
 
-export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof SchemaMappingKeyDict];
+export type TSchemaMappingKey =
+  (typeof SchemaMappingKeyDict)[keyof typeof SchemaMappingKeyDict];
 
 export const ScanConfigActivity = {
-  Simulate: 'simulate',
-  Extract: 'extract',
-  Process: 'process',
-  Build: 'build',
+  Simulate: "simulate",
+  Extract: "extract",
+  Process: "process",
+  Build: "build",
 } as const;
 
-export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
+export type TScanConfigActivity =
+  (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
 
 export const BaseScanConfigTabs = {
-  configuration: 'configuration',
+  configuration: "configuration",
 } as const;
 
 export type TSimulateScanConfigTabs = {
   id: keyof typeof SimulateScanConfigTabs;
-  __activity: 'simulate';
+  __activity: "simulate";
 };
 export type TExtractScanConfigTabs = {
   id: keyof typeof ExtractScanConfigTabs;
-  __activity: 'extract';
+  __activity: "extract";
 };
 export type TBuildScanConfigTabs = {
   id: keyof typeof BuildScanConfigTabs;
-  __activity: 'build';
+  __activity: "build";
 };
 
 export const ProcessScanConfigTabs = {
   ...BaseScanConfigTabs,
-  skeletonizations: 'skeletonizations',
+  skeletonizations: "skeletonizations",
 } as const;
 
 export type TProcessScanConfigTabs = {
   id: keyof typeof ProcessScanConfigTabs;
-  __activity: 'process';
+  __activity: "process";
 };
 
 export type TScanConfigTabs =
@@ -83,17 +92,17 @@ export type TScanConfigTabs =
 
 export const SimulateScanConfigTabs = {
   ...BaseScanConfigTabs,
-  simulations: 'simulations',
+  simulations: "simulations",
 } as const;
 
 export const ExtractScanConfigTabs = {
   ...BaseScanConfigTabs,
-  extractions: 'extractions',
+  extractions: "extractions",
 } as const;
 
 export const BuildScanConfigTabs = {
   ...BaseScanConfigTabs,
-  results: 'results',
+  results: "results",
 } as const;
 
 export const ScanConfigTabs = {
@@ -109,25 +118,29 @@ export const ScanConfigDefaultTab = {
 } as const;
 
 export type SimExecStatusMap = Map<string, ActivityStatus>;
-export type TabType = 'configuration' | 'simulations';
+export type TabType = "configuration" | "simulations";
 
 export const SchemaNameDict = {
   // simulation
-  CircuitSimulationScanConfig: 'CircuitSimulationScanConfig',
-  Brian2CircuitSimulationScanConfig: 'Brian2CircuitSimulationScanConfig',
-  LearningEngineCircuitSimulationScanConfig: 'LearningEngineCircuitSimulationScanConfig',
-  MEModelSimulationScanConfig: 'MEModelSimulationScanConfig',
-  MEModelWithSynapsesCircuitSimulationScanConfig: 'MEModelWithSynapsesCircuitSimulationScanConfig',
-  IonChannelModelSimulationScanConfig: 'IonChannelModelSimulationScanConfig',
+  CircuitSimulationScanConfig: "CircuitSimulationScanConfig",
+  Brian2CircuitSimulationScanConfig: "Brian2CircuitSimulationScanConfig",
+  LearningEngineCircuitSimulationScanConfig:
+    "LearningEngineCircuitSimulationScanConfig",
+  MEModelSimulationScanConfig: "MEModelSimulationScanConfig",
+  MEModelWithSynapsesCircuitSimulationScanConfig:
+    "MEModelWithSynapsesCircuitSimulationScanConfig",
+  IonChannelModelSimulationScanConfig: "IonChannelModelSimulationScanConfig",
   // extraction
-  CircuitExtractionScanConfig: 'CircuitExtractionScanConfig',
-  EModelEFeatureExtractionScanConfig: 'EModelEFeatureExtractionScanConfig',
+  CircuitExtractionScanConfig: "CircuitExtractionScanConfig",
+  EModelEFeatureExtractionScanConfig: "EModelEFeatureExtractionScanConfig",
   // build
-  EMSynapseMappingScanConfig: 'EMSynapseMappingScanConfig',
-  ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
-  BuildSynaptomeScanConfig: 'MEModelSynapticModelPlacementScanConfig',
+  EMSynapseMappingScanConfig: "EMSynapseMappingScanConfig",
+  ExtracellularRecordingArrayScanConfig:
+    "CreateExtracellularRecordingArrayScanConfig",
+  BuildSynaptomeScanConfig: "MEModelSynapticModelPlacementScanConfig",
+  SynapseParameterizationScanConfig: "SynapseParameterizationScanConfig",
   // processing
-  SkeletonizationScanConfig: 'SkeletonizationScanConfig',
+  SkeletonizationScanConfig: "SkeletonizationScanConfig",
 } as const;
 
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
@@ -141,44 +154,47 @@ export type TRootElement = {
 
 export const ScanConfigUIElementDict = {
   // blocks
-  BlockUnion: 'block_union',
-  BlockSingle: 'block_single',
-  BlockDictionary: 'block_dictionary',
+  BlockUnion: "block_union",
+  BlockSingle: "block_single",
+  BlockDictionary: "block_dictionary",
   // components
-  StringInput: 'string_input',
-  ModelIdentifier: 'model_identifier',
-  FloatParameterSweep: 'float_parameter_sweep',
-  IntParameterSweep: 'int_parameter_sweep',
-  Reference: 'reference',
-  EntityPropertyDropdown: 'entity_property_dropdown',
-  NeuronIds: 'neuron_ids',
-  BooleanInput: 'boolean_input',
-  ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
-  IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
-  ModelSelectorSingle: 'model_selector_single',
-  SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
-  VoltageDuration: 'voltage_duration',
-  ModelIdentifierMultiple: 'model_identifier_multiple',
-  StringSelectionEnhanced: 'string_selection_enhanced',
-  NeuronPropertyFilter: 'neuron_property_filter',
-  NeuronSetCombination: 'neuron_set_combination',
-  MorphologySectionTypeSelection: 'morphology_section_type_selection',
-  FloatOptional: 'float_optional',
-  SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
-  MorphologyLocationSelection: 'morphology_location_selection',
+  StringInput: "string_input",
+  ModelIdentifier: "model_identifier",
+  FloatParameterSweep: "float_parameter_sweep",
+  IntParameterSweep: "int_parameter_sweep",
+  Reference: "reference",
+  EntityPropertyDropdown: "entity_property_dropdown",
+  NeuronIds: "neuron_ids",
+  BooleanInput: "boolean_input",
+  ionChannelVariableModificationBySectionList:
+    "ion_channel_variable_modification_by_section_list",
+  IonChannelVariableModificationByNeuron:
+    "ion_channel_variable_modification_by_neuron",
+  ModelSelectorSingle: "model_selector_single",
+  SelectRecordableIonChannelVariable: "select_recordable_ion_channel_variable",
+  VoltageDuration: "voltage_duration",
+  ModelIdentifierMultiple: "model_identifier_multiple",
+  StringSelectionEnhanced: "string_selection_enhanced",
+  NeuronPropertyFilter: "neuron_property_filter",
+  NeuronSetCombination: "neuron_set_combination",
+  MorphologySectionTypeSelection: "morphology_section_type_selection",
+  FloatOptional: "float_optional",
+  SelectEFeaturesByProtocol: "select_efeatures_by_protocol",
+  MorphologyLocationSelection: "morphology_location_selection",
 } as const;
 
 export type TScanConfigUIElementDict =
   (typeof ScanConfigUIElementDict)[keyof typeof ScanConfigUIElementDict];
 
 export const NeuronalManipulationTypeDict = {
-  CircuitByNeuron: 'CircuitByNeuronMechanismVariableNeuronalManipulation',
-  CircuitBySectionList: 'CircuitBySectionListMechanismVariableNeuronalManipulation',
-  ByNeuron: 'ByNeuronMechanismVariableNeuronalManipulation',
-  BySectionList: 'BySectionListMechanismVariableNeuronalManipulation',
+  CircuitByNeuron: "CircuitByNeuronMechanismVariableNeuronalManipulation",
+  CircuitBySectionList:
+    "CircuitBySectionListMechanismVariableNeuronalManipulation",
+  ByNeuron: "ByNeuronMechanismVariableNeuronalManipulation",
+  BySectionList: "BySectionListMechanismVariableNeuronalManipulation",
 } as const;
 
-export const CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD = 'neuron_set';
+export const CIRCUIT_NEURONAL_MANIPULATION_SOURCE_FIELD = "neuron_set";
 
 const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
   NeuronalManipulationTypeDict.CircuitByNeuron,
@@ -191,8 +207,13 @@ const CircuitNeuronalManipulationTypes: ReadonlySet<string> = new Set([
  * @param typeConst - Variant discriminator from the block state/schema.
  * @returns `true` for Circuit variants (neuron-set scoped); `false` for MEModel variants.
  */
-export function isCircuitNeuronalManipulationType(typeConst: string | undefined): boolean {
-  return typeof typeConst === 'string' && CircuitNeuronalManipulationTypes.has(typeConst);
+export function isCircuitNeuronalManipulationType(
+  typeConst: string | undefined,
+): boolean {
+  return (
+    typeof typeConst === "string" &&
+    CircuitNeuronalManipulationTypes.has(typeConst)
+  );
 }
 export interface StringInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringInput;
@@ -209,16 +230,16 @@ export interface FloatParameterSweep extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.FloatParameterSweep;
   anyOf: [
     {
-      type: 'number';
+      type: "number";
       minimum?: number;
       maximum?: number;
       exclusiveMinimum?: number;
       exclusiveMaximum?: number;
     },
     {
-      type: 'array';
+      type: "array";
       items: {
-        type: 'number';
+        type: "number";
         minimum?: number;
         maximum?: number;
         exclusiveMinimum?: number;
@@ -232,16 +253,16 @@ export interface IntParameterSweep extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.IntParameterSweep;
   anyOf: [
     {
-      type: 'integer';
+      type: "integer";
       minimum?: number;
       maximum?: number;
       exclusiveMinimum?: number;
       exclusiveMaximum?: number;
     },
     {
-      type: 'array';
+      type: "array";
       items: {
-        type: 'integer';
+        type: "integer";
         minimum?: number;
         maximum?: number;
         exclusiveMinimum?: number;
@@ -260,13 +281,13 @@ export interface FloatOptional extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.FloatOptional;
   anyOf: [
     {
-      type: 'number';
+      type: "number";
       minimum?: number;
       maximum?: number;
       exclusiveMinimum?: number;
       exclusiveMaximum?: number;
     },
-    { type: 'null' },
+    { type: "null" },
   ];
 }
 
@@ -276,7 +297,7 @@ export interface FloatOptional extends TBlockElement {
  */
 export interface TSelectEFeaturesByProtocol extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.SelectEFeaturesByProtocol;
-  type: 'object';
+  type: "object";
   property_endpoints?: string;
 }
 
@@ -290,7 +311,7 @@ export interface Reference extends TBlockElement {
         properties?: { type?: { const?: string } };
         [key: string]: unknown;
       }
-    | { type: 'null' }
+    | { type: "null" }
   >;
 }
 
@@ -312,9 +333,9 @@ export interface ModelSelectorSingle extends TBlockElement {
     };
     type: {
       type: string;
-      const: 'IonChannelModelFromID';
+      const: "IonChannelModelFromID";
       title: string;
-      default: 'IonChannelModelFromID';
+      default: "IonChannelModelFromID";
     };
   };
 }
@@ -325,19 +346,22 @@ export interface SelectRecordableIonChannelVariable extends TBlockElement {
   property_group: string;
   properties: {
     ion_channel_id: {
-      anyOf: [{ type: 'string'; format: 'uuid'; description: string }, { type: 'null' }];
+      anyOf: [
+        { type: "string"; format: "uuid"; description: string },
+        { type: "null" },
+      ];
       title: string;
     };
     variable_name: {
-      type: 'string';
+      type: "string";
       title: string;
       description: string;
     };
     type: {
-      type: 'string';
-      const: 'IonChannelVariableForRecording';
+      type: "string";
+      const: "IonChannelVariableForRecording";
       title: string;
-      default: 'IonChannelVariableForRecording';
+      default: "IonChannelVariableForRecording";
     };
   };
 }
@@ -361,7 +385,7 @@ export interface IonChannelRangeVariableModification extends TBlockElement {
   /** Sibling field that scopes the Circuit fetch (e.g. `neuron_set`). */
   property_source_field?: string;
   title: string;
-  type: 'object';
+  type: "object";
   properties: {
     modification: any;
     neuron_set: any;
@@ -378,7 +402,7 @@ export interface IonChannelGlobalVariableModification extends TBlockElement {
   property_group?: string;
   /** Sibling field that scopes the Circuit fetch (e.g. `neuron_set`). */
   property_source_field?: string;
-  type: 'object';
+  type: "object";
   properties: {
     modification: any;
     neuron_set: any;
@@ -427,7 +451,12 @@ export interface IMorphologyLocationSelection extends TBlockElement {
   items: {
     properties: {
       section_id: { title?: string; description?: string; minimum?: number };
-      offset: { title?: string; description?: string; minimum?: number; maximum?: number };
+      offset: {
+        title?: string;
+        description?: string;
+        minimum?: number;
+        maximum?: number;
+      };
     };
   };
 }
@@ -445,7 +474,9 @@ export interface NeuronSetCombination extends TBlockElement {
 export interface IBlockUnion extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.BlockUnion;
   /** the property name used to block between variants (defaults to 'type') */
-  discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
+  discriminator?:
+    | string
+    | { propertyName: string; mapping?: Record<string, string> };
   /** array of possible variant schemas */
   oneOf: TBlock[];
 }
@@ -517,7 +548,10 @@ export type ConfigSchema = {
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {
+  properties: Record<
+    string,
+    IBlockSingle | IBlockDictionary | IRootBlockUnion
+  > & {
     type: Type;
   };
   title: string;
@@ -530,14 +564,14 @@ type Type = {
 };
 
 export function isType(v: TRootElement | Type | TBlockElement): v is Type {
-  return 'const' in v;
+  return "const" in v;
 }
 
 export const ActivityCustomFileRenderer = {
-  MiniDetailView: 'mini-detail-view',
-  Default: 'default',
-  TaskConfigurationViewer: 'task-configuration-viewer',
-  TaskLogsViewer: 'task-logs-viewer',
+  MiniDetailView: "mini-detail-view",
+  Default: "default",
+  TaskConfigurationViewer: "task-configuration-viewer",
+  TaskLogsViewer: "task-logs-viewer",
 } as const;
 
 export type TActivityCustomFileRenderer =
