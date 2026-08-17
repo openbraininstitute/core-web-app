@@ -10,6 +10,7 @@ import {
   extracellularRecordingArrayBuildFlag,
   extractionActivityFlag,
 } from '@/features/feature-flags/flags';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   readWorkflowSessionSelection,
   WorkflowSessionSelectionMode,
@@ -393,5 +394,23 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
     await expect(
       resolveWorkflowConfigureHrefForEntity({ entityId: ENTITY_ID, workspace, flags: allFlags })
     ).resolves.toBeNull();
+  });
+
+  it('opens stored campaigns editable when mode is duplicate', async () => {
+    applyFixture({
+      entity: { type: EntityTypeDict.SimulationCampaign },
+      input: { type: EntityTypeDict.Memodel },
+    });
+
+    const resolved = await resolveWorkflowConfigureHrefForEntity({
+      entityId: ENTITY_ID,
+      workspace,
+      flags: allFlags,
+      mode: ScanConfigCampaignOriginActionDict.Duplicate,
+    });
+
+    expect(normalizeSession(resolved as string)).toBe(
+      `${base}/simulate/configure/me-model-circuit-simulation/{session}?mode=duplicate&origin=${ENTITY_ID}`
+    );
   });
 });
