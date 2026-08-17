@@ -17,7 +17,7 @@ const SIMULATE_CIRCUIT_PREVIEW_TYPES = new Set<string>([
  * Whether the scan-config right column should render {@link ModelPreview}.
  *
  * - Simulate → Circuit / MemodelCircuit / WholeBrain / SingleNeuronCircuit
- * - Extract / Build → Circuit only
+ * - Extract / Build / Process → Circuit only
  * - Always requires a loaded `entity`
  */
 export function shouldShowCircuitModelPreview(options: {
@@ -36,7 +36,11 @@ export function shouldShowCircuitModelPreview(options: {
     )
     .with(
       {
-        activity: P.union(ScanConfigActivity.Extract, ScanConfigActivity.Build),
+        activity: P.union(
+          ScanConfigActivity.Extract,
+          ScanConfigActivity.Build,
+          ScanConfigActivity.Process
+        ),
         entityType: ExtendedEntitiesTypeDict.Circuit,
       },
       () => true

@@ -126,6 +126,11 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.Circuit,
     label: 'Circuit extraction campaign',
   },
+  [ExtendedEntitiesTypeDict.CircuitSimplificationCampaign]: {
+    value: ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
+    group: EntityGroupDict.Circuit,
+    label: 'Circuit simplification campaign',
+  },
   [ExtendedEntitiesTypeDict.EFeatureExtractionCampaign]: {
     value: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
     group: EntityGroupDict.Cellular,

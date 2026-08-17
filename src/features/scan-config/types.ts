@@ -123,6 +123,7 @@ export const SchemaNameDict = {
   ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
+  CircuitSimplificationScanConfig: 'CircuitSimplificationScanConfig',
 } as const;
 
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];

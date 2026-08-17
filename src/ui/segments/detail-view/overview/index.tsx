@@ -27,6 +27,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { CircuitSimplificationCampaign } from '@/entity-configuration/domain/processing/circuit-simplification-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSingleNeuronSimulation,
@@ -179,6 +180,49 @@ export default async function Overview({
               id: ExtractScanConfigTabs.configuration,
             }}
             activity={ScanConfigActivity.Extract}
+            campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          />
+          <DownloadPanel />
+        </>
+      );
+    }
+
+    if (
+      'task_config_type' in entity &&
+      entity.task_config_type === TaskConfigType.CircuitSimplificationCampaign
+    ) {
+      // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+      const resolveSimplificationCampaign = CircuitSimplificationCampaign.api.query.resolve!;
+      const { data: simplificationConfig, error } = await tryCatch(
+        resolveSimplificationCampaign({ id: entity.id, context: context })
+      );
+
+      if (error || !simplificationConfig.circuitId) {
+        notFound();
+      }
+
+      const scanConfig = findScanConfigRegistryByTargetType(
+        ExtendedEntitiesTypeDict.CircuitSimplificationCampaign
+      );
+      if (!scanConfig) {
+        notFound();
+      }
+
+      return (
+        <>
+          <ScanConfiguration
+            entityId={simplificationConfig.circuitId}
+            scanConfig={scanConfig}
+            virtualLabId={context.virtualLabId}
+            projectId={context.projectId}
+            origin={simplificationConfig.campaign.id}
+            initialConfig={simplificationConfig.config?.form}
+            readOnly={!isWorkflow}
+            defaultTab={{
+              __activity: ScanConfigActivity.Process,
+              id: ProcessScanConfigTabs.configuration,
+            }}
+            activity={ScanConfigActivity.Process}
             campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
           />
           <DownloadPanel />
@@ -408,6 +452,45 @@ export default async function Overview({
           projectId={context.projectId}
           origin={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Process,
+            id: ProcessScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Process}
+        />
+        <DownloadPanel />
+      </>
+    );
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.CircuitSimplificationCampaign) {
+    // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+    const resolveSimplificationCampaign = CircuitSimplificationCampaign.api.query.resolve!;
+    const { data: simplificationConfig, error } = await tryCatch(
+      resolveSimplificationCampaign({ id: entity.id, context })
+    );
+
+    if (error || !simplificationConfig.circuitId) {
+      notFound();
+    }
+
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.CircuitSimplificationCampaign
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
+    return (
+      <>
+        <ScanConfiguration
+          entityId={simplificationConfig.circuitId}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={simplificationConfig.campaign.id}
+          initialConfig={simplificationConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{
             __activity: ScanConfigActivity.Process,

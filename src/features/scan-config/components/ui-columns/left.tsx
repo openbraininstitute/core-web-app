@@ -18,6 +18,7 @@ import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
 
 import type { Config } from '@/features/scan-config/types';
+import type { TScanConfigWorkflowI18n } from '@/features/scan-config/workflow/types';
 
 export default function Left({
   schema,
@@ -44,6 +45,7 @@ export default function Left({
   generatedEndpoint,
   entityType,
   aiEnabled,
+  i18n,
 }: {
   schema: ConfigSchema;
   selectedRootElement: string;
@@ -69,6 +71,7 @@ export default function Left({
   generatedEndpoint: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
   aiEnabled?: boolean;
+  i18n?: TScanConfigWorkflowI18n;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig, setAiConfig } = useAIConfig();
@@ -161,6 +164,7 @@ export default function Left({
             activity={activity}
             entityType={entityType}
             generatedApiUrl={generatedEndpoint}
+            i18n={i18n}
           />
         </div>
       )}

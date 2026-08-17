@@ -1,1 +1,1 @@
-export { default } from './tabs-selector';
+export { default, TabsSelector } from './tabs-selector';

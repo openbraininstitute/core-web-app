@@ -29,6 +29,7 @@ import {
   resolveIonChannelModelingByCampaignId,
   type TExtendedIonChannelModelingCampaignsType,
 } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { CircuitSimplificationCampaign } from '@/entity-configuration/domain/processing/circuit-simplification-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   type ExtendedCampaignsType,
@@ -86,6 +87,7 @@ export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+  ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
   ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
@@ -203,16 +205,21 @@ export function WorkflowActivity() {
         id: 'activity-table-type-cell-selector',
       }),
       render: (_, record) => {
-        const extractionTitle =
-          record.type === EntityTypeDict.TaskConfig &&
-          (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
-            TaskConfigType.CircuitExtractionCampaign
-            ? getEntityByExtendedType({
-                type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-              })?.title
+        const taskConfigType =
+          record.type === EntityTypeDict.TaskConfig
+            ? (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type
             : undefined;
+        const taskConfigTitleType =
+          taskConfigType === TaskConfigType.CircuitExtractionCampaign
+            ? ExtendedEntitiesTypeDict.CircuitExtractionCampaign
+            : taskConfigType === TaskConfigType.CircuitSimplificationCampaign
+              ? ExtendedEntitiesTypeDict.CircuitSimplificationCampaign
+              : undefined;
+        const taskConfigTitle = taskConfigTitleType
+          ? getEntityByExtendedType({ type: taskConfigTitleType })?.title
+          : undefined;
         const title =
-          extractionTitle ??
+          taskConfigTitle ??
           getEntityByExtendedType({
             type: record.type as unknown as TExtendedEntitiesTypeDict,
           })?.title ??
@@ -260,12 +267,11 @@ export function WorkflowActivity() {
           .with({ type: EntityTypeDict.TaskConfig }, () => {
             const taskConfigType = (record as unknown as ITaskConfig<Record<string, unknown>>)
               .task_config_type;
-            if (taskConfigType === TaskConfigType.CircuitExtractionCampaign) {
-              return (
-                <ActivityStatusCell campaignId={record.id} context={{ virtualLabId, projectId }} />
-              );
-            }
-            if (taskConfigType === TaskConfigType.SkeletonizationCampaign) {
+            if (
+              taskConfigType === TaskConfigType.CircuitExtractionCampaign ||
+              taskConfigType === TaskConfigType.CircuitSimplificationCampaign ||
+              taskConfigType === TaskConfigType.SkeletonizationCampaign
+            ) {
               return (
                 <ActivityStatusCell campaignId={record.id} context={{ virtualLabId, projectId }} />
               );
@@ -439,12 +445,14 @@ export function WorkflowActivity() {
       ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       ExtendedEntitiesTypeDict.IonChannelModelSimulation,
       ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+      ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
       ExtendedEntitiesTypeDict.SkeletonizationCampaign,
     ];
 
     if (!entityType || !expandableTypes.includes(entityType)) return undefined;
     if (
       entityType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign ||
+      entityType === ExtendedEntitiesTypeDict.CircuitSimplificationCampaign ||
       entityType === ExtendedEntitiesTypeDict.SkeletonizationCampaign
     ) {
       return {
@@ -453,15 +461,12 @@ export function WorkflowActivity() {
         fetcher: async (record: WorkflowTaskCampaignRow) => {
           const taskConfigType = (record as unknown as ITaskConfig<Record<string, unknown>>)
             .task_config_type;
-          if (taskConfigType === TaskConfigType.SkeletonizationCampaign) {
-            const expandRow = SkeletonizationCampaign.api.expandRow;
-            if (!expandRow) return [];
-            return expandRow(record as unknown as ITaskConfig<Record<string, unknown>>, {
-              virtualLabId,
-              projectId,
-            }) as Promise<WorkflowTaskCampaignRow['rows']>;
-          }
-          const expandRow = CircuitExtractionCampaign.api.expandRow;
+          const expandRow =
+            taskConfigType === TaskConfigType.SkeletonizationCampaign
+              ? SkeletonizationCampaign.api.expandRow
+              : taskConfigType === TaskConfigType.CircuitSimplificationCampaign
+                ? CircuitSimplificationCampaign.api.expandRow
+                : CircuitExtractionCampaign.api.expandRow;
           if (!expandRow) return [];
           return expandRow(record as unknown as ITaskConfig<Record<string, unknown>>, {
             virtualLabId,
