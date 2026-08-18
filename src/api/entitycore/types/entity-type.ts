@@ -29,6 +29,7 @@ export const EntityTypeDict = {
   EMCellMesh: 'em_cell_mesh',
   SkeletonizationCampaign: 'skeletonization_campaign',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
+  CircuitSimplificationCampaign: 'circuit_simplification_campaign',
   CircuitExtractionConfig: 'circuit_extraction_config',
   EFeatureExtractionCampaign: 'efeature_extraction_campaign',
   EFeatureExtractionConfig: 'efeature_extraction_config',

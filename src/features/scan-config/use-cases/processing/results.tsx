@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
@@ -15,69 +14,72 @@ import {
   ScanConfigActivity,
   type TActivityCustomFile,
 } from '@/features/scan-config/types';
+import { InOutFiles } from '@/features/scan-config/use-cases/processing/in-out-files';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
-import { messages as textMessages } from '@/i18n/en/scan-config';
+import { messages } from '@/i18n/en/scan-config';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
-import { InOutFiles } from './in-out-files';
-
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
+type TProcessingCampaignMeta = { scan_parameters?: Record<string, unknown> };
+
 type Props = {
   campaignId: string;
-  virtualLabId: string;
-  projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
   /** obi-one + entitycore task types for this workflow (from its definition) */
   taskTypeBindings: TWorkflowTaskTypeBindings;
+  launchLabel?: string;
+  workflowLabel?: string;
 };
 
-export function SkeletonizationTab({
+export function ProcessingTab({
   campaignId,
-  virtualLabId,
-  projectId,
   campaignOriginAction,
   isCampaignIdChanged,
   taskTypeBindings,
+  launchLabel = 'Launch processing',
+  workflowLabel = 'processes',
 }: Props) {
-  const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
+  const context = useWorkspace();
+  const i18n = messages[ScanConfigActivity.Process];
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
-  const [activeConfig, setActiveConfig] =
-    useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
+  const [activeConfig, setActiveConfig] = useState<ITaskConfig<TProcessingCampaignMeta> | null>(
+    null
+  );
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
     new Map()
   );
 
-  const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
-    useTaskLaunchMutation({
-      context,
-      obiOneTaskType: taskTypeBindings.obiOne,
-      executionActivityType: taskTypeBindings.execution,
-      notificationKey: 'skeletonization-config-error',
-      failureMessage: textMessages[ScanConfigActivity.Process].GenericFailed,
-      logTopic: 'Skeletonization',
-      requiresConsent: true,
-    });
+  const { mutateAsync: runProcessing, isPending: runProcessingPending } = useTaskLaunchMutation({
+    context,
+    obiOneTaskType: taskTypeBindings.obiOne,
+    executionActivityType: taskTypeBindings.execution,
+    notificationKey: 'processing-config-error',
+    failureMessage: i18n.GenericFailed,
+    logTopic: 'Processing',
+    requiresConsent: true,
+  });
 
   const { configGenerationLoading, configsResponse, configsLoading } =
-    useTaskRunner<TSkeletonizationTaskConfigMeta>({
+    useTaskRunner<TProcessingCampaignMeta>({
       context,
       campaignId,
       configGenerationActivityType: taskTypeBindings.configGeneration,
       executionActivityType: taskTypeBindings.execution,
       taskConfigType: taskTypeBindings.config,
-      pauseExecutionPolling: runSkeletonizationPending,
+      pauseExecutionPolling: runProcessingPending,
       loadExecutions: false,
     });
 
@@ -96,14 +98,11 @@ export function SkeletonizationTab({
   const taskLogsShouldReadSnapshot =
     !!activeConfigExecStatus && isTerminalActivityStatus(activeConfigExecStatus);
 
-  const onActiveConfigChange = useCallback(
-    (config: ITaskConfig<TSkeletonizationTaskConfigMeta>) => {
-      setActiveConfig(config);
-    },
-    []
-  );
+  const onActiveConfigChange = useCallback((config: ITaskConfig<TProcessingCampaignMeta>) => {
+    setActiveConfig(config);
+  }, []);
 
-  const onSelectedForSkeletonizationChange = useCallback((configId: string, selected: boolean) => {
+  const onSelectedForProcessingChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
       setSelectedConfigIds((prev) => [...(prev ?? []), configId]);
     } else {
@@ -137,7 +136,7 @@ export function SkeletonizationTab({
     selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
 
   const onRun = async (configIdsToRun: string[]) => {
-    await runSkeletonization(configIdsToRun);
+    await runProcessing(configIdsToRun);
     setSelectedConfigIds([]);
   };
 
@@ -152,7 +151,7 @@ export function SkeletonizationTab({
   const { openModal, modal: costConfirmationModal } = useCostConfirmation({
     items: costModalItems,
     taskType: taskTypeBindings.obiOne,
-    workflowLabel: 'skeletonizations',
+    workflowLabel,
     context,
     onConfirm: onRun,
   });
@@ -167,7 +166,7 @@ export function SkeletonizationTab({
       <ResultsLayout
         campaignId={campaignId}
         left={
-          <div className="flex h-full flex-col gap-4 overflow-y-hidden w-full">
+          <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
             <TaskConfigSelectionList
               campaignId={campaignId}
               configs={configs}
@@ -175,25 +174,26 @@ export function SkeletonizationTab({
               selectedConfigIds={resolvedSelectedConfigIds}
               activeConfigId={resolvedActiveConfig?.id}
               loading={loading}
-              selectionDisabled={runSkeletonizationPending}
+              selectionDisabled={runProcessingPending}
               fallbackColor="#8c8c8c"
               context={context}
               executionActivityType={taskTypeBindings.execution}
-              pauseStatusPolling={runSkeletonizationPending}
+              pauseStatusPolling={runProcessingPending}
               executionByConfigId={executionByConfigId}
               onSelectConfig={onActiveConfigChange}
-              onCheckedChange={onSelectedForSkeletonizationChange}
+              onCheckedChange={onSelectedForProcessingChange}
               onToggleSelectAll={(checked) =>
                 setSelectedConfigIds(checked ? selectableConfigIds : [])
               }
               onExecutionLoad={onExecutionLoad}
             />
             <TaskLaunchButton
-              label="Launch skeletonizations"
+              label={launchLabel}
               countLabel={launchBtnLabelPrefix}
-              pending={runSkeletonizationPending}
-              disabled={runSkeletonizationPending || resolvedSelectedConfigIds.length === 0}
+              pending={runProcessingPending}
+              disabled={runProcessingPending || resolvedSelectedConfigIds.length === 0}
               onClick={openModal}
+              className="rounded-full"
             />
           </div>
         }
@@ -206,6 +206,7 @@ export function SkeletonizationTab({
                 execution={activeConfigExecution}
                 selectedFile={selectedFile}
                 context={context}
+                campaignOrigin={campaignOriginAction}
                 onSelect={setSelectedFile}
               />
             </div>
@@ -220,8 +221,8 @@ export function SkeletonizationTab({
               <div className="h-full w-full">
                 <MiniDetailViewRenderer
                   section={WorkspaceSection.Data}
-                  record={selectedFile.entity as ICellMorphology}
-                  dataType={EntityTypeDict.CellMorphology}
+                  record={selectedFile.entity as EntityCoreObjectTypes}
+                  dataType={selectedFile.entity.type as TExtendedEntitiesTypeDict}
                   theme={ViewVariant.Light}
                   enableAnimation={false}
                 />

@@ -35,6 +35,7 @@ function resolveScanConfigConfigureAside(
 ): ReactNode | undefined {
   switch (targetType) {
     case ExtendedEntitiesTypeDict.CircuitExtractionCampaign:
+    case ExtendedEntitiesTypeDict.CircuitSimplificationCampaign:
     case ExtendedEntitiesTypeDict.EmSynapseMappingCampaign:
       return <DownloadPanel />;
     default:

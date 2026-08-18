@@ -27,6 +27,7 @@ export const ScanConfigGeneratedApiPath = {
   MEModelSimulation: 'me-model-simulation-scan-config-generate-grid',
   IonChannelModelSimulation: 'ion-channel-model-simulation-scan-config-generate-grid',
   CircuitExtraction: 'circuit-extraction-scan-config-generate-grid',
+  CircuitSimplification: 'circuit-simplification-scan-config-generate-grid',
   EFeatureExtraction: 'e-model-e-feature-extraction-scan-config-generate-grid',
   Skeletonization: 'skeletonization-scan-config-generate-grid',
   EMSynapseMapping: 'em-synapse-mapping-scan-config-generate-grid',
@@ -170,6 +171,18 @@ export function extractCircuitConfigureBinding(): TScanConfigConfigureBinding {
       [ExtendedEntitiesTypeDict.Circuit]: ScanConfigFromIdType.CircuitFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.CircuitExtraction,
+    schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function processCircuitSimplificationConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Circuit,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Circuit,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.Circuit]: ScanConfigFromIdType.CircuitFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.CircuitSimplification,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }

@@ -58,6 +58,7 @@ export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+  ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
   ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
@@ -291,16 +292,21 @@ export function WorkflowActivity() {
         header: 'Type',
         width: { minWidth: 140, flex: 1 },
         renderCell: (record) => {
-          const extractionTitle =
-            record.type === EntityTypeDict.TaskConfig &&
-            (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
-              TaskConfigType.CircuitExtractionCampaign
-              ? getEntityByExtendedType({
-                  type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-                })?.title
+          const taskConfigType =
+            record.type === EntityTypeDict.TaskConfig
+              ? (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type
               : undefined;
+          const taskConfigTitleType =
+            taskConfigType === TaskConfigType.CircuitExtractionCampaign
+              ? ExtendedEntitiesTypeDict.CircuitExtractionCampaign
+              : taskConfigType === TaskConfigType.CircuitSimplificationCampaign
+                ? ExtendedEntitiesTypeDict.CircuitSimplificationCampaign
+                : undefined;
+          const taskConfigTitle = taskConfigTitleType
+            ? getEntityByExtendedType({ type: taskConfigTitleType })?.title
+            : undefined;
           const title =
-            extractionTitle ??
+            taskConfigTitle ??
             getEntityByExtendedType({
               type: record.type as unknown as TExtendedEntitiesTypeDict,
             })?.title ??

@@ -21,6 +21,14 @@ export const processEmCellMeshWorkflow = defineScanConfigWorkflow({
   editor: {
     className: 'px-4',
   },
+  i18n: {
+    resultsTab: 'skeletonizations',
+    generate: 'Generate skeletonization(s)',
+    new: 'New skeletonization campaign',
+    copyCampaignId: 'Copy skeletonization campaign ID',
+    launch: 'Launch skeletonizations',
+    workflowLabel: 'skeletonizations',
+  },
   taskTypeBindings: {
     obiOne: ObiOneTaskTypeDict.Skeletonization,
     configGeneration: TaskActivityType.SkeletonizationConfigGeneration,

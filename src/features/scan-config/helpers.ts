@@ -35,6 +35,7 @@ export const VALID_AI_CONFIG_KEYS = [
   'me_model_with_synapses_simulation_config',
   'ion_channel_model_simulation_config',
   'skeletonization_config',
+  'circuit_simplification_config',
   'em_synapse_mapping_config',
 ] as const;
 
@@ -57,7 +58,11 @@ export function getConfigKeyForEntity(
   activity: TScanConfigActivity,
   entity?: { scale?: string }
 ): TAIConfigKey {
-  if (activity === ScanConfigActivity.Process) return 'skeletonization_config';
+  if (activity === ScanConfigActivity.Process) {
+    return entityType === ExtendedEntitiesTypeDict.Circuit
+      ? 'circuit_simplification_config'
+      : 'skeletonization_config';
+  }
 
   // Simulate activity — resolve by entity type
   if (entityType === ExtendedEntitiesTypeDict.MemodelCircuit) {

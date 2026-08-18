@@ -22,11 +22,12 @@ import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
 import type { Config } from '@/features/scan-config/types';
+import type { TScanConfigWorkflowI18n } from '@/features/scan-config/workflow/types';
 
 const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Simulate]: 'run the simulation',
   [ScanConfigActivity.Extract]: 'run the extraction',
-  [ScanConfigActivity.Process]: 'run the skeletonization',
+  [ScanConfigActivity.Process]: 'run the processing',
   [ScanConfigActivity.Build]: 'build the model',
 };
 
@@ -66,6 +67,7 @@ export default function GenerateConfigButton({
   activity,
   generatedApiUrl,
   entityType,
+  i18n,
 }: {
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -77,6 +79,7 @@ export default function GenerateConfigButton({
   activity: TScanConfigActivity;
   generatedApiUrl: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  i18n?: TScanConfigWorkflowI18n;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
   // ajv schema errors plus field-level errors (e.g. duplicate group names) that
@@ -145,8 +148,8 @@ export default function GenerateConfigButton({
       >
         <div className="flex justify-between gap-5">
           {!campaignId
-            ? get(messages, `${activity}.Generate`, 'Generate campaign')
-            : get(messages, `${activity}.New`, 'New campaign')}
+            ? (i18n?.generate ?? get(messages, `${activity}.Generate`, 'Generate campaign'))
+            : (i18n?.new ?? get(messages, `${activity}.New`, 'New campaign'))}
           {loading && <LoadingOutlined />}
         </div>
       </button>

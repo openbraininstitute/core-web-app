@@ -135,6 +135,7 @@ function ScanConfigWorkflowEditor() {
         className={editor.className}
         scanConfig={scanConfig}
         taskTypeBindings={definition.taskTypeBindings}
+        i18n={definition.i18n}
       />
     </ScanConfigWorkflowEditorFieldProvider>
   );

@@ -7,6 +7,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { WorkflowActivityDictValue } from '@/constants';
 import {
   brainRegionSimulationFlag,
+  circuitSimplificationFlag,
   eFeatureExtractionFlag,
   extracellularRecordingArrayBuildFlag,
   extractionActivityFlag,
@@ -57,6 +58,7 @@ const allFlags = {
   [eFeatureExtractionFlag.key]: true,
   [brainRegionSimulationFlag.key]: true,
   [extracellularRecordingArrayBuildFlag.key]: true,
+  [circuitSimplificationFlag.key]: true,
 } as FeatureFlags;
 
 const ENTITY_ID = 'entity-id';
@@ -184,6 +186,17 @@ const cases: TCase[] = [
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
   },
   {
+    name: 'scale-less circuit → circuit simplification when only that flag is enabled',
+    fixture: { entity: { type: EntityTypeDict.Circuit } },
+    covers: {
+      activity: process,
+      targetType: ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
+    },
+    href: `${base}/process/configure/circuit-simplification-campaign/{session}`,
+    selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
+    flags: { [circuitSimplificationFlag.key]: true } as FeatureFlags,
+  },
+  {
     name: 'scale-less circuit → circuit extraction when only extraction is enabled',
     fixture: { entity: { type: EntityTypeDict.Circuit } },
     covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign },
@@ -272,6 +285,19 @@ const cases: TCase[] = [
     },
     covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign },
     href: `${base}/extract/configure/circuit-extraction-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
+    name: 'circuit simplification task config → process editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.Circuit },
+      taskConfigType: TaskConfigType.CircuitSimplificationCampaign,
+    },
+    covers: {
+      activity: process,
+      targetType: ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
+    },
+    href: `${base}/process/configure/circuit-simplification-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
     name: 'skeletonization task config → process editor',

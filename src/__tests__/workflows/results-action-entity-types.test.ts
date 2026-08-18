@@ -8,6 +8,7 @@ describe('workflow activity "View results" action', () => {
     // task campaigns registering one result per config, with no campaign-level result entity
     ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
     ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+    ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
     ExtendedEntitiesTypeDict.SkeletonizationCampaign,
   ])('is hidden for %s', (entityType) => {
     expect(NotAllowedResultsActionEntityTypes).toContain(entityType);
