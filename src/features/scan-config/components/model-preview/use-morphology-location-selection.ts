@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppMessage } from '@/components/notification';
 import { sectionTypeLabel } from '@/features/scan-config/components/circuit-viz/section-type-label';
+import {
+  EXPLICIT_BLOCK_TYPE,
+  type IStoredLocation,
+  readEntry,
+  readLocations,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-key';
 import { MorphoViewerTreeItemType } from '@/features/scan-config/types';
 
@@ -11,13 +17,11 @@ import type { Config } from '@/features/scan-config/types';
 import type {
   MorphoViewerMorphologyLocationHover,
   MorphoViewerMorphologyLocationLabel,
+  MorphoViewerMorphologyLocationMarker,
   MorphoViewerMorphologyLocationPick,
   MorphoViewerMorphologyLocationSelection,
   MorphoViewerSmallCircuitCell,
 } from '@/morpho-viewer';
-
-/** Only this block type stores locations outright; the others describe how to sample them. */
-const EXPLICIT_BLOCK_TYPE = 'ExplicitMorphologyLocations';
 
 /** Section types a location may sit on today. */
 const TARGETABLE_SECTION_TYPES: ReadonlySet<number> = new Set<number>([
@@ -36,11 +40,6 @@ function isTargetable(sectionType: number | undefined): boolean {
   return sectionType !== undefined && TARGETABLE_SECTION_TYPES.has(sectionType);
 }
 
-interface IStoredLocation {
-  section_id: number;
-  offset: number;
-}
-
 interface IOptions {
   config?: Config | null;
   onConfigChange?: (updater: (previous: Config) => Config) => void;
@@ -50,32 +49,16 @@ interface IOptions {
   selectedEntry?: string;
   /** Cells currently in the viewer, needed to place markers. */
   cells: MorphoViewerSmallCircuitCell[];
+  /** Per cell, SONATA section id → the section name the viewer addresses. */
+  sonataSectionIds?: ReadonlyMap<string, ReadonlyMap<number, string>>;
   /** Marker radius in world units, from the viewer settings slider. */
   markerRadius?: number;
   /** Whether to publish label positions, from the viewer settings toggle. */
   showLabels?: boolean;
 }
 
-function readEntry(config: Config | null | undefined, entry: string | undefined) {
-  if (!config || !entry) return null;
-  const dictionary = (config as Record<string, unknown>)[MORPHOLOGY_LOCATIONS_CONFIG_KEY];
-  if (!dictionary || typeof dictionary !== 'object') return null;
-  const block = (dictionary as Record<string, unknown>)[entry];
-  if (!block || typeof block !== 'object') return null;
-  return block as Record<string, unknown>;
-}
-
-function readLocations(block: Record<string, unknown> | null): IStoredLocation[] {
-  if (!block || block.type !== EXPLICIT_BLOCK_TYPE) return [];
-  const locations = block.locations;
-  if (!Array.isArray(locations)) return [];
-  return locations.flatMap((entry) => {
-    if (!entry || typeof entry !== 'object') return [];
-    const { section_id: sectionId, offset } = entry as Record<string, unknown>;
-    if (typeof sectionId !== 'number' || typeof offset !== 'number') return [];
-    return [{ section_id: sectionId, offset }];
-  });
-}
+/** A marker plus the row it came from. */
+type TLocationMarker = MorphoViewerMorphologyLocationMarker & { locationIndex: number };
 
 /**
  * Two-way binding between the 3D viewer and an `ExplicitMorphologyLocations` block.
@@ -99,6 +82,7 @@ export function useMorphologyLocationSelection({
   selectedRootElement,
   selectedEntry,
   cells,
+  sonataSectionIds,
   markerRadius,
   showLabels = false,
 }: IOptions): {
@@ -109,37 +93,59 @@ export function useMorphologyLocationSelection({
   const message = useAppMessage();
   const [hover, setHover] = useState<MorphoViewerMorphologyLocationHover | null>(null);
   const [labels, setLabels] = useState<MorphoViewerMorphologyLocationLabel[]>([]);
-  const isEditingMorphologyLocations = selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY;
+  // `block` is a reference into the config, so it changes identity exactly when this block's
+  // rows do — no need to compare them by value.
   const block = readEntry(config, selectedEntry);
-  const isExplicit = isEditingMorphologyLocations && block?.type === EXPLICIT_BLOCK_TYPE;
-  const locationsKey = isExplicit ? JSON.stringify(readLocations(block)) : '';
+  const isExplicit =
+    selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY && block?.type === EXPLICIT_BLOCK_TYPE;
+  const storedLocations = useMemo<IStoredLocation[]>(
+    () => (isExplicit ? readLocations(block) : []),
+    [isExplicit, block]
+  );
 
-  const selected = useMemo(() => {
-    if (!locationsKey) return [];
-    const locations = JSON.parse(locationsKey) as IStoredLocation[];
-    // `sectionName` in the viewer is OBI-One's raw morphio id as a string, and
-    // `sonata_section_id` is that plus one. Undo the shift to address the drawn section.
-    return cells.flatMap((cell) =>
-      locations.map((location) => ({
-        cellId: cell.id,
-        sectionName: location.section_id === 0 ? 'soma' : String(location.section_id - 1),
-        offset: location.offset,
-        // Carried through so the hover popover can name the id the config actually stores,
-        // rather than the raw morphio id the viewer addresses sections by.
-        sonataSectionId: location.section_id,
-      }))
-    );
-  }, [locationsKey, cells]);
+  const selected = useMemo<TLocationMarker[]>(() => {
+    if (storedLocations.length === 0) return [];
+    return cells.flatMap((cell) => {
+      const sectionIds = sonataSectionIds?.get(cell.id);
+      return storedLocations.flatMap((location, locationIndex) => {
+        const sectionName =
+          sectionIds?.get(location.section_id) ?? (location.section_id === 0 ? 'soma' : undefined);
+        if (sectionName === undefined) return [];
+        return [
+          {
+            cellId: cell.id,
+            sectionName,
+            offset: location.offset,
+            sonataSectionId: location.section_id,
+            locationIndex,
+          },
+        ];
+      });
+    });
+  }, [storedLocations, cells, sonataSectionIds]);
 
   const onPick = useCallback(
     (pick: MorphoViewerMorphologyLocationPick) => {
-      if (!onConfigChange || !selectedEntry || pick.sonataSectionId === undefined) return;
+      if (!onConfigChange || !selectedEntry) return;
 
-      // Removing an existing marker is always allowed; only adding is restricted.
+      // A narrowed local: property narrowing would not survive into the updater closure.
+      const { sonataSectionId } = pick;
+      if (sonataSectionId === undefined) {
+        message.info(
+          'This circuit does not report SONATA section ids yet, so locations cannot be picked here.'
+        );
+        return;
+      }
+
       if (!pick.existingMarker && !isTargetable(pick.sectionType)) {
         message.info(
-          `${sectionTypeLabel(pick.sectionType) ?? 'This section'} is not supported yet — pick a basal or apical dendrite.`
+          `${sectionTypeLabel(pick.sectionType) ?? 'This section'} is not supported yet, please pick a basal or apical dendrite.`
         );
+        return;
+      }
+
+      if (pick.existingMarker && storedLocations.length <= 1) {
+        message.info('At least one location is required — edit this one instead of removing it.');
         return;
       }
 
@@ -152,28 +158,22 @@ export function useMorphologyLocationSelection({
 
         const existing = readLocations(current);
         const removed = pick.existingMarker;
-        // Clicking a location you already added removes it — the same gesture both ways, so
-        // there is no separate delete target to hunt for in the 3D view. Matched on the
-        // viewer's own report rather than on the click's rounded offset, which would not
-        // reliably land back on the stored value.
-        const next = removed
-          ? existing.filter(
-              (location) =>
-                !(
-                  location.section_id === removed.sonataSectionId &&
-                  location.offset === removed.offset
-                )
-            )
-          : [
-              ...existing,
-              {
-                section_id: pick.sonataSectionId as number,
-                offset: Number(pick.offset.toFixed(4)),
-              } satisfies IStoredLocation,
-            ];
+        // Clicking a location you already added removes it.
+        let next: IStoredLocation[];
+        if (removed) {
+          const index = resolveLocationIndex(existing, removed);
+          if (index < 0) return previous;
+          next = existing.toSpliced(index, 1);
+        } else {
+          next = [
+            ...existing,
+            {
+              section_id: sonataSectionId,
+              offset: Number(pick.offset.toFixed(4)),
+            },
+          ];
+        }
 
-        // The backend requires at least one location, so the last one cannot be removed this
-        // way any more than it can from the list.
         if (next.length === 0) return previous;
 
         return {
@@ -185,11 +185,9 @@ export function useMorphologyLocationSelection({
         } as Config;
       });
     },
-    [onConfigChange, selectedEntry, message]
+    [onConfigChange, selectedEntry, message, storedLocations.length]
   );
 
-  // Coalesced to one update per frame: the viewer republishes on every repaint, and an orbit
-  // is a repaint per frame. Without this, a drag would queue a React render per frame.
   const pendingLabels = useRef<MorphoViewerMorphologyLocationLabel[] | null>(null);
   const labelFrame = useRef<number | null>(null);
   const onLabelsChange = useCallback((next: MorphoViewerMorphologyLocationLabel[]) => {
@@ -216,8 +214,6 @@ export function useMorphologyLocationSelection({
             onPick,
             onHover: setHover,
             radius: markerRadius,
-            // Presence of the callback is what turns per-frame projection on in the viewer,
-            // so it is omitted entirely when labels are switched off.
             onLabelsChange: showLabels ? onLabelsChange : undefined,
           }
         : undefined,
@@ -229,4 +225,17 @@ export function useMorphologyLocationSelection({
     hover: isExplicit ? hover : null,
     labels: isExplicit && showLabels ? labels : [],
   };
+}
+
+function resolveLocationIndex(
+  locations: IStoredLocation[],
+  { locationIndex, offset, sonataSectionId }: Partial<TLocationMarker>
+): number {
+  const matches = (location: IStoredLocation) =>
+    location.section_id === sonataSectionId && location.offset === offset;
+  if (locationIndex !== undefined) {
+    const candidate = locations[locationIndex];
+    if (candidate && matches(candidate)) return locationIndex;
+  }
+  return locations.findIndex(matches);
 }

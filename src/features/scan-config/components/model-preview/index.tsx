@@ -9,7 +9,8 @@ import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import {
   CircuitPreview,
-  type ElectrodeOverlayOptions,
+  type IElectrodeOverlayOptions,
+  type IFormBindingOptions,
 } from '@/features/scan-config/components/model-preview/circuit-preview';
 import {
   resolveEnableCellHover,
@@ -22,6 +23,7 @@ import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-con
 
 export function ModelPreview({
   model,
+  form,
   electrodes,
   defaultNeuronOpacity,
   /**
@@ -33,8 +35,10 @@ export function ModelPreview({
   viewerFeatures,
 }: {
   model: TSupportedEntitiesForScanConfiguration;
+  /** The live form to bind the viewer to; omit for a read-only preview. */
+  form?: IFormBindingOptions;
   /** The electrode-overlay layer; omit for a plain circuit viewer. */
-  electrodes?: ElectrodeOverlayOptions;
+  electrodes?: IElectrodeOverlayOptions;
   /**
    * Initial neuron opacity for the circuit viewer. Host-owned (scan-config,
    * details, …). Omit for 100%; pass e.g. 0.2 when electrodes should dominate.
@@ -87,8 +91,8 @@ export function ModelPreview({
           disableSynapses
         />
       ))
-      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit.
-      // Loader strategy is selected inside CircuitViz by scale (SONATA vs OBI-One).
+      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit, all served
+      // by OBI-One `/circuit/viz`.
       .with(
         {
           type: EntityTypeDict.Circuit,
@@ -101,6 +105,7 @@ export function ModelPreview({
         (circuit) => (
           <CircuitPreview
             circuit={circuit as ICircuit}
+            form={form}
             electrodes={electrodes}
             enableVisualization
             features={featuresForSmall(circuit as ICircuit)}
@@ -111,6 +116,7 @@ export function ModelPreview({
       .with({ type: EntityTypeDict.Circuit }, () => (
         <CircuitPreview
           circuit={model as ICircuit}
+          form={form}
           electrodes={electrodes}
           enableVisualization
           largeCircuit

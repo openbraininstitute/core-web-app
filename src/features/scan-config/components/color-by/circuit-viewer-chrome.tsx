@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
+import { MorphologyLocationHelp } from '../circuit-viz/morphology-location-help';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { ModeToggle, type ViewerMode, ViewerModeDict } from './mode-toggle';
@@ -17,7 +18,7 @@ import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 import styles from './chrome-animations.module.css';
 
-export interface CircuitViewerChromeProps {
+export interface ICircuitViewerChromeProps {
   /** Current viewer mode. Omit with `onModeChange` when image mode is unavailable. */
   mode?: ViewerMode;
   onModeChange?: (mode: ViewerMode) => void;
@@ -38,6 +39,8 @@ export interface CircuitViewerChromeProps {
      * false so the interaction help does not advertise gestures that do nothing.
      */
     electrodesInteractive?: boolean;
+    /** Whether clicking a neurite adds a morphology location right now. */
+    morphologyLocationsInteractive?: boolean;
   };
 }
 
@@ -52,7 +55,7 @@ export function CircuitViewerChrome({
   theme,
   table,
   viz,
-}: CircuitViewerChromeProps) {
+}: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
   const selectedProperty = colorBy?.selectedProperty ?? null;
   const showKey =
@@ -135,6 +138,9 @@ export function CircuitViewerChrome({
               viz.electrodesInteractive !== false && (
                 <ElectrodeInteractionHelp container={portalContainer} />
               )}
+            {viz.morphologyLocationsInteractive && (
+              <MorphologyLocationHelp container={portalContainer} />
+            )}
           </div>
         )}
       </div>

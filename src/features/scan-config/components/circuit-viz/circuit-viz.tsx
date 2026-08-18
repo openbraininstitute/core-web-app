@@ -1,7 +1,6 @@
 import { useSetAtom } from 'jotai';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { useMorphologyLocationSelection } from '@/features/scan-config/components/model-preview/use-morphology-location-selection';
@@ -97,49 +96,25 @@ export interface IMorphologyLocationsBinding {
 /**
  * Small-circuit GPU surface.
  *
- * The morphology comes from OBI-One `/circuit/viz`, whose sections carry the
- * `sonata_section_id` a click needs to become a morphology location. A single circuit also
- * draws its synapses, fetched from `/circuit/viz/{id}/synapses` and projected client-side
- * onto the surface being drawn.
- *
- * Split into child components to keep the Rules of Hooks.
+ * Nodes and synapses are read from the circuit's SONATA files in the browser; morphologies
+ * come from OBI-One `/circuit/viz`, whose sections carry the `sonata_section_id` a click
+ * needs to become a morphology location.
  */
-const CircuitViz = (props: CircuitVizProps) =>
-  // Only a single-scale circuit has synapses; its own component keeps the extra request
-  // out of pair and small, and the hook order legal.
-  props.circuit.scale === CircuitScaleDictionary.Single ? (
-    <CircuitVizWithSynapses {...props} />
-  ) : (
-    <CircuitVizPlain {...props} />
-  );
-
-function CircuitVizWithSynapses(props: CircuitVizProps) {
-  const source = useObiOneVizSource(sourceOptions(props));
-  const synapses = useCircuitSynapses(props.circuit);
-  const withSynapses = useMemo(() => ({ ...source, synapses }), [source, synapses]);
-  return <CircuitVizView {...props} source={withSynapses} clearSequentialOnAxonToggle />;
-}
-
-function CircuitVizPlain(props: CircuitVizProps) {
-  const source = useObiOneVizSource(sourceOptions(props));
-  return <CircuitVizView {...props} source={source} clearSequentialOnAxonToggle />;
-}
-
-function sourceOptions(props: CircuitVizProps) {
-  return {
+function CircuitViz(props: CircuitVizProps) {
+  const source = useObiOneVizSource({
     circuitId: props.circuit.id,
     showAxons: props.showAxons,
     colorsByNode: props.colorsByNode,
     defaultColor: props.defaultColor,
-  };
+  });
+  const synapses = useCircuitSynapses(props.circuit);
+  const withSynapses = useMemo(() => ({ ...source, synapses }), [source, synapses]);
+  return <CircuitVizView {...props} source={withSynapses} />;
 }
 
 /** The view reads no entity fields, so it serves any small-circuit source. */
 type TCircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
   source: SmallCircuitSource;
-  /** OBI-One axon toggle remounts morph keys — clear the sequential morphology cache. */
-  clearSequentialOnAxonToggle?: boolean;
-  errorActions?: ReactNode;
 };
 
 function CircuitVizView({
@@ -155,8 +130,6 @@ function CircuitVizView({
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   features,
   source,
-  clearSequentialOnAxonToggle = false,
-  errorActions,
   morphologyLocations,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
@@ -167,13 +140,25 @@ function CircuitVizView({
   } = useMorphologyLocationSelection({
     ...morphologyLocations,
     cells: source.cells,
+    sonataSectionIds: source.sonataSectionIds,
   });
   const [progress, setProgress] = useState(0);
-  // Stay covered for a paint frame after morphoviewer reports 100%, so the
-  // neurite mesh replaces the soma placeholder before the overlay lifts.
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
-  const { cells, isLoading, error, loadCell, synapses } = source;
+  const { cells, isLoading, error, loadCell, retry, synapses } = source;
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
+
+  const [reloadNonce, setReloadNonce] = useState(0);
+
+  const resetPaint = useCallback(() => {
+    setProgress(0);
+    setMorphologiesPainted(false);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    resetPaint();
+    setReloadNonce((nonce) => nonce + 1);
+    retry();
+  }, [resetPaint, retry]);
 
   // Publish circuit centre so Add-electrode can seed origin_* in-view.
   useEffect(() => {
@@ -195,17 +180,7 @@ function CircuitVizView({
     [scalebarColor]
   );
 
-  // Empty highlightedCellIds → morphoviewer flat overlay stays black (ADD black
-  // = no wash-out). Hosts pass features.cellHover from domain `viewer`.
   const [highlightedCellId, setHighlightedCellId] = useState('');
-  // Dragging an electrode must not leave a neuron lit under it. morphoviewer
-  // only reports overlay transforms once the gesture ends, so the drag is
-  // detected here from the pointer: press clears any highlight and suspends
-  // hover, release resumes it.
-  //
-  // A ref, not state: nothing renders from this flag, and morphoviewer
-  // re-subscribes whenever `onCellHover` changes identity — a stateful flag
-  // would rebuild the closure and churn that listener on every drag.
   const draggingOverlayRef = useRef(false);
   const handleCellHover = useCallback((cell: Cell | undefined): void => {
     if (draggingOverlayRef.current) return;
@@ -219,23 +194,21 @@ function CircuitVizView({
   const resumeHoverHighlight = () => {
     draggingOverlayRef.current = false;
   };
-  // Stable array identity: morphoviewer's `highlightedCellIds` setter bails out
-  // on reference equality, so a fresh array each render forces a repaint pass.
+
   const highlightedCellIds = useMemo(
     () => (enableCellHover ? [highlightedCellId] : []),
     [enableCellHover, highlightedCellId]
   );
 
+  // OBI-One axon toggle remounts morph keys — clear the sequential morphology cache.
   const prevAxonRef = useRef(showAxons);
   useEffect(() => {
-    if (!clearSequentialOnAxonToggle) return;
     if (prevAxonRef.current !== showAxons) {
       prevAxonRef.current = showAxons;
       sequentialCellLoader.clear();
-      setProgress(0);
-      setMorphologiesPainted(false);
+      resetPaint();
     }
-  }, [showAxons, clearSequentialOnAxonToggle]);
+  }, [showAxons, resetPaint]);
 
   useEffect(() => {
     if (progress < 1) {
@@ -278,8 +251,9 @@ function CircuitVizView({
     >
       {cells.length > 0 && (
         <MorphoViewerCircuitMultipleNeurons
-          className={styles.morphoViewer}
           gizmo
+          key={reloadNonce}
+          className={styles.morphoViewer}
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           signals={signals}
@@ -306,14 +280,23 @@ function CircuitVizView({
       <MorphologyLocationPopover hover={locationHover} />
       {loading && <VisualizationLoadingIndicator progress={progress} />}
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
+        <div
+          role="alert"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4"
+        >
           <details className="text-red-500">
             <summary>
               <strong>Couldn't load the visualization</strong>
             </summary>
             <div>{error.message}</div>
           </details>
-          {errorActions}
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="rounded-full bg-white px-3 py-1 text-sm text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-100"
+          >
+            Try again
+          </button>
         </div>
       )}
     </div>

@@ -24,7 +24,7 @@ import {
   type ICircuitOverlayGroup,
   scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-key';
+import { supportsMorphologyLocationPicking } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
   useElectrodeOverlays,
@@ -52,7 +52,7 @@ function circuitHasDesignerImage(circuit: ICircuit): boolean {
   );
 }
 
-interface CircuitPreviewProps {
+interface ICircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
   enableVisualization?: boolean;
@@ -68,6 +68,8 @@ interface CircuitPreviewProps {
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when electrodes should dominate.
    */
   defaultNeuronOpacity?: number;
+  /** The live form this viewer edits; omit for a read-only preview. */
+  form?: IFormBindingOptions;
   /**
    * The electrode-overlay layer. Omit entirely for a plain circuit viewer.
    *
@@ -75,27 +77,25 @@ interface CircuitPreviewProps {
    * grow (new sources, new selection modes) without every host and intermediate
    * component re-declaring another optional prop.
    */
-  electrodes?: ElectrodeOverlayOptions;
+  electrodes?: IElectrodeOverlayOptions;
 }
 
-/** Everything the electrode-overlay layer needs, in one place. */
-export interface ElectrodeOverlayOptions {
-  /** Live scan-config; when it contains `electrode_locations`, overlays are fetched. */
+/** The form binding every feature that edits config from the 3D view reads. */
+export interface IFormBindingOptions {
+  /** Live scan-config. */
   config?: Config;
-  /**
-   * Enables drag/rotate in 3D, writing origin/rotation back into the form.
-   * Omit for read-only hosts — its absence is what makes overlays static.
-   */
+  /** Enables editing from 3D; omit for read-only hosts. */
   onConfigChange?: (newConfig: Config | ((prev: Config) => Config)) => void;
-  /**
-   * Stored recording array whose `electrode_locations` asset supplies the
-   * overlays when there is no live `config` (read-only detail views).
-   */
-  arrayEntity?: TElectrodeArrayEntity | null;
   /** Schema root currently selected in the form (`electrode_locations`, `recordings`, …). */
   selectedRootElement?: string;
-  /** Dictionary entry name currently selected; highlights the overlay it produced. */
+  /** Dictionary entry name currently selected; the one a 3D edit writes into. */
   selectedEntry?: string;
+}
+
+/** The stored electrode-overlay source and which of its electrodes to draw. */
+export interface IElectrodeOverlayOptions {
+  /** Stored recording array supplying the overlays when there is no live config. */
+  arrayEntity?: TElectrodeArrayEntity | null;
   /**
    * Electrode ids to draw. Omit to draw every overlay (scan-config behaviour);
    * pass an explicit list — `[]` included — to hand visibility to the host, which
@@ -125,16 +125,16 @@ export function CircuitPreview({
   largeCircuit = false,
   features,
   defaultNeuronOpacity,
+  form,
   electrodes,
-}: CircuitPreviewProps) {
+}: ICircuitPreviewProps) {
   const {
     config: scanConfig,
     onConfigChange: setConfig,
-    arrayEntity,
     selectedRootElement,
     selectedEntry,
-    visibleIds: visibleOverlayIds,
-  } = electrodes ?? {};
+  } = form ?? {};
+  const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
   const enableColorBy = features?.colorBy ?? true;
   const enableCellHover = features?.cellHover ?? true;
@@ -172,6 +172,10 @@ export function CircuitPreview({
   // morphology itself is drawn.
   const supportsAxons = !largeCircuit;
 
+  const supportsMorphologyLocations =
+    !largeCircuit &&
+    supportsMorphologyLocationPicking({ config: scanConfig, selectedRootElement, selectedEntry });
+
   const {
     overlays,
     available: electrodesAvailable,
@@ -200,9 +204,7 @@ export function CircuitPreview({
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
       supportsAxons,
       supportsElectrodes: enableElectrodes && electrodesAvailable,
-      // The marker slider is only meaningful while the form is editing morphology locations,
-      // which is also the only time markers are on screen.
-      supportsMorphologyLocations: selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY,
+      supportsMorphologyLocations,
       defaultNeuronOpacity,
       population,
     });
@@ -366,6 +368,7 @@ export function CircuitPreview({
             menu,
             colorBy: enableColorBy ? colorBy : undefined,
             electrodesInteractive: overlaysInteractive,
+            morphologyLocationsInteractive: supportsMorphologyLocations && Boolean(setConfig),
           }}
         />
       )}

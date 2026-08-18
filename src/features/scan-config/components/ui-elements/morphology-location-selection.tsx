@@ -4,15 +4,16 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
 import { useId } from 'react';
 
+import {
+  type IStoredLocation,
+  readLocationRows,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 import type { IMorphologyLocationSelection as MorphologyLocationSelectionSchema } from '@/features/scan-config/types';
 
-/** One `IMorphologyLocationPoint`: a SONATA section id plus a normalized offset along it. */
-export interface IMorphologyLocationPoint {
-  section_id: number;
-  offset: number;
-}
+/** One row: a SONATA section id plus a normalized offset along it. */
+export type IMorphologyLocationPoint = IStoredLocation;
 
 const OFFSET_STEP = 0.05;
 
@@ -21,15 +22,6 @@ const OFFSET_STEP = 0.05;
  * dropped rather than rendered as a blank row: the backend rejects partial points, so a row
  * that cannot round-trip would be a trap rather than a starting point.
  */
-function toRows(value: unknown): IMorphologyLocationPoint[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) => {
-    if (!entry || typeof entry !== 'object') return [];
-    const { section_id: sectionId, offset } = entry as Record<string, unknown>;
-    if (typeof sectionId !== 'number' || typeof offset !== 'number') return [];
-    return [{ section_id: sectionId, offset }];
-  });
-}
 
 /**
  * Renders the `morphology_location_selection` UI element: an editable list of morphology
@@ -53,7 +45,7 @@ export default function MorphologyLocationSelection({
   disabled: boolean;
   paramSchema: MorphologyLocationSelectionSchema;
 }) {
-  const rows = toRows(value);
+  const rows = readLocationRows(value);
   const offsetSchema = paramSchema.items?.properties?.offset;
   // antd renders its own inner <input>, so labels need an explicit htmlFor to bind to it.
   const fieldId = useId();
@@ -79,7 +71,8 @@ export default function MorphologyLocationSelection({
             {/* Always disabled, never only when the form is: the id comes from the viewer. */}
             <InputNumber
               id={`${fieldId}-section-${index}`}
-              className="w-full [&_input]:cursor-default [&_input]:font-medium [&_input]:text-neutral-1"
+              // `!` because antd's disabled colour is a more specific selector.
+              className="w-full [&_input]:cursor-default [&_input]:font-medium [&_input]:!text-neutral-10"
               variant="filled"
               controls={false}
               disabled

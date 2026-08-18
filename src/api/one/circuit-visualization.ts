@@ -3,16 +3,6 @@ import { obioneApi } from '@/api/one/utils';
 
 import type { WorkspaceContext } from '@/types/common';
 
-/** The cells of a circuit, with the morphology each one is drawn from. */
-export function circuitNodesPath(circuitId: string): string {
-  return `/circuit/viz/${circuitId}/nodes`;
-}
-
-/** The afferent synapses of a circuit, one group per edge population. */
-export function circuitSynapsesPath(circuitId: string): string {
-  return `/circuit/viz/${circuitId}/synapses`;
-}
-
 /**
  * The sections of one morphology, as OBI-One numbers them.
  *

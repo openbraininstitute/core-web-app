@@ -19,9 +19,8 @@ export interface ViewerLayoutProps {
 /**
  * Legacy single-scale preview shell (SONATA → MorphoViewerSmallCircuit).
  *
- * Prefer {@link CircuitPreview} / {@link CircuitViz}, which select the SONATA
- * loader via {@link resolveSmallCircuitLoaderKind}. Kept for the shared
- * {@link CircuitLoader} module and download helper under this folder.
+ * Prefer {@link CircuitPreview} / {@link CircuitViz}. Kept for the
+ * {@link CircuitLoader} module under this folder.
  */
 export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
   const [progress, setProgress] = React.useState(0);

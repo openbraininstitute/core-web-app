@@ -90,3 +90,12 @@ export function buildMorphoTree(
     },
   };
 }
+
+/** SONATA section id → the `id` the viewer addresses that section by. */
+export function buildSonataSectionIdIndex(sections: Sections): Map<number, string> {
+  const index = new Map<number, string>();
+  for (const sec of sections) {
+    if (sec.sonata_section_id !== undefined) index.set(sec.sonata_section_id, sec.id);
+  }
+  return index;
+}

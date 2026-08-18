@@ -17,6 +17,7 @@ export type {
   MorphoViewerElectrodeRecording,
   MorphoViewerMorphologyLocationHover,
   MorphoViewerMorphologyLocationLabel,
+  MorphoViewerMorphologyLocationMarker,
   MorphoViewerMorphologyLocationPick,
   MorphoViewerMorphologyLocationSelection,
   MorphoViewerOctreeProps,

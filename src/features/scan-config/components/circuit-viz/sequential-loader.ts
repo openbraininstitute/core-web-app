@@ -2,7 +2,14 @@ import { circuitMorphologyPath, fetchCircuitViz } from '@/api/one/circuit-visual
 import { MorphoViewerTreeItemType, SectionsArraySchema } from '@/features/scan-config/types';
 import { logError } from '@/utils/logger';
 
-import { buildMorphoTree } from './build-morpho-tree';
+import { buildMorphoTree, buildSonataSectionIdIndex } from './build-morpho-tree';
+
+import type { MorphoViewerSmallCircuitCellData } from '@/morpho-viewer';
+
+/** A loaded cell, plus the SONATA-id index built from the same response. */
+export type TLoadedCell = MorphoViewerSmallCircuitCellData & {
+  sonataSectionIds: Map<number, string>;
+};
 
 /** Settles a task dropped by {@link SequentialLoader.clear}; callers filter it out. */
 export class SequentialLoaderClearedError extends Error {
@@ -84,7 +91,7 @@ async function actualLoad({
   name: string;
   file: string;
   showAxon: boolean;
-}) {
+}): Promise<TLoadedCell> {
   // The path doubles as the cache key: it already carries everything that varies.
   const key = circuitMorphologyPath(circuitId, file, name);
   const promise = morphologiesCache.get(key) ?? loadCellAsync(virtualLabId, projectId, key, cellId);
@@ -96,7 +103,10 @@ async function actualLoad({
   const filtered_sections = sections.filter(
     (s) => showAxon || s.type !== MorphoViewerTreeItemType.Axon
   );
-  return buildMorphoTree(filtered_sections, cellId);
+  return {
+    ...buildMorphoTree(filtered_sections, cellId),
+    sonataSectionIds: buildSonataSectionIdIndex(filtered_sections),
+  };
 }
 
 const morphologiesCache = new Map<string, Promise<unknown>>();

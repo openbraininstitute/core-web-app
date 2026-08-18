@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { circuitSynapsesPath, fetchCircuitViz } from '@/api/one/circuit-visualization';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { STATIC_RESOURCE_QUERY_OPTIONS } from '@/features/scan-config/components/circuit-viz/query-options';
 import {
   projectionCellLoader,
@@ -21,7 +21,7 @@ import {
   somaEnvelopeOf,
   transform,
 } from '@/features/scan-config/components/drawn-surface';
-import { SynapseGroupsArraySchema } from '@/features/scan-config/types';
+import { getCircuitLoader } from '@/features/scan-config/components/model-preview/viewer-layout/circuit-loader';
 import { MorphoViewerTreeItemType } from '@/morpho-viewer';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -33,29 +33,38 @@ import type { ICircuit } from '@/api/entitycore/types';
 import type { Vec3 } from '@/features/scan-config/components/drawn-surface';
 import type { Node, Nodes, TSynapseGroup, TSynapseGroups } from '@/features/scan-config/types';
 import type { MorphoViewerTreeItem } from '@/morpho-viewer';
-import type { SmallCircuitSynapseGroup } from './types';
+import type { TSmallCircuitSynapseGroup } from './types';
 
 /**
- * Afferent synapses from OBI-One `/circuit/viz/{id}/synapses`, projected onto the drawn
- * surface: SONATA computes somatic synapses against a spherical soma, so their raw
+ * Afferent synapses read from the circuit's SONATA edge files in the browser, projected onto
+ * the drawn surface: SONATA computes somatic synapses against a spherical soma, so their raw
  * coordinates must be snapped onto the capsule stack the viewer paints.
+ *
+ * Only a single-scale circuit has them, so any other scale skips the request.
  *
  * @param circuit - The circuit whose afferent synapses to load.
  * @returns One coloured group per edge population; empty until loaded.
  */
-export function useCircuitSynapses(circuit: ICircuit): SmallCircuitSynapseGroup[] {
+export function useCircuitSynapses(circuit: ICircuit): TSmallCircuitSynapseGroup[] {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const circuitId = circuit.id;
 
   const { data: projected } = useQuery({
+    enabled: circuit.scale === CircuitScaleDictionary.Single,
     queryKey: keyBuilder.circuitSynapses(circuitId),
     queryFn: async () => {
-      const [groups, nodes] = await Promise.all([
-        fetchSynapseGroups(circuitId, virtualLabId, projectId),
-        queryClient.ensureQueryData(circuitNodesQueryOptions(circuitId, virtualLabId, projectId)),
-      ]);
-      return projectSynapseGroups(groups, nodes, { virtualLabId, projectId, circuitId });
+      try {
+        const loader = getCircuitLoader({ circuitId, virtualLabId, projectId });
+        const [groups, nodes] = await Promise.all([
+          loader.getAfferentSynapses(),
+          queryClient.ensureQueryData(circuitNodesQueryOptions(circuitId, virtualLabId, projectId)),
+        ]);
+        return projectSynapseGroups(groups, nodes, { virtualLabId, projectId, circuitId });
+      } catch (error) {
+        logError(`Afferent synapses of circuit "${circuitId}" could not be loaded:`, error);
+        throw error;
+      }
     },
     ...STATIC_RESOURCE_QUERY_OPTIONS,
   });
@@ -67,18 +76,6 @@ export function useCircuitSynapses(circuit: ICircuit): SmallCircuitSynapseGroup[
       coordinates,
     }));
   }, [projected]);
-}
-
-async function fetchSynapseGroups(
-  circuitId: string,
-  virtualLabId: string,
-  projectId: string
-): Promise<TSynapseGroups> {
-  const json = await fetchCircuitViz(circuitSynapsesPath(circuitId), {
-    virtualLabId,
-    projectId,
-  });
-  return SynapseGroupsArraySchema.parse(json);
 }
 
 type TProjectionContext = { virtualLabId: string; projectId: string; circuitId: string };

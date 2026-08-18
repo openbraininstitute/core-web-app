@@ -34,9 +34,8 @@ export const DEFAULT_ELECTRODE_RADIUS = 5;
 /**
  * Default radius of a morphology-location marker, in world units.
  *
- * Matches morphoviewer's own default. Small on purpose: a marker sits on a neurite, and one
- * much larger than the branch hides the thing it is pointing at. The per-pixel floor keeps it
- * visible when the camera pulls back, so this controls prominence rather than visibility.
+ * Restates morphoviewer's `DEFAULT_LOCATION_MARKER_RADIUS`; importing it would pull
+ * `@tolokoban/tgd` — which touches `document` at module scope — into server renders.
  */
 export const DEFAULT_MORPHOLOGY_LOCATION_RADIUS = 3;
 
