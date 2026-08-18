@@ -49,6 +49,7 @@ export function LeftColumn({ props, state }: ColumnProps) {
       aiEnabled={props.aiEnabled}
       selectedMechanismsTab={state.selectedMechanismsTab}
       setSelectedMechanismsTab={state.setSelectedMechanismsTab}
+      i18n={props.i18n}
     />
   );
 }

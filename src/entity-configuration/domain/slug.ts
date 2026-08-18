@@ -54,6 +54,7 @@ const ExtractionEntitySlug = {
 
 const ProcessingEntitySlug = {
   Skeletonization: 'skeletonization',
+  CircuitSimplification: 'circuit-simplification',
 } as const;
 
 const OptimizationEntitySlug = {

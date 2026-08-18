@@ -126,6 +126,7 @@ function ScanConfigWorkflowEditor() {
         scanConfig={scanConfig}
         seed={definition.seed}
         taskTypeBindings={definition.taskTypeBindings}
+        i18n={definition.i18n}
       />
     </ScanConfigWorkflowEditorFieldProvider>
   );

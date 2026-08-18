@@ -10,12 +10,39 @@ import { renderMathInText } from '@/features/scan-config/components/shared/rende
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Modal } from '@/ui/molecules/modal';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 import { scanConfigHeldTestId } from '../utils';
 
+import type { KeyboardEvent, MouseEvent, PointerEvent, SyntheticEvent } from 'react';
 import type { StringSelectionEnhanced as TStringSelectionEnhanced } from '@/features/scan-config/types';
+
+const DESCRIPTION_COLLAPSED_LINES = 3;
+
+function stopNestedAction(event: SyntheticEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
+}
+
+function DescriptionToggle({ isExpanded, toggle }: { isExpanded: boolean; toggle: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-expanded={isExpanded}
+      onClick={(event: MouseEvent<HTMLButtonElement>) => {
+        stopNestedAction(event);
+        toggle();
+      }}
+      onPointerDown={(event: PointerEvent<HTMLButtonElement>) => stopNestedAction(event)}
+      onKeyDown={(event: KeyboardEvent<HTMLButtonElement>) => event.stopPropagation()}
+      className="text-primary-8 text-xs font-medium underline underline-offset-2"
+    >
+      {isExpanded ? 'Show less' : 'Show more'}
+    </button>
+  );
+}
 
 /** renders a raw LaTeX expression (e.g. `A_{latex}`) to a KaTeX HTML string */
 function renderLatex(latex: string): string {
@@ -37,7 +64,7 @@ function OptionContent({
   content,
   onExpandLatex,
   testId,
-  markdown = false,
+  markdown = true,
 }: {
   content: TOptionContent;
   onExpandLatex?: () => void;
@@ -50,14 +77,28 @@ function OptionContent({
     // min-w-0 lets a wide formula scroll inside the card instead of spilling past it
     <div className="flex min-w-0 flex-col gap-2" data-testid={testId}>
       <span className="text-primary-8 text-lg font-bold">{renderMathInText(content.title)}</span>
-      {content.description &&
-        (markdown ? (
-          <MarkdownDescription className="text-sm text-gray-700">
-            {content.description}
-          </MarkdownDescription>
-        ) : (
-          <span className="text-sm text-gray-700">{content.description}</span>
-        ))}
+      {content.description && (
+        <ExpandableText
+          key={content.description}
+          text={content.description}
+          content={
+            markdown ? (
+              <MarkdownDescription className="text-sm text-gray-700">
+                {content.description}
+              </MarkdownDescription>
+            ) : (
+              content.description
+            )
+          }
+          collapsedLines={DESCRIPTION_COLLAPSED_LINES}
+          className="text-sm leading-5 text-gray-700"
+          btnWrapperClassName="mt-1"
+        >
+          {({ isExpanded, toggle }) => (
+            <DescriptionToggle isExpanded={isExpanded} toggle={toggle} />
+          )}
+        </ExpandableText>
+      )}
       {content.latexHtml && (
         <div className="relative rounded-md border-t border-gray-100 pt-2">
           <div
@@ -110,11 +151,12 @@ export function StringSelectionEnhanced({
   onChange,
   disabled = false,
   paramSchema,
-  markdown = false,
+  markdown = true,
 }: IStringSelectionEnhancedProps) {
   const [open, setOpen] = useState(false);
   const optionsId = useId();
   const [expandedLatexHtml, setExpandedLatexHtml] = useState<string | null>(null);
+  const options = paramSchema.enum ?? [];
 
   // Pre-render each option's content once per schema — KaTeX rendering is the only non-trivial cost.
   const optionContentByKey = useMemo(() => {
@@ -153,7 +195,9 @@ export function StringSelectionEnhanced({
             data-testid="scan-config-control"
             data-scan-config-options={optionsId}
             aria-controls={optionsId}
+            role="combobox"
             aria-expanded={open}
+            aria-haspopup="listbox"
             data-scan-config-block-element={ScanConfigUIElementDict.StringSelectionEnhanced}
             disabled={disabled}
             className={cn(
@@ -180,17 +224,20 @@ export function StringSelectionEnhanced({
         </PopoverTrigger>
         <PopoverContent
           align="start"
+          side="bottom"
+          collisionPadding={12}
           className={cn(
-            'max-h-100 w-(--radix-popover-trigger-width) overflow-y-auto rounded-2xl border border-gray-100 bg-white p-2 shadow-md'
+            'flex w-(--radix-popover-trigger-width) flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-2 shadow-md',
+            'max-h-[min(24rem,var(--radix-popover-content-available-height,24rem))]'
           )}
         >
           <div
             id={optionsId}
             data-testid="scan-config-options"
             role="listbox"
-            className="flex flex-col gap-2"
+            className="secondary-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain"
           >
-            {paramSchema.enum.map((key) => {
+            {options.map((key) => {
               const content = optionContentByKey.get(key);
               if (!content) return null;
               const selected = key === value;

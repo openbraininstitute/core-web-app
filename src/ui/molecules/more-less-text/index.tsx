@@ -12,6 +12,8 @@ import { cn } from '@/utils/css-class';
 type ExpandableTextProps = {
   id?: string;
   text: string;
+  /** When set, rendered inside the clamp container instead of plain `text` (e.g. markdown). */
+  content?: ReactNode;
   collapsedLines?: number;
   className?: ComponentProps<'div'>['className'];
   btnWrapperClassName?: ComponentProps<'div'>['className'];
@@ -44,6 +46,7 @@ const clampClassFor = (lines: number): string => {
 export function ExpandableText({
   id,
   text,
+  content,
   collapsedLines = 6,
   className,
   btnWrapperClassName,
@@ -52,7 +55,7 @@ export function ExpandableText({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isOverflowing, setIsOverflowing] = useState<boolean>(false);
 
-  const contentRef = useRef<HTMLParagraphElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -81,7 +84,7 @@ export function ExpandableText({
       cancelAnimationFrame(rafId);
       if (resizeObserver) resizeObserver.disconnect();
     };
-  }, [text, collapsedLines, isExpanded]);
+  }, [collapsedLines]);
 
   const toggle = (): void => {
     setIsExpanded((prev: boolean) => !prev);
@@ -89,14 +92,13 @@ export function ExpandableText({
 
   return (
     <div className="relative">
-      <p
+      <div
         id={id}
         ref={contentRef}
         className={cn(!isExpanded && clampClassFor(collapsedLines), className)}
-        aria-expanded={isExpanded}
       >
-        {text}
-      </p>
+        {content ?? text}
+      </div>
       {isOverflowing && (
         <div className={cn('mt-2', btnWrapperClassName)}>{children?.({ isExpanded, toggle })}</div>
       )}

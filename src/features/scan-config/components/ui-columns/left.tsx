@@ -20,6 +20,7 @@ import GenerateNewCampaignButton from '../generate-new-campaign-button';
 import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
+import type { TScanConfigWorkflowI18n } from '@/features/scan-config/workflow/types';
 
 export default function Left({
   schema,
@@ -49,6 +50,7 @@ export default function Left({
   aiEnabled,
   selectedMechanismsTab,
   setSelectedMechanismsTab,
+  i18n,
 }: {
   schema: ConfigSchema;
   selectedRootElement: string;
@@ -78,6 +80,7 @@ export default function Left({
   aiEnabled?: boolean;
   selectedMechanismsTab: string;
   setSelectedMechanismsTab: (tab: string) => void;
+  i18n?: TScanConfigWorkflowI18n;
 }) {
   const { aiConfig, setAiConfig } = useAIConfig();
   const [pendingRestoreConfig, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
@@ -181,6 +184,7 @@ export default function Left({
             entityType={entityType}
             campaignEntityType={campaignEntityType}
             generatedApiUrl={generatedEndpoint}
+            i18n={i18n}
           />
         </div>
       )}

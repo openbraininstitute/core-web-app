@@ -33,6 +33,7 @@ import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEModelBuildCampaign } from '@/entity-configuration/domain/model/memodel-build-campaign';
 import { EModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
+import { CircuitSimplificationCampaign } from '@/entity-configuration/domain/processing/circuit-simplification-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSingleNeuronSimulation,
@@ -72,6 +73,7 @@ import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definit
 import { buildMEModelWorkflow } from '@/features/scan-config/workflow/definitions/build-memodel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
+import { processCircuitSimplificationWorkflow } from '@/features/scan-config/workflow/definitions/process-circuit-simplification';
 import { validateEModelWorkflow } from '@/features/scan-config/workflow/definitions/validate-emodel';
 import EModelOverview from '@/ui/segments/detail-view/overview/e-model';
 import { Field } from '@/ui/segments/detail-view/overview/field';
@@ -348,6 +350,48 @@ export default async function Overview({
       );
     }
 
+    if (
+      'task_config_type' in entity &&
+      entity.task_config_type === TaskConfigType.CircuitSimplificationCampaign
+    ) {
+      // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+      const resolveSimplificationCampaign = CircuitSimplificationCampaign.api.query.resolve!;
+      const { data: simplificationConfig, error } = await tryCatch(
+        resolveSimplificationCampaign({ id: entity.id, context })
+      );
+
+      if (error || !simplificationConfig.circuitId) {
+        notFound();
+      }
+
+      const scanConfig = findScanConfigRegistryByTargetType(
+        ExtendedEntitiesTypeDict.CircuitSimplificationCampaign
+      );
+      if (!scanConfig) {
+        notFound();
+      }
+
+      return (
+        <ScanConfiguration
+          entityId={simplificationConfig.circuitId}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={simplificationConfig.campaign.id}
+          initialConfig={simplificationConfig.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Process,
+            id: ProcessScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Process}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={processCircuitSimplificationWorkflow.taskTypeBindings}
+          i18n={processCircuitSimplificationWorkflow.i18n}
+        />
+      );
+    }
+
     const buildCampaign =
       'task_config_type' in entity
         ? BuildScanConfigCampaigns[entity.task_config_type as TTaskConfigType]
@@ -596,6 +640,45 @@ export default async function Overview({
           id: ProcessScanConfigTabs.configuration,
         }}
         activity={ScanConfigActivity.Process}
+      />
+    );
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.CircuitSimplificationCampaign) {
+    // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+    const resolveSimplificationCampaign = CircuitSimplificationCampaign.api.query.resolve!;
+    const { data: simplificationConfig, error } = await tryCatch(
+      resolveSimplificationCampaign({ id: entity.id, context })
+    );
+
+    if (error || !simplificationConfig.circuitId) {
+      notFound();
+    }
+
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.CircuitSimplificationCampaign
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+
+    return (
+      <ScanConfiguration
+        entityId={simplificationConfig.circuitId}
+        scanConfig={scanConfig}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        origin={simplificationConfig.campaign.id}
+        initialConfig={simplificationConfig.config?.form}
+        readOnly={!isWorkflow}
+        defaultTab={{
+          __activity: ScanConfigActivity.Process,
+          id: ProcessScanConfigTabs.configuration,
+        }}
+        activity={ScanConfigActivity.Process}
+        campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+        taskTypeBindings={processCircuitSimplificationWorkflow.taskTypeBindings}
+        i18n={processCircuitSimplificationWorkflow.i18n}
       />
     );
   }
