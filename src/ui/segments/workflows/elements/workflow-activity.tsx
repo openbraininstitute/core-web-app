@@ -19,6 +19,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
+import { ServerGridStateStatus } from '@/features/data-grid/react';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -39,6 +40,7 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
+import type { IServerGridState } from '@/features/data-grid/react';
 
 /**
  * Campaign and simulation types whose row offers no "View results" action.
@@ -60,6 +62,8 @@ export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
   ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
 ];
+
+const IDLE_GRID_META: IServerGridState = { total: 0, status: ServerGridStateStatus.Idle };
 
 export interface WorkflowActivityRef {
   dataCount: number;
@@ -114,37 +118,30 @@ export function WorkflowActivity() {
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
+  // Also the SimpleGrid `key`, so a change remounts the grid on page 1.
+  const gridKey = `${resolvedActivityType}-${resolvedEntityType}`;
+
   const [selectedRow, setSelectedRow] = useState<EntityCoreObjectTypes | undefined>(undefined);
-  const [gridMeta, setGridMeta] = useState<{
-    total: number;
-    status: 'idle' | 'loading' | 'loaded';
-  }>({ total: 0, status: 'idle' });
+  const [gridMeta, setGridMeta] = useState<IServerGridState>(IDLE_GRID_META);
+  const [metaKey, setMetaKey] = useState(gridKey);
   const [isResolvingResults, setIsResolvingResults] = useState(false);
 
-  // changing category/type resets selection + meta; the SimpleGrid `key` remounts the
-  // grid with a fresh page-1 store
-  const updateActivity = (activity: TActivityValue | null) => {
+  // Reset on the key, not in the change handlers: both values also come from the URL, so
+  // browser navigation swaps them without either handler running.
+  if (metaKey !== gridKey) {
+    setMetaKey(gridKey);
+    setGridMeta(IDLE_GRID_META);
     setSelectedRow(undefined);
-    setGridMeta({ total: 0, status: 'idle' });
-    updateActivityState({ activityType: activity });
-  };
+  }
 
-  const updateEntityType = (et: TExtendedEntitiesTypeDict | null) => {
-    setSelectedRow(undefined);
-    setGridMeta({ total: 0, status: 'idle' });
-    updateActivityState({ entityType: et });
-  };
-
-  // server data source: the grid owns paging; each fetch also surfaces total/loading
-  // into `gridMeta` for the empty and loading states
+  // server data source: the grid owns paging and reports status/total back through
+  // `serverSide.onStateChange`, which drives the empty state
   const entity = getEntityByExtendedType({ type: resolvedEntityType });
   const listQuery = entity?.api.query?.list;
   const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
     () => ({
       fetch: async (q): Promise<IGridPage<EntityCoreObjectTypes>> => {
-        setGridMeta((m) => ({ ...m, status: 'loading' }));
         if (!listQuery) {
-          setGridMeta({ total: 0, status: 'loaded' });
           return { rows: [], total: 0 };
         }
         const response = await listQuery({
@@ -158,7 +155,6 @@ export function WorkflowActivity() {
           },
         });
         const total = response?.pagination?.total_items ?? 0;
-        setGridMeta({ total, status: 'loaded' });
         // per-entity list queries return a union of entity arrays; the table is entity-agnostic
         return { rows: (response?.data ?? []) as EntityCoreObjectTypes[], total };
       },
@@ -269,7 +265,8 @@ export function WorkflowActivity() {
     });
   }, [entityType, resolvedActivityType, selectedRow]);
 
-  const shouldShowEmptyState = gridMeta.status === 'loaded' && gridMeta.total === 0;
+  const shouldShowEmptyState =
+    gridMeta.status === ServerGridStateStatus.Loaded && gridMeta.total === 0;
 
   const columns: Array<ISimpleColumn<EntityCoreObjectTypes>> = useMemo(
     () => [
@@ -362,8 +359,8 @@ export function WorkflowActivity() {
           <ActivityAndTypeSelectors
             activity={activityType}
             entityType={entityType}
-            onActivityChange={updateActivity}
-            onEntityTypeChange={updateEntityType}
+            onActivityChange={(activityType) => updateActivityState({ activityType })}
+            onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
           />
         </div>
       </div>
@@ -387,8 +384,7 @@ export function WorkflowActivity() {
             <div className="relative min-h-0 flex-1">
               <div className="h-full overflow-hidden">
                 <SimpleGrid<EntityCoreObjectTypes>
-                  // remount on category/type change → fresh page-1 store
-                  key={`${resolvedActivityType}-${resolvedEntityType}`}
+                  key={gridKey}
                   columns={columns}
                   getRowId={(o) => o.id}
                   autoHeight={false}
@@ -410,6 +406,7 @@ export function WorkflowActivity() {
                       resolvedEntityType,
                     ],
                     enabled: Boolean(resolvedActivityType && resolvedEntityType),
+                    onStateChange: setGridMeta,
                   }}
                 />
               </div>

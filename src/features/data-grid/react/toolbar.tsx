@@ -15,7 +15,7 @@ export interface IDataGridToolbarSlots {
   brainRegion?: ReactNode;
   /** anything else the host contributes to the left cluster (e.g. a view toggle) */
   left?: ReactNode;
-  /** quick-search input — right cluster, first */
+  /** free-text search input — right cluster, first */
   search?: ReactNode;
 }
 

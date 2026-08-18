@@ -91,7 +91,7 @@ describe('reducer — filters', () => {
     expect(reducer(s, { type: GridActionType.ClearFilters })).toBe(s);
     expect(reducer(s, { type: GridActionType.SetPage, page: 1 })).toBe(s);
     expect(reducer(s, { type: GridActionType.SetPageSize, pageSize: 20 })).toBe(s);
-    expect(reducer(s, { type: GridActionType.SetQuickFilter, text: '' })).toBe(s);
+    expect(reducer(s, { type: GridActionType.SetFreeTextSearch, text: '' })).toBe(s);
   });
 
   it('clearFilters empties all filters and resets page', () => {
@@ -120,12 +120,12 @@ describe('reducer — pagination', () => {
   });
 });
 
-describe('reducer — quick filter', () => {
+describe('reducer — free-text search', () => {
   it('resets page and selection on text change', () => {
     let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
     s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
-    s = reducer(s, { type: GridActionType.SetQuickFilter, text: 'mouse' });
-    expect(s.quickFilter).toBe('mouse');
+    s = reducer(s, { type: GridActionType.SetFreeTextSearch, text: 'mouse' });
+    expect(s.freeTextSearch).toBe('mouse');
     expect(s.page).toBe(1);
     expect(s.selection).toEqual([]);
   });

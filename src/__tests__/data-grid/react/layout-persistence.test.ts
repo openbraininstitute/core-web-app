@@ -135,7 +135,7 @@ describe('column layout persistence (flag ON)', () => {
 
     const local = JSON.parse(window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`) as string);
     expect(local).not.toHaveProperty('filters');
-    expect(window.sessionStorage.getItem(`data-grid:v1:s:${KEY}`)).toBeTruthy();
+    expect(window.sessionStorage.getItem(`data-grid:v2:s:${KEY}`)).toBeTruthy();
   });
 
   it('remembers an AUXILIARY column the user switched on', async () => {
@@ -305,7 +305,7 @@ describe('column layout persistence (flag OFF)', () => {
     });
     controller.dispose();
 
-    expect(window.sessionStorage.getItem(`data-grid:v1:s:${KEY}`)).toBeTruthy();
+    expect(window.sessionStorage.getItem(`data-grid:v2:s:${KEY}`)).toBeTruthy();
   });
 });
 
@@ -334,14 +334,14 @@ describe('resetColumnLayout — the column chooser\'s "Reset to default"', () =>
 
   it('leaves browse state alone — only the layout resets', async () => {
     const controller = await makeController();
-    controller.store.dispatch({ type: GridActionType.SetQuickFilter, text: 'abc' });
+    controller.store.dispatch({ type: GridActionType.SetFreeTextSearch, text: 'abc' });
     controller.store.dispatch({ type: GridActionType.SetPageSize, pageSize: 50 });
     controller.store.dispatch({ type: GridActionType.SetHiddenColumns, hidden: ['species'] });
 
     controller.resetColumnLayout();
 
     const state = controller.store.getSnapshot();
-    expect(state.quickFilter).toBe('abc');
+    expect(state.freeTextSearch).toBe('abc');
     expect(state.pageSize).toBe(50);
     controller.dispose();
   });

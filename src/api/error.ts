@@ -22,4 +22,9 @@ export class ApiError extends Error {
   }
 }
 
+/** The backend's "not a member of this project" signal, as opposed to a real failure. */
+export function isNotAuthorizedError(error: unknown): boolean {
+  return error instanceof ApiError && error.cause?.code === 'NOT_AUTHORIZED';
+}
+
 export default ApiError;

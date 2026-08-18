@@ -16,3 +16,11 @@ export function getWorkspaceScopeFilters(scope: TWorkspaceScope, context?: Works
 
   return filters[scope] ?? {};
 }
+
+/** Record-level form of {@link WorkspaceScope.Project}'s filter. */
+export function isProjectPrivateRecord(
+  record: { authorized_public: boolean; authorized_project_id: string },
+  projectId?: string
+): boolean {
+  return !record.authorized_public && record.authorized_project_id === projectId;
+}

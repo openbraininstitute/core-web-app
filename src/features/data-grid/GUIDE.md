@@ -166,7 +166,7 @@ All three visibility flags live on `IColumnModel` (`core/domain/column-model.ts`
   it invalidates every user's saved layout for that column — treat it as a migration.
 - `field` defaults to `id`; `sortField` defaults to `field ?? id`. Read §5.2 before
   setting `sortable: true`.
-- `getValue` feeds sorting fallback, the quick filter and export. `cellRenderer` is a
+- `getValue` feeds sorting fallback, the free-text search and export. `cellRenderer` is a
   **string key** resolved by the React ring's registry — the core ring never imports React.
 
 ### 2.2 `auxiliary: true` — hidden until ticked
@@ -333,7 +333,9 @@ Registration has two routes, and the choice matters:
   **unconditionally for every listing**. Use this for a renderer that any schema may
   reference, because many definitions declare no `registerCellRenderers` at all and an
   unregistered key silently degrades the cell to plain text. `LIFECYCLE_STATUS_RENDERER`
-  and `DESCRIPTION_RENDERER` are registered this way.
+  and `DESCRIPTION_RENDERER` are registered this way, as are the shared preview and
+  contributors renderers (`registerSharedRenderers`) — the shared column catalog emits
+  those keys, so any schema built from it references them.
 
 A column with a `cellRenderer` is excluded from `withEmptyPlaceholder`
 (`keepsBlankWhenEmpty`), so the component owns its own empty state — render
@@ -666,7 +668,7 @@ State is persisted in **two deliberately separate slices** (`react/persistence/s
 
 | slice | storage | key | keeps | lifetime |
 | --- | --- | --- | --- | --- |
-| session | `sessionStorage` | `data-grid:v1:s:<instanceKey>` | `filters`, `sort`, `page`, `pageSize`, `quickFilter` | the browser tab |
+| session | `sessionStorage` | `data-grid:v1:s:<instanceKey>` | `filters`, `sort`, `page`, `pageSize`, `freeTextSearch` | the browser tab |
 | layout | `localStorage` | `data-grid:v1:l:<section>/<dataType>` | `columnOrder`, `hiddenColumns`, `columnWidths` | across sessions |
 
 The split is a product decision, not an implementation detail: a saved **layout** is a

@@ -22,7 +22,7 @@ export function lifecycleStatusColumn<Row>(o?: TColumnOverride<Row>): IColumnMod
       header: 'Lifecycle status',
       order: LAST_COLUMN_ORDER,
       sortable: false,
-      // label, not the wire value: also feeds quick filter, export and the fallback
+      // label, not the wire value: also feeds free-text search, export and the fallback
       getValue: (r) => {
         const status = (r as IHasLifecycleStatus).lifecycle_status;
         return (

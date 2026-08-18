@@ -21,8 +21,8 @@ export interface IGridQuery {
   pageSize: number;
   sort: TSortModel;
   filters: TFilterModel;
-  /** free-text quick filter (a binding maps this to e.g. search / ilike_search) */
-  quickFilter?: string;
+  /** free-text term; each binding decides which fields it matches and how */
+  freeTextSearch?: string;
   /**
    * Opaque, host-provided params merged into the request by the data source
    * (e.g. brain-region id, scope filters, `with_facets`, extra query params).

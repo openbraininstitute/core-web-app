@@ -11,31 +11,56 @@ export interface IGridSearchProps {
   onSearch: (text: string) => void;
   openOnMount?: boolean;
   className?: string;
+  /** Current term from the grid store, including one hydrated from session storage. */
+  value?: string;
 }
 
 /**
- * The listing quick-search: a round button that expands into a pill input with a
- * clear affordance. Debounced text is pushed to the grid store's quick filter via
+ * The listing free-text search: a round button that expands into a pill input with a
+ * clear affordance. Debounced text is pushed to the grid store's free-text search via
  * {@link onSearch}.
  */
-export function GridSearch({ onSearch, openOnMount = false, className }: IGridSearchProps) {
-  const [open, setOpen] = useState(openOnMount);
-  const [text, setText] = useState('');
+export function GridSearch({ onSearch, openOnMount = false, className, value }: IGridSearchProps) {
+  const [open, setOpen] = useState(openOnMount || Boolean(value));
+  const [text, setText] = useState(value ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
+  /** last term this input pushed, so its own echo is not adopted back */
+  const lastCommittedRef = useRef(value ?? '');
 
-  const commit = useDebouncedCallback((t: string) => onSearch(t), [onSearch], 300);
+  const commit = useDebouncedCallback(
+    (t: string) => {
+      lastCommittedRef.current = t;
+      onSearch(t);
+    },
+    [onSearch],
+    300
+  );
+
+  // Adopt store-driven changes only (hydration, `resetState`); adopting this input's own
+  // echo would clobber keystrokes typed while that render was in flight.
+  useEffect(() => {
+    if (value === undefined || value === lastCommittedRef.current) return;
+    commit.cancel();
+    lastCommittedRef.current = value;
+    setText(value);
+    if (value) setOpen(true);
+  }, [value, commit]);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  /** Push a term immediately, cancelling any pending debounce. */
+  const commitNow = (t: string) => {
+    commit.cancel();
+    lastCommittedRef.current = t;
+    setText(t);
+    onSearch(t);
+  };
+
   const toggle = () => {
     if (open) {
-      if (text) {
-        setText('');
-        commit.cancel();
-        onSearch('');
-      }
+      if (text) commitNow('');
       setOpen(false);
     } else {
       setOpen(true);
@@ -48,9 +73,7 @@ export function GridSearch({ onSearch, openOnMount = false, className }: IGridSe
   };
 
   const clear = () => {
-    setText('');
-    commit.cancel();
-    onSearch('');
+    commitNow('');
     inputRef.current?.focus();
   };
 

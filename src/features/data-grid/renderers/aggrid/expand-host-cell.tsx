@@ -1,10 +1,10 @@
 import { Align } from '@/features/data-grid/core';
+import { renderKeyedCell } from '@/features/data-grid/renderers/aggrid/cell-host';
 import { isDetailRow } from '@/features/data-grid/renderers/aggrid/detail-rows';
 import { ExpandToggleButton } from '@/features/data-grid/renderers/aggrid/expand-cell';
 
 import type { CustomCellRendererProps } from 'ag-grid-react';
 import type { ReactNode } from 'react';
-import type { ICellRendererProps } from '@/features/data-grid/react';
 import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-context';
 
 /** Params threaded onto the host column by the col-def mapper. */
@@ -33,23 +33,13 @@ export function AgExpandHostCell(props: CustomCellRendererProps) {
 
   const align = params.expandAlign ?? 'right';
 
-  let content: ReactNode = null;
-  if (params.rendererKey) {
-    const Component = ctx.cellRenderers.get(params.rendererKey);
-    if (Component) {
-      const cellProps: ICellRendererProps<unknown> = {
-        row: props.data,
-        value: props.value as ICellRendererProps<unknown>['value'],
-        rowIndex: props.node?.rowIndex ?? 0,
-        params,
-      };
-      content = <Component {...cellProps} />;
-    } else {
-      content = props.value == null ? null : String(props.value);
-    }
-  } else {
-    content = props.value == null ? null : String(props.value);
-  }
+  const keyed = renderKeyedCell(ctx.cellRenderers, params.rendererKey, {
+    row: props.data,
+    value: props.value,
+    rowIndex: props.node?.rowIndex ?? 0,
+    params,
+  });
+  const content: ReactNode = keyed ?? (props.value == null ? null : String(props.value));
 
   const toggle = (
     <span className="shrink-0">

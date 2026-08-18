@@ -5,14 +5,15 @@ import type { IGridState, IStatePersistence } from '@/features/data-grid/core';
 /**
  * Two slices stored apart: session = transient browse state, cleared with the tab;
  * local = durable view layout. Selection and expansion are never persisted. Keys are
- * namespaced `data-grid:v1:*`, versioned so a breaking state shape can bump it.
+ * namespaced `data-grid:<version>:*`; the session slice is at v2 after the
+ * `quickFilter` → `freeTextSearch` rename, which a v1 entry cannot satisfy.
  */
 const SESSION_KEYS = [
   'filters',
   'sort',
   'page',
   'pageSize',
-  'quickFilter',
+  'freeTextSearch',
 ] as const satisfies ReadonlyArray<keyof IGridState>;
 const LOCAL_KEYS = [
   'columnOrder',
@@ -80,7 +81,7 @@ function createStoragePersistence(
 export function createSessionStatePersistence(): IStatePersistence {
   return createStoragePersistence(
     () => (typeof window !== 'undefined' ? window.sessionStorage : undefined),
-    'data-grid:v1:s:',
+    'data-grid:v2:s:',
     SESSION_KEYS
   );
 }

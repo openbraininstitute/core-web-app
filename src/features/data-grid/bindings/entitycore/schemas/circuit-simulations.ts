@@ -24,6 +24,7 @@ import {
   type ICampaignRow,
   registerCampaignRenderers,
 } from '@/features/data-grid/bindings/entitycore/schemas/campaign-common';
+import { dataBrowseSelection } from '@/features/data-grid/bindings/entitycore/schemas/selection-policies';
 import { mergeColumnDef, SortDirection } from '@/features/data-grid/core';
 
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
@@ -92,6 +93,7 @@ export function buildSimulationCampaignDefinition({
     id,
     getRowId: (row) => row.id,
     defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
+    selection: dataBrowseSelection,
     columns,
     ...(nestedMode ? { detail: campaignDetailSpec<ICampaignRow>() } : {}),
   };

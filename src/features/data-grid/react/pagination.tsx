@@ -37,8 +37,8 @@ export function GridPagination<Row>({
   pageSize,
   className,
 }: IGridPaginationProps<Row>) {
-  // hidden when there's nothing to paginate — zero results or a single page
-  if (total <= 0 || Math.ceil(total / pageSize) <= 1) return null;
+  // shown even for a single page, always has a size selector
+  if (total <= 0) return null;
   const options = controller.schema.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
 
   return (

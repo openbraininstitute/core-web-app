@@ -17,9 +17,10 @@ export {
   createSessionStatePersistence,
   layoutKeyFor,
 } from './persistence/storage-persistence';
+export { ServerGridStateStatus } from './renderer';
 export { DataGridToolbar } from './toolbar';
 export { useDataGrid } from './use-data-grid';
-export { useGridState } from './use-grid-state';
+export { useGridState, useGridStateSlice } from './use-grid-state';
 
 export type { IActiveFiltersButtonProps } from './active-filters';
 export type { IAdvancedFiltersMenuProps } from './advanced-filters';
@@ -35,8 +36,10 @@ export type {
   IDetailRuntime,
   IExpandColumnConfig,
   IGridRendererProps,
+  IServerGridState,
   TDetailRenderFn,
   TGridRenderer,
+  TServerGridStateStatus,
 } from './renderer';
 export type { IDataGridToolbarProps, IDataGridToolbarSlots } from './toolbar';
 export type { IUseDataGridArgs, IUseDataGridResult } from './use-data-grid';

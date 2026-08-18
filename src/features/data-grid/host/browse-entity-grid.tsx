@@ -3,11 +3,13 @@
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { ApiError } from '@/api/error';
+import { isNotAuthorizedError } from '@/api/error';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -22,7 +24,7 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 // barrel pulls in the registry, which statically imports the circuit plugin schema,
 // whose body imports THIS host; going through the barrel would form a module-init
 // cycle (the registry's definitions would see `undefined` for the circuit entry).
-import { buildCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
+import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
   createDefaultOperatorRegistry,
@@ -32,7 +34,12 @@ import {
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
-import { createDefaultPersistence, DataGrid, layoutKeyFor } from '@/features/data-grid/react';
+import {
+  createDefaultPersistence,
+  DataGrid,
+  layoutKeyFor,
+  useGridStateSlice,
+} from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -49,14 +56,21 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
+import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import { getWorkspaceScopeFilters, isProjectPrivateRecord } from '@/utils/workspace-scope';
 
 import type { FC, ReactNode } from 'react';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
-import type { IGridDataSource, TFacets, TGridContextValue } from '@/features/data-grid/core';
+import type {
+  IGridDataSource,
+  IGridState,
+  TFacets,
+  TGridContextValue,
+} from '@/features/data-grid/core';
 import type {
   IDataGridSelection,
   IDataGridToolbarSlots,
@@ -64,6 +78,9 @@ import type {
   IExpandColumnConfig,
 } from '@/features/data-grid/react';
 import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
+
+/** Module-level so the slice subscription's reader identity stays stable. */
+const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
 
 export interface IBrowseEntityGridProps extends BrowseEntityScopeProps {
   definition: TAnyEntityGridDefinition;
@@ -139,6 +156,7 @@ export function EntityDataGrid({
   extraFactors,
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
+  const pathname = usePathname();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
@@ -180,11 +198,19 @@ export function EntityDataGrid({
   useEffect(() => () => setGridTotal(undefined), [setGridTotal]);
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
-  const cellRenderers = useMemo(() => buildCellRenderers(definition), [definition]);
+  const cellRenderers = getCellRenderers(definition);
 
+  // A picker supplying `onCellClick` navigates instead of opening the mini-detail panel.
+  const onCellClick = mainTableProps?.onCellClick;
   const handleRowClick = useCallback(
-    (row: EntityCoreIdentifiableNamed) => makeSelectEntityClickEvent({ display: true, data: row }),
-    []
+    (row: EntityCoreIdentifiableNamed) => {
+      if (onCellClick) {
+        onCellClick(pathname, row, dataType);
+        return;
+      }
+      makeSelectEntityClickEvent({ display: true, data: row });
+    },
+    [onCellClick, pathname, dataType]
   );
 
   // Picker selection is opt-in: only when `mainTableProps` supplies both a type and
@@ -220,9 +246,11 @@ export function EntityDataGrid({
   useEffect(() => controller.connect(), [controller]);
 
   const handleSearch = useCallback(
-    (text: string) => controller.store.dispatch({ type: GridActionType.SetQuickFilter, text }),
+    (text: string) => controller.store.dispatch({ type: GridActionType.SetFreeTextSearch, text }),
     [controller]
   );
+
+  const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
 
   const extraOrderBy = extraQueryParams?.order_by;
   const defaultDataSource = useMemo(
@@ -295,6 +323,20 @@ export function EntityDataGrid({
     allowQuery &&
     (isAllSpeciesMode || !requireBrainRegion || hasBrainRegion) &&
     (extraEnabled ?? true);
+
+  // Per row, not per listing: a Combined listing mixes public and owned records.
+  const resolveRowIsPrivate = useCallback(
+    (record: EntityCoreObjectTypes) => isProjectPrivateRecord(record, projectId),
+    [projectId]
+  );
+
+  // Gates `MiniDetailView`'s notebook delete and course-sync actions.
+  const { data: virtualLabData } = useQuery({
+    queryKey: workspaceKeyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
+    enabled: requireMiniDetailView && !!virtualLabId,
+    staleTime: 1000 * 60 * 5,
+  });
 
   // A loader-scoped override replaces the source's own facets-only request, so it has
   // to be fetched here or set filters show "No options". Same request scope as the
@@ -385,7 +427,9 @@ export function EntityDataGrid({
                 onSelect={requireEntityTypeSelector.onSelect}
               />
             ) : undefined,
-            search: allowSearch ? <GridSearch onSearch={handleSearch} openOnMount /> : undefined,
+            search: allowSearch ? (
+              <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />
+            ) : undefined,
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
           }}
@@ -443,7 +487,13 @@ export function EntityDataGrid({
             classNames?.miniView
           )}
         >
-          <MiniDetailView section={section} {...miniViewProps} dataType={dataType} />
+          <MiniDetailView
+            section={section}
+            dataType={dataType}
+            isPrivate={resolveRowIsPrivate}
+            virtualLabData={virtualLabData}
+            {...miniViewProps}
+          />
         </div>
       )}
       <DownloadPanel />
@@ -474,7 +524,7 @@ function renderListingError(error: unknown, entityTitle?: string): ReactNode {
   let content: ReactNode = `An error occurred while fetching "${entityTitle ?? 'entities'}" data for this region. We are sorry about the inconvenience. Please contact support.`;
   let shouldContactSupport = true;
 
-  if (error instanceof ApiError && error.cause?.code === 'NOT_AUTHORIZED') {
+  if (isNotAuthorizedError(error)) {
     shouldContactSupport = false;
     content = (
       <>

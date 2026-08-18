@@ -33,6 +33,8 @@ import type {
   TSelectionMode,
   TSortModel,
 } from '@/features/data-grid/core';
+import type { IServerGridState } from '@/features/data-grid/react';
+import type { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 
 registerDataGridModules();
 
@@ -89,6 +91,18 @@ export interface ISimpleServerSide<Row> {
   total?: number;
   /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …). */
   queryOptions?: Omit<UseQueryOptions<IGridPage<Row>>, 'queryKey' | 'queryFn'>;
+  /**
+   * Rendered when the fetch fails; omit to fall back to an empty grid, which is
+   * indistinguishable from a listing with no rows. `hasRows` is false on a first-load
+   * failure, where this replaces the grid, and true on a later one, where it is a banner
+   * above the last page that loaded — size the content accordingly.
+   */
+  renderError?: (error: unknown, info: { hasRows: boolean }) => ReactNode;
+  /**
+   * Notified with the fetch status and row total, derived from React Query so a cache
+   * hit still reports. Use for host-level empty/loading states.
+   */
+  onStateChange?: (result: IServerGridState) => void;
 }
 
 export interface ISimpleGridProps<Row> {
@@ -138,6 +152,11 @@ export interface ISimpleGridProps<Row> {
   pageSizeOptions?: number[];
   /** Operator catalog for the filter editors (default: the standard registry). */
   operators?: OperatorRegistry;
+  /**
+   * Resolves a column's `cellRenderer` key to a component. Needed when reusing a
+   * binding's schema columns, which name renderers by key rather than inline.
+   */
+  cellRenderers?: CellRendererRegistry;
   /**
    * Opt into server mode: sort/filter/pagination are resolved by the data source
    * rather than in memory. Routes to the enhanced engine.
@@ -375,8 +394,11 @@ function SimpleGridBasic<Row>({
  * (header filter popovers, column chooser, store-driven sorting, pagination).
  */
 export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
-  // Server mode also runs the enhanced engine: the store drives the query.
-  const enhanced = Boolean(props.filterable || props.showColumnChooser || props.serverSide);
+  // Server mode and a `cellRenderers` registry both need the enhanced engine;
+  // `SimpleGridBasic` ignores the registry and leaves keyed columns blank.
+  const enhanced = Boolean(
+    props.filterable || props.showColumnChooser || props.serverSide || props.cellRenderers
+  );
   if (!enhanced) return <SimpleGridBasic {...props} />;
 
   const { serverSide } = props;
@@ -391,6 +413,8 @@ export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
       enabled={serverSide?.enabled}
       total={serverSide?.total}
       serverQueryOptions={serverSide?.queryOptions}
+      renderError={serverSide?.renderError}
+      onServerStateChange={serverSide?.onStateChange}
       loadingLabel={props.loadingLabel}
       filterable={props.filterable}
       showColumnChooser={props.showColumnChooser}
@@ -403,6 +427,7 @@ export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
       autoHeight={props.autoHeight}
       rowSelection={props.rowSelection}
       operators={props.operators}
+      cellRenderers={props.cellRenderers}
       className={cn(
         props.className,
         props.pinnedColumnBorder === false ? NO_PINNED_BORDER_CLASS : undefined
