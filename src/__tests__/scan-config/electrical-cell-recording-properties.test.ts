@@ -72,13 +72,13 @@ describe('resolveRecordingPropertiesEndpoint', () => {
 describe('parseElectricalCellRecordingProperties', () => {
   it('parses the declared endpoint response', () => {
     const parsed = parseElectricalCellRecordingProperties({
-      Protocols: ['IDrest', 'IV'],
-      ProtocolsByRecording: { [FIRST]: ['IDrest'], [SECOND]: ['IV'] },
-      AmplitudesByProtocol: { IDrest: [0.1, 0.2], IV: [-0.02] },
+      Protocols: ['IDRestProtocol', 'IVProtocol'],
+      ProtocolsByRecording: { [FIRST]: ['IDRestProtocol'], [SECOND]: ['IVProtocol'] },
+      AmplitudesByProtocol: { IDRestProtocol: [0.1, 0.2], IVProtocol: [-0.02] },
     });
 
-    expect(parsed.Protocols).toEqual(['IDrest', 'IV']);
-    expect(parsed.AmplitudesByProtocol.IDrest).toEqual([0.1, 0.2]);
+    expect(parsed.Protocols).toEqual(['IDRestProtocol', 'IVProtocol']);
+    expect(parsed.AmplitudesByProtocol.IDRestProtocol).toEqual([0.1, 0.2]);
   });
 
   it('rejects a response missing the amplitude map', () => {

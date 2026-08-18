@@ -198,7 +198,11 @@ export default function EphysViewer({
                   repetition: repetitionClosure,
                 })
               }
-              onProtocolChange={(next) => dispatch({ type: 'setProtocol', protocol: next })}
+              onProtocolChange={
+                protocolOverride
+                  ? undefined
+                  : (next) => dispatch({ type: 'setProtocol', protocol: next })
+              }
               variant={variant}
             />
           </ErrorBoundary>

@@ -56,7 +56,7 @@ interface TraceOverviewComponentProps {
   cellId: string;
   protocol: string;
   onCellIdChange: (cellId: string) => void;
-  onProtocolChange: (value: string) => void;
+  onProtocolChange?: (value: string) => void;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
   variant?: TViewVariant;
 }
@@ -354,7 +354,8 @@ export default function TraceOverview({
             className="stimulus-select w-48"
             placeholder="Select a stimulus"
             value={protocol}
-            onChange={onProtocolChange}
+            disabled={!onProtocolChange}
+            onChange={(next) => onProtocolChange?.(next)}
             variant={variant}
             items={[
               { value: 'All', label: 'All' },

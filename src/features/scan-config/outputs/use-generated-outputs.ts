@@ -37,6 +37,16 @@ type Result = {
   isLoading: boolean;
 };
 
+function outputIdentity(data: TResolvedOutput | null | undefined): string {
+  if (!data) return '-';
+
+  const assets = Array.isArray(data.entity?.assets)
+    ? data.entity.assets.map((asset) => asset?.id ?? '').join(',')
+    : '';
+
+  return [data.ref?.id, data.strategyId, data.extendedType, data.entity?.id, assets].join(':');
+}
+
 /**
  * Resolves a run's `generated` refs into the output files its panel lists.
  *
@@ -79,41 +89,40 @@ export function useGeneratedOutputs({ execution, context, pollingEnabled = true 
     })),
   });
 
-  const files = useMemo(
-    () =>
-      queries.flatMap(({ data }) => {
-        if (!data) return [];
+  const settled = queries.every((query) => !query.isFetching);
+  const resolvedKey = queries.map(({ data }) => outputIdentity(data)).join('|');
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the resolved data through `resolvedKey`; depending on `queries` would defeat the memo
+  const { files, listingTypes } = useMemo(() => {
+    const resolved = queries
+      .map(({ data }) => data)
+      .filter((data): data is TResolvedOutput => !!data);
+
+    return {
+      files: resolved.flatMap((data) => {
         const strategy = getOutputStrategyById(data.strategyId);
         if (!strategy) return [];
 
         return orderOutputFiles(strategy.toFiles(data), data.extendedType);
       }),
-    [queries]
-  );
+      listingTypes: settled
+        ? [
+            ...new Set(
+              resolved
+                .map((data) => data.extendedType)
+                .filter((type): type is TExtendedEntitiesTypeDict => !!type)
+            ),
+          ].sort()
+        : [],
+    };
+  }, [resolvedKey, settled]);
 
-  // Settled means no query is in flight, not that every ref produced data: a ref with no id keeps
-  // its query disabled and therefore pending forever, which must not block the rest of the run.
-  const settled = queries.every((query) => !query.isFetching);
-  const listingTypes = settled
-    ? [
-        ...new Set(
-          queries
-            .map((query) => query.data?.extendedType)
-            .filter((type): type is TExtendedEntitiesTypeDict => !!type)
-        ),
-      ].sort()
-    : [];
-  // Identifies the run as well as its types: two configs of one campaign feed the same listing,
-  // and selecting the second must refresh it again rather than read as already handled.
   const invalidation = listingTypes.length
     ? `${execution?.id ?? ''}|${listingTypes.join(',')}`
     : '';
   const invalidated = useRef<string | null>(null);
 
   useEffect(() => {
-    // Runs once per (run, types) pair, so a strategy polling for a late asset does not
-    // re-invalidate on every poll tick.
     if (!invalidation || invalidated.current === invalidation) return;
 
     invalidated.current = invalidation;

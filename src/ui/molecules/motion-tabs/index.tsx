@@ -28,6 +28,8 @@ type TMotionTabsContext = {
   setValue: (value: string) => void;
   layoutId: string;
   variant: TMotionTabsVariant;
+  tabId: (value: string) => string;
+  panelId: (value: string) => string;
 };
 
 const MotionTabsContext = createContext<TMotionTabsContext | null>(null);
@@ -77,7 +79,14 @@ export function MotionTabs({
   );
 
   const contextValue = useMemo(
-    () => ({ value: current, setValue, layoutId, variant }),
+    () => ({
+      value: current,
+      setValue,
+      layoutId,
+      variant,
+      tabId: (id: string) => `${layoutId}-tab-${id}`,
+      panelId: (id: string) => `${layoutId}-panel-${id}`,
+    }),
     [current, layoutId, setValue, variant]
   );
 
@@ -125,7 +134,7 @@ export function MotionTabsTrigger({
   className?: string;
   indicatorClassName?: string;
 }) {
-  const { value: current, setValue, layoutId, variant } = useMotionTabs();
+  const { value: current, setValue, layoutId, variant, tabId, panelId } = useMotionTabs();
   const active = current === value;
 
   if (variant === 'underline') {
@@ -133,6 +142,8 @@ export function MotionTabsTrigger({
       <button
         type="button"
         role="tab"
+        id={tabId(value)}
+        aria-controls={panelId(value)}
         aria-selected={active}
         onClick={() => setValue(value)}
         className={cn(
@@ -170,6 +181,8 @@ export function MotionTabsTrigger({
       <button
         type="button"
         role="tab"
+        id={tabId(value)}
+        aria-controls={panelId(value)}
         aria-selected={active}
         onClick={() => setValue(value)}
         className={cn(
@@ -195,12 +208,18 @@ export function MotionTabsContent({
   children: ReactNode;
   className?: string;
 }) {
-  const { value: current } = useMotionTabs();
+  const { value: current, tabId, panelId } = useMotionTabs();
   const reduce = useReducedMotion();
 
   if (current !== value) {
     return (
-      <div hidden className={className}>
+      <div
+        hidden
+        id={panelId(value)}
+        role="tabpanel"
+        aria-labelledby={tabId(value)}
+        className={className}
+      >
         {children}
       </div>
     );
@@ -209,6 +228,9 @@ export function MotionTabsContent({
   return (
     <motion.div
       key={value}
+      id={panelId(value)}
+      role="tabpanel"
+      aria-labelledby={tabId(value)}
       initial={{ opacity: 0, y: reduce ? 0 : 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: CONTENT_EASE_OUT }}

@@ -94,7 +94,11 @@ const selectionSchema = {
                       description: 'eFEL ``voltage_base``.',
                       properties: {
                         type: { const: 'VoltageBaseFeature', default: 'VoltageBaseFeature' },
-                        stim_start: { type: 'number', default: 0.0 },
+                        stim_start: {
+                          type: 'number',
+                          default: 0.0,
+                          ui_element: 'float_parameter_sweep',
+                        },
                       },
                     },
                     {
@@ -115,10 +119,10 @@ const selectionSchema = {
             properties: {
               type: { const: 'SAHPProtocol', default: 'SAHPProtocol', type: 'string' },
               extraction_amplitudes: { type: 'array', default: [] },
-              stim_start: { type: 'number', default: 0.0 },
-              stim_mid: { type: 'number', default: 0.0 },
-              stim_mid_2: { type: 'number', default: 0.0 },
-              stim_end: { type: 'number', default: 0.0 },
+              stim_start: { type: 'number', default: 0.0, ui_element: 'float_parameter_sweep' },
+              stim_mid: { type: 'number', default: 0.0, ui_element: 'float_parameter_sweep' },
+              stim_mid_2: { type: 'number', default: 0.0, ui_element: 'float_parameter_sweep' },
+              stim_end: { type: 'number', default: 0.0, ui_element: 'float_parameter_sweep' },
               features: { type: 'array', items: { oneOf: [] } },
             },
           },

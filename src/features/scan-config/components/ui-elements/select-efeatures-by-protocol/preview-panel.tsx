@@ -134,12 +134,9 @@ function TracesTab({ recordingIds }: { recordingIds: readonly string[] }) {
 
   return (
     <EphysViewer
-      // remounted per recording: the viewer downloads and indexes one NWB, and carries the
-      // protocol/repetition/sweep it settled on for that file
       key={recording.id}
       entity={recording}
       ctx={workspace}
-      // one panel among several, already committed to the interactive reading
       showViewModeToggle={false}
       controlsVariant="panel"
       detailControls={inputSelect}

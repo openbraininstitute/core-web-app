@@ -29,7 +29,6 @@ import {
 } from '@/features/scan-config/bridge/settings-panel';
 import { cn } from '@/utils/css-class';
 
-import { EFeatureFigure } from './feature-figure';
 import {
   fieldUnsetValue,
   isFieldSet,
@@ -686,7 +685,6 @@ function FeatureRow({
   onReset,
   disabled,
   docUrl,
-  figureUrl,
   renderField,
 }: {
   def: TFeatureDef | undefined;
@@ -697,7 +695,6 @@ function FeatureRow({
   onReset: () => void;
   disabled: boolean;
   docUrl: string | null;
-  figureUrl: string | null;
   renderField: TRenderField;
 }) {
   const label = def ? featureLabel(def) : value.type;
@@ -737,7 +734,6 @@ function FeatureRow({
         )}
       >
         <SettingsForm description={def?.description ?? null}>
-          <EFeatureFigure url={figureUrl} label={label} />
           <SettingsFields
             fields={def?.overrideFields ?? []}
             state={value as Record<string, ConfigValue>}
@@ -782,7 +778,6 @@ export function ProtocolCard({
   disabled,
   discoveredAmplitudes,
   docUrlFor,
-  figureUrlFor,
   renderField,
 }: {
   def: TProtocolDef;
@@ -798,7 +793,6 @@ export function ProtocolCard({
   disabled: boolean;
   discoveredAmplitudes: number[] | undefined;
   docUrlFor: (feature: TFeatureDef) => string | null;
-  figureUrlFor: (feature: TFeatureDef) => string | null;
   renderField: TRenderField;
 }) {
   const [featuresOpen, setFeaturesOpen] = useState(true);
@@ -964,7 +958,6 @@ export function ProtocolCard({
                           panelKey={`${def.typeName}:${feature.type}`}
                           disabled={disabled}
                           docUrl={featureDef ? docUrlFor(featureDef) : null}
-                          figureUrl={featureDef ? figureUrlFor(featureDef) : null}
                           renderField={renderField}
                           onReset={() =>
                             onChange({
