@@ -5,6 +5,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { eFeatureExtractionFlag } from '@/features/feature-flags/flags';
 
 import type { ITaskResult, ITaskResultFilter } from '@/api/entitycore/types/entities/task-result';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -37,6 +38,7 @@ export const EFeatureExtractionResult: EntityCoreTypeConfig<TEFeatureExtractionR
   extendedType: ExtendedEntitiesTypeDict.EFeatureExtractionResult,
   type: EntityTypeDict.TaskResult,
   slug: EntitySlug.EFeatureExtractionResult,
+  requiredFeatures: [eFeatureExtractionFlag.key],
   api: {
     config: {
       // a task result carries no facetable column of its own
