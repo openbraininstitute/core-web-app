@@ -135,7 +135,7 @@ describe('column layout persistence (flag ON)', () => {
 
     const local = JSON.parse(window.localStorage.getItem(`data-grid:v1:l:${LAYOUT_KEY}`) as string);
     expect(local).not.toHaveProperty('filters');
-    expect(window.sessionStorage.getItem(`data-grid:v1:s:${KEY}`)).toBeTruthy();
+    expect(window.sessionStorage.getItem(`data-grid:v2:s:${KEY}`)).toBeTruthy();
   });
 
   it('remembers an AUXILIARY column the user switched on', async () => {
@@ -305,7 +305,7 @@ describe('column layout persistence (flag OFF)', () => {
     });
     controller.dispose();
 
-    expect(window.sessionStorage.getItem(`data-grid:v1:s:${KEY}`)).toBeTruthy();
+    expect(window.sessionStorage.getItem(`data-grid:v2:s:${KEY}`)).toBeTruthy();
   });
 });
 

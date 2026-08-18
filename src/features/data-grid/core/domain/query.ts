@@ -21,7 +21,7 @@ export interface IGridQuery {
   pageSize: number;
   sort: TSortModel;
   filters: TFilterModel;
-  /** ilike_search (free-text search on name+description) */
+  /** free-text term; each binding decides which fields it matches and how */
   freeTextSearch?: string;
   /**
    * Opaque, host-provided params merged into the request by the data source

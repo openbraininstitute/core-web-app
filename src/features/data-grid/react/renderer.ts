@@ -24,7 +24,8 @@ export const ServerGridStateStatus = {
   Error: 'error',
   Loaded: 'loaded',
 } as const;
-type TServerGridStateStatus = (typeof ServerGridStateStatus)[keyof typeof ServerGridStateStatus];
+export type TServerGridStateStatus =
+  (typeof ServerGridStateStatus)[keyof typeof ServerGridStateStatus];
 /**
  * A server-backed grid's fetch state, derived from the query rather than from the data
  * source, so a cache hit that never runs the fetcher still reports.

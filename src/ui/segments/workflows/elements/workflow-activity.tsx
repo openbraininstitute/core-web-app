@@ -19,7 +19,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
-import { ServerGridStateStatus } from '@/features/data-grid/react/renderer';
+import { ServerGridStateStatus } from '@/features/data-grid/react';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -54,6 +54,8 @@ const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
 ];
+
+const IDLE_GRID_META: IServerGridState = { total: 0, status: ServerGridStateStatus.Idle };
 
 export interface WorkflowActivityRef {
   dataCount: number;
@@ -108,26 +110,21 @@ export function WorkflowActivity() {
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
+  // Also the SimpleGrid `key`, so a change remounts the grid on page 1.
+  const gridKey = `${resolvedActivityType}-${resolvedEntityType}`;
+
   const [selectedRow, setSelectedRow] = useState<EntityCoreObjectTypes | undefined>(undefined);
-  const [gridMeta, setGridMeta] = useState<IServerGridState>({
-    total: 0,
-    status: ServerGridStateStatus.Idle,
-  });
+  const [gridMeta, setGridMeta] = useState<IServerGridState>(IDLE_GRID_META);
+  const [metaKey, setMetaKey] = useState(gridKey);
   const [isResolvingResults, setIsResolvingResults] = useState(false);
 
-  // changing category/type resets selection + meta; the SimpleGrid `key` remounts the
-  // grid with a fresh page-1 store
-  const updateActivity = (activity: TActivityValue | null) => {
+  // Reset on the key, not in the change handlers: both values also come from the URL, so
+  // browser navigation swaps them without either handler running.
+  if (metaKey !== gridKey) {
+    setMetaKey(gridKey);
+    setGridMeta(IDLE_GRID_META);
     setSelectedRow(undefined);
-    setGridMeta({ total: 0, status: ServerGridStateStatus.Idle });
-    updateActivityState({ activityType: activity });
-  };
-
-  const updateEntityType = (et: TExtendedEntitiesTypeDict | null) => {
-    setSelectedRow(undefined);
-    setGridMeta({ total: 0, status: ServerGridStateStatus.Idle });
-    updateActivityState({ entityType: et });
-  };
+  }
 
   // server data source: the grid owns paging and reports status/total back through
   // `serverSide.onStateChange`, which drives the empty state
@@ -354,8 +351,8 @@ export function WorkflowActivity() {
           <ActivityAndTypeSelectors
             activity={activityType}
             entityType={entityType}
-            onActivityChange={updateActivity}
-            onEntityTypeChange={updateEntityType}
+            onActivityChange={(activityType) => updateActivityState({ activityType })}
+            onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
           />
         </div>
       </div>
@@ -379,8 +376,7 @@ export function WorkflowActivity() {
             <div className="relative min-h-0 flex-1">
               <div className="h-full overflow-hidden">
                 <SimpleGrid<EntityCoreObjectTypes>
-                  // remount on category/type change → fresh page-1 store
-                  key={`${resolvedActivityType}-${resolvedEntityType}`}
+                  key={gridKey}
                   columns={columns}
                   getRowId={(o) => o.id}
                   autoHeight={false}

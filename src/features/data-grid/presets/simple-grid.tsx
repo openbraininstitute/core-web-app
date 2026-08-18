@@ -92,10 +92,12 @@ export interface ISimpleServerSide<Row> {
   /** pass-through React Query options (refetchOnWindowFocus, staleTime, retry, …). */
   queryOptions?: Omit<UseQueryOptions<IGridPage<Row>>, 'queryKey' | 'queryFn'>;
   /**
-   * Rendered in place of the grid when the fetch fails; omit to fall back to an empty
-   * grid, which is indistinguishable from a listing with no rows.
+   * Rendered when the fetch fails; omit to fall back to an empty grid, which is
+   * indistinguishable from a listing with no rows. `hasRows` is false on a first-load
+   * failure, where this replaces the grid, and true on a later one, where it is a banner
+   * above the last page that loaded — size the content accordingly.
    */
-  renderError?: (error: unknown) => ReactNode;
+  renderError?: (error: unknown, info: { hasRows: boolean }) => ReactNode;
   /**
    * Notified with the fetch status and row total, derived from React Query so a cache
    * hit still reports. Use for host-level empty/loading states.
@@ -392,8 +394,11 @@ function SimpleGridBasic<Row>({
  * (header filter popovers, column chooser, store-driven sorting, pagination).
  */
 export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
-  // Server mode also runs the enhanced engine: the store drives the query.
-  const enhanced = Boolean(props.filterable || props.showColumnChooser || props.serverSide);
+  // Server mode and a `cellRenderers` registry both need the enhanced engine;
+  // `SimpleGridBasic` ignores the registry and leaves keyed columns blank.
+  const enhanced = Boolean(
+    props.filterable || props.showColumnChooser || props.serverSide || props.cellRenderers
+  );
   if (!enhanced) return <SimpleGridBasic {...props} />;
 
   const { serverSide } = props;

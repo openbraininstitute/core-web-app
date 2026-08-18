@@ -58,7 +58,8 @@ type Props = {
   dataType: TExtendedEntitiesTypeDict;
   hideUseModelAction?: boolean;
   workflowTargetType?: TExtendedEntitiesTypeDict;
-  isPrivate?: boolean;
+  /** Pass a predicate where the listing can mix public and owned records. */
+  isPrivate?: boolean | ((record: EntityCoreObjectTypes) => boolean);
   virtualLabData?: TVirtualLab;
 };
 
@@ -103,7 +104,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       onClose={onClose}
       hideUseModelAction={hideUseModelAction}
       workflowTargetType={workflowTargetType}
-      isPrivate={isPrivate}
+      isPrivate={typeof isPrivate === 'function' ? Boolean(record && isPrivate(record)) : isPrivate}
       virtualLabData={virtualLabData}
     />
   );

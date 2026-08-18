@@ -24,28 +24,43 @@ export function GridSearch({ onSearch, openOnMount = false, className, value }: 
   const [open, setOpen] = useState(openOnMount || Boolean(value));
   const [text, setText] = useState(value ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
+  /** last term this input pushed, so its own echo is not adopted back */
+  const lastCommittedRef = useRef(value ?? '');
 
-  const commit = useDebouncedCallback((t: string) => onSearch(t), [onSearch], 300);
+  const commit = useDebouncedCallback(
+    (t: string) => {
+      lastCommittedRef.current = t;
+      onSearch(t);
+    },
+    [onSearch],
+    300
+  );
 
-  // Adopt store-driven changes (hydration on a controller swap, `resetState`). The echo
-  // of this input's own commit is a same-value set that React bails out of.
+  // Adopt store-driven changes only (hydration, `resetState`); adopting this input's own
+  // echo would clobber keystrokes typed while that render was in flight.
   useEffect(() => {
-    if (value === undefined) return;
+    if (value === undefined || value === lastCommittedRef.current) return;
+    commit.cancel();
+    lastCommittedRef.current = value;
     setText(value);
     if (value) setOpen(true);
-  }, [value]);
+  }, [value, commit]);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  /** Push a term immediately, cancelling any pending debounce. */
+  const commitNow = (t: string) => {
+    commit.cancel();
+    lastCommittedRef.current = t;
+    setText(t);
+    onSearch(t);
+  };
+
   const toggle = () => {
     if (open) {
-      if (text) {
-        setText('');
-        commit.cancel();
-        onSearch('');
-      }
+      if (text) commitNow('');
       setOpen(false);
     } else {
       setOpen(true);
@@ -58,9 +73,7 @@ export function GridSearch({ onSearch, openOnMount = false, className, value }: 
   };
 
   const clear = () => {
-    setText('');
-    commit.cancel();
-    onSearch('');
+    commitNow('');
     inputRef.current?.focus();
   };
 

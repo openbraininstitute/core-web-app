@@ -1,6 +1,5 @@
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceSection } from '@/constants';
 import {
   brainRegionColumn,
   contributionsColumn,
@@ -25,9 +24,9 @@ import {
   flatAdvancedFilters,
   recordIdFilter,
 } from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { dataBrowseSelection } from '@/features/data-grid/bindings/entitycore/schemas/selection-policies';
 import {
   Align,
-  byContext,
   FilterOptionsKind,
   FreeEntryKind,
   OperatorId,
@@ -36,24 +35,8 @@ import {
 
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
-import type {
-  IAdvancedFilterGroup,
-  IColumnModel,
-  IGridSchema,
-  ISelectionSpec,
-} from '@/features/data-grid/core';
+import type { IAdvancedFilterGroup, IColumnModel, IGridSchema } from '@/features/data-grid/core';
 import type { CellRendererRegistry } from '@/features/data-grid/react';
-
-/**
- * Multi-download checkboxes only in Data browse. Simulate/Build pick via mini-detail
- * or `mainTableProps.selectionType` (picker mode), so schema selection stays off there.
- */
-export const memodelDataBrowseSelection: ISelectionSpec = {
-  enabled: byContext({
-    default: false,
-    rules: [{ when: { section: WorkspaceSection.Data }, value: true }],
-  }),
-};
 
 /**
  * `GET /memodel` params with no column: just the record's own `id`. Shared by `memodel`
@@ -269,7 +252,7 @@ export const memodelSchema: IGridSchema<IMEModel> = {
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
-  selection: memodelDataBrowseSelection,
+  selection: dataBrowseSelection,
   advancedFilters: flatAdvancedFilters(memodelAdvancedFilters),
   columns: buildMemodelColumns(),
 };

@@ -8,9 +8,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { ApiError } from '@/api/error';
+import { isNotAuthorizedError } from '@/api/error';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceScope, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PortalRegionBanner } from '@/features/brain-region-hierarchy/components/region-banner';
@@ -24,7 +24,7 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 // barrel pulls in the registry, which statically imports the circuit plugin schema,
 // whose body imports THIS host; going through the barrel would form a module-init
 // cycle (the registry's definitions would see `undefined` for the circuit entry).
-import { buildCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
+import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
   createDefaultOperatorRegistry,
@@ -59,9 +59,10 @@ import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-select
 import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import { getWorkspaceScopeFilters, isProjectPrivateRecord } from '@/utils/workspace-scope';
 
 import type { FC, ReactNode } from 'react';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import type {
@@ -197,7 +198,7 @@ export function EntityDataGrid({
   useEffect(() => () => setGridTotal(undefined), [setGridTotal]);
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
-  const cellRenderers = useMemo(() => buildCellRenderers(definition), [definition]);
+  const cellRenderers = getCellRenderers(definition);
 
   // A picker supplying `onCellClick` navigates instead of opening the mini-detail panel.
   const onCellClick = mainTableProps?.onCellClick;
@@ -322,6 +323,12 @@ export function EntityDataGrid({
     allowQuery &&
     (isAllSpeciesMode || !requireBrainRegion || hasBrainRegion) &&
     (extraEnabled ?? true);
+
+  // Per row, not per listing: a Combined listing mixes public and owned records.
+  const resolveRowIsPrivate = useCallback(
+    (record: EntityCoreObjectTypes) => isProjectPrivateRecord(record, projectId),
+    [projectId]
+  );
 
   // Gates `MiniDetailView`'s notebook delete and course-sync actions.
   const { data: virtualLabData } = useQuery({
@@ -482,10 +489,10 @@ export function EntityDataGrid({
         >
           <MiniDetailView
             section={section}
-            {...miniViewProps}
             dataType={dataType}
-            isPrivate={scope === WorkspaceScope.Project}
+            isPrivate={resolveRowIsPrivate}
             virtualLabData={virtualLabData}
+            {...miniViewProps}
           />
         </div>
       )}
@@ -517,7 +524,7 @@ function renderListingError(error: unknown, entityTitle?: string): ReactNode {
   let content: ReactNode = `An error occurred while fetching "${entityTitle ?? 'entities'}" data for this region. We are sorry about the inconvenience. Please contact support.`;
   let shouldContactSupport = true;
 
-  if (error instanceof ApiError && error.cause?.code === 'NOT_AUTHORIZED') {
+  if (isNotAuthorizedError(error)) {
     shouldContactSupport = false;
     content = (
       <>

@@ -22,11 +22,24 @@ export function buildCellRenderers(definition: TAnyEntityGridDefinition): CellRe
   const registry = new CellRendererRegistry();
   registry.register(LIFECYCLE_STATUS_RENDERER, LifecycleStatusCell);
   registry.register(DESCRIPTION_RENDERER, DescriptionCell);
-  // The shared column catalog emits the preview and contributors keys, so any schema
-  // built from it references them; registering here keeps that from depending on the
-  // author remembering an opt-in line. A definition's own registrations run last and
-  // still win.
   registerSharedRenderers(registry);
   definition.registerCellRenderers?.(registry);
+  return registry;
+}
+
+/** One registry per definition, so every grid on it resolves against the same object. */
+const REGISTRY_BY_DEFINITION = new WeakMap<TAnyEntityGridDefinition, CellRendererRegistry>();
+
+/**
+ * The shared registry for a definition, built on first use. Prefer this in components so
+ * a nested grid and its host resolve against one object. Shared and mutable — use
+ * {@link buildCellRenderers} for a private registry you intend to add to.
+ */
+export function getCellRenderers(definition: TAnyEntityGridDefinition): CellRendererRegistry {
+  let registry = REGISTRY_BY_DEFINITION.get(definition);
+  if (!registry) {
+    registry = buildCellRenderers(definition);
+    REGISTRY_BY_DEFINITION.set(definition, registry);
+  }
   return registry;
 }

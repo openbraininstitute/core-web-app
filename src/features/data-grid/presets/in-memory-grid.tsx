@@ -35,7 +35,7 @@ import { ColumnChooser } from '@/features/data-grid/react/column-chooser';
 import { GridLoaderOverlay } from '@/features/data-grid/react/grid-loader';
 import { GridPagination } from '@/features/data-grid/react/pagination';
 import { useGridState } from '@/features/data-grid/react/use-grid-state';
-import { AgCellHost } from '@/features/data-grid/renderers/aggrid/cell-host';
+import { AgCellHost, renderKeyedCell } from '@/features/data-grid/renderers/aggrid/cell-host';
 import {
   keepsBlankWhenEmpty,
   withEmptyPlaceholder,
@@ -74,8 +74,10 @@ const EXPAND_COL_ID = '__im_expand';
 const DETAIL_ID_PREFIX = 'im-detail:';
 const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 
-/** Shared empty registry — the in-memory grid renders cells inline, not via keys. */
+/** Shared empty registry for callers that pass no renderers of their own. */
 const EMPTY_CELL_RENDERERS = new CellRendererRegistry();
+
+const EMPTY_PAGE = { rows: [], total: 0 };
 
 /**
  * Vertically-centre cells. Making them flex is also what lets `justify-content` (the
@@ -161,10 +163,10 @@ export interface IInMemoryGridProps<Row> {
   /** Gate the server fetch (default: true when a `dataSource` is set). */
   enabled?: boolean;
   /**
-   * Server mode only. Rendered in place of the grid when the fetch fails; omit to fall
-   * back to an empty grid, which is indistinguishable from a listing with no rows.
+   * Server mode only. Rendered when the fetch fails. `hasRows` is false when this
+   * replaces the grid, true when it is a banner above the last page that loaded.
    */
-  renderError?: (error: unknown) => ReactNode;
+  renderError?: (error: unknown, info: { hasRows: boolean }) => ReactNode;
   /**
    * Server mode only. Notified with the fetch's status and row total, derived from React
    * Query so a cache hit still reports. The reference need not be stable.
@@ -217,12 +219,41 @@ function toColumnModel<Row>(c: ISimpleColumn<Row>): IColumnModel<Row> {
   return model;
 }
 
-/** Inline cell renderer host — invokes the column's `renderCell` with the row. */
+/** Content sources for one column, threaded onto its cells by the col-def builder. */
+interface IInMemoryCellParams<Row> {
+  /** inline `renderCell`; wins over `rendererKey`. */
+  render?: (row: Row) => ReactNode;
+  rendererKey?: string;
+  rendererParams?: Record<string, unknown>;
+  readValue: (row: Row) => ReactNode;
+  /** wraps the resolved content, e.g. to seat the expander at the cell's edge. */
+  wrap?: (row: Row, content: ReactNode) => ReactNode;
+}
+
+/** Resolves a cell in precedence order: inline `renderCell`, registry key, plain value. */
 function InMemoryRenderCell<Row>(
-  props: ICellRendererParams<TDisplayRow<Row>> & { render: (row: Row) => ReactNode }
+  props: ICellRendererParams<TDisplayRow<Row>> & IInMemoryCellParams<Row>
 ) {
   const data = props.data;
-  return data != null && !isDetailRow(data) ? props.render(data as Row) : null;
+  if (data == null || isDetailRow(data)) return null;
+
+  const row = data as Row;
+  const wrap = props.wrap;
+  if (props.render) {
+    const inline = props.render(row);
+    return wrap ? wrap(row, inline) : inline;
+  }
+
+  const value = props.readValue(row);
+  const ctx = props.context as IAgGridContext;
+  const keyed = renderKeyedCell(ctx.cellRenderers, props.rendererKey, {
+    row,
+    value,
+    rowIndex: props.node?.rowIndex ?? 0,
+    params: props.rendererParams ?? {},
+  });
+  const content = keyed ?? value;
+  return wrap ? wrap(row, content) : content;
 }
 
 /** Detail render + measured-height config threaded through AG Grid's `context`. */
@@ -397,10 +428,13 @@ export function InMemoryGrid<Row>({
   );
   const facets: TFacets | undefined = isServerMode ? serverResult.data?.facets : clientFacets;
 
-  // Client mode filters/sorts/paginates in memory; server mode uses the fetched page.
+  // Server mode reads the fetched page, so the in-memory pass is skipped there entirely.
   const clientPage = useMemo(
-    () => runInMemoryQuery(rows, query, { columns, disablePagination: !pagination }),
-    [rows, query, columns, pagination]
+    () =>
+      isServerMode
+        ? EMPTY_PAGE
+        : runInMemoryQuery(rows, query, { columns, disablePagination: !pagination }),
+    [isServerMode, rows, query, columns, pagination]
   );
   const page: IGridPage<Row> = isServerMode
     ? { rows: serverResult.data?.rows ?? [], total: serverResult.data?.total ?? total ?? 0 }
@@ -557,29 +591,32 @@ export function InMemoryGrid<Row>({
       const baseRender = c.renderCell;
 
       if (baseRender || isHost) {
-        // Wrap the cell so the expander can render at the cell's edge, centred.
-        colDef.cellRenderer = InMemoryRenderCell;
-        colDef.cellRendererParams = {
-          render: (row: Row): ReactNode => {
-            const content = baseRender
-              ? baseRender(row)
-              : c.getValue
-                ? (c.getValue(row) ?? null)
-                : ((row as unknown as Record<string, ReactNode>)[c.field ?? c.id] ?? null);
-            if (!isHost) return content;
-            return (
-              <div className="flex h-full w-full items-center gap-1">
-                {expandAlign === Align.Left && (
-                  <span className="shrink-0">{renderExpander(row)}</span>
-                )}
-                <span className="min-w-0 flex-1">{content}</span>
-                {expandAlign === Align.Right && (
-                  <span className="shrink-0">{renderExpander(row)}</span>
-                )}
-              </div>
-            );
-          },
+        // A host column can also name a registry renderer, which the else-branch below
+        // never sees, so both go through the same cell host.
+        const cellParams: IInMemoryCellParams<Row> = {
+          render: baseRender,
+          rendererKey: c.cellRenderer,
+          rendererParams: c.cellRendererParams,
+          readValue: (row) =>
+            c.getValue
+              ? (c.getValue(row) ?? null)
+              : ((row as unknown as Record<string, ReactNode>)[c.field ?? c.id] ?? null),
+          wrap: isHost
+            ? (row, content) => (
+                <div className="flex h-full w-full items-center gap-1">
+                  {expandAlign === Align.Left && (
+                    <span className="shrink-0">{renderExpander(row)}</span>
+                  )}
+                  <span className="min-w-0 flex-1">{content}</span>
+                  {expandAlign === Align.Right && (
+                    <span className="shrink-0">{renderExpander(row)}</span>
+                  )}
+                </div>
+              )
+            : undefined,
         };
+        colDef.cellRenderer = InMemoryRenderCell;
+        colDef.cellRendererParams = cellParams;
       } else {
         if (c.getValue) {
           const getValue = c.getValue;
@@ -743,8 +780,17 @@ export function InMemoryGrid<Row>({
 
   if (!mounted) return <div className={cn('ag-data-grid w-full', className)} />;
 
-  if (isServerMode && serverResult.isError && renderError) {
-    return <div className={cn('w-full', className)}>{renderError(serverResult.error)}</div>;
+  // `keepPreviousData` keeps the last good page rendered, so a later failure reports
+  // above it and leaves the pager reachable; with nothing to keep, it replaces the grid.
+  const hasRows = (serverResult.data?.rows.length ?? 0) > 0;
+  const failed = isServerMode && serverResult.isError && renderError !== undefined;
+
+  if (failed && !hasRows) {
+    return (
+      <div className={cn('w-full', className)}>
+        {renderError(serverResult.error, { hasRows: false })}
+      </div>
+    );
   }
 
   return (
@@ -753,6 +799,11 @@ export function InMemoryGrid<Row>({
     // cell takes the space the chooser and pager leave, so the pager stays in view and
     // the rows scroll inside the grid.
     <div className={cn('flex w-full flex-col', !autoHeight && 'h-full min-h-0', className)}>
+      {failed && hasRows && (
+        <div className="mb-2 w-full shrink-0">
+          {renderError(serverResult.error, { hasRows: true })}
+        </div>
+      )}
       {showChooser && (
         <div className="mb-2 flex shrink-0 items-center justify-end">
           <ColumnChooser controller={controller} state={state} />

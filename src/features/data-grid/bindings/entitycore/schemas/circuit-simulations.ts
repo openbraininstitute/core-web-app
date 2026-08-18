@@ -1,5 +1,4 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceSection } from '@/constants';
 import {
   ionChannelSimulationExpandedViewConfig,
   memodelCircuitSimulationExpandedViewConfig,
@@ -25,7 +24,8 @@ import {
   type ICampaignRow,
   registerCampaignRenderers,
 } from '@/features/data-grid/bindings/entitycore/schemas/campaign-common';
-import { byContext, mergeColumnDef, SortDirection } from '@/features/data-grid/core';
+import { dataBrowseSelection } from '@/features/data-grid/bindings/entitycore/schemas/selection-policies';
+import { mergeColumnDef, SortDirection } from '@/features/data-grid/core';
 
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import type { IEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
@@ -93,13 +93,7 @@ export function buildSimulationCampaignDefinition({
     id,
     getRowId: (row) => row.id,
     defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
-    // Checkboxes + bulk actions on Data browse only; workflow surfaces select by picker.
-    selection: {
-      enabled: byContext({
-        default: false,
-        rules: [{ when: { section: WorkspaceSection.Data }, value: true }],
-      }),
-    },
+    selection: dataBrowseSelection,
     columns,
     ...(nestedMode ? { detail: campaignDetailSpec<ICampaignRow>() } : {}),
   };

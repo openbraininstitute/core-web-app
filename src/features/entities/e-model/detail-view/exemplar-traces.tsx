@@ -7,6 +7,7 @@ import { getElectricalCellRecordings } from '@/api/entitycore/queries';
 import { getEntityDerivations } from '@/api/entitycore/queries/general/derivation';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
+import { isNotAuthorizedError } from '@/api/error';
 import { ErrorData } from '@/components/message-banners/error';
 import { DEFAULT_PAGE_XSMALL_SIZE, type TViewVariant, ViewVariant } from '@/constants';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
@@ -26,6 +27,23 @@ import type {
 import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { NormalizeChars } from '@/utils/type';
+
+/**
+ * A failed fetch is not an empty listing: reporting every error as "no traces" hides a
+ * permission problem behind a wording the user cannot act on.
+ */
+function describeTracesError(error: unknown): { title: string; description: string } {
+  if (isNotAuthorizedError(error)) {
+    return {
+      title: 'No access to exemplar traces',
+      description: "You don't have permission to view the recordings behind this e-model.",
+    };
+  }
+  return {
+    title: 'Could not load exemplar traces',
+    description: 'Something went wrong while fetching them. Please try again.',
+  };
+}
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -104,17 +122,20 @@ export function ExemplarTraces({ source, variant = ViewVariant.Light }: Props) {
           serverSide={{
             dataSource,
             queryKey: ['emodel-exemplar-traces', virtualLabId, projectId, source.id],
-            renderError: () => (
-              <ErrorData
-                title="No exemplar traces found"
-                description="No exemplar traces found for this e-model"
-                cls={{
-                  container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full!',
-                  title: 'text-primary-9',
-                  description: 'text-primary-9',
-                }}
-              />
-            ),
+            renderError: (error, { hasRows }) => {
+              const { title, description } = describeTracesError(error);
+              return (
+                <ErrorData
+                  title={title}
+                  description={hasRows ? undefined : description}
+                  cls={{
+                    container: 'bg-white text-primary-9 border-primary-9! w-full! max-w-full!',
+                    title: 'text-primary-9',
+                    description: 'text-primary-9',
+                  }}
+                />
+              );
+            },
           }}
         />
       </div>

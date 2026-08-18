@@ -17,6 +17,7 @@ export {
   createSessionStatePersistence,
   layoutKeyFor,
 } from './persistence/storage-persistence';
+export { ServerGridStateStatus } from './renderer';
 export { DataGridToolbar } from './toolbar';
 export { useDataGrid } from './use-data-grid';
 export { useGridState, useGridStateSlice } from './use-grid-state';
@@ -38,6 +39,7 @@ export type {
   IServerGridState,
   TDetailRenderFn,
   TGridRenderer,
+  TServerGridStateStatus,
 } from './renderer';
 export type { IDataGridToolbarProps, IDataGridToolbarSlots } from './toolbar';
 export type { IUseDataGridArgs, IUseDataGridResult } from './use-data-grid';
