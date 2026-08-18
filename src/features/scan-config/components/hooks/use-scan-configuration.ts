@@ -35,6 +35,7 @@ import {
 } from '@/features/scan-config/types';
 import {
   resolveWorkflowTaskTypeBindings,
+  type TScanConfigWorkflowI18n,
   type TWorkflowTaskTypeBindings,
   type TWorkflowTaskTypeBindingsInput,
 } from '@/features/scan-config/workflow/types';
@@ -65,6 +66,7 @@ export type TUseScanConfigurationParams = {
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
   taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
+  i18n?: TScanConfigWorkflowI18n;
 };
 
 export type TScanConfigurationReadyState = {
@@ -86,6 +88,7 @@ export type TScanConfigurationReadyState = {
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
+  i18n?: TScanConfigWorkflowI18n;
 };
 
 /**
@@ -114,6 +117,7 @@ export function useScanConfiguration({
   workflowSessionSelection,
   resolveSessionFromIdType,
   taskTypeBindings,
+  i18n,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
   const registryResolved = useMemo(() => resolveScanConfigFromRegistry(scanConfig), [scanConfig]);
 
@@ -268,6 +272,7 @@ export function useScanConfiguration({
         workflowSessionSelection,
         resolveSessionFromIdType,
         taskTypeBindings: resolveWorkflowTaskTypeBindings(taskTypeBindings, { entity }),
+        i18n,
       },
     };
   }, [
@@ -288,5 +293,6 @@ export function useScanConfiguration({
     taskTypeBindings,
     virtualLabId,
     workflowSessionSelection,
+    i18n,
   ]);
 }

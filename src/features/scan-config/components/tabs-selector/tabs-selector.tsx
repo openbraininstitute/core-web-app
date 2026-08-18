@@ -26,17 +26,23 @@ interface TabsSelectorProps {
   disableResultsTab: boolean;
   activity: TScanConfigActivity;
   disableConfigurationTab: boolean;
+  resultsTabLabel?: string;
 }
 
-export default function TabsSelector({
+export function TabsSelector({
   className,
   tab,
   setTab,
   disableResultsTab,
   activity,
   disableConfigurationTab,
+  resultsTabLabel,
 }: TabsSelectorProps) {
-  const tabs = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
+  const tabs = Object.entries(ScanConfigTabs[activity]).map(([id, defaultLabel]) => {
+    const label =
+      id === ProcessScanConfigTabs.skeletonizations && resultsTabLabel
+        ? resultsTabLabel
+        : defaultLabel;
     const disableSimulations = !!(
       (id === SimulateScanConfigTabs.simulations ||
         id === ExtractScanConfigTabs.extractions ||
@@ -99,7 +105,7 @@ export default function TabsSelector({
                   <span>
                     <Tab
                       key={`tab-${id}`}
-                      tab={label}
+                      tab={id}
                       rounded={getRoundedByIndex(index, tabs.length)}
                       selectedTab={tab}
                       onClick={onClick}
@@ -136,7 +142,7 @@ export default function TabsSelector({
           return (
             <Tab
               key={`tab-${id}`}
-              tab={label}
+              tab={id}
               rounded={getRoundedByIndex(index, tabs.length)}
               selectedTab={tab}
               onClick={onClick}
@@ -151,3 +157,5 @@ export default function TabsSelector({
     </div>
   );
 }
+
+export default TabsSelector;

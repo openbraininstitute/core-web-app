@@ -37,6 +37,7 @@ export {
   getScanConfigConfigureBinding,
   ionChannelSimulationConfigureBinding,
   memodelCircuitSimulationConfigureBinding,
+  processCircuitSimplificationConfigureBinding,
   processEmCellMeshConfigureBinding,
   resolveScanConfigFromIdType,
   resolveScanConfigFromRegistry,

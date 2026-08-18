@@ -12,7 +12,7 @@ import {
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import TabsSelector from '@/features/scan-config/components/tabs-selector';
+import { TabsSelector } from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
   getConfigKeyForEntity,
@@ -35,8 +35,8 @@ import {
 } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
+import { ProcessingTab } from '@/features/scan-config/use-cases/processing/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
-import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
@@ -49,7 +49,10 @@ import { showRestoreAtom } from '../ai-assistant/message-item/collapsible-messag
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
+import type {
+  TScanConfigWorkflowI18n,
+  TWorkflowTaskTypeBindings,
+} from '@/features/scan-config/workflow/types';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
@@ -75,6 +78,7 @@ type Props = {
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
+  i18n?: TScanConfigWorkflowI18n;
 };
 
 export function ScanConfigTemplate(props: Props) {
@@ -105,6 +109,7 @@ function ScanConfigTemplateContent({
   workflowSessionSelection,
   resolveSessionFromIdType,
   taskTypeBindings,
+  i18n,
 }: Props) {
   const browseOverlayContext = useScanConfigMainOverlayOptional();
   const browseOverlay = browseOverlayContext?.overlay;
@@ -208,13 +213,13 @@ function ScanConfigTemplateContent({
     .with(ScanConfigActivity.Process, () =>
       taskTypeBindings ? (
         <Suspense>
-          <SkeletonizationTab
-            campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
-            campaignOriginAction={campaignOriginAction}
+          <ProcessingTab
             isCampaignIdChanged={isCampaignIdChanged}
+            campaignOriginAction={campaignOriginAction}
+            campaignId={campaignId}
             taskTypeBindings={taskTypeBindings}
+            launchLabel={i18n?.launch}
+            workflowLabel={i18n?.workflowLabel}
           />
         </Suspense>
       ) : null
@@ -247,10 +252,14 @@ function ScanConfigTemplateContent({
           setTab={setTab}
           disableResultsTab={!campaignId || loading}
           disableConfigurationTab={Boolean(!initialConfig && readOnly)}
+          resultsTabLabel={i18n?.resultsTab}
         />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && (
-            <ButtonCopyId label={get(messages, `${activity}.CopyCampaignId`)} value={campaignId} />
+            <ButtonCopyId
+              label={i18n?.copyCampaignId ?? get(messages, `${activity}.CopyCampaignId`)}
+              value={campaignId}
+            />
           )}
         </div>
       </header>
@@ -265,7 +274,7 @@ function ScanConfigTemplateContent({
             // reduced motion keeps the fade, drops the movement
             className={cn(
               'h-[calc(100%-0.5rem)] min-h-0',
-              'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
+              'transition-[opacity,transform] duration-200 ease-out-expo',
               'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
             )}
           >
@@ -310,6 +319,7 @@ function ScanConfigTemplateContent({
             generatedEndpoint={generatedEndpoint}
             entityType={entityType}
             aiEnabled={aiEnabled}
+            i18n={i18n}
           />
           <div
             id="scan-config-controls-middle"
@@ -359,7 +369,7 @@ function ScanConfigTemplateContent({
         <div
           id="scan-config-results"
           className={cn(
-            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
+            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 h-full overflow-hidden',
             { hidden: isConfigurationTab },
             { 'h-full': !isConfigurationTab }
           )}

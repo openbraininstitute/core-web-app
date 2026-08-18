@@ -10,6 +10,7 @@ import {
   getStatusCountMap as getIonChannelModelingStatusCountMap,
   type TExtendedIonChannelModelingCampaignsType,
 } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { CircuitSimplificationCampaign } from '@/entity-configuration/domain/processing/circuit-simplification-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   rows as listSimulationRows,
@@ -104,13 +105,16 @@ export function WorkflowStatusCell({
         .task_config_type;
       const isExpandableTask =
         taskConfigType === TaskConfigType.CircuitExtractionCampaign ||
+        taskConfigType === TaskConfigType.CircuitSimplificationCampaign ||
         taskConfigType === TaskConfigType.SkeletonizationCampaign;
 
       if (isExpandableTask) {
         const expandRow =
           taskConfigType === TaskConfigType.SkeletonizationCampaign
             ? SkeletonizationCampaign.api.expandRow
-            : CircuitExtractionCampaign.api.expandRow;
+            : taskConfigType === TaskConfigType.CircuitSimplificationCampaign
+              ? CircuitSimplificationCampaign.api.expandRow
+              : CircuitExtractionCampaign.api.expandRow;
         return (
           <CampaignStatusBadgePopover
             fetchStatus={() =>

@@ -7,15 +7,25 @@ import { useCallback, useMemo, useState } from 'react';
 import 'katex/dist/katex.min.css';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Modal } from '@/ui/molecules/modal';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
+import type { KeyboardEvent, MouseEvent, PointerEvent, SyntheticEvent } from 'react';
 import type { StringSelectionEnhanced as TStringSelectionEnhanced } from '@/features/scan-config/types';
+
+const DESCRIPTION_COLLAPSED_LINES = 3;
 
 /** renders a raw LaTeX expression (e.g. `A_{latex}`) to a KaTeX HTML string */
 function renderLatex(latex: string): string {
   return katex.renderToString(latex, { throwOnError: false, displayMode: true, output: 'html' });
+}
+
+function stopNestedAction(event: SyntheticEvent): void {
+  event.preventDefault();
+  event.stopPropagation();
 }
 
 /** a single enum option's content: title, description and optional rendered formula */
@@ -25,6 +35,28 @@ type TOptionContent = {
   latexHtml?: string;
 };
 
+function DescriptionToggle({ isExpanded, toggle }: { isExpanded: boolean; toggle: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-expanded={isExpanded}
+      onClick={(event: MouseEvent<HTMLButtonElement>) => {
+        stopNestedAction(event);
+        toggle();
+      }}
+      onPointerDown={(event: PointerEvent<HTMLButtonElement>) => {
+        stopNestedAction(event);
+      }}
+      onKeyDown={(event: KeyboardEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+      }}
+      className="text-primary-8 text-xs font-medium underline underline-offset-2"
+    >
+      {isExpanded ? 'Show less' : 'Show more'}
+    </button>
+  );
+}
+
 function OptionContent({
   content,
   onExpandLatex,
@@ -33,9 +65,26 @@ function OptionContent({
   onExpandLatex?: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <span className="text-primary-8 text-lg font-bold">{content.title}</span>
-      {content.description && <span className="text-sm text-gray-700">{content.description}</span>}
+      {content.description && (
+        <ExpandableText
+          key={content.description}
+          text={content.description}
+          content={
+            <MarkdownDescription className="text-sm text-gray-700">
+              {content.description}
+            </MarkdownDescription>
+          }
+          collapsedLines={DESCRIPTION_COLLAPSED_LINES}
+          className="text-sm leading-5 text-gray-700"
+          btnWrapperClassName="mt-1"
+        >
+          {({ isExpanded, toggle }) => (
+            <DescriptionToggle isExpanded={isExpanded} toggle={toggle} />
+          )}
+        </ExpandableText>
+      )}
       {content.latexHtml && (
         <div className="relative rounded-md border-t border-gray-100 pt-2">
           <div
@@ -89,12 +138,13 @@ export function StringSelectionEnhanced({
 }: IStringSelectionEnhancedProps) {
   const [open, setOpen] = useState(false);
   const [expandedLatexHtml, setExpandedLatexHtml] = useState<string | null>(null);
+  const options = paramSchema.enum ?? [];
 
   // Pre-render each option's content once per schema — KaTeX rendering is the only non-trivial cost.
   const optionContentByKey = useMemo(() => {
-    const { enum: options, title_by_key, description_by_key, latex_by_key } = paramSchema;
+    const { enum: enumOptions, title_by_key, description_by_key, latex_by_key } = paramSchema;
     return new Map<string, TOptionContent>(
-      options.map((key) => {
+      (enumOptions ?? []).map((key) => {
         const latex = latex_by_key?.[key];
         return [
           key,
@@ -122,17 +172,27 @@ export function StringSelectionEnhanced({
     <>
       <Popover open={open} onOpenChange={disabled ? undefined : setOpen}>
         <PopoverTrigger asChild disabled={disabled}>
-          <button
-            type="button"
+          <div
+            role="combobox"
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            aria-disabled={disabled || undefined}
+            tabIndex={disabled ? -1 : 0}
             data-scan-config-block-element={ScanConfigUIElementDict.StringSelectionEnhanced}
-            disabled={disabled}
+            onKeyDown={(event) => {
+              if (disabled) return;
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.currentTarget.click();
+              }
+            }}
             className={cn(
               'flex w-full items-start justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left',
-              disabled ? 'cursor-not-allowed opacity-60' : 'hover:border-gray-300'
+              disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-gray-300'
             )}
           >
             {selectedContent ? (
-              <OptionContent content={selectedContent} />
+              <OptionContent key={value} content={selectedContent} />
             ) : (
               <span className="text-gray-400">Select option</span>
             )}
@@ -142,16 +202,22 @@ export function StringSelectionEnhanced({
                 open && 'rotate-180'
               )}
             />
-          </button>
+          </div>
         </PopoverTrigger>
         <PopoverContent
           align="start"
+          side="bottom"
+          collisionPadding={12}
           className={cn(
-            'max-h-100 w-(--radix-popover-trigger-width) overflow-y-auto rounded-2xl border border-gray-100 bg-white p-2 shadow-md'
+            'flex w-(--radix-popover-trigger-width) flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-2 shadow-md',
+            'max-h-[min(24rem,var(--radix-popover-content-available-height,24rem))]'
           )}
         >
-          <div role="listbox" className="flex flex-col gap-2">
-            {paramSchema.enum.map((key) => {
+          <div
+            role="listbox"
+            className="secondary-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain"
+          >
+            {options.map((key) => {
               const content = optionContentByKey.get(key);
               if (!content) return null;
               const selected = key === value;

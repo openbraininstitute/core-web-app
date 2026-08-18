@@ -15,6 +15,7 @@ import { Skeleton } from '@/ui/molecules/skeleton';
 import {
   collectSelectionErrors,
   efelDocUrl,
+  efelFigureUrl,
   listCatalogueDefs,
   listProtocolDefs,
   makeFilledProtocolValue,
@@ -207,6 +208,7 @@ export function SelectEFeaturesByProtocol({
   };
 
   const docUrlFor = (feature: TFeatureDef) => efelDocUrl(schema, feature);
+  const figureUrlFor = (feature: TFeatureDef) => efelFigureUrl(schema, feature.schema);
 
   return (
     <div
@@ -260,6 +262,7 @@ export function SelectEFeaturesByProtocol({
                 disabled={disabled}
                 discoveredAmplitudes={amplitudesFor(def)}
                 docUrlFor={docUrlFor}
+                figureUrlFor={figureUrlFor}
                 renderField={renderField}
                 onToggleSelected={(selected) => toggleSelected(def, selected)}
                 onToggleExpanded={() =>

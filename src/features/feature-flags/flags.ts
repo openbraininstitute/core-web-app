@@ -28,6 +28,14 @@ export const eFeatureExtractionFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const circuitSimplificationFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Circuit simplification workflow',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const brainRegionSimulationFlag = defineFlag<boolean>({
   key: 'brain-region-simulation',
   defaultValue: false,
@@ -57,6 +65,7 @@ export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
   eFeatureExtractionFlag,
+  circuitSimplificationFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   electrodeOverlaysFlag,

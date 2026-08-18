@@ -49,6 +49,7 @@ const ExtractionEntitySlug = {
 
 const ProcessingEntitySlug = {
   Skeletonization: 'skeletonization',
+  CircuitSimplification: 'circuit-simplification',
 } as const;
 
 export const EntitySlug = {

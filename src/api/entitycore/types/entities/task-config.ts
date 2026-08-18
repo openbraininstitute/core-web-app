@@ -27,6 +27,8 @@ export const TaskConfigType = {
   CircuitSimulationConfig: 'circuit_simulation__config',
   CircuitExtractionCampaign: 'circuit_extraction__campaign',
   CircuitExtractionConfig: 'circuit_extraction__config',
+  CircuitSimplificationCampaign: 'circuit_simplification__campaign',
+  CircuitSimplificationConfig: 'circuit_simplification__config',
   EFeatureExtractionCampaign: 'efeature_extraction__campaign',
   EFeatureExtractionConfig: 'efeature_extraction__config',
   IonChannelModelingCampaign: 'ion_channel_modeling__campaign',

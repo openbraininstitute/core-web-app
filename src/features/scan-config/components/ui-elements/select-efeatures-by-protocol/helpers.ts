@@ -102,6 +102,25 @@ export function efelDocUrl(schema: ConfigSchema, feature: TFeatureDef): string |
   return `${base}#${fragment}`;
 }
 
+/**
+ * Illustration for one feature, addressed by its eFEL key.
+ */
+export function efelFigureUrl(
+  schema: ConfigSchema,
+  variant: Record<string, unknown>
+): string | null {
+  const base = (schema as unknown as Record<string, unknown>).efel_figures_base_url;
+  if (typeof base !== 'string' || !base) return null;
+
+  const image =
+    typeof variant.efel_feature_image === 'string' && variant.efel_feature_image
+      ? variant.efel_feature_image
+      : `${efelNameFromDef(variant)}.png`;
+
+  if (image.startsWith('null')) return null;
+  return `${base.replace(/\/$/, '')}/${image}`;
+}
+
 /** The `extra` bag obi-one attaches to a schema through `json_schema_extra`. */
 function schemaExtras(variant: Record<string, unknown>): Record<string, unknown> {
   return asRecord(variant.extra) ?? {};

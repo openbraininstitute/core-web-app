@@ -48,6 +48,9 @@ function legacyRightPreviewMode(options: {
       entityType === ExtendedEntitiesTypeDict.Circuit) ||
     (activity === ScanConfigActivity.Build &&
       Boolean(entity) &&
+      entityType === ExtendedEntitiesTypeDict.Circuit) ||
+    (activity === ScanConfigActivity.Process &&
+      Boolean(entity) &&
       entityType === ExtendedEntitiesTypeDict.Circuit);
 
   if (showIonChannel) return RightPreviewModeDict.IonChannel;
@@ -113,8 +116,12 @@ describe('shouldShowCircuitModelPreview', () => {
     ).toBe(false);
   });
 
-  it('shows Circuit only for Extract and Build', () => {
-    for (const activity of [ScanConfigActivity.Extract, ScanConfigActivity.Build]) {
+  it('shows Circuit for Extract, Build, and Process', () => {
+    for (const activity of [
+      ScanConfigActivity.Extract,
+      ScanConfigActivity.Build,
+      ScanConfigActivity.Process,
+    ]) {
       expect(
         shouldShowCircuitModelPreview({
           activity,
@@ -131,16 +138,6 @@ describe('shouldShowCircuitModelPreview', () => {
         })
       ).toBe(false);
     }
-  });
-
-  it('hides Process (and any other non-circuit activities)', () => {
-    expect(
-      shouldShowCircuitModelPreview({
-        activity: ScanConfigActivity.Process,
-        entityType: ExtendedEntitiesTypeDict.Circuit,
-        hasEntity: true,
-      })
-    ).toBe(false);
   });
 });
 
