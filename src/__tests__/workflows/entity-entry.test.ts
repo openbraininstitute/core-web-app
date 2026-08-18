@@ -7,6 +7,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { WorkflowActivityDictValue } from '@/constants';
 import {
   brainRegionSimulationFlag,
+  eFeatureExtractionFlag,
   extracellularRecordingArrayBuildFlag,
   extractionActivityFlag,
 } from '@/features/feature-flags/flags';
@@ -53,6 +54,7 @@ const workspace = { virtualLabId: 'lab-1', projectId: 'project-1' };
 /** every flag on, so flag-gated workflows are reachable in the table below */
 const allFlags = {
   [extractionActivityFlag.key]: true,
+  [eFeatureExtractionFlag.key]: true,
   [brainRegionSimulationFlag.key]: true,
   [extracellularRecordingArrayBuildFlag.key]: true,
 } as FeatureFlags;
