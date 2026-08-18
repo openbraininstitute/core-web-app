@@ -126,6 +126,13 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.Circuit,
     label: 'Circuit extraction campaign',
   },
+  [ExtendedEntitiesTypeDict.EFeatureExtractionCampaign]: {
+    value: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'Intracellular EFeatures',
+    title: 'Intracellular EFeatures',
+    description: 'Extract experimental e-features from intracellular electrophysiology recordings.',
+  },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {
     value: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     group: EntityGroupDict.Circuit,

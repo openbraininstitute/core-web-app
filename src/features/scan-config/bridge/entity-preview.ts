@@ -11,6 +11,22 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 
 /**
+ * What opened the mini-detail.
+ *
+ * A workflow whose right column has a preview of its own keeps showing it when the user merely
+ * picks entities, and yields only to a deliberate click — see `resolveRightPreviewMode`.
+ */
+export const ScanConfigEntityPreviewOrigin = {
+  /** The user clicked an entity card, pill or row. */
+  Click: 'click',
+  /** A side effect of confirming a browse selection. */
+  Selection: 'selection',
+} as const;
+
+export type TScanConfigEntityPreviewOrigin =
+  (typeof ScanConfigEntityPreviewOrigin)[keyof typeof ScanConfigEntityPreviewOrigin];
+
+/**
  * `id` + `dataType` are always required (the stable identity). `record` is
  * optional: pass it when you already have the resolved entity to skip a fetch,
  * or omit it and `usePreviewRecord` resolves it from the domain config by id
@@ -19,6 +35,8 @@ export type TScanConfigEntityPreview = {
   dataType: TExtendedEntitiesTypeDict;
   id: string;
   record?: EntityCoreIdentifiableNamed;
+  /** Defaults to {@link ScanConfigEntityPreviewOrigin.Click} — an explicit user action. */
+  origin?: TScanConfigEntityPreviewOrigin;
 };
 
 export const scanConfigEntityPreviewAtom = atom<TScanConfigEntityPreview | null>(null);

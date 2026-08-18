@@ -23,7 +23,14 @@ export function ImageFileViewer({ file, context }: ImageFileViewerProps) {
   const [loadedForUrl, setLoadedForUrl] = useState<string | null>(null);
 
   const { data: imageUrl, isLoading: isLoadingUrl } = useQuery({
-    queryKey: keyBuilder.s3presignedUrl({ entityId: entity.id, assetId: asset.id, ...context }),
+    // assetPath is part of the key: files inside a directory asset share one asset id and differ
+    // only by their path, so leaving it out serves every one of them the first file's url
+    queryKey: keyBuilder.s3presignedUrl({
+      entityId: entity.id,
+      assetId: asset.id,
+      assetPath,
+      ...context,
+    }),
     queryFn: async () => {
       const { url } = await getEntityCorePresignedUrl({
         entityType: entity.type as TEntityTypeDict,

@@ -10,6 +10,8 @@ export type EntityBatchDownloadTicket = {
   virtualLabId?: string | null;
   projectId?: string | null;
   entityIds: string[];
+  /** name of the single selected entity, used to name the archive; absent for a multi-selection */
+  name?: string | null;
   createdAt: number;
 };
 

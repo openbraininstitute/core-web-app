@@ -4,13 +4,15 @@ import { Radio, type RadioChangeEvent } from 'antd';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { cn } from '@/utils/css-class';
 
-export enum TraceViewMode {
-  OVERVIEW = 'overview',
-  DETAILED = 'detailed',
-}
+export const TraceViewMode = {
+  Overview: 'overview',
+  Detailed: 'detailed',
+} as const;
+
+export type TTraceViewMode = (typeof TraceViewMode)[keyof typeof TraceViewMode];
 
 type Props = {
-  value: TraceViewMode;
+  value: TTraceViewMode;
   onChange: (e: RadioChangeEvent) => void;
   variant?: TViewVariant;
   detailedLabel?: string;
@@ -38,10 +40,10 @@ export function TraceViewModeToggle({
         ]
       )}
     >
-      <Radio.Button value={TraceViewMode.OVERVIEW}>
+      <Radio.Button value={TraceViewMode.Overview}>
         <FileImageOutlined /> Overview
       </Radio.Button>
-      <Radio.Button value={TraceViewMode.DETAILED}>
+      <Radio.Button value={TraceViewMode.Detailed}>
         <LineChartOutlined /> {detailedLabel}
       </Radio.Button>
     </Radio.Group>

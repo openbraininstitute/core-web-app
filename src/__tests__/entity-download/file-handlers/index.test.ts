@@ -12,6 +12,7 @@ describe('getEntityFilesHandlerMap', () => {
     EntityTypeDict.ExperimentalSynapsesPerConnection,
     EntityTypeDict.CellMorphology,
     EntityTypeDict.EMCellMesh,
+    EntityTypeDict.TaskResult,
     EntityTypeDict.Emodel,
     EntityTypeDict.Memodel,
     EntityTypeDict.SingleNeuronSynaptome,

@@ -1,6 +1,6 @@
 import { Empty } from 'antd';
-import { useState } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { useReducer } from 'react';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { type TViewVariant, ViewVariant } from '@/constants';
@@ -17,12 +17,65 @@ import { TraceProvider } from '@/features/ephys-viewer/trace-context';
 import { cn } from '@/utils/css-class';
 import { formatBytes } from '@/utils/format';
 
+import type { ReactNode } from 'react';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
+import type { TEphysControlsVariant } from '@/features/ephys-viewer/components/option-select';
+import type { TTraceViewMode } from '@/features/ephys-viewer/components/trace-view-mode-toggle';
 import type { WorkspaceContext } from '@/types/common';
 import type { DownloadProgress } from '@/utils/h5/fs';
 
 import './styles/ephys-plugin-styles.css';
+
+/** Sentinel the selects use for "no narrowing", rather than a real cell or protocol name. */
+const ALL = 'All';
+const NONE = 'None';
+
+/**
+ * What the viewer is showing.
+ *
+ * These move together — picking a repetition from the overview sets the protocol, the repetition
+ * and the view at once — so they are one state rather than four that each caller has to keep
+ * consistent by hand.
+ */
+export type TViewerState = {
+  view: TTraceViewMode;
+  cellId: string;
+  protocol: string;
+  repetition: string | undefined;
+};
+
+export type ViewerAction =
+  | { type: 'setView'; view: TTraceViewMode }
+  | { type: 'setCellId'; cellId: string }
+  | { type: 'setProtocol'; protocol: string }
+  | { type: 'showRepetition'; protocol: string; repetition: string };
+
+export function viewerReducer(state: TViewerState, action: ViewerAction): TViewerState {
+  switch (action.type) {
+    case 'setView':
+      return { ...state, view: action.view };
+    case 'setCellId':
+      return { ...state, cellId: action.cellId };
+    case 'setProtocol':
+      return { ...state, protocol: action.protocol };
+    case 'showRepetition':
+      // a single transition, so the details view can never open on a protocol/repetition mismatch
+      return {
+        ...state,
+        view: TraceViewMode.Detailed,
+        protocol: action.protocol,
+        repetition: action.repetition,
+      };
+    default:
+      return state;
+  }
+}
+
+/** Adapts the shared error component to the props `react-error-boundary` gives its fallback. */
+function TraceErrorFallback({ error }: FallbackProps) {
+  return <SimpleErrorComponent error={error as Error} />;
+}
 
 export default function EphysViewer({
   entity,
@@ -30,12 +83,36 @@ export default function EphysViewer({
   ctx,
   defaultToInteractiveDetails = true,
   variant = ViewVariant.Light,
+  protocol: protocolOverride,
+  showViewModeToggle = true,
+  detailControls,
+  controlsVariant = 'page',
 }: {
   entity: IElectricalCellRecording | ISimulationResult;
   assetId?: string;
   ctx?: WorkspaceContext;
   defaultToInteractiveDetails?: boolean;
   variant?: TViewVariant;
+  /**
+   * Protocol to show, driven from outside. Matched case-insensitively against the protocols the
+   * trace actually contains, so a caller can pass an eCode name without knowing how the NWB
+   * capitalised it. Omit to let the viewer manage its own selection, as the detail pages do.
+   */
+  protocol?: string;
+  /**
+   * Whether the Overview / Interactive Details switch is offered.
+   *
+   * A detail page presents both readings of the same trace and lets the reader choose. A host
+   * embedding the viewer as one panel among several has usually already made that choice — the
+   * e-feature editor wants the interactive plots and nothing else — and a two-item switch with
+   * one real destination is a control that asks a question it does not mean. Off pins the view
+   * to the interactive details.
+   */
+  showViewModeToggle?: boolean;
+  /** Extra controls for the interactive details' control row. See `leadingControls` there. */
+  detailControls?: ReactNode;
+  /** Look and layout of that control row. See {@link TEphysControlsVariant}. */
+  controlsVariant?: TEphysControlsVariant;
 }) {
   const { index, progress, error, getSweepSeries, getCachedSweepSeries } = useTrace({
     entity,
@@ -43,18 +120,17 @@ export default function EphysViewer({
     ctx,
   });
 
-  const [view, setView] = useState<TraceViewMode>(
-    defaultToInteractiveDetails ? TraceViewMode.DETAILED : TraceViewMode.OVERVIEW
-  );
-  const [repetition, setRepetition] = useState<string>();
-  const [cellId, setCellId] = useState<string>('All');
-  const [protocol, setProtocol] = useState<string>('All');
+  const [state, dispatch] = useReducer(viewerReducer, {
+    view: defaultToInteractiveDetails ? TraceViewMode.Detailed : TraceViewMode.Overview,
+    cellId: ALL,
+    protocol: ALL,
+    repetition: undefined,
+  });
 
-  const showRepetitionDetails = (protocolClosure: string, repetitionClosure: string) => () => {
-    setProtocol(protocolClosure);
-    setRepetition(repetitionClosure);
-    setView(TraceViewMode.DETAILED);
-  };
+  // with no switch on screen there is no way back from the overview, so the view is pinned
+  const view = showViewModeToggle ? state.view : TraceViewMode.Detailed;
+  const protocol = protocolOverride ?? state.protocol;
+  const requestedProtocol = protocol === NONE || protocol === ALL ? undefined : protocol;
 
   if (error) {
     return (
@@ -71,7 +147,13 @@ export default function EphysViewer({
     return (
       <div className="relative">
         <div className={cn(download && 'pointer-events-none opacity-70 blur-[2px]')}>
-          <EphysViewerSkeleton view={view} variant={variant} />
+          <EphysViewerSkeleton
+            view={view}
+            variant={variant}
+            showViewModeToggle={showViewModeToggle}
+            detailControls={detailControls}
+            controlsVariant={controlsVariant}
+          />
         </div>
         {download && (
           // Centred within the first 70vh rather than over the whole skeleton, which runs long
@@ -92,37 +174,51 @@ export default function EphysViewer({
       getCachedSweepSeries={getCachedSweepSeries}
     >
       <div className="@container flex flex-col gap-6">
-        <TraceViewModeToggle
-          value={view}
-          onChange={(e) => setView(e.target.value as TraceViewMode)}
-          variant={variant}
-        />
+        {showViewModeToggle && (
+          <TraceViewModeToggle
+            value={view}
+            onChange={(e) => dispatch({ type: 'setView', view: e.target.value as TTraceViewMode })}
+            variant={variant}
+          />
+        )}
 
-        {view === TraceViewMode.OVERVIEW && (
+        {view === TraceViewMode.Overview && (
           <ErrorBoundary
-            FallbackComponent={SimpleErrorComponent}
-            resetKeys={[index, cellId, protocol]}
+            FallbackComponent={TraceErrorFallback}
+            resetKeys={[index, state.cellId, protocol]}
           >
             <TraceOverview
-              cellId={cellId}
-              onCellIdChange={setCellId}
+              cellId={state.cellId}
+              onCellIdChange={(cellId) => dispatch({ type: 'setCellId', cellId })}
               protocol={protocol}
-              onRepetitionClick={showRepetitionDetails}
-              onProtocolChange={setProtocol}
+              onRepetitionClick={(protocolClosure, repetitionClosure) => () =>
+                dispatch({
+                  type: 'showRepetition',
+                  protocol: protocolClosure,
+                  repetition: repetitionClosure,
+                })
+              }
+              onProtocolChange={
+                protocolOverride
+                  ? undefined
+                  : (next) => dispatch({ type: 'setProtocol', protocol: next })
+              }
               variant={variant}
             />
           </ErrorBoundary>
         )}
 
-        {view === TraceViewMode.DETAILED && (
+        {view === TraceViewMode.Detailed && (
           <ErrorBoundary
-            FallbackComponent={SimpleErrorComponent}
-            resetKeys={[index, cellId, protocol, repetition]}
+            FallbackComponent={TraceErrorFallback}
+            resetKeys={[index, state.cellId, protocol, state.repetition]}
           >
             <TraceDetailsView
-              defaultProtocol={protocol === 'None' || protocol === 'All' ? undefined : protocol}
-              defaultRepetition={repetition}
+              defaultProtocol={requestedProtocol}
+              defaultRepetition={state.repetition}
               variant={variant}
+              leadingControls={detailControls}
+              controlsVariant={controlsVariant}
             />
           </ErrorBoundary>
         )}

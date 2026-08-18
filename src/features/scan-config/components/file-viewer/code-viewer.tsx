@@ -25,7 +25,14 @@ export function CodeFileViewer({
   assetPath?: string;
 }) {
   const { data: presignedData, isLoading: isLoadingUrl } = useQuery({
-    queryKey: keyBuilder.s3presignedUrl({ entityId: entity.id, assetId: asset.id, ...context }),
+    // assetPath is part of the key: files inside a directory asset share one asset id and differ
+    // only by their path, so leaving it out serves every one of them the first file's url
+    queryKey: keyBuilder.s3presignedUrl({
+      entityId: entity.id,
+      assetId: asset.id,
+      assetPath,
+      ...context,
+    }),
     queryFn: async () => {
       return getEntityCorePresignedUrl({
         entityType: entity.type as TEntityTypeDict,

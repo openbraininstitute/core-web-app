@@ -1,4 +1,3 @@
-import kebabCase from 'es-toolkit/compat/kebabCase';
 import snakeCase from 'es-toolkit/compat/snakeCase';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -6,7 +5,10 @@ import { z } from 'zod';
 import { auth } from '@/auth';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { ticketStore } from '@/features/entity-download/ticket-store';
-import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
+import {
+  getDownloadStreamHeaders,
+  getEntityArchiveFilename,
+} from '@/features/entity-download/utils';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 
@@ -55,7 +57,7 @@ export async function GET(
 
     return new NextResponse(downloadStream, {
       headers: getDownloadStreamHeaders({
-        filename: `${kebabCase(entityType)}.tar.gz`,
+        filename: getEntityArchiveFilename({ entityType, name: ticket.name }),
       }),
     });
   } catch (error) {

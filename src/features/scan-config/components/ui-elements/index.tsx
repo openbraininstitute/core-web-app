@@ -4,6 +4,7 @@ import { match, P } from 'ts-pattern';
 
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
+import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
 import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
@@ -23,12 +24,13 @@ import {
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
+import { SelectEFeaturesByProtocol } from '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol';
 import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import {
   VoltageDuration,
   type VoltageDurationState,
 } from '@/features/scan-config/components/ui-elements/voltage-duration';
-import { isPlainObject } from '@/features/scan-config/components/utils';
+import { isPlainObject, numericSchemaBounds } from '@/features/scan-config/components/utils';
 import {
   resolveEntityQueryFilters,
   resolveNeuronFilterProperties,
@@ -127,18 +129,79 @@ export function UIElementRender({
           ),
         },
       },
+      ({ paramSchema }) => {
+        const bounds = numericSchemaBounds(paramSchema);
+        return (
+          <ParameterSweep
+            k={k}
+            min={bounds.min}
+            max={bounds.max}
+            exclusiveMin={bounds.exclusiveMin}
+            exclusiveMax={bounds.exclusiveMax}
+            // a plain `float` field has no array branch; offering a sweep would build a list the
+            // schema rejects
+            allowMultiple={bounds.allowMultiple}
+            disabled={disabled}
+            value={value as number | null | number[]}
+            onChange={(value) => {
+              setState({ ...state, [k]: value });
+            }}
+          />
+        );
+      }
+    )
+    .with(
+      { paramSchema: { ui_element: ScanConfigUIElementDict.FloatOptional } },
+      ({ paramSchema }) => {
+        const bounds = numericSchemaBounds(paramSchema);
+        return (
+          <FloatOptional
+            min={bounds.min}
+            max={bounds.max}
+            exclusiveMin={bounds.exclusiveMin}
+            exclusiveMax={bounds.exclusiveMax}
+            disabled={disabled}
+            value={typeof value === 'number' ? value : null}
+            onChange={(next) => {
+              setState({ ...state, [k]: next });
+            }}
+          />
+        );
+      }
+    )
+    .with(
+      { paramSchema: { ui_element: ScanConfigUIElementDict.SelectEFeaturesByProtocol } },
       ({ paramSchema }) => (
-        <ParameterSweep
-          k={k}
-          min={paramSchema.anyOf[0]?.minimum}
-          max={paramSchema.anyOf[0]?.maximum}
-          exclusiveMin={paramSchema.anyOf[0]?.exclusiveMinimum}
-          exclusiveMax={paramSchema.anyOf[0]?.exclusiveMaximum}
+        <SelectEFeaturesByProtocol
+          fieldKey={k}
+          value={value}
+          state={state}
+          setState={setState}
+          paramSchema={paramSchema}
+          schema={schema}
+          config={config}
           disabled={disabled}
-          value={value as number | null | number[]}
-          onChange={(value) => {
-            setState({ ...state, [k]: value });
-          }}
+          errorPathPrefix={errorPathPrefix}
+          // the shared renderer is defined in this module; passing it down keeps the widget
+          // from importing its own barrel
+          renderField={({
+            fieldKey,
+            paramSchema: fieldSchema,
+            state: fieldState,
+            setState: setFieldState,
+          }) => (
+            <UIElementRender
+              k={fieldKey}
+              disabled={disabled}
+              paramSchema={fieldSchema}
+              state={fieldState}
+              setState={setFieldState}
+              config={config}
+              schema={schema}
+              entity={entity}
+              schemaMappingConfig={schemaMappingConfig}
+            />
+          )}
         />
       )
     )

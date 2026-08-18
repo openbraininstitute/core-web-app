@@ -1,5 +1,6 @@
 'use client';
 
+import { CloseOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
@@ -11,9 +12,15 @@ import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
+  ScanConfigEntityPreviewOrigin,
   usePreviewRecord,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
+import {
+  type TScanConfigSettingsPanel,
+  useScanConfigSettingsPanel,
+  useSetScanConfigSettingsPanel,
+} from '@/features/scan-config/bridge/settings-panel';
 import {
   RightPreviewModeDict,
   resolveHostNeuronOpacity,
@@ -27,6 +34,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type {
   Config,
+  ConfigSchema,
   TScanConfigActivity,
   TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -45,6 +53,14 @@ const IonChannelModelRecordingRender = dynamic(
   { ssr: false }
 );
 
+const EFeaturesPreviewPanel = dynamic(
+  () =>
+    import(
+      '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol/preview-panel'
+    ).then((m) => m.EFeaturesPreviewPanel),
+  { ssr: false }
+);
+
 type RightProps = {
   activity: TScanConfigActivity;
   entityType: TExtendedEntitiesTypeDict;
@@ -53,6 +69,8 @@ type RightProps = {
   selectedRootElement: string;
   config: Config;
   setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
+  /** Root scan-config schema; previews that describe the whole configuration read it. */
+  schema: ConfigSchema;
   /**
    * The config can no longer be edited (campaign generated, generation in
    * flight, read-only host, …). Electrode overlays then render static: without
@@ -194,8 +212,50 @@ function EmptyPreviewPane() {
 }
 
 /**
+ * Host for a field's settings form.
+ *
+ * Only the frame and the mount point live here; the field portals the form itself in, so it keeps
+ * reading the live schema and config rather than a snapshot taken when the panel opened.
+ */
+function SettingsPane({ panel }: { panel: TScanConfigSettingsPanel }) {
+  const setPanel = useSetScanConfigSettingsPanel();
+
+  useEffect(() => {
+    return () => setPanel({ slot: null, headerSlot: null });
+  }, [setPanel]);
+
+  return (
+    <div
+      id="scan-config-controls-right-settings"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg bg-white px-4 py-3"
+    >
+      <header className="mb-3 flex shrink-0 items-center gap-3">
+        <h3 className="text-primary-9 shrink-0 text-lg font-bold">{panel.title}</h3>
+        <div
+          ref={(node) => setPanel({ headerSlot: node })}
+          className="flex min-w-0 flex-1 justify-center"
+        />
+        <button
+          type="button"
+          aria-label="Close settings"
+          onClick={() => setPanel({ open: null })}
+          className="shrink-0"
+        >
+          <CloseOutlined className="text-primary-9!" />
+        </button>
+      </header>
+
+      <div
+        ref={(node) => setPanel({ slot: node })}
+        className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto"
+      />
+    </div>
+  );
+}
+
+/**
  * Scan-config right column: exclusive preview variants (entity mini-detail,
- * ion-channel figure, or circuit model). Mode is derived during render.
+ * ion-channel figure, e-feature traces, or circuit model). Mode is derived during render.
  */
 export function Right({
   activity,
@@ -205,6 +265,7 @@ export function Right({
   selectedRootElement,
   config,
   setConfig,
+  schema,
   locked,
 }: RightProps) {
   useClearEntityPreviewOnNavigation(entity?.id);
@@ -227,14 +288,21 @@ export function Right({
     isLoading: isPreviewLoading,
   } = usePreviewRecord();
 
+  const settingsPanel = useScanConfigSettingsPanel();
+
   const mode = resolveRightPreviewMode({
+    settingsPanelActive: Boolean(settingsPanel),
     entityPreviewActive: Boolean(entityPreview && (previewRecord || isPreviewLoading)),
+    entityPreviewFromSelection: entityPreview?.origin === ScanConfigEntityPreviewOrigin.Selection,
     activity,
     entityType,
     hasEntity: Boolean(entity),
   });
 
   return match(mode)
+    .with(RightPreviewModeDict.Settings, () =>
+      settingsPanel ? <SettingsPane panel={settingsPanel} /> : <EmptyPreviewPane />
+    )
     .with(RightPreviewModeDict.EntityPreview, () =>
       entityPreview ? (
         <EntityPreviewPane
@@ -251,6 +319,14 @@ export function Right({
         selectedEntry={selectedEntry}
         config={config}
       />
+    ))
+    .with(RightPreviewModeDict.EFeatures, () => (
+      <div
+        id="scan-config-controls-right-efeatures"
+        className="h-full bg-white min-h-0 overflow-y-auto secondary-scrollbar rounded-xl px-0.5"
+      >
+        <EFeaturesPreviewPanel config={config} schema={schema} />
+      </div>
     ))
     .with(RightPreviewModeDict.CircuitModel, () =>
       entity ? (

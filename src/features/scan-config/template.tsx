@@ -128,7 +128,6 @@ function ScanConfigTemplateContent({
     workflowSessionSelection,
     resolveFromIdType: resolveSessionFromIdType,
   });
-
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
 
   const selectedSchema = schema.properties[selectedRootElement];
@@ -352,6 +351,7 @@ function ScanConfigTemplateContent({
               selectedRootElement={selectedRootElement}
               config={config}
               setConfig={setConfig}
+              schema={schema}
               locked={editingLocked}
             />
           </div>

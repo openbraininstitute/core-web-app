@@ -189,6 +189,13 @@ const cases: TCase[] = [
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
     flags: { [extractionActivityFlag.key]: true } as FeatureFlags,
   },
+  {
+    name: 'electrical cell recording → intracellular e-feature extraction',
+    fixture: { entity: { type: EntityTypeDict.ElectricalCellRecording } },
+    covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign },
+    href: `${base}/extract/configure/efeature-extraction-campaign/{session}`,
+    selects: { type: ExtendedEntitiesTypeDict.ElectricalCellRecording, id: ENTITY_ID },
+  },
 
   // legacy browse-first workflows: configure keyed by the entity itself ───
   {

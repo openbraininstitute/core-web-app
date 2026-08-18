@@ -1,13 +1,17 @@
-import { Select } from 'antd';
+import { useId } from 'react';
 
 import { type TViewVariant, ViewVariant } from '@/constants';
 import {
+  EphysSelect,
+  type TEphysSelectItem,
+} from '@/features/ephys-viewer/components/ephys-select';
+import {
   ephysControlLabelClass,
   ephysControlSubLabelClass,
-  ephysSelectClass,
 } from '@/features/ephys-viewer/label-styles';
+import { cn } from '@/utils/css-class';
 
-import type { JSX } from 'react';
+export type { TEphysControlsVariant } from '@/features/ephys-viewer/components/ephys-select';
 
 interface OptionSelectProps {
   label: {
@@ -16,41 +20,49 @@ interface OptionSelectProps {
   };
   value: string;
   onChange: (value: string) => void;
-  options: JSX.Element[] | null;
+  items: TEphysSelectItem[];
   hideWhenSingle?: boolean;
   variant?: TViewVariant;
+  /** Fill the available width instead of sitting at the fixed control width. */
+  fluid?: boolean;
 }
 
+/** A labelled {@link EphysSelect}: the title, how many choices there are, and the box. */
 function OptionSelect({
   label: { numberOfAvailable, title },
   value,
   onChange: handleChange,
-  options,
+  items,
   hideWhenSingle = false,
   variant = ViewVariant.Light,
+  fluid = false,
 }: OptionSelectProps) {
+  // several of these sit side by side in the control row; a shared literal id would point every
+  // label at the first select
+  const selectId = useId();
+
   if (hideWhenSingle && numberOfAvailable === 1) {
     return null;
   }
+
   return (
-    <div className="flex flex-col gap-3">
-      <label className={ephysControlLabelClass(variant)} htmlFor="optionSelect">
+    <div className={cn('flex min-w-0 flex-col gap-2', fluid && 'w-full')}>
+      <label className={ephysControlLabelClass(variant)} htmlFor={selectId}>
         {title}
         <small className={ephysControlSubLabelClass(variant)}>
           {numberOfAvailable > 1 && <>&nbsp;({numberOfAvailable} available)</>}
         </small>
       </label>
 
-      <Select
-        id="optionSelect"
-        className={ephysSelectClass(variant, 'w-[180px]')}
+      <EphysSelect
+        id={selectId}
         value={value}
-        placeholder="Please select"
         onChange={handleChange}
+        items={items}
         disabled={numberOfAvailable === 1}
-      >
-        {options}
-      </Select>
+        variant={variant}
+        className={fluid ? 'w-full' : 'w-[180px] max-w-full'}
+      />
     </div>
   );
 }

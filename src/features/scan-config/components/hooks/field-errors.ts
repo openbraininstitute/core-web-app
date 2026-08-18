@@ -32,6 +32,17 @@ export function useFieldError(fieldPath: string | undefined, error: string | und
       else next.delete(fieldPath);
       return next;
     });
+
+    // drop the error when the field that raised it goes away — a removed field cannot still be
+    // invalid, and a stale entry keeps its whole root element flagged forever
+    return () => {
+      setFieldErrors((prev) => {
+        if (!prev.has(fieldPath)) return prev;
+        const next = new Map(prev);
+        next.delete(fieldPath);
+        return next;
+      });
+    };
   }, [fieldPath, error, setFieldErrors]);
 }
 

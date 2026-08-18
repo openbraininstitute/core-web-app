@@ -229,6 +229,8 @@ export enum AssetLabel {
   cell_composition_volumes = 'cell_composition_volumes',
   cell_surface_mesh = 'cell_surface_mesh',
   custom_node_sets = 'custom_node_sets',
+  efeature_extraction_features = 'efeature_extraction_features',
+  efeature_extraction_figures = 'efeature_extraction_figures',
   emodel_optimization_output = 'emodel_optimization_output',
   morphology = 'morphology',
   neuron_hoc = 'neuron_hoc',

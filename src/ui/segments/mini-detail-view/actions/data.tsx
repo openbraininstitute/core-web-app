@@ -51,8 +51,17 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   const hasDetailView =
     (getEntityByExtendedType({ type: effectiveDataType })?.detailViewSections?.length ?? 0) > 0;
 
+  // a single entity, so the archive is named after it
+  const recordName = (record as { name?: unknown }).name;
+
   const { isPending: pendingDownload, mutateAsync: downloadAsync } = useMutation({
-    mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
+    mutationFn: () =>
+      downloadArchive(
+        record.type,
+        [record.id],
+        { virtualLabId, projectId },
+        typeof recordName === 'string' ? recordName : undefined
+      ),
   });
   const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
   const onDownload = () => {

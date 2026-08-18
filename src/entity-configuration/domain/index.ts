@@ -2,12 +2,14 @@ import { AnalysisNotebookResult } from '@/entity-configuration/domain/analysis-n
 import { AnalysisNotebookTemplate } from '@/entity-configuration/domain/analysis-notebook-template';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
+import { EFeatureExtractionResult } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
+import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
@@ -55,6 +57,7 @@ export const EntityCoreExperimentalConfiguration = {
   BoutonDensity,
   SynapsesPerConnection,
   EmCellMesh,
+  EFeatureExtractionResult,
 } as const;
 
 export const EntityCoreModelConfiguration = {
@@ -93,6 +96,7 @@ const EntityCoreSimulationConfiguration = {
 
 const EntityCoreExtractionConfiguration = {
   CircuitExtractionCampaign,
+  EFeatureExtractionCampaign,
 };
 
 const EntityCoreProcessingConfiguration = {

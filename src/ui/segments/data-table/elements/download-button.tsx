@@ -66,11 +66,17 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
 
     const entity_type = entity?.type;
 
+    // a multi-selection has no single name to carry, so the archive keeps the type-only name
+    const [onlyRow] = selectedRows.length === 1 ? selectedRows : [];
+    const rowName = (onlyRow as { name?: unknown } | undefined)?.name;
+    const archiveName = typeof rowName === 'string' ? rowName : undefined;
+
     try {
       await downloadArchive(
         entity_type,
         selectedRows.map((row) => row.id),
-        workspace
+        workspace,
+        archiveName
       );
       setDownloadState(DownloadStateDict.success);
       setTimeout(() => {

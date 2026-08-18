@@ -6,6 +6,7 @@ import { match } from 'ts-pattern';
 
 import { getCellMorphology, getEmCellMesh, getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getElectricalCellRecording } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
@@ -21,7 +22,12 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 import { fetchAllPaginatedData } from '@/utils/pagination';
 
-import type { ICellMorphology, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
+import type {
+  ICellMorphology,
+  IElectricalCellRecording,
+  IMEModel,
+  TEntityTypeDict,
+} from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
@@ -232,9 +238,14 @@ export function useModelQuery({
     isLoading: modelLoading,
     error: modelError,
   } = useQuery<
-    ICircuit | IMEModel | IonChannelModel | IEMCellMesh | ICellMorphology,
+    | ICircuit
+    | IMEModel
+    | IonChannelModel
+    | IEMCellMesh
+    | ICellMorphology
+    | IElectricalCellRecording,
     Error,
-    ICircuit | IMEModel | IonChannelModel | IEMCellMesh | ICellMorphology
+    ICircuit | IMEModel | IonChannelModel | IEMCellMesh | ICellMorphology | IElectricalCellRecording
   >({
     // @ts-expect-error this query won't start without the id
     queryKey: keyBuilder.entity({ id, context, type: entityType }),
@@ -251,6 +262,8 @@ export function useModelQuery({
           .with(EntityTypeDict.EMCellMesh, () => getEmCellMesh(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.CellMorphology, () => getCellMorphology(params))
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.ElectricalCellRecording, () => getElectricalCellRecording(params))
           .otherwise((entityType) => {
             throw new Error(`Unsupported model entity type ${entityType}`);
           })

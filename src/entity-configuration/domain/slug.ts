@@ -6,6 +6,7 @@ const ExperimentalEntitySlug = {
   ExperimentalBoutonDensity: 'bouton-density',
   ExperimentalSynapsesPerConnection: 'synapse-per-connection',
   EMCellMesh: 'em-cell-mesh',
+  EFeatureExtractionResult: 'intracellular-efeature-extraction',
 } as const;
 
 export const ModelEntitySlug = {
@@ -43,6 +44,7 @@ const SimulationEntitySlug = {
 
 const ExtractionEntitySlug = {
   CircuitExtraction: 'circuit-extraction',
+  EFeatureExtraction: 'intracellular-efeature-extraction',
 } as const;
 
 const ProcessingEntitySlug = {

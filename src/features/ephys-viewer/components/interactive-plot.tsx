@@ -102,6 +102,7 @@ export default function InteractivePlot({
 
   return (
     <Plot
+      divId={`interactive-plot-${recordingType}-${recordingIndex}`}
       data={plotData}
       onLegendClick={handleClick}
       onDoubleClick={() => false}
@@ -115,7 +116,8 @@ export default function InteractivePlot({
         setZoomRanges({ x: [x1, x2], y: [y1, y2] });
       }}
       layout={{
-        title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
+        // plotly types a title as an object; a bare string is rejected
+        title: { text: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response' },
         datarevision: dataRevision,
         xaxis: {
           title: {

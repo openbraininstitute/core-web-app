@@ -14,6 +14,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { WorkspaceSection } from '@/constants';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
+  ScanConfigEntityPreviewOrigin,
   useScanConfigEntityPreview,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
@@ -115,7 +116,8 @@ export function EntitySelectorSingle({
     overlayHost?.closeOverlay();
   }, [overlayHost]);
 
-  // id-only preview; the right column resolves the record itself
+  // id-only preview; the right column resolves the record itself. Flagged as a selection so a
+  // workflow that owns its right column keeps its own preview — see `resolveRightPreviewMode`.
   const previewRef = useCallback(
     (ref: TFromIdRef | undefined) => {
       if (!ref) {
@@ -123,7 +125,11 @@ export function EntitySelectorSingle({
       }
       const target = resolveEntityFetchTarget(ref);
       if (target) {
-        setEntityPreview({ dataType: target.entityType, id: target.id });
+        setEntityPreview({
+          dataType: target.entityType,
+          id: target.id,
+          origin: ScanConfigEntityPreviewOrigin.Selection,
+        });
       }
     },
     [setEntityPreview]

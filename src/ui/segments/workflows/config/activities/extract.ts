@@ -2,9 +2,17 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { extractionActivityFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { extractCircuitWorkflow } from '@/features/scan-config/workflow/definitions/extract-circuit';
+import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 
-import { extractCircuitConfigureBinding } from '../scan-config-binding';
-import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
+import {
+  extractCircuitConfigureBinding,
+  extractEFeaturesConfigureBinding,
+} from '../scan-config-binding';
+import {
+  WorkflowBrowseDefaults,
+  WorkflowConfigureRoutingDict,
+  WorkflowStagePresets,
+} from '../types';
 
 import type { IWorkflowDescriptor } from '../types';
 
@@ -27,5 +35,23 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
     label: 'Circuit',
     disabled: false,
     requiredFeatures: [extractionActivityFlag.key],
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.ScanConfigInEditorSelection,
+    sourceType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+    targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+    breadcrumb: {
+      root: 'Intracellular EFeatures',
+    },
+    configureRouting: WorkflowConfigureRoutingDict.Standalone,
+    scanConfig: {
+      definition: extractEFeaturesWorkflow,
+      schemaName: SchemaNameDict.EModelEFeatureExtractionScanConfig,
+      configureBinding: extractEFeaturesConfigureBinding(),
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }],
+    label: 'Intracellular EFeatures',
+    disabled: false,
   },
 ];
