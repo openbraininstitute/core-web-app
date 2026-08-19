@@ -12,6 +12,7 @@ export {
 export { useEnsureOfflineTokenConsent } from './ensure-consent';
 export { useRunWithOfflineTokenConsent } from './run-with-consent';
 export {
+  isOfflineTokenConsentGrantedForSession,
   isOfflineTokenConsentStateFresh,
   OFFLINE_TOKEN_CONSENT_TTL_MS,
   readOfflineTokenConsentState,

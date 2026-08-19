@@ -7,7 +7,7 @@ import {
   subscribeOfflineTokenConsentEvents,
 } from '@/features/offline-auth-management/bus';
 import {
-  isOfflineTokenConsentStateFresh,
+  isOfflineTokenConsentGrantedForSession,
   readOfflineTokenConsentState,
   writeOfflineTokenConsentState,
 } from '@/features/offline-auth-management/store';
@@ -20,7 +20,11 @@ import type { OfflineTokenConsentRequest } from '@/features/offline-auth-managem
 import type { OfflineTokenConsentEvent } from '@/features/offline-auth-management/types';
 
 type EnsureOptions = {
-  /** use localStorage to reduce the number of requests to auth-manager (defaults: false) */
+  /**
+   * reuse a grant recorded in localStorage, skipping the consent tab when it belongs to
+   * the session we are in. auth-manager is still asked which session that is, so this
+   * saves the round trip through the consent page rather than the request (defaults: false)
+   */
   useCache?: boolean;
   timeoutMs?: number;
   // max time we'll accept a previously-emitted event as relevant to this wait.
@@ -111,7 +115,9 @@ async function waitForDecision({
  * before you start a task (extraction, simulation, ...)
  *
  * how it works:
- * - if we have a fresh local state that says “granted”, we allow the task directly
+ * - if we have a fresh local state that says “granted” *for the session we are in*, we
+ *   allow the task directly — a grant from an earlier session does not count, because the
+ *   offline token auth-manager hands the launch system is stored per session
  * - if not granted, we request a `consentUrl` from auth-manager, try to open it in a new tab,
  *   and we show a modal as a fallback (manual link)
  * - we wait for the consent callback page to emit an event (granted/denied) and then we return.
@@ -202,30 +208,40 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     setModal({ open: true, consentUrl: undefined });
 
     try {
-      if (opts.useCache) {
-        const cached = readOfflineTokenConsentState();
-        if (isOfflineTokenConsentStateFresh(cached) && cached?.decision === 'granted') {
-          setModal({ open: false, consentUrl: undefined });
-          publishOfflineTokenConsentEvent({
-            type: OfflineTokenConsentEventType.Granted,
-            at: Date.now(),
-            source: OfflineTokenConsentEventSource.Server,
-          });
-          lastGrantAtRef.current = Date.now();
-          return { ok: true };
-        }
-      }
-
+      // Only a prefetch from the last PREFETCH_TTL_MS is used: it carries the session id
+      // the cached grant is checked against below, and an old one would answer for a
+      // session we may no longer be in.
       const prefetched = consentPrefetchRef.current;
-      const hasUrl = !!prefetched?.value?.consentUrl;
+      const prefetchFresh = !!prefetched && Date.now() - prefetched.at < PREFETCH_TTL_MS;
+      const hasUrl = prefetchFresh && !!prefetched?.value?.consentUrl;
 
       if (!hasUrl) {
         await new Promise<void>((r) => setTimeout(r, 0));
       }
 
-      const consentRes = prefetched?.value ?? (await fetchConsent({ useCache: opts.useCache }));
+      const consentRes =
+        (prefetchFresh ? prefetched?.value : undefined) ??
+        (await fetchConsent({ useCache: opts.useCache }));
       const consentUrl = consentRes.consentUrl;
       const sessionStateId = consentRes.sessionStateId;
+
+      // The cached grant is only read once auth-manager has told us which session we are
+      // in: it is keyed by session, so this has to come after the consent request rather
+      // than short-circuiting ahead of it.
+      if (opts.useCache) {
+        const cached = readOfflineTokenConsentState();
+        if (isOfflineTokenConsentGrantedForSession(cached, sessionStateId)) {
+          setModal({ open: false, consentUrl: undefined });
+          publishOfflineTokenConsentEvent({
+            type: OfflineTokenConsentEventType.Granted,
+            at: Date.now(),
+            source: OfflineTokenConsentEventSource.Server,
+            sessionStateId,
+          });
+          lastGrantAtRef.current = Date.now();
+          return { ok: true };
+        }
+      }
 
       if (!consentUrl) {
         setModal({ open: false, consentUrl: undefined });
