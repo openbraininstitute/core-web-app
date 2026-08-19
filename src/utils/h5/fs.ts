@@ -25,6 +25,43 @@ const PROGRESS_BYTE_STEP = 2 * 1024 * 1024;
 /** The eight bytes every HDF5 file begins with. */
 const HDF5_SIGNATURE = [0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a];
 
+function isHDF5Signature(head: Uint8Array): boolean {
+  return (
+    head.length === HDF5_SIGNATURE.length && HDF5_SIGNATURE.every((byte, i) => head[i] === byte)
+  );
+}
+
+/**
+ * The largest asset we will pull into the WASM filesystem.
+ *
+ * h5wasm is a 32-bit build, so the whole heap — this file, plus every column
+ * h5wasm materialises out of it while reading — shares a 4 GiB address space,
+ * and MEMFS holds the file as one contiguous allocation. Past a certain size
+ * the download does not fail so much as the tab dies, several layers from
+ * anything that names a cause.
+ *
+ * A ceiling here turns that into a sentence. It is deliberately not the
+ * theoretical maximum: leaving room for h5wasm's own working set is the point.
+ */
+const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
+
+function formatSize(bytes: number): string {
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GiB`;
+}
+
+/**
+ * `bytes` is what we know: the declared length where the server gave one, and
+ * how far the download had got where it did not. Passing the limit itself would
+ * read "over 2.0 GiB; limit 2.0 GiB", which tells the reader nothing.
+ */
+function tooLargeError(bytes: number, exact: boolean): AssetFetchError {
+  const size = exact ? formatSize(bytes) : `over ${formatSize(bytes)}`;
+  return new AssetFetchError(
+    0,
+    `Asset is too large to open in the browser (${size}; limit ${formatSize(MAX_ASSET_BYTES)})`
+  );
+}
+
 type EmscriptenFS = Awaited<typeof ready>['FS'];
 type FSStream = ReturnType<EmscriptenFS['open']>;
 
@@ -45,7 +82,7 @@ function readsAsHDF5(FS: EmscriptenFS, stream: FSStream): boolean {
   // Positional, so the write position the stream is left at doesn't come into it.
   const read = FS.read(stream, head, 0, head.length, 0);
 
-  return read === head.length && HDF5_SIGNATURE.every((byte, index) => head[index] === byte);
+  return read === head.length && isHDF5Signature(head);
 }
 
 /**
@@ -113,6 +150,10 @@ function streamToFS({
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
+        // A response that declared no length gets checked as it arrives; one
+        // that did was already rejected before the first read. Checked before
+        // the write, so the chunk that would cross the limit is never stored.
+        if (offset + value.byteLength > MAX_ASSET_BYTES) throw tooLargeError(offset, false);
         FS.write(stream, value, 0, value.byteLength, offset);
         offset += value.byteLength;
         if (onProgress) {
@@ -239,6 +280,9 @@ export async function fetchToFS({
     throw new AssetFetchError(0, 'Asset response has no body stream');
   }
   const total = contentLength(fresh);
+  // Cheapest place to stop: the server has told us the size and we have not
+  // written a byte yet.
+  if (total && total > MAX_ASSET_BYTES) throw tooLargeError(total, true);
 
   // Stream the *live network response* into the FS while tee-ing a second branch into CacheStorage,
   // so progress reflects the actual download (not a fast local cache read). The network is the
@@ -286,6 +330,10 @@ export async function fetchToFS({
  *
  * Like `fetchToFS`, this hands back only the filename; clean up through `unlinkFromFS` so the
  * FS handle stays inside this module.
+ *
+ * Held to the same size and signature conditions as the streaming path, because this module — not
+ * its callers — owns which bytes may enter the WASM FS. Checked before `publishToFS`, since a file
+ * published under the final name is one later readers take as complete.
  */
 export async function writeToFS(
   fileKey: string,
@@ -294,6 +342,12 @@ export async function writeToFS(
 ): Promise<{ filename: string }> {
   const { FS } = await ready;
   if (!FS) throw new Error('h5wasm FS not initialized');
+  if (buffer.byteLength > MAX_ASSET_BYTES) throw tooLargeError(buffer.byteLength, true);
+
+  const head = new Uint8Array(buffer, 0, Math.min(HDF5_SIGNATURE.length, buffer.byteLength));
+  if (!isHDF5Signature(head)) {
+    throw new AssetFetchError(0, 'Asset is not an HDF5 file');
+  }
   const filename = `${fileKey}${extension}`;
 
   try {

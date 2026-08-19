@@ -199,6 +199,22 @@ describe('fetchToFS', () => {
     expect(files.size).toBe(0);
   });
 
+  it('rejects a declared length over the cap before writing a byte', async () => {
+    const fetchMock = vi.fn(async () =>
+      // Body and header disagree on purpose: the check reads the header, and a
+      // test that actually produced 2 GiB would not be one worth having.
+      responseOf(hdf5Bytes(1024), 3 * 1024 * 1024 * 1024)
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchAsset()).rejects.toThrow(
+      'too large to open in the browser (3.0 GiB; limit 2.0 GiB)'
+    );
+    // Rejected off the header, so nothing was staged and nothing was cached.
+    expect(files.size).toBe(0);
+    expect(entries.size).toBe(0);
+  });
+
   it('drops a truncated cache entry and downloads afresh', async () => {
     const bytes = hdf5Bytes(4096);
     // What an interrupted `cache.put` leaves behind: the full length in the header, part of the
@@ -264,6 +280,22 @@ describe('writeToFS', () => {
     expect(filename).toBe('spikes.h5');
     expect(files.has('spikes.h5')).toBe(true);
     expect(files.has('spikes.h5.part')).toBe(false);
+  });
+
+  it('rejects bytes that are not an HDF5 file', async () => {
+    // Same condition as the streaming path: this module, not its callers, decides
+    // which bytes may enter the WASM FS.
+    await expect(
+      writeToFS('spikes', new Uint8Array(512).fill(7).buffer as ArrayBuffer)
+    ).rejects.toThrow('not an HDF5 file');
+    expect(files.size).toBe(0);
+  });
+
+  it('rejects a buffer shorter than the HDF5 signature', async () => {
+    await expect(writeToFS('spikes', new Uint8Array(4).buffer as ArrayBuffer)).rejects.toThrow(
+      'not an HDF5 file'
+    );
+    expect(files.size).toBe(0);
   });
 
   it('leaves nothing behind when the write fails part-way', async () => {

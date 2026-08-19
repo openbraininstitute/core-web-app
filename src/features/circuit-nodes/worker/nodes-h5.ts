@@ -8,12 +8,23 @@ import {
   type ColumnMeta,
   type GetRowsRequest,
   type GetRowsResponse,
+  type NodeGeometry,
+  type NodeGeometryOptions,
   type NumberFilter,
   type SortItem,
   type TextFilter,
 } from '@/features/circuit-nodes/types';
 
 const SYNTHETIC_NODE_ID = 'node_id';
+
+const POSITION_COLUMNS = ['x', 'y', 'z'] as const;
+const ORIENTATION_COLUMNS = [
+  'orientation_x',
+  'orientation_y',
+  'orientation_z',
+  'orientation_w',
+] as const;
+const MORPHOLOGY_COLUMN = 'morphology';
 
 const LOADED_COLUMN_CACHE_SIZE = 12;
 const VIEW_CACHE_SIZE = 8;
@@ -364,6 +375,72 @@ export class NodesSession {
     return sorted;
   }
 
+  /**
+   * Read the whole population's placement in one pass: positions, orientations
+   * and — only when asked — the morphology each node points at.
+   *
+   * Positions are mandatory — a population without x/y/z cannot be drawn, and
+   * failing here names the reason rather than painting every cell at the
+   * origin. Orientation and morphology are not: a point-neuron population
+   * carries neither, and a viewer can still place somas without them.
+   *
+   * @see NodeGeometryOptions — why both of the optional ones are opt-in.
+   */
+  getGeometry({
+    withMorphologies = false,
+    withOrientations = false,
+  }: NodeGeometryOptions = {}): NodeGeometry {
+    const positions = this.packColumns(POSITION_COLUMNS);
+    if (!positions) {
+      throw new Error(
+        `Population '${this.populationKey}' has no x/y/z columns; nothing to place in 3D`
+      );
+    }
+
+    const morphologies =
+      withMorphologies && this.columnIndex.has(MORPHOLOGY_COLUMN)
+        ? asStrings(this.getColumnValues(MORPHOLOGY_COLUMN).values)
+        : null;
+
+    return {
+      count: this.rowCount,
+      positions,
+      orientations: withOrientations ? this.packColumns(ORIENTATION_COLUMNS) : null,
+      morphologies,
+    };
+  }
+
+  /**
+   * Interleave whole numeric columns into one flat array, or null if any is
+   * missing or is not a number.
+   *
+   * All-or-nothing because these columns only mean anything together: three of
+   * four orientation components is not a partial quaternion, it is no
+   * quaternion.
+   *
+   * The kind is part of that test and not a formality. A `Float64Array` write
+   * runs ToNumber on whatever it is given, so a string `x` column would land as
+   * `NaN` and a `@library`-encoded one as category indices — both of which draw
+   * a circuit rather than reporting that it cannot be drawn.
+   */
+  private packColumns(names: readonly string[]): Float64Array | null {
+    // Checked before any read: loading three of four orientation components
+    // only to discard them evicts three entries from a cache the nodes table
+    // is sharing.
+    if (!names.every((name) => this.columnIndex.get(name)?.kind === 'numeric')) return null;
+
+    // Numeric handles, so `loadColumn` went through `ensureFloatArray`.
+    const columns = names.map((name) => this.loadColumn(name) as Float32Array | Float64Array);
+
+    const stride = names.length;
+    const out = new Float64Array(this.rowCount * stride);
+    for (let c = 0; c < stride; c++) {
+      const column = columns[c];
+      for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = column[i];
+    }
+    return out;
+  }
+
   private loadColumn(name: string): LoadedColumn {
     const cached = this.loaded.get(name);
     if (cached) return cached;
@@ -689,4 +766,15 @@ function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | nu
   // string
   if (Array.isArray(sliced)) return sliced.map((v) => String(v));
   return [];
+}
+
+/**
+ * `getColumnValues` already materialises categorical and string columns as
+ * strings, so mapping a `morphology` column again would allocate a second array
+ * the size of the population to no effect.
+ */
+function asStrings(values: (string | number)[]): string[] {
+  return values.every((value) => typeof value === 'string')
+    ? (values as string[])
+    : values.map(String);
 }

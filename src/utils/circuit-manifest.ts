@@ -52,6 +52,21 @@ export function resolveManifestPath(path: string, manifest?: Record<string, stri
 }
 
 /**
+ * Resolve a `circuit_config.json` path into one an asset request can carry.
+ *
+ * Expansion routinely produces `$BASE/../networks/x.h5`, and these strings leave
+ * as `asset_path` query parameters, where a `..` is a segment the server matches
+ * literally rather than a step up.
+ *
+ * Composed rather than folded into `resolveManifestPath` because the circuit
+ * download panel wants the expansion unnormalised — it looks paths up as keys in
+ * a directory tree, where collapsing a segment changes the key.
+ */
+export function resolveCircuitAssetPath(path: string, manifest?: Record<string, string>): string {
+  return normalizeRelativePath(resolveManifestPath(path, manifest));
+}
+
+/**
  * Collapses `.` and `..` segments (and empty segments) in a relative path.
  * `a/./b/../c` -> `a/c`. A leading `..` with nothing to pop is a no-op.
  */
