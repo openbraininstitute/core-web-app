@@ -1,8 +1,7 @@
 'use client';
 
-import { ViewerHelpRow, ViewerHelpTooltip } from './viewer-help-tooltip';
+import { ViewerHelpRow, ViewerHelpTooltip } from '../viewer-help-tooltip';
 
-/** Top-left chrome help for picking morphology locations. */
 export function MorphologyLocationHelp({ container }: { container?: HTMLElement | null }) {
   return (
     <ViewerHelpTooltip

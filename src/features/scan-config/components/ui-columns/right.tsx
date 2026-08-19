@@ -67,6 +67,8 @@ type RightProps = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   selectedEntry: string;
   selectedRootElement: string;
+  /** Add a block to a root element and open it, for a 3D action that creates one. */
+  onCreateEntry: (rootElement: string, block: Record<string, unknown>) => void;
   config: Config;
   setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
   /** Root scan-config schema; previews that describe the whole configuration read it. */
@@ -165,6 +167,7 @@ function CircuitModelPreviewPane({
   setConfig,
   selectedRootElement,
   selectedEntry,
+  onCreateEntry,
   defaultNeuronOpacity,
   viewerFeatures,
   locked,
@@ -174,6 +177,7 @@ function CircuitModelPreviewPane({
   setConfig: RightProps['setConfig'];
   selectedRootElement: string;
   selectedEntry: string;
+  onCreateEntry: (rootElement: string, block: Record<string, unknown>) => void;
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
   locked?: boolean;
@@ -188,8 +192,9 @@ function CircuitModelPreviewPane({
       onConfigChange: locked ? undefined : setConfig,
       selectedRootElement,
       selectedEntry,
+      onCreateEntry: locked ? undefined : onCreateEntry,
     }),
-    [config, setConfig, selectedRootElement, selectedEntry, locked]
+    [config, setConfig, selectedRootElement, selectedEntry, onCreateEntry, locked]
   );
 
   return (
@@ -262,6 +267,7 @@ export function Right({
   entity,
   selectedEntry,
   selectedRootElement,
+  onCreateEntry,
   config,
   setConfig,
   schema,
@@ -335,6 +341,7 @@ export function Right({
           setConfig={setConfig}
           selectedRootElement={selectedRootElement}
           selectedEntry={selectedEntry}
+          onCreateEntry={onCreateEntry}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
           locked={locked}

@@ -10,7 +10,6 @@ import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import {
   CircuitPreview,
   type IElectrodeOverlayOptions,
-  type IFormBindingOptions,
 } from '@/features/scan-config/components/model-preview/circuit-preview';
 import {
   resolveEnableCellHover,
@@ -19,6 +18,7 @@ import {
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 export function ModelPreview({

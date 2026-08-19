@@ -1,22 +1,27 @@
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildMorphoTree,
   buildSonataSectionIdIndex,
 } from '@/features/scan-config/components/circuit-viz/build-morpho-tree';
-import { morphologyLocationsColor } from '@/features/scan-config/components/color-by/palette';
 import {
-  readAllLocations,
+  morphologyLocationsColor,
+  recedeMarkerColor,
+} from '@/features/scan-config/components/color-by/palette';
+import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
+import {
+  collectLocations,
+  MorphologyLocationPickModeDict,
   readEntry,
   readLocations,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
-import { useMorphologyLocationSelection } from '@/features/scan-config/components/model-preview/use-morphology-location-selection';
 import { MorphoViewerTreeItemType } from '@/features/scan-config/types';
 
 import type { Config, Sections } from '@/features/scan-config/types';
 import type {
+  MorphoViewerMorphologyLocationHover,
   MorphoViewerMorphologyLocationPick,
   MorphoViewerSmallCircuitCell,
 } from '@/morpho-viewer';
@@ -38,29 +43,24 @@ const CELLS: MorphoViewerSmallCircuitCell[] = [
   { id: CELL_ID, center: [0, 0, 0], orientation: [0, 0, 0, 1], somaRadius: 8 },
 ];
 
+/** Two explicit blocks, one row each. */
+const TWO_BLOCKS = {
+  first: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 3, offset: 0.1 }] },
+  second: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 1, offset: 0.2 }] },
+};
+
+/** A workflow that supports morphology locations, with none created yet. */
+const EMPTY: Config = { morphology_locations: {} } as unknown as Config;
+
+/** Elsewhere in the form, so a pick creates a block rather than extending one. */
+const elsewhere = { selectedRootElement: 'recordings', selectedEntry: 'some recording' };
+
 function configWith(locations: { section_id: number; offset: number }[]): Config {
   return {
     morphology_locations: {
       block: { type: 'ExplicitMorphologyLocations', locations },
     },
   };
-}
-
-function renderSelection(
-  config: Config,
-  sonataSectionIds?: Map<string, Map<number, string>>,
-  onConfigChange?: (updater: (previous: Config) => Config) => void
-) {
-  return renderHook(() =>
-    useMorphologyLocationSelection({
-      config,
-      onConfigChange,
-      selectedRootElement: 'morphology_locations',
-      selectedEntry: 'block',
-      cells: CELLS,
-      sonataSectionIds,
-    })
-  );
 }
 
 /** Two sections whose morphio ids and SONATA ids are not one apart. */
@@ -96,6 +96,37 @@ const SECTIONS: Sections = [
     radii: [1, 1],
   },
 ];
+
+const BACKGROUND = '#000000';
+const SECTION_INDEX = new Map([[CELL_ID, buildSonataSectionIdIndex(SECTIONS)]]);
+
+type TOptions = Parameters<typeof useMorphologyLocationSelection>[0];
+
+/** Editing `block` of `configWith(...)`, unless the test says otherwise. */
+function render(overrides: Partial<TOptions>) {
+  return renderHook(() =>
+    useMorphologyLocationSelection({
+      selectedRootElement: 'morphology_locations',
+      selectedEntry: 'block',
+      cells: CELLS,
+      sonataSectionIds: SECTION_INDEX,
+      backgroundColor: BACKGROUND,
+      ...overrides,
+    })
+  );
+}
+
+/** A pick on the basal dendrite, which is the one type locations may sit on. */
+function pick(overrides: Partial<MorphoViewerMorphologyLocationPick> = {}) {
+  return {
+    cell: CELLS[0],
+    sectionName: '0',
+    sonataSectionId: 3,
+    sectionType: MorphoViewerTreeItemType.BasalDendrite,
+    offset: 0.25,
+    ...overrides,
+  } as MorphoViewerMorphologyLocationPick;
+}
 
 describe('buildSonataSectionIdIndex', () => {
   it('pairs each SONATA id with the section name the viewer draws', () => {
@@ -148,47 +179,49 @@ describe('supportsMorphologyLocationPicking', () => {
 
 describe('useMorphologyLocationSelection markers', () => {
   it('addresses the section by the pairing the response carried, not by an offset id', () => {
-    const index = new Map([[CELL_ID, buildSonataSectionIdIndex(SECTIONS)]]);
-
-    const { result } = renderSelection(configWith([{ section_id: 3, offset: 0.5 }]), index);
+    const { result } = render({ config: configWith([{ section_id: 3, offset: 0.5 }]) });
 
     expect(result.current.selection?.selected).toEqual([
       expect.objectContaining({ cellId: CELL_ID, sectionName: '0', offset: 0.5 }),
     ]);
   });
 
-  it('draws nothing for a section the index does not know', () => {
-    const index = new Map([[CELL_ID, new Map<number, string>()]]);
+  it('keeps the open block bright and mutes the others', () => {
+    const { result } = render({
+      config: { morphology_locations: TWO_BLOCKS } as unknown as Config,
+      selectedEntry: 'first',
+    });
+    const colors = (result.current.selection?.selected ?? []).map((marker) => marker.color);
 
-    const { result } = renderSelection(configWith([{ section_id: 7, offset: 0.5 }]), index);
+    expect(colors).toContain(morphologyLocationsColor('first'));
+    expect(colors).toContain(recedeMarkerColor(morphologyLocationsColor('second'), BACKGROUND));
+  });
+
+  it('draws nothing for a section the index does not know', () => {
+    const { result } = render({
+      config: configWith([{ section_id: 7, offset: 0.5 }]),
+      sonataSectionIds: new Map([[CELL_ID, new Map()]]),
+      onConfigChange: vi.fn(),
+    });
 
     expect(result.current.selection?.selected).toEqual([]);
   });
 });
 
 describe('useMorphologyLocationSelection picking', () => {
-  function pick(overrides: Partial<MorphoViewerMorphologyLocationPick> = {}) {
-    return {
-      cell: CELLS[0],
-      sectionName: '0',
-      sonataSectionId: 3,
-      sectionType: MorphoViewerTreeItemType.BasalDendrite,
-      offset: 0.25,
-      ...overrides,
-    } as MorphoViewerMorphologyLocationPick;
-  }
-
   it('removes only the row that was clicked when two hold the same values', () => {
     const rows = [
       { section_id: 3, offset: 0.5 },
       { section_id: 3, offset: 0.5 },
     ];
     const config = configWith(rows);
-    const index = new Map([[CELL_ID, buildSonataSectionIdIndex(SECTIONS)]]);
     let next: Config | undefined;
 
-    const { result } = renderSelection(config, index, (updater) => {
-      next = updater(config);
+    const { result } = render({
+      config,
+      onConfigChange: (updater) => {
+        next = updater(config);
+      },
     });
     const markers = result.current.selection?.selected ?? [];
 
@@ -202,11 +235,12 @@ describe('useMorphologyLocationSelection picking', () => {
 
   it('explains the backend minimum instead of silently doing nothing', () => {
     infos.length = 0;
-    const config = configWith([{ section_id: 3, offset: 0.5 }]);
-    const index = new Map([[CELL_ID, buildSonataSectionIdIndex(SECTIONS)]]);
     const onConfigChange = vi.fn();
 
-    const { result } = renderSelection(config, index, onConfigChange);
+    const { result } = render({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      onConfigChange,
+    });
     const markers = result.current.selection?.selected ?? [];
 
     act(() => {
@@ -219,10 +253,12 @@ describe('useMorphologyLocationSelection picking', () => {
 
   it('explains a click it cannot store rather than ignoring it', () => {
     infos.length = 0;
-    const config = configWith([{ section_id: 3, offset: 0.5 }]);
     const onConfigChange = vi.fn();
 
-    const { result } = renderSelection(config, undefined, onConfigChange);
+    const { result } = render({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      onConfigChange,
+    });
 
     act(() => {
       result.current.selection?.onPick?.(pick({ sonataSectionId: undefined }));
@@ -233,65 +269,148 @@ describe('useMorphologyLocationSelection picking', () => {
   });
 });
 
-describe('readAllLocations', () => {
-  it('gathers the rows of every explicit block', () => {
-    const config = {
-      morphology_locations: {
-        first: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 3, offset: 0.1 }] },
-        second: {
-          type: 'ExplicitMorphologyLocations',
-          locations: [
-            { section_id: 5, offset: 0.2 },
-            { section_id: 7, offset: 0.3 },
-          ],
-        },
-      },
-    } as unknown as Config;
+describe('useMorphologyLocationSelection with no block open', () => {
+  it('hands the host a block to add, rather than naming one itself', () => {
+    const onCreateEntry = vi.fn();
 
-    expect(readAllLocations(config).map((row) => row.section_id)).toEqual([3, 5, 7]);
+    const { result } = render({ ...elsewhere, config: EMPTY, onCreateEntry });
+
+    expect(result.current.pickMode).toBe(MorphologyLocationPickModeDict.Create);
+    act(() => {
+      result.current.selection?.onPick?.(pick());
+    });
+
+    expect(onCreateEntry).toHaveBeenCalledWith('morphology_locations', {
+      type: 'ExplicitMorphologyLocations',
+      locations: [{ section_id: 3, offset: 0.25 }],
+    });
+  });
+
+  it('refuses a marker belonging to a block that is not open', () => {
+    infos.length = 0;
+    const onConfigChange = vi.fn();
+    const onCreateEntry = vi.fn();
+
+    const { result } = render({
+      ...elsewhere,
+      config: { morphology_locations: TWO_BLOCKS } as unknown as Config,
+      onConfigChange,
+      onCreateEntry,
+    });
+    const markers = result.current.selection?.selected ?? [];
+
+    act(() => {
+      result.current.selection?.onPick?.(pick({ offset: 0.1, existingMarker: markers[0] }));
+    });
+
+    expect(onConfigChange).not.toHaveBeenCalled();
+    expect(onCreateEntry).not.toHaveBeenCalled();
+    expect(infos.join(' ')).toMatch(/belongs to "first"/);
+  });
+
+  it('does not offer picking when the form cannot open the block it would create', () => {
+    const { result } = render({ ...elsewhere, config: EMPTY });
+
+    expect(result.current.pickMode).toBe(null);
+    expect(result.current.selection).toBeUndefined();
+  });
+
+  it('does not offer picking where the workflow has no morphology locations', () => {
+    const { result } = render({ ...elsewhere, config: {} as Config, onCreateEntry: vi.fn() });
+
+    expect(result.current.pickMode).toBe(null);
+  });
+});
+
+describe('useMorphologyLocationSelection hover', () => {
+  const PREVIEW: MorphoViewerMorphologyLocationHover = {
+    kind: 'preview',
+    cellId: CELL_ID,
+    sectionName: '0',
+    sonataSectionId: 3,
+    sectionType: MorphoViewerTreeItemType.BasalDendrite,
+    offset: 0.25,
+    screen: { x: 0.5, y: 0.5 },
+  };
+
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('waits for the pointer to rest before offering a new block', () => {
+    const { result } = render({ ...elsewhere, config: EMPTY, onCreateEntry: vi.fn() });
+
+    act(() => result.current.selection?.onHover?.(PREVIEW));
+    expect(result.current.hover).toBe(null);
+
+    act(() => vi.advanceTimersByTime(299));
+    expect(result.current.hover).toBe(null);
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(result.current.hover).toBe(PREVIEW);
+  });
+
+  it('follows the pointer once it is up, and hides as soon as it leaves', () => {
+    const moved = { ...PREVIEW, offset: 0.4 };
+    const { result } = render({ ...elsewhere, config: EMPTY, onCreateEntry: vi.fn() });
+
+    act(() => result.current.selection?.onHover?.(PREVIEW));
+    act(() => vi.advanceTimersByTime(300));
+
+    // Already up: no second wait.
+    act(() => result.current.selection?.onHover?.(moved));
+    expect(result.current.hover).toBe(moved);
+
+    act(() => result.current.selection?.onHover?.(null));
+    expect(result.current.hover).toBe(null);
+
+    // Left the neurite, so coming back waits again.
+    act(() => result.current.selection?.onHover?.(PREVIEW));
+    expect(result.current.hover).toBe(null);
+    act(() => vi.advanceTimersByTime(300));
+    expect(result.current.hover).toBe(PREVIEW);
+  });
+
+  it('does not wait while a block is open', () => {
+    const { result } = render({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      onConfigChange: vi.fn(),
+    });
+
+    act(() => result.current.selection?.onHover?.(PREVIEW));
+    expect(result.current.hover).toBe(PREVIEW);
+  });
+});
+
+describe('collectLocations', () => {
+  it('gathers the rows of every explicit block', () => {
+    expect(collectLocations(TWO_BLOCKS).map((row) => row.section_id)).toEqual([3, 1]);
   });
 
   it('ignores blocks that only describe how to sample', () => {
-    const config = {
-      morphology_locations: {
-        explicit: {
-          type: 'ExplicitMorphologyLocations',
-          locations: [{ section_id: 3, offset: 0.1 }],
-        },
-        sampled: { type: 'RandomMorphologyLocations', number_of_locations: 20 },
+    const dictionary = {
+      explicit: {
+        type: 'ExplicitMorphologyLocations',
+        locations: [{ section_id: 3, offset: 0.1 }],
       },
-    } as unknown as Config;
+      sampled: { type: 'RandomMorphologyLocations', number_of_locations: 20 },
+    };
 
-    expect(readAllLocations(config)).toHaveLength(1);
+    expect(collectLocations(dictionary)).toHaveLength(1);
   });
 
   it('is empty when there is no morphology-locations dictionary at all', () => {
-    expect(readAllLocations({} as Config)).toEqual([]);
-    expect(readAllLocations(null)).toEqual([]);
+    expect(collectLocations(null)).toEqual([]);
   });
 });
 
 describe('morphologyLocationsColor', () => {
   it('does not depend on where the block sits in the dictionary', () => {
-    const before = readAllLocations({
-      morphology_locations: {
-        first: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 3, offset: 0.1 }] },
-        second: {
-          type: 'ExplicitMorphologyLocations',
-          locations: [{ section_id: 5, offset: 0.2 }],
-        },
-      },
-    } as unknown as Config);
-    const after = readAllLocations({
-      morphology_locations: {
-        second: {
-          type: 'ExplicitMorphologyLocations',
-          locations: [{ section_id: 5, offset: 0.2 }],
-        },
-      },
-    } as unknown as Config);
+    const before = collectLocations(TWO_BLOCKS);
+    const after = collectLocations({ second: TWO_BLOCKS.second });
 
-    expect(after[0].color).toBe(before[1].color);
+    expect(morphologyLocationsColor(after[0].entry)).toBe(
+      morphologyLocationsColor(before[1].entry)
+    );
   });
 
   it('gives different blocks different colours', () => {
