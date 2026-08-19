@@ -4,7 +4,11 @@ import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-con
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
+import type {
+  NodeGeometry,
+  NodePopulation,
+  ParsedCircuitConfig,
+} from '@/features/circuit-nodes/types';
 
 type Args = {
   circuit: ICircuit;
@@ -12,10 +16,14 @@ type Args = {
   population: NodePopulation | undefined;
   /** @see NodeGeometryOptions.withMorphologies */
   withMorphologies?: boolean;
+  /** @see NodeGeometryOptions.withOrientations */
+  withOrientations?: boolean;
 };
 
 type Result = {
   geometry: NodeGeometry | null;
+  /** The parsed `circuit_config.json`, for callers that need `raw`. */
+  config: ParsedCircuitConfig | undefined;
   isLoading: boolean;
   error: Error | null;
 };
@@ -27,7 +35,12 @@ type Result = {
  * so a viewer and the nodes table looking at the same population download the
  * file once between them.
  */
-export function useNodeGeometry({ circuit, population, withMorphologies = false }: Args): Result {
+export function useNodeGeometry({
+  circuit,
+  population,
+  withMorphologies = false,
+  withOrientations = false,
+}: Args): Result {
   const { config, error: configError } = useCircuitConfig(circuit);
 
   const {
@@ -57,7 +70,7 @@ export function useNodeGeometry({ circuit, population, withMorphologies = false 
 
     let cancelled = false;
     setGeometryError(null);
-    getGeometry({ withMorphologies })
+    getGeometry({ withMorphologies, withOrientations })
       .then((next) => {
         if (!cancelled) setGeometry(next);
       })
@@ -68,7 +81,7 @@ export function useNodeGeometry({ circuit, population, withMorphologies = false 
     return () => {
       cancelled = true;
     };
-  }, [status, getGeometry, withMorphologies]);
+  }, [status, getGeometry, withMorphologies, withOrientations]);
 
   // A config that loads but names no node population would otherwise leave the
   // viewer on its spinner for good: the worker session is gated on having one,
@@ -80,7 +93,7 @@ export function useNodeGeometry({ circuit, population, withMorphologies = false 
 
   const error = asError(configError) ?? noPopulation ?? workerError ?? geometryError;
 
-  return { geometry, isLoading: !error && !geometry, error };
+  return { geometry, config, isLoading: !error && !geometry, error };
 }
 
 function asError(value: unknown): Error | null {

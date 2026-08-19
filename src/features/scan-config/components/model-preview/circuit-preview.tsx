@@ -326,6 +326,7 @@ export function CircuitPreview({
           <CircuitViz
             key={circuit.id}
             circuit={circuit}
+            population={population}
             colorsByNode={enableColorBy ? colorsByNode : undefined}
             defaultColor={defaultColor}
             showAxons={config.showAxons}

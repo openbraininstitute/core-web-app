@@ -11,10 +11,11 @@ import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 import { MorphologyLocationLabels } from './morphology-location-labels';
 import { MorphologyLocationPopover } from './morphology-location-popover';
 import { sequentialCellLoader } from './sequential-loader';
-import { useCircuitSynapses, useObiOneVizSource } from './sources';
+import { circuitDrawsSynapses, useSmallCircuitSource } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { Cell, Config } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
@@ -34,6 +35,11 @@ const SYNAPSE_MIN_RADIUS_IN_PIXELS = 2;
 
 interface CircuitVizProps {
   circuit: ICircuit;
+  /**
+   * SONATA node population to draw. Host-owned and shared with colour-by, so
+   * `colorsByNode` stays indexed against the same nodes this draws.
+   */
+  population?: NodePopulation;
   /** per-node colors aligned by node index; undefined → viewer default (blue). */
   colorsByNode?: string[];
   /** default color for nodes with no property color (adapts to bg in adaptive mode). */
@@ -96,20 +102,21 @@ export interface IMorphologyLocationsBinding {
 /**
  * Small-circuit GPU surface.
  *
- * Nodes and synapses are read from the circuit's SONATA files in the browser; morphologies
- * come from OBI-One `/circuit/viz`, whose sections carry the `sonata_section_id` a click
- * needs to become a morphology location.
+ * Node placement and synapses are read from the circuit's own SONATA files — placement
+ * through the shared nodes worker, which the nodes table and colour-by already have the
+ * file open in. Morphologies come from OBI-One `/circuit/viz`, whose sections carry the
+ * `sonata_section_id` a click needs to become a morphology location.
  */
 function CircuitViz(props: CircuitVizProps) {
-  const source = useObiOneVizSource({
-    circuitId: props.circuit.id,
+  const source = useSmallCircuitSource({
+    circuit: props.circuit,
+    population: props.population,
     showAxons: props.showAxons,
     colorsByNode: props.colorsByNode,
     defaultColor: props.defaultColor,
+    withSynapses: circuitDrawsSynapses(props.circuit.scale),
   });
-  const synapses = useCircuitSynapses(props.circuit);
-  const withSynapses = useMemo(() => ({ ...source, synapses }), [source, synapses]);
-  return <CircuitVizView {...props} source={withSynapses} />;
+  return <CircuitVizView {...props} source={source} />;
 }
 
 /** The view reads no entity fields, so it serves any small-circuit source. */

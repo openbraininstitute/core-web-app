@@ -1,3 +1,5 @@
+import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
+
 export const ColumnKindDict = {
   Numeric: 'numeric',
   Categorical: 'categorical',
@@ -160,6 +162,15 @@ export type ParsedCircuitConfig = {
   nodes: NodePopulation[];
   edges: EdgePopulation[];
   circuitAssetId: string;
+  /**
+   * The `circuit_config.json` as served, manifest variables unresolved.
+   *
+   * Kept alongside the parsed populations because morphology lookup needs
+   * fields this shape does not carry (`components`, `alternate_morphologies`),
+   * and re-downloading the config to read them would be a second request for
+   * bytes already in hand.
+   */
+  raw: ICircuitSonataConfiguration;
 };
 
 export type ViewMode = 'nodes' | 'edges';
