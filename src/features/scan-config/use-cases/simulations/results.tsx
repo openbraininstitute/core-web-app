@@ -31,7 +31,7 @@ import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
-import errorRegistry from '@/features/scan-config/error-registry';
+import { errorRegistry } from '@/features/scan-config/error-registry';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
@@ -219,6 +219,12 @@ export default function SimulationsTab({
     // so initial auto-selection can run for the newly loaded simulations
     setSelectedSimulationIds([]);
     setInitialSelectionDone(false);
+    // statuses are keyed by simulation id and belong to the previous campaign;
+    // keeping them lets `allSimulationStatusesLoaded` read as true too early
+    setLocalStatusMap(new Map());
+    setActiveSimulation(null);
+    setSelectedFile(undefined);
+    setJobIdMap(new Map());
   }, [campaignId]);
 
   useEffect(() => {

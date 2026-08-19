@@ -1,16 +1,16 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
 import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import { useTaskTabState } from '@/features/scan-config/components/shared/use-task-tab-state';
+import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
@@ -20,8 +20,6 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
-import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
@@ -41,12 +39,6 @@ export function ExtractionTab({
   taskTypeBindings,
 }: Props) {
   const context = useWorkspace();
-  const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
-  const [activeConfig, setActiveConfig] = useState<ITaskConfig<TTaskConfigMeta> | null>(null);
-  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
-    new Map()
-  );
 
   const { mutateAsync: runExtraction, isPending: runExtractionPending } = useTaskLaunchMutation({
     context,
@@ -69,7 +61,14 @@ export function ExtractionTab({
       loadExecutions: false,
     });
 
-  const configs = configsResponse?.configList ?? [];
+  const configs = useMemo(() => configsResponse?.configList ?? [], [configsResponse?.configList]);
+
+  const {
+    state: { activeConfig, selectedFile, executionByConfigId },
+    act,
+    selectableConfigIds,
+    resolvedSelectedConfigIds,
+  } = useTaskTabState<TTaskConfigMeta>(campaignId, configs);
 
   const resolvedActiveConfig = activeConfig ?? configs[0] ?? null;
 
@@ -84,46 +83,9 @@ export function ExtractionTab({
   const taskLogsShouldReadSnapshot =
     !!activeConfigExecStatus && isTerminalActivityStatus(activeConfigExecStatus);
 
-  const onActiveConfigChange = useCallback((config: ITaskConfig<TTaskConfigMeta>) => {
-    setActiveConfig(config);
-  }, []);
-
-  const onSelectedForExtractionChange = useCallback((configId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedConfigIds((prev) => [...(prev ?? []), configId]);
-    } else {
-      setSelectedConfigIds((prev) => (prev ?? []).filter((id) => id !== configId));
-    }
-  }, []);
-
-  const onExecutionLoad = useCallback((configId: string, execution: ITaskActivity | null) => {
-    setExecutionByConfigId((prev) => {
-      if (prev.get(configId) === execution) return prev;
-      return new Map(prev).set(configId, execution);
-    });
-  }, []);
-
-  const selectableConfigIds = useMemo(() => {
-    return (
-      (configsResponse?.configList ?? [])
-        .filter((config) => {
-          if (!executionByConfigId.has(config.id)) return false;
-          const status = executionByConfigId.get(config.id)?.status;
-          return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
-        })
-        .map((c) => c.id) ?? []
-    );
-  }, [configsResponse?.configList, executionByConfigId]);
-
-  const allConfigStatusesLoaded =
-    configs.length > 0 && configs.every((config) => executionByConfigId.has(config.id));
-
-  const resolvedSelectedConfigIds =
-    selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
-
   const onRun = async (configIdsToRun: string[]) => {
     await runExtraction(configIdsToRun);
-    setSelectedConfigIds([]);
+    act.onLaunched();
   };
 
   const costModalItems = useMemo(
@@ -166,12 +128,10 @@ export function ExtractionTab({
               executionActivityType={taskTypeBindings.execution}
               pauseStatusPolling={runExtractionPending}
               executionByConfigId={executionByConfigId}
-              onSelectConfig={onActiveConfigChange}
-              onCheckedChange={onSelectedForExtractionChange}
-              onToggleSelectAll={(checked) =>
-                setSelectedConfigIds(checked ? selectableConfigIds : [])
-              }
-              onExecutionLoad={onExecutionLoad}
+              onSelectConfig={act.onActiveConfigChange}
+              onCheckedChange={act.onCheckedChange}
+              onToggleSelectAll={act.onToggleSelectAll}
+              onExecutionLoad={act.onExecutionLoad}
             />
             <TaskLaunchButton
               label="Launch extractions"
@@ -193,7 +153,7 @@ export function ExtractionTab({
                 selectedFile={selectedFile}
                 context={context}
                 campaignOrigin={campaignOriginAction}
-                onSelect={setSelectedFile}
+                onSelect={act.onSelectedFileChange}
               />
             </div>
           )

@@ -1,15 +1,15 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
-import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
 import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import { useTaskTabState } from '@/features/scan-config/components/shared/use-task-tab-state';
+import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
@@ -19,8 +19,6 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
-import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
@@ -43,13 +41,6 @@ export function BuildTab({
 }: Props) {
   const context = useWorkspace();
 
-  const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
-  const [activeConfig, setActiveConfig] = useState<ITaskConfig<TBuildCampaignMeta> | null>(null);
-  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
-    new Map()
-  );
-
   const { mutateAsync: runBuild, isPending: runBuildPending } = useTaskLaunchMutation({
     context,
     obiOneTaskType: taskTypeBindings.obiOne,
@@ -70,7 +61,14 @@ export function BuildTab({
       loadExecutions: false,
     });
 
-  const configs = configsResponse?.configList ?? [];
+  const configs = useMemo(() => configsResponse?.configList ?? [], [configsResponse?.configList]);
+
+  const {
+    state: { activeConfig, selectedFile, executionByConfigId },
+    act,
+    selectableConfigIds,
+    resolvedSelectedConfigIds,
+  } = useTaskTabState<TBuildCampaignMeta>(campaignId, configs);
 
   const resolvedActiveConfig = activeConfig ?? configs[0] ?? null;
 
@@ -85,46 +83,9 @@ export function BuildTab({
   const taskLogsShouldReadSnapshot =
     !!activeConfigExecStatus && isTerminalActivityStatus(activeConfigExecStatus);
 
-  const onActiveConfigChange = useCallback((config: ITaskConfig<TBuildCampaignMeta>) => {
-    setActiveConfig(config);
-  }, []);
-
-  const onSelectedForBuildChange = useCallback((configId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedConfigIds((prev) => [...(prev ?? []), configId]);
-    } else {
-      setSelectedConfigIds((prev) => (prev ?? []).filter((id) => id !== configId));
-    }
-  }, []);
-
-  const onExecutionLoad = useCallback((configId: string, execution: ITaskActivity | null) => {
-    setExecutionByConfigId((prev) => {
-      if (prev.get(configId) === execution) return prev;
-      return new Map(prev).set(configId, execution);
-    });
-  }, []);
-
-  const selectableConfigIds = useMemo(() => {
-    return (
-      (configsResponse?.configList ?? [])
-        .filter((config) => {
-          if (!executionByConfigId.has(config.id)) return false;
-          const status = executionByConfigId.get(config.id)?.status;
-          return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
-        })
-        .map((c) => c.id) ?? []
-    );
-  }, [configsResponse?.configList, executionByConfigId]);
-
-  const allConfigStatusesLoaded =
-    configs.length > 0 && configs.every((config) => executionByConfigId.has(config.id));
-
-  const resolvedSelectedConfigIds =
-    selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
-
   const onRun = async (configIdsToRun: string[]) => {
     await runBuild(configIdsToRun);
-    setSelectedConfigIds([]);
+    act.onLaunched();
   };
 
   const costModalItems = useMemo(
@@ -167,12 +128,10 @@ export function BuildTab({
               executionActivityType={taskTypeBindings.execution}
               pauseStatusPolling={runBuildPending}
               executionByConfigId={executionByConfigId}
-              onSelectConfig={onActiveConfigChange}
-              onCheckedChange={onSelectedForBuildChange}
-              onToggleSelectAll={(checked) =>
-                setSelectedConfigIds(checked ? selectableConfigIds : [])
-              }
-              onExecutionLoad={onExecutionLoad}
+              onSelectConfig={act.onActiveConfigChange}
+              onCheckedChange={act.onCheckedChange}
+              onToggleSelectAll={act.onToggleSelectAll}
+              onExecutionLoad={act.onExecutionLoad}
             />
             <TaskLaunchButton
               label="Launch builds"
@@ -194,7 +153,7 @@ export function BuildTab({
                 selectedFile={selectedFile}
                 context={context}
                 campaignOrigin={campaignOriginAction}
-                onSelect={setSelectedFile}
+                onSelect={act.onSelectedFileChange}
               />
             </div>
           )
