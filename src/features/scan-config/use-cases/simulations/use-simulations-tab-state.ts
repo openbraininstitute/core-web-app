@@ -20,11 +20,6 @@ export const SimulationsTabActionDict = {
   Launched: 'launched',
 } as const;
 
-/**
- * Every field is campaign-scoped: it is meaningless once `campaignId` changes.
- * `campaignId` lives inside the state so that reset is a single transition
- * instead of several setters that can drift apart.
- */
 export interface ISimulationsTabState {
   campaignId: string;
   /** `null` means the user has not touched the selection yet, so launchable simulations are auto-selected. */
@@ -169,7 +164,7 @@ export interface ISimulationsTabStateActions {
   onActiveSimulationChange: (simulation: ISimulation) => void;
   onSelectedFileChange: (file: TActivityCustomFile | undefined) => void;
   onSelectedForSimChange: (simulationId: string, checked: boolean) => void;
-  onToggleSelectAll: (checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean, selectableSimulationIds: string[]) => void;
   setSimulationStatus: (simulationId: string, status: ActivityStatus) => void;
   onSimulationStatusLoad: (simulationId: string, status: ActivityStatus) => void;
   setSimulationJobId: (simulationId: string, jobId: string) => void;
@@ -185,11 +180,6 @@ export interface ISimulationsTabStateResult {
   resolvedSelectedSimulationIds: string[];
 }
 
-/**
- * Single owner of the campaign-scoped state for the simulations result tab. The
- * tab is not remounted when the campaign changes, so the state is reset during
- * render off `campaignId`.
- */
 export function useSimulationsTabState(
   campaignId: string,
   simulations: ISimulation[]
@@ -249,7 +239,7 @@ export function useSimulationsTabState(
           simulationId,
           checked,
         }),
-      onToggleSelectAll: (checked) =>
+      onToggleSelectAll: (checked, selectableSimulationIds) =>
         dispatch({
           type: SimulationsTabActionDict.SelectAllToggled,
           checked,
@@ -263,7 +253,7 @@ export function useSimulationsTabState(
         dispatch({ type: SimulationsTabActionDict.JobIdAssigned, simulationId, jobId }),
       onLaunched: () => dispatch({ type: SimulationsTabActionDict.Launched }),
     }),
-    [selectableSimulationIds]
+    []
   );
 
   return { state, act, selectableSimulationIds, resolvedSelectedSimulationIds };

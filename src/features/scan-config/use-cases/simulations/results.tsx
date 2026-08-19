@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -97,11 +97,13 @@ export default function SimulationsTab({
   const { state, act, selectableSimulationIds, resolvedSelectedSimulationIds } =
     useSimulationsTabState(campaignId, simulations);
   const {
-    activeSimulation,
+    activeSimulation: pickedSimulation,
     selectedFile,
     statusBySimulationId: localStatusMap,
     jobIdBySimulationId: jobIdMap,
   } = state;
+
+  const activeSimulation = pickedSimulation ?? simulations[0] ?? null;
   const {
     modal: offlineTokenConsentModal,
     ensure: ensureOfflineTokenConsent,
@@ -173,13 +175,6 @@ export default function SimulationsTab({
     setSimulationStatus,
     onSimulationStatusLoad,
   } = act;
-
-  useEffect(() => {
-    // Select first simulation from the list
-    if (simulations.length > 0) {
-      onActiveSimulationChange(simulations[0]);
-    }
-  }, [onActiveSimulationChange, simulations]);
 
   const runViaLaunchSystem = async (simIds: string[]) => {
     const consentResult = await ensureOfflineTokenConsent();
@@ -340,7 +335,7 @@ export default function SimulationsTab({
   };
 
   const onToggleSelectAll = (checked: boolean) => {
-    act.onToggleSelectAll(checked);
+    act.onToggleSelectAll(checked, selectableSimulationIds);
   };
 
   const launchSimBtnLabelPrefix = resolvedSelectedSimulationIds.length
