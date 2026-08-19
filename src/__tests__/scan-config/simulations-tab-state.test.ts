@@ -137,20 +137,34 @@ describe('simulationsTabStateReducer', () => {
   });
 
   describe('selection', () => {
-    it('starts a selection from the sentinel without losing the checked simulation', () => {
+    it('unchecking one auto-selected simulation keeps the others checked', () => {
+      // regression: the sentinel fell back to [] instead of what was on screen,
+      // so unchecking one card cleared every checkbox.
       const next = simulationsTabStateReducer(initialSimulationsTabState('campaign-a'), {
         type: SimulationsTabActionDict.SimulationCheckedChanged,
-        simulationId: 's1',
-        checked: true,
+        simulationId: 's2',
+        checked: false,
+        shownSelectedSimulationIds: ['s1', 's2', 's3'],
       });
-      expect(next.selectedSimulationIds).toEqual(['s1']);
+      expect(next.selectedSimulationIds).toEqual(['s1', 's3']);
     });
 
-    it('unchecking from the sentinel yields an explicit empty selection', () => {
+    it('checking a failed simulation keeps the auto-selected ones checked', () => {
+      const next = simulationsTabStateReducer(initialSimulationsTabState('campaign-a'), {
+        type: SimulationsTabActionDict.SimulationCheckedChanged,
+        simulationId: 'failed',
+        checked: true,
+        shownSelectedSimulationIds: ['s1', 's2'],
+      });
+      expect(next.selectedSimulationIds).toEqual(['s1', 's2', 'failed']);
+    });
+
+    it('unchecking the last checked simulation yields an explicit empty selection', () => {
       const next = simulationsTabStateReducer(initialSimulationsTabState('campaign-a'), {
         type: SimulationsTabActionDict.SimulationCheckedChanged,
         simulationId: 's1',
         checked: false,
+        shownSelectedSimulationIds: ['s1'],
       });
       expect(next.selectedSimulationIds).toEqual([]);
     });

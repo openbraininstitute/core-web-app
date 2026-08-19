@@ -10,6 +10,7 @@ import {
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TTaskTabAction } from '@/features/scan-config/components/shared/use-task-tab-state';
 
 type TMeta = Record<string, unknown>;
 
@@ -70,30 +71,47 @@ describe('taskTabStateReducer', () => {
   });
 
   describe('selection', () => {
-    it('starts a selection from the sentinel without losing the checked config', () => {
+    it('unchecking one auto-selected config keeps the others checked', () => {
+      // regression: the sentinel fell back to [] instead of what was on screen,
+      // so unchecking one card cleared every checkbox.
       const next = taskTabStateReducer(initialTaskTabState<TMeta>('campaign-a'), {
         type: TaskTabActionDict.ConfigCheckedChanged,
-        configId: 'c1',
-        checked: true,
+        configId: 'c2',
+        checked: false,
+        shownSelectedConfigIds: ['c1', 'c2', 'c3'],
       });
-      expect(next.selectedConfigIds).toEqual(['c1']);
+      expect(next.selectedConfigIds).toEqual(['c1', 'c3']);
+    });
+
+    it('checking a config that was not auto-selected keeps the others checked', () => {
+      // a failed config is selectable but not auto-selected: checking it must
+      // not drop the freshly created ones.
+      const next = taskTabStateReducer(initialTaskTabState<TMeta>('campaign-a'), {
+        type: TaskTabActionDict.ConfigCheckedChanged,
+        configId: 'failed',
+        checked: true,
+        shownSelectedConfigIds: ['c1', 'c2'],
+      });
+      expect(next.selectedConfigIds).toEqual(['c1', 'c2', 'failed']);
     });
 
     it('does not add the same config twice', () => {
-      const check = {
+      const check: TTaskTabAction<TMeta> = {
         type: TaskTabActionDict.ConfigCheckedChanged,
         configId: 'c1',
         checked: true,
-      } as const;
+        shownSelectedConfigIds: [],
+      };
       const once = taskTabStateReducer(initialTaskTabState<TMeta>('campaign-a'), check);
       expect(taskTabStateReducer(once, check)).toBe(once);
     });
 
-    it('unchecking from the sentinel yields an explicit empty selection', () => {
+    it('unchecking the last checked config yields an explicit empty selection', () => {
       const next = taskTabStateReducer(initialTaskTabState<TMeta>('campaign-a'), {
         type: TaskTabActionDict.ConfigCheckedChanged,
         configId: 'c1',
         checked: false,
+        shownSelectedConfigIds: ['c1'],
       });
       expect(next.selectedConfigIds).toEqual([]);
     });

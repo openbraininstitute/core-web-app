@@ -129,7 +129,9 @@ export function BuildTab({
               pauseStatusPolling={runBuildPending}
               executionByConfigId={executionByConfigId}
               onSelectConfig={act.onActiveConfigChange}
-              onCheckedChange={act.onCheckedChange}
+              onCheckedChange={(configId, checked) =>
+                act.onCheckedChange(configId, checked, resolvedSelectedConfigIds)
+              }
               onToggleSelectAll={act.onToggleSelectAll}
               onExecutionLoad={act.onExecutionLoad}
             />

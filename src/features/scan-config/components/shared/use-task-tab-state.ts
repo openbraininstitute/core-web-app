@@ -30,7 +30,13 @@ export type TTaskTabAction<M extends Record<string, unknown>> =
   | { type: typeof TaskTabActionDict.CampaignChanged; campaignId: string }
   | { type: typeof TaskTabActionDict.ActiveConfigChanged; config: ITaskConfig<M> }
   | { type: typeof TaskTabActionDict.SelectedFileChanged; file: TActivityCustomFile | undefined }
-  | { type: typeof TaskTabActionDict.ConfigCheckedChanged; configId: string; checked: boolean }
+  | {
+      type: typeof TaskTabActionDict.ConfigCheckedChanged;
+      configId: string;
+      checked: boolean;
+      /** The selection currently on screen, so a first edit starts from what the user sees. */
+      shownSelectedConfigIds: string[];
+    }
   | {
       type: typeof TaskTabActionDict.SelectAllToggled;
       checked: boolean;
@@ -70,15 +76,23 @@ export function taskTabStateReducer<M extends Record<string, unknown>>(
       ...state,
       selectedFile: file,
     }))
-    .with({ type: TaskTabActionDict.ConfigCheckedChanged, checked: true }, ({ configId }) => {
-      const current = state.selectedConfigIds ?? [];
-      if (current.includes(configId)) return state;
-      return { ...state, selectedConfigIds: [...current, configId] };
-    })
-    .with({ type: TaskTabActionDict.ConfigCheckedChanged, checked: false }, ({ configId }) => ({
-      ...state,
-      selectedConfigIds: (state.selectedConfigIds ?? []).filter((id) => id !== configId),
-    }))
+    .with(
+      { type: TaskTabActionDict.ConfigCheckedChanged, checked: true },
+      ({ configId, shownSelectedConfigIds }) => {
+        const current = state.selectedConfigIds ?? shownSelectedConfigIds;
+        if (current.includes(configId)) return state;
+        return { ...state, selectedConfigIds: [...current, configId] };
+      }
+    )
+    .with(
+      { type: TaskTabActionDict.ConfigCheckedChanged, checked: false },
+      ({ configId, shownSelectedConfigIds }) => ({
+        ...state,
+        selectedConfigIds: (state.selectedConfigIds ?? shownSelectedConfigIds).filter(
+          (id) => id !== configId
+        ),
+      })
+    )
     .with({ type: TaskTabActionDict.SelectAllToggled }, ({ checked, selectableConfigIds }) => ({
       ...state,
       selectedConfigIds: checked ? selectableConfigIds : [],
@@ -102,7 +116,7 @@ export function isConfigSelectable(execution: ITaskActivity | null | undefined):
 export interface ITaskTabStateActions<M extends Record<string, unknown>> {
   onActiveConfigChange: (config: ITaskConfig<M>) => void;
   onSelectedFileChange: (file: TActivityCustomFile | undefined) => void;
-  onCheckedChange: (configId: string, checked: boolean) => void;
+  onCheckedChange: (configId: string, checked: boolean, shownSelectedConfigIds: string[]) => void;
   onToggleSelectAll: (checked: boolean) => void;
   onExecutionLoad: (configId: string, execution: ITaskActivity | null) => void;
   onLaunched: () => void;
@@ -153,8 +167,13 @@ export function useTaskTabState<M extends Record<string, unknown>>(
         dispatch({ type: TaskTabActionDict.ActiveConfigChanged, config }),
       onSelectedFileChange: (file) =>
         dispatch({ type: TaskTabActionDict.SelectedFileChanged, file }),
-      onCheckedChange: (configId, checked) =>
-        dispatch({ type: TaskTabActionDict.ConfigCheckedChanged, configId, checked }),
+      onCheckedChange: (configId, checked, shownSelectedConfigIds) =>
+        dispatch({
+          type: TaskTabActionDict.ConfigCheckedChanged,
+          configId,
+          checked,
+          shownSelectedConfigIds,
+        }),
       onToggleSelectAll: (checked) =>
         dispatch({ type: TaskTabActionDict.SelectAllToggled, checked, selectableConfigIds }),
       onExecutionLoad: (configId, execution) =>

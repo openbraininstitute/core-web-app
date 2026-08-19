@@ -61,6 +61,28 @@ describe('useSimulationsTabState', () => {
     expect(result.current.selectableSimulationIds).toEqual(['s1', 's2']);
   });
 
+  it('unchecking one auto-selected card leaves the rest checked', () => {
+    // regression seen in the UI: unchecking a single card cleared every checkbox,
+    // because the first edit started from [] rather than the shown selection.
+    const { result } = renderHook(() => useSimulationsTabState('campaign-a', simulations));
+
+    reactAct(() => {
+      result.current.act.onSimulationStatusLoad('s1', ActivityStatus.CREATED);
+      result.current.act.onSimulationStatusLoad('s2', ActivityStatus.CREATED);
+    });
+    expect(result.current.resolvedSelectedSimulationIds).toEqual(['s1', 's2']);
+
+    reactAct(() => {
+      result.current.act.onSelectedForSimChange(
+        's1',
+        false,
+        result.current.resolvedSelectedSimulationIds
+      );
+    });
+
+    expect(result.current.resolvedSelectedSimulationIds).toEqual(['s2']);
+  });
+
   it('re-arms the auto-selection when the campaign changes after a launch', () => {
     const { result, rerender } = renderHook(
       ({ campaignId }) => useSimulationsTabState(campaignId, simulations),

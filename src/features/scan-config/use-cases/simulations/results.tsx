@@ -359,7 +359,9 @@ export default function SimulationsTab({
         launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
         onToggleSelectAll={onToggleSelectAll}
         onActiveSimulationChange={onActiveSimulationChange}
-        onSelectedForSimChange={onSelectedForSimChange}
+        onSelectedForSimChange={(simulationId, checked) =>
+          onSelectedForSimChange(simulationId, checked, resolvedSelectedSimulationIds)
+        }
         onSimulationStatusLoad={onSimulationStatusLoad}
         onRun={onLaunch}
         middle={

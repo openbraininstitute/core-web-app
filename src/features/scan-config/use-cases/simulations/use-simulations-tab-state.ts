@@ -41,6 +41,8 @@ export type TSimulationsTabAction =
       type: typeof SimulationsTabActionDict.SimulationCheckedChanged;
       simulationId: string;
       checked: boolean;
+      /** The selection currently on screen, so a first edit starts from what the user sees. */
+      shownSelectedSimulationIds: string[];
     }
   | {
       type: typeof SimulationsTabActionDict.SelectAllToggled;
@@ -102,17 +104,17 @@ export function simulationsTabStateReducer(
     }))
     .with(
       { type: SimulationsTabActionDict.SimulationCheckedChanged, checked: true },
-      ({ simulationId }) => {
-        const current = state.selectedSimulationIds ?? [];
+      ({ simulationId, shownSelectedSimulationIds }) => {
+        const current = state.selectedSimulationIds ?? shownSelectedSimulationIds;
         if (current.includes(simulationId)) return state;
         return { ...state, selectedSimulationIds: [...current, simulationId] };
       }
     )
     .with(
       { type: SimulationsTabActionDict.SimulationCheckedChanged, checked: false },
-      ({ simulationId }) => ({
+      ({ simulationId, shownSelectedSimulationIds }) => ({
         ...state,
-        selectedSimulationIds: (state.selectedSimulationIds ?? []).filter(
+        selectedSimulationIds: (state.selectedSimulationIds ?? shownSelectedSimulationIds).filter(
           (id) => id !== simulationId
         ),
       })
@@ -163,7 +165,11 @@ export function isSimulationSelectable(
 export interface ISimulationsTabStateActions {
   onActiveSimulationChange: (simulation: ISimulation) => void;
   onSelectedFileChange: (file: TActivityCustomFile | undefined) => void;
-  onSelectedForSimChange: (simulationId: string, checked: boolean) => void;
+  onSelectedForSimChange: (
+    simulationId: string,
+    checked: boolean,
+    shownSelectedSimulationIds: string[]
+  ) => void;
   onToggleSelectAll: (checked: boolean, selectableSimulationIds: string[]) => void;
   setSimulationStatus: (simulationId: string, status: ActivityStatus) => void;
   onSimulationStatusLoad: (simulationId: string, status: ActivityStatus) => void;
@@ -233,11 +239,12 @@ export function useSimulationsTabState(
         dispatch({ type: SimulationsTabActionDict.ActiveSimulationChanged, simulation }),
       onSelectedFileChange: (file) =>
         dispatch({ type: SimulationsTabActionDict.SelectedFileChanged, file }),
-      onSelectedForSimChange: (simulationId, checked) =>
+      onSelectedForSimChange: (simulationId, checked, shownSelectedSimulationIds) =>
         dispatch({
           type: SimulationsTabActionDict.SimulationCheckedChanged,
           simulationId,
           checked,
+          shownSelectedSimulationIds,
         }),
       onToggleSelectAll: (checked, selectableSimulationIds) =>
         dispatch({
