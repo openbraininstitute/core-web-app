@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -16,10 +16,7 @@ import {
   listExecutionsBySimulationId,
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
-import {
-  hasSimConfigAsset,
-  shouldLaunchSimulationViaTaskSystem,
-} from '@/entity-configuration/domain/simulation/utils';
+import { shouldLaunchSimulationViaTaskSystem } from '@/entity-configuration/domain/simulation/utils';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -30,10 +27,10 @@ import { useCostConfirmation } from '@/features/scan-config/components/cost-conf
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
-import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
-import errorRegistry from '@/features/scan-config/error-registry';
+import { errorRegistry } from '@/features/scan-config/error-registry';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
+import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
@@ -44,9 +41,7 @@ import { MessageType } from '@/services/small-scale-simulator/types';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
-import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type SimulationTabProps = {
@@ -96,21 +91,25 @@ export default function SimulationsTab({
     targetSimulator,
   });
 
-  const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
-  const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
-  const [activeSimulation, setActiveSimulation] = useState<null | ISimulation>(null);
-  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
-  const [jobIdMap, setJobIdMap] = useState<Map<string, string>>(new Map());
+
+  const { state, act, selectableSimulationIds, resolvedSelectedSimulationIds } =
+    useSimulationsTabState(campaignId, simulations);
+  const {
+    activeSimulation: pickedSimulation,
+    selectedFile,
+    statusBySimulationId: localStatusMap,
+    jobIdBySimulationId: jobIdMap,
+  } = state;
+
+  const activeSimulation = pickedSimulation ?? simulations[0] ?? null;
   const {
     modal: offlineTokenConsentModal,
     ensure: ensureOfflineTokenConsent,
     cancel: cancelOfflineTokenConsent,
     openConsentLink,
   } = useEnsureOfflineTokenConsent({ useCache: true });
-  const previousCampaignIdRef = useRef(campaignId);
 
   const simConfigAsset = activeSimulation?.assets?.find(
     (a) => a.label === AssetLabel.sonata_simulation_config
@@ -170,78 +169,12 @@ export default function SimulationsTab({
   const taskLogsShouldReadSnapshot =
     !!activeSimulationExecStatus && isTerminalActivityStatus(activeSimulationExecStatus);
 
-  const onActiveSimulationChange = useCallback((simulation: ISimulation) => {
-    setActiveSimulation(simulation);
-  }, []);
-
-  const onSelectedForSimChange = useCallback((simulationId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedSimulationIds((prev) => [...prev, simulationId]);
-    } else {
-      setSelectedSimulationIds((prev) => prev.filter((id) => id !== simulationId));
-    }
-  }, []);
-
-  const setSimulationStatus = useCallback((simulationId: string, status: ActivityStatus) => {
-    setLocalStatusMap((prev) => new Map(prev).set(simulationId, status));
-  }, []);
-
-  const onSimulationStatusLoad = useCallback((simulationId: string, status: ActivityStatus) => {
-    setLocalStatusMap((prev) => {
-      const previous = prev.get(simulationId);
-      if (previous === status) return prev;
-      return new Map(prev).set(
-        simulationId,
-        previous ? getLatestSimExecStatus(status, previous) : status
-      );
-    });
-  }, []);
-
-  const selectableSimulationIds = useMemo(() => {
-    return simulations
-      .filter((simulation) => {
-        const status = localStatusMap.get(simulation.id);
-        return status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
-      })
-      .filter((simulation) => hasSimConfigAsset(simulation))
-      .map((s) => s.id);
-  }, [localStatusMap, simulations]);
-
-  const allSimulationStatusesLoaded =
-    simulations.length > 0 && simulations.every((simulation) => localStatusMap.has(simulation.id));
-
-  useEffect(() => {
-    if (previousCampaignIdRef.current === campaignId) return;
-
-    previousCampaignIdRef.current = campaignId;
-
-    // reset launch-selection state whenever campaign changes
-    // so initial auto-selection can run for the newly loaded simulations
-    setSelectedSimulationIds([]);
-    setInitialSelectionDone(false);
-  }, [campaignId]);
-
-  useEffect(() => {
-    // Auto select all valid simulations with status "created" on page load.
-    // Previously failed simulations with a valid simulation config have to be explicitly
-    // re-selected by the user.
-    const simIds = simulations
-      .filter((simulation) => localStatusMap.get(simulation.id) === ActivityStatus.CREATED)
-      .filter((simulation) => hasSimConfigAsset(simulation))
-      .map((s) => s.id);
-
-    if (allSimulationStatusesLoaded && !initialSelectionDone) {
-      setSelectedSimulationIds(simIds);
-      setInitialSelectionDone(true);
-    }
-  }, [allSimulationStatusesLoaded, simulations, initialSelectionDone, localStatusMap]);
-
-  useEffect(() => {
-    // Select first simulation from the list
-    if (simulations.length > 0) {
-      onActiveSimulationChange(simulations[0]);
-    }
-  }, [onActiveSimulationChange, simulations]);
+  const {
+    onActiveSimulationChange,
+    onSelectedForSimChange,
+    setSimulationStatus,
+    onSimulationStatusLoad,
+  } = act;
 
   const runViaLaunchSystem = async (simIds: string[]) => {
     const consentResult = await ensureOfflineTokenConsent();
@@ -274,7 +207,7 @@ export default function SimulationsTab({
           config_id: simId,
         });
         log('info', res);
-        setJobIdMap((prev) => new Map(prev).set(simId, res.job_id));
+        act.setSimulationJobId(simId, res.job_id);
         setSimulationStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
       } catch (error) {
@@ -288,7 +221,7 @@ export default function SimulationsTab({
       // Launching reserves credits, so refetch the balance.
       invalidateProjectBalance({ queryClient, context });
     }
-    setSelectedSimulationIds([]);
+    act.onLaunched();
     setSimRequestInProgress(false);
     if (lowFundsError) {
       notifyLowCredits();
@@ -322,7 +255,7 @@ export default function SimulationsTab({
           simIds.forEach((simId) => {
             setSimulationStatus(simId, ActivityStatus.PENDING);
           });
-          setSelectedSimulationIds([]);
+          act.onLaunched();
           setSimRequestInProgress(false);
         },
         onMessage: (message) => {
@@ -377,9 +310,9 @@ export default function SimulationsTab({
   const costModalItems = useMemo(
     () =>
       simulations
-        .filter((s) => selectedSimulationIds.includes(s.id))
+        .filter((s) => resolvedSelectedSimulationIds.includes(s.id))
         .map((s) => ({ id: s.id, name: s.name })),
-    [simulations, selectedSimulationIds]
+    [simulations, resolvedSelectedSimulationIds]
   );
 
   const { openModal, modal: costConfirmationModal } = useCostConfirmation({
@@ -402,11 +335,11 @@ export default function SimulationsTab({
   };
 
   const onToggleSelectAll = (checked: boolean) => {
-    setSelectedSimulationIds(checked ? selectableSimulationIds : []);
+    act.onToggleSelectAll(checked);
   };
 
-  const launchSimBtnLabelPrefix = selectedSimulationIds.length
-    ? `(${selectedSimulationIds.length})`
+  const launchSimBtnLabelPrefix = resolvedSelectedSimulationIds.length
+    ? `(${resolvedSelectedSimulationIds.length})`
     : '';
 
   const loading = simulationsLoading;
@@ -418,7 +351,7 @@ export default function SimulationsTab({
         loading={loading}
         simulations={simulations}
         activeSimulationId={activeSimulation?.id}
-        selectedSimulationIds={selectedSimulationIds}
+        selectedSimulationIds={resolvedSelectedSimulationIds}
         selectableSimulationIds={selectableSimulationIds}
         simRequestInProgress={simRequestInProgress}
         context={context}
@@ -441,7 +374,7 @@ export default function SimulationsTab({
                   execStatus={activeSimulationExecStatus}
                   selectedFile={selectedFile}
                   context={context}
-                  onSelect={setSelectedFile}
+                  onSelect={act.onSelectedFileChange}
                   onLoadingChange={setFilesLoading}
                   jobId={activeJobId}
                 />

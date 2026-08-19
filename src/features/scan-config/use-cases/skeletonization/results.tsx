@@ -1,20 +1,16 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
 import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
-import {
-  ActivityCustomFileRenderer,
-  ScanConfigActivity,
-  type TActivityCustomFile,
-} from '@/features/scan-config/types';
+import { useTaskTabState } from '@/features/scan-config/components/shared/use-task-tab-state';
+import { ActivityCustomFileRenderer, ScanConfigActivity } from '@/features/scan-config/types';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
@@ -25,8 +21,6 @@ import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { InOutFiles } from './in-out-files';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
-import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
@@ -51,14 +45,6 @@ export function SkeletonizationTab({
 }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
-  const [activeConfig, setActiveConfig] =
-    useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
-  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
-    new Map()
-  );
-
   const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
     useTaskLaunchMutation({
       context,
@@ -81,7 +67,14 @@ export function SkeletonizationTab({
       loadExecutions: false,
     });
 
-  const configs = configsResponse?.configList ?? [];
+  const configs = useMemo(() => configsResponse?.configList ?? [], [configsResponse?.configList]);
+
+  const {
+    state: { activeConfig, selectedFile, executionByConfigId },
+    act,
+    selectableConfigIds,
+    resolvedSelectedConfigIds,
+  } = useTaskTabState<TSkeletonizationTaskConfigMeta>(campaignId, configs);
 
   const resolvedActiveConfig = activeConfig ?? configs[0] ?? null;
 
@@ -96,49 +89,9 @@ export function SkeletonizationTab({
   const taskLogsShouldReadSnapshot =
     !!activeConfigExecStatus && isTerminalActivityStatus(activeConfigExecStatus);
 
-  const onActiveConfigChange = useCallback(
-    (config: ITaskConfig<TSkeletonizationTaskConfigMeta>) => {
-      setActiveConfig(config);
-    },
-    []
-  );
-
-  const onSelectedForSkeletonizationChange = useCallback((configId: string, selected: boolean) => {
-    if (selected) {
-      setSelectedConfigIds((prev) => [...(prev ?? []), configId]);
-    } else {
-      setSelectedConfigIds((prev) => (prev ?? []).filter((id) => id !== configId));
-    }
-  }, []);
-
-  const onExecutionLoad = useCallback((configId: string, execution: ITaskActivity | null) => {
-    setExecutionByConfigId((prev) => {
-      if (prev.get(configId) === execution) return prev;
-      return new Map(prev).set(configId, execution);
-    });
-  }, []);
-
-  const selectableConfigIds = useMemo(() => {
-    return (
-      (configsResponse?.configList ?? [])
-        .filter((config) => {
-          if (!executionByConfigId.has(config.id)) return false;
-          const status = executionByConfigId.get(config.id)?.status;
-          return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
-        })
-        .map((c) => c.id) ?? []
-    );
-  }, [configsResponse?.configList, executionByConfigId]);
-
-  const allConfigStatusesLoaded =
-    configs.length > 0 && configs.every((config) => executionByConfigId.has(config.id));
-
-  const resolvedSelectedConfigIds =
-    selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
-
   const onRun = async (configIdsToRun: string[]) => {
     await runSkeletonization(configIdsToRun);
-    setSelectedConfigIds([]);
+    act.onLaunched();
   };
 
   const costModalItems = useMemo(
@@ -181,12 +134,10 @@ export function SkeletonizationTab({
               executionActivityType={taskTypeBindings.execution}
               pauseStatusPolling={runSkeletonizationPending}
               executionByConfigId={executionByConfigId}
-              onSelectConfig={onActiveConfigChange}
-              onCheckedChange={onSelectedForSkeletonizationChange}
-              onToggleSelectAll={(checked) =>
-                setSelectedConfigIds(checked ? selectableConfigIds : [])
-              }
-              onExecutionLoad={onExecutionLoad}
+              onSelectConfig={act.onActiveConfigChange}
+              onCheckedChange={act.onCheckedChange}
+              onToggleSelectAll={act.onToggleSelectAll}
+              onExecutionLoad={act.onExecutionLoad}
             />
             <TaskLaunchButton
               label="Launch skeletonizations"
@@ -206,7 +157,7 @@ export function SkeletonizationTab({
                 execution={activeConfigExecution}
                 selectedFile={selectedFile}
                 context={context}
-                onSelect={setSelectedFile}
+                onSelect={act.onSelectedFileChange}
               />
             </div>
           )
