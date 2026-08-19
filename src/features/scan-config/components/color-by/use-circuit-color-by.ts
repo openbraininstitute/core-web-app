@@ -26,7 +26,7 @@ interface Options {
   supportsAxons?: boolean;
   /** whether electrode overlays are available for this preview */
   supportsElectrodes?: boolean;
-  /** whether morphology locations can be picked, which is what the marker slider sizes */
+  /** whether morphology-location markers are on screen, which the marker controls act on */
   supportsMorphologyLocations?: boolean;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass

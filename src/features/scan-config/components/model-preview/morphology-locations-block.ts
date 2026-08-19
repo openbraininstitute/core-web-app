@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 import { z } from 'zod';
 
+import { morphologyLocationsColor } from '@/features/scan-config/components/color-by/palette';
 import { isObject } from '@/util/type-guards';
 
 import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from './morphology-locations-key';
@@ -41,19 +42,45 @@ export function readLocations(block: Record<string, unknown> | null): IStoredLoc
   return readLocationRows(block.locations);
 }
 
-/**
- * Every explicit block's rows, in dictionary order.
- *
- * For showing what already exists while the form is on some other block: the locations stay
- * on screen instead of vanishing the moment the user looks away from them.
- */
-export function readAllLocations(config: Config | null | undefined): IStoredLocation[] {
-  const dictionary = config?.[MORPHOLOGY_LOCATIONS_CONFIG_KEY];
-  if (!isObject(dictionary)) return [];
+/** A stored location, plus the colour of the block it belongs to. */
+export type IColoredLocation = IStoredLocation & { color: string };
 
-  return Object.values(dictionary).flatMap((block) =>
-    isObject(block) ? readLocations(block) : []
-  );
+/** One block's rows, tagged with the block's colour. */
+export function readColoredLocations(
+  block: Record<string, unknown> | null,
+  entry: string
+): IColoredLocation[] {
+  const color = morphologyLocationsColor(entry);
+  return readLocations(block).map((location) => ({ ...location, color }));
+}
+
+/** Every explicit block's rows, each tagged with its block's colour. */
+export function readAllLocations(config: Config | null | undefined): IColoredLocation[] {
+  return readDictionary(config).flatMap(([entry, block]) => readColoredLocations(block, entry));
+}
+
+/** The morphology-locations dictionary, or null. Its identity survives edits elsewhere. */
+export function readLocationsDictionary(config: Config | null | undefined) {
+  const dictionary = config?.[MORPHOLOGY_LOCATIONS_CONFIG_KEY];
+  return isObject(dictionary) ? dictionary : null;
+}
+
+/** Whether any block holds at least one location. */
+export function hasAnyLocation(config: Config | null | undefined): boolean {
+  return readDictionary(config).some(([, block]) => readLocations(block).length > 0);
+}
+
+function readDictionary(
+  config: Config | null | undefined
+): Array<[string, Record<string, unknown>]> {
+  const dictionary = readLocationsDictionary(config);
+  if (!dictionary) return [];
+
+  const entries: Array<[string, Record<string, unknown>]> = [];
+  for (const [entry, block] of Object.entries(dictionary)) {
+    if (isObject(block)) entries.push([entry, block]);
+  }
+  return entries;
 }
 
 /** Whether the form selection is one a 3D click can add a location to. */

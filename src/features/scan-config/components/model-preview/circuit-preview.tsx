@@ -26,6 +26,7 @@ import {
   scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import {
+  hasAnyLocation,
   morphologyLocationsHintHoveredAtom,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -176,9 +177,12 @@ export function CircuitPreview({
   // morphology itself is drawn.
   const supportsAxons = !largeCircuit;
 
-  const supportsMorphologyLocations =
+  const canPickMorphologyLocations =
     !largeCircuit &&
     supportsMorphologyLocationPicking({ config: scanConfig, selectedRootElement, selectedEntry });
+  // Markers stay on screen outside their block, so their settings do too.
+  const hasMorphologyLocationsOnScreen =
+    !largeCircuit && (canPickMorphologyLocations || hasAnyLocation(scanConfig));
 
   const {
     overlays,
@@ -208,7 +212,7 @@ export function CircuitPreview({
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
       supportsAxons,
       supportsElectrodes: enableElectrodes && electrodesAvailable,
-      supportsMorphologyLocations,
+      supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
       defaultNeuronOpacity,
       population,
     });
@@ -298,9 +302,9 @@ export function CircuitPreview({
   // feature. The signal rejects until the viewer registers it, which is not worth reporting.
   const hintHovered = useAtomValue(morphologyLocationsHintHoveredAtom);
   useEffect(() => {
-    if (!hintHovered || !supportsMorphologyLocations || !showViz) return;
+    if (!hintHovered || !canPickMorphologyLocations || !showViz) return;
     signals.nudgeMorphology.dispatch().catch(() => {});
-  }, [hintHovered, supportsMorphologyLocations, showViz, signals]);
+  }, [hintHovered, canPickMorphologyLocations, showViz, signals]);
 
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
@@ -380,7 +384,7 @@ export function CircuitPreview({
             menu,
             colorBy: enableColorBy ? colorBy : undefined,
             electrodesInteractive: overlaysInteractive,
-            morphologyLocationsInteractive: supportsMorphologyLocations && Boolean(setConfig),
+            morphologyLocationsInteractive: canPickMorphologyLocations && Boolean(setConfig),
           }}
         />
       )}

@@ -5,6 +5,7 @@ import {
   buildMorphoTree,
   buildSonataSectionIdIndex,
 } from '@/features/scan-config/components/circuit-viz/build-morpho-tree';
+import { morphologyLocationsColor } from '@/features/scan-config/components/color-by/palette';
 import {
   readAllLocations,
   readEntry,
@@ -192,7 +193,7 @@ describe('useMorphologyLocationSelection picking', () => {
     const markers = result.current.selection?.selected ?? [];
 
     act(() => {
-      result.current.selection?.onPick(pick({ existingMarker: markers[1] }));
+      result.current.selection?.onPick?.(pick({ existingMarker: markers[1] }));
     });
 
     expect(next).toBeDefined();
@@ -209,7 +210,7 @@ describe('useMorphologyLocationSelection picking', () => {
     const markers = result.current.selection?.selected ?? [];
 
     act(() => {
-      result.current.selection?.onPick(pick({ existingMarker: markers[0] }));
+      result.current.selection?.onPick?.(pick({ existingMarker: markers[0] }));
     });
 
     expect(onConfigChange).not.toHaveBeenCalled();
@@ -224,7 +225,7 @@ describe('useMorphologyLocationSelection picking', () => {
     const { result } = renderSelection(config, undefined, onConfigChange);
 
     act(() => {
-      result.current.selection?.onPick(pick({ sonataSectionId: undefined }));
+      result.current.selection?.onPick?.(pick({ sonataSectionId: undefined }));
     });
 
     expect(onConfigChange).not.toHaveBeenCalled();
@@ -267,5 +268,33 @@ describe('readAllLocations', () => {
   it('is empty when there is no morphology-locations dictionary at all', () => {
     expect(readAllLocations({} as Config)).toEqual([]);
     expect(readAllLocations(null)).toEqual([]);
+  });
+});
+
+describe('morphologyLocationsColor', () => {
+  it('does not depend on where the block sits in the dictionary', () => {
+    const before = readAllLocations({
+      morphology_locations: {
+        first: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 3, offset: 0.1 }] },
+        second: {
+          type: 'ExplicitMorphologyLocations',
+          locations: [{ section_id: 5, offset: 0.2 }],
+        },
+      },
+    } as unknown as Config);
+    const after = readAllLocations({
+      morphology_locations: {
+        second: {
+          type: 'ExplicitMorphologyLocations',
+          locations: [{ section_id: 5, offset: 0.2 }],
+        },
+      },
+    } as unknown as Config);
+
+    expect(after[0].color).toBe(before[1].color);
+  });
+
+  it('gives different blocks different colours', () => {
+    expect(morphologyLocationsColor('block-a')).not.toBe(morphologyLocationsColor('block-b'));
   });
 });

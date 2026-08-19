@@ -1,6 +1,8 @@
 import chroma from 'chroma-js';
 import { atom } from 'jotai';
 
+import { blockPaletteIndex } from '@/features/scan-config/components/color-by/palette';
+
 import type {
   ElectrodeLocationPoint,
   ElectrodeLocationsBlockSummary,
@@ -74,38 +76,6 @@ export const ELECTRODE_PALETTE: readonly string[] = [
 ];
 
 /**
- * Deterministic hash for a block name, so a renamed block keeps one colour across reloads.
- */
-function hashName(name: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < name.length; i++) {
-    hash ^= name.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return Math.abs(hash) % ELECTRODE_PALETTE.length;
-}
-
-/**
- * Palette slot for a block, derived purely from its name.
- *
- * How: `BlockDictionary` names new entries `"<Singular> <n>"` where `n` is the
- * lowest free creation index, so that trailing number *is* a stable ordinal —
- * block 0 is blue, block 1 green, and adding or deleting a block never
- * renumbers the others. Names without one fall back to a hash.
- *
- * Why derived and not remembered: a module-level registry would mutate during
- * render, which React Compiler and StrictMode both assume never happens, and it
- * would hand two sessions different colours for the same config.
- *
- * Past `ELECTRODE_PALETTE.length` blocks, colours necessarily repeat.
- */
-function electrodePaletteIndex(name: string): number {
-  const ordinal = /(\d+)\s*$/.exec(name);
-  if (ordinal) return Number(ordinal[1]) % ELECTRODE_PALETTE.length;
-  return hashName(name);
-}
-
-/**
  * Colour for electrode contact spheres of a named block.
  *
  * @param name - Electrode block name (`electrode_locations` key)
@@ -115,7 +85,7 @@ function electrodePaletteIndex(name: string): number {
  * colorForElectrodeBlock('Electrode 0'); // → palette[0], blue
  */
 export function colorForElectrodeBlock(name: string): string {
-  return ELECTRODE_PALETTE[electrodePaletteIndex(name)];
+  return ELECTRODE_PALETTE[blockPaletteIndex(name, ELECTRODE_PALETTE.length)];
 }
 
 /**

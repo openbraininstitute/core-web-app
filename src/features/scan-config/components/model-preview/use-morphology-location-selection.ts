@@ -10,10 +10,13 @@ import {
 } from '@/features/scan-config/components/circuit-viz/section-type-label';
 import {
   EXPLICIT_BLOCK_TYPE,
+  type IColoredLocation,
   type IStoredLocation,
   readAllLocations,
+  readColoredLocations,
   readEntry,
   readLocations,
+  readLocationsDictionary,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-key';
 import { MorphoViewerTreeItemType } from '@/features/scan-config/types';
@@ -88,9 +91,15 @@ export function useMorphologyLocationSelection({
     selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY && block?.type === EXPLICIT_BLOCK_TYPE;
   // Editing a block shows that block's rows; anywhere else shows every block's, so locations
   // already placed stay on screen instead of vanishing when the user looks at something else.
-  const storedLocations = useMemo<IStoredLocation[]>(
-    () => (isExplicit ? readLocations(block) : readAllLocations(config)),
-    [isExplicit, block, config]
+  const dictionary = readLocationsDictionary(config);
+  const storedLocations = useMemo<IColoredLocation[]>(
+    () =>
+      isExplicit && selectedEntry
+        ? readColoredLocations(block, selectedEntry)
+        : readAllLocations(config),
+    // `dictionary` rather than `config`: an edit anywhere else must not rebuild the markers.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: config is read only through it.
+    [isExplicit, block, dictionary, selectedEntry]
   );
 
   const selected = useMemo<TLocationMarker[]>(() => {
@@ -107,6 +116,7 @@ export function useMorphologyLocationSelection({
             sectionName,
             offset: location.offset,
             sonataSectionId: location.section_id,
+            color: location.color,
             locationIndex,
           },
         ];
@@ -198,38 +208,28 @@ export function useMorphologyLocationSelection({
 
   // Typed wider than the package so the option compiles against a viewer that predates it;
   // an older viewer simply ignores the extra field.
-  const selection = useMemo(() => {
-    if (selected.length === 0 && !isExplicit) return undefined;
-
-    if (!isExplicit) {
-      // Read-only: the markers show what exists, but nothing here is the user's to edit until
-      // they open the block. An empty `pickableSectionTypes` keeps the hand cursor away, and
-      // without `onHover` there is no popover offering a click that would do nothing.
-      return { selected, onPick: noop, radius: markerRadius, pickableSectionTypes: NONE_PICKABLE };
-    }
-
-    return {
-      selected,
-      onPick,
-      onHover: setHover,
-      radius: markerRadius,
-      // So the hand cursor only appears where a click would be accepted.
-      pickableSectionTypes: TARGETABLE_SECTION_TYPES,
-      onLabelsChange: showLabels ? onLabelsChange : undefined,
-    };
-  }, [isExplicit, selected, onPick, markerRadius, showLabels, onLabelsChange]);
+  // Without `onPick` the viewer draws the markers read-only: no picking, no hand cursor.
+  const selection = useMemo(
+    () =>
+      selected.length === 0 && !isExplicit
+        ? undefined
+        : {
+            selected,
+            radius: markerRadius,
+            onLabelsChange: showLabels ? onLabelsChange : undefined,
+            onPick: isExplicit ? onPick : undefined,
+            onHover: isExplicit ? setHover : undefined,
+            pickableSectionTypes: isExplicit ? TARGETABLE_SECTION_TYPES : undefined,
+          },
+    [isExplicit, selected, onPick, markerRadius, showLabels, onLabelsChange]
+  );
 
   return {
     selection,
     hover: isExplicit ? hover : null,
-    labels: isExplicit && showLabels ? labels : [],
+    labels: showLabels && selected.length > 0 ? labels : [],
   };
 }
-
-/** No section accepts a click, so the viewer never offers one. */
-const NONE_PICKABLE: readonly number[] = [];
-
-function noop() {}
 
 function resolveLocationIndex(
   locations: IStoredLocation[],

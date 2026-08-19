@@ -258,3 +258,28 @@ function compareValues(a: string, b: string): number {
   if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
   return a.localeCompare(b);
 }
+
+/** Palette slot for a block name: its trailing ordinal, else a hash. */
+export function blockPaletteIndex(name: string, slotCount: number): number {
+  const ordinal = /(\d+)\s*$/.exec(name);
+  if (ordinal) return Number(ordinal[1]) % slotCount;
+  return hashName(name) % slotCount;
+}
+
+/** FNV-1a. */
+function hashName(name: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < name.length; i++) {
+    hash ^= name.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash);
+}
+
+/** Colour for a block's morphology-location markers. */
+export function morphologyLocationsColor(entry: string): string {
+  return categoricalColor(blockPaletteIndex(entry, MORPHOLOGY_LOCATION_COLOR_SLOTS));
+}
+
+/** Bounded so the viewer's palette texture stays small. */
+const MORPHOLOGY_LOCATION_COLOR_SLOTS = 12;
