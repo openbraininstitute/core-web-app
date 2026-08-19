@@ -148,11 +148,17 @@ export function useSmallCircuitSource({
         // Queued: morphoviewer asks for every cell at once, and one request per
         // cell in flight is what OBI-One is least able to absorb.
         const loaded = await sequentialCellLoader.load(request);
+        // Keyed by the id the viewer addresses the cell by, not the one it asked
+        // with: morphoviewer strips the query part before calling `loadCell`,
+        // while `useMorphologyLocationSelection` looks this map up by `cell.id`.
+        // The axon flag belongs in the key either way — the index is built from
+        // the filtered sections, so it names different sections with axons off.
+        const vizCellId = makeVizCellId(cellId, showAxons);
         // Guarded so a repeated load of the same cell does not re-render.
         setSonataSectionIds((previous) =>
-          previous.get(cellId) === loaded.sonataSectionIds
+          previous.get(vizCellId) === loaded.sonataSectionIds
             ? previous
-            : new Map(previous).set(cellId, loaded.sonataSectionIds)
+            : new Map(previous).set(vizCellId, loaded.sonataSectionIds)
         );
         return loaded;
       } catch (e) {
