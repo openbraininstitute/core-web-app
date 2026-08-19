@@ -16,6 +16,23 @@ const SECTION_TYPE_LABELS: Partial<Record<MorphoViewerTreeItemType, string>> = {
   [MorphoViewerTreeItemType.Myelin]: 'Myelin',
 };
 
+/** Section types a morphology location may sit on today. */
+export const TARGETABLE_SECTION_TYPES: readonly MorphoViewerTreeItemType[] = [
+  MorphoViewerTreeItemType.BasalDendrite,
+  MorphoViewerTreeItemType.ApicalDendrite,
+  MorphoViewerTreeItemType.Dendrite,
+];
+
+/**
+ * Whether a location may sit on this section.
+ *
+ * Takes `number` because the enum is declared in both the viewer package and this feature,
+ * and TypeScript treats those as different types even though the values match.
+ */
+export function isTargetableSectionType(sectionType: number | undefined): boolean {
+  return sectionType !== undefined && TARGETABLE_SECTION_TYPES.includes(sectionType);
+}
+
 /**
  * Display name for a section type, or `undefined` when there is nothing useful to say.
  *

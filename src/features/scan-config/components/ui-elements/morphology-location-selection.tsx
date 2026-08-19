@@ -1,11 +1,14 @@
 'use client';
 
 import { DeleteOutlined } from '@ant-design/icons';
+import { RiCursorHand } from '@remixicon/react';
 import { InputNumber } from 'antd';
-import { useId } from 'react';
+import { useSetAtom } from 'jotai';
+import { useEffect, useId } from 'react';
 
 import {
   type IStoredLocation,
+  morphologyLocationsHintHoveredAtom,
   readLocationRows,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
@@ -49,6 +52,15 @@ export default function MorphologyLocationSelection({
   const offsetSchema = paramSchema.items?.properties?.offset;
   // antd renders its own inner <input>, so labels need an explicit htmlFor to bind to it.
   const fieldId = useId();
+  // Pointing at the hint nudges the 3D viewer, so the two panes read as one feature.
+  // Only while the list is empty: once a point exists the user has found the viewer, and a
+  // cue that keeps firing is noise.
+  const setHintHovered = useSetAtom(morphologyLocationsHintHoveredAtom);
+  const nudgeOnHover = rows.length === 0;
+  useEffect(() => () => setHintHovered(false), [setHintHovered]);
+  useEffect(() => {
+    if (!nudgeOnHover) setHintHovered(false);
+  }, [nudgeOnHover, setHintHovered]);
 
   const update = (index: number, patch: Partial<IMorphologyLocationPoint>) =>
     onChange(rows.with(index, { ...rows[index], ...patch }));
@@ -58,6 +70,19 @@ export default function MorphologyLocationSelection({
       className="flex flex-col gap-2"
       data-scan-config-block-element={ScanConfigUIElementDict.MorphologyLocationSelection}
     >
+      {!disabled && (
+        <p
+          className="flex items-start gap-2 rounded-md bg-primary-0 p-2.5 text-sm text-primary-9"
+          onMouseEnter={() => nudgeOnHover && setHintHovered(true)}
+          onMouseLeave={() => setHintHovered(false)}
+        >
+          <RiCursorHand className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            <strong className="font-semibold">Add locations from the 3D viewer.</strong> Click a
+            basal or apical dendrite to add one, and click it again to remove it.
+          </span>
+        </p>
+      )}
       {rows.map((row, index) => (
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional; two rows may hold identical values
@@ -106,13 +131,6 @@ export default function MorphologyLocationSelection({
           )}
         </div>
       ))}
-
-      {!disabled && (
-        <p className="text-neutral-3 text-xs">
-          Click a basal or apical dendrite in the 3D viewer to add a location. Click a location
-          again to remove it.
-        </p>
-      )}
     </div>
   );
 }

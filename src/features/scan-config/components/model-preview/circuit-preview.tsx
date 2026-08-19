@@ -1,6 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
 import chroma from 'chroma-js';
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { getAsset } from '@/api/entitycore/selectors/assets';
@@ -24,7 +25,10 @@ import {
   type ICircuitOverlayGroup,
   scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import { supportsMorphologyLocationPicking } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import {
+  morphologyLocationsHintHoveredAtom,
+  supportsMorphologyLocationPicking,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
   useElectrodeOverlays,
@@ -289,6 +293,14 @@ export function CircuitPreview({
   // WebGL / reload morphologies (visibility only).
   const mountImage = hasDesignerImage || !enableVisualization;
   const mountViz = enableVisualization;
+
+  // Pointing at the form hint grows the morphologies once, so the two panes read as one
+  // feature. The signal rejects until the viewer registers it, which is not worth reporting.
+  const hintHovered = useAtomValue(morphologyLocationsHintHoveredAtom);
+  useEffect(() => {
+    if (!hintHovered || !supportsMorphologyLocations || !showViz) return;
+    signals.nudgeMorphology.dispatch().catch(() => {});
+  }, [hintHovered, supportsMorphologyLocations, showViz, signals]);
 
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">

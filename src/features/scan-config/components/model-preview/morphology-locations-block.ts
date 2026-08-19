@@ -1,3 +1,4 @@
+import { atom } from 'jotai';
 import { z } from 'zod';
 
 import { isObject } from '@/util/type-guards';
@@ -53,3 +54,11 @@ export function supportsMorphologyLocationPicking({
   if (selectedRootElement !== MORPHOLOGY_LOCATIONS_CONFIG_KEY) return false;
   return readEntry(config, selectedEntry)?.type === EXPLICIT_BLOCK_TYPE;
 }
+
+/**
+ * Set while the pointer is on the "add locations from the 3D viewer" hint.
+ *
+ * Why jotai: the hint is a form widget and the viewer is a sibling pane, so they share no
+ * parent worth threading a prop through.
+ */
+export const morphologyLocationsHintHoveredAtom = atom(false);

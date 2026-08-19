@@ -3,7 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppMessage } from '@/components/notification';
-import { sectionTypeLabel } from '@/features/scan-config/components/circuit-viz/section-type-label';
+import {
+  isTargetableSectionType,
+  sectionTypeLabel,
+  TARGETABLE_SECTION_TYPES,
+} from '@/features/scan-config/components/circuit-viz/section-type-label';
 import {
   EXPLICIT_BLOCK_TYPE,
   type IStoredLocation,
@@ -22,23 +26,6 @@ import type {
   MorphoViewerMorphologyLocationSelection,
   MorphoViewerSmallCircuitCell,
 } from '@/morpho-viewer';
-
-/** Section types a location may sit on today. */
-const TARGETABLE_SECTION_TYPES: ReadonlySet<number> = new Set<number>([
-  MorphoViewerTreeItemType.BasalDendrite,
-  MorphoViewerTreeItemType.ApicalDendrite,
-  MorphoViewerTreeItemType.Dendrite,
-]);
-
-/**
- * Whether a location may sit on this section.
- *
- * Takes `number` because the enum is declared in both the viewer package and this feature,
- * and TypeScript treats those as different types even though the values match.
- */
-function isTargetable(sectionType: number | undefined): boolean {
-  return sectionType !== undefined && TARGETABLE_SECTION_TYPES.has(sectionType);
-}
 
 interface IOptions {
   config?: Config | null;
@@ -137,7 +124,7 @@ export function useMorphologyLocationSelection({
         return;
       }
 
-      if (!pick.existingMarker && !isTargetable(pick.sectionType)) {
+      if (!pick.existingMarker && !isTargetableSectionType(pick.sectionType)) {
         message.info(
           `${sectionTypeLabel(pick.sectionType) ?? 'This section'} is not supported yet, please pick a basal or apical dendrite.`
         );
@@ -206,6 +193,8 @@ export function useMorphologyLocationSelection({
     []
   );
 
+  // Typed wider than the package so the option compiles against a viewer that predates it;
+  // an older viewer simply ignores the extra field.
   const selection = useMemo(
     () =>
       isExplicit
@@ -214,6 +203,8 @@ export function useMorphologyLocationSelection({
             onPick,
             onHover: setHover,
             radius: markerRadius,
+            // So the hand cursor only appears where a click would be accepted.
+            pickableSectionTypes: TARGETABLE_SECTION_TYPES,
             onLabelsChange: showLabels ? onLabelsChange : undefined,
           }
         : undefined,
