@@ -160,6 +160,7 @@ export const ScanConfigUIElementDict = {
   MorphologySectionTypeSelection: 'morphology_section_type_selection',
   FloatOptional: 'float_optional',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
+  MorphologyLocationSelection: 'morphology_location_selection',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -410,6 +411,22 @@ export interface VoltageDuration extends TBlockElement {
   };
 }
 
+/**
+ * A list of `{ section_id, offset }` rows — one morphology location each.
+ *
+ * `section_id` is SONATA numbering (0 = soma), the same id the circuit viewer reports as
+ * `sonata_section_id`, so a viewer selection can be written straight into a row.
+ */
+export interface IMorphologyLocationSelection extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.MorphologyLocationSelection;
+  items: {
+    properties: {
+      section_id: { title?: string; description?: string; minimum?: number };
+      offset: { title?: string; description?: string; minimum?: number; maximum?: number };
+    };
+  };
+}
+
 export interface NeuronPropertyFilter extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter;
   population_source_dropdown_key: string;
@@ -456,6 +473,7 @@ export type ParamSchema =
   | ModelSelectorSingle
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
+  | IMorphologyLocationSelection
   | VoltageDuration
   | StringSelectionEnhanced
   | NeuronPropertyFilter
@@ -555,6 +573,17 @@ const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
 
 export const SectionSchema = z.object({
   id: z.string(),
+  /**
+   * SONATA global section id: 0 for the soma, then nrn_order neurites — the id
+   * `IMorphologyLocationPoint.section_id` expects. `id` above is OBI-One's raw morphio id
+   * and is only meaningful for parent/child linking within the same response.
+   *
+   * Optional on purpose: OBI-One only started reporting it alongside the `nrn_order`
+   * fix, and a required field here would make `SectionsArraySchema.parse` throw against
+   * an older deployment, taking the whole circuit viewer down for a field nothing
+   * renders yet. Tighten to required once every environment serves it.
+   */
+  sonata_section_id: z.number().int().optional(),
   parent_id: z.string().nullable(),
   type: z.enum(MorphoViewerTreeItemType),
   points: z.array(Point3DSchema),
@@ -566,6 +595,21 @@ export type Sections = z.infer<typeof SectionsArraySchema>;
 
 export type Node = z.infer<typeof NodeSchema>;
 export type Nodes = z.infer<typeof NodesSchema>;
+
+/** One edge population from OBI-One `/circuit/viz/{id}/synapses`, raw `afferent_surface` data. */
+export const SynapseGroupSchema = z.object({
+  population_name: z.string(),
+  /** Flat `[x0, y0, z0, x1, …]` afferent surface positions. */
+  coordinates: z.array(z.number()),
+  /** SONATA `afferent_section_id` per synapse; `0` is the soma. */
+  section_ids: z.array(z.number().int()),
+  /** Index of the cell each synapse lands on, within the target node population. */
+  target_node_ids: z.array(z.number().int()),
+});
+
+export const SynapseGroupsArraySchema = z.array(SynapseGroupSchema);
+export type TSynapseGroup = z.infer<typeof SynapseGroupSchema>;
+export type TSynapseGroups = z.infer<typeof SynapseGroupsArraySchema>;
 
 export type Cell = {
   id: string;
@@ -583,6 +627,15 @@ export interface MorphoViewerTreeItem {
   type: MorphoViewerTreeItemType;
   sectionId: string;
   segmentId: string;
+  /**
+   * SONATA global section id this node belongs to, when the source can supply one.
+   * `sectionId` identifies the section only within its own response, so it cannot be
+   * written into a morphology-location config; this can.
+   *
+   * Undefined for sources that parse SWC in the browser, which have no way to reproduce
+   * OBI-One's nrn_order numbering.
+   */
+  sonataSectionId?: number;
   distanceFromSoma: number;
   children?: MorphoViewerTreeItem[];
 }

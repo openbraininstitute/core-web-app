@@ -15,6 +15,11 @@ export type {
   ColoringType,
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
+  MorphoViewerMorphologyLocationHover,
+  MorphoViewerMorphologyLocationLabel,
+  MorphoViewerMorphologyLocationMarker,
+  MorphoViewerMorphologyLocationPick,
+  MorphoViewerMorphologyLocationSelection,
   MorphoViewerOctreeProps,
   /** Absolute origin + rotation from electrode overlay drag/rotate (`phase: 'end'`). */
   MorphoViewerOverlayTransformEvent,
@@ -25,6 +30,7 @@ export type {
   MorphoViewerSynapsesGroup,
   MorphoViewerTree,
   MorphoViewerTreeItem,
+  SectionColors,
 } from '@openbraininstitute/morphoviewer';
 
 export const MorphoViewerOctree = dynamic(
@@ -32,17 +38,17 @@ export const MorphoViewerOctree = dynamic(
   { ssr: false }
 );
 
-export const MorphoViewerSimul = dynamic(
+export const MorphoViewerSingleNeuron = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSimul),
   { ssr: false }
 );
 
-export const MorphoViewerSmallCircuit = dynamic(
+export const MorphoViewerCircuitMultipleNeurons = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSmallCircuit),
   { ssr: false }
 );
 
-export const MorphoViewerSomasOnly = dynamic(
+export const MorphoViewerCircuitMultipleNeuronsSomaOnly = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSomasOnly),
   { ssr: false }
 );

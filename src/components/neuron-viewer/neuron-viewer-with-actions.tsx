@@ -6,7 +6,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { MorphoViewerSimul, morphoViewerConvertMorphologyIntoTree } from '@/morpho-viewer';
+import { MorphoViewerSingleNeuron, morphoViewerConvertMorphologyIntoTree } from '@/morpho-viewer';
 import {
   SimulationStatus,
   simulationStatusAtomFamily,
@@ -85,7 +85,7 @@ export function NeuronViewerContainer({
             <CollapsedViewer onClick={() => setCollapsed(false)} />
           ) : (
             <>
-              <MorphoViewerSimul
+              <MorphoViewerSingleNeuron
                 morphology={tree}
                 synapses={synapses}
                 recordings={disableElectrodes ? [] : recordings}

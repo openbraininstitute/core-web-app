@@ -1,6 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
 import chroma from 'chroma-js';
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { getAsset } from '@/api/entitycore/selectors/assets';
@@ -9,10 +10,7 @@ import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
-import CircuitViz, {
-  loaderSupportsAxonToggle,
-  resolveSmallCircuitLoaderKind,
-} from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
 import {
@@ -27,6 +25,11 @@ import {
   type ICircuitOverlayGroup,
   scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import {
+  hasAnyLocation,
+  morphologyLocationsHintHoveredAtom,
+  supportsMorphologyLocationPicking,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
   useElectrodeOverlays,
@@ -54,7 +57,7 @@ function circuitHasDesignerImage(circuit: ICircuit): boolean {
   );
 }
 
-interface CircuitPreviewProps {
+interface ICircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
   enableVisualization?: boolean;
@@ -70,6 +73,8 @@ interface CircuitPreviewProps {
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when electrodes should dominate.
    */
   defaultNeuronOpacity?: number;
+  /** The live form this viewer edits; omit for a read-only preview. */
+  form?: IFormBindingOptions;
   /**
    * The electrode-overlay layer. Omit entirely for a plain circuit viewer.
    *
@@ -77,27 +82,25 @@ interface CircuitPreviewProps {
    * grow (new sources, new selection modes) without every host and intermediate
    * component re-declaring another optional prop.
    */
-  electrodes?: ElectrodeOverlayOptions;
+  electrodes?: IElectrodeOverlayOptions;
 }
 
-/** Everything the electrode-overlay layer needs, in one place. */
-export interface ElectrodeOverlayOptions {
-  /** Live scan-config; when it contains `electrode_locations`, overlays are fetched. */
+/** The form binding every feature that edits config from the 3D view reads. */
+export interface IFormBindingOptions {
+  /** Live scan-config. */
   config?: Config;
-  /**
-   * Enables drag/rotate in 3D, writing origin/rotation back into the form.
-   * Omit for read-only hosts — its absence is what makes overlays static.
-   */
+  /** Enables editing from 3D; omit for read-only hosts. */
   onConfigChange?: (newConfig: Config | ((prev: Config) => Config)) => void;
-  /**
-   * Stored recording array whose `electrode_locations` asset supplies the
-   * overlays when there is no live `config` (read-only detail views).
-   */
-  arrayEntity?: TElectrodeArrayEntity | null;
   /** Schema root currently selected in the form (`electrode_locations`, `recordings`, …). */
   selectedRootElement?: string;
-  /** Dictionary entry name currently selected; highlights the overlay it produced. */
+  /** Dictionary entry name currently selected; the one a 3D edit writes into. */
   selectedEntry?: string;
+}
+
+/** The stored electrode-overlay source and which of its electrodes to draw. */
+export interface IElectrodeOverlayOptions {
+  /** Stored recording array supplying the overlays when there is no live config. */
+  arrayEntity?: TElectrodeArrayEntity | null;
   /**
    * Electrode ids to draw. Omit to draw every overlay (scan-config behaviour);
    * pass an explicit list — `[]` included — to hand visibility to the host, which
@@ -127,16 +130,16 @@ export function CircuitPreview({
   largeCircuit = false,
   features,
   defaultNeuronOpacity,
+  form,
   electrodes,
-}: CircuitPreviewProps) {
+}: ICircuitPreviewProps) {
   const {
     config: scanConfig,
     onConfigChange: setConfig,
-    arrayEntity,
     selectedRootElement,
     selectedEntry,
-    visibleIds: visibleOverlayIds,
-  } = electrodes ?? {};
+  } = form ?? {};
+  const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
   const enableColorBy = features?.colorBy ?? true;
   const enableCellHover = features?.cellHover ?? true;
@@ -170,8 +173,16 @@ export function CircuitPreview({
     setPopulationName(name);
   }, []);
 
-  const supportsAxons =
-    !largeCircuit && loaderSupportsAxonToggle(resolveSmallCircuitLoaderKind(circuit.scale));
+  // Every small-circuit source filters axon sections, so the toggle is offered wherever the
+  // morphology itself is drawn.
+  const supportsAxons = !largeCircuit;
+
+  const canPickMorphologyLocations =
+    !largeCircuit &&
+    supportsMorphologyLocationPicking({ config: scanConfig, selectedRootElement, selectedEntry });
+  // Markers stay on screen outside their block, so their settings do too.
+  const hasMorphologyLocationsOnScreen =
+    !largeCircuit && (canPickMorphologyLocations || hasAnyLocation(scanConfig));
 
   const {
     overlays,
@@ -201,6 +212,7 @@ export function CircuitPreview({
     useCircuitColorBy(enableVisualization ? circuit : undefined, {
       supportsAxons,
       supportsElectrodes: enableElectrodes && electrodesAvailable,
+      supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
       defaultNeuronOpacity,
       population,
     });
@@ -286,6 +298,14 @@ export function CircuitPreview({
   const mountImage = hasDesignerImage || !enableVisualization;
   const mountViz = enableVisualization;
 
+  // Pointing at the form hint grows the morphologies once, so the two panes read as one
+  // feature. The signal rejects until the viewer registers it, which is not worth reporting.
+  const hintHovered = useAtomValue(morphologyLocationsHintHoveredAtom);
+  useEffect(() => {
+    if (!hintHovered || !canPickMorphologyLocations || !showViz) return;
+    signals.nudgeMorphology.dispatch().catch(() => {});
+  }, [hintHovered, canPickMorphologyLocations, showViz, signals]);
+
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
       {mountImage && (
@@ -319,6 +339,14 @@ export function CircuitPreview({
             neuronOpacity={config.neuronOpacity}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
+            morphologyLocations={{
+              config: scanConfig,
+              onConfigChange: setConfig,
+              selectedRootElement,
+              selectedEntry,
+              markerRadius: config.morphologyLocationRadius,
+              showLabels: config.showMorphologyLocationLabels,
+            }}
           />
         </div>
       )}
@@ -356,6 +384,7 @@ export function CircuitPreview({
             menu,
             colorBy: enableColorBy ? colorBy : undefined,
             electrodesInteractive: overlaysInteractive,
+            morphologyLocationsInteractive: canPickMorphologyLocations && Boolean(setConfig),
           }}
         />
       )}
@@ -438,8 +467,8 @@ function TableResizeHandle({
   );
 }
 
-export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
-  const { data, isLoading, error } = useCircuitImageURL(circuit?.id);
+export function CircuitImage({ className, circuit }: { className?: string; circuit: ICircuit }) {
+  const { data, isLoading, error } = useCircuitImageURL(circuit.id);
   const [loaded, setLoaded] = useState(false);
 
   useLayoutEffect(() => {

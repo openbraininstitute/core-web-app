@@ -181,9 +181,8 @@ function CircuitModelPreviewPane({
   // Memoised so the grouped prop does not hand ModelPreview a fresh object every
   // render; `config` already changes on each form edit, the rest rarely.
   //
-  // Omitting `onConfigChange` while locked is what makes the overlays static —
-  // the viewer keys its drag/rotate gizmo off the presence of a write path.
-  const electrodes = useMemo(
+  // Omitting `onConfigChange` while locked is what makes 3D editing read-only.
+  const form = useMemo(
     () => ({
       config,
       onConfigChange: locked ? undefined : setConfig,
@@ -198,7 +197,7 @@ function CircuitModelPreviewPane({
       <div className="rounded-lg h-full" id="scan-config-right-model-preview">
         <ModelPreview
           model={entity}
-          electrodes={electrodes}
+          form={form}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
         />

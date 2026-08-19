@@ -1,28 +1,22 @@
 import { useSetAtom } from 'jotai';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { match } from 'ts-pattern';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
-import { useDownloadHandler } from '@/features/scan-config/components/model-preview/viewer-layout/hooks';
+import { useMorphologyLocationSelection } from '@/features/scan-config/components/model-preview/use-morphology-location-selection';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
-import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
-import { Button } from '@/ui/molecules/button';
+import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 
+import { MorphologyLocationLabels } from './morphology-location-labels';
+import { MorphologyLocationPopover } from './morphology-location-popover';
 import { sequentialCellLoader } from './sequential-loader';
-import {
-  loaderSupportsAxonToggle,
-  resolveSmallCircuitLoaderKind,
-  SmallCircuitLoaderKind,
-  useObiOneVizSource,
-  useSonataAssetSource,
-} from './sources';
+import { useCircuitSynapses, useObiOneVizSource } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
+import type { Cell, Config } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 import type { SmallCircuitSource } from './sources';
 
@@ -79,56 +73,48 @@ interface CircuitVizProps {
    * Only `cellHover` is consumed here today.
    */
   features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
+  /**
+   * Binding for picking morphology locations in 3D.
+   *
+   * Resolved here rather than in the parent because both the markers and the pick handler
+   * need the loaded cells, which only this component has.
+   */
+  morphologyLocations?: IMorphologyLocationsBinding;
+}
+
+export interface IMorphologyLocationsBinding {
+  config?: Config | null;
+  onConfigChange?: (updater: (previous: Config) => Config) => void;
+  selectedRootElement?: string;
+  selectedEntry?: string;
+  /** Marker radius in world units, from the viewer settings slider. */
+  markerRadius?: number;
+  /** Show a `Type[section]` tag beside each location, from the viewer settings toggle. */
+  showLabels?: boolean;
 }
 
 /**
- * Small-circuit GPU surface. Data strategy is selected by circuit scale:
- * - pair / small → OBI-One `/circuit/viz`
- * - single → client SONATA asset
+ * Small-circuit GPU surface.
  *
- * Split child components keep Rules of Hooks intact (SONATA must not mount for pair).
+ * Nodes and synapses are read from the circuit's SONATA files in the browser; morphologies
+ * come from OBI-One `/circuit/viz`, whose sections carry the `sonata_section_id` a click
+ * needs to become a morphology location.
  */
-const CircuitViz = (props: CircuitVizProps) =>
-  match(resolveSmallCircuitLoaderKind(props.circuit.scale))
-    .with(SmallCircuitLoaderKind.SonataAsset, () => <CircuitVizSonata {...props} />)
-    .with(SmallCircuitLoaderKind.ObiOneVisualization, () => <CircuitVizObiOne {...props} />)
-    .exhaustive();
-
-function CircuitVizObiOne(props: CircuitVizProps) {
+function CircuitViz(props: CircuitVizProps) {
   const source = useObiOneVizSource({
     circuitId: props.circuit.id,
     showAxons: props.showAxons,
     colorsByNode: props.colorsByNode,
     defaultColor: props.defaultColor,
   });
-  return <CircuitVizView {...props} source={source} clearSequentialOnAxonToggle />;
+  const synapses = useCircuitSynapses(props.circuit);
+  const withSynapses = useMemo(() => ({ ...source, synapses }), [source, synapses]);
+  return <CircuitVizView {...props} source={withSynapses} />;
 }
 
-function CircuitVizSonata(props: CircuitVizProps) {
-  const source = useSonataAssetSource({
-    circuit: props.circuit,
-    colorsByNode: props.colorsByNode,
-    defaultColor: props.defaultColor,
-  });
-  const handleDownload = useDownloadHandler(props.circuit);
-  return (
-    <CircuitVizView
-      {...props}
-      source={source}
-      errorActions={
-        <Button className="mt-3" onClick={handleDownload}>
-          Download SONATA file
-        </Button>
-      }
-    />
-  );
-}
-
-type CircuitVizViewProps = CircuitVizProps & {
+/** The view reads no entity fields, so it serves any small-circuit source. */
+type TCircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
   source: SmallCircuitSource;
-  /** OBI-One axon toggle remounts morph keys — clear the sequential morphology cache. */
-  clearSequentialOnAxonToggle?: boolean;
-  errorActions?: ReactNode;
 };
 
 function CircuitVizView({
@@ -144,16 +130,35 @@ function CircuitVizView({
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   features,
   source,
-  clearSequentialOnAxonToggle = false,
-  errorActions,
-}: CircuitVizViewProps) {
+  morphologyLocations,
+}: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
+  const {
+    selection: locationSelection,
+    hover: locationHover,
+    labels: locationLabels,
+  } = useMorphologyLocationSelection({
+    ...morphologyLocations,
+    cells: source.cells,
+    sonataSectionIds: source.sonataSectionIds,
+  });
   const [progress, setProgress] = useState(0);
-  // Stay covered for a paint frame after morphoviewer reports 100%, so the
-  // neurite mesh replaces the soma placeholder before the overlay lifts.
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
-  const { cells, isLoading, error, loadCell, synapses } = source;
+  const { cells, isLoading, error, loadCell, retry, synapses } = source;
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
+
+  const [reloadNonce, setReloadNonce] = useState(0);
+
+  const resetPaint = useCallback(() => {
+    setProgress(0);
+    setMorphologiesPainted(false);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    resetPaint();
+    setReloadNonce((nonce) => nonce + 1);
+    retry();
+  }, [resetPaint, retry]);
 
   // Publish circuit centre so Add-electrode can seed origin_* in-view.
   useEffect(() => {
@@ -175,17 +180,7 @@ function CircuitVizView({
     [scalebarColor]
   );
 
-  // Empty highlightedCellIds → morphoviewer flat overlay stays black (ADD black
-  // = no wash-out). Hosts pass features.cellHover from domain `viewer`.
   const [highlightedCellId, setHighlightedCellId] = useState('');
-  // Dragging an electrode must not leave a neuron lit under it. morphoviewer
-  // only reports overlay transforms once the gesture ends, so the drag is
-  // detected here from the pointer: press clears any highlight and suspends
-  // hover, release resumes it.
-  //
-  // A ref, not state: nothing renders from this flag, and morphoviewer
-  // re-subscribes whenever `onCellHover` changes identity — a stateful flag
-  // would rebuild the closure and churn that listener on every drag.
   const draggingOverlayRef = useRef(false);
   const handleCellHover = useCallback((cell: Cell | undefined): void => {
     if (draggingOverlayRef.current) return;
@@ -199,23 +194,21 @@ function CircuitVizView({
   const resumeHoverHighlight = () => {
     draggingOverlayRef.current = false;
   };
-  // Stable array identity: morphoviewer's `highlightedCellIds` setter bails out
-  // on reference equality, so a fresh array each render forces a repaint pass.
+
   const highlightedCellIds = useMemo(
     () => (enableCellHover ? [highlightedCellId] : []),
     [enableCellHover, highlightedCellId]
   );
 
+  // OBI-One axon toggle remounts morph keys — clear the sequential morphology cache.
   const prevAxonRef = useRef(showAxons);
   useEffect(() => {
-    if (!clearSequentialOnAxonToggle) return;
     if (prevAxonRef.current !== showAxons) {
       prevAxonRef.current = showAxons;
       sequentialCellLoader.clear();
-      setProgress(0);
-      setMorphologiesPainted(false);
+      resetPaint();
     }
-  }, [showAxons, clearSequentialOnAxonToggle]);
+  }, [showAxons, resetPaint]);
 
   useEffect(() => {
     if (progress < 1) {
@@ -257,14 +250,16 @@ function CircuitVizView({
       onPointerLeave={resumeHoverHighlight}
     >
       {cells.length > 0 && (
-        <MorphoViewerSmallCircuit
-          className={styles.morphoViewer}
+        <MorphoViewerCircuitMultipleNeurons
           gizmo
+          key={reloadNonce}
+          className={styles.morphoViewer}
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           signals={signals}
           circuit={cells}
           onCellHover={enableCellHover ? handleCellHover : undefined}
+          locationSelection={locationSelection}
           highlightedCellIds={highlightedCellIds}
           loadCell={loadCell}
           controls={[]}
@@ -281,104 +276,31 @@ function CircuitVizView({
           synapsesMinRadiusInPixels={SYNAPSE_MIN_RADIUS_IN_PIXELS}
         />
       )}
+      <MorphologyLocationLabels labels={locationLabels} />
+      <MorphologyLocationPopover hover={locationHover} />
       {loading && <VisualizationLoadingIndicator progress={progress} />}
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4">
+        <div
+          role="alert"
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4"
+        >
           <details className="text-red-500">
             <summary>
               <strong>Couldn't load the visualization</strong>
             </summary>
             <div>{error.message}</div>
           </details>
-          {errorActions}
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="rounded-full bg-white px-3 py-1 text-sm text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-100"
+          >
+            Try again
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-export function buildMorphoTree(
-  sections: Sections,
-  cellId: string
-): {
-  type: 'tree';
-  data: {
-    cellId: string;
-    roots: MorphoViewerTreeItem[];
-  };
-} {
-  const roots: MorphoViewerTreeItem[] = [];
-  const terminalNodes = new Map<string, MorphoViewerTreeItem>();
-  const somaNodes: MorphoViewerTreeItem[] = [];
-
-  for (const sec of sections) {
-    let prevNode: MorphoViewerTreeItem | null = null;
-
-    if (sec.parent_id === 'soma' && somaNodes.length > 0) {
-      if (somaNodes.length === 1) {
-        prevNode = somaNodes[0];
-      } else {
-        const [nx, ny, nz] = sec.points[0];
-        let minDistance = Infinity;
-
-        for (const sNode of somaNodes) {
-          const dist = Math.sqrt((sNode.x - nx) ** 2 + (sNode.y - ny) ** 2 + (sNode.z - nz) ** 2);
-          if (dist < minDistance) {
-            minDistance = dist;
-            prevNode = sNode;
-          }
-        }
-      }
-    } else if (sec.parent_id !== null && sec.parent_id !== 'soma') {
-      prevNode = terminalNodes.get(sec.parent_id) || null;
-    }
-
-    const isSoma = sec.id === 'soma';
-    const startIdx = sec.parent_id === null || sec.parent_id === 'soma' ? 0 : 1;
-    let lastNode = prevNode;
-
-    for (let i = startIdx; i < sec.points.length; i++) {
-      const [x, y, z] = sec.points[i];
-      const node: MorphoViewerTreeItem = {
-        x,
-        y,
-        z,
-        radius: sec.radii[i],
-        type: sec.type,
-        sectionId: sec.id,
-        segmentId: String(i),
-        distanceFromSoma: 0,
-      };
-
-      if (!lastNode && !isSoma) {
-        roots.push(node);
-      } else if (isSoma && i === 0) {
-        roots.push(node);
-      } else if (lastNode) {
-        lastNode.children = lastNode.children || [];
-        lastNode.children.push(node);
-      }
-
-      lastNode = node;
-
-      if (isSoma) {
-        somaNodes.push(node);
-      }
-    }
-
-    if (lastNode && !isSoma) {
-      terminalNodes.set(sec.id, lastNode);
-    }
-  }
-
-  return {
-    type: 'tree',
-    data: {
-      cellId,
-      roots: roots,
-    },
-  };
-}
-
-export { loaderSupportsAxonToggle, resolveSmallCircuitLoaderKind };
 export default CircuitViz;

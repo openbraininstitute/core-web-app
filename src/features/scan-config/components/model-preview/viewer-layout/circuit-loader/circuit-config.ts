@@ -12,6 +12,7 @@ export class CircuitConfig {
     const { components } = this.config;
     if (components) {
       components.morphologies_dir = this.resolvePath(components.morphologies_dir);
+      this.resolveAlternateMorphologies(components.alternate_morphologies);
     }
     for (const node of this.config.networks.nodes) {
       node.nodes_file = this.resolvePath(node.nodes_file);
@@ -20,12 +21,20 @@ export class CircuitConfig {
         if (population.morphologies_dir) {
           population.morphologies_dir = this.resolvePath(population.morphologies_dir);
         }
+        this.resolveAlternateMorphologies(population.alternate_morphologies);
       }
     }
     for (const edge of this.config.networks.edges) {
       edge.edges_file = this.resolvePath(edge.edges_file);
     }
     this.config.node_sets_file = this.resolvePath(this.config.node_sets_file);
+  }
+
+  private resolveAlternateMorphologies(alternates: Record<string, string> | undefined) {
+    if (!alternates) return;
+    for (const key of Object.keys(alternates)) {
+      alternates[key] = this.resolvePath(alternates[key]);
+    }
   }
 
   private resolvePath(path: string) {

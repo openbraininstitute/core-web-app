@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
+import { TooltipIcon } from '@/components/icons/Tooltip';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -40,6 +41,12 @@ export interface ViewerControlsMenuProps {
   /** electrode marker radius (world units); omit when electrodes unavailable */
   electrodeRadius?: number;
   onElectrodeRadiusChange?: (value: number) => void;
+  /** morphology-location marker radius (world units); omit when picking is not active */
+  morphologyLocationRadius?: number;
+  onMorphologyLocationRadiusChange?: (value: number) => void;
+  /** `Type[section]` tags beside each location; omit when picking is not active */
+  showMorphologyLocationLabels?: boolean;
+  onToggleMorphologyLocationLabels?: (value: boolean) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
@@ -67,6 +74,10 @@ export function ViewerControlsMenu({
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
+  morphologyLocationRadius,
+  onMorphologyLocationRadiusChange,
+  showMorphologyLocationLabels,
+  onToggleMorphologyLocationLabels,
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
@@ -180,39 +191,44 @@ export function ViewerControlsMenu({
             </MenuRow>
           )}
           {onElectrodeRadiusChange && electrodeRadius !== undefined && showElectrodes !== false && (
-            <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
-              <div className="flex items-center justify-between gap-2">
-                <span>Electrode size</span>
-                <span className="tabular-nums text-neutral-500">{electrodeRadius}</span>
-              </div>
-              <Slider
-                min={DEFAULT_ELECTRODE_RADIUS}
-                max={80}
-                step={5}
-                value={electrodeRadius}
-                onChange={onElectrodeRadiusChange}
-                tooltip={{ formatter: null }}
-                disabled={showElectrodes === false}
+            <MenuSlider
+              label="Electrode size"
+              min={DEFAULT_ELECTRODE_RADIUS}
+              max={80}
+              step={5}
+              value={electrodeRadius}
+              onChange={onElectrodeRadiusChange}
+            />
+          )}
+          {onToggleMorphologyLocationLabels && (
+            <MenuRow label="Location labels" icon={<TooltipIcon className="size-4 shrink-0" />}>
+              <Switch
+                size="small"
+                checked={!!showMorphologyLocationLabels}
+                onChange={onToggleMorphologyLocationLabels}
               />
-            </div>
+            </MenuRow>
+          )}
+          {onMorphologyLocationRadiusChange && morphologyLocationRadius !== undefined && (
+            <MenuSlider
+              label="Location marker size"
+              min={1}
+              max={30}
+              step={1}
+              value={morphologyLocationRadius}
+              onChange={onMorphologyLocationRadiusChange}
+            />
           )}
           {onNeuronOpacityChange && neuronOpacity !== undefined && (
-            <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
-              <div className="flex items-center justify-between gap-2">
-                <span>Neuron opacity</span>
-                <span className="tabular-nums text-neutral-500">
-                  {Math.round(neuronOpacity * 100)}%
-                </span>
-              </div>
-              <Slider
-                min={5}
-                max={100}
-                step={5}
-                value={Math.round(neuronOpacity * 100)}
-                onChange={(pct) => onNeuronOpacityChange(pct / 100)}
-                tooltip={{ formatter: null }}
-              />
-            </div>
+            <MenuSlider
+              label="Neuron opacity"
+              min={5}
+              max={100}
+              step={5}
+              value={Math.round(neuronOpacity * 100)}
+              format={(percent) => `${percent}%`}
+              onChange={(percent) => onNeuronOpacityChange(percent / 100)}
+            />
           )}
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
             <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />
@@ -317,6 +333,42 @@ function MenuButton({
       <span className={menuItemIconClass}>{icon}</span>
       {label}
     </button>
+  );
+}
+
+/** A labelled slider row: {@link MenuRow} for controls that take a range. */
+function MenuSlider({
+  label,
+  min,
+  max,
+  step,
+  value,
+  onChange,
+  format,
+}: {
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (value: number) => void;
+  format?: (value: number) => string;
+}) {
+  return (
+    <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
+      <div className="flex items-center justify-between gap-2">
+        <span>{label}</span>
+        <span className="tabular-nums text-neutral-500">{format ? format(value) : value}</span>
+      </div>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={onChange}
+        tooltip={{ formatter: null }}
+      />
+    </div>
   );
 }
 

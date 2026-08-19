@@ -10,10 +10,17 @@ import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-con
 
 export function useCircuitLoader(model: TSupportedEntitiesForScanConfiguration) {
   const { virtualLabId, projectId } = useWorkspace();
-  return React.useMemo(
+  const loader = React.useMemo(
     () => new CircuitLoader(model, virtualLabId, projectId),
     [model, virtualLabId, projectId]
   );
+  React.useEffect(() => {
+    loader.initializeLegacyPreview();
+    return () => {
+      loader.dispose();
+    };
+  }, [loader]);
+  return loader;
 }
 
 export function useDownloadHandler(model: TSupportedEntitiesForScanConfiguration) {

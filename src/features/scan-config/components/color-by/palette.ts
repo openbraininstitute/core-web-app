@@ -12,6 +12,22 @@ import type { CategoricalLegendEntry, ColorMapping, ContinuousLegend } from './t
 export const DEFAULT_NEURON_COLOR = '#2b5cd9';
 
 /**
+ * Per-section-type neuron colors, for a cell shown on its own.
+ *
+ * With one cell on screen there is nothing to tell apart, so color carries which part of the
+ * neuron a branch belongs to. Several cells use a flat color each instead. Values match the
+ * SONATA circuit loader.
+ */
+export const SECTION_TYPE_COLORS = {
+  soma: '#aaa',
+  axon: '#39F',
+  apicalDendrite: '#b2f',
+  basalDendrite: '#f55',
+  myelin: '#ff0',
+  unknown: '#f80',
+} as const;
+
+/**
  * colorblind-safe categorical palette: the Okabe–Ito set (minus black, which
  * disappears on dark backgrounds) extended with a few Tableau-10 hues. Ordering
  * is fixed so the same category always maps to the same color across sessions
@@ -242,3 +258,28 @@ function compareValues(a: string, b: string): number {
   if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
   return a.localeCompare(b);
 }
+
+/** Palette slot for a block name: its trailing ordinal, else a hash. */
+export function blockPaletteIndex(name: string, slotCount: number): number {
+  const ordinal = /(\d+)\s*$/.exec(name);
+  if (ordinal) return Number(ordinal[1]) % slotCount;
+  return hashName(name) % slotCount;
+}
+
+/** FNV-1a. */
+function hashName(name: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < name.length; i++) {
+    hash ^= name.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash);
+}
+
+/** Colour for a block's morphology-location markers. */
+export function morphologyLocationsColor(entry: string): string {
+  return categoricalColor(blockPaletteIndex(entry, MORPHOLOGY_LOCATION_COLOR_SLOTS));
+}
+
+/** Bounded so the viewer's palette texture stays small. */
+const MORPHOLOGY_LOCATION_COLOR_SLOTS = 12;

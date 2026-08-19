@@ -1,88 +1,27 @@
 import { Dataset, type Entity, Group, File as H5File, ready } from 'h5wasm';
 
-import { downloadAsset, getAssets, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
-import {
-  type MorphoViewerSmallCircuitCell,
-  type MorphoViewerSmallCircuitCellData,
-  MorphoViewerTreeItemType,
-} from '@/morpho-viewer';
+import { downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
+import { NodesSchema } from '@/features/scan-config/types';
 import GenericEvent from '@/util/generic-event';
-import { assertType } from '@/util/type-guards';
+import { assertArray, assertType } from '@/util/type-guards';
 import { logError } from '@/utils/logger';
 
 import { CircuitConfig } from './circuit-config';
-import {
-  createSurfaceSdf,
-  drawnRadiusFactor,
-  isSomaSection,
-  projectOntoSurface,
-  rescueOffSurface,
-  type SomaEnvelope,
-  type SurfacePoint,
-  type SurfaceSdf,
-  type SurfaceSegment,
-  somaEnvelopeOf,
-} from './morphology-surface';
 import { Report } from './report';
 import { convertSwcToTree } from './swc';
-import { transform } from './transform';
 
-import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
-import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
-import type { Vec3 } from './sdf';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
+import type { Node, Nodes, TSynapseGroups } from '@/features/scan-config/types';
+import type {
+  MorphoViewerSmallCircuitCell,
+  MorphoViewerSmallCircuitCellData,
+} from '@/morpho-viewer';
 
-/** The signed distance fields one cell needs, built once and shared. */
-type CellSurfaces = {
-  /** What the soma painter draws — where SONATA's soma synapses belong. */
-  soma: SurfaceSdf | null;
-  /** Everything the cell draws, for measuring and rescuing synapses against. */
-  whole: SurfaceSdf | null;
-  /** Where the spherical-soma model can reach — see {@link rescueOffSurface}. */
-  somaEnvelope: SomaEnvelope | null;
-};
-
-/**
- * One morphology sample, kept in both spaces: local because that is where the
- * renderer decides how thick to draw a segment, world because that is where the
- * synapses are.
- */
-type Sample = { local: Vec3; point: SurfacePoint };
-
-/**
- * The segment between two samples as the viewer paints it, radii and all.
- *
- * Passing the same sample twice gives the degenerate segment a parentless root
- * is drawn as, which the renderer draws at its true radius.
- *
- * @see drawnRadiusFactor — why the radii are not the ones the morphology states.
- */
-function drawnSegment(from: Sample, to: Sample): SurfaceSegment {
-  const factor = drawnRadiusFactor(from.local, to.local);
-  return {
-    from: { ...from.point, radius: from.point.radius * factor },
-    to: { ...to.point, radius: to.point.radius * factor },
-  };
-}
-
-/**
- * How far outside the drawn surface a synapse has to sit before it is worth
- * moving. About the radius the viewer gives a marker: any closer and the marker
- * still touches its branch, so there is nothing to see.
- */
-const OFF_SURFACE_TOLERANCE = 0.5;
-
-/**
- * How many neurite synapses to measure against the drawn surface. Enough for a
- * stable median without walking a whole morphology thousands of times.
- */
-const NEURITE_PROBE_LIMIT = 256;
-
-/**
- * Above this many target cells the probe is skipped: it needs a signed distance
- * field over every segment of each cell, which is only cheap while "small
- * circuit" means what it says.
- */
-const NEURITE_PROBE_CELL_LIMIT = 8;
+/** All the loader reads off an entity; full scan-config entities satisfy it structurally. */
+type TCircuitEntityRef = { id: string; type: TEntityTypeDict };
 
 export class CircuitLoader {
   public readonly report = new Report();
@@ -93,26 +32,198 @@ export class CircuitLoader {
 
   private _circuit: MorphoViewerSmallCircuitCell[] = [];
 
-  private directory: Record<string, DirectoryItem> = {};
-
-  private assetDirectoryId = '';
-
   private circuitConfig = new CircuitConfig({
     networks: { nodes: [], edges: [] },
   });
 
   private morphologiesDir = '';
 
-  private _synapses: { coordinates: Float32Array; populationName: string }[] = [];
-
   private readonly cacheCells = new Map<string, Promise<MorphoViewerSmallCircuitCellData | null>>();
 
+  private _asyncAssetDirectoryId: Promise<string> | null = null;
+
+  private _asyncConfig: Promise<CircuitConfig> | null = null;
+
+  private _asyncNodes: Promise<Nodes> | null = null;
+
+  private _asyncSynapses: Promise<TSynapseGroups> | null = null;
+
+  private readonly files = new Map<string, Promise<ArrayBuffer>>();
+
+  private readonly h5Files = new Map<string, Promise<{ file: H5File; filename: string }>>();
+
+  private disposed = false;
+
   constructor(
-    private readonly model: TSupportedEntitiesForScanConfiguration,
+    private readonly model: TCircuitEntityRef,
     private readonly virtualLabId: string,
     private readonly projectId: string
-  ) {
-    this.initialize();
+  ) {}
+
+  /** The circuit's SONATA config, downloaded and manifest-resolved once. */
+  get asyncCircuitConfig(): Promise<CircuitConfig> {
+    this._asyncConfig ??= this.retryable(
+      this.loadJSON('circuit_config.json').then((json) => new CircuitConfig(json)),
+      () => {
+        this._asyncConfig = null;
+      }
+    );
+    return this._asyncConfig;
+  }
+
+  /**
+   * Memoize a result but not a failure.
+   *
+   * `loadFile`/`loadH5` already evict failed downloads so the next call retries; without the
+   * same rule here, the memo above would keep re-serving that one rejection for the loader's
+   * lifetime and defeat every automatic recovery path.
+   */
+  private retryable<T>(promise: Promise<T>, forget: () => void): Promise<T> {
+    promise.catch(forget);
+    return promise;
+  }
+
+  /**
+   * The circuit's cells, in the shape OBI-One's `/circuit/viz/{id}/nodes` used to serve:
+   * every biophysical population in name order, each node with its position, orientation
+   * quaternion and the morphology file+name the `/morphologies` endpoint expects.
+   */
+  getNodes(): Promise<Nodes> {
+    this._asyncNodes ??= this.retryable(
+      this.readNodes().then((nodes) => NodesSchema.parse(nodes)),
+      () => {
+        this._asyncNodes = null;
+      }
+    );
+    return this._asyncNodes;
+  }
+
+  /** Release the WASM-side copies of every parsed H5 file. The loader is unusable after. */
+  async dispose() {
+    this.disposed = true;
+    const { FS } = await ready;
+    for (const pending of this.h5Files.values()) {
+      try {
+        const { file, filename } = await pending;
+        file.close();
+        FS.unlink(filename);
+      } catch {
+        // A file that failed to parse holds nothing to release.
+      }
+    }
+    this.h5Files.clear();
+    this.files.clear();
+  }
+
+  /** Raw afferent synapses per edge population, mirroring `/circuit/viz/{id}/synapses`. */
+  getAfferentSynapses(): Promise<TSynapseGroups> {
+    this._asyncSynapses ??= this.retryable(this.readAfferentSynapses(), () => {
+      this._asyncSynapses = null;
+    });
+    return this._asyncSynapses;
+  }
+
+  private async readNodes(): Promise<Nodes> {
+    const { config } = await this.asyncCircuitConfig;
+    const nodes: Node[] = [];
+
+    for (const { nodesFile, populationName, population } of listBiophysicalPopulations(config)) {
+      const rule = resolveMorphologyRule(config, populationName, population);
+      const file = await this.loadH5(nodesFile);
+      this.assertUsable();
+      const { x, y, z, qx, qy, qz, qw } = this.readNodeGeometry(file, populationName);
+      const names = this.readMorphologyNames(file, populationName);
+
+      for (let i = 0; i < x.length; i++) {
+        nodes.push({
+          position: [x[i], y[i], z[i]],
+          orientation: [qx[i], qy[i], qz[i], qw[i]],
+          morphology_file: morphologyFileOf(rule, names[i]),
+          morphology_name: names[i],
+        });
+      }
+    }
+
+    return nodes;
+  }
+
+  /** The seven per-node geometry datasets both the viz and the legacy preview read. */
+  private readNodeGeometry(file: H5File, populationName: string) {
+    const group = (name: string) => `nodes/${populationName}/0/${name}`;
+    return {
+      x: this.getNumberArray(file, group('x')),
+      y: this.getNumberArray(file, group('y')),
+      z: this.getNumberArray(file, group('z')),
+      qx: this.getNumberArray(file, group('orientation_x')),
+      qy: this.getNumberArray(file, group('orientation_y')),
+      qz: this.getNumberArray(file, group('orientation_z')),
+      qw: this.getNumberArray(file, group('orientation_w')),
+    };
+  }
+
+  /** Morphology names per node, decoding SONATA's `@library` enum encoding when present. */
+  private readMorphologyNames(file: H5File, populationName: string): string[] {
+    const values = this.getDataset(file, `nodes/${populationName}/0/morphology`, assertArray);
+    const libraryPath = `nodes/${populationName}/0/@library/morphology`;
+    if (
+      values.every((value): value is number => typeof value === 'number') &&
+      this.hasDataset(file, libraryPath)
+    ) {
+      const library = this.getDataset(file, libraryPath, assertArray);
+      return values.map((value) => String(library[value]));
+    }
+    return values.map((value) => String(value));
+  }
+
+  private async readAfferentSynapses(): Promise<TSynapseGroups> {
+    const { config } = await this.asyncCircuitConfig;
+    const groups: TSynapseGroups = [];
+
+    for (const edge of config.networks.edges) {
+      const file = await this.loadH5(edge.edges_file);
+      // Without this a disposal mid-download closes the file, every `hasDataset` reads
+      // false, and the circuit caches an empty synapse list as a success.
+      this.assertUsable();
+      for (const populationName of Object.keys(edge.populations)) {
+        const attribute = (name: string) => `edges/${populationName}/0/${name}`;
+        // A population without surface positions is a purely functional connectome:
+        // nothing to draw, skipped rather than an error.
+        if (!AFFERENT_ATTRIBUTES.every((name) => this.hasDataset(file, attribute(name)))) {
+          continue;
+        }
+
+        const x = this.getNumberArray(file, attribute('afferent_surface_x'));
+        const y = this.getNumberArray(file, attribute('afferent_surface_y'));
+        const z = this.getNumberArray(file, attribute('afferent_surface_z'));
+        const sectionIds = this.getNumberArray(file, attribute('afferent_section_id'));
+        // Unlike the `afferent_*` attributes, targets sit at the population root.
+        const targetIds = this.getNumberArray(file, `edges/${populationName}/target_node_id`);
+
+        const coordinates: number[] = new Array(x.length * 3);
+        for (let i = 0; i < x.length; i++) {
+          coordinates[i * 3] = x[i];
+          coordinates[i * 3 + 1] = y[i];
+          coordinates[i * 3 + 2] = z[i];
+        }
+
+        groups.push({
+          population_name: populationName,
+          coordinates,
+          section_ids: sectionIds,
+          target_node_ids: targetIds,
+        });
+      }
+    }
+
+    return groups;
+  }
+
+  private assertUsable() {
+    if (this.disposed) throw new Error('This circuit loader was disposed.');
+  }
+
+  private hasDataset(file: H5File, path: string): boolean {
+    return file.get(path) instanceof Dataset;
   }
 
   useLoaded() {
@@ -125,10 +236,6 @@ export class CircuitLoader {
 
   get circuit() {
     return this._circuit;
-  }
-
-  get synapses() {
-    return this._synapses;
   }
 
   get loaded(): boolean {
@@ -152,6 +259,9 @@ export class CircuitLoader {
 
   private async loadCellNow(id: string) {
     try {
+      if (!this.morphologiesDir) {
+        throw new Error('Legacy preview not initialized — call initializeLegacyPreview() first.');
+      }
       const morphologyFilename = `${this.morphologiesDir}/${id}.swc`;
       const morphology = await this.loadText(morphologyFilename);
       const tree = convertSwcToTree(morphology);
@@ -164,34 +274,18 @@ export class CircuitLoader {
     }
   }
 
-  private async initialize() {
-    const { model, virtualLabId, projectId, report } = this;
+  /** Load the legacy SWC preview (node set selection, cells, SWC morphologies). */
+  async initializeLegacyPreview() {
+    const { report } = this;
     report.clear();
     try {
       this.loaded = false;
-      const assets = await this.loadAssets();
-      report.logTask('Looking for asset directory with label "sonata_circuit"...');
-      const assetDirectory = assets.data.find((asset) => asset.label === 'sonata_circuit');
-      if (!assetDirectory) throw new Error('No asset directory found!');
-
-      this.assetDirectoryId = assetDirectory.id;
-      report.logTask('Listing directory...');
-      const directory = await listDirectoryOfAssets({
-        ctx: { virtualLabId, projectId },
-        entityType: model.type,
-        entityId: model.id,
-        id: assetDirectory.id,
-      });
-      this.directory = directory.files;
-      const circuitConfig = await this.loadJSON('circuit_config.json');
-      this.circuitConfig = new CircuitConfig(circuitConfig);
+      this.circuitConfig = await this.asyncCircuitConfig;
       this.morphologiesDir = this.circuitConfig.config.components.morphologies_dir;
       report.logTask(`Default morphologies dir: "${this.morphologiesDir}"`);
       const nodeSet = await this.loadNodeSet();
       const circuit = await this.getMorphoViewerSmallCircuitCells(nodeSet);
       this._circuit = circuit;
-      const synapses = await this.getAfferentSynapses();
-      this._synapses = synapses;
       this.loaded = true;
     } catch (error) {
       report.logFailure(error);
@@ -201,275 +295,27 @@ export class CircuitLoader {
     }
   }
 
-  private lookForPopulationMorphologiesDir(populationName: string) {
-    const { config } = this.circuitConfig;
-    for (const node of config.networks.nodes) {
-      const population = node.populations[populationName];
-      if (population?.morphologies_dir) {
-        this.morphologiesDir = population.morphologies_dir;
-        this.report.logTask(
-          `Population "${populationName}" overrides morphologies dir: "${this.morphologiesDir}"`
-        );
-        return;
+  private get asyncAssetDirectoryId(): Promise<string> {
+    this._asyncAssetDirectoryId ??= this.retryable(
+      this.loadAssets().then((assets) => {
+        this.report.logTask('Looking for asset directory with label "sonata_circuit"...');
+        const assetDirectory = assets.data.find((asset) => asset.label === 'sonata_circuit');
+        if (!assetDirectory) throw new Error('No asset directory found!');
+        return assetDirectory.id;
+      }),
+      () => {
+        this._asyncAssetDirectoryId = null;
       }
-    }
-  }
-
-  /**
-   * Retrieve afferent synapses from the SONATA file, one entry per edge
-   * population, each holding a flat `[x, y, z, ...]` array of world coordinates.
-   *
-   * Positions come from `afferent_surface_*`, which is already on the neurite
-   * surface. Soma synapses are the exception: they are computed against a
-   * spherical soma while SWC stores a stack of cones, so they get projected
-   * onto the drawn soma ({@link projectOntoSurface}) or they float free of it.
-   * "Drawn" there means the soma on screen, which is thinner than the one the
-   * morphology describes — {@link drawnRadiusFactor} explains why, and why we
-   * follow the picture rather than the data.
-   *
-   * Neurite synapses are left where SONATA put them, with one exception: a few
-   * arrive near the soma yet clear of everything drawn, and those get pulled
-   * back onto the mesh — see {@link rescueOffSurface}. A sample of the rest is
-   * measured against the drawn surface — see {@link probeNeuriteSynapses}.
-   *
-   * @see https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html#fields-for-edges
-   */
-  private async getAfferentSynapses(): Promise<
-    Array<{ coordinates: Float32Array; populationName: string }>
-  > {
-    const { report, circuitConfig } = this;
-    const { config } = circuitConfig;
-    if (config.networks.edges.length === 0) {
-      report.logTask('No edges found in circuit config.');
-      return [];
-    }
-    const results: Array<{ coordinates: Float32Array; populationName: string }> = [];
-    for (const edge of config.networks.edges) {
-      report.logTask(`Loading edges file "${edge.edges_file}"...`);
-      const edgesFile = await this.loadH5(edge.edges_file);
-      for (const populationName of Object.keys(edge.populations)) {
-        report.logTask(`Reading afferent synapse positions for population "${populationName}"...`);
-        if (!this.hasDataset(edgesFile, `edges/${populationName}/0/afferent_surface_x`)) {
-          report.logTask(`No afferent_surface dataset found!`);
-          continue;
-        }
-        const ds = (name: string) =>
-          this.getDataset(edgesFile, `edges/${populationName}/${name}`, assertArrayNumber);
-        const arrXs = ds('0/afferent_surface_x');
-        const arrYs = ds('0/afferent_surface_y');
-        const arrZs = ds('0/afferent_surface_z');
-        const arrSectionId = ds('0/afferent_section_id');
-        // Unlike the `afferent_*` datasets, this one is not nested under `0/`.
-        const arrTarget = ds('target_node_id');
-
-        const surfaces = await this.getCellSurfaces(arrSectionId, arrTarget);
-
-        const coordinates = new Float32Array(arrXs.length * 3);
-        let somaTotal = 0;
-        let projected = 0;
-        // How far the projected points still sit from the drawn soma. Should be
-        // ~0; anything else means the reconstructed soma disagrees with the one
-        // being drawn, which is the difference between "projection never ran"
-        // and "projection ran against the wrong shape".
-        let worstResidual = 0;
-        let rescued = 0;
-        for (let i = 0; i < arrXs.length; i++) {
-          const surface: Vec3 = [arrXs[i], arrYs[i], arrZs[i]];
-          const isSoma = isSomaSection(arrSectionId[i]);
-          if (isSoma) somaTotal++;
-          const cell = surfaces.get(arrTarget[i]);
-          const sdf = isSoma ? cell?.soma : undefined;
-          let point = surface;
-          if (sdf) {
-            point = projectOntoSurface(surface, sdf);
-            projected++;
-            worstResidual = Math.max(worstResidual, Math.abs(sdf(point).distance));
-          } else if (cell?.whole && cell.somaEnvelope) {
-            const rescue = rescueOffSurface(
-              surface,
-              cell.whole,
-              cell.somaEnvelope,
-              OFF_SURFACE_TOLERANCE
-            );
-            if (rescue) {
-              point = rescue;
-              rescued++;
-            }
-          }
-          coordinates[i * 3] = point[0];
-          coordinates[i * 3 + 1] = point[1];
-          coordinates[i * 3 + 2] = point[2];
-        }
-        report.logTask(
-          `Loaded ${arrXs.length} afferent synapses for "${populationName}": ` +
-            `${somaTotal} on a soma, ${projected} projected` +
-            (projected > 0 ? `, worst residual ${worstResidual.toFixed(3)}µm` : '') +
-            (rescued > 0 ? `, ${rescued} rescued off the surface near a soma` : '') +
-            '.'
-        );
-        this.probeNeuriteSynapses(populationName, coordinates, arrSectionId, arrTarget, surfaces);
-        results.push({ coordinates, populationName });
-      }
-    }
-    return results;
-  }
-
-  /**
-   * Build the drawn surfaces of every *distinct* target cell in a population.
-   *
-   * Why up front: a cell's geometry is identical for all of its synapses, and a
-   * small circuit holds a handful of cells against thousands of synapses.
-   * Building per synapse would re-walk the morphology tree every time and make
-   * the projection loop quadratic.
-   */
-  private async getCellSurfaces(
-    sectionIds: number[],
-    targetNodeIds: number[]
-  ): Promise<Map<number, CellSurfaces>> {
-    const surfaces = new Map<number, CellSurfaces>();
-    const cellIndices = new Set(targetNodeIds);
-    // Only cells that carry soma synapses need a soma SDF. The whole-morphology
-    // one is built for every cell — it costs a couple of milliseconds and both
-    // the rescue and the probe want it.
-    const somaCells = new Set<number>();
-    for (let i = 0; i < sectionIds.length; i++) {
-      if (isSomaSection(sectionIds[i])) somaCells.add(targetNodeIds[i]);
-    }
-
-    for (const cellIndex of cellIndices) {
-      const built = await this.buildCellSurfaces(cellIndex, { soma: somaCells.has(cellIndex) });
-      if (built) surfaces.set(cellIndex, built);
-    }
-    return surfaces;
-  }
-
-  /**
-   * Reconstruct the segments the viewer draws for one cell, in world
-   * coordinates, and turn them into signed distance fields.
-   *
-   * Returns `null` when the cell can't be reconstructed, so callers fall back to
-   * the raw SONATA coordinates rather than losing the synapse entirely.
-   */
-  private async buildCellSurfaces(
-    cellIndex: number,
-    want: { soma: boolean }
-  ): Promise<CellSurfaces | null> {
-    const { report } = this;
-    // `target_node_id` indexes the target population; `circuit` holds the
-    // selected node set. Those coincide for the single-cell circuits this
-    // loader serves, but not in general — hence the lookup guard.
-    const cellDef = this.circuit[cellIndex];
-    if (!cellDef) {
-      report.logTask(`No morphology for cell #${cellIndex}; leaving its synapses unprojected.`);
-      return null;
-    }
-
-    const cell = await this.loadCell(cellDef.id);
-    const somaSegments: SurfaceSegment[] = [];
-    const wholeSegments: SurfaceSegment[] = [];
-    const stack = (cell?.data.roots ?? []).map((item) => ({
-      item,
-      parent: null as Sample | null,
-    }));
-    while (stack.length > 0) {
-      const entry = stack.pop();
-      if (!entry) continue;
-
-      const { item, parent } = entry;
-      const [x, y, z] = transform(item.x, item.y, item.z, cellDef);
-      const sample: Sample = {
-        local: [item.x, item.y, item.z],
-        point: { x, y, z, radius: item.radius },
-      };
-      // Mirror the viewer's own segment construction: a parentless root is drawn
-      // as a degenerate segment (a sphere), every other sample as a cone from
-      // its parent — soma-typed ones by the soma painter, the rest by the
-      // neurite painter. Reconstructing the soma any other way, by chaining
-      // samples in traversal order say, invents surfaces the viewer never draws,
-      // and synapses projected onto those hang off the mesh.
-      const segment = parent ? drawnSegment(parent, sample) : drawnSegment(sample, sample);
-      if (!parent || item.type === MorphoViewerTreeItemType.Soma) somaSegments.push(segment);
-      wholeSegments.push(segment);
-
-      for (const child of item.children ?? []) stack.push({ item: child, parent: sample });
-    }
-    report.logTask(
-      `Cell #${cellIndex} draws ${wholeSegments.length} segment(s), ${somaSegments.length} of them soma.`
     );
-
-    const soma = want.soma ? createSurfaceSdf(somaSegments) : null;
-    if (want.soma && !soma) {
-      report.logTask(`Cell #${cellIndex} draws no soma; leaving its soma synapses unprojected.`);
-    }
-    return {
-      soma,
-      whole: createSurfaceSdf(wholeSegments),
-      somaEnvelope: somaEnvelopeOf(somaSegments, [
-        cellDef.center[0],
-        cellDef.center[1],
-        cellDef.center[2],
-      ]),
-    };
+    return this._asyncAssetDirectoryId;
   }
 
-  /**
-   * Measure how far a sample of neurite synapses sits from the drawn surface.
-   *
-   * Nothing acts on the result — it is the difference between "they look wrong"
-   * and knowing whether they are. `afferent_surface_*` is supposed to be on the
-   * neurite surface already, so a median near zero means any floating-looking
-   * markers are a drawing artefact (a marker wider than its own branch, or a
-   * branch out of frame) rather than misplaced coordinates.
-   *
-   * Near zero, not zero: neurites keep their SONATA coordinates, so they sit on
-   * the branch the morphology describes rather than the slightly thinner one on
-   * screen. At a median radius of 0.22µm that gap is measured in hundredths of a
-   * micron — see {@link drawnRadiusFactor}.
-   */
-  private probeNeuriteSynapses(
-    populationName: string,
-    coordinates: Float32Array,
-    sectionIds: number[],
-    targetNodeIds: number[],
-    surfaces: Map<number, CellSurfaces>
-  ) {
-    // Each query walks every segment of its cell, so this stays worth doing only
-    // while "small circuit" means what it says.
-    if (surfaces.size > NEURITE_PROBE_CELL_LIMIT) {
-      this.report.logTask(
-        `${surfaces.size} target cells — skipping the neurite surface probe (limit ${NEURITE_PROBE_CELL_LIMIT}).`
-      );
-      return;
-    }
-
-    const candidates: number[] = [];
-    for (let i = 0; i < sectionIds.length; i++) {
-      if (!isSomaSection(sectionIds[i]) && surfaces.get(targetNodeIds[i])?.whole)
-        candidates.push(i);
-    }
-    if (candidates.length === 0) return;
-
-    // Evenly spread over the population rather than taking a prefix, so one
-    // badly placed branch can't stand in for the whole cell.
-    const stride = Math.max(1, Math.floor(candidates.length / NEURITE_PROBE_LIMIT));
-    const distances: number[] = [];
-    for (let n = 0; n < candidates.length; n += stride) {
-      const i = candidates[n];
-      const sdf = surfaces.get(targetNodeIds[i])?.whole;
-      if (!sdf) continue;
-
-      const point: Vec3 = [coordinates[i * 3], coordinates[i * 3 + 1], coordinates[i * 3 + 2]];
-      distances.push(Math.abs(sdf(point).distance));
-    }
-    if (distances.length === 0) return;
-
-    distances.sort((a, b) => a - b);
-    const at = (fraction: number) =>
-      distances[Math.min(distances.length - 1, Math.floor(distances.length * fraction))];
+  private lookForPopulationMorphologiesDir(populationName: string) {
+    const dir = findPopulation(this.circuitConfig.config, populationName)?.morphologies_dir;
+    if (!dir) return;
+    this.morphologiesDir = dir;
     this.report.logTask(
-      `Probed ${distances.length}/${candidates.length} neurite synapses of "${populationName}" ` +
-        `against the drawn surface: median ${at(0.5).toFixed(3)}µm, ` +
-        `p95 ${at(0.95).toFixed(3)}µm, max ${distances[distances.length - 1].toFixed(3)}µm.`
+      `Population "${populationName}" overrides morphologies dir: "${this.morphologiesDir}"`
     );
   }
 
@@ -485,73 +331,33 @@ export class CircuitLoader {
     }
     this.lookForPopulationMorphologiesDir(nodeSet.population);
     const nodesFile = await this.loadH5(node.nodes_file);
-    const ids = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/morphology`,
-      assertArrayString
-    );
-    const positionX = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/x`,
-      assertArrayNumber
-    );
-    const positionY = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/y`,
-      assertArrayNumber
-    );
-    const positionZ = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/z`,
-      assertArrayNumber
-    );
-    const orientationX = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/orientation_x`,
-      assertArrayNumber
-    );
-    const orientationY = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/orientation_y`,
-      assertArrayNumber
-    );
-    const orientationZ = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/orientation_z`,
-      assertArrayNumber
-    );
-    const orientationW = this.getDataset(
-      nodesFile,
-      `nodes/${nodeSet.population}/0/orientation_w`,
-      assertArrayNumber
-    );
+    const ids = this.readMorphologyNames(nodesFile, nodeSet.population);
+    const { x, y, z, qx, qy, qz, qw } = this.readNodeGeometry(nodesFile, nodeSet.population);
     return ids.map((id, index) => {
       const cell: MorphoViewerSmallCircuitCell = {
         id,
-        center: [positionX[index], positionY[index], positionZ[index]],
-        orientation: [
-          orientationX[index],
-          orientationY[index],
-          orientationZ[index],
-          orientationW[index],
-        ],
+        center: [x[index], y[index], z[index]],
+        orientation: [qx[index], qy[index], qz[index], qw[index]],
         somaRadius: 50,
-        color: {
-          soma: '#aaa',
-          axon: '#39F',
-          apicalDendrite: '#b2f',
-          basalDendrite: '#f55',
-          myelin: '#ff0',
-          unknown: '#f80',
-        },
+        color: SECTION_TYPE_COLORS,
       };
       return cell;
     });
   }
 
-  private hasDataset(file: H5File, path: string) {
+  private getNumberArray(file: H5File, path: string): number[] {
     const dataset = file.get(path);
-    return dataset instanceof Dataset;
+    if (!(dataset instanceof Dataset)) {
+      throw new Error(
+        `Unable to find dataset at "${path}"!\nAvailable paths:\n${getAvailablePaths(file, path)}`
+      );
+    }
+    const value = dataset.value;
+    if (ArrayBuffer.isView(value)) {
+      return Array.from(value, Number);
+    }
+    assertArray(value);
+    return value.map(Number);
   }
 
   private getDataset<T>(
@@ -633,35 +439,53 @@ export class CircuitLoader {
     return JSON.parse(text);
   }
 
-  private async loadH5(assetPath: string): Promise<H5File> {
-    const data = await this.loadFile(assetPath);
-    this.report.logTask(`Parsing HDF5 file "${assetPath}"...`);
-    const magic = new Uint8Array(data, 0, 8);
-    // Expected: 89 48 44 46 0d 0a 1a 0a
-    if (magic[0] !== 0x89 || magic[1] !== 0x48 || magic[2] !== 0x44 || magic[3] !== 0x46) {
-      logError('Not a valid HDF5 file!');
-      throw new Error('Invalid HDF5 file format!');
-    }
+  private loadH5(assetPath: string): Promise<H5File> {
+    const cached = this.h5Files.get(assetPath);
+    if (cached) return cached.then((entry) => entry.file);
 
-    const { FS } = await ready;
-    const filename = `sonata_${Date.now()}.h5`;
-    FS.writeFile(filename, new Uint8Array(data));
-    const file = new H5File(filename, 'r');
-    return file;
+    const promise = (async () => {
+      const data = await this.loadFile(assetPath);
+      this.report.logTask(`Parsing HDF5 file "${assetPath}"...`);
+      const magic = new Uint8Array(data, 0, 8);
+      // Expected: 89 48 44 46 0d 0a 1a 0a
+      if (magic[0] !== 0x89 || magic[1] !== 0x48 || magic[2] !== 0x44 || magic[3] !== 0x46) {
+        logError('Not a valid HDF5 file!');
+        throw new Error('Invalid HDF5 file format!');
+      }
+
+      const { FS } = await ready;
+      const filename = `sonata_${nextH5FileId()}.h5`;
+      FS.writeFile(filename, new Uint8Array(data));
+      // MEMFS now holds the bytes; keeping the ArrayBuffer too would double the memory.
+      this.files.delete(assetPath);
+      return { file: new H5File(filename, 'r'), filename };
+    })();
+    this.h5Files.set(assetPath, promise);
+    promise.catch(() => this.h5Files.delete(assetPath));
+    return promise.then((entry) => entry.file);
   }
 
-  private async loadFile(assetPath: string): Promise<ArrayBuffer> {
-    const { model, virtualLabId, projectId, assetDirectoryId } = this;
+  private loadFile(assetPath: string): Promise<ArrayBuffer> {
+    const cached = this.files.get(assetPath);
+    if (cached) return cached;
+
+    const { model, virtualLabId, projectId } = this;
     this.report.logTask(`Loading file "${assetPath}"...`);
-    const content = await downloadAsset({
-      ctx: { virtualLabId, projectId },
-      entityType: model.type,
-      entityId: model.id,
-      id: assetDirectoryId,
-      assetPath,
-      asRawResponse: true,
-    });
-    return content.arrayBuffer();
+    const promise = (async () => {
+      const content = await downloadAsset({
+        ctx: { virtualLabId, projectId },
+        entityType: model.type,
+        entityId: model.id,
+        id: await this.asyncAssetDirectoryId,
+        assetPath,
+        asRawResponse: true,
+      });
+      return content.arrayBuffer();
+    })();
+    this.files.set(assetPath, promise);
+    // A failed download must not poison the cache; the next call retries.
+    promise.catch(() => this.files.delete(assetPath));
+    return promise;
   }
 
   private async loadAssets() {
@@ -715,14 +539,6 @@ function _debugH5(file: H5File) {
   console.debug(logs.join('\n'));
 }
 
-function assertArrayString(data: unknown): asserts data is string[] {
-  assertType(data, ['array', 'string']);
-}
-
-function assertArrayNumber(data: unknown): asserts data is number[] {
-  assertType(data, ['array', 'number']);
-}
-
 /**
  * Many circuits have just one population and one cell.
  * In this case, we can use any node set.
@@ -762,4 +578,146 @@ function getAvailablePaths(file: H5File, path: string) {
     .keys()
     .map((name) => `  - ${prefix}/${name}`)
     .join('\n');
+}
+
+let h5FileId = 0;
+
+function nextH5FileId() {
+  h5FileId += 1;
+  return h5FileId;
+}
+
+const AFFERENT_ATTRIBUTES = [
+  'afferent_surface_x',
+  'afferent_surface_y',
+  'afferent_surface_z',
+  'afferent_section_id',
+] as const;
+
+type TSonataNodePopulation =
+  ICircuitSonataConfiguration['networks']['nodes'][number]['populations'][string];
+
+/** One biophysical population, with the nodes file and config entry it came from. */
+type TBiophysicalPopulation = {
+  nodesFile: string;
+  populationName: string;
+  population: TSonataNodePopulation;
+};
+
+type TMorphologyLocationRule =
+  | { kind: 'directory'; path: string; format: 'swc' | 'asc' | 'h5' }
+  | { kind: 'container'; path: string };
+
+/**
+ * Where a population's morphology files live — OBI-One's `resolve_morph_path`, mirrored.
+ *
+ * A `morphologies_dir` means one SWC file per cell. Otherwise the first alternate format
+ * wins: `neurolucida-asc` files or H5 — and an alternate path that already has an extension
+ * is a single container file holding every morphology.
+ */
+export function resolveMorphologyRule(
+  config: ICircuitSonataConfiguration,
+  populationName: string,
+  /** The population's own entry; looked up by name when the caller has only that. */
+  population: TSonataNodePopulation | undefined = findPopulation(config, populationName)
+): TMorphologyLocationRule {
+  const components = config.components;
+
+  const morphologiesDir = population?.morphologies_dir ?? components?.morphologies_dir;
+  if (morphologiesDir) return { kind: 'directory', path: morphologiesDir, format: 'swc' };
+
+  const alternates = population?.alternate_morphologies ?? components?.alternate_morphologies;
+  const entry = alternates ? Object.entries(alternates)[0] : undefined;
+  if (entry) {
+    const [alternateFormat, path] = entry;
+    if (hasSuffix(path)) return { kind: 'container', path };
+    return {
+      kind: 'directory',
+      path,
+      format: alternateFormat === 'neurolucida-asc' ? 'asc' : 'h5',
+    };
+  }
+
+  throw new Error(`No morphologies found for population "${populationName}".`);
+}
+
+/** The `{morphology_file}` path the morphology endpoint expects for one cell. */
+export function morphologyFileOf(rule: TMorphologyLocationRule, morphologyName: string): string {
+  if (rule.kind === 'container') return rule.path;
+  return `${rule.path}/${morphologyName}.${rule.format}`;
+}
+
+function hasSuffix(path: string): boolean {
+  const basename = path.split('/').at(-1) ?? '';
+  return basename.includes('.') && !basename.startsWith('.');
+}
+
+function findPopulation(config: ICircuitSonataConfiguration, name: string) {
+  for (const node of config.networks.nodes) {
+    const population = node.populations[name];
+    if (population) return population;
+  }
+  return undefined;
+}
+
+export function listBiophysicalPopulations(config: ICircuitSonataConfiguration) {
+  const populations: TBiophysicalPopulation[] = [];
+  for (const node of config.networks.nodes) {
+    for (const populationName of Object.keys(node.populations)) {
+      const population = node.populations[populationName];
+      if ((population.type ?? 'biophysical') !== 'biophysical') continue;
+      populations.push({ nodesFile: node.nodes_file, populationName, population });
+    }
+  }
+  // libsonata enumerates populations in codepoint order; `localeCompare` would order them
+  // by the viewer's locale, shifting node indices between users of the same circuit.
+  return populations.sort((a, b) => (a.populationName < b.populationName ? -1 : 1));
+}
+
+type TCircuitLoaderContext = {
+  circuitId: string;
+  virtualLabId: string;
+  projectId: string;
+};
+
+const loaders = new Map<string, CircuitLoader>();
+
+function loaderKey({ circuitId, virtualLabId, projectId }: TCircuitLoaderContext) {
+  return `${virtualLabId}/${projectId}/${circuitId}`;
+}
+
+/** The UI shows one circuit at a time; keeping a spare covers a quick switch back. */
+const MAX_CACHED_LOADERS = 2;
+
+/** One loader per circuit, so config, nodes and edges files download once and stay cached. */
+export function getCircuitLoader(context: TCircuitLoaderContext): CircuitLoader {
+  const key = loaderKey(context);
+  const cached = loaders.get(key);
+  if (cached) {
+    // Re-insert so Map iteration order is least-recently-used; without this, eviction
+    // follows insertion order and can drop the circuit the user just came back to.
+    loaders.delete(key);
+    loaders.set(key, cached);
+    return cached;
+  }
+
+  const loader = new CircuitLoader(
+    { id: context.circuitId, type: EntityTypeDict.Circuit },
+    context.virtualLabId,
+    context.projectId
+  );
+  loaders.set(key, loader);
+  for (const [oldestKey, oldest] of loaders) {
+    if (loaders.size <= MAX_CACHED_LOADERS) break;
+    loaders.delete(oldestKey);
+    oldest.dispose();
+  }
+  return loader;
+}
+
+/** Drop the cached loader so a retry starts from fresh downloads. */
+export function invalidateCircuitLoader(context: TCircuitLoaderContext) {
+  const key = loaderKey(context);
+  loaders.get(key)?.dispose();
+  loaders.delete(key);
 }
