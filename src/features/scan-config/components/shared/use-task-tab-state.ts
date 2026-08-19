@@ -1,4 +1,4 @@
-import { useMemo, useReducer } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { match } from 'ts-pattern';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -116,7 +116,7 @@ export function isConfigSelectable(execution: ITaskActivity | null | undefined):
 export interface ITaskTabStateActions<M extends Record<string, unknown>> {
   onActiveConfigChange: (config: ITaskConfig<M>) => void;
   onSelectedFileChange: (file: TActivityCustomFile | undefined) => void;
-  onCheckedChange: (configId: string, checked: boolean, shownSelectedConfigIds: string[]) => void;
+  onCheckedChange: (configId: string, checked: boolean) => void;
   onToggleSelectAll: (checked: boolean) => void;
   onExecutionLoad: (configId: string, execution: ITaskActivity | null) => void;
   onLaunched: () => void;
@@ -161,26 +161,38 @@ export function useTaskTabState<M extends Record<string, unknown>>(
   const resolvedSelectedConfigIds =
     selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
 
+  const shownSelectedConfigIdsRef = useRef<string[]>([]);
+  const selectableConfigIdsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    shownSelectedConfigIdsRef.current = resolvedSelectedConfigIds;
+    selectableConfigIdsRef.current = selectableConfigIds;
+  });
+
   const act = useMemo<ITaskTabStateActions<M>>(
     () => ({
       onActiveConfigChange: (config) =>
         dispatch({ type: TaskTabActionDict.ActiveConfigChanged, config }),
       onSelectedFileChange: (file) =>
         dispatch({ type: TaskTabActionDict.SelectedFileChanged, file }),
-      onCheckedChange: (configId, checked, shownSelectedConfigIds) =>
+      onCheckedChange: (configId, checked) =>
         dispatch({
           type: TaskTabActionDict.ConfigCheckedChanged,
           configId,
           checked,
-          shownSelectedConfigIds,
+          shownSelectedConfigIds: shownSelectedConfigIdsRef.current,
         }),
       onToggleSelectAll: (checked) =>
-        dispatch({ type: TaskTabActionDict.SelectAllToggled, checked, selectableConfigIds }),
+        dispatch({
+          type: TaskTabActionDict.SelectAllToggled,
+          checked,
+          selectableConfigIds: selectableConfigIdsRef.current,
+        }),
       onExecutionLoad: (configId, execution) =>
         dispatch({ type: TaskTabActionDict.ExecutionLoaded, configId, execution }),
       onLaunched: () => dispatch({ type: TaskTabActionDict.Launched }),
     }),
-    [selectableConfigIds]
+    []
   );
 
   return { state, act, selectableConfigIds, resolvedSelectedConfigIds };

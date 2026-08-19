@@ -73,11 +73,7 @@ describe('useSimulationsTabState', () => {
     expect(result.current.resolvedSelectedSimulationIds).toEqual(['s1', 's2']);
 
     reactAct(() => {
-      result.current.act.onSelectedForSimChange(
-        's1',
-        false,
-        result.current.resolvedSelectedSimulationIds
-      );
+      result.current.act.onSelectedForSimChange('s1', false);
     });
 
     expect(result.current.resolvedSelectedSimulationIds).toEqual(['s2']);

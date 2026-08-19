@@ -1,4 +1,4 @@
-import { useMemo, useReducer } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { match } from 'ts-pattern';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -165,12 +165,8 @@ export function isSimulationSelectable(
 export interface ISimulationsTabStateActions {
   onActiveSimulationChange: (simulation: ISimulation) => void;
   onSelectedFileChange: (file: TActivityCustomFile | undefined) => void;
-  onSelectedForSimChange: (
-    simulationId: string,
-    checked: boolean,
-    shownSelectedSimulationIds: string[]
-  ) => void;
-  onToggleSelectAll: (checked: boolean, selectableSimulationIds: string[]) => void;
+  onSelectedForSimChange: (simulationId: string, checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean) => void;
   setSimulationStatus: (simulationId: string, status: ActivityStatus) => void;
   onSimulationStatusLoad: (simulationId: string, status: ActivityStatus) => void;
   setSimulationJobId: (simulationId: string, jobId: string) => void;
@@ -233,24 +229,36 @@ export function useSimulationsTabState(
   const resolvedSelectedSimulationIds =
     selectedSimulationIds ?? (allStatusesLoaded ? autoSelectedSimulationIds : []);
 
+  // The reducer needs the selection the user is looking at, which only this hook
+  // knows. Holding it in refs keeps `act` referentially stable for its lifetime,
+  // so consumers can pass the handlers straight to children and key effects off
+  // them. Handlers only run from user events, i.e. after the effect has synced.
+  const shownSelectedSimulationIdsRef = useRef<string[]>([]);
+  const selectableSimulationIdsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    shownSelectedSimulationIdsRef.current = resolvedSelectedSimulationIds;
+    selectableSimulationIdsRef.current = selectableSimulationIds;
+  });
+
   const act = useMemo<ISimulationsTabStateActions>(
     () => ({
       onActiveSimulationChange: (simulation) =>
         dispatch({ type: SimulationsTabActionDict.ActiveSimulationChanged, simulation }),
       onSelectedFileChange: (file) =>
         dispatch({ type: SimulationsTabActionDict.SelectedFileChanged, file }),
-      onSelectedForSimChange: (simulationId, checked, shownSelectedSimulationIds) =>
+      onSelectedForSimChange: (simulationId, checked) =>
         dispatch({
           type: SimulationsTabActionDict.SimulationCheckedChanged,
           simulationId,
           checked,
-          shownSelectedSimulationIds,
+          shownSelectedSimulationIds: shownSelectedSimulationIdsRef.current,
         }),
-      onToggleSelectAll: (checked, selectableSimulationIds) =>
+      onToggleSelectAll: (checked) =>
         dispatch({
           type: SimulationsTabActionDict.SelectAllToggled,
           checked,
-          selectableSimulationIds,
+          selectableSimulationIds: selectableSimulationIdsRef.current,
         }),
       setSimulationStatus: (simulationId, status) =>
         dispatch({ type: SimulationsTabActionDict.StatusSet, simulationId, status }),

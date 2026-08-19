@@ -335,7 +335,7 @@ export default function SimulationsTab({
   };
 
   const onToggleSelectAll = (checked: boolean) => {
-    act.onToggleSelectAll(checked, selectableSimulationIds);
+    act.onToggleSelectAll(checked);
   };
 
   const launchSimBtnLabelPrefix = resolvedSelectedSimulationIds.length
@@ -359,9 +359,7 @@ export default function SimulationsTab({
         launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
         onToggleSelectAll={onToggleSelectAll}
         onActiveSimulationChange={onActiveSimulationChange}
-        onSelectedForSimChange={(simulationId, checked) =>
-          onSelectedForSimChange(simulationId, checked, resolvedSelectedSimulationIds)
-        }
+        onSelectedForSimChange={onSelectedForSimChange}
         onSimulationStatusLoad={onSimulationStatusLoad}
         onRun={onLaunch}
         middle={

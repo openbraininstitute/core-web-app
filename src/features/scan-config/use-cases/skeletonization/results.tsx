@@ -135,9 +135,7 @@ export function SkeletonizationTab({
               pauseStatusPolling={runSkeletonizationPending}
               executionByConfigId={executionByConfigId}
               onSelectConfig={act.onActiveConfigChange}
-              onCheckedChange={(configId, checked) =>
-                act.onCheckedChange(configId, checked, resolvedSelectedConfigIds)
-              }
+              onCheckedChange={act.onCheckedChange}
               onToggleSelectAll={act.onToggleSelectAll}
               onExecutionLoad={act.onExecutionLoad}
             />
