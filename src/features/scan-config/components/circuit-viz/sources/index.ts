@@ -1,5 +1,5 @@
-export { useCircuitSynapses } from './use-circuit-synapses';
-export { useObiOneVizSource } from './use-obi-one-viz-source';
+export { circuitDrawsSynapses } from './draws-synapses';
+export { useSmallCircuitSource } from './use-small-circuit-source';
 
 export type {
   TSmallCircuitSource as SmallCircuitSource,

@@ -1,9 +1,20 @@
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 
-/** prefer biophysical populations; otherwise fall back to the first entry */
+/**
+ * Prefer a biophysical population; otherwise fall back to the first entry.
+ *
+ * A population with no `type` counts as biophysical, which is what SONATA says
+ * it means. Without that a config listing a virtual population first and an
+ * untyped biophysical one second would open the virtual one, which has nothing
+ * to draw.
+ */
 export function pickDefaultPopulation(populations: NodePopulation[]): NodePopulation | undefined {
   if (populations.length === 0) return undefined;
-  return populations.find((p) => p.type === 'biophysical') ?? populations[0];
+  return populations.find(isBiophysical) ?? populations[0];
+}
+
+function isBiophysical(population: NodePopulation): boolean {
+  return (population.type || 'biophysical') === 'biophysical';
 }
 
 export function resolvePopulation(

@@ -19,7 +19,15 @@ import type {
 
 const CIRCUIT_CONFIG_PATH = 'circuit_config.json';
 
-function parseSonataConfig(
+/**
+ * Flatten a `circuit_config.json` into the populations and files the reader
+ * consumes, with every path's manifest variables expanded.
+ *
+ * Exported for tests: manifest expansion has to reach `nodes_file` and
+ * `edges_file` alike, and getting it wrong on one of them fails as a 404 far
+ * from here.
+ */
+export function parseSonataConfig(
   raw: ICircuitSonataConfiguration,
   circuitAssetId: string
 ): ParsedCircuitConfig {
@@ -41,7 +49,7 @@ function parseSonataConfig(
     }
   }
 
-  return { nodes, edges, circuitAssetId };
+  return { nodes, edges, circuitAssetId, raw };
 }
 
 export function useCircuitConfig(circuit: ICircuit | undefined) {
