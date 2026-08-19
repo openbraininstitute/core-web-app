@@ -1,18 +1,18 @@
 import { atom } from 'jotai';
 import { z } from 'zod';
 
-import { morphologyLocationsColor } from '@/features/scan-config/components/color-by/palette';
 import { isObject } from '@/util/type-guards';
 
-import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from './morphology-locations-key';
-
 import type { Config } from '@/features/scan-config/types';
+
+/** Block-dictionary key holding morphology-location blocks in a scan config. */
+export const MORPHOLOGY_LOCATIONS_CONFIG_KEY = 'morphology_locations';
 
 /** Only this block type stores locations outright; the others describe how to sample them. */
 export const EXPLICIT_BLOCK_TYPE = 'ExplicitMorphologyLocations';
 
 /** One stored location: a SONATA section id and a normalized offset along that section. */
-export const StoredLocationSchema = z.object({
+const StoredLocationSchema = z.object({
   section_id: z.number(),
   offset: z.number(),
 });
@@ -42,21 +42,18 @@ export function readLocations(block: Record<string, unknown> | null): IStoredLoc
   return readLocationRows(block.locations);
 }
 
-/** A stored location, plus the colour of the block it belongs to. */
-export type IColoredLocation = IStoredLocation & { color: string };
+/** A stored location, plus which block it came from and where it sits in that block. */
+export type ITaggedLocation = IStoredLocation & {
+  entry: string;
+  /** Row number inside its own block, which is what an edit addresses. */
+  index: number;
+};
 
-/** One block's rows, tagged with the block's colour. */
-export function readColoredLocations(
-  block: Record<string, unknown> | null,
-  entry: string
-): IColoredLocation[] {
-  const color = morphologyLocationsColor(entry);
-  return readLocations(block).map((location) => ({ ...location, color }));
-}
-
-/** Every explicit block's rows, each tagged with its block's colour. */
-export function readAllLocations(config: Config | null | undefined): IColoredLocation[] {
-  return readDictionary(config).flatMap(([entry, block]) => readColoredLocations(block, entry));
+/** Every explicit block's rows in a dictionary, each tagged with its block. */
+export function collectLocations(dictionary: Record<string, unknown> | null): ITaggedLocation[] {
+  return blocksOf(dictionary).flatMap(([entry, block]) =>
+    readLocations(block).map((location, index) => ({ ...location, entry, index }))
+  );
 }
 
 /** The morphology-locations dictionary, or null. Its identity survives edits elsewhere. */
@@ -67,13 +64,14 @@ export function readLocationsDictionary(config: Config | null | undefined) {
 
 /** Whether any block holds at least one location. */
 export function hasAnyLocation(config: Config | null | undefined): boolean {
-  return readDictionary(config).some(([, block]) => readLocations(block).length > 0);
+  return blocksOf(readLocationsDictionary(config)).some(
+    ([, block]) => readLocations(block).length > 0
+  );
 }
 
-function readDictionary(
-  config: Config | null | undefined
+function blocksOf(
+  dictionary: Record<string, unknown> | null
 ): Array<[string, Record<string, unknown>]> {
-  const dictionary = readLocationsDictionary(config);
   if (!dictionary) return [];
 
   const entries: Array<[string, Record<string, unknown>]> = [];
@@ -83,24 +81,54 @@ function readDictionary(
   return entries;
 }
 
+/** What the form gives the 3D viewer so a pick can write back to the config. */
+export interface IFormBindingOptions {
+  config?: Config | null;
+  onConfigChange?: (updater: (previous: Config) => Config) => void;
+  /** Which block dictionary the form is editing. */
+  selectedRootElement?: string;
+  /** The dictionary entry being edited; a pick is appended to this one. */
+  selectedEntry?: string;
+  /** Add a block and open it. Without it, a pick with no block open does nothing. */
+  onCreateEntry?: (rootElement: string, block: Record<string, unknown>) => void;
+}
+
 /** Whether the form selection is one a 3D click can add a location to. */
 export function supportsMorphologyLocationPicking({
   config,
   selectedRootElement,
   selectedEntry,
-}: {
-  config?: Config | null;
-  selectedRootElement?: string;
-  selectedEntry?: string;
-}): boolean {
+}: IFormBindingOptions): boolean {
   if (selectedRootElement !== MORPHOLOGY_LOCATIONS_CONFIG_KEY) return false;
   return readEntry(config, selectedEntry)?.type === EXPLICIT_BLOCK_TYPE;
 }
 
-/**
- * Set while the pointer is on the "add locations from the 3D viewer" hint.
- *
- * Why jotai: the hint is a form widget and the viewer is a sibling pane, so they share no
- * parent worth threading a prop through.
- */
+/** What a 3D click does here: extend the open block, or start a new one. */
+export const MorphologyLocationPickModeDict = {
+  Edit: 'edit',
+  Create: 'create',
+} as const;
+
+/** `null` when a click does nothing. */
+export type TMorphologyLocationPickModeDict =
+  | (typeof MorphologyLocationPickModeDict)[keyof typeof MorphologyLocationPickModeDict]
+  | null;
+
+/** One rule for whether picking is on, used by both the viewer host and the pick handler. */
+export function morphologyLocationPickMode({
+  config,
+  selectedRootElement,
+  selectedEntry,
+  onConfigChange,
+  onCreateEntry,
+}: IFormBindingOptions): TMorphologyLocationPickModeDict {
+  if (supportsMorphologyLocationPicking({ config, selectedRootElement, selectedEntry })) {
+    return onConfigChange ? MorphologyLocationPickModeDict.Edit : null;
+  }
+  return onCreateEntry && readLocationsDictionary(config) !== null
+    ? MorphologyLocationPickModeDict.Create
+    : null;
+}
+
+/** Set while the pointer is on the "add locations from the 3D viewer" hint. */
 export const morphologyLocationsHintHoveredAtom = atom(false);

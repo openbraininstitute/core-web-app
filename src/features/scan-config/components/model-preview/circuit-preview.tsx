@@ -1,6 +1,5 @@
 import { RiCloseLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
-import chroma from 'chroma-js';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
@@ -17,6 +16,7 @@ import {
   type ViewerMode,
   ViewerModeDict,
 } from '@/features/scan-config/components/color-by/mode-toggle';
+import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { useFullscreenElement } from '@/features/scan-config/components/color-by/use-fullscreen-element';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
@@ -25,8 +25,11 @@ import {
   type ICircuitOverlayGroup,
   scopeOverlaysToSelection,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview';
 import {
   hasAnyLocation,
+  type IFormBindingOptions,
+  morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -37,12 +40,9 @@ import {
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
-import { LargeCircuitPreview } from './large-circuit-preview';
-
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
-import type { Config } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const MIN_TABLE_HEIGHT = 280;
@@ -86,16 +86,6 @@ interface ICircuitPreviewProps {
 }
 
 /** The form binding every feature that edits config from the 3D view reads. */
-export interface IFormBindingOptions {
-  /** Live scan-config. */
-  config?: Config;
-  /** Enables editing from 3D; omit for read-only hosts. */
-  onConfigChange?: (newConfig: Config | ((prev: Config) => Config)) => void;
-  /** Schema root currently selected in the form (`electrode_locations`, `recordings`, …). */
-  selectedRootElement?: string;
-  /** Dictionary entry name currently selected; the one a 3D edit writes into. */
-  selectedEntry?: string;
-}
 
 /** The stored electrode-overlay source and which of its electrodes to draw. */
 export interface IElectrodeOverlayOptions {
@@ -138,6 +128,7 @@ export function CircuitPreview({
     onConfigChange: setConfig,
     selectedRootElement,
     selectedEntry,
+    onCreateEntry,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -179,10 +170,22 @@ export function CircuitPreview({
 
   const canPickMorphologyLocations =
     !largeCircuit &&
-    supportsMorphologyLocationPicking({ config: scanConfig, selectedRootElement, selectedEntry });
-  // Markers stay on screen outside their block, so their settings do too.
+    morphologyLocationPickMode({
+      config: scanConfig,
+      selectedRootElement,
+      selectedEntry,
+      onConfigChange: setConfig,
+      onCreateEntry,
+    }) !== null;
+  // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
-    !largeCircuit && (canPickMorphologyLocations || hasAnyLocation(scanConfig));
+    !largeCircuit &&
+    (supportsMorphologyLocationPicking({
+      config: scanConfig,
+      selectedRootElement,
+      selectedEntry,
+    }) ||
+      hasAnyLocation(scanConfig));
 
   const {
     overlays,
@@ -344,6 +347,7 @@ export function CircuitPreview({
               onConfigChange: setConfig,
               selectedRootElement,
               selectedEntry,
+              onCreateEntry,
               markerRadius: config.morphologyLocationRadius,
               showLabels: config.showMorphologyLocationLabels,
             }}
@@ -384,7 +388,7 @@ export function CircuitPreview({
             menu,
             colorBy: enableColorBy ? colorBy : undefined,
             electrodesInteractive: overlaysInteractive,
-            morphologyLocationsInteractive: canPickMorphologyLocations && Boolean(setConfig),
+            morphologyLocationsInteractive: canPickMorphologyLocations,
           }}
         />
       )}
@@ -541,23 +545,8 @@ function styleOverlaysForSelection(
   return overlays.map((group) => {
     const legible = forceOpaqueRgb(adaptColorToBackground(group.color, background));
     if (!selectedId || group.id === selectedId) return { ...group, color: legible };
-    return { ...group, color: recedeColor(legible, background) };
+    return { ...group, color: recedeMarkerColor(legible, background) };
   });
-}
-
-/**
- * Non-selected electrodes: keep the hue, drop its intensity.
- *
- * Why not mix toward grey: at a 5-unit radius a greyed marker loses the one cue
- * that says *which* probe it is. Desaturating and easing toward the background
- * pushes it back without discarding its identity.
- */
-function recedeColor(color: string, background: string): string {
-  try {
-    return chroma.mix(chroma(color).desaturate(1.4), background, 0.18, 'oklab').hex();
-  } catch {
-    return color;
-  }
 }
 
 /** Strip any CSS alpha so morphoviewer palette texels stay fully opaque. */

@@ -2,14 +2,14 @@
 
 import { get } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import {
   ScanConfigMainOverlayProvider,
   useScanConfigMainOverlayOptional,
 } from '@/features/scan-config/bridge/main-overlay-context';
-import { useEntries } from '@/features/scan-config/components/hooks';
+import { nextEntryName, useEntries } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
@@ -40,7 +40,7 @@ import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletoniza
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
-import { clearDiffStateAtom } from '@/state/config-highlights';
+import { clearDiffStateAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -129,6 +129,31 @@ function ScanConfigTemplateContent({
     resolveFromIdType: resolveSessionFromIdType,
   });
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
+  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
+
+  const createEntry = useCallback(
+    (rootElement: string, block: Record<string, unknown>) => {
+      const entry = nextEntryName(schema, rootElement, allEntries);
+      allEntries.add(entry);
+
+      setConfig(
+        (previous) =>
+          ({
+            ...previous,
+            [rootElement]: { ...(previous[rootElement] as object), [entry]: block },
+          }) as Config
+      );
+
+      // Selecting alone only highlights the tab; the form opens on `editing`.
+      setExpandedRootElements((previous) => new Set(previous).add(rootElement));
+      setSelectedRootElement(rootElement);
+      setSelectedEntry(entry);
+      setEditing(true);
+      setIsEditingKey(false);
+      setNewKey('');
+    },
+    [schema, allEntries, setConfig, setExpandedRootElements]
+  );
 
   const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
@@ -349,6 +374,7 @@ function ScanConfigTemplateContent({
               entity={entity}
               selectedEntry={selectedEntry}
               selectedRootElement={selectedRootElement}
+              onCreateEntry={createEntry}
               config={config}
               setConfig={setConfig}
               schema={schema}

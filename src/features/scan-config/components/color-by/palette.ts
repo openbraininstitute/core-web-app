@@ -276,6 +276,20 @@ function hashName(name: string): number {
   return Math.abs(hash);
 }
 
+/**
+ * Push a marker back when its block is not selected.
+ *
+ * Not grey: a small grey marker loses the cue that says which block it is. Stays opaque —
+ * a translucent marker lets the circuit show through it.
+ */
+export function recedeMarkerColor(color: string, background: string): string {
+  try {
+    return chroma.mix(chroma(color).desaturate(1.4), background, 0.18, 'oklab').hex();
+  } catch {
+    return color;
+  }
+}
+
 /** Colour for a block's morphology-location markers. */
 export function morphologyLocationsColor(entry: string): string {
   return categoricalColor(blockPaletteIndex(entry, MORPHOLOGY_LOCATION_COLOR_SLOTS));

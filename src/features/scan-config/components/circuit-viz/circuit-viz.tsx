@@ -2,21 +2,22 @@ import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
+import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
-import { useMorphologyLocationSelection } from '@/features/scan-config/components/model-preview/use-morphology-location-selection';
 import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 
-import { MorphologyLocationLabels } from './morphology-location-labels';
-import { MorphologyLocationPopover } from './morphology-location-popover';
+import { MorphologyLocationLabels } from './morphology-location/labels';
+import { MorphologyLocationPopover } from './morphology-location/popover';
 import { sequentialCellLoader } from './sequential-loader';
 import { useCircuitSynapses, useObiOneVizSource } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { Cell, Config } from '@/features/scan-config/types';
+import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import type { Cell } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 import type { SmallCircuitSource } from './sources';
 
@@ -82,11 +83,7 @@ interface CircuitVizProps {
   morphologyLocations?: IMorphologyLocationsBinding;
 }
 
-export interface IMorphologyLocationsBinding {
-  config?: Config | null;
-  onConfigChange?: (updater: (previous: Config) => Config) => void;
-  selectedRootElement?: string;
-  selectedEntry?: string;
+export interface IMorphologyLocationsBinding extends IFormBindingOptions {
   /** Marker radius in world units, from the viewer settings slider. */
   markerRadius?: number;
   /** Show a `Type[section]` tag beside each location, from the viewer settings toggle. */
@@ -137,10 +134,12 @@ function CircuitVizView({
     selection: locationSelection,
     hover: locationHover,
     labels: locationLabels,
+    pickMode: locationPickMode,
   } = useMorphologyLocationSelection({
     ...morphologyLocations,
     cells: source.cells,
     sonataSectionIds: source.sonataSectionIds,
+    backgroundColor,
   });
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
@@ -277,7 +276,7 @@ function CircuitVizView({
         />
       )}
       <MorphologyLocationLabels labels={locationLabels} />
-      <MorphologyLocationPopover hover={locationHover} />
+      <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
       {loading && <VisualizationLoadingIndicator progress={progress} />}
       {error && (
         <div
