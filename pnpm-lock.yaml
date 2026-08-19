@@ -57,8 +57,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: 0.32.3
-        version: 0.32.3(react@19.2.6)
+        specifier: 0.32.4
+        version: 0.32.4(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -2912,8 +2912,8 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@0.32.3':
-    resolution: {integrity: sha512-ZfJGbhlPAazacBr8ERYkywyAfNjkYYHhDZ4ET2Y5Bd+bH0hwfG+WDJLkpnpgiRQxPCKIZvulhcXIvrNMOTpBjg==}
+  '@openbraininstitute/morphoviewer@0.32.4':
+    resolution: {integrity: sha512-+W1BQ+BLr3JJUCjyyNht/aJ7kJc2RYxBaaPyGcp9cZ7DvavnX1bGiUhFxeXOW03dN7sQKEiBkCCtDPnUxPdnGQ==}
     peerDependencies:
       react: ^19.2.5
 
@@ -13591,7 +13591,7 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@0.32.3(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@0.32.4(react@19.2.6)':
     dependencies:
       '@tolokoban/tgd': 2.4.0
       fflate: 0.8.3
