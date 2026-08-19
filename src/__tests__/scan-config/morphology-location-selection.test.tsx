@@ -6,6 +6,7 @@ import {
   buildSonataSectionIdIndex,
 } from '@/features/scan-config/components/circuit-viz/build-morpho-tree';
 import {
+  readAllLocations,
   readEntry,
   readLocations,
   supportsMorphologyLocationPicking,
@@ -228,5 +229,43 @@ describe('useMorphologyLocationSelection picking', () => {
 
     expect(onConfigChange).not.toHaveBeenCalled();
     expect(infos.join(' ')).toMatch(/section ids/i);
+  });
+});
+
+describe('readAllLocations', () => {
+  it('gathers the rows of every explicit block', () => {
+    const config = {
+      morphology_locations: {
+        first: { type: 'ExplicitMorphologyLocations', locations: [{ section_id: 3, offset: 0.1 }] },
+        second: {
+          type: 'ExplicitMorphologyLocations',
+          locations: [
+            { section_id: 5, offset: 0.2 },
+            { section_id: 7, offset: 0.3 },
+          ],
+        },
+      },
+    } as unknown as Config;
+
+    expect(readAllLocations(config).map((row) => row.section_id)).toEqual([3, 5, 7]);
+  });
+
+  it('ignores blocks that only describe how to sample', () => {
+    const config = {
+      morphology_locations: {
+        explicit: {
+          type: 'ExplicitMorphologyLocations',
+          locations: [{ section_id: 3, offset: 0.1 }],
+        },
+        sampled: { type: 'RandomMorphologyLocations', number_of_locations: 20 },
+      },
+    } as unknown as Config;
+
+    expect(readAllLocations(config)).toHaveLength(1);
+  });
+
+  it('is empty when there is no morphology-locations dictionary at all', () => {
+    expect(readAllLocations({} as Config)).toEqual([]);
+    expect(readAllLocations(null)).toEqual([]);
   });
 });

@@ -11,6 +11,7 @@ import {
 import {
   EXPLICIT_BLOCK_TYPE,
   type IStoredLocation,
+  readAllLocations,
   readEntry,
   readLocations,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -85,9 +86,11 @@ export function useMorphologyLocationSelection({
   const block = readEntry(config, selectedEntry);
   const isExplicit =
     selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY && block?.type === EXPLICIT_BLOCK_TYPE;
+  // Editing a block shows that block's rows; anywhere else shows every block's, so locations
+  // already placed stay on screen instead of vanishing when the user looks at something else.
   const storedLocations = useMemo<IStoredLocation[]>(
-    () => (isExplicit ? readLocations(block) : []),
-    [isExplicit, block]
+    () => (isExplicit ? readLocations(block) : readAllLocations(config)),
+    [isExplicit, block, config]
   );
 
   const selected = useMemo<TLocationMarker[]>(() => {
@@ -195,21 +198,26 @@ export function useMorphologyLocationSelection({
 
   // Typed wider than the package so the option compiles against a viewer that predates it;
   // an older viewer simply ignores the extra field.
-  const selection = useMemo(
-    () =>
-      isExplicit
-        ? {
-            selected,
-            onPick,
-            onHover: setHover,
-            radius: markerRadius,
-            // So the hand cursor only appears where a click would be accepted.
-            pickableSectionTypes: TARGETABLE_SECTION_TYPES,
-            onLabelsChange: showLabels ? onLabelsChange : undefined,
-          }
-        : undefined,
-    [isExplicit, selected, onPick, markerRadius, showLabels, onLabelsChange]
-  );
+  const selection = useMemo(() => {
+    if (selected.length === 0 && !isExplicit) return undefined;
+
+    if (!isExplicit) {
+      // Read-only: the markers show what exists, but nothing here is the user's to edit until
+      // they open the block. An empty `pickableSectionTypes` keeps the hand cursor away, and
+      // without `onHover` there is no popover offering a click that would do nothing.
+      return { selected, onPick: noop, radius: markerRadius, pickableSectionTypes: NONE_PICKABLE };
+    }
+
+    return {
+      selected,
+      onPick,
+      onHover: setHover,
+      radius: markerRadius,
+      // So the hand cursor only appears where a click would be accepted.
+      pickableSectionTypes: TARGETABLE_SECTION_TYPES,
+      onLabelsChange: showLabels ? onLabelsChange : undefined,
+    };
+  }, [isExplicit, selected, onPick, markerRadius, showLabels, onLabelsChange]);
 
   return {
     selection,
@@ -217,6 +225,11 @@ export function useMorphologyLocationSelection({
     labels: isExplicit && showLabels ? labels : [],
   };
 }
+
+/** No section accepts a click, so the viewer never offers one. */
+const NONE_PICKABLE: readonly number[] = [];
+
+function noop() {}
 
 function resolveLocationIndex(
   locations: IStoredLocation[],

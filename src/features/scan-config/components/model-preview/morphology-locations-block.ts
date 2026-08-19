@@ -41,6 +41,21 @@ export function readLocations(block: Record<string, unknown> | null): IStoredLoc
   return readLocationRows(block.locations);
 }
 
+/**
+ * Every explicit block's rows, in dictionary order.
+ *
+ * For showing what already exists while the form is on some other block: the locations stay
+ * on screen instead of vanishing the moment the user looks away from them.
+ */
+export function readAllLocations(config: Config | null | undefined): IStoredLocation[] {
+  const dictionary = config?.[MORPHOLOGY_LOCATIONS_CONFIG_KEY];
+  if (!isObject(dictionary)) return [];
+
+  return Object.values(dictionary).flatMap((block) =>
+    isObject(block) ? readLocations(block) : []
+  );
+}
+
 /** Whether the form selection is one a 3D click can add a location to. */
 export function supportsMorphologyLocationPicking({
   config,
