@@ -15,6 +15,16 @@ export function circuitMorphologyPath(circuitId: string, file: string, name?: st
 }
 
 /**
+ * An MEModel's morphology, in the same `Sections` shape as {@link circuitMorphologyPath}.
+ *
+ * Its own route because an MEModel is not stored as a Circuit: OBI-One serves it from the
+ * cell morphology asset rather than from a SONATA directory.
+ */
+export function memodelMorphologyPath(memodelId: string): string {
+  return `/memodel/viz/${memodelId}/morphology`;
+}
+
+/**
  * GET a `/circuit/viz` resource as JSON.
  *
  * Returns `unknown`: every caller parses the body with the zod schema for that endpoint, so

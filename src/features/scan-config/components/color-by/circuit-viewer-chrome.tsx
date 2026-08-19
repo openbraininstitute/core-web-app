@@ -22,6 +22,10 @@ export interface ICircuitViewerChromeProps {
   /** Current viewer mode. Omit with `onModeChange` when image mode is unavailable. */
   mode?: ViewerMode;
   onModeChange?: (mode: ViewerMode) => void;
+  /** Offer the dendrogram tab alongside 3D and image. */
+  showDendrogram?: boolean;
+  /** Offer the image tab. */
+  showImageMode?: boolean;
   /** background-derived theme (adaptive mode), or null for the fixed default */
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
@@ -52,6 +56,8 @@ export interface ICircuitViewerChromeProps {
 export function CircuitViewerChrome({
   mode,
   onModeChange,
+  showDendrogram,
+  showImageMode,
   theme,
   table,
   viz,
@@ -104,7 +110,14 @@ export function CircuitViewerChrome({
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        {mode != null && onModeChange && <ModeToggle mode={mode} onChange={onModeChange} />}
+        {mode != null && onModeChange && (
+          <ModeToggle
+            mode={mode}
+            onChange={onModeChange}
+            showDendrogram={showDendrogram}
+            showImage={showImageMode}
+          />
+        )}
         {table && (
           <ChromeButton
             label={table.active ? 'Hide nodes table' : 'Show nodes table'}

@@ -11,7 +11,7 @@ import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 import { MorphologyLocationLabels } from './morphology-location-labels';
 import { MorphologyLocationPopover } from './morphology-location-popover';
 import { sequentialCellLoader } from './sequential-loader';
-import { circuitDrawsSynapses, useSmallCircuitSource } from './sources';
+import { circuitDrawsSynapses, useMemodelVizSource, useSmallCircuitSource } from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -86,6 +86,8 @@ interface CircuitVizProps {
    * need the loaded cells, which only this component has.
    */
   morphologyLocations?: IMorphologyLocationsBinding;
+  /** Morph the cell into a dendrogram of the same segments. */
+  dendrogram?: boolean;
 }
 
 export interface IMorphologyLocationsBinding {
@@ -119,7 +121,7 @@ function CircuitViz(props: CircuitVizProps) {
   return <CircuitVizView {...props} source={source} />;
 }
 
-/** The view reads no entity fields, so it serves any small-circuit source. */
+/** The view reads no entity fields, so it serves circuits and MEModels alike. */
 type TCircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
   source: SmallCircuitSource;
 };
@@ -138,6 +140,7 @@ function CircuitVizView({
   features,
   source,
   morphologyLocations,
+  dendrogram = false,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -261,6 +264,7 @@ function CircuitVizView({
           gizmo
           key={reloadNonce}
           className={styles.morphoViewer}
+          dendrogram={dendrogram}
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           signals={signals}
@@ -311,3 +315,22 @@ function CircuitVizView({
 }
 
 export default CircuitViz;
+
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source'> & {
+  memodelId: string;
+};
+
+/**
+ * Single-neuron GPU surface, on the same viewer as single/pair/small circuits.
+ *
+ * An MEModel is not a Circuit, so it is served from its cell morphology instead — same section
+ * shape, same numbering, so a click becomes a morphology location here too.
+ */
+export function MemodelViz({ memodelId, ...props }: TMemodelVizProps) {
+  const source = useMemodelVizSource({
+    memodelId,
+    showAxons: props.showAxons,
+    colorsByNode: props.colorsByNode,
+  });
+  return <CircuitVizView {...props} source={source} />;
+}
