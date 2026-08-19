@@ -11,7 +11,15 @@ export function makeNodeKey(circuitId: string, index: number): string {
   return `${circuitId} #${index}`;
 }
 
-/** The id the viewer addresses a cell by; the query part is its axon-toggle reload key. */
+/**
+ * The id the viewer addresses a cell by; the query part is its axon-toggle
+ * reload key.
+ *
+ * Worth knowing when reading it back: morphoviewer splits the id on `?` and
+ * calls `loadCell` with the path part alone, so a handler is handed the node
+ * key rather than the id the viewer is holding. Anything indexed against what
+ * the viewer knows — `sonataSectionIds`, say — has to be re-keyed through this.
+ */
 export function makeVizCellId(nodeKey: string, showAxons: boolean): string {
   return `${nodeKey}?axons=${showAxons}`;
 }
