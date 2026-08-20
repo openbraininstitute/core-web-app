@@ -20,14 +20,11 @@ import {
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ISpikeReplayBinding } from '@/features/circuit-viewer/circuit-scene';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
-import type {
-  MorphoViewerOverlayTransformEvent,
-  MorphoViewerSignals,
-  MorphoViewerSmallCircuitSpikes,
-} from '@/morpho-viewer';
+import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 import type { SmallCircuitSource } from './sources';
 
 import styles from './circuit-viz.module.css';
@@ -103,29 +100,6 @@ interface CircuitVizProps {
   onZoomChange?: (zoom: number) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
-}
-
-/**
- * A spike replay and the controls driving it.
- *
- * The viewer owns the clock: it advances simulated time on every painted frame
- * and reports where it got to through {@link ISpikeReplayBinding.onTimeChange}.
- * `timeInMs` is therefore a seek, not a mirror — feeding the reported time
- * straight back would fight the animation.
- */
-export interface ISpikeReplayBinding {
-  data?: MorphoViewerSmallCircuitSpikes;
-  /** Move the playhead here. Only read when it changes. */
-  timeInMs?: number;
-  /** The playhead on every painted frame. Throttle before putting it in state. */
-  onTimeChange?(timeInMs: number): void;
-  playing?: boolean;
-  /** Also fires with `false` when playback reaches the end of the recording. */
-  onPlayingChange?(playing: boolean): void;
-  /** Simulated milliseconds per wall-clock second. */
-  speed?: number;
-  /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
-  afterglowInSeconds?: number;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {

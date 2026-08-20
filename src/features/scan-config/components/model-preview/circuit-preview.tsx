@@ -1,6 +1,6 @@
 import { RiImageLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 
 import { getAsset } from '@/api/entitycore/selectors/assets';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -21,9 +21,6 @@ import type {
 } from '@/features/circuit-viewer/circuit-scene';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
-
-// Re-exported for the hosts that still import it from here; it lives on the scene now.
-export type { IElectrodeOverlayOptions };
 
 const ViewerModeDict = {
   Visualization: 'viz',
@@ -124,33 +121,30 @@ export function CircuitPreview({
   const mountImage = Boolean(circuit) && (hasDesignerImage || !enableVisualization);
   const mountViz = enableVisualization;
 
-  const modeToggle = useMemo<IViewerModeOption[]>(() => {
-    const options: IViewerModeOption[] = [
-      {
-        label: '3D visualization',
-        icon: <View3d className="size-4" />,
-        active: activeMode === ViewerModeDict.Visualization,
-        onSelect: () => setMode(ViewerModeDict.Visualization),
-      },
-    ];
-    if (hasDesignerImage) {
-      options.push({
-        label: 'Image',
-        icon: <RiImageLine className="size-4" />,
-        active: showImage,
-        onSelect: () => setMode(ViewerModeDict.Image),
-      });
-    }
-    if (supportsDendrogram) {
-      options.push({
-        label: 'Dendrogram',
-        icon: <FamilyTree className="size-4" />,
-        active: showDendrogram,
-        onSelect: () => setMode(ViewerModeDict.Dendrogram),
-      });
-    }
-    return options;
-  }, [activeMode, hasDesignerImage, showImage, supportsDendrogram, showDendrogram]);
+  const modeToggle: IViewerModeOption[] = [
+    {
+      label: '3D visualization',
+      icon: <View3d className="size-4" />,
+      active: activeMode === ViewerModeDict.Visualization,
+      onSelect: () => setMode(ViewerModeDict.Visualization),
+    },
+  ];
+  if (hasDesignerImage) {
+    modeToggle.push({
+      label: 'Image',
+      icon: <RiImageLine className="size-4" />,
+      active: showImage,
+      onSelect: () => setMode(ViewerModeDict.Image),
+    });
+  }
+  if (supportsDendrogram) {
+    modeToggle.push({
+      label: 'Dendrogram',
+      icon: <FamilyTree className="size-4" />,
+      active: showDendrogram,
+      onSelect: () => setMode(ViewerModeDict.Dendrogram),
+    });
+  }
 
   return (
     <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">

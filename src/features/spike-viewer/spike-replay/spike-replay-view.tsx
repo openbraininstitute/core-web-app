@@ -42,9 +42,10 @@ interface SpikeReplayViewProps {
  * A simulation's spikes as a raster, as a 3D replay over the circuit that
  * produced them, or both at once.
  *
- * Both panes stay mounted in every mode. Switching views must not tear down the
- * WebGL context and re-download every morphology, which is what unmounting the
- * 3D scene would cost.
+ * The 3D scene mounts the first time it is asked for and stays mounted from
+ * then on. Switching views must not tear down the WebGL context and re-download
+ * every morphology — but that only means keeping it after the first look, not
+ * building it for the majority who open a spike file and read the raster.
  */
 export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const [mode, setMode] = useState<ReplayMode>(MODES.Raster);
@@ -63,6 +64,15 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
 
   const spikes = useMemo(() => spikesToViewer(data, population?.name), [data, population]);
   const replayable = spikes !== null;
+  const showScene = mode !== MODES.Raster;
+  const showRaster = mode !== MODES.Replay;
+  const isSplit = mode === MODES.Split;
+
+  // Latches on: see the note above about what unmounting would cost.
+  const [sceneMounted, setSceneMounted] = useState(false);
+  useEffect(() => {
+    if (showScene) setSceneMounted(true);
+  }, [showScene]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -88,14 +98,12 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
       () => setReadoutTimeInMs(liveTimeRef.current),
       READOUT_INTERVAL_IN_MS
     );
-    return () => window.clearInterval(interval);
-  }, [playing]);
-
-  // Settling on the exact frame playback stopped at, which the sampler above
-  // will have missed by up to its own interval.
-  useEffect(() => {
-    if (playing) return;
-    setReadoutTimeInMs(liveTimeRef.current);
+    // Cleanup settles on the exact frame playback stopped at, which the sampler
+    // will have missed by up to its own interval.
+    return () => {
+      window.clearInterval(interval);
+      setReadoutTimeInMs(liveTimeRef.current);
+    };
   }, [playing]);
 
   const handleSeek = useCallback((timeInMs: number) => {
@@ -105,9 +113,10 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
     playheadRef.current?.(timeInMs);
   }, []);
 
-  // One-shot: the viewer has moved on by the time this clears, and holding the
-  // value would re-seek it on the next unrelated render. Children's effects run
-  // before this one, so the seek always lands first.
+  // One-shot, so that seeking twice to the same millisecond still seeks: held,
+  // the second Restart during playback would be no state change, hence no
+  // re-seek, and the button would go dead. Children's effects run before this
+  // one, so the seek always lands before it is cleared.
   useEffect(() => {
     if (seekToMs === undefined) return;
     setSeekToMs(undefined);
@@ -119,46 +128,28 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
     if (mode === MODES.Raster || !replayable) setPlaying(false);
   }, [mode, replayable]);
 
-  const modeOptions = useMemo(
-    () => [
-      {
-        label: 'Raster plot',
-        icon: <RiBarChart2Line className="size-4" />,
-        active: mode === MODES.Raster,
-        onSelect: () => setMode(MODES.Raster),
-      },
-      {
-        label: '3D spike replay',
-        icon: <RiBox3Line className="size-4" />,
-        active: mode === MODES.Replay,
-        onSelect: () => setMode(MODES.Replay),
-      },
-      {
-        label: 'Raster and replay',
-        icon: <RiLayoutRowLine className="size-4" />,
-        active: mode === MODES.Split,
-        onSelect: () => setMode(MODES.Split),
-      },
-    ],
-    [mode]
-  );
+  const modeOptions = [
+    {
+      label: 'Raster plot',
+      icon: <RiBarChart2Line className="size-4" />,
+      active: mode === MODES.Raster,
+      onSelect: () => setMode(MODES.Raster),
+    },
+    {
+      label: '3D spike replay',
+      icon: <RiBox3Line className="size-4" />,
+      active: mode === MODES.Replay,
+      onSelect: () => setMode(MODES.Replay),
+    },
+    {
+      label: 'Raster and replay',
+      icon: <RiLayoutRowLine className="size-4" />,
+      active: mode === MODES.Split,
+      onSelect: () => setMode(MODES.Split),
+    },
+  ];
 
-  const showScene = mode !== MODES.Raster;
-  const showRaster = mode !== MODES.Replay;
   const splitHeight = clampSplitHeight(rasterHeight, containerHeight);
-
-  const spikeBinding = useMemo(
-    () => ({
-      data: spikes ?? undefined,
-      timeInMs: seekToMs,
-      onTimeChange: handleTimeChange,
-      playing,
-      onPlayingChange: setPlaying,
-      speed,
-      afterglowInSeconds,
-    }),
-    [spikes, seekToMs, handleTimeChange, playing, speed, afterglowInSeconds]
-  );
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -179,16 +170,26 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
             'absolute left-0 right-0 top-0',
             !showScene && 'invisible pointer-events-none'
           )}
-          style={{ bottom: mode === MODES.Split ? splitHeight : 0 }}
+          style={{ bottom: isSplit ? splitHeight : 0 }}
           aria-hidden={!showScene}
           inert={!showScene || undefined}
         >
-          <CircuitScene
-            circuit={circuit}
-            active={showScene}
-            onPopulationChange={setPopulation}
-            spikes={spikeBinding}
-          />
+          {sceneMounted && (
+            <CircuitScene
+              circuit={circuit}
+              active={showScene}
+              onPopulationChange={setPopulation}
+              spikes={{
+                data: spikes ?? undefined,
+                timeInMs: seekToMs,
+                onTimeChange: handleTimeChange,
+                playing,
+                onPlayingChange: setPlaying,
+                speed,
+                afterglowInSeconds,
+              }}
+            />
+          )}
         </div>
 
         <div
@@ -196,11 +197,11 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
             'absolute left-0 right-0 bottom-0',
             !showRaster && 'invisible pointer-events-none'
           )}
-          style={mode === MODES.Split ? { height: splitHeight } : { top: 0 }}
+          style={isSplit ? { height: splitHeight } : { top: 0 }}
           aria-hidden={!showRaster}
           inert={!showRaster || undefined}
         >
-          {mode === MODES.Split && (
+          {isSplit && (
             <PaneResizeHandle
               containerRef={containerRef}
               minHeight={MIN_PANE_HEIGHT}
@@ -209,7 +210,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
           )}
           <RasterPlot
             data={data}
-            playheadRef={playheadRef}
+            playheadRef={showRaster ? playheadRef : undefined}
             onSeek={replayable ? handleSeek : undefined}
           />
         </div>

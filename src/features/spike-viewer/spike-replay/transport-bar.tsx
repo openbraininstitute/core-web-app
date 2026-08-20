@@ -137,6 +137,7 @@ export function TransportBar({
               min={0.05}
               max={2}
               step={0.05}
+              disabled={disabled}
               onChange={onAfterglowChange}
               tooltip={{ formatter: null }}
             />

@@ -1,4 +1,5 @@
 import { RiCloseLine } from '@remixicon/react';
+import chroma from 'chroma-js';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -39,10 +40,12 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { ISpikeReplayBinding } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
-import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
+import type {
+  MorphoViewerOverlayTransformEvent,
+  MorphoViewerSmallCircuitSpikes,
+} from '@/morpho-viewer';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
@@ -57,6 +60,29 @@ export interface IElectrodeOverlayOptions {
    * then also owns it: the viewer's own show/hide toggle stops gating them.
    */
   visibleIds?: readonly string[];
+}
+
+/**
+ * A spike replay and the controls driving it.
+ *
+ * The viewer owns the clock: it advances simulated time on every painted frame
+ * and reports where it got to through {@link ISpikeReplayBinding.onTimeChange}.
+ * `timeInMs` is therefore a seek, not a mirror — feeding the reported time
+ * straight back would fight the animation.
+ */
+export interface ISpikeReplayBinding {
+  data?: MorphoViewerSmallCircuitSpikes;
+  /** Move the playhead here. Only read when it changes. */
+  timeInMs?: number;
+  /** The playhead on every painted frame. Throttle before putting it in state. */
+  onTimeChange?(timeInMs: number): void;
+  playing?: boolean;
+  /** Also fires with `false` when playback reaches the end of the recording. */
+  onPlayingChange?(playing: boolean): void;
+  /** Simulated milliseconds per wall-clock second. */
+  speed?: number;
+  /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
+  afterglowInSeconds?: number;
 }
 
 /** The MEModel on show. Only its id and name are read here. */
@@ -181,10 +207,6 @@ export function CircuitScene({
   useEffect(() => {
     onPopulationChange?.(population);
   }, [population, onPopulationChange]);
-
-  const handlePopulationChange = useCallback((name: string) => {
-    setPopulationName(name);
-  }, []);
 
   // Every small-circuit source filters axon sections, so the toggle is offered wherever the
   // morphology itself is drawn.
@@ -358,45 +380,15 @@ export function CircuitScene({
     // a designer image, a raster — has to stay clickable through the gaps. The
     // canvas and the chrome buttons each opt back in.
     <div ref={containerRef} className="pointer-events-none relative h-full min-h-0 overflow-hidden">
-      {!largeCircuit && (
-        <div
-          className={classNames(
-            'absolute inset-0',
-            active ? 'pointer-events-auto' : 'invisible pointer-events-none'
-          )}
-          aria-hidden={!active}
-          inert={!active || undefined}
-        >
-          {memodel ? (
-            <MemodelVisualization
-              key={memodel.id}
-              memodelId={memodel.id}
-              dendrogram={dendrogram}
-              {...sharedVizProps}
-            />
-          ) : (
-            circuit && (
-              <CircuitVisualization
-                key={circuit.id}
-                circuit={circuit}
-                population={population}
-                colorsByNode={enableColorBy ? colorsByNode : undefined}
-                defaultColor={defaultColor}
-                {...sharedVizProps}
-              />
-            )
-          )}
-        </div>
-      )}
-      {largeCircuit && circuit && (
-        <div
-          className={classNames(
-            'absolute inset-0',
-            active ? 'pointer-events-auto' : 'invisible pointer-events-none'
-          )}
-          aria-hidden={!active}
-          inert={!active || undefined}
-        >
+      <div
+        className={classNames(
+          'absolute inset-0',
+          active ? 'pointer-events-auto' : 'invisible pointer-events-none'
+        )}
+        aria-hidden={!active}
+        inert={!active || undefined}
+      >
+        {largeCircuit && circuit ? (
           <LargeCircuitPreview
             key={circuit.id}
             circuit={circuit}
@@ -413,8 +405,26 @@ export function CircuitScene({
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
           />
-        </div>
-      )}
+        ) : memodel ? (
+          <MemodelVisualization
+            key={memodel.id}
+            memodelId={memodel.id}
+            dendrogram={dendrogram}
+            {...sharedVizProps}
+          />
+        ) : (
+          circuit && (
+            <CircuitVisualization
+              key={circuit.id}
+              circuit={circuit}
+              population={population}
+              colorsByNode={enableColorBy ? colorsByNode : undefined}
+              defaultColor={defaultColor}
+              {...sharedVizProps}
+            />
+          )
+        )}
+      </div>
 
       <CircuitViewerChrome
         modeToggle={modeToggle}
@@ -450,7 +460,7 @@ export function CircuitScene({
           <CircuitNodesTable
             circuit={circuit}
             populationName={populationName}
-            onPopulationChange={handlePopulationChange}
+            onPopulationChange={setPopulationName}
             portalContainer={portalContainer}
           />
         </div>
@@ -484,34 +494,17 @@ function styleOverlaysForSelection(
   });
 }
 
-/** Strip any CSS alpha so morphoviewer palette texels stay fully opaque. */
+/**
+ * Strip any CSS alpha so morphoviewer palette texels stay fully opaque.
+ *
+ * Same `try`/`catch` shape as {@link adaptColorToBackground} and
+ * {@link recedeMarkerColor}, the two functions this one sits between: a colour
+ * chroma cannot read is passed through rather than thrown away.
+ */
 function forceOpaqueRgb(color: string): string {
-  const rgb = parseCssColor(color);
-  if (!rgb) return color;
-  return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-}
-
-/** Parse `#rgb` / `#rrggbb` / `rgb(...)` / `rgba(...)` into RGB channels. */
-function parseCssColor(color: string): [number, number, number] | null {
-  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim());
-  if (hex) {
-    const h = hex[1];
-    if (h.length === 3) {
-      return [
-        Number.parseInt(h[0] + h[0], 16),
-        Number.parseInt(h[1] + h[1], 16),
-        Number.parseInt(h[2] + h[2], 16),
-      ];
-    }
-    return [
-      Number.parseInt(h.slice(0, 2), 16),
-      Number.parseInt(h.slice(2, 4), 16),
-      Number.parseInt(h.slice(4, 6), 16),
-    ];
+  try {
+    return chroma(color).alpha(1).hex();
+  } catch {
+    return color;
   }
-  const rgb = /^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i.exec(color.trim());
-  if (rgb) {
-    return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
-  }
-  return null;
 }

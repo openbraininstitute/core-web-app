@@ -26,7 +26,7 @@ export interface ICircuitViewerChromeProps {
    * Whether the 3D controls apply right now. `false` hides them while keeping
    * them mounted, so switching to another view and back does not remount them.
    */
-  vizActive?: boolean;
+  vizActive: boolean;
   /** background-derived theme (adaptive mode), or null for the fixed default */
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
@@ -58,7 +58,7 @@ export interface ICircuitViewerChromeProps {
  */
 export function CircuitViewerChrome({
   modeToggle,
-  vizActive = true,
+  vizActive,
   theme,
   table,
   viz,
@@ -129,7 +129,7 @@ export function CircuitViewerChrome({
         </div>
       )}
       <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        {modeToggle && modeToggle.length > 1 && <ModeToggle options={modeToggle} />}
+        {modeToggle && <ModeToggle options={modeToggle} />}
         {table && (
           <ChromeButton
             label={table.active ? 'Hide nodes table' : 'Show nodes table'}
