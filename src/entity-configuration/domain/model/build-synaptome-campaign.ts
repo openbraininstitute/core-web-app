@@ -123,7 +123,7 @@ export const BuildSynaptomeCampaign: EntityCoreTypeConfig<
   TResolvedBuildSynaptomeByCampaigns
 > = {
   group: EntityTypeGroup.Models,
-  title: 'Single neuron synaptome',
+  title: 'Synaptome',
   extendedType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
   type: EntityTypeDict.TaskConfig,
   slug: EntitySlug.BuildSynaptomeCampaign,

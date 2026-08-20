@@ -232,6 +232,7 @@ export function buildSynaptomeConfigureBinding(): TScanConfigConfigureBinding {
       [ExtendedEntitiesTypeDict.Memodel]: ScanConfigFromIdType.MEModelFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.BuildSynaptome,
+    schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }
 

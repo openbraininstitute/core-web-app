@@ -81,9 +81,9 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.Memodel,
     targetType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
-    label: 'Single neuron synaptome',
+    label: 'Synaptome',
     breadcrumb: {
-      root: 'Single neuron synaptome build',
+      root: 'Synaptome build',
       steps: {
         selection: 'Select an ME-model',
       },

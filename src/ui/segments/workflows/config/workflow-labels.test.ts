@@ -49,7 +49,7 @@ describe('workflow naming', () => {
     expect(enabledLabelsInOrder(WorkspaceSection.BuildWorkflow)).toEqual([
       'Ion channel',
       'Single neuron',
-      'Single neuron synaptome',
+      'Synaptome',
       'Electron microscopy circuit',
       'Extracellular recording array',
       'Synaptome (legacy)',

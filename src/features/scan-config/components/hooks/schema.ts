@@ -199,10 +199,20 @@ export function isRootBlockSingle(schema: ConfigSchema, key: string) {
   );
 }
 
+const OPENAPI_FIELD_SIBLING_PROPERTIES = ['title', 'description'];
+
+export async function dereferenceObiOneOpenApi(json: object) {
+  return $RefParser.dereference(json, {
+    dereference: {
+      preservedProperties: OPENAPI_FIELD_SIBLING_PROPERTIES,
+    },
+  });
+}
+
 export async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
   const json = await res.json();
-  const dereferenced = await $RefParser.dereference(json);
+  const dereferenced = await dereferenceObiOneOpenApi(json);
 
   // @ts-expect-error: dereferenced is a JSONSchema6 object, but we know it has the components property
   const theSchema = dereferenced.components.schemas[schemaName] as ConfigSchema;
