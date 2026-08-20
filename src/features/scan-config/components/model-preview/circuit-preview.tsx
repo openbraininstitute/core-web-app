@@ -9,7 +9,10 @@ import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
-import CircuitViz from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import {
+  CircuitVisualization,
+  MemodelVisualization,
+} from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
 import {
@@ -57,9 +60,35 @@ function circuitHasDesignerImage(circuit: ICircuit): boolean {
   );
 }
 
+/**
+ * Which pane the viewer shows. A stale dendrogram choice falls back to 3D, and circuits
+ * without a designer image stay in 3D.
+ */
+function resolveActiveMode({
+  enableVisualization,
+  supportsDendrogram,
+  hasDesignerImage,
+  mode,
+}: {
+  enableVisualization: boolean;
+  supportsDendrogram: boolean;
+  hasDesignerImage: boolean;
+  mode: ViewerMode;
+}): ViewerMode {
+  if (!enableVisualization) return ViewerModeDict.Image;
+  if (mode === ViewerModeDict.Dendrogram) {
+    return supportsDendrogram ? ViewerModeDict.Dendrogram : ViewerModeDict.Visualization;
+  }
+  if (!hasDesignerImage) return ViewerModeDict.Visualization;
+  return mode;
+}
+
 interface ICircuitPreviewProps {
   className?: string;
-  circuit: ICircuit;
+  /** The circuit to preview. Omit for an MEModel and pass {@link memodelId} instead. */
+  circuit?: ICircuit;
+  /** Preview a single MEModel instead of a circuit. */
+  memodelId?: string;
   enableVisualization?: boolean;
   largeCircuit?: boolean;
   /**
@@ -116,6 +145,7 @@ export interface IElectrodeOverlayOptions {
 export function CircuitPreview({
   className,
   circuit,
+  memodelId,
   enableVisualization = false,
   largeCircuit = false,
   features,
@@ -134,21 +164,23 @@ export function CircuitPreview({
   const enableElectrodes = features?.electrodes ?? false;
   const enableColorBy = features?.colorBy ?? true;
   const enableCellHover = features?.cellHover ?? true;
-  const enableNodesTable = features?.nodesTable ?? true;
+  // An MEModel has no nodes file to list.
+  const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
 
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
 
-  const hasDesignerImage = circuitHasDesignerImage(circuit);
-  // Synaptome (beta) / some circuits have no designer image — stay in 3D and
-  // hide the mode toggle so image mode cannot toast "No image found".
-  const activeMode: ViewerMode = !enableVisualization
-    ? ViewerModeDict.Image
-    : !hasDesignerImage
-      ? ViewerModeDict.Visualization
-      : mode;
+  const hasDesignerImage = circuit ? circuitHasDesignerImage(circuit) : false;
+  // The dendrogram tab is only offered on MEModels.
+  const supportsDendrogram = Boolean(memodelId) && enableVisualization;
+  const activeMode = resolveActiveMode({
+    enableVisualization,
+    supportsDendrogram,
+    hasDesignerImage,
+    mode,
+  });
 
   const portalContainer = useFullscreenElement();
 
@@ -294,8 +326,37 @@ export function CircuitPreview({
 
   const vizFeatures = useMemo(() => ({ cellHover: enableCellHover }), [enableCellHover]);
 
+  // Props shared by both viz surfaces.
+  const sharedVizProps = {
+    colorsByNode: enableColorBy ? colorsByNode : undefined,
+    defaultColor,
+    showAxons: config.showAxons,
+    backgroundColor: config.backgroundColor,
+    scalebarColor: theme?.foreground,
+    signals,
+    overlays: styledOverlays,
+    overlaysInteractive,
+    onOverlayTransform: handleOverlayTransform,
+    highlightedOverlayId,
+    neuronOpacity: config.neuronOpacity,
+    electrodeRadius: config.electrodeRadius,
+    features: vizFeatures,
+    morphologyLocations: {
+      config: scanConfig,
+      onConfigChange: setConfig,
+      selectedRootElement,
+      selectedEntry,
+      onCreateEntry,
+      markerRadius: config.morphologyLocationRadius,
+      showLabels: config.showMorphologyLocationLabels,
+    },
+  };
+
+  const hasModeToggle = hasDesignerImage || supportsDendrogram;
   const showImage = activeMode === ViewerModeDict.Image;
-  const showViz = activeMode === ViewerModeDict.Visualization;
+  const showViz =
+    activeMode === ViewerModeDict.Visualization || activeMode === ViewerModeDict.Dendrogram;
+  const showDendrogram = supportsDendrogram && activeMode === ViewerModeDict.Dendrogram;
   // Keep both panes mounted once available so mode switches don't remount
   // WebGL / reload morphologies (visibility only).
   const mountImage = hasDesignerImage || !enableVisualization;
@@ -311,7 +372,7 @@ export function CircuitPreview({
 
   return (
     <div ref={containerRef} className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      {mountImage && (
+      {mountImage && circuit && (
         <div
           className={classNames('absolute inset-0', !showImage && 'invisible pointer-events-none')}
           aria-hidden={!showImage}
@@ -326,36 +387,26 @@ export function CircuitPreview({
           aria-hidden={!showViz}
           inert={!showViz || undefined}
         >
-          <CircuitViz
-            key={circuit.id}
-            circuit={circuit}
-            population={population}
-            colorsByNode={enableColorBy ? colorsByNode : undefined}
-            defaultColor={defaultColor}
-            showAxons={config.showAxons}
-            backgroundColor={config.backgroundColor}
-            scalebarColor={theme?.foreground}
-            signals={signals}
-            overlays={styledOverlays}
-            overlaysInteractive={overlaysInteractive}
-            onOverlayTransform={handleOverlayTransform}
-            highlightedOverlayId={highlightedOverlayId}
-            neuronOpacity={config.neuronOpacity}
-            electrodeRadius={config.electrodeRadius}
-            features={vizFeatures}
-            morphologyLocations={{
-              config: scanConfig,
-              onConfigChange: setConfig,
-              selectedRootElement,
-              selectedEntry,
-              onCreateEntry,
-              markerRadius: config.morphologyLocationRadius,
-              showLabels: config.showMorphologyLocationLabels,
-            }}
-          />
+          {memodelId ? (
+            <MemodelVisualization
+              key={memodelId}
+              memodelId={memodelId}
+              dendrogram={showDendrogram}
+              {...sharedVizProps}
+            />
+          ) : (
+            circuit && (
+              <CircuitVisualization
+                key={circuit.id}
+                circuit={circuit}
+                population={population}
+                {...sharedVizProps}
+              />
+            )
+          )}
         </div>
       )}
-      {mountViz && largeCircuit && (
+      {mountViz && largeCircuit && circuit && (
         <div
           className={classNames('absolute inset-0', !showViz && 'invisible pointer-events-none')}
           aria-hidden={!showViz}
@@ -382,8 +433,10 @@ export function CircuitPreview({
 
       {enableVisualization && (
         <CircuitViewerChrome
-          mode={hasDesignerImage ? activeMode : undefined}
-          onModeChange={hasDesignerImage ? setMode : undefined}
+          mode={hasModeToggle ? activeMode : undefined}
+          onModeChange={hasModeToggle ? setMode : undefined}
+          showDendrogram={supportsDendrogram}
+          showImage={hasDesignerImage}
           theme={theme}
           table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
           viz={{
@@ -395,7 +448,7 @@ export function CircuitPreview({
         />
       )}
 
-      {showTable && tableHeight !== null && containerHeight > 0 && (
+      {showTable && circuit && tableHeight !== null && containerHeight > 0 && (
         <div
           className="absolute left-0 right-0 bottom-0 z-30 flex flex-col border-t border-neutral-200 bg-white"
           style={{ height: clampedHeight }}

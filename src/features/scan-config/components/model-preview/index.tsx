@@ -15,7 +15,6 @@ import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
-import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -83,12 +82,22 @@ export function ModelPreview({
 
   return (
     match(model)
+      // An MEModel shares the circuit viewer and its morphology-location picking.
       .with({ type: EntityTypeDict.Memodel }, () => (
-        <NeuronVisualizer
+        <CircuitPreview
           memodelId={model.id}
-          sessionId={model.id}
-          disableElectrodes
-          disableSynapses
+          // The form binding lets a 3D click write a morphology location back into the form.
+          form={form}
+          enableVisualization
+          features={{
+            ...viewerFeatures,
+            colorBy: false,
+            nodesTable: false,
+            electrodes: false,
+            // Hover highlight is pointless with a single neuron.
+            cellHover: false,
+          }}
+          defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
       // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit, all served

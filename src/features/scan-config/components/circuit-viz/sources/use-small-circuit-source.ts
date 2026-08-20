@@ -30,7 +30,7 @@ import type { TSmallCircuitSource } from './types';
  * arrives. Also seeds the bounding box the camera frames until then, so it
  * wants to be the order of magnitude of the cells on screen.
  */
-const PLACEHOLDER_SOMA_RADIUS = 8;
+export const PLACEHOLDER_SOMA_RADIUS = 8;
 
 type TOptions = {
   circuit: ICircuit;
