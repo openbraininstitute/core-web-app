@@ -1,7 +1,7 @@
 import type { NodeGeometry } from '@/features/circuit-nodes/types';
 
 /** What a node with no orientation column is drawn with: no rotation at all. */
-const IDENTITY_QUATERNION: [x: number, y: number, z: number, w: number] = [0, 0, 0, 1];
+export const IDENTITY_QUATERNION: [x: number, y: number, z: number, w: number] = [0, 0, 0, 1];
 
 /** Where a cell sits and how it is turned, which is what puts its morphology in the world. */
 export type NodePlacement = {

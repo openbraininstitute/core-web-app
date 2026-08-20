@@ -11,7 +11,11 @@ import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 import { MorphologyLocationLabels } from './morphology-location/labels';
 import { MorphologyLocationPopover } from './morphology-location/popover';
 import { sequentialCellLoader } from './sequential-loader';
-import { circuitDrawsSynapses, useSmallCircuitSource } from './sources';
+import {
+  circuitDrawsSynapses,
+  useMemodelVisualizationSource,
+  useSmallCircuitSource,
+} from './sources';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -87,6 +91,8 @@ interface CircuitVizProps {
    * need the loaded cells, which only this component has.
    */
   morphologyLocations?: IMorphologyLocationsBinding;
+  /** Morph the cell into a dendrogram of the same segments. */
+  dendrogram?: boolean;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
@@ -104,7 +110,7 @@ export interface IMorphologyLocationsBinding extends IFormBindingOptions {
  * file open in. Morphologies come from OBI-One `/circuit/viz`, whose sections carry the
  * `sonata_section_id` a click needs to become a morphology location.
  */
-function CircuitViz(props: CircuitVizProps) {
+export function CircuitVisualization(props: CircuitVizProps) {
   const source = useSmallCircuitSource({
     circuit: props.circuit,
     population: props.population,
@@ -116,7 +122,7 @@ function CircuitViz(props: CircuitVizProps) {
   return <CircuitVizView {...props} source={source} />;
 }
 
-/** The view reads no entity fields, so it serves any small-circuit source. */
+/** The view reads no entity fields, so it serves circuits and MEModels alike. */
 type TCircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
   source: SmallCircuitSource;
 };
@@ -135,6 +141,7 @@ function CircuitVizView({
   features,
   source,
   morphologyLocations,
+  dendrogram = false,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -260,6 +267,7 @@ function CircuitVizView({
           gizmo
           key={reloadNonce}
           className={styles.morphoViewer}
+          dendrogram={dendrogram}
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           signals={signals}
@@ -309,4 +317,17 @@ function CircuitVizView({
   );
 }
 
-export default CircuitViz;
+export default CircuitVisualization;
+
+type TMemodelVizProps = Omit<
+  TCircuitVizViewProps,
+  'source' | 'colorsByNode' | 'defaultColor' | 'population'
+> & {
+  memodelId: string;
+};
+
+/** A single MEModel on the small-circuit viewer, served from its cell morphology. */
+export function MemodelVisualization({ memodelId, ...props }: TMemodelVizProps) {
+  const source = useMemodelVisualizationSource({ memodelId, showAxons: props.showAxons });
+  return <CircuitVizView {...props} source={source} />;
+}

@@ -14,6 +14,11 @@ export function circuitMorphologyPath(circuitId: string, file: string, name?: st
   return `/circuit/viz/${circuitId}/morphologies/${encodeURIComponent(file)}${nameParam}`;
 }
 
+/** An MEModel's morphology, in the same `Sections` shape as {@link circuitMorphologyPath}. */
+export function memodelMorphologyPath(memodelId: string): string {
+  return `/memodel/viz/${encodeURIComponent(memodelId)}/morphology`;
+}
+
 /**
  * GET a `/circuit/viz` resource as JSON.
  *

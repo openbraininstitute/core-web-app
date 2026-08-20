@@ -79,6 +79,7 @@ export function useMorphologyLocationSelection({
   selectedRootElement,
   selectedEntry,
   onCreateEntry,
+  supportsExplicitLocations,
   cells,
   sonataSectionIds,
   backgroundColor,
@@ -99,6 +100,7 @@ export function useMorphologyLocationSelection({
     selectedEntry,
     onConfigChange,
     onCreateEntry,
+    supportsExplicitLocations,
   });
   const canEdit = pickMode === MorphologyLocationPickModeDict.Edit;
   // Read through the dictionary, not `config`: an edit elsewhere in the form must not rebuild
