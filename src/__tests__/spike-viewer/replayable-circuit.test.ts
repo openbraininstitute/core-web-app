@@ -12,21 +12,10 @@ function circuit(scale: string): TSupportedEntitiesForScanConfiguration {
 }
 
 describe('replayableCircuit', () => {
-  it.each([
-    CircuitScaleDictionary.Single,
-    CircuitScaleDictionary.PairNeuron,
-    CircuitScaleDictionary.SmallMicrocircuit,
-  ])('replays over a %s circuit, which is drawn as morphologies', (scale) => {
+  it.each(
+    Object.values(CircuitScaleDictionary)
+  )('replays over a %s circuit, whichever way its cells are drawn', (scale) => {
     expect(replayableCircuit(circuit(scale))).not.toBeNull();
-  });
-
-  it.each([
-    CircuitScaleDictionary.Microcircuit,
-    CircuitScaleDictionary.Region,
-    CircuitScaleDictionary.System,
-    CircuitScaleDictionary.WholeBrain,
-  ])('has nothing to offer for a %s circuit, which is drawn as somas', (scale) => {
-    expect(replayableCircuit(circuit(scale))).toBeNull();
   });
 
   it('has nothing to offer when the campaign scanned something other than a circuit', () => {

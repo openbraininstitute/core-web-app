@@ -1,5 +1,5 @@
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
-import type { MorphoViewerSmallCircuitSpikes } from '@/morpho-viewer';
+import type { MorphoViewerSpikes } from '@/morpho-viewer';
 
 /**
  * Turn a parsed `spikes.h5` into the flat arrays the 3D viewer replays.
@@ -14,7 +14,7 @@ import type { MorphoViewerSmallCircuitSpikes } from '@/morpho-viewer';
 export function spikesToViewer(
   data: SpikeData,
   populationName: string | undefined
-): MorphoViewerSmallCircuitSpikes | null {
+): MorphoViewerSpikes | null {
   if (!populationName) return null;
 
   const population = data.populations.find((p) => p.name === populationName);
@@ -76,5 +76,5 @@ function sortByTimestamp(
   return { timestamps: sortedTimestamps, nodeIds: sortedNodeIds };
 }
 
-/** Larger than any circuit the small-scale viewer will ever draw. */
+/** Larger than any circuit either viewer will ever draw. */
 const OUT_OF_RANGE_NODE_ID = 0xffffffff;

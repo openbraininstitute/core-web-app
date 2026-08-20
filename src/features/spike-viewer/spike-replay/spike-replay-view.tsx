@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
@@ -193,6 +194,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
           {sceneMounted && (
             <CircuitScene
               circuit={circuit}
+              largeCircuit={!circuitDrawsMorphologies(circuit.scale)}
               active={showScene}
               onPopulationChange={setPopulation}
               spikes={{

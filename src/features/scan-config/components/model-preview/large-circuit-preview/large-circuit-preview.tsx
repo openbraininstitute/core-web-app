@@ -20,6 +20,7 @@ import { useSomaRadius } from './hooks';
 import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ISpikeReplayBinding } from '@/features/circuit-viewer/circuit-scene';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 
@@ -77,6 +78,14 @@ export interface LargeCircuitPreviewProps {
    * Reserved for parity with {@link CircuitViz}; soma-only path has no cell hover.
    */
   features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
+  /**
+   * Spikes to replay over the somas, and the transport driving them.
+   *
+   * A soma lights up the same way a morphology does — the viewer takes a
+   * brightness per cell either way — so this is the identical binding
+   * {@link CircuitViz} gets, spread across the same props.
+   */
+  spikes?: ISpikeReplayBinding;
 }
 
 interface CellInfo {
@@ -107,6 +116,7 @@ export function LargeCircuitPreview({
   highlightedOverlayId = null,
   neuronOpacity,
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
+  spikes,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);
@@ -198,6 +208,13 @@ export function LargeCircuitPreview({
           onOverlayTransform={onOverlayTransform}
           highlightedOverlayId={highlightedOverlayId}
           neuronOpacity={neuronOpacity}
+          spikes={spikes?.data}
+          spikeTime={spikes?.timeInMs}
+          onSpikeTimeChange={spikes?.onTimeChange}
+          spikePlaying={spikes?.playing}
+          onSpikePlayingChange={spikes?.onPlayingChange}
+          spikeSpeed={spikes?.speed}
+          spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
           controls={[
             debugMode
               ? [

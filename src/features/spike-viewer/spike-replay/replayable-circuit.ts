@@ -1,5 +1,4 @@
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
@@ -9,15 +8,17 @@ import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-con
  *
  * `null` is what keeps the 3D and split icons out of the viewer for campaigns
  * that scanned something else — an ion channel, a single cell — instead of
- * offering a view that cannot be drawn. Circuits too large to draw as
- * morphologies are refused for the same reason: a soma point cloud has no
- * per-cell channel to fade, so there is nothing to light up yet.
+ * offering a view that cannot be drawn.
+ *
+ * Every circuit scale qualifies. The two viewers behind this draw a cell very
+ * differently — one a whole neurite tree, the other a point — but both take a
+ * brightness per cell, so which one runs is a rendering detail rather than a
+ * limit on what can be replayed.
  */
 export function replayableCircuit(
   model: TSupportedEntitiesForScanConfiguration | null
 ): ICircuit | null {
   if (!model || model.type !== EntityTypeDict.Circuit) return null;
 
-  const circuit = model as ICircuit;
-  return circuitDrawsMorphologies(circuit.scale) ? circuit : null;
+  return model as ICircuit;
 }

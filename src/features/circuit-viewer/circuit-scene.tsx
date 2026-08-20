@@ -42,10 +42,7 @@ import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
-import type {
-  MorphoViewerOverlayTransformEvent,
-  MorphoViewerSmallCircuitSpikes,
-} from '@/morpho-viewer';
+import type { MorphoViewerOverlayTransformEvent, MorphoViewerSpikes } from '@/morpho-viewer';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
@@ -71,7 +68,7 @@ export interface IElectrodeOverlayOptions {
  * straight back would fight the animation.
  */
 export interface ISpikeReplayBinding {
-  data?: MorphoViewerSmallCircuitSpikes;
+  data?: MorphoViewerSpikes;
   /** Move the playhead here. Only read when it changes. */
   timeInMs?: number;
   /** The playhead on every painted frame. Throttle before putting it in state. */
@@ -404,6 +401,7 @@ export function CircuitScene({
             neuronOpacity={config.neuronOpacity}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
+            spikes={spikes}
           />
         ) : memodel ? (
           <MemodelVisualization
