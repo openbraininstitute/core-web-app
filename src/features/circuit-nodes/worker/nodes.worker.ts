@@ -9,6 +9,8 @@ import type {
   DownloadProgress,
   GetRowsRequest,
   GetRowsResponse,
+  NodeGeometry,
+  NodeGeometryOptions,
   OpenRequest,
   OpenResponse,
 } from '@/features/circuit-nodes/types';
@@ -44,6 +46,17 @@ const api = {
   async getColumn(name: string): Promise<{ kind: ColumnKind; values: (string | number)[] }> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     return session.getColumnValues(name);
+  },
+
+  async getGeometry(options?: NodeGeometryOptions): Promise<NodeGeometry> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    const geometry = session.getGeometry(options);
+    // Transferred, not cloned: at region scale these arrays are tens of
+    // megabytes. Detaching them here is safe because `getGeometry` packs fresh
+    // arrays on every call rather than handing out a cached one.
+    const buffers: ArrayBuffer[] = [geometry.positions.buffer as ArrayBuffer];
+    if (geometry.orientations) buffers.push(geometry.orientations.buffer as ArrayBuffer);
+    return Comlink.transfer(geometry, buffers);
   },
 
   async close(): Promise<void> {

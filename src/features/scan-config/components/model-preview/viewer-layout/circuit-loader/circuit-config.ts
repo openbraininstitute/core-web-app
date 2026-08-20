@@ -1,5 +1,5 @@
 import { assertType } from '@/util/type-guards';
-import { normalizeRelativePath, resolveManifestPath } from '@/utils/circuit-manifest';
+import { resolveCircuitAssetPath } from '@/utils/circuit-manifest';
 
 import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
 
@@ -38,7 +38,7 @@ export class CircuitConfig {
   }
 
   private resolvePath(path: string) {
-    return normalizeRelativePath(resolveManifestPath(path ?? '', this.config.manifest));
+    return resolveCircuitAssetPath(path ?? '', this.config.manifest);
   }
 }
 

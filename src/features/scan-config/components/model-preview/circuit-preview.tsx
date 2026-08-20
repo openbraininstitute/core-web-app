@@ -363,6 +363,7 @@ export function CircuitPreview({
           <LargeCircuitPreview
             key={circuit.id}
             circuit={circuit}
+            population={population}
             colorsByNode={enableColorBy ? colorsByNode : undefined}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
