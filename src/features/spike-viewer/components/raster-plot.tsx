@@ -36,8 +36,12 @@ export default function RasterPlot({ data, playheadRef, onSeek }: RasterPlotProp
     if (!playheadRef) return;
 
     playheadRef.current = setPlayhead;
+    // Clearing the rule as well as the ref: the ref only carries pushes, so a
+    // driver that detaches would otherwise strand its last position on the
+    // plot as a marker nothing owns and nothing can move.
     return () => {
       playheadRef.current = null;
+      setPlayhead(null);
     };
   }, [playheadRef, setPlayhead]);
 

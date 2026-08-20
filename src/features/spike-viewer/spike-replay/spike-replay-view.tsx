@@ -25,6 +25,15 @@ type ReplayMode = (typeof MODES)[keyof typeof MODES];
 const MIN_PANE_HEIGHT = 200;
 const DEFAULT_RASTER_HEIGHT_RATIO = 0.4;
 
+/**
+ * Clear space each pane keeps on its side of the divider.
+ *
+ * Both panes fill their box, so without it the scale bar above and the
+ * population line below run right into the grab bar and read as chrome
+ * belonging to it rather than as two separate views.
+ */
+const SPLIT_GUTTER_IN_PX = 12;
+
 /** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
 const DEFAULT_SPEED = 100;
 /** Wall-clock seconds for a spike to fade to `1/e`. */
@@ -128,6 +137,13 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
     if (mode === MODES.Raster || !replayable) setPlaying(false);
   }, [mode, replayable]);
 
+  // The rule is otherwise only pushed by a painted frame, so entering the split
+  // paused — which is every time, since leaving it stops playback — would show
+  // a raster with no playhead on it. The child has attached by now.
+  useEffect(() => {
+    if (isSplit) playheadRef.current?.(liveTimeRef.current);
+  }, [isSplit]);
+
   const modeOptions = [
     {
       label: 'Raster plot',
@@ -170,7 +186,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
             'absolute left-0 right-0 top-0',
             !showScene && 'invisible pointer-events-none'
           )}
-          style={{ bottom: isSplit ? splitHeight : 0 }}
+          style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
           aria-hidden={!showScene}
           inert={!showScene || undefined}
         >
@@ -197,7 +213,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
             'absolute left-0 right-0 bottom-0',
             !showRaster && 'invisible pointer-events-none'
           )}
-          style={isSplit ? { height: splitHeight } : { top: 0 }}
+          style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}
           aria-hidden={!showRaster}
           inert={!showRaster || undefined}
         >
@@ -210,8 +226,8 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
           )}
           <RasterPlot
             data={data}
-            playheadRef={showRaster ? playheadRef : undefined}
-            onSeek={replayable ? handleSeek : undefined}
+            playheadRef={isSplit ? playheadRef : undefined}
+            onSeek={isSplit && replayable ? handleSeek : undefined}
           />
         </div>
       </div>
@@ -235,9 +251,15 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   );
 }
 
-/** Keep both panes usable however far the divider is dragged. */
+/**
+ * Keep both panes usable however far the divider is dragged.
+ *
+ * These are box heights, and each pane spends {@link SPLIT_GUTTER_IN_PX} of its
+ * own on clearance, so the floor is the minimum plus a gutter.
+ */
 function clampSplitHeight(rasterHeight: number | null, containerHeight: number): number {
   const preferred = rasterHeight ?? Math.round(containerHeight * DEFAULT_RASTER_HEIGHT_RATIO);
-  if (containerHeight <= MIN_PANE_HEIGHT * 2) return Math.round(containerHeight / 2);
-  return Math.min(containerHeight - MIN_PANE_HEIGHT, Math.max(MIN_PANE_HEIGHT, preferred));
+  const floor = MIN_PANE_HEIGHT + SPLIT_GUTTER_IN_PX;
+  if (containerHeight <= floor * 2) return Math.round(containerHeight / 2);
+  return Math.min(containerHeight - floor, Math.max(floor, preferred));
 }
