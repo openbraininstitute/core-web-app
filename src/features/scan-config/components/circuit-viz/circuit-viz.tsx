@@ -319,16 +319,15 @@ function CircuitVizView({
 
 export default CircuitVisualization;
 
-type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source'> & {
+type TMemodelVizProps = Omit<
+  TCircuitVizViewProps,
+  'source' | 'colorsByNode' | 'defaultColor' | 'population'
+> & {
   memodelId: string;
 };
 
 /** A single MEModel on the small-circuit viewer, served from its cell morphology. */
 export function MemodelVisualization({ memodelId, ...props }: TMemodelVizProps) {
-  const source = useMemodelVisualizationSource({
-    memodelId,
-    showAxons: props.showAxons,
-    colorsByNode: props.colorsByNode,
-  });
+  const source = useMemodelVisualizationSource({ memodelId, showAxons: props.showAxons });
   return <CircuitVizView {...props} source={source} />;
 }

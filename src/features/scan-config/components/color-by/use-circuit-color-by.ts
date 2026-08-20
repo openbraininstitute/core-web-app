@@ -16,6 +16,7 @@ import { useNodeColorMapping } from './use-node-color-mapping';
 import { useViewerConfig } from './use-viewer-config';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from './contrast';
 import type { ColorByProperty, ColorMapping } from './types';
@@ -36,6 +37,8 @@ interface Options {
   defaultNeuronOpacity?: number;
   /** SONATA population whose H5 columns drive colour-by and the nodes table */
   population?: NodePopulation;
+  /** What is on show when it is not a circuit. Names the saved config and the snapshot. */
+  subject?: Pick<EntityCoreIdentifiableNamed, 'id' | 'name'>;
 }
 
 /** props the chrome needs to render the color-by dropdown + key */
@@ -62,7 +65,8 @@ export interface ColorByControls {
  * persisted config, the per-node color mapping (with user overrides), and
  * ready-made control props for the chrome. `colorsByNode` is aligned by node
  * index for the viewer. owned by the preview host, which passes `colorsByNode`
- * and the config down to the actual viewers.
+ * and the config down to the actual viewers. Also serves the MEModel viewer, which
+ * has no colour-by.
  */
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
@@ -72,10 +76,11 @@ export function useCircuitColorBy(
     supportsMorphologyLocations,
     defaultNeuronOpacity,
     population,
+    subject,
   }: Options = {}
 ) {
-  const circuitId = circuit?.id ?? '';
-  const { config, hasSavedConfig, update, reset } = useViewerConfig(circuitId, {
+  const shown = subject ?? circuit;
+  const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
   });
   const property = config.colorByProperty;
@@ -114,8 +119,8 @@ export function useCircuitColorBy(
   const signals = useMorphoViewerSignals();
   const captureImage = useCallback(async () => {
     const image = await signals.snapshot.dispatch(undefined).catch(() => null);
-    if (image) downloadCircuitImage(image, circuit?.name ?? '', config.backgroundColor);
-  }, [signals, circuit?.name, config.backgroundColor]);
+    if (image) downloadCircuitImage(image, shown?.name ?? '', config.backgroundColor);
+  }, [signals, shown?.name, config.backgroundColor]);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;

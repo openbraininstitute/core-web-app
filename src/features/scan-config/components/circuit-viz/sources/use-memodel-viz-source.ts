@@ -20,7 +20,6 @@ import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
 type TOptions = {
   memodelId: string;
   showAxons?: boolean;
-  colorsByNode?: string[];
 };
 
 const MEMODEL_CELL_ID = 'memodel-cell';
@@ -35,7 +34,6 @@ const ORIGIN: [number, number, number] = [0, 0, 0];
 export function useMemodelVisualizationSource({
   memodelId,
   showAxons = false,
-  colorsByNode,
 }: TOptions): TSmallCircuitSource {
   const { data: allSections, error, isLoading, refetch } = useMemodelMorphology(memodelId);
   // The simulation replaces the axon, so it is hidden by default.
@@ -59,12 +57,11 @@ export function useMemodelVisualizationSource({
               center: ORIGIN,
               orientation: IDENTITY_QUATERNION,
               somaRadius: PLACEHOLDER_SOMA_RADIUS,
-              // Colour-by wins; otherwise colour by section type.
-              color: colorsByNode?.[0] ?? SECTION_TYPE_COLORS,
+              color: SECTION_TYPE_COLORS,
             },
           ]
         : [],
-    [sections, cellId, colorsByNode]
+    [sections, cellId]
   );
 
   const loadCell = useCallback(

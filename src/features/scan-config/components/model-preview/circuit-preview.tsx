@@ -44,6 +44,7 @@ import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
@@ -83,12 +84,16 @@ function resolveActiveMode({
   return mode;
 }
 
-interface ICircuitPreviewProps {
+/** The MEModel on show. Only its id and name are read here. */
+type TPreviewedMemodel = Pick<EntityCoreIdentifiableNamed, 'id' | 'name'>;
+
+/** Exactly one of circuit or memodel. */
+type TPreviewSubject =
+  | { circuit: ICircuit; memodel?: never }
+  | { memodel: TPreviewedMemodel; circuit?: never };
+
+interface ICircuitPreviewOptions {
   className?: string;
-  /** The circuit to preview. Omit for an MEModel and pass {@link memodelId} instead. */
-  circuit?: ICircuit;
-  /** Preview a single MEModel instead of a circuit. */
-  memodelId?: string;
   enableVisualization?: boolean;
   largeCircuit?: boolean;
   /**
@@ -113,6 +118,8 @@ interface ICircuitPreviewProps {
    */
   electrodes?: IElectrodeOverlayOptions;
 }
+
+type TCircuitPreviewProps = ICircuitPreviewOptions & TPreviewSubject;
 
 /** The form binding every feature that edits config from the 3D view reads. */
 
@@ -145,14 +152,15 @@ export interface IElectrodeOverlayOptions {
 export function CircuitPreview({
   className,
   circuit,
-  memodelId,
+  memodel,
   enableVisualization = false,
   largeCircuit = false,
   features,
   defaultNeuronOpacity,
   form,
   electrodes,
-}: ICircuitPreviewProps) {
+}: TCircuitPreviewProps) {
+  // Destructured, so the subject union no longer narrows — hence the `circuit &&` guards below.
   const {
     config: scanConfig,
     onConfigChange: setConfig,
@@ -166,6 +174,7 @@ export function CircuitPreview({
   const enableCellHover = features?.cellHover ?? true;
   // An MEModel has no nodes file to list.
   const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
+  const memodelId = memodel?.id;
 
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
   const [showTable, setShowTable] = useState(false);
@@ -250,6 +259,7 @@ export function CircuitPreview({
       supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
       defaultNeuronOpacity,
       population,
+      subject: memodel,
     });
 
   // Selecting the block an overlay came from highlights it, whichever root

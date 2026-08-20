@@ -85,7 +85,7 @@ export function ModelPreview({
       // An MEModel shares the circuit viewer and its morphology-location picking.
       .with({ type: EntityTypeDict.Memodel }, () => (
         <CircuitPreview
-          memodelId={model.id}
+          memodel={model}
           // The form binding lets a 3D click write a morphology location back into the form.
           form={form}
           enableVisualization
