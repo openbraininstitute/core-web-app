@@ -6,15 +6,25 @@ import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 export function useRasterRenderer(
   containerRef: React.RefObject<HTMLDivElement | null>,
-  data: SpikeData | null
+  data: SpikeData | null,
+  /** Called with a time in ms when the user clicks in the plot. */
+  onSeek?: (timeInMs: number) => void
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
+  // Held in a ref so a caller passing an inline handler does not tear the
+  // renderer down and rebuild its WebGL context on every render.
+  const onSeekRef = useRef(onSeek);
+
+  useEffect(() => {
+    onSeekRef.current = onSeek;
+  }, [onSeek]);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const renderer = new RasterRenderer(el);
+    renderer.onSeek = (timeInMs) => onSeekRef.current?.(timeInMs);
     rendererRef.current = renderer;
 
     return () => {
@@ -42,5 +52,9 @@ export function useRasterRenderer(
     rendererRef.current?.setBaseSize(size);
   }, []);
 
-  return { setVisiblePopulations, setBaseSize };
+  const setPlayhead = useCallback((timeInMs: number | null) => {
+    rendererRef.current?.setPlayhead(timeInMs);
+  }, []);
+
+  return { setVisiblePopulations, setBaseSize, setPlayhead };
 }

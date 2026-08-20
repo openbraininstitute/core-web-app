@@ -11,11 +11,35 @@ import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 type RasterPlotProps = {
   data: SpikeData;
+  /**
+   * Filled in with a setter that moves the playhead rule, and cleared on
+   * unmount.
+   *
+   * A ref rather than a prop because the 3D replay reports its clock on every
+   * painted frame: passing that as a prop would re-render this tree at 60 Hz to
+   * move one line.
+   */
+  playheadRef?: React.RefObject<((timeInMs: number | null) => void) | null>;
+  /** Called with a time in ms when the user clicks in the plot. */
+  onSeek?: (timeInMs: number) => void;
 };
 
-export default function RasterPlot({ data }: RasterPlotProps) {
+export default function RasterPlot({ data, playheadRef, onSeek }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setVisiblePopulations, setBaseSize } = useRasterRenderer(containerRef, data);
+  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
+    containerRef,
+    data,
+    onSeek
+  );
+
+  useEffect(() => {
+    if (!playheadRef) return;
+
+    playheadRef.current = setPlayhead;
+    return () => {
+      playheadRef.current = null;
+    };
+  }, [playheadRef, setPlayhead]);
 
   const [selectedPopulations, setSelectedPopulations] = useState<Set<string>>(
     new Set(data.populations.map((p) => p.name))

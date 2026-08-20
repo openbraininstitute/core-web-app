@@ -55,7 +55,10 @@ export class AxisOverlay {
     this.ctx = ctx;
   }
 
-  draw(bounds: ViewBounds, plotRect: PlotRect) {
+  /**
+   * @param playhead Time in ms to mark with a vertical rule, or `null` for none.
+   */
+  draw(bounds: ViewBounds, plotRect: PlotRect, playhead: number | null = null) {
     const ctx = this.ctx;
     const dpr = window.devicePixelRatio || 1;
 
@@ -70,6 +73,7 @@ export class AxisOverlay {
 
     this.drawBackground(ctx, plotRect);
     this.drawGrid(ctx, bounds, plotRect, xTicks);
+    this.drawPlayhead(ctx, bounds, plotRect, playhead);
     this.drawAxes(ctx, bounds, plotRect, xTicks, yTicks);
     this.drawAxisTitles(ctx, plotRect, ctx.canvas.height / dpr);
 
@@ -97,6 +101,24 @@ export class AxisOverlay {
       ctx.lineTo(px, rect.y + rect.height);
     }
 
+    ctx.stroke();
+  }
+
+  /** Where the 3D replay currently is, so the two views read as one moment. */
+  private drawPlayhead(
+    ctx: CanvasRenderingContext2D,
+    bounds: ViewBounds,
+    rect: PlotRect,
+    playhead: number | null
+  ) {
+    if (playhead === null || playhead < bounds.xMin || playhead > bounds.xMax) return;
+
+    const px = rect.x + ((playhead - bounds.xMin) / (bounds.xMax - bounds.xMin)) * rect.width;
+    ctx.strokeStyle = '#f5222d';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(px, rect.y);
+    ctx.lineTo(px, rect.y + rect.height);
     ctx.stroke();
   }
 

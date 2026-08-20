@@ -48,6 +48,7 @@ export class RasterRenderer {
   private rafId: number | null = null;
   private resizeRafId: number | null = null;
   private hasData = false;
+  private playhead: number | null = null;
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -132,6 +133,25 @@ export class RasterRenderer {
     this.scheduleRender();
   }
 
+  /**
+   * Mark where the 3D replay currently is, or `null` to clear the rule.
+   *
+   * Imperative because the replay reports its clock on every painted frame:
+   * routing that through React to move one line would re-render the tree at
+   * 60 Hz.
+   */
+  setPlayhead(timeInMs: number | null) {
+    if (this.playhead === timeInMs) return;
+
+    this.playhead = timeInMs;
+    this.scheduleRender();
+  }
+
+  /** Called with a time in ms when the user clicks in the plot. */
+  set onSeek(handler: ((timeInMs: number) => void) | null) {
+    this.interaction.onSeek = handler;
+  }
+
   setBaseSize(size: number) {
     this.baseSize = size;
     this.scheduleRender();
@@ -165,7 +185,7 @@ export class RasterRenderer {
 
     const pointSize = this.computePointSize();
     this.webgl.draw(this.view, pointSize);
-    this.axis.draw(this.view, this.plotRect);
+    this.axis.draw(this.view, this.plotRect, this.playhead);
   }
 
   private computePointSize(): number {

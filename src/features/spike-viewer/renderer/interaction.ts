@@ -33,6 +33,13 @@ export class InteractionManager {
 
   onViewChange: ((bounds: ViewBounds) => void) | null = null;
   onHover: ((info: HoverInfo | null) => void) | null = null;
+  /**
+   * A plain click inside the plot, as a time in ms.
+   *
+   * Drag already means zoom and shift-drag means pan, so a click that never
+   * moved was the one gesture left unused.
+   */
+  onSeek: ((timeInMs: number) => void) | null = null;
 
   constructor(element: HTMLElement) {
     this.element = element;
@@ -276,7 +283,12 @@ export class InteractionManager {
         : drag.mode === 'zoom-y'
           ? dy >= MIN_DRAG_PX
           : dx >= MIN_DRAG_PX || dy >= MIN_DRAG_PX;
-    if (!significant) return;
+    if (!significant) {
+      if (drag.mode === 'zoom-xy') {
+        this.onSeek?.(this.pixelToData(drag.lastClient.x, drag.lastClient.y).x);
+      }
+      return;
+    }
 
     const d1 = this.pixelToData(drag.startClient.x, drag.startClient.y);
     const d2 = this.pixelToData(drag.lastClient.x, drag.lastClient.y);

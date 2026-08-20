@@ -23,7 +23,11 @@ import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
-import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
+import type {
+  MorphoViewerOverlayTransformEvent,
+  MorphoViewerSignals,
+  MorphoViewerSmallCircuitSpikes,
+} from '@/morpho-viewer';
 import type { SmallCircuitSource } from './sources';
 
 import styles from './circuit-viz.module.css';
@@ -97,6 +101,31 @@ interface CircuitVizProps {
   dendrogram?: boolean;
   /** Called with the camera zoom whenever it changes, the user's own scrolling included. */
   onZoomChange?: (zoom: number) => void;
+  /** Spikes to replay over the circuit, and the transport driving them. */
+  spikes?: ISpikeReplayBinding;
+}
+
+/**
+ * A spike replay and the controls driving it.
+ *
+ * The viewer owns the clock: it advances simulated time on every painted frame
+ * and reports where it got to through {@link ISpikeReplayBinding.onTimeChange}.
+ * `timeInMs` is therefore a seek, not a mirror — feeding the reported time
+ * straight back would fight the animation.
+ */
+export interface ISpikeReplayBinding {
+  data?: MorphoViewerSmallCircuitSpikes;
+  /** Move the playhead here. Only read when it changes. */
+  timeInMs?: number;
+  /** The playhead on every painted frame. Throttle before putting it in state. */
+  onTimeChange?(timeInMs: number): void;
+  playing?: boolean;
+  /** Also fires with `false` when playback reaches the end of the recording. */
+  onPlayingChange?(playing: boolean): void;
+  /** Simulated milliseconds per wall-clock second. */
+  speed?: number;
+  /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
+  afterglowInSeconds?: number;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
@@ -148,6 +177,7 @@ function CircuitVizView({
   morphologyLocations,
   dendrogram = false,
   onZoomChange,
+  spikes,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -295,6 +325,13 @@ function CircuitVizView({
           synapses={synapses}
           synapsesRadius={SYNAPSE_RADIUS}
           synapsesMinRadiusInPixels={SYNAPSE_MIN_RADIUS_IN_PIXELS}
+          spikes={spikes?.data}
+          spikeTime={spikes?.timeInMs}
+          onSpikeTimeChange={spikes?.onTimeChange}
+          spikePlaying={spikes?.playing}
+          onSpikePlayingChange={spikes?.onPlayingChange}
+          spikeSpeed={spikes?.speed}
+          spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
         />
       )}
       <MorphologyLocationLabels labels={locationLabels} />

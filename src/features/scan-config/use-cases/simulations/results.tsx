@@ -32,6 +32,7 @@ import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
+import { SimulationModelProvider } from '@/features/spike-viewer/simulation-model-context';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
 import { invalidateProjectBalance } from '@/features/task-runner/hooks/use-balance-refresh';
@@ -409,12 +410,16 @@ export default function SimulationsTab({
             {selectedFile?.renderer !== ActivityCustomFileRenderer.TaskLogsViewer &&
               selectedFile?.renderer !== ActivityCustomFileRenderer.TaskConfigurationViewer && (
                 <SimulationReportsProvider reports={simConfig?.reports ?? null}>
-                  <FileViewer
-                    file={selectedFile}
-                    className="h-full w-full"
-                    context={context}
-                    loading={filesLoading}
-                  />
+                  {/* The spike viewer replays over the circuit that was scanned,
+                      which only the campaign knows. Already resolved above. */}
+                  <SimulationModelProvider model={model}>
+                    <FileViewer
+                      file={selectedFile}
+                      className="h-full w-full"
+                      context={context}
+                      loading={filesLoading}
+                    />
+                  </SimulationModelProvider>
                 </SimulationReportsProvider>
               )}
           </>
