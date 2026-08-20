@@ -111,6 +111,8 @@ function render(overrides: Partial<TOptions>) {
       cells: CELLS,
       sonataSectionIds: SECTION_INDEX,
       backgroundColor: BACKGROUND,
+      // A single neuron or a synaptome, which is where explicit locations are taken.
+      supportsExplicitLocations: true,
       ...overrides,
     })
   );
@@ -266,6 +268,43 @@ describe('useMorphologyLocationSelection picking', () => {
 
     expect(onConfigChange).not.toHaveBeenCalled();
     expect(infos.join(' ')).toMatch(/section ids/i);
+  });
+});
+
+describe('useMorphologyLocationSelection on a model that takes no explicit locations', () => {
+  it('picks nothing, wherever the form is', () => {
+    // A small microcircuit generates its locations, so the dictionary is in the config while
+    // no explicit block may be written to it.
+    const onCreateEntry = vi.fn();
+
+    const { result } = render({
+      ...elsewhere,
+      config: EMPTY,
+      onCreateEntry,
+      supportsExplicitLocations: false,
+    });
+
+    expect(result.current.pickMode).toBe(null);
+    act(() => {
+      result.current.selection?.onPick?.(pick());
+    });
+    expect(onCreateEntry).not.toHaveBeenCalled();
+  });
+
+  it('picks nothing even inside an explicit block left in the config', () => {
+    const onConfigChange = vi.fn();
+
+    const { result } = render({
+      config: configWith([{ section_id: 3, offset: 0.1 }]),
+      onConfigChange,
+      supportsExplicitLocations: false,
+    });
+
+    expect(result.current.pickMode).toBe(null);
+    act(() => {
+      result.current.selection?.onPick?.(pick());
+    });
+    expect(onConfigChange).not.toHaveBeenCalled();
   });
 });
 

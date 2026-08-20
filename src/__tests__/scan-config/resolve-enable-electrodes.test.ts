@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
+  resolveEnableMorphologyLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 
 describe('resolveEnableElectrodes', () => {
@@ -71,5 +73,34 @@ describe('resolveEnableCellHover', () => {
         scale: CircuitScaleDictionary.PairNeuron,
       })
     ).toBe(false);
+  });
+});
+
+describe('resolveEnableMorphologyLocations', () => {
+  it('takes explicit locations on one neuron', () => {
+    // The single cell, and the synaptome — a single-scale circuit holding one neuron.
+    expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.Memodel })).toBe(true);
+    expect(
+      resolveEnableMorphologyLocations({
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.Single,
+      })
+    ).toBe(true);
+  });
+
+  it('does not on a circuit that generates its locations', () => {
+    for (const scale of [
+      CircuitScaleDictionary.PairNeuron,
+      CircuitScaleDictionary.SmallMicrocircuit,
+      CircuitScaleDictionary.Microcircuit,
+      CircuitScaleDictionary.Region,
+    ]) {
+      expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.Circuit, scale })).toBe(false);
+    }
+  });
+
+  it('does not on anything else the preview accepts', () => {
+    expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.IonChannelModel })).toBe(false);
+    expect(resolveEnableMorphologyLocations({})).toBe(false);
   });
 });

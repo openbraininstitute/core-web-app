@@ -167,6 +167,7 @@ export function CircuitPreview({
     selectedRootElement,
     selectedEntry,
     onCreateEntry,
+    supportsExplicitLocations,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -217,6 +218,7 @@ export function CircuitPreview({
       selectedEntry,
       onConfigChange: setConfig,
       onCreateEntry,
+      supportsExplicitLocations,
     }) !== null;
   // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
@@ -352,11 +354,7 @@ export function CircuitPreview({
     electrodeRadius: config.electrodeRadius,
     features: vizFeatures,
     morphologyLocations: {
-      config: scanConfig,
-      onConfigChange: setConfig,
-      selectedRootElement,
-      selectedEntry,
-      onCreateEntry,
+      ...form,
       markerRadius: config.morphologyLocationRadius,
       showLabels: config.showMorphologyLocationLabels,
     },

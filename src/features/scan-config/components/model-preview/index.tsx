@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -14,6 +14,7 @@ import {
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
+  resolveEnableMorphologyLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -80,6 +81,12 @@ export function ModelPreview({
       }),
   };
 
+  const picksLocations = resolveEnableMorphologyLocations(model);
+  const viewerForm = useMemo(
+    () => (form ? { ...form, supportsExplicitLocations: picksLocations } : undefined),
+    [form, picksLocations]
+  );
+
   return (
     match(model)
       // An MEModel shares the circuit viewer and its morphology-location picking.
@@ -87,7 +94,7 @@ export function ModelPreview({
         <CircuitPreview
           memodel={model}
           // The form binding lets a 3D click write a morphology location back into the form.
-          form={form}
+          form={viewerForm}
           enableVisualization
           features={{
             ...viewerFeatures,
@@ -114,7 +121,7 @@ export function ModelPreview({
         (circuit) => (
           <CircuitPreview
             circuit={circuit as ICircuit}
-            form={form}
+            form={viewerForm}
             electrodes={electrodes}
             enableVisualization
             features={featuresForSmall(circuit as ICircuit)}
@@ -125,7 +132,7 @@ export function ModelPreview({
       .with({ type: EntityTypeDict.Circuit }, () => (
         <CircuitPreview
           circuit={model as ICircuit}
-          form={form}
+          form={viewerForm}
           electrodes={electrodes}
           enableVisualization
           largeCircuit

@@ -91,6 +91,8 @@ export interface IFormBindingOptions {
   selectedEntry?: string;
   /** Add a block and open it. Without it, a pick with no block open does nothing. */
   onCreateEntry?: (rootElement: string, block: Record<string, unknown>) => void;
+  /** Whether the model takes explicit locations. Off unless the host says otherwise. */
+  supportsExplicitLocations?: boolean;
 }
 
 /** Whether the form selection is one a 3D click can add a location to. */
@@ -121,7 +123,10 @@ export function morphologyLocationPickMode({
   selectedEntry,
   onConfigChange,
   onCreateEntry,
+  supportsExplicitLocations,
 }: IFormBindingOptions): TMorphologyLocationPickModeDict {
+  if (!supportsExplicitLocations) return null;
+
   if (supportsMorphologyLocationPicking({ config, selectedRootElement, selectedEntry })) {
     return onConfigChange ? MorphologyLocationPickModeDict.Edit : null;
   }
