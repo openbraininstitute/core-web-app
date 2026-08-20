@@ -75,6 +75,20 @@ async function loadCellAsync(
   }
 }
 
+/** Everything OBI-One needs to hand back one cell's drawable sections. */
+export type TMorphologyRequest = {
+  virtualLabId: string;
+  projectId: string;
+  circuitId: string;
+  /** The id the resulting tree carries; see `sources/node-key.ts`. */
+  cellId: string;
+  /** The morphology's name, as the node's `morphology` column spells it. */
+  name: string;
+  /** The file it lives in, relative to the circuit's SONATA directory. */
+  file: string;
+  showAxon: boolean;
+};
+
 async function actualLoad({
   virtualLabId,
   projectId,
@@ -83,15 +97,7 @@ async function actualLoad({
   name,
   file,
   showAxon,
-}: {
-  virtualLabId: string;
-  projectId: string;
-  circuitId: string;
-  cellId: string;
-  name: string;
-  file: string;
-  showAxon: boolean;
-}): Promise<TLoadedCell> {
+}: TMorphologyRequest): Promise<TLoadedCell> {
   // The path doubles as the cache key: it already carries everything that varies.
   const key = circuitMorphologyPath(circuitId, file, name);
   const promise = morphologiesCache.get(key) ?? loadCellAsync(virtualLabId, projectId, key, cellId);

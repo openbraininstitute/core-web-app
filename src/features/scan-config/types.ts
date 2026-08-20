@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 // biome-ignore lint/style/useImportType: biome hallucination
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+// Past the package barrel: `SectionSchema` needs the enum as a runtime value,
+// and the barrel would cost this module a WebGL renderer.
+import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
 
 import type {
   ICellMorphology,
@@ -15,6 +18,7 @@ import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
+import type { MorphoViewerTreeItem } from '@/morpho-viewer/tree-item-type';
 import type { Prettify } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
@@ -548,26 +552,10 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
-export const NodeSchema = z.object({
-  morphology_file: z.string(),
-  morphology_name: z.string(),
-  position: z.tuple([z.number(), z.number(), z.number()]),
-  orientation: z.tuple([z.number(), z.number(), z.number(), z.number()]),
-});
-
-export const NodesSchema = z.array(NodeSchema);
-
-export enum MorphoViewerTreeItemType {
-  Soma = 0,
-  Dendrite,
-  BasalDendrite,
-  ApicalDendrite,
-  Myelin,
-  Axon,
-  Selected,
-  Liaison,
-  Unknown,
-}
+// Re-exported rather than re-declared: a structurally identical enum is still a
+// *different* enum to TypeScript, so two copies never compare equal.
+export type { MorphoViewerTreeItem };
+export { MorphoViewerTreeItemType };
 
 const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
 
@@ -593,24 +581,6 @@ export const SectionSchema = z.object({
 export const SectionsArraySchema = z.array(SectionSchema);
 export type Sections = z.infer<typeof SectionsArraySchema>;
 
-export type Node = z.infer<typeof NodeSchema>;
-export type Nodes = z.infer<typeof NodesSchema>;
-
-/** One edge population from OBI-One `/circuit/viz/{id}/synapses`, raw `afferent_surface` data. */
-export const SynapseGroupSchema = z.object({
-  population_name: z.string(),
-  /** Flat `[x0, y0, z0, x1, …]` afferent surface positions. */
-  coordinates: z.array(z.number()),
-  /** SONATA `afferent_section_id` per synapse; `0` is the soma. */
-  section_ids: z.array(z.number().int()),
-  /** Index of the cell each synapse lands on, within the target node population. */
-  target_node_ids: z.array(z.number().int()),
-});
-
-export const SynapseGroupsArraySchema = z.array(SynapseGroupSchema);
-export type TSynapseGroup = z.infer<typeof SynapseGroupSchema>;
-export type TSynapseGroups = z.infer<typeof SynapseGroupsArraySchema>;
-
 export type Cell = {
   id: string;
   center: [number, number, number];
@@ -618,27 +588,6 @@ export type Cell = {
   somaRadius: number;
   color: string;
 };
-
-export interface MorphoViewerTreeItem {
-  x: number;
-  y: number;
-  z: number;
-  radius: number;
-  type: MorphoViewerTreeItemType;
-  sectionId: string;
-  segmentId: string;
-  /**
-   * SONATA global section id this node belongs to, when the source can supply one.
-   * `sectionId` identifies the section only within its own response, so it cannot be
-   * written into a morphology-location config; this can.
-   *
-   * Undefined for sources that parse SWC in the browser, which have no way to reproduce
-   * OBI-One's nrn_order numbering.
-   */
-  sonataSectionId?: number;
-  distanceFromSoma: number;
-  children?: MorphoViewerTreeItem[];
-}
 
 export type TSupportedEntitiesForScanConfiguration =
   | ICircuit

@@ -1,5 +1,14 @@
 import type { NodeGeometry } from '@/features/circuit-nodes/types';
 
+/** What a node with no orientation column is drawn with: no rotation at all. */
+const IDENTITY_QUATERNION: [x: number, y: number, z: number, w: number] = [0, 0, 0, 1];
+
+/** Where a cell sits and how it is turned, which is what puts its morphology in the world. */
+export type NodePlacement = {
+  center: [x: number, y: number, z: number];
+  orientation: [x: number, y: number, z: number, w: number];
+};
+
 /**
  * Read one node's position out of the flat geometry arrays.
  *
@@ -14,4 +23,28 @@ export function positionAt(
 ): [x: number, y: number, z: number] {
   const { positions } = geometry;
   return [positions[index * 3], positions[index * 3 + 1], positions[index * 3 + 2]];
+}
+
+/**
+ * Read one node's placement, or null where the index is not in the population.
+ *
+ * Null rather than a default placement: a caller asking about a node that isn't
+ * drawn — an edge file's `target_node_id` pointing outside the drawn population,
+ * say — wants to know that, not to be handed the origin.
+ */
+export function placementAt(geometry: NodeGeometry, index: number): NodePlacement | null {
+  if (index < 0 || index >= geometry.count) return null;
+
+  const { orientations } = geometry;
+  return {
+    center: positionAt(geometry, index),
+    orientation: orientations
+      ? [
+          orientations[index * 4],
+          orientations[index * 4 + 1],
+          orientations[index * 4 + 2],
+          orientations[index * 4 + 3],
+        ]
+      : IDENTITY_QUATERNION,
+  };
 }
