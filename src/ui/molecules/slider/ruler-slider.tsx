@@ -1,5 +1,4 @@
 'use client';
-// beui.dev/components/motion/range-slider
 
 import {
   animate,
@@ -72,11 +71,6 @@ export function RulerSlider({
 }: RulerSliderProps) {
   const vertical = orientation === 'vertical';
   const reduce = useReducedMotion();
-  // Decimal places the step implies, so 0.5 reads "72.5" and 1 reads "72".
-  // Fixed width keeps the readout from jittering as the value rolls; tick
-  // labels stay trimmed so a whole-number scale is not littered with ".0".
-  // ponytail: reads 0 decimals for an exponential step (1e-7) — no such scale
-  // is legible on a ruler anyway, so no parsing beyond this.
   const decimals = String(options.step ?? 1).split('.')[1]?.length ?? 0;
   const readout = (value: number) => value.toFixed(decimals);
 
@@ -87,9 +81,6 @@ export function RulerSlider({
     formatValueText: options.formatValueText ?? (unit ? (v) => `${readout(v)} ${unit}` : undefined),
   });
 
-  // The range need not divide by the step (0–10 by 4). Full ticks stop at the
-  // last whole one and max gets a tick of its own, so the scale never runs past
-  // the value the slider can actually report.
   const span = Number(((max - min) / step).toFixed(6));
   const wholeSteps = Math.floor(span);
   const remainder = span - wholeSteps;
@@ -118,12 +109,9 @@ export function RulerSlider({
   // clear interacting underneath an active drag.
   const gesture = useRef(0);
 
-  // ponytail: every tick is in the DOM — fine to a few hundred (80 units at
-  // step 0.5 is 161). Window to the visible span if a finer step is ever needed.
-  // Each tick carries an offset because max sits `remainder` of a step past the
-  // last whole tick. Whenever remainder is under 0.5 that point falls inside
-  // the previous box, so an appended flex box can never centre on it.
   const [valueVisible, setValueVisible] = useState(showValue === 'always');
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: current needed
   useEffect(() => {
     if (showValue === 'always') return;
 
@@ -133,19 +121,13 @@ export function RulerSlider({
   }, [current, showValue]);
 
   const ticks = Array.from({ length: wholeSteps + 1 }, (_, i) => ({
-    // toFixed trims float dust from fractional steps (0.1 + 0.2 …).
     value: Number((min + i * step).toFixed(6)),
     major: i % majorEvery === 0,
     offset: i * gap,
   }));
-  // A tiny remainder puts this label close to the one before it. That is what
-  // a scale ending a hair past a step looks like.
   if (remainder > 0) ticks.push({ value: max, major: true, offset: maxOffset });
 
   const snapToTick = () => {
-    // The same nearest-tick rule useSlider applies. max counts as a candidate
-    // when the step does not divide the range, so a flick near the end does
-    // not settle on the last whole step.
     const target = snapSliderValue(valueAt(x.get()), min, max, step);
     const snapped = travelOf(target);
     const id = ++gesture.current;
@@ -159,8 +141,6 @@ export function RulerSlider({
     });
   };
 
-  // A key press takes the scale back from momentum: without this the coasting
-  // strip keeps committing its own value and swallows the keyboard input.
   const rootProps = {
     ...sliderProps,
     onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
@@ -183,6 +163,7 @@ export function RulerSlider({
   });
 
   return (
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: helper
     <div
       {...rootProps}
       id="ruler-slider"
@@ -304,10 +285,7 @@ export function RulerSlider({
           )}
         >
           <span
-            className={cn(
-              'block rounded-full bg-current',
-              vertical ? 'h-0.75 w-5' : 'h-9 w-0.75'
-            )}
+            className={cn('block rounded-full bg-current', vertical ? 'h-0.75 w-5' : 'h-9 w-0.75')}
           />
         </div>
       </div>

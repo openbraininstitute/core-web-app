@@ -6,13 +6,7 @@ import { capturePointer, releasePointer } from './touch';
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-/** Nearest legal value on [min, max] for the given step. max counts as a
- * candidate when the step does not divide the range, so a pointer near the end
- * does not snap back onto the last whole step. */
 export function snapSliderValue(next: number, min: number, max: number, step: number): number {
-  // Neither case has a grid to walk. An empty range has exactly one legal
-  // point, and a non-positive step only needs a clamp, which also keeps the
-  // division below away from zero.
   if (!(max > min)) return min;
   if (!(step > 0)) return clamp(next, min, max);
   const whole = Math.floor(Number(((max - min) / step).toFixed(6)));
