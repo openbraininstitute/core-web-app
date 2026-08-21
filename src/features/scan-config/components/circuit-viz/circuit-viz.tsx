@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
-import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
+import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 
@@ -53,6 +53,8 @@ interface CircuitVizProps {
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
   scalebarColor?: string;
+  /** Draw the scalebar down the side of the canvas. */
+  showScalebar?: boolean;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
   /**
@@ -93,6 +95,8 @@ interface CircuitVizProps {
   morphologyLocations?: IMorphologyLocationsBinding;
   /** Morph the cell into a dendrogram of the same segments. */
   dendrogram?: boolean;
+  /** Called with the camera zoom whenever it changes, the user's own scrolling included. */
+  onZoomChange?: (zoom: number) => void;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
@@ -131,6 +135,7 @@ function CircuitVizView({
   showAxons,
   backgroundColor,
   scalebarColor,
+  showScalebar = true,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -142,6 +147,7 @@ function CircuitVizView({
   source,
   morphologyLocations,
   dendrogram = false,
+  onZoomChange,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -189,8 +195,8 @@ function CircuitVizView({
   }, [cells, setCircuitSceneAnchor]);
 
   const scalebar = useMemo(
-    () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
-    [scalebarColor]
+    () => resolveScalebar(showScalebar, scalebarColor),
+    [scalebarColor, showScalebar]
   );
 
   const [highlightedCellId, setHighlightedCellId] = useState('');
@@ -268,6 +274,7 @@ function CircuitVizView({
           key={reloadNonce}
           className={styles.morphoViewer}
           dendrogram={dendrogram}
+          onZoomChange={onZoomChange}
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           signals={signals}

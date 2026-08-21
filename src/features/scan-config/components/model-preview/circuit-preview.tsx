@@ -40,6 +40,7 @@ import {
   electrodeBlockPath,
   useElectrodeOverlays,
 } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
+import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use-viewer-zoom';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
@@ -338,27 +339,58 @@ export function CircuitPreview({
 
   const vizFeatures = useMemo(() => ({ cellHover: enableCellHover }), [enableCellHover]);
 
-  // Props shared by both viz surfaces.
-  const sharedVizProps = {
-    colorsByNode: enableColorBy ? colorsByNode : undefined,
-    defaultColor,
-    showAxons: config.showAxons,
-    backgroundColor: config.backgroundColor,
-    scalebarColor: theme?.foreground,
-    signals,
-    overlays: styledOverlays,
-    overlaysInteractive,
-    onOverlayTransform: handleOverlayTransform,
-    highlightedOverlayId,
-    neuronOpacity: config.neuronOpacity,
-    electrodeRadius: config.electrodeRadius,
-    features: vizFeatures,
-    morphologyLocations: {
-      ...form,
-      markerRadius: config.morphologyLocationRadius,
-      showLabels: config.showMorphologyLocationLabels,
-    },
-  };
+  const zoom = useViewerZoom(signals);
+
+  // Memoised explicitly, not left to the compiler: a zoom tick changes this object, and a
+  // fresh one re-renders the 3D surface every frame of a scroll-zoom.
+  const sharedVizProps = useMemo(
+    () => ({
+      colorsByNode: enableColorBy ? colorsByNode : undefined,
+      defaultColor,
+      showAxons: config.showAxons,
+      backgroundColor: config.backgroundColor,
+      scalebarColor: theme?.foreground,
+      showScalebar: config.showScalebar,
+      signals,
+      overlays: styledOverlays,
+      overlaysInteractive,
+      onOverlayTransform: handleOverlayTransform,
+      highlightedOverlayId,
+      neuronOpacity: config.neuronOpacity,
+      electrodeRadius: config.electrodeRadius,
+      features: vizFeatures,
+      // Subscribed only while the slider is shown: the viewer reports every zoom change, and
+      // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
+      onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
+      morphologyLocations: {
+        ...form,
+        markerRadius: config.morphologyLocationRadius,
+        showLabels: config.showMorphologyLocationLabels,
+      },
+    }),
+    [
+      enableColorBy,
+      colorsByNode,
+      defaultColor,
+      config.showAxons,
+      config.backgroundColor,
+      config.showScalebar,
+      config.neuronOpacity,
+      config.electrodeRadius,
+      config.morphologyLocationRadius,
+      config.showMorphologyLocationLabels,
+      config.showZoomSlider,
+      theme?.foreground,
+      signals,
+      styledOverlays,
+      overlaysInteractive,
+      handleOverlayTransform,
+      highlightedOverlayId,
+      vizFeatures,
+      zoom.onZoomChange,
+      form,
+    ]
+  );
 
   const hasModeToggle = hasDesignerImage || supportsDendrogram;
   const showImage = activeMode === ViewerModeDict.Image;
@@ -427,6 +459,7 @@ export function CircuitPreview({
             colorsByNode={enableColorBy ? colorsByNode : undefined}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
+            showScalebar={config.showScalebar}
             signals={signals}
             overlays={styledOverlays}
             overlaysInteractive={overlaysInteractive}
@@ -452,6 +485,9 @@ export function CircuitPreview({
             colorBy: enableColorBy ? colorBy : undefined,
             electrodesInteractive: overlaysInteractive,
             morphologyLocationsInteractive: canPickMorphologyLocations,
+            // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
+            // props, and with the setting off there is nothing to drive.
+            zoom: largeCircuit || !config.showZoomSlider ? undefined : zoom,
           }}
         />
       )}

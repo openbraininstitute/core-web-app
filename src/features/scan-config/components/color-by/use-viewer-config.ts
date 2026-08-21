@@ -52,6 +52,10 @@ export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   // placing one. Re-projecting them costs a little work on every frame, so leaving them off
   // also keeps orbiting free for anyone who does not want them.
   showMorphologyLocationLabels: false,
+  // Off by default: scroll already zooms, so the slider is for people who want a readout
+  // and a handle rather than a wheel.
+  showZoomSlider: false,
+  showScalebar: true,
   colorOverrides: {},
 };
 
