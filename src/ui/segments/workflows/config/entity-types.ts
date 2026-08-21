@@ -140,6 +140,13 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     title: 'Electron Microscopy Circuit',
     description: 'Build a circuit campaign from an electron-microscopy cell morphology.',
   },
+  [ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign]: {
+    value: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+    group: EntityGroupDict.Circuit,
+    label: 'Circuit synaptic physiology',
+    title: 'Circuit synaptic physiology',
+    description: 'Generate or replace a physiological parameterization of an anatomical circuit.',
+  },
   [ExtendedEntitiesTypeDict.EMCellMesh]: {
     value: ExtendedEntitiesTypeDict.EMCellMesh,
     group: EntityGroupDict.Cellular,

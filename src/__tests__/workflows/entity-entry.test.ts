@@ -184,10 +184,15 @@ const cases: TCase[] = [
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
   },
   {
-    name: 'scale-less circuit → circuit extraction when only extraction is enabled',
+    // with the recording-array flag off, the next circuit-consuming build workflow
+    // (circuit synaptic physiology, unflagged) wins over extract by activity order
+    name: 'scale-less circuit → circuit synaptic physiology build when recording array is off',
     fixture: { entity: { type: EntityTypeDict.Circuit } },
-    covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign },
-    href: `${base}/extract/configure/circuit-extraction-campaign/{session}`,
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+    },
+    href: `${base}/build/configure/circuit-synaptic-physiology-campaign/{session}`,
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
     flags: { [extractionActivityFlag.key]: true } as FeatureFlags,
   },
@@ -307,6 +312,19 @@ const cases: TCase[] = [
     href: `${base}/build/configure/extracellular-recording-array-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
+    name: 'circuit synaptic physiology task config → build editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.Circuit },
+      taskConfigType: TaskConfigType.CircuitSynapticPhysiologyCampaign,
+    },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+    },
+    href: `${base}/build/configure/circuit-synaptic-physiology-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
     name: 'circuit simulation task config picks the workflow matching its input scale',
     fixture: {
       entity: { type: EntityTypeDict.TaskConfig },
@@ -390,7 +408,13 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
   });
 
   it('skips workflows the user has no feature flag for', async () => {
-    applyFixture({ entity: { type: EntityTypeDict.Circuit } });
+    // a recording-array task config only matches the flag-gated recording-array build,
+    // so without flags no workflow accepts it
+    applyFixture({
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.Circuit },
+      taskConfigType: TaskConfigType.ExtracellularRecordingWeightsCalculationCampaign,
+    });
 
     await expect(
       resolveWorkflowConfigureHrefForEntity({ entityId: ENTITY_ID, workspace })
