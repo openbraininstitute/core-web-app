@@ -52,6 +52,7 @@ export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   // placing one. Re-projecting them costs a little work on every frame, so leaving them off
   // also keeps orbiting free for anyone who does not want them.
   showMorphologyLocationLabels: false,
+  showScalebar: true,
   colorOverrides: {},
 };
 

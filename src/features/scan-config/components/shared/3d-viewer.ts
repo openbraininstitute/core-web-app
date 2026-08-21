@@ -17,6 +17,17 @@ export const VERTICAL_SCALEBAR: ScalebarConfig = {
   labels: { show: ScalebarWhen.Always, side: ScalebarSide.Right },
 } as const;
 
+/**
+ * The scalebar config for a circuit viewer, or `false` to leave it out.
+ *
+ * Shared because both viewers resolve it the same way, and a scalebar that differed
+ * between the small and large circuit views would read as a bug.
+ */
+export function resolveScalebar(show: boolean, color?: string): ScalebarConfig | false {
+  if (!show) return false;
+  return color ? { ...VERTICAL_SCALEBAR, color } : VERTICAL_SCALEBAR;
+}
+
 const WATERMARK_TITLE = 'Open Brain Institute';
 const WATERMARK_URL = 'www.openbraininstitute.org';
 /** primary-8 on light canvas backgrounds */

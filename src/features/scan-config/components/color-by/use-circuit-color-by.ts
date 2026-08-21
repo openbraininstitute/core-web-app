@@ -194,6 +194,8 @@ export function useCircuitColorBy(
       onToggleMorphologyLocationLabels: supportsMorphologyLocations
         ? (value: boolean) => update({ showMorphologyLocationLabels: value })
         : undefined,
+      showScalebar: config.showScalebar,
+      onToggleScalebar: (value: boolean) => update({ showScalebar: value }),
       hasSavedConfig,
       onResetConfig: reset,
     }),
@@ -208,6 +210,7 @@ export function useCircuitColorBy(
       config.electrodeRadius,
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
+      config.showScalebar,
       supportsAxons,
       supportsElectrodes,
       supportsMorphologyLocations,

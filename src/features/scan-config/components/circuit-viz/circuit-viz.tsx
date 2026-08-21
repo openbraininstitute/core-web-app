@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
-import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
+import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
 
@@ -53,6 +53,8 @@ interface CircuitVizProps {
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
   scalebarColor?: string;
+  /** Draw the scalebar down the side of the canvas. */
+  showScalebar?: boolean;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
   /**
@@ -131,6 +133,7 @@ function CircuitVizView({
   showAxons,
   backgroundColor,
   scalebarColor,
+  showScalebar = true,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -189,8 +192,8 @@ function CircuitVizView({
   }, [cells, setCircuitSceneAnchor]);
 
   const scalebar = useMemo(
-    () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
-    [scalebarColor]
+    () => resolveScalebar(showScalebar, scalebarColor),
+    [scalebarColor, showScalebar]
   );
 
   const [highlightedCellId, setHighlightedCellId] = useState('');

@@ -345,6 +345,7 @@ export function CircuitPreview({
     showAxons: config.showAxons,
     backgroundColor: config.backgroundColor,
     scalebarColor: theme?.foreground,
+    showScalebar: config.showScalebar,
     signals,
     overlays: styledOverlays,
     overlaysInteractive,
@@ -427,6 +428,7 @@ export function CircuitPreview({
             colorsByNode={enableColorBy ? colorsByNode : undefined}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
+            showScalebar={config.showScalebar}
             signals={signals}
             overlays={styledOverlays}
             overlaysInteractive={overlaysInteractive}

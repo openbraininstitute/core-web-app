@@ -15,6 +15,7 @@ import { Slider, Switch } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 import { AxonIcon } from '@/components/icons/Axon';
+import { RulerMeasure } from '@/components/icons/RulerMeasure';
 import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
 import { TooltipIcon } from '@/components/icons/Tooltip';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
@@ -47,6 +48,9 @@ export interface ViewerControlsMenuProps {
   /** `Type[section]` tags beside each location; omit when picking is not active */
   showMorphologyLocationLabels?: boolean;
   onToggleMorphologyLocationLabels?: (value: boolean) => void;
+  /** scalebar down the side of the canvas */
+  showScalebar?: boolean;
+  onToggleScalebar?: (value: boolean) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
@@ -78,6 +82,8 @@ export function ViewerControlsMenu({
   onMorphologyLocationRadiusChange,
   showMorphologyLocationLabels,
   onToggleMorphologyLocationLabels,
+  showScalebar,
+  onToggleScalebar,
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
@@ -182,12 +188,12 @@ export function ViewerControlsMenu({
           />
           {onToggleAxons && (
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
-              <Switch size="small" checked={!!showAxons} onChange={onToggleAxons} />
+              <ViewerSwitch checked={!!showAxons} onChange={onToggleAxons} />
             </MenuRow>
           )}
           {onToggleElectrodes && (
             <MenuRow label="Electrodes" icon={<ElectrodesIcon className="size-4 shrink-0" />}>
-              <Switch size="small" checked={!!showElectrodes} onChange={onToggleElectrodes} />
+              <ViewerSwitch checked={!!showElectrodes} onChange={onToggleElectrodes} />
             </MenuRow>
           )}
           {onElectrodeRadiusChange && electrodeRadius !== undefined && showElectrodes !== false && (
@@ -200,10 +206,14 @@ export function ViewerControlsMenu({
               onChange={onElectrodeRadiusChange}
             />
           )}
+          {onToggleScalebar && (
+            <MenuRow label="Scale bar" icon={<RulerMeasure className="size-4 shrink-0" />}>
+              <ViewerSwitch checked={!!showScalebar} onChange={onToggleScalebar} />
+            </MenuRow>
+          )}
           {onToggleMorphologyLocationLabels && (
             <MenuRow label="Location labels" icon={<TooltipIcon className="size-4 shrink-0" />}>
-              <Switch
-                size="small"
+              <ViewerSwitch
                 checked={!!showMorphologyLocationLabels}
                 onChange={onToggleMorphologyLocationLabels}
               />
@@ -337,6 +347,31 @@ function MenuButton({
 }
 
 /** A labelled slider row: {@link MenuRow} for controls that take a range. */
+/**
+ * Antd paints its own blue when a control is on; these bring it to primary-9 so the menu
+ * matches the rest of the app. Applied per control rather than through a provider, which
+ * would recolour every antd control on the page.
+ */
+const ON_COLOR = 'var(--color-primary-9)';
+
+/** A settings switch, primary-9 while on. */
+function ViewerSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <Switch
+      size="small"
+      checked={checked}
+      onChange={onChange}
+      style={checked ? { backgroundColor: ON_COLOR } : undefined}
+    />
+  );
+}
+
 function MenuSlider({
   label,
   min,
@@ -367,6 +402,10 @@ function MenuSlider({
         value={value}
         onChange={onChange}
         tooltip={{ formatter: null }}
+        styles={{
+          track: { backgroundColor: ON_COLOR },
+          handle: { borderColor: ON_COLOR },
+        }}
       />
     </div>
   );

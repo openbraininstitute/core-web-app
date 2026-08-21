@@ -6,7 +6,7 @@ import { positionAt } from '@/features/circuit-nodes/geometry-utils';
 import { useNodeGeometry } from '@/features/circuit-nodes/hooks/use-node-geometry';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
-import { VERTICAL_SCALEBAR } from '@/features/scan-config/components/shared/3d-viewer';
+import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import {
   MorphoViewerCircuitMultipleNeuronsSomaOnly,
@@ -53,6 +53,8 @@ export interface LargeCircuitPreviewProps {
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default  */
   scalebarColor?: string;
+  /** Draw the scalebar down the side of the canvas. */
+  showScalebar?: boolean;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
   /**
@@ -97,6 +99,7 @@ export function LargeCircuitPreview({
   colorsByNode,
   backgroundColor,
   scalebarColor,
+  showScalebar = true,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -127,8 +130,8 @@ export function LargeCircuitPreview({
     setCircuitSceneAnchor([sx / count, sy / count, sz / count]);
   }, [geometry, setCircuitSceneAnchor]);
   const scalebar = React.useMemo(
-    () => (scalebarColor ? { ...VERTICAL_SCALEBAR, color: scalebarColor } : VERTICAL_SCALEBAR),
-    [scalebarColor]
+    () => resolveScalebar(showScalebar, scalebarColor),
+    [scalebarColor, showScalebar]
   );
   const handleDownload = () => {
     if (!geometry) return;
