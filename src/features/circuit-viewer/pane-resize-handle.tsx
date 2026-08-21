@@ -18,15 +18,12 @@ export function PaneResizeHandle({
     e.preventDefault();
     const container = containerRef.current;
     if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const containerBottom = rect.bottom;
-    const containerTop = rect.top;
+    const { bottom: containerBottom, height: containerHeight } = container.getBoundingClientRect();
     e.currentTarget.setPointerCapture(e.pointerId);
 
     function onPointerMove(ev: PointerEvent) {
       const raw = containerBottom - ev.clientY;
-      const max = containerBottom - containerTop;
-      onResize(Math.min(max, Math.max(minHeight, raw)));
+      onResize(Math.min(containerHeight, Math.max(minHeight, raw)));
     }
     function onPointerUp(ev: PointerEvent) {
       window.removeEventListener('pointermove', onPointerMove);

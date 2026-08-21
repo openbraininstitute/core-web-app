@@ -152,7 +152,10 @@ export class RasterRenderer {
     if (this.playhead === timeInMs) return;
 
     this.playhead = timeInMs;
-    this.scheduleRender();
+    // Its own layer, so moving it is one style write. Going through the render
+    // loop would redraw every spike and repaint the axes sixty times a second
+    // for a rule that is on neither.
+    this.positionPlayhead();
   }
 
   /** Called with a time in ms when the user clicks in the plot. */
@@ -199,9 +202,9 @@ export class RasterRenderer {
 
   /** Where the 3D replay currently is, so the two views read as one moment. */
   private positionPlayhead() {
-    const { playhead, plotRect, view } = this;
+    const { hasData, playhead, plotRect, view } = this;
 
-    if (playhead === null || playhead < view.xMin || playhead > view.xMax) {
+    if (!hasData || playhead === null || playhead < view.xMin || playhead > view.xMax) {
       this.playheadEl.style.display = 'none';
       return;
     }

@@ -13,11 +13,12 @@ import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type {
   ICircuitSceneProps,
   IElectrodeOverlayOptions,
+  TSceneMemodel,
+  TSceneSubject,
 } from '@/features/circuit-viewer/circuit-scene';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -61,14 +62,6 @@ function resolveActiveMode({
   return mode;
 }
 
-/** The MEModel on show. Only its id and name are read here. */
-type TPreviewedMemodel = Pick<EntityCoreIdentifiableNamed, 'id' | 'name'>;
-
-/** Exactly one of circuit or memodel. */
-type TPreviewSubject =
-  | { circuit: ICircuit; memodel?: never }
-  | { memodel: TPreviewedMemodel; circuit?: never };
-
 interface ICircuitPreviewOptions {
   className?: string;
   enableVisualization?: boolean;
@@ -80,7 +73,7 @@ interface ICircuitPreviewOptions {
   electrodes?: IElectrodeOverlayOptions;
 }
 
-type TCircuitPreviewProps = ICircuitPreviewOptions & TPreviewSubject;
+type TCircuitPreviewProps = ICircuitPreviewOptions & TSceneSubject;
 
 /**
  * The model as scan-config shows it: {@link CircuitScene} in 3D, with the
@@ -160,7 +153,7 @@ export function CircuitPreview({
       {mountViz && (
         <div className="absolute inset-0">
           <CircuitScene
-            {...(circuit ? { circuit } : { memodel: memodel as TPreviewedMemodel })}
+            {...(circuit ? { circuit } : { memodel: memodel as TSceneMemodel })}
             largeCircuit={largeCircuit}
             active={showViz}
             dendrogram={showDendrogram}

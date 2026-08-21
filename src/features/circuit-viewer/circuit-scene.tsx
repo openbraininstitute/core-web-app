@@ -86,7 +86,7 @@ export interface ISpikeReplayBinding {
 export type TSceneMemodel = Pick<EntityCoreIdentifiableNamed, 'id' | 'name'>;
 
 /** Exactly one of circuit or memodel. */
-type TSceneSubject =
+export type TSceneSubject =
   | { circuit: ICircuit; memodel?: never }
   | { memodel: TSceneMemodel; circuit?: never };
 

@@ -335,8 +335,6 @@ function CircuitVizView({
   );
 }
 
-export default CircuitVisualization;
-
 type TMemodelVizProps = Omit<
   TCircuitVizViewProps,
   'source' | 'colorsByNode' | 'defaultColor' | 'population'
