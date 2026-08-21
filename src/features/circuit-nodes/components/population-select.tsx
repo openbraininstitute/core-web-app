@@ -9,7 +9,6 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
-import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
@@ -25,7 +24,9 @@ const toolbarContentCls = 'bg-white border-gray-200';
 const toolbarItemCls = 'text-primary-9 text-sm data-[state=checked]:font-bold';
 
 type Props = {
-  populations: NodePopulation[];
+  /** Name and type are all this reads, so a host without a full config entry —
+   * the spike viewer's header — can pass what it has. */
+  populations: readonly { name: string; type?: string }[];
   value: string | undefined;
   onChange: (name: string) => void;
   /** toolbar = full-width table header; chrome = compact pill for the viewer overlay */
@@ -61,18 +62,17 @@ export function PopulationSelect({
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled || populations.length === 0}>
       <SelectTrigger
-        className={cn(
+        className={
           chrome
             ? cn(
-                'inline-flex h-auto items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold backdrop-blur-sm transition-colors focus-visible:outline-none',
+                'inline-flex h-auto items-center gap-1 rounded-full border-0 px-3 py-1.5 text-sm font-semibold backdrop-blur-sm transition-colors focus-visible:outline-none',
                 theme
-                  ? 'hover:brightness-110'
+                  ? 'shadow-none ring-0 hover:brightness-110'
                   : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50',
                 className
               )
-            : cn(toolbarTriggerCls, styles.populationSelect, 'w-full min-w-0', className),
-          chrome && 'border-0 shadow-none ring-0'
-        )}
+            : cn(toolbarTriggerCls, styles.populationSelect, 'w-full min-w-0', className)
+        }
         style={panelStyle}
         icon={
           <RiArrowDownSLine
@@ -111,7 +111,7 @@ export function PopulationSelect({
               chrome ? 'rounded-xl text-sm data-[state=checked]:font-semibold' : toolbarItemCls
             )}
           >
-            {`${p.name} (${p.type})`}
+            {p.type ? `${p.name} (${p.type})` : p.name}
           </SelectItem>
         ))}
       </SelectContent>

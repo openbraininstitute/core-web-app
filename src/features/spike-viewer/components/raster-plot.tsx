@@ -1,16 +1,22 @@
 'use client';
 
-import { Checkbox, Empty } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Empty } from 'antd';
+import { useEffect, useMemo, useRef } from 'react';
 
-import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
-import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 type RasterPlotProps = {
   data: SpikeData;
+  /**
+   * The one population to plot.
+   *
+   * The host picks it and names it above the plot, so that the raster and the 3D
+   * replay beside it are always reading the same cells.
+   */
+  populationName: string | undefined;
+  markerSize: number;
   /**
    * Filled in with a setter that moves the playhead rule, and cleared on
    * unmount.
@@ -24,7 +30,13 @@ type RasterPlotProps = {
   onSeek?: (timeInMs: number) => void;
 };
 
-export default function RasterPlot({ data, playheadRef, onSeek }: RasterPlotProps) {
+export default function RasterPlot({
+  data,
+  populationName,
+  markerSize,
+  playheadRef,
+  onSeek,
+}: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
     containerRef,
@@ -45,69 +57,35 @@ export default function RasterPlot({ data, playheadRef, onSeek }: RasterPlotProp
     };
   }, [playheadRef, setPlayhead]);
 
-  const [selectedPopulations, setSelectedPopulations] = useState<Set<string>>(
-    new Set(data.populations.map((p) => p.name))
+  const visiblePopulations = useMemo(
+    () => new Set(populationName ? [populationName] : []),
+    [populationName]
   );
-  const [markerSize, setMarkerSize] = useState(4);
 
-  // Sync visibility when selection changes
   useEffect(() => {
-    setVisiblePopulations(selectedPopulations);
-  }, [selectedPopulations, setVisiblePopulations]);
+    setVisiblePopulations(visiblePopulations);
+  }, [visiblePopulations, setVisiblePopulations]);
 
-  // Sync marker size when slider changes
   useEffect(() => {
     setBaseSize(markerSize);
   }, [markerSize, setBaseSize]);
 
-  const togglePopulation = (name: string, checked: boolean) => {
-    setSelectedPopulations((prev) => {
-      const next = new Set(prev);
-      if (checked) {
-        next.add(name);
-      } else {
-        next.delete(name);
-      }
-      return next;
-    });
-  };
+  const spikeCount =
+    data.populations.find((p) => p.name === populationName)?.timestamps.length ?? 0;
 
-  const totalSpikes = useMemo(() => {
-    return data.populations.reduce((sum, pop) => sum + pop.timestamps.length, 0);
-  }, [data.populations]);
-
-  if (totalSpikes === 0) {
+  if (spikeCount === 0) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        <Empty description="No spikes recorded during this simulation" />
+      <div className="flex h-full items-center justify-center">
+        <Empty
+          description={
+            populationName
+              ? `No spikes recorded for “${populationName}”`
+              : 'No spikes recorded during this simulation'
+          }
+        />
       </div>
     );
   }
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="mb-2 flex flex-wrap items-center gap-4">
-        {data.populations.length === 1 ? (
-          <span style={{ color: POPULATION_COLORS[0] }}>
-            Population: {data.populations[0].name} (
-            {data.populations[0].timestamps.length.toLocaleString()} spikes)
-          </span>
-        ) : (
-          data.populations.map((pop, idx) => (
-            <Checkbox
-              key={pop.name}
-              checked={selectedPopulations.has(pop.name)}
-              onChange={(e) => togglePopulation(pop.name, e.target.checked)}
-            >
-              <span style={{ color: POPULATION_COLORS[idx % POPULATION_COLORS.length] }}>
-                Population: {pop.name} ({pop.timestamps.length.toLocaleString()} spikes)
-              </span>
-            </Checkbox>
-          ))
-        )}
-        <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
-      </div>
-      <div ref={containerRef} className="min-h-0 flex-1" />
-    </div>
-  );
+  return <div ref={containerRef} className="h-full min-h-0" />;
 }

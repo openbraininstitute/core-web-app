@@ -129,6 +129,12 @@ interface ICircuitSceneOptions {
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
   dendrogram?: boolean;
   /**
+   * The SONATA population to draw. Omit to let the scene pick one and let the
+   * nodes table switch it — a host only sets this when it has taken that choice
+   * over, which means it has also turned the table off.
+   */
+  populationName?: string;
+  /**
    * The SONATA population being drawn, whenever it changes.
    *
    * The nodes table lets a user switch populations mid-session, so a host that
@@ -170,6 +176,7 @@ export function CircuitScene({
   modeToggle,
   spikes,
   dendrogram = false,
+  populationName: hostPopulationName,
   onPopulationChange,
 }: ICircuitSceneProps) {
   const {
@@ -194,7 +201,8 @@ export function CircuitScene({
   const portalContainer = useFullscreenElement();
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
-  const [populationName, setPopulationName] = useState<string | undefined>();
+  const [tablePopulationName, setTablePopulationName] = useState<string | undefined>();
+  const populationName = hostPopulationName ?? tablePopulationName;
 
   const population = useMemo(
     () => (circuitConfig ? resolvePopulation(circuitConfig.nodes, populationName) : undefined),
@@ -458,7 +466,7 @@ export function CircuitScene({
           <CircuitNodesTable
             circuit={circuit}
             populationName={populationName}
-            onPopulationChange={setPopulationName}
+            onPopulationChange={setTablePopulationName}
             portalContainer={portalContainer}
           />
         </div>

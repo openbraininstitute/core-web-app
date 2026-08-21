@@ -13,7 +13,7 @@ export function pickDefaultPopulation(populations: NodePopulation[]): NodePopula
   return populations.find(isBiophysical) ?? populations[0];
 }
 
-function isBiophysical(population: NodePopulation): boolean {
+export function isBiophysical(population: Pick<NodePopulation, 'type'>): boolean {
   return (population.type || 'biophysical') === 'biophysical';
 }
 

@@ -2,7 +2,6 @@ import { Empty, Spin } from 'antd';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
 import { useSimulationModel } from '@/features/spike-viewer/simulation-model-context';
 import { replayableCircuit } from '@/features/spike-viewer/spike-replay/replayable-circuit';
@@ -42,20 +41,12 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
     );
   }
 
-  // The panel hands this viewer the bare pane, so the inset is ours to lay out. The replay lays
-  // out its own — the 3D pane has to run edge to edge for its floating chrome to sit where the
-  // circuit preview's does — so only the lone raster is inset from here.
+  // The panel hands this viewer the bare pane, so the inset is the view's own to
+  // lay out — the 3D pane has to run edge to edge for its floating chrome to sit
+  // where the circuit preview's does.
   return (
-    <div className="flex h-full flex-col">
-      <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[data]}>
-        {circuit ? (
-          <SpikeReplayView data={data} circuit={circuit} />
-        ) : (
-          <div className="h-full p-3">
-            <RasterPlot data={data} />
-          </div>
-        )}
-      </ErrorBoundary>
-    </div>
+    <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[data]}>
+      <SpikeReplayView data={data} circuit={circuit ?? undefined} />
+    </ErrorBoundary>
   );
 }
