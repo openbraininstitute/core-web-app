@@ -73,19 +73,23 @@ export default function RasterPlot({
   const spikeCount =
     data.populations.find((p) => p.name === populationName)?.timestamps.length ?? 0;
 
-  if (spikeCount === 0) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Empty
-          description={
-            populationName
-              ? `No spikes recorded for “${populationName}”`
-              : 'No spikes recorded during this simulation'
-          }
-        />
-      </div>
-    );
-  }
-
-  return <div ref={containerRef} className="h-full min-h-0" />;
+  // Overlaid rather than returned in place of the plot: the renderer is built
+  // once against this container, so unmounting it for an empty population would
+  // strand the WebGL context and leave the plot blank after switching back.
+  return (
+    <div className="relative h-full min-h-0">
+      <div ref={containerRef} className="h-full min-h-0" />
+      {spikeCount === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white">
+          <Empty
+            description={
+              populationName
+                ? `No spikes recorded for “${populationName}”`
+                : 'No spikes recorded during this simulation'
+            }
+          />
+        </div>
+      )}
+    </div>
+  );
 }

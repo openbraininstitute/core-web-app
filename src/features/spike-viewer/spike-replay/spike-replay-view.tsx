@@ -159,12 +159,21 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
     };
   }, [playing]);
 
-  const handleSeek = useCallback((timeInMs: number) => {
-    setSeekToMs(timeInMs);
-    setReadoutTimeInMs(timeInMs);
-    liveTimeRef.current = timeInMs;
-    playheadRef.current?.(timeInMs);
-  }, []);
+  // Clamped because the raster pads its initial view either side of the data,
+  // so a click well inside the plot area can name a time the recording never
+  // reached - which the transport would print and the 3D viewer, clamping
+  // internally, would refuse to follow.
+  const { min: timeMinInMs, max: timeMaxInMs } = data.timeRange;
+  const handleSeek = useCallback(
+    (rawTimeInMs: number) => {
+      const timeInMs = Math.min(timeMaxInMs, Math.max(timeMinInMs, rawTimeInMs));
+      setSeekToMs(timeInMs);
+      setReadoutTimeInMs(timeInMs);
+      liveTimeRef.current = timeInMs;
+      playheadRef.current?.(timeInMs);
+    },
+    [timeMinInMs, timeMaxInMs]
+  );
 
   // One-shot, so that seeking twice to the same millisecond still seeks: held,
   // the second Restart during playback would be no state change, hence no
