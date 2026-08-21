@@ -119,6 +119,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const showScene = circuit !== undefined && mode !== MODES.Raster;
   const isSplit = mode === MODES.Split;
   const showRaster = !showScene || isSplit;
+  const canSeek = isSplit && replayable;
 
   // Latches on: see the note above about what unmounting would cost.
   const [sceneMounted, setSceneMounted] = useState(false);
@@ -251,9 +252,6 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
               : 'Reading the circuit’s node populations…'}
           </span>
         )}
-        {showRaster && (
-          <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
-        )}
       </div>
 
       <div ref={containerRef} className="relative min-h-0 flex-1">
@@ -305,13 +303,27 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
               onResize={setRasterHeight}
             />
           )}
-          <RasterPlot
-            data={data}
-            populationName={populationName}
-            markerSize={markerSize}
-            playheadRef={isSplit ? playheadRef : undefined}
-            onSeek={isSplit && replayable ? handleSeek : undefined}
-          />
+          <div className="relative h-full min-h-0">
+            <RasterPlot
+              data={data}
+              populationName={populationName}
+              markerSize={markerSize}
+              playheadRef={isSplit ? playheadRef : undefined}
+              onSeek={canSeek ? handleSeek : undefined}
+            />
+            {/* Inside the pane it belongs to, the way the scene's chrome sits in
+                its own: in the split these controls are the raster's alone, and
+                the row above the panes is for what governs both. */}
+            {recorded && recorded.timestamps.length > 0 && (
+              <div className="absolute right-0 top-0 z-10">
+                <RasterPlotControls
+                  markerSize={markerSize}
+                  onMarkerSizeChange={setMarkerSize}
+                  canSeek={canSeek}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

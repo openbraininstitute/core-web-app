@@ -12,6 +12,8 @@ type RasterPlotControlsProps = {
   onMarkerSizeChange: (size: number) => void;
   minSize?: number;
   maxSize?: number;
+  /** Whether a plain click in the plot seeks right now. */
+  canSeek?: boolean;
 };
 
 export default function RasterPlotControls({
@@ -19,9 +21,10 @@ export default function RasterPlotControls({
   onMarkerSizeChange,
   minSize = 1,
   maxSize = 10,
+  canSeek,
 }: RasterPlotControlsProps) {
   return (
-    <div className="ml-auto flex items-center gap-1">
+    <div className="flex items-center gap-1">
       <Popover>
         <PopoverTrigger asChild>
           <Button type="button" variant="icon" size="sm" aria-label="Open chart settings">
@@ -60,6 +63,7 @@ export default function RasterPlotControls({
           className="bg-white text-primary-9 shadow-md"
         >
           Drag to zoom · Shift+drag to pan · Double-click to reset
+          {canSeek && ' · Click to seek'}
         </TooltipContent>
       </Tooltip>
     </div>
