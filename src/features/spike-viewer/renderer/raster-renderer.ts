@@ -31,6 +31,7 @@ export class RasterRenderer {
   private glCanvas: HTMLCanvasElement;
   private axisCanvas: HTMLCanvasElement;
   private interactionLayer: HTMLDivElement;
+  private playheadEl: HTMLDivElement;
   private tooltipEl: HTMLDivElement;
 
   private webgl: WebGLPoints;
@@ -63,6 +64,13 @@ export class RasterRenderer {
     this.glCanvas = document.createElement('canvas');
     this.glCanvas.style.cssText = 'position:absolute';
     container.appendChild(this.glCanvas);
+
+    // Playhead rule, above the plot: drawn with the axes it would sit behind
+    // the WebGL canvas, and a dense population buries it.
+    this.playheadEl = document.createElement('div');
+    this.playheadEl.style.cssText =
+      'position:absolute;pointer-events:none;display:none;width:1.5px;background:#f5222d';
+    container.appendChild(this.playheadEl);
 
     // Interaction layer (full size, topmost)
     this.interactionLayer = document.createElement('div');
@@ -185,7 +193,24 @@ export class RasterRenderer {
 
     const pointSize = this.computePointSize();
     this.webgl.draw(this.view, pointSize);
-    this.axis.draw(this.view, this.plotRect, this.playhead);
+    this.axis.draw(this.view, this.plotRect);
+    this.positionPlayhead();
+  }
+
+  /** Where the 3D replay currently is, so the two views read as one moment. */
+  private positionPlayhead() {
+    const { playhead, plotRect, view } = this;
+
+    if (playhead === null || playhead < view.xMin || playhead > view.xMax) {
+      this.playheadEl.style.display = 'none';
+      return;
+    }
+
+    const px = plotRect.x + ((playhead - view.xMin) / (view.xMax - view.xMin)) * plotRect.width;
+    this.playheadEl.style.display = 'block';
+    this.playheadEl.style.left = `${px - 0.75}px`;
+    this.playheadEl.style.top = `${plotRect.y}px`;
+    this.playheadEl.style.height = `${plotRect.height}px`;
   }
 
   private computePointSize(): number {
@@ -335,6 +360,7 @@ export class RasterRenderer {
     this.glCanvas.remove();
     this.axisCanvas.remove();
     this.interactionLayer.remove();
+    this.playheadEl.remove();
     this.tooltipEl.remove();
   }
 }
