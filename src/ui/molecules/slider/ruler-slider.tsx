@@ -99,14 +99,8 @@ export function RulerSlider({
   const tickTop = (offset: number) => (vertical ? maxOffset - offset : offset);
 
   const x = useMotionValue(travelOf(current));
-  // While the pointer drives the strip (or its momentum still runs), x owns the
-  // value; outside of that the value owns x.
   const interacting = useRef(false);
-  // True only while the pointer is down. It keeps a cancelled momentum's
-  // transition end from snapping underneath a fresh grab.
   const holding = useRef(false);
-  // A new gesture or key press bumps this, so a snap that resolves late cannot
-  // clear interacting underneath an active drag.
   const gesture = useRef(0);
 
   const [valueVisible, setValueVisible] = useState(showValue === 'always');
@@ -136,9 +130,11 @@ export function RulerSlider({
       interacting.current = false;
       return;
     }
-    animate(x, snapped, SPRING_SNAP).then(() => {
+
+    const release = () => {
       if (gesture.current === id) interacting.current = false;
-    });
+    };
+    animate(x, snapped, { ...SPRING_SNAP, onComplete: release, onStop: release });
   };
 
   const rootProps = {
@@ -227,9 +223,6 @@ export function RulerSlider({
             holding.current = false;
             if (reduce) snapToTick();
           }}
-          // The ticks are positioned rather than laid out, so the row needs an
-          // explicit width plus half a gap of slop each side to cover the
-          // whole drag surface.
           style={
             vertical
               ? { y: x, marginTop: -gap / 2, height: maxOffset + gap }

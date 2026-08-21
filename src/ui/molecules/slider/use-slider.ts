@@ -1,6 +1,13 @@
 'use client';
 
-import { type KeyboardEvent, type PointerEvent, useCallback, useRef, useState } from 'react';
+import {
+  type KeyboardEvent,
+  type PointerEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { capturePointer, releasePointer } from './touch';
 
@@ -63,10 +70,17 @@ export function useSlider({
   const current = clamp(controlled ? value : internal, lo, hi);
   const percent = hi > lo ? ((current - lo) / (hi - lo)) * 100 : 0;
 
+  const reported = useRef(current);
+  useEffect(() => {
+    reported.current = current;
+  }, [current]);
+
   const commit = useCallback(
     (next: number) => {
       const clean = snapSliderValue(next, lo, hi, stride);
       if (!controlled) setInternal(clean);
+      if (clean === reported.current) return;
+      reported.current = clean;
       onValueChange?.(clean);
     },
     [controlled, onValueChange, lo, hi, stride]
