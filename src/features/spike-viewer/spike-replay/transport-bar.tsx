@@ -60,7 +60,7 @@ export function TransportBar({
   const step = Math.max(duration / 1000, 1e-3);
 
   return (
-    <div className="flex items-center gap-3 border-t border-neutral-200 px-2 py-1.5">
+    <div className="flex items-center gap-3 border-t border-neutral-200 px-3 py-2">
       <Button
         type="button"
         variant="icon"

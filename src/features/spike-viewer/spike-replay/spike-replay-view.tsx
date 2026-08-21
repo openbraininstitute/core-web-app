@@ -170,7 +170,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="mb-2 flex items-center gap-3">
+      <div className="mb-2 flex items-center gap-3 px-3 pt-3">
         <ModeToggle options={modeOptions} />
         {showScene && !replayable && (
           <span role="status" className="text-xs text-amber-600">
@@ -212,7 +212,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
 
         <div
           className={classNames(
-            'absolute left-0 right-0 bottom-0',
+            'absolute left-0 right-0 bottom-0 px-3 pb-3',
             !showRaster && 'invisible pointer-events-none'
           )}
           style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}

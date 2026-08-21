@@ -27,17 +27,34 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
   const circuit = replayableCircuit(useSimulationModel());
 
   if (error) {
-    return <Empty className="p-2em" description="There was a problem loading the spike data" />;
+    return (
+      <div className="flex h-full items-center justify-center p-3">
+        <Empty description="There was a problem loading the spike data" />
+      </div>
+    );
   }
 
   if (!data) {
-    return <Spin />;
+    return (
+      <div className="flex h-full items-center justify-center p-3">
+        <Spin />
+      </div>
+    );
   }
 
+  // The panel hands this viewer the bare pane, so the inset is ours to lay out. The replay lays
+  // out its own — the 3D pane has to run edge to edge for its floating chrome to sit where the
+  // circuit preview's does — so only the lone raster is inset from here.
   return (
     <div className="flex h-full flex-col">
       <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[data]}>
-        {circuit ? <SpikeReplayView data={data} circuit={circuit} /> : <RasterPlot data={data} />}
+        {circuit ? (
+          <SpikeReplayView data={data} circuit={circuit} />
+        ) : (
+          <div className="h-full p-3">
+            <RasterPlot data={data} />
+          </div>
+        )}
       </ErrorBoundary>
     </div>
   );

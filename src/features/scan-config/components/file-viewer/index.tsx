@@ -110,7 +110,13 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
   const isPdf =
     displayFile?.asset.content_type === AssetContentType.pdf ||
     displayFile?.enforcedRenderType === AssetContentType.pdf;
-  const edgeToEdge = isJson || isImage || isDirectory || isPdf;
+  // the spike viewer fills its pane and floats its chrome over the plot the way the circuit
+  // preview does, so it lays out its own inset rather than being pushed off the corner
+  const isSpikeReport =
+    displayFile?.asset.content_type === AssetContentType.h5 &&
+    (displayFile.asset.label === AssetLabel.spike_report ||
+      displayFile.asset.label === AssetLabel.replay_spikes);
+  const edgeToEdge = isJson || isImage || isDirectory || isPdf || isSpikeReport;
 
   const viewerContent = renderFileContent(displayFile, context);
 
