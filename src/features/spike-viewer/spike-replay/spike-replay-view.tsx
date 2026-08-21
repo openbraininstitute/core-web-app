@@ -44,7 +44,7 @@ const SPLIT_GUTTER_IN_PX = 12;
 /** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
 const DEFAULT_SPEED = 100;
 /** Wall-clock seconds for a spike to fade to `1/e`. */
-const DEFAULT_AFTERGLOW_IN_SECONDS = 0.35;
+const DEFAULT_AFTERGLOW_IN_SECONDS = 0.25;
 
 /** Radius in pixels of a raster marker. */
 const DEFAULT_MARKER_SIZE = 4;
