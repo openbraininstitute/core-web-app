@@ -18,6 +18,7 @@ import { AxonIcon } from '@/components/icons/Axon';
 import { RulerMeasure } from '@/components/icons/RulerMeasure';
 import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
 import { TooltipIcon } from '@/components/icons/Tooltip';
+import { ZoomInArea } from '@/components/icons/ZoomInArea';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -48,6 +49,9 @@ export interface ViewerControlsMenuProps {
   /** `Type[section]` tags beside each location; omit when picking is not active */
   showMorphologyLocationLabels?: boolean;
   onToggleMorphologyLocationLabels?: (value: boolean) => void;
+  /** zoom slider over the canvas */
+  showZoomSlider?: boolean;
+  onToggleZoomSlider?: (value: boolean) => void;
   /** scalebar down the side of the canvas */
   showScalebar?: boolean;
   onToggleScalebar?: (value: boolean) => void;
@@ -82,6 +86,8 @@ export function ViewerControlsMenu({
   onMorphologyLocationRadiusChange,
   showMorphologyLocationLabels,
   onToggleMorphologyLocationLabels,
+  showZoomSlider,
+  onToggleZoomSlider,
   showScalebar,
   onToggleScalebar,
   onElectrodeRadiusChange,
@@ -209,6 +215,11 @@ export function ViewerControlsMenu({
           {onToggleScalebar && (
             <MenuRow label="Scale bar" icon={<RulerMeasure className="size-4 shrink-0" />}>
               <ViewerSwitch checked={!!showScalebar} onChange={onToggleScalebar} />
+            </MenuRow>
+          )}
+          {onToggleZoomSlider && (
+            <MenuRow label="Zoom slider" icon={<ZoomInArea className="size-4 shrink-0" />}>
+              <ViewerSwitch checked={!!showZoomSlider} onChange={onToggleZoomSlider} />
             </MenuRow>
           )}
           {onToggleMorphologyLocationLabels && (

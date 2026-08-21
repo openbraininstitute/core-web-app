@@ -6,6 +6,7 @@ import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { MorphologyLocationHelp } from '../circuit-viz/morphology-location/help';
+import { ZoomSlider } from '../zoom-slider/zoom-slider';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { ModeToggle, type ViewerMode, ViewerModeDict } from './mode-toggle';
@@ -45,6 +46,8 @@ export interface ICircuitViewerChromeProps {
     electrodesInteractive?: boolean;
     /** Whether clicking a neurite adds a morphology location right now. */
     morphologyLocationsInteractive?: boolean;
+    /** Camera zoom and a way to set it; omit to leave the zoom slider out. */
+    zoom?: { value: number; onChange: (zoom: number) => void };
   };
 }
 
@@ -109,6 +112,24 @@ export function CircuitViewerChrome({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
+      {viz?.zoom && (
+        <div
+          className={cn(
+            'pointer-events-auto absolute left-1 top-1/2 -translate-y-1/2',
+            // Frosted so a morphology drawn behind the ruler cannot swallow its ticks.
+            // No ring or shadow, unlike the chrome's other panels: this one sits over the
+            // canvas rather than beside it, and an edge would draw the eye to the panel.
+            'rounded-xl px-1 py-1.5 backdrop-blur-md',
+            !theme && 'bg-white/70',
+            !showVizChrome && 'invisible pointer-events-none'
+          )}
+          style={theme ? { background: theme.panelBackground, color: theme.foreground } : undefined}
+          aria-hidden={!showVizChrome}
+          inert={!showVizChrome || undefined}
+        >
+          <ZoomSlider zoom={viz.zoom.value} onZoomChange={viz.zoom.onChange} theme={theme} />
+        </div>
+      )}
       <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
         {mode != null && onModeChange && (
           <ModeToggle

@@ -95,6 +95,8 @@ interface CircuitVizProps {
   morphologyLocations?: IMorphologyLocationsBinding;
   /** Morph the cell into a dendrogram of the same segments. */
   dendrogram?: boolean;
+  /** Called with the camera zoom whenever it changes, the user's own scrolling included. */
+  onZoomChange?: (zoom: number) => void;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
@@ -145,6 +147,7 @@ function CircuitVizView({
   source,
   morphologyLocations,
   dendrogram = false,
+  onZoomChange,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -271,6 +274,7 @@ function CircuitVizView({
           key={reloadNonce}
           className={styles.morphoViewer}
           dendrogram={dendrogram}
+          onZoomChange={onZoomChange}
           scalebar={scalebar}
           backgroundColor={backgroundColor}
           signals={signals}

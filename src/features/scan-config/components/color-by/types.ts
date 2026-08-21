@@ -82,6 +82,8 @@ export interface ViewerConfig {
   morphologyLocationRadius: number;
   /** Show a `Type[section]` tag beside each selected morphology location. */
   showMorphologyLocationLabels: boolean;
+  /** Show the zoom slider over the canvas. */
+  showZoomSlider: boolean;
   /** Show the scalebar down the side of the canvas. */
   showScalebar: boolean;
   /** per-property, per-value color overrides chosen by the user */
