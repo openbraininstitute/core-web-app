@@ -5,6 +5,7 @@ import { getTaskConfig } from '@/api/entitycore/queries/task/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkflowActivityDictValue } from '@/constants';
+import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import {
   type ScanConfigCampaignOriginActionDict,
   ScanConfigModeSearchParam,
@@ -460,7 +461,10 @@ export async function resolveWorkflowConfigureHrefForEntity({
   if (output) return buildStoredConfigurationHref({ match: output, workspace, entityId, mode });
 
   const source = findWorkflowFor('sourceType', candidates, flags);
-  if (source) return buildNewConfigurationHref({ match: source, workspace, entityId });
+  if (source) {
+    if (!isEntitySelectableForWorkflow(entity)) return null;
+    return buildNewConfigurationHref({ match: source, workspace, entityId });
+  }
 
   return null;
 }

@@ -5,6 +5,7 @@ import type {
   EntityCoreOwnership,
   EntityCoreType,
   IContributor,
+  TEntityLifecycleStatus,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -24,7 +25,7 @@ export interface IAnalysisNotebookResult
     EntityCoreType,
     EntityCoreOwnership {
   description: string;
-  lifecycle_status?: string | null;
+  lifecycle_status?: TEntityLifecycleStatus | null;
   contributions?: Array<IContributor> | null;
 }
 

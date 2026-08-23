@@ -259,6 +259,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   onRowsSelected,
   selectedRows,
   keepSelectionOnScopeChange,
+  getCheckboxProps,
   scrollable = true,
   dataKey,
   expandableConfig,
@@ -303,6 +304,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     onRowsSelected,
     dataSource,
     selectedRows,
+    getCheckboxProps,
   });
 
   const { expandableConfig: generatedExpandableConfig } = useExpandableTable(expandableOptions);

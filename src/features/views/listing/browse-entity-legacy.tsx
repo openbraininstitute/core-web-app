@@ -2,7 +2,7 @@
 
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { get, uniqBy } from 'es-toolkit/compat';
+import { get, isString, uniqBy } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
@@ -34,6 +34,11 @@ import {
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  isEntitySelectableForWorkflow,
+  isWorkflowPickerSection,
+  workflowLifecycleRowClass,
+} from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import {
   speciesSelectionModeAtom,
   workspaceHierarchySpeciesAtom,
@@ -415,6 +420,30 @@ export function BrowseEntityScopeLegacy({
     });
   };
 
+  const applyLifecycleGating = isWorkflowPickerSection(section);
+  const hostRowClassName = mainTableProps?.rowClassName;
+  const hostGetCheckboxProps = mainTableProps?.getCheckboxProps;
+  const composedRowClassName = useCallback(
+    (record: EntityCoreIdentifiableNamed, index: number, indent: number) => {
+      const extra = isString(hostRowClassName)
+        ? hostRowClassName
+        : hostRowClassName?.(record, index, indent);
+      return cn(extra, applyLifecycleGating ? workflowLifecycleRowClass(record) : undefined);
+    },
+    [applyLifecycleGating, hostRowClassName]
+  );
+  const composedGetCheckboxProps = useCallback(
+    (record: EntityCoreIdentifiableNamed) => {
+      const extra = hostGetCheckboxProps?.(record);
+      const lifecycleBlocked = applyLifecycleGating && !isEntitySelectableForWorkflow(record);
+      return {
+        ...extra,
+        disabled: Boolean(extra?.disabled) || lifecycleBlocked,
+      };
+    },
+    [applyLifecycleGating, hostGetCheckboxProps]
+  );
+
   useSelectEntityClickEvent((event) => {
     setMdv(event.detail.display);
   });
@@ -504,6 +533,10 @@ export function BrowseEntityScopeLegacy({
                 container: classNames?.tableClassNames?.container,
               }}
               {...mainTableProps}
+              rowClassName={composedRowClassName}
+              getCheckboxProps={
+                applyLifecycleGating || hostGetCheckboxProps ? composedGetCheckboxProps : undefined
+              }
               requireEntityTypeSelector={requireEntityTypeSelector}
               paginationClassName={
                 detailVariant === ViewVariant.Default && !contentOnInsetPanel

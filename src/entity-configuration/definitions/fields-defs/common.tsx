@@ -6,7 +6,12 @@ import { hasAssets } from '@/api/entitycore/guards';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import {
+  AgentType,
+  AssetLabel,
+  EntityLifecycleStatus,
+  EntityLifecycleStatusLabel,
+} from '@/api/entitycore/types/shared/global';
 import { DownloadIcon } from '@/components/icons';
 import { WorkspaceSection } from '@/constants';
 import {
@@ -38,7 +43,11 @@ import { ensureArray } from '@/utils/array';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
+import type {
+  IContributor,
+  IEntityLifecycleStatus,
+  TAgentType,
+} from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
@@ -65,7 +74,9 @@ const renderContributors = (
   return renderContributorsModal(sortedContribution, false, () => {}, 'inline');
 };
 
-export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
+export const FieldsDefinition: Partial<
+  FieldsDefinitionRegistry<EntityCoreObjectTypes & Partial<IEntityLifecycleStatus>>
+> = {
   [EntityCoreFields.Preview]: {
     className: 'text-center',
     title: 'Preview',
@@ -499,7 +510,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         return renderEmptyOrValue(
           renderArray(ensureArray({ input: r.species }).map((s) => s.name))
         );
-      if ('subject' in r && 'species' in r.subject)
+      if ('subject' in r && r.subject && 'species' in r.subject)
         return renderEmptyOrValue(r.subject.species.name);
       return EmptyValue;
     },
@@ -552,7 +563,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) => {
       if ('strain' in r)
         return renderEmptyOrValue(renderArray(ensureArray({ input: r.strain }).map((s) => s.name)));
-      if ('subject' in r && 'strain' in r.subject)
+      if ('subject' in r && r.subject && 'strain' in r.subject)
         return renderEmptyOrValue(r.subject.strain?.name);
       return EmptyValue;
     },
@@ -725,19 +736,17 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.LifecycleStatus]: {
     title: 'Lifecycle status',
     filter: CoreFieldFilterTypeEnum.DropdownList,
-    render: (r) => {
-      const status = 'lifecycle_status' in r ? (r.lifecycle_status as string | null) : null;
-      return getLifecycleStatusBadgeSpec(status) ? (
-        <LifecycleStatusBadge status={status} />
+    render: (r) =>
+      getLifecycleStatusBadgeSpec(r.lifecycle_status) ? (
+        <LifecycleStatusBadge status={r.lifecycle_status} />
       ) : (
         EmptyValue
-      );
-    },
+      ),
     vocabulary: {
       plural: 'Lifecycle statuses',
       singular: 'Lifecycle status',
     },
-    defaultConstraint: 'lifecycle_status',
+    defaultConstraint: EntityCoreFields.LifecycleStatus,
     isSortable: false,
     isDisplayable: true,
     isFilterable: true,
@@ -746,11 +755,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         allowMultiple: false,
         options: {
           kind: FilterOptionsSourceKind.Static,
-          items: [
-            { label: 'Draft', value: 'draft' },
-            { label: 'Active', value: 'active' },
-            { label: 'Disqualified', value: 'disqualified' },
-          ],
+          items: Object.values(EntityLifecycleStatus).map((value) => ({
+            label: EntityLifecycleStatusLabel[value],
+            value,
+          })),
         },
       },
     },

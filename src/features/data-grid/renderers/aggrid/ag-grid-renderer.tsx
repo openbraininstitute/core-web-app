@@ -74,6 +74,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     onRowClick,
     activeRowId,
     getRowClass,
+    isRowSelectable,
     expandColumn,
     loadingLabel,
   } = props;
@@ -151,13 +152,22 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   const selectionSpec = controller.schema.selection;
   // Picker mode overrides the schema's declared mode (radio single / checkbox multi).
   const effectiveSelectionMode = selectionModeOverride ?? selectionSpec?.mode;
+  const rowIsSelectable = useCallback(
+    (data: TDisplayRow<Row> | undefined): boolean => {
+      if (data == null || isDetailRow(data)) return false;
+      return isRowSelectable ? isRowSelectable(data) : true;
+    },
+    [isRowSelectable]
+  );
   const rowSelection = useMemo<RowSelectionOptions<TDisplayRow<Row>> | undefined>(() => {
     if (!selectionEnabled) return undefined;
+    const isSelectable = (p: { data?: TDisplayRow<Row> }) => rowIsSelectable(p.data);
     if (effectiveSelectionMode === 'single') {
       return {
         mode: 'singleRow',
         checkboxes: (p) => !isDetailRow(p.data),
         enableClickSelection: false,
+        isRowSelectable: isSelectable,
       };
     }
     return {
@@ -166,8 +176,9 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       headerCheckbox: selectionSpec?.headerCheckbox ?? true,
       selectAll: 'currentPage',
       enableClickSelection: false,
+      isRowSelectable: isSelectable,
     };
-  }, [selectionEnabled, effectiveSelectionMode, selectionSpec?.headerCheckbox]);
+  }, [selectionEnabled, effectiveSelectionMode, selectionSpec?.headerCheckbox, rowIsSelectable]);
 
   const selectionColumnDef = useMemo(
     () =>

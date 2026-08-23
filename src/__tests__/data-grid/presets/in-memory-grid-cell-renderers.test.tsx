@@ -1,6 +1,10 @@
 import { render, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import {
+  EntityLifecycleStatus,
+  type TEntityLifecycleStatus,
+} from '@/api/entitycore/types/shared/global';
 import { InMemoryGrid } from '@/features/data-grid/presets/in-memory-grid';
 import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 
@@ -8,10 +12,10 @@ import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 interface Row {
   id: string;
-  lifecycle_status: string;
+  lifecycle_status: TEntityLifecycleStatus;
 }
 
-const rows: Row[] = [{ id: 'a', lifecycle_status: 'active' }];
+const rows: Row[] = [{ id: 'a', lifecycle_status: EntityLifecycleStatus.Active }];
 
 /**
  * A schema column names its renderer by KEY (as the entitycore bindings do) rather than
@@ -53,7 +57,7 @@ describe('InMemoryGrid — keyed cell renderers', () => {
 
     await waitFor(() => expect(getByTestId('pill')).toBeTruthy());
     // row and value both reach the renderer, as they do through `AgCellHost`
-    expect(getByTestId('pill').textContent).toBe('a:active');
+    expect(getByTestId('pill').textContent).toBe(`a:${EntityLifecycleStatus.Active}`);
     // and so do the column's static renderer params
     expect(getByTestId('pill').getAttribute('data-tone')).toBe('green');
   });
@@ -63,7 +67,7 @@ describe('InMemoryGrid — keyed cell renderers', () => {
       <InMemoryGrid<Row> columns={columns} rows={rows} getRowId={(r) => r.id} />
     );
 
-    await waitFor(() => expect(container.textContent).toContain('active'));
+    await waitFor(() => expect(container.textContent).toContain(EntityLifecycleStatus.Active));
     expect(queryByTestId('pill')).toBeNull();
   });
 

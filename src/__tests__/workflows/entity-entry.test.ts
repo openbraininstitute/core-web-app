@@ -4,6 +4,7 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkflowActivityDictValue } from '@/constants';
 import {
   brainRegionSimulationFlag,
@@ -421,5 +422,24 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
     expect(normalizeSession(resolved as string)).toBe(
       `${base}/simulate/configure/me-model-circuit-simulation/{session}?mode=duplicate&origin=${ENTITY_ID}`
     );
+  });
+
+  it.each([
+    EntityLifecycleStatus.Draft,
+    EntityLifecycleStatus.Disqualified,
+  ])('returns null for a %s source model', async (lifecycle_status) => {
+    getEntity.mockResolvedValue({
+      id: ENTITY_ID,
+      type: EntityTypeDict.Memodel,
+      lifecycle_status,
+    });
+
+    await expect(
+      resolveWorkflowConfigureHrefForEntity({
+        entityId: ENTITY_ID,
+        workspace,
+        flags: allFlags,
+      })
+    ).resolves.toBeNull();
   });
 });

@@ -107,13 +107,13 @@ describe('lifecycle status — coverage across every registered listing', () => 
             columnId: 'lifecycleStatus',
             operator: OperatorId.Eq,
             targetId: 'lifecycleStatus',
-            value: { kind: FilterValueKind.Text, text: EntityLifecycleStatus.Active.key },
+            value: { kind: FilterValueKind.Text, text: EntityLifecycleStatus.Active },
           },
         },
       }),
       schema
     );
-    expect(params.lifecycle_status).toBe('active');
+    expect(params.lifecycle_status).toBe(EntityLifecycleStatus.Active);
     expect(params.lifecycle_status__in).toBeUndefined();
   });
 
@@ -129,9 +129,9 @@ describe('lifecycle status — coverage across every registered listing', () => 
     expect(
       target?.options?.kind === FilterOptionsKind.Static ? target.options.items : undefined
     ).toEqual([
-      { id: 'draft', label: 'Draft' },
-      { id: 'active', label: 'Active' },
-      { id: 'disqualified', label: 'Disqualified' },
+      { id: EntityLifecycleStatus.Draft, label: 'Draft' },
+      { id: EntityLifecycleStatus.Active, label: 'Active' },
+      { id: EntityLifecycleStatus.Disqualified, label: 'Disqualified' },
     ]);
   });
 
@@ -170,9 +170,15 @@ describe('lifecycle status — cell value and pill', () => {
   it('shows the LABEL, not the wire value', () => {
     const { schema } = definitionFor('emodel');
     const column = schema.columns.find((c) => c.id === 'lifecycleStatus');
-    expect(column?.getValue?.({ lifecycle_status: 'active' } as never)).toBe('Active');
-    expect(column?.getValue?.({ lifecycle_status: 'draft' } as never)).toBe('Draft');
-    expect(column?.getValue?.({ lifecycle_status: 'disqualified' } as never)).toBe('Disqualified');
+    expect(column?.getValue?.({ lifecycle_status: EntityLifecycleStatus.Active } as never)).toBe(
+      'Active'
+    );
+    expect(column?.getValue?.({ lifecycle_status: EntityLifecycleStatus.Draft } as never)).toBe(
+      'Draft'
+    );
+    expect(
+      column?.getValue?.({ lifecycle_status: EntityLifecycleStatus.Disqualified } as never)
+    ).toBe('Disqualified');
   });
 
   it('falls through to the shared empty cell when the value is absent', () => {
@@ -184,15 +190,15 @@ describe('lifecycle status — cell value and pill', () => {
   });
 
   it('maps each status to a light pill with a full-colour border and text', () => {
-    expect(getLifecycleStatusBadgeSpec('draft')).toMatchObject({
+    expect(getLifecycleStatusBadgeSpec(EntityLifecycleStatus.Draft)).toMatchObject({
       label: 'Draft',
       tone: 'neutral',
     });
-    expect(getLifecycleStatusBadgeSpec('active')).toMatchObject({
+    expect(getLifecycleStatusBadgeSpec(EntityLifecycleStatus.Active)).toMatchObject({
       label: 'Active',
       tone: 'success',
     });
-    expect(getLifecycleStatusBadgeSpec('disqualified')).toMatchObject({
+    expect(getLifecycleStatusBadgeSpec(EntityLifecycleStatus.Disqualified)).toMatchObject({
       label: 'Disqualified',
       tone: 'destructive',
     });

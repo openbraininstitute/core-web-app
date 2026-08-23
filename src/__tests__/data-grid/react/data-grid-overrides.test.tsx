@@ -7,6 +7,7 @@ import {
   createDefaultOperatorRegistry,
   GridController,
   OperatorId,
+  SelectionMode,
 } from '@/features/data-grid/core';
 import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
 import { DataGrid } from '@/features/data-grid/react/data-grid';
@@ -84,6 +85,35 @@ describe('DataGrid — optional getRowClass / expandColumn passthrough (backward
     expect(received?.expandColumn).toBe(expandColumn);
   });
 
+  it('forwards picker isRowSelectable to the renderer', async () => {
+    let received: IGridRendererProps<Row> | undefined;
+    const spyRenderer: TGridRenderer = (props) => {
+      received = props as unknown as IGridRendererProps<Row>;
+      return null;
+    };
+    const isRowSelectable = (row: Row) => row.id !== 'blocked';
+
+    wrap(
+      <DataGrid
+        controller={controller()}
+        dataSource={dataSource}
+        renderer={spyRenderer}
+        operators={createDefaultOperatorRegistry()}
+        cellRenderers={new CellRendererRegistry()}
+        queryKey={['t']}
+        selection={{
+          mode: SelectionMode.Multi,
+          onChange: () => {},
+          isRowSelectable,
+        }}
+        showColumnChooser={false}
+      />
+    );
+
+    await waitFor(() => expect(received).toBeDefined());
+    expect(received?.isRowSelectable).toBe(isRowSelectable);
+  });
+
   it('omitting them leaves the renderer props undefined (unchanged default)', async () => {
     let received: IGridRendererProps<Row> | undefined;
     const spyRenderer: TGridRenderer = (props) => {
@@ -106,6 +136,7 @@ describe('DataGrid — optional getRowClass / expandColumn passthrough (backward
     await waitFor(() => expect(received).toBeDefined());
     expect(received?.getRowClass).toBeUndefined();
     expect(received?.expandColumn).toBeUndefined();
+    expect(received?.isRowSelectable).toBeUndefined();
   });
 
   it('merges host-supplied toolbar slots into the toolbar', async () => {

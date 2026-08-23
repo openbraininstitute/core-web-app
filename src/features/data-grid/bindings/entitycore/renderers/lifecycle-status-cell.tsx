@@ -8,6 +8,7 @@ import {
 } from '@/ui/molecules/lifecycle-status-badge';
 
 import type { ReactNode } from 'react';
+import type { TEntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import type { ICellRendererProps } from '@/features/data-grid/react';
 
 export { EntityLifecycleStatus, getLifecycleStatusBadgeSpec };
@@ -16,7 +17,7 @@ export { EntityLifecycleStatus, getLifecycleStatusBadgeSpec };
 export const LIFECYCLE_STATUS_RENDERER = 'lifecycleStatus';
 
 interface ILifecycleStatusRow {
-  lifecycle_status?: string | null;
+  lifecycle_status?: TEntityLifecycleStatus | null;
 }
 
 /** Shared lifecycle-status cell; falls through to the empty placeholder if absent. */

@@ -1,18 +1,14 @@
+import {
+  EntityLifecycleStatus,
+  EntityLifecycleStatusLabel,
+  type TEntityLifecycleStatus,
+} from '@/api/entitycore/types/shared/global';
 import { Badge } from '@/ui/molecules/badge';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
-/**
- * Entitycore's lifecycle-status enum in the `{ key, label }` shape the grid's
- * `staticOptions` helpers read, so display labels and filter options cannot drift.
- * (`shared/global` has a bare key → wire-value map, which carries no labels.)
- */
-export const EntityLifecycleStatus = {
-  Draft: { key: 'draft', label: 'Draft' },
-  Active: { key: 'active', label: 'Active' },
-  Disqualified: { key: 'disqualified', label: 'Disqualified' },
-} as const;
+export { EntityLifecycleStatus, EntityLifecycleStatusLabel };
 
 /** Semantic tone for one lifecycle status. */
 const LifecycleStatusTone = {
@@ -36,22 +32,22 @@ export interface ILifecycleStatusBadgeSpec {
 
 /** Status → pill presentation: light background, full-colour border and text. */
 const STATUS_BADGE: Record<string, ILifecycleStatusBadgeSpec> = {
-  [EntityLifecycleStatus.Draft.key]: {
-    label: EntityLifecycleStatus.Draft.label,
+  [EntityLifecycleStatus.Draft]: {
+    label: EntityLifecycleStatusLabel[EntityLifecycleStatus.Draft],
     tone: LifecycleStatusTone.Neutral,
     bg: 'bg-slate-50',
     border: 'border-slate-400',
     text: 'text-slate-600',
   },
-  [EntityLifecycleStatus.Active.key]: {
-    label: EntityLifecycleStatus.Active.label,
+  [EntityLifecycleStatus.Active]: {
+    label: EntityLifecycleStatusLabel[EntityLifecycleStatus.Active],
     tone: LifecycleStatusTone.Success,
     bg: 'bg-green-50',
     border: 'border-green-500',
     text: 'text-green-700',
   },
-  [EntityLifecycleStatus.Disqualified.key]: {
-    label: EntityLifecycleStatus.Disqualified.label,
+  [EntityLifecycleStatus.Disqualified]: {
+    label: EntityLifecycleStatusLabel[EntityLifecycleStatus.Disqualified],
     tone: LifecycleStatusTone.Destructive,
     bg: 'bg-red-50',
     border: 'border-red-500',
@@ -64,7 +60,7 @@ const STATUS_BADGE: Record<string, ILifecycleStatusBadgeSpec> = {
  * may add enum members first) degrades to a neutral pill showing the raw value.
  */
 export function getLifecycleStatusBadgeSpec(
-  status: string | null | undefined
+  status: TEntityLifecycleStatus | string | null | undefined
 ): ILifecycleStatusBadgeSpec | undefined {
   if (!status) return undefined;
   return (
@@ -83,7 +79,7 @@ export function LifecycleStatusBadge({
   status,
   className,
 }: {
-  status: string | null | undefined;
+  status: TEntityLifecycleStatus | string | null | undefined;
   className?: string;
 }): ReactNode | null {
   const spec = getLifecycleStatusBadgeSpec(status);

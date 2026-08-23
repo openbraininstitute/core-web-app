@@ -1,10 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkspaceSection } from '@/constants';
 import { WorkflowActions } from '@/ui/segments/mini-detail-view/actions/simulate-extract-process';
 
-import { makeCellMorphology, makeCircuit, makeSingleNeuronScaleCircuit } from './fixtures';
+import {
+  makeCellMorphology,
+  makeCircuit,
+  makeMemodel,
+  makeSingleNeuronScaleCircuit,
+} from './fixtures';
 
 import type { ComponentProps } from 'react';
 
@@ -12,8 +19,10 @@ vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vl-1', projectId: 'proj-1' }),
 }));
 
-// only the search-param constant is used by this component; the "Use model" action itself is
-// hidden in every test below (`hideUseModelAction`) to isolate "View details"
+vi.mock('@bprogress/next', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 vi.mock('@/ui/segments/workflows/config', () => ({
   WORKFLOW_SESSION_ID_SEARCH_PARAM: 'workflow_session_id',
 }));
@@ -61,5 +70,45 @@ describe.each([
       'href',
       `${ROOT_ROUTE}/vl-1/proj-1/data/view/single-neuron-circuit/circuit-single-1`
     );
+  });
+});
+
+describe('WorkflowActions "Use model" lifecycle gating', () => {
+  it('keeps Use model enabled for an active entity', () => {
+    renderWorkflowActions({
+      hideUseModelAction: false,
+      section: WorkspaceSection.SimulateWorkflow,
+      workflowTargetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+      record: makeMemodel({ lifecycle_status: EntityLifecycleStatus.Active }),
+    });
+
+    expect(screen.getByRole('button', { name: 'Use model' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'View details' })).toBeEnabled();
+  });
+
+  it.each([
+    EntityLifecycleStatus.Draft,
+    EntityLifecycleStatus.Disqualified,
+  ])('disables Use model for a %s entity', (status) => {
+    renderWorkflowActions({
+      hideUseModelAction: false,
+      section: WorkspaceSection.SimulateWorkflow,
+      workflowTargetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+      record: makeMemodel({ lifecycle_status: status }),
+    });
+
+    expect(screen.getByRole('button', { name: 'Use model' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'View details' })).toBeEnabled();
+  });
+
+  it('disables the fallback Use model link for a draft entity', () => {
+    renderWorkflowActions({
+      hideUseModelAction: false,
+      section: WorkspaceSection.SimulateWorkflow,
+      record: makeMemodel({ lifecycle_status: EntityLifecycleStatus.Draft }),
+    });
+
+    expect(screen.getByRole('button', { name: 'Use model' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'View details' })).toBeEnabled();
   });
 });

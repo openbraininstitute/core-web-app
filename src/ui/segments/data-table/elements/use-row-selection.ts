@@ -20,7 +20,10 @@ function areSelectedRowsEqual<T extends { id: string }>(left: T[], right: T[]): 
   return left.every((row, index) => row.id === right[index]?.id);
 }
 
-type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
+type RowSelection<T> = Pick<
+  TableRowSelection<T>,
+  'selectedRowKeys' | 'onChange' | 'type' | 'getCheckboxProps'
+>;
 
 export type RenderButtonProps<T> = {
   selectedRows: Array<T>;
@@ -34,6 +37,7 @@ export type TableRowSelectionProps<T extends { id: string }> = {
   onRowsSelected?: (rows: T[]) => void;
   /** when true, workspace scope changes do not clear row selection */
   keepSelectionOnScopeChange?: boolean;
+  getCheckboxProps?: TableRowSelection<T>['getCheckboxProps'];
 };
 
 /**
@@ -51,6 +55,7 @@ export function useRowSelection<T extends { id: string }>({
   dataSource,
   selectedRows: selectedRowsProp,
   onRowsSelected,
+  getCheckboxProps,
 }: {
   dataKey: string;
   selectionType?: RowSelectionType;
@@ -114,6 +119,7 @@ export function useRowSelection<T extends { id: string }>({
       selectedRowKeys: selectedRows.map((row) => row.id),
       onChange: onRowSelect,
       type: selectionType,
+      getCheckboxProps,
     },
     selectedRows,
     clearSelectedRows,

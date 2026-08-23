@@ -20,12 +20,30 @@ export type EntityCoreType = {
   type: TEntityTypeDict;
 };
 
-const EntityLifecycleStatus = {
+/** Mirrors entitycore's `EntityLifecycleStatus(StrEnum)`. */
+export const EntityLifecycleStatus = {
   Draft: 'draft',
   Active: 'active',
   Disqualified: 'disqualified',
 } as const;
-type TEntityLifecycleStatus = (typeof EntityLifecycleStatus)[keyof typeof EntityLifecycleStatus];
+
+export type TEntityLifecycleStatus =
+  (typeof EntityLifecycleStatus)[keyof typeof EntityLifecycleStatus];
+
+export const EntityLifecycleStatusLabel = {
+  [EntityLifecycleStatus.Draft]: 'Draft',
+  [EntityLifecycleStatus.Active]: 'Active',
+  [EntityLifecycleStatus.Disqualified]: 'Disqualified',
+} as const satisfies Record<TEntityLifecycleStatus, string>;
+
+export function getEntityLifecycleStatusLabel(
+  status: TEntityLifecycleStatus | string | null | undefined
+): string {
+  if (status == null) return '';
+  return status in EntityLifecycleStatusLabel
+    ? EntityLifecycleStatusLabel[status as TEntityLifecycleStatus]
+    : status;
+}
 
 export interface IEntityLifecycleStatus {
   lifecycle_status: TEntityLifecycleStatus;
