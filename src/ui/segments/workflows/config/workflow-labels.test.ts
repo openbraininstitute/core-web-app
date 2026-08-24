@@ -140,6 +140,22 @@ describe('legacy marking', () => {
   });
 });
 
+describe('workflow types menu', () => {
+  it('gives every entry of an activity a distinct react key', () => {
+    for (const activity of EVERY_ACTIVITY) {
+      // the menu keys carousel items by target type: the Build list holds two entries
+      // labelled "Single neuron" (ME-model and single neuron circuit), so group + label collide
+      const keys = listWorkflows({
+        activity,
+        flags: allFlagsOn,
+        sort: WorkflowListSortDict.Order,
+      }).map((workflow) => workflow.targetType);
+
+      expect(new Set(keys).size).toBe(keys.length);
+    }
+  });
+});
+
 describe('data navigation naming', () => {
   it('orders Data > Model with the superseded synaptome last', () => {
     expect(Object.values(ModelDataExtendedTypes).map((entity) => entity.title)).toEqual([
