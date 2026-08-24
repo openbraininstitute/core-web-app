@@ -46,7 +46,9 @@ export function getWorkflowLifecycleBlockReason(
 ): string | undefined {
   const status = entity.lifecycle_status;
   if (status == null) return undefined;
-  return BLOCKED_LIFECYCLE_REASONS[status as TEntityLifecycleStatus];
+  return Object.hasOwn(BLOCKED_LIFECYCLE_REASONS, status)
+    ? BLOCKED_LIFECYCLE_REASONS[status as TEntityLifecycleStatus]
+    : undefined;
 }
 
 /**

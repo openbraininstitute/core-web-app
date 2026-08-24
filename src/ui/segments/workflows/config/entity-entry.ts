@@ -5,7 +5,7 @@ import { getTaskConfig } from '@/api/entitycore/queries/task/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkflowActivityDictValue } from '@/constants';
-import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
+import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import {
   type ScanConfigCampaignOriginActionDict,
   ScanConfigModeSearchParam,
@@ -64,6 +64,30 @@ export type TResolveWorkflowConfigureHrefForEntityParams = {
   flags?: FeatureFlags;
   mode?: TWorkflowConfigureHrefMode;
 };
+
+export const WorkflowConfigureOutcomeDict = {
+  Resolved: 'resolved',
+  NoWorkflow: 'no-workflow',
+  LifecycleBlocked: 'lifecycle-blocked',
+} as const;
+
+export type TWorkflowConfigureOutcome =
+  (typeof WorkflowConfigureOutcomeDict)[keyof typeof WorkflowConfigureOutcomeDict];
+
+/** `lifecycle-blocked` carries the same reason the picker tooltips show, so callers can say why. */
+export type TWorkflowConfigureHrefResult =
+  | { outcome: typeof WorkflowConfigureOutcomeDict.Resolved; href: string }
+  | { outcome: typeof WorkflowConfigureOutcomeDict.NoWorkflow; href: null }
+  | { outcome: typeof WorkflowConfigureOutcomeDict.LifecycleBlocked; href: null; reason: string };
+
+const NO_WORKFLOW_RESULT: TWorkflowConfigureHrefResult = {
+  outcome: WorkflowConfigureOutcomeDict.NoWorkflow,
+  href: null,
+};
+
+function toConfigureHrefResult(href: string | null): TWorkflowConfigureHrefResult {
+  return href ? { outcome: WorkflowConfigureOutcomeDict.Resolved, href } : NO_WORKFLOW_RESULT;
+}
 
 /**
  * workflows the user can open, simulate first
@@ -428,43 +452,56 @@ async function resolveTaskConfigHref({
  *   read with; public entities resolve from any workspace
  * @param flags: the viewer's feature flags, so a flag-gated workflow is never linked to
  * @param mode: `'duplicate'` opens a stored campaign editable; omitted keeps the read-only view
- * @returns configure href, or `null` when no available workflow accepts the entity
+ * @returns `resolved` with the configure href, `lifecycle-blocked` with the reason to show when the
+ *   entity's lifecycle status keeps it out of workflows, or `no-workflow` when no available
+ *   workflow accepts the entity
  *
  * @example
- * const href = await resolveWorkflowConfigureHrefForEntity({
+ * const result = await resolveWorkflowConfigureHrefForEntity({
  *   entityId: 'a-simulation-campaign-id',
  *   workspace: { virtualLabId, projectId },
  *   flags,
  *   mode: 'duplicate',
  * });
- * // /app/virtual-lab/{lab}/{project}/workflows/simulate/configure/me-model-circuit-simulation/wf_…?mode=duplicate&origin=a-simulation-campaign-id
+ * // { outcome: 'resolved', href: '/app/virtual-lab/{lab}/{project}/workflows/simulate/configure/me-model-circuit-simulation/wf_…?mode=duplicate&origin=a-simulation-campaign-id' }
  */
 export async function resolveWorkflowConfigureHrefForEntity({
   entityId,
   workspace,
   flags,
   mode,
-}: TResolveWorkflowConfigureHrefForEntityParams): Promise<string | null> {
+}: TResolveWorkflowConfigureHrefForEntityParams): Promise<TWorkflowConfigureHrefResult> {
   const entity = await getEntity({ id: entityId, context: workspace });
 
   if (entity.type === EntityTypeDict.SimulationCampaign) {
-    return resolveSimulationCampaignHref({ campaignId: entityId, workspace, flags, mode });
+    return toConfigureHrefResult(
+      await resolveSimulationCampaignHref({ campaignId: entityId, workspace, flags, mode })
+    );
   }
 
   if (entity.type === EntityTypeDict.TaskConfig) {
-    return resolveTaskConfigHref({ taskConfigId: entityId, workspace, flags, mode });
+    return toConfigureHrefResult(
+      await resolveTaskConfigHref({ taskConfigId: entityId, workspace, flags, mode })
+    );
   }
 
   const candidates = await resolveEntityTypeCandidates(entity, workspace);
 
   const output = findWorkflowFor('targetType', candidates.filter(isActivityOutputType), flags);
-  if (output) return buildStoredConfigurationHref({ match: output, workspace, entityId, mode });
+  if (output) {
+    return toConfigureHrefResult(
+      buildStoredConfigurationHref({ match: output, workspace, entityId, mode })
+    );
+  }
 
   const source = findWorkflowFor('sourceType', candidates, flags);
   if (source) {
-    if (!isEntitySelectableForWorkflow(entity)) return null;
-    return buildNewConfigurationHref({ match: source, workspace, entityId });
+    const reason = getWorkflowLifecycleBlockReason(entity);
+    if (reason) {
+      return { outcome: WorkflowConfigureOutcomeDict.LifecycleBlocked, href: null, reason };
+    }
+    return toConfigureHrefResult(buildNewConfigurationHref({ match: source, workspace, entityId }));
   }
 
-  return null;
+  return NO_WORKFLOW_RESULT;
 }

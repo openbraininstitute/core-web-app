@@ -37,6 +37,11 @@ describe('isEntitySelectableForWorkflow', () => {
   it('allows an unknown status', () => {
     expect(isEntitySelectableForWorkflow({ lifecycle_status: 'archived' })).toBe(true);
   });
+
+  it('allows a status that collides with an Object prototype key', () => {
+    expect(isEntitySelectableForWorkflow({ lifecycle_status: 'constructor' })).toBe(true);
+    expect(isEntitySelectableForWorkflow({ lifecycle_status: 'toString' })).toBe(true);
+  });
 });
 
 describe('getWorkflowLifecycleBlockReason', () => {
@@ -54,6 +59,7 @@ describe('getWorkflowLifecycleBlockReason', () => {
     ).toBeUndefined();
     expect(getWorkflowLifecycleBlockReason({})).toBeUndefined();
     expect(getWorkflowLifecycleBlockReason({ lifecycle_status: 'archived' })).toBeUndefined();
+    expect(getWorkflowLifecycleBlockReason({ lifecycle_status: 'toString' })).toBeUndefined();
   });
 });
 

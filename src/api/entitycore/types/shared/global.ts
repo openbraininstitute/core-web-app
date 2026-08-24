@@ -40,7 +40,7 @@ export function getEntityLifecycleStatusLabel(
   status: TEntityLifecycleStatus | string | null | undefined
 ): string {
   if (status == null) return '';
-  return status in EntityLifecycleStatusLabel
+  return Object.hasOwn(EntityLifecycleStatusLabel, status)
     ? EntityLifecycleStatusLabel[status as TEntityLifecycleStatus]
     : status;
 }
