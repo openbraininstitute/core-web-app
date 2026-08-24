@@ -5,7 +5,7 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { resolveManifestPath } from '@/utils/circuit-manifest';
+import { resolveCircuitAssetPath } from '@/utils/circuit-manifest';
 
 import type {
   ICircuit,
@@ -19,27 +19,37 @@ import type {
 
 const CIRCUIT_CONFIG_PATH = 'circuit_config.json';
 
-function parseSonataConfig(
+/**
+ * Flatten a `circuit_config.json` into the populations and files the reader
+ * consumes, with every path's manifest variables expanded.
+ *
+ * Exported for tests: manifest expansion has to reach `nodes_file` and
+ * `edges_file` alike, and getting it wrong on one of them fails as a 404 far
+ * from here.
+ */
+export function parseSonataConfig(
   raw: ICircuitSonataConfiguration,
   circuitAssetId: string
 ): ParsedCircuitConfig {
   const nodes: NodePopulation[] = [];
   const edges: EdgePopulation[] = [];
 
+  const filePath = (path: string) => resolveCircuitAssetPath(path, raw.manifest);
+
   for (const entry of raw.networks?.nodes ?? []) {
-    const file = resolveManifestPath(entry.nodes_file ?? '', raw.manifest);
+    const file = filePath(entry.nodes_file ?? '');
     for (const [name, pop] of Object.entries(entry.populations ?? {})) {
       nodes.push({ name, type: pop.type, file });
     }
   }
   for (const entry of raw.networks?.edges ?? []) {
-    const file = resolveManifestPath(entry.edges_file ?? '', raw.manifest);
+    const file = filePath(entry.edges_file ?? '');
     for (const [name, pop] of Object.entries(entry.populations ?? {})) {
       edges.push({ name, type: pop.type, file });
     }
   }
 
-  return { nodes, edges, circuitAssetId };
+  return { nodes, edges, circuitAssetId, raw };
 }
 
 export function useCircuitConfig(circuit: ICircuit | undefined) {

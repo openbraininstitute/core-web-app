@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 // biome-ignore lint/style/useImportType: biome hallucination
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+// Past the package barrel: `SectionSchema` needs the enum as a runtime value,
+// and the barrel would cost this module a WebGL renderer.
+import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
 
 import type {
   ICellMorphology,
@@ -15,6 +18,7 @@ import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
+import type { MorphoViewerTreeItem } from '@/morpho-viewer/tree-item-type';
 import type { Prettify } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
@@ -160,6 +164,7 @@ export const ScanConfigUIElementDict = {
   MorphologySectionTypeSelection: 'morphology_section_type_selection',
   FloatOptional: 'float_optional',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
+  MorphologyLocationSelection: 'morphology_location_selection',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -410,6 +415,22 @@ export interface VoltageDuration extends TBlockElement {
   };
 }
 
+/**
+ * A list of `{ section_id, offset }` rows — one morphology location each.
+ *
+ * `section_id` is SONATA numbering (0 = soma), the same id the circuit viewer reports as
+ * `sonata_section_id`, so a viewer selection can be written straight into a row.
+ */
+export interface IMorphologyLocationSelection extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.MorphologyLocationSelection;
+  items: {
+    properties: {
+      section_id: { title?: string; description?: string; minimum?: number };
+      offset: { title?: string; description?: string; minimum?: number; maximum?: number };
+    };
+  };
+}
+
 export interface NeuronPropertyFilter extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter;
   population_source_dropdown_key: string;
@@ -456,6 +477,7 @@ export type ParamSchema =
   | ModelSelectorSingle
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
+  | IMorphologyLocationSelection
   | VoltageDuration
   | StringSelectionEnhanced
   | NeuronPropertyFilter
@@ -530,31 +552,26 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
-export const NodeSchema = z.object({
-  morphology_file: z.string(),
-  morphology_name: z.string(),
-  position: z.tuple([z.number(), z.number(), z.number()]),
-  orientation: z.tuple([z.number(), z.number(), z.number(), z.number()]),
-});
-
-export const NodesSchema = z.array(NodeSchema);
-
-export enum MorphoViewerTreeItemType {
-  Soma = 0,
-  Dendrite,
-  BasalDendrite,
-  ApicalDendrite,
-  Myelin,
-  Axon,
-  Selected,
-  Liaison,
-  Unknown,
-}
+// Re-exported rather than re-declared: a structurally identical enum is still a
+// *different* enum to TypeScript, so two copies never compare equal.
+export type { MorphoViewerTreeItem };
+export { MorphoViewerTreeItemType };
 
 const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
 
 export const SectionSchema = z.object({
   id: z.string(),
+  /**
+   * SONATA global section id: 0 for the soma, then nrn_order neurites — the id
+   * `IMorphologyLocationPoint.section_id` expects. `id` above is OBI-One's raw morphio id
+   * and is only meaningful for parent/child linking within the same response.
+   *
+   * Optional on purpose: OBI-One only started reporting it alongside the `nrn_order`
+   * fix, and a required field here would make `SectionsArraySchema.parse` throw against
+   * an older deployment, taking the whole circuit viewer down for a field nothing
+   * renders yet. Tighten to required once every environment serves it.
+   */
+  sonata_section_id: z.number().int().optional(),
   parent_id: z.string().nullable(),
   type: z.enum(MorphoViewerTreeItemType),
   points: z.array(Point3DSchema),
@@ -564,9 +581,6 @@ export const SectionSchema = z.object({
 export const SectionsArraySchema = z.array(SectionSchema);
 export type Sections = z.infer<typeof SectionsArraySchema>;
 
-export type Node = z.infer<typeof NodeSchema>;
-export type Nodes = z.infer<typeof NodesSchema>;
-
 export type Cell = {
   id: string;
   center: [number, number, number];
@@ -574,18 +588,6 @@ export type Cell = {
   somaRadius: number;
   color: string;
 };
-
-export interface MorphoViewerTreeItem {
-  x: number;
-  y: number;
-  z: number;
-  radius: number;
-  type: MorphoViewerTreeItemType;
-  sectionId: string;
-  segmentId: string;
-  distanceFromSoma: number;
-  children?: MorphoViewerTreeItem[];
-}
 
 export type TSupportedEntitiesForScanConfiguration =
   | ICircuit

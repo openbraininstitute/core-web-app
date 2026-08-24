@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -9,19 +9,21 @@ import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import {
   CircuitPreview,
-  type ElectrodeOverlayOptions,
+  type IElectrodeOverlayOptions,
 } from '@/features/scan-config/components/model-preview/circuit-preview';
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
+  resolveEnableMorphologyLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
-import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 export function ModelPreview({
   model,
+  form,
   electrodes,
   defaultNeuronOpacity,
   /**
@@ -33,8 +35,10 @@ export function ModelPreview({
   viewerFeatures,
 }: {
   model: TSupportedEntitiesForScanConfiguration;
+  /** The live form to bind the viewer to; omit for a read-only preview. */
+  form?: IFormBindingOptions;
   /** The electrode-overlay layer; omit for a plain circuit viewer. */
-  electrodes?: ElectrodeOverlayOptions;
+  electrodes?: IElectrodeOverlayOptions;
   /**
    * Initial neuron opacity for the circuit viewer. Host-owned (scan-config,
    * details, …). Omit for 100%; pass e.g. 0.2 when electrodes should dominate.
@@ -77,18 +81,34 @@ export function ModelPreview({
       }),
   };
 
+  const picksLocations = resolveEnableMorphologyLocations(model);
+  const viewerForm = useMemo(
+    () => (form ? { ...form, supportsExplicitLocations: picksLocations } : undefined),
+    [form, picksLocations]
+  );
+
   return (
     match(model)
+      // An MEModel shares the circuit viewer and its morphology-location picking.
       .with({ type: EntityTypeDict.Memodel }, () => (
-        <NeuronVisualizer
-          memodelId={model.id}
-          sessionId={model.id}
-          disableElectrodes
-          disableSynapses
+        <CircuitPreview
+          memodel={model}
+          // The form binding lets a 3D click write a morphology location back into the form.
+          form={viewerForm}
+          enableVisualization
+          features={{
+            ...viewerFeatures,
+            colorBy: false,
+            nodesTable: false,
+            electrodes: false,
+            // Hover highlight is pointless with a single neuron.
+            cellHover: false,
+          }}
+          defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
-      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit.
-      // Loader strategy is selected inside CircuitViz by scale (SONATA vs OBI-One).
+      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit, all served
+      // by OBI-One `/circuit/viz`.
       .with(
         {
           type: EntityTypeDict.Circuit,
@@ -101,6 +121,7 @@ export function ModelPreview({
         (circuit) => (
           <CircuitPreview
             circuit={circuit as ICircuit}
+            form={viewerForm}
             electrodes={electrodes}
             enableVisualization
             features={featuresForSmall(circuit as ICircuit)}
@@ -111,6 +132,7 @@ export function ModelPreview({
       .with({ type: EntityTypeDict.Circuit }, () => (
         <CircuitPreview
           circuit={model as ICircuit}
+          form={viewerForm}
           electrodes={electrodes}
           enableVisualization
           largeCircuit

@@ -1,3 +1,5 @@
+import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
+
 export const ColumnKindDict = {
   Numeric: 'numeric',
   Categorical: 'categorical',
@@ -98,6 +100,50 @@ export type OpenResponse = {
   columns: ColumnMeta[];
 };
 
+/**
+ * Everything a 3D viewer needs from a node population, in one read.
+ *
+ * Flat typed arrays rather than per-node objects: they cross the worker
+ * boundary as transferables, so a population of any size costs one detach
+ * instead of a structured clone. `Float64Array` and not `Float32Array` because
+ * these coordinates feed electrode placement maths, not just the paint.
+ */
+export type NodeGeometry = {
+  count: number;
+  /** flat `[x, y, z, ...]`, one triple per node, in file order */
+  positions: Float64Array;
+  /** flat `[x, y, z, w, ...]` quaternions; null when the population declares none */
+  orientations: Float64Array | null;
+  /**
+   * Morphology name per node; null when not requested (see
+   * {@link NodeGeometryOptions.withMorphologies}) or when the population has no
+   * `morphology` column.
+   */
+  morphologies: string[] | null;
+};
+
+export type NodeGeometryOptions = {
+  /**
+   * Read the `morphology` column too. Off by default, because it is the one
+   * part of {@link NodeGeometry} that cannot cross the worker boundary as a
+   * transferable: it decodes to one JS string per node, which at region scale
+   * is the single largest allocation in the payload.
+   *
+   * Only callers that resolve a morphology *file* from the name need it; the
+   * somas-only viewer does not.
+   */
+  withMorphologies?: boolean;
+  /**
+   * Read the four `orientation_*` columns too. Off by default: they pack into a
+   * `count * 4` `Float64Array`, which is 128 MB on a four-million-node circuit
+   * and is packed, transferred and dropped again by any viewer that only places
+   * somas.
+   *
+   * Only callers that turn a morphology into world space need them.
+   */
+  withOrientations?: boolean;
+};
+
 export type { DownloadProgress } from '@/utils/h5/fs';
 
 export type NodePopulation = {
@@ -116,6 +162,15 @@ export type ParsedCircuitConfig = {
   nodes: NodePopulation[];
   edges: EdgePopulation[];
   circuitAssetId: string;
+  /**
+   * The `circuit_config.json` as served, manifest variables unresolved.
+   *
+   * Kept alongside the parsed populations because morphology lookup needs
+   * fields this shape does not carry (`components`, `alternate_morphologies`),
+   * and re-downloading the config to read them would be a second request for
+   * bytes already in hand.
+   */
+  raw: ICircuitSonataConfiguration;
 };
 
 export type ViewMode = 'nodes' | 'edges';

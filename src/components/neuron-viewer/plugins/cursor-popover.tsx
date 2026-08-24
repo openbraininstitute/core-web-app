@@ -1,6 +1,6 @@
 import { Fragment, useRef } from 'react';
 
-import { NeuronSegmentInfo } from '@/services/bluenaas-single-cell/renderer-utils';
+import type { NeuronSegmentInfo } from '@/services/bluenaas-single-cell/renderer-utils';
 
 const dataMapping = {
   segIdx: { title: 'Segment index', unit: '' },

@@ -28,10 +28,6 @@ const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
 
 const CATEGORICAL_SET_FILTER_MAX = 100;
 
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-quartz.css';
-import '@/features/circuit-nodes/components/nodes-grid.css';
-
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
 type Props = {
@@ -194,7 +190,7 @@ export function NodesGrid({
   }, [columns, visibleColumns]);
 
   return (
-    <div className={`ag-theme-quartz ${styles.gridWrapper}`}>
+    <div className={styles.gridWrapper}>
       <div className={styles.gridHeader}>
         <span className={styles.gridStat}>
           {filteredCount === null ? (
@@ -210,7 +206,6 @@ export function NodesGrid({
       <div className={styles.grid}>
         <AgGridReact
           ref={gridRef}
-          theme="legacy"
           columnDefs={columnDefs}
           rowModelType="infinite"
           cacheBlockSize={200}

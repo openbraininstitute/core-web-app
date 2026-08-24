@@ -67,6 +67,8 @@ type RightProps = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   selectedEntry: string;
   selectedRootElement: string;
+  /** Add a block to a root element and open it, for a 3D action that creates one. */
+  onCreateEntry: (rootElement: string, block: Record<string, unknown>) => void;
   config: Config;
   setConfig: (newConfig: Config | ((prev: Config) => Config)) => void;
   /** Root scan-config schema; previews that describe the whole configuration read it. */
@@ -165,6 +167,7 @@ function CircuitModelPreviewPane({
   setConfig,
   selectedRootElement,
   selectedEntry,
+  onCreateEntry,
   defaultNeuronOpacity,
   viewerFeatures,
   locked,
@@ -174,6 +177,7 @@ function CircuitModelPreviewPane({
   setConfig: RightProps['setConfig'];
   selectedRootElement: string;
   selectedEntry: string;
+  onCreateEntry: (rootElement: string, block: Record<string, unknown>) => void;
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
   locked?: boolean;
@@ -181,16 +185,16 @@ function CircuitModelPreviewPane({
   // Memoised so the grouped prop does not hand ModelPreview a fresh object every
   // render; `config` already changes on each form edit, the rest rarely.
   //
-  // Omitting `onConfigChange` while locked is what makes the overlays static —
-  // the viewer keys its drag/rotate gizmo off the presence of a write path.
-  const electrodes = useMemo(
+  // Omitting `onConfigChange` while locked is what makes 3D editing read-only.
+  const form = useMemo(
     () => ({
       config,
       onConfigChange: locked ? undefined : setConfig,
       selectedRootElement,
       selectedEntry,
+      onCreateEntry: locked ? undefined : onCreateEntry,
     }),
-    [config, setConfig, selectedRootElement, selectedEntry, locked]
+    [config, setConfig, selectedRootElement, selectedEntry, onCreateEntry, locked]
   );
 
   return (
@@ -198,7 +202,7 @@ function CircuitModelPreviewPane({
       <div className="rounded-lg h-full" id="scan-config-right-model-preview">
         <ModelPreview
           model={entity}
-          electrodes={electrodes}
+          form={form}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
         />
@@ -263,6 +267,7 @@ export function Right({
   entity,
   selectedEntry,
   selectedRootElement,
+  onCreateEntry,
   config,
   setConfig,
   schema,
@@ -336,6 +341,7 @@ export function Right({
           setConfig={setConfig}
           selectedRootElement={selectedRootElement}
           selectedEntry={selectedEntry}
+          onCreateEntry={onCreateEntry}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
           locked={locked}

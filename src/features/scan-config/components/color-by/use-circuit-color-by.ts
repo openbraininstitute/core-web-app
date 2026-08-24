@@ -16,6 +16,7 @@ import { useNodeColorMapping } from './use-node-color-mapping';
 import { useViewerConfig } from './use-viewer-config';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from './contrast';
 import type { ColorByProperty, ColorMapping } from './types';
@@ -26,6 +27,8 @@ interface Options {
   supportsAxons?: boolean;
   /** whether electrode overlays are available for this preview */
   supportsElectrodes?: boolean;
+  /** whether morphology-location markers are on screen, which the marker controls act on */
+  supportsMorphologyLocations?: boolean;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
@@ -34,6 +37,8 @@ interface Options {
   defaultNeuronOpacity?: number;
   /** SONATA population whose H5 columns drive colour-by and the nodes table */
   population?: NodePopulation;
+  /** What is on show when it is not a circuit. Names the saved config and the snapshot. */
+  subject?: Pick<EntityCoreIdentifiableNamed, 'id' | 'name'>;
 }
 
 /** props the chrome needs to render the color-by dropdown + key */
@@ -60,14 +65,22 @@ export interface ColorByControls {
  * persisted config, the per-node color mapping (with user overrides), and
  * ready-made control props for the chrome. `colorsByNode` is aligned by node
  * index for the viewer. owned by the preview host, which passes `colorsByNode`
- * and the config down to the actual viewers.
+ * and the config down to the actual viewers. Also serves the MEModel viewer, which
+ * has no colour-by.
  */
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
-  { supportsAxons, supportsElectrodes, defaultNeuronOpacity, population }: Options = {}
+  {
+    supportsAxons,
+    supportsElectrodes,
+    supportsMorphologyLocations,
+    defaultNeuronOpacity,
+    population,
+    subject,
+  }: Options = {}
 ) {
-  const circuitId = circuit?.id ?? '';
-  const { config, hasSavedConfig, update, reset } = useViewerConfig(circuitId, {
+  const shown = subject ?? circuit;
+  const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
   });
   const property = config.colorByProperty;
@@ -106,8 +119,8 @@ export function useCircuitColorBy(
   const signals = useMorphoViewerSignals();
   const captureImage = useCallback(async () => {
     const image = await signals.snapshot.dispatch(undefined).catch(() => null);
-    if (image) downloadCircuitImage(image, circuit?.name ?? '', config.backgroundColor);
-  }, [signals, circuit?.name, config.backgroundColor]);
+    if (image) downloadCircuitImage(image, shown?.name ?? '', config.backgroundColor);
+  }, [signals, shown?.name, config.backgroundColor]);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -167,6 +180,28 @@ export function useCircuitColorBy(
       onElectrodeRadiusChange: supportsElectrodes
         ? (value) => update({ electrodeRadius: value })
         : undefined,
+      // Only offered while locations can actually be picked, so the menu does not carry a
+      // control for something not on screen.
+      morphologyLocationRadius: supportsMorphologyLocations
+        ? config.morphologyLocationRadius
+        : undefined,
+      onMorphologyLocationRadiusChange: supportsMorphologyLocations
+        ? (value: number) => update({ morphologyLocationRadius: value })
+        : undefined,
+      showMorphologyLocationLabels: supportsMorphologyLocations
+        ? config.showMorphologyLocationLabels
+        : undefined,
+      onToggleMorphologyLocationLabels: supportsMorphologyLocations
+        ? (value: boolean) => update({ showMorphologyLocationLabels: value })
+        : undefined,
+      // Offered only where a zoom slider can actually appear — the large-circuit viewer
+      // has none, and a switch that does nothing is worse than no switch.
+      showZoomSlider: supportsAxons ? config.showZoomSlider : undefined,
+      onToggleZoomSlider: supportsAxons
+        ? (value: boolean) => update({ showZoomSlider: value })
+        : undefined,
+      showScalebar: config.showScalebar,
+      onToggleScalebar: (value: boolean) => update({ showScalebar: value }),
       hasSavedConfig,
       onResetConfig: reset,
     }),
@@ -179,8 +214,13 @@ export function useCircuitColorBy(
       config.neuronOpacity,
       config.showElectrodes,
       config.electrodeRadius,
+      config.morphologyLocationRadius,
+      config.showMorphologyLocationLabels,
+      config.showZoomSlider,
+      config.showScalebar,
       supportsAxons,
       supportsElectrodes,
+      supportsMorphologyLocations,
       hasSavedConfig,
       update,
       reset,

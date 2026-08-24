@@ -1,3 +1,4 @@
+import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   CircuitScaleDictionary,
   type TCircuitScaleDictionary,
@@ -48,4 +49,16 @@ export function resolveEnableCellHover(options: {
 }): boolean {
   if (options.domainCellHover === false) return false;
   return options.scale !== CircuitScaleDictionary.Single;
+}
+
+/**
+ * Whether explicit morphology locations may be picked on this model.
+ */
+export function resolveEnableMorphologyLocations(model: {
+  type?: string;
+  scale?: TCircuitScaleDictionary;
+}): boolean {
+  if (model.type === EntityTypeDict.Memodel) return true;
+  if (model.type !== EntityTypeDict.Circuit) return false;
+  return model.scale === CircuitScaleDictionary.Single;
 }

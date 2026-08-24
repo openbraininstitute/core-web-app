@@ -8,6 +8,8 @@ import type {
   DownloadProgress,
   GetRowsRequest,
   GetRowsResponse,
+  NodeGeometry,
+  NodeGeometryOptions,
   OpenRequest,
 } from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
@@ -141,6 +143,12 @@ class NodesWorkerRegistry {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
     return session.proxy.getColumn(name);
+  }
+
+  getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return session.proxy.getGeometry(options);
   }
 
   private setState(session: Session, patch: Partial<NodesSessionState>): void {

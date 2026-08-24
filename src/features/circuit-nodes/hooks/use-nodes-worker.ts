@@ -10,7 +10,11 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IDatasource } from 'ag-grid-community';
-import type { ColumnMeta, NodePopulation } from '@/features/circuit-nodes/types';
+import type {
+  ColumnMeta,
+  NodeGeometryOptions,
+  NodePopulation,
+} from '@/features/circuit-nodes/types';
 
 type Args = {
   enabled: boolean;
@@ -95,12 +99,21 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     };
   }, [key, state.status, state.columns, state.rowCount]);
 
-  const getColumn = useMemo(() => {
-    return async (name: string) => {
+  const getColumn = useCallback(
+    async (name: string) => {
       if (!key) throw new Error('Nodes worker not ready');
       return nodesWorkerRegistry.getColumn(key, name);
-    };
-  }, [key]);
+    },
+    [key]
+  );
+
+  const getGeometry = useCallback(
+    async (options?: NodeGeometryOptions) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getGeometry(key, options);
+    },
+    [key]
+  );
 
   const retry = useCallback(() => {
     if (key) nodesWorkerRegistry.retry(key);
@@ -112,6 +125,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     columns: state.columns,
     datasource,
     getColumn,
+    getGeometry,
     status: state.status,
     isLoading: state.status === 'loading',
     progress: state.progress,

@@ -1,1 +1,1 @@
-export { default } from './circuit-viz';
+export { CircuitVisualization, default } from './circuit-viz';

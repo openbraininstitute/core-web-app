@@ -1,9 +1,9 @@
-import { capitalize } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
+import { nextEntryName } from '@/features/scan-config/components/hooks';
 import {
   getBlockUsabilityConfig,
   isRootBlock,
@@ -20,21 +20,20 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
-import {
-  type Config,
-  type ConfigSchema,
-  type ConfigValue,
-  type IBlockDictionary,
-  ScanConfigUIElementDict,
-  type TBlock,
-  type TSupportedEntitiesForScanConfiguration,
-} from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { configDiffsAtom } from '@/state/config-highlights';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import type {
+  Config,
+  ConfigSchema,
+  ConfigValue,
+  IBlockDictionary,
+  TBlock,
+  TSupportedEntitiesForScanConfiguration,
+} from '@/features/scan-config/types';
 import type { Nullish } from '@/utils/type';
 
 type Props = {
@@ -237,18 +236,7 @@ export default function BlockDictionary({
                         >)
                       : initial;
 
-                  const element = schema.properties?.[selectedRootElement];
-
-                  const baseName =
-                    element.ui_element === ScanConfigUIElementDict.BlockDictionary
-                      ? capitalize(element.singular_name)
-                      : 'element';
-                  let counter = 0;
-                  let newEntry: string;
-
-                  do {
-                    newEntry = `${baseName} ${counter++}`;
-                  } while (allEntries.has(newEntry));
+                  const newEntry = nextEntryName(schema, selectedRootElement, allEntries);
 
                   setSelectedEntry(newEntry);
                   allEntries.add(newEntry);

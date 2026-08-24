@@ -2,19 +2,30 @@ import { MorphoViewerSignals } from '@openbraininstitute/morphoviewer';
 import dynamic from 'next/dynamic';
 import React from 'react';
 
+import { isMorphoViewerDebugMode } from './debug-mode';
+
 export {
   MorphologyCanvas,
   MorphoViewerSignals,
-  MorphoViewerTreeItemType,
   morphoViewerConvertMorphologyIntoTree,
   TgdColor,
   tgdFullscreenToggle,
 } from '@openbraininstitute/morphoviewer';
 
+// Through `./tree-item-type`, not the package: re-exporting it from both would
+// leave one enum with two import paths, and a module that took the wrong one
+// would pull in a WebGL renderer to read an enum.
+export { MorphoViewerTreeItemType } from './tree-item-type';
+
 export type {
   ColoringType,
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
+  MorphoViewerMorphologyLocationHover,
+  MorphoViewerMorphologyLocationLabel,
+  MorphoViewerMorphologyLocationMarker,
+  MorphoViewerMorphologyLocationPick,
+  MorphoViewerMorphologyLocationSelection,
   MorphoViewerOctreeProps,
   /** Absolute origin + rotation from electrode overlay drag/rotate (`phase: 'end'`). */
   MorphoViewerOverlayTransformEvent,
@@ -25,6 +36,7 @@ export type {
   MorphoViewerSynapsesGroup,
   MorphoViewerTree,
   MorphoViewerTreeItem,
+  SectionColors,
 } from '@openbraininstitute/morphoviewer';
 
 export const MorphoViewerOctree = dynamic(
@@ -32,17 +44,17 @@ export const MorphoViewerOctree = dynamic(
   { ssr: false }
 );
 
-export const MorphoViewerSimul = dynamic(
+export const MorphoViewerSingleNeuron = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSimul),
   { ssr: false }
 );
 
-export const MorphoViewerSmallCircuit = dynamic(
+export const MorphoViewerCircuitMultipleNeurons = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSmallCircuit),
   { ssr: false }
 );
 
-export const MorphoViewerSomasOnly = dynamic(
+export const MorphoViewerCircuitMultipleNeuronsSomaOnly = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSomasOnly),
   { ssr: false }
 );
@@ -56,9 +68,8 @@ export function useMorphoViewerSignals(): MorphoViewerSignals {
 
 export function useMorphoViewerDebugMode(): boolean {
   const [debugMode, setDebugMode] = React.useState(false);
-  React.useEffect(() => {
-    const item = globalThis.localStorage.getItem('@openbraininstitute/morphoviewer:debug');
-    setDebugMode(!!item && item.length > 0);
-  }, []);
+  // Read in an effect rather than as the initial state: the flag lives in
+  // `localStorage`, which the server render has no view of.
+  React.useEffect(() => setDebugMode(isMorphoViewerDebugMode()), []);
   return debugMode;
 }

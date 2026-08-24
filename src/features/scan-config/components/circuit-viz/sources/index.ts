@@ -1,13 +1,8 @@
-export {
-  loaderSupportsAxonToggle,
-  resolveSmallCircuitLoaderKind,
-} from './resolve-loader-kind';
-export { SmallCircuitLoaderKind } from './types';
-export { useObiOneVizSource } from './use-obi-one-viz-source';
-export { useSonataAssetSource } from './use-sonata-asset-source';
+export { circuitDrawsSynapses } from './draws-synapses';
+export { useMemodelVisualizationSource } from './use-memodel-viz-source';
+export { useSmallCircuitSource } from './use-small-circuit-source';
 
 export type {
-  SmallCircuitSource,
-  SmallCircuitSynapseGroup,
-  TSmallCircuitLoaderKind,
+  TSmallCircuitSource as SmallCircuitSource,
+  TSmallCircuitSynapseGroup as SmallCircuitSynapseGroup,
 } from './types';
