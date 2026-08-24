@@ -41,6 +41,8 @@ export interface IDataGridSelection<Row> {
   selectedRows?: Row[];
   /** emitted with the selected rows on every user-driven change. */
   onChange: (rows: Row[]) => void;
+  /** when false, the row's checkbox/radio is disabled and cannot be picked. */
+  isRowSelectable?: (row: Row) => boolean;
 }
 
 export interface IDataGridProps<Row> {
@@ -209,6 +211,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     onRowClick,
     activeRowId,
     getRowClass,
+    isRowSelectable: selection?.isRowSelectable,
     expandColumn,
     loadingLabel,
   };

@@ -5,6 +5,7 @@ import { notFound, useSearchParams } from 'next/navigation';
 import { use, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
+import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import {
   type TWorkflowSchemaSelection,
   WorkflowSchemaSelectionMode,
@@ -87,10 +88,12 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
   const groups = configurationInputs
     .map((input) => ({
       name: input.label,
-      items: (selectionsByType[input.type] ?? []).map((row) => ({
-        type: input.type,
-        id: row.id,
-      })),
+      items: (selectionsByType[input.type] ?? [])
+        .filter(isEntitySelectableForWorkflow)
+        .map((row) => ({
+          type: input.type,
+          id: row.id,
+        })),
     }))
     .filter((group) => group.items.length > 0);
 
@@ -160,7 +163,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     () =>
       configurationInputs.reduce<Partial<Record<TExtendedEntitiesTypeDict, number>>>(
         (counts, input) => {
-          counts[input.type] = selectionsByType[input.type]?.length ?? 0;
+          counts[input.type] =
+            selectionsByType[input.type]?.filter(isEntitySelectableForWorkflow).length ?? 0;
           return counts;
         },
         {}
@@ -368,7 +372,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
 
         return {
           ...previous,
-          [activeEntityType]: rows,
+          [activeEntityType]: rows.filter(isEntitySelectableForWorkflow),
         };
       });
     },

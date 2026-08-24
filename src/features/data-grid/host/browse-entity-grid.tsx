@@ -13,6 +13,11 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  isEntitySelectableForWorkflow,
+  isWorkflowPickerSection,
+  workflowLifecycleRowClass,
+} from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import { PortalRegionBanner } from '@/features/brain-region-hierarchy/components/region-banner';
 import {
   speciesSelectionModeAtom,
@@ -218,6 +223,7 @@ export function EntityDataGrid({
   const selectionType = mainTableProps?.selectionType;
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
+  const applyLifecycleGating = isWorkflowPickerSection(section);
   const pickerSelection = useMemo<
     IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
   >(() => {
@@ -226,8 +232,19 @@ export function EntityDataGrid({
       mode: selectionType === 'radio' ? SelectionMode.Single : SelectionMode.Multi,
       selectedRows: controlledSelectedRows,
       onChange: onRowsSelected,
+      isRowSelectable: applyLifecycleGating ? isEntitySelectableForWorkflow : undefined,
     };
-  }, [selectionType, onRowsSelected, controlledSelectedRows]);
+  }, [selectionType, onRowsSelected, controlledSelectedRows, applyLifecycleGating]);
+
+  const composedGetRowClass = useCallback(
+    (row: EntityCoreIdentifiableNamed) => {
+      const pluginClass = getRowClass?.(row);
+      const lifecycleClass = applyLifecycleGating ? workflowLifecycleRowClass(row) : undefined;
+      return cn(pluginClass, lifecycleClass) || undefined;
+    },
+    [getRowClass, applyLifecycleGating]
+  );
+  const resolvedGetRowClass = getRowClass || applyLifecycleGating ? composedGetRowClass : undefined;
 
   const speciesKey = isAllSpeciesMode ? 'all' : workspaceSpecies?.hierarchId;
   const controller = useMemo(
@@ -409,7 +426,7 @@ export function EntityDataGrid({
           enabled={enabled}
           facets={externalFacets}
           detail={detail}
-          getRowClass={getRowClass}
+          getRowClass={resolvedGetRowClass}
           expandColumn={expandColumn}
           className="h-full"
           gridClassName={classNames?.tableClassNames?.container}

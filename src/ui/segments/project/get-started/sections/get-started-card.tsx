@@ -18,7 +18,10 @@ import {
   type TProjectHomeGetStartedCard,
   type TProjectHomeResource,
 } from '@/ui/segments/project/get-started/query';
-import { resolveWorkflowConfigureHrefForEntity } from '@/ui/segments/workflows/config/entity-entry';
+import {
+  resolveWorkflowConfigureHrefForEntity,
+  WorkflowConfigureOutcomeDict,
+} from '@/ui/segments/workflows/config/entity-entry';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -133,15 +136,18 @@ function ResourceItem({
       flags,
       mode: ScanConfigCampaignOriginActionDict.Duplicate,
     })
-      .then((href) => {
-        if (href) {
-          router.push(href);
+      .then((result) => {
+        if (result.outcome === WorkflowConfigureOutcomeDict.Resolved) {
+          router.push(result.href);
           return;
         }
 
         notifyError({
           message: 'Example unavailable',
-          description: `No workflow configuration could be opened for "${resource.label}".`,
+          description:
+            result.outcome === WorkflowConfigureOutcomeDict.LifecycleBlocked
+              ? result.reason
+              : `No workflow configuration could be opened for "${resource.label}".`,
         });
       })
       .catch(() => {

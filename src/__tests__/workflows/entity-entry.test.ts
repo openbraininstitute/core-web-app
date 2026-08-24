@@ -4,7 +4,9 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkflowActivityDictValue } from '@/constants';
+import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import {
   brainRegionSimulationFlag,
   eFeatureExtractionFlag,
@@ -17,7 +19,10 @@ import {
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
 import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
-import { resolveWorkflowConfigureHrefForEntity } from '@/ui/segments/workflows/config/entity-entry';
+import {
+  resolveWorkflowConfigureHrefForEntity,
+  WorkflowConfigureOutcomeDict,
+} from '@/ui/segments/workflows/config/entity-entry';
 
 import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -364,11 +369,11 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
       flags: flags ?? allFlags,
     });
 
-    expect(resolved).not.toBeNull();
-    expect(normalizeSession(resolved as string)).toBe(href);
+    expect(resolved.outcome).toBe(WorkflowConfigureOutcomeDict.Resolved);
+    expect(normalizeSession(resolved.href as string)).toBe(href);
 
     if (selects) {
-      const sessionId = (resolved as string).match(/wf_[a-z0-9]+/)?.[0];
+      const sessionId = (resolved.href as string).match(/wf_[a-z0-9]+/)?.[0];
       expect(readWorkflowSessionSelection(sessionId as string)).toEqual({
         mode: WorkflowSessionSelectionMode.Single,
         item: selects,
@@ -394,7 +399,7 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
 
     await expect(
       resolveWorkflowConfigureHrefForEntity({ entityId: ENTITY_ID, workspace })
-    ).resolves.toBeNull();
+    ).resolves.toEqual({ outcome: WorkflowConfigureOutcomeDict.NoWorkflow, href: null });
   });
 
   it('returns null when no workflow accepts the entity', async () => {
@@ -402,7 +407,7 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
 
     await expect(
       resolveWorkflowConfigureHrefForEntity({ entityId: ENTITY_ID, workspace, flags: allFlags })
-    ).resolves.toBeNull();
+    ).resolves.toEqual({ outcome: WorkflowConfigureOutcomeDict.NoWorkflow, href: null });
   });
 
   it('opens stored campaigns editable when mode is duplicate', async () => {
@@ -418,8 +423,31 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
       mode: ScanConfigCampaignOriginActionDict.Duplicate,
     });
 
-    expect(normalizeSession(resolved as string)).toBe(
+    expect(normalizeSession(resolved.href as string)).toBe(
       `${base}/simulate/configure/me-model-circuit-simulation/{session}?mode=duplicate&origin=${ENTITY_ID}`
     );
+  });
+
+  it.each([
+    EntityLifecycleStatus.Draft,
+    EntityLifecycleStatus.Disqualified,
+  ])('reports the block reason for a %s source model', async (lifecycle_status) => {
+    getEntity.mockResolvedValue({
+      id: ENTITY_ID,
+      type: EntityTypeDict.Memodel,
+      lifecycle_status,
+    });
+
+    const resolved = await resolveWorkflowConfigureHrefForEntity({
+      entityId: ENTITY_ID,
+      workspace,
+      flags: allFlags,
+    });
+
+    expect(resolved).toEqual({
+      outcome: WorkflowConfigureOutcomeDict.LifecycleBlocked,
+      href: null,
+      reason: getWorkflowLifecycleBlockReason({ lifecycle_status }),
+    });
   });
 });

@@ -108,6 +108,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onRowsSelected,
   selectedRows,
   keepSelectionOnScopeChange,
+  getCheckboxProps,
   onCellClick,
   tableStyle,
   // us
@@ -196,6 +197,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           onRowsSelected={onRowsSelected}
           selectedRows={selectedRows}
           keepSelectionOnScopeChange={keepSelectionOnScopeChange}
+          getCheckboxProps={getCheckboxProps}
           dataKey={dataKey}
           rowClassName={rowClassName}
           tableStyle={tableStyle}

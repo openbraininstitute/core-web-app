@@ -8,6 +8,7 @@ import type {
   EntityCoreType,
   IContributor,
   IEntityLifecycleStatus,
+  TEntityLifecycleStatus,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -61,7 +62,7 @@ export interface INestedDerivationEntity {
   type: string;
   authorized_project_id: string | null;
   authorized_public: boolean;
-  lifecycle_status?: string;
+  lifecycle_status?: TEntityLifecycleStatus;
   creation_date?: string;
   update_date?: string;
 }

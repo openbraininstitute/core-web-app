@@ -1,13 +1,16 @@
 import {
   EntityLifecycleStatus,
-  LIFECYCLE_STATUS_RENDERER,
-} from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
+  EntityLifecycleStatusLabel,
+  getEntityLifecycleStatusLabel,
+  type TEntityLifecycleStatus,
+} from '@/api/entitycore/types/shared/global';
+import { LIFECYCLE_STATUS_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
 import { Align, FilterOptionsKind, mergeColumnDef, OperatorId } from '@/features/data-grid/core';
 
 import type { IColumnModel, TColumnOverride } from '@/features/data-grid/core';
 
 export interface IHasLifecycleStatus {
-  lifecycle_status?: string | null;
+  lifecycle_status?: TEntityLifecycleStatus | null;
 }
 
 /**
@@ -23,12 +26,7 @@ export function lifecycleStatusColumn<Row>(o?: TColumnOverride<Row>): IColumnMod
       order: LAST_COLUMN_ORDER,
       sortable: false,
       // label, not the wire value: also feeds free-text search, export and the fallback
-      getValue: (r) => {
-        const status = (r as IHasLifecycleStatus).lifecycle_status;
-        return (
-          Object.values(EntityLifecycleStatus).find((s) => s.key === status)?.label ?? status ?? ''
-        );
-      },
+      getValue: (r) => getEntityLifecycleStatusLabel((r as IHasLifecycleStatus).lifecycle_status),
       cellRenderer: LIFECYCLE_STATUS_RENDERER,
       width: { width: 140, minWidth: 120 },
       align: Align.Center,
@@ -43,9 +41,9 @@ export function lifecycleStatusColumn<Row>(o?: TColumnOverride<Row>): IColumnMod
             operators: [OperatorId.Eq],
             options: {
               kind: FilterOptionsKind.Static,
-              items: Object.values(EntityLifecycleStatus).map((s) => ({
-                id: s.key,
-                label: s.label,
+              items: Object.values(EntityLifecycleStatus).map((value) => ({
+                id: value,
+                label: EntityLifecycleStatusLabel[value],
               })),
             },
             description: 'Whether the record is a draft, active, or disqualified',

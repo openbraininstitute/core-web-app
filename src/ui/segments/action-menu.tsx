@@ -23,6 +23,7 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { type TViewVariant, ViewVariant, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import { useFlags } from '@/features/feature-flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -153,6 +154,9 @@ export default function ActionMenu({
     });
   }, [isSimulatable, ctx, type, entity, flags]);
 
+  const simulateBlockReason = getWorkflowLifecycleBlockReason(entity);
+  const simulateDisabled = Boolean(simulateBlockReason);
+
   return (
     <div
       className={cn(
@@ -180,16 +184,27 @@ export default function ActionMenu({
         {copying ? 'Copied' : 'Copy ID'}
       </Action>
 
-      {simulateHref && (
-        <Action
-          variant={variant}
-          kind={ActionKind.Link}
-          href={simulateHref}
-          icon={<ExperimentOutlined />}
-        >
-          Simulate
-        </Action>
-      )}
+      {simulateHref &&
+        (simulateDisabled ? (
+          <Action
+            variant={variant}
+            kind={ActionKind.Button}
+            disabled
+            disabledReason={simulateBlockReason}
+            icon={<ExperimentOutlined />}
+          >
+            Simulate
+          </Action>
+        ) : (
+          <Action
+            variant={variant}
+            kind={ActionKind.Link}
+            href={simulateHref}
+            icon={<ExperimentOutlined />}
+          >
+            Simulate
+          </Action>
+        ))}
 
       {entityType.isDownloadable && (
         <Action
