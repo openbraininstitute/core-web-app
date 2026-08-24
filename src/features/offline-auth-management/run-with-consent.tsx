@@ -9,7 +9,11 @@ import type { EnsureResult } from '@/features/offline-auth-management/ensure-con
 type NotifyError = (params: { message: string; duration?: number; key?: string }) => void;
 
 type UseRunWithOfflineTokenConsentOptions = {
-  /** When true, use localStorage and in-memory prefetch cache. Default: false (no cache). */
+  /**
+   * When true, reuse a stored grant that belongs to the session we are in, skipping the
+   * trip through the consent page. auth-manager is still asked which session that is.
+   * Default: false (no cache).
+   */
   useCache?: boolean;
   notifyError?: NotifyError;
   messages?: {

@@ -7,6 +7,8 @@ import {
   writeOfflineTokenConsentState,
 } from '@/features/offline-auth-management/store';
 
+import { installLocalStorage } from './install-local-storage';
+
 import type { OfflineTokenConsentState } from '@/features/offline-auth-management/types';
 
 const SESSION = 'mMFQaLMROg0P37gICaF_PTdM';
@@ -60,7 +62,7 @@ describe('isOfflineTokenConsentGrantedForSession', () => {
 
 describe('offline token consent state round trip', () => {
   beforeEach(() => {
-    window.localStorage.clear();
+    installLocalStorage();
   });
 
   it('reads back a grant it wrote, and it counts for that session only', () => {
