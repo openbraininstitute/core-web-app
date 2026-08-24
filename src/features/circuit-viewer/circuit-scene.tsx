@@ -41,9 +41,10 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
-import type { MorphoViewerOverlayTransformEvent, MorphoViewerSpikes } from '@/morpho-viewer';
+import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
@@ -58,29 +59,6 @@ export interface IElectrodeOverlayOptions {
    * then also owns it: the viewer's own show/hide toggle stops gating them.
    */
   visibleIds?: readonly string[];
-}
-
-/**
- * A spike replay and the controls driving it.
- *
- * The viewer owns the clock: it advances simulated time on every painted frame
- * and reports where it got to through {@link ISpikeReplayBinding.onTimeChange}.
- * `timeInMs` is therefore a seek, not a mirror — feeding the reported time
- * straight back would fight the animation.
- */
-export interface ISpikeReplayBinding {
-  data?: MorphoViewerSpikes;
-  /** Move the playhead here. Only read when it changes. */
-  timeInMs?: number;
-  /** The playhead on every painted frame. Throttle before putting it in state. */
-  onTimeChange?(timeInMs: number): void;
-  playing?: boolean;
-  /** Also fires with `false` when playback reaches the end of the recording. */
-  onPlayingChange?(playing: boolean): void;
-  /** Simulated milliseconds per wall-clock second. */
-  speed?: number;
-  /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
-  afterglowInSeconds?: number;
 }
 
 /** The MEModel on show. Only its id and name are read here. */

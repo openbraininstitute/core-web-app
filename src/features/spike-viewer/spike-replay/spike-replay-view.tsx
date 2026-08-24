@@ -1,7 +1,7 @@
 'use client';
 
 import { RiBarChart2Line, RiBox3Line, RiLayoutRowLine } from '@remixicon/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
@@ -79,13 +79,15 @@ interface SpikeReplayViewProps {
  */
 export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const [mode, setMode] = useState<ReplayMode>(MODES.Raster);
-  const [population, setPopulation] = useState<NodePopulation | undefined>();
   const [chosenPopulationName, setChosenPopulationName] = useState<string>();
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(DEFAULT_SPEED);
   const [afterglowInSeconds, setAfterglowInSeconds] = useState(DEFAULT_AFTERGLOW_IN_SECONDS);
   const [seekToMs, setSeekToMs] = useState<number | undefined>();
+  // False until the viewer has painted a frame. It arrives on a dynamic
+  // chunk, so for a while there is no child to receive anything.
+  const [sceneLive, setSceneLive] = useState(false);
   const [readoutTimeInMs, setReadoutTimeInMs] = useState(data.timeRange.min);
   const [rasterHeight, setRasterHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -94,28 +96,45 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const playheadRef = useRef<((timeInMs: number | null) => void) | null>(null);
   const liveTimeRef = useRef(data.timeRange.min);
 
-  const { config: circuitConfig } = useCircuitConfig(circuit);
+  const {
+    config: circuitConfig,
+    isLoading: configLoading,
+    error: configError,
+  } = useCircuitConfig(circuit);
+
+  // Every recorded population is on offer — input (virtual) spikes included,
+  // since the raster can always plot them. Which of them the 3D replay can
+  // light up is a separate question, answered below rather than by hiding
+  // the rest of the list.
   const populations = useMemo(
-    () => selectablePopulations(data, circuitConfig?.nodes),
+    () =>
+      data.populations.map((p) => ({
+        name: p.name,
+        type: circuitConfig?.nodes.find((n) => n.name === p.name)?.type,
+      })),
     [data, circuitConfig]
   );
-  // Derived rather than corrected in an effect: the list arrives with the
-  // circuit config, and a name chosen against the file's own list before then
-  // has to give way to it without a render in between showing neither.
+  // Derived rather than corrected in an effect: the default may move when the
+  // circuit config arrives and names a replayable population, and the name on
+  // show has to give way to it without a render in between showing neither.
   const populationName =
-    populations.find((p) => p.name === chosenPopulationName)?.name ?? populations[0]?.name;
+    populations.find((p) => p.name === chosenPopulationName)?.name ??
+    populations.find((p) => replayablePopulation(circuitConfig?.nodes, p.name))?.name ??
+    populations[0]?.name;
   const recordedIndex = data.populations.findIndex((p) => p.name === populationName);
   const recorded = recordedIndex < 0 ? undefined : data.populations[recordedIndex];
 
-  // The scene resolves the name against the circuit's own config, and falls back
-  // to a population of its own when it holds no such nodes. Replaying the
-  // selection over those would look plausible and be wrong.
-  const sceneOnSelection = population?.name === populationName;
+  // Decided against the host's own copy of the circuit config — the same
+  // query the scene resolves against — so the answer never lags the scene by
+  // a render: switching populations mid-play used to trip the pause effect
+  // below on exactly that lag. A population the config does not list, or
+  // lists as virtual, has no cells to light; the scene then draws its own
+  // default and the notice in the header says why.
+  const replayable = replayablePopulation(circuitConfig?.nodes, populationName);
   const spikes = useMemo(
-    () => (sceneOnSelection ? spikesToViewer(data, populationName) : null),
-    [data, populationName, sceneOnSelection]
+    () => (replayable ? spikesToViewer(data, populationName) : null),
+    [data, populationName, replayable]
   );
-  const replayable = spikes !== null;
   const showScene = circuit !== undefined && mode !== MODES.Raster;
   const isSplit = mode === MODES.Split;
   const showRaster = !showScene || isSplit;
@@ -127,10 +146,14 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
     if (showScene) setSceneMounted(true);
   }, [showScene]);
 
-  useEffect(() => {
+  // A layout effect, seeded by hand: the observer's first report only lands a
+  // frame after `observe`, and the split would size its raster pane off a
+  // zero height for that first paint.
+  useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
+    setContainerHeight(el.getBoundingClientRect().height);
     const observer = new ResizeObserver(([entry]) => setContainerHeight(entry.contentRect.height));
     observer.observe(el);
     return () => observer.disconnect();
@@ -142,6 +165,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const handleTimeChange = useCallback((timeInMs: number) => {
     liveTimeRef.current = timeInMs;
     playheadRef.current?.(timeInMs);
+    setSceneLive(true);
   }, []);
 
   useEffect(() => {
@@ -177,12 +201,14 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
 
   // One-shot, so that seeking twice to the same millisecond still seeks: held,
   // the second Restart during playback would be no state change, hence no
-  // re-seek, and the button would go dead. Children's effects run before this
-  // one, so the seek always lands before it is cleared.
+  // re-seek, and the button would go dead. "Children's effects run first"
+  // only covers a child that exists — until the viewer's chunk has loaded and
+  // reported a frame, clearing here would throw the seek away and play would
+  // start from `timeMin`.
   useEffect(() => {
-    if (seekToMs === undefined) return;
+    if (seekToMs === undefined || !sceneLive) return;
     setSeekToMs(undefined);
-  }, [seekToMs]);
+  }, [seekToMs, sceneLive]);
 
   // Nothing to animate for, and playing on would keep the render loop spinning
   // behind a pane nobody is looking at.
@@ -256,9 +282,12 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
         )}
         {showScene && !replayable && (
           <span role="status" className="text-xs text-amber-600">
-            {population
-              ? `This circuit has no nodes for “${populationName}”, so there is nothing to replay these spikes over.`
-              : 'Reading the circuit’s node populations…'}
+            {replayNotice(
+              populationName,
+              circuitConfig?.nodes,
+              configLoading,
+              configError !== null
+            )}
           </span>
         )}
       </div>
@@ -280,8 +309,11 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
                 largeCircuit={!circuitDrawsMorphologies(circuit.scale)}
                 active={showScene}
                 features={SCENE_FEATURES}
-                populationName={populationName}
-                onPopulationChange={setPopulation}
+                // Only a name the config backs with cells. A name the scene
+                // cannot draw would make it fall back on its own — with no name
+                // it falls back deliberately, to the same default, and the
+                // notice in the header explains what is on show.
+                populationName={replayable ? populationName : undefined}
                 spikes={{
                   data: spikes ?? undefined,
                   timeInMs: seekToMs,
@@ -312,9 +344,12 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
           inert={!showRaster || undefined}
         >
           {isSplit && (
+            // The floor lives in `clampSplitHeight`, which knows when the
+            // panel is too short to honour it. A floor here as well would
+            // stop the drag at exactly the heights where the clamp relents.
             <PaneResizeHandle
               containerRef={containerRef}
-              minHeight={MIN_PANE_HEIGHT}
+              minHeight={0}
               onResize={setRasterHeight}
             />
           )}
@@ -361,38 +396,42 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   );
 }
 
-/**
- * The populations this viewer offers.
- *
- * Biophysical ones only: a spikes file records the virtual inputs beside the
- * cells that fired, and there is nothing worth watching in a population with no
- * cells behind it. Which is which is the circuit's business, so until its config
- * arrives — and on a file whose populations it lists none of, which is what an
- * input-spike recording looks like — the file's own list stands in rather than
- * leaving the viewer with nothing to show.
- */
-function selectablePopulations(
-  data: SpikeData,
-  nodes: NodePopulation[] | undefined
-): { name: string; type?: string }[] {
-  const recorded = (population: { name: string }) =>
-    data.populations.some((p) => p.name === population.name);
+/** The circuit lists the population and backs it with cells to light up. */
+function replayablePopulation(
+  nodes: NodePopulation[] | undefined,
+  name: string | undefined
+): boolean {
+  const listed = name === undefined ? undefined : nodes?.find((n) => n.name === name);
+  return listed !== undefined && isBiophysical(listed);
+}
 
-  const fromCircuit = (nodes ?? []).filter(isBiophysical).filter(recorded);
-  if (fromCircuit.length > 0) return fromCircuit;
-
-  return data.populations.map((p) => ({ name: p.name }));
+/** Why the population on show cannot be replayed, told apart by cause. */
+function replayNotice(
+  name: string | undefined,
+  nodes: NodePopulation[] | undefined,
+  loading: boolean,
+  failed: boolean
+): string {
+  if (loading) return 'Reading the circuit’s node populations…';
+  if (failed)
+    return 'The circuit’s node populations could not be read, so there is nothing to replay these spikes over.';
+  if (!nodes?.some((n) => n.name === name))
+    return `This circuit has no nodes for “${name}”, so there is nothing to replay these spikes over.`;
+  return `“${name}” is an input population — its spikes drive cells rather than fire in them, so there is nothing to light up.`;
 }
 
 /**
  * Keep both panes usable however far the divider is dragged.
  *
  * These are box heights, and each pane spends {@link SPLIT_GUTTER_IN_PX} of its
- * own on clearance, so the floor is the minimum plus a gutter.
+ * own on clearance, so the floor is the minimum plus a gutter. In a panel too
+ * short for two floored panes the bounds cross — swapped, the divider stays
+ * live there, where pinning to the middle would swallow the drag.
  */
 function clampSplitHeight(rasterHeight: number | null, containerHeight: number): number {
   const preferred = rasterHeight ?? Math.round(containerHeight * DEFAULT_RASTER_HEIGHT_RATIO);
   const floor = MIN_PANE_HEIGHT + SPLIT_GUTTER_IN_PX;
-  if (containerHeight <= floor * 2) return Math.round(containerHeight / 2);
-  return Math.min(containerHeight - floor, Math.max(floor, preferred));
+  const lo = Math.max(0, Math.min(floor, containerHeight - floor));
+  const hi = Math.min(containerHeight, Math.max(floor, containerHeight - floor));
+  return Math.round(Math.min(hi, Math.max(lo, preferred)));
 }

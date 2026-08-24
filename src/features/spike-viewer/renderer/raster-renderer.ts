@@ -19,11 +19,15 @@ export const POPULATION_COLORS = [
   '#17becf',
 ];
 
-/** Sorted population data for efficient binary-search hover. */
-type SortedPopulation = {
+/**
+ * A population plus whether it is on show. The arrays are the parser's own —
+ * already time-sorted (see `sortSpikes` in `spike-trace.ts`), which is what
+ * lets the hover lookup binary-search them without keeping a copy.
+ */
+type PlottedPopulation = {
   name: string;
   timestamps: Float32Array;
-  nodeIds: Float32Array;
+  nodeIds: Float64Array;
   visible: boolean;
 };
 
@@ -42,7 +46,8 @@ export class RasterRenderer {
   private view: ViewBounds = { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
   private initialView: ViewBounds = { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
   private plotRect: PlotRect = { x: 0, y: 0, width: 1, height: 1 };
-  private sortedPops: SortedPopulation[] = [];
+  private pops: PlottedPopulation[] = [];
+  private dataBounds: ViewBounds = { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
   private visibleSpikes = 0;
   private baseSize = 6;
   private dirty = true;
@@ -87,7 +92,7 @@ export class RasterRenderer {
 
     this.webgl = new WebGLPoints(this.glCanvas);
     this.webgl.onRestored = () => {
-      for (const pop of this.sortedPops) {
+      for (const pop of this.pops) {
         this.webgl.setVisibility(pop.name, pop.visible);
       }
       this.webgl.resize(this.glCanvas.width, this.glCanvas.height);
@@ -116,28 +121,41 @@ export class RasterRenderer {
   }
 
   setData(populations: SpikePopulation[], dataBounds: ViewBounds) {
-    // Add padding to data bounds
-    const xPad = (dataBounds.xMax - dataBounds.xMin) * 0.02 || 1;
-    const yPad = (dataBounds.yMax - dataBounds.yMin) * 0.05 || 1;
-    this.initialView = {
-      xMin: dataBounds.xMin - xPad,
-      xMax: dataBounds.xMax + xPad,
-      yMin: dataBounds.yMin - yPad,
-      yMax: dataBounds.yMax + yPad,
-    };
+    this.dataBounds = dataBounds;
+    this.initialView = paddedView(dataBounds);
     this.view = { ...this.initialView };
 
     this.webgl.setData(populations, POPULATION_COLORS);
     this.interaction.setInitialView(this.initialView);
 
-    // Build sorted copies for binary-search hover
-    this.sortedPops = populations.map((pop) => {
-      const { timestamps, nodeIds } = sortByTimestamp(pop.timestamps, pop.nodeIds);
-      return { name: pop.name, timestamps, nodeIds, visible: true };
-    });
+    this.pops = populations.map((pop) => ({
+      name: pop.name,
+      timestamps: pop.timestamps,
+      nodeIds: pop.nodeIds,
+      visible: true,
+    }));
 
     this.visibleSpikes = populations.reduce((sum, p) => sum + p.timestamps.length, 0);
     this.hasData = true;
+    this.scheduleRender();
+  }
+
+  /**
+   * Rescale the y-axis, keeping the x-axis and the uploaded spikes.
+   *
+   * Node ids are per-population row indices, not a shared scale, so when one
+   * population is on show the axis should span its ids — against the
+   * file-wide range, a small population beside a large one flattens into a
+   * sliver along the bottom. Resets the viewport the way new data does: a new
+   * scale makes the old zoom meaningless.
+   */
+  setYBounds(yMin: number, yMax: number) {
+    if (!this.hasData) return;
+
+    this.dataBounds = { ...this.dataBounds, yMin, yMax };
+    this.initialView = paddedView(this.dataBounds);
+    this.view = { ...this.initialView };
+    this.interaction.setInitialView(this.initialView);
     this.scheduleRender();
   }
 
@@ -169,12 +187,12 @@ export class RasterRenderer {
   }
 
   setVisiblePopulations(names: Set<string>) {
-    for (const pop of this.sortedPops) {
+    for (const pop of this.pops) {
       const visible = names.has(pop.name);
       pop.visible = visible;
       this.webgl.setVisibility(pop.name, visible);
     }
-    this.visibleSpikes = this.sortedPops
+    this.visibleSpikes = this.pops
       .filter((p) => p.visible)
       .reduce((sum, p) => sum + p.timestamps.length, 0);
     this.scheduleRender();
@@ -294,7 +312,7 @@ export class RasterRenderer {
     let bestDist = Infinity;
     let bestResult: { population: string; nodeId: number; time: number } | null = null;
 
-    for (const pop of this.sortedPops) {
+    for (const pop of this.pops) {
       if (!pop.visible || pop.timestamps.length === 0) continue;
 
       // Binary search for start of x window
@@ -383,23 +401,16 @@ function countFactor(n: number): number {
   return 1.0 - 0.5 * t;
 }
 
-/** Sort timestamps and nodeIds arrays together by timestamp (ascending). */
-function sortByTimestamp(
-  timestamps: Float32Array,
-  nodeIds: Float32Array
-): { timestamps: Float32Array; nodeIds: Float32Array } {
-  const n = timestamps.length;
-  const indices = new Uint32Array(n);
-  for (let i = 0; i < n; i++) indices[i] = i;
-  indices.sort((a, b) => timestamps[a] - timestamps[b]);
-
-  const sortedTs = new Float32Array(n);
-  const sortedIds = new Float32Array(n);
-  for (let i = 0; i < n; i++) {
-    sortedTs[i] = timestamps[indices[i]];
-    sortedIds[i] = nodeIds[indices[i]];
-  }
-  return { timestamps: sortedTs, nodeIds: sortedIds };
+/** Data bounds plus the margin that keeps edge spikes off the plot border. */
+function paddedView(bounds: ViewBounds): ViewBounds {
+  const xPad = (bounds.xMax - bounds.xMin) * 0.02 || 1;
+  const yPad = (bounds.yMax - bounds.yMin) * 0.05 || 1;
+  return {
+    xMin: bounds.xMin - xPad,
+    xMax: bounds.xMax + xPad,
+    yMin: bounds.yMin - yPad,
+    yMax: bounds.yMax + yPad,
+  };
 }
 
 /** Find first index where arr[i] >= value (lower bound). */

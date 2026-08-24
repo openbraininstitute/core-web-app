@@ -7,6 +7,8 @@ import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 export function useRasterRenderer(
   containerRef: React.RefObject<HTMLDivElement | null>,
   data: SpikeData | null,
+  /** The population on show; scales the y-axis to its own node-id range. */
+  populationName?: string,
   /** Called with a time in ms when the user clicks in the plot. */
   onSeek?: (timeInMs: number) => void
 ) {
@@ -43,6 +45,15 @@ export function useRasterRenderer(
       yMax: data.nodeIdRange.max,
     });
   }, [data]);
+
+  // Node ids are per-population row indices, not a shared scale — so the one
+  // population on show gets the axis scaled to its own ids, where the
+  // file-wide range above would squash it beside a larger sibling.
+  useEffect(() => {
+    const pop = data?.populations.find((p) => p.name === populationName);
+    if (!rendererRef.current || !pop) return;
+    rendererRef.current.setYBounds(pop.nodeIdRange.min, pop.nodeIdRange.max);
+  }, [data, populationName]);
 
   const setVisiblePopulations = useCallback((names: Set<string>) => {
     rendererRef.current?.setVisiblePopulations(names);

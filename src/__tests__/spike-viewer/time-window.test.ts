@@ -10,7 +10,8 @@ function file(min: number, max: number): SpikeData {
       {
         name: 'cortex',
         timestamps: Float32Array.from([min, max]),
-        nodeIds: Float32Array.from([0, 1]),
+        nodeIds: Float64Array.from([0, 1]),
+        nodeIdRange: { min: 0, max: 1 },
       },
     ],
     timeRange: { min, max },
@@ -41,5 +42,13 @@ describe('withSimulationTimeWindow', () => {
     const data = withSimulationTimeWindow(file(11, 1400), { tstop: 1000 });
 
     expect(data.timeRange).toEqual({ min: 0, max: 1400 });
+  });
+
+  it('keeps a spike that precedes tstart on the axis', () => {
+    // The left-edge mirror of the case above: a config that disagrees with
+    // the file it describes must not push spikes off either end.
+    const data = withSimulationTimeWindow(file(11, 940), { tstart: 200, tstop: 1000 });
+
+    expect(data.timeRange).toEqual({ min: 11, max: 1000 });
   });
 });

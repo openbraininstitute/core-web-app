@@ -20,7 +20,7 @@ import { useSomaRadius } from './hooks';
 import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { ISpikeReplayBinding } from '@/features/circuit-viewer/circuit-scene';
+import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
 

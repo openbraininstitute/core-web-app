@@ -41,6 +41,7 @@ export default function RasterPlot({
   const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
     containerRef,
     data,
+    populationName,
     onSeek
   );
 
