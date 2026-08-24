@@ -3,11 +3,10 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { requestOfflineTokenConsent } from '@/features/offline-auth-management/auth-manager-client';
 import {
   publishOfflineTokenConsentEvent,
-  readLastOfflineTokenConsentEvent,
   subscribeOfflineTokenConsentEvents,
 } from '@/features/offline-auth-management/bus';
 import {
-  isOfflineTokenConsentStateFresh,
+  isOfflineTokenConsentGrantedForSession,
   readOfflineTokenConsentState,
   writeOfflineTokenConsentState,
 } from '@/features/offline-auth-management/store';
@@ -20,14 +19,16 @@ import type { OfflineTokenConsentRequest } from '@/features/offline-auth-managem
 import type { OfflineTokenConsentEvent } from '@/features/offline-auth-management/types';
 
 type EnsureOptions = {
-  /** use localStorage to reduce the number of requests to auth-manager (defaults: false) */
+  /**
+   * reuse a grant recorded in localStorage, skipping the consent tab when it belongs to
+   * the session we are in. auth-manager is still asked which session that is, so this
+   * saves the round trip through the consent page rather than the request (defaults: false)
+   */
   useCache?: boolean;
   timeoutMs?: number;
   // max time we'll accept a previously-emitted event as relevant to this wait.
   // this prevents stale “granted” events from auto-unblocking a new flow.
   maxEventAgeMs?: number;
-  // how many times to re-check auth-manager after a grant event.
-  recheckAttempts?: number;
 };
 
 export type EnsureResult =
@@ -45,27 +46,32 @@ export type OfflineTokenConsentModalState = {
 const PREFETCH_TTL_MS = 30_000;
 const INMEMORY_GRANT_TTL_MS = 10 * 60_000;
 
+/**
+ * whether a consent event answers the flow waiting on `flowSessionStateId`.
+ *
+ * an event carrying no session id is accepted: auth-manager does not always put
+ * `session_state_id` on the callback redirect, and rejecting those would hang every flow
+ * until it times out. a positive mismatch is a grant made in a different session — the
+ * offline token it created is not the one this flow needs.
+ */
+function answersConsentSession(eventSessionStateId?: string, flowSessionStateId?: string) {
+  if (!eventSessionStateId || !flowSessionStateId) return true;
+  return eventSessionStateId === flowSessionStateId;
+}
+
 async function waitForDecision({
-  useCache,
   timeoutMs,
   maxEventAgeMs,
   minEventAt,
+  sessionStateId,
   signal,
 }: {
-  useCache: boolean;
   timeoutMs: number;
   maxEventAgeMs: number;
   minEventAt: number;
+  sessionStateId?: string;
   signal: AbortSignal;
 }): Promise<OfflineTokenConsentEvent> {
-  // Fast-path: accept a very recent event (helps cross-tab “already granted just now”).
-  if (useCache) {
-    const last = readLastOfflineTokenConsentEvent();
-    if (last && last.at >= minEventAt && Date.now() - last.at < maxEventAgeMs) {
-      return last;
-    }
-  }
-
   return new Promise((resolve, reject) => {
     const onAbort = () => {
       cleanup();
@@ -85,6 +91,7 @@ async function waitForDecision({
         event.type !== OfflineTokenConsentEventType.Denied
       )
         return;
+      if (!answersConsentSession(event.sessionStateId, sessionStateId)) return;
       cleanup();
       resolve(event);
     });
@@ -111,10 +118,13 @@ async function waitForDecision({
  * before you start a task (extraction, simulation, ...)
  *
  * how it works:
- * - if we have a fresh local state that says “granted”, we allow the task directly
+ * - if we have a fresh local state that says “granted” *for the session we are in*, we
+ *   allow the task directly — a grant from an earlier session does not count, because the
+ *   offline token auth-manager hands the launch system is stored per session
  * - if not granted, we request a `consentUrl` from auth-manager, try to open it in a new tab,
  *   and we show a modal as a fallback (manual link)
  * - we wait for the consent callback page to emit an event (granted/denied) and then we return.
+ *   an event naming a different session is ignored: it settles someone else's flow, not ours.
  *
  * @param options - Tuning options (timeouts, event age, etc).
  * @returns helpers for UI + the main `ensure()` function
@@ -125,9 +135,8 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       useCache: options?.useCache ?? false,
       timeoutMs: options?.timeoutMs ?? 2 * 60 * 1000,
       maxEventAgeMs: options?.maxEventAgeMs ?? 10 * 60 * 1000,
-      recheckAttempts: options?.recheckAttempts ?? 5,
     }),
-    [options?.maxEventAgeMs, options?.recheckAttempts, options?.timeoutMs, options?.useCache]
+    [options?.maxEventAgeMs, options?.timeoutMs, options?.useCache]
   );
 
   const abortRef = useRef<AbortController | null>(null);
@@ -191,6 +200,9 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       };
     }
 
+    // not session-checked: knowing the current session costs a request to auth-manager,
+    // which is the whole point of this short-lived in-memory window. a session only
+    // rotates on a re-login, which unmounts this hook in the tab that did it.
     if (Date.now() - lastGrantAtRef.current < INMEMORY_GRANT_TTL_MS) {
       return { ok: true };
     }
@@ -199,33 +211,41 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     abortRef.current?.abort('superseded');
     abortRef.current = new AbortController();
 
-    setModal({ open: true, consentUrl: undefined });
-
     try {
-      if (opts.useCache) {
-        const cached = readOfflineTokenConsentState();
-        if (isOfflineTokenConsentStateFresh(cached) && cached?.decision === 'granted') {
-          setModal({ open: false, consentUrl: undefined });
-          publishOfflineTokenConsentEvent({
-            type: OfflineTokenConsentEventType.Granted,
-            at: Date.now(),
-            source: OfflineTokenConsentEventSource.Server,
-          });
-          lastGrantAtRef.current = Date.now();
-          return { ok: true };
-        }
-      }
-
+      // Only a prefetch from the last PREFETCH_TTL_MS is used: it carries the session id
+      // the cached grant is checked against below, and an old one would answer for a
+      // session we may no longer be in.
       const prefetched = consentPrefetchRef.current;
-      const hasUrl = !!prefetched?.value?.consentUrl;
+      const prefetchFresh = !!prefetched && Date.now() - prefetched.at < PREFETCH_TTL_MS;
+      const hasUrl = prefetchFresh && !!prefetched?.value?.consentUrl;
 
       if (!hasUrl) {
         await new Promise<void>((r) => setTimeout(r, 0));
       }
 
-      const consentRes = prefetched?.value ?? (await fetchConsent({ useCache: opts.useCache }));
+      const consentRes =
+        (prefetchFresh ? prefetched?.value : undefined) ??
+        (await fetchConsent({ useCache: opts.useCache }));
       const consentUrl = consentRes.consentUrl;
       const sessionStateId = consentRes.sessionStateId;
+
+      // The cached grant is only read once auth-manager has told us which session we are
+      // in: it is keyed by session, so this has to come after the consent request rather
+      // than short-circuiting ahead of it.
+      if (opts.useCache) {
+        const cached = readOfflineTokenConsentState();
+        if (isOfflineTokenConsentGrantedForSession(cached, sessionStateId)) {
+          setModal({ open: false, consentUrl: undefined });
+          publishOfflineTokenConsentEvent({
+            type: OfflineTokenConsentEventType.Granted,
+            at: Date.now(),
+            source: OfflineTokenConsentEventSource.Server,
+            sessionStateId,
+          });
+          lastGrantAtRef.current = Date.now();
+          return { ok: true };
+        }
+      }
 
       if (!consentUrl) {
         setModal({ open: false, consentUrl: undefined });
@@ -242,10 +262,10 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       openConsentLink(consentUrl);
 
       const decision = await waitForDecision({
-        useCache: opts.useCache,
         timeoutMs: opts.timeoutMs,
         maxEventAgeMs: opts.maxEventAgeMs,
         minEventAt: flowStartedAt,
+        sessionStateId,
         signal: abortRef.current.signal,
       });
 
@@ -271,15 +291,23 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       }
 
       const now = Date.now();
+      // the callback page reports the session Keycloak stored the token under; the id we
+      // fetched before opening the consent page is a fallback for redirects that omit it.
+      const grantedSessionStateId = decision.sessionStateId ?? sessionStateId;
       if (opts.useCache) {
-        writeOfflineTokenConsentState({ decision: 'granted', updatedAt: now, sessionStateId });
-        consentPrefetchRef.current = { at: now, value: { consentUrl: undefined, sessionStateId } };
+        writeOfflineTokenConsentState({
+          decision: 'granted',
+          updatedAt: now,
+          sessionStateId: grantedSessionStateId,
+        });
+        // the consent url is spent, so drop the prefetch instead of caching a url-less entry.
+        consentPrefetchRef.current = null;
       }
       publishOfflineTokenConsentEvent({
         type: OfflineTokenConsentEventType.Granted,
         at: now,
         source: OfflineTokenConsentEventSource.Server,
-        sessionStateId,
+        sessionStateId: grantedSessionStateId,
       });
       lastGrantAtRef.current = now;
       return { ok: true };

@@ -29,3 +29,22 @@ export function isOfflineTokenConsentStateFresh(
   if (!state) return false;
   return Date.now() - state.updatedAt < ttlMs;
 }
+
+/**
+ * a grant only counts for the Keycloak session it was made in.
+ *
+ * auth-manager stores the offline token against the session's `session_state_id`, so a
+ * grant carried over from a previous session passes a freshness check while the token
+ * the launch needs does not exist — the job submission then fails server-side with
+ * `token_not_found`. An unknown session id on either side counts as a miss, so the
+ * consent flow runs again rather than being skipped on a guess.
+ */
+export function isOfflineTokenConsentGrantedForSession(
+  state: OfflineTokenConsentState | null,
+  sessionStateId: string | undefined,
+  ttlMs = OFFLINE_TOKEN_CONSENT_TTL_MS
+) {
+  if (!isOfflineTokenConsentStateFresh(state, ttlMs)) return false;
+  if (state?.decision !== 'granted') return false;
+  return !!sessionStateId && state.sessionStateId === sessionStateId;
+}
