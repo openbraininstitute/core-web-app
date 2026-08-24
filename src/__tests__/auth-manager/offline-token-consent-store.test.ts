@@ -5,9 +5,9 @@ import {
   OFFLINE_TOKEN_CONSENT_TTL_MS,
   readOfflineTokenConsentState,
   writeOfflineTokenConsentState,
-} from './store';
+} from '@/features/offline-auth-management/store';
 
-import type { OfflineTokenConsentState } from './types';
+import type { OfflineTokenConsentState } from '@/features/offline-auth-management/types';
 
 const SESSION = 'mMFQaLMROg0P37gICaF_PTdM';
 const OTHER_SESSION = 'UVEcyuOGjWtZ4Xk2pQ1rLmNo';
