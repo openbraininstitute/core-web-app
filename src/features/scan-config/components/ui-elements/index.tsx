@@ -327,6 +327,7 @@ export function UIElementRender({
         const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
         return (
           <BooleanInput
+            fieldKey={k}
             value={currentValue}
             disabled={disabled}
             onChange={(value: boolean) => {

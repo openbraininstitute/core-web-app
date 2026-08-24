@@ -108,19 +108,24 @@ export default function Block({
               return (
                 <div
                   key={k}
-                  className={cn(
-                    'flex w-full min-w-0 max-w-full',
-                    isBooleanInput ? 'flex-row items-center' : 'flex-col'
-                  )}
-                  data-scan-config-block-element={blockElementSchema.ui_element}
+                  className={cn('flex w-full min-w-0 max-w-full flex-col', {
+                    'flex-row items-center justify-between hover:bg-gray-100 p-2 rounded-lg':
+                      isBooleanInput,
+                  })}
+                  data-scan-config-block-element-container-of={blockElementSchema.ui_element}
                 >
-                  <div className="flex gap-0.5 w-full items-center mb-2">
-                    <div
-                      className="text-primary-9 text-base font-semibold uppercase"
+                  <div
+                    className={cn('flex gap-0.5 w-full items-center', { 'mb-2': !isBooleanInput })}
+                  >
+                    <label
+                      htmlFor={k}
+                      className={cn('text-primary-9 text-base font-semibold uppercase', {
+                        'cursor-pointer': isBooleanInput,
+                      })}
                       title={blockElementSchema.description}
                     >
                       {blockElementSchema.title}
-                    </div>
+                    </label>
                     {blockElementSchema.units && (
                       <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
                     )}
@@ -139,34 +144,32 @@ export default function Block({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="w-full min-w-0 max-w-full">
-                        <div className="mb-1 w-full min-w-0 max-w-full">
-                          <div
-                            className={cn(
-                              'w-full min-w-0 max-w-full border',
-                              isPillField ? 'rounded-full' : 'rounded-lg',
-                              fieldBorderClass,
-                              !fieldBorderClass && 'border-transparent'
-                            )}
-                          >
-                            <UIElementRender
-                              k={k}
-                              disabled={disabled}
-                              paramSchema={blockElementSchema}
-                              config={config}
-                              schema={schema}
-                              entity={entity}
-                              schemaMappingConfig={schemaMappingConfig}
-                              state={state}
-                              setState={setState}
-                              selectedEntry={selectedEntry}
-                              errorPathPrefix={
-                                errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
-                              }
-                            />
-                          </div>
+                      <span>
+                        <div
+                          className={cn(
+                            'w-full min-w-0 max-w-full border',
+                            isPillField ? 'rounded-full' : 'rounded-lg',
+                            fieldBorderClass,
+                            !fieldBorderClass && 'border-transparent'
+                          )}
+                        >
+                          <UIElementRender
+                            k={k}
+                            disabled={disabled}
+                            paramSchema={blockElementSchema}
+                            config={config}
+                            schema={schema}
+                            entity={entity}
+                            schemaMappingConfig={schemaMappingConfig}
+                            state={state}
+                            setState={setState}
+                            selectedEntry={selectedEntry}
+                            errorPathPrefix={
+                              errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
+                            }
+                          />
                         </div>
-                      </div>
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent
                       avoidCollisions

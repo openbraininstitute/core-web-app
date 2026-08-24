@@ -53,9 +53,11 @@ export function NeuronViewerContainer({
     logError('Unable to load morphology:', error);
     throw new Error('Unable to load morphology!');
   }
+  const containerClassName = cn(styles.viewerContainer, collapsed && styles.collapsed);
+
   if (loading)
     return (
-      <div className={styles.viewerContainer}>
+      <div className={containerClassName}>
         <LoadingNeuronSpinner />
       </div>
     );
@@ -80,7 +82,7 @@ export function NeuronViewerContainer({
       })}
     >
       <DefaultLoadingSuspense>
-        <div className={cn(styles.viewerContainer, collapsed && styles.collapsed)}>
+        <div className={containerClassName}>
           {collapsed ? (
             <CollapsedViewer onClick={() => setCollapsed(false)} />
           ) : (

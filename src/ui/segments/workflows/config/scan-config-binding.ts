@@ -32,6 +32,7 @@ export const ScanConfigGeneratedApiPath = {
   EMSynapseMapping: 'em-synapse-mapping-scan-config-generate-grid',
   CreateExtracellularRecordingArray:
     'create-extracellular-recording-array-scan-config-generate-grid',
+  BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -99,6 +100,8 @@ export function resolveSimulatorScanConfigOverride(
 export type TScanConfigRegistryConfig = {
   configureBinding: TScanConfigConfigureBinding;
   schemaName: SchemaName;
+  /** Campaign entity type produced by the workflow this scan config belongs to. */
+  targetType?: TExtendedEntitiesTypeDict;
 };
 
 export function resolveScanConfigFromRegistry(config: TScanConfigRegistryConfig) {
@@ -107,6 +110,7 @@ export function resolveScanConfigFromRegistry(config: TScanConfigRegistryConfig)
     schemaName: config.schemaName,
     generatedEndpoint: resolveScanConfigGeneratedApiUrl(config.configureBinding),
     schemaMappingKey: config.configureBinding.schemaMappingKey,
+    targetType: config.targetType,
   };
 }
 
@@ -219,6 +223,18 @@ export function createExtracellularRecordingArrayConfigureBinding(): TScanConfig
       [ExtendedEntitiesTypeDict.Circuit]: ScanConfigFromIdType.CircuitFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray,
+    schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function buildSynaptomeConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Memodel,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Memodel,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.Memodel]: ScanConfigFromIdType.MEModelFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.BuildSynaptome,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }

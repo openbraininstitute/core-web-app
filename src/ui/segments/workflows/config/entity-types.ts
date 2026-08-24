@@ -71,6 +71,11 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.Cellular,
     label: 'Single neuron simulation',
   },
+  [ExtendedEntitiesTypeDict.BuildSynaptomeCampaign]: {
+    value: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'Synaptome',
+  },
   [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     group: EntityGroupDict.Cellular,

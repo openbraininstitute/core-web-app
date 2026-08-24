@@ -26,6 +26,7 @@ export const ModelEntitySlug = {
   EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
   ExtracellularRecordingArray: 'extracellular-recording-array',
   ExtracellularRecordingArrayCampaign: 'extracellular-recording-array-campaign',
+  BuildSynaptomeCampaign: 'build-synaptome-campaign',
 } as const;
 
 const SimulationEntitySlug = {

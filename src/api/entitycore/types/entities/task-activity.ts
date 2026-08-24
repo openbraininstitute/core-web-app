@@ -44,6 +44,8 @@ export const TaskActivityType = {
     'extracellular_recording_weights_calculation__config_generation',
   ExtracellularRecordingWeightsCalculationExecution:
     'extracellular_recording_weights_calculation__execution',
+  BuildSynaptomeConfigGeneration: 'circuit_single_build__config_generation',
+  BuildSynaptomeExecution: 'circuit_single_build__execution',
 } as const;
 
 export type TTaskActivityType = (typeof TaskActivityType)[keyof typeof TaskActivityType];

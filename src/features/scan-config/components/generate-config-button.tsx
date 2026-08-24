@@ -21,6 +21,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
 
 const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
@@ -66,6 +67,7 @@ export default function GenerateConfigButton({
   activity,
   generatedApiUrl,
   entityType,
+  campaignEntityType,
 }: {
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -77,6 +79,7 @@ export default function GenerateConfigButton({
   activity: TScanConfigActivity;
   generatedApiUrl: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  campaignEntityType?: TExtendedEntitiesTypeDict;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
   // ajv schema errors plus field-level errors (e.g. duplicate group names) that
@@ -98,6 +101,7 @@ export default function GenerateConfigButton({
     ctx: { virtualLabId, projectId },
     activity,
     entityType,
+    campaignEntityType,
     onSuccess: (newCampaignId) => {
       setCampaignId(newCampaignId);
       setTab(ACTIVITY_RESULTS_TAB[activity]);

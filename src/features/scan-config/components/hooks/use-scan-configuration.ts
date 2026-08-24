@@ -70,6 +70,12 @@ export type TUseScanConfigurationParams = {
 export type TScanConfigurationReadyState = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  /**
+   * Campaign entity type the workflow produces. Source types are not unique across
+   * workflows, so the campaign type is carried from the registry entry rather than
+   * resolved back from `entityType`.
+   */
+  campaignEntityType?: TExtendedEntitiesTypeDict;
   virtualLabId: string;
   projectId: string;
   origin?: string;
@@ -173,6 +179,7 @@ export function useScanConfiguration({
 
     return {
       usedType: registryResolved.entityType,
+      targetType: registryResolved.targetType,
       entityConfig,
       endpoint: effectiveEndpoint,
       schemaName: effectiveSchemaName,
@@ -252,6 +259,7 @@ export function useScanConfiguration({
       ready: {
         entity,
         entityType: resolved.usedType,
+        campaignEntityType: resolved.targetType,
         virtualLabId,
         projectId,
         origin,

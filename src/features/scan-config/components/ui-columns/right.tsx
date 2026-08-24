@@ -122,7 +122,7 @@ function EntityPreviewPane({
   return (
     <div
       id="scan-config-controls-right-mini-detail"
-      className="h-full min-h-0 rounded-lg px-0.5 py-1"
+      className="h-full min-h-0 overflow-auto rounded-lg px-0.5 py-1 secondary-scrollbar"
     >
       {record ? (
         <MiniDetailViewRenderer
@@ -198,8 +198,14 @@ function CircuitModelPreviewPane({
   );
 
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
-      <div className="rounded-lg h-full" id="scan-config-right-model-preview">
+    <div
+      id="scan-config-controls-right-preview"
+      className="h-full min-h-0 overflow-hidden rounded-lg px-0.5"
+    >
+      <div
+        className="h-full min-h-0 overflow-hidden rounded-lg"
+        id="scan-config-right-model-preview"
+      >
         <ModelPreview
           model={entity}
           form={form}

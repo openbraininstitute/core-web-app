@@ -49,6 +49,7 @@ describe('workflow naming', () => {
     expect(enabledLabelsInOrder(WorkspaceSection.BuildWorkflow)).toEqual([
       'Ion channel',
       'Single neuron',
+      'Synaptome',
       'Electron microscopy circuit',
       'Extracellular recording array',
       'Synaptome (legacy)',
@@ -136,6 +137,22 @@ describe('legacy marking', () => {
 
     expect(firstLegacyIndex).toBeGreaterThan(0);
     expect(flags.slice(firstLegacyIndex)).not.toContain(false);
+  });
+});
+
+describe('workflow types menu', () => {
+  it('gives every entry of an activity a distinct react key', () => {
+    for (const activity of EVERY_ACTIVITY) {
+      // the menu keys carousel items by target type: the Build list holds two entries
+      // labelled "Single neuron" (ME-model and single neuron circuit), so group + label collide
+      const keys = listWorkflows({
+        activity,
+        flags: allFlagsOn,
+        sort: WorkflowListSortDict.Order,
+      }).map((workflow) => workflow.targetType);
+
+      expect(new Set(keys).size).toBe(keys.length);
+    }
   });
 });
 
