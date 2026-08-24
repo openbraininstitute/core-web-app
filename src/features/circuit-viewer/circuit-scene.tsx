@@ -32,6 +32,7 @@ import {
   electrodeBlockPath,
   useElectrodeOverlays,
 } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
+import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use-viewer-zoom';
 import { classNames } from '@/util/utils';
 
 import { PaneResizeHandle } from './pane-resize-handle';
@@ -353,32 +354,68 @@ export function CircuitScene({
     signals.nudgeMorphology.dispatch().catch(() => {});
   }, [hintHovered, canPickMorphologyLocations, active, signals]);
 
+  const zoom = useViewerZoom(signals);
+
   // Props shared by both viz surfaces. An MEModel has no colour-by, so
   // `colorsByNode` and `defaultColor` stay on the circuit branch.
-  const sharedVizProps = {
-    showAxons: config.showAxons,
-    backgroundColor: config.backgroundColor,
-    scalebarColor: theme?.foreground,
-    signals,
-    overlays: styledOverlays,
-    overlaysInteractive,
-    onOverlayTransform: handleOverlayTransform,
-    highlightedOverlayId,
-    neuronOpacity: config.neuronOpacity,
-    electrodeRadius: config.electrodeRadius,
-    features: vizFeatures,
-    spikes,
-    morphologyLocations: {
-      config: scanConfig,
-      onConfigChange: setConfig,
+  //
+  // Memoised explicitly, not left to the compiler: a zoom tick changes this object, and a
+  // fresh one re-renders the 3D surface every frame of a scroll-zoom.
+  const sharedVizProps = useMemo(
+    () => ({
+      showAxons: config.showAxons,
+      backgroundColor: config.backgroundColor,
+      scalebarColor: theme?.foreground,
+      showScalebar: config.showScalebar,
+      signals,
+      overlays: styledOverlays,
+      overlaysInteractive,
+      onOverlayTransform: handleOverlayTransform,
+      highlightedOverlayId,
+      neuronOpacity: config.neuronOpacity,
+      electrodeRadius: config.electrodeRadius,
+      features: vizFeatures,
+      spikes,
+      // Subscribed only while the slider is shown: the viewer reports every zoom change, and
+      // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
+      onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
+      morphologyLocations: {
+        config: scanConfig,
+        onConfigChange: setConfig,
+        selectedRootElement,
+        selectedEntry,
+        onCreateEntry,
+        supportsExplicitLocations,
+        markerRadius: config.morphologyLocationRadius,
+        showLabels: config.showMorphologyLocationLabels,
+      },
+    }),
+    [
+      config.showAxons,
+      config.backgroundColor,
+      config.showScalebar,
+      config.neuronOpacity,
+      config.electrodeRadius,
+      config.morphologyLocationRadius,
+      config.showMorphologyLocationLabels,
+      config.showZoomSlider,
+      theme?.foreground,
+      signals,
+      styledOverlays,
+      overlaysInteractive,
+      handleOverlayTransform,
+      highlightedOverlayId,
+      vizFeatures,
+      spikes,
+      zoom.onZoomChange,
+      scanConfig,
+      setConfig,
       selectedRootElement,
       selectedEntry,
       onCreateEntry,
       supportsExplicitLocations,
-      markerRadius: config.morphologyLocationRadius,
-      showLabels: config.showMorphologyLocationLabels,
-    },
-  };
+    ]
+  );
 
   return (
     // Transparent to the pointer as a whole: whatever a host stacks underneath —
@@ -401,6 +438,7 @@ export function CircuitScene({
             colorsByNode={enableColorBy ? colorsByNode : undefined}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
+            showScalebar={config.showScalebar}
             signals={signals}
             overlays={styledOverlays}
             overlaysInteractive={overlaysInteractive}
@@ -442,6 +480,9 @@ export function CircuitScene({
           colorBy: enableColorBy ? colorBy : undefined,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,
+          // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
+          // props, and with the setting off there is nothing to drive.
+          zoom: largeCircuit || !config.showZoomSlider ? undefined : zoom,
         }}
       />
 
