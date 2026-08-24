@@ -114,7 +114,9 @@ export default function Block({
                   })}
                   data-scan-config-block-element-container-of={blockElementSchema.ui_element}
                 >
-                  <div className="flex gap-0.5 w-full items-center">
+                  <div
+                    className={cn('flex gap-0.5 w-full items-center', { 'mb-2': !isBooleanInput })}
+                  >
                     <label
                       htmlFor={k}
                       className={cn('text-primary-9 text-base font-semibold uppercase', {

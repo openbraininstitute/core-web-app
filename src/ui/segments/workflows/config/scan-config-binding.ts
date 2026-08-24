@@ -100,6 +100,8 @@ export function resolveSimulatorScanConfigOverride(
 export type TScanConfigRegistryConfig = {
   configureBinding: TScanConfigConfigureBinding;
   schemaName: SchemaName;
+  /** Campaign entity type produced by the workflow this scan config belongs to. */
+  targetType?: TExtendedEntitiesTypeDict;
 };
 
 export function resolveScanConfigFromRegistry(config: TScanConfigRegistryConfig) {
@@ -108,6 +110,7 @@ export function resolveScanConfigFromRegistry(config: TScanConfigRegistryConfig)
     schemaName: config.schemaName,
     generatedEndpoint: resolveScanConfigGeneratedApiUrl(config.configureBinding),
     schemaMappingKey: config.configureBinding.schemaMappingKey,
+    targetType: config.targetType,
   };
 }
 

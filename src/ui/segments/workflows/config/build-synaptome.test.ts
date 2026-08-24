@@ -5,6 +5,7 @@ import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 
 import { BuildWorkflows } from './activities/build';
+import { getTargetType } from './helpers';
 import {
   buildGeneratedApiUrl,
   resolveScanConfigFromIdType,
@@ -30,6 +31,16 @@ describe('build synaptome workflow registration', () => {
     expect(buildGeneratedApiUrl(registry?.configureBinding.generatedApiPath ?? '')).toContain(
       '/generated/me-model-synaptic-model-placement-scan-config-generate-grid'
     );
+  });
+
+  it('carries the campaign type on the registry entry, which the ME-model source type cannot give', () => {
+    const registry = findScanConfigRegistryByDefinition(buildSynaptomeWorkflow);
+
+    expect(registry?.targetType).toBe(ExtendedEntitiesTypeDict.BuildSynaptomeCampaign);
+    // the single neuron build declares the same source type and is registered first
+    expect(
+      getTargetType({ activity: 'build', sourceType: ExtendedEntitiesTypeDict.Memodel })
+    ).not.toBe(ExtendedEntitiesTypeDict.BuildSynaptomeCampaign);
   });
 
   it('writes the browsed ME-model into initialize as an MEModelFromID', () => {

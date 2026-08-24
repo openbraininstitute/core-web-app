@@ -17,6 +17,7 @@ import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
 
 export default function Left({
@@ -43,6 +44,7 @@ export default function Left({
   activity,
   generatedEndpoint,
   entityType,
+  campaignEntityType,
   aiEnabled,
 }: {
   schema: ConfigSchema;
@@ -68,6 +70,7 @@ export default function Left({
   activity: TScanConfigActivity;
   generatedEndpoint: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  campaignEntityType?: TExtendedEntitiesTypeDict;
   aiEnabled?: boolean;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
@@ -160,6 +163,7 @@ export default function Left({
             setLoading={setLoading}
             activity={activity}
             entityType={entityType}
+            campaignEntityType={campaignEntityType}
             generatedApiUrl={generatedEndpoint}
           />
         </div>

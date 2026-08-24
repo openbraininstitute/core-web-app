@@ -24,6 +24,7 @@ export function findScanConfigRegistryByDefinition(
       return {
         configureBinding: scanConfig.configureBinding,
         schemaName: scanConfig.schemaName,
+        targetType: workflow.targetType,
       };
     }
   }
@@ -49,6 +50,7 @@ export function findScanConfigRegistryByTargetType(
       return {
         configureBinding: scanConfig.configureBinding,
         schemaName: scanConfig.schemaName,
+        targetType: workflow.targetType,
       };
     }
   }

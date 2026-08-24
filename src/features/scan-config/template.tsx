@@ -72,6 +72,7 @@ type Props = {
   aiEnabled: boolean;
   generatedEndpoint: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  campaignEntityType?: TExtendedEntitiesTypeDict;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
@@ -101,6 +102,7 @@ function ScanConfigTemplateContent({
   aiEnabled,
   generatedEndpoint,
   entityType,
+  campaignEntityType,
   campaignOriginAction,
   workflowSessionSelection,
   resolveSessionFromIdType,
@@ -334,6 +336,7 @@ function ScanConfigTemplateContent({
             activity={activity}
             generatedEndpoint={generatedEndpoint}
             entityType={entityType}
+            campaignEntityType={campaignEntityType}
             aiEnabled={aiEnabled}
           />
           <div
