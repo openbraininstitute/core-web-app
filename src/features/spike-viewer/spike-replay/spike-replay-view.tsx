@@ -299,6 +299,9 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
         <div
           className={classNames(
             'absolute left-0 right-0 bottom-0 px-3 pb-3',
+            // Two white panes meet along this edge, so without a rule they read
+            // as one view with a gap in it. The grab bar rides on top of it.
+            isSplit && 'border-t border-neutral-2',
             !showRaster && 'invisible pointer-events-none'
           )}
           style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}
