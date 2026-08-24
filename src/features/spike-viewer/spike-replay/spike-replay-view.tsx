@@ -298,11 +298,9 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
 
         <div
           className={classNames(
-            // Inset by a margin rather than held off by padding, so that the
-            // rule below stops short of the panel's edges: full-bleed, it would
-            // carry the weight of the one above the transport bar and read as a
-            // section break, leaving the view pill and the population above it
-            // looking like chrome belonging to the 3D pane alone.
+            // A margin rather than padding, so the rule below stops short of
+            // the panel's edges: full-bleed it reads as a section break, and
+            // the header above it as chrome belonging to the 3D pane alone.
             'absolute left-0 right-0 bottom-0 mx-3 pb-3',
             // Two white panes meet along this edge, so without a rule they read
             // as one view with a gap in it. The grab bar rides on top of it.

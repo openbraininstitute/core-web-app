@@ -4,14 +4,7 @@ import { createContext, useContext, useMemo } from 'react';
 
 import type { ReactNode } from 'react';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
-
-/** The `run` block of a SONATA `simulation_config.json`. */
-export type SimulationRun = {
-  /** Simulated milliseconds at which the run started; SONATA defaults it to 0. */
-  tstart?: number;
-  /** Simulated milliseconds at which the run stopped. */
-  tstop?: number;
-};
+import type { SimulationRun } from '@/features/spike-viewer/time-window';
 
 type SimulationContextValue = {
   model: TSupportedEntitiesForScanConfiguration | null;
@@ -26,8 +19,7 @@ type SimulationContextValue = {
  * to draw a plot and nothing more. Replaying spikes over the circuit they came
  * from needs the circuit, and spanning an axis over the run needs its window —
  * neither of which is in the file, and both of which the campaign already
- * resolved. The same gap {@link SimulationReportsProvider} fills for report
- * metadata.
+ * resolved. The same gap `SimulationReportsProvider` fills for report metadata.
  *
  * Every simulation in a campaign scans the same model, so that is one value for
  * the whole tab; the window is the active simulation's, since `tstop` can itself
@@ -49,10 +41,6 @@ export function SimulationProvider({
   return <SimulationContext.Provider value={value}>{children}</SimulationContext.Provider>;
 }
 
-export function useSimulationModel(): TSupportedEntitiesForScanConfiguration | null {
-  return useContext(SimulationContext).model;
-}
-
-export function useSimulationRun(): SimulationRun | null {
-  return useContext(SimulationContext).run;
+export function useSimulation(): SimulationContextValue {
+  return useContext(SimulationContext);
 }

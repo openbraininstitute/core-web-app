@@ -1,5 +1,12 @@
-import type { SimulationRun } from '@/features/spike-viewer/simulation-context';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
+
+/** The `run` block of a SONATA `simulation_config.json`. */
+export type SimulationRun = {
+  /** Simulated milliseconds at which the run started; SONATA defaults it to 0. */
+  tstart?: number;
+  /** Simulated milliseconds at which the run stopped. */
+  tstop?: number;
+};
 
 /**
  * Re-read a parsed `spikes.h5` against the window its simulation ran for.
@@ -22,9 +29,6 @@ export function withSimulationTimeWindow(data: SpikeData, run: SimulationRun | n
   // `max` rather than `tstop` alone: a config that disagrees with the file it
   // describes must not push spikes off the end of the axis.
   const stop = run?.tstop === undefined ? max : Math.max(run.tstop, max);
-  const timeRange = { min: Math.min(start, min), max: stop };
 
-  if (timeRange.min === min && timeRange.max === max) return data;
-
-  return { ...data, timeRange };
+  return { ...data, timeRange: { min: Math.min(start, min), max: stop } };
 }

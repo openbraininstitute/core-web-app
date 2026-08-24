@@ -42,10 +42,4 @@ describe('withSimulationTimeWindow', () => {
 
     expect(data.timeRange).toEqual({ min: 0, max: 1400 });
   });
-
-  it('leaves the data alone when the window is already the one it holds', () => {
-    const data = file(0, 1000);
-
-    expect(withSimulationTimeWindow(data, { tstop: 1000 })).toBe(data);
-  });
 });
