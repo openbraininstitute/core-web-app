@@ -4,7 +4,7 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import PopulationSelect from '@/features/sonata-viewer/components/population-select';
-import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR, OVERVIEW_GRID_CLASS_NAME } from '@/features/sonata-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/sonata-viewer/hooks/config-hooks';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import { cn } from '@/utils/css-class';
@@ -17,9 +17,6 @@ import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-wo
 const Plot = createPlotlyComponent(Plotly);
 
 const OVERVIEW_DESIRED_POINTS = 100;
-
-const GRID_CLASS_NAME =
-  'grid gap-7 pt-5 @max-xs:grid-cols-1 @lg:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6';
 
 function ThumbnailPlot({
   data,
@@ -54,7 +51,8 @@ function ThumbnailPlot({
 function ThumbnailContainer({
   worker,
   populationName,
-  nodeId,
+  traceIndex,
+  label,
   units,
   variableName,
   showTitle,
@@ -62,7 +60,8 @@ function ThumbnailContainer({
 }: {
   worker: Remote<SonataWorkerImpl>;
   populationName: string;
-  nodeId: number;
+  traceIndex: number;
+  label: string;
   units: string;
   variableName?: string;
   showTitle?: boolean;
@@ -92,7 +91,7 @@ function ThumbnailContainer({
     worker
       .getNodeTrace({
         populationName,
-        nodeId,
+        traceIndex,
         desiredPoints: OVERVIEW_DESIRED_POINTS,
       })
       .then((result) => {
@@ -102,13 +101,13 @@ function ThumbnailContainer({
     return () => {
       cancelled = true;
     };
-  }, [inView, worker, populationName, nodeId]);
+  }, [inView, worker, populationName, traceIndex]);
 
   return (
     <div className="flex flex-col gap-8">
       {showTitle && (
         <span className="text-lg">
-          {populationName}_{nodeId}
+          {populationName}_{label}
         </span>
       )}
       <button
@@ -138,7 +137,7 @@ export default function ReportOverview({
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
-  onNodeClick: (populationName: string, nodeId: number) => void;
+  onNodeClick: (populationName: string, traceIndex: number) => void;
   variableName?: string;
 }) {
   const populationNames = useMemo(
@@ -172,22 +171,24 @@ export default function ReportOverview({
             <div className="text-primary-9 flex items-baseline gap-2 text-lg font-bold">
               {pop.name}
               <small className="font-light">
-                {pop.nodeIds.length} {pop.nodeIds.length === 1 ? 'node' : 'nodes'}
+                {pop.nodeCount} {pop.nodeCount === 1 ? 'node' : 'nodes'}
               </small>
             </div>
           )}
 
-          <div className={GRID_CLASS_NAME}>
-            {pop.nodeIds.map((nodeId) => (
+          <div className={OVERVIEW_GRID_CLASS_NAME}>
+            {pop.traceLabels.map((label, traceIndex) => (
               <ThumbnailContainer
-                key={`${pop.name}-${nodeId}`}
+                // biome-ignore lint/suspicious/noArrayIndexKey: column index is the trace identity
+                key={`${pop.name}-${traceIndex}`}
                 worker={worker}
                 populationName={pop.name}
-                nodeId={nodeId}
+                traceIndex={traceIndex}
+                label={label}
                 units={pop.dataUnits}
                 variableName={variableName}
-                showTitle={pop.nodeIds.length > 1}
-                onClick={() => onNodeClick(pop.name, nodeId)}
+                showTitle={pop.traceLabels.length > 1}
+                onClick={() => onNodeClick(pop.name, traceIndex)}
               />
             ))}
           </div>

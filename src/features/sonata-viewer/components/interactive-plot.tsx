@@ -18,14 +18,16 @@ const INTERACTIVE_DESIRED_POINTS = 1000;
 export default function InteractivePlot({
   worker,
   populationName,
-  nodeId,
+  traceIndex,
+  label,
   units,
   variableName,
   showTitle,
 }: {
   worker: Remote<SonataWorkerImpl>;
   populationName: string;
-  nodeId: number;
+  traceIndex: number;
+  label: string;
   units: string;
   variableName?: string;
   showTitle?: boolean;
@@ -50,7 +52,7 @@ export default function InteractivePlot({
     worker
       .getNodeTrace({
         populationName,
-        nodeId,
+        traceIndex,
         desiredPoints: INTERACTIVE_DESIRED_POINTS,
         zoomRange: zoomRange ? { xStart: zoomRange.x[0], xEnd: zoomRange.x[1] } : undefined,
       })
@@ -64,10 +66,11 @@ export default function InteractivePlot({
     return () => {
       cancelled = true;
     };
-  }, [worker, populationName, nodeId, zoomRange]);
+  }, [worker, populationName, traceIndex, zoomRange]);
 
   if (!data) return null;
 
+  const title = `${populationName}_${label}`;
   const plotData: Partial<PlotData>[] = [
     {
       x: Array.from(data.x),
@@ -75,17 +78,13 @@ export default function InteractivePlot({
       type: 'scatter',
       mode: 'lines',
       line: { color: CHART_LINE_COLOR, width: 1 },
-      name: `${populationName}_${nodeId}`,
+      name: title,
     },
   ];
 
   return (
     <div ref={containerRef} className="flex flex-col gap-1">
-      {showTitle && (
-        <span className="text-lg">
-          {populationName}_{nodeId}
-        </span>
-      )}
+      {showTitle && <span className="text-lg">{title}</span>}
       <Plot
         onInitialized={(_, graphDiv) => {
           plotRef.current = graphDiv;
@@ -106,7 +105,7 @@ export default function InteractivePlot({
         }}
         layout={{
           ...layout,
-          title: showTitle ? `${populationName}_${nodeId}` : undefined,
+          title: showTitle ? title : undefined,
           xaxis: {
             ...layout.xaxis,
             title: { font, text: 'Time (ms)' },

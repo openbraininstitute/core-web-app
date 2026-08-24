@@ -4,8 +4,10 @@ export type SonataReportMetadata = {
 
 export type PopulationMetadata = {
   name: string;
-  nodeIds: number[];
-  indexPointers: number[];
+  /** Display label per recorded column of the data matrix. */
+  traceLabels: string[];
+  /** Distinct cells recorded; fewer than `traceLabels.length` in a compartment report. */
+  nodeCount: number;
   timeConfig: TimeConfig;
   dataUnits: string;
 };
@@ -19,7 +21,6 @@ export type TimeConfig = {
 
 export type NodeTraceData = {
   populationName: string;
-  nodeId: number;
   x: number[];
   y: number[];
   units: string;
@@ -32,7 +33,8 @@ export type ZoomRange = {
 
 export type DownsampleRequest = {
   populationName: string;
-  nodeId: number;
+  /** Column of the data matrix. */
+  traceIndex: number;
   desiredPoints: number;
   zoomRange?: ZoomRange;
 };

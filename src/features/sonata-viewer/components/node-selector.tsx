@@ -1,4 +1,5 @@
 import { Select } from 'antd';
+import range from 'es-toolkit/compat/range';
 
 const SELECT_ALL_SENTINEL = 'All';
 
@@ -17,45 +18,45 @@ const SELECT_ALL_SENTINEL = 'All';
  */
 export default function NodeSelector({
   populationName,
-  nodeIds,
-  selectedNodeIds,
+  traceLabels,
+  selectedTraceIndices,
   onChange,
 }: {
   populationName: string;
-  nodeIds: number[];
-  selectedNodeIds: number[];
-  onChange: (nodeIds: number[]) => void;
+  traceLabels: string[];
+  selectedTraceIndices: number[];
+  onChange: (traceIndices: number[]) => void;
 }) {
-  const allNodesSelected = selectedNodeIds.length === nodeIds.length && nodeIds.length > 0;
+  const allNodesSelected =
+    selectedTraceIndices.length === traceLabels.length && traceLabels.length > 0;
 
   const selectionSummary = allNodesSelected
-    ? `All cells (${nodeIds.length})`
-    : `${selectedNodeIds.length} of ${nodeIds.length} selected`;
+    ? `All cells (${traceLabels.length})`
+    : `${selectedTraceIndices.length} of ${traceLabels.length} selected`;
 
   return (
     <div className="flex flex-col gap-2">
-      Select cell ({nodeIds.length} available)
+      Select cell ({traceLabels.length} available)
       <Select
         className="w-full"
         mode="multiple"
         virtual
         showSearch
-        value={
-          allNodesSelected
-            ? [SELECT_ALL_SENTINEL, ...nodeIds.map(String)]
-            : selectedNodeIds.map(String)
-        }
+        value={[
+          ...(allNodesSelected ? [SELECT_ALL_SENTINEL] : []),
+          ...selectedTraceIndices.map(String),
+        ]}
         onChange={(values: string[]) => {
           const wasAllSelected = allNodesSelected;
           const allOptionToggled = values.includes(SELECT_ALL_SENTINEL);
 
           if (!wasAllSelected && allOptionToggled) {
-            onChange(nodeIds);
+            onChange(range(traceLabels.length));
           } else if (wasAllSelected && !allOptionToggled) {
             onChange([]);
           } else {
-            const individualNodeIds = values.filter((v) => v !== SELECT_ALL_SENTINEL).map(Number);
-            onChange(individualNodeIds);
+            const individualIndices = values.filter((v) => v !== SELECT_ALL_SENTINEL).map(Number);
+            onChange(individualIndices);
           }
         }}
         placeholder="Select cells"
@@ -68,9 +69,13 @@ export default function NodeSelector({
         }
       >
         <Select.Option value={SELECT_ALL_SENTINEL}>All cells</Select.Option>
-        {nodeIds.map((id) => (
-          <Select.Option value={String(id)} key={id}>
-            {populationName}_{id}
+        {traceLabels.map((label, index) => (
+          <Select.Option
+            value={String(index)}
+            // biome-ignore lint/suspicious/noArrayIndexKey: column index is the trace identity
+            key={index}
+          >
+            {populationName}_{label}
           </Select.Option>
         ))}
       </Select>

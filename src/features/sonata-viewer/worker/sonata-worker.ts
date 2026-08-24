@@ -3,6 +3,8 @@ import { Dataset, File, Group, ready } from 'h5wasm';
 
 import { lttbDownsample } from '@/utils/lttb';
 
+import { buildTraceLabels, expandToColumns } from './column-mapping';
+
 import type {
   DownsampleRequest,
   NodeTraceData,
@@ -17,6 +19,8 @@ class SonataWorkerImpl {
   private file: File | null = null;
   private filename: string | null = null;
   private populationDataCache = new Map<string, Float32Array>();
+  private shapes = new Map<string, { numTimesteps: number; numColumns: number }>();
+  private timeAxisCache = new Map<string, Float64Array>();
   private metadata: SonataReportMetadata | null = null;
 
   async loadFile(buffer: ArrayBuffer): Promise<SonataReportMetadata> {
@@ -100,10 +104,16 @@ class SonataWorkerImpl {
         units: timeUnits,
       };
 
+      const [numTimesteps, numColumns] = dataDataset.shape;
+      if (!numTimesteps || !numColumns) continue;
+
+      const columnNodeIds = expandToColumns(nodeIds, indexPointers, numColumns);
+      this.shapes.set(popName, { numTimesteps, numColumns });
+
       populations.push({
         name: popName,
-        nodeIds,
-        indexPointers,
+        traceLabels: buildTraceLabels(columnNodeIds),
+        nodeCount: new Set(columnNodeIds).size,
         timeConfig,
         dataUnits,
       });
@@ -129,9 +139,9 @@ class SonataWorkerImpl {
       throw new Error(`Dataset not found for population "${populationName}".`);
     }
 
-    const rawData = dataDataset.to_array();
+    const rawData = dataDataset.value;
     const flat =
-      rawData instanceof Float32Array ? rawData : new Float32Array((rawData as number[][]).flat());
+      rawData instanceof Float32Array ? rawData : Float32Array.from(rawData as ArrayLike<number>);
 
     this.populationDataCache.set(populationName, flat);
     return flat;
@@ -143,60 +153,63 @@ class SonataWorkerImpl {
     }
 
     const pop = this.metadata.populations.find((p) => p.name === req.populationName);
-    if (!pop) throw new Error(`Population "${req.populationName}" not found.`);
+    const shape = this.shapes.get(req.populationName);
+    if (!pop || !shape) throw new Error(`Population "${req.populationName}" not found.`);
 
-    const nodeIndex = pop.nodeIds.indexOf(req.nodeId);
-    if (nodeIndex === -1)
-      throw new Error(`Node ${req.nodeId} not found in "${req.populationName}".`);
+    const { numTimesteps, numColumns } = shape;
+    if (req.traceIndex < 0 || req.traceIndex >= numColumns) {
+      throw new Error(`Trace ${req.traceIndex} is out of range in "${req.populationName}".`);
+    }
 
     const { startTime, endTime, timeStep } = pop.timeConfig;
-    const numTimesteps = Math.round((endTime - startTime) / timeStep) + 1;
-    const numCompartments = pop.indexPointers[pop.indexPointers.length - 1];
-    const colStart = pop.indexPointers[nodeIndex];
-
     const flatData = this.getPopulationData(req.populationName);
 
-    // Extract this node's column(s) from the flat data matrix [timesteps x compartments]
-    // For soma reports, colEnd - colStart = 1 (single compartment)
-    const nodeData = new Array<number>(numTimesteps);
-    for (let t = 0; t < numTimesteps; t++) {
-      nodeData[t] = flatData[t * numCompartments + colStart];
+    const columnData = new Float32Array(numTimesteps);
+    for (let t = 0; t < numTimesteps; t += 1) {
+      columnData[t] = flatData[t * numColumns + req.traceIndex];
     }
 
-    // Build time array
-    const timeData = new Array<number>(numTimesteps);
-    for (let t = 0; t < numTimesteps; t++) {
-      timeData[t] = startTime + t * timeStep;
-    }
+    const timeData = this.getTimeAxis(req.populationName, pop.timeConfig, numTimesteps);
 
-    // Apply zoom range if specified
-    let xSlice = timeData;
-    let ySlice = nodeData;
+    let xSlice: ArrayLike<number> = timeData;
+    let ySlice: ArrayLike<number> = columnData;
     if (req.zoomRange?.xStart !== undefined || req.zoomRange?.xEnd !== undefined) {
       const xStart = req.zoomRange.xStart ?? startTime;
       const xEnd = req.zoomRange.xEnd ?? endTime;
       const startIdx = Math.max(0, Math.floor((xStart - startTime) / timeStep));
       const endIdx = Math.min(numTimesteps, Math.ceil((xEnd - startTime) / timeStep) + 1);
-      xSlice = timeData.slice(startIdx, endIdx);
-      ySlice = nodeData.slice(startIdx, endIdx);
+      xSlice = timeData.subarray(startIdx, endIdx);
+      ySlice = columnData.subarray(startIdx, endIdx);
     }
 
-    // Downsample
     const downsampled = lttbDownsample(xSlice, ySlice, req.desiredPoints);
 
     return {
       populationName: req.populationName,
-      nodeId: req.nodeId,
       x: downsampled.x,
       y: downsampled.y,
       units: pop.dataUnits,
     };
   }
 
+  /** The time axis is identical for every column of a population, so build it once. */
+  private getTimeAxis(name: string, time: TimeConfig, numTimesteps: number): Float64Array {
+    const cached = this.timeAxisCache.get(name);
+    if (cached) return cached;
+
+    const axis = new Float64Array(numTimesteps);
+    for (let t = 0; t < numTimesteps; t += 1) axis[t] = time.startTime + t * time.timeStep;
+
+    this.timeAxisCache.set(name, axis);
+    return axis;
+  }
+
   destroy(): void {
     this.file?.close();
     this.file = null;
     this.populationDataCache.clear();
+    this.shapes.clear();
+    this.timeAxisCache.clear();
     this.metadata = null;
 
     if (this.filename) {
