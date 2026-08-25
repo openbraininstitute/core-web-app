@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@openbraininstitute/morphoviewer': file:vendor/openbraininstitute-morphoviewer-0.35.1.tgz
-
 importers:
 
   .:
@@ -60,8 +57,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: file:vendor/openbraininstitute-morphoviewer-0.35.1.tgz
-        version: file:vendor/openbraininstitute-morphoviewer-0.35.1.tgz(react@19.2.6)
+        specifier: 0.35.2
+        version: 0.35.2(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -2915,9 +2912,8 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.35.1.tgz':
-    resolution: {integrity: sha512-Fq5yuitWbjSDEjM+9IyRvteOSK/2TlsQmLTAyEA2kUGHT7ekm69Qil7cgeAKuGrmhXc6vXey4SW8BgwoddkpGg==, tarball: file:vendor/openbraininstitute-morphoviewer-0.35.1.tgz}
-    version: 0.35.1
+  '@openbraininstitute/morphoviewer@0.35.2':
+    resolution: {integrity: sha512-565qEhe8YqZa3caxo79eYyvukzJddXhUfLhtOo8kWV3VUl5YeH93sryIFAWa/gC78R/FLwD3+K5N0f1n8SIyRQ==}
     peerDependencies:
       react: ^19.2.5
 
@@ -13595,7 +13591,7 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@file:vendor/openbraininstitute-morphoviewer-0.35.1.tgz(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@0.35.2(react@19.2.6)':
     dependencies:
       '@tolokoban/tgd': 2.4.0
       fflate: 0.8.3
