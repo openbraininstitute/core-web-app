@@ -52,7 +52,6 @@ export class RasterRenderer {
   private baseSize = 6;
   private dirty = true;
   private rafId: number | null = null;
-  private resizeRafId: number | null = null;
   private hasData = false;
   private playhead: number | null = null;
 
@@ -108,14 +107,10 @@ export class RasterRenderer {
 
     this.interaction.onHover = (info) => this.handleHover(info);
 
-    this.observer = new ResizeObserver(() => {
-      if (this.resizeRafId === null) {
-        this.resizeRafId = requestAnimationFrame(() => {
-          this.resizeRafId = null;
-          this.handleResize();
-        });
-      }
-    });
+    // handleResize runs inside the observer callback on purpose: ResizeObserver
+    // fires after layout and before paint, so the callback can resize and
+    // redraw the canvases before the compositor reads them.
+    this.observer = new ResizeObserver(() => this.handleResize());
     this.observer.observe(container);
     this.handleResize();
   }
@@ -368,12 +363,14 @@ export class RasterRenderer {
     this.axisCanvas.height = h * dpr;
 
     this.interaction.setPlotRect(this.plotRect);
-    this.scheduleRender();
+    // Setting a canvas's size resets it, so the redraw belongs in this same
+    // task. A redraw queued for the next frame would let the browser composite
+    // the empty canvases once per resize step, and a divider drag would blink.
+    this.render();
   }
 
   destroy() {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId);
-    if (this.resizeRafId !== null) cancelAnimationFrame(this.resizeRafId);
     this.observer.disconnect();
     this.interaction.destroy();
     this.webgl.destroy();
