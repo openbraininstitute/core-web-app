@@ -73,12 +73,12 @@ interface SpikeReplayViewProps {
  * layout under it stay exactly as they are here.
  *
  * The 3D scene mounts the first time it is asked for and stays mounted from
- * then on. Switching views must not tear down the WebGL context and re-download
- * every morphology — but that only means keeping it after the first look, not
- * building it for the majority who open a spike file and read the raster.
+ * then on, so switching views never tears down the WebGL context and
+ * re-downloads every morphology. Without a circuit it never mounts at all —
+ * there is nothing to replay.
  */
 export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
-  const [mode, setMode] = useState<ReplayMode>(MODES.Raster);
+  const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [chosenPopulationName, setChosenPopulationName] = useState<string>();
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [playing, setPlaying] = useState(false);
