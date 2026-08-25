@@ -133,7 +133,10 @@ export class WebGLPoints {
       // Node IDs → attribute 1 (y)
       const yBuffer = glRequire(gl.createBuffer(), 'yBuffer');
       gl.bindBuffer(gl.ARRAY_BUFFER, yBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, pop.nodeIds, gl.STATIC_DRAW);
+      // The attribute is FLOAT, so the Float64 ids narrow here — the y axis is
+      // a screen position, and sub-integer precision does not survive
+      // rasterisation anyway. Exactness matters to the replay, not to this.
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pop.nodeIds), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(1);
       gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
 

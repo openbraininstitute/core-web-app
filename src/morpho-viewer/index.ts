@@ -33,6 +33,7 @@ export type {
   MorphoViewerSmallCircuitCellData,
   MorphoViewerSmallCircuitProps,
   MorphoViewerSnapshotOptions,
+  MorphoViewerSpikes,
   MorphoViewerSynapsesGroup,
   MorphoViewerTree,
   MorphoViewerTreeItem,

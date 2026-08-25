@@ -1,85 +1,96 @@
 'use client';
 
-import { Checkbox, Empty } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Empty } from 'antd';
+import { useEffect, useMemo, useRef } from 'react';
 
-import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
-import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 type RasterPlotProps = {
   data: SpikeData;
+  /**
+   * The one population to plot.
+   *
+   * The host picks it and names it above the plot, so that the raster and the 3D
+   * replay beside it are always reading the same cells.
+   */
+  populationName: string | undefined;
+  markerSize: number;
+  /**
+   * Filled in with a setter that moves the playhead rule, and cleared on
+   * unmount.
+   *
+   * A ref rather than a prop because the 3D replay reports its clock on every
+   * painted frame: passing that as a prop would re-render this tree at 60 Hz to
+   * move one line.
+   */
+  playheadRef?: React.RefObject<((timeInMs: number | null) => void) | null>;
+  /** Called with a time in ms when the user clicks in the plot. */
+  onSeek?: (timeInMs: number) => void;
 };
 
-export default function RasterPlot({ data }: RasterPlotProps) {
+export default function RasterPlot({
+  data,
+  populationName,
+  markerSize,
+  playheadRef,
+  onSeek,
+}: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setVisiblePopulations, setBaseSize } = useRasterRenderer(containerRef, data);
-
-  const [selectedPopulations, setSelectedPopulations] = useState<Set<string>>(
-    new Set(data.populations.map((p) => p.name))
+  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
+    containerRef,
+    data,
+    populationName,
+    onSeek
   );
-  const [markerSize, setMarkerSize] = useState(4);
 
-  // Sync visibility when selection changes
   useEffect(() => {
-    setVisiblePopulations(selectedPopulations);
-  }, [selectedPopulations, setVisiblePopulations]);
+    if (!playheadRef) return;
 
-  // Sync marker size when slider changes
+    playheadRef.current = setPlayhead;
+    // Clearing the rule as well as the ref: the ref only carries pushes, so a
+    // driver that detaches would otherwise strand its last position on the
+    // plot as a marker nothing owns and nothing can move.
+    return () => {
+      playheadRef.current = null;
+      setPlayhead(null);
+    };
+  }, [playheadRef, setPlayhead]);
+
+  const visiblePopulations = useMemo(
+    () => new Set(populationName ? [populationName] : []),
+    [populationName]
+  );
+
+  useEffect(() => {
+    setVisiblePopulations(visiblePopulations);
+  }, [visiblePopulations, setVisiblePopulations]);
+
   useEffect(() => {
     setBaseSize(markerSize);
   }, [markerSize, setBaseSize]);
 
-  const togglePopulation = (name: string, checked: boolean) => {
-    setSelectedPopulations((prev) => {
-      const next = new Set(prev);
-      if (checked) {
-        next.add(name);
-      } else {
-        next.delete(name);
-      }
-      return next;
-    });
-  };
+  const spikeCount =
+    data.populations.find((p) => p.name === populationName)?.timestamps.length ?? 0;
 
-  const totalSpikes = useMemo(() => {
-    return data.populations.reduce((sum, pop) => sum + pop.timestamps.length, 0);
-  }, [data.populations]);
-
-  if (totalSpikes === 0) {
-    return (
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        <Empty description="No spikes recorded during this simulation" />
-      </div>
-    );
-  }
-
+  // Overlaid rather than returned in place of the plot: the renderer is built
+  // once against this container, so unmounting it for an empty population would
+  // strand the WebGL context and leave the plot blank after switching back.
   return (
-    <div className="flex h-full flex-col">
-      <div className="mb-2 flex flex-wrap items-center gap-4">
-        {data.populations.length === 1 ? (
-          <span style={{ color: POPULATION_COLORS[0] }}>
-            Population: {data.populations[0].name} (
-            {data.populations[0].timestamps.length.toLocaleString()} spikes)
-          </span>
-        ) : (
-          data.populations.map((pop, idx) => (
-            <Checkbox
-              key={pop.name}
-              checked={selectedPopulations.has(pop.name)}
-              onChange={(e) => togglePopulation(pop.name, e.target.checked)}
-            >
-              <span style={{ color: POPULATION_COLORS[idx % POPULATION_COLORS.length] }}>
-                Population: {pop.name} ({pop.timestamps.length.toLocaleString()} spikes)
-              </span>
-            </Checkbox>
-          ))
-        )}
-        <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
-      </div>
-      <div ref={containerRef} className="min-h-0 flex-1" />
+    <div className="relative h-full min-h-0">
+      <div ref={containerRef} className="h-full min-h-0" />
+      {spikeCount === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white">
+          <Empty
+            description={
+              populationName
+                ? `No spikes recorded for “${populationName}”`
+                : 'No spikes recorded during this simulation'
+            }
+          />
+        </div>
+      )}
     </div>
   );
 }

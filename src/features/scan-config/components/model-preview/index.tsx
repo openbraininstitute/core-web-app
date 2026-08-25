@@ -4,20 +4,19 @@ import { memo, useMemo } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
-import {
-  CircuitPreview,
-  type IElectrodeOverlayOptions,
-} from '@/features/scan-config/components/model-preview/circuit-preview';
+import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
   resolveEnableMorphologyLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { IElectrodeOverlayOptions } from '@/features/circuit-viewer/circuit-scene';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
@@ -112,11 +111,7 @@ export function ModelPreview({
       .with(
         {
           type: EntityTypeDict.Circuit,
-          scale: P.union(
-            CircuitScaleDictionary.Single,
-            CircuitScaleDictionary.PairNeuron,
-            CircuitScaleDictionary.SmallMicrocircuit
-          ),
+          scale: P.when(circuitDrawsMorphologies),
         },
         (circuit) => (
           <CircuitPreview

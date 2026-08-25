@@ -47,6 +47,8 @@ export default function useSpikeTrace({
         id: asset.id,
         ctx,
       }),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -57,9 +59,6 @@ export default function useSpikeTrace({
 
   useEffect(() => {
     if (!spikeArrayBuffer) return;
-
-    setData(null);
-    setError(null);
 
     let cancelled = false;
     const worker = new Worker(new URL('../spike-trace.worker.ts', import.meta.url));

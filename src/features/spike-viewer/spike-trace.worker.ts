@@ -15,7 +15,7 @@ const api = {
       file = new File(filename, 'r');
       const data = parseSpikeData(file);
 
-      // Transfer Float32Array buffers back to main thread (zero-copy)
+      // Transfer the typed-array buffers back to the main thread (zero-copy)
       const transferables: ArrayBuffer[] = [];
       for (const pop of data.populations) {
         const tsBuf = pop.timestamps.buffer as ArrayBuffer;

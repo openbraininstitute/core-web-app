@@ -62,6 +62,7 @@ export function useCircuitConfig(circuit: ICircuit | undefined) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['circuit-nodes-config', circuit?.id, asset?.id],
     enabled: !!circuit?.id && !!asset?.id,
+    staleTime: Infinity,
     refetchOnWindowFocus: false,
     queryFn: async () => {
       if (!circuit || !asset) throw new Error('Missing circuit or sonata_circuit asset');

@@ -4,6 +4,9 @@ import type { PlotRect, ViewBounds } from '@/features/spike-viewer/renderer/axis
 
 const MIN_RANGE = 1e-6;
 const MIN_DRAG_PX = 5;
+// Long enough to cover a comfortable double-click, short enough that a seek
+// still feels like it answers the click.
+const DBLCLICK_MS = 300;
 
 export type HoverInfo = {
   dataX: number;
@@ -30,9 +33,17 @@ export class InteractionManager {
   private selectionEl: HTMLDivElement;
 
   private drag: DragState | null = null;
+  private seekTimer = 0;
 
   onViewChange: ((bounds: ViewBounds) => void) | null = null;
   onHover: ((info: HoverInfo | null) => void) | null = null;
+  /**
+   * A plain click inside the plot, as a time in ms.
+   *
+   * Drag already means zoom and shift-drag means pan, so a click that never
+   * moved was the one gesture left unused.
+   */
+  onSeek: ((timeInMs: number) => void) | null = null;
 
   constructor(element: HTMLElement) {
     this.element = element;
@@ -276,7 +287,17 @@ export class InteractionManager {
         : drag.mode === 'zoom-y'
           ? dy >= MIN_DRAG_PX
           : dx >= MIN_DRAG_PX || dy >= MIN_DRAG_PX;
-    if (!significant) return;
+    if (!significant) {
+      // Held for one double-click interval so that resetting the view does not
+      // also move time: a double-click is two of these pairs, and both land
+      // before the dblclick that cancels them.
+      if (drag.mode === 'zoom-xy') {
+        const timeInMs = this.pixelToData(drag.lastClient.x, drag.lastClient.y).x;
+        window.clearTimeout(this.seekTimer);
+        this.seekTimer = window.setTimeout(() => this.onSeek?.(timeInMs), DBLCLICK_MS);
+      }
+      return;
+    }
 
     const d1 = this.pixelToData(drag.startClient.x, drag.startClient.y);
     const d2 = this.pixelToData(drag.lastClient.x, drag.lastClient.y);
@@ -309,6 +330,8 @@ export class InteractionManager {
   };
 
   private readonly handleDblClick = (e: MouseEvent) => {
+    window.clearTimeout(this.seekTimer);
+
     if (this.isInPlotArea(e.clientX, e.clientY)) {
       this.resetView('both');
     } else if (this.isInXAxisArea(e.clientX, e.clientY)) {
@@ -355,6 +378,8 @@ export class InteractionManager {
   }
 
   destroy() {
+    window.clearTimeout(this.seekTimer);
+
     const el = this.element;
     el.removeEventListener('pointerdown', this.handlePointerDown);
     el.removeEventListener('pointermove', this.handlePointerMove);

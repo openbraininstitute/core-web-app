@@ -9,7 +9,7 @@ import { MorphologyLocationHelp } from '../circuit-viz/morphology-location/help'
 import { ZoomSlider } from '../zoom-slider/zoom-slider';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
-import { ModeToggle, type ViewerMode, ViewerModeDict } from './mode-toggle';
+import { type IViewerModeOption, ModeToggle } from './mode-toggle';
 import { useFullscreenElement } from './use-fullscreen-element';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
@@ -20,13 +20,13 @@ import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 import styles from './chrome-animations.module.css';
 
 export interface ICircuitViewerChromeProps {
-  /** Current viewer mode. Omit with `onModeChange` when image mode is unavailable. */
-  mode?: ViewerMode;
-  onModeChange?: (mode: ViewerMode) => void;
-  /** Show the dendrogram tab. */
-  showDendrogram?: boolean;
-  /** Show the image tab. */
-  showImage?: boolean;
+  /** The view-mode pill. Omit when the host has only one view to offer. */
+  modeToggle?: readonly IViewerModeOption[];
+  /**
+   * Whether the 3D controls apply right now. `false` hides them while keeping
+   * them mounted, so switching to another view and back does not remount them.
+   */
+  vizActive: boolean;
   /** background-derived theme (adaptive mode), or null for the fixed default */
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
@@ -57,10 +57,8 @@ export interface ICircuitViewerChromeProps {
  * the 3D canvas
  */
 export function CircuitViewerChrome({
-  mode,
-  onModeChange,
-  showDendrogram,
-  showImage,
+  modeToggle,
+  vizActive,
   theme,
   table,
   viz,
@@ -73,8 +71,8 @@ export function CircuitViewerChrome({
     colorBy?.mapping &&
     colorBy.mapping.mode !== 'none';
   const showLegendToggle = !!selectedProperty;
-  // Keep viz chrome mounted across image↔3D switches; only hide it.
-  const showVizChrome = viz != null && mode !== ViewerModeDict.Image;
+  // Keep viz chrome mounted across view switches; only hide it.
+  const showVizChrome = viz != null && vizActive;
   const [legendOpen, setLegendOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarWidth, setToolbarWidth] = useState<number>();
@@ -131,14 +129,7 @@ export function CircuitViewerChrome({
         </div>
       )}
       <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        {mode != null && onModeChange && (
-          <ModeToggle
-            mode={mode}
-            onChange={onModeChange}
-            showDendrogram={showDendrogram}
-            showImage={showImage}
-          />
-        )}
+        {modeToggle && <ModeToggle options={modeToggle} />}
         {table && (
           <ChromeButton
             label={table.active ? 'Hide nodes table' : 'Show nodes table'}

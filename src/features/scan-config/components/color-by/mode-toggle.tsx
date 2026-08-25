@@ -1,35 +1,33 @@
-import { RiImageLine } from '@remixicon/react';
-
-import { FamilyTree } from '@/components/icons/FamilyTree';
-import { View3d } from '@/components/icons/View3d';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-export const ViewerModeDict = {
-  Visualization: 'viz',
-  Image: 'image',
-  Dendrogram: 'dendrogram',
-} as const;
-export type ViewerMode = (typeof ViewerModeDict)[keyof typeof ViewerModeDict];
-
-interface ModeToggleProps {
-  mode: ViewerMode;
-  onChange: (mode: ViewerMode) => void;
-  className?: string;
-  /** Show the dendrogram tab. */
-  showDendrogram?: boolean;
-  /** Show the image tab. */
-  showImage?: boolean;
+/** One icon in the view-mode pill. */
+export interface IViewerModeOption {
+  /** Tooltip text and accessible name. */
+  label: string;
+  icon: React.ReactNode;
+  active: boolean;
+  onSelect: () => void;
 }
 
-/** toggle switching the viewer between the 3D visualization and the image. */
-export function ModeToggle({
-  mode,
-  onChange,
-  className,
-  showDendrogram = false,
-  showImage = true,
-}: ModeToggleProps) {
+interface ModeToggleProps {
+  options: readonly IViewerModeOption[];
+  className?: string;
+}
+
+/**
+ * Pill switching the viewer between the views a host offers.
+ *
+ * Which views those are is the host's business — the circuit preview toggles 3D
+ * against a designer image and, on an MEModel, a dendrogram; spike replay adds a
+ * raster and a split — so the options come in whole rather than being enumerated
+ * here.
+ */
+export function ModeToggle({ options, className }: ModeToggleProps) {
+  // Nothing to switch between: a single-option pill reads as a button that
+  // does nothing.
+  if (options.length < 2) return null;
+
   return (
     <div
       id="preview-mode-toggle"
@@ -39,28 +37,15 @@ export function ModeToggle({
         className
       )}
     >
-      <ModeButton
-        active={mode === ViewerModeDict.Visualization}
-        label="3D visualization"
-        icon={<View3d className="size-4" />}
-        onClick={() => onChange(ViewerModeDict.Visualization)}
-      />
-      {showImage && (
+      {options.map((option) => (
         <ModeButton
-          active={mode === ViewerModeDict.Image}
-          label="Image"
-          icon={<RiImageLine className="size-4" />}
-          onClick={() => onChange(ViewerModeDict.Image)}
+          key={option.label}
+          active={option.active}
+          label={option.label}
+          icon={option.icon}
+          onClick={option.onSelect}
         />
-      )}
-      {showDendrogram && (
-        <ModeButton
-          active={mode === ViewerModeDict.Dendrogram}
-          label="Dendrogram"
-          icon={<FamilyTree className="size-4" />}
-          onClick={() => onChange(ViewerModeDict.Dendrogram)}
-        />
-      )}
+      ))}
     </div>
   );
 }

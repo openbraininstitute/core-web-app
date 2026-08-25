@@ -12,7 +12,9 @@ export type PlotRect = {
   height: number;
 };
 
-export const MARGIN = { top: 20, right: 20, bottom: 60, left: 70 };
+// The top band is clearance for the controls floating in the pane's top-right:
+// an h-8 button and a little air, so the icons never sit on the spikes.
+export const MARGIN = { top: 36, right: 20, bottom: 60, left: 70 };
 
 /** Compute nice tick values for an axis range. When integer is true, step is constrained to an integer >= 1. */
 function computeTicks(min: number, max: number, targetCount: number, integer = false): number[] {

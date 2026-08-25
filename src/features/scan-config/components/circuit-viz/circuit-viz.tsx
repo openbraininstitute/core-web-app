@@ -20,6 +20,7 @@ import {
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
@@ -97,6 +98,8 @@ interface CircuitVizProps {
   dendrogram?: boolean;
   /** Called with the camera zoom whenever it changes, the user's own scrolling included. */
   onZoomChange?: (zoom: number) => void;
+  /** Spikes to replay over the circuit, and the transport driving them. */
+  spikes?: ISpikeReplayBinding;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
@@ -148,6 +151,7 @@ function CircuitVizView({
   morphologyLocations,
   dendrogram = false,
   onZoomChange,
+  spikes,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -295,6 +299,13 @@ function CircuitVizView({
           synapses={synapses}
           synapsesRadius={SYNAPSE_RADIUS}
           synapsesMinRadiusInPixels={SYNAPSE_MIN_RADIUS_IN_PIXELS}
+          spikes={spikes?.data}
+          spikeTime={spikes?.timeInMs}
+          onSpikeTimeChange={spikes?.onTimeChange}
+          spikePlaying={spikes?.playing}
+          onSpikePlayingChange={spikes?.onPlayingChange}
+          spikeSpeed={spikes?.speed}
+          spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
         />
       )}
       <MorphologyLocationLabels labels={locationLabels} />
@@ -323,8 +334,6 @@ function CircuitVizView({
     </div>
   );
 }
-
-export default CircuitVisualization;
 
 type TMemodelVizProps = Omit<
   TCircuitVizViewProps,
