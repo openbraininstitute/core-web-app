@@ -1,5 +1,6 @@
 import Plotly from 'plotly.js-dist-min';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
@@ -21,6 +22,7 @@ export default function InteractivePlot({
   traceIndex,
   label,
   units,
+  timeUnits,
   variableName,
   showTitle,
 }: {
@@ -29,6 +31,7 @@ export default function InteractivePlot({
   traceIndex: number;
   label: string;
   units: string;
+  timeUnits: string;
   variableName?: string;
   showTitle?: boolean;
 }) {
@@ -37,7 +40,13 @@ export default function InteractivePlot({
     x: (number | undefined)[];
     y: (number | undefined)[];
   } | null>(null);
-  const { config, layout, font, style } = useInteractivePlotConfig(units, variableName);
+  const { config, layout, font, style } = useInteractivePlotConfig(units, variableName, timeUnits);
+
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 0,
+    triggerOnce: true,
+    rootMargin: '1200px',
+  });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<HTMLElement>(null);
@@ -47,6 +56,8 @@ export default function InteractivePlot({
   useResizeObserver(containerRef, onResize);
 
   useEffect(() => {
+    if (!inView) return;
+
     let cancelled = false;
 
     worker
@@ -66,11 +77,14 @@ export default function InteractivePlot({
     return () => {
       cancelled = true;
     };
-  }, [worker, populationName, traceIndex, zoomRange]);
-
-  if (!data) return null;
+  }, [inView, worker, populationName, traceIndex, zoomRange]);
 
   const title = `${populationName}_${label}`;
+
+  if (!data) {
+    return <div ref={inViewRef} className="h-[40vh] w-full" />;
+  }
+
   const plotData: Partial<PlotData>[] = [
     {
       x: Array.from(data.x),
@@ -83,7 +97,13 @@ export default function InteractivePlot({
   ];
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-1">
+    <div
+      ref={(el) => {
+        containerRef.current = el;
+        inViewRef(el);
+      }}
+      className="flex flex-col gap-1"
+    >
       {showTitle && <span className="text-lg">{title}</span>}
       <Plot
         onInitialized={(_, graphDiv) => {
@@ -91,6 +111,12 @@ export default function InteractivePlot({
         }}
         data={plotData}
         onRelayout={(e) => {
+          // Autoscale and Reset axes emit autorange with no range keys.
+          if (e['xaxis.autorange'] === true) {
+            setZoomRange(null);
+            return;
+          }
+
           const x1 = e['xaxis.range[0]'] as number | undefined;
           const x2 = e['xaxis.range[1]'] as number | undefined;
           const y1 = e['yaxis.range[0]'] as number | undefined;
@@ -108,7 +134,7 @@ export default function InteractivePlot({
           title: showTitle ? title : undefined,
           xaxis: {
             ...layout.xaxis,
-            title: { font, text: 'Time (ms)' },
+            title: { font, text: `Time (${timeUnits})` },
             range: zoomRange?.x,
           },
           yaxis: {

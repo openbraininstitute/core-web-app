@@ -32,12 +32,9 @@ export default function SonataViewer({
   assetId?: string;
   ctx?: WorkspaceContext;
 }) {
-  const { metadata, worker, error, isLoading } = useSonataReport({ entity, assetId, ctx });
+  const { metadata, worker, asset, error, isLoading } = useSonataReport({ entity, assetId, ctx });
 
-  const assetFileName = entity.assets
-    ?.find((a) => a.id === assetId)
-    ?.path.split('/')
-    .pop();
+  const assetFileName = asset?.path.split('/').pop();
   const report = useSimulationReport(assetFileName);
   const variableName = report?.variable_name !== 'v' ? report?.variable_name : undefined;
 
@@ -45,7 +42,7 @@ export default function SonataViewer({
   const [defaultPopulation, setDefaultPopulation] = useState<string>();
   const [defaultTraceIndex, setDefaultTraceIndex] = useState<number>();
 
-  const handleNodeClick = (populationName: string, traceIndex: number) => {
+  const handleTraceClick = (populationName: string, traceIndex: number) => {
     setDefaultPopulation(populationName);
     setDefaultTraceIndex(traceIndex);
     setView(VIEW.INTERACTIVE);
@@ -85,7 +82,7 @@ export default function SonataViewer({
           <ReportOverview
             metadata={metadata}
             worker={worker}
-            onNodeClick={handleNodeClick}
+            onTraceClick={handleTraceClick}
             variableName={variableName}
           />
         </ErrorBoundary>

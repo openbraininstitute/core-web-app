@@ -3,7 +3,7 @@ import { Dataset, File, Group, ready } from 'h5wasm';
 
 import { lttbDownsample } from '@/utils/lttb';
 
-import { buildTraceLabels, expandToColumns } from './column-mapping';
+import { resolveTraces } from './column-mapping';
 
 import type {
   DownsampleRequest,
@@ -107,13 +107,21 @@ class SonataWorkerImpl {
       const [numTimesteps, numColumns] = dataDataset.shape;
       if (!numTimesteps || !numColumns) continue;
 
-      const columnNodeIds = expandToColumns(nodeIds, indexPointers, numColumns);
+      const elementIdsDataset = mappingGroup.get('element_ids');
+      const elementIds =
+        elementIdsDataset instanceof Dataset
+          ? Array.from(elementIdsDataset.to_array() as number[])
+          : null;
+
+      const traces = resolveTraces(nodeIds, indexPointers, elementIds, numColumns);
+      if (!traces) continue;
+
       this.shapes.set(popName, { numTimesteps, numColumns });
 
       populations.push({
         name: popName,
-        traceLabels: buildTraceLabels(columnNodeIds),
-        nodeCount: new Set(columnNodeIds).size,
+        traces,
+        nodeCount: new Set(traces.map((t) => t.nodeId)).size,
         timeConfig,
         dataUnits,
       });
@@ -177,22 +185,20 @@ class SonataWorkerImpl {
       const xStart = req.zoomRange.xStart ?? startTime;
       const xEnd = req.zoomRange.xEnd ?? endTime;
       const startIdx = Math.max(0, Math.floor((xStart - startTime) / timeStep));
-      const endIdx = Math.min(numTimesteps, Math.ceil((xEnd - startTime) / timeStep) + 1);
+      const endIdx = Math.max(
+        startIdx,
+        Math.min(numTimesteps, Math.ceil((xEnd - startTime) / timeStep) + 1)
+      );
       xSlice = timeData.subarray(startIdx, endIdx);
       ySlice = columnData.subarray(startIdx, endIdx);
     }
 
     const downsampled = lttbDownsample(xSlice, ySlice, req.desiredPoints);
 
-    return {
-      populationName: req.populationName,
-      x: downsampled.x,
-      y: downsampled.y,
-      units: pop.dataUnits,
-    };
+    return { x: downsampled.x, y: downsampled.y };
   }
 
-  /** The time axis is identical for every column of a population, so build it once. */
+  /** Shared by every column of a population. */
   private getTimeAxis(name: string, time: TimeConfig, numTimesteps: number): Float64Array {
     const cached = this.timeAxisCache.get(name);
     if (cached) return cached;
@@ -212,15 +218,16 @@ class SonataWorkerImpl {
     this.timeAxisCache.clear();
     this.metadata = null;
 
-    if (this.filename) {
+    const filename = this.filename;
+    if (filename) {
+      this.filename = null;
       ready.then(({ FS }) => {
         try {
-          if (this.filename) FS.unlink(this.filename);
+          FS.unlink(filename);
         } catch {
           // Ignore cleanup errors
         }
       });
-      this.filename = null;
     }
   }
 }

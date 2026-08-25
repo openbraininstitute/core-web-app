@@ -22,17 +22,20 @@ function ThumbnailPlot({
   data,
   plotRevision,
   units,
+  timeUnits,
   variableName,
 }: {
   data: NodeTraceData;
   plotRevision: number;
   units: string;
+  timeUnits: string;
   variableName?: string;
 }) {
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
     units,
     variableName,
+    timeUnits,
   });
 
   const plotData: Partial<PlotData>[] = [
@@ -54,6 +57,7 @@ function ThumbnailContainer({
   traceIndex,
   label,
   units,
+  timeUnits,
   variableName,
   showTitle,
   onClick,
@@ -63,6 +67,7 @@ function ThumbnailContainer({
   traceIndex: number;
   label: string;
   units: string;
+  timeUnits: string;
   variableName?: string;
   showTitle?: boolean;
   onClick: () => void;
@@ -96,6 +101,9 @@ function ThumbnailContainer({
       })
       .then((result) => {
         if (!cancelled) setData(result);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
       });
 
     return () => {
@@ -113,6 +121,7 @@ function ThumbnailContainer({
       <button
         ref={ref}
         type="button"
+        aria-label={`Open trace ${populationName}_${label} in interactive details`}
         className={cn('relative aspect-4/3 cursor-pointer overflow-hidden bg-gray-100')}
         onClick={onClick}
       >
@@ -121,6 +130,7 @@ function ThumbnailContainer({
             data={data}
             plotRevision={plotRevision}
             units={units}
+            timeUnits={timeUnits}
             variableName={variableName}
           />
         ) : null}
@@ -132,12 +142,12 @@ function ThumbnailContainer({
 export default function ReportOverview({
   metadata,
   worker,
-  onNodeClick,
+  onTraceClick,
   variableName,
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
-  onNodeClick: (populationName: string, traceIndex: number) => void;
+  onTraceClick: (populationName: string, traceIndex: number) => void;
   variableName?: string;
 }) {
   const populationNames = useMemo(
@@ -177,18 +187,19 @@ export default function ReportOverview({
           )}
 
           <div className={OVERVIEW_GRID_CLASS_NAME}>
-            {pop.traceLabels.map((label, traceIndex) => (
+            {pop.traces.map((trace, traceIndex) => (
               <ThumbnailContainer
                 // biome-ignore lint/suspicious/noArrayIndexKey: column index is the trace identity
                 key={`${pop.name}-${traceIndex}`}
                 worker={worker}
                 populationName={pop.name}
                 traceIndex={traceIndex}
-                label={label}
+                label={trace.label}
                 units={pop.dataUnits}
+                timeUnits={pop.timeConfig.units}
                 variableName={variableName}
-                showTitle={pop.traceLabels.length > 1}
-                onClick={() => onNodeClick(pop.name, traceIndex)}
+                showTitle={pop.traces.length > 1}
+                onClick={() => onTraceClick(pop.name, traceIndex)}
               />
             ))}
           </div>

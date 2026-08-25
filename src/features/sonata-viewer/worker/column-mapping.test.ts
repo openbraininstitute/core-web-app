@@ -1,114 +1,130 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTraceLabels, expandToColumns } from './column-mapping';
+import { resolveTraces } from './column-mapping';
 
 /** `mapping` of a soma report: one unique node per column, as the SONATA spec describes. */
 function somaReport(nodeCount: number) {
   return {
     nodeIds: Array.from({ length: nodeCount }, (_, i) => i),
     indexPointers: Array.from({ length: nodeCount + 1 }, (_, i) => i),
-    numColumns: nodeCount,
   };
 }
 
-/** Column node ids plus their labels, the pair the viewer actually renders from. */
-function traces(nodeIds: number[], indexPointers: number[], numColumns: number) {
-  const columnNodeIds = expandToColumns(nodeIds, indexPointers, numColumns);
-  return { columnNodeIds, labels: buildTraceLabels(columnNodeIds) };
-}
+const nodeIdsOf = (traces: { nodeId: number }[]) => traces.map((t) => t.nodeId);
+const labelsOf = (traces: { label: string }[]) => traces.map((t) => t.label);
 
-describe('expandToColumns', () => {
-  it('gives every soma-report node its own column', () => {
-    const { nodeIds, indexPointers, numColumns } = somaReport(4);
+describe('resolveTraces: layout detection', () => {
+  it('maps a spec soma report one node per column', () => {
+    const { nodeIds, indexPointers } = somaReport(4);
 
-    expect(expandToColumns(nodeIds, indexPointers, numColumns)).toEqual([0, 1, 2, 3]);
+    const traces = resolveTraces(nodeIds, indexPointers, null, 4);
+
+    expect(traces && nodeIdsOf(traces)).toEqual([0, 1, 2, 3]);
+    expect(traces && labelsOf(traces)).toEqual(['0', '1', '2', '3']);
   });
 
-  it('spreads one node across the whole span it owns', () => {
-    // The spec-compliant compartment report: one cell recorded at 20 compartments.
-    expect(expandToColumns([0], [0, 20], 20)).toEqual(Array.from({ length: 20 }, () => 0));
+  it('spreads a spec compartment report across the cell span', () => {
+    const traces = resolveTraces([0], [0, 20], null, 20);
+
+    expect(traces && nodeIdsOf(traces)).toEqual(Array.from({ length: 20 }, () => 0));
   });
 
-  it('handles node_ids written once per column instead of once per node', () => {
-    // The non-conformant writer: 20 rows that all read 0, one column each.
+  it('maps spec spans of several multi-compartment cells', () => {
+    const traces = resolveTraces([7, 9], [0, 3, 6], null, 6);
+
+    expect(traces && nodeIdsOf(traces)).toEqual([7, 7, 7, 9, 9, 9]);
+  });
+
+  it('handles the per-column layout with repeated node ids', () => {
     const nodeIds = Array.from({ length: 20 }, () => 0);
     const indexPointers = Array.from({ length: 21 }, (_, i) => i);
 
-    expect(expandToColumns(nodeIds, indexPointers, 20)).toEqual(nodeIds);
+    const traces = resolveTraces(nodeIds, indexPointers, null, 20);
+
+    expect(traces && nodeIdsOf(traces)).toEqual(nodeIds);
   });
 
-  it('interleaves several cells that each span several compartments', () => {
-    expect(expandToColumns([7, 9], [0, 3, 6], 6)).toEqual([7, 7, 7, 9, 9, 9]);
+  it('handles per-column node_ids even when index_pointers follow the other convention', () => {
+    const traces = resolveTraces([0, 0, 0, 1, 1, 1], [0, 3, 6], null, 6);
+
+    expect(traces && nodeIdsOf(traces)).toEqual([0, 0, 0, 1, 1, 1]);
+    expect(traces && new Set(nodeIdsOf(traces)).size).toBe(2);
   });
 
-  it('never returns more entries than the data matrix has columns', () => {
-    // A pointer past the end must not stretch the array; the grid renders one cell per entry.
-    expect(expandToColumns([0, 1], [0, 2, 99], 3)).toHaveLength(3);
-  });
+  it('handles per-column node_ids with empty index_pointers', () => {
+    const traces = resolveTraces([0, 1, 2], [], null, 3);
 
-  it('clamps a span that overruns the matrix', () => {
-    expect(expandToColumns([0, 1], [0, 2, 99], 3)).toEqual([0, 0, 1]);
-  });
-});
-
-describe('buildTraceLabels', () => {
-  it('labels a soma report by node id alone', () => {
-    expect(buildTraceLabels([0, 1, 2, 3])).toEqual(['0', '1', '2', '3']);
-  });
-
-  it('adds the index only once a node id repeats', () => {
-    expect(buildTraceLabels([0, 0, 0])).toEqual(['0[0]', '0[1]', '0[2]']);
-  });
-
-  it('leaves a single recorded trace unqualified', () => {
-    expect(buildTraceLabels([0])).toEqual(['0']);
-  });
-
-  it('qualifies every label once any node id repeats, so none read alike', () => {
-    const labels = buildTraceLabels([0, 0, 1]);
-
-    expect(new Set(labels).size).toBe(labels.length);
+    expect(traces && nodeIdsOf(traces)).toEqual([0, 1, 2]);
   });
 });
 
-describe('report layouts', () => {
-  it('renders one distinguishable trace per column, whatever the layout', () => {
-    const layouts = {
-      'soma, 20 cells': somaReport(20),
-      'compartment, 1 cell x 20': { nodeIds: [0], indexPointers: [0, 20], numColumns: 20 },
-      'node_ids repeated per column': {
-        nodeIds: Array.from({ length: 20 }, () => 0),
-        indexPointers: Array.from({ length: 21 }, (_, i) => i),
-        numColumns: 20,
-      },
-      '4 cells x 5 compartments': {
-        nodeIds: [0, 1, 2, 3],
-        indexPointers: [0, 5, 10, 15, 20],
-        numColumns: 20,
-      },
-    };
+describe('resolveTraces: rejects unrecognised layouts', () => {
+  it('rejects spans that stop before the last column, instead of inventing phantom traces', () => {
+    expect(resolveTraces([0, 1], [0, 2, 4], null, 6)).toBeNull();
+  });
 
-    for (const [name, m] of Object.entries(layouts)) {
-      const { labels } = traces(m.nodeIds, m.indexPointers, m.numColumns);
+  it('rejects non-monotonic index_pointers', () => {
+    expect(resolveTraces([0, 1], [0, 4, 2], null, 4)).toBeNull();
+  });
 
-      // one plot per column, and no two plots carrying the same name
-      expect(labels, name).toHaveLength(20);
-      expect(new Set(labels).size, name).toBe(20);
+  it('rejects index_pointers not starting at 0', () => {
+    expect(resolveTraces([5, 6], [2, 3, 4], null, 4)).toBeNull();
+  });
+
+  it('rejects a mapping that fits neither layout', () => {
+    expect(resolveTraces([7, 9], [0, 1, 2, 3, 4, 5, 6], null, 6)).toBeNull();
+  });
+
+  it('rejects empty node_ids and empty matrices', () => {
+    expect(resolveTraces([], [0], null, 4)).toBeNull();
+    expect(resolveTraces([0], [0, 1], null, 0)).toBeNull();
+  });
+});
+
+describe('resolveTraces: labels', () => {
+  it('brackets with the ordinal WITHIN the cell, not the global column', () => {
+    const traces = resolveTraces([7, 9], [0, 3, 6], null, 6);
+
+    expect(traces && labelsOf(traces)).toEqual(['7[0]', '7[1]', '7[2]', '9[0]', '9[1]', '9[2]']);
+  });
+
+  it('leaves a single-compartment cell unbracketed even beside a multi-compartment one', () => {
+    const traces = resolveTraces([7, 9], [0, 3, 4], null, 4);
+
+    expect(traces && labelsOf(traces)).toEqual(['7[0]', '7[1]', '7[2]', '9']);
+  });
+
+  it('keeps labels unique in every layout', () => {
+    const cases = [
+      resolveTraces(...([somaReport(20).nodeIds, somaReport(20).indexPointers, null, 20] as const)),
+      resolveTraces([0], [0, 20], null, 20),
+      resolveTraces(
+        Array.from({ length: 20 }, () => 0),
+        Array.from({ length: 21 }, (_, i) => i),
+        null,
+        20
+      ),
+      resolveTraces([0, 0, 0, 1, 1, 1], [0, 3, 6], null, 6),
+    ];
+
+    for (const traces of cases) {
+      expect(traces).not.toBeNull();
+      const labels = traces ? labelsOf(traces) : [];
+      expect(new Set(labels).size).toBe(labels.length);
     }
   });
+});
 
-  it('keeps soma-report labels free of an index suffix', () => {
-    const { nodeIds, indexPointers, numColumns } = somaReport(20);
+describe('resolveTraces: element ids', () => {
+  it('carries the real element id per column when the dataset matches', () => {
+    const traces = resolveTraces([0], [0, 3], [184, 197, 202], 3);
 
-    const { labels } = traces(nodeIds, indexPointers, numColumns);
-
-    expect(labels).toEqual(Array.from({ length: 20 }, (_, i) => String(i)));
+    expect(traces?.map((t) => t.elementId)).toEqual([184, 197, 202]);
   });
 
-  it('counts distinct cells, not traces', () => {
-    // The overview header says "N nodes"; 20 compartments of one cell is still one node.
-    const { columnNodeIds } = traces([0], [0, 20], 20);
+  it('ignores element_ids whose length does not match the columns', () => {
+    const traces = resolveTraces([0], [0, 3], [184], 3);
 
-    expect(new Set(columnNodeIds).size).toBe(1);
+    expect(traces?.map((t) => t.elementId)).toEqual([null, null, null]);
   });
 });

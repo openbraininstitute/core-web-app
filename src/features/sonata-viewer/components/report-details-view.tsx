@@ -1,3 +1,4 @@
+import { Empty } from 'antd';
 import range from 'es-toolkit/compat/range';
 import { useMemo, useState } from 'react';
 
@@ -44,12 +45,13 @@ export default function ReportDetailsView({
     [metadata.populations, selectedPopulation]
   );
 
-  const traceLabels = currentPop?.traceLabels ?? [];
+  const traces = currentPop?.traces ?? [];
+  const traceLabels = useMemo(() => traces.map((t) => t.label), [traces]);
 
   const [selectedTraceIndices, setSelectedTraceIndices] = useState<number[]>(() =>
-    defaultTraceIndex !== undefined && defaultTraceIndex < traceLabels.length
+    defaultTraceIndex !== undefined && defaultTraceIndex < traces.length
       ? [defaultTraceIndex]
-      : defaultSelection(traceLabels.length)
+      : defaultSelection(traces.length)
   );
 
   const handlePopulationChange = (value: string) => {
@@ -57,7 +59,7 @@ export default function ReportDetailsView({
     const pop = metadata.populations.find((p) => p.name === value);
     if (!pop) return;
 
-    setSelectedTraceIndices(defaultSelection(pop.traceLabels.length));
+    setSelectedTraceIndices(defaultSelection(pop.traces.length));
   };
 
   return (
@@ -72,30 +74,36 @@ export default function ReportDetailsView({
           />
         )}
 
-        {traceLabels.length > 1 && (
+        {traces.length > 1 && (
           <NodeSelector
             populationName={selectedPopulation}
             traceLabels={traceLabels}
+            nodeCount={currentPop?.nodeCount ?? traces.length}
             selectedTraceIndices={selectedTraceIndices}
             onChange={setSelectedTraceIndices}
           />
         )}
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,25rem),1fr))] gap-10">
-        {selectedTraceIndices.map((traceIndex) => (
-          <InteractivePlot
-            key={`${selectedPopulation}-${traceIndex}-${selectedTraceIndices.length}`}
-            worker={worker}
-            populationName={selectedPopulation}
-            traceIndex={traceIndex}
-            label={traceLabels[traceIndex]}
-            units={currentPop?.dataUnits ?? 'mV'}
-            variableName={variableName}
-            showTitle={traceLabels.length > 1}
-          />
-        ))}
-      </div>
+      {selectedTraceIndices.length === 0 ? (
+        <Empty description="No cells selected" />
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,25rem),1fr))] gap-10">
+          {selectedTraceIndices.map((traceIndex) => (
+            <InteractivePlot
+              key={`${selectedPopulation}-${traceIndex}`}
+              worker={worker}
+              populationName={selectedPopulation}
+              traceIndex={traceIndex}
+              label={traces[traceIndex]?.label ?? String(traceIndex)}
+              units={currentPop?.dataUnits ?? 'mV'}
+              timeUnits={currentPop?.timeConfig.units ?? 'ms'}
+              variableName={variableName}
+              showTitle={traces.length > 1}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

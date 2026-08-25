@@ -2,11 +2,21 @@ export type SonataReportMetadata = {
   populations: PopulationMetadata[];
 };
 
+/** One recorded column of the data matrix. */
+export type TraceMeta = {
+  /** The cell this column belongs to. */
+  nodeId: number;
+  /** Value from `mapping/element_ids` for this column, when the file carries one. */
+  elementId: number | null;
+  /** Unique label: the node id, plus a per-cell ordinal when the cell spans columns. */
+  label: string;
+};
+
 export type PopulationMetadata = {
   name: string;
-  /** Display label per recorded column of the data matrix. */
-  traceLabels: string[];
-  /** Distinct cells recorded; fewer than `traceLabels.length` in a compartment report. */
+  /** One entry per column of the data matrix, in column order. */
+  traces: TraceMeta[];
+  /** Distinct cells recorded; fewer than `traces.length` in a compartment report. */
   nodeCount: number;
   timeConfig: TimeConfig;
   dataUnits: string;
@@ -20,10 +30,8 @@ export type TimeConfig = {
 };
 
 export type NodeTraceData = {
-  populationName: string;
   x: number[];
   y: number[];
-  units: string;
 };
 
 export type ZoomRange = {
