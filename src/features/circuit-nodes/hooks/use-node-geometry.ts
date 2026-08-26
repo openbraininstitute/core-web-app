@@ -24,7 +24,6 @@ type Result = {
   geometry: NodeGeometry | null;
   /** The parsed `circuit_config.json`, for callers that need `raw`. */
   config: ParsedCircuitConfig | undefined;
-  isLoading: boolean;
   error: Error | null;
 };
 
@@ -100,7 +99,7 @@ export function useNodeGeometry({
 
   const error = asError(configError) ?? noPopulation ?? workerError ?? geometryError;
 
-  return { geometry, config, isLoading: !error && !geometry, error };
+  return { geometry, config, error };
 }
 
 function asError(value: unknown): Error | null {

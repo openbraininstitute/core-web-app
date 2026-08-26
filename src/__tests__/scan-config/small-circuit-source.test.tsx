@@ -25,6 +25,7 @@ function placement(positions: number[]): NodeGeometry {
 const fixtures = vi.hoisted(() => ({
   /** What `useNodeGeometry` answers for the population on show. */
   detail: null as NodeGeometry | null,
+  error: null as Error | null,
   config: {
     nodes: [
       { name: 'default', type: 'biophysical', file: 'nodes.h5' },
@@ -56,8 +57,7 @@ vi.mock('@/features/circuit-nodes/hooks/use-node-geometry', () => ({
   useNodeGeometry: () => ({
     geometry: fixtures.detail,
     config: fixtures.config,
-    isLoading: fixtures.detail === null,
-    error: null,
+    error: fixtures.error,
   }),
 }));
 
@@ -120,6 +120,7 @@ describe('useSmallCircuitSource', () => {
       orientations: new Float64Array([0, 0, 0, 1]),
       morphologies: ['morph-a'],
     };
+    fixtures.error = null;
     fixtures.placement = {
       placed: [{ population: DEFAULT, geometry: placement([0, 0, 0]) }],
       failures: new Map(),
@@ -234,5 +235,28 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.cells.map((cell) => cell.center)).toEqual(
       shown.map((cell) => cell.center)
     );
+  });
+
+  // The error panel would otherwise sit on the previous population's cells,
+  // and 'Try again' would remount the viewer with their ids while `loadCell`
+  // answers for the new population: the old scene repainted as bare somas.
+  it('drops the scene when the newly selected population fails to load', () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0]) },
+        { population: INPUTS, geometry: placement([10, 0, 0]) },
+      ],
+      failures: new Map(),
+      settled: true,
+    };
+    const { result, rerender } = render(false, [DEFAULT, INPUTS]);
+    expect(result.current.cells).toHaveLength(2);
+
+    fixtures.detail = null;
+    fixtures.error = new Error('nodes.h5 could not be opened');
+    rerender({ population: INPUTS, populations: [DEFAULT, INPUTS], showAxons: false });
+
+    expect(result.current.cells).toEqual([]);
+    expect(result.current.error).toBe(fixtures.error);
   });
 });

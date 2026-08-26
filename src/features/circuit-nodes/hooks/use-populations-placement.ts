@@ -39,7 +39,9 @@ type Result = {
  * for as long as the hook lives, so one that leaves the list and comes back —
  * the one on show, once another is selected — is not read again. A viewer
  * therefore has every position it needs the moment the selection changes, and
- * can repaint the scene instead of rebuilding it.
+ * can repaint the scene instead of rebuilding it. A failure is not kept the
+ * same way: its session stays subscribed, so a retry made from the nodes table
+ * or the colour-by panel — the same session, shared — reaches the viewer too.
  *
  * A population whose file will not open, or whose nodes carry no positions —
  * an input population, typically — lands in `failures` rather than being
@@ -72,15 +74,27 @@ export function usePopulationsPlacement({ circuit, populations }: Args): Result 
     let cancelled = false;
     const keyOf = (population: NodePopulation) =>
       nodesSessionKey(circuitId, circuitAssetId, population.name);
-    // By name, for the populations whose session is open and not yet read.
+    // By name, for the populations whose session is held: not yet read, or
+    // failed and waiting on a retry.
     const cleanups = new Map<string, () => void>();
 
-    const record = (population: NodePopulation, outcome: NodeGeometry | Error) => {
+    const settle = (population: NodePopulation, outcome: NodeGeometry | Error) => {
       if (cancelled) return;
       const next = new Map(outcomesRef.current).set(keyOf(population), outcome);
       outcomesRef.current = next;
       setOutcomes(next);
-      // The session has given all that was wanted of it.
+    };
+    // Back to pending: a session that failed is being retried.
+    const forget = (population: NodePopulation) => {
+      if (cancelled || !outcomesRef.current.has(keyOf(population))) return;
+      const next = new Map(outcomesRef.current);
+      next.delete(keyOf(population));
+      outcomesRef.current = next;
+      setOutcomes(next);
+    };
+    // The session has given all that will be wanted of it.
+    const close = (population: NodePopulation) => {
+      if (cancelled) return;
       cleanups.get(population.name)?.();
       cleanups.delete(population.name);
       openReady();
@@ -89,23 +103,28 @@ export function usePopulationsPlacement({ circuit, populations }: Args): Result 
     const open = (population: NodePopulation) => {
       const key = keyOf(population);
       nodesWorkerRegistry.acquire(key, nodesOpenParams(ctx, circuitId, circuitAssetId, population));
-      let done = false;
+      let reading = false;
       const sync = () => {
-        if (done) return;
         const state = nodesWorkerRegistry.getState(key);
         if (state.status === 'error') {
-          done = true;
-          record(
+          // Held rather than closed: the table and colour-by retry this same
+          // session, and the viewer should come back with them.
+          settle(
             population,
             state.error ?? new Error(`Population '${population.name}' could not be opened`)
           );
-        } else if (state.status === 'ready') {
-          done = true;
-          nodesWorkerRegistry.getGeometry(key).then(
-            (geometry) => record(population, geometry),
-            (reason: unknown) =>
-              record(population, reason instanceof Error ? reason : new Error(String(reason)))
-          );
+        } else if (state.status === 'loading') {
+          forget(population);
+        } else if (state.status === 'ready' && !reading) {
+          reading = true;
+          nodesWorkerRegistry
+            .getGeometry(key)
+            .then(
+              (geometry) => settle(population, geometry),
+              (reason: unknown) =>
+                settle(population, reason instanceof Error ? reason : new Error(String(reason)))
+            )
+            .then(() => close(population));
         }
       };
       const unsubscribe = nodesWorkerRegistry.subscribe(key, sync);
@@ -116,18 +135,28 @@ export function usePopulationsPlacement({ circuit, populations }: Args): Result 
       sync();
     };
 
+    const pending = (population: NodePopulation) =>
+      cleanups.has(population.name) && !outcomesRef.current.has(keyOf(population));
     const fileBusy = (file: string) =>
-      populations.some((other) => other.file === file && cleanups.has(other.name));
+      populations.some((other) => other.file === file && pending(other));
+    const placedBefore = (population: NodePopulation) => {
+      const outcome = outcomesRef.current.get(keyOf(population));
+      return outcome !== undefined && !(outcome instanceof Error);
+    };
 
+    // This run's: a placement is kept for good, a failure only until the list
+    // changes, when the population is asked for afresh.
+    const attempted = new Set<string>();
     const openReady = () => {
       for (const population of populations) {
         if (
-          cleanups.has(population.name) ||
-          outcomesRef.current.has(keyOf(population)) ||
+          attempted.has(population.name) ||
+          placedBefore(population) ||
           fileBusy(population.file)
         ) {
           continue;
         }
+        attempted.add(population.name);
         open(population);
       }
     };

@@ -153,9 +153,11 @@ export function useSmallCircuitSource({
   // What is on screen stays until the next scene can be drawn in full. On a
   // switch the newly selected population's morphology names and orientations
   // take a moment to arrive, and emptying the scene meanwhile would unmount the
-  // viewer: a black frame, then a camera reset.
-  const shownRef = useRef<MorphoViewerSmallCircuitCell[]>([]);
-  const cells = built ?? shownRef.current;
+  // viewer: a black frame, then a camera reset. Not past a failure, though: the
+  // error panel would sit on the previous population's cells, and a retry would
+  // remount the viewer with their ids while `loadCell` answers for the new one.
+  const shownRef = useRef<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
+  const cells = built ?? (error ? NO_CELLS : shownRef.current);
   useEffect(() => {
     shownRef.current = cells;
   }, [cells]);
@@ -286,3 +288,4 @@ export function useSmallCircuitSource({
 }
 
 const EMPTY_SECTION_IDS = new Map<string, Map<number, string>>();
+const NO_CELLS: MorphoViewerSmallCircuitCell[] = [];

@@ -167,6 +167,50 @@ describe('usePopulationsPlacement', () => {
     expect(result.current.failures.has('inputs')).toBe(true);
   });
 
+  // A download can fail once. The nodes table and colour-by retry the same
+  // session, and the viewer has to come back with them rather than stay on its
+  // error until it is remounted.
+  it('heals when a failed session is retried', async () => {
+    const { result } = render([CORTEX, INPUTS]);
+    act(() => {
+      registry.settle(key(CORTEX), 'ready', geometry(1));
+      registry.settle(key(INPUTS), 'error');
+    });
+    await waitFor(() => expect(result.current.settled).toBe(true));
+    expect(result.current.failures.has('inputs')).toBe(true);
+    // Held, so the retry is seen.
+    expect(registry.released).toEqual([key(CORTEX)]);
+
+    act(() => {
+      registry.settle(key(INPUTS), 'loading');
+    });
+    expect(result.current.settled).toBe(false);
+
+    act(() => {
+      registry.settle(key(INPUTS), 'ready', geometry(2));
+    });
+    await waitFor(() => expect(result.current.settled).toBe(true));
+    expect(result.current.placed.map((entry) => entry.population.name)).toEqual([
+      'cortex',
+      'inputs',
+    ]);
+    expect(registry.released).toEqual([key(CORTEX), key(INPUTS)]);
+  });
+
+  it('asks again for a population that failed once the list changes', async () => {
+    const { result, rerender } = render([CORTEX, INPUTS]);
+    act(() => {
+      registry.settle(key(CORTEX), 'ready', geometry(1));
+      registry.settle(key(INPUTS), 'error');
+    });
+    await waitFor(() => expect(result.current.settled).toBe(true));
+
+    rerender({ populations: [INPUTS, CORTEX] });
+
+    expect(registry.acquired.filter((asked) => asked === key(INPUTS))).toHaveLength(2);
+    expect(registry.acquired.filter((asked) => asked === key(CORTEX))).toHaveLength(1);
+  });
+
   it('opens two populations kept in one file one after the other', async () => {
     const first = { ...CORTEX, file: 'shared.h5' };
     const second = { ...INPUTS, file: 'shared.h5' };
