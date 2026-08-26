@@ -101,6 +101,20 @@ export type OpenResponse = {
 };
 
 /**
+ * A whole column in node-index order, in the compact form the worker already
+ * holds it: a typed array for numeric columns (the synthetic node id is an
+ * identity `Uint32Array`), the `@library` strings plus one library index per
+ * node for categorical ones. Only string columns cost a JS value per node.
+ *
+ * The arrays are fresh copies, so the worker can hand them across the
+ * boundary as transferables instead of structured-cloning per-node values.
+ */
+export type ColumnValues =
+  | { kind: 'numeric'; values: Float32Array | Float64Array | Uint32Array }
+  | { kind: 'categorical'; library: string[]; indices: Uint32Array }
+  | { kind: 'string'; values: string[] };
+
+/**
  * Everything a 3D viewer needs from a node population, in one read.
  *
  * Flat typed arrays rather than per-node objects: they cross the worker

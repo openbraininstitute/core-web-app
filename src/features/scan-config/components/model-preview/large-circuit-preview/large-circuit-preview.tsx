@@ -22,6 +22,7 @@ import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type {
   MorphoViewerCellColors,
@@ -55,7 +56,7 @@ export interface LargeCircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
   /**
-   * Host-owned, so `colorsByNode` is indexed against the cells it colours.
+   * Host-owned, so `nodeColors` is indexed against the cells it colours.
    *
    * Required but nullable: undefined is the honest value while
    * `circuit_config.json` is still loading, but a caller that leaves it out
@@ -65,8 +66,8 @@ export interface LargeCircuitPreviewProps {
   population: NodePopulation | undefined;
   /** @see CircuitVizProps.populations */
   populations: readonly NodePopulation[];
-  /** per-node colors aligned by node index; undefined → viewer default  */
-  colorsByNode?: string[];
+  /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
+  nodeColors?: NodeColors;
   /** Paint for the somas of the populations not on show. */
   recededColor?: string;
   /** A click on one of those somas, naming its population. */
@@ -113,7 +114,7 @@ export function LargeCircuitPreview({
   circuit,
   population,
   populations,
-  colorsByNode,
+  nodeColors,
   recededColor,
   onPopulationClick,
   backgroundColor,
@@ -190,19 +191,19 @@ export function LargeCircuitPreview({
   // scene of one population has no reason to repaint on a background change.
   const recede = hasContext ? recededColor : undefined;
 
-  // A palette and a column per soma, rather than a colour string per soma: at
-  // region scale this is the whole of a selection change, and it has to stay
-  // small enough to run inside one frame. Nothing here allocates per node
-  // except the one typed array.
+  // The mapping already arrives as a palette and a column per soma; this memo
+  // only lands the subject's columns at its offset in the scene and appends a
+  // column for everything else, so at region scale a selection change stays
+  // one typed-array copy — small enough to run inside one frame.
   const cellColors = React.useMemo(() => {
     // Nothing of ours to say — one population, no colour-by — so the viewer
     // paints its own depth-shaded blue, which is what it does today.
-    if (!colorsByNode && !recede) return VIEWER_DEFAULT_PALETTE;
+    if (!nodeColors && !recede) return VIEWER_DEFAULT_PALETTE;
 
     // `null` is "nothing of ours to say about this soma": the viewer paints it
     // from its own ramp, which is what an uncoloured cloud has always looked
     // like, rather than flattening it to one hue.
-    const palette: (string | null)[] = [];
+    const palette: (string | null)[] = nodeColors ? [...nodeColors.palette] : [];
     const columnByPaint = new Map<string | null, number>();
     const columnOf = (paint: string | null) => {
       const known = columnByPaint.get(paint);
@@ -216,19 +217,19 @@ export function LargeCircuitPreview({
     const columnByCell = new Uint16Array(cellInfos.length);
     let index = 0;
     for (const { population: candidate, geometry } of placed) {
-      if (candidate.name === subjectName) {
-        for (let local = 0; local < geometry.count; local++) {
-          columnByCell[index++] = columnOf(colorsByNode?.[local] ?? null);
-        }
+      if (candidate.name === subjectName && nodeColors) {
+        // The mapping's palette sits at the same indices here, so its columns
+        // land as they are.
+        columnByCell.set(nodeColors.columnByNode.subarray(0, geometry.count), index);
       } else {
         // One colour for a whole population: found once, then filled.
-        const column = columnOf(recede ?? null);
-        columnByCell.fill(column, index, index + geometry.count);
-        index += geometry.count;
+        const paint = candidate.name === subjectName ? null : (recede ?? null);
+        columnByCell.fill(columnOf(paint), index, index + geometry.count);
       }
+      index += geometry.count;
     }
     return { palette, columnByCell };
-  }, [placed, subjectName, cellInfos.length, colorsByNode, recede]);
+  }, [placed, subjectName, cellInfos.length, nodeColors, recede]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {

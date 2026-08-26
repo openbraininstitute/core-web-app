@@ -2,7 +2,7 @@ import chroma from 'chroma-js';
 
 import { adaptColorToBackground, backgroundIsDark } from './contrast';
 
-import type { ColumnKind } from '@/features/circuit-nodes/types';
+import type { ColumnValues } from '@/features/circuit-nodes/types';
 import type { CategoricalLegendEntry, ColorMapping, ContinuousLegend } from './types';
 
 /**
@@ -128,9 +128,8 @@ export function categoricalColor(index: number): string {
 
 interface BuildArgs {
   property: string;
-  kind: ColumnKind;
-  /** property value per node, aligned by node index (string or number) */
-  values: (string | number)[];
+  /** the whole column, in the compact form the worker hands back */
+  column: ColumnValues;
   /** optional user color overrides for this property (value → hex) */
   overrides?: Record<string, string>;
   /**
@@ -154,39 +153,48 @@ function tune(color: string, background?: string): string {
 }
 
 /**
- * turn a column of per-node property values into a stable color mapping plus the
- * legend needed to render the key. chooses a categorical key or a continuous
- * scale bar based on the property kind and cardinality. User `overrides` (value
- * → hex) are folded into both the legend and the per-node colors; a `background`
- * (adaptive mode) keeps every color legible against it
+ * turn a whole column into a stable color mapping plus the legend needed to
+ * render the key. chooses a categorical key or a continuous scale bar based on
+ * the column kind and cardinality. User `overrides` (value → hex) are folded
+ * into both the legend and the palette; a `background` (adaptive mode) keeps
+ * every color legible against it. The per-node side is a palette column per
+ * node — nothing here allocates a JS value per node.
  */
 export function buildColorMapping({
   property,
-  kind,
-  values,
+  column,
   overrides,
   background,
 }: BuildArgs): ColorMapping {
-  const treatAsContinuous = kind === 'numeric' && exceedsDistinct(values, NUMERIC_CATEGORICAL_MAX);
-
-  return treatAsContinuous
-    ? buildContinuous(property, values, background)
-    : buildCategorical(property, values, overrides, background);
+  if (column.kind === 'categorical') {
+    return buildCategoricalColumn(property, column.library, column.indices, overrides, background);
+  }
+  if (column.kind === 'numeric') {
+    return exceedsDistinct(column.values, NUMERIC_CATEGORICAL_MAX)
+      ? buildContinuous(property, column.values, background)
+      : buildNumericKey(property, column.values, overrides, background);
+  }
+  return buildStringKey(property, column.values, overrides, background);
 }
 
-function buildCategorical(
-  property: string,
-  values: (string | number)[],
+type NumericColumn = Float32Array | Float64Array | Uint32Array;
+
+/**
+ * the categorical key: a legend entry per distinct value (in `ordered` order,
+ * which is what fixes each value's color), plus the bounded palette and each
+ * value's column in it. Values whose colors coincide — the generated palette
+ * cycles past MAX_DISTINCT_COLORS — share a column, which keeps the palette (a
+ * texture in the viewer) bounded however many values the column holds.
+ */
+function buildKey(
+  ordered: readonly { value: string; count: number }[],
   overrides?: Record<string, string>,
   background?: string
-): ColorMapping {
-  // deterministic order: sort distinct values (numeric-aware) so colors are stable
-  const counts = new Map<string, number>();
-  for (const v of values) {
-    const key = String(v);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  const ordered = [...counts.keys()].sort(compareValues);
+): {
+  categorical: CategoricalLegendEntry[];
+  palette: string[];
+  columnByValue: Map<string, number>;
+} {
   // background-adapt each *palette* color at most once. Palette colors repeat
   // every MAX_DISTINCT_COLORS, so this stays cheap even for huge cardinality.
   const tuneCache = new Map<string, string>();
@@ -197,73 +205,165 @@ function buildCategorical(
     tuneCache.set(raw, out);
     return out;
   };
-  const colorByValue = new Map<string, string>();
-  const categorical: CategoricalLegendEntry[] = ordered.map((value, index) => {
+  const palette: string[] = [];
+  const columnByColor = new Map<string, number>();
+  const columnByValue = new Map<string, number>();
+  const categorical = ordered.map(({ value, count }, index) => {
     // rawColor is what the user owns/edits (their override or the base palette
     // color); color is its background-adapted display used by the swatch + 3D.
     const rawColor = overrides?.[value] ?? categoricalColor(index);
     const color = tuned(rawColor);
-    colorByValue.set(value, color);
-    return { value, color, rawColor, count: counts.get(value) ?? 0 };
+    let column = columnByColor.get(color);
+    if (column === undefined) {
+      column = palette.length;
+      columnByColor.set(color, column);
+      palette.push(color);
+    }
+    columnByValue.set(value, column);
+    return { value, color, rawColor, count };
   });
-  const fallback = defaultNeuronColor(background);
-  const colorsByNode = values.map((v) => colorByValue.get(String(v)) ?? fallback);
-  return { mode: 'categorical', property, colorsByNode, categorical };
+  return { categorical, palette, columnByValue };
+}
+
+/** a categorical column: the key from its library, the per-node pass on its indices */
+function buildCategoricalColumn(
+  property: string,
+  library: string[],
+  indices: Uint32Array,
+  overrides?: Record<string, string>,
+  background?: string
+): ColorMapping {
+  // occurrences per library slot. Indices past the library (malformed files)
+  // count under their own `String(slot)` name, as they always have.
+  let slotCount = library.length;
+  for (let i = 0; i < indices.length; i++) {
+    if (indices[i] >= slotCount) slotCount = indices[i] + 1;
+  }
+  const counts = new Uint32Array(slotCount);
+  for (let i = 0; i < indices.length; i++) counts[indices[i]] += 1;
+
+  // distinct *present* values, merged by name in case a library repeats one
+  const slotsByName = new Map<string, { count: number; slots: number[] }>();
+  for (let slot = 0; slot < slotCount; slot++) {
+    if (counts[slot] === 0) continue;
+    const name = library[slot] ?? String(slot);
+    const entry = slotsByName.get(name);
+    if (entry) {
+      entry.count += counts[slot];
+      entry.slots.push(slot);
+    } else {
+      slotsByName.set(name, { count: counts[slot], slots: [slot] });
+    }
+  }
+  // deterministic order: sort distinct values (numeric-aware) so colors are stable
+  const ordered = [...slotsByName.entries()]
+    .map(([value, entry]) => ({ value, ...entry }))
+    .sort((a, b) => compareValues(a.value, b.value));
+
+  const { categorical, palette, columnByValue } = buildKey(ordered, overrides, background);
+  const slotToColumn = new Uint16Array(slotCount);
+  for (const { value, slots } of ordered) {
+    const column = columnByValue.get(value) ?? 0;
+    for (const slot of slots) slotToColumn[slot] = column;
+  }
+  const columnByNode = new Uint16Array(indices.length);
+  for (let i = 0; i < indices.length; i++) columnByNode[i] = slotToColumn[indices[i]];
+  return { mode: 'categorical', property, palette, columnByNode, categorical };
+}
+
+/** a numeric column below the cardinality threshold: keyed, like a categorical one */
+function buildNumericKey(
+  property: string,
+  values: NumericColumn,
+  overrides?: Record<string, string>,
+  background?: string
+): ColorMapping {
+  const counts = new Map<number, number>();
+  for (let i = 0; i < values.length; i++) {
+    counts.set(values[i], (counts.get(values[i]) ?? 0) + 1);
+  }
+  // deterministic order: sort distinct values (numeric-aware) so colors are stable
+  const ordered = [...counts.entries()]
+    .map(([key, count]) => ({ key, value: String(key), count }))
+    .sort((a, b) => compareValues(a.value, b.value));
+
+  const { categorical, palette, columnByValue } = buildKey(ordered, overrides, background);
+  const columnByKey = new Map<number, number>();
+  for (const { key, value } of ordered) columnByKey.set(key, columnByValue.get(value) ?? 0);
+  const columnByNode = new Uint16Array(values.length);
+  for (let i = 0; i < values.length; i++) columnByNode[i] = columnByKey.get(values[i]) ?? 0;
+  return { mode: 'categorical', property, palette, columnByNode, categorical };
+}
+
+/** a string column: keyed whatever its cardinality — a ramp over names means nothing */
+function buildStringKey(
+  property: string,
+  values: string[],
+  overrides?: Record<string, string>,
+  background?: string
+): ColorMapping {
+  const counts = new Map<string, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  // deterministic order: sort distinct values (numeric-aware) so colors are stable
+  const ordered = [...counts.entries()]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => compareValues(a.value, b.value));
+
+  const { categorical, palette, columnByValue } = buildKey(ordered, overrides, background);
+  const columnByNode = new Uint16Array(values.length);
+  for (let i = 0; i < values.length; i++) columnByNode[i] = columnByValue.get(values[i]) ?? 0;
+  return { mode: 'categorical', property, palette, columnByNode, categorical };
 }
 
 function buildContinuous(
   property: string,
-  values: (string | number)[],
+  values: NumericColumn,
   background?: string
 ): ColorMapping {
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
-  const nums = values.map((v) => {
-    const n = typeof v === 'number' ? v : Number(v);
-    if (Number.isFinite(n)) {
-      min = Math.min(min, n);
-      max = Math.max(max, n);
-    }
-    return n;
-  });
+  for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+    if (!Number.isFinite(value)) continue;
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
   if (!Number.isFinite(min) || !Number.isFinite(max)) {
     min = 0;
     max = 1;
   }
   const span = max - min || 1;
-  // adapt the bounded ramp once (≤ CONTINUOUS_STOPS distinct colors), then reuse
-  const rampCache = new Map<string, string>();
-  const ramp = (raw: string): string => {
-    const cached = rampCache.get(raw);
-    if (cached) return cached;
-    const tuned = tune(raw, background);
-    rampCache.set(raw, tuned);
-    return tuned;
-  };
-  // quantize into CONTINUOUS_STOPS colors so the viewer palette stays bounded
-  const colorsByNode = nums.map((n) => {
-    const t = Number.isFinite(n) ? (n - min) / span : 0;
-    const step = Math.round(t * (CONTINUOUS_STOPS - 1)) / (CONTINUOUS_STOPS - 1);
-    return ramp(viridisColor(step));
-  });
+  // the quantized ramp *is* the palette: every node samples one of its stops,
+  // which keeps the viewer's palette texture bounded however many distinct
+  // values the column holds
+  const palette = new Array<string>(CONTINUOUS_STOPS);
+  for (let stop = 0; stop < CONTINUOUS_STOPS; stop++) {
+    palette[stop] = tune(viridisColor(stop / (CONTINUOUS_STOPS - 1)), background);
+  }
+  const columnByNode = new Uint16Array(values.length);
+  for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+    // non-finite values sit on the low stop, as they always have
+    if (Number.isFinite(value)) {
+      columnByNode[i] = Math.round(((value - min) / span) * (CONTINUOUS_STOPS - 1));
+    }
+  }
   const gradient = viridisGradient().map((c) => tune(c, background));
   const continuous: ContinuousLegend = { min, max, gradient };
-  return { mode: 'continuous', property, colorsByNode, continuous };
+  return { mode: 'continuous', property, palette, columnByNode, continuous };
 }
 /**
- * More than `limit` distinct values, answered without stringifying the column.
+ * More than `limit` distinct values, answered without a pass over the column.
  *
  * The threshold is the only thing that ever asks, and on a continuous property
  * the thirteenth distinct value arrives within the first few nodes, so this
- * stops there. Building the whole set instead meant a string per node, and
- * those strings are nearly all distinct where the values are: 3.7M of them on
- * a region circuit, two seconds of the redraw and a few hundred megabytes of
- * garbage to decide something the first handful of rows had already settled.
+ * stops there — deciding by looking at the whole column would take longer than
+ * everything the answer is used for.
  */
-function exceedsDistinct(values: (string | number)[], limit: number): boolean {
-  const seen = new Set<string | number>();
-  for (const value of values) {
-    seen.add(value);
+function exceedsDistinct(values: NumericColumn, limit: number): boolean {
+  const seen = new Set<number>();
+  for (let i = 0; i < values.length; i++) {
+    seen.add(values[i]);
     if (seen.size > limit) return true;
   }
   return false;

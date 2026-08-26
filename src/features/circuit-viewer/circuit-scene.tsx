@@ -263,7 +263,7 @@ export function CircuitScene({
   const {
     containerRef,
     config,
-    colorsByNode,
+    nodeColors,
     defaultColor,
     recededColor,
     theme,
@@ -364,7 +364,7 @@ export function CircuitScene({
   const zoom = useViewerZoom(signals);
 
   // Props shared by both viz surfaces. An MEModel has no colour-by, so
-  // `colorsByNode` and `defaultColor` stay on the circuit branch.
+  // `nodeColors` and `defaultColor` stay on the circuit branch.
   //
   // Memoised explicitly, not left to the compiler: a zoom tick changes this object, and a
   // fresh one re-renders the 3D surface every frame of a scroll-zoom.
@@ -443,7 +443,7 @@ export function CircuitScene({
             circuit={circuit}
             population={population}
             populations={populations}
-            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            nodeColors={enableColorBy ? nodeColors : undefined}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
             backgroundColor={config.backgroundColor}
@@ -473,7 +473,7 @@ export function CircuitScene({
               circuit={circuit}
               population={population}
               populations={populations}
-              colorsByNode={enableColorBy ? colorsByNode : undefined}
+              nodeColors={enableColorBy ? nodeColors : undefined}
               defaultColor={defaultColor}
               recededColor={recededColor}
               onPopulationClick={handlePopulationClick}

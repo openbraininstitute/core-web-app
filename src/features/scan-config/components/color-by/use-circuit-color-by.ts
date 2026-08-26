@@ -63,9 +63,10 @@ export interface ColorByControls {
 /**
  * central state for the color-by feature on a single circuit viewer: the
  * persisted config, the per-node color mapping (with user overrides), and
- * ready-made control props for the chrome. `colorsByNode` is aligned by node
- * index for the viewer. owned by the preview host, which passes `colorsByNode`
- * and the config down to the actual viewers. Also serves the MEModel viewer, which
+ * ready-made control props for the chrome. `nodeColors` is the mapping's
+ * palette plus a palette column per node, aligned by node index for the
+ * viewer. owned by the preview host, which passes `nodeColors` and the config
+ * down to the actual viewers. Also serves the MEModel viewer, which
  * has no colour-by.
  */
 export function useCircuitColorBy(
@@ -244,7 +245,8 @@ export function useCircuitColorBy(
   return {
     containerRef,
     config,
-    colorsByNode: mapping?.colorsByNode,
+    /** the mapping's palette + palette column per node, for the viewers */
+    nodeColors: mapping ?? undefined,
     /** default neuron color (adapted to the background in adaptive mode) */
     defaultColor,
     /** paint for the somas of the populations drawn but not on show */

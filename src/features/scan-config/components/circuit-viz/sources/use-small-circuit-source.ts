@@ -27,6 +27,7 @@ import { useAfferentSynapses } from './use-afferent-synapses';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { TMorphologyRequest } from '@/features/scan-config/components/circuit-viz/sequential-loader';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
 import type { TSmallCircuitSource } from './types';
 
@@ -39,12 +40,12 @@ export const PLACEHOLDER_SOMA_RADIUS = 8;
 
 type TOptions = {
   circuit: ICircuit;
-  /** Host-owned, so `colorsByNode` is indexed against the cells it colours. */
+  /** Host-owned, so `nodeColors` is indexed against the cells it colours. */
   population: NodePopulation | undefined;
   /** @see CircuitVizProps.populations */
   populations: readonly NodePopulation[];
   showAxons: boolean;
-  colorsByNode?: string[];
+  nodeColors?: NodeColors;
   /** Paint for nodes colour-by has nothing to say about. */
   defaultColor?: MorphoViewerSmallCircuitCell['color'];
   /** Paint for the somas of the populations not on show. */
@@ -73,7 +74,7 @@ export function useSmallCircuitSource({
   population,
   populations,
   showAxons,
-  colorsByNode,
+  nodeColors,
   defaultColor = DEFAULT_NEURON_COLOR,
   recededColor,
   withSynapses = false,
@@ -115,6 +116,7 @@ export function useSmallCircuitSource({
     // point of drawing one. A crowd keeps a flat colour per cell instead, since
     // there the job is telling the cells apart.
     const paint = detail.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
+    const { palette, columnByNode } = nodeColors ?? EMPTY_NODE_COLORS;
 
     // In declared order, the population on show at its own place in it, so a
     // cell keeps its id and position whichever population is selected. The
@@ -133,7 +135,7 @@ export function useSmallCircuitSource({
             ? (placementAt(detail, i)?.orientation ?? IDENTITY_QUATERNION)
             : IDENTITY_QUATERNION,
           somaRadius: PLACEHOLDER_SOMA_RADIUS,
-          color: onShow ? (colorsByNode?.[i] ?? paint) : recededColor,
+          color: onShow ? (palette[columnByNode[i]] ?? paint) : recededColor,
         };
       }
       return result;
@@ -145,7 +147,7 @@ export function useSmallCircuitSource({
     detail,
     circuitId,
     showAxons,
-    colorsByNode,
+    nodeColors,
     defaultColor,
     recededColor,
   ]);
@@ -289,3 +291,4 @@ export function useSmallCircuitSource({
 
 const EMPTY_SECTION_IDS = new Map<string, Map<number, string>>();
 const NO_CELLS: MorphoViewerSmallCircuitCell[] = [];
+const EMPTY_NODE_COLORS: NodeColors = { palette: [], columnByNode: new Uint16Array(0) };

@@ -6,6 +6,7 @@ import {
   type ColumnKind,
   ColumnKindDict,
   type ColumnMeta,
+  type ColumnValues,
   type GetRowsRequest,
   type GetRowsResponse,
   type NodeGeometry,
@@ -399,7 +400,7 @@ export class NodesSession {
 
     const morphologies =
       withMorphologies && this.columnIndex.has(MORPHOLOGY_COLUMN)
-        ? asStrings(this.getColumnValues(MORPHOLOGY_COLUMN).values)
+        ? this.columnStrings(MORPHOLOGY_COLUMN)
         : null;
 
     return {
@@ -519,34 +520,63 @@ export class NodesSession {
   }
 
   /**
-   * read a whole column in node-index order.
-   * used to color the 3D viewers by a node property (values align 1:1 with the circuit's node index).
+   * read a whole column in node-index order, in the compact form the column
+   * cache holds it (see {@link ColumnValues}). The arrays are fresh copies,
+   * so a caller may transfer them across the worker boundary without
+   * detaching the cache's own.
+   *
+   * used to color the 3D viewers by a node property (values align 1:1 with
+   * the circuit's node index).
    */
-  getColumnValues(name: string): { kind: ColumnKind; values: (string | number)[] } {
+  getColumnValues(name: string): ColumnValues {
     const handle = this.columnIndex.get(name);
     if (!handle) return { kind: ColumnKindDict.String, values: [] };
 
     if (handle.kind === ColumnKindDict.SyntheticNodeId) {
-      const values = new Array<number>(this.rowCount);
-      for (let i = 0; i < this.rowCount; i++) values[i] = i;
-      return { kind: ColumnKindDict.Numeric, values };
+      return { kind: ColumnKindDict.Numeric, values: identityIndices(this.rowCount) };
     }
 
+    const data = this.loadColumn(name);
+    if (handle.kind === ColumnKindDict.Categorical) {
+      return {
+        kind: ColumnKindDict.Categorical,
+        library: handle.library,
+        indices: (data as Uint32Array).slice(),
+      };
+    }
+    if (handle.kind === ColumnKindDict.Numeric) {
+      return {
+        kind: ColumnKindDict.Numeric,
+        values: (data as Float32Array | Float64Array).slice(),
+      };
+    }
+    return { kind: ColumnKindDict.String, values: [...(data as string[])] };
+  }
+
+  /**
+   * a column as one string per node — the morphology read, which resolves a
+   * file per name and so needs the names themselves. Kept off the
+   * {@link getColumnValues} path so colouring a region-scale circuit never
+   * materialises a string per node.
+   */
+  private columnStrings(name: string): string[] {
+    const handle = this.columnIndex.get(name);
+    if (!handle || handle.kind === ColumnKindDict.SyntheticNodeId) return [];
     const data = this.loadColumn(name);
     if (handle.kind === ColumnKindDict.Categorical) {
       const arr = data as Uint32Array;
       const lib = handle.library;
       const values = new Array<string>(arr.length);
       for (let i = 0; i < arr.length; i++) values[i] = lib[arr[i]] ?? String(arr[i]);
-      return { kind: ColumnKindDict.Categorical, values };
+      return values;
     }
     if (handle.kind === ColumnKindDict.Numeric) {
-      return {
-        kind: ColumnKindDict.Numeric,
-        values: Array.from(data as Float32Array | Float64Array),
-      };
+      const arr = data as Float32Array | Float64Array;
+      const values = new Array<string>(arr.length);
+      for (let i = 0; i < arr.length; i++) values[i] = String(arr[i]);
+      return values;
     }
-    return { kind: ColumnKindDict.String, values: [...(data as string[])] };
+    return data as string[];
   }
 }
 
@@ -766,15 +796,4 @@ function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | nu
   // string
   if (Array.isArray(sliced)) return sliced.map((v) => String(v));
   return [];
-}
-
-/**
- * `getColumnValues` already materialises categorical and string columns as
- * strings, so mapping a `morphology` column again would allocate a second array
- * the size of the population to no effect.
- */
-function asStrings(values: (string | number)[]): string[] {
-  return values.every((value) => typeof value === 'string')
-    ? (values as string[])
-    : values.map(String);
 }

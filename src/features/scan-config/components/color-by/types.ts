@@ -30,15 +30,26 @@ export interface ContinuousLegend {
 }
 
 /**
- * the result of mapping a node property onto colors: a per-node color array
- * aligned by node index, plus the legend needed to render the key
+ * compact per-node coloring: a bounded palette of display colors plus the
+ * palette column each node samples. The typed array is the only per-node
+ * allocation, so recoloring a region-scale circuit stays one array copy
+ * rather than a string per node.
  */
-export interface ColorMapping {
+export interface NodeColors {
+  /** distinct display colors: at most MAX_DISTINCT_COLORS for a key, CONTINUOUS_STOPS for a scale */
+  palette: string[];
+  /** palette index per node, aligned by node index. Empty when mode === 'none' */
+  columnByNode: Uint16Array;
+}
+
+/**
+ * the result of mapping a node property onto colors: the per-node palette
+ * (see {@link NodeColors}), plus the legend needed to render the key
+ */
+export interface ColorMapping extends NodeColors {
   mode: ColorMode;
   /** property name being colored by, or null when mode === 'none' */
   property: string | null;
-  /** per-node colors, aligned by node index. Empty when mode === 'none' */
-  colorsByNode: string[];
   categorical?: CategoricalLegendEntry[];
   continuous?: ContinuousLegend;
 }

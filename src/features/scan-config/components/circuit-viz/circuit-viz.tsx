@@ -22,6 +22,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
@@ -48,11 +49,11 @@ interface CircuitVizProps {
   circuit: ICircuit;
   /**
    * SONATA node population to draw. Host-owned and shared with colour-by, so
-   * `colorsByNode` stays indexed against the same nodes this draws.
+   * `nodeColors` stays indexed against the same nodes this draws.
    */
   population?: NodePopulation;
-  /** per-node colors aligned by node index; undefined → viewer default (blue). */
-  colorsByNode?: string[];
+  /** per-node colors (a palette + column per node); undefined → viewer default (blue). */
+  nodeColors?: NodeColors;
   /** default color for nodes with no property color (adapts to bg in adaptive mode). */
   defaultColor?: string;
   /**
@@ -143,7 +144,7 @@ export function CircuitVisualization({
     population: props.population,
     populations,
     showAxons: props.showAxons,
-    colorsByNode: props.colorsByNode,
+    nodeColors: props.nodeColors,
     defaultColor: props.defaultColor,
     recededColor,
     withSynapses: circuitDrawsSynapses(props.circuit.scale),
@@ -370,7 +371,7 @@ function CircuitVizView({
 
 type TMemodelVizProps = Omit<
   TCircuitVizViewProps,
-  'source' | 'colorsByNode' | 'defaultColor' | 'onCellClick'
+  'source' | 'nodeColors' | 'defaultColor' | 'onCellClick'
 > & {
   memodelId: string;
 };

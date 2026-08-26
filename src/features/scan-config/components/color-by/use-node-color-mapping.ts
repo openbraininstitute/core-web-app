@@ -6,7 +6,7 @@ import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/
 import { buildColorMapping } from './palette';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ColumnKind, NodePopulation } from '@/features/circuit-nodes/types';
+import type { ColumnValues, NodePopulation } from '@/features/circuit-nodes/types';
 import type { ColorMapping } from './types';
 
 interface Result {
@@ -20,11 +20,10 @@ interface Result {
   retry: () => void;
 }
 
-/** a raw column, as read for one property */
+/** a raw column, as read for one property, in the worker's compact form */
 interface LoadedColumn {
   property: string;
-  kind: ColumnKind;
-  values: (string | number)[];
+  column: ColumnValues;
 }
 
 /**
@@ -77,11 +76,11 @@ export function useNodeColorMapping(
 
     let cancelled = false;
     getColumn(property)
-      .then(({ kind, values }) => {
+      .then((column) => {
         if (cancelled) return;
         setLoaded((prev) => ({
           ...prev,
-          columns: new Map(prev.columns).set(populationKey, { property, kind, values }),
+          columns: new Map(prev.columns).set(populationKey, { property, column }),
         }));
       })
       .catch((e) => {

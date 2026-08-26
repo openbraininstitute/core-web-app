@@ -7,6 +7,7 @@ import type { MorphoViewerSomasOnlyProps } from '@openbraininstitute/morphoviewe
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 
 const CORTEX: NodePopulation = { name: 'cortex', type: 'biophysical', file: 'nodes.h5' };
 const VPM: NodePopulation = { name: 'vpm', type: 'virtual', file: 'inputs.h5' };
@@ -17,6 +18,15 @@ function placement(positions: number[]): NodeGeometry {
     positions: new Float64Array(positions),
     orientations: null,
     morphologies: null,
+  };
+}
+
+/** The compact form the colour-by mapping hands the preview. */
+function asNodeColors(byNode: string[]): NodeColors {
+  const palette = [...new Set(byNode)];
+  return {
+    palette,
+    columnByNode: Uint16Array.from(byNode, (color) => palette.indexOf(color)),
   };
 }
 
@@ -53,15 +63,15 @@ vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
 
 const circuit = { id: 'circuit-id', name: 'Circuit' } as ICircuit;
 
-type TProps = { population: NodePopulation; colorsByNode?: string[]; recededColor?: string };
+type TProps = { population: NodePopulation; nodeColors?: NodeColors; recededColor?: string };
 
-function draw({ population, colorsByNode, recededColor }: TProps) {
+function draw({ population, nodeColors, recededColor }: TProps) {
   return render(
     <LargeCircuitPreview
       circuit={circuit}
       population={population}
       populations={[CORTEX, VPM]}
-      colorsByNode={colorsByNode}
+      nodeColors={nodeColors}
       recededColor={recededColor}
       backgroundColor="#000000"
       signals={{} as never}
@@ -100,7 +110,7 @@ describe('LargeCircuitPreview colours', () => {
   });
 
   it('paints the population on show by node and the rest receded', () => {
-    draw({ population: CORTEX, colorsByNode: ['#aaa', '#bbb'], recededColor: '#ccc' });
+    draw({ population: CORTEX, nodeColors: asNodeColors(['#aaa', '#bbb']), recededColor: '#ccc' });
 
     const props = lastRender();
     expect(paints(props)).toEqual(['#aaa', '#bbb', '#ccc']);
@@ -118,7 +128,7 @@ describe('LargeCircuitPreview colours', () => {
   it('hands back the same cellInfos when only the selection changes', () => {
     const { rerender } = draw({
       population: CORTEX,
-      colorsByNode: ['#aaa', '#bbb'],
+      nodeColors: asNodeColors(['#aaa', '#bbb']),
       recededColor: '#ccc',
     });
     const first = lastRender();
@@ -128,7 +138,7 @@ describe('LargeCircuitPreview colours', () => {
         circuit={circuit}
         population={VPM}
         populations={[CORTEX, VPM]}
-        colorsByNode={['#ddd']}
+        nodeColors={asNodeColors(['#ddd'])}
         recededColor="#ccc"
         backgroundColor="#000000"
         signals={{} as never}
@@ -143,7 +153,7 @@ describe('LargeCircuitPreview colours', () => {
   // One column for a whole population, not one per soma: the palette is a
   // texture a pixel wide per colour.
   it('gives one palette column to each distinct colour', () => {
-    draw({ population: CORTEX, colorsByNode: ['#aaa', '#aaa'], recededColor: '#ccc' });
+    draw({ population: CORTEX, nodeColors: asNodeColors(['#aaa', '#aaa']), recededColor: '#ccc' });
 
     expect(lastRender().cellColors?.palette).toEqual(['#aaa', '#ccc']);
   });
