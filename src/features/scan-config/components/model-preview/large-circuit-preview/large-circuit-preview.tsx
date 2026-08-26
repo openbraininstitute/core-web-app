@@ -23,7 +23,12 @@ import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
+import type {
+  MorphoViewerCellColors,
+  MorphoViewerCellInfo,
+  MorphoViewerOverlayTransformEvent,
+  MorphoViewerSignals,
+} from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
 
@@ -34,9 +39,17 @@ import styles from './large-circuit-preview.module.css';
  * decide whether a new `cellInfos` array is a recolour or a rebuild — and it
  * compares the position alongside it in the same loop. The position is what
  * actually discriminates, so one shared string behaves identically to a
- * distinct one per node and allocates nothing at region scale.
+ * distinct one per node and allocates nothing at region scale. That comparison
+ * is not reached here at all now that the same array goes back every render,
+ * but a host cannot rely on that.
  */
 const SHARED_MORPHOLOGY_ID = '';
+
+/** Says "no colours of ours": the viewer's own depth-shaded blue palette. */
+const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
+  palette: [],
+  columnByCell: new Uint16Array(0),
+};
 
 export interface LargeCircuitPreviewProps {
   className?: string;
@@ -93,19 +106,6 @@ export interface LargeCircuitPreviewProps {
    * {@link CircuitViz} gets, spread across the same props.
    */
   spikes?: ISpikeReplayBinding;
-}
-
-interface CellInfo {
-  /**
-   * Required by morphoviewer, but never rendered: it feeds one
-   * change-detection diff (`sameGeometry`) that gates the cheap recolour path,
-   * and that diff compares positions in the same loop. The node index is
-   * therefore as good as a real morphology name here, and reading the
-   * `morphology` column to fill it would cost a JS string per node.
-   */
-  morphologyId: string;
-  position: [number, number, number];
-  color?: string;
 }
 
 export function LargeCircuitPreview({
@@ -172,37 +172,63 @@ export function LargeCircuitPreview({
   };
 
   // In declared order, the population on show at its own place in it, so a
-  // soma keeps its index and position whichever population is selected. The
-  // viewer takes a same-shaped `cellInfos` as a recolour and anything else as
-  // a new scene, camera reset included — selecting a population has to be the
-  // former. Split from the recolour below so a selection change rebuilds only
-  // the `CellInfo` wrappers, not a position tuple per node as well.
-  const positions = React.useMemo(
-    () =>
-      placed.flatMap(({ geometry }) =>
-        Array.from({ length: geometry.count }, (_, i) => positionAt(geometry, i))
-      ),
-    [placed]
-  );
-
-  // Only where something recedes: the colour follows the background, and a
-  // scene of one population has no reason to rebuild on a background change.
-  const recede = hasContext ? recededColor : undefined;
+  // soma keeps its index and position whichever population is selected — and
+  // built once, from the placement alone. The viewer takes a new `cellInfos`
+  // array as a new scene, camera reset included, so this must not change when
+  // the selection does; the colours travel separately, below.
   const cellInfos = React.useMemo(() => {
-    const infos = new Array<CellInfo>(positions.length);
-    let index = 0;
-    for (const { population: candidate, geometry } of placed) {
-      const onShow = candidate.name === subjectName;
-      for (let local = 0; local < geometry.count; local++, index++) {
-        infos[index] = {
-          morphologyId: SHARED_MORPHOLOGY_ID,
-          position: positions[index],
-          color: onShow ? colorsByNode?.[local] : recede,
-        };
+    const infos: MorphoViewerCellInfo[] = [];
+    for (const { geometry } of placed) {
+      for (let local = 0; local < geometry.count; local++) {
+        infos.push({ morphologyId: SHARED_MORPHOLOGY_ID, position: positionAt(geometry, local) });
       }
     }
     return infos;
-  }, [placed, subjectName, positions, colorsByNode, recede]);
+  }, [placed]);
+
+  // Only where something recedes: the colour follows the background, and a
+  // scene of one population has no reason to repaint on a background change.
+  const recede = hasContext ? recededColor : undefined;
+
+  // A palette and a column per soma, rather than a colour string per soma: at
+  // region scale this is the whole of a selection change, and it has to stay
+  // small enough to run inside one frame. Nothing here allocates per node
+  // except the one typed array.
+  const cellColors = React.useMemo(() => {
+    // Nothing of ours to say — one population, no colour-by — so the viewer
+    // paints its own depth-shaded blue, which is what it does today.
+    if (!colorsByNode && !recede) return VIEWER_DEFAULT_PALETTE;
+
+    // `null` is "nothing of ours to say about this soma": the viewer paints it
+    // from its own ramp, which is what an uncoloured cloud has always looked
+    // like, rather than flattening it to one hue.
+    const palette: (string | null)[] = [];
+    const columnByPaint = new Map<string | null, number>();
+    const columnOf = (paint: string | null) => {
+      const known = columnByPaint.get(paint);
+      if (known !== undefined) return known;
+
+      columnByPaint.set(paint, palette.length);
+      palette.push(paint);
+      return palette.length - 1;
+    };
+
+    const columnByCell = new Uint16Array(cellInfos.length);
+    let index = 0;
+    for (const { population: candidate, geometry } of placed) {
+      if (candidate.name === subjectName) {
+        for (let local = 0; local < geometry.count; local++) {
+          columnByCell[index++] = columnOf(colorsByNode?.[local] ?? null);
+        }
+      } else {
+        // One colour for a whole population: found once, then filled.
+        const column = columnOf(recede ?? null);
+        columnByCell.fill(column, index, index + geometry.count);
+        index += geometry.count;
+      }
+    }
+    return { palette, columnByCell };
+  }, [placed, subjectName, cellInfos.length, colorsByNode, recede]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {
@@ -252,6 +278,7 @@ export function LargeCircuitPreview({
           gizmo
           scalebar={scalebar}
           cellInfos={cellInfos}
+          cellColors={cellColors}
           backgroundColor={backgroundColor}
           signals={signals}
           overlays={morphoOverlays}
