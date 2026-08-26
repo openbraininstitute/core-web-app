@@ -119,15 +119,16 @@ export type ColumnValues =
  *
  * Flat typed arrays rather than per-node objects: they cross the worker
  * boundary as transferables, so a population of any size costs one detach
- * instead of a structured clone. `Float64Array` and not `Float32Array` because
- * these coordinates feed electrode placement maths, not just the paint.
+ * instead of a structured clone. `Float32Array` is enough for every reader,
+ * electrode placement included: micron coordinates spanning ~10⁴ µm keep
+ * ~10⁻³ µm of resolution in f32, at half the memory and transfer of f64.
  */
 export type NodeGeometry = {
   count: number;
   /** flat `[x, y, z, ...]`, one triple per node, in file order */
-  positions: Float64Array;
+  positions: Float32Array;
   /** flat `[x, y, z, w, ...]` quaternions; null when the population declares none */
-  orientations: Float64Array | null;
+  orientations: Float32Array | null;
   /**
    * Morphology name per node; null when not requested (see
    * {@link NodeGeometryOptions.withMorphologies}) or when the population has no
@@ -149,7 +150,7 @@ export type NodeGeometryOptions = {
   withMorphologies?: boolean;
   /**
    * Read the four `orientation_*` columns too. Off by default: they pack into a
-   * `count * 4` `Float64Array`, which is 128 MB on a four-million-node circuit
+   * `count * 4` `Float32Array`, which is 64 MB on a four-million-node circuit
    * and is packed, transferred and dropped again by any viewer that only places
    * somas.
    *

@@ -14,7 +14,7 @@ const INPUTS: NodePopulation = { name: 'inputs', type: 'virtual', file: 'inputs.
 function placement(positions: number[]): NodeGeometry {
   return {
     count: positions.length / 3,
-    positions: new Float64Array(positions),
+    positions: new Float32Array(positions),
     orientations: null,
     morphologies: null,
   };
@@ -116,8 +116,8 @@ describe('useSmallCircuitSource', () => {
   beforeEach(() => {
     fixtures.detail = {
       count: 1,
-      positions: new Float64Array([0, 0, 0]),
-      orientations: new Float64Array([0, 0, 0, 1]),
+      positions: new Float32Array([0, 0, 0]),
+      orientations: new Float32Array([0, 0, 0, 1]),
       morphologies: ['morph-a'],
     };
     fixtures.error = null;

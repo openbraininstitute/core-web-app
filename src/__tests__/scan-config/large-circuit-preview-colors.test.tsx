@@ -15,7 +15,7 @@ const VPM: NodePopulation = { name: 'vpm', type: 'virtual', file: 'inputs.h5' };
 function placement(positions: number[]): NodeGeometry {
   return {
     count: positions.length / 3,
-    positions: new Float64Array(positions),
+    positions: new Float32Array(positions),
     orientations: null,
     morphologies: null,
   };

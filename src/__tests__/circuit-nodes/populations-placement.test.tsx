@@ -108,7 +108,7 @@ const key = (population: NodePopulation) => nodesSessionKey('circuit-id', 'asset
 function geometry(count: number): NodeGeometry {
   return {
     count,
-    positions: new Float64Array(count * 3),
+    positions: new Float32Array(count * 3),
     orientations: null,
     morphologies: null,
   };

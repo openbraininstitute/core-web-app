@@ -419,12 +419,12 @@ export class NodesSession {
    * four orientation components is not a partial quaternion, it is no
    * quaternion.
    *
-   * The kind is part of that test and not a formality. A `Float64Array` write
+   * The kind is part of that test and not a formality. A `Float32Array` write
    * runs ToNumber on whatever it is given, so a string `x` column would land as
    * `NaN` and a `@library`-encoded one as category indices — both of which draw
    * a circuit rather than reporting that it cannot be drawn.
    */
-  private packColumns(names: readonly string[]): Float64Array | null {
+  private packColumns(names: readonly string[]): Float32Array | null {
     // Checked before any read: loading three of four orientation components
     // only to discard them evicts three entries from a cache the nodes table
     // is sharing.
@@ -434,7 +434,7 @@ export class NodesSession {
     const columns = names.map((name) => this.loadColumn(name) as Float32Array | Float64Array);
 
     const stride = names.length;
-    const out = new Float64Array(this.rowCount * stride);
+    const out = new Float32Array(this.rowCount * stride);
     for (let c = 0; c < stride; c++) {
       const column = columns[c];
       for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = column[i];
