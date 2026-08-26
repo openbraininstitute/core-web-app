@@ -37,16 +37,11 @@ export class IonChannelRecordingParser extends H5Parser {
 
     const filename = `${id}.nwb`;
 
-    try {
-      // TODO: Is there a better way to check if the file exists?
-      FS.stat(filename);
-    } catch (error: any) {
-      if (error?.message === 'FS error') {
-        FS.writeFile(filename, new Uint8Array(nwbArrayBuffer));
-      }
+    if (!FS.analyzePath(filename).exists) {
+      FS.writeFile(filename, new Uint8Array(nwbArrayBuffer));
     }
 
-    const file = new File(`${id}.nwb`, 'r');
+    const file = new File(filename, 'r');
     const trace = new IonChannelRecordingParser(file);
     return trace;
   }

@@ -1,5 +1,6 @@
 import Plotly from 'plotly.js-dist-min';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
@@ -18,15 +19,19 @@ const INTERACTIVE_DESIRED_POINTS = 1000;
 export default function InteractivePlot({
   worker,
   populationName,
-  nodeId,
+  traceIndex,
+  label,
   units,
+  timeUnits,
   variableName,
   showTitle,
 }: {
   worker: Remote<SonataWorkerImpl>;
   populationName: string;
-  nodeId: number;
+  traceIndex: number;
+  label: string;
   units: string;
+  timeUnits: string;
   variableName?: string;
   showTitle?: boolean;
 }) {
@@ -35,7 +40,13 @@ export default function InteractivePlot({
     x: (number | undefined)[];
     y: (number | undefined)[];
   } | null>(null);
-  const { config, layout, font, style } = useInteractivePlotConfig(units, variableName);
+  const { config, layout, font, style } = useInteractivePlotConfig(units, variableName, timeUnits);
+
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 0,
+    triggerOnce: true,
+    rootMargin: '1200px',
+  });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<HTMLElement>(null);
@@ -45,12 +56,14 @@ export default function InteractivePlot({
   useResizeObserver(containerRef, onResize);
 
   useEffect(() => {
+    if (!inView) return;
+
     let cancelled = false;
 
     worker
       .getNodeTrace({
         populationName,
-        nodeId,
+        traceIndex,
         desiredPoints: INTERACTIVE_DESIRED_POINTS,
         zoomRange: zoomRange ? { xStart: zoomRange.x[0], xEnd: zoomRange.x[1] } : undefined,
       })
@@ -64,9 +77,13 @@ export default function InteractivePlot({
     return () => {
       cancelled = true;
     };
-  }, [worker, populationName, nodeId, zoomRange]);
+  }, [inView, worker, populationName, traceIndex, zoomRange]);
 
-  if (!data) return null;
+  const title = `${populationName}_${label}`;
+
+  if (!data) {
+    return <div ref={inViewRef} className="h-[40vh] w-full" />;
+  }
 
   const plotData: Partial<PlotData>[] = [
     {
@@ -75,23 +92,31 @@ export default function InteractivePlot({
       type: 'scatter',
       mode: 'lines',
       line: { color: CHART_LINE_COLOR, width: 1 },
-      name: `${populationName}_${nodeId}`,
+      name: title,
     },
   ];
 
   return (
-    <div ref={containerRef} className="flex flex-col gap-1">
-      {showTitle && (
-        <span className="text-lg">
-          {populationName}_{nodeId}
-        </span>
-      )}
+    <div
+      ref={(el) => {
+        containerRef.current = el;
+        inViewRef(el);
+      }}
+      className="flex flex-col gap-1"
+    >
+      {showTitle && <span className="text-lg">{title}</span>}
       <Plot
         onInitialized={(_, graphDiv) => {
           plotRef.current = graphDiv;
         }}
         data={plotData}
         onRelayout={(e) => {
+          // Autoscale and Reset axes emit autorange with no range keys.
+          if (e['xaxis.autorange'] === true) {
+            setZoomRange(null);
+            return;
+          }
+
           const x1 = e['xaxis.range[0]'] as number | undefined;
           const x2 = e['xaxis.range[1]'] as number | undefined;
           const y1 = e['yaxis.range[0]'] as number | undefined;
@@ -106,10 +131,10 @@ export default function InteractivePlot({
         }}
         layout={{
           ...layout,
-          title: showTitle ? `${populationName}_${nodeId}` : undefined,
+          title: showTitle ? title : undefined,
           xaxis: {
             ...layout.xaxis,
-            title: { font, text: 'Time (ms)' },
+            title: { font, text: `Time (${timeUnits})` },
             range: zoomRange?.x,
           },
           yaxis: {

@@ -13,7 +13,8 @@ interface UseConfigResponse {
 
 export const useInteractivePlotConfig = (
   units: string,
-  variableName?: string
+  variableName?: string,
+  timeUnits = 'ms'
 ): UseConfigResponse => {
   const antBreakpoints = useBreakpoint();
 
@@ -29,7 +30,7 @@ export const useInteractivePlotConfig = (
       showlegend: false,
       margin: antBreakpoints.md ? { l: 55, r: 0, t: 30, b: 50 } : { l: 45, r: 0, t: 20, b: 35 },
       xaxis: {
-        title: { text: 'Time (ms)' },
+        title: { text: `Time (${timeUnits})` },
         zeroline: false,
       },
       yaxis: {
@@ -54,10 +55,12 @@ export const useOverviewPlotConfig = ({
   datarevision,
   units,
   variableName,
+  timeUnits = 'ms',
 }: {
   datarevision: number;
   units: string;
   variableName?: string;
+  timeUnits?: string;
 }): UseConfigResponse => {
   return {
     layout: {
@@ -85,7 +88,7 @@ export const useOverviewPlotConfig = ({
         ticklen: 6,
         ticks: 'outside',
         tickwidth: 1,
-        title: { font: { size: 10 }, text: 'Time (ms)' },
+        title: { font: { size: 10 }, text: `Time (${timeUnits})` },
         zeroline: false,
       },
       yaxis: {

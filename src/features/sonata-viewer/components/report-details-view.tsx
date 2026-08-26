@@ -1,3 +1,5 @@
+import { Empty } from 'antd';
+import range from 'es-toolkit/compat/range';
 import { useMemo, useState } from 'react';
 
 import InteractivePlot from '@/features/sonata-viewer/components/interactive-plot';
@@ -12,17 +14,21 @@ import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-wo
 // otherwise only the first one will be selected to avoid performance issues.
 const AUTO_SELECT_ALL_THRESHOLD = 20;
 
+function defaultSelection(traceCount: number): number[] {
+  return range(traceCount <= AUTO_SELECT_ALL_THRESHOLD ? traceCount : 1);
+}
+
 export default function ReportDetailsView({
   metadata,
   worker,
   defaultPopulation,
-  defaultNodeId,
+  defaultTraceIndex,
   variableName,
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
   defaultPopulation?: string;
-  defaultNodeId?: number;
+  defaultTraceIndex?: number;
   variableName?: string;
 }) {
   const populationNames = useMemo(
@@ -39,23 +45,21 @@ export default function ReportDetailsView({
     [metadata.populations, selectedPopulation]
   );
 
-  const nodeIds = currentPop?.nodeIds ?? [];
-  const autoSelectAll = nodeIds.length <= AUTO_SELECT_ALL_THRESHOLD;
+  const traces = currentPop?.traces ?? [];
+  const traceLabels = useMemo(() => traces.map((t) => t.label), [traces]);
 
-  const [selectedNodeIds, setSelectedNodeIds] = useState<number[]>(() => {
-    if (defaultNodeId !== undefined && nodeIds.includes(defaultNodeId)) {
-      return [defaultNodeId];
-    }
-    return autoSelectAll ? nodeIds : nodeIds.length > 0 ? [nodeIds[0]] : [];
-  });
+  const [selectedTraceIndices, setSelectedTraceIndices] = useState<number[]>(() =>
+    defaultTraceIndex !== undefined && defaultTraceIndex < traces.length
+      ? [defaultTraceIndex]
+      : defaultSelection(traces.length)
+  );
 
   const handlePopulationChange = (value: string) => {
     setSelectedPopulation(value);
     const pop = metadata.populations.find((p) => p.name === value);
     if (!pop) return;
 
-    const canSelectAll = pop.nodeIds.length <= AUTO_SELECT_ALL_THRESHOLD;
-    setSelectedNodeIds(canSelectAll ? pop.nodeIds : pop.nodeIds.length > 0 ? [pop.nodeIds[0]] : []);
+    setSelectedTraceIndices(defaultSelection(pop.traces.length));
   };
 
   return (
@@ -70,29 +74,36 @@ export default function ReportDetailsView({
           />
         )}
 
-        {nodeIds.length > 1 && (
+        {traces.length > 1 && (
           <NodeSelector
             populationName={selectedPopulation}
-            nodeIds={nodeIds}
-            selectedNodeIds={selectedNodeIds}
-            onChange={setSelectedNodeIds}
+            traceLabels={traceLabels}
+            nodeCount={currentPop?.nodeCount ?? traces.length}
+            selectedTraceIndices={selectedTraceIndices}
+            onChange={setSelectedTraceIndices}
           />
         )}
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,25rem),1fr))] gap-10">
-        {selectedNodeIds.map((nodeId) => (
-          <InteractivePlot
-            key={`${selectedPopulation}-${nodeId}-${selectedNodeIds.length}`}
-            worker={worker}
-            populationName={selectedPopulation}
-            nodeId={nodeId}
-            units={currentPop?.dataUnits ?? 'mV'}
-            variableName={variableName}
-            showTitle={nodeIds.length > 1}
-          />
-        ))}
-      </div>
+      {selectedTraceIndices.length === 0 ? (
+        <Empty description="No cells selected" />
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,25rem),1fr))] gap-10">
+          {selectedTraceIndices.map((traceIndex) => (
+            <InteractivePlot
+              key={`${selectedPopulation}-${traceIndex}`}
+              worker={worker}
+              populationName={selectedPopulation}
+              traceIndex={traceIndex}
+              label={traces[traceIndex]?.label ?? String(traceIndex)}
+              units={currentPop?.dataUnits ?? 'mV'}
+              timeUnits={currentPop?.timeConfig.units ?? 'ms'}
+              variableName={variableName}
+              showTitle={traces.length > 1}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

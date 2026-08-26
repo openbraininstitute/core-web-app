@@ -47,11 +47,14 @@ export function lttbDownsample(
     const nextBucketStart = bucketEnd;
     const nextBucketEnd = Math.min(Math.floor((i + 1) * bucketSize) + 1, length - 1);
 
-    // Average of the next bucket, which forms the far vertex of the triangle.
-    let avgX = 0;
-    let avgY = 0;
+    // Far vertex of the triangle: the next bucket's average, or the final point for the
+    // last bucket, which has no next one.
+    let avgX = x[length - 1];
+    let avgY = y[length - 1];
     const nextLength = nextBucketEnd - nextBucketStart;
     if (nextLength > 0) {
+      avgX = 0;
+      avgY = 0;
       for (let j = nextBucketStart; j < nextBucketEnd; j += 1) {
         avgX += x[j];
         avgY += y[j];

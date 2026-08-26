@@ -1,64 +1,58 @@
 import { Select } from 'antd';
+import range from 'es-toolkit/compat/range';
+import { useId } from 'react';
 
 const SELECT_ALL_SENTINEL = 'All';
 
-/**
- * Multi-select dropdown for choosing node IDs within a population.
- *
- * Ant Design's multi-mode Select has no built-in "select all" toggle, so we
- * prepend a synthetic "All" option (SELECT_ALL_SENTINEL) to the list. The
- * onChange handler detects transitions to/from the all-selected state:
- * - User clicks "All" when not all selected → select every node
- * - User clicks "All" when all selected    → deselect everything
- * - Otherwise                              → update individual selection
- *
- * A collapsed tag placeholder shows a summary like "3 of 50 selected" instead
- * of rendering every tag.
- */
+/** Multi-select of a population's traces, with a synthetic "All" toggle antd lacks. */
 export default function NodeSelector({
   populationName,
-  nodeIds,
-  selectedNodeIds,
+  traceLabels,
+  nodeCount,
+  selectedTraceIndices,
   onChange,
 }: {
   populationName: string;
-  nodeIds: number[];
-  selectedNodeIds: number[];
-  onChange: (nodeIds: number[]) => void;
+  traceLabels: string[];
+  /** Distinct cells; equal to the trace count when each cell has one trace. */
+  nodeCount: number;
+  selectedTraceIndices: number[];
+  onChange: (traceIndices: number[]) => void;
 }) {
-  const allNodesSelected = selectedNodeIds.length === nodeIds.length && nodeIds.length > 0;
+  const selectId = useId();
+  const noun = nodeCount === traceLabels.length ? 'cell' : 'trace';
 
-  const selectionSummary = allNodesSelected
-    ? `All cells (${nodeIds.length})`
-    : `${selectedNodeIds.length} of ${nodeIds.length} selected`;
+  const allSelected = selectedTraceIndices.length === traceLabels.length && traceLabels.length > 0;
+
+  const selectionSummary = allSelected
+    ? `All ${noun}s (${traceLabels.length})`
+    : `${selectedTraceIndices.length} of ${traceLabels.length} selected`;
 
   return (
     <div className="flex flex-col gap-2">
-      Select cell ({nodeIds.length} available)
+      <label htmlFor={selectId}>
+        Select {noun} ({traceLabels.length} available)
+      </label>
       <Select
+        id={selectId}
         className="w-full"
         mode="multiple"
         virtual
         showSearch
-        value={
-          allNodesSelected
-            ? [SELECT_ALL_SENTINEL, ...nodeIds.map(String)]
-            : selectedNodeIds.map(String)
-        }
+        value={[...(allSelected ? [SELECT_ALL_SENTINEL] : []), ...selectedTraceIndices.map(String)]}
         onChange={(values: string[]) => {
-          const wasAllSelected = allNodesSelected;
           const allOptionToggled = values.includes(SELECT_ALL_SENTINEL);
 
-          if (!wasAllSelected && allOptionToggled) {
-            onChange(nodeIds);
-          } else if (wasAllSelected && !allOptionToggled) {
+          if (!allSelected && allOptionToggled) {
+            onChange(range(traceLabels.length));
+          } else if (allSelected && !allOptionToggled) {
             onChange([]);
           } else {
-            const individualNodeIds = values.filter((v) => v !== SELECT_ALL_SENTINEL).map(Number);
-            onChange(individualNodeIds);
+            const individualIndices = values.filter((v) => v !== SELECT_ALL_SENTINEL).map(Number);
+            onChange(individualIndices);
           }
         }}
-        placeholder="Select cells"
+        placeholder={`Select ${noun}s`}
         maxTagCount={0}
         maxTagPlaceholder={() => selectionSummary}
         filterOption={(input, option) =>
@@ -67,10 +61,14 @@ export default function NodeSelector({
             .includes(input.toLowerCase())
         }
       >
-        <Select.Option value={SELECT_ALL_SENTINEL}>All cells</Select.Option>
-        {nodeIds.map((id) => (
-          <Select.Option value={String(id)} key={id}>
-            {populationName}_{id}
+        <Select.Option value={SELECT_ALL_SENTINEL}>{`All ${noun}s`}</Select.Option>
+        {traceLabels.map((label, index) => (
+          <Select.Option
+            value={String(index)}
+            // biome-ignore lint/suspicious/noArrayIndexKey: column index is the trace identity
+            key={index}
+          >
+            {`${populationName}_${label}`}
           </Select.Option>
         ))}
       </Select>

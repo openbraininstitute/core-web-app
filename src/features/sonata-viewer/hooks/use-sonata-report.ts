@@ -3,7 +3,7 @@ import { wrap } from 'comlink';
 import { useEffect, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { AssetContentType } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, type IAsset } from '@/api/entitycore/types/shared/global';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { Remote } from 'comlink';
@@ -28,6 +28,8 @@ type WorkerState = {
 type UseSonataReportReturn = {
   metadata: SonataReportMetadata | null;
   worker: Remote<SonataWorkerImpl> | null;
+  /** The asset the hook resolved: the requested one, else the first h5. */
+  asset: IAsset | undefined;
   error: Error | null;
   isLoading: boolean;
 };
@@ -64,10 +66,15 @@ export default function useSonataReport({
         ctx,
       }),
     enabled: !!asset,
+    // Refetching re-downloads the file and rebuilds the worker.
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
     if (!arrayBuffer) return;
+
+    setWorkerError(null);
 
     if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
       setWorkerError(
@@ -106,6 +113,7 @@ export default function useSonataReport({
   return {
     metadata: state?.metadata ?? null,
     worker: state?.worker ?? null,
+    asset,
     error,
     isLoading: !state && !error,
   };

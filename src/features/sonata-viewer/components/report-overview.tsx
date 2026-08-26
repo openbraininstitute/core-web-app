@@ -4,7 +4,7 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import PopulationSelect from '@/features/sonata-viewer/components/population-select';
-import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR, OVERVIEW_GRID_CLASS_NAME } from '@/features/sonata-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/sonata-viewer/hooks/config-hooks';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import { cn } from '@/utils/css-class';
@@ -18,24 +18,24 @@ const Plot = createPlotlyComponent(Plotly);
 
 const OVERVIEW_DESIRED_POINTS = 100;
 
-const GRID_CLASS_NAME =
-  'grid gap-7 pt-5 @max-xs:grid-cols-1 @lg:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4 @6xl:grid-cols-5 @7xl:grid-cols-6';
-
 function ThumbnailPlot({
   data,
   plotRevision,
   units,
+  timeUnits,
   variableName,
 }: {
   data: NodeTraceData;
   plotRevision: number;
   units: string;
+  timeUnits: string;
   variableName?: string;
 }) {
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
     units,
     variableName,
+    timeUnits,
   });
 
   const plotData: Partial<PlotData>[] = [
@@ -54,16 +54,20 @@ function ThumbnailPlot({
 function ThumbnailContainer({
   worker,
   populationName,
-  nodeId,
+  traceIndex,
+  label,
   units,
+  timeUnits,
   variableName,
   showTitle,
   onClick,
 }: {
   worker: Remote<SonataWorkerImpl>;
   populationName: string;
-  nodeId: number;
+  traceIndex: number;
+  label: string;
   units: string;
+  timeUnits: string;
   variableName?: string;
   showTitle?: boolean;
   onClick: () => void;
@@ -92,28 +96,32 @@ function ThumbnailContainer({
     worker
       .getNodeTrace({
         populationName,
-        nodeId,
+        traceIndex,
         desiredPoints: OVERVIEW_DESIRED_POINTS,
       })
       .then((result) => {
         if (!cancelled) setData(result);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [inView, worker, populationName, nodeId]);
+  }, [inView, worker, populationName, traceIndex]);
 
   return (
     <div className="flex flex-col gap-8">
       {showTitle && (
         <span className="text-lg">
-          {populationName}_{nodeId}
+          {populationName}_{label}
         </span>
       )}
       <button
         ref={ref}
         type="button"
+        aria-label={`Open trace ${populationName}_${label} in interactive details`}
         className={cn('relative aspect-4/3 cursor-pointer overflow-hidden bg-gray-100')}
         onClick={onClick}
       >
@@ -122,6 +130,7 @@ function ThumbnailContainer({
             data={data}
             plotRevision={plotRevision}
             units={units}
+            timeUnits={timeUnits}
             variableName={variableName}
           />
         ) : null}
@@ -133,12 +142,12 @@ function ThumbnailContainer({
 export default function ReportOverview({
   metadata,
   worker,
-  onNodeClick,
+  onTraceClick,
   variableName,
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
-  onNodeClick: (populationName: string, nodeId: number) => void;
+  onTraceClick: (populationName: string, traceIndex: number) => void;
   variableName?: string;
 }) {
   const populationNames = useMemo(
@@ -172,22 +181,25 @@ export default function ReportOverview({
             <div className="text-primary-9 flex items-baseline gap-2 text-lg font-bold">
               {pop.name}
               <small className="font-light">
-                {pop.nodeIds.length} {pop.nodeIds.length === 1 ? 'node' : 'nodes'}
+                {pop.nodeCount} {pop.nodeCount === 1 ? 'node' : 'nodes'}
               </small>
             </div>
           )}
 
-          <div className={GRID_CLASS_NAME}>
-            {pop.nodeIds.map((nodeId) => (
+          <div className={OVERVIEW_GRID_CLASS_NAME}>
+            {pop.traces.map((trace, traceIndex) => (
               <ThumbnailContainer
-                key={`${pop.name}-${nodeId}`}
+                // biome-ignore lint/suspicious/noArrayIndexKey: column index is the trace identity
+                key={`${pop.name}-${traceIndex}`}
                 worker={worker}
                 populationName={pop.name}
-                nodeId={nodeId}
+                traceIndex={traceIndex}
+                label={trace.label}
                 units={pop.dataUnits}
+                timeUnits={pop.timeConfig.units}
                 variableName={variableName}
-                showTitle={pop.nodeIds.length > 1}
-                onClick={() => onNodeClick(pop.name, nodeId)}
+                showTitle={pop.traces.length > 1}
+                onClick={() => onTraceClick(pop.name, traceIndex)}
               />
             ))}
           </div>
