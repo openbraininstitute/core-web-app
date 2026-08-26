@@ -134,6 +134,22 @@ before AO lands; AO applies once after.
 
 ## Phase 4 — Typed-array geometry API (O5, fixes F1, both repos)
 
+> **Status (2026-08-26):** implemented. morphoviewer `6680e11` on
+> `feat/240-somas-only-cell-picking` (not pushed — Pavlo pushes): the somas-only
+> viewer takes `positions?: Float32Array` (wins over `cellInfos`; reference
+> identity replaces the `sameGeometry` walk; `cellColors` is the only colour
+> source on the path), `PainterCellInfos` packs the flat array straight
+> (`packPositions`, bit-identical scan to the legacy loop, which stays for
+> object hosts), and `SomaPicker` consumes the array as given. Jest 82/82,
+> biome clean, lib build green; tgz re-vendored (packed from `lib/`).
+> core-web-app `99d1d016e`: the preview concatenates placed geometries with
+> `set()` into one `Float32Array`; the `cellInfos` memo and
+> `SHARED_MORPHOLOGY_ID` are gone; F9a ride-along done — the debug download
+> serialises in chunked Blob parts, no tuple objects, no single giant string.
+> Vitest fully green (208 files / 2268 tests), biome clean, tsc delta clean.
+> Exit measurement pending: steady-state heap profile before/after (together
+> with Phase 2's), in-browser.
+
 The big one. Viewer accepts flat positions alongside the legacy `cellInfos`:
 
 - morphoviewer: new prop (e.g. `positions?: Float32Array`, xyz-interleaved;
