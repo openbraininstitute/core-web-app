@@ -45,7 +45,7 @@ export function useMemodelVisualizationSource({
 
   // The axon flag makes a new id, so toggling axons reloads the morphology in place.
   // `sonataSectionIds` must be keyed by this full id.
-  const cellId = makeVizCellId(MEMODEL_CELL_ID, showAxons);
+  const cellId = makeVizCellId(MEMODEL_CELL_ID, { showAxons });
 
   // Only announce the cell once it can be loaded.
   const cells: MorphoViewerSmallCircuitCell[] = useMemo(
@@ -86,6 +86,7 @@ export function useMemodelVisualizationSource({
     error,
     retry,
     sonataSectionIds,
+    anchor: cells.length > 0 ? ORIGIN : null,
   };
 }
 

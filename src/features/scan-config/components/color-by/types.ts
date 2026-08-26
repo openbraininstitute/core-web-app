@@ -59,8 +59,13 @@ export type ColorOverrides = Record<string, Record<string, string>>;
 
 /** persisted, per-circuit viewer configuration */
 export interface ViewerConfig {
-  /** selected color-by property name, or null for the default (blue) */
-  colorByProperty: string | null;
+  /**
+   * Selected colour-by property by population name; absent or null for the
+   * default (blue). Per population because the property list is: one's
+   * `mtype` is another's nothing, so a choice means something only where it
+   * was made, and coming back to that population should find it as it was left.
+   */
+  colorByProperty: Record<string, string | null>;
   backgroundColor: string;
   showAxons: boolean;
   /**

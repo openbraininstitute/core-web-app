@@ -1,26 +1,42 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
+
+const DEFAULT: NodePopulation = { name: 'default', type: 'biophysical', file: 'nodes.h5' };
+const INPUTS: NodePopulation = { name: 'inputs', type: 'virtual', file: 'inputs.h5' };
+
+/** Positions alone, as the placement hook reads them. */
+function placement(positions: number[]): NodeGeometry {
+  return {
+    count: positions.length / 3,
+    positions: new Float64Array(positions),
+    orientations: null,
+    morphologies: null,
+  };
+}
 
 // Hoisted so the module factories below, which run before the test body, can
 // read them.
 const fixtures = vi.hoisted(() => ({
-  geometry: {
-    count: 1,
-    positions: new Float64Array([0, 0, 0]),
-    orientations: new Float64Array([0, 0, 0, 1]),
-    morphologies: ['morph-a'],
-  },
+  /** What `useNodeGeometry` answers for the population on show. */
+  detail: null as NodeGeometry | null,
   config: {
-    nodes: [{ name: 'default', type: 'biophysical', file: 'nodes.h5' }],
+    nodes: [
+      { name: 'default', type: 'biophysical', file: 'nodes.h5' },
+      { name: 'inputs', type: 'virtual', file: 'inputs.h5' },
+    ],
     edges: [],
     circuitAssetId: 'asset',
     raw: { components: { morphologies_dir: 'morphologies' } },
   },
+  placement: { placed: [], failures: new Map(), settled: true } as ReturnType<
+    typeof usePopulationsPlacement
+  >,
 }));
 
 // The viewer barrel pulls in tgd, which touches `document` at module scope.
@@ -38,11 +54,15 @@ vi.mock('@/features/scan-config/components/circuit-viz/sources/use-afferent-syna
 
 vi.mock('@/features/circuit-nodes/hooks/use-node-geometry', () => ({
   useNodeGeometry: () => ({
-    geometry: fixtures.geometry,
+    geometry: fixtures.detail,
     config: fixtures.config,
-    isLoading: false,
+    isLoading: fixtures.detail === null,
     error: null,
   }),
+}));
+
+vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
+  usePopulationsPlacement: () => fixtures.placement,
 }));
 
 /** Soma plus one dendrite, whose morphio ids and SONATA ids are not one apart. */
@@ -77,17 +97,36 @@ vi.mock('@/api/one/circuit-visualization', async () => {
 
 const circuit = { id: 'circuit-id' } as ICircuit;
 
-function render(showAxons: boolean) {
-  return renderHook(() =>
-    useSmallCircuitSource({
-      circuit,
-      population: fixtures.config.nodes[0] as NodePopulation,
-      showAxons,
-    })
+type TProps = { population: NodePopulation; populations?: NodePopulation[]; showAxons: boolean };
+
+function render(showAxons: boolean, populations?: NodePopulation[], population = DEFAULT) {
+  return renderHook(
+    (props: TProps) =>
+      useSmallCircuitSource({
+        circuit,
+        ...props,
+        populations: props.populations ?? [props.population],
+        recededColor: '#cccccc',
+      }),
+    { initialProps: { population, populations, showAxons } }
   );
 }
 
 describe('useSmallCircuitSource', () => {
+  beforeEach(() => {
+    fixtures.detail = {
+      count: 1,
+      positions: new Float64Array([0, 0, 0]),
+      orientations: new Float64Array([0, 0, 0, 1]),
+      morphologies: ['morph-a'],
+    };
+    fixtures.placement = {
+      placed: [{ population: DEFAULT, geometry: placement([0, 0, 0]) }],
+      failures: new Map(),
+      settled: true,
+    };
+  });
+
   /**
    * The regression this pins: morphoviewer splits a cell id on `?` and calls
    * `loadCell` with the path part, so keying the index by the argument stores it
@@ -110,23 +149,90 @@ describe('useSmallCircuitSource', () => {
   it('keys the two axon states apart', async () => {
     const withAxons = render(true);
     await act(async () => {
-      await withAxons.result.current.loadCell('circuit-id #0');
+      await withAxons.result.current.loadCell('circuit-id/default #0');
     });
 
     const withoutAxons = render(false);
     await act(async () => {
-      await withoutAxons.result.current.loadCell('circuit-id #0');
+      await withoutAxons.result.current.loadCell('circuit-id/default #0');
     });
 
     // Each viewer id carries its own index: the axon-off one is built from the
     // filtered sections, so it names a different set of sections.
     await waitFor(() => {
       expect([...(withAxons.result.current.sonataSectionIds?.keys() ?? [])]).toEqual([
-        'circuit-id #0?axons=true',
+        'circuit-id/default #0?axons=true',
       ]);
       expect([...(withoutAxons.result.current.sonataSectionIds?.keys() ?? [])]).toEqual([
-        'circuit-id #0?axons=false',
+        'circuit-id/default #0?axons=false',
       ]);
     });
+  });
+
+  it('stands the other populations as receded somas that load nothing', async () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0]) },
+        { population: INPUTS, geometry: placement([10, 0, 0]) },
+      ],
+      failures: new Map(),
+      settled: true,
+    };
+    const { result } = render(false, [DEFAULT, INPUTS]);
+
+    // Declared order, ids telling the populations apart.
+    expect(result.current.cells.map((cell) => cell.id)).toEqual([
+      'circuit-id/default #0?axons=false',
+      'circuit-id/inputs #0?axons=false&soma-only',
+    ]);
+    expect(result.current.cells[1]).toMatchObject({ center: [10, 0, 0], color: '#cccccc' });
+    // The anchor stays on the population on show: the other one sits 10 away.
+    expect(result.current.anchor).toEqual([0, 0, 0]);
+    await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
+  });
+
+  // One build, not one per arrival: the viewer re-fits every cell when the
+  // id set changes.
+  it('draws nothing until every population is placed', () => {
+    fixtures.placement = { placed: [], failures: new Map(), settled: false };
+    const { result } = render(false, [DEFAULT, INPUTS]);
+
+    expect(result.current.cells).toEqual([]);
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  // Emptying the scene while the newly selected population's morphology
+  // names and orientations load would unmount the viewer: a black frame, then
+  // a camera reset.
+  it('keeps the scene on screen until the newly selected population can be drawn in full', () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0]) },
+        { population: INPUTS, geometry: placement([10, 0, 0]) },
+      ],
+      failures: new Map(),
+      settled: true,
+    };
+    const { result, rerender } = render(false, [DEFAULT, INPUTS]);
+    const shown = result.current.cells;
+
+    // The detail hook has nothing yet for the new population.
+    fixtures.detail = null;
+    rerender({ population: INPUTS, populations: [DEFAULT, INPUTS], showAxons: false });
+
+    expect(result.current.cells).toBe(shown);
+    expect(result.current.isLoading).toBe(false);
+
+    fixtures.detail = placement([10, 0, 0]);
+    rerender({ population: INPUTS, populations: [DEFAULT, INPUTS], showAxons: false });
+
+    // Same cells, same positions; only which one is drawn in full has moved.
+    expect(result.current.cells.map((cell) => cell.id)).toEqual([
+      'circuit-id/default #0?axons=false&soma-only',
+      'circuit-id/inputs #0?axons=false',
+    ]);
+    expect(result.current.cells.map((cell) => cell.center)).toEqual(
+      shown.map((cell) => cell.center)
+    );
   });
 });

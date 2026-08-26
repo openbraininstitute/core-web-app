@@ -1,7 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { placementAt } from '@/features/circuit-nodes/geometry-utils';
+import {
+  centroidOf,
+  IDENTITY_QUATERNION,
+  placementAt,
+  positionAt,
+} from '@/features/circuit-nodes/geometry-utils';
 import { useNodeGeometry } from '@/features/circuit-nodes/hooks/use-node-geometry';
+import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import {
   projectionCellLoader,
   SequentialLoaderClearedError,
@@ -14,12 +20,11 @@ import {
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { logError } from '@/utils/logger';
 
-import { indexOfNodeKey, makeNodeKey, makeVizCellId } from './node-key';
+import { makeNodeKey, makeVizCellId, parseNodeKey } from './node-key';
 import { morphologyFileOf, resolveMorphologyLocation } from './resolve-morphology-path';
 import { useAfferentSynapses } from './use-afferent-synapses';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NodePlacement } from '@/features/circuit-nodes/geometry-utils';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { TMorphologyRequest } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
@@ -36,10 +41,14 @@ type TOptions = {
   circuit: ICircuit;
   /** Host-owned, so `colorsByNode` is indexed against the cells it colours. */
   population: NodePopulation | undefined;
+  /** @see CircuitVizProps.populations */
+  populations: readonly NodePopulation[];
   showAxons: boolean;
   colorsByNode?: string[];
   /** Paint for nodes colour-by has nothing to say about. */
   defaultColor?: MorphoViewerSmallCircuitCell['color'];
+  /** Paint for the somas of the populations not on show. */
+  recededColor?: string;
   /** Read the circuit's edge files and draw its afferent synapses. */
   withSynapses?: boolean;
 };
@@ -54,23 +63,39 @@ type TOptions = {
  * hand. Morphologies are not: they arrive as SWC, ASC or HDF5, and OBI-One runs
  * MorphIO over all three and hands back sections carrying the
  * `sonata_section_id` a click needs to become a morphology location.
+ *
+ * Only the population on show gets its morphologies. The others in
+ * `populations` stand as placeholder somas in a receded colour — enough to
+ * see where they are and to click one — and load nothing from OBI-One.
  */
 export function useSmallCircuitSource({
   circuit,
   population,
+  populations,
   showAxons,
   colorsByNode,
   defaultColor = DEFAULT_NEURON_COLOR,
+  recededColor,
   withSynapses = false,
 }: TOptions): TSmallCircuitSource {
   const { virtualLabId, projectId } = useWorkspace();
   const circuitId = circuit.id;
+  const populationName = population?.name;
+
+  // Everyone's positions, the population on show included. These place the
+  // cells, and they never change with the selection, so selecting another
+  // population repaints the scene rather than re-fitting the camera around it.
+  const { placed, settled } = usePopulationsPlacement({ circuit, populations });
 
   // Both, because this source puts a whole morphology in world space: the file
   // to draw comes from the `morphology` column, the rotation that places it from
   // the `orientation_*` ones. The somas-only viewer deliberately asks for
   // neither.
-  const { geometry, config, isLoading, error } = useNodeGeometry({
+  const {
+    geometry: detail,
+    config,
+    error,
+  } = useNodeGeometry({
     circuit,
     population,
     withMorphologies: true,
@@ -80,29 +105,60 @@ export function useSmallCircuitSource({
   const [sonataSectionIds, setSonataSectionIds] =
     useState<Map<string, Map<number, string>>>(EMPTY_SECTION_IDS);
 
-  const cells: MorphoViewerSmallCircuitCell[] = useMemo(() => {
-    if (!geometry) return [];
+  const built = useMemo((): MorphoViewerSmallCircuitCell[] | null => {
+    // Only once the population on show can be drawn in full: the scene must
+    // not stand as somas first and reload as morphologies a moment later.
+    if (!population || !settled || !detail) return null;
 
     // Colour-by wins where it has an opinion; failing that a lone cell reads by
     // section type, because telling its dendrites from its axon is the whole
     // point of drawing one. A crowd keeps a flat colour per cell instead, since
     // there the job is telling the cells apart.
-    const paint = geometry.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
+    const paint = detail.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
 
-    const result = new Array<MorphoViewerSmallCircuitCell>(geometry.count);
-    for (let i = 0; i < geometry.count; i++) {
-      // Non-null: `i` is bounded by the same count `placementAt` checks against.
-      const { center, orientation } = placementAt(geometry, i) as NodePlacement;
-      result[i] = {
-        id: makeVizCellId(makeNodeKey(circuitId, i), showAxons),
-        center,
-        orientation,
-        somaRadius: PLACEHOLDER_SOMA_RADIUS,
-        color: colorsByNode?.[i] ?? paint,
-      };
-    }
-    return result;
-  }, [geometry, circuitId, showAxons, colorsByNode, defaultColor]);
+    // In declared order, the population on show at its own place in it, so a
+    // cell keeps its id and position whichever population is selected. The
+    // others stand as somas: unrotated, receded, and keyed as such.
+    return placed.flatMap(({ population: candidate, geometry: placement }) => {
+      const onShow = candidate.name === population.name;
+      const result = new Array<MorphoViewerSmallCircuitCell>(placement.count);
+      for (let i = 0; i < placement.count; i++) {
+        result[i] = {
+          id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), {
+            showAxons,
+            somaOnly: !onShow,
+          }),
+          center: positionAt(placement, i),
+          orientation: onShow
+            ? (placementAt(detail, i)?.orientation ?? IDENTITY_QUATERNION)
+            : IDENTITY_QUATERNION,
+          somaRadius: PLACEHOLDER_SOMA_RADIUS,
+          color: onShow ? (colorsByNode?.[i] ?? paint) : recededColor,
+        };
+      }
+      return result;
+    });
+  }, [
+    population,
+    placed,
+    settled,
+    detail,
+    circuitId,
+    showAxons,
+    colorsByNode,
+    defaultColor,
+    recededColor,
+  ]);
+
+  // What is on screen stays until the next scene can be drawn in full. On a
+  // switch the newly selected population's morphology names and orientations
+  // take a moment to arrive, and emptying the scene meanwhile would unmount the
+  // viewer: a black frame, then a camera reset.
+  const shownRef = useRef<MorphoViewerSmallCircuitCell[]>([]);
+  const cells = built ?? shownRef.current;
+  useEffect(() => {
+    shownRef.current = cells;
+  }, [cells]);
 
   // Resolved once per population rather than per cell: every node of a
   // population draws from the same directory or container.
@@ -111,7 +167,7 @@ export function useSmallCircuitSource({
     [config, population]
   );
 
-  const morphologies = geometry?.morphologies ?? null;
+  const morphologies = detail?.morphologies ?? null;
 
   /**
    * What OBI-One needs to serve one node's morphology, or null where the node
@@ -120,7 +176,7 @@ export function useSmallCircuitSource({
    */
   const morphologyRequest = useCallback(
     (index: number, showAxon: boolean): TMorphologyRequest | null => {
-      if (!location) return null;
+      if (!location || populationName === undefined) return null;
 
       const name = morphologies?.[index];
       if (!name) return null;
@@ -129,19 +185,23 @@ export function useSmallCircuitSource({
         virtualLabId,
         projectId,
         circuitId,
-        cellId: makeNodeKey(circuitId, index),
+        cellId: makeNodeKey(circuitId, populationName, index),
         name,
         file: morphologyFileOf(location, name),
         showAxon,
       };
     },
-    [location, morphologies, virtualLabId, projectId, circuitId]
+    [location, morphologies, virtualLabId, projectId, circuitId, populationName]
   );
 
   const loadCell = useCallback(
     async (cellId: string) => {
-      const index = indexOfNodeKey(cellId);
-      const request = index === null ? null : morphologyRequest(index, showAxons);
+      const node = parseNodeKey(cellId);
+      // Only the population on show gets its morphologies; the rest stand as somas.
+      const request =
+        node && node.population === populationName
+          ? morphologyRequest(node.index, showAxons)
+          : null;
       if (!request) return null;
 
       try {
@@ -153,7 +213,7 @@ export function useSmallCircuitSource({
         // while `useMorphologyLocationSelection` looks this map up by `cell.id`.
         // The axon flag belongs in the key either way — the index is built from
         // the filtered sections, so it names different sections with axons off.
-        const vizCellId = makeVizCellId(cellId, showAxons);
+        const vizCellId = makeVizCellId(cellId, { showAxons });
         // Guarded so a repeated load of the same cell does not re-render.
         setSonataSectionIds((previous) =>
           previous.get(vizCellId) === loaded.sonataSectionIds
@@ -174,7 +234,7 @@ export function useSmallCircuitSource({
         return null;
       }
     },
-    [morphologyRequest, showAxons]
+    [morphologyRequest, showAxons, populationName]
   );
 
   /** @see useAfferentSynapses — always whole, axons included. */
@@ -195,7 +255,7 @@ export function useSmallCircuitSource({
     enabled: withSynapses,
     circuit,
     config,
-    geometry,
+    geometry: detail,
     loadTree,
   });
 
@@ -208,14 +268,20 @@ export function useSmallCircuitSource({
     projectionCellLoader.clear();
   }, []);
 
+  const subject = placed.find((entry) => entry.population.name === populationName)?.geometry;
+  const anchor = useMemo(() => (subject ? centroidOf(subject) : null), [subject]);
+
   return {
     cells,
     loadCell,
-    isLoading,
+    // The viewer's own progress covers the morphologies; this covers the
+    // positions, everyone's, since the scene is built only once they are in.
+    isLoading: !error && !settled,
     error,
     retry,
     synapses,
     sonataSectionIds,
+    anchor,
   };
 }
 

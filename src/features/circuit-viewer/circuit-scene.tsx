@@ -109,8 +109,9 @@ interface ICircuitSceneOptions {
   dendrogram?: boolean;
   /**
    * The SONATA population to draw. Omit to let the scene pick one and let the
-   * nodes table switch it — a host only sets this when it has taken that choice
-   * over, which means it has also turned the table off.
+   * nodes table — or a click on another population in 3D — switch it. A host
+   * only sets this when it has taken that choice over, which means it has
+   * also turned the table off.
    */
   populationName?: string;
   /**
@@ -121,6 +122,14 @@ interface ICircuitSceneOptions {
    * cannot resolve the population once and keep it.
    */
   onPopulationChange?: (population: NodePopulation | undefined) => void;
+  /**
+   * Draw the circuit's other populations too, receded around the one on show,
+   * so that a click on any of them selects it — in the nodes table as well.
+   * Defaults on. Off draws the population on show alone: spike replay's
+   * setting, since its cell indices count within that population and the
+   * rest would be scenery with nothing to say about the spikes.
+   */
+  showUnselectedPopulations?: boolean;
 }
 
 export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
@@ -157,6 +166,7 @@ export function CircuitScene({
   dendrogram = false,
   populationName: hostPopulationName,
   onPopulationChange,
+  showUnselectedPopulations = true,
 }: ICircuitSceneProps) {
   const {
     config: scanConfig,
@@ -191,6 +201,16 @@ export function CircuitScene({
   useEffect(() => {
     onPopulationChange?.(population);
   }, [population, onPopulationChange]);
+
+  // What the viewers draw, in declared order: the circuit's populations, or
+  // the one on show alone.
+  const populations = useMemo((): readonly NodePopulation[] => {
+    if (showUnselectedPopulations) return circuitConfig?.nodes ?? [];
+    return population ? [population] : [];
+  }, [showUnselectedPopulations, circuitConfig, population]);
+  // A host that pins the population keeps it, so there is nothing to select from 3D.
+  const handlePopulationClick =
+    hostPopulationName === undefined ? setTablePopulationName : undefined;
 
   // Every small-circuit source filters axon sections, so the toggle is offered wherever the
   // morphology itself is drawn.
@@ -240,15 +260,24 @@ export function CircuitScene({
     [setConfig, enableElectrodes, draggableOverlayIds]
   );
 
-  const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
-    useCircuitColorBy(circuit, {
-      supportsAxons,
-      supportsElectrodes: enableElectrodes && electrodesAvailable,
-      supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
-      defaultNeuronOpacity,
-      population,
-      subject: memodel,
-    });
+  const {
+    containerRef,
+    config,
+    colorsByNode,
+    defaultColor,
+    recededColor,
+    theme,
+    signals,
+    colorBy,
+    menu,
+  } = useCircuitColorBy(circuit, {
+    supportsAxons,
+    supportsElectrodes: enableElectrodes && electrodesAvailable,
+    supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
+    defaultNeuronOpacity,
+    population,
+    subject: memodel,
+  });
 
   // Selecting the block an overlay came from highlights it, whichever root
   // element that block lives under (`electrode_locations` while building an
@@ -413,7 +442,10 @@ export function CircuitScene({
             key={circuit.id}
             circuit={circuit}
             population={population}
+            populations={populations}
             colorsByNode={enableColorBy ? colorsByNode : undefined}
+            recededColor={recededColor}
+            onPopulationClick={handlePopulationClick}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
             showScalebar={config.showScalebar}
@@ -440,8 +472,11 @@ export function CircuitScene({
               key={circuit.id}
               circuit={circuit}
               population={population}
+              populations={populations}
               colorsByNode={enableColorBy ? colorsByNode : undefined}
               defaultColor={defaultColor}
+              recededColor={recededColor}
+              onPopulationClick={handlePopulationClick}
               {...sharedVizProps}
             />
           )

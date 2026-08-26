@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
-import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 
 import { buildColorMapping } from './palette';
 
@@ -20,7 +20,7 @@ interface Result {
   retry: () => void;
 }
 
-/** the raw column fetched for the currently selected property */
+/** a raw column, as read for one property */
 interface LoadedColumn {
   property: string;
   kind: ColumnKind;
@@ -51,47 +51,59 @@ export function useNodeColorMapping(
     population,
   });
 
-  const [column, setColumn] = useState<LoadedColumn | null>(null);
+  // The last column read for each population, not only the one on show. A
+  // population coming back on show — a click on it in 3D — is painted from here
+  // in the render that switches to it, not blue for as long as its session takes
+  // to reopen and the column to be read again. One column per population, so
+  // this holds no more than the remembered choices can ask for, and dropped
+  // with the circuit: a new one is a new scene, whether or not the host
+  // remounts this. Keyed by the session it was read from.
+  const [loaded, setLoaded] = useState<{
+    circuitId: string | undefined;
+    columns: ReadonlyMap<string, LoadedColumn>;
+  }>(() => ({ circuitId: circuit?.id, columns: new Map() }));
+  if (loaded.circuitId !== circuit?.id) setLoaded({ circuitId: circuit?.id, columns: new Map() });
   const [buildError, setBuildError] = useState<Error | null>(null);
+  const populationKey =
+    circuit && population && config
+      ? nodesSessionKey(circuit.id, config.circuitAssetId, population.name)
+      : undefined;
+  const last = populationKey === undefined ? undefined : loaded.columns.get(populationKey);
+  const column = last?.property === property ? last : null;
 
   useEffect(() => {
-    if (!property) {
-      setColumn(null);
-      setBuildError(null);
-      return;
-    }
-    if (status !== 'ready') return;
+    setBuildError(null);
+    if (!property || populationKey === undefined || column !== null || status !== 'ready') return;
 
     let cancelled = false;
-    setBuildError(null);
-    // hide the previous key while the new property's column is being read.
-    setColumn(null);
     getColumn(property)
       .then(({ kind, values }) => {
         if (cancelled) return;
-        setColumn({ property, kind, values });
+        setLoaded((prev) => ({
+          ...prev,
+          columns: new Map(prev.columns).set(populationKey, { property, kind, values }),
+        }));
       })
       .catch((e) => {
         if (cancelled) return;
         setBuildError(e instanceof Error ? e : new Error(String(e)));
-        setColumn(null);
       });
     return () => {
       cancelled = true;
     };
-  }, [property, status, getColumn]);
+  }, [property, populationKey, column, status, getColumn]);
 
   // rebuild the mapping cheaply when overrides or background change (same column,
   // no refetch).
-  const mapping = useMemo(() => {
-    if (!property || !column || column.property !== property) return null;
-    return buildColorMapping({ ...column, overrides, background });
-  }, [property, column, overrides, background]);
+  const mapping = useMemo(
+    () => (column ? buildColorMapping({ ...column, overrides, background }) : null),
+    [column, overrides, background]
+  );
 
   return {
     mapping,
     columns,
-    loading: !!property && (isLoading || (status === 'ready' && !column && !buildError)),
+    loading: !!property && !column && (isLoading || (status === 'ready' && !buildError)),
     error: error ?? buildError,
     status,
     retry,

@@ -314,6 +314,11 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
                 // it falls back deliberately, to the same default, and the
                 // notice in the header explains what is on show.
                 populationName={replayable ? populationName : undefined}
+                // The population above the panes is the one being replayed,
+                // and the spikes' cell indices count within it. The circuit's
+                // other populations stay off screen here rather than standing
+                // around it as context.
+                showUnselectedPopulations={false}
                 spikes={{
                   data: spikes ?? undefined,
                   timeInMs: seekToMs,

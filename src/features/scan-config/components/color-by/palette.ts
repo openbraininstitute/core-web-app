@@ -1,6 +1,6 @@
 import chroma from 'chroma-js';
 
-import { adaptColorToBackground } from './contrast';
+import { adaptColorToBackground, backgroundIsDark } from './contrast';
 
 import type { ColumnKind } from '@/features/circuit-nodes/types';
 import type { CategoricalLegendEntry, ColorMapping, ContinuousLegend } from './types';
@@ -287,6 +287,25 @@ export function recedeMarkerColor(color: string, background: string): string {
     return chroma.mix(chroma(color).desaturate(1.4), background, 0.18, 'oklab').hex();
   } catch {
     return color;
+  }
+}
+
+/**
+ * Paint for a population that is drawn but not the one on show.
+ *
+ * The default neuron colour drained of its saturation and pushed most of the
+ * way to the background: still a shape the eye can find and click, no longer a
+ * colour competing with the population on show. Opaque, like
+ * {@link recedeMarkerColor}, and for the same reason.
+ */
+export function recededNeuronColor(background: string): string {
+  try {
+    // Two steps, not one: contrast is not symmetric, and a dark grey on black
+    // disappears long before the same step of light grey on white does.
+    const step = backgroundIsDark(background) ? 0.3 : 0.55;
+    return chroma.mix(chroma(DEFAULT_NEURON_COLOR).desaturate(3), background, step, 'oklab').hex();
+  } catch {
+    return DEFAULT_NEURON_COLOR;
   }
 }
 

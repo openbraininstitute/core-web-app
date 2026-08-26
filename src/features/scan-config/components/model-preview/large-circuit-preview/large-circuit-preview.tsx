@@ -2,8 +2,9 @@ import { saveAs } from 'file-saver';
 import { useSetAtom } from 'jotai';
 import React from 'react';
 
-import { positionAt } from '@/features/circuit-nodes/geometry-utils';
-import { useNodeGeometry } from '@/features/circuit-nodes/hooks/use-node-geometry';
+import { centroidOf, positionAt } from '@/features/circuit-nodes/geometry-utils';
+import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
+import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
@@ -49,8 +50,14 @@ export interface LargeCircuitPreviewProps {
    * message blaming the data for a bug in the call.
    */
   population: NodePopulation | undefined;
+  /** @see CircuitVizProps.populations */
+  populations: readonly NodePopulation[];
   /** per-node colors aligned by node index; undefined → viewer default  */
   colorsByNode?: string[];
+  /** Paint for the somas of the populations not on show. */
+  recededColor?: string;
+  /** A click on one of those somas, naming its population. */
+  onPopulationClick?: (populationName: string) => void;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default  */
   scalebarColor?: string;
@@ -105,7 +112,10 @@ export function LargeCircuitPreview({
   className,
   circuit,
   population,
+  populations,
   colorsByNode,
+  recededColor,
+  onPopulationClick,
   backgroundColor,
   scalebarColor,
   showScalebar = true,
@@ -120,54 +130,97 @@ export function LargeCircuitPreview({
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
   const somaRadius = useSomaRadius(circuit);
-  // Somas only: no morphology names needed, so the `morphology` column is left
-  // unread rather than decoded into one JS string per node.
-  const { geometry, error } = useNodeGeometry({ circuit, population });
+  const { config, error: configError } = useCircuitConfig(circuit);
+  // Somas only: positions are all that is read, for every population at once,
+  // and they are kept across selection changes — so selecting a population
+  // recolours the somas in place, and the camera stays where the user left it.
+  // Nothing is placed until everything is, so a subject in hand means the
+  // scene can be built.
+  const { placed, failures } = usePopulationsPlacement({ circuit, populations });
+  const subjectName = population?.name;
+  const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
+  const hasContext = placed.some((entry) => entry.population.name !== subjectName);
+
+  // A config that loads but names no node population would otherwise leave the
+  // viewer on its spinner for good: nothing is asked for, so nothing ever fails.
+  const noPopulation =
+    config && !population
+      ? new Error('This circuit’s circuit_config.json declares no node populations')
+      : null;
+  // The population on show failing is the viewer failing; another population
+  // failing is context that goes undrawn.
+  const error =
+    configError ??
+    noPopulation ??
+    (subjectName === undefined ? null : (failures.get(subjectName) ?? null));
+
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
   React.useEffect(() => {
-    if (!geometry || geometry.count === 0) return;
-    // Read directly rather than through `positionAt`: a running sum has no
-    // use for a tuple per node.
-    const { count, positions: xyz } = geometry;
-    let sx = 0;
-    let sy = 0;
-    let sz = 0;
-    for (let i = 0; i < count; i++) {
-      sx += xyz[i * 3];
-      sy += xyz[i * 3 + 1];
-      sz += xyz[i * 3 + 2];
-    }
-    setCircuitSceneAnchor([sx / count, sy / count, sz / count]);
-  }, [geometry, setCircuitSceneAnchor]);
+    const anchor = subject && centroidOf(subject);
+    if (anchor) setCircuitSceneAnchor(anchor);
+  }, [subject, setCircuitSceneAnchor]);
   const scalebar = React.useMemo(
     () => resolveScalebar(showScalebar, scalebarColor),
     [scalebarColor, showScalebar]
   );
   const handleDownload = () => {
-    if (!geometry) return;
-    const { count } = geometry;
-    const triples = Array.from({ length: count }, (_, i) => positionAt(geometry, i));
+    if (!subject) return;
+    const { count } = subject;
+    const triples = Array.from({ length: count }, (_, i) => positionAt(subject, i));
     const blob = new Blob([JSON.stringify(triples)], { type: 'application/json' });
     saveAs(blob, `${circuit.id}.json`);
   };
-  // Split from the recolour below so a colour change rebuilds only the
-  // `CellInfo` wrappers, not a position tuple per node as well.
-  const positions = React.useMemo(() => {
-    if (!geometry) return [];
-    return Array.from({ length: geometry.count }, (_, i) => positionAt(geometry, i));
-  }, [geometry]);
 
-  const cellInfos = React.useMemo(
+  // In declared order, the population on show at its own place in it, so a
+  // soma keeps its index and position whichever population is selected. The
+  // viewer takes a same-shaped `cellInfos` as a recolour and anything else as
+  // a new scene, camera reset included — selecting a population has to be the
+  // former. Split from the recolour below so a selection change rebuilds only
+  // the `CellInfo` wrappers, not a position tuple per node as well.
+  const positions = React.useMemo(
     () =>
-      positions.map(
-        (position, i): CellInfo => ({
-          morphologyId: SHARED_MORPHOLOGY_ID,
-          position,
-          color: colorsByNode?.[i],
-        })
+      placed.flatMap(({ geometry }) =>
+        Array.from({ length: geometry.count }, (_, i) => positionAt(geometry, i))
       ),
-    [positions, colorsByNode]
+    [placed]
   );
+
+  // Only where something recedes: the colour follows the background, and a
+  // scene of one population has no reason to rebuild on a background change.
+  const recede = hasContext ? recededColor : undefined;
+  const cellInfos = React.useMemo(() => {
+    const infos = new Array<CellInfo>(positions.length);
+    let index = 0;
+    for (const { population: candidate, geometry } of placed) {
+      const onShow = candidate.name === subjectName;
+      for (let local = 0; local < geometry.count; local++, index++) {
+        infos[index] = {
+          morphologyId: SHARED_MORPHOLOGY_ID,
+          position: positions[index],
+          color: onShow ? colorsByNode?.[local] : recede,
+        };
+      }
+    }
+    return infos;
+  }, [placed, subjectName, positions, colorsByNode, recede]);
+
+  const handleCellClick = React.useCallback(
+    (index: number) => {
+      let end = 0;
+      for (const { population: candidate, geometry } of placed) {
+        end += geometry.count;
+        if (index < end) {
+          if (candidate.name !== subjectName) onPopulationClick?.(candidate.name);
+          return;
+        }
+      }
+    },
+    [placed, subjectName, onPopulationClick]
+  );
+  // Offered only with something to select: the viewer builds its pick buffer
+  // on the first click, which at region scale is a second copy of every
+  // position.
+  const canPickPopulation = onPopulationClick !== undefined && hasContext;
 
   const morphoOverlays = React.useMemo(
     () =>
@@ -184,7 +237,7 @@ export function LargeCircuitPreview({
 
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
-      {!geometry && !error && <VisualizationLoadingIndicator />}
+      {!subject && !error && <VisualizationLoadingIndicator />}
       {error && (
         <div className={styles.error}>
           <h2>
@@ -193,7 +246,7 @@ export function LargeCircuitPreview({
           <p>{error.message}</p>
         </div>
       )}
-      {geometry && !error && (
+      {subject && !error && (
         <MorphoViewerCircuitMultipleNeuronsSomaOnly
           somaRadius={somaRadius}
           gizmo
@@ -208,6 +261,7 @@ export function LargeCircuitPreview({
           onOverlayTransform={onOverlayTransform}
           highlightedOverlayId={highlightedOverlayId}
           neuronOpacity={neuronOpacity}
+          onCellClick={canPickPopulation ? handleCellClick : undefined}
           spikes={spikes?.data}
           spikeTime={spikes?.timeInMs}
           onSpikeTimeChange={spikes?.onTimeChange}
@@ -219,7 +273,7 @@ export function LargeCircuitPreview({
             debugMode
               ? [
                   <Button key="download" onClick={handleDownload} className={styles.downloadButton}>
-                    Download {geometry.count} nodes
+                    Download {subject.count} nodes
                   </Button>,
                 ]
               : [],

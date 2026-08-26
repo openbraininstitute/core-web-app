@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { downloadCircuitImage } from '@/features/scan-config/components/shared/3d-viewer';
 import { useMorphoViewerSignals } from '@/morpho-viewer';
@@ -10,7 +10,7 @@ import {
   CANVAS_LIGHT,
   viewerTheme,
 } from './contrast';
-import { defaultNeuronColor } from './palette';
+import { defaultNeuronColor, recededNeuronColor } from './palette';
 import { buildColorByProperties } from './properties';
 import { useNodeColorMapping } from './use-node-color-mapping';
 import { useViewerConfig } from './use-viewer-config';
@@ -83,7 +83,9 @@ export function useCircuitColorBy(
   const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
   });
-  const property = config.colorByProperty;
+  const populationName = population?.name;
+  const property =
+    populationName === undefined ? null : (config.colorByProperty[populationName] ?? null);
   const overridesForProperty = property ? config.colorOverrides[property] : undefined;
   const backgroundDark = backgroundIsDark(config.backgroundColor);
   const adaptiveBackground = BACKGROUND_ADAPTIVE
@@ -91,13 +93,6 @@ export function useCircuitColorBy(
       ? CANVAS_DARK
       : CANVAS_LIGHT
     : undefined;
-
-  const prevPopulationRef = useRef(population?.name);
-  useEffect(() => {
-    if (prevPopulationRef.current === population?.name) return;
-    prevPopulationRef.current = population?.name;
-    if (property) update({ colorByProperty: null });
-  }, [population?.name, property, update]);
 
   const { mapping, loading, columns, status, retry } = useNodeColorMapping(
     circuit,
@@ -112,6 +107,10 @@ export function useCircuitColorBy(
     [backgroundDark]
   );
   const defaultColor = useMemo(() => defaultNeuronColor(adaptiveBackground), [adaptiveBackground]);
+  const recededColor = useMemo(
+    () => recededNeuronColor(config.backgroundColor),
+    [config.backgroundColor]
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
   // one signal bus per viewer instance: dispatch to trigger camera reset /
@@ -148,7 +147,10 @@ export function useCircuitColorBy(
   const colorBy: ColorByControls = useMemo(
     () => ({
       selectedProperty: property,
-      onSelectProperty: (p) => update({ colorByProperty: p }),
+      onSelectProperty: (p) => {
+        if (populationName === undefined) return;
+        update({ colorByProperty: { ...config.colorByProperty, [populationName]: p } });
+      },
       properties,
       propertiesLoading: !columns && status !== 'error',
       mapping,
@@ -157,7 +159,19 @@ export function useCircuitColorBy(
       onRetryProperties: retry,
       onChangeCategoryColor,
     }),
-    [property, properties, columns, status, retry, mapping, loading, update, onChangeCategoryColor]
+    [
+      property,
+      populationName,
+      config.colorByProperty,
+      properties,
+      columns,
+      status,
+      retry,
+      mapping,
+      loading,
+      update,
+      onChangeCategoryColor,
+    ]
   );
 
   const menu: ViewerControlsMenuProps = useMemo(
@@ -233,6 +247,8 @@ export function useCircuitColorBy(
     colorsByNode: mapping?.colorsByNode,
     /** default neuron color (adapted to the background in adaptive mode) */
     defaultColor,
+    /** paint for the somas of the populations drawn but not on show */
+    recededColor,
     /** chrome theme derived from the background, or null when adaptive mode is off */
     theme,
     /** signal bus passed to the viewer to trigger camera reset / snapshot */

@@ -54,12 +54,13 @@ export function useNodeGeometry({
     population,
   });
 
-  const [geometry, setGeometry] = useState<NodeGeometry | null>(null);
+  const [loaded, setLoaded] = useState<{ population: string; geometry: NodeGeometry } | null>(null);
   const [geometryError, setGeometryError] = useState<Error | null>(null);
+  const populationName = population?.name;
 
   useEffect(() => {
-    if (status !== 'ready') {
-      setGeometry(null);
+    if (status !== 'ready' || populationName === undefined) {
+      setLoaded(null);
       // Cleared here too, not only once a read succeeds: without it a failed
       // population's error outlives the switch to a working one, and the user
       // reads a stale failure for the length of the next download instead of
@@ -72,7 +73,7 @@ export function useNodeGeometry({
     setGeometryError(null);
     getGeometry({ withMorphologies, withOrientations })
       .then((next) => {
-        if (!cancelled) setGeometry(next);
+        if (!cancelled) setLoaded({ population: populationName, geometry: next });
       })
       .catch((e) => {
         if (cancelled) return;
@@ -81,7 +82,13 @@ export function useNodeGeometry({
     return () => {
       cancelled = true;
     };
-  }, [status, getGeometry, withMorphologies, withOrientations]);
+  }, [status, getGeometry, withMorphologies, withOrientations, populationName]);
+
+  // Never another population's. A session the table or colour-by already has
+  // open is `ready` the moment it is asked for, so on a switch the previous
+  // population's placement would otherwise stand in for the new one until its
+  // own read completes.
+  const geometry = loaded !== null && loaded.population === populationName ? loaded.geometry : null;
 
   // A config that loads but names no node population would otherwise leave the
   // viewer on its spinner for good: the worker session is gated on having one,
