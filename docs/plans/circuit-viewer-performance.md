@@ -105,6 +105,21 @@ construct `Float64Array` (`populations-placement.test.tsx`,
 
 ## Phase 3 — AO off the first paint (O3, fixes F6, morphoviewer)
 
+> **Status (2026-08-26):** implemented and committed as `aa73132` on
+> morphoviewer's `feat/240-somas-only-cell-picking` (not pushed — Pavlo
+> pushes). `AmbientOcclusionComputation` is a resumable class; the painter
+> drives it on idle callbacks (setTimeout slices on Safari/jsdom) and applies
+> once via `setUV` + `paint()`; `delete()` cancels the pending slice. Jest
+> 80/80 green, biome clean, lib build green. Tgz re-vendored into
+> core-web-app (pack from `lib/`, NOT the repo root — the root pack nests
+> `lib/dist/` and breaks the `morphoviewer/dist/...` deep imports);
+> core-web-app vitest fully green against it. Found, not fixed (visual
+> change): `Proximity.nextPoint` is written by cell index but read by point
+> index, so each grid cell only ever offers its last-inserted soma as a
+> neighbour — today's AO underweights density, and fixing it would change
+> every frame's shading. In-browser check pending: cloud appears flat, then
+> deepens once, ~a second later, with no first-paint stall.
+
 `PainterCellInfos` builds the cloud with flat occlusion (`v = 0.5`, as the
 array is already initialised), then computes AO asynchronously — chunked over
 soma ranges on idle callbacks is enough (~1 s split into slices; a worker with
