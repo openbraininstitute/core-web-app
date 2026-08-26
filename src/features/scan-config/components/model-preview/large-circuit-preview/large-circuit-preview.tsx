@@ -2,7 +2,7 @@ import { saveAs } from 'file-saver';
 import { useSetAtom } from 'jotai';
 import React from 'react';
 
-import { centroidOf, positionAt } from '@/features/circuit-nodes/geometry-utils';
+import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
@@ -26,25 +26,14 @@ import type { NodeColors } from '@/features/scan-config/components/color-by/type
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type {
   MorphoViewerCellColors,
-  MorphoViewerCellInfo,
   MorphoViewerOverlayTransformEvent,
   MorphoViewerSignals,
 } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
 
-/**
- * Stands in for a per-cell morphology id, which somas-only has no use for.
- *
- * The viewer reads `morphologyId` in exactly one place — `sameGeometry`, to
- * decide whether a new `cellInfos` array is a recolour or a rebuild — and it
- * compares the position alongside it in the same loop. The position is what
- * actually discriminates, so one shared string behaves identically to a
- * distinct one per node and allocates nothing at region scale. That comparison
- * is not reached here at all now that the same array goes back every render,
- * but a host cannot rely on that.
- */
-const SHARED_MORPHOLOGY_ID = '';
+/** Somas per JSON part of the debug download (see its `handleDownload`). */
+const DOWNLOAD_CHUNK = 65_536;
 
 /** Says "no colours of ours": the viewer's own depth-shaded blue palette. */
 const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
@@ -166,25 +155,38 @@ export function LargeCircuitPreview({
   );
   const handleDownload = () => {
     if (!subject) return;
-    const { count } = subject;
-    const triples = Array.from({ length: count }, (_, i) => positionAt(subject, i));
-    const blob = new Blob([JSON.stringify(triples)], { type: 'application/json' });
-    saveAs(blob, `${circuit.id}.json`);
+    const { count, positions: coords } = subject;
+    // One JSON part per chunk of somas, glued by the Blob natively: no tuple
+    // object per node and no single region-sized string on the main thread.
+    const parts: string[] = ['['];
+    for (let start = 0; start < count; start += DOWNLOAD_CHUNK) {
+      let part = '';
+      for (let node = start; node < Math.min(count, start + DOWNLOAD_CHUNK); node++) {
+        part += `${node === 0 ? '' : ','}[${coords[node * 3]},${coords[node * 3 + 1]},${coords[node * 3 + 2]}]`;
+      }
+      parts.push(part);
+    }
+    parts.push(']');
+    saveAs(new Blob(parts, { type: 'application/json' }), `${circuit.id}.json`);
   };
 
   // In declared order, the population on show at its own place in it, so a
   // soma keeps its index and position whichever population is selected — and
-  // built once, from the placement alone. The viewer takes a new `cellInfos`
+  // built once, from the placement alone. The viewer takes a new `positions`
   // array as a new scene, camera reset included, so this must not change when
-  // the selection does; the colours travel separately, below.
-  const cellInfos = React.useMemo(() => {
-    const infos: MorphoViewerCellInfo[] = [];
+  // the selection does; the colours travel separately, below. Straight
+  // typed-array copies: the geometries already hold the flat triples the
+  // viewer reads, so nothing here exists per node.
+  const positions = React.useMemo(() => {
+    let length = 0;
+    for (const { geometry } of placed) length += geometry.positions.length;
+    const all = new Float32Array(length);
+    let offset = 0;
     for (const { geometry } of placed) {
-      for (let local = 0; local < geometry.count; local++) {
-        infos.push({ morphologyId: SHARED_MORPHOLOGY_ID, position: positionAt(geometry, local) });
-      }
+      all.set(geometry.positions, offset);
+      offset += geometry.positions.length;
     }
-    return infos;
+    return all;
   }, [placed]);
 
   // Only where something recedes: the colour follows the background, and a
@@ -214,7 +216,7 @@ export function LargeCircuitPreview({
       return palette.length - 1;
     };
 
-    const columnByCell = new Uint16Array(cellInfos.length);
+    const columnByCell = new Uint16Array(positions.length / 3);
     let index = 0;
     for (const { population: candidate, geometry } of placed) {
       if (candidate.name === subjectName && nodeColors) {
@@ -229,7 +231,7 @@ export function LargeCircuitPreview({
       index += geometry.count;
     }
     return { palette, columnByCell };
-  }, [placed, subjectName, cellInfos.length, nodeColors, recede]);
+  }, [placed, subjectName, positions.length, nodeColors, recede]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {
@@ -278,7 +280,7 @@ export function LargeCircuitPreview({
           somaRadius={somaRadius}
           gizmo
           scalebar={scalebar}
-          cellInfos={cellInfos}
+          positions={positions}
           cellColors={cellColors}
           backgroundColor={backgroundColor}
           signals={signals}

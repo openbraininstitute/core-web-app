@@ -116,16 +116,12 @@ describe('LargeCircuitPreview colours', () => {
     expect(paints(props)).toEqual(['#aaa', '#bbb', '#ccc']);
     // Declared order, positions in it, so a soma keeps its index whichever
     // population is selected.
-    expect(props.cellInfos.map((cell) => cell.position)).toEqual([
-      [0, 0, 0],
-      [1, 1, 1],
-      [9, 9, 9],
-    ]);
+    expect(props.positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1, 9, 9, 9]));
   });
 
-  // The whole point of the split: `cellInfos` is a new scene to the viewer,
+  // The whole point of the split: `positions` is a new scene to the viewer,
   // camera reset included, so a selection change must not touch it.
-  it('hands back the same cellInfos when only the selection changes', () => {
+  it('hands back the same positions when only the selection changes', () => {
     const { rerender } = draw({
       population: CORTEX,
       nodeColors: asNodeColors(['#aaa', '#bbb']),
@@ -146,7 +142,7 @@ describe('LargeCircuitPreview colours', () => {
     );
     const second = lastRender();
 
-    expect(second.cellInfos).toBe(first.cellInfos);
+    expect(second.positions).toBe(first.positions);
     expect(paints(second)).toEqual(['#ccc', '#ccc', '#ddd']);
   });
 
