@@ -1,6 +1,7 @@
 import { RiArrowDownSLine, RiFullscreenExitLine, RiTableLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -55,8 +56,8 @@ export interface ICircuitViewerChromeProps {
 
 /**
  * absolutely-positioned control layer over a circuit viewer: mode toggle +
- * table + settings (top-left), color-by dropdown + key (top-right). Sits above
- * the 3D canvas
+ * table + settings (top-left), populations checklist + color-by dropdown + key
+ * (top-right). Sits above the 3D canvas
  */
 export function CircuitViewerChrome({
   modeToggle,
@@ -66,6 +67,7 @@ export function CircuitViewerChrome({
   viz,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
+  const populations = viz?.populations;
   const selectedProperty = colorBy?.selectedProperty ?? null;
   const showKey =
     selectedProperty &&
@@ -172,7 +174,7 @@ export function CircuitViewerChrome({
         )}
       </div>
 
-      {colorBy && (
+      {(colorBy || populations) && (
         <div
           className={cn(
             'pointer-events-auto absolute right-3 top-3 flex flex-col items-end gap-2',
@@ -186,42 +188,68 @@ export function CircuitViewerChrome({
               : undefined
           }
         >
-          <div ref={toolbarRef} className="flex items-center gap-1">
-            <ColorByDropdown
-              value={colorBy.selectedProperty}
-              onChange={colorBy.onSelectProperty}
-              properties={colorBy.properties}
-              loading={colorBy.propertiesLoading}
-              error={colorBy.propertiesError}
-              onRetry={colorBy.onRetryProperties}
-              theme={theme}
-              container={portalContainer}
-            />
-            {showLegendToggle && (
-              <button
-                type="button"
-                id="color-mapping-panel-toggle"
-                data-slot="color-mapping-panel-toggle"
-                aria-label={legendOpen ? 'Hide color mapping' : 'Show color mapping'}
-                aria-expanded={legendOpen}
-                aria-controls="color-mapping-panel"
-                onClick={() => setLegendOpen((open) => !open)}
-                style={panelStyle}
-                className={cn(
-                  styles.legendToggle,
-                  'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
-                  theme
-                    ? 'hover:brightness-110'
-                    : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
-                )}
+          <div className="flex items-center gap-2">
+            {populations && (
+              <PopulationsMenu
+                populations={populations.populations}
+                hidden={populations.hidden}
+                onChange={populations.onChange}
+                selected={populations.selected}
+                onSelect={populations.onSelect}
+                theme={theme}
+                container={portalContainer}
+              />
+            )}
+            {/* Beside the measured toolbar rather than inside it: the key below is
+                sized from that element, so a pill counted into the measurement would
+                stretch the key out to cover the pill as well. */}
+            {colorBy && (
+              <div
+                ref={toolbarRef}
+                data-testid="color-by-toolbar"
+                className="flex items-center gap-1"
               >
-                <RiArrowDownSLine
-                  className={cn(styles.chevronIcon, 'size-4', legendOpen && styles.chevronIconOpen)}
+                <ColorByDropdown
+                  value={colorBy.selectedProperty}
+                  onChange={colorBy.onSelectProperty}
+                  properties={colorBy.properties}
+                  loading={colorBy.propertiesLoading}
+                  error={colorBy.propertiesError}
+                  onRetry={colorBy.onRetryProperties}
+                  theme={theme}
+                  container={portalContainer}
                 />
-              </button>
+                {showLegendToggle && (
+                  <button
+                    type="button"
+                    id="color-mapping-panel-toggle"
+                    data-slot="color-mapping-panel-toggle"
+                    aria-label={legendOpen ? 'Hide color mapping' : 'Show color mapping'}
+                    aria-expanded={legendOpen}
+                    aria-controls="color-mapping-panel"
+                    onClick={() => setLegendOpen((open) => !open)}
+                    style={panelStyle}
+                    className={cn(
+                      styles.legendToggle,
+                      'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
+                      theme
+                        ? 'hover:brightness-110'
+                        : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
+                    )}
+                  >
+                    <RiArrowDownSLine
+                      className={cn(
+                        styles.chevronIcon,
+                        'size-4',
+                        legendOpen && styles.chevronIconOpen
+                      )}
+                    />
+                  </button>
+                )}
+              </div>
             )}
           </div>
-          {showKey && legendOpen && colorBy.mapping && (
+          {showKey && legendOpen && colorBy?.mapping && (
             <div
               className={cn(styles.panelReveal, 'min-w-0')}
               style={{ width: 'var(--color-by-toolbar-width)' }}
