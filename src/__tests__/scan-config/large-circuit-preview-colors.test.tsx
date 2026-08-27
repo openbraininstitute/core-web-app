@@ -88,9 +88,10 @@ function lastRender(): MorphoViewerSomasOnlyProps {
 
 /**
  * The colour each soma ends up sampling, read back through the palette. `null`
- * means the viewer's own occlusion ramp.
+ * means the viewer's own occlusion ramp, `false` a soma the viewer does not
+ * draw at all, and `undefined` a column the palette does not reach.
  */
-function paints(props: MorphoViewerSomasOnlyProps): (string | null | undefined)[] {
+function paints(props: MorphoViewerSomasOnlyProps): (string | null | false | undefined)[] {
   const colors = props.cellColors;
   if (!colors) throw new Error('The viewer was given no cellColors');
   return [...colors.columnByCell].map((column) => colors.palette[column]);
