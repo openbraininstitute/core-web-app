@@ -69,15 +69,29 @@ describe('PopulationsMenu', () => {
     expect(onChange).toHaveBeenCalledWith(['vpm']);
   });
 
-  it('shows only one population by hiding every other', () => {
-    const { onChange } = open();
+  // Both halves of one gesture: the population left in the scene is also the
+  // one put on show. Without the second half the only thing drawn would be
+  // drawn receded, and the nodes table would list a population that is not in
+  // the scene at all.
+  it('shows only one population by hiding every other, and puts that one on show', () => {
+    const { onChange, onSelect } = open();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show only thalamus' }));
+    expect(onChange).toHaveBeenCalledWith(['cortex', 'vpm']);
+    expect(onSelect).toHaveBeenCalledWith('thalamus');
+  });
+
+  it('shows only one population even when that one was itself hidden', () => {
+    const { onChange } = open({ hidden: ['thalamus'] });
 
     fireEvent.click(screen.getByRole('button', { name: 'Show only thalamus' }));
     expect(onChange).toHaveBeenCalledWith(['cortex', 'vpm']);
   });
 
-  it('shows only one population even when that one was itself hidden', () => {
-    const { onChange } = open({ hidden: ['thalamus'] });
+  // Nothing else to do about it: the host owns that choice, and the scene it
+  // leaves is the one the host asked for.
+  it('still shows only one population where the host pins what is on show', () => {
+    const { onChange } = open({ selected: 'cortex', onSelect: undefined });
 
     fireEvent.click(screen.getByRole('button', { name: 'Show only thalamus' }));
     expect(onChange).toHaveBeenCalledWith(['cortex', 'vpm']);
@@ -115,7 +129,8 @@ describe('PopulationsMenu', () => {
     fireEvent.click(screen.getByRole('button', { name: /^cortex/ }));
     expect(onSelect).toHaveBeenCalledWith('cortex');
     // Putting a population on show says nothing about what is drawn — the two
-    // are separate questions, on separate targets.
+    // are separate questions, on separate targets. Only the row's "Only"
+    // answers both at once.
     expect(onChange).not.toHaveBeenCalled();
   });
 

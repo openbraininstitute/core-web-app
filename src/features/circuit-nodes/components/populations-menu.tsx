@@ -35,6 +35,9 @@ interface PopulationsMenuProps {
  * property and listed in the nodes table, and it can perfectly well be one the
  * user has hidden. A single row that meant either depending on where the
  * pointer landed is not something a screen reader could put into words.
+ *
+ * A third target, `Only`, answers both at once — it is the one gesture where
+ * the two answers cannot sensibly differ.
  */
 export function PopulationsMenu({
   populations,
@@ -217,9 +220,17 @@ export function PopulationsMenu({
                   <button
                     type="button"
                     aria-label={`Show only ${name}`}
-                    onClick={() =>
-                      onChange(populations.map((p) => p.name).filter((n) => n !== name))
-                    }
+                    onClick={() => {
+                      onChange(populations.map((p) => p.name).filter((n) => n !== name));
+                      // The one population left in the scene is the one to put
+                      // on show. Leaving the selection where it was would draw
+                      // the only thing on screen receded, with the nodes table
+                      // listing a population that is not drawn at all. Ticking
+                      // a checkbox is the other case, and stays as it was: it
+                      // says which populations are drawn and nothing about
+                      // which one is on show.
+                      onSelect?.(name);
+                    }}
                     className={cn(
                       'shrink-0 text-xs font-medium opacity-0 transition-opacity',
                       'group-hover/row:opacity-100 focus-visible:opacity-100 motion-reduce:transition-none',
