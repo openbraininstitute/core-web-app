@@ -63,20 +63,29 @@ vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
 
 const circuit = { id: 'circuit-id', name: 'Circuit' } as ICircuit;
 
-type TProps = { population: NodePopulation; nodeColors?: NodeColors; recededColor?: string };
+type TProps = {
+  population: NodePopulation;
+  hiddenPopulations?: string[];
+  nodeColors?: NodeColors;
+  recededColor?: string;
+  onPopulationClick?: (name: string) => void;
+};
 
-function draw({ population, nodeColors, recededColor }: TProps) {
-  return render(
+/** The element, so a rerender can vary one prop without restating the rest. */
+function preview(props: TProps) {
+  return (
     <LargeCircuitPreview
       circuit={circuit}
-      population={population}
       populations={[CORTEX, VPM]}
-      nodeColors={nodeColors}
-      recededColor={recededColor}
       backgroundColor="#000000"
       signals={{} as never}
+      {...props}
     />
   );
+}
+
+function draw(props: TProps) {
+  return render(preview(props));
 }
 
 /** The props the viewer was last rendered with. */
@@ -131,15 +140,7 @@ describe('LargeCircuitPreview colours', () => {
     const first = lastRender();
 
     rerender(
-      <LargeCircuitPreview
-        circuit={circuit}
-        population={VPM}
-        populations={[CORTEX, VPM]}
-        nodeColors={asNodeColors(['#ddd'])}
-        recededColor="#ccc"
-        backgroundColor="#000000"
-        signals={{} as never}
-      />
+      preview({ population: VPM, nodeColors: asNodeColors(['#ddd']), recededColor: '#ccc' })
     );
     const second = lastRender();
 
@@ -175,5 +176,60 @@ describe('LargeCircuitPreview colours', () => {
     draw({ population: CORTEX });
 
     expect(lastRender().cellColors?.palette).toEqual([]);
+  });
+  // The regression test for the whole design: hiding is a repaint, not a new
+  // scene. If `positions` changes identity here, the viewer refits the camera
+  // and the user loses the view they were standing at.
+  it('takes a population out of the scene without moving the somas that stay', () => {
+    const props: TProps = {
+      population: CORTEX,
+      nodeColors: asNodeColors(['#aaa', '#bbb']),
+      recededColor: '#ccc',
+    };
+    const { rerender } = draw(props);
+    const first = lastRender();
+
+    rerender(preview({ ...props, hiddenPopulations: ['vpm'] }));
+    const second = lastRender();
+
+    expect(second.positions).toBe(first.positions);
+    // `false`, not a transparent colour: the viewer skips the soma outright,
+    // and derives what is unpickable from the same entry.
+    expect(paints(second)).toEqual(['#aaa', '#bbb', false]);
+  });
+
+  // Nothing is left for the rest to recede behind, so paying for a colour that
+  // follows the background would buy a repaint on every background change and
+  // nothing else.
+  it('puts no receded colour in the palette when the subject is the hidden one', () => {
+    draw({
+      population: CORTEX,
+      hiddenPopulations: ['cortex'],
+      nodeColors: asNodeColors(['#aaa', '#bbb']),
+      recededColor: '#ccc',
+    });
+
+    expect(paints(lastRender())).toEqual([false, false, null]);
+    expect(lastRender().cellColors?.palette).not.toContain('#ccc');
+  });
+
+  // An empty scene is a finished state. The gate on to the viewer must not read
+  // it as one still loading, or the user watches a spinner for good.
+  it('still hands the viewer a scene when every population is hidden', () => {
+    draw({ population: CORTEX, hiddenPopulations: ['cortex', 'vpm'] });
+
+    expect(paints(lastRender())).toEqual([false, false, false]);
+  });
+
+  // The viewer builds its pick buffer on the first click, which at region scale
+  // is a second copy of every position. With nothing pickable left on screen,
+  // that is a copy paid for nothing.
+  it('withdraws the click handler once the only other population is hidden', () => {
+    const props: TProps = { population: CORTEX, onPopulationClick: vi.fn() };
+    const { rerender } = draw(props);
+    expect(lastRender().onCellClick).toBeDefined();
+
+    rerender(preview({ ...props, hiddenPopulations: ['vpm'] }));
+    expect(lastRender().onCellClick).toBeUndefined();
   });
 });

@@ -35,6 +35,9 @@ import styles from './large-circuit-preview.module.css';
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
+/** Nothing hidden. Shared, so the memos below are not rebuilt every render. */
+const NONE_HIDDEN: readonly string[] = [];
+
 /** An empty palette: the viewer falls back to its own depth-shaded blue. */
 const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
   palette: [],
@@ -55,6 +58,13 @@ export interface LargeCircuitPreviewProps {
   population: NodePopulation | undefined;
   /** @see CircuitVizProps.populations */
   populations: readonly NodePopulation[];
+  /**
+   * Populations taken out of the scene, by name. Their somas keep their place
+   * in `positions` — that array is what the viewer reads as the scene, and
+   * rebuilding it would refit the camera — and take a palette column that draws
+   * nothing.
+   */
+  hiddenPopulations?: readonly string[];
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
   /** Colour for the somas of the populations that are not on show. */
@@ -103,6 +113,7 @@ export function LargeCircuitPreview({
   circuit,
   population,
   populations,
+  hiddenPopulations = NONE_HIDDEN,
   nodeColors,
   recededColor,
   onPopulationClick,
@@ -129,7 +140,14 @@ export function LargeCircuitPreview({
   const { placed, failures } = usePopulationsPlacement({ circuit, populations });
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
-  const hasContext = placed.some((entry) => entry.population.name !== subjectName);
+  const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
+  const subjectHidden = subjectName !== undefined && hidden.has(subjectName);
+  // Context is what is on screen beside the subject, so a hidden population is
+  // not it: there is nothing to recede behind the subject and nothing a click
+  // could land on.
+  const hasContext = placed.some(
+    (entry) => entry.population.name !== subjectName && !hidden.has(entry.population.name)
+  );
 
   // A config that loads but names no node population would otherwise leave the
   // viewer on its spinner for good: nothing is asked for, so nothing ever fails.
@@ -195,30 +213,37 @@ export function LargeCircuitPreview({
 
   // Only when something actually recedes: this colour follows the background,
   // and a single-population scene should not repaint when the background
-  // changes.
-  const recede = hasContext ? recededColor : undefined;
+  // changes. Nor when the subject is itself hidden — nothing is left to recede
+  // behind, so what is on screen takes the viewer's own ramp instead.
+  const recede = hasContext && !subjectHidden ? recededColor : undefined;
 
   // The mapping already arrives as a palette and a column per soma. This memo
   // writes the subject's columns at its offset in the scene and appends a
   // column for everything else, so at region scale a selection change costs one
   // typed-array copy, small enough to run inside a single frame.
   const cellColors = React.useMemo(() => {
-    // Nothing to colour by and only one population, so leave the viewer to its
-    // own depth-shaded blue, as it draws today.
-    if (!nodeColors && !recede) return VIEWER_DEFAULT_PALETTE;
+    // Nothing to colour by, nothing receding and nothing hidden, so leave the
+    // viewer to its own depth-shaded blue, as it draws today.
+    if (!nodeColors && !recede && hidden.size === 0) return VIEWER_DEFAULT_PALETTE;
 
-    const palette: (string | null)[] = nodeColors ? [...nodeColors.palette] : [];
-    // Two colours are added here: the receded colour, and `null`, which leaves
-    // a soma to the viewer's own ramp. `null` rather than a colour of our own,
-    // which would flatten an uncoloured cloud to a single hue. Each takes a
-    // palette column on first use.
+    const palette: (string | null | false)[] = nodeColors ? [...nodeColors.palette] : [];
+    // Three entries are added here beyond the mapping's own colours: the
+    // receded colour; `null`, which leaves a soma to the viewer's own ramp,
+    // rather than a colour of our own, which would flatten an uncoloured cloud
+    // to a single hue; and `false`, which the viewer reads as a soma to skip
+    // entirely — undrawn, unpickable, and with no hover of its own. Each takes
+    // a palette column on first use.
     let ownRampColumn: number | undefined;
     let recededColumn: number | undefined;
+    let hiddenColumn: number | undefined;
 
     const columnByCell = new Uint16Array(positions.length / 3);
     let index = 0;
     for (const { population: candidate, geometry } of placed) {
-      if (candidate.name === subjectName && nodeColors) {
+      if (hidden.has(candidate.name)) {
+        hiddenColumn ??= palette.push(false) - 1;
+        columnByCell.fill(hiddenColumn, index, index + geometry.count);
+      } else if (candidate.name === subjectName && nodeColors) {
         // The mapping's palette sits at the same indices here, so its columns
         // land as they are.
         columnByCell.set(nodeColors.columnByNode.subarray(0, geometry.count), index);
@@ -233,7 +258,7 @@ export function LargeCircuitPreview({
       index += geometry.count;
     }
     return { palette, columnByCell };
-  }, [placed, subjectName, positions.length, nodeColors, recede]);
+  }, [placed, subjectName, positions.length, nodeColors, recede, hidden]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {

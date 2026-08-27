@@ -471,6 +471,7 @@ export function CircuitScene({
             circuit={circuit}
             population={population}
             populations={populations}
+            hiddenPopulations={config.hiddenPopulations}
             nodeColors={enableColorBy ? nodeColors : undefined}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
