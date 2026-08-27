@@ -138,7 +138,6 @@ export function LargeCircuitPreview({
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
   const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
-  const subjectHidden = subjectName !== undefined && hidden.has(subjectName);
   // Context is what is on screen beside the subject, so a hidden population is
   // not it: there is nothing to recede behind the subject and nothing a click
   // could land on.
@@ -210,9 +209,11 @@ export function LargeCircuitPreview({
 
   // Only when something actually recedes: this colour follows the background,
   // and a single-population scene should not repaint when the background
-  // changes. Nor when the subject is itself hidden — nothing is left to recede
-  // behind, so what is on screen takes the viewer's own ramp instead.
-  const recede = hasContext && !subjectHidden ? recededColor : undefined;
+  // changes. Hiding the population on show is not that exception it looks like:
+  // nothing on screen is the selection then either, and the viewer's own ramp
+  // would say the opposite, lighting the whole rest of the circuit up the
+  // moment the user takes the selection out of it.
+  const recede = hasContext ? recededColor : undefined;
 
   // The mapping already arrives as a palette and a column per soma. This memo
   // writes the subject's columns at its offset in the scene and appends a

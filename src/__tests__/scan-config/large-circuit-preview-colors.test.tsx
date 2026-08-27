@@ -198,10 +198,11 @@ describe('LargeCircuitPreview colours', () => {
     expect(paints(second)).toEqual(['#aaa', '#bbb', false]);
   });
 
-  // Nothing is left for the rest to recede behind, so paying for a colour that
-  // follows the background would buy a repaint on every background change and
-  // nothing else.
-  it('puts no receded colour in the palette when the subject is the hidden one', () => {
+  // Taking the selection out of the scene leaves nothing in it that is the
+  // selection, which is what the receded colour says. The viewer's own ramp
+  // would say the opposite: the rest of the circuit lighting up blue the moment
+  // the user unticks the population being coloured.
+  it('keeps the rest receded when the subject is the hidden one', () => {
     draw({
       population: CORTEX,
       hiddenPopulations: ['cortex'],
@@ -209,8 +210,7 @@ describe('LargeCircuitPreview colours', () => {
       recededColor: '#ccc',
     });
 
-    expect(paints(lastRender())).toEqual([false, false, null]);
-    expect(lastRender().cellColors?.palette).not.toContain('#ccc');
+    expect(paints(lastRender())).toEqual([false, false, '#ccc']);
   });
 
   // An empty scene is a finished state. The gate on to the viewer must not read
