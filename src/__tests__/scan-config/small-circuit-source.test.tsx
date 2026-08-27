@@ -303,6 +303,34 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.cells[0].center).toEqual([0, 0, 0]);
   });
 
+  // An empty scene reads as a finished one, or the viewer sits on its loading
+  // indicator for good: with no cells it is never mounted, so the progress the
+  // indicator waits on never arrives.
+  it('is not loading once every population has been hidden', () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0]) },
+        { population: INPUTS, geometry: placement([10, 0, 0]) },
+      ],
+      failures: new Map(),
+      settled: true,
+    };
+    const { result } = render(false, [DEFAULT, INPUTS], DEFAULT, ['default', 'inputs']);
+
+    expect(result.current.cells).toEqual([]);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  // Placement settles before the columns the population on show is drawn from
+  // arrive, and in that gap there is nothing to draw and nothing drawn before.
+  it('is still loading while the population on show has no columns yet', () => {
+    fixtures.detail = null;
+    const { result } = render(false);
+
+    expect(result.current.cells).toEqual([]);
+    expect(result.current.isLoading).toBe(true);
+  });
+
   it('drops the population on show when that is the hidden one', () => {
     fixtures.placement = {
       placed: [

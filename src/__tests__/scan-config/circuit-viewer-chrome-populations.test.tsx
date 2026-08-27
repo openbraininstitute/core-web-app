@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
@@ -36,6 +36,7 @@ const POPULATIONS: PopulationsControls = {
   populations: [
     { name: 'cortex', type: 'biophysical', file: 'nodes.h5' },
     { name: 'thalamus', type: 'biophysical', file: 'nodes.h5' },
+    { name: 'vpm', type: 'virtual', file: 'inputs.h5' },
   ],
   hidden: [],
   onChange: vi.fn(),
@@ -43,8 +44,14 @@ const POPULATIONS: PopulationsControls = {
   onSelect: vi.fn(),
 };
 
-function renderChrome(viz: ICircuitViewerChromeProps['viz']) {
-  render(<CircuitViewerChrome vizActive viz={viz} />);
+function renderChrome(viz: ICircuitViewerChromeProps['viz'], vizActive = true) {
+  render(<CircuitViewerChrome vizActive={vizActive} viz={viz} />);
+}
+
+/** The checklist's props with a given hidden set, and a fresh `onChange` to read. */
+function withHidden(hidden: string[], overrides: Partial<PopulationsControls> = {}) {
+  const onChange = vi.fn();
+  return { populations: { ...POPULATIONS, hidden, onChange, ...overrides }, onChange };
 }
 
 describe('CircuitViewerChrome populations pill', () => {
@@ -69,5 +76,71 @@ describe('CircuitViewerChrome populations pill', () => {
 
     expect(screen.queryByTestId('populations-menu-trigger')).toBeNull();
     expect(screen.queryByTestId('color-by-toolbar')).toBeNull();
+  });
+});
+
+/**
+ * Said here rather than in either viewer: the chrome is the one layer over both
+ * of them, and it already holds the way back.
+ */
+describe('CircuitViewerChrome population notices', () => {
+  it('says nothing while every population is on screen', () => {
+    renderChrome({ menu: MENU, populations: withHidden([]).populations });
+
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('names the population being coloured when that is the one hidden, and puts it back', () => {
+    const { populations, onChange } = withHidden(['cortex', 'vpm']);
+    renderChrome({ menu: MENU, populations });
+
+    expect(screen.getByRole('status')).toHaveTextContent('“cortex” is selected but hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'Show' }));
+    // That one back, and only that one: the notice is about the population on
+    // show, not about everything the user has taken out of the scene.
+    expect(onChange).toHaveBeenCalledWith(['vpm']);
+  });
+
+  it('leaves the notice out while a population other than the one on show is hidden', () => {
+    renderChrome({ menu: MENU, populations: withHidden(['thalamus']).populations });
+
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('reports an emptied scene, and offers every population back at once', () => {
+    const { populations, onChange } = withHidden(['cortex', 'thalamus', 'vpm']);
+    renderChrome({ menu: MENU, populations });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Every population is hidden');
+    fireEvent.click(screen.getByRole('button', { name: 'Show all' }));
+    expect(onChange).toHaveBeenCalledWith([]);
+  });
+
+  // Naming the selected one too would be two notices saying the same thing, and
+  // a Show that leaves the scene as empty as the user found it.
+  it('says only that the scene is empty, not which population is missing from it', () => {
+    renderChrome({
+      menu: MENU,
+      populations: withHidden(['cortex', 'thalamus', 'vpm']).populations,
+    });
+
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Show' })).toBeNull();
+  });
+
+  // There is no 3D scene to be empty in image mode.
+  it('keeps the emptied-scene notice off a view that is not the 3D one', () => {
+    renderChrome(
+      { menu: MENU, populations: withHidden(['cortex', 'thalamus', 'vpm']).populations },
+      false
+    );
+
+    expect(screen.queryByText('Every population is hidden')).toBeNull();
+  });
+
+  it('does not read a circuit that declares no populations as a scene the user emptied', () => {
+    renderChrome({ menu: MENU, populations: withHidden([], { populations: [] }).populations });
+
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });

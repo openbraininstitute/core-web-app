@@ -298,7 +298,12 @@ function CircuitVizView({
     };
   }, [progress]);
 
-  const loading = !error && (isLoading || progress < 1 || !morphologiesPainted);
+  // Wait on the viewer's paint only where there is a viewer: with no cells it
+  // is never mounted, so its progress would never arrive and the indicator
+  // would sit for good over a scene the user emptied on purpose. Whether an
+  // empty scene is that or one still arriving is the source's to say.
+  const painting = cells.length > 0 && (progress < 1 || !morphologiesPainted);
+  const loading = !error && (isLoading || painting);
 
   // Pass interactive metadata through; morphoviewer ignores unknown fields safely.
   const morphoOverlays = useMemo(

@@ -291,10 +291,13 @@ export function useSmallCircuitSource({
   return {
     cells,
     loadCell,
-    // The viewer's own progress covers the morphologies; this covers the
-    // positions of every population, since the scene is built only once they
-    // have all arrived.
-    isLoading: !error && !settled,
+    // Nothing on screen yet. The viewer's own progress covers the morphologies;
+    // this covers everything before them — the positions of every population,
+    // and the columns the one on show is drawn from, since the scene is built
+    // only once they have all arrived. An empty scene is not always this:
+    // hiding every population empties it on purpose, and then there is nothing
+    // left to wait for.
+    isLoading: !error && built === null && cells.length === 0,
     error,
     retry,
     synapses,

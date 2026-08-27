@@ -57,7 +57,8 @@ export interface ICircuitViewerChromeProps {
 /**
  * absolutely-positioned control layer over a circuit viewer: mode toggle +
  * table + settings (top-left), populations checklist + color-by dropdown + key
- * (top-right). Sits above the 3D canvas
+ * (top-right), and what the checklist can leave the scene in (centre). Sits
+ * above the 3D canvas
  */
 export function CircuitViewerChrome({
   modeToggle,
@@ -75,6 +76,22 @@ export function CircuitViewerChrome({
     colorBy?.mapping &&
     colorBy.mapping.mode !== 'none';
   const showLegendToggle = !!selectedProperty;
+  // Two states the checklist can leave the scene in, worked out here rather
+  // than in the viewers: the chrome is the one layer over both of them, and it
+  // already holds the way back.
+  const hiddenNames = new Set(populations?.hidden);
+  // Nothing drawn at all — asked of a non-empty list, so a circuit declaring no
+  // populations does not read as a scene the user emptied.
+  const allHidden =
+    !!populations?.populations.length &&
+    populations.populations.every((p) => hiddenNames.has(p.name));
+  // The population being coloured and listed in the nodes table is not among
+  // what is drawn. Not worth saying when nothing is: the empty state says it of
+  // every population at once.
+  const hiddenSubject =
+    populations?.selected !== undefined && hiddenNames.has(populations.selected) && !allHidden
+      ? populations.selected
+      : undefined;
   // Keep viz chrome mounted across view switches; only hide it.
   const showVizChrome = viz != null && vizActive;
   const [legendOpen, setLegendOpen] = useState(false);
@@ -249,6 +266,19 @@ export function CircuitViewerChrome({
               </div>
             )}
           </div>
+          {populations && hiddenSubject !== undefined && (
+            <ChromeNotice
+              action="Show"
+              onAction={() =>
+                populations.onChange(populations.hidden.filter((name) => name !== hiddenSubject))
+              }
+              theme={theme}
+              style={panelStyle}
+              className="px-3 py-1 text-xs"
+            >
+              “{hiddenSubject}” is selected but hidden
+            </ChromeNotice>
+          )}
           {showKey && legendOpen && colorBy?.mapping && (
             <div
               className={cn(styles.panelReveal, 'min-w-0')}
@@ -264,6 +294,63 @@ export function CircuitViewerChrome({
           )}
         </div>
       )}
+
+      {showVizChrome && allHidden && populations && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <ChromeNotice
+            action="Show all"
+            onAction={() => populations.onChange([])}
+            theme={theme}
+            style={panelStyle}
+            className="pointer-events-auto px-4 py-2 text-sm"
+          >
+            Every population is hidden
+          </ChromeNotice>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A line of status over the canvas, with the way out of it. Wears the chrome's
+ * own pill because it sits among the controls and over the same 3D scene: bare
+ * text would be read against whatever colour happens to be behind it.
+ */
+function ChromeNotice({
+  children,
+  action,
+  onAction,
+  theme,
+  style,
+  className,
+}: {
+  children: React.ReactNode;
+  /** Label of the button that undoes what the notice reports. */
+  action: string;
+  onAction: () => void;
+  theme?: ViewerTheme | null;
+  style?: React.CSSProperties;
+  className?: string;
+}) {
+  return (
+    <div
+      role="status"
+      style={style}
+      className={cn(
+        'flex items-center gap-2 rounded-full backdrop-blur-sm',
+        !theme && 'bg-white text-neutral-600 shadow-md ring-1 ring-black/5',
+        className
+      )}
+    >
+      <span>{children}</span>
+      <button
+        type="button"
+        onClick={onAction}
+        className={cn('font-semibold hover:underline', !theme && 'text-primary-9')}
+      >
+        {action}
+      </button>
     </div>
   );
 }
