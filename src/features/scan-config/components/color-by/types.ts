@@ -77,6 +77,12 @@ export interface ViewerConfig {
    * population restores the choice made there.
    */
   colorByProperty: Record<string, string | null>;
+  /**
+   * Populations the user has taken out of the scene, by name; anything not
+   * named is drawn. Kept as the exceptions rather than as the visible set, so a
+   * population this list has never heard of is on screen rather than missing.
+   */
+  hiddenPopulations: string[];
   backgroundColor: string;
   showAxons: boolean;
   /**
