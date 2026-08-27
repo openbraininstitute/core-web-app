@@ -170,11 +170,12 @@ export function buildColorMapping({
     return buildCategoricalColumn(property, column.library, column.indices, overrides, background);
   }
   if (column.kind === 'numeric') {
-    return exceedsDistinct(column.values, NUMERIC_CATEGORICAL_MAX)
-      ? buildContinuous(property, column.values, background)
-      : buildNumericKey(property, column.values, overrides, background);
+    const counts = countsWithin(column.values, NUMERIC_CATEGORICAL_MAX);
+    return counts
+      ? buildDiscreteKey(property, column.values, overrides, background, counts)
+      : buildContinuous(property, column.values, background);
   }
-  return buildStringKey(property, column.values, overrides, background);
+  return buildDiscreteKey(property, column.values, overrides, background);
 }
 
 type NumericColumn = Float32Array | Float64Array | Uint32Array;
@@ -271,16 +272,23 @@ function buildCategoricalColumn(
   return { mode: 'categorical', property, palette, columnByNode, categorical };
 }
 
-/** a numeric column below the cardinality threshold: keyed, like a categorical one */
-function buildNumericKey(
+/**
+ * a keyed column: numeric below the cardinality threshold, or strings whatever
+ * theirs — a ramp over names means nothing.
+ */
+function buildDiscreteKey(
   property: string,
-  values: NumericColumn,
+  values: NumericColumn | string[],
   overrides?: Record<string, string>,
-  background?: string
+  background?: string,
+  /** from the threshold decision, so that column is not counted twice */
+  precounted?: ReadonlyMap<string | number, number>
 ): ColorMapping {
-  const counts = new Map<number, number>();
-  for (let i = 0; i < values.length; i++) {
-    counts.set(values[i], (counts.get(values[i]) ?? 0) + 1);
+  let counts = precounted;
+  if (!counts) {
+    const tally = new Map<string | number, number>();
+    for (let i = 0; i < values.length; i++) tally.set(values[i], (tally.get(values[i]) ?? 0) + 1);
+    counts = tally;
   }
   // deterministic order: sort distinct values (numeric-aware) so colors are stable
   const ordered = [...counts.entries()]
@@ -288,30 +296,10 @@ function buildNumericKey(
     .sort((a, b) => compareValues(a.value, b.value));
 
   const { categorical, palette, columnByValue } = buildKey(ordered, overrides, background);
-  const columnByKey = new Map<number, number>();
+  const columnByKey = new Map<string | number, number>();
   for (const { key, value } of ordered) columnByKey.set(key, columnByValue.get(value) ?? 0);
   const columnByNode = new Uint16Array(values.length);
   for (let i = 0; i < values.length; i++) columnByNode[i] = columnByKey.get(values[i]) ?? 0;
-  return { mode: 'categorical', property, palette, columnByNode, categorical };
-}
-
-/** a string column: keyed whatever its cardinality — a ramp over names means nothing */
-function buildStringKey(
-  property: string,
-  values: string[],
-  overrides?: Record<string, string>,
-  background?: string
-): ColorMapping {
-  const counts = new Map<string, number>();
-  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
-  // deterministic order: sort distinct values (numeric-aware) so colors are stable
-  const ordered = [...counts.entries()]
-    .map(([value, count]) => ({ value, count }))
-    .sort((a, b) => compareValues(a.value, b.value));
-
-  const { categorical, palette, columnByValue } = buildKey(ordered, overrides, background);
-  const columnByNode = new Uint16Array(values.length);
-  for (let i = 0; i < values.length; i++) columnByNode[i] = columnByValue.get(values[i]) ?? 0;
   return { mode: 'categorical', property, palette, columnByNode, categorical };
 }
 
@@ -353,20 +341,19 @@ function buildContinuous(
   return { mode: 'continuous', property, palette, columnByNode, continuous };
 }
 /**
- * More than `limit` distinct values, answered without a pass over the column.
- *
- * The threshold is the only thing that ever asks, and on a continuous property
- * the thirteenth distinct value arrives within the first few nodes, so this
- * stops there — deciding by looking at the whole column would take longer than
- * everything the answer is used for.
+ * Distinct-value counts, or null past `limit` — where the continuous ramp
+ * takes over. On a continuous property the value past the limit arrives
+ * within the first few nodes, so the bail keeps the decision from costing a
+ * pass over a region-scale column; below it, the counts feed the key, so the
+ * column is read once, not once to decide and once to count.
  */
-function exceedsDistinct(values: NumericColumn, limit: number): boolean {
-  const seen = new Set<number>();
+function countsWithin(values: NumericColumn, limit: number): Map<string | number, number> | null {
+  const counts = new Map<string | number, number>();
   for (let i = 0; i < values.length; i++) {
-    seen.add(values[i]);
-    if (seen.size > limit) return true;
+    counts.set(values[i], (counts.get(values[i]) ?? 0) + 1);
+    if (counts.size > limit) return null;
   }
-  return false;
+  return counts;
 }
 
 /** numeric-aware comparison so "2" sorts before "10" */

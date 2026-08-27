@@ -4,7 +4,8 @@ import { CANVAS_LIGHT, normalizeCanvasBackground } from './contrast';
 
 import type { ViewerConfig } from './types';
 
-const STORAGE_PREFIX = 'obi:circuit-viewer-config:v1:';
+// v2: `colorByProperty` went from `string | null` to a per-population record.
+const STORAGE_PREFIX = 'obi:circuit-viewer-config:v2:';
 
 /**
  * in-house flag: when true, the per-circuit viewer config is persisted to (and

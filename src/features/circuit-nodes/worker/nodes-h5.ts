@@ -562,21 +562,13 @@ export class NodesSession {
   private columnStrings(name: string): string[] {
     const handle = this.columnIndex.get(name);
     if (!handle || handle.kind === ColumnKindDict.SyntheticNodeId) return [];
-    const data = this.loadColumn(name);
-    if (handle.kind === ColumnKindDict.Categorical) {
-      const arr = data as Uint32Array;
-      const lib = handle.library;
-      const values = new Array<string>(arr.length);
-      for (let i = 0; i < arr.length; i++) values[i] = lib[arr[i]] ?? String(arr[i]);
-      return values;
-    }
-    if (handle.kind === ColumnKindDict.Numeric) {
-      const arr = data as Float32Array | Float64Array;
-      const values = new Array<string>(arr.length);
-      for (let i = 0; i < arr.length; i++) values[i] = String(arr[i]);
-      return values;
-    }
-    return data as string[];
+    // The per-kind decode — malformed-file fallback included — is
+    // `decodeSliceForPage`'s; only numbers still need to become strings here.
+    const decoded = decodeSliceForPage(handle, this.loadColumn(name));
+    if (handle.kind !== ColumnKindDict.Numeric) return decoded as string[];
+    const values = new Array<string>(decoded.length);
+    for (let i = 0; i < decoded.length; i++) values[i] = String(decoded[i]);
+    return values;
   }
 }
 

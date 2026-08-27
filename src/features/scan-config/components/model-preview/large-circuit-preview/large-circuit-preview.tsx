@@ -178,6 +178,9 @@ export function LargeCircuitPreview({
   // typed-array copies: the geometries already hold the flat triples the
   // viewer reads, so nothing here exists per node.
   const positions = React.useMemo(() => {
+    // One population is the placement's own array: the hook keeps it for as
+    // long as it lives, so a copy would only double region-scale residency.
+    if (placed.length === 1) return placed[0].geometry.positions;
     let length = 0;
     for (const { geometry } of placed) length += geometry.positions.length;
     const all = new Float32Array(length);
@@ -202,19 +205,13 @@ export function LargeCircuitPreview({
     // paints its own depth-shaded blue, which is what it does today.
     if (!nodeColors && !recede) return VIEWER_DEFAULT_PALETTE;
 
-    // `null` is "nothing of ours to say about this soma": the viewer paints it
-    // from its own ramp, which is what an uncoloured cloud has always looked
-    // like, rather than flattening it to one hue.
     const palette: (string | null)[] = nodeColors ? [...nodeColors.palette] : [];
-    const columnByPaint = new Map<string | null, number>();
-    const columnOf = (paint: string | null) => {
-      const known = columnByPaint.get(paint);
-      if (known !== undefined) return known;
-
-      columnByPaint.set(paint, palette.length);
-      palette.push(paint);
-      return palette.length - 1;
-    };
+    // The only two paints of ours: the receded colour, and `null` — "nothing
+    // of ours to say about this soma", the viewer's own ramp, which is what an
+    // uncoloured cloud has always looked like, rather than flattening it to
+    // one hue. Each takes a palette column on first use.
+    let ownRampColumn: number | undefined;
+    let recededColumn: number | undefined;
 
     const columnByCell = new Uint16Array(positions.length / 3);
     let index = 0;
@@ -223,10 +220,13 @@ export function LargeCircuitPreview({
         // The mapping's palette sits at the same indices here, so its columns
         // land as they are.
         columnByCell.set(nodeColors.columnByNode.subarray(0, geometry.count), index);
-      } else {
+      } else if (candidate.name !== subjectName && recede !== undefined) {
         // One colour for a whole population: found once, then filled.
-        const paint = candidate.name === subjectName ? null : (recede ?? null);
-        columnByCell.fill(columnOf(paint), index, index + geometry.count);
+        recededColumn ??= palette.push(recede) - 1;
+        columnByCell.fill(recededColumn, index, index + geometry.count);
+      } else {
+        ownRampColumn ??= palette.push(null) - 1;
+        columnByCell.fill(ownRampColumn, index, index + geometry.count);
       }
       index += geometry.count;
     }

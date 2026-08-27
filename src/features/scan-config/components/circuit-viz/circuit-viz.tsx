@@ -169,7 +169,15 @@ export function CircuitVisualization({
 /** The view reads no entity fields, so it serves circuits and MEModels alike. */
 type TCircuitVizViewProps = Omit<
   CircuitVizProps,
-  'circuit' | 'population' | 'populations' | 'recededColor' | 'onPopulationClick'
+  // `nodeColors` and `defaultColor` feed `useSmallCircuitSource` in the
+  // wrapper; the view itself never reads them.
+  | 'circuit'
+  | 'population'
+  | 'populations'
+  | 'recededColor'
+  | 'onPopulationClick'
+  | 'nodeColors'
+  | 'defaultColor'
 > & {
   source: SmallCircuitSource;
   /** Whole-cell clicks, from the same pick pass as `cellHover`. */
@@ -369,10 +377,7 @@ function CircuitVizView({
   );
 }
 
-type TMemodelVizProps = Omit<
-  TCircuitVizViewProps,
-  'source' | 'nodeColors' | 'defaultColor' | 'onCellClick'
-> & {
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick'> & {
   memodelId: string;
 };
 
