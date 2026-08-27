@@ -35,9 +35,6 @@ import styles from './large-circuit-preview.module.css';
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
-/** Nothing hidden. Shared, so the memos below are not rebuilt every render. */
-const NONE_HIDDEN: readonly string[] = [];
-
 /** An empty palette: the viewer falls back to its own depth-shaded blue. */
 const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
   palette: [],
@@ -113,7 +110,7 @@ export function LargeCircuitPreview({
   circuit,
   population,
   populations,
-  hiddenPopulations = NONE_HIDDEN,
+  hiddenPopulations,
   nodeColors,
   recededColor,
   onPopulationClick,

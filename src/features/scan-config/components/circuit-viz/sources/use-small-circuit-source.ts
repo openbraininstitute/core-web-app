@@ -44,6 +44,8 @@ type TOptions = {
   population: NodePopulation | undefined;
   /** @see CircuitVizProps.populations */
   populations: readonly NodePopulation[];
+  /** @see CircuitVizProps.hiddenPopulations */
+  hiddenPopulations?: readonly string[];
   showAxons: boolean;
   nodeColors?: NodeColors;
   /** Paint for nodes colour-by has nothing to say about. */
@@ -67,12 +69,14 @@ type TOptions = {
  *
  * Only the population on show gets its morphologies. The others in
  * `populations` are drawn as placeholder somas in a receded colour, enough to
- * locate and to click, and load nothing from OBI-One.
+ * locate and to click, and load nothing from OBI-One. A hidden population is
+ * not even that: it contributes no cells at all.
  */
 export function useSmallCircuitSource({
   circuit,
   population,
   populations,
+  hiddenPopulations,
   showAxons,
   nodeColors,
   defaultColor = DEFAULT_NEURON_COLOR,
@@ -87,6 +91,7 @@ export function useSmallCircuitSource({
   // cells and do not change with the selection, so selecting another
   // population repaints the scene instead of re-fitting the camera around it.
   const { placed, settled } = usePopulationsPlacement({ circuit, populations });
+  const hidden = useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
 
   // Both, because this source puts a whole morphology in world space: the file
   // to draw comes from the `morphology` column, the rotation that places it from
@@ -122,6 +127,12 @@ export function useSmallCircuitSource({
     // cell keeps its id and position whichever population is selected. The
     // others are drawn as somas: unrotated, receded, and keyed as such.
     return placed.flatMap(({ population: candidate, geometry: placement }) => {
+      // Dropped rather than drawn dark: the viewer asks `loadCell` for every
+      // cell it is given, so a population that contributes none is a population
+      // whose morphologies are never asked of OBI-One. What stays is a subset of
+      // what was on screen, which the viewer reads as the same scene and does
+      // not re-frame the camera around.
+      if (hidden.has(candidate.name)) return [];
       const onShow = candidate.name === population.name;
       const result = new Array<MorphoViewerSmallCircuitCell>(placement.count);
       for (let i = 0; i < placement.count; i++) {
@@ -143,6 +154,7 @@ export function useSmallCircuitSource({
   }, [
     population,
     placed,
+    hidden,
     settled,
     detail,
     circuitId,

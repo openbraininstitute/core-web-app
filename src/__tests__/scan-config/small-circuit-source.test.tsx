@@ -97,9 +97,22 @@ vi.mock('@/api/one/circuit-visualization', async () => {
 
 const circuit = { id: 'circuit-id' } as ICircuit;
 
-type TProps = { population: NodePopulation; populations?: NodePopulation[]; showAxons: boolean };
+type TProps = {
+  population: NodePopulation;
+  populations?: NodePopulation[];
+  hiddenPopulations?: string[];
+  showAxons: boolean;
+};
 
-function render(showAxons: boolean, populations?: NodePopulation[], population = DEFAULT) {
+function render(
+  showAxons: boolean,
+  populations?: NodePopulation[],
+  population = DEFAULT,
+  hiddenPopulations?: string[]
+) {
+  // Annotated, so the optional props stay optional for `rerender`, which
+  // otherwise infers its argument from this literal and demands all four.
+  const initialProps: TProps = { population, populations, hiddenPopulations, showAxons };
   return renderHook(
     (props: TProps) =>
       useSmallCircuitSource({
@@ -108,7 +121,7 @@ function render(showAxons: boolean, populations?: NodePopulation[], population =
         populations: props.populations ?? [props.population],
         recededColor: '#cccccc',
       }),
-    { initialProps: { population, populations, showAxons } }
+    { initialProps }
   );
 }
 
@@ -258,5 +271,53 @@ describe('useSmallCircuitSource', () => {
 
     expect(result.current.cells).toEqual([]);
     expect(result.current.error).toBe(fixtures.error);
+  });
+  // Here hiding is a real saving rather than a repaint: the viewer asks
+  // `loadCell` for every cell it is handed, so a population that contributes
+  // none is a population whose morphologies are never asked of OBI-One.
+  it('leaves a hidden population out of the scene, and puts it back where it was', () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0]) },
+        { population: INPUTS, geometry: placement([10, 0, 0]) },
+      ],
+      failures: new Map(),
+      settled: true,
+    };
+    const { result, rerender } = render(false, [DEFAULT, INPUTS], DEFAULT, ['inputs']);
+
+    expect(result.current.cells.map((cell) => cell.id)).toEqual([
+      'circuit-id/default #0?axons=false',
+    ]);
+
+    rerender({ population: DEFAULT, populations: [DEFAULT, INPUTS], showAxons: false });
+
+    // The same id, in the same place, on both sides of the hide. What the
+    // viewer sees is a subset and then a superset of the ids it already holds,
+    // which is how it knows this is the scene it is standing in rather than a
+    // new one to re-frame.
+    expect(result.current.cells.map((cell) => cell.id)).toEqual([
+      'circuit-id/default #0?axons=false',
+      'circuit-id/inputs #0?axons=false&soma-only',
+    ]);
+    expect(result.current.cells[0].center).toEqual([0, 0, 0]);
+  });
+
+  it('drops the population on show when that is the hidden one', () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0]) },
+        { population: INPUTS, geometry: placement([10, 0, 0]) },
+      ],
+      failures: new Map(),
+      settled: true,
+    };
+    const { result } = render(false, [DEFAULT, INPUTS], DEFAULT, ['default']);
+
+    // What is left is the other population, still a receded soma: being the one
+    // on show is not what puts a cell on screen, being unhidden is.
+    expect(result.current.cells.map((cell) => cell.id)).toEqual([
+      'circuit-id/inputs #0?axons=false&soma-only',
+    ]);
   });
 });

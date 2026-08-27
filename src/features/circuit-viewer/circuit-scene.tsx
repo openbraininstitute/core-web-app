@@ -502,6 +502,7 @@ export function CircuitScene({
               circuit={circuit}
               population={population}
               populations={populations}
+              hiddenPopulations={config.hiddenPopulations}
               nodeColors={enableColorBy ? nodeColors : undefined}
               defaultColor={defaultColor}
               recededColor={recededColor}

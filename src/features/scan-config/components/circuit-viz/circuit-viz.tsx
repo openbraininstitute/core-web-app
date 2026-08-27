@@ -62,6 +62,12 @@ interface CircuitVizProps {
    * positions.
    */
   populations: readonly NodePopulation[];
+  /**
+   * Populations taken out of the scene, by name. Here that is a real saving
+   * rather than a repaint: a hidden population contributes no cells, and the
+   * viewer only asks for the morphologies of cells it has been given.
+   */
+  hiddenPopulations?: readonly string[];
   /** Colour for the somas of the populations that are not on show. */
   recededColor?: string;
   /** Called with the population name when one of those somas is clicked. */
@@ -135,6 +141,7 @@ export interface IMorphologyLocationsBinding extends IFormBindingOptions {
  */
 export function CircuitVisualization({
   populations,
+  hiddenPopulations,
   recededColor,
   onPopulationClick,
   ...props
@@ -143,6 +150,7 @@ export function CircuitVisualization({
     circuit: props.circuit,
     population: props.population,
     populations,
+    hiddenPopulations,
     showAxons: props.showAxons,
     nodeColors: props.nodeColors,
     defaultColor: props.defaultColor,
@@ -174,6 +182,7 @@ type TCircuitVizViewProps = Omit<
   | 'circuit'
   | 'population'
   | 'populations'
+  | 'hiddenPopulations'
   | 'recededColor'
   | 'onPopulationClick'
   | 'nodeColors'
