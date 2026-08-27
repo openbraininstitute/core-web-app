@@ -139,7 +139,7 @@ export function PopulationsMenu({
         <div ref={contentRef}>
           <div className="flex items-center justify-between gap-2 px-2 py-1.5">
             <span className="text-xs uppercase tracking-wide" style={mutedStyle}>
-              On screen
+              Visible
             </span>
             <button
               type="button"
