@@ -126,7 +126,9 @@ export function PopulationsMenu({
       <PopoverContent
         container={container}
         data-testid="populations-menu-content"
-        align="end"
+        // Opens under the pill's left edge, which is the one that stays put:
+        // the pill sits at the left of the chrome and grows rightward.
+        align="start"
         sideOffset={6}
         style={panelStyle}
         className={cn(

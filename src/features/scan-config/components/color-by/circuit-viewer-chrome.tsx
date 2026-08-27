@@ -56,9 +56,9 @@ export interface ICircuitViewerChromeProps {
 
 /**
  * absolutely-positioned control layer over a circuit viewer: mode toggle +
- * table + settings (top-left), populations checklist + color-by dropdown + key
- * (top-right), and what the checklist can leave the scene in (centre). Sits
- * above the 3D canvas
+ * table + settings + populations checklist (top-left), color-by dropdown + key
+ * (top-right), and what the checklist can leave the scene in (centre and
+ * top-left). Sits above the 3D canvas
  */
 export function CircuitViewerChrome({
   modeToggle,
@@ -149,49 +149,85 @@ export function CircuitViewerChrome({
           <ZoomSlider zoom={viz.zoom.value} onZoomChange={viz.zoom.onChange} theme={theme} />
         </div>
       )}
-      <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        {modeToggle && <ModeToggle options={modeToggle} />}
-        {table && (
-          <ChromeButton
-            label={table.active ? 'Hide nodes table' : 'Show nodes table'}
-            onClick={table.onToggle}
-            active={table.active}
-          >
-            <RiTableLine className="size-4" />
-          </ChromeButton>
-        )}
-        {viz && (
-          <div
-            className={cn(
-              'flex items-center gap-2',
-              !showVizChrome && 'invisible pointer-events-none'
-            )}
-            aria-hidden={!showVizChrome}
-            inert={!showVizChrome || undefined}
-          >
-            {isFullscreen && (
-              <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
-                <RiFullscreenExitLine className="size-4" />
-              </ChromeButton>
-            )}
-            <ViewerControlsMenu
-              {...viz.menu}
-              container={portalContainer}
-              isFullscreen={isFullscreen}
-            />
-            {viz.menu.onToggleElectrodes &&
-              viz.menu.showElectrodes !== false &&
-              viz.electrodesInteractive !== false && (
-                <ElectrodeInteractionHelp container={portalContainer} />
+      {/* What the scene is made of: which populations are in it, the table
+          listing the one on show, and how it is drawn. A column, because the
+          checklist has something to say below itself. */}
+      <div
+        data-testid="viewer-chrome-left"
+        className="pointer-events-auto absolute left-3 top-3 flex flex-col items-start gap-2"
+      >
+        <div className="flex items-center gap-2">
+          {modeToggle && <ModeToggle options={modeToggle} />}
+          {table && (
+            <ChromeButton
+              label={table.active ? 'Hide nodes table' : 'Show nodes table'}
+              onClick={table.onToggle}
+              active={table.active}
+            >
+              <RiTableLine className="size-4" />
+            </ChromeButton>
+          )}
+          {viz && (
+            <div
+              className={cn(
+                'flex items-center gap-2',
+                !showVizChrome && 'invisible pointer-events-none'
               )}
-            {viz.morphologyLocationsInteractive && (
-              <MorphologyLocationHelp container={portalContainer} />
-            )}
-          </div>
+              aria-hidden={!showVizChrome}
+              inert={!showVizChrome || undefined}
+            >
+              {isFullscreen && (
+                <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
+                  <RiFullscreenExitLine className="size-4" />
+                </ChromeButton>
+              )}
+              <ViewerControlsMenu
+                {...viz.menu}
+                container={portalContainer}
+                isFullscreen={isFullscreen}
+              />
+              {/* Ahead of the help icons, which come and go with the mode: in a
+                  row anchored to the left edge, only what precedes an element
+                  can move it, and the pill's own width changes as populations
+                  are ticked off. */}
+              {populations && (
+                <PopulationsMenu
+                  populations={populations.populations}
+                  hidden={populations.hidden}
+                  onChange={populations.onChange}
+                  selected={populations.selected}
+                  onSelect={populations.onSelect}
+                  theme={theme}
+                  container={portalContainer}
+                />
+              )}
+              {viz.menu.onToggleElectrodes &&
+                viz.menu.showElectrodes !== false &&
+                viz.electrodesInteractive !== false && (
+                  <ElectrodeInteractionHelp container={portalContainer} />
+                )}
+              {viz.morphologyLocationsInteractive && (
+                <MorphologyLocationHelp container={portalContainer} />
+              )}
+            </div>
+          )}
+        </div>
+        {showVizChrome && populations && hiddenSubject !== undefined && (
+          <ChromeNotice
+            action="Show"
+            onAction={() =>
+              populations.onChange(populations.hidden.filter((name) => name !== hiddenSubject))
+            }
+            theme={theme}
+            style={panelStyle}
+            className="px-3 py-1 text-xs"
+          >
+            “{hiddenSubject}” is selected but hidden
+          </ChromeNotice>
         )}
       </div>
 
-      {(colorBy || populations) && (
+      {colorBy && (
         <div
           className={cn(
             'pointer-events-auto absolute right-3 top-3 flex flex-col items-end gap-2',
@@ -205,81 +241,44 @@ export function CircuitViewerChrome({
               : undefined
           }
         >
-          <div className="flex items-center gap-2">
-            {populations && (
-              <PopulationsMenu
-                populations={populations.populations}
-                hidden={populations.hidden}
-                onChange={populations.onChange}
-                selected={populations.selected}
-                onSelect={populations.onSelect}
-                theme={theme}
-                container={portalContainer}
-              />
-            )}
-            {/* Beside the measured toolbar rather than inside it: the key below is
-                sized from that element, so a pill counted into the measurement would
-                stretch the key out to cover the pill as well. */}
-            {colorBy && (
-              <div
-                ref={toolbarRef}
-                data-testid="color-by-toolbar"
-                className="flex items-center gap-1"
-              >
-                <ColorByDropdown
-                  value={colorBy.selectedProperty}
-                  onChange={colorBy.onSelectProperty}
-                  properties={colorBy.properties}
-                  loading={colorBy.propertiesLoading}
-                  error={colorBy.propertiesError}
-                  onRetry={colorBy.onRetryProperties}
-                  theme={theme}
-                  container={portalContainer}
-                />
-                {showLegendToggle && (
-                  <button
-                    type="button"
-                    id="color-mapping-panel-toggle"
-                    data-slot="color-mapping-panel-toggle"
-                    aria-label={legendOpen ? 'Hide color mapping' : 'Show color mapping'}
-                    aria-expanded={legendOpen}
-                    aria-controls="color-mapping-panel"
-                    onClick={() => setLegendOpen((open) => !open)}
-                    style={panelStyle}
-                    className={cn(
-                      styles.legendToggle,
-                      'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
-                      theme
-                        ? 'hover:brightness-110'
-                        : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
-                    )}
-                  >
-                    <RiArrowDownSLine
-                      className={cn(
-                        styles.chevronIcon,
-                        'size-4',
-                        legendOpen && styles.chevronIconOpen
-                      )}
-                    />
-                  </button>
+          {/* Measured here rather than on the column, which holds the key that
+              is being sized from it. */}
+          <div ref={toolbarRef} data-testid="color-by-toolbar" className="flex items-center gap-1">
+            <ColorByDropdown
+              value={colorBy.selectedProperty}
+              onChange={colorBy.onSelectProperty}
+              properties={colorBy.properties}
+              loading={colorBy.propertiesLoading}
+              error={colorBy.propertiesError}
+              onRetry={colorBy.onRetryProperties}
+              theme={theme}
+              container={portalContainer}
+            />
+            {showLegendToggle && (
+              <button
+                type="button"
+                id="color-mapping-panel-toggle"
+                data-slot="color-mapping-panel-toggle"
+                aria-label={legendOpen ? 'Hide color mapping' : 'Show color mapping'}
+                aria-expanded={legendOpen}
+                aria-controls="color-mapping-panel"
+                onClick={() => setLegendOpen((open) => !open)}
+                style={panelStyle}
+                className={cn(
+                  styles.legendToggle,
+                  'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
+                  theme
+                    ? 'hover:brightness-110'
+                    : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
                 )}
-              </div>
+              >
+                <RiArrowDownSLine
+                  className={cn(styles.chevronIcon, 'size-4', legendOpen && styles.chevronIconOpen)}
+                />
+              </button>
             )}
           </div>
-          {populations && hiddenSubject !== undefined && (
-            <ChromeNotice
-              action="Show"
-              onAction={() =>
-                populations.onChange(populations.hidden.filter((name) => name !== hiddenSubject))
-              }
-              theme={theme}
-              style={panelStyle}
-              className="px-3 py-1 text-xs"
-            >
-              “{hiddenSubject}” is selected but hidden
-            </ChromeNotice>
-          )}
-          {showKey && legendOpen && colorBy?.mapping && (
+          {showKey && legendOpen && colorBy.mapping && (
             <div
               className={cn(styles.panelReveal, 'min-w-0')}
               style={{ width: 'var(--color-by-toolbar-width)' }}

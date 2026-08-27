@@ -55,12 +55,15 @@ function withHidden(hidden: string[], overrides: Partial<PopulationsControls> = 
 }
 
 describe('CircuitViewerChrome populations pill', () => {
-  it('keeps the pill out of the element the colour key is measured from', () => {
+  // Which populations are in the scene belongs with the rest of what the scene
+  // is made of, not with how it is painted. It also stops the pill jumping: the
+  // colour toolbar is right-anchored and its width follows the property name,
+  // so anything to its left moves every time a property is picked.
+  it('puts the pill with the scene controls, not the colour ones', () => {
     renderChrome({ menu: MENU, colorBy: COLOR_BY, populations: POPULATIONS });
 
     const pill = screen.getByTestId('populations-menu-trigger');
-    // The key below the toolbar is sized from this element, so anything counted
-    // into it is something the key then stretches out to cover.
+    expect(screen.getByTestId('viewer-chrome-left')).toContainElement(pill);
     expect(screen.getByTestId('color-by-toolbar')).not.toContainElement(pill);
   });
 
@@ -94,7 +97,11 @@ describe('CircuitViewerChrome population notices', () => {
     const { populations, onChange } = withHidden(['cortex', 'vpm']);
     renderChrome({ menu: MENU, populations });
 
-    expect(screen.getByRole('status')).toHaveTextContent('“cortex” is selected but hidden');
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent('“cortex” is selected but hidden');
+    // Under the checklist it is about, so the way back sits beside the control
+    // that got the user here.
+    expect(screen.getByTestId('viewer-chrome-left')).toContainElement(notice);
     fireEvent.click(screen.getByRole('button', { name: 'Show' }));
     // That one back, and only that one: the notice is about the population on
     // show, not about everything the user has taken out of the scene.
