@@ -14,7 +14,7 @@ import { useFullscreenElement } from './use-fullscreen-element';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
 import type { ViewerTheme } from './contrast';
-import type { ColorByControls } from './use-circuit-color-by';
+import type { ColorByControls, PopulationsControls } from './use-circuit-color-by';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 import styles from './chrome-animations.module.css';
@@ -39,6 +39,8 @@ export interface ICircuitViewerChromeProps {
     menu: ViewerControlsMenuProps;
     /** Omit to hide the color-by dropdown + legend. */
     colorBy?: ColorByControls;
+    /** Omit to hide the populations checklist. */
+    populations?: PopulationsControls;
     /**
      * Whether electrodes can actually be dragged/rotated. Read-only hosts pass
      * false so the interaction help does not advertise gestures that do nothing.

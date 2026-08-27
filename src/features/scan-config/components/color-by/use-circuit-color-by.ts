@@ -60,6 +60,24 @@ export interface ColorByControls {
   onChangeCategoryColor: (value: string, color: string) => void;
 }
 
+/** props the chrome needs to render the populations checklist */
+export interface PopulationsControls {
+  /** Every population the circuit declares, in declared order. */
+  populations: readonly NodePopulation[];
+  /** The ones taken out of the scene, by name; the rest are drawn. */
+  hidden: readonly string[];
+  /**
+   * Replace the hidden set. One setter rather than a callback per gesture:
+   * showing all of them and showing only one are both a set, worked out where
+   * the list is on hand.
+   */
+  onChange: (hidden: string[]) => void;
+  /** The population on show, drawn in full and listed in the nodes table. */
+  selected?: string;
+  /** Put another population on show. Absent where the host pins that choice. */
+  onSelect?: (name: string) => void;
+}
+
 /**
  * central state for the color-by feature on a single circuit viewer: the
  * persisted config, the per-node color mapping (with user overrides), and
@@ -143,6 +161,11 @@ export function useCircuitColorBy(
       });
     },
     [property, config.colorOverrides, update]
+  );
+
+  const onHiddenPopulationsChange = useCallback(
+    (hiddenPopulations: string[]) => update({ hiddenPopulations }),
+    [update]
   );
 
   const colorBy: ColorByControls = useMemo(
@@ -256,6 +279,8 @@ export function useCircuitColorBy(
     /** signal bus passed to the viewer to trigger camera reset / snapshot */
     signals,
     colorBy,
+    /** Take populations out of the scene, or put them back; see {@link PopulationsControls}. */
+    onHiddenPopulationsChange,
     menu,
   };
 }

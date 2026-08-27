@@ -43,6 +43,7 @@ import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
+import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
@@ -269,6 +270,7 @@ export function CircuitScene({
     theme,
     signals,
     colorBy,
+    onHiddenPopulationsChange,
     menu,
   } = useCircuitColorBy(circuit, {
     supportsAxons,
@@ -278,6 +280,32 @@ export function CircuitScene({
     population,
     subject: memodel,
   });
+
+  // Offered only where the other populations are on screen to begin with, and
+  // only where there is more than one — with a single population, hiding it is
+  // the empty scene and nothing else. That is the same condition that decides
+  // whether clicking a population in 3D selects it.
+  const populationsControl = useMemo((): PopulationsControls | undefined => {
+    const nodes = circuitConfig?.nodes;
+    if (!showUnselectedPopulations || !nodes || nodes.length < 2) return undefined;
+    return {
+      populations: nodes,
+      hidden: config.hiddenPopulations,
+      onChange: onHiddenPopulationsChange,
+      // The resolved name, not what the host or the table asked for: with
+      // neither naming one, the scene falls back to the first population, and
+      // that is the one on show.
+      selected: population?.name,
+      onSelect: handlePopulationClick,
+    };
+  }, [
+    showUnselectedPopulations,
+    circuitConfig,
+    config.hiddenPopulations,
+    onHiddenPopulationsChange,
+    population?.name,
+    handlePopulationClick,
+  ]);
 
   // Selecting the block an overlay came from highlights it, whichever root
   // element that block lives under (`electrode_locations` while building an
@@ -491,6 +519,7 @@ export function CircuitScene({
         viz={{
           menu,
           colorBy: enableColorBy ? colorBy : undefined,
+          populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,
           // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
