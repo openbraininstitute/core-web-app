@@ -17,7 +17,7 @@ vi.mock('@/features/scan-config/components/shared/3d-viewer', () => ({
   downloadCircuitImage: () => {},
 }));
 
-// The mapping reads the SONATA file; this is about which property is asked for.
+// The mapping reads the SONATA file; this test is about which property is asked for.
 vi.mock('@/features/scan-config/components/color-by/use-node-color-mapping', () => ({
   useNodeColorMapping: () => ({
     mapping: null,
@@ -48,7 +48,7 @@ describe('useCircuitColorBy', () => {
     act(() => result.current.colorBy.onSelectProperty('mtype'));
     expect(result.current.colorBy.selectedProperty).toBe('mtype');
 
-    // A property list is per population: `mtype` means nothing on the inputs.
+    // Property lists are per population: `mtype` does not exist on the inputs.
     rerender({ population: INPUTS });
     expect(result.current.colorBy.selectedProperty).toBeNull();
 
@@ -62,15 +62,16 @@ describe('useCircuitColorBy', () => {
   });
 
   // A render committed with the previous population's choice would paint the
-  // new one in the wrong colours first: a recolour of every soma for nothing.
+  // new population in the wrong colours first, recolouring every soma for
+  // nothing.
   it('restores the remembered choice in the render that switches, committing nothing in between', () => {
     const committed: (string | null)[] = [];
     const { result, rerender } = renderHook(
       ({ population: shown }: { population: NodePopulation }) => {
         const colorBy = useCircuitColorBy(circuit, { population: shown });
         const { selectedProperty } = colorBy.colorBy;
-        // Every commit, not every change: the stale commit carries the same
-        // value as the one before it.
+        // Every commit, not every change, because the stale commit carries the
+        // same value as the one before it.
         useEffect(() => {
           committed.push(selectedProperty);
         });

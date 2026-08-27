@@ -48,7 +48,7 @@ type TOptions = {
   nodeColors?: NodeColors;
   /** Paint for nodes colour-by has nothing to say about. */
   defaultColor?: MorphoViewerSmallCircuitCell['color'];
-  /** Paint for the somas of the populations not on show. */
+  /** Colour for the somas of the populations that are not on show. */
   recededColor?: string;
   /** Read the circuit's edge files and draw its afferent synapses. */
   withSynapses?: boolean;
@@ -66,8 +66,8 @@ type TOptions = {
  * `sonata_section_id` a click needs to become a morphology location.
  *
  * Only the population on show gets its morphologies. The others in
- * `populations` stand as placeholder somas in a receded colour — enough to
- * see where they are and to click one — and load nothing from OBI-One.
+ * `populations` are drawn as placeholder somas in a receded colour, enough to
+ * locate and to click, and load nothing from OBI-One.
  */
 export function useSmallCircuitSource({
   circuit,
@@ -83,9 +83,9 @@ export function useSmallCircuitSource({
   const circuitId = circuit.id;
   const populationName = population?.name;
 
-  // Everyone's positions, the population on show included. These place the
-  // cells, and they never change with the selection, so selecting another
-  // population repaints the scene rather than re-fitting the camera around it.
+  // Positions for every population, including the one on show. They place the
+  // cells and do not change with the selection, so selecting another
+  // population repaints the scene instead of re-fitting the camera around it.
   const { placed, settled } = usePopulationsPlacement({ circuit, populations });
 
   // Both, because this source puts a whole morphology in world space: the file
@@ -107,8 +107,8 @@ export function useSmallCircuitSource({
     useState<Map<string, Map<number, string>>>(EMPTY_SECTION_IDS);
 
   const built = useMemo((): MorphoViewerSmallCircuitCell[] | null => {
-    // Only once the population on show can be drawn in full: the scene must
-    // not stand as somas first and reload as morphologies a moment later.
+    // Wait until the population on show can be drawn in full, so the scene
+    // does not appear as somas and reload as morphologies a moment later.
     if (!population || !settled || !detail) return null;
 
     // Colour-by wins where it has an opinion; failing that a lone cell reads by
@@ -118,9 +118,9 @@ export function useSmallCircuitSource({
     const paint = detail.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
     const { palette, columnByNode } = nodeColors ?? EMPTY_NODE_COLORS;
 
-    // In declared order, the population on show at its own place in it, so a
+    // In declared order, with the population on show in its own place, so a
     // cell keeps its id and position whichever population is selected. The
-    // others stand as somas: unrotated, receded, and keyed as such.
+    // others are drawn as somas: unrotated, receded, and keyed as such.
     return placed.flatMap(({ population: candidate, geometry: placement }) => {
       const onShow = candidate.name === population.name;
       const result = new Array<MorphoViewerSmallCircuitCell>(placement.count);
@@ -152,12 +152,13 @@ export function useSmallCircuitSource({
     recededColor,
   ]);
 
-  // What is on screen stays until the next scene can be drawn in full. On a
-  // switch the newly selected population's morphology names and orientations
+  // Keep what is on screen until the next scene can be drawn in full. On a
+  // switch, the newly selected population's morphology names and orientations
   // take a moment to arrive, and emptying the scene meanwhile would unmount the
-  // viewer: a black frame, then a camera reset. Not past a failure, though: the
-  // error panel would sit on the previous population's cells, and a retry would
-  // remount the viewer with their ids while `loadCell` answers for the new one.
+  // viewer, giving a black frame and then a camera reset. This does not apply
+  // after a failure: the error panel would sit on the previous population's
+  // cells, and a retry would remount the viewer with their ids while `loadCell`
+  // answers for the new population.
   const shownRef = useRef<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
   const cells = built ?? (error ? NO_CELLS : shownRef.current);
   useEffect(() => {
@@ -201,7 +202,7 @@ export function useSmallCircuitSource({
   const loadCell = useCallback(
     async (cellId: string) => {
       const node = parseNodeKey(cellId);
-      // Only the population on show gets its morphologies; the rest stand as somas.
+      // Only the population on show gets its morphologies; the rest stay somas.
       const request =
         node && node.population === populationName
           ? morphologyRequest(node.index, showAxons)
@@ -279,7 +280,8 @@ export function useSmallCircuitSource({
     cells,
     loadCell,
     // The viewer's own progress covers the morphologies; this covers the
-    // positions, everyone's, since the scene is built only once they are in.
+    // positions of every population, since the scene is built only once they
+    // have all arrived.
     isLoading: !error && !settled,
     error,
     retry,

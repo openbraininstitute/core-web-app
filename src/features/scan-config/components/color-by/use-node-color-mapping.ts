@@ -50,13 +50,13 @@ export function useNodeColorMapping(
     population,
   });
 
-  // The last column read for each population, not only the one on show. A
-  // population coming back on show — a click on it in 3D — is painted from here
-  // in the render that switches to it, not blue for as long as its session takes
-  // to reopen and the column to be read again. One column per population, so
-  // this holds no more than the remembered choices can ask for, and dropped
-  // with the circuit: a new one is a new scene, whether or not the host
-  // remounts this. Keyed by the session it was read from.
+  // The last column read for each population, not only the one on show. When a
+  // population comes back on show, by a click on it in 3D, it is painted from
+  // here in the render that switches to it, instead of falling back to blue
+  // while its session reopens and the column is read again. One column per
+  // population, so this holds no more than the remembered choices can ask for.
+  // Dropped when the circuit changes, since that is a new scene whether or not
+  // the host remounts this hook. Keyed by the session the column was read from.
   const [loaded, setLoaded] = useState<{
     circuitId: string | undefined;
     columns: ReadonlyMap<string, LoadedColumn>;

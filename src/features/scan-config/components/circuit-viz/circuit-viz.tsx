@@ -57,14 +57,14 @@ interface CircuitVizProps {
   /** default color for nodes with no property color (adapts to bg in adaptive mode). */
   defaultColor?: string;
   /**
-   * Every population to draw, in declared order, `population` among them. The
-   * others stand as receded somas — or nowhere, when their nodes carry no
+   * Every population to draw, in declared order, including `population`. The
+   * others are drawn as receded somas, or not at all when their nodes carry no
    * positions.
    */
   populations: readonly NodePopulation[];
-  /** Paint for the somas of the populations not on show. */
+  /** Colour for the somas of the populations that are not on show. */
   recededColor?: string;
-  /** A click on one of those somas, naming its population. */
+  /** Called with the population name when one of those somas is clicked. */
   onPopulationClick?: (populationName: string) => void;
   showAxons: boolean;
   backgroundColor: string;

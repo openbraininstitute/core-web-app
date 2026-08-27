@@ -46,10 +46,10 @@ const api = {
   async getColumn(name: string): Promise<ColumnValues> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     const column = session.getColumnValues(name);
-    // Transferred, not cloned, like `getGeometry` — and for a categorical
-    // column the payload is its library plus one Uint32 per node, never a
-    // string per node. `getColumnValues` hands back fresh arrays, so
-    // detaching them cannot touch the session's column cache.
+    // Transferred rather than cloned, as `getGeometry` does. A categorical
+    // column travels as its library plus one Uint32 per node, not a string per
+    // node. `getColumnValues` returns fresh arrays, so detaching them does not
+    // touch the session's column cache.
     if (column.kind === 'categorical') {
       return Comlink.transfer(column, [column.indices.buffer as ArrayBuffer]);
     }

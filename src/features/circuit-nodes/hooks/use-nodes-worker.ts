@@ -26,9 +26,9 @@ type Args = {
 };
 
 /**
- * The registry key of a population's session. One per circuit, asset and
- * population, shared by every reader — the table, colour-by, the viewers — so
- * the file is downloaded once between them.
+ * Registry key of a population's session: one per circuit, asset and
+ * population. Every reader (the nodes table, colour-by, the viewers) shares
+ * the session, so the file is downloaded once.
  */
 export function nodesSessionKey(
   circuitId: string,
@@ -38,7 +38,7 @@ export function nodesSessionKey(
   return `${circuitId}-${circuitAssetId}-${populationName}`;
 }
 
-/** What opening that session takes: the population, and a signed download of its file. */
+/** Arguments for opening that session: the population, and a signed download of its file. */
 export function nodesOpenParams(
   ctx: WorkspaceContext,
   circuitId: string,

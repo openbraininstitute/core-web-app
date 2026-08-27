@@ -181,19 +181,19 @@ describe('useSmallCircuitSource', () => {
     };
     const { result } = render(false, [DEFAULT, INPUTS]);
 
-    // Declared order, ids telling the populations apart.
+    // Declared order, with ids that tell the populations apart.
     expect(result.current.cells.map((cell) => cell.id)).toEqual([
       'circuit-id/default #0?axons=false',
       'circuit-id/inputs #0?axons=false&soma-only',
     ]);
     expect(result.current.cells[1]).toMatchObject({ center: [10, 0, 0], color: '#cccccc' });
-    // The anchor stays on the population on show: the other one sits 10 away.
+    // The anchor stays on the population on show; the other one sits 10 away.
     expect(result.current.anchor).toEqual([0, 0, 0]);
     await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
   });
 
-  // One build, not one per arrival: the viewer re-fits every cell when the
-  // id set changes.
+  // Built once rather than once per arrival, because the viewer re-fits every
+  // cell when the id set changes.
   it('draws nothing until every population is placed', () => {
     fixtures.placement = { placed: [], failures: new Map(), settled: false };
     const { result } = render(false, [DEFAULT, INPUTS]);
@@ -202,9 +202,9 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.isLoading).toBe(true);
   });
 
-  // Emptying the scene while the newly selected population's morphology
-  // names and orientations load would unmount the viewer: a black frame, then
-  // a camera reset.
+  // Emptying the scene while the newly selected population's morphology names
+  // and orientations load would unmount the viewer, giving a black frame and
+  // then a camera reset.
   it('keeps the scene on screen until the newly selected population can be drawn in full', () => {
     fixtures.placement = {
       placed: [
@@ -227,7 +227,7 @@ describe('useSmallCircuitSource', () => {
     fixtures.detail = placement([10, 0, 0]);
     rerender({ population: INPUTS, populations: [DEFAULT, INPUTS], showAxons: false });
 
-    // Same cells, same positions; only which one is drawn in full has moved.
+    // Same cells and same positions; only which one is drawn in full changes.
     expect(result.current.cells.map((cell) => cell.id)).toEqual([
       'circuit-id/default #0?axons=false&soma-only',
       'circuit-id/inputs #0?axons=false',
@@ -237,9 +237,9 @@ describe('useSmallCircuitSource', () => {
     );
   });
 
-  // The error panel would otherwise sit on the previous population's cells,
-  // and 'Try again' would remount the viewer with their ids while `loadCell`
-  // answers for the new population: the old scene repainted as bare somas.
+  // The error panel would otherwise sit on the previous population's cells, and
+  // 'Try again' would remount the viewer with their ids while `loadCell` answers
+  // for the new population, repainting the old scene as bare somas.
   it('drops the scene when the newly selected population fails to load', () => {
     fixtures.placement = {
       placed: [

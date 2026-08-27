@@ -34,10 +34,10 @@ export type TSmallCircuitSource = {
   /** Per loaded cell (by the id in {@link cells}): SONATA section id → the viewer's section name. */
   sonataSectionIds?: ReadonlyMap<string, ReadonlyMap<number, string>>;
   /**
-   * The centre of the population on show, for placing things near it — a new
-   * electrode seeds its origin here. Null until its nodes are placed. Not the
-   * centre of {@link cells}: those may include other populations, drawn for
-   * context, which would pull it away from the cells being recorded.
+   * Centre of the population on show, used to place things near it: a new
+   * electrode seeds its origin here. Null until that population's nodes are
+   * placed. This is not the centre of {@link cells}, which may include context
+   * populations that would pull it away from the cells being recorded.
    */
   anchor: [x: number, y: number, z: number] | null;
 };

@@ -13,9 +13,9 @@ import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/type
 
 /**
  * A registry the test drives by hand: a session opens as `loading` on the
- * first acquire and moves on only when the test settles it. A session settled
- * without geometry answers `getGeometry` the way the worker does for a
- * population without positions — by rejecting.
+ * first acquire and only moves on when the test settles it. A session settled
+ * without geometry rejects `getGeometry`, as the worker does for a population
+ * that carries no positions.
  */
 const registry = vi.hoisted(() => {
   type Session = {
@@ -168,7 +168,7 @@ describe('usePopulationsPlacement', () => {
   });
 
   // A download can fail once. The nodes table and colour-by retry the same
-  // session, and the viewer has to come back with them rather than stay on its
+  // session, and the viewer has to pick that retry up instead of staying on its
   // error until it is remounted.
   it('heals when a failed session is retried', async () => {
     const { result } = render([CORTEX, INPUTS]);
@@ -178,7 +178,7 @@ describe('usePopulationsPlacement', () => {
     });
     await waitFor(() => expect(result.current.settled).toBe(true));
     expect(result.current.failures.has('inputs')).toBe(true);
-    // Held, so the retry is seen.
+    // Still held, so the retry is seen.
     expect(registry.released).toEqual([key(CORTEX)]);
 
     act(() => {
@@ -226,8 +226,8 @@ describe('usePopulationsPlacement', () => {
     await waitFor(() => expect(registry.acquired).toContain(key(second)));
   });
 
-  // Selecting a population reorders nothing and re-reads nothing: the viewer
-  // repaints from what is already in hand.
+  // Selecting a population neither reorders nor re-reads anything, so the
+  // viewer can repaint from what it already has.
   it('keeps what it has read when the list changes, reading only the newcomers', async () => {
     const { result, rerender } = render([CORTEX, INPUTS]);
     act(() => {
@@ -250,7 +250,7 @@ describe('usePopulationsPlacement', () => {
       'cortex',
       'thalamus',
     ]);
-    // The same geometry objects, not copies.
+    // The same geometry objects, rather than copies.
     expect(result.current.placed[1].geometry).toBe(before[0].geometry);
   });
 

@@ -38,9 +38,9 @@ describe('colour-by mode', () => {
     expect(Math.max(...mapping.columnByNode)).toBeLessThan(CONTINUOUS_STOPS);
   });
 
-  // The threshold is answered by the first values that exceed it rather than by
-  // a pass over the column, so a region-scale property must not be measured by
-  // how long the whole of it takes to look at.
+  // The threshold is decided by the first values that exceed it rather than by
+  // a pass over the whole column, so the cost must not scale with the column's
+  // length.
   it('decides on a very long column without reading all of it', () => {
     const { values } = numeric(NUMERIC_CATEGORICAL_MAX + 1, 2_000_000);
     let read = 0;
@@ -53,13 +53,14 @@ describe('colour-by mode', () => {
 
     buildColorMapping({ property: 'y', column: { kind: 'numeric', values: counted } });
 
-    // Two passes build the scale — the bounds, then the stops — and nothing
-    // like a third goes on the decision.
+    // Two passes build the scale, one for the bounds and one for the stops.
+    // The mode decision must not add anything like a third.
     expect(read).toBeLessThan(values.length * 2.5);
   });
 
-  // Cardinality only ever decided the numeric case: a string property is a key
-  // however many values it holds, since a viridis ramp over names means nothing.
+  // Cardinality only ever decided the numeric case. A string property is keyed
+  // however many values it holds, since a viridis ramp over names would mean
+  // nothing.
   it('keys a string property whatever its cardinality', () => {
     const mapping = buildColorMapping({
       property: 'mtype',
@@ -73,8 +74,8 @@ describe('colour-by mode', () => {
     expect(mapping.categorical).toHaveLength(300);
   });
 
-  // The main path at scale: the key is built from the library, the per-node
-  // pass stays on the indices — no string per node anywhere.
+  // The main path at scale: the key is built from the library and the per-node
+  // pass stays on the indices, so no string is created per node.
   it('keys a categorical property from its library and indices', () => {
     const mapping = buildColorMapping({
       property: 'mtype',

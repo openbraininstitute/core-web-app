@@ -40,8 +40,8 @@ const fixtures = vi.hoisted(() => ({
   rendered: [] as MorphoViewerSomasOnlyProps[],
 }));
 
-// The real one is a `next/dynamic` import of a WebGL renderer; here it is the
-// thing under test — what the preview hands the viewer.
+// The real one is a `next/dynamic` import of a WebGL renderer. What the
+// preview hands it is the thing under test.
 vi.mock('@/morpho-viewer', () => ({
   MorphoViewerCircuitMultipleNeuronsSomaOnly: (props: MorphoViewerSomasOnlyProps) => {
     fixtures.rendered.push(props);
@@ -88,7 +88,7 @@ function lastRender(): MorphoViewerSomasOnlyProps {
 
 /**
  * The colour each soma ends up sampling, read back through the palette. `null`
- * is the viewer's own occlusion ramp.
+ * means the viewer's own occlusion ramp.
  */
 function paints(props: MorphoViewerSomasOnlyProps): (string | null | undefined)[] {
   const colors = props.cellColors;
@@ -114,13 +114,13 @@ describe('LargeCircuitPreview colours', () => {
 
     const props = lastRender();
     expect(paints(props)).toEqual(['#aaa', '#bbb', '#ccc']);
-    // Declared order, positions in it, so a soma keeps its index whichever
-    // population is selected.
+    // Declared order, and positions follow it, so a soma keeps its index
+    // whichever population is selected.
     expect(props.positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1, 9, 9, 9]));
   });
 
-  // The whole point of the split: `positions` is a new scene to the viewer,
-  // camera reset included, so a selection change must not touch it.
+  // The viewer treats a new `positions` array as a new scene and resets the
+  // camera, so a selection change must not touch it.
   it('hands back the same positions when only the selection changes', () => {
     const { rerender } = draw({
       population: CORTEX,
@@ -146,25 +146,25 @@ describe('LargeCircuitPreview colours', () => {
     expect(paints(second)).toEqual(['#ccc', '#ccc', '#ddd']);
   });
 
-  // One column for a whole population, not one per soma: the palette is a
-  // texture a pixel wide per colour.
+  // One column for a whole population rather than one per soma, since the
+  // palette is a texture one pixel wide per colour.
   it('gives one palette column to each distinct colour', () => {
     draw({ population: CORTEX, nodeColors: asNodeColors(['#aaa', '#aaa']), recededColor: '#ccc' });
 
     expect(lastRender().cellColors?.palette).toEqual(['#aaa', '#ccc']);
   });
 
-  // Colour-by off, but another population is receded, so the scene needs a
-  // palette to hold the grey — and the somas on show must not be flattened to
-  // one hue on the way, which is what a colour of their own would do.
+  // Colour-by is off, but another population is receded, so the scene still
+  // needs a palette to hold the grey. The somas on show must not be flattened
+  // to a single hue in the process, which giving them a colour would do.
   it('leaves the nodes colour-by has nothing for to the viewer', () => {
     draw({ population: CORTEX, recededColor: '#ccc' });
 
     expect(paints(lastRender())).toEqual([null, null, '#ccc']);
   });
 
-  // Nothing of ours to say: the viewer's own depth-shaded blue, which is what
-  // a single-population circuit has always looked like.
+  // Nothing to colour by, so the viewer keeps its own depth-shaded blue, which
+  // is how a single-population circuit has always looked.
   it('says nothing when there is one population and no colour-by', () => {
     fixtures.placement = {
       placed: [{ population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) }],

@@ -249,7 +249,7 @@ export function useCircuitColorBy(
     nodeColors: mapping ?? undefined,
     /** default neuron color (adapted to the background in adaptive mode) */
     defaultColor,
-    /** paint for the somas of the populations drawn but not on show */
+    /** colour for the somas of the populations drawn but not on show */
     recededColor,
     /** chrome theme derived from the background, or null when adaptive mode is off */
     theme,

@@ -35,7 +35,7 @@ import styles from './large-circuit-preview.module.css';
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
-/** Says "no colours of ours": the viewer's own depth-shaded blue palette. */
+/** An empty palette: the viewer falls back to its own depth-shaded blue. */
 const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
   palette: [],
   columnByCell: new Uint16Array(0),
@@ -57,9 +57,9 @@ export interface LargeCircuitPreviewProps {
   populations: readonly NodePopulation[];
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
-  /** Paint for the somas of the populations not on show. */
+  /** Colour for the somas of the populations that are not on show. */
   recededColor?: string;
-  /** A click on one of those somas, naming its population. */
+  /** Called with the population name when one of those somas is clicked. */
   onPopulationClick?: (populationName: string) => void;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default  */
@@ -122,10 +122,10 @@ export function LargeCircuitPreview({
   const somaRadius = useSomaRadius(circuit);
   const { config, error: configError } = useCircuitConfig(circuit);
   // Somas only: positions are all that is read, for every population at once,
-  // and they are kept across selection changes — so selecting a population
-  // recolours the somas in place, and the camera stays where the user left it.
-  // Nothing is placed until everything is, so a subject in hand means the
-  // scene can be built.
+  // and they are kept across selection changes, so selecting a population
+  // recolours the somas in place and the camera stays where the user left it.
+  // Nothing is reported placed until everything is, so having the subject means
+  // the whole scene can be built.
   const { placed, failures } = usePopulationsPlacement({ circuit, populations });
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
@@ -137,8 +137,8 @@ export function LargeCircuitPreview({
     config && !population
       ? new Error('This circuit’s circuit_config.json declares no node populations')
       : null;
-  // The population on show failing is the viewer failing; another population
-  // failing is context that goes undrawn.
+  // A failure of the population on show fails the viewer; a failure of any
+  // other population is context that simply goes undrawn.
   const error =
     configError ??
     noPopulation ??
@@ -156,8 +156,9 @@ export function LargeCircuitPreview({
   const handleDownload = () => {
     if (!subject) return;
     const { count, positions: coords } = subject;
-    // One JSON part per chunk of somas, glued by the Blob natively: no tuple
-    // object per node and no single region-sized string on the main thread.
+    // One JSON part per chunk of somas, concatenated by the Blob itself: no
+    // tuple object per node, and no single region-sized string on the main
+    // thread.
     const parts: string[] = ['['];
     for (let start = 0; start < count; start += DOWNLOAD_CHUNK) {
       let part = '';
@@ -170,16 +171,16 @@ export function LargeCircuitPreview({
     saveAs(new Blob(parts, { type: 'application/json' }), `${circuit.id}.json`);
   };
 
-  // In declared order, the population on show at its own place in it, so a
-  // soma keeps its index and position whichever population is selected — and
-  // built once, from the placement alone. The viewer takes a new `positions`
-  // array as a new scene, camera reset included, so this must not change when
-  // the selection does; the colours travel separately, below. Straight
-  // typed-array copies: the geometries already hold the flat triples the
-  // viewer reads, so nothing here exists per node.
+  // In declared order, with the population on show in its own place, so a soma
+  // keeps its index and position whichever population is selected. Built once,
+  // from the placement alone: the viewer treats a new `positions` array as a
+  // new scene and resets the camera, so this must not change when the selection
+  // does. Colours are passed separately, below. These are straight typed-array
+  // copies, since the geometries already hold the flat triples the viewer
+  // reads.
   const positions = React.useMemo(() => {
-    // One population is the placement's own array: the hook keeps it for as
-    // long as it lives, so a copy would only double region-scale residency.
+    // With a single population, reuse the placement's own array: the hook
+    // keeps it alive anyway, so copying would double region-scale residency.
     if (placed.length === 1) return placed[0].geometry.positions;
     let length = 0;
     for (const { geometry } of placed) length += geometry.positions.length;
@@ -192,24 +193,25 @@ export function LargeCircuitPreview({
     return all;
   }, [placed]);
 
-  // Only where something recedes: the colour follows the background, and a
-  // scene of one population has no reason to repaint on a background change.
+  // Only when something actually recedes: this colour follows the background,
+  // and a single-population scene should not repaint when the background
+  // changes.
   const recede = hasContext ? recededColor : undefined;
 
-  // The mapping already arrives as a palette and a column per soma; this memo
-  // only lands the subject's columns at its offset in the scene and appends a
-  // column for everything else, so at region scale a selection change stays
-  // one typed-array copy — small enough to run inside one frame.
+  // The mapping already arrives as a palette and a column per soma. This memo
+  // writes the subject's columns at its offset in the scene and appends a
+  // column for everything else, so at region scale a selection change costs one
+  // typed-array copy, small enough to run inside a single frame.
   const cellColors = React.useMemo(() => {
-    // Nothing of ours to say — one population, no colour-by — so the viewer
-    // paints its own depth-shaded blue, which is what it does today.
+    // Nothing to colour by and only one population, so leave the viewer to its
+    // own depth-shaded blue, as it draws today.
     if (!nodeColors && !recede) return VIEWER_DEFAULT_PALETTE;
 
     const palette: (string | null)[] = nodeColors ? [...nodeColors.palette] : [];
-    // The only two paints of ours: the receded colour, and `null` — "nothing
-    // of ours to say about this soma", the viewer's own ramp, which is what an
-    // uncoloured cloud has always looked like, rather than flattening it to
-    // one hue. Each takes a palette column on first use.
+    // Two colours are added here: the receded colour, and `null`, which leaves
+    // a soma to the viewer's own ramp. `null` rather than a colour of our own,
+    // which would flatten an uncoloured cloud to a single hue. Each takes a
+    // palette column on first use.
     let ownRampColumn: number | undefined;
     let recededColumn: number | undefined;
 
@@ -221,7 +223,7 @@ export function LargeCircuitPreview({
         // land as they are.
         columnByCell.set(nodeColors.columnByNode.subarray(0, geometry.count), index);
       } else if (candidate.name !== subjectName && recede !== undefined) {
-        // One colour for a whole population: found once, then filled.
+        // One colour for a whole population: allocate the column once, then fill.
         recededColumn ??= palette.push(recede) - 1;
         columnByCell.fill(recededColumn, index, index + geometry.count);
       } else {
@@ -246,8 +248,8 @@ export function LargeCircuitPreview({
     },
     [placed, subjectName, onPopulationClick]
   );
-  // Offered only with something to select: the viewer builds its pick buffer
-  // on the first click, which at region scale is a second copy of every
+  // Only offered when there is something to select: the viewer builds its pick
+  // buffer on the first click, which at region scale is a second copy of every
   // position.
   const canPickPopulation = onPopulationClick !== undefined && hasContext;
 

@@ -157,8 +157,8 @@ function tune(color: string, background?: string): string {
  * render the key. chooses a categorical key or a continuous scale bar based on
  * the column kind and cardinality. User `overrides` (value → hex) are folded
  * into both the legend and the palette; a `background` (adaptive mode) keeps
- * every color legible against it. The per-node side is a palette column per
- * node — nothing here allocates a JS value per node.
+ * every color legible against it. The per-node output is a palette column per
+ * node; nothing here allocates a JS value per node.
  */
 export function buildColorMapping({
   property,
@@ -182,10 +182,11 @@ type NumericColumn = Float32Array | Float64Array | Uint32Array;
 
 /**
  * the categorical key: a legend entry per distinct value (in `ordered` order,
- * which is what fixes each value's color), plus the bounded palette and each
- * value's column in it. Values whose colors coincide — the generated palette
- * cycles past MAX_DISTINCT_COLORS — share a column, which keeps the palette (a
- * texture in the viewer) bounded however many values the column holds.
+ * which determines each value's color), plus the bounded palette and each
+ * value's column in it. Values whose colors coincide, because the generated
+ * palette cycles past MAX_DISTINCT_COLORS, share a column. That keeps the
+ * palette (a texture in the viewer) bounded however many values the column
+ * holds.
  */
 function buildKey(
   ordered: readonly { value: string; count: number }[],
@@ -226,7 +227,7 @@ function buildKey(
   return { categorical, palette, columnByValue };
 }
 
-/** a categorical column: the key from its library, the per-node pass on its indices */
+/** a categorical column: the key comes from its library, the per-node pass from its indices */
 function buildCategoricalColumn(
   property: string,
   library: string[],
@@ -235,7 +236,7 @@ function buildCategoricalColumn(
   background?: string
 ): ColorMapping {
   // occurrences per library slot. Indices past the library (malformed files)
-  // count under their own `String(slot)` name, as they always have.
+  // count under their own `String(slot)` name, as before.
   let slotCount = library.length;
   for (let i = 0; i < indices.length; i++) {
     if (indices[i] >= slotCount) slotCount = indices[i] + 1;
@@ -273,8 +274,8 @@ function buildCategoricalColumn(
 }
 
 /**
- * a keyed column: numeric below the cardinality threshold, or strings whatever
- * theirs — a ramp over names means nothing.
+ * a keyed column: numeric columns below the cardinality threshold, and string
+ * columns at any cardinality, since a ramp over names would mean nothing.
  */
 function buildDiscreteKey(
   property: string,
@@ -321,7 +322,7 @@ function buildContinuous(
     max = 1;
   }
   const span = max - min || 1;
-  // the quantized ramp *is* the palette: every node samples one of its stops,
+  // the quantized ramp is the palette: every node samples one of its stops,
   // which keeps the viewer's palette texture bounded however many distinct
   // values the column holds
   const palette = new Array<string>(CONTINUOUS_STOPS);
@@ -331,7 +332,7 @@ function buildContinuous(
   const columnByNode = new Uint16Array(values.length);
   for (let i = 0; i < values.length; i++) {
     const value = values[i];
-    // non-finite values sit on the low stop, as they always have
+    // non-finite values sit on the low stop, as before
     if (Number.isFinite(value)) {
       columnByNode[i] = Math.round(((value - min) / span) * (CONTINUOUS_STOPS - 1));
     }
@@ -341,11 +342,11 @@ function buildContinuous(
   return { mode: 'continuous', property, palette, columnByNode, continuous };
 }
 /**
- * Distinct-value counts, or null past `limit` — where the continuous ramp
- * takes over. On a continuous property the value past the limit arrives
- * within the first few nodes, so the bail keeps the decision from costing a
- * pass over a region-scale column; below it, the counts feed the key, so the
- * column is read once, not once to decide and once to count.
+ * Distinct-value counts, or null once `limit` is exceeded, which is where the
+ * continuous ramp takes over. On a continuous property the limit is exceeded
+ * within the first few nodes, so bailing out keeps the decision from costing a
+ * full pass over a region-scale column. Below the limit the counts feed the
+ * key, so the column is read once rather than once to decide and once to count.
  */
 function countsWithin(values: NumericColumn, limit: number): Map<string | number, number> | null {
   const counts = new Map<string | number, number>();
@@ -396,16 +397,16 @@ export function recedeMarkerColor(color: string, background: string): string {
 }
 
 /**
- * Paint for a population that is drawn but not the one on show.
+ * Colour for a population that is drawn but is not the one on show.
  *
- * The default neuron colour drained of its saturation and pushed most of the
- * way to the background: still a shape the eye can find and click, no longer a
- * colour competing with the population on show. Opaque, like
- * {@link recedeMarkerColor}, and for the same reason.
+ * The default neuron colour, desaturated and mixed most of the way to the
+ * background: still visible and clickable, but no longer competing with the
+ * population on show. Opaque, like {@link recedeMarkerColor} and for the same
+ * reason.
  */
 export function recededNeuronColor(background: string): string {
   try {
-    // Two steps, not one: contrast is not symmetric, and a dark grey on black
+    // Two step sizes, because contrast is not symmetric: a dark grey on black
     // disappears long before the same step of light grey on white does.
     const step = backgroundIsDark(background) ? 0.3 : 0.55;
     return chroma.mix(chroma(DEFAULT_NEURON_COLOR).desaturate(3), background, step, 'oklab').hex();

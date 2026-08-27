@@ -49,13 +49,13 @@ export function placementAt(geometry: NodeGeometry, index: number): NodePlacemen
   };
 }
 
-/** The mean position of a population's nodes, or null when it has none. */
+/** Mean position of a population's nodes, or null when the population is empty. */
 export function centroidOf(geometry: NodeGeometry): [x: number, y: number, z: number] | null {
   const { count, positions } = geometry;
   if (count === 0) return null;
 
-  // Read directly rather than through `positionAt`: a running sum has no
-  // use for a tuple per node.
+  // Reads the array directly instead of going through `positionAt`, which
+  // would allocate a tuple per node.
   let sx = 0;
   let sy = 0;
   let sz = 0;

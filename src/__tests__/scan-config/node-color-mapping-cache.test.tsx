@@ -54,8 +54,8 @@ describe('useNodeColorMapping', () => {
     worker.getColumn.mockClear();
   });
 
-  // A population coming back on show — a click on it in 3D — has its session
-  // reopened and would otherwise stay blue until its column is read again.
+  // A population coming back on show, by a click on it in 3D, has its session
+  // reopened, and would otherwise stay blue until its column is read again.
   it('paints a population coming back on show from its last column, in the same render', async () => {
     const { result, rerender } = render(CORTEX, 'mtype');
     await waitFor(() => expect(result.current.mapping?.property).toBe('mtype'));
@@ -64,19 +64,19 @@ describe('useNodeColorMapping', () => {
     rerender({ population: INPUTS, property: 'layer' });
     await waitFor(() => expect(result.current.mapping?.property).toBe('layer'));
 
-    // Back on show, its session not yet reopened.
+    // Back on show, with its session not yet reopened.
     worker.status = 'loading';
     rerender({ population: CORTEX, property: 'mtype' });
 
-    // Rebuilt from the kept column — `useMemo` holds one slot — but in this
-    // render, with nothing read.
+    // Rebuilt from the kept column, since `useMemo` holds only one slot, but
+    // within this render and without reading anything.
     expect(result.current.mapping).toStrictEqual(cortex);
     expect(result.current.loading).toBe(false);
     expect(worker.getColumn).toHaveBeenCalledTimes(2);
   });
 
-  // One column per population: what the remembered choice can ask for, and no
-  // more — a column is a value per node.
+  // One column per population, which is all the remembered choice can ask for.
+  // A column is a value per node, so this bound matters.
   it('keeps only the last column read for a population', async () => {
     const { result, rerender } = render(CORTEX, 'mtype');
     await waitFor(() => expect(result.current.mapping?.property).toBe('mtype'));

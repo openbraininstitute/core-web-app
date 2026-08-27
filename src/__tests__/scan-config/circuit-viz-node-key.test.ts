@@ -41,7 +41,7 @@ describe('node key', () => {
   });
 
   // Selecting a population turns its somas into morphologies, and the viewer
-  // only re-asks for cells whose id changed.
+  // only re-requests cells whose id changed.
   it('gives a soma-only cell a different viewer id from the same cell drawn in full', () => {
     const key = makeNodeKey('circuit-id', 'cortex', 0);
 

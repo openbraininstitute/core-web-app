@@ -1,12 +1,12 @@
 /**
  * The id morphoviewer knows a cell by, and how to get the node back out of it.
  *
- * Two ids, because they answer different questions. {@link makeNodeKey} names
- * the node itself — population and index, since every population counts its
- * nodes from 0 — and is what the synapse projection and error logs cite;
- * {@link makeVizCellId} adds the reload key, so a change in what `loadCell`
- * would answer yields new ids and the viewer re-requests each cell's geometry
- * instead of repainting the cached tree.
+ * There are two ids, answering different questions. {@link makeNodeKey} names
+ * the node itself, by population and index, since every population counts its
+ * nodes from 0; it is what the synapse projection and error logs cite.
+ * {@link makeVizCellId} adds a reload key, so a change in what `loadCell` would
+ * answer yields new ids and the viewer re-requests each cell's geometry instead
+ * of repainting the cached tree.
  */
 export function makeNodeKey(circuitId: string, population: string, index: number): string {
   return `${circuitId}/${population} #${index}`;
@@ -15,10 +15,10 @@ export function makeNodeKey(circuitId: string, population: string, index: number
 type TVizCellOptions = {
   showAxons: boolean;
   /**
-   * The node stands as a soma alone: its population is on screen for
-   * context, not on show. In the key because selecting that population has
-   * to turn its somas into morphologies, and the viewer only re-asks for
-   * cells whose id changed.
+   * The node is drawn as a soma only: its population is on screen for
+   * context rather than on show. Part of the key because selecting that
+   * population must turn its somas into morphologies, and the viewer only
+   * re-requests cells whose id changed.
    */
   somaOnly?: boolean;
 };
@@ -39,11 +39,11 @@ export function makeVizCellId(nodeKey: string, { showAxons, somaOnly = false }: 
  * Recover the node from an id either function produced, or null for anything
  * else.
  *
- * Matched rather than split: `Number('')` is 0, so an id without an index
- * would otherwise resolve to node 0 and quietly load the wrong cell's
- * morphology. The population is everything between the circuit id and the
- * last ` #index`, which is unambiguous because a SONATA population is an HDF5
- * group and its name cannot contain `/`.
+ * Matched with a regex rather than split: `Number('')` is 0, so an id without
+ * an index would resolve to node 0 and load the wrong cell's morphology. The
+ * population is everything between the circuit id and the trailing ` #index`,
+ * which is unambiguous because a SONATA population is an HDF5 group and its
+ * name cannot contain `/`.
  */
 export function parseNodeKey(cellId: string): { population: string; index: number } | null {
   const match = /^[^/]+\/(.+) #(\d+)(?:\?|$)/.exec(cellId);

@@ -103,11 +103,11 @@ export type OpenResponse = {
 /**
  * A whole column in node-index order, in the compact form the worker already
  * holds it: a typed array for numeric columns (the synthetic node id is an
- * identity `Uint32Array`), the `@library` strings plus one library index per
- * node for categorical ones. Only string columns cost a JS value per node.
+ * identity `Uint32Array`), and the `@library` strings plus one library index
+ * per node for categorical ones. Only string columns cost a JS value per node.
  *
- * The arrays are fresh copies, so the worker can hand them across the
- * boundary as transferables instead of structured-cloning per-node values.
+ * The arrays are fresh copies, so the worker can transfer them across the
+ * boundary instead of structured-cloning per-node values.
  */
 export type ColumnValues =
   | { kind: 'numeric'; values: Float32Array | Float64Array | Uint32Array }
@@ -120,7 +120,7 @@ export type ColumnValues =
  * Flat typed arrays rather than per-node objects: they cross the worker
  * boundary as transferables, so a population of any size costs one detach
  * instead of a structured clone. `Float32Array` is enough for every reader,
- * electrode placement included: micron coordinates spanning ~10⁴ µm keep
+ * including electrode placement: micron coordinates spanning ~10⁴ µm keep
  * ~10⁻³ µm of resolution in f32, at half the memory and transfer of f64.
  */
 export type NodeGeometry = {

@@ -83,10 +83,9 @@ export function useNodeGeometry({
     };
   }, [status, getGeometry, withMorphologies, withOrientations, populationName]);
 
-  // Never another population's. A session the table or colour-by already has
-  // open is `ready` the moment it is asked for, so on a switch the previous
-  // population's placement would otherwise stand in for the new one until its
-  // own read completes.
+  // A session the table or colour-by already has open reports `ready`
+  // immediately, so without this check the previous population's geometry
+  // would stand in for the newly selected one until its own read completes.
   const geometry = loaded !== null && loaded.population === populationName ? loaded.geometry : null;
 
   // A config that loads but names no node population would otherwise leave the

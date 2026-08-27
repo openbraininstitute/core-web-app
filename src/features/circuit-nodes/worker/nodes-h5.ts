@@ -554,16 +554,16 @@ export class NodesSession {
   }
 
   /**
-   * a column as one string per node — the morphology read, which resolves a
-   * file per name and so needs the names themselves. Kept off the
+   * a column as one string per node. Used by the morphology read, which
+   * resolves a file per name and so needs the names themselves. Kept off the
    * {@link getColumnValues} path so colouring a region-scale circuit never
    * materialises a string per node.
    */
   private columnStrings(name: string): string[] {
     const handle = this.columnIndex.get(name);
     if (!handle || handle.kind === ColumnKindDict.SyntheticNodeId) return [];
-    // The per-kind decode — malformed-file fallback included — is
-    // `decodeSliceForPage`'s; only numbers still need to become strings here.
+    // `decodeSliceForPage` owns the per-kind decode, malformed-file fallback
+    // included; only numbers still need converting to strings here.
     const decoded = decodeSliceForPage(handle, this.loadColumn(name));
     if (handle.kind !== ColumnKindDict.Numeric) return decoded as string[];
     const values = new Array<string>(decoded.length);

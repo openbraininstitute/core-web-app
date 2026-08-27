@@ -32,8 +32,8 @@ export interface ContinuousLegend {
 /**
  * compact per-node coloring: a bounded palette of display colors plus the
  * palette column each node samples. The typed array is the only per-node
- * allocation, so recoloring a region-scale circuit stays one array copy
- * rather than a string per node.
+ * allocation, so recoloring a region-scale circuit costs one array copy
+ * instead of a string per node.
  */
 export interface NodeColors {
   /** distinct display colors: at most MAX_DISTINCT_COLORS for a key, CONTINUOUS_STOPS for a scale */
@@ -71,10 +71,10 @@ export type ColorOverrides = Record<string, Record<string, string>>;
 /** persisted, per-circuit viewer configuration */
 export interface ViewerConfig {
   /**
-   * Selected colour-by property by population name; absent or null for the
-   * default (blue). Per population because the property list is: one's
-   * `mtype` is another's nothing, so a choice means something only where it
-   * was made, and coming back to that population should find it as it was left.
+   * Selected colour-by property, by population name; absent or null for the
+   * default (blue). Stored per population because the property list is per
+   * population: a property one population has, another may not. Returning to a
+   * population restores the choice made there.
    */
   colorByProperty: Record<string, string | null>;
   backgroundColor: string;
