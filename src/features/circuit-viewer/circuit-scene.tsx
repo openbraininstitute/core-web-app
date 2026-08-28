@@ -453,10 +453,23 @@ export function CircuitScene({
   );
 
   return (
-    // Transparent to the pointer as a whole: whatever a host stacks underneath —
-    // a designer image, a raster — has to stay clickable through the gaps. The
-    // canvas and the chrome buttons each opt back in.
-    <div ref={containerRef} className="pointer-events-none relative h-full min-h-0 overflow-hidden">
+    <div
+      ref={containerRef}
+      className={classNames(
+        'relative h-full min-h-0 overflow-hidden',
+        // Transparent to the pointer as a whole: whatever a host stacks
+        // underneath — a designer image, a raster — has to stay clickable through
+        // the gaps. The canvas and the chrome buttons each opt back in.
+        //
+        // Not in fullscreen, where this element is also what the chrome portals
+        // its panels into. `pointer-events` inherits, so the populations and
+        // colour-by menus opened over a canvas that swallowed every click aimed
+        // at them: the click landed outside the panel and closed it, reading as
+        // the panel dismissing itself. There is nothing stacked under a
+        // fullscreen element to keep reachable anyway.
+        portalContainer ? 'pointer-events-auto' : 'pointer-events-none'
+      )}
+    >
       <div
         className={classNames(
           'absolute inset-0',
