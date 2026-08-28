@@ -164,7 +164,7 @@ export function useSmallCircuitSource({
 
     // In declared order, with the population on show in its own place, so a
     // cell keeps its id and position whichever population is selected. The
-    // others are drawn as somas: unrotated, receded, and keyed as such.
+    // others are drawn as somas: unrotated and receded.
     return placed.flatMap(({ population: candidate, geometry: placement }) => {
       // Dropped rather than drawn dark: a hidden population contributes no
       // cells, so nothing is drawn for it and, when it is the one on show,
@@ -180,7 +180,7 @@ export function useSmallCircuitSource({
         // report itself nearly loaded before the first morphology arrived.
         const somaOnly = !onShow || morphologyRequest(i, showAxons) === null;
         result[i] = {
-          id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), { showAxons, somaOnly }),
+          id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), { showAxons }),
           center: positionAt(placement, i),
           orientation: onShow
             ? (placementAt(detail, i)?.orientation ?? IDENTITY_QUATERNION)

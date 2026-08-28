@@ -197,7 +197,7 @@ describe('useSmallCircuitSource', () => {
     // Declared order, with ids that tell the populations apart.
     expect(result.current.cells.map((cell) => cell.id)).toEqual([
       'circuit-id/default #0?axons=false',
-      'circuit-id/inputs #0?axons=false&soma-only',
+      'circuit-id/inputs #0?axons=false',
     ]);
     expect(result.current.cells[1]).toMatchObject({ center: [10, 0, 0], color: '#cccccc' });
     // Marked, not left for the viewer to find out by asking: it counts the cells it is
@@ -259,11 +259,12 @@ describe('useSmallCircuitSource', () => {
     fixtures.detail = { ...placement([10, 0, 0]), morphologies: ['morph-b'] };
     rerender({ population: INPUTS, populations: [DEFAULT, INPUTS], showAxons: false });
 
-    // Same cells and same positions; only which one is drawn in full changes.
-    expect(result.current.cells.map((cell) => cell.id)).toEqual([
-      'circuit-id/default #0?axons=false&soma-only',
-      'circuit-id/inputs #0?axons=false',
-    ]);
+    // Same cells, same ids and same positions; only which one is drawn in full
+    // changes. The ids have to be untouched: the viewer reads a scene whose ids
+    // it already holds as the one it is standing in, and keeps the morphologies
+    // it has drawn for it — so switching back is instant rather than a reload.
+    expect(result.current.cells.map((cell) => cell.id)).toEqual(shown.map((cell) => cell.id));
+    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([true, false]);
     expect(result.current.cells.map((cell) => cell.center)).toEqual(
       shown.map((cell) => cell.center)
     );
@@ -317,7 +318,7 @@ describe('useSmallCircuitSource', () => {
     // new one to re-frame.
     expect(result.current.cells.map((cell) => cell.id)).toEqual([
       'circuit-id/default #0?axons=false',
-      'circuit-id/inputs #0?axons=false&soma-only',
+      'circuit-id/inputs #0?axons=false',
     ]);
     expect(result.current.cells[0].center).toEqual([0, 0, 0]);
   });
@@ -364,7 +365,7 @@ describe('useSmallCircuitSource', () => {
     // What is left is the other population, still a receded soma: being the one
     // on show is not what puts a cell on screen, being unhidden is.
     expect(result.current.cells.map((cell) => cell.id)).toEqual([
-      'circuit-id/inputs #0?axons=false&soma-only',
+      'circuit-id/inputs #0?axons=false',
     ]);
   });
 });

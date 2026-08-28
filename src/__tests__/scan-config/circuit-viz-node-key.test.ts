@@ -15,10 +15,7 @@ describe('node key', () => {
   });
 
   it('round-trips them through a viewer id too', () => {
-    const id = makeVizCellId(makeNodeKey('circuit-id', 'cortex', 42), {
-      showAxons: true,
-      somaOnly: true,
-    });
+    const id = makeVizCellId(makeNodeKey('circuit-id', 'cortex', 42), { showAxons: true });
 
     expect(parseNodeKey(id)).toEqual({ population: 'cortex', index: 42 });
   });
@@ -37,16 +34,6 @@ describe('node key', () => {
 
     expect(makeVizCellId(key, { showAxons: true })).not.toBe(
       makeVizCellId(key, { showAxons: false })
-    );
-  });
-
-  // Selecting a population turns its somas into morphologies, and the viewer
-  // only re-requests cells whose id changed.
-  it('gives a soma-only cell a different viewer id from the same cell drawn in full', () => {
-    const key = makeNodeKey('circuit-id', 'cortex', 0);
-
-    expect(makeVizCellId(key, { showAxons: true, somaOnly: true })).not.toBe(
-      makeVizCellId(key, { showAxons: true })
     );
   });
 

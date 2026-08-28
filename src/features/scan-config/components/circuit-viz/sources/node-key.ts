@@ -6,7 +6,10 @@
  * nodes from 0; it is what the synapse projection and error logs cite.
  * {@link makeVizCellId} adds a reload key, so a change in what `loadCell` would
  * answer yields new ids and the viewer re-requests each cell's geometry instead
- * of repainting the cached tree.
+ * of repainting the cached tree. Only what `loadCell` answers belongs there:
+ * whether a cell is asked at all is `somaOnly` on the cell itself, and putting
+ * it in the key as well would make putting another population on show read as a
+ * different scene, throwing away every morphology already drawn.
  */
 export function makeNodeKey(circuitId: string, population: string, index: number): string {
   return `${circuitId}/${population} #${index}`;
@@ -14,13 +17,6 @@ export function makeNodeKey(circuitId: string, population: string, index: number
 
 type TVizCellOptions = {
   showAxons: boolean;
-  /**
-   * The node is drawn as a soma only: either its population is on screen for
-   * context rather than on show, or it has no morphology to draw. Part of the
-   * key because selecting that population must turn its somas into
-   * morphologies, and the viewer only re-requests cells whose id changed.
-   */
-  somaOnly?: boolean;
 };
 
 /**
@@ -31,8 +27,8 @@ type TVizCellOptions = {
  * key rather than the id the viewer is holding. Anything indexed against what
  * the viewer knows — `sonataSectionIds`, say — has to be re-keyed through this.
  */
-export function makeVizCellId(nodeKey: string, { showAxons, somaOnly = false }: TVizCellOptions) {
-  return `${nodeKey}?axons=${showAxons}${somaOnly ? '&soma-only' : ''}`;
+export function makeVizCellId(nodeKey: string, { showAxons }: TVizCellOptions) {
+  return `${nodeKey}?axons=${showAxons}`;
 }
 
 /**
