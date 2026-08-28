@@ -6,7 +6,7 @@ import {
   placementAt,
   positionAt,
 } from '@/features/circuit-nodes/geometry-utils';
-import { useNodeGeometry } from '@/features/circuit-nodes/hooks/use-node-geometry';
+import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import {
   projectionCellLoader,
@@ -25,10 +25,12 @@ import { morphologyFileOf, resolveMorphologyLocation } from './resolve-morpholog
 import { useAfferentSynapses } from './use-afferent-synapses';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { PlacedPopulation } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { TMorphologyRequest } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
+import type { MorphologyLocation } from './resolve-morphology-path';
 import type { TSmallCircuitSource } from './types';
 
 /**
@@ -50,7 +52,7 @@ type TOptions = {
   nodeColors?: NodeColors;
   /** Paint for nodes colour-by has nothing to say about. */
   defaultColor?: MorphoViewerSmallCircuitCell['color'];
-  /** Colour for the somas of the populations that are not on show. */
+  /** Colour for the populations that are not on show. */
   recededColor?: string;
   /** Read the circuit's edge files and draw its afferent synapses. */
   withSynapses?: boolean;
@@ -67,10 +69,19 @@ type TOptions = {
  * MorphIO over all three and hands back sections carrying the
  * `sonata_section_id` a click needs to become a morphology location.
  *
- * Only the population on show gets its morphologies. The others in
- * `populations` are drawn as placeholder somas in a receded colour, enough to
- * locate and to click, and load nothing from OBI-One. A hidden population is
- * not even that: it contributes no cells at all.
+ * Every population that names morphologies is drawn with them, whichever one is
+ * on show: the one on show is coloured by property and the rest recede, but
+ * they all keep their shape. A population that names none — SONATA's `virtual`,
+ * an input projection — is drawn as placeholder somas, because that is all
+ * there is to draw for it. Drawing only the population on show meant selecting
+ * an input emptied the scene of every morphology in it.
+ *
+ * Affordable because of the scale gate: `circuitDrawsMorphologies` sends
+ * anything above a small microcircuit to the somas-only viewer, so the cells
+ * summed over every population here are few, and one OBI-One request each is
+ * within budget.
+ *
+ * A hidden population is not drawn at all: it contributes no cells.
  */
 export function useSmallCircuitSource({
   circuit,
@@ -87,42 +98,44 @@ export function useSmallCircuitSource({
   const circuitId = circuit.id;
   const populationName = population?.name;
 
-  // Positions for every population, including the one on show. They place the
-  // cells and do not change with the selection, so selecting another
-  // population repaints the scene instead of re-fitting the camera around it.
-  const { placed, settled } = usePopulationsPlacement({ circuit, populations });
-  const hidden = useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
+  const { config, error: configError } = useCircuitConfig(circuit);
 
-  // Both, because this source puts a whole morphology in world space: the file
-  // to draw comes from the `morphology` column, the rotation that places it from
-  // the `orientation_*` ones. The somas-only viewer deliberately asks for
-  // neither.
-  const {
-    geometry: detail,
-    config,
-    error,
-  } = useNodeGeometry({
+  // Everything the scene is built from, for every population at once: where the
+  // cells sit, the morphology each one names, and the rotation that puts that
+  // morphology in the world. None of it changes with the selection, so
+  // selecting another population repaints the scene instead of re-reading it,
+  // and the camera stays where the user left it.
+  const { placed, failures, settled } = usePopulationsPlacement({
     circuit,
-    population,
+    populations,
     withMorphologies: true,
     withOrientations: true,
   });
+  const hidden = useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
 
   const [sonataSectionIds, setSonataSectionIds] =
     useState<Map<string, Map<number, string>>>(EMPTY_SECTION_IDS);
 
-  // Resolved once per population rather than per cell: every node of a
-  // population draws from the same directory or container.
-  const location = useMemo(
-    () => (config && population ? resolveMorphologyLocation(config.raw, population.name) : null),
-    [config, population]
+  /** The population on show, which is what the synapses and the anchor are for. */
+  const subject = useMemo(
+    () => placed.find((entry) => entry.population.name === populationName) ?? null,
+    [placed, populationName]
   );
 
-  const morphologies = detail?.morphologies ?? null;
+  // Resolved once per population rather than per cell: every node of a
+  // population draws from the same directory or container.
+  const locations = useMemo(() => {
+    const byPopulation = new Map<string, MorphologyLocation | null>();
+    if (!config) return byPopulation;
+    for (const { population: candidate } of placed) {
+      byPopulation.set(candidate.name, resolveMorphologyLocation(config.raw, candidate.name));
+    }
+    return byPopulation;
+  }, [config, placed]);
 
   /**
    * What OBI-One needs to serve one node's morphology, or null where the node
-   * has none to serve — a point-neuron population, or a population whose
+   * has none to serve — an input or point-neuron population, or a population whose
    * `circuit_config.json` names no morphology directory at all.
    *
    * Asked twice, and the two answers have to agree: the scene marks a node with nothing to
@@ -131,63 +144,66 @@ export function useSmallCircuitSource({
    * the viewer would wait on a morphology that is never coming.
    */
   const morphologyRequest = useCallback(
-    (index: number, showAxon: boolean): TMorphologyRequest | null => {
-      if (!location || populationName === undefined) return null;
+    (
+      { population: candidate, geometry }: PlacedPopulation,
+      index: number,
+      showAxon: boolean
+    ): TMorphologyRequest | null => {
+      const location = locations.get(candidate.name);
+      if (!location) return null;
 
-      const name = morphologies?.[index];
+      const name = geometry.morphologies?.[index];
       if (!name) return null;
 
       return {
         virtualLabId,
         projectId,
         circuitId,
-        cellId: makeNodeKey(circuitId, populationName, index),
+        cellId: makeNodeKey(circuitId, candidate.name, index),
         name,
         file: morphologyFileOf(location, name),
         showAxon,
       };
     },
-    [location, morphologies, virtualLabId, projectId, circuitId, populationName]
+    [locations, virtualLabId, projectId, circuitId]
   );
 
   const built = useMemo((): MorphoViewerSmallCircuitCell[] | null => {
-    // Wait until the population on show can be drawn in full, so the scene
-    // does not appear as somas and reload as morphologies a moment later.
-    if (!population || !settled || !detail) return null;
+    // Wait until every population has been read, so the scene is built once
+    // rather than once per arrival: the viewer re-fits the camera whenever the
+    // set of ids changes.
+    if (!population || !settled) return null;
 
     // Colour-by wins where it has an opinion; failing that a lone cell reads by
     // section type, because telling its dendrites from its axon is the whole
     // point of drawing one. A crowd keeps a flat colour per cell instead, since
     // there the job is telling the cells apart.
-    const paint = detail.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
+    const paint = subject?.geometry.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
     const { palette, columnByNode } = nodeColors ?? EMPTY_NODE_COLORS;
 
     // In declared order, with the population on show in its own place, so a
-    // cell keeps its id and position whichever population is selected. The
-    // others are drawn as somas: unrotated and receded.
-    return placed.flatMap(({ population: candidate, geometry: placement }) => {
+    // cell keeps its id, its position and its morphology whichever population
+    // is selected. Colour is all the selection changes.
+    return placed.flatMap((entry) => {
+      const { population: candidate, geometry } = entry;
       // Dropped rather than drawn dark: a hidden population contributes no
-      // cells, so nothing is drawn for it and, when it is the one on show,
-      // nothing is asked of OBI-One either. What stays is a subset of what was
-      // on screen, which the viewer reads as the same scene and does not
-      // re-frame the camera around.
+      // cells, so nothing is drawn for it and nothing is asked of OBI-One for
+      // it either. What stays is a subset of what was on screen, which the
+      // viewer reads as the same scene and does not re-frame the camera around.
       if (hidden.has(candidate.name)) return [];
       const onShow = candidate.name === population.name;
-      const result = new Array<MorphoViewerSmallCircuitCell>(placement.count);
-      for (let i = 0; i < placement.count; i++) {
-        // Told to the viewer, not left for it to discover by asking: it counts the cells it
-        // is waiting on, and a scene where most of them will never answer would otherwise
-        // report itself nearly loaded before the first morphology arrived.
-        const somaOnly = !onShow || morphologyRequest(i, showAxons) === null;
+      const result = new Array<MorphoViewerSmallCircuitCell>(geometry.count);
+      for (let i = 0; i < geometry.count; i++) {
         result[i] = {
           id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), { showAxons }),
-          center: positionAt(placement, i),
-          orientation: onShow
-            ? (placementAt(detail, i)?.orientation ?? IDENTITY_QUATERNION)
-            : IDENTITY_QUATERNION,
+          center: positionAt(geometry, i),
+          orientation: placementAt(geometry, i)?.orientation ?? IDENTITY_QUATERNION,
           somaRadius: PLACEHOLDER_SOMA_RADIUS,
           color: onShow ? (palette[columnByNode[i]] ?? paint) : recededColor,
-          somaOnly,
+          // Told to the viewer, not left for it to discover by asking: it counts the cells it
+          // is waiting on, and a scene where most of them will never answer would otherwise
+          // report itself nearly loaded before the first morphology arrived.
+          somaOnly: morphologyRequest(entry, i, showAxons) === null,
         };
       }
       return result;
@@ -197,7 +213,7 @@ export function useSmallCircuitSource({
     placed,
     hidden,
     settled,
-    detail,
+    subject,
     circuitId,
     showAxons,
     morphologyRequest,
@@ -206,13 +222,26 @@ export function useSmallCircuitSource({
     recededColor,
   ]);
 
-  // Keep what is on screen until the next scene can be drawn in full. On a
-  // switch, the newly selected population's morphology names and orientations
-  // take a moment to arrive, and emptying the scene meanwhile would unmount the
-  // viewer, giving a black frame and then a camera reset. This does not apply
-  // after a failure: the error panel would sit on the previous population's
-  // cells, and a retry would remount the viewer with their ids while `loadCell`
-  // answers for the new population.
+  // A config that loads but names no node population would otherwise leave the
+  // viewer on its spinner for good: nothing is asked for, so nothing ever fails
+  // and nothing ever arrives.
+  const noPopulation =
+    config && !population
+      ? new Error('This circuit’s circuit_config.json declares no node populations')
+      : null;
+  // A population that could not be placed is context that goes undrawn: an
+  // input population carrying no positions is the ordinary case, and the scene
+  // stands without it. Only a scene with nothing in it at all is worth covering
+  // the canvas for, and then the reason is whichever population failed.
+  const noPlacement =
+    !settled || placed.length > 0 ? null : (failures.values().next().value ?? null);
+  const error = configError ?? noPopulation ?? noPlacement;
+
+  // Keep what is on screen until the next scene can be drawn. A population
+  // joining or leaving the list takes a moment to read, and emptying the scene
+  // meanwhile would unmount the viewer, giving a black frame and then a camera
+  // reset. This does not apply after a failure: the error panel would sit on
+  // cells that 'Try again' is about to replace.
   const shownRef = useRef<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
   const cells = built ?? (error ? NO_CELLS : shownRef.current);
   useEffect(() => {
@@ -222,11 +251,12 @@ export function useSmallCircuitSource({
   const loadCell = useCallback(
     async (cellId: string) => {
       const node = parseNodeKey(cellId);
-      // Only the population on show gets its morphologies; the rest stay somas.
-      const request =
-        node && node.population === populationName
-          ? morphologyRequest(node.index, showAxons)
-          : null;
+      if (!node) return null;
+
+      // Answered for every population drawn, not only the one on show: they all
+      // keep their morphologies, and only their colour changes.
+      const entry = placed.find((candidate) => candidate.population.name === node.population);
+      const request = entry ? morphologyRequest(entry, node.index, showAxons) : null;
       if (!request) return null;
 
       try {
@@ -259,13 +289,19 @@ export function useSmallCircuitSource({
         return null;
       }
     },
-    [morphologyRequest, showAxons, populationName]
+    [placed, morphologyRequest, showAxons]
   );
 
-  /** @see useAfferentSynapses — always whole, axons included. */
+  /**
+   * @see useAfferentSynapses — always whole, axons included.
+   *
+   * Indices are the population on show's own, which is what the edge files
+   * address: synapses are drawn for a single-cell circuit, where that
+   * population is the only one with anything to target.
+   */
   const loadTree = useCallback(
     async (index: number) => {
-      const request = morphologyRequest(index, true);
+      const request = subject ? morphologyRequest(subject, index, true) : null;
       if (!request) return null;
 
       // Its own queue: the projection must not be dropped by the axon toggle's
@@ -273,14 +309,14 @@ export function useSmallCircuitSource({
       const cell = await projectionCellLoader.load(request);
       return cell?.data ?? null;
     },
-    [morphologyRequest]
+    [morphologyRequest, subject]
   );
 
   const synapses = useAfferentSynapses({
     enabled: withSynapses,
     circuit,
     config,
-    geometry: detail,
+    geometry: subject?.geometry ?? null,
     loadTree,
   });
 
@@ -293,18 +329,16 @@ export function useSmallCircuitSource({
     projectionCellLoader.clear();
   }, []);
 
-  const subject = placed.find((entry) => entry.population.name === populationName)?.geometry;
-  const anchor = useMemo(() => (subject ? centroidOf(subject) : null), [subject]);
+  const anchor = useMemo(() => (subject ? centroidOf(subject.geometry) : null), [subject]);
 
   return {
     cells,
     loadCell,
     // Nothing on screen yet. The viewer's own progress covers the morphologies;
-    // this covers everything before them — the positions of every population,
-    // and the columns the one on show is drawn from, since the scene is built
-    // only once they have all arrived. An empty scene is not always this:
-    // hiding every population empties it on purpose, and then there is nothing
-    // left to wait for.
+    // this covers everything before them — the placement of every population,
+    // since the scene is built only once it has all arrived. An empty scene is
+    // not always this: hiding every population empties it on purpose, and then
+    // there is nothing left to wait for.
     isLoading: !error && built === null && cells.length === 0,
     error,
     retry,

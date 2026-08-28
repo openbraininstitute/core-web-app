@@ -12,11 +12,15 @@ type Args = {
   circuit: ICircuit;
   /** The populations to place, in the order they should come back. Memoise it. */
   populations: readonly NodePopulation[];
+  /** @see NodeGeometryOptions.withMorphologies */
+  withMorphologies?: boolean;
+  /** @see NodeGeometryOptions.withOrientations */
+  withOrientations?: boolean;
 };
 
 export type PlacedPopulation = {
   population: NodePopulation;
-  /** Positions only: no orientations, no morphology names. */
+  /** Positions, plus whatever else the caller asked for. */
   geometry: NodeGeometry;
 };
 
@@ -33,8 +37,13 @@ type Result = {
 };
 
 /**
- * Reads where the nodes of a circuit's populations sit, positions only, one
- * population at a time.
+ * Reads where the nodes of a circuit's populations sit, one population at a
+ * time.
+ *
+ * Positions by default. A viewer that draws morphologies asks for the
+ * `morphology` and `orientation_*` columns too, and pays for them: they are the
+ * two parts of a read that scale with the cell count in earnest, which is why
+ * the somas-only viewer leaves them alone.
  *
  * Placements are kept for the lifetime of the hook, so a population that
  * leaves the list and comes back (the one on show, once another is selected)
@@ -57,7 +66,12 @@ type Result = {
  * second read comes from the first's cache rather than fetching a second copy
  * of a very large file.
  */
-export function usePopulationsPlacement({ circuit, populations }: Args): Result {
+export function usePopulationsPlacement({
+  circuit,
+  populations,
+  withMorphologies = false,
+  withOrientations = false,
+}: Args): Result {
   const ctx = useWorkspace();
   const { config } = useCircuitConfig(circuit);
   const circuitId = circuit.id;
@@ -120,7 +134,7 @@ export function usePopulationsPlacement({ circuit, populations }: Args): Result 
         } else if (state.status === 'ready' && !reading) {
           reading = true;
           nodesWorkerRegistry
-            .getGeometry(key)
+            .getGeometry(key, { withMorphologies, withOrientations })
             .then(
               (geometry) => settle(population, geometry),
               (reason: unknown) =>
@@ -168,7 +182,7 @@ export function usePopulationsPlacement({ circuit, populations }: Args): Result 
       cancelled = true;
       for (const cleanup of cleanups.values()) cleanup();
     };
-  }, [circuitId, circuitAssetId, populations, ctx]);
+  }, [circuitId, circuitAssetId, populations, ctx, withMorphologies, withOrientations]);
 
   return useMemo(() => {
     if (populations.length === 0) return { placed: [], failures: EMPTY_FAILURES, settled: true };

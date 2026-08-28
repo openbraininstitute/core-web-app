@@ -58,8 +58,8 @@ interface CircuitVizProps {
   defaultColor?: string;
   /**
    * Every population to draw, in declared order, including `population`. The
-   * others are drawn as receded somas, or not at all when their nodes carry no
-   * positions.
+   * others are drawn receded, keeping the morphologies of those that have any,
+   * or not at all when their nodes carry no positions.
    */
   populations: readonly NodePopulation[];
   /**
@@ -68,9 +68,9 @@ interface CircuitVizProps {
    * viewer only asks for the morphologies of cells it has been given.
    */
   hiddenPopulations?: readonly string[];
-  /** Colour for the somas of the populations that are not on show. */
+  /** Colour for the populations that are not on show. */
   recededColor?: string;
-  /** Called with the population name when one of those somas is clicked. */
+  /** Called with the population name when a cell of another population is clicked. */
   onPopulationClick?: (populationName: string) => void;
   showAxons: boolean;
   backgroundColor: string;
