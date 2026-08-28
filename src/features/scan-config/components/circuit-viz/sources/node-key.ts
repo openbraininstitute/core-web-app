@@ -15,10 +15,10 @@ export function makeNodeKey(circuitId: string, population: string, index: number
 type TVizCellOptions = {
   showAxons: boolean;
   /**
-   * The node is drawn as a soma only: its population is on screen for
-   * context rather than on show. Part of the key because selecting that
-   * population must turn its somas into morphologies, and the viewer only
-   * re-requests cells whose id changed.
+   * The node is drawn as a soma only: either its population is on screen for
+   * context rather than on show, or it has no morphology to draw. Part of the
+   * key because selecting that population must turn its somas into
+   * morphologies, and the viewer only re-requests cells whose id changed.
    */
   somaOnly?: boolean;
 };

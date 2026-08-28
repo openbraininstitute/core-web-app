@@ -111,72 +111,6 @@ export function useSmallCircuitSource({
   const [sonataSectionIds, setSonataSectionIds] =
     useState<Map<string, Map<number, string>>>(EMPTY_SECTION_IDS);
 
-  const built = useMemo((): MorphoViewerSmallCircuitCell[] | null => {
-    // Wait until the population on show can be drawn in full, so the scene
-    // does not appear as somas and reload as morphologies a moment later.
-    if (!population || !settled || !detail) return null;
-
-    // Colour-by wins where it has an opinion; failing that a lone cell reads by
-    // section type, because telling its dendrites from its axon is the whole
-    // point of drawing one. A crowd keeps a flat colour per cell instead, since
-    // there the job is telling the cells apart.
-    const paint = detail.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
-    const { palette, columnByNode } = nodeColors ?? EMPTY_NODE_COLORS;
-
-    // In declared order, with the population on show in its own place, so a
-    // cell keeps its id and position whichever population is selected. The
-    // others are drawn as somas: unrotated, receded, and keyed as such.
-    return placed.flatMap(({ population: candidate, geometry: placement }) => {
-      // Dropped rather than drawn dark: the viewer asks `loadCell` for every
-      // cell it is given, so a population that contributes none is a population
-      // whose morphologies are never asked of OBI-One. What stays is a subset of
-      // what was on screen, which the viewer reads as the same scene and does
-      // not re-frame the camera around.
-      if (hidden.has(candidate.name)) return [];
-      const onShow = candidate.name === population.name;
-      const result = new Array<MorphoViewerSmallCircuitCell>(placement.count);
-      for (let i = 0; i < placement.count; i++) {
-        result[i] = {
-          id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), {
-            showAxons,
-            somaOnly: !onShow,
-          }),
-          center: positionAt(placement, i),
-          orientation: onShow
-            ? (placementAt(detail, i)?.orientation ?? IDENTITY_QUATERNION)
-            : IDENTITY_QUATERNION,
-          somaRadius: PLACEHOLDER_SOMA_RADIUS,
-          color: onShow ? (palette[columnByNode[i]] ?? paint) : recededColor,
-        };
-      }
-      return result;
-    });
-  }, [
-    population,
-    placed,
-    hidden,
-    settled,
-    detail,
-    circuitId,
-    showAxons,
-    nodeColors,
-    defaultColor,
-    recededColor,
-  ]);
-
-  // Keep what is on screen until the next scene can be drawn in full. On a
-  // switch, the newly selected population's morphology names and orientations
-  // take a moment to arrive, and emptying the scene meanwhile would unmount the
-  // viewer, giving a black frame and then a camera reset. This does not apply
-  // after a failure: the error panel would sit on the previous population's
-  // cells, and a retry would remount the viewer with their ids while `loadCell`
-  // answers for the new population.
-  const shownRef = useRef<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
-  const cells = built ?? (error ? NO_CELLS : shownRef.current);
-  useEffect(() => {
-    shownRef.current = cells;
-  }, [cells]);
-
   // Resolved once per population rather than per cell: every node of a
   // population draws from the same directory or container.
   const location = useMemo(
@@ -190,6 +124,11 @@ export function useSmallCircuitSource({
    * What OBI-One needs to serve one node's morphology, or null where the node
    * has none to serve — a point-neuron population, or a population whose
    * `circuit_config.json` names no morphology directory at all.
+   *
+   * Asked twice, and the two answers have to agree: the scene marks a node with nothing to
+   * serve so the viewer neither requests a morphology for it nor counts it among the ones it
+   * is waiting on, and `loadCell` returns nothing when asked for one. Were those to disagree
+   * the viewer would wait on a morphology that is never coming.
    */
   const morphologyRequest = useCallback(
     (index: number, showAxon: boolean): TMorphologyRequest | null => {
@@ -210,6 +149,75 @@ export function useSmallCircuitSource({
     },
     [location, morphologies, virtualLabId, projectId, circuitId, populationName]
   );
+
+  const built = useMemo((): MorphoViewerSmallCircuitCell[] | null => {
+    // Wait until the population on show can be drawn in full, so the scene
+    // does not appear as somas and reload as morphologies a moment later.
+    if (!population || !settled || !detail) return null;
+
+    // Colour-by wins where it has an opinion; failing that a lone cell reads by
+    // section type, because telling its dendrites from its axon is the whole
+    // point of drawing one. A crowd keeps a flat colour per cell instead, since
+    // there the job is telling the cells apart.
+    const paint = detail.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
+    const { palette, columnByNode } = nodeColors ?? EMPTY_NODE_COLORS;
+
+    // In declared order, with the population on show in its own place, so a
+    // cell keeps its id and position whichever population is selected. The
+    // others are drawn as somas: unrotated, receded, and keyed as such.
+    return placed.flatMap(({ population: candidate, geometry: placement }) => {
+      // Dropped rather than drawn dark: a hidden population contributes no
+      // cells, so nothing is drawn for it and, when it is the one on show,
+      // nothing is asked of OBI-One either. What stays is a subset of what was
+      // on screen, which the viewer reads as the same scene and does not
+      // re-frame the camera around.
+      if (hidden.has(candidate.name)) return [];
+      const onShow = candidate.name === population.name;
+      const result = new Array<MorphoViewerSmallCircuitCell>(placement.count);
+      for (let i = 0; i < placement.count; i++) {
+        // Told to the viewer, not left for it to discover by asking: it counts the cells it
+        // is waiting on, and a scene where most of them will never answer would otherwise
+        // report itself nearly loaded before the first morphology arrived.
+        const somaOnly = !onShow || morphologyRequest(i, showAxons) === null;
+        result[i] = {
+          id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), { showAxons, somaOnly }),
+          center: positionAt(placement, i),
+          orientation: onShow
+            ? (placementAt(detail, i)?.orientation ?? IDENTITY_QUATERNION)
+            : IDENTITY_QUATERNION,
+          somaRadius: PLACEHOLDER_SOMA_RADIUS,
+          color: onShow ? (palette[columnByNode[i]] ?? paint) : recededColor,
+          somaOnly,
+        };
+      }
+      return result;
+    });
+  }, [
+    population,
+    placed,
+    hidden,
+    settled,
+    detail,
+    circuitId,
+    showAxons,
+    morphologyRequest,
+    nodeColors,
+    defaultColor,
+    recededColor,
+  ]);
+
+  // Keep what is on screen until the next scene can be drawn in full. On a
+  // switch, the newly selected population's morphology names and orientations
+  // take a moment to arrive, and emptying the scene meanwhile would unmount the
+  // viewer, giving a black frame and then a camera reset. This does not apply
+  // after a failure: the error panel would sit on the previous population's
+  // cells, and a retry would remount the viewer with their ids while `loadCell`
+  // answers for the new population.
+  const shownRef = useRef<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
+  const cells = built ?? (error ? NO_CELLS : shownRef.current);
+  useEffect(() => {
+    shownRef.current = cells;
+  }, [cells]);
 
   const loadCell = useCallback(
     async (cellId: string) => {

@@ -200,9 +200,26 @@ describe('useSmallCircuitSource', () => {
       'circuit-id/inputs #0?axons=false&soma-only',
     ]);
     expect(result.current.cells[1]).toMatchObject({ center: [10, 0, 0], color: '#cccccc' });
+    // Marked, not left for the viewer to find out by asking: it counts the cells it is
+    // waiting on, so one that will never answer has to be left out of that count.
+    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
     // The anchor stays on the population on show; the other one sits 10 away.
     expect(result.current.anchor).toEqual([0, 0, 0]);
     await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
+  });
+
+  /**
+   * The regression this pins: the viewer holds its progress below 1 until every cell it was
+   * told to wait for has answered, and covers the canvas meanwhile. A population whose nodes
+   * name no morphology answers for none of them, so leaving it unmarked leaves the scene
+   * behind a loading veil that never lifts.
+   */
+  it('marks a population with no morphologies as somas, so nothing waits on it', async () => {
+    fixtures.detail = { ...placement([0, 0, 0]), morphologies: null };
+    const { result } = render(false);
+
+    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([true]);
+    await expect(result.current.loadCell('circuit-id/default #0')).resolves.toBeNull();
   });
 
   // Built once rather than once per arrival, because the viewer re-fits every
@@ -237,7 +254,9 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.cells).toBe(shown);
     expect(result.current.isLoading).toBe(false);
 
-    fixtures.detail = placement([10, 0, 0]);
+    // With a morphology to draw, so the switch is between two populations that
+    // can each be drawn in full.
+    fixtures.detail = { ...placement([10, 0, 0]), morphologies: ['morph-b'] };
     rerender({ population: INPUTS, populations: [DEFAULT, INPUTS], showAxons: false });
 
     // Same cells and same positions; only which one is drawn in full changes.
