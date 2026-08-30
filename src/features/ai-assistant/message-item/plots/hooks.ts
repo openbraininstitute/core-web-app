@@ -20,6 +20,10 @@ export function usePlotFile(fileIdentifier: string) {
       }
     },
     staleTime: Infinity,
+    // Prevent refetch on remount — if Streamdown remounts a node, the cached data
+    // (or in-flight query) is reused. This avoids the "stuck loading" state where
+    // the query subscription gets interrupted mid-flight and restarts in a stale state.
+    refetchOnMount: false,
   });
 
   return {

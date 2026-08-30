@@ -23,6 +23,8 @@ export interface ToolPlotGeneratorProps {
   data?: { content: string; type: string };
   plotRenderKey?: number | string;
   isAnimating?: boolean;
+  isStreaming?: boolean;
+  skipSkeleton?: boolean;
 }
 
 export default function ToolPlotGenerator({
@@ -31,6 +33,8 @@ export default function ToolPlotGenerator({
   data: providedData,
   plotRenderKey,
   isAnimating,
+  isStreaming,
+  skipSkeleton,
 }: ToolPlotGeneratorProps) {
   if (!result) return null;
 
@@ -44,6 +48,8 @@ export default function ToolPlotGenerator({
         providedData={providedData}
         plotRenderKey={plotRenderKey}
         isAnimating={isAnimating}
+        isStreaming={isStreaming}
+        skipSkeleton={skipSkeleton}
       />
     )
   );
@@ -378,17 +384,35 @@ function CustomPlot({
   providedData,
   plotRenderKey,
   isAnimating,
+  isStreaming,
+  skipSkeleton,
 }: {
   className?: string;
   providedData: { content: string; type: string };
   plotRenderKey?: number | string;
   isAnimating?: boolean;
+  isStreaming?: boolean;
+  skipSkeleton?: boolean;
 }) {
   const { content, type } = providedData;
   const [plotReady, setPlotReady] = React.useState(false);
   const [fullscreenPlotReady, setFullscreenPlotReady] = React.useState(false);
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Freeze the animation decision at mount time — no re-trigger if isStreaming flips.
+  const shouldAnimateRef = React.useRef(!!isStreaming);
+  const [animationDone, setAnimationDone] = React.useState(!shouldAnimateRef.current);
+
+  // Single-fire timer: runs once on mount if animating. Empty deps = no re-trigger.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional single-fire on mount
+  React.useEffect(() => {
+    if (!shouldAnimateRef.current) return;
+    const timer = setTimeout(() => setAnimationDone(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const showPlot = plotReady && animationDone;
 
   // Ref, not state — using state caused an infinite resize loop at the 500px boundary
   // (layout change ↔ width oscillation ↔ ResizeObserver ↔ re-render).
@@ -413,11 +437,17 @@ function CustomPlot({
   }
 
   const layout = (props.layout ?? {}) as Record<string, unknown>;
-  const title = (layout.title as Record<string, unknown>)?.text ?? (layout.title as string) ?? '';
-  const titleFont = ((layout.title as Record<string, unknown>)?.font ?? {}) as Record<
-    string,
-    unknown
-  >;
+  const rawTitle = layout.title;
+  const title: string =
+    typeof rawTitle === 'string'
+      ? rawTitle
+      : typeof rawTitle === 'object' && rawTitle !== null
+        ? String((rawTitle as Record<string, unknown>).text ?? '')
+        : '';
+  const titleFont =
+    typeof rawTitle === 'object' && rawTitle !== null
+      ? (((rawTitle as Record<string, unknown>).font ?? {}) as Record<string, unknown>)
+      : ({} as Record<string, unknown>);
 
   const subplotCount = countAxes(layout);
   const isGrid = subplotCount >= 4;
@@ -449,33 +479,33 @@ function CustomPlot({
     refDialog.current?.showModal();
   };
 
-  return (
-    <>
-      <div
-        ref={containerRef}
-        className={classNames('h-full', styles.plotContainer)}
-        style={{
-          ...(isAnimating ? { contain: 'strict' } : undefined),
-          ...(aspectRatio ? { aspectRatio } : {}),
-        }}
+  const plotEl = (
+    <div
+      ref={containerRef}
+      className={classNames('h-full', styles.plotContainer)}
+      style={{
+        ...(isAnimating ? { contain: 'strict' } : undefined),
+        ...(aspectRatio ? { aspectRatio } : {}),
+        // While waiting for Plotly to initialize, match the skeleton's base color
+        // so there's no visible color shift during the transition.
+        ...(!showPlot ? { backgroundColor: '#f8f9fb' } : undefined),
+      }}
+    >
+      <button
+        type="button"
+        onClick={handleShow}
+        className={styles.fullscreenButton}
+        aria-label="View fullscreen"
       >
-        <button
-          type="button"
-          onClick={handleShow}
-          className={styles.fullscreenButton}
-          aria-label="View fullscreen"
-        >
-          <FullscreenOutlined />
-        </button>
-        {title && (
-          <PlotTitle
-            title={title as string}
-            titleFont={titleFont}
-            symmetricPadding="28px"
-            compact
-          />
-        )}
-        {!plotReady && <ToolSkeleton />}
+        <FullscreenOutlined />
+      </button>
+      {showPlot && title ? (
+        <PlotTitle title={title as string} titleFont={titleFont} symmetricPadding="20px" compact />
+      ) : showPlot ? (
+        <div style={{ height: '20px', flexShrink: 0 }} />
+      ) : null}
+      {!showPlot && !skipSkeleton && <ToolSkeleton />}
+      {animationDone && (
         <div
           key={plotRenderKey}
           style={{
@@ -507,7 +537,13 @@ function CustomPlot({
             onDoubleClick={handleShow}
           />
         </div>
-      </div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      {shouldAnimateRef.current ? <div className={styles.streamingReveal}>{plotEl}</div> : plotEl}
       <FullscreenDialog dialogRef={refDialog}>
         {title && <PlotTitle title={title as string} titleFont={titleFont} isFullscreen />}
         <Plot
@@ -552,10 +588,13 @@ function PlotTitle({
     fontSize = Math.min(baseFontSize, 24);
   }
 
+  // Safety: ensure title is always a primitive string
+  const safeTitle = typeof title === 'string' ? title : String(title ?? '');
+
   return (
     <div
       className={compact ? 'px-2 py-0.5 text-center font-bold' : 'px-4 py-2 text-center font-bold'}
-      title={title}
+      title={safeTitle}
       style={{
         fontSize,
         fontFamily: titleFont.family || 'Arial, sans-serif',
@@ -569,7 +608,7 @@ function PlotTitle({
         whiteSpace: 'nowrap',
       }}
     >
-      {title}
+      {safeTitle}
     </div>
   );
 }

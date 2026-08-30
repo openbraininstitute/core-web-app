@@ -16,7 +16,7 @@ import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './collapsible-message.module.css';
 
-const COLLAPSE_ANIMATION_MS = 350;
+const COLLAPSE_ANIMATION_MS = 450;
 
 interface CollapsibleMessageProps {
   message: UIMessage;
@@ -100,27 +100,38 @@ export function CollapsibleMessage({
   const isExpandedRef = React.useRef(isExpanded);
   isExpandedRef.current = isExpanded;
 
-  React.useEffect(() => {
+  // Synchronously detect new step boundary and compute animating indices during render
+  // to avoid a blank frame where items move to collapsed before the animation wrapper appears.
+  // We track whether we need to schedule the timeout via a ref so the effect can pick it up.
+  const pendingAnimationRef = React.useRef(false);
+
+  if (
+    (status === 'streaming' || status === 'submitted') &&
+    lastStepStartIndex > previousStepStartRef.current &&
+    !isExpandedRef.current
+  ) {
     const previous = previousStepStartRef.current;
-    previousStepStartRef.current = lastStepStartIndex;
-
-    if (status !== 'streaming' || lastStepStartIndex <= previous) return undefined;
-
-    // When the reasoning box is expanded, items are already visible inside it,
-    // so skip the slide-out animation to avoid a jarring jump when they reappear
-    // in the collapsible content after the animation ends.
-    if (isExpandedRef.current) return undefined;
-
     const toAnimate = new Set<number>();
     for (let i = Math.max(0, previous); i < lastStepStartIndex; i++) {
       toAnimate.add(i);
     }
-    if (toAnimate.size === 0) return undefined;
+    if (toAnimate.size > 0 && animatingIndices.size === 0) {
+      // setState during render is fine in React 18+ when the value differs
+      setAnimatingIndices(toAnimate);
+      pendingAnimationRef.current = true;
+    }
+    previousStepStartRef.current = lastStepStartIndex;
+  } else if (lastStepStartIndex !== previousStepStartRef.current) {
+    previousStepStartRef.current = lastStepStartIndex;
+  }
 
-    setAnimatingIndices(toAnimate);
+  // Schedule cleanup timeout after animation completes
+  React.useEffect(() => {
+    if (!pendingAnimationRef.current) return undefined;
+    pendingAnimationRef.current = false;
     const timer = setTimeout(() => setAnimatingIndices(new Set()), COLLAPSE_ANIMATION_MS);
     return () => clearTimeout(timer);
-  }, [lastStepStartIndex, status]);
+  }, [animatingIndices]);
 
   // ── Restore confirmation ─────────────────────────────────────────────────
   const [isConfirmingRestore, setIsConfirmingRestore] = React.useState(false);
@@ -151,26 +162,29 @@ export function CollapsibleMessage({
 
   const collapsedChildren: React.ReactNode[] = [];
   const visibleChildren: React.ReactNode[] = [];
+  const animatingChildren: React.ReactNode[] = [];
 
   children.forEach((child, index) => {
     if (child === null || child === undefined) return;
 
     if (animatingIndices.has(index)) {
-      visibleChildren.push(
-        <div
-          key={`animating-${index}`}
-          className={styles.slideToCollapsible}
-          data-collapsing="true"
-        >
-          {child}
-        </div>
-      );
+      animatingChildren.push(<React.Fragment key={`animating-${index}`}>{child}</React.Fragment>);
     } else if (index < lastStepStartIndex) {
       collapsedChildren.push(<div key={`collapsed-${index}`}>{child}</div>);
     } else {
       visibleChildren.push(child);
     }
   });
+
+  // Wrap all animating items in a single collapse wrapper so margins between
+  // them still collapse naturally (no per-item BFC isolation).
+  if (animatingChildren.length > 0) {
+    visibleChildren.unshift(
+      <div key="animating-group" className={styles.slideToCollapsible} data-collapsing="true">
+        <div className={styles.slideToCollapsibleInner}>{animatingChildren}</div>
+      </div>
+    );
+  }
 
   const toggleExpanded = () => {
     const next = !isExpanded;
@@ -292,7 +306,11 @@ export function CollapsibleMessage({
           </div>
         </div>
       )}
-      <div className={styles.contentWrapper} data-visible-tools="true">
+      <div
+        className={styles.contentWrapper}
+        data-visible-tools="true"
+        data-instant={mountedAsReady.current}
+      >
         {visibleChildren}
       </div>
     </>

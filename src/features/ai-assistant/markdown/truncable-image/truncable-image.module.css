@@ -2,7 +2,7 @@
   width: 600px;
   max-width: 100%;
   aspect-ratio: 4 / 3;
-  border: 1px solid #d9d9d9;
+  border: 1px solid color-mix(in srgb, var(--color-primary-9) 12%, transparent);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -12,6 +12,20 @@
   margin: 4px 0;
 }
 
+/* Smooth height reveal wrapper — animates max-height from 0 to a known cap */
+.streamingReveal {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  animation: revealHeight 500ms ease-out forwards;
+  margin: 4px 0;
+}
+
+/* Remove inner margin when wrapped — the outer handles spacing */
+.streamingReveal > .container {
+  margin: 0;
+}
+
 .image {
   max-width: 100%;
   max-height: 100%;
@@ -19,6 +33,27 @@
   height: auto;
   object-fit: contain;
   display: block;
+  animation: plotContentFadeIn 300ms ease both;
+}
+
+@keyframes plotContentFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes revealHeight {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 460px;
+    opacity: 1;
+  }
 }
 
 .fullscreenButton {

@@ -23,7 +23,7 @@ const StorageImage = ({
   const isValidUUID = storageIdMatch && validStorageIds?.includes(storageIdMatch[1]);
 
   if (isValidUUID) {
-    return <PlotInChat storageId={storageIdMatch[1]} />;
+    return <PlotInChat storageId={storageIdMatch[1]} isStreaming={isStreaming} />;
   }
 
   const isSameOrigin = srcString.includes('openbraininstitute');

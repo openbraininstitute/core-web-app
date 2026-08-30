@@ -642,20 +642,27 @@ function formatPythonCode(code: string): string {
 function CodeValue({ code, language }: { code: string; language: string }) {
   const [html, setHtml] = useState<string>('');
   const mounted = useRef(false);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formatted = useMemo(() => formatCodeForDisplay(code, language), [code, language]);
 
   useEffect(() => {
     mounted.current = true;
-    highlightCode(formatted, language as BundledLanguage, false)
-      .then((highlighted) => {
-        if (mounted.current) setHtml(highlighted);
-      })
-      .catch(() => {
-        // Fallback: no highlighting
-        if (mounted.current) setHtml('');
-      });
+    // Debounce: only highlight once code stops changing for 500ms.
+    // Prevents async shiki calls from piling up during streaming.
+    if (debounce.current) clearTimeout(debounce.current);
+    debounce.current = setTimeout(() => {
+      highlightCode(formatted, language as BundledLanguage, false)
+        .then((highlighted) => {
+          if (mounted.current) setHtml(highlighted);
+        })
+        .catch(() => {
+          // Fallback: no highlighting
+          if (mounted.current) setHtml('');
+        });
+    }, 500);
     return () => {
       mounted.current = false;
+      if (debounce.current) clearTimeout(debounce.current);
     };
   }, [formatted, language]);
 

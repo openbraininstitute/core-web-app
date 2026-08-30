@@ -40,6 +40,9 @@ export function useAutoScroll({
 
     if (isAutoScrollRef.current) {
       scrollToBottom();
+      // Schedule a follow-up scroll to catch layout changes from CSS animations
+      // (e.g. grid-based grow animations on image/plot containers).
+      requestAnimationFrame(scrollToBottom);
     }
   }, [messages, isLoadingMessages, scrollToBottom]);
 
@@ -51,6 +54,23 @@ export function useAutoScroll({
       }
     }
     prevStatusRef.current = status;
+  }, [status, scrollToBottom]);
+
+  // During streaming, poll scroll position to keep up with CSS height animations
+  // (grid-template-rows transitions) that don't trigger React re-renders.
+  React.useEffect(() => {
+    if (status !== 'streaming' && status !== 'submitted') return;
+    if (!isAutoScrollRef.current) return;
+
+    let rafId: number;
+    const poll = () => {
+      if (isAutoScrollRef.current) {
+        scrollToBottom();
+      }
+      rafId = requestAnimationFrame(poll);
+    };
+    rafId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(rafId);
   }, [status, scrollToBottom]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: threadId resets scroll on conversation switch

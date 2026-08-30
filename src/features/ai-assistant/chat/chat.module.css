@@ -140,6 +140,18 @@ button.actionButton {
 .suggestedQuestionsContainerInChat {
   margin-top: auto;
   padding-bottom: 1em;
+  animation: fadeInSuggestions 300ms ease both;
+}
+
+@keyframes fadeInSuggestions {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .spinnerContainer {

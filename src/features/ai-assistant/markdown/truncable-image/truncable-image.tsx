@@ -22,11 +22,27 @@ export default function TruncableImage({ src, isStreaming }: TruncableImageProps
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
 
+  // Freeze the animation decision at mount time. If the component mounts during
+  // streaming it animates; if Streamdown remounts it later (same stream), the fresh
+  // instance captures the current isStreaming value — no double-trigger risk.
+  const shouldAnimateRef = React.useRef(!!isStreaming);
+  const [animationDone, setAnimationDone] = React.useState(!shouldAnimateRef.current);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: the pattern seems correct here.
   React.useEffect(() => {
     setImageLoaded(false);
     setImageError(false);
   }, [src]);
+
+  // Single-fire timer: runs once on mount if animating. Empty deps = no re-trigger.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional single-fire on mount
+  React.useEffect(() => {
+    if (!shouldAnimateRef.current) return;
+    const timer = setTimeout(() => setAnimationDone(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const showImage = imageLoaded && animationDone;
 
   const handleShow = () => {
     refDialog.current?.showModal();
@@ -51,43 +67,51 @@ export default function TruncableImage({ src, isStreaming }: TruncableImageProps
 
   if (!src) return null;
 
+  const containerEl = (
+    <div className={styles.container}>
+      {showImage && (
+        <button
+          type="button"
+          onClick={handleShow}
+          className={styles.fullscreenButton}
+          aria-label="View fullscreen"
+        >
+          <FullscreenOutlined />
+        </button>
+      )}
+      {!showImage && <ToolSkeleton />}
+      <img
+        className={styles.image}
+        src={src}
+        alt=""
+        style={{
+          display: showImage ? 'block' : 'none',
+          cursor: 'pointer',
+        }}
+        onLoad={() => setImageLoaded(true)}
+        onError={() => {
+          logError('Unable to load image:', src);
+          setImageError(true);
+        }}
+        onClick={handleShow}
+        onKeyDown={(evt) => {
+          if (![' ', 'Enter'].includes(evt.key)) return;
+
+          evt.preventDefault();
+          evt.stopPropagation();
+          handleShow();
+        }}
+      />
+    </div>
+  );
+
   return (
     <>
-      <div className={styles.container}>
-        {imageLoaded && (
-          <button
-            type="button"
-            onClick={handleShow}
-            className={styles.fullscreenButton}
-            aria-label="View fullscreen"
-          >
-            <FullscreenOutlined />
-          </button>
-        )}
-        {!imageLoaded && <ToolSkeleton />}
-        <img
-          className={styles.image}
-          src={src}
-          alt=""
-          style={{
-            display: imageLoaded ? 'block' : 'none',
-            cursor: 'pointer',
-          }}
-          onLoad={() => setImageLoaded(true)}
-          onError={() => {
-            logError('Unable to load image:', src);
-            setImageError(true);
-          }}
-          onClick={handleShow}
-          onKeyDown={(evt) => {
-            if (![' ', 'Enter'].includes(evt.key)) return;
-
-            evt.preventDefault();
-            evt.stopPropagation();
-            handleShow();
-          }}
-        />
-      </div>
+      {shouldAnimateRef.current ? (
+        <div className={styles.streamingReveal}>{containerEl}</div>
+      ) : (
+        containerEl
+      )}
       <FullscreenDialog dialogRef={refDialog}>
         <img src={src} alt="" className={dialogStyles.fullscreenImage} />
       </FullscreenDialog>
