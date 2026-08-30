@@ -50,9 +50,12 @@ export function NeuronSetCombination({
   selfName?: string;
 }) {
   // synthetic reference schema so we can reuse the existing `Reference` picker for each row.
-  // `Reference` only reads `reference_types`; `anyOf` is an unused placeholder for the type cast.
+  // `Reference` reads `reference_types` and `reference_tag`; `anyOf` is an unused placeholder for
+  // the type cast. the tag is carried over so each row's default option is labelled with what an
+  // unset operand actually resolves to, which differs by the combined set's population type.
   const referenceSchema = {
     reference_types: paramSchema.reference_types,
+    reference_tag: paramSchema.reference_tag,
     anyOf: [],
   } as unknown as ReferenceSchema;
 
