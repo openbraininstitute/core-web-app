@@ -134,7 +134,7 @@ export function LargeCircuitPreview({
   // recolours the somas in place and the camera stays where the user left it.
   // Nothing is reported placed until everything is, so having the subject means
   // the whole scene can be built.
-  const { placed, failures } = usePopulationsPlacement({ circuit, populations });
+  const { placed, failures, download } = usePopulationsPlacement({ circuit, populations });
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
   const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
@@ -291,7 +291,7 @@ export function LargeCircuitPreview({
 
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
-      {!subject && !error && <VisualizationLoadingIndicator />}
+      {!subject && !error && <VisualizationLoadingIndicator download={download} />}
       {error && (
         <div className={styles.error}>
           <h2>

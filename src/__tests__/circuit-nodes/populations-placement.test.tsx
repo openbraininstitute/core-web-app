@@ -70,8 +70,15 @@ const registry = vi.hoisted(() => {
     /** Test control: move a session on and tell its listeners. */
     settle(key: string, status: NodesSessionStatus, geometry: NodeGeometry | null = null) {
       const target = session(key);
-      target.state = { ...target.state, status };
+      // The registry drops the byte count when a session leaves its download.
+      target.state = { ...target.state, status, progress: null };
       target.geometry = geometry;
+      for (const listener of target.listeners) listener();
+    },
+    /** Test control: report how far a session's download has got. */
+    progress(key: string, received: number, total: number | null) {
+      const target = session(key);
+      target.state = { ...target.state, progress: { received, total } };
       for (const listener of target.listeners) listener();
     },
     reset() {
@@ -270,7 +277,85 @@ describe('usePopulationsPlacement', () => {
   it('is settled with nothing to place when given no populations', () => {
     const { result } = render([]);
 
-    expect(result.current).toEqual({ placed: [], failures: new Map(), settled: true });
+    expect(result.current).toEqual({
+      placed: [],
+      failures: new Map(),
+      settled: true,
+      download: null,
+    });
     expect(registry.acquired).toEqual([]);
+  });
+
+  it('sums the bytes of the node files it is reading', () => {
+    const { result } = render([CORTEX, THALAMUS]);
+
+    // Nothing has crossed the wire yet, so there is nothing to say it is doing.
+    expect(result.current.download).toBeNull();
+
+    act(() => {
+      registry.progress(key(CORTEX), 10, 100);
+      registry.progress(key(THALAMUS), 5, 50);
+    });
+
+    expect(result.current.download).toEqual({ received: 15, total: 150 });
+  });
+
+  // The registry drops a session's byte count once its file is open, and a
+  // finished file leaving the sum would take the reading backwards while its
+  // neighbours are still coming.
+  it('keeps a file that has finished in the sum', async () => {
+    const { result } = render([CORTEX, THALAMUS]);
+
+    act(() => {
+      registry.progress(key(CORTEX), 100, 100);
+      registry.progress(key(THALAMUS), 5, 50);
+      registry.settle(key(CORTEX), 'ready', geometry(1));
+    });
+
+    await waitFor(() => expect(registry.geometryAsked).toContain(key(CORTEX)));
+    expect(result.current.download).toEqual({ received: 105, total: 150 });
+  });
+
+  it('has no total to show when one file reports no length', () => {
+    const { result } = render([CORTEX, THALAMUS]);
+
+    act(() => {
+      registry.progress(key(CORTEX), 10, 100);
+      registry.progress(key(THALAMUS), 5, null);
+    });
+
+    expect(result.current.download).toEqual({ received: 15, total: null });
+  });
+
+  it('has nothing left to report once everything is placed', async () => {
+    const { result } = render([CORTEX]);
+
+    act(() => {
+      registry.progress(key(CORTEX), 10, 100);
+    });
+    expect(result.current.download).not.toBeNull();
+
+    act(() => {
+      registry.settle(key(CORTEX), 'ready', geometry(1));
+    });
+
+    await waitFor(() => expect(result.current.settled).toBe(true));
+    expect(result.current.download).toBeNull();
+  });
+
+  // A population joining the list would otherwise inherit the readings of the
+  // files already read, and announce a download that is already complete.
+  it('forgets what it has read when the list changes', async () => {
+    const { result, rerender } = render([CORTEX]);
+
+    act(() => {
+      registry.progress(key(CORTEX), 100, 100);
+      registry.settle(key(CORTEX), 'ready', geometry(1));
+    });
+    await waitFor(() => expect(result.current.settled).toBe(true));
+
+    rerender({ populations: [CORTEX, THALAMUS] });
+
+    expect(result.current).toMatchObject({ settled: false, download: null });
   });
 });

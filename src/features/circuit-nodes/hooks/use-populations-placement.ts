@@ -6,7 +6,11 @@ import { nodesOpenParams, nodesSessionKey } from '@/features/circuit-nodes/hooks
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
+import type {
+  DownloadProgress,
+  NodeGeometry,
+  NodePopulation,
+} from '@/features/circuit-nodes/types';
 
 type Args = {
   circuit: ICircuit;
@@ -34,6 +38,12 @@ type Result = {
   failures: ReadonlyMap<string, Error>;
   /** Every population has either been placed or given up on. */
   settled: boolean;
+  /**
+   * The node files still coming, summed: what a viewer can say it is waiting
+   * for. Null where nothing crossed the wire — every population came from a
+   * session another panel already had open — and null again once `settled`.
+   */
+  download: DownloadProgress | null;
 };
 
 /**
@@ -84,10 +94,20 @@ export function usePopulationsPlacement({
     useState<ReadonlyMap<string, NodeGeometry | Error>>(EMPTY_OUTCOMES);
   const outcomesRef = useRef(outcomes);
 
+  // By session key: how far its file's download has got. Only the files this
+  // effect run opened, and every one of them — see `report`.
+  const [downloads, setDownloads] =
+    useState<ReadonlyMap<string, DownloadProgress>>(EMPTY_DOWNLOADS);
+
   useEffect(() => {
     if (!circuitAssetId) return;
 
     let cancelled = false;
+    // The files of the previous run are read, or are being re-opened here from
+    // scratch; either way their byte counts no longer describe the wait. A
+    // population joining the list would otherwise inherit them and report a
+    // download already complete.
+    setDownloads(EMPTY_DOWNLOADS);
     const keyOf = (population: NodePopulation) =>
       nodesSessionKey(circuitId, circuitAssetId, population.name);
     // By name, for the populations whose session is still held: either not
@@ -108,6 +128,14 @@ export function usePopulationsPlacement({
       outcomesRef.current = next;
       setOutcomes(next);
     };
+    // A file that has finished downloading keeps its final reading rather than
+    // dropping out of the sum: the registry clears `progress` on ready, and
+    // subtracting a finished file would take the total backwards while its
+    // neighbours are still coming.
+    const report = (key: string, progress: DownloadProgress) => {
+      if (cancelled) return;
+      setDownloads((previous) => new Map(previous).set(key, progress));
+    };
     // Nothing further is needed from this session, so release it.
     const close = (population: NodePopulation) => {
       if (cancelled) return;
@@ -122,6 +150,7 @@ export function usePopulationsPlacement({
       let reading = false;
       const sync = () => {
         const state = nodesWorkerRegistry.getState(key);
+        if (state.progress) report(key, state.progress);
         if (state.status === 'error') {
           // Held open rather than closed: the table and colour-by retry this
           // same session, and the viewer has to pick up that retry too.
@@ -184,7 +213,22 @@ export function usePopulationsPlacement({
     };
   }, [circuitId, circuitAssetId, populations, ctx, withMorphologies, withOrientations]);
 
-  return useMemo(() => {
+  // Kept off the memo below so a byte arriving does not hand the caller a new
+  // `placed`, which viewers rebuild their scene from.
+  const download = useMemo((): DownloadProgress | null => {
+    if (downloads.size === 0) return null;
+    let received = 0;
+    // A file whose response carried no Content-Length has no length to add, and
+    // one unknown length makes the sum unknown.
+    let total: number | null = 0;
+    for (const progress of downloads.values()) {
+      received += progress.received;
+      if (total !== null) total = progress.total === null ? null : total + progress.total;
+    }
+    return { received, total };
+  }, [downloads]);
+
+  const placement = useMemo(() => {
     if (populations.length === 0) return { placed: [], failures: EMPTY_FAILURES, settled: true };
     if (!circuitAssetId) return UNSETTLED;
 
@@ -198,8 +242,16 @@ export function usePopulationsPlacement({
     }
     return { placed, failures, settled: true };
   }, [populations, outcomes, circuitId, circuitAssetId]);
+
+  return useMemo(
+    // Nothing is left to wait for once everything is placed, whatever the last
+    // reading said.
+    () => ({ ...placement, download: placement.settled ? null : download }),
+    [placement, download]
+  );
 }
 
 const EMPTY_OUTCOMES: ReadonlyMap<string, NodeGeometry | Error> = new Map();
+const EMPTY_DOWNLOADS: ReadonlyMap<string, DownloadProgress> = new Map();
 const EMPTY_FAILURES: ReadonlyMap<string, Error> = new Map();
-const UNSETTLED: Result = { placed: [], failures: EMPTY_FAILURES, settled: false };
+const UNSETTLED = { placed: [], failures: EMPTY_FAILURES, settled: false };

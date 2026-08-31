@@ -6,7 +6,7 @@ import { CircuitVisualization } from '@/features/scan-config/components/circuit-
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { SmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources';
 
-/** The label the loading indicator announces itself by. */
+/** The label the loading indicator announces itself by with nothing to count. */
 const LOADING = 'Loading visualization…';
 
 const fixtures = vi.hoisted(() => ({
@@ -72,20 +72,23 @@ describe('CircuitVisualization on an empty scene', () => {
   // The indicator waits on the viewer's own paint progress, and with no cells
   // the viewer is never mounted to report any — so waiting on it would leave
   // the indicator up for good over a scene the user emptied on purpose.
-  it('reads a finished, empty scene as finished', () => {
+  it('reads a finished, empty scene as finished', async () => {
     draw({ cells: [], isLoading: false });
 
-    expect(screen.queryByLabelText(LOADING)).toBeNull();
+    // Waited out: the indicator holds itself back for a moment before it
+    // appears, so an immediate check would read as absence either way. By role
+    // rather than label, since which phase it would have named is not the point.
+    await expect(screen.findByRole('status', {}, { timeout: 400 })).rejects.toThrow();
     expect(fixtures.mounted).toHaveLength(0);
   });
 
-  it('still covers an empty scene that has not arrived yet', () => {
+  it('still covers an empty scene that has not arrived yet', async () => {
     draw({ cells: [], isLoading: true });
 
-    expect(screen.getByLabelText(LOADING)).toBeInTheDocument();
+    expect(await screen.findByLabelText(LOADING)).toBeInTheDocument();
   });
 
-  it('keeps covering a scene whose cells are placed but not yet painted', () => {
+  it('keeps covering a scene whose cells are placed but not yet painted', async () => {
     const cell = {
       id: 'circuit-id/default #0',
       center: [0, 0, 0] as [number, number, number],
@@ -95,8 +98,8 @@ describe('CircuitVisualization on an empty scene', () => {
     draw({ cells: [cell], isLoading: false });
 
     // Mounted, and reporting no progress: the morphologies are still on their
-    // way from OBI-One.
+    // way from OBI-One, which is what the cover says it is waiting for.
     expect(fixtures.mounted).toHaveLength(1);
-    expect(screen.getByLabelText(LOADING)).toBeInTheDocument();
+    expect(await screen.findByLabelText('Drawing morphologies… 0 of 1')).toBeInTheDocument();
   });
 });

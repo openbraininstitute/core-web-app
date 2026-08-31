@@ -227,7 +227,7 @@ function CircuitVizView({
   });
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
-  const { cells, isLoading, error, loadCell, retry, synapses, anchor } = source;
+  const { cells, isLoading, error, loadCell, retry, synapses, anchor, download } = source;
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
 
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -305,6 +305,11 @@ function CircuitVizView({
   const painting = cells.length > 0 && (progress < 1 || !morphologiesPainted);
   const loading = !error && (isLoading || painting);
 
+  // What the second phase is counting. The scene already marks the cells with
+  // no morphology coming, and morphoviewer counts the rest — so the two agree
+  // without a second source of truth, or a change to the viewer.
+  const morphologyCount = useMemo(() => cells.filter((cell) => !cell.somaOnly).length, [cells]);
+
   // Pass interactive metadata through; morphoviewer ignores unknown fields safely.
   const morphoOverlays = useMemo(
     () =>
@@ -366,7 +371,12 @@ function CircuitVizView({
       )}
       <MorphologyLocationLabels labels={locationLabels} />
       <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
-      {loading && <VisualizationLoadingIndicator progress={progress} />}
+      {loading && (
+        <VisualizationLoadingIndicator
+          download={download}
+          morphologies={{ loaded: Math.round(progress * morphologyCount), total: morphologyCount }}
+        />
+      )}
       {error && (
         <div
           role="alert"

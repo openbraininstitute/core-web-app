@@ -1,3 +1,4 @@
+import type { DownloadProgress } from '@/features/circuit-nodes/types';
 import type {
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
@@ -22,6 +23,12 @@ export type TSmallCircuitSource = {
   cells: MorphoViewerSmallCircuitCell[];
   loadCell: (cellId: string) => Promise<MorphoViewerSmallCircuitCellData | null>;
   isLoading: boolean;
+  /**
+   * Node-file bytes still coming, so the viewer can say what it is waiting for.
+   * Optional: an MEModel is served whole by `/memodel/viz` and reads no node
+   * files at all.
+   */
+  download?: DownloadProgress | null;
   /** Anything the source failed at — the node list or a morphology. */
   error: Error | null;
   /** Discard the failure and fetch again. */

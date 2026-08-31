@@ -105,7 +105,7 @@ export function useSmallCircuitSource({
   // morphology in the world. None of it changes with the selection, so
   // selecting another population repaints the scene instead of re-reading it,
   // and the camera stays where the user left it.
-  const { placed, failures, settled } = usePopulationsPlacement({
+  const { placed, failures, settled, download } = usePopulationsPlacement({
     circuit,
     populations,
     withMorphologies: true,
@@ -340,6 +340,7 @@ export function useSmallCircuitSource({
     // not always this: hiding every population empties it on purpose, and then
     // there is nothing left to wait for.
     isLoading: !error && built === null && cells.length === 0,
+    download,
     error,
     retry,
     synapses,

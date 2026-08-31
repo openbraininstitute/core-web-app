@@ -33,7 +33,7 @@ function asNodeColors(byNode: string[]): NodeColors {
 // Hoisted so the module factories below, which run before the test body, can
 // read them.
 const fixtures = vi.hoisted(() => ({
-  placement: { placed: [], failures: new Map(), settled: true } as ReturnType<
+  placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
     typeof usePopulationsPlacement
   >,
   /** Every set of props the viewer has been rendered with, in order. */
@@ -116,6 +116,7 @@ describe('LargeCircuitPreview colours', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
   });
 
@@ -172,6 +173,7 @@ describe('LargeCircuitPreview colours', () => {
       placed: [{ population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) }],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     draw({ population: CORTEX });
 

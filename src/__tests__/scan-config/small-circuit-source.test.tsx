@@ -41,7 +41,7 @@ const fixtures = vi.hoisted(() => ({
     raw: { components: { morphologies_dir: 'morphologies' } },
   } as unknown,
   configError: null as Error | null,
-  placement: { placed: [], failures: new Map(), settled: true } as ReturnType<
+  placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
     typeof usePopulationsPlacement
   >,
 }));
@@ -134,6 +134,7 @@ describe('useSmallCircuitSource', () => {
       placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
       failures: new Map(),
       settled: true,
+      download: null,
     };
   });
 
@@ -187,6 +188,7 @@ describe('useSmallCircuitSource', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     const { result } = render(false, [DEFAULT, INPUTS]);
 
@@ -218,6 +220,7 @@ describe('useSmallCircuitSource', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     const { result } = render(false, [DEFAULT, INPUTS], INPUTS);
 
@@ -237,6 +240,7 @@ describe('useSmallCircuitSource', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     const { result } = render(false, [DEFAULT, OTHER]);
 
@@ -252,7 +256,7 @@ describe('useSmallCircuitSource', () => {
   // Built once rather than once per arrival, because the viewer re-fits every
   // cell when the id set changes.
   it('draws nothing until every population is placed', () => {
-    fixtures.placement = { placed: [], failures: new Map(), settled: false };
+    fixtures.placement = { placed: [], failures: new Map(), settled: false, download: null };
     const { result } = render(false, [DEFAULT, INPUTS]);
 
     expect(result.current.cells).toEqual([]);
@@ -272,6 +276,7 @@ describe('useSmallCircuitSource', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     const { result, rerender } = render(false, [DEFAULT, OTHER]);
     const shown = result.current.cells;
@@ -299,6 +304,7 @@ describe('useSmallCircuitSource', () => {
       placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
       failures: new Map([['inputs', new Error('no x/y/z columns')]]),
       settled: true,
+      download: null,
     };
     const { result } = render(false, [DEFAULT, INPUTS], INPUTS);
 
@@ -314,6 +320,7 @@ describe('useSmallCircuitSource', () => {
       placed: [],
       failures: new Map([['default', failure]]),
       settled: true,
+      download: null,
     };
     const { result } = render(false, [DEFAULT]);
 
@@ -332,6 +339,7 @@ describe('useSmallCircuitSource', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     const { result, rerender } = render(false, [DEFAULT, INPUTS], DEFAULT, ['inputs']);
 
@@ -363,6 +371,7 @@ describe('useSmallCircuitSource', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     const { result } = render(false, [DEFAULT, INPUTS], DEFAULT, ['default', 'inputs']);
 
@@ -378,6 +387,7 @@ describe('useSmallCircuitSource', () => {
       ],
       failures: new Map(),
       settled: true,
+      download: null,
     };
     const { result } = render(false, [DEFAULT, INPUTS], DEFAULT, ['default']);
 
