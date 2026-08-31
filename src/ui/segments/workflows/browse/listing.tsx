@@ -432,14 +432,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     handleBack,
   ]);
 
-  // warm the lazy data-table chunk while the user is on the prerequisite step, so confirming
-  // resolves near-instantly instead of waiting on a first-time chunk download
-  useEffect(() => {
-    if (showPrerequisitePhase) {
-      void import('@/ui/segments/data-table');
-    }
-  }, [showPrerequisitePhase]);
-
   const handleEntityTypeSelect = useCallback((entityType: TExtendedEntitiesTypeDict) => {
     setSelectedEntityType(entityType);
   }, []);
@@ -563,7 +555,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         facetsQueryFn={loaderFacetsQueryFn}
         mainTableProps={{
           selectionType: tableSelectionType,
-          ...(isMultiEntityBrowse ? { keepSelectionOnScopeChange: true } : {}),
           ...(trackTableSelections
             ? {
                 selectedRows: activeSelectedRows,
