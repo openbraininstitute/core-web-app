@@ -281,6 +281,21 @@ export function CircuitScene({
     subject: memodel,
   });
 
+  // What is drawn, once the default has had its say. A virtual population is an
+  // input to the circuit rather than part of it, so it starts out of the scene;
+  // never the one on show, which would leave the user looking at nothing, with
+  // no checklist to bring it back where the circuit declares a single
+  // population. `null` is the checklist untouched, and only then does any of
+  // this apply — an empty array is the user asking for every population back.
+  const hiddenPopulations = useMemo(
+    () =>
+      config.hiddenPopulations ??
+      populations
+        .filter((p) => p.type === 'virtual' && p.name !== population?.name)
+        .map((p) => p.name),
+    [config.hiddenPopulations, populations, population?.name]
+  );
+
   // Offered only where the other populations are on screen to begin with, and
   // only where there is more than one — with a single population, hiding it is
   // the empty scene and nothing else. That is the same condition that decides
@@ -290,7 +305,7 @@ export function CircuitScene({
     if (!showUnselectedPopulations || !nodes || nodes.length < 2) return undefined;
     return {
       populations: nodes,
-      hidden: config.hiddenPopulations,
+      hidden: hiddenPopulations,
       onChange: onHiddenPopulationsChange,
       // The resolved name, not what the host or the table asked for: with
       // neither naming one, the scene falls back to the first population, and
@@ -301,7 +316,7 @@ export function CircuitScene({
   }, [
     showUnselectedPopulations,
     circuitConfig,
-    config.hiddenPopulations,
+    hiddenPopulations,
     onHiddenPopulationsChange,
     population?.name,
     handlePopulationClick,
@@ -484,7 +499,7 @@ export function CircuitScene({
             circuit={circuit}
             population={population}
             populations={populations}
-            hiddenPopulations={config.hiddenPopulations}
+            hiddenPopulations={hiddenPopulations}
             nodeColors={enableColorBy ? nodeColors : undefined}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
@@ -515,7 +530,7 @@ export function CircuitScene({
               circuit={circuit}
               population={population}
               populations={populations}
-              hiddenPopulations={config.hiddenPopulations}
+              hiddenPopulations={hiddenPopulations}
               nodeColors={enableColorBy ? nodeColors : undefined}
               defaultColor={defaultColor}
               recededColor={recededColor}

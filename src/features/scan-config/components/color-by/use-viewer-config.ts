@@ -43,7 +43,9 @@ export const DEFAULT_MORPHOLOGY_LOCATION_RADIUS = 3;
 /** Baseline viewer defaults (full neuron opacity, electrode size 5). */
 export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   colorByProperty: {},
-  hiddenPopulations: [],
+  // Undecided: the populations this would name arrive long after the config is
+  // built. @see ViewerConfig.hiddenPopulations
+  hiddenPopulations: null,
   backgroundColor: CANVAS_LIGHT,
   showAxons: false,
   neuronOpacity: DEFAULT_NEURON_OPACITY,

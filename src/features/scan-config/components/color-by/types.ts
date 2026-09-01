@@ -81,8 +81,13 @@ export interface ViewerConfig {
    * Populations the user has taken out of the scene, by name; anything not
    * named is drawn. Kept as the exceptions rather than as the visible set, so a
    * population this list has never heard of is on screen rather than missing.
+   *
+   * `null` while the user has not touched the checklist, which is when the
+   * default applies: a circuit's virtual populations start out of the scene.
+   * Distinct from `[]`, a set the user can ask for — "Show all", or unticking
+   * the last hidden row — and which has to stick.
    */
-  hiddenPopulations: string[];
+  hiddenPopulations: string[] | null;
   backgroundColor: string;
   showAxons: boolean;
   /**
