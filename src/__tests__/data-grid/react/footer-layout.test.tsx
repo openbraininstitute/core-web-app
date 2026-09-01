@@ -89,6 +89,19 @@ describe('DataGrid footer', () => {
     expect(selected.compareDocumentPosition(bulk) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
+  // The empty-selection gate used to live in the antd `TableControls` wrapper; it now
+  // lives in `BulkActions`, so the bulk-download button must stay absent until a row is
+  // selected rather than rendering a "(0)" action.
+  it('renders no bulk actions until a row is selected', async () => {
+    const { controller } = setup();
+    await waitFor(() => expect(screen.getByTestId('results-count')).toBeInTheDocument());
+
+    expect(screen.queryByTestId('bulk-download')).not.toBeInTheDocument();
+
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
+    expect(await screen.findByTestId('bulk-download')).toBeInTheDocument();
+  });
+
   it('keeps the bulk actions out of the toolbar', async () => {
     const { controller } = setup();
     await waitFor(() => expect(screen.getByTestId('results-count')).toBeInTheDocument());

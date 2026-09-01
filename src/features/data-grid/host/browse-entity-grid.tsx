@@ -82,7 +82,7 @@ import type {
   IDetailRuntime,
   IExpandColumnConfig,
 } from '@/features/data-grid/react';
-import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
+import type { BrowseEntityScopeProps } from '@/features/views/listing/types';
 
 /** Module-level so the slice subscription's reader identity stays stable. */
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;

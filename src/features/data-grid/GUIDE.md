@@ -100,28 +100,30 @@ const definitions: Record<string, TAnyEntityGridDefinition> = {
 };
 ```
 
-That entry **is** the per-entity migration switch. `src/features/views/listing/browse-entity.tsx`:
+That entry is what makes the listing render at all. `src/features/views/listing/browse-entity.tsx`:
 
 ```ts
 const definition = getEntityGridDefinition(props.dataType);
-if (definition) return <BrowseEntityGrid {...props} definition={definition} />;
-return <BrowseEntityScopeLegacy {...props} />;
+if (!definition) return <GenericError … />;   // no listing exists for this dataType
+return <BrowseEntityGrid {...props} definition={definition} />;
 ```
 
-Registered ⇒ the AG Grid listing. Absent ⇒ the untouched legacy antd table. **Rollback
-is deleting the line** — that is why the registry keeps rollback comments next to the
-circuit spreads. The same lookup is used by `src/ui/segments/explore/circuit/index.tsx`.
+**There is no fallback.** The legacy antd table was removed once every routed dataType
+had a schema, so an unregistered dataType is a broken listing, not a quieter one —
+deleting a registry entry is not a rollback. To take a listing out of service, remove
+the dataType from the route allowlist (`listing/data-browse-entities.ts`) so the route
+404s instead.
 
 Then extend `src/__tests__/data-grid/bindings/entitycore/registry-coverage.test.ts`.
-Its lists mirror the real call sites (the data-browse route's `AllowedEntities`, the
-notebooks route, and every workflow/picker `sourceType`), so an entity that can reach
-`BrowseEntityScope` without a schema fails the build instead of silently falling back
-to antd.
+It imports the data-browse allowlist directly, so that route cannot drift. The picker
+list is hand-kept and only a lower bound: a scan-config picker resolves its accepted
+types at runtime from a server-supplied schema, which no static list can mirror.
 
 ### 1.3 Write the parity test
 
-A parity test (`*-parity.test.ts`) is the flip's safety net. It pins two invariants
-against the **legacy** implementation, which is still in the tree and is the oracle:
+A parity test (`*-parity.test.ts`) pins two invariants against the behaviour the legacy
+antd listing had. That implementation is no longer in the tree, so the oracle is now the
+entity's own view-def plus the recorded expectations in these tests:
 
 1. **Presentation** — the non-auxiliary column ids, in order, equal the legacy
    view-def's columns (`src/entity-configuration/definitions/view-defs/**`).

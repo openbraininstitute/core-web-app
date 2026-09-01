@@ -6,7 +6,7 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
-import TableControls from '@/ui/segments/data-table/elements/controls';
+import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 
 import type { Session } from 'next-auth';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
@@ -35,14 +35,12 @@ function makeRow(id: string, name?: string): EntityCoreIdentifiable {
   return { id, ...(name ? { name } : {}) } as EntityCoreIdentifiable;
 }
 
-function renderTableControls({
+function renderDownloadButton({
   selectedRows,
-  allowDownload = true,
   clearSelectedRows = vi.fn(),
   session = { user: { name: 'tester' } } as Session,
 }: {
   selectedRows: EntityCoreIdentifiable[];
-  allowDownload?: boolean;
   clearSelectedRows?: () => void;
   session?: Session | null;
 }) {
@@ -54,42 +52,30 @@ function renderTableControls({
     store,
     ...render(
       <Provider store={store}>
-        <TableControls
-          visible
+        <EntityDownloadButton
           selectedRows={selectedRows}
           clearSelectedRows={clearSelectedRows}
           dataType={ExtendedEntitiesTypeDict.CellMorphology}
           workspace={workspace}
-          allowDownload={allowDownload}
         />
       </Provider>
     ),
   };
 }
 
-describe('TableControls bulk download (data listing selection)', () => {
+/**
+ * Bulk download for every data listing. `browse-entity-grid.tsx` renders this button
+ * in `renderBulkActions`; it used to be reached through a `TableControls` pass-through,
+ * which is what this spec used to mount.
+ */
+describe('EntityDownloadButton (data listing bulk download)', () => {
   beforeEach(() => {
     vi.mocked(downloadArchive).mockReset();
     vi.mocked(downloadArchive).mockResolvedValue(undefined);
   });
 
-  it('hides the bulk download button when nothing is selected', () => {
-    renderTableControls({ selectedRows: [] });
-
-    expect(screen.queryByTestId('bulk-download-button')).not.toBeInTheDocument();
-  });
-
-  it('hides the bulk download button when allowDownload is false', () => {
-    renderTableControls({
-      selectedRows: [makeRow('m1')],
-      allowDownload: false,
-    });
-
-    expect(screen.queryByTestId('bulk-download-button')).not.toBeInTheDocument();
-  });
-
   it('hides the bulk download button when there is no session', () => {
-    renderTableControls({
+    renderDownloadButton({
       selectedRows: [makeRow('m1')],
       session: null,
     });
@@ -98,13 +84,13 @@ describe('TableControls bulk download (data listing selection)', () => {
   });
 
   it('labels a single selection as Download entity (1)', () => {
-    renderTableControls({ selectedRows: [makeRow('m1')] });
+    renderDownloadButton({ selectedRows: [makeRow('m1')] });
 
     expect(screen.getByTestId('bulk-download-button')).toHaveTextContent('Download entity (1)');
   });
 
   it('labels a multi selection as Download entities (N)', () => {
-    renderTableControls({
+    renderDownloadButton({
       selectedRows: [makeRow('m1'), makeRow('m2'), makeRow('m3')],
     });
 
@@ -112,7 +98,7 @@ describe('TableControls bulk download (data listing selection)', () => {
   });
 
   it('downloads the selected entity ids through downloadArchive', async () => {
-    renderTableControls({
+    renderDownloadButton({
       selectedRows: [makeRow('m1'), makeRow('m2')],
     });
 
@@ -130,7 +116,7 @@ describe('TableControls bulk download (data listing selection)', () => {
   });
 
   it('passes the entity name along when a single row is selected', async () => {
-    renderTableControls({ selectedRows: [makeRow('m1', 'Morph A')] });
+    renderDownloadButton({ selectedRows: [makeRow('m1', 'Morph A')] });
 
     fireEvent.click(screen.getByTestId('bulk-download-button'));
 
@@ -153,7 +139,7 @@ describe('TableControls bulk download (data listing selection)', () => {
         })
     );
 
-    renderTableControls({ selectedRows: [makeRow('m1')] });
+    renderDownloadButton({ selectedRows: [makeRow('m1')] });
 
     fireEvent.click(screen.getByTestId('bulk-download-button'));
 
@@ -172,7 +158,7 @@ describe('TableControls bulk download (data listing selection)', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const clearSelectedRows = vi.fn();
 
-    renderTableControls({
+    renderDownloadButton({
       selectedRows: [makeRow('m1')],
       clearSelectedRows,
     });
