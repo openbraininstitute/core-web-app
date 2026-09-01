@@ -13,6 +13,8 @@ const fixtures = vi.hoisted(() => ({
   source: {} as SmallCircuitSource,
   /** One entry per time the viewer was mounted. */
   mounted: [] as unknown[],
+  /** Whether the form is taking morphology locations from the 3D view. */
+  pickMode: null as string | null,
 }));
 
 // A WebGL surface, and the thing whose absence this file is about. The section
@@ -37,7 +39,7 @@ vi.mock('@/features/scan-config/components/hooks/use-morphology-location-selecti
     selection: undefined,
     hover: null,
     labels: [],
-    pickMode: 'off',
+    pickMode: fixtures.pickMode,
   }),
 }));
 
@@ -54,9 +56,16 @@ function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
   };
 }
 
-function draw(state: Partial<SmallCircuitSource>) {
+function draw(
+  state: Partial<SmallCircuitSource>,
+  {
+    pickMode = null,
+    onPopulationClick,
+  }: { pickMode?: string | null; onPopulationClick?: () => void } = {}
+) {
   fixtures.source = source(state);
   fixtures.mounted = [];
+  fixtures.pickMode = pickMode;
   render(
     <CircuitVisualization
       circuit={{ id: 'circuit-id', scale: 'microcircuit' } as ICircuit}
@@ -64,9 +73,17 @@ function draw(state: Partial<SmallCircuitSource>) {
       showAxons={false}
       backgroundColor="#000000"
       signals={{} as never}
+      onPopulationClick={onPopulationClick}
     />
   );
 }
+
+const CELL = {
+  id: 'circuit-id/default #0',
+  center: [0, 0, 0] as [number, number, number],
+  orientation: [0, 0, 0, 1] as [number, number, number, number],
+  somaRadius: 8,
+};
 
 describe('CircuitVisualization on an empty scene', () => {
   // The indicator waits on the viewer's own paint progress, and with no cells
@@ -89,17 +106,27 @@ describe('CircuitVisualization on an empty scene', () => {
   });
 
   it('keeps covering a scene whose cells are placed but not yet painted', async () => {
-    const cell = {
-      id: 'circuit-id/default #0',
-      center: [0, 0, 0] as [number, number, number],
-      orientation: [0, 0, 0, 1] as [number, number, number, number],
-      somaRadius: 8,
-    };
-    draw({ cells: [cell], isLoading: false });
+    draw({ cells: [CELL], isLoading: false });
 
     // Mounted, and reporting no progress: the morphologies are still on their
     // way from OBI-One, which is what the cover says it is waiting for.
     expect(fixtures.mounted).toHaveLength(1);
     expect(await screen.findByLabelText('Drawing morphologies… 0 of 1')).toBeInTheDocument();
+  });
+});
+
+describe('CircuitVisualization while a morphology location is being placed', () => {
+  // morphoviewer dispatches the cell click and the location pick from the same
+  // tap. Left wired, a tap meant for a neurite would also put another
+  // population on show, recolouring the scene and swapping the nodes table
+  // under the user. The checklist still changes population.
+  it('takes the population click off the tap', () => {
+    const onCellClick = () => (fixtures.mounted[0] as { onCellClick?: unknown }).onCellClick;
+
+    draw({ cells: [CELL] }, { onPopulationClick: vi.fn() });
+    expect(onCellClick()).toBeDefined();
+
+    draw({ cells: [CELL] }, { onPopulationClick: vi.fn(), pickMode: 'edit' });
+    expect(onCellClick()).toBeUndefined();
   });
 });

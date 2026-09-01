@@ -39,9 +39,10 @@ type Result = {
   /** Every population has either been placed or given up on. */
   settled: boolean;
   /**
-   * The node files still coming, summed: what a viewer can say it is waiting
-   * for. Null where nothing crossed the wire — every population came from a
-   * session another panel already had open — and null again once `settled`.
+   * The node files still coming, summed — one reading per file, however many
+   * populations are read from it: what a viewer can say it is waiting for. Null
+   * where nothing crossed the wire — every population came from a session
+   * another panel already had open — and null again once `settled`.
    */
   download: DownloadProgress | null;
 };
@@ -94,8 +95,10 @@ export function usePopulationsPlacement({
     useState<ReadonlyMap<string, NodeGeometry | Error>>(EMPTY_OUTCOMES);
   const outcomesRef = useRef(outcomes);
 
-  // By session key: how far its file's download has got. Only the files this
-  // effect run opened, and every one of them — see `report`.
+  // By node file: how far its download has got. Only the files this effect run
+  // opened, and every one of them — see `report`. Keyed by the file rather than
+  // by the session reading it, so two populations kept in one file describe one
+  // download between them instead of counting it twice.
   const [downloads, setDownloads] =
     useState<ReadonlyMap<string, DownloadProgress>>(EMPTY_DOWNLOADS);
 
@@ -132,9 +135,9 @@ export function usePopulationsPlacement({
     // dropping out of the sum: the registry clears `progress` on ready, and
     // subtracting a finished file would take the total backwards while its
     // neighbours are still coming.
-    const report = (key: string, progress: DownloadProgress) => {
+    const report = (file: string, progress: DownloadProgress) => {
       if (cancelled) return;
-      setDownloads((previous) => new Map(previous).set(key, progress));
+      setDownloads((previous) => new Map(previous).set(file, progress));
     };
     // Nothing further is needed from this session, so release it.
     const close = (population: NodePopulation) => {
@@ -150,7 +153,7 @@ export function usePopulationsPlacement({
       let reading = false;
       const sync = () => {
         const state = nodesWorkerRegistry.getState(key);
-        if (state.progress) report(key, state.progress);
+        if (state.progress) report(population.file, state.progress);
         if (state.status === 'error') {
           // Held open rather than closed: the table and colour-by retry this
           // same session, and the viewer has to pick up that retry too.
@@ -158,6 +161,11 @@ export function usePopulationsPlacement({
             population,
             state.error ?? new Error(`Population '${population.name}' could not be opened`)
           );
+          // The queue moves on all the same. The outcome is recorded, so this
+          // file is no longer busy, and a population waiting behind it would
+          // otherwise never be opened at all — leaving the placement unsettled
+          // for good, with the viewer on its spinner and the reason unread.
+          openReady();
         } else if (state.status === 'loading') {
           forget(population);
         } else if (state.status === 'ready' && !reading) {

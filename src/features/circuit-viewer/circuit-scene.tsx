@@ -47,6 +47,7 @@ import type { PopulationsControls } from '@/features/scan-config/components/colo
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
+const NOTHING_HIDDEN: readonly string[] = [];
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 
@@ -281,27 +282,38 @@ export function CircuitScene({
     subject: memodel,
   });
 
+  // Offered only where the other populations are on screen to begin with, and
+  // only where there is more than one — with a single population, hiding it is
+  // the empty scene and nothing else. That is the same condition that decides
+  // whether clicking a population in 3D selects it.
+  const hasPopulationsChecklist =
+    showUnselectedPopulations && (circuitConfig?.nodes?.length ?? 0) > 1;
+
   // A virtual population is an input to the circuit rather than part of it, so
   // it starts out of the scene. Never the one on show: that leaves nothing to
   // look at, and a circuit declaring a single population has no checklist to
   // bring it back. `null` is the checklist untouched, the only state the
   // default applies to; `[]` is the user asking for all of them.
+  //
+  // Nothing is hidden where that checklist is not drawn, whatever the circuit's
+  // stored setting says: it is the only way back, and the notices reporting a
+  // hidden selection or an empty scene come from it too. The setting is per
+  // circuit, so a population hidden in the standalone viewer would otherwise
+  // empty the scene of a host that pins its own population — spike replay.
   const hiddenPopulations = useMemo(
     () =>
-      config.hiddenPopulations ??
-      populations
-        .filter((p) => p.type === 'virtual' && p.name !== population?.name)
-        .map((p) => p.name),
-    [config.hiddenPopulations, populations, population?.name]
+      hasPopulationsChecklist
+        ? (config.hiddenPopulations ??
+          populations
+            .filter((p) => p.type === 'virtual' && p.name !== population?.name)
+            .map((p) => p.name))
+        : NOTHING_HIDDEN,
+    [hasPopulationsChecklist, config.hiddenPopulations, populations, population?.name]
   );
 
-  // Offered only where the other populations are on screen to begin with, and
-  // only where there is more than one — with a single population, hiding it is
-  // the empty scene and nothing else. That is the same condition that decides
-  // whether clicking a population in 3D selects it.
   const populationsControl = useMemo((): PopulationsControls | undefined => {
     const nodes = circuitConfig?.nodes;
-    if (!showUnselectedPopulations || !nodes || nodes.length < 2) return undefined;
+    if (!hasPopulationsChecklist || !nodes) return undefined;
     return {
       populations: nodes,
       hidden: hiddenPopulations,
@@ -313,7 +325,7 @@ export function CircuitScene({
       onSelect: handlePopulationClick,
     };
   }, [
-    showUnselectedPopulations,
+    hasPopulationsChecklist,
     circuitConfig,
     hiddenPopulations,
     onHiddenPopulationsChange,

@@ -248,6 +248,15 @@ export function useSmallCircuitSource({
     shownRef.current = cells;
   }, [cells]);
 
+  // Drawn for every population, marked for one. The morphology locations of a
+  // neuron set are section ids without a cell, so they are read against the
+  // population on show; matched against another's morphologies they would put a
+  // marker on every cell whose sections happen to number the same way.
+  const locationCells = useMemo(
+    () => cells.filter((cell) => parseNodeKey(cell.id)?.population === populationName),
+    [cells, populationName]
+  );
+
   const loadCell = useCallback(
     async (cellId: string) => {
       const node = parseNodeKey(cellId);
@@ -333,6 +342,7 @@ export function useSmallCircuitSource({
 
   return {
     cells,
+    locationCells,
     loadCell,
     // Nothing on screen yet. The viewer's own progress covers the morphologies;
     // this covers everything before them — the placement of every population,

@@ -255,6 +255,29 @@ describe('useSmallCircuitSource', () => {
 
   // Built once rather than once per arrival, because the viewer re-fits every
   // cell when the id set changes.
+  // A morphology location is a section id and an offset with no cell of its
+  // own, so it is read against the population on show. Offered the whole scene
+  // it would put a marker on every cell of every population whose morphology
+  // happens to number a section the same way.
+  it('offers only the population on show for morphology locations', () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0, 1, 0, 0], ['morph-a', 'morph-b']) },
+        { population: OTHER, geometry: placement([10, 0, 0], ['morph-c']) },
+      ],
+      failures: new Map(),
+      settled: true,
+      download: null,
+    };
+    const { result } = render(false, [DEFAULT, OTHER]);
+
+    expect(result.current.cells).toHaveLength(3);
+    expect(result.current.locationCells?.map((cell) => cell.id)).toEqual([
+      'circuit-id/default #0?axons=false',
+      'circuit-id/default #1?axons=false',
+    ]);
+  });
+
   it('draws nothing until every population is placed', () => {
     fixtures.placement = { placed: [], failures: new Map(), settled: false, download: null };
     const { result } = render(false, [DEFAULT, INPUTS]);

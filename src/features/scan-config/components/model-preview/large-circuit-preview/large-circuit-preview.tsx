@@ -132,9 +132,12 @@ export function LargeCircuitPreview({
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
   // recolours the somas in place and the camera stays where the user left it.
-  // Nothing is reported placed until everything is, so having the subject means
-  // the whole scene can be built.
-  const { placed, failures, download } = usePopulationsPlacement({ circuit, populations });
+  // Nothing is reported placed until everything is, so anything placed at all
+  // means the whole scene can be built.
+  const { placed, failures, settled, download } = usePopulationsPlacement({
+    circuit,
+    populations,
+  });
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
   const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
@@ -151,12 +154,14 @@ export function LargeCircuitPreview({
     config && !population
       ? new Error('This circuit’s circuit_config.json declares no node populations')
       : null;
-  // A failure of the population on show fails the viewer; a failure of any
-  // other population is context that simply goes undrawn.
-  const error =
-    configError ??
-    noPopulation ??
-    (subjectName === undefined ? null : (failures.get(subjectName) ?? null));
+  // A population that could not be placed is context that goes undrawn, the one
+  // on show included: an input population carries no positions, and picking it
+  // out of the checklist should not take the circuit off the screen. Only a
+  // scene with nothing in it at all is worth covering the canvas for, and then
+  // the reason is whichever population failed.
+  const noPlacement =
+    !settled || placed.length > 0 ? null : (failures.values().next().value ?? null);
+  const error = configError ?? noPopulation ?? noPlacement;
 
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
   React.useEffect(() => {
@@ -213,7 +218,9 @@ export function LargeCircuitPreview({
   // nothing on screen is the selection then either, and the viewer's own ramp
   // would say the opposite, lighting the whole rest of the circuit up the
   // moment the user takes the selection out of it.
-  const recede = hasContext ? recededColor : undefined;
+  // With the population on show unplaceable there is no selection on screen to
+  // recede behind, and receding everything would grey the whole circuit out.
+  const recede = hasContext && subject ? recededColor : undefined;
 
   // The mapping already arrives as a palette and a column per soma. This memo
   // writes the subject's columns at its offset in the scene and appends a
@@ -291,7 +298,7 @@ export function LargeCircuitPreview({
 
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
-      {!subject && !error && <VisualizationLoadingIndicator download={download} />}
+      {placed.length === 0 && !error && <VisualizationLoadingIndicator download={download} />}
       {error && (
         <div className={styles.error}>
           <h2>
@@ -300,7 +307,7 @@ export function LargeCircuitPreview({
           <p>{error.message}</p>
         </div>
       )}
-      {subject && !error && (
+      {placed.length > 0 && !error && (
         <MorphoViewerCircuitMultipleNeuronsSomaOnly
           somaRadius={somaRadius}
           gizmo
@@ -325,7 +332,7 @@ export function LargeCircuitPreview({
           spikeSpeed={spikes?.speed}
           spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
           controls={[
-            debugMode
+            debugMode && subject
               ? [
                   <Button key="download" onClick={handleDownload} className={styles.downloadButton}>
                     Download {subject.count} nodes

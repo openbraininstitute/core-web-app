@@ -41,6 +41,14 @@ export type TSmallCircuitSource = {
   /** Per loaded cell (by the id in {@link cells}): SONATA section id → the viewer's section name. */
   sonataSectionIds?: ReadonlyMap<string, ReadonlyMap<number, string>>;
   /**
+   * The subset of {@link cells} a stored morphology location applies to: the
+   * population on show. A location is a section id and an offset with no cell
+   * of its own, so it can only be read against one population's morphologies —
+   * every other population has section ids of its own, answering to nothing.
+   * Omitted where every cell is one, as for an MEModel.
+   */
+  locationCells?: MorphoViewerSmallCircuitCell[];
+  /**
    * Centre of the population on show, used to place things near it: a new
    * electrode seeds its origin here. Null until that population's nodes are
    * placed. This is not the centre of {@link cells}, which may include context

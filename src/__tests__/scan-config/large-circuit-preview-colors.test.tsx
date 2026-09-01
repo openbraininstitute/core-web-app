@@ -223,6 +223,44 @@ describe('LargeCircuitPreview colours', () => {
     expect(paints(lastRender())).toEqual([false, false, false]);
   });
 
+  // An input population carries no positions, and selecting one out of the
+  // checklist should not take the circuit off the screen: it is context that
+  // goes undrawn, as a failure of any other population already is. The error
+  // panel unmounts the viewer, and with it the WebGL context and the camera.
+  it('draws the rest of the circuit when the population on show has no positions', () => {
+    fixtures.placement = {
+      placed: [{ population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) }],
+      failures: new Map([['vpm', new Error('no x/y/z columns; nothing to place in 3D')]]),
+      settled: true,
+      download: null,
+    };
+    const { container } = draw({
+      population: VPM,
+      recededColor: '#ccc',
+      onPopulationClick: vi.fn(),
+    });
+
+    expect(lastRender().positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1]));
+    // Nothing on screen is the selection, so there is nothing for the rest to
+    // recede behind: the viewer keeps its own ramp.
+    expect(lastRender().cellColors?.palette).toEqual([]);
+    // And a click is still the way back to a population that can be drawn.
+    expect(lastRender().onCellClick).toBeDefined();
+    expect(container.textContent).not.toContain('Unable to load');
+  });
+
+  it('covers the canvas only once no population at all could be placed', () => {
+    fixtures.placement = {
+      placed: [],
+      failures: new Map([['cortex', new Error('nodes.h5 could not be opened')]]),
+      settled: true,
+      download: null,
+    };
+    const { container } = draw({ population: CORTEX });
+
+    expect(container.textContent).toContain('nodes.h5 could not be opened');
+  });
+
   // The viewer builds its pick buffer on the first click, which at region scale
   // is a second copy of every position. With nothing pickable left on screen,
   // that is a copy paid for nothing.

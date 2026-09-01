@@ -221,7 +221,7 @@ function CircuitVizView({
     pickMode: locationPickMode,
   } = useMorphologyLocationSelection({
     ...morphologyLocations,
-    cells: source.cells,
+    cells: source.locationCells ?? source.cells,
     sonataSectionIds: source.sonataSectionIds,
     backgroundColor,
   });
@@ -344,7 +344,12 @@ function CircuitVizView({
           signals={signals}
           circuit={cells}
           onCellHover={enableCellHover ? handleCellHover : undefined}
-          onCellClick={onCellClick}
+          // Not while a location is being placed: morphoviewer dispatches the
+          // cell click and the location pick from the same tap, so a tap meant
+          // for a neurite would also put another population on show, recolouring
+          // the scene and swapping the nodes table under the user. The checklist
+          // still changes population.
+          onCellClick={locationPickMode ? undefined : onCellClick}
           locationSelection={locationSelection}
           highlightedCellIds={highlightedCellIds}
           loadCell={loadCell}

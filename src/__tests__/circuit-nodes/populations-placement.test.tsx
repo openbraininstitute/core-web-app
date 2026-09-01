@@ -233,6 +233,31 @@ describe('usePopulationsPlacement', () => {
     await waitFor(() => expect(registry.acquired).toContain(key(second)));
   });
 
+  // The file that will not open is holding the one behind it, so giving up on
+  // it has to let that one through. Left waiting, it is never opened at all and
+  // the placement never settles: the viewer keeps its spinner and the reason
+  // for the failure is never read out of it.
+  it('opens the next population in a shared file when the first fails', async () => {
+    const first = { ...CORTEX, file: 'shared.h5' };
+    const second = { ...INPUTS, file: 'shared.h5' };
+    const { result } = render([first, second]);
+
+    expect(registry.acquired).toEqual([key(first)]);
+
+    act(() => {
+      registry.settle(key(first), 'error');
+    });
+    await waitFor(() => expect(registry.acquired).toContain(key(second)));
+
+    act(() => {
+      registry.settle(key(second), 'ready', geometry(2));
+    });
+
+    await waitFor(() => expect(result.current.settled).toBe(true));
+    expect(result.current.placed.map((entry) => entry.population.name)).toEqual(['inputs']);
+    expect(result.current.failures.has('cortex')).toBe(true);
+  });
+
   // Selecting a population neither reorders nor re-reads anything, so the
   // viewer can repaint from what it already has.
   it('keeps what it has read when the list changes, reading only the newcomers', async () => {
@@ -313,6 +338,32 @@ describe('usePopulationsPlacement', () => {
     });
 
     await waitFor(() => expect(registry.geometryAsked).toContain(key(CORTEX)));
+    expect(result.current.download).toEqual({ received: 105, total: 150 });
+  });
+
+  // Two populations kept in one file are read one after the other, and each
+  // reports the download of that one file.
+  it('counts a file two populations share once', async () => {
+    const first = { ...CORTEX, file: 'shared.h5' };
+    const second = { ...INPUTS, file: 'shared.h5' };
+    const { result } = render([first, second, THALAMUS]);
+
+    act(() => {
+      registry.progress(key(first), 100, 100);
+      registry.progress(key(THALAMUS), 5, 50);
+    });
+    expect(result.current.download).toEqual({ received: 105, total: 150 });
+
+    act(() => {
+      registry.settle(key(first), 'ready', geometry(1));
+    });
+    await waitFor(() => expect(registry.acquired).toContain(key(second)));
+
+    // The same 100-byte file, read by the population that comes next. Counted
+    // per session it would read as 250 bytes over two files.
+    act(() => {
+      registry.progress(key(second), 100, 100);
+    });
     expect(result.current.download).toEqual({ received: 105, total: 150 });
   });
 
