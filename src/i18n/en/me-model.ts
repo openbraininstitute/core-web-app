@@ -11,4 +11,10 @@ export const messages = {
   CreationModelSucceed: 'The me-model has been successfully created.',
   CheckingCompatibility: 'Model compatibility check in progress...',
   IncompatibleModels: 'Incompatible M-model and E-model, please select a different combination.',
+  CompatibilityCheckFailed:
+    "We couldn't complete the compatibility check. You can try again, or build the model and review the validation results afterwards.",
+  CompatibilityDetailsShow: 'Show details',
+  CompatibilityDetailsHide: 'Hide details',
+  CompatibilityDetailsCopy: 'Copy details',
+  CompatibilityRetry: 'Try again',
 };
