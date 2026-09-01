@@ -7,6 +7,7 @@ import {
 
 import type { CompatibilityCheckResponse } from '@/api/small-scale-simulator/single-neuron/compatibility';
 import type { ApiResponse } from '@/types/small-scale-simulator/common';
+import type { CompatibilityState } from '@/ui/segments/workflows/build/memodel/compatibility-state';
 
 const base = { selectionComplete: true, isFetching: false, isError: false };
 
@@ -94,12 +95,25 @@ describe('blocksBuild', () => {
     expect(blocksBuild({ kind: 'incompatible' })).toBe(true);
   });
 
-  it('lets the user build when the check merely could not run', () => {
-    expect(blocksBuild({ kind: 'check-failed' })).toBe(false);
+  it('blocks when the check could not reach a verdict', () => {
+    expect(blocksBuild({ kind: 'check-failed' })).toBe(true);
   });
 
-  it('does not block otherwise', () => {
-    expect(blocksBuild({ kind: 'idle' })).toBe(false);
-    expect(blocksBuild({ kind: 'compatible' })).toBe(false);
+  it('blocks while no verdict exists yet', () => {
+    // Reachable with a complete selection, between the selection landing and the query
+    // starting — the build must not flash enabled in that gap.
+    expect(blocksBuild({ kind: 'idle' })).toBe(true);
+  });
+
+  it('unblocks only on a verified-compatible pair', () => {
+    const states: CompatibilityState[] = [
+      { kind: 'idle' },
+      { kind: 'checking' },
+      { kind: 'compatible' },
+      { kind: 'incompatible' },
+      { kind: 'check-failed' },
+    ];
+
+    expect(states.filter((state) => !blocksBuild(state))).toEqual([{ kind: 'compatible' }]);
   });
 });

@@ -88,7 +88,10 @@ export function Menu({ sessionId }: { sessionId: string }) {
         signal,
       }),
     enabled: selectionComplete,
-    retry: false,
+    // A failed check blocks the build, so let a transport blip heal itself rather than
+    // making the user click Try again. Only reaches this path when the request itself
+    // failed: a check that ran but could not finish comes back as a 200.
+    retry: 2,
     refetchOnWindowFocus: false,
     staleTime: Infinity,
   });
@@ -177,6 +180,23 @@ export function Menu({ sessionId }: { sessionId: string }) {
 
   const result = CreateSingleNeuronContextSchema.safeParse(payload);
   const disabled = mutate.isPending || !!result.error || blocksBuild(compatibility);
+
+  // Why the button is disabled, so the tooltip stops claiming the selection is at fault
+  // when the real reason is that the check could not reach a verdict.
+  const disabledReason = ((): React.ReactNode => {
+    if (mutate.isPending) return null;
+    if (result.error)
+      return (
+        <>
+          Please fill all the required information along with <br /> selecting compatible M-model
+          and E-model
+        </>
+      );
+    if (compatibility.kind === 'checking') return messages.CheckingCompatibility;
+    if (compatibility.kind === 'incompatible') return messages.IncompatibleModels;
+    if (compatibility.kind === 'check-failed') return messages.CompatibilityBlockedTooltip;
+    return null;
+  })();
 
   return (
     <>
@@ -336,12 +356,9 @@ export function Menu({ sessionId }: { sessionId: string }) {
               </Button>
             </div>
           </TooltipTrigger>
-          {disabled && (
+          {disabledReason && (
             <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
-              <p className={cn('text-justify text-base')}>
-                Please fill all the required information along with <br /> selecting compatible
-                M-model and E-model
-              </p>
+              <p className={cn('text-justify text-base')}>{disabledReason}</p>
             </TooltipContent>
           )}
         </Tooltip>
