@@ -240,6 +240,15 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     [isCustomLoader, activeLoader, confirmedPrerequisite]
   );
 
+  // Warm the lazy listing chunk while the user is on the prerequisite step, so confirming
+  // resolves near-instantly instead of waiting on a first-time chunk download. Must name
+  // the same module `browse-entity.tsx` lazy-loads, or it warms nothing.
+  useEffect(() => {
+    if (showPrerequisitePhase) {
+      void import('@/features/data-grid/host/browse-entity-grid');
+    }
+  }, [showPrerequisitePhase]);
+
   const loaderFacetsQueryFn = useMemo(
     () => (isCustomLoader ? activeLoader.facets?.build(confirmedPrerequisite) : undefined),
     [isCustomLoader, activeLoader, confirmedPrerequisite]

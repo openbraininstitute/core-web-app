@@ -27,7 +27,7 @@ import type {
   EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/bulk-action-props';
 
 type DeletionResult = {
   success: Array<
