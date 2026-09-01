@@ -7,8 +7,9 @@ import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-brow
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 /**
- * Migration guardrail: an unregistered dataType now renders an error instead of a
- * listing, so every routable type needs a definition.
+ * Migration guardrail: there is no legacy fallback any more, so an unregistered
+ * dataType renders an error instead of a listing and every routable type needs a
+ * definition.
  *
  * Coverage is NOT complete, and cannot be. The data-browse list below is imported from
  * the route itself, so it cannot drift. The picker list is still hand-kept and is only

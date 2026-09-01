@@ -52,9 +52,9 @@ export interface IEntityGridDefinition<Row> {
 export type TAnyEntityGridDefinition = IEntityGridDefinition<any>;
 
 /**
- * dataType → grid definition. Per-entity flip switch: a registered dataType routes
- * `BrowseEntityScope` to the AG Grid host, removing the entry falls back to the legacy
- * antd table.
+ * dataType → grid definition. Every dataType routed to `BrowseEntityScope` needs an
+ * entry: there is no second listing implementation to fall back to, so removing one
+ * breaks that listing rather than reverting it.
  */
 const definitions: Record<string, TAnyEntityGridDefinition> = {
   [cellMorphologyGridDefinition.dataType]: cellMorphologyGridDefinition,
