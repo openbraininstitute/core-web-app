@@ -199,6 +199,7 @@ export function CircuitViewerChrome({
                   onSelect={populations.onSelect}
                   theme={theme}
                   container={portalContainer}
+                  autoOpen={showVizChrome}
                 />
               )}
               {viz.menu.onToggleElectrodes &&

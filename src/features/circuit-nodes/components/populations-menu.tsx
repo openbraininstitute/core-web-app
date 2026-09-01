@@ -7,6 +7,13 @@ import { cn } from '@/utils/css-class';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
+/**
+ * Written once the checklist has opened itself for this user, and read to make
+ * sure it never does so again. Per browser rather than per circuit: it is the
+ * control that has to be found, and it only has to be found once.
+ */
+export const POPULATIONS_MENU_INTRODUCED_KEY = 'obi:circuit-viewer-populations-menu:v1';
+
 interface PopulationsMenuProps {
   /** Every population the circuit declares, in declared order. */
   populations: readonly NodePopulation[];
@@ -22,6 +29,14 @@ interface PopulationsMenuProps {
   theme?: ViewerTheme | null;
   /** portal target for the popover (fullscreen element); null → document.body. */
   container?: HTMLElement | null;
+  /**
+   * Whether the checklist may introduce itself, which it does by opening once
+   * and never again — see {@link POPULATIONS_MENU_INTRODUCED_KEY}. The host
+   * says when, because the chrome stays mounted behind the views it is not on,
+   * and a viewer nobody is looking at would spend that one introduction where
+   * nobody sees it.
+   */
+  autoOpen?: boolean;
   className?: string;
 }
 
@@ -47,11 +62,31 @@ export function PopulationsMenu({
   onSelect,
   theme,
   container,
+  autoOpen = false,
   className,
 }: PopulationsMenuProps) {
   const [open, setOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  // The pill counts what is on screen and says nothing about what a click on it
+  // does, which is a poor place to learn that the populations missing from the
+  // scene are a default rather than a failure. So the panel says it itself, the
+  // first time it is on screen, and leaves the pill to it from then on.
+  useEffect(() => {
+    if (!autoOpen) return;
+
+    try {
+      const storage = globalThis.localStorage;
+      if (!storage || storage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)) return;
+      storage.setItem(POPULATIONS_MENU_INTRODUCED_KEY, '1');
+    } catch {
+      // Storage blocked or full. An introduction that cannot be recorded is one
+      // given again on every visit, which is worse than never giving it.
+      return;
+    }
+    setOpen(true);
+  }, [autoOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -127,8 +162,17 @@ export function PopulationsMenu({
         />
       </PopoverTrigger>
       <PopoverContent
+        ref={contentRef}
         container={container}
         data-testid="populations-menu-content"
+        onOpenAutoFocus={(event) => {
+          // Radix hands focus to the first control in the panel, which is "Show
+          // all": a focus ring on a panel that opened itself, and one Enter away
+          // from putting back every population the user has hidden. The panel
+          // takes the focus instead, so Tab still walks the rows from here.
+          event.preventDefault();
+          contentRef.current?.focus();
+        }}
         // Opens under the pill's left edge, which is the one that stays put:
         // the pill sits at the left of the chrome and grows rightward.
         align="start"
@@ -139,111 +183,106 @@ export function PopulationsMenu({
           !theme && 'bg-white ring-1 ring-black/5'
         )}
       >
-        <div ref={contentRef}>
-          <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-            <span className="text-xs uppercase tracking-wide" style={mutedStyle}>
-              Visible
-            </span>
-            <button
-              type="button"
-              data-testid="populations-menu-show-all"
-              disabled={hidden.length === 0}
-              onClick={() => onChange([])}
-              className={cn(
-                'text-sm font-medium enabled:hover:underline disabled:opacity-40',
-                !theme && 'text-primary-9'
-              )}
-            >
-              Show all
-            </button>
-          </div>
-          <ul className="max-h-72 overflow-y-auto">
-            {populations.map((population) => {
-              const { name } = population;
-              const isHidden = hiddenSet.has(name);
-              return (
-                <li
-                  key={name}
-                  className={cn(
-                    'group/row flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors',
-                    hoverClass
-                  )}
-                >
-                  <label className="flex shrink-0 items-center">
-                    <input
-                      type="checkbox"
-                      checked={!isHidden}
-                      onChange={(e) =>
-                        onChange(
-                          e.target.checked ? hidden.filter((n) => n !== name) : [...hidden, name]
-                        )
-                      }
-                      className="size-4 cursor-pointer accent-current"
-                    />
-                    <span className="sr-only">Show {name}</span>
-                  </label>
-                  {onSelect ? (
-                    <button
-                      type="button"
-                      aria-pressed={name === selected}
-                      onClick={() => onSelect(name)}
-                      className={cn(
-                        'min-w-0 flex-1 truncate text-left text-sm',
-                        name === selected && 'font-semibold',
-                        isHidden && 'opacity-50',
-                        !theme && (name === selected ? 'text-primary-9' : 'text-neutral-700')
-                      )}
-                    >
-                      {name}
-                      {population.type && (
-                        <span
-                          className={cn('ml-1', !theme && 'text-neutral-400')}
-                          style={mutedStyle}
-                        >
-                          {population.type}
-                        </span>
-                      )}
-                    </button>
-                  ) : (
-                    <span
-                      className={cn(
-                        'min-w-0 flex-1 truncate text-sm',
-                        name === selected && 'font-semibold',
-                        isHidden && 'opacity-50'
-                      )}
-                    >
-                      {name}
-                    </span>
-                  )}
-                  {/* Revealed on hover so a row reads as a name, not a row of buttons — but
-                      focusable throughout, or it would be a gesture only a mouse could make. */}
+        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+          <span className="text-xs uppercase tracking-wide" style={mutedStyle}>
+            Visible
+          </span>
+          <button
+            type="button"
+            data-testid="populations-menu-show-all"
+            disabled={hidden.length === 0}
+            onClick={() => onChange([])}
+            className={cn(
+              'text-sm font-medium enabled:hover:underline disabled:opacity-40',
+              !theme && 'text-primary-9'
+            )}
+          >
+            Show all
+          </button>
+        </div>
+        <ul className="max-h-72 overflow-y-auto">
+          {populations.map((population) => {
+            const { name } = population;
+            const isHidden = hiddenSet.has(name);
+            return (
+              <li
+                key={name}
+                className={cn(
+                  'group/row flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors',
+                  hoverClass
+                )}
+              >
+                <label className="flex shrink-0 items-center">
+                  <input
+                    type="checkbox"
+                    checked={!isHidden}
+                    onChange={(e) =>
+                      onChange(
+                        e.target.checked ? hidden.filter((n) => n !== name) : [...hidden, name]
+                      )
+                    }
+                    className="size-4 cursor-pointer accent-current"
+                  />
+                  <span className="sr-only">Show {name}</span>
+                </label>
+                {onSelect ? (
                   <button
                     type="button"
-                    aria-label={`Show only ${name}`}
-                    onClick={() => {
-                      onChange(populations.map((p) => p.name).filter((n) => n !== name));
-                      // The one population left in the scene is the one to put
-                      // on show. Leaving the selection where it was would draw
-                      // the only thing on screen receded, with the nodes table
-                      // listing a population that is not drawn at all. Ticking
-                      // a checkbox is the other case, and stays as it was: it
-                      // says which populations are drawn and nothing about
-                      // which one is on show.
-                      onSelect?.(name);
-                    }}
+                    aria-pressed={name === selected}
+                    onClick={() => onSelect(name)}
                     className={cn(
-                      'shrink-0 text-xs font-medium opacity-0 transition-opacity',
-                      'group-hover/row:opacity-100 focus-visible:opacity-100 motion-reduce:transition-none',
-                      !theme && 'text-primary-9'
+                      'min-w-0 flex-1 truncate text-left text-sm',
+                      name === selected && 'font-semibold',
+                      isHidden && 'opacity-50',
+                      !theme && (name === selected ? 'text-primary-9' : 'text-neutral-700')
                     )}
                   >
-                    Only
+                    {name}
+                    {population.type && (
+                      <span className={cn('ml-1', !theme && 'text-neutral-400')} style={mutedStyle}>
+                        {population.type}
+                      </span>
+                    )}
                   </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                ) : (
+                  <span
+                    className={cn(
+                      'min-w-0 flex-1 truncate text-sm',
+                      name === selected && 'font-semibold',
+                      isHidden && 'opacity-50'
+                    )}
+                  >
+                    {name}
+                  </span>
+                )}
+                {/* Revealed on hover so a row reads as a name, not a row of buttons — but
+                    focusable throughout, or it would be a gesture only a mouse could make. */}
+                <button
+                  type="button"
+                  aria-label={`Show only ${name}`}
+                  onClick={() => {
+                    onChange(populations.map((p) => p.name).filter((n) => n !== name));
+                    // The one population left in the scene is the one to put
+                    // on show. Leaving the selection where it was would draw
+                    // the only thing on screen receded, with the nodes table
+                    // listing a population that is not drawn at all. Ticking
+                    // a checkbox is the other case, and stays as it was: it
+                    // says which populations are drawn and nothing about
+                    // which one is on show.
+                    onSelect?.(name);
+                  }}
+                  className={cn(
+                    'shrink-0 text-xs font-medium opacity-0 transition-opacity',
+                    'group-hover/row:opacity-100 focus-visible:opacity-100 motion-reduce:transition-none',
+                    !theme && 'text-primary-9'
+                  )}
+                >
+                  Only
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </PopoverContent>
     </Popover>
   );

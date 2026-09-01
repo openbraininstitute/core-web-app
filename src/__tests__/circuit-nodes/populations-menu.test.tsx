@@ -1,7 +1,10 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
+import {
+  POPULATIONS_MENU_INTRODUCED_KEY,
+  PopulationsMenu,
+} from '@/features/circuit-nodes/components/populations-menu';
 
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 
@@ -134,6 +137,16 @@ describe('PopulationsMenu', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  // The panel is portalled, so what closes it is a handler of its own rather
+  // than anything the DOM does for it.
+  it('closes on a pointer landing outside it', () => {
+    open();
+    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
+
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
+  });
+
   it('offers no way to change what is on show when the host pins it', () => {
     open({ selected: 'cortex', onSelect: undefined });
 
@@ -141,5 +154,62 @@ describe('PopulationsMenu', () => {
     // The checkbox is still there: pinning which population is on show says
     // nothing about which ones are drawn around it.
     expect(checkbox('cortex')).toBeInTheDocument();
+  });
+});
+
+/**
+ * A user who has never seen the checklist, which is the only user it opens
+ * itself for.
+ */
+describe('PopulationsMenu introduction', () => {
+  beforeEach(() => localStorage.clear());
+
+  function introduce(autoOpen: boolean) {
+    return (
+      <PopulationsMenu
+        populations={POPULATIONS}
+        hidden={['vpm']}
+        onChange={vi.fn()}
+        autoOpen={autoOpen}
+      />
+    );
+  }
+
+  // What the pill cannot say: that the population missing from the scene is a
+  // default rather than a failure, and that this is where it comes back.
+  it('opens itself the first time a user is shown it', () => {
+    render(introduce(true));
+
+    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
+    expect(checkbox('vpm').checked).toBe(false);
+  });
+
+  // Radix would hand the focus to "Show all", which draws a ring on a panel
+  // nobody opened and leaves Enter putting every population back.
+  it('takes the focus itself rather than putting it on a control', () => {
+    render(introduce(true));
+
+    expect(screen.getByTestId('populations-menu-content')).toHaveFocus();
+    expect(screen.getByTestId('populations-menu-show-all')).not.toHaveFocus();
+  });
+
+  it('leaves itself shut for a user who has already met it', () => {
+    const { unmount } = render(introduce(true));
+    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
+    unmount();
+
+    render(introduce(true));
+    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
+  });
+
+  // The host owns the timing, and holds it back where the checklist is mounted
+  // but not on screen. Spending the introduction there spends it on nobody.
+  it('waits for the host rather than spending the introduction unseen', () => {
+    const { rerender } = render(introduce(false));
+    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
+    expect(localStorage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)).toBeNull();
+
+    rerender(introduce(true));
+    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
   });
 });
