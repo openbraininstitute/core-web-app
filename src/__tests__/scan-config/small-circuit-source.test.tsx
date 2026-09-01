@@ -13,8 +13,9 @@ const INPUTS: NodePopulation = { name: 'inputs', type: 'virtual', file: 'inputs.
 
 /**
  * One population's placement, as this viewer asks the hook to read it:
- * positions, orientations, and the morphology each node names — null for a
- * population that names none, which is what an input population looks like.
+ * positions, orientations, and the morphology each node names. That last is
+ * null for a population that names none, which is what an input population
+ * looks like.
  */
 function placement(positions: number[], morphologies: string[] | null = null): NodeGeometry {
   const count = positions.length / 3;
@@ -253,8 +254,8 @@ describe('useSmallCircuitSource', () => {
     await expect(result.current.loadCell('circuit-id/other #1')).resolves.not.toBeNull();
   });
 
-  // Built once rather than once per arrival, because the viewer re-fits every
-  // cell when the id set changes.
+  // Built one time only, because the viewer re-fits every cell when the id set
+  // changes.
   // A morphology location is a section id and an offset with no cell of its
   // own, so it is read against the population on show. Offered the whole scene
   // it would put a marker on every cell of every population whose morphology
@@ -309,7 +310,7 @@ describe('useSmallCircuitSource', () => {
 
     // The ids have to be untouched: the viewer reads a scene whose ids it
     // already holds as the one it is standing in, and keeps the morphologies it
-    // has drawn for it — so switching back is instant rather than a reload.
+    // has drawn for it, so switching back does not reload them.
     expect(result.current.cells.map((cell) => cell.id)).toEqual(shown.map((cell) => cell.id));
     expect(result.current.cells.map((cell) => cell.center)).toEqual(
       shown.map((cell) => cell.center)
@@ -320,8 +321,8 @@ describe('useSmallCircuitSource', () => {
   });
 
   // An input population carrying no positions is the ordinary case, and the
-  // circuit is perfectly drawable without it. Failing the viewer over it would
-  // cover a correct render with a panel about the one thing missing from it.
+  // circuit is drawable without it. Failing the viewer over it would cover a
+  // correct render with a panel about the one thing missing from it.
   it('draws on when a population cannot be placed', () => {
     fixtures.placement = {
       placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],

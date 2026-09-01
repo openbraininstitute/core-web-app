@@ -71,10 +71,10 @@ type TOptions = {
  *
  * Every population that names morphologies is drawn with them, whichever one is
  * on show: the one on show is coloured by property and the rest recede, but
- * they all keep their shape. A population that names none — SONATA's `virtual`,
- * an input projection — is drawn as placeholder somas, because that is all
- * there is to draw for it. Drawing only the population on show meant selecting
- * an input emptied the scene of every morphology in it.
+ * they all keep their shape. A population that names none (SONATA's `virtual`,
+ * an input projection) is drawn as placeholder somas, because that is all there
+ * is to draw for it. Drawing only the population on show meant selecting an
+ * input emptied the scene of every morphology in it.
  *
  * Affordable because of the scale gate: `circuitDrawsMorphologies` sends
  * anything above a small microcircuit to the somas-only viewer, so the cells
@@ -135,8 +135,8 @@ export function useSmallCircuitSource({
 
   /**
    * What OBI-One needs to serve one node's morphology, or null where the node
-   * has none to serve — an input or point-neuron population, or a population whose
-   * `circuit_config.json` names no morphology directory at all.
+   * has none to serve: an input or point-neuron population, or a population
+   * whose `circuit_config.json` names no morphology directory at all.
    *
    * Asked twice, and the two answers have to agree: the scene marks a node with nothing to
    * serve so the viewer neither requests a morphology for it nor counts it among the ones it
@@ -169,9 +169,9 @@ export function useSmallCircuitSource({
   );
 
   const built = useMemo((): MorphoViewerSmallCircuitCell[] | null => {
-    // Wait until every population has been read, so the scene is built once
-    // rather than once per arrival: the viewer re-fits the camera whenever the
-    // set of ids changes.
+    // Wait until every population has been read. The viewer re-fits the camera
+    // whenever the set of ids changes, so the scene has to be built one time
+    // only.
     if (!population || !settled) return null;
 
     // Colour-by wins where it has an opinion; failing that a lone cell reads by
@@ -302,7 +302,7 @@ export function useSmallCircuitSource({
   );
 
   /**
-   * @see useAfferentSynapses — always whole, axons included.
+   * @see useAfferentSynapses. Always whole, axons included.
    *
    * Indices are the population on show's own, which is what the edge files
    * address: synapses are drawn for a single-cell circuit, where that
@@ -345,10 +345,10 @@ export function useSmallCircuitSource({
     locationCells,
     loadCell,
     // Nothing on screen yet. The viewer's own progress covers the morphologies;
-    // this covers everything before them — the placement of every population,
+    // this covers everything before them: the placement of every population,
     // since the scene is built only once it has all arrived. An empty scene is
-    // not always this: hiding every population empties it on purpose, and then
-    // there is nothing left to wait for.
+    // not always this, since hiding every population empties it on purpose, and
+    // then there is nothing left to wait for.
     isLoading: !error && built === null && cells.length === 0,
     download,
     error,

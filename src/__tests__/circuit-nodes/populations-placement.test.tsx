@@ -282,7 +282,7 @@ describe('usePopulationsPlacement', () => {
       'cortex',
       'thalamus',
     ]);
-    // The same geometry objects, rather than copies.
+    // The same geometry objects the hook returned before the switch.
     expect(result.current.placed[1].geometry).toBe(before[0].geometry);
   });
 

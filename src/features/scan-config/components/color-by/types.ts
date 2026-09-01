@@ -79,7 +79,7 @@ export interface ViewerConfig {
   colorByProperty: Record<string, string | null>;
   /**
    * Populations the user has taken out of the scene, by name; anything not
-   * named is drawn. Kept as the exceptions rather than as the visible set, so a
+   * named is drawn. The exceptions are stored, not the visible set, so a
    * population this list has never heard of is on screen rather than missing.
    *
    * `null` while the user has not touched the checklist, which is when the

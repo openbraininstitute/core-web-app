@@ -122,8 +122,8 @@ describe('NodesSession.getGeometry', () => {
     const session = open(writeNodesFile('unasked-quat.h5', 2, { orientation: true }));
 
     // Same reasoning as the morphology column: a somas-only viewer never turns a
-    // cell, and packing these costs a `count * 4` Float32Array — 64 MB on a
-    // four-million-node circuit — to transfer and drop.
+    // cell, and packing these costs a `count * 4` Float32Array to transfer and
+    // drop, 64 MB on a four-million-node circuit.
     expect(session.getGeometry().orientations).toBeNull();
   });
 

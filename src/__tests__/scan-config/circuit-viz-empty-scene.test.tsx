@@ -87,14 +87,14 @@ const CELL = {
 
 describe('CircuitVisualization on an empty scene', () => {
   // The indicator waits on the viewer's own paint progress, and with no cells
-  // the viewer is never mounted to report any — so waiting on it would leave
-  // the indicator up for good over a scene the user emptied on purpose.
+  // the viewer is never mounted to report any. Waiting on it would leave the
+  // indicator up for good over a scene the user emptied on purpose.
   it('reads a finished, empty scene as finished', async () => {
     draw({ cells: [], isLoading: false });
 
     // Waited out: the indicator holds itself back for a moment before it
-    // appears, so an immediate check would read as absence either way. By role
-    // rather than label, since which phase it would have named is not the point.
+    // appears, so an immediate check would read as absence either way. By role,
+    // since which phase it would have named is not the point.
     await expect(screen.findByRole('status', {}, { timeout: 400 })).rejects.toThrow();
     expect(fixtures.mounted).toHaveLength(0);
   });

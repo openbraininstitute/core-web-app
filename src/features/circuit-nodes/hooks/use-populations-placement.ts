@@ -31,7 +31,7 @@ export type PlacedPopulation = {
 type Result = {
   /**
    * In `populations` order, minus those that could not be placed. Empty until
-   * `settled`, so a viewer builds its scene once rather than once per arrival.
+   * `settled`, so a viewer builds its scene once, when everything has arrived.
    */
   placed: PlacedPopulation[];
   /** Why a population could not be placed, by name. */
@@ -39,10 +39,11 @@ type Result = {
   /** Every population has either been placed or given up on. */
   settled: boolean;
   /**
-   * The node files still coming, summed — one reading per file, however many
-   * populations are read from it: what a viewer can say it is waiting for. Null
-   * where nothing crossed the wire — every population came from a session
-   * another panel already had open — and null again once `settled`.
+   * The node files still coming, summed: one reading per file, however many
+   * populations are read from it, which is what a viewer can say it is waiting
+   * for. Null where nothing crossed the wire, meaning every population came
+   * from a session another panel already had open, and null again once
+   * `settled`.
    */
   download: DownloadProgress | null;
 };
@@ -96,8 +97,8 @@ export function usePopulationsPlacement({
   const outcomesRef = useRef(outcomes);
 
   // By node file: how far its download has got. Only the files this effect run
-  // opened, and every one of them — see `report`. Keyed by the file rather than
-  // by the session reading it, so two populations kept in one file describe one
+  // opened, and every one of them; see `report`. Keyed by the file and not by
+  // the session reading it, so two populations kept in one file describe one
   // download between them instead of counting it twice.
   const [downloads, setDownloads] =
     useState<ReadonlyMap<string, DownloadProgress>>(EMPTY_DOWNLOADS);
@@ -131,10 +132,9 @@ export function usePopulationsPlacement({
       outcomesRef.current = next;
       setOutcomes(next);
     };
-    // A file that has finished downloading keeps its final reading rather than
-    // dropping out of the sum: the registry clears `progress` on ready, and
-    // subtracting a finished file would take the total backwards while its
-    // neighbours are still coming.
+    // A file that has finished downloading keeps its final reading in the sum:
+    // the registry clears `progress` on ready, and subtracting a finished file
+    // would take the total backwards while its neighbours are still coming.
     const report = (file: string, progress: DownloadProgress) => {
       if (cancelled) return;
       setDownloads((previous) => new Map(previous).set(file, progress));
@@ -163,7 +163,7 @@ export function usePopulationsPlacement({
           );
           // The queue moves on all the same. The outcome is recorded, so this
           // file is no longer busy, and a population waiting behind it would
-          // otherwise never be opened at all — leaving the placement unsettled
+          // otherwise never be opened at all, leaving the placement unsettled
           // for good, with the viewer on its spinner and the reason unread.
           openReady();
         } else if (state.status === 'loading') {

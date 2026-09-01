@@ -131,9 +131,9 @@ describe('PopulationsMenu', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^cortex/ }));
     expect(onSelect).toHaveBeenCalledWith('cortex');
-    // Putting a population on show says nothing about what is drawn — the two
-    // are separate questions, on separate targets. Only the row's "Only"
-    // answers both at once.
+    // Putting a population on show says nothing about what is drawn. They are
+    // separate questions on separate targets, and only the row's "Only" answers
+    // both at once.
     expect(onChange).not.toHaveBeenCalled();
   });
 

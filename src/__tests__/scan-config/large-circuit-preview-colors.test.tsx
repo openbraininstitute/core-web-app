@@ -149,8 +149,8 @@ describe('LargeCircuitPreview colours', () => {
     expect(paints(second)).toEqual(['#ccc', '#ccc', '#ddd']);
   });
 
-  // One column for a whole population rather than one per soma, since the
-  // palette is a texture one pixel wide per colour.
+  // A whole population shares one column, since the palette is a texture one
+  // pixel wide per colour.
   it('gives one palette column to each distinct colour', () => {
     draw({ population: CORTEX, nodeColors: asNodeColors(['#aaa', '#aaa']), recededColor: '#ccc' });
 

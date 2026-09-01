@@ -23,7 +23,7 @@ function PopoverContent({
   container,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> & {
-  /** Portal mount node — required in fullscreen so panels stay interactive. */
+  /** Portal mount node; required in fullscreen so panels stay interactive. */
   container?: HTMLElement | null;
 }) {
   return (

@@ -57,9 +57,9 @@ export interface LargeCircuitPreviewProps {
   populations: readonly NodePopulation[];
   /**
    * Populations taken out of the scene, by name. Their somas keep their place
-   * in `positions` — that array is what the viewer reads as the scene, and
-   * rebuilding it would refit the camera — and take a palette column that draws
-   * nothing.
+   * in `positions` and take a palette column that draws nothing. That array is
+   * what the viewer reads as the scene, and rebuilding it would refit the
+   * camera.
    */
   hiddenPopulations?: readonly string[];
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
@@ -212,9 +212,9 @@ export function LargeCircuitPreview({
     return all;
   }, [placed]);
 
-  // Only when something actually recedes: this colour follows the background,
-  // and a single-population scene should not repaint when the background
-  // changes. Hiding the population on show is not that exception it looks like:
+  // Only where something recedes: this colour follows the background, and a
+  // single-population scene should not repaint when the background changes.
+  // Hiding the population on show is not that exception it looks like:
   // nothing on screen is the selection then either, and the viewer's own ramp
   // would say the opposite, lighting the whole rest of the circuit up the
   // moment the user takes the selection out of it.
@@ -236,8 +236,8 @@ export function LargeCircuitPreview({
     // receded colour; `null`, which leaves a soma to the viewer's own ramp,
     // rather than a colour of our own, which would flatten an uncoloured cloud
     // to a single hue; and `false`, which the viewer reads as a soma to skip
-    // entirely — undrawn, unpickable, and with no hover of its own. Each takes
-    // a palette column on first use.
+    // entirely, so it is undrawn, unpickable and has no hover of its own. Each
+    // takes a palette column on first use.
     let ownRampColumn: number | undefined;
     let recededColumn: number | undefined;
     let hiddenColumn: number | undefined;

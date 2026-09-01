@@ -38,18 +38,18 @@ interface PopulationsMenuProps {
 }
 
 /**
- * "Populations 3 of 4 ▾" — which of a circuit's populations are on screen, and
+ * "Populations 3 of 4 ▾": which of a circuit's populations are on screen, and
  * which of them is on show.
  *
- * Two things per row, on two targets rather than one. A checkbox draws the
- * population or leaves it out; the name puts it on show, which is a different
- * question — the population on show is the one drawn in full, coloured by
- * property and listed in the nodes table, and it can perfectly well be one the
- * user has hidden. A single row that meant either depending on where the
- * pointer landed is not something a screen reader could put into words.
+ * Two things per row, on two targets. A checkbox draws the population or leaves
+ * it out; the name puts it on show, which is a different question. The
+ * population on show is the one drawn in full, coloured by property and listed
+ * in the nodes table, and it may be one the user has hidden. A single row
+ * that meant either depending on where the pointer landed is not something a
+ * screen reader could put into words.
  *
- * A third target, `Only`, answers both at once — it is the one gesture where
- * the two answers cannot sensibly differ.
+ * A third target, `Only`, answers both at once. It is the one gesture where the
+ * two answers cannot sensibly differ.
  */
 export function PopulationsMenu({
   populations,
@@ -67,8 +67,8 @@ export function PopulationsMenu({
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   // The pill counts what is on screen without saying that the populations
-  // missing from it are a default rather than a failure, or that a click brings
-  // them back. The panel says so itself, once.
+  // missing from it were left out by default, or that a click brings them back.
+  // The panel says so itself, once.
   useEffect(() => {
     if (!autoOpen) return;
 
@@ -86,8 +86,8 @@ export function PopulationsMenu({
 
   useEffect(() => {
     if (!open) return;
-    // Capture phase so a click on the WebGL canvas — which may stop propagation
-    // — still closes the menu.
+    // Capture phase, so a click on the WebGL canvas still closes the menu even
+    // though the canvas may stop propagation.
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as Node | null;
       if (!target) return;
@@ -251,8 +251,8 @@ export function PopulationsMenu({
                     {name}
                   </span>
                 )}
-                {/* Revealed on hover so a row reads as a name, not a row of buttons — but
-                    focusable throughout, or it would be a gesture only a mouse could make. */}
+                {/* Revealed on hover so a row reads as a name and not a row of buttons.
+                    Focusable throughout, or it would be a gesture only a mouse could make. */}
                 <button
                   type="button"
                   aria-label={`Show only ${name}`}

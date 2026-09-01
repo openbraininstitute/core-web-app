@@ -43,8 +43,8 @@ export type TSmallCircuitSource = {
   /**
    * The subset of {@link cells} a stored morphology location applies to: the
    * population on show. A location is a section id and an offset with no cell
-   * of its own, so it can only be read against one population's morphologies —
-   * every other population has section ids of its own, answering to nothing.
+   * of its own, so it can only be read against one population's morphologies.
+   * Every other population has section ids of its own, answering to nothing.
    * Omitted where every cell is one, as for an MEModel.
    */
   locationCells?: MorphoViewerSmallCircuitCell[];

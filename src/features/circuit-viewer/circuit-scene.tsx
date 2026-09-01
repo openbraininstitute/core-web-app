@@ -283,7 +283,7 @@ export function CircuitScene({
   });
 
   // Offered only where the other populations are on screen to begin with, and
-  // only where there is more than one — with a single population, hiding it is
+  // only where there is more than one: with a single population, hiding it is
   // the empty scene and nothing else. That is the same condition that decides
   // whether clicking a population in 3D selects it.
   const hasPopulationsChecklist =
@@ -299,7 +299,7 @@ export function CircuitScene({
   // stored setting says: it is the only way back, and the notices reporting a
   // hidden selection or an empty scene come from it too. The setting is per
   // circuit, so a population hidden in the standalone viewer would otherwise
-  // empty the scene of a host that pins its own population — spike replay.
+  // empty the scene of spike replay, which pins its own population.
   const hiddenPopulations = useMemo(
     () =>
       hasPopulationsChecklist
@@ -484,8 +484,8 @@ export function CircuitScene({
       className={classNames(
         'relative h-full min-h-0 overflow-hidden',
         // Transparent to the pointer as a whole: whatever a host stacks
-        // underneath — a designer image, a raster — has to stay clickable through
-        // the gaps. The canvas and the chrome buttons each opt back in.
+        // underneath, a designer image or a raster, has to stay clickable
+        // through the gaps. The canvas and the chrome buttons each opt back in.
         //
         // Not in fullscreen, where this element is also what the chrome portals
         // its panels into. `pointer-events` inherits, so the populations and

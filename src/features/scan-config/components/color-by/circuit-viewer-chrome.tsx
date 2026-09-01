@@ -80,7 +80,7 @@ export function CircuitViewerChrome({
   // than in the viewers: the chrome is the one layer over both of them, and it
   // already holds the way back.
   const hiddenNames = new Set(populations?.hidden);
-  // Nothing drawn at all — asked of a non-empty list, so a circuit declaring no
+  // Nothing drawn at all. Asked of a non-empty list, so a circuit declaring no
   // populations does not read as a scene the user emptied.
   const allHidden =
     !!populations?.populations.length &&

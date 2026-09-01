@@ -68,9 +68,9 @@ export function VisualizationLoadingIndicator({
         <div
           className={cn(
             'flex flex-col gap-1.5 bg-white/90 px-3 py-1.5 text-sm text-primary-9 shadow-md ring-1 ring-black/5 backdrop-blur',
-            // Sized to the label rather than to a guess: the byte counts change
-            // width as they climb, and a fixed width wide enough for "1000 MB of
-            // 1000 MB" would leave the shorter phases rattling around in it. The
+            // Sized to the label it carries: the byte counts change width as
+            // they climb, and a fixed width wide enough for "1000 MB of 1000 MB"
+            // would leave the shorter phases rattling around in it. The
             // floor keeps the bar from being a stub on a short label.
             percent === null ? 'rounded-full' : 'min-w-56 rounded-xl'
           )}

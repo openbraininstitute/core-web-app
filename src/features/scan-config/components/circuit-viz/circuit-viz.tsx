@@ -306,8 +306,8 @@ function CircuitVizView({
   const loading = !error && (isLoading || painting);
 
   // What the second phase is counting. The scene already marks the cells with
-  // no morphology coming, and morphoviewer counts the rest — so the two agree
-  // without a second source of truth, or a change to the viewer.
+  // no morphology coming, and morphoviewer counts the rest, so the two agree
+  // without a second source of truth or a change to the viewer.
   const morphologyCount = useMemo(() => cells.filter((cell) => !cell.somaOnly).length, [cells]);
 
   // Pass interactive metadata through; morphoviewer ignores unknown fields safely.

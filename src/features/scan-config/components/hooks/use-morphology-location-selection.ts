@@ -76,7 +76,7 @@ type TLocationMarker = MorphoViewerMorphologyLocationMarker & {
  * A row has a section id and an offset but no cell, so it applies to every morphology in the
  * neuron set. That is only unambiguous for one cell, which is what OBI-One allows today; the
  * mapping below still spans every cell it is given, so the view keeps matching what gets
- * simulated. Which cells those are is the caller's to say — a circuit scene draws populations
+ * simulated. Which cells those are is the caller's to say: a circuit scene draws populations
  * this block has nothing to do with.
  */
 export function useMorphologyLocationSelection({
