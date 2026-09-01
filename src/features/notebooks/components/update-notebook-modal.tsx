@@ -734,7 +734,7 @@ export function UpdateNotebookModal({
             !submitMutation.isPending &&
             !submitMutation.isError &&
             activeStep === 'setup' && (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-6">
                 <div>
                   <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
                   <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
@@ -750,7 +750,11 @@ export function UpdateNotebookModal({
                     <Input
                       value={assignmentId}
                       placeholder="Optional — assignment ID this notebook grades"
-                      className="h-12 rounded-full px-4"
+                      // `border-input` on the Input molecule resolves to nothing (no
+                      // --color-input token), and Tailwind v4 defaults a bare border to
+                      // currentColor — so state the antd border colour the rest of the
+                      // form uses.
+                      className="border-neutral-2 h-12 rounded-full px-4"
                       onChange={(e) => {
                         setAssignmentId(e.target.value);
                         setClearConflict(false);
