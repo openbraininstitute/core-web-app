@@ -137,8 +137,8 @@ describe('PopulationsMenu', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  // The panel is portalled, so what closes it is a handler of its own rather
-  // than anything the DOM does for it.
+  // The panel is portalled, so closing on an outside click is our own
+  // handler's job rather than the DOM's.
   it('closes on a pointer landing outside it', () => {
     open();
     expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
@@ -157,11 +157,8 @@ describe('PopulationsMenu', () => {
   });
 });
 
-/**
- * A user who has never seen the checklist, which is the only user it opens
- * itself for.
- */
 describe('PopulationsMenu introduction', () => {
+  // No record of a previous visit, the only case it opens itself in.
   beforeEach(() => localStorage.clear());
 
   function introduce(autoOpen: boolean) {
@@ -175,8 +172,6 @@ describe('PopulationsMenu introduction', () => {
     );
   }
 
-  // What the pill cannot say: that the population missing from the scene is a
-  // default rather than a failure, and that this is where it comes back.
   it('opens itself the first time a user is shown it', () => {
     render(introduce(true));
 
@@ -184,8 +179,8 @@ describe('PopulationsMenu introduction', () => {
     expect(checkbox('vpm').checked).toBe(false);
   });
 
-  // Radix would hand the focus to "Show all", which draws a ring on a panel
-  // nobody opened and leaves Enter putting every population back.
+  // Left to Radix the focus lands on "Show all": a ring on a panel nobody
+  // opened, and Enter puts every population back.
   it('takes the focus itself rather than putting it on a control', () => {
     render(introduce(true));
 
@@ -202,8 +197,8 @@ describe('PopulationsMenu introduction', () => {
     expect(screen.queryByTestId('populations-menu-content')).toBeNull();
   });
 
-  // The host owns the timing, and holds it back where the checklist is mounted
-  // but not on screen. Spending the introduction there spends it on nobody.
+  // The host holds it back while the checklist is mounted but off screen,
+  // where the one introduction would be seen by nobody.
   it('waits for the host rather than spending the introduction unseen', () => {
     const { rerender } = render(introduce(false));
     expect(screen.queryByTestId('populations-menu-content')).toBeNull();

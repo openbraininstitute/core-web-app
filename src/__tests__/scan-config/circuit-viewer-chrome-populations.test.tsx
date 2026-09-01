@@ -49,8 +49,8 @@ function renderChrome(viz: ICircuitViewerChromeProps['viz'], vizActive = true) {
   render(<CircuitViewerChrome vizActive={vizActive} viz={viz} />);
 }
 
-// A user who has met the checklist before, so it stays shut and its own "Show
-// all" is not on screen beside the notices below.
+// Seeded as already introduced, so the checklist stays shut and its "Show all"
+// is not on screen beside the notices below.
 beforeEach(() => localStorage.setItem(POPULATIONS_MENU_INTRODUCED_KEY, '1'));
 
 /** The checklist's props with a given hidden set, and a fresh `onChange` to read. */
@@ -167,7 +167,7 @@ describe('CircuitViewerChrome checklist introduction', () => {
   });
 
   // The chrome stays mounted behind the views it is not on, invisible and
-  // inert, so the introduction has to wait for the 3D one.
+  // inert, so the introduction waits for the 3D one.
   it('keeps it back while another view is on show', () => {
     renderChrome({ menu: MENU, populations: POPULATIONS }, false);
 

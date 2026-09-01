@@ -84,8 +84,8 @@ export interface ViewerConfig {
    *
    * `null` while the user has not touched the checklist, which is when the
    * default applies: a circuit's virtual populations start out of the scene.
-   * Distinct from `[]`, a set the user can ask for — "Show all", or unticking
-   * the last hidden row — and which has to stick.
+   * Distinct from `[]`, which the user can ask for with "Show all" or by
+   * unticking the last hidden row, and which has to stick.
    */
   hiddenPopulations: string[] | null;
   backgroundColor: string;

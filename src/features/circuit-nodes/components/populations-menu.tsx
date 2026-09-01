@@ -8,9 +8,8 @@ import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
 /**
- * Written once the checklist has opened itself for this user, and read to make
- * sure it never does so again. Per browser rather than per circuit: it is the
- * control that has to be found, and it only has to be found once.
+ * Set once the checklist has opened itself, and read so it never does again.
+ * Per browser rather than per circuit: the control has to be found once.
  */
 export const POPULATIONS_MENU_INTRODUCED_KEY = 'obi:circuit-viewer-populations-menu:v1';
 
@@ -30,11 +29,9 @@ interface PopulationsMenuProps {
   /** portal target for the popover (fullscreen element); null → document.body. */
   container?: HTMLElement | null;
   /**
-   * Whether the checklist may introduce itself, which it does by opening once
-   * and never again — see {@link POPULATIONS_MENU_INTRODUCED_KEY}. The host
-   * says when, because the chrome stays mounted behind the views it is not on,
-   * and a viewer nobody is looking at would spend that one introduction where
-   * nobody sees it.
+   * Whether the checklist may open itself, which it does once and never again
+   * ({@link POPULATIONS_MENU_INTRODUCED_KEY}). The host says when, since the
+   * chrome stays mounted behind the views it is not on.
    */
   autoOpen?: boolean;
   className?: string;
@@ -69,10 +66,9 @@ export function PopulationsMenu({
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  // The pill counts what is on screen and says nothing about what a click on it
-  // does, which is a poor place to learn that the populations missing from the
-  // scene are a default rather than a failure. So the panel says it itself, the
-  // first time it is on screen, and leaves the pill to it from then on.
+  // The pill counts what is on screen without saying that the populations
+  // missing from it are a default rather than a failure, or that a click brings
+  // them back. The panel says so itself, once.
   useEffect(() => {
     if (!autoOpen) return;
 
@@ -81,8 +77,8 @@ export function PopulationsMenu({
       if (!storage || storage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)) return;
       storage.setItem(POPULATIONS_MENU_INTRODUCED_KEY, '1');
     } catch {
-      // Storage blocked or full. An introduction that cannot be recorded is one
-      // given again on every visit, which is worse than never giving it.
+      // Storage blocked or full. An introduction we cannot record is one given
+      // on every visit, which is worse than none.
       return;
     }
     setOpen(true);
@@ -166,10 +162,10 @@ export function PopulationsMenu({
         container={container}
         data-testid="populations-menu-content"
         onOpenAutoFocus={(event) => {
-          // Radix hands focus to the first control in the panel, which is "Show
-          // all": a focus ring on a panel that opened itself, and one Enter away
-          // from putting back every population the user has hidden. The panel
-          // takes the focus instead, so Tab still walks the rows from here.
+          // Radix focuses the first control, "Show all": a ring on a panel
+          // that opened itself, and one Enter from putting back every
+          // population the user has hidden. The panel takes the focus, so Tab
+          // still walks the rows from here.
           event.preventDefault();
           contentRef.current?.focus();
         }}

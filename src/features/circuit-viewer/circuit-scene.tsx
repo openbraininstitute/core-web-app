@@ -281,12 +281,11 @@ export function CircuitScene({
     subject: memodel,
   });
 
-  // What is drawn, once the default has had its say. A virtual population is an
-  // input to the circuit rather than part of it, so it starts out of the scene;
-  // never the one on show, which would leave the user looking at nothing, with
-  // no checklist to bring it back where the circuit declares a single
-  // population. `null` is the checklist untouched, and only then does any of
-  // this apply — an empty array is the user asking for every population back.
+  // A virtual population is an input to the circuit rather than part of it, so
+  // it starts out of the scene. Never the one on show: that leaves nothing to
+  // look at, and a circuit declaring a single population has no checklist to
+  // bring it back. `null` is the checklist untouched, the only state the
+  // default applies to; `[]` is the user asking for all of them.
   const hiddenPopulations = useMemo(
     () =>
       config.hiddenPopulations ??
