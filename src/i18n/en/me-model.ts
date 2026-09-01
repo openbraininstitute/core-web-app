@@ -12,9 +12,10 @@ export const messages = {
   CheckingCompatibility: 'Model compatibility check in progress...',
   IncompatibleModels: 'Incompatible M-model and E-model, please select a different combination.',
   CompatibilityCheckFailed:
-    "We couldn't complete the compatibility check. You can try again, or build the model and review the validation results afterwards.",
+    "We couldn't complete the compatibility check, so this combination can't be verified yet. Try again before building.",
   CompatibilityDetailsShow: 'Show details',
   CompatibilityDetailsHide: 'Hide details',
   CompatibilityDetailsCopy: 'Copy details',
   CompatibilityRetry: 'Try again',
+  CompatibilityBlockedTooltip: "We couldn't verify this combination. Try the check again.",
 };

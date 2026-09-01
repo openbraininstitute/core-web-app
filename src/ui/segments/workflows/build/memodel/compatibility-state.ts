@@ -47,10 +47,14 @@ export function deriveCompatibilityState({
 }
 
 /**
- * Only a real incompatibility blocks the build. A check that could not run leaves the
- * button enabled with a warning — the check is advisory, and refusing to build because
- * the simulator is briefly unreachable is worse than letting the user proceed knowingly.
+ * Only a verified-compatible pair may be built: no verdict, no build. Building costs
+ * credits, and an unverified pair that turns out to be incompatible leaves behind an
+ * entity that fails later at validation.
+ *
+ * Stated as "everything except compatible" rather than as a list of blocking states so
+ * that a state carrying no verdict cannot leak through — `idle` is briefly reachable
+ * with a complete selection, between the selection landing and the query starting.
  */
 export function blocksBuild(state: CompatibilityState): boolean {
-  return state.kind === 'checking' || state.kind === 'incompatible';
+  return state.kind !== 'compatible';
 }
