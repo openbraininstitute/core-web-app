@@ -1,4 +1,3 @@
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity } from '@/features/scan-config/types';
@@ -9,8 +8,10 @@ export const simulateIonChannelWorkflow = defineScanConfigWorkflow({
   id: 'simulate-ion-channel-model',
   activity: ScanConfigActivity.Simulate,
   entity: {
-    mode: ScanConfigEntitySourceMode.StaticType,
-    entityType: ExtendedEntitiesTypeDict.IonChannelModel,
+    // the editor picks its own ion channel models, so configure opens on a session that may be
+    // empty (hub entry) or carry the model from a detail page's Simulate action
+    mode: ScanConfigEntitySourceMode.Session,
+    picksEntitiesInEditor: true,
   },
   campaign: {
     resolve: resolveSimulationByCampaignId,
