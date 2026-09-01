@@ -33,7 +33,6 @@ export const buildSynaptomeWorkflow = defineScanConfigWorkflow({
     config: TaskConfigType.BuildSynaptomeConfig,
   },
   editor: {
-    className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
     defaultTab: {
       __activity: ScanConfigActivity.Build,

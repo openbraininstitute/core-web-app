@@ -12,7 +12,7 @@ import {
 import { nextEntryName, useEntries } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import TabsSelector from '@/features/scan-config/components/tabs-selector';
+import ScanConfigTabsPanel from '@/features/scan-config/components/tabs';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
   getConfigKeyForEntity,
@@ -26,7 +26,6 @@ import {
   isType,
   ScanConfigActivity,
   ScanConfigDefaultTab,
-  ScanConfigTabs,
   type SchemaName,
   type TScanConfigActivity,
   type TScanConfigTabs,
@@ -205,8 +204,6 @@ function ScanConfigTemplateContent({
   );
   useAIConfig();
 
-  const configurationTabId = ScanConfigTabs[activity].configuration;
-  const isConfigurationTab = tab.id === configurationTabId;
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
@@ -262,140 +259,149 @@ function ScanConfigTemplateContent({
       throw new Error(`${activity} is not supported yet`);
     });
 
-  return (
-    <div className={cn('flex h-full flex-col', className)}>
-      <header
-        id="template-header"
-        className={cn('flex flex-nowrap justify-between items-center gap-4 pt-4 pb-2')}
-      >
-        <TabsSelector
-          activity={activity}
-          tab={tab}
-          setTab={setTab}
-          disableResultsTab={!campaignId || loading}
-          disableConfigurationTab={Boolean(!initialConfig && readOnly)}
-        />
-        <div className="flex items-center justify-center gap-8">
-          {!!campaignId && (
-            <ButtonCopyId label={get(messages, `${activity}.CopyCampaignId`)} value={campaignId} />
-          )}
-        </div>
-      </header>
-
-      <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
-      <div id="template-content" className="flex-1 min-h-0">
-        {isConfigurationTab && browseOverlay ? (
-          <div
-            id="scan-config-model-selection-overlay"
-            // the picker replaces the whole main area — fade + slight rise on open
-            // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
-            // reduced motion keeps the fade, drops the movement
-            className={cn(
-              'h-[calc(100%-0.5rem)] min-h-0',
-              'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
-              'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
-            )}
-          >
-            <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
-              {browseOverlay}
-            </Suspense>
-          </div>
-        ) : null}
+  const configurationContent = (
+    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-4 pb-2">
+      {browseOverlay ? (
         <div
-          id="scan-config-content-columns"
+          id="scan-config-model-selection-overlay"
+          // the picker replaces the whole main area — fade + slight rise on open
+          // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
+          // reduced motion keeps the fade, drops the movement
           className={cn(
-            'py-2',
-            {
-              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden *:min-w-0':
-                isConfigurationTab && !browseOverlay,
-            },
-            { hidden: !isConfigurationTab || Boolean(browseOverlay) }
+            'min-h-0 flex-1',
+            'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
+            'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
           )}
         >
-          <Left
-            schema={schema}
-            selectedRootElement={selectedRootElement}
-            setSelectedRootElement={setSelectedRootElement}
-            config={config}
-            setConfig={setConfig}
-            campaignId={campaignId}
-            loading={loading}
-            selectedEntry={selectedEntry}
-            setSelectedEntry={setSelectedEntry}
-            setEditing={setEditing}
-            readOnly={readOnly}
-            setCampaignId={setCampaignId}
-            setLoading={setLoading}
-            initialConfig={initialConfig}
-            setTab={setTab}
-            allEntries={allEntries}
-            newKey={newKey}
-            setNewKey={setNewKey}
-            isEditingKey={isEditingKey}
-            setIsEditingKey={setIsEditingKey}
-            activity={activity}
-            generatedEndpoint={generatedEndpoint}
-            entityType={entityType}
-            campaignEntityType={campaignEntityType}
-            aiEnabled={aiEnabled}
-          />
-          <div
-            id="scan-config-controls-middle"
-            className={cn(
-              styles.scrollable,
-              'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
-            )}
-          >
-            {editing && selectedSchema !== undefined && (
-              <Middle
-                key={`${schemaName}_${selectedRootElement}_${selectedEntry}`}
-                schema={schema}
-                selectedRootElement={selectedRootElement}
-                editing={editing}
-                selectedEntry={selectedEntry}
-                setSelectedEntry={setSelectedEntry}
-                campaignId={campaignId}
-                loading={loading}
-                config={config}
-                setConfig={setConfig}
-                entity={entity}
-                allEntries={allEntries}
-                onNewBlockClick={() => {
-                  setNewKey('');
-                  setIsEditingKey(false);
-                }}
-                selectedSchema={selectedSchema}
-                schemaMappingConfig={schemaMappingConfig}
-                entityType={entityType}
-              />
-            )}
-          </div>
-          <div className="h-full min-h-0 min-w-0 overflow-hidden">
-            <Right
-              activity={activity}
-              entityType={entityType}
-              entity={entity}
-              selectedEntry={selectedEntry}
+          <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
+            {browseOverlay}
+          </Suspense>
+        </div>
+      ) : null}
+      <div
+        id="scan-config-content-columns"
+        className={cn(
+          'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] min-h-0 flex-1 overflow-hidden *:min-w-0',
+          { hidden: Boolean(browseOverlay) }
+        )}
+      >
+        <Left
+          schema={schema}
+          selectedRootElement={selectedRootElement}
+          setSelectedRootElement={setSelectedRootElement}
+          config={config}
+          setConfig={setConfig}
+          campaignId={campaignId}
+          loading={loading}
+          selectedEntry={selectedEntry}
+          setSelectedEntry={setSelectedEntry}
+          setEditing={setEditing}
+          readOnly={readOnly}
+          setCampaignId={setCampaignId}
+          setLoading={setLoading}
+          initialConfig={initialConfig}
+          setTab={setTab}
+          allEntries={allEntries}
+          newKey={newKey}
+          setNewKey={setNewKey}
+          isEditingKey={isEditingKey}
+          setIsEditingKey={setIsEditingKey}
+          activity={activity}
+          generatedEndpoint={generatedEndpoint}
+          entityType={entityType}
+          campaignEntityType={campaignEntityType}
+          aiEnabled={aiEnabled}
+        />
+        <div
+          id="scan-config-controls-middle"
+          className={cn(
+            styles.scrollable,
+            'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
+          )}
+        >
+          {editing && selectedSchema !== undefined && (
+            <Middle
+              key={`${schemaName}_${selectedRootElement}_${selectedEntry}`}
+              schema={schema}
               selectedRootElement={selectedRootElement}
-              onCreateEntry={createEntry}
+              editing={editing}
+              selectedEntry={selectedEntry}
+              setSelectedEntry={setSelectedEntry}
+              campaignId={campaignId}
+              loading={loading}
               config={config}
               setConfig={setConfig}
-              schema={schema}
-              locked={editingLocked}
+              entity={entity}
+              allEntries={allEntries}
+              onNewBlockClick={() => {
+                setNewKey('');
+                setIsEditingKey(false);
+              }}
+              selectedSchema={selectedSchema}
+              schemaMappingConfig={schemaMappingConfig}
+              entityType={entityType}
             />
-          </div>
-        </div>
-        <div
-          id="scan-config-results"
-          className={cn(
-            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
-            { hidden: isConfigurationTab },
-            { 'h-full': !isConfigurationTab }
           )}
-        >
-          {results}
+        </div>
+        <div className="h-full min-h-0 min-w-0 overflow-hidden">
+          <Right
+            activity={activity}
+            entityType={entityType}
+            entity={entity}
+            selectedEntry={selectedEntry}
+            selectedRootElement={selectedRootElement}
+            onCreateEntry={createEntry}
+            config={config}
+            setConfig={setConfig}
+            schema={schema}
+            locked={editingLocked}
+          />
         </div>
       </div>
+    </div>
+  );
+
+  const resultsContent = (
+    <div
+      id="scan-config-results"
+      className="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] min-h-0 flex-1 overflow-hidden px-2 pt-4 pb-2"
+    >
+      {results}
+    </div>
+  );
+
+  return (
+    <div className={cn('flex h-full min-h-0 flex-col', className)}>
+      <ScanConfigTabsPanel
+        className="min-h-0 flex-1"
+        activity={activity}
+        tab={tab}
+        setTab={setTab}
+        disableResultsTab={!campaignId || loading}
+        disableConfigurationTab={Boolean(!initialConfig && readOnly)}
+        configuration={configurationContent}
+        results={resultsContent}
+        resultsAction={
+          campaignId ? (
+            <ButtonCopyId
+              iconOnly
+              label={get(messages, `${activity}.CopyCampaignId`)}
+              tooltip={get(messages, `${activity}.CopyCampaignId`)}
+              value={campaignId}
+              classNames={{
+                button: 'size-8 p-0',
+                // bare glyph at rest; the chip only materialises under the pointer
+                icon: cn(
+                  'size-8 rounded-none border-transparent bg-transparent transition-all',
+                  'hover:rounded-full hover:border-primary-8 hover:bg-primary-8',
+                  'hover:[&_svg]:text-white'
+                ),
+                glyph: 'size-5 text-primary-9',
+              }}
+            />
+          ) : null
+        }
+      />
     </div>
   );
 }
