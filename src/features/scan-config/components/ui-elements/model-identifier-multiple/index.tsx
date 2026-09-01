@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useSetAtom } from 'jotai';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { WorkspaceSection } from '@/constants';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
@@ -27,6 +28,7 @@ import {
   type TModelIdentifierMultiple,
   type TScanConfigUIElementDict,
 } from '@/features/scan-config/types';
+import { workflowBreadcrumbEntitiesAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
@@ -117,6 +119,20 @@ function ModelIdentifierField({
       return [{ ...entityMatch, ref }];
     });
   }, [allRefs, entities]);
+
+  // the editor can re-point the workflow without a navigation; keep the breadcrumb in step
+  const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
+  useEffect(() => {
+    if (resolvedEntities.length === 0) return;
+    setBreadcrumbEntities(
+      resolvedEntities.map((entry) => ({
+        key: `${entry.entityType}:${entry.id}`,
+        id: entry.id,
+        type: entry.entityType,
+        name: entry.name ?? null,
+      }))
+    );
+  }, [resolvedEntities, setBreadcrumbEntities]);
 
   const writeValue = useCallback(
     (nextValue: ConfigValue) => {

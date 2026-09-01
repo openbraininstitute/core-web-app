@@ -1,8 +1,11 @@
 'use client';
 
+import { FolderAdminOpen, FolderPublicOpen } from '@/components/icons';
 import { WorkspaceScope } from '@/constants';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { MotionTabs, MotionTabsList, MotionTabsTrigger } from '@/ui/molecules/motion-tabs';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -90,5 +93,69 @@ export function TabsSelector({
         ))}
       </PillTabsList>
     </PillTabs>
+  );
+}
+
+const scopeIcons: Record<string, typeof FolderPublicOpen> = {
+  [WorkspaceScope.Public]: FolderPublicOpen,
+  [WorkspaceScope.Project]: FolderAdminOpen,
+};
+
+/**
+ * Icon-only scope switch for a toolbar row, where the labelled pill is too wide. The
+ * title moves into a tooltip, so the control still names itself.
+ */
+export function IconTabsSelector({
+  id = 'scope-selector',
+  activeTab,
+  onValueChange,
+  className,
+  items = tabsConfigItems,
+}: Omit<Props, 'compact'>) {
+  return (
+    <MotionTabs
+      variant="pill"
+      value={activeTab}
+      onValueChange={onValueChange}
+      className={cn('shrink-0', className)}
+    >
+      <MotionTabsList
+        id={id}
+        data-testid={id}
+        className="border-neutral-2 h-10 w-auto gap-0.5 rounded-full border bg-white p-1"
+      >
+        {items.map((tab) => {
+          const Icon = scopeIcons[tab.key];
+          return (
+            <Tooltip key={tab.key}>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <MotionTabsTrigger
+                    id={`scope-selector-tab-${tab.key}`}
+                    data-testid={`scope-selector-tab-${tab.key}`}
+                    value={tab.key}
+                    disabled={tab.disabled}
+                    aria-label={tab.title}
+                    wrapperClassName="flex-none"
+                    className="size-8 px-0 py-0"
+                    indicatorClassName="rounded-full"
+                  >
+                    {Icon ? <Icon className="size-4.5" /> : tab.title}
+                  </MotionTabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                sideOffset={6}
+                className="text-primary-9 border-neutral-2 border bg-white shadow-md"
+                arrowClassName="bg-white"
+              >
+                {tab.title}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </MotionTabsList>
+    </MotionTabs>
   );
 }

@@ -35,7 +35,9 @@ function scanConfigActivityToWorkspaceSection(activity: TScanConfigActivity): TW
   }
 }
 
-function findWorkflowDescriptorByDefinitionId(definitionId: string): IWorkflowDescriptor | null {
+export function findWorkflowDescriptorByDefinitionId(
+  definitionId: string
+): IWorkflowDescriptor | null {
   for (const activity of Object.values(ActivityRegistry)) {
     const workflows = [...activity.workflows, ...(activity.browseWorkflows ?? [])];
 

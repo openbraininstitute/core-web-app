@@ -1,7 +1,8 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { Activity, Suspense } from 'react';
+import { useSetAtom } from 'jotai';
+import { Activity, Suspense, useEffect } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -16,6 +17,11 @@ import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/resul
 import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
+import {
+  ScanConfigWorkflowBreadcrumb,
+  ScanConfigWorkflowSummary,
+} from '@/features/scan-config/workflow/breadcrumb';
+import { workflowBreadcrumbEntitiesAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { messages } from '@/i18n/en/scan-config';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
@@ -41,9 +47,16 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   const state = useScanConfigTemplate(props);
   const browseOverlay = useScanConfigMainOverlayOptional()?.overlay;
   const { isConfigurationTab, isEModelOptimisationParameters } = state;
+  const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
+
+  // The breadcrumb's entities are module state that outlives the route. Clearing in a
+  // cleanup keyed on `schemaName` fires on unmount *and* on a workflow switch, and — unlike
+  // an effect body — runs before the next workflow's model selectors publish their own.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `schemaName` is the key, not a read — it is what makes the cleanup fire on a workflow switch
+  useEffect(() => () => setBreadcrumbEntities([]), [props.schemaName, setBreadcrumbEntities]);
 
   const configurationContent = (
-    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-4 pb-2">
+    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-6 pb-2">
       {!props.readOnly && (
         <IonChannelModelPropertiesChecks
           schema={props.schema}
@@ -92,7 +105,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
       <div
         id="scan-config-results"
         data-testid="scan-config-results"
-        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden px-2 pt-4 pb-2"
+        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden px-2 pt-6 pb-2"
       >
         <ScanConfigResults props={props} state={state} />
       </div>
@@ -110,26 +123,30 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
         configuration={configurationContent}
         results={resultsContent}
-        resultsAction={
-          state.campaignId ? (
-            <ButtonCopyId
-              iconOnly
-              label={get(messages, `${props.activity}.CopyCampaignId`)}
-              tooltip={get(messages, `${props.activity}.CopyCampaignId`)}
-              value={state.campaignId}
-              classNames={{
-                button: 'size-8 p-0',
-                // bare glyph at rest; the chip only materialises under the pointer
-                icon: cn(
-                  'size-8 rounded-none border-transparent bg-transparent transition-all',
-                  'hover:rounded-full hover:border-primary-8 hover:bg-primary-8',
-                  'hover:[&_svg]:text-white'
-                ),
-                glyph: 'size-5 text-primary-9',
-              }}
-            />
-          ) : null
+        railCenter={
+          <ScanConfigWorkflowSummary
+            action={
+              state.campaignId ? (
+                <ButtonCopyId
+                  iconOnly
+                  label={get(messages, `${props.activity}.CopyCampaignId`)}
+                  tooltip={get(messages, `${props.activity}.CopyCampaignId`)}
+                  value={state.campaignId}
+                  classNames={{
+                    button: 'size-6 p-0',
+                    // bare glyph at rest; the chip only materialises under the pointer
+                    icon: cn(
+                      'size-6 rounded-full border-transparent bg-transparent transition-colors',
+                      'hover:border-primary-8 hover:bg-primary-8 hover:[&_svg]:text-white'
+                    ),
+                    glyph: 'size-3.5 text-primary-9',
+                  }}
+                />
+              ) : null
+            }
+          />
         }
+        railEnd={<ScanConfigWorkflowBreadcrumb />}
       />
     </div>
   );

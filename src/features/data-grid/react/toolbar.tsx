@@ -9,7 +9,7 @@ import type { ReactNode } from 'react';
 export interface IDataGridToolbarSlots {
   /** entity-type count selector — left cluster, first */
   entityType?: ReactNode;
-  /** scope (Public / Project) selector — left cluster, second */
+  /** scope (Public / Project) selector — right cluster, straight after the search */
   scope?: ReactNode;
   /** brain-region tree selector — left cluster, third */
   brainRegion?: ReactNode;
@@ -39,8 +39,8 @@ export function DataGridToolbar({
   columnChooser,
   className,
 }: IDataGridToolbarProps) {
-  const hasLeft = slots?.entityType || slots?.scope || slots?.brainRegion || slots?.left;
-  const hasRight = slots?.search || filters || columnChooser;
+  const hasLeft = slots?.entityType || slots?.brainRegion || slots?.left;
+  const hasRight = slots?.search || slots?.scope || filters || columnChooser;
   if (!hasLeft && !hasRight) return null;
 
   return (
@@ -51,7 +51,6 @@ export function DataGridToolbar({
       {hasLeft ? (
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           {slots?.entityType}
-          {slots?.scope}
           {slots?.brainRegion}
           {slots?.left}
         </div>
@@ -59,6 +58,7 @@ export function DataGridToolbar({
       {hasRight ? (
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {slots?.search}
+          {slots?.scope}
           {filters}
           {columnChooser}
         </div>

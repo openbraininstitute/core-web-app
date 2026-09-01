@@ -110,14 +110,15 @@ const listClasses: Record<TMotionTabsVariant, string> = {
 export function MotionTabsList({
   children,
   className,
+  ...rest
 }: {
   children: ReactNode;
   className?: string;
-}) {
+} & Omit<React.ComponentProps<'div'>, 'children' | 'className'>) {
   const { variant } = useMotionTabs();
 
   return (
-    <div role="tablist" className={cn(listClasses[variant], className)}>
+    <div role="tablist" className={cn(listClasses[variant], className)} {...rest}>
       {children}
     </div>
   );
@@ -128,12 +129,16 @@ export function MotionTabsTrigger({
   children,
   className,
   indicatorClassName,
+  /** wrapper around the indicator + button; `flex-1` by default so triggers share the row */
+  wrapperClassName,
+  ...buttonProps
 }: {
   value: string;
   children: ReactNode;
   className?: string;
   indicatorClassName?: string;
-}) {
+  wrapperClassName?: string;
+} & Omit<React.ComponentProps<'button'>, 'value' | 'children' | 'className' | 'onClick'>) {
   const { value: current, setValue, layoutId, variant, tabId, panelId } = useMotionTabs();
   const active = current === value;
 
@@ -152,6 +157,7 @@ export function MotionTabsTrigger({
           active ? 'text-primary-9' : 'text-gray-500 hover:text-primary-9',
           className
         )}
+        {...buttonProps}
       >
         {children}
         {active && (
@@ -170,7 +176,7 @@ export function MotionTabsTrigger({
   const radius = variant === 'pill' ? 'rounded-full' : 'rounded-md';
 
   return (
-    <div className="relative flex-1">
+    <div className={cn('relative flex-1', wrapperClassName)}>
       {active && (
         <motion.span
           layoutId={layoutId}
@@ -192,6 +198,7 @@ export function MotionTabsTrigger({
           radius,
           className
         )}
+        {...buttonProps}
       >
         {children}
       </button>
