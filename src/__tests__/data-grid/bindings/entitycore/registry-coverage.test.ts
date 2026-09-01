@@ -2,46 +2,28 @@ import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
+import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-browse-entities';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 /**
- * Migration guardrail: an unregistered dataType silently falls back to the legacy antd
- * table, which code review cannot see. The lists below mirror the real call sites — add
- * an entity there, add it here.
+ * Migration guardrail: an unregistered dataType now renders an error instead of a
+ * listing, so every routable type needs a definition.
+ *
+ * Coverage is NOT complete, and cannot be. The data-browse list below is imported from
+ * the route itself, so it cannot drift. The picker list is still hand-kept and is only
+ * a lower bound: `browse-widget.tsx` resolves its accepted types at runtime from the
+ * server-supplied scan-config schema (`acceptedEntityTypesFromField`), which takes
+ * precedence over the static `configurationInputs`. No static list can mirror that, so
+ * treat a green run as "these are registered", not "everything reachable is registered".
  */
 
 /**
- * Mirrors `AllowedEntities` in the data-browse `entity/[type]/page.tsx`; anything absent
- * from that list 404s.
+ * The REAL route allowlist, not a copy: a hand-kept copy drifted once
+ * (`EFeatureExtractionResult` was routable but unregistered, so the page rendered
+ * empty), which is exactly the failure this test exists to prevent.
  */
-const DATA_BROWSE_ENTITIES: ReadonlyArray<TExtendedEntitiesTypeDict> = [
-  ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
-  ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
-  ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
-  ExtendedEntitiesTypeDict.CellMorphology,
-  ExtendedEntitiesTypeDict.ElectricalCellRecording,
-  ExtendedEntitiesTypeDict.IonChannelRecording,
-  ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-  ExtendedEntitiesTypeDict.Memodel,
-  ExtendedEntitiesTypeDict.Circuit,
-  ExtendedEntitiesTypeDict.Emodel,
-  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
-  ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
-  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
-  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
-  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
-  ExtendedEntitiesTypeDict.MicrocircuitSimulation,
-  ExtendedEntitiesTypeDict.SingleNeuronSimulation,
-  ExtendedEntitiesTypeDict.IonChannelModel,
-  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
-  ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
-  ExtendedEntitiesTypeDict.EMCellMesh,
-  ExtendedEntitiesTypeDict.IonChannelModelSimulation,
-  ExtendedEntitiesTypeDict.RegionCircuitSimulation,
-  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
-];
+const DATA_BROWSE_ENTITIES: ReadonlyArray<TExtendedEntitiesTypeDict> = DATA_BROWSE_ALLOWED_ENTITIES;
 
 /** The notebooks browse route (`notebooks/(browse)/browse/[type]`) — group members. */
 const NOTEBOOK_BROWSE_ENTITIES: ReadonlyArray<TExtendedEntitiesTypeDict> = [

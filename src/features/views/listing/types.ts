@@ -1,11 +1,8 @@
 import type { ComponentProps } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type {
-  EntityCoreIdentifiableNamed,
-  EntityCoreResponse,
-} from '@/api/entitycore/types/shared/global';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TViewVariant, TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { TFacets } from '@/features/data-grid/core';
 import type { WorkspaceContext } from '@/types/common';
 import type { MiniDetailView } from '@/ui/segments/mini-detail-view';
 
