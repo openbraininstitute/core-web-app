@@ -10,9 +10,14 @@ interface ButtonCopyIdProps {
   label?: string;
   tooltip?: string;
   value: string;
+  /** Drops the visible label; the tooltip becomes the only affordance. */
+  iconOnly?: boolean;
   classNames?: {
     button?: string;
+    /** The rounded box around the glyph. */
     icon?: string;
+    /** The glyph itself. */
+    glyph?: string;
     tooltip?: string;
   };
 }
@@ -21,6 +26,7 @@ export function ButtonCopyId({
   value,
   tooltip = 'Database ID',
   label = 'Copy ID',
+  iconOnly = false,
   classNames,
 }: ButtonCopyIdProps) {
   const [, copyCampaignId, , copyingCampaignId] = useCopyToClipboard();
@@ -33,12 +39,12 @@ export function ButtonCopyId({
             rounded
             variant="ghost"
             type="button"
-            aria-label="Copy campaign ID"
-            className={cn('pr-1 text-primary-9 ', classNames?.button)}
+            aria-label={label}
+            className={cn('text-primary-9', iconOnly ? 'size-9 p-0' : 'pr-1', classNames?.button)}
             size="md"
             onClick={() => copyCampaignId(value)}
           >
-            <span className="text-base">{label}</span>
+            {!iconOnly && <span className="text-base">{label}</span>}
             <div
               className={cn(
                 'flex size-8 items-center justify-center border',
@@ -49,7 +55,7 @@ export function ButtonCopyId({
               {copyingCampaignId ? (
                 <RiCheckLine className="text-green-400! text-sm" />
               ) : (
-                <RiFileCopyLine className="text-sm text-gray-400" />
+                <RiFileCopyLine className={cn('text-sm text-gray-400', classNames?.glyph)} />
               )}
             </div>
           </Button>
