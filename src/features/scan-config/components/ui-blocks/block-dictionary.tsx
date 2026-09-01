@@ -4,6 +4,7 @@ import { useAtomValue } from 'jotai';
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
 import { nextEntryName } from '@/features/scan-config/components/hooks';
+import { buildBlockDefaults } from '@/features/scan-config/components/hooks/block-defaults';
 import {
   getBlockUsabilityConfig,
   isRootBlock,
@@ -213,11 +214,7 @@ export default function BlockDictionary({
                   if (isRootBlock(schema, selectedRootElement)) return;
                   if (onNewBlockClick) onNewBlockClick();
 
-                  const initial: Record<string, ConfigValue> = {};
-                  if (o.properties)
-                    Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                      initial[subkey] = subValue.default ?? null;
-                    });
+                  const initial = buildBlockDefaults(o);
 
                   // Seed origin at the loaded circuit centre rather than the schema default
                   // (0,0,0), which can sit millimetres away from the circuit.

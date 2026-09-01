@@ -185,7 +185,8 @@ That page reads `targetType` from the URL, finds your registry entry, and opens 
 For a normal browse → configure flow, **skip this step**. A workflow whose editor picks its own
 entities still goes through the catch-all: give the definition
 `entity: { mode: Session, picksEntitiesInEditor: true }` so configure opens on a session that is
-empty from the hub and carries the entity when a detail page's Simulate action started it.
+empty from the hub and carries a seeded entity when a detail page's Simulate action started it
+(see `workflow/seeding`).
 
 ---
 

@@ -43,6 +43,9 @@ interface IonChannelModelBase extends EntityCoreIdentifiableNamed {
   temperature_celsius: number;
   is_stochastic: boolean;
   neuron_block: NeuronBlock;
+  /** NMODL conductance / permeability parameter names; decide which simulation block accepts the model. */
+  conductance_name?: string | null;
+  max_permeability_name?: string | null;
 }
 
 export interface IonChannelModel
