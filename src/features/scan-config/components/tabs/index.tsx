@@ -29,8 +29,10 @@ type ScanConfigTabsPanelProps = {
   disableConfigurationTab: boolean;
   configuration: ReactNode;
   results: ReactNode;
-  /** Trailing control inside the results tab, shown while that tab is active. */
-  resultsAction?: ReactNode;
+  /** Rail-level trailing content, level with the tabs (e.g. the selected model). */
+  railEnd?: ReactNode;
+  /** Rail-level content centred on the panel edge (e.g. the workflow summary). */
+  railCenter?: ReactNode;
 };
 
 /** The results tab is named after the activity — `simulations`, `extractions`, … */
@@ -90,7 +92,8 @@ export default function ScanConfigTabsPanel({
   disableConfigurationTab,
   configuration,
   results,
-  resultsAction,
+  railEnd,
+  railCenter,
 }: ScanConfigTabsPanelProps) {
   // not memoised: `configuration` and `results` are fresh nodes on every render
   const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
@@ -103,7 +106,6 @@ export default function ScanConfigTabsPanel({
       id,
       label,
       icon: <Icon className="size-5" />,
-      action: isConfiguration ? undefined : resultsAction,
       disabled,
       tooltip: disableConfiguration ? <LegacyConfigurationTooltip /> : undefined,
       content: isConfiguration ? configuration : results,
@@ -114,6 +116,8 @@ export default function ScanConfigTabsPanel({
     <MorphingTabs
       keepMounted
       reorderable={false}
+      railEnd={railEnd}
+      railCenter={railCenter}
       items={items}
       value={tab.id}
       onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}

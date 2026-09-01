@@ -36,6 +36,11 @@ import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
+import {
+  ScanConfigWorkflowBreadcrumb,
+  ScanConfigWorkflowSummary,
+} from '@/features/scan-config/workflow/breadcrumb';
+import { workflowBreadcrumbEntitiesAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
@@ -166,6 +171,7 @@ function ScanConfigTemplateContent({
 
   const setDiffBarData = useSetAtom(diffBarDataAtom);
   const setShowRestore = useSetAtom(showRestoreAtom);
+  const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
 
   useEffect(() => {
     // reset the global sidebar expansion/highlight state back to its idle default ("Info")
@@ -195,6 +201,12 @@ function ScanConfigTemplateContent({
     },
     [setDiffBarData, setShowRestore]
   );
+
+  // The breadcrumb's entities are module state that outlives the route. Clearing in a
+  // cleanup keyed on `schemaName` fires on unmount *and* on a workflow switch, and — unlike
+  // an effect body — runs before the next workflow's model selectors publish their own.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `schemaName` is the key, not a read — it is what makes the cleanup fire on a workflow switch
+  useEffect(() => () => setBreadcrumbEntities([]), [schemaName, setBreadcrumbEntities]);
 
   useAgentState(
     aiEnabled
@@ -260,7 +272,7 @@ function ScanConfigTemplateContent({
     });
 
   const configurationContent = (
-    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-4 pb-2">
+    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-6 pb-2">
       {browseOverlay ? (
         <div
           id="scan-config-model-selection-overlay"
@@ -364,7 +376,7 @@ function ScanConfigTemplateContent({
   const resultsContent = (
     <div
       id="scan-config-results"
-      className="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] min-h-0 flex-1 overflow-hidden px-2 pt-4 pb-2"
+      className="grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] min-h-0 flex-1 overflow-hidden px-2 pt-6 pb-2"
     >
       {results}
     </div>
@@ -381,26 +393,30 @@ function ScanConfigTemplateContent({
         disableConfigurationTab={Boolean(!initialConfig && readOnly)}
         configuration={configurationContent}
         results={resultsContent}
-        resultsAction={
-          campaignId ? (
-            <ButtonCopyId
-              iconOnly
-              label={get(messages, `${activity}.CopyCampaignId`)}
-              tooltip={get(messages, `${activity}.CopyCampaignId`)}
-              value={campaignId}
-              classNames={{
-                button: 'size-8 p-0',
-                // bare glyph at rest; the chip only materialises under the pointer
-                icon: cn(
-                  'size-8 rounded-none border-transparent bg-transparent transition-all',
-                  'hover:rounded-full hover:border-primary-8 hover:bg-primary-8',
-                  'hover:[&_svg]:text-white'
-                ),
-                glyph: 'size-5 text-primary-9',
-              }}
-            />
-          ) : null
+        railCenter={
+          <ScanConfigWorkflowSummary
+            action={
+              campaignId ? (
+                <ButtonCopyId
+                  iconOnly
+                  label={get(messages, `${activity}.CopyCampaignId`)}
+                  tooltip={get(messages, `${activity}.CopyCampaignId`)}
+                  value={campaignId}
+                  classNames={{
+                    button: 'size-6 p-0',
+                    // bare glyph at rest; the chip only materialises under the pointer
+                    icon: cn(
+                      'size-6 rounded-full border-transparent bg-transparent transition-colors',
+                      'hover:border-primary-8 hover:bg-primary-8 hover:[&_svg]:text-white'
+                    ),
+                    glyph: 'size-3.5 text-primary-9',
+                  }}
+                />
+              ) : null
+            }
+          />
         }
+        railEnd={<ScanConfigWorkflowBreadcrumb />}
       />
     </div>
   );

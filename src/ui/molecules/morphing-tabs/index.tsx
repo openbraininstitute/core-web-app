@@ -50,6 +50,8 @@ export type MorphingTabsClassNames = {
   icon?: string;
   label?: string;
   action?: string;
+  railEnd?: string;
+  railCenter?: string;
   content?: string;
   panel?: string;
   tooltip?: string;
@@ -67,6 +69,10 @@ export interface MorphingTabsProps {
   keepMounted?: boolean;
   /** Set false where tab order carries meaning, to drop drag reordering. */
   reorderable?: boolean;
+  /** Rail-level trailing content, sitting level with the tabs on the panel's top edge. */
+  railEnd?: ReactNode;
+  /** Rail-level content centred on the panel's top edge. */
+  railCenter?: ReactNode;
   ariaLabel?: string;
   className?: string;
   classNames?: MorphingTabsClassNames;
@@ -115,10 +121,10 @@ const DRAG_THRESHOLD = 5;
 // label stops reading. See `tabWidth` in MorphingTabs.
 const MAX_TAB_WIDTH = 232;
 const MIN_TAB_WIDTH = 132;
-const TAB_HEIGHT = 56;
+const TAB_HEIGHT = 48;
 const TAB_TOP = 0;
 const TAB_RADIUS = 24;
-const RAIL_HEIGHT = 56;
+const RAIL_HEIGHT = 48;
 const SURFACE_INSET = 4;
 const LIQUID_JOIN = 24;
 const PANEL_RADIUS = 28;
@@ -336,6 +342,8 @@ export function MorphingTabs({
   onOrderChange,
   keepMounted = false,
   reorderable = true,
+  railEnd,
+  railCenter,
   ariaLabel = 'Tabs',
   className,
   classNames,
@@ -725,7 +733,7 @@ export function MorphingTabs({
         className
       )}
     >
-      <div className="relative h-14 shrink-0">
+      <div className="relative h-12 shrink-0">
         <div
           ref={railRef}
           role="tablist"
@@ -887,6 +895,30 @@ export function MorphingTabs({
               </SpringTab>
             );
           })}
+
+          {railCenter ? (
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-x-0 z-30 flex justify-center',
+                classNames?.railCenter
+              )}
+              style={{ bottom: -20, height: 32 }}
+            >
+              <div className="pointer-events-auto flex items-center">{railCenter}</div>
+            </div>
+          ) : null}
+
+          {railEnd ? (
+            <div
+              className={cn(
+                'pointer-events-auto absolute z-30 flex items-center',
+                classNames?.railEnd
+              )}
+              style={{ right: SURFACE_INSET + PANEL_RADIUS, bottom: -20, height: 32 }}
+            >
+              {railEnd}
+            </div>
+          ) : null}
         </div>
       </div>
 

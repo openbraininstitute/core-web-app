@@ -1,11 +1,16 @@
 'use client';
 
 import { useRouter } from '@bprogress/next';
+import { useSetAtom } from 'jotai';
 import { notFound, useSearchParams } from 'next/navigation';
 import { use, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
+import {
+  workflowBreadcrumbEntitiesAtom,
+  workflowBreadcrumbEntitiesFromSelection,
+} from '@/features/scan-config/workflow/breadcrumb-entities';
 import {
   type TWorkflowSchemaSelection,
   WorkflowSchemaSelectionMode,
@@ -46,9 +51,6 @@ import type { TWorkspaceSection } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TBrowsePrerequisiteValue } from '@/ui/segments/workflows/browse/browse-config';
 import type { KebabCase } from '@/utils/type';
-
-/** height reserved for the multi-entity "Use selection" footer in workflow browse grids. */
-const WORKFLOW_BROWSE_USE_SELECTION_BAR_HEIGHT = '4.5rem';
 
 type WorkflowNewBrowsePageProps = {
   activity: TActivityValue;
@@ -93,6 +95,7 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
         .map((row) => ({
           type: input.type,
           id: row.id,
+          name: row.name,
         })),
     }))
     .filter((group) => group.items.length > 0);
@@ -133,11 +136,11 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
 function getBrowseClassNames(isMultiEntityBrowse: boolean) {
   return {
     container: isMultiEntityBrowse
-      ? `max-h-full min-h-0 flex-1 [grid-area:body] max-h-[calc(100vh-11.8rem-${WORKFLOW_BROWSE_USE_SELECTION_BAR_HEIGHT})]`
-      : 'max-h-full min-h-0 flex-1 relative [grid-area:body]',
+      ? 'h-full max-h-full min-h-0 flex-1 [grid-area:body]'
+      : 'h-full max-h-full min-h-0 flex-1 relative [grid-area:body]',
     miniView: isMultiEntityBrowse
-      ? 'max-h-[calc(100vh-11rem)] [grid-area:mini-view] row-span-2 self-stretch'
-      : 'max-h-[calc(100vh-11rem)] [grid-area:mini-view]',
+      ? 'h-full min-h-0 [grid-area:mini-view] row-span-2 self-stretch'
+      : 'h-full min-h-0 [grid-area:mini-view]',
     footer: 'flex shrink-0 justify-end bg-background pt-3 pb-2 [grid-area:footer]',
   };
 }
@@ -454,6 +457,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     [configurationInputs, selectionCountsByType]
   );
 
+  const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
+
   const handleConfigureSelected = useCallback(() => {
     const payload = buildWorkflowBrowseSelectionPayload({
       selectionConfig,
@@ -466,6 +471,10 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     if (!payload) {
       return;
     }
+
+    // hand the names to the configure breadcrumb; the payload carries them too, but this
+    // reaches a breadcrumb that mounts before the session read resolves
+    setBreadcrumbEntities(workflowBreadcrumbEntitiesFromSelection(payload));
 
     // carry the confirmed prerequisites, keyed by entity type so the configure-page browse can
     // look one up directly (no share-key logic on the read side) and rebuild the same loader
@@ -489,6 +498,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       })
     );
   }, [
+    setBreadcrumbEntities,
     activity,
     confirmedPrerequisiteByKey,
     configurationInputs,
@@ -550,7 +560,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         requireMiniDetailView
         requireBrainRegion={workflow.requireSpecies}
         requireSpeciesSelector={workflow.requireSpecies}
-        requireScopeSelector={workflow.requireScope}
+        requireScopeSelector
         allowFilter={workflow.requireFilters}
         section={section}
         classNames={{

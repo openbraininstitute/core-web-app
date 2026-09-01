@@ -16,11 +16,14 @@ export const WorkflowSessionSelectionMode = {
 export type TWorkflowSessionSelectionRef = {
   type: TExtendedEntitiesTypeDict;
   id: string;
+  /** display name captured at pick time, so chrome can name the selection without refetching */
+  name?: string;
 };
 
 const workflowSessionSelectionRefSchema = z.object({
   type: z.string(),
   id: z.string(),
+  name: z.string().optional(),
 });
 
 /**

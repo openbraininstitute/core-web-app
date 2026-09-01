@@ -46,7 +46,7 @@ describe('buildWorkflowBrowseSelectionPayload lifecycle gating', () => {
 
     expect(payload).toEqual({
       mode: WorkflowSessionSelectionMode.List,
-      items: [{ type: ExtendedEntitiesTypeDict.Memodel, id: 'active-1' }],
+      items: [{ type: ExtendedEntitiesTypeDict.Memodel, id: 'active-1', name: 'active-1' }],
     });
   });
 
