@@ -2,7 +2,6 @@
 
 import {
   CheckCircleFilled,
-  ExclamationCircleOutlined,
   LoadingOutlined,
   RightOutlined,
   SettingFilled,
@@ -28,6 +27,11 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { CompatibilityNotice } from '@/ui/segments/workflows/build/memodel/compatibility-notice';
+import {
+  blocksBuild,
+  deriveCompatibilityState,
+} from '@/ui/segments/workflows/build/memodel/compatibility-state';
 import {
   BuildStep,
   type BuildStepKeys,
@@ -89,11 +93,12 @@ export function Menu({ sessionId }: { sessionId: string }) {
     staleTime: Infinity,
   });
 
-  const isCheckingCompatibility = selectionComplete && compatibilityCheck.isFetching;
-  const isIncompatible =
-    selectionComplete &&
-    compatibilityCheck.isSuccess &&
-    compatibilityCheck.data?.data.compatible === false;
+  const compatibility = deriveCompatibilityState({
+    selectionComplete,
+    isFetching: compatibilityCheck.isFetching,
+    isError: compatibilityCheck.isError,
+    data: compatibilityCheck.data,
+  });
 
   const onStepChange = (s: BuildStepKeys) => {
     const query = new URLSearchParams(searchParams);
@@ -171,7 +176,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   });
 
   const result = CreateSingleNeuronContextSchema.safeParse(payload);
-  const disabled = mutate.isPending || !!result.error || isCheckingCompatibility || isIncompatible;
+  const disabled = mutate.isPending || !!result.error || blocksBuild(compatibility);
 
   return (
     <>
@@ -307,18 +312,12 @@ export function Menu({ sessionId }: { sessionId: string }) {
             />
           </div>
         </Button>
-        {isCheckingCompatibility && (
-          <div className="p-4 pl-6 font-semibold text-primary-9 flex items-center gap-3">
-            <LoadingOutlined />
-            {messages.CheckingCompatibility}
-          </div>
-        )}
-        {isIncompatible && (
-          <div className="p-4 pl-6 font-semibold text-destructive flex items-center gap-3">
-            <ExclamationCircleOutlined />
-            {messages.IncompatibleModels}
-          </div>
-        )}
+        <CompatibilityNotice
+          state={compatibility}
+          onRetry={() => {
+            compatibilityCheck.refetch();
+          }}
+        />
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="mt-auto w-full">
