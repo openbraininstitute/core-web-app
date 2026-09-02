@@ -75,13 +75,15 @@ const STATUS_BADGE: Record<ActivityStatus, ICampaignStatusBadgeSpec> = {
     text: 'text-slate-600',
     chip: 'bg-slate-400',
   },
+  // Charcoal, not another light grey: CREATED is the other neutral, and the two sit
+  // side by side in a mixed pill where no label separates them.
   [ActivityStatus.CANCELLED]: {
     label: 'Cancelled',
     tone: CampaignStatusTone.Neutral,
-    bg: 'bg-gray-50',
-    border: 'border-gray-400',
-    text: 'text-gray-600',
-    chip: 'bg-gray-400',
+    bg: 'bg-zinc-100',
+    border: 'border-zinc-600',
+    text: 'text-zinc-700',
+    chip: 'bg-zinc-600',
   },
 };
 
@@ -127,6 +129,137 @@ export function aggregateCampaignStatus(
 ): ActivityStatus | undefined {
   if (!statusCountMap || statusCountMap.size === 0) return undefined;
   return STATUS_PRECEDENCE.find((status) => (statusCountMap.get(status) ?? 0) > 0);
+}
+
+/** Lifecycle order used when a campaign's members span several statuses. */
+const STATUS_DISPLAY_ORDER: ActivityStatus[] = [
+  ActivityStatus.CREATED,
+  ActivityStatus.PENDING,
+  ActivityStatus.RUNNING,
+  ActivityStatus.DONE,
+  ActivityStatus.ERROR,
+  ActivityStatus.CANCELLED,
+];
+
+export interface ICampaignStatusCount {
+  status: ActivityStatus;
+  count: number;
+}
+
+/**
+ * Non-empty status buckets in lifecycle order. More than one entry means the campaign is
+ * mixed, and the cell shows per-status counts instead of a single headline label.
+ */
+export function getCampaignStatusBreakdown(
+  statusCountMap: Map<ActivityStatus, number> | undefined | null
+): ICampaignStatusCount[] {
+  if (!statusCountMap || statusCountMap.size === 0) return [];
+  return STATUS_DISPLAY_ORDER.flatMap((status) => {
+    const count = statusCountMap.get(status) ?? 0;
+    return count > 0 ? [{ status, count }] : [];
+  });
+}
+
+/** "4 Generated, 2 Done" — the breakdown read out for assistive tech. */
+export function describeCampaignStatusBreakdown(breakdown: ICampaignStatusCount[]): string {
+  return breakdown
+    .map(({ status, count }) => `${count} ${getCampaignStatusBadgeSpec(status).label}`)
+    .join(', ');
+}
+
+/**
+ * Most segments the pill will draw. Four `count + glyph` segments plus the cell's own
+ * padding is about as much as the Status column's floor affords; past that the pill
+ * would be clipped, silently eating a digit.
+ */
+const MAX_VISIBLE_SEGMENTS = 4;
+
+export interface ICampaignStatusSegments {
+  /** buckets the pill draws, in lifecycle order */
+  visible: ICampaignStatusCount[];
+  /** buckets omitted to keep the pill inside its cell */
+  hidden: ICampaignStatusCount[];
+}
+
+/**
+ * Split a breakdown into what the pill can draw and what it must leave to the tooltip.
+ * A breakdown that already fits is returned whole.
+ *
+ * Failures are never hidden — a single ERROR is the one bucket a reader must not miss —
+ * and the remaining slots go to the largest buckets, so the pill still reflects where the
+ * campaign's members actually are.
+ */
+export function splitCampaignStatusSegments(
+  breakdown: ICampaignStatusCount[]
+): ICampaignStatusSegments {
+  if (breakdown.length <= MAX_VISIBLE_SEGMENTS) return { visible: breakdown, hidden: [] };
+
+  // one slot goes to the overflow marker, so keep one fewer than the cap
+  const slots = MAX_VISIBLE_SEGMENTS - 1;
+  const byCount = [...breakdown].sort((a, b) => b.count - a.count);
+  const pinned = breakdown.filter((bucket) => bucket.status === ActivityStatus.ERROR);
+  const keep = new Set(pinned.map((bucket) => bucket.status));
+  for (const bucket of byCount) {
+    if (keep.size >= slots) break;
+    keep.add(bucket.status);
+  }
+
+  return {
+    visible: breakdown.filter((bucket) => keep.has(bucket.status)),
+    hidden: breakdown.filter((bucket) => !keep.has(bucket.status)),
+  };
+}
+
+interface CampaignStatusCountsProps {
+  breakdown: ICampaignStatusCount[];
+  className?: string;
+}
+
+/**
+ * Count-per-status pill for a mixed campaign — one `N ⟨glyph⟩` segment per status, in
+ * lifecycle order. Labels are dropped: with several statuses no single one is the truth.
+ *
+ * The pill sizes to its content and never exceeds the cell: past
+ * {@link MAX_VISIBLE_SEGMENTS} buckets the tail collapses into an ellipsis segment, and
+ * the full breakdown stays in the `aria-label` and the hover popover.
+ */
+export function CampaignStatusCounts({ breakdown, className }: CampaignStatusCountsProps) {
+  const { visible, hidden } = splitCampaignStatusSegments(breakdown);
+
+  return (
+    <Badge
+      rounded
+      size="sm"
+      variant="outline"
+      aria-label={describeCampaignStatusBreakdown(breakdown)}
+      className={cn(
+        'max-w-full select-none gap-0 divide-x divide-neutral-200 border-neutral-300 bg-white px-0 font-semibold',
+        className
+      )}
+    >
+      {visible.map(({ status, count }) => {
+        const spec = getCampaignStatusBadgeSpec(status);
+        return (
+          <span key={status} className={cn('inline-flex items-center gap-0.5 px-1.5', spec.text)}>
+            <span>{count}</span>
+            <span
+              className={cn(
+                'inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-white [&_svg]:size-2',
+                spec.chip
+              )}
+            >
+              {executionStatusIconMap[status]}
+            </span>
+          </span>
+        );
+      })}
+      {hidden.length > 0 ? (
+        <span className="inline-flex items-center px-1.5 text-neutral-500" aria-hidden>
+          …
+        </span>
+      ) : null}
+    </Badge>
+  );
 }
 
 interface CampaignStatusBadgeProps {

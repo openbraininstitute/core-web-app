@@ -332,7 +332,10 @@ export function WorkflowActivity() {
         id: 'status',
         header: 'Status',
         align: 'center',
-        width: { minWidth: 140, flex: 1 },
+        // The widest status pill is 4 count segments (~148px); 190 clears that plus the
+        // grid's 2x16px cell padding, so a cramped table narrows other columns instead
+        // of clipping a count.
+        width: { minWidth: 190, flex: 1 },
         renderCell: (record) => <WorkflowStatusCell record={record} workspace={workspace} />,
       },
     ],

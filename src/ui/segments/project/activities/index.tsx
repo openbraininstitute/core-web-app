@@ -100,6 +100,8 @@ export function ProjectActivities({
     {
       id: 'status',
       header: 'Status',
+      // room for the widest status pill; see the workflows listing for the arithmetic
+      width: { minWidth: 190 },
       // per-type aggregated status (badge + scan-cards popover)
       renderCell: (record) => (
         <WorkflowStatusCell record={record} workspace={{ virtualLabId, projectId }} />
