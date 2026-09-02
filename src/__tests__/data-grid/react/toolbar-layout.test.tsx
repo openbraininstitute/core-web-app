@@ -16,7 +16,7 @@ function order(testIds: string[]): string[] {
 }
 
 describe('DataGridToolbar', () => {
-  it('lays out entity type → scope → brain region, then search → filters → columns', () => {
+  it('lays out entity type → brain region, then search → scope → filters → columns', () => {
     render(
       <DataGridToolbar
         slots={{
@@ -35,16 +35,16 @@ describe('DataGridToolbar', () => {
       order(['entity-type', 'scope', 'brain-region', 'extra-left', 'search', 'filters', 'columns'])
     ).toEqual([
       'entity-type',
-      'scope',
       'brain-region',
       'extra-left',
       'search',
+      'scope',
       'filters',
       'columns',
     ]);
   });
 
-  it('puts the entity-type selector FIRST in the left cluster, ahead of the scope tabs', () => {
+  it('keeps the scope tabs in the right cluster, immediately after the search', () => {
     render(
       <DataGridToolbar
         slots={{
@@ -57,8 +57,9 @@ describe('DataGridToolbar', () => {
     const scope = screen.getByTestId('scope');
     const entityType = screen.getByTestId('entity-type');
     const search = screen.getByTestId('search');
-    expect(entityType.parentElement).toBe(scope.parentElement);
-    expect(entityType.parentElement).not.toBe(search.parentElement);
+    expect(scope.parentElement).toBe(search.parentElement);
+    expect(scope.previousElementSibling).toBe(search);
+    expect(entityType.parentElement).not.toBe(scope.parentElement);
     expect(entityType.previousElementSibling).toBeNull();
   });
 

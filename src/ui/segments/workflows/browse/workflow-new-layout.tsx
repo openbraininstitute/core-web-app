@@ -2,8 +2,11 @@
 
 import { motion } from 'motion/react';
 import { useParams } from 'next/navigation';
+import { useNextStep } from 'nextstepjs';
 
+import { useLocalOnboardingTour } from '@/hooks/use-local-onboarding';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { workflowScopeTour } from '@/ui/segments/app-setup/discover-app';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowBreadcrumbProvider } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
 import { WorkflowBreadcrumb } from '@/ui/segments/workflows/elements/workflow-breadcrumb';
@@ -22,7 +25,14 @@ const GRID_TRANSITION = {
 export function WorkflowNewLayout({ children }: { children: ReactNode }) {
   const { type } = useParams<{ type: string }>();
   const { mdv, setMdv } = useMiniDetailView();
+  const { startNextStep } = useNextStep();
   useDisableElementOverflow({ id: 'workspace-body' });
+  // the scope switch moved into the grid toolbar; point it out once per browser
+  useLocalOnboardingTour({
+    tour: workflowScopeTour,
+    selector: '#scope-selector',
+    startTour: startNextStep,
+  });
   useSelectEntityClickEvent((ev) => {
     setMdv(ev.detail.display);
   });
