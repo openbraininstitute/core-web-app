@@ -16,7 +16,7 @@ export function ScanConfigContainer(props: ScanConfigContainerProps) {
   const { isLoading, error, unresolvedMessage, ready } = useScanConfiguration(configurationParams);
 
   if (isLoading) {
-    return <ScanConfigSkeleton />;
+    return <ScanConfigSkeleton activity={configurationParams.activity} className={className} />;
   }
 
   if (error) {

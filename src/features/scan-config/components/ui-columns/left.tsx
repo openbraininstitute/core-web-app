@@ -106,7 +106,9 @@ export default function Left({
           return (
             <div key={group} className="w-full flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <h4 className="self-start text-gray-500 uppercase">{group}</h4>
+                <h4 className="self-start text-xs font-bold text-[oklch(0.704_0.04_256.788)] uppercase">
+                  {group}
+                </h4>
                 {groupIndex === 0 && aiEnabled && <EditWithChatButton />}
               </div>
               {schema.properties &&
@@ -152,7 +154,7 @@ export default function Left({
       </div>
 
       {!readOnly && (
-        <div className="mt-auto w-full pr-4 pt-2">
+        <div className="mt-auto w-full pl-2 pr-4 pt-2">
           <GenerateConfigButton
             loading={loading}
             campaignId={campaignId}

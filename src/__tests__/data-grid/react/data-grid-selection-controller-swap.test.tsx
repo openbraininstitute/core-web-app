@@ -199,14 +199,14 @@ describe('EntityDataGrid — switching scope in a picker listing', () => {
     const projectTab = await screen.findByTestId('scope-selector-tab-project');
 
     await act(async () => {
-      fireEvent.mouseDown(projectTab, { button: 0 });
+      fireEvent.click(projectTab);
       await new Promise((r) => setTimeout(r, 250));
     });
 
     await waitFor(() =>
       expect(screen.getByTestId('scope-selector-tab-project')).toHaveAttribute(
-        'data-state',
-        'active'
+        'aria-selected',
+        'true'
       )
     );
   });

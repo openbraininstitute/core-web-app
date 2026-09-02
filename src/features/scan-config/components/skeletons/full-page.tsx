@@ -1,16 +1,15 @@
+'use client';
+
+import ScanConfigTabsPanel, { toScanConfigTab } from '@/features/scan-config/components/tabs';
+import {
+  BaseScanConfigTabs,
+  ScanConfigActivity,
+  type TScanConfigActivity,
+} from '@/features/scan-config/types';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 import styles from '@/features/scan-config/scan-config.module.css';
-
-function TabsSkeleton() {
-  return (
-    <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
-      <Skeleton className="h-10 w-40 rounded-none" />
-      <Skeleton className="h-10 w-40 rounded-none" />
-    </div>
-  );
-}
 
 function LeftColumnSkeleton() {
   return (
@@ -67,7 +66,7 @@ function MiddleColumnSkeleton() {
           <Skeleton className="h-3 w-48 rounded-full" />
           <Skeleton className="h-3 w-full rounded-full" />
           <Skeleton className="h-3 w-full rounded-full" />
-          <Skeleton className="h-3 w-60 rounded-full" />
+          <Skeleton className="h-3 w-3/4 rounded-full" />
         </div>
         <div className="space-y-2 h-14!">
           <Skeleton className="h-3 w-28 rounded-full" />
@@ -86,34 +85,39 @@ function ModelPreviewSkeleton() {
   return <div className="h-full rounded-lg bg-gray-100 animate-pulse mr-3" />;
 }
 
-function HeaderActionSkeleton() {
+/**
+ * Renders the real tab chrome around skeleton columns, so nothing about the
+ * frame moves or swaps when the configuration resolves.
+ */
+export function ScanConfigSkeleton({
+  className,
+  activity = ScanConfigActivity.Simulate,
+}: {
+  className?: string;
+  activity?: TScanConfigActivity;
+}) {
   return (
-    <div className="flex items-center justify-center gap-8">
-      <Skeleton className="h-10 w-46 rounded-full" />
-    </div>
-  );
-}
-
-export function ScanConfigSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex h-full flex-col', className)}>
-      <header className="flex flex-nowrap items-center justify-between gap-4 pt-4 pb-2 px-3">
-        <TabsSkeleton />
-        <HeaderActionSkeleton />
-      </header>
-
-      <div className="px-3 w-full">
-        <div className="my-2 h-px w-full bg-gray-200" />
-      </div>
-      <div className="flex-1 min-h-0">
-        <div className="grid h-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] overflow-hidden py-2 *:min-w-0">
-          <LeftColumnSkeleton />
-          <MiddleColumnSkeleton />
-          <div className="h-full min-w-0 overflow-auto secondary-scrollbar">
-            <ModelPreviewSkeleton />
+    <div className={cn('flex h-full min-h-0 flex-col', className)}>
+      <ScanConfigTabsPanel
+        className="min-h-0 flex-1"
+        activity={activity}
+        tab={toScanConfigTab(activity, BaseScanConfigTabs.configuration)}
+        setTab={() => {}}
+        disableResultsTab
+        disableConfigurationTab={false}
+        results={null}
+        configuration={
+          <div className="flex min-h-0 flex-1 flex-col px-2 pt-6 pb-2">
+            <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] overflow-hidden *:min-w-0">
+              <LeftColumnSkeleton />
+              <MiddleColumnSkeleton />
+              <div className="h-full min-w-0 overflow-auto secondary-scrollbar">
+                <ModelPreviewSkeleton />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
     </div>
   );
 }

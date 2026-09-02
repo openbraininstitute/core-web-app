@@ -150,7 +150,7 @@ export function SkeletonizationTab({
         }
         middle={
           !!resolvedActiveConfig && (
-            <div className="h-full bg-background! w-full">
+            <div className="h-full bg-white! w-full">
               <InOutFiles
                 config={resolvedActiveConfig}
                 execStatus={activeConfigExecStatus}

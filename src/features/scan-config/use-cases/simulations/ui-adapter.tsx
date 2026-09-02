@@ -239,10 +239,11 @@ function SimulationListItem({
                 <Checkbox
                   className={cn(
                     'mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap',
-                    '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6! [&_.ant-checkbox-checked_.ant-checkbox]:border-primary-6!',
+                    '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-9! [&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-9!',
+                    '[&_.ant-checkbox-indeterminate_.ant-checkbox-inner]:after:bg-primary-9!',
                     '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!',
-                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
-                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-6!',
+                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-9!',
+                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-9!',
                     '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
                   )}
                   disabled={selectionForSimDisabled}

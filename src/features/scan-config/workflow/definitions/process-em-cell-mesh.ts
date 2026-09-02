@@ -18,9 +18,6 @@ export const processEmCellMeshWorkflow = defineScanConfigWorkflow({
       return await SkeletonizationCampaign.api.query.resolve!({ id, context });
     },
   },
-  editor: {
-    className: 'px-4',
-  },
   taskTypeBindings: {
     obiOne: ObiOneTaskTypeDict.Skeletonization,
     configGeneration: TaskActivityType.SkeletonizationConfigGeneration,

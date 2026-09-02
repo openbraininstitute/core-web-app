@@ -65,10 +65,10 @@ export function IoLayout({
       defaultActiveKey={['input', 'output']}
       items={items}
       className={cn(
-        'bg-background [&_.ant-collapse-item]:border-0 [&_.ant-collapse-header]:bg-background ',
+        'bg-white [&_.ant-collapse-item]:border-0 [&_.ant-collapse-header]:bg-white ',
         '[&_.ant-collapse-item-disabled_.ant-collapse-header]:cursor-default! ',
-        '[&_.ant-collapse-content]:border-t-0 [&_.ant-collapse-content]:bg-background',
-        ' [&_.ant-collapse-content-box]:bg-background [&_.ant-collapse-content-box]:py-0!'
+        '[&_.ant-collapse-content]:border-t-0 [&_.ant-collapse-content]:bg-white',
+        ' [&_.ant-collapse-content-box]:bg-white [&_.ant-collapse-content-box]:py-0!'
       )}
     />
   );

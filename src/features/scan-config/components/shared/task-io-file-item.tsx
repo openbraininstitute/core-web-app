@@ -28,9 +28,10 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
       type="button"
       title={displayName}
       className={classNames(
-        'group flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white',
-        'hover:bg-gray-100'
+        'group flex w-full cursor-pointer items-center justify-between rounded-4xl border p-4 transition-colors',
+        selected
+          ? 'border-transparent bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]'
+          : 'border-[oklch(0.968_0.007_247.896)] bg-white hover:bg-[oklch(0.968_0.007_247.896)]'
       )}
       onClick={() => onSelect(file)}
     >
@@ -44,9 +45,10 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
       </div>
       <span
         className={classNames(
-          'group-hover:bg-gray-200 group-hover:border-gray-100',
           'ml-4 shrink-0 rounded-full border px-4 uppercase text-xs py-1',
-          selected ? 'border-white text-primary-9 bg-white' : 'text-neutral-5 border-neutral-5'
+          selected
+            ? 'border-white text-primary-9 bg-white'
+            : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5'
         )}
       >
         {badgeContent}

@@ -7,6 +7,7 @@ import CheckIcon from './Check';
 import ChevronIcon from './Chevron';
 import ChevronLeft from './ChevronLeft';
 import ChevronRight from './ChevronRight';
+import { ChevronRightStroke } from './ChevronRightStroke';
 import CloseIcon from './CloseIcon';
 import { DocumentationIcon } from './Documentation';
 import DownloadIcon from './DownloadIcon';
@@ -26,10 +27,12 @@ import IconPlus from './Plus';
 import RangeIcon from './Range';
 import ReadMeIcon from './ReadMeIcon';
 import ResetIcon from './ResetIcon';
+import { FolderAdminOpen, FolderPublicOpen } from './ScopeFolders';
 import { SettingsIcon } from './Settings';
 import UndoIcon from './UndoIcon';
 import UserIcon from './UserIcon';
 import VirtualLabIcon from './VirtualLab';
+import { ConfigurationIcon, ResultsIcon } from './WorkflowTabs';
 import { ZoomInIcon, ZoomOutIcon } from './Zoom';
 
 export {
@@ -41,14 +44,18 @@ export {
   ChevronIcon,
   ChevronLeft,
   ChevronRight,
+  ChevronRightStroke,
   CloseIcon,
   CoinsIcon,
+  ConfigurationIcon,
   DocumentationIcon,
   DownloadIcon,
   EyeIcon,
   FileDownloadFill,
   FileIcon,
   FlatListViewIcon,
+  FolderAdminOpen,
+  FolderPublicOpen,
   HierarchicalViewIcon,
   HomeIcon,
   IconPlus as PlusIcon,
@@ -61,6 +68,7 @@ export {
   RangeIcon,
   ReadMeIcon,
   ResetIcon,
+  ResultsIcon,
   SettingsIcon,
   UndoIcon,
   UserIcon,

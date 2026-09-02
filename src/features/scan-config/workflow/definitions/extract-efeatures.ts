@@ -23,7 +23,6 @@ export const extractEFeaturesWorkflow = defineScanConfigWorkflow({
     },
   },
   editor: {
-    className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
     defaultTab: {
       __activity: ScanConfigActivity.Extract,

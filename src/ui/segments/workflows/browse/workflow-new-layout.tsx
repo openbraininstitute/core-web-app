@@ -2,11 +2,13 @@
 
 import { motion } from 'motion/react';
 import { useParams } from 'next/navigation';
+import { useNextStep } from 'nextstepjs';
 
+import { useLocalOnboardingTour } from '@/hooks/use-local-onboarding';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { workflowScopeTour } from '@/ui/segments/app-setup/discover-app';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowBreadcrumbProvider } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { WorkflowBreadcrumb } from '@/ui/segments/workflows/elements/workflow-breadcrumb';
 import { cn } from '@/utils/css-class';
 
@@ -23,7 +25,14 @@ const GRID_TRANSITION = {
 export function WorkflowNewLayout({ children }: { children: ReactNode }) {
   const { type } = useParams<{ type: string }>();
   const { mdv, setMdv } = useMiniDetailView();
+  const { startNextStep } = useNextStep();
   useDisableElementOverflow({ id: 'workspace-body' });
+  // the scope switch moved into the grid toolbar; point it out once per browser
+  useLocalOnboardingTour({
+    tour: workflowScopeTour,
+    selector: '#scope-selector',
+    startTour: startNextStep,
+  });
   useSelectEntityClickEvent((ev) => {
     setMdv(ev.detail.display);
   });
@@ -35,17 +44,13 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="mx-2 flex h-full max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] flex-col overflow-hidden">
-      <WorkflowScopeTabs className="mb-3 max-w-max" />
+    <div className="mx-2 flex h-full min-h-0 w-[calc(100%-10px)] flex-col overflow-hidden">
       <WorkflowBreadcrumbProvider key={type}>
-        <div className="bg-background border-neutral-2 h-full overflow-hidden rounded-2xl border">
-          <WorkflowBreadcrumb />
+        <WorkflowBreadcrumb />
+        <div className="bg-background border-neutral-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border">
           <motion.div
             id="browse-workflow-new-inner-layout"
-            className={cn(
-              'grid gap-2 [grid-area:main]',
-              'h-full max-h-[calc(100%-4rem)] px-3 py-2'
-            )}
+            className={cn('grid min-h-0 flex-1 gap-2 [grid-area:main]', 'px-3 py-2')}
             initial={gridTemplate}
             animate={gridTemplate}
             transition={GRID_TRANSITION}

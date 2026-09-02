@@ -57,11 +57,12 @@ export function SelectAllCheckbox({
       checked={allSelected}
       disabled={disabled || selectableCount === 0}
       className={cn(
-        'ml-4.5 [&_.ant-checkbox-checked_.ant-checkbox]:border-primary-6!',
-        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
+        'ml-4.5 [&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-9!',
+        '[&_.ant-checkbox-indeterminate_.ant-checkbox-inner]:after:bg-primary-9!',
+        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-9!',
         '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!',
-        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
-        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-6!',
+        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-9!',
+        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-9!',
         '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
       )}
     >

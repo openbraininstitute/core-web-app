@@ -33,7 +33,9 @@ function scanConfigActivityToWorkspaceSection(activity: TScanConfigActivity): TW
   }
 }
 
-function findWorkflowDescriptorByDefinitionId(definitionId: string): IWorkflowDescriptor | null {
+export function findWorkflowDescriptorByDefinitionId(
+  definitionId: string
+): IWorkflowDescriptor | null {
   for (const activity of Object.values(ActivityRegistry)) {
     const workflows = [...activity.workflows, ...(activity.browseWorkflows ?? [])];
 
@@ -68,11 +70,7 @@ function ScanConfigWorkflowFrame({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <div className={cn('border-neutral-2 ml-2 h-full rounded-2xl border', className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('h-full min-h-0 pl-2', className)}>{children}</div>;
 }
 
 function ScanConfigWorkflowEditor() {
