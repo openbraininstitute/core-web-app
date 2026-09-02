@@ -7,7 +7,10 @@ import {
 } from '@/features/data-grid/bindings/entitycore/renderers/campaign-scan-cards';
 import {
   aggregateCampaignStatus,
+  describeCampaignStatusBreakdown,
   getCampaignStatusBadgeSpec,
+  getCampaignStatusBreakdown,
+  splitCampaignStatusSegments,
 } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
 
 describe('getCampaignStatusBadgeSpec (status → badge colours)', () => {
@@ -36,6 +39,16 @@ describe('getCampaignStatusBadgeSpec (status → badge colours)', () => {
 
   it('maps CREATED to "Generated"', () => {
     expect(getCampaignStatusBadgeSpec(ActivityStatus.CREATED).label).toBe('Generated');
+  });
+
+  it('keeps the two neutral statuses visually apart', () => {
+    // the two neutrals appear unlabelled side by side in the counts pill
+    const created = getCampaignStatusBadgeSpec(ActivityStatus.CREATED);
+    const cancelled = getCampaignStatusBadgeSpec(ActivityStatus.CANCELLED);
+    expect(created.chip).not.toBe(cancelled.chip);
+    expect(created.text).not.toBe(cancelled.text);
+    expect(cancelled.chip).toContain('zinc-600');
+    expect(cancelled.text).toContain('zinc-700');
   });
 
   it('degrades unknown/undefined status to a neutral fallback', () => {
@@ -88,6 +101,142 @@ describe('aggregateCampaignStatus (count map → headline status)', () => {
         ])
       )
     ).toBe(ActivityStatus.DONE);
+  });
+});
+
+describe('getCampaignStatusBreakdown (count map → per-status buckets)', () => {
+  const map = (entries: Array<[ActivityStatus, number]>) => new Map(entries);
+
+  it('returns [] for an empty / missing campaign', () => {
+    expect(getCampaignStatusBreakdown(map([]))).toEqual([]);
+    expect(getCampaignStatusBreakdown(undefined)).toEqual([]);
+  });
+
+  it('keeps every non-empty bucket', () => {
+    expect(
+      getCampaignStatusBreakdown(
+        map([
+          [ActivityStatus.DONE, 2],
+          [ActivityStatus.CREATED, 4],
+        ])
+      )
+    ).toEqual([
+      { status: ActivityStatus.CREATED, count: 4 },
+      { status: ActivityStatus.DONE, count: 2 },
+    ]);
+  });
+
+  it('orders buckets by lifecycle, not by map insertion', () => {
+    const breakdown = getCampaignStatusBreakdown(
+      map([
+        [ActivityStatus.ERROR, 1],
+        [ActivityStatus.DONE, 2],
+        [ActivityStatus.RUNNING, 3],
+        [ActivityStatus.CREATED, 4],
+      ])
+    );
+    expect(breakdown.map((bucket) => bucket.status)).toEqual([
+      ActivityStatus.CREATED,
+      ActivityStatus.RUNNING,
+      ActivityStatus.DONE,
+      ActivityStatus.ERROR,
+    ]);
+  });
+
+  it('drops zero-count buckets', () => {
+    expect(
+      getCampaignStatusBreakdown(
+        map([
+          [ActivityStatus.RUNNING, 0],
+          [ActivityStatus.DONE, 6],
+        ])
+      )
+    ).toEqual([{ status: ActivityStatus.DONE, count: 6 }]);
+  });
+
+  it('formats a breakdown as counted labels', () => {
+    expect(
+      describeCampaignStatusBreakdown([
+        { status: ActivityStatus.CREATED, count: 4 },
+        { status: ActivityStatus.DONE, count: 2 },
+      ])
+    ).toBe('4 Generated, 2 Done');
+  });
+});
+
+describe('splitCampaignStatusSegments (keeping the pill inside its cell)', () => {
+  const buckets = (entries: Array<[ActivityStatus, number]>) =>
+    getCampaignStatusBreakdown(new Map(entries));
+
+  it('draws every bucket when they fit', () => {
+    const breakdown = buckets([
+      [ActivityStatus.CREATED, 3],
+      [ActivityStatus.RUNNING, 1],
+      [ActivityStatus.DONE, 2],
+      [ActivityStatus.ERROR, 1],
+    ]);
+    expect(splitCampaignStatusSegments(breakdown)).toEqual({ visible: breakdown, hidden: [] });
+  });
+
+  it('caps the pill at 3 buckets plus the overflow marker', () => {
+    const breakdown = buckets([
+      [ActivityStatus.CREATED, 2],
+      [ActivityStatus.PENDING, 1],
+      [ActivityStatus.RUNNING, 1],
+      [ActivityStatus.DONE, 4],
+      [ActivityStatus.ERROR, 1],
+      [ActivityStatus.CANCELLED, 1],
+    ]);
+    const { visible, hidden } = splitCampaignStatusSegments(breakdown);
+    expect(visible).toHaveLength(3);
+    expect(visible.length + hidden.length).toBe(breakdown.length);
+  });
+
+  it('never hides a failure', () => {
+    const { visible } = splitCampaignStatusSegments(
+      buckets([
+        [ActivityStatus.CREATED, 20],
+        [ActivityStatus.PENDING, 15],
+        [ActivityStatus.RUNNING, 12],
+        [ActivityStatus.DONE, 40],
+        [ActivityStatus.ERROR, 1],
+      ])
+    );
+    expect(visible.map((bucket) => bucket.status)).toContain(ActivityStatus.ERROR);
+  });
+
+  it('fills remaining slots with the largest buckets', () => {
+    const { visible, hidden } = splitCampaignStatusSegments(
+      buckets([
+        [ActivityStatus.CREATED, 2],
+        [ActivityStatus.PENDING, 1],
+        [ActivityStatus.RUNNING, 1],
+        [ActivityStatus.DONE, 4],
+        [ActivityStatus.ERROR, 1],
+      ])
+    );
+    expect(visible.map((bucket) => bucket.status)).toEqual([
+      ActivityStatus.CREATED,
+      ActivityStatus.DONE,
+      ActivityStatus.ERROR,
+    ]);
+    expect(hidden.map((bucket) => bucket.status)).toEqual([
+      ActivityStatus.PENDING,
+      ActivityStatus.RUNNING,
+    ]);
+  });
+
+  it('keeps hidden buckets in the described breakdown', () => {
+    const breakdown = buckets([
+      [ActivityStatus.CREATED, 2],
+      [ActivityStatus.PENDING, 1],
+      [ActivityStatus.RUNNING, 1],
+      [ActivityStatus.DONE, 4],
+      [ActivityStatus.ERROR, 1],
+    ]);
+    expect(describeCampaignStatusBreakdown(breakdown)).toBe(
+      '2 Generated, 1 Pending, 1 Running, 4 Done, 1 Error'
+    );
   });
 });
 

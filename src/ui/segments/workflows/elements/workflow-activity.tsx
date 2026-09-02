@@ -17,6 +17,7 @@ import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { EmptyValue, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { CAMPAIGN_STATUS_COLUMN_MIN_WIDTH } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
 import { SelectionMode } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { ServerGridStateStatus } from '@/features/data-grid/react';
@@ -332,7 +333,7 @@ export function WorkflowActivity() {
         id: 'status',
         header: 'Status',
         align: 'center',
-        width: { minWidth: 140, flex: 1 },
+        width: { minWidth: CAMPAIGN_STATUS_COLUMN_MIN_WIDTH, flex: 1 },
         renderCell: (record) => <WorkflowStatusCell record={record} workspace={workspace} />,
       },
     ],

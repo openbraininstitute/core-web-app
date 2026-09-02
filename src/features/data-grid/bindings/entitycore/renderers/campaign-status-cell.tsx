@@ -21,6 +21,8 @@ import {
   aggregateCampaignStatus,
   CampaignStatusBadge,
   CampaignStatusBadgeSkeleton,
+  CampaignStatusCounts,
+  getCampaignStatusBreakdown,
 } from './campaign-status-badge';
 
 import type { ReactNode } from 'react';
@@ -138,12 +140,16 @@ export function CampaignStatusBadgePopover({
     return <CampaignStatusBadgeSkeleton />;
   }
 
+  const breakdown = getCampaignStatusBreakdown(statusCountMap);
   const headline = aggregateCampaignStatus(statusCountMap);
-  const count = statusCountMap
-    ? Array.from(statusCountMap.values()).reduce((sum, n) => sum + n, 0)
-    : 0;
+  const count = breakdown.reduce((sum, bucket) => sum + bucket.count, 0);
 
-  const badge = <CampaignStatusBadge status={headline} count={count} fixedWidth />;
+  const badge =
+    breakdown.length > 1 ? (
+      <CampaignStatusCounts breakdown={breakdown} />
+    ) : (
+      <CampaignStatusBadge status={headline} count={count} fixedWidth />
+    );
 
   if (!fetchScanRows) {
     return <div className="flex w-full items-center justify-center">{badge}</div>;
