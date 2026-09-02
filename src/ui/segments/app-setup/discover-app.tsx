@@ -8,6 +8,7 @@ import {
 } from 'nextstepjs';
 import { type ReactNode, useLayoutEffect } from 'react';
 
+import { writeLocalTourStatus } from '@/hooks/use-local-onboarding';
 import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
@@ -64,6 +65,16 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
     if (!tour) return;
     const isComplete =
       (OnboardingDiscoverSteps.find((o) => o.tour === tour)?.steps.length ?? 0) - 1 === step;
+
+    if (LocalTours.has(tour)) {
+      writeLocalTourStatus(tour, {
+        currentStep: step,
+        completed: isComplete || action === TourAction.Complete,
+        dismissed: action === TourAction.Skip,
+      });
+      return;
+    }
+
     updateBackend({
       tour: tour as TOnboardingFeature,
       current_step: step,
@@ -74,6 +85,11 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
 
   const onStepChange = (step: number, tour: string | null) => {
     if (!tour) return;
+
+    if (LocalTours.has(tour)) {
+      writeLocalTourStatus(tour, { currentStep: step });
+      return;
+    }
 
     updateBackend({
       tour: tour as TOnboardingFeature,
@@ -190,6 +206,11 @@ export const projectTour = `${defaultWorkspaceTour}-project`;
 export const dataTour = `${defaultWorkspaceTour}-data`;
 export const workflowTour = `${defaultWorkspaceTour}-workflow`;
 export const notebookTour = `${defaultWorkspaceTour}-notebook`;
+/** Ships ahead of its backend flag, so its progress lives in localStorage. */
+export const workflowScopeTour = `${defaultWorkspaceTour}-workflow-scope`;
+
+/** Tours the onboarding API has no enum value for yet; see {@link writeLocalTourStatus}. */
+const LocalTours: ReadonlySet<string> = new Set([workflowScopeTour]);
 
 export const OnboardingDiscoverSteps: Tour[] = [
   {
@@ -455,6 +476,28 @@ export const OnboardingDiscoverSteps: Tour[] = [
         blockKeyboardControl: true,
         pointerPadding: 0,
         pointerRadius: 14,
+      },
+    ],
+  },
+  {
+    tour: workflowScopeTour,
+    steps: [
+      {
+        icon: null,
+        title: 'Public and project data',
+        content: (
+          <>
+            Switch the table between public and project data. Hover an icon to see which is which.
+          </>
+        ),
+        selector: '#scope-selector',
+        // `left` centres the arrow on the card's own edge; the bottom-* sides pin it 20px
+        // from a corner, which only lines up when the card happens to be the right width
+        side: 'left',
+        showControls: true,
+        blockKeyboardControl: true,
+        pointerPadding: 6,
+        pointerRadius: 25,
       },
     ],
   },
