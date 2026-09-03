@@ -74,3 +74,26 @@ describe('buildColDefs — expander placement (backward-compatible default)', ()
     expect(withRenderer?.cellRenderer).toBe(AgCellHost);
   });
 });
+
+describe('buildColDefs — edge-pinned columns', () => {
+  it('freezes a pinned column against its edge and locks it there', () => {
+    const defs = buildColDefs([...columns, col('actions', { pinned: 'right', movable: false })], {
+      ...OPTIONS,
+      withExpandColumn: false,
+    });
+    const actions = defs.find((d) => d.colId === 'actions');
+
+    expect(actions?.pinned).toBe('right');
+    // without lockPosition AG lets a drag pull the column out of the frozen region
+    expect(actions?.lockPosition).toBe('right');
+    expect(actions?.suppressMovable).toBe(true);
+  });
+
+  it('leaves an unpinned column unpinned and unlocked', () => {
+    const defs = buildColDefs(columns, { ...OPTIONS, withExpandColumn: false });
+    const name = defs.find((d) => d.colId === 'name');
+
+    expect(name?.pinned).toBeUndefined();
+    expect(name?.lockPosition).toBeUndefined();
+  });
+});

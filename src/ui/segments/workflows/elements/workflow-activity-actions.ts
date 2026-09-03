@@ -20,6 +20,27 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { WorkspaceContext } from '@/types/common';
 import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
 
+/**
+ * Campaign and simulation types whose row offers no "View results" action.
+ *
+ * Their results are not reachable from a single generated entity — an e-feature extraction, for
+ * instance, registers one task result per config rather than one entity for the campaign — so the
+ * detail results route has nothing to open.
+ */
+export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
+  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+  ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
+  ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+  ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+  ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+  ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+];
+
 /** minimal row shape shared by workflow activity tables (campaigns, task configs) */
 export type TWorkflowActivityTableRow = {
   id: string;

@@ -153,6 +153,16 @@ export interface IColumnModel<Row = unknown> {
    * one hosting a tree's expand chevron.
    */
   movable?: boolean;
+  /**
+   * Freeze the column against an edge of the viewport, so it stays put while the rest
+   * scrolls horizontally. For a column whose content must always be reachable — a
+   * per-row action menu on the right, an identity column on the left.
+   *
+   * Position within the frozen region still comes from the column order, so pair this
+   * with `movable: false` (and usually `alwaysVisible`) unless the user is meant to be
+   * able to drag it around or hide it.
+   */
+  pinned?: 'left' | 'right';
   filter?: IColumnFilter;
 }
 

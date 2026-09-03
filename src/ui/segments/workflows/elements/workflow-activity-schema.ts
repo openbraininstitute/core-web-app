@@ -11,6 +11,8 @@ import {
   SortDirection,
 } from '@/features/data-grid/core';
 import {
+  WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
+  WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
   WORKFLOW_ACTIVITY_DATE_RENDERER,
   WORKFLOW_ACTIVITY_STATUS_RENDERER,
   WORKFLOW_ACTIVITY_TYPE_RENDERER,
@@ -20,6 +22,7 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IAdvancedFilterGroup, IGridSchema } from '@/features/data-grid/core';
 import type { WorkspaceContext } from '@/types/common';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 /**
  * ORDERING SAFETY — every activity type is listed either from its own entity endpoint
@@ -69,6 +72,8 @@ const workflowActivityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
 ];
 
 export interface IWorkflowActivitySchemaArgs {
+  /** the selected activity, forwarded to the actions cell to build its hrefs */
+  activity: TActivityValue;
   /** activity label shown verbatim in every Category cell (Build, Simulation, …) */
   activityName: string;
   /** the listing's selected entity type, used as the Type cell's fallback title */
@@ -83,6 +88,7 @@ export interface IWorkflowActivitySchemaArgs {
  * owns, and a column's `cellRendererParams` is the only channel into a keyed renderer.
  */
 export function buildWorkflowActivitySchema({
+  activity,
   activityName,
   entityType,
   workspace,
@@ -166,6 +172,25 @@ export function buildWorkflowActivitySchema({
         cellRenderer: WORKFLOW_ACTIVITY_STATUS_RENDERER,
         cellRendererParams: { workspace },
         width: { minWidth: CAMPAIGN_STATUS_COLUMN_MIN_WIDTH, flex: 1 },
+      },
+      {
+        // The per-row action menu. Frozen right and locked down: it must stay reachable
+        // however far the row scrolls, and there is no state in which hiding, moving or
+        // resizing it helps.
+        id: 'actions',
+        header: 'Actions',
+        align: Align.Center,
+        getValue: () => '',
+        cellRenderer: WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
+        cellRendererParams: { activity, entityType },
+        pinned: 'right',
+        movable: false,
+        alwaysVisible: true,
+        width: {
+          width: WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
+          minWidth: WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
+          resizable: false,
+        },
       },
     ],
   };

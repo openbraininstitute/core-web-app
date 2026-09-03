@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
 import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
+import { ActivityValues } from '@/ui/segments/workflows/config';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -16,6 +17,7 @@ import type { IGridQuery, TFilterValue } from '@/features/data-grid/core';
 const TASK_CONFIG_ORDERING_FIELDS = ['creation_date', 'update_date', 'name'];
 
 const schema = buildWorkflowActivitySchema({
+  activity: ActivityValues.Build,
   activityName: 'Build',
   entityType: 'memodel' as TExtendedEntitiesTypeDict,
   workspace: { virtualLabId: 'vlab', projectId: 'proj' },
@@ -123,8 +125,39 @@ describe('workflow-activity schema — filter wire params', () => {
   });
 
   it('leaves the display-only columns without a filter', () => {
-    for (const id of ['category', 'type', 'creation_date', 'status']) {
+    for (const id of ['category', 'type', 'creation_date', 'status', 'actions']) {
       expect(schema.columns.find((c) => c.id === id)?.filter).toBeUndefined();
     }
+  });
+});
+
+describe('workflow-activity schema — the actions column', () => {
+  const actions = () => schema.columns.find((c) => c.id === 'actions');
+
+  it('is named, so the column chooser has a label for it', () => {
+    expect(actions()?.header).toBe('Actions');
+  });
+
+  it('is the last column, frozen to the right edge', () => {
+    expect(schema.columns.at(-1)?.id).toBe('actions');
+    expect(actions()?.pinned).toBe('right');
+  });
+
+  it('cannot be moved, hidden or resized', () => {
+    expect(actions()?.movable).toBe(false);
+    expect(actions()?.alwaysVisible).toBe(true);
+    expect(actions()?.width?.resizable).toBe(false);
+  });
+
+  it('carries no sort or filter, so it never reaches the query', () => {
+    expect(actions()?.sortable).toBeFalsy();
+    expect(serializeQuery(query(), schema).order_by).toBeUndefined();
+  });
+
+  it('passes the activity and entity type its menu needs to build hrefs', () => {
+    expect(actions()?.cellRendererParams).toMatchObject({
+      activity: ActivityValues.Build,
+      entityType: 'memodel',
+    });
   });
 });
