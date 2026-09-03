@@ -2,8 +2,6 @@ import {
   RiCameraLine,
   RiCloseLine,
   RiEqualizerLine,
-  RiFullscreenExitLine,
-  RiFullscreenLine,
   RiMoonFill,
   RiMoonLine,
   RiRefreshLine,
@@ -25,7 +23,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 export interface ViewerControlsMenuProps {
-  onFullscreen: () => void;
   onResetView: () => void;
   /** capture a PNG of the circuit canvas (excludes gizmo, scalebar, chrome) */
   onCaptureImage: () => void;
@@ -60,7 +57,6 @@ export interface ViewerControlsMenuProps {
   onResetConfig: () => void;
   /** portal target for the popover (fullscreen element); null → document.body */
   container?: HTMLElement | null;
-  isFullscreen?: boolean;
   className?: string;
 }
 
@@ -70,7 +66,6 @@ export interface ViewerControlsMenuProps {
  * right of the trigger
  */
 export function ViewerControlsMenu({
-  onFullscreen,
   onResetView,
   onCaptureImage,
   backgroundDark,
@@ -94,7 +89,6 @@ export function ViewerControlsMenu({
   hasSavedConfig,
   onResetConfig,
   container,
-  isFullscreen = false,
   className,
 }: ViewerControlsMenuProps) {
   const [open, setOpen] = useState(false);
@@ -121,11 +115,6 @@ export function ViewerControlsMenu({
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
-
-  const handleFullscreen = () => {
-    setOpen(false);
-    onFullscreen();
-  };
 
   const handleCaptureImage = () => {
     setOpen(false);
@@ -171,17 +160,6 @@ export function ViewerControlsMenu({
         className="w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl"
       >
         <div ref={contentRef}>
-          <MenuButton
-            icon={
-              isFullscreen ? (
-                <RiFullscreenExitLine className="size-4 shrink-0" />
-              ) : (
-                <RiFullscreenLine className="size-4 shrink-0" />
-              )
-            }
-            label={isFullscreen ? 'Exit full screen' : 'Full screen'}
-            onClick={handleFullscreen}
-          />
           <MenuButton
             icon={<RiRefreshLine className="size-4 shrink-0" />}
             label="Reset view"

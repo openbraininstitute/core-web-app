@@ -1,6 +1,12 @@
 'use client';
 
-import { RiBarChart2Line, RiBox3Line, RiLayoutRowLine } from '@remixicon/react';
+import {
+  RiBarChart2Line,
+  RiBox3Line,
+  RiFullscreenExitLine,
+  RiFullscreenLine,
+  RiLayoutRowLine,
+} from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
@@ -9,6 +15,11 @@ import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
+import {
+  toggleFullscreen,
+  useFullscreenElement,
+} from '@/features/scan-config/components/color-by/fullscreen';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
@@ -92,8 +103,10 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const [rasterHeight, setRasterHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState(0);
 
+  const rootRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<((timeInMs: number | null) => void) | null>(null);
+  const isFullscreen = useFullscreenElement() !== null;
   const liveTimeRef = useRef(data.timeRange.min);
 
   const {
@@ -249,9 +262,26 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const splitHeight = clampSplitHeight(rasterHeight, containerHeight);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    // Fullscreen takes the whole view — raster, replay and transport together —
+    // so the element blown up is this root rather than the 3D pane inside it,
+    // and the scene is left without a fullscreen button of its own. The white
+    // ground is the panel's, and the panel is outside the fullscreen element.
+    <div ref={rootRef} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
       <div className="mb-2 flex items-center gap-3 px-3 pt-3">
-        <ModeToggle options={modeOptions} />
+        <div className="flex items-center gap-2">
+          <ModeToggle options={modeOptions} />
+          <ChromeButton
+            label={isFullscreen ? 'Exit full screen' : 'Full screen'}
+            onClick={() => toggleFullscreen(rootRef.current)}
+            active={isFullscreen}
+          >
+            {isFullscreen ? (
+              <RiFullscreenExitLine className="size-4" />
+            ) : (
+              <RiFullscreenLine className="size-4" />
+            )}
+          </ChromeButton>
+        </div>
         {populationName && (
           <div className="flex min-w-0 items-center gap-2">
             {recorded && (
