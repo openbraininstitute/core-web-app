@@ -1,6 +1,7 @@
 import { RiArrowDownSLine, RiFullscreenExitLine, RiTableLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -14,7 +15,7 @@ import { useFullscreenElement } from './use-fullscreen-element';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
 import type { ViewerTheme } from './contrast';
-import type { ColorByControls } from './use-circuit-color-by';
+import type { ColorByControls, PopulationsControls } from './use-circuit-color-by';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 import styles from './chrome-animations.module.css';
@@ -39,6 +40,8 @@ export interface ICircuitViewerChromeProps {
     menu: ViewerControlsMenuProps;
     /** Omit to hide the color-by dropdown + legend. */
     colorBy?: ColorByControls;
+    /** Omit to hide the populations checklist. */
+    populations?: PopulationsControls;
     /**
      * Whether electrodes can actually be dragged/rotated. Read-only hosts pass
      * false so the interaction help does not advertise gestures that do nothing.
@@ -53,8 +56,9 @@ export interface ICircuitViewerChromeProps {
 
 /**
  * absolutely-positioned control layer over a circuit viewer: mode toggle +
- * table + settings (top-left), color-by dropdown + key (top-right). Sits above
- * the 3D canvas
+ * table + settings + populations checklist (top-left), color-by dropdown + key
+ * (top-right), and what the checklist can leave the scene in (centre and
+ * top-left). Sits above the 3D canvas
  */
 export function CircuitViewerChrome({
   modeToggle,
@@ -64,6 +68,7 @@ export function CircuitViewerChrome({
   viz,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
+  const populations = viz?.populations;
   const selectedProperty = colorBy?.selectedProperty ?? null;
   const showKey =
     selectedProperty &&
@@ -71,6 +76,22 @@ export function CircuitViewerChrome({
     colorBy?.mapping &&
     colorBy.mapping.mode !== 'none';
   const showLegendToggle = !!selectedProperty;
+  // Two states the checklist can leave the scene in, worked out here rather
+  // than in the viewers: the chrome is the one layer over both of them, and it
+  // already holds the way back.
+  const hiddenNames = new Set(populations?.hidden);
+  // Nothing drawn at all. Asked of a non-empty list, so a circuit declaring no
+  // populations does not read as a scene the user emptied.
+  const allHidden =
+    !!populations?.populations.length &&
+    populations.populations.every((p) => hiddenNames.has(p.name));
+  // The population being coloured and listed in the nodes table is not among
+  // what is drawn. Not worth saying when nothing is: the empty state says it of
+  // every population at once.
+  const hiddenSubject =
+    populations?.selected !== undefined && hiddenNames.has(populations.selected) && !allHidden
+      ? populations.selected
+      : undefined;
   // Keep viz chrome mounted across view switches; only hide it.
   const showVizChrome = viz != null && vizActive;
   const [legendOpen, setLegendOpen] = useState(false);
@@ -128,45 +149,82 @@ export function CircuitViewerChrome({
           <ZoomSlider zoom={viz.zoom.value} onZoomChange={viz.zoom.onChange} theme={theme} />
         </div>
       )}
-      <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2">
-        {modeToggle && <ModeToggle options={modeToggle} />}
-        {table && (
-          <ChromeButton
-            label={table.active ? 'Hide nodes table' : 'Show nodes table'}
-            onClick={table.onToggle}
-            active={table.active}
-          >
-            <RiTableLine className="size-4" />
-          </ChromeButton>
-        )}
-        {viz && (
-          <div
-            className={cn(
-              'flex items-center gap-2',
-              !showVizChrome && 'invisible pointer-events-none'
-            )}
-            aria-hidden={!showVizChrome}
-            inert={!showVizChrome || undefined}
-          >
-            {isFullscreen && (
-              <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
-                <RiFullscreenExitLine className="size-4" />
-              </ChromeButton>
-            )}
-            <ViewerControlsMenu
-              {...viz.menu}
-              container={portalContainer}
-              isFullscreen={isFullscreen}
-            />
-            {viz.menu.onToggleElectrodes &&
-              viz.menu.showElectrodes !== false &&
-              viz.electrodesInteractive !== false && (
-                <ElectrodeInteractionHelp container={portalContainer} />
+      {/* What the scene is made of: which populations are in it, the table
+          listing the one on show, and how it is drawn. A column, because the
+          checklist has something to say below itself. */}
+      <div
+        data-testid="viewer-chrome-left"
+        className="pointer-events-auto absolute left-3 top-3 flex flex-col items-start gap-2"
+      >
+        <div className="flex items-center gap-2">
+          {modeToggle && <ModeToggle options={modeToggle} />}
+          {table && (
+            <ChromeButton
+              label={table.active ? 'Hide nodes table' : 'Show nodes table'}
+              onClick={table.onToggle}
+              active={table.active}
+            >
+              <RiTableLine className="size-4" />
+            </ChromeButton>
+          )}
+          {viz && (
+            <div
+              className={cn(
+                'flex items-center gap-2',
+                !showVizChrome && 'invisible pointer-events-none'
               )}
-            {viz.morphologyLocationsInteractive && (
-              <MorphologyLocationHelp container={portalContainer} />
-            )}
-          </div>
+              aria-hidden={!showVizChrome}
+              inert={!showVizChrome || undefined}
+            >
+              {isFullscreen && (
+                <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
+                  <RiFullscreenExitLine className="size-4" />
+                </ChromeButton>
+              )}
+              <ViewerControlsMenu
+                {...viz.menu}
+                container={portalContainer}
+                isFullscreen={isFullscreen}
+              />
+              {/* Ahead of the help icons, which come and go with the mode: in a
+                  row anchored to the left edge, only what precedes an element
+                  can move it, and the pill's own width changes as populations
+                  are ticked off. */}
+              {populations && (
+                <PopulationsMenu
+                  populations={populations.populations}
+                  hidden={populations.hidden}
+                  onChange={populations.onChange}
+                  selected={populations.selected}
+                  onSelect={populations.onSelect}
+                  theme={theme}
+                  container={portalContainer}
+                  autoOpen={showVizChrome}
+                />
+              )}
+              {viz.menu.onToggleElectrodes &&
+                viz.menu.showElectrodes !== false &&
+                viz.electrodesInteractive !== false && (
+                  <ElectrodeInteractionHelp container={portalContainer} />
+                )}
+              {viz.morphologyLocationsInteractive && (
+                <MorphologyLocationHelp container={portalContainer} />
+              )}
+            </div>
+          )}
+        </div>
+        {showVizChrome && populations && hiddenSubject !== undefined && (
+          <ChromeNotice
+            action="Show"
+            onAction={() =>
+              populations.onChange(populations.hidden.filter((name) => name !== hiddenSubject))
+            }
+            theme={theme}
+            style={panelStyle}
+            className="px-3 py-1 text-xs"
+          >
+            “{hiddenSubject}” is selected but hidden
+          </ChromeNotice>
         )}
       </div>
 
@@ -184,7 +242,9 @@ export function CircuitViewerChrome({
               : undefined
           }
         >
-          <div ref={toolbarRef} className="flex items-center gap-1">
+          {/* Measured here rather than on the column, which holds the key that
+              is being sized from it. */}
+          <div ref={toolbarRef} data-testid="color-by-toolbar" className="flex items-center gap-1">
             <ColorByDropdown
               value={colorBy.selectedProperty}
               onChange={colorBy.onSelectProperty}
@@ -234,6 +294,63 @@ export function CircuitViewerChrome({
           )}
         </div>
       )}
+
+      {showVizChrome && allHidden && populations && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <ChromeNotice
+            action="Show all"
+            onAction={() => populations.onChange([])}
+            theme={theme}
+            style={panelStyle}
+            className="pointer-events-auto px-4 py-2 text-sm"
+          >
+            Every population is hidden
+          </ChromeNotice>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A line of status over the canvas, with the way out of it. Wears the chrome's
+ * own pill because it sits among the controls and over the same 3D scene: bare
+ * text would be read against whatever colour happens to be behind it.
+ */
+function ChromeNotice({
+  children,
+  action,
+  onAction,
+  theme,
+  style,
+  className,
+}: {
+  children: React.ReactNode;
+  /** Label of the button that undoes what the notice reports. */
+  action: string;
+  onAction: () => void;
+  theme?: ViewerTheme | null;
+  style?: React.CSSProperties;
+  className?: string;
+}) {
+  return (
+    <div
+      role="status"
+      style={style}
+      className={cn(
+        'flex items-center gap-2 rounded-full backdrop-blur-sm',
+        !theme && 'bg-white text-neutral-600 shadow-md ring-1 ring-black/5',
+        className
+      )}
+    >
+      <span>{children}</span>
+      <button
+        type="button"
+        onClick={onAction}
+        className={cn('font-semibold hover:underline', !theme && 'text-primary-9')}
+      >
+        {action}
+      </button>
     </div>
   );
 }

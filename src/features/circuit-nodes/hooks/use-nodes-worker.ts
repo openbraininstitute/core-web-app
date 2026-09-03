@@ -4,6 +4,7 @@ import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   IDLE_SESSION_STATE,
+  type NodesOpenParams,
   type NodesSessionState,
   nodesWorkerRegistry,
 } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
@@ -15,6 +16,7 @@ import type {
   NodeGeometryOptions,
   NodePopulation,
 } from '@/features/circuit-nodes/types';
+import type { WorkspaceContext } from '@/types/common';
 
 type Args = {
   enabled: boolean;
@@ -22,6 +24,39 @@ type Args = {
   circuitAssetId: string;
   population: NodePopulation | undefined;
 };
+
+/**
+ * Registry key of a population's session: one per circuit, asset and
+ * population. Every reader (the nodes table, colour-by, the viewers) shares
+ * the session, so the file is downloaded once.
+ */
+export function nodesSessionKey(
+  circuitId: string,
+  circuitAssetId: string,
+  populationName: string
+): string {
+  return `${circuitId}-${circuitAssetId}-${populationName}`;
+}
+
+/** Arguments for opening that session: the population, and a signed download of its file. */
+export function nodesOpenParams(
+  ctx: WorkspaceContext,
+  circuitId: string,
+  circuitAssetId: string,
+  population: NodePopulation
+): NodesOpenParams {
+  return {
+    populationKey: population.name,
+    buildRequest: () =>
+      buildAssetDownloadRequest({
+        ctx,
+        entityType: EntityTypeDict.Circuit,
+        entityId: circuitId,
+        id: circuitAssetId,
+        assetPath: population.file,
+      }),
+  };
+}
 
 /**
  * read a circuit's SONATA node population through a shared worker session
@@ -36,7 +71,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
 
   const key =
     enabled && population && circuitAssetId && circuitId
-      ? `${circuitId}-${circuitAssetId}-${population.name}`
+      ? nodesSessionKey(circuitId, circuitAssetId, population.name)
       : null;
 
   useEffect(() => {
@@ -45,20 +80,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
       return;
     }
 
-    const populationName = population.name;
-    const populationFile = population.file;
-    const buildRequest = async () => {
-      const { url, headers } = await buildAssetDownloadRequest({
-        ctx,
-        entityType: EntityTypeDict.Circuit,
-        entityId: circuitId,
-        id: circuitAssetId,
-        assetPath: populationFile,
-      });
-      return { url, headers };
-    };
-
-    nodesWorkerRegistry.acquire(key, { populationKey: populationName, buildRequest });
+    nodesWorkerRegistry.acquire(key, nodesOpenParams(ctx, circuitId, circuitAssetId, population));
     const sync = () => setState(nodesWorkerRegistry.getState(key));
     const unsubscribe = nodesWorkerRegistry.subscribe(key, sync);
     sync();

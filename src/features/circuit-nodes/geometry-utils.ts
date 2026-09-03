@@ -48,3 +48,21 @@ export function placementAt(geometry: NodeGeometry, index: number): NodePlacemen
       : IDENTITY_QUATERNION,
   };
 }
+
+/** Mean position of a population's nodes, or null when the population is empty. */
+export function centroidOf(geometry: NodeGeometry): [x: number, y: number, z: number] | null {
+  const { count, positions } = geometry;
+  if (count === 0) return null;
+
+  // Reads the array directly instead of going through `positionAt`, which
+  // would allocate a tuple per node.
+  let sx = 0;
+  let sy = 0;
+  let sz = 0;
+  for (let i = 0; i < count; i++) {
+    sx += positions[i * 3];
+    sy += positions[i * 3 + 1];
+    sz += positions[i * 3 + 2];
+  }
+  return [sx / count, sy / count, sz / count];
+}

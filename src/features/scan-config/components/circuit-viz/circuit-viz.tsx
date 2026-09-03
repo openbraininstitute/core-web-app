@@ -16,15 +16,21 @@ import {
   useMemodelVisualizationSource,
   useSmallCircuitSource,
 } from './sources';
+import { parseNodeKey } from './sources/node-key';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
-import type { MorphoViewerOverlayTransformEvent, MorphoViewerSignals } from '@/morpho-viewer';
+import type {
+  MorphoViewerOverlayTransformEvent,
+  MorphoViewerSignals,
+  MorphoViewerSmallCircuitCell,
+} from '@/morpho-viewer';
 import type { SmallCircuitSource } from './sources';
 
 import styles from './circuit-viz.module.css';
@@ -43,13 +49,29 @@ interface CircuitVizProps {
   circuit: ICircuit;
   /**
    * SONATA node population to draw. Host-owned and shared with colour-by, so
-   * `colorsByNode` stays indexed against the same nodes this draws.
+   * `nodeColors` stays indexed against the same nodes this draws.
    */
   population?: NodePopulation;
-  /** per-node colors aligned by node index; undefined → viewer default (blue). */
-  colorsByNode?: string[];
+  /** per-node colors (a palette + column per node); undefined → viewer default (blue). */
+  nodeColors?: NodeColors;
   /** default color for nodes with no property color (adapts to bg in adaptive mode). */
   defaultColor?: string;
+  /**
+   * Every population to draw, in declared order, including `population`. The
+   * others are drawn receded, keeping the morphologies of those that have any,
+   * or not at all when their nodes carry no positions.
+   */
+  populations: readonly NodePopulation[];
+  /**
+   * Populations taken out of the scene, by name. Here that is a real saving
+   * rather than a repaint: a hidden population contributes no cells, and the
+   * viewer only asks for the morphologies of cells it has been given.
+   */
+  hiddenPopulations?: readonly string[];
+  /** Colour for the populations that are not on show. */
+  recededColor?: string;
+  /** Called with the population name when a cell of another population is clicked. */
+  onPopulationClick?: (populationName: string) => void;
   showAxons: boolean;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
@@ -117,21 +139,58 @@ export interface IMorphologyLocationsBinding extends IFormBindingOptions {
  * file open in. Morphologies come from OBI-One `/circuit/viz`, whose sections carry the
  * `sonata_section_id` a click needs to become a morphology location.
  */
-export function CircuitVisualization(props: CircuitVizProps) {
+export function CircuitVisualization({
+  populations,
+  hiddenPopulations,
+  recededColor,
+  onPopulationClick,
+  ...props
+}: CircuitVizProps) {
   const source = useSmallCircuitSource({
     circuit: props.circuit,
     population: props.population,
+    populations,
+    hiddenPopulations,
     showAxons: props.showAxons,
-    colorsByNode: props.colorsByNode,
+    nodeColors: props.nodeColors,
     defaultColor: props.defaultColor,
+    recededColor,
     withSynapses: circuitDrawsSynapses(props.circuit.scale),
   });
-  return <CircuitVizView {...props} source={source} />;
+  const subjectName = props.population?.name;
+  const handleCellClick = useCallback(
+    (cell: MorphoViewerSmallCircuitCell | undefined) => {
+      const node = cell && parseNodeKey(cell.id);
+      if (node && node.population !== subjectName) onPopulationClick?.(node.population);
+    },
+    [subjectName, onPopulationClick]
+  );
+  return (
+    <CircuitVizView
+      {...props}
+      source={source}
+      onCellClick={onPopulationClick ? handleCellClick : undefined}
+    />
+  );
 }
 
 /** The view reads no entity fields, so it serves circuits and MEModels alike. */
-type TCircuitVizViewProps = Omit<CircuitVizProps, 'circuit'> & {
+type TCircuitVizViewProps = Omit<
+  CircuitVizProps,
+  // `nodeColors` and `defaultColor` feed `useSmallCircuitSource` in the
+  // wrapper; the view itself never reads them.
+  | 'circuit'
+  | 'population'
+  | 'populations'
+  | 'hiddenPopulations'
+  | 'recededColor'
+  | 'onPopulationClick'
+  | 'nodeColors'
+  | 'defaultColor'
+> & {
   source: SmallCircuitSource;
+  /** Whole-cell clicks, from the same pick pass as `cellHover`. */
+  onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
 };
 
 function CircuitVizView({
@@ -152,6 +211,7 @@ function CircuitVizView({
   dendrogram = false,
   onZoomChange,
   spikes,
+  onCellClick,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -161,13 +221,13 @@ function CircuitVizView({
     pickMode: locationPickMode,
   } = useMorphologyLocationSelection({
     ...morphologyLocations,
-    cells: source.cells,
+    cells: source.locationCells ?? source.cells,
     sonataSectionIds: source.sonataSectionIds,
     backgroundColor,
   });
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
-  const { cells, isLoading, error, loadCell, retry, synapses } = source;
+  const { cells, isLoading, error, loadCell, retry, synapses, anchor, download } = source;
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
 
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -185,18 +245,8 @@ function CircuitVizView({
 
   // Publish circuit centre so Add-electrode can seed origin_* in-view.
   useEffect(() => {
-    if (!cells.length) return;
-    let sx = 0;
-    let sy = 0;
-    let sz = 0;
-    for (const cell of cells) {
-      sx += cell.center[0];
-      sy += cell.center[1];
-      sz += cell.center[2];
-    }
-    const n = cells.length;
-    setCircuitSceneAnchor([sx / n, sy / n, sz / n]);
-  }, [cells, setCircuitSceneAnchor]);
+    if (anchor) setCircuitSceneAnchor(anchor);
+  }, [anchor, setCircuitSceneAnchor]);
 
   const scalebar = useMemo(
     () => resolveScalebar(showScalebar, scalebarColor),
@@ -248,7 +298,17 @@ function CircuitVizView({
     };
   }, [progress]);
 
-  const loading = !error && (isLoading || progress < 1 || !morphologiesPainted);
+  // Wait on the viewer's paint only where there is a viewer: with no cells it
+  // is never mounted, so its progress would never arrive and the indicator
+  // would sit for good over a scene the user emptied on purpose. Whether an
+  // empty scene is that or one still arriving is the source's to say.
+  const painting = cells.length > 0 && (progress < 1 || !morphologiesPainted);
+  const loading = !error && (isLoading || painting);
+
+  // What the second phase is counting. The scene already marks the cells with
+  // no morphology coming, and morphoviewer counts the rest, so the two agree
+  // without a second source of truth or a change to the viewer.
+  const morphologyCount = useMemo(() => cells.filter((cell) => !cell.somaOnly).length, [cells]);
 
   // Pass interactive metadata through; morphoviewer ignores unknown fields safely.
   const morphoOverlays = useMemo(
@@ -284,6 +344,12 @@ function CircuitVizView({
           signals={signals}
           circuit={cells}
           onCellHover={enableCellHover ? handleCellHover : undefined}
+          // Not while a location is being placed: morphoviewer dispatches the
+          // cell click and the location pick from the same tap, so a tap meant
+          // for a neurite would also put another population on show, recolouring
+          // the scene and swapping the nodes table under the user. The checklist
+          // still changes population.
+          onCellClick={locationPickMode ? undefined : onCellClick}
           locationSelection={locationSelection}
           highlightedCellIds={highlightedCellIds}
           loadCell={loadCell}
@@ -310,7 +376,12 @@ function CircuitVizView({
       )}
       <MorphologyLocationLabels labels={locationLabels} />
       <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
-      {loading && <VisualizationLoadingIndicator progress={progress} />}
+      {loading && (
+        <VisualizationLoadingIndicator
+          download={download}
+          morphologies={{ loaded: Math.round(progress * morphologyCount), total: morphologyCount }}
+        />
+      )}
       {error && (
         <div
           role="alert"
@@ -335,10 +406,7 @@ function CircuitVizView({
   );
 }
 
-type TMemodelVizProps = Omit<
-  TCircuitVizViewProps,
-  'source' | 'colorsByNode' | 'defaultColor' | 'population'
-> & {
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick'> & {
   memodelId: string;
 };
 

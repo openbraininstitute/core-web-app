@@ -101,19 +101,34 @@ export type OpenResponse = {
 };
 
 /**
+ * A whole column in node-index order, in the compact form the worker already
+ * holds it: a typed array for numeric columns (the synthetic node id is an
+ * identity `Uint32Array`), and the `@library` strings plus one library index
+ * per node for categorical ones. Only string columns cost a JS value per node.
+ *
+ * The arrays are fresh copies, so the worker can transfer them across the
+ * boundary instead of structured-cloning per-node values.
+ */
+export type ColumnValues =
+  | { kind: 'numeric'; values: Float32Array | Float64Array | Uint32Array }
+  | { kind: 'categorical'; library: string[]; indices: Uint32Array }
+  | { kind: 'string'; values: string[] };
+
+/**
  * Everything a 3D viewer needs from a node population, in one read.
  *
  * Flat typed arrays rather than per-node objects: they cross the worker
  * boundary as transferables, so a population of any size costs one detach
- * instead of a structured clone. `Float64Array` and not `Float32Array` because
- * these coordinates feed electrode placement maths, not just the paint.
+ * instead of a structured clone. `Float32Array` is enough for every reader,
+ * including electrode placement: micron coordinates spanning ~10⁴ µm keep
+ * ~10⁻³ µm of resolution in f32, at half the memory and transfer of f64.
  */
 export type NodeGeometry = {
   count: number;
   /** flat `[x, y, z, ...]`, one triple per node, in file order */
-  positions: Float64Array;
+  positions: Float32Array;
   /** flat `[x, y, z, w, ...]` quaternions; null when the population declares none */
-  orientations: Float64Array | null;
+  orientations: Float32Array | null;
   /**
    * Morphology name per node; null when not requested (see
    * {@link NodeGeometryOptions.withMorphologies}) or when the population has no
@@ -135,7 +150,7 @@ export type NodeGeometryOptions = {
   withMorphologies?: boolean;
   /**
    * Read the four `orientation_*` columns too. Off by default: they pack into a
-   * `count * 4` `Float64Array`, which is 128 MB on a four-million-node circuit
+   * `count * 4` `Float32Array`, which is 64 MB on a four-million-node circuit
    * and is packed, transferred and dropped again by any viewer that only places
    * somas.
    *

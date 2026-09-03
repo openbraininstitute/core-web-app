@@ -1,3 +1,4 @@
+import type { DownloadProgress } from '@/features/circuit-nodes/types';
 import type {
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
@@ -22,6 +23,12 @@ export type TSmallCircuitSource = {
   cells: MorphoViewerSmallCircuitCell[];
   loadCell: (cellId: string) => Promise<MorphoViewerSmallCircuitCellData | null>;
   isLoading: boolean;
+  /**
+   * Node-file bytes still coming, so the viewer can say what it is waiting for.
+   * Optional: an MEModel is served whole by `/memodel/viz` and reads no node
+   * files at all.
+   */
+  download?: DownloadProgress | null;
   /** Anything the source failed at — the node list or a morphology. */
   error: Error | null;
   /** Discard the failure and fetch again. */
@@ -33,4 +40,19 @@ export type TSmallCircuitSource = {
   synapses?: TSmallCircuitSynapseGroup[];
   /** Per loaded cell (by the id in {@link cells}): SONATA section id → the viewer's section name. */
   sonataSectionIds?: ReadonlyMap<string, ReadonlyMap<number, string>>;
+  /**
+   * The subset of {@link cells} a stored morphology location applies to: the
+   * population on show. A location is a section id and an offset with no cell
+   * of its own, so it can only be read against one population's morphologies.
+   * Every other population has section ids of its own, answering to nothing.
+   * Omitted where every cell is one, as for an MEModel.
+   */
+  locationCells?: MorphoViewerSmallCircuitCell[];
+  /**
+   * Centre of the population on show, used to place things near it: a new
+   * electrode seeds its origin here. Null until that population's nodes are
+   * placed. This is not the centre of {@link cells}, which may include context
+   * populations that would pull it away from the cells being recorded.
+   */
+  anchor: [x: number, y: number, z: number] | null;
 };

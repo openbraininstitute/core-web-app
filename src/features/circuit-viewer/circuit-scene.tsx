@@ -43,9 +43,11 @@ import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
+import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
+const NOTHING_HIDDEN: readonly string[] = [];
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 
@@ -109,8 +111,9 @@ interface ICircuitSceneOptions {
   dendrogram?: boolean;
   /**
    * The SONATA population to draw. Omit to let the scene pick one and let the
-   * nodes table switch it — a host only sets this when it has taken that choice
-   * over, which means it has also turned the table off.
+   * nodes table, or a click on another population in 3D, switch it. A host
+   * only sets this when it has taken that choice over, which means it has
+   * also turned the table off.
    */
   populationName?: string;
   /**
@@ -121,6 +124,14 @@ interface ICircuitSceneOptions {
    * cannot resolve the population once and keep it.
    */
   onPopulationChange?: (population: NodePopulation | undefined) => void;
+  /**
+   * Draw the circuit's other populations too, receded around the one on show,
+   * so that clicking any of them selects it, in the nodes table as well.
+   * Defaults on. Off draws only the population on show. Spike replay sets it
+   * off because its cell indices are relative to that population, so the other
+   * populations carry no spike data.
+   */
+  showUnselectedPopulations?: boolean;
 }
 
 export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
@@ -157,6 +168,7 @@ export function CircuitScene({
   dendrogram = false,
   populationName: hostPopulationName,
   onPopulationChange,
+  showUnselectedPopulations = true,
 }: ICircuitSceneProps) {
   const {
     config: scanConfig,
@@ -191,6 +203,16 @@ export function CircuitScene({
   useEffect(() => {
     onPopulationChange?.(population);
   }, [population, onPopulationChange]);
+
+  // What the viewers draw, in declared order: every population, or only the
+  // one on show.
+  const populations = useMemo((): readonly NodePopulation[] => {
+    if (showUnselectedPopulations) return circuitConfig?.nodes ?? [];
+    return population ? [population] : [];
+  }, [showUnselectedPopulations, circuitConfig, population]);
+  // A host that pins the population owns that choice, so 3D selection is off.
+  const handlePopulationClick =
+    hostPopulationName === undefined ? setTablePopulationName : undefined;
 
   // Every small-circuit source filters axon sections, so the toggle is offered wherever the
   // morphology itself is drawn.
@@ -240,15 +262,76 @@ export function CircuitScene({
     [setConfig, enableElectrodes, draggableOverlayIds]
   );
 
-  const { containerRef, config, colorsByNode, defaultColor, theme, signals, colorBy, menu } =
-    useCircuitColorBy(circuit, {
-      supportsAxons,
-      supportsElectrodes: enableElectrodes && electrodesAvailable,
-      supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
-      defaultNeuronOpacity,
-      population,
-      subject: memodel,
-    });
+  const {
+    containerRef,
+    config,
+    nodeColors,
+    defaultColor,
+    recededColor,
+    theme,
+    signals,
+    colorBy,
+    onHiddenPopulationsChange,
+    menu,
+  } = useCircuitColorBy(circuit, {
+    supportsAxons,
+    supportsElectrodes: enableElectrodes && electrodesAvailable,
+    supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
+    defaultNeuronOpacity,
+    population,
+    subject: memodel,
+  });
+
+  // Offered only where the other populations are on screen to begin with, and
+  // only where there is more than one: with a single population, hiding it is
+  // the empty scene and nothing else. That is the same condition that decides
+  // whether clicking a population in 3D selects it.
+  const hasPopulationsChecklist =
+    showUnselectedPopulations && (circuitConfig?.nodes?.length ?? 0) > 1;
+
+  // A virtual population is an input to the circuit rather than part of it, so
+  // it starts out of the scene. Never the one on show: that leaves nothing to
+  // look at, and a circuit declaring a single population has no checklist to
+  // bring it back. `null` is the checklist untouched, the only state the
+  // default applies to; `[]` is the user asking for all of them.
+  //
+  // Nothing is hidden where that checklist is not drawn, whatever the circuit's
+  // stored setting says: it is the only way back, and the notices reporting a
+  // hidden selection or an empty scene come from it too. The setting is per
+  // circuit, so a population hidden in the standalone viewer would otherwise
+  // empty the scene of spike replay, which pins its own population.
+  const hiddenPopulations = useMemo(
+    () =>
+      hasPopulationsChecklist
+        ? (config.hiddenPopulations ??
+          populations
+            .filter((p) => p.type === 'virtual' && p.name !== population?.name)
+            .map((p) => p.name))
+        : NOTHING_HIDDEN,
+    [hasPopulationsChecklist, config.hiddenPopulations, populations, population?.name]
+  );
+
+  const populationsControl = useMemo((): PopulationsControls | undefined => {
+    const nodes = circuitConfig?.nodes;
+    if (!hasPopulationsChecklist || !nodes) return undefined;
+    return {
+      populations: nodes,
+      hidden: hiddenPopulations,
+      onChange: onHiddenPopulationsChange,
+      // The resolved name, not what the host or the table asked for: with
+      // neither naming one, the scene falls back to the first population, and
+      // that is the one on show.
+      selected: population?.name,
+      onSelect: handlePopulationClick,
+    };
+  }, [
+    hasPopulationsChecklist,
+    circuitConfig,
+    hiddenPopulations,
+    onHiddenPopulationsChange,
+    population?.name,
+    handlePopulationClick,
+  ]);
 
   // Selecting the block an overlay came from highlights it, whichever root
   // element that block lives under (`electrode_locations` while building an
@@ -335,7 +418,7 @@ export function CircuitScene({
   const zoom = useViewerZoom(signals);
 
   // Props shared by both viz surfaces. An MEModel has no colour-by, so
-  // `colorsByNode` and `defaultColor` stay on the circuit branch.
+  // `nodeColors` and `defaultColor` stay on the circuit branch.
   //
   // Memoised explicitly, not left to the compiler: a zoom tick changes this object, and a
   // fresh one re-renders the 3D surface every frame of a scroll-zoom.
@@ -396,10 +479,23 @@ export function CircuitScene({
   );
 
   return (
-    // Transparent to the pointer as a whole: whatever a host stacks underneath —
-    // a designer image, a raster — has to stay clickable through the gaps. The
-    // canvas and the chrome buttons each opt back in.
-    <div ref={containerRef} className="pointer-events-none relative h-full min-h-0 overflow-hidden">
+    <div
+      ref={containerRef}
+      className={classNames(
+        'relative h-full min-h-0 overflow-hidden',
+        // Transparent to the pointer as a whole: whatever a host stacks
+        // underneath, a designer image or a raster, has to stay clickable
+        // through the gaps. The canvas and the chrome buttons each opt back in.
+        //
+        // Not in fullscreen, where this element is also what the chrome portals
+        // its panels into. `pointer-events` inherits, so the populations and
+        // colour-by menus opened over a canvas that swallowed every click aimed
+        // at them: the click landed outside the panel and closed it, reading as
+        // the panel dismissing itself. There is nothing stacked under a
+        // fullscreen element to keep reachable anyway.
+        portalContainer ? 'pointer-events-auto' : 'pointer-events-none'
+      )}
+    >
       <div
         className={classNames(
           'absolute inset-0',
@@ -413,7 +509,11 @@ export function CircuitScene({
             key={circuit.id}
             circuit={circuit}
             population={population}
-            colorsByNode={enableColorBy ? colorsByNode : undefined}
+            populations={populations}
+            hiddenPopulations={hiddenPopulations}
+            nodeColors={enableColorBy ? nodeColors : undefined}
+            recededColor={recededColor}
+            onPopulationClick={handlePopulationClick}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
             showScalebar={config.showScalebar}
@@ -440,8 +540,12 @@ export function CircuitScene({
               key={circuit.id}
               circuit={circuit}
               population={population}
-              colorsByNode={enableColorBy ? colorsByNode : undefined}
+              populations={populations}
+              hiddenPopulations={hiddenPopulations}
+              nodeColors={enableColorBy ? nodeColors : undefined}
               defaultColor={defaultColor}
+              recededColor={recededColor}
+              onPopulationClick={handlePopulationClick}
               {...sharedVizProps}
             />
           )
@@ -456,6 +560,7 @@ export function CircuitScene({
         viz={{
           menu,
           colorBy: enableColorBy ? colorBy : undefined,
+          populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,
           // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
