@@ -42,7 +42,10 @@ export function GridPagination<Row>({
   const options = controller.schema.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
 
   return (
-    <div className={cn('flex items-center justify-center gap-3', className)}>
+    <div
+      data-testid="data-grid-pagination"
+      className={cn('flex items-center justify-center gap-3', className)}
+    >
       <Pagination
         className={cn(
           'flex items-center gap-1',
@@ -68,7 +71,11 @@ export function GridPagination<Row>({
           controller.store.dispatch({ type: GridActionType.SetPageSize, pageSize: Number(v) })
         }
       >
-        <SelectTrigger size="sm" className={GRID_SELECT_TRIGGER_CLASS}>
+        <SelectTrigger
+          data-testid="data-grid-page-size"
+          size="sm"
+          className={GRID_SELECT_TRIGGER_CLASS}
+        >
           {/* render the label explicitly — Radix can't derive it until the menu opens once */}
           <SelectValue>{pageSize} / page</SelectValue>
         </SelectTrigger>

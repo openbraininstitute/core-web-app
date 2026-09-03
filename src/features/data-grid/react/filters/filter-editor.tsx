@@ -274,7 +274,10 @@ export function FilterEditor({
 
       {operatorIds.length > 1 && (
         <Select value={operator} onValueChange={onOperatorChange}>
-          <SelectTrigger className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}>
+          <SelectTrigger
+            data-testid="column-filter-operator"
+            className={cn('h-9 w-full', GRID_SELECT_TRIGGER_CLASS)}
+          >
             <SelectValue>{ctx.operators.get(operator).label}</SelectValue>
           </SelectTrigger>
           <SelectContent className={GRID_SELECT_CONTENT_MATCH_TRIGGER_CLASS}>
@@ -321,6 +324,7 @@ export function FilterEditor({
         ) : (
           <Input
             autoFocus
+            data-testid="column-filter-value"
             className={INPUT_CLASS}
             placeholder={placeholder}
             value={pending.kind === FilterValueKind.Text ? pending.text : ''}
@@ -333,6 +337,7 @@ export function FilterEditor({
       {uiKind === OperatorUiKind.Number && (
         <Input
           type="number"
+          data-testid="column-filter-value"
           className={INPUT_CLASS}
           placeholder={placeholder}
           value={
@@ -353,6 +358,7 @@ export function FilterEditor({
         <div className="flex items-center gap-2">
           <Input
             type="number"
+            data-testid="column-filter-min"
             className={INPUT_CLASS}
             placeholder="Min"
             value={
@@ -374,6 +380,7 @@ export function FilterEditor({
           <span className="text-gray-300">–</span>
           <Input
             type="number"
+            data-testid="column-filter-max"
             className={INPUT_CLASS}
             placeholder="Max"
             value={
@@ -464,6 +471,7 @@ export function FilterEditor({
       <div className="mt-0.5 flex items-center justify-between border-t border-gray-100 pt-3">
         <button
           type="button"
+          data-testid="column-filter-reset"
           className="text-[13px] font-medium text-gray-500 underline-offset-2 hover:text-gray-800 hover:underline"
           onClick={onReset}
         >
@@ -471,6 +479,7 @@ export function FilterEditor({
         </button>
         <button
           type="button"
+          data-testid="column-filter-apply"
           disabled={applyBlocked}
           className={cn(
             'rounded-xl px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-colors',
@@ -591,6 +600,7 @@ function SetEditor({
   return (
     <div className="flex max-h-72 w-full flex-col gap-2">
       <Input
+        data-testid="column-filter-search"
         className={INPUT_CLASS}
         placeholder="Search…"
         value={query}
@@ -601,6 +611,7 @@ function SetEditor({
           type="button"
           className="text-primary-6 hover:text-primary-7"
           // Accumulates like `toggle`: adds the visible matches to the current selection.
+          data-testid="column-filter-select-all"
           onClick={() => onChange([...new Set([...selectedSet, ...visible.map((o) => o.value)])])}
         >
           Select all
@@ -608,6 +619,7 @@ function SetEditor({
         <button
           type="button"
           className="text-gray-400 hover:text-gray-600"
+          data-testid="column-filter-clear"
           onClick={() => onChange([])}
         >
           Clear
@@ -617,10 +629,19 @@ function SetEditor({
         {loading ? (
           <div className="py-3 text-center text-xs text-gray-400">Loading…</div>
         ) : visible.length === 0 ? (
-          <div className="py-3 text-center text-xs text-gray-400">No options</div>
+          <div
+            data-testid="column-filter-no-options"
+            className="py-3 text-center text-xs text-gray-400"
+          >
+            No options
+          </div>
         ) : (
           visible.map((o) => (
-            <div key={o.id} className="rounded-lg px-1.5 py-1 hover:bg-gray-50">
+            <div
+              key={o.id}
+              data-testid="column-filter-option"
+              className="rounded-lg px-1.5 py-1 hover:bg-gray-50"
+            >
               {/* biome-ignore lint/a11y/noLabelWithoutControl: the checkbox is nested as the control */}
               <label
                 className={cn('flex cursor-pointer items-center gap-2 text-sm')}
@@ -637,7 +658,10 @@ function SetEditor({
                   <span className="flex-1 truncate text-primary-8">{o.label}</span>
                 )}
                 {o.count != null && (
-                  <span className="shrink-0 rounded-full bg-gray-100 px-1.5 text-[11px] text-gray-500">
+                  <span
+                    data-testid="column-filter-option-count"
+                    className="shrink-0 rounded-full bg-gray-100 px-1.5 text-[11px] text-gray-500"
+                  >
                     {o.count}
                   </span>
                 )}
