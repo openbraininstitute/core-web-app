@@ -115,6 +115,7 @@ export function GridSearch({ onSearch, openOnMount = false, className, value }: 
         <div className="flex h-10 w-64 items-center rounded-r-full bg-white pr-1.5">
           <input
             ref={inputRef}
+            data-testid="data-grid-search"
             type="text"
             value={text}
             onChange={onChange}
