@@ -1,19 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
-const listeners = new Set<() => void>();
-
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-/** One `fullscreenchange` listener for the app: every tooltip reads this. */
 function subscribe(onChange: () => void) {
-  if (listeners.size === 0) document.addEventListener('fullscreenchange', emit);
-  listeners.add(onChange);
-  return () => {
-    listeners.delete(onChange);
-    if (listeners.size === 0) document.removeEventListener('fullscreenchange', emit);
-  };
+  document.addEventListener('fullscreenchange', onChange);
+  return () => document.removeEventListener('fullscreenchange', onChange);
 }
 
 const getSnapshot = () => (document.fullscreenElement as HTMLElement | null) ?? null;
@@ -32,4 +21,12 @@ export function toggleFullscreen(element: HTMLElement | null) {
   } else {
     void element.requestFullscreen?.();
   }
+}
+
+/**
+ * Mount node for antd popups, which take a callback rather than a hook. Same
+ * fallback as the Radix molecules: whatever is fullscreen, else the body.
+ */
+export function fullscreenPopupContainer(): HTMLElement {
+  return (document.fullscreenElement as HTMLElement | null) ?? document.body;
 }

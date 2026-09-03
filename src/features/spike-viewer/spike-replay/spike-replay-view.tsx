@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  RiBarChart2Line,
-  RiBox3Line,
-  RiFullscreenExitLine,
-  RiFullscreenLine,
-  RiLayoutRowLine,
-} from '@remixicon/react';
+import { RiBarChart2Line, RiBox3Line, RiLayoutRowLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
@@ -15,7 +9,7 @@ import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
-import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
+import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
@@ -23,7 +17,7 @@ import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-rende
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { classNames } from '@/util/utils';
-import { toggleFullscreen, useFullscreenElement } from '@/utils/fullscreen';
+import { toggleFullscreen } from '@/utils/fullscreen';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -103,7 +97,6 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<((timeInMs: number | null) => void) | null>(null);
-  const isFullscreen = useFullscreenElement() !== null;
   const liveTimeRef = useRef(data.timeRange.min);
 
   const {
@@ -260,23 +253,12 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
 
   return (
     // This root goes fullscreen, not the 3D pane inside it, so the raster and
-    // transport bar go with it; the scene is handed no fullscreen button of its
-    // own. The white ground comes from the panel outside.
+    // transport bar go with it; the scene is handed no fullscreen button of its own.
     <div ref={rootRef} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
       <div className="mb-2 flex items-center gap-3 px-3 pt-3">
         <div className="flex items-center gap-2">
           <ModeToggle options={modeOptions} />
-          <ChromeButton
-            label={isFullscreen ? 'Exit full screen' : 'Full screen'}
-            onClick={() => toggleFullscreen(rootRef.current)}
-            active={isFullscreen}
-          >
-            {isFullscreen ? (
-              <RiFullscreenExitLine className="size-4" />
-            ) : (
-              <RiFullscreenLine className="size-4" />
-            )}
-          </ChromeButton>
+          <FullscreenButton onToggle={() => toggleFullscreen(rootRef.current)} />
         </div>
         {populationName && (
           <div className="flex min-w-0 items-center gap-2">

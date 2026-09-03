@@ -33,7 +33,6 @@ import {
 } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use-viewer-zoom';
 import { classNames } from '@/util/utils';
-import { useFullscreenElement } from '@/utils/fullscreen';
 
 import { PaneResizeHandle } from './pane-resize-handle';
 
@@ -196,8 +195,6 @@ export function CircuitScene({
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
-
-  const portalContainer = useFullscreenElement();
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [tablePopulationName, setTablePopulationName] = useState<string | undefined>();
@@ -491,9 +488,7 @@ export function CircuitScene({
       ref={containerRef}
       // Transparent to the pointer as a whole: whatever a host stacks
       // underneath, a designer image or a raster, has to stay clickable through
-      // the gaps. The canvas and the chrome buttons each opt back in. In
-      // fullscreen too: the element blown up is the host's, an ancestor of this
-      // one.
+      // the gaps. The canvas and the chrome buttons each opt back in.
       className="pointer-events-none relative h-full min-h-0 overflow-hidden"
     >
       <div
@@ -592,7 +587,6 @@ export function CircuitScene({
             circuit={circuit}
             populationName={populationName}
             onPopulationChange={setTablePopulationName}
-            portalContainer={portalContainer}
           />
         </div>
       )}

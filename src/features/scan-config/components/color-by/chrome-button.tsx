@@ -1,5 +1,8 @@
+import { RiFullscreenExitLine, RiFullscreenLine } from '@remixicon/react';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
+import { useFullscreenElement } from '@/utils/fullscreen';
 
 /**
  * A round icon button for the viewer chrome: white and shadowed so it reads over
@@ -44,5 +47,28 @@ export function ChromeButton({
         {label}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+/**
+ * The one fullscreen control a view offers. Which element is blown up is the
+ * host's business, so it passes `onToggle`; what state that left it in is read
+ * here.
+ */
+export function FullscreenButton({ onToggle }: { onToggle: () => void }) {
+  const isFullscreen = useFullscreenElement() !== null;
+
+  return (
+    <ChromeButton
+      label={isFullscreen ? 'Exit full screen' : 'Full screen'}
+      onClick={onToggle}
+      active={isFullscreen}
+    >
+      {isFullscreen ? (
+        <RiFullscreenExitLine className="size-4" />
+      ) : (
+        <RiFullscreenLine className="size-4" />
+      )}
+    </ChromeButton>
   );
 }

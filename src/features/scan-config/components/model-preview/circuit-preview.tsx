@@ -11,7 +11,7 @@ import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
-import { toggleFullscreen } from '@/utils/fullscreen';
+import { fullscreenPopupContainer, toggleFullscreen } from '@/utils/fullscreen';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -143,8 +143,7 @@ export function CircuitPreview({
 
   return (
     // The wrapper goes fullscreen, not the scene inside it, so the designer
-    // image beside the scene is still on screen there. Corners and ground come
-    // from the panel outside, which fullscreen leaves behind.
+    // image beside the scene is still on screen there.
     <div
       ref={previewRef}
       className="relative h-full min-h-0 overflow-hidden rounded-2xl [&:fullscreen]:rounded-none [&:fullscreen]:bg-white"
@@ -221,6 +220,7 @@ export function CircuitImage({ className, circuit }: { className?: string; circu
             <AntdImage
               src={data}
               alt="Circuit preview"
+              preview={{ getContainer: fullscreenPopupContainer }}
               className="block! w-full! h-full!"
               style={{ width: '100%', height: '100%', display: 'block' }}
             />

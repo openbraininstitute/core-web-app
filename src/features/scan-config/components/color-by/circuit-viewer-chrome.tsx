@@ -1,20 +1,13 @@
-import {
-  RiAlertLine,
-  RiArrowDownSLine,
-  RiFullscreenExitLine,
-  RiFullscreenLine,
-  RiTableLine,
-} from '@remixicon/react';
+import { RiAlertLine, RiArrowDownSLine, RiTableLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
 import { cn } from '@/utils/css-class';
-import { useFullscreenElement } from '@/utils/fullscreen';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { MorphologyLocationHelp } from '../circuit-viz/morphology-location/help';
 import { ZoomSlider } from '../zoom-slider/zoom-slider';
-import { ChromeButton } from './chrome-button';
+import { ChromeButton, FullscreenButton } from './chrome-button';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
@@ -38,11 +31,7 @@ export interface ICircuitViewerChromeProps {
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
   table?: { active: boolean; onToggle: () => void };
-  /**
-   * Fullscreen toggle, beside the table one and visible in every view. The host
-   * supplies it because what goes fullscreen is more than the 3D scene; omit to
-   * leave the button out.
-   */
+  /** Fullscreen toggle, beside the table one and visible in every view. Omit to leave it out. */
   onToggleFullscreen?: () => void;
   /**
    * 3D chrome (settings + color-by). Kept mounted across mode switches; hidden
@@ -110,10 +99,6 @@ export function CircuitViewerChrome({
   const [legendOpen, setLegendOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarWidth, setToolbarWidth] = useState<number>();
-  // Portalled overlays must render inside the fullscreen element to stay visible
-  // in fullscreen; null → the browser default (document.body).
-  const portalContainer = useFullscreenElement();
-  const isFullscreen = portalContainer !== null;
 
   useEffect(() => {
     setLegendOpen(!!selectedProperty);
@@ -178,19 +163,7 @@ export function CircuitViewerChrome({
             <RiTableLine className="size-4" />
           </ChromeButton>
         )}
-        {onToggleFullscreen && (
-          <ChromeButton
-            label={isFullscreen ? 'Exit full screen' : 'Full screen'}
-            onClick={onToggleFullscreen}
-            active={isFullscreen}
-          >
-            {isFullscreen ? (
-              <RiFullscreenExitLine className="size-4" />
-            ) : (
-              <RiFullscreenLine className="size-4" />
-            )}
-          </ChromeButton>
-        )}
+        {onToggleFullscreen && <FullscreenButton onToggle={onToggleFullscreen} />}
         {viz && (
           <div
             className={cn(
@@ -200,7 +173,7 @@ export function CircuitViewerChrome({
             aria-hidden={!showVizChrome}
             inert={!showVizChrome || undefined}
           >
-            <ViewerControlsMenu {...viz.menu} container={portalContainer} />
+            <ViewerControlsMenu {...viz.menu} />
             {/* Ahead of the help icons, which come and go with the mode: in a
                 row anchored to the left edge, only what precedes an element can
                 move it, and the pill's own width changes as populations are
@@ -213,18 +186,13 @@ export function CircuitViewerChrome({
                 selected={populations.selected}
                 onSelect={populations.onSelect}
                 theme={theme}
-                container={portalContainer}
                 autoOpen={showVizChrome}
               />
             )}
             {viz.menu.onToggleElectrodes &&
               viz.menu.showElectrodes !== false &&
-              viz.electrodesInteractive !== false && (
-                <ElectrodeInteractionHelp container={portalContainer} />
-              )}
-            {viz.morphologyLocationsInteractive && (
-              <MorphologyLocationHelp container={portalContainer} />
-            )}
+              viz.electrodesInteractive !== false && <ElectrodeInteractionHelp />}
+            {viz.morphologyLocationsInteractive && <MorphologyLocationHelp />}
           </div>
         )}
       </div>
@@ -272,7 +240,6 @@ export function CircuitViewerChrome({
               error={colorBy.propertiesError}
               onRetry={colorBy.onRetryProperties}
               theme={theme}
-              container={portalContainer}
             />
             {showLegendToggle && (
               <button
@@ -307,7 +274,6 @@ export function CircuitViewerChrome({
                 mapping={colorBy.mapping}
                 onChangeCategoryColor={colorBy.onChangeCategoryColor}
                 theme={theme}
-                container={portalContainer}
               />
             </div>
           )}

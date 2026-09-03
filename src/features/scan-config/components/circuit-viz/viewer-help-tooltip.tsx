@@ -12,15 +12,12 @@ export function ViewerHelpTooltip({
   label,
   title,
   children,
-  container,
   width = 'w-64',
 }: {
   /** Accessible name for the trigger. */
   label: string;
   title: string;
   children: ReactNode;
-  /** Portal target while fullscreen; null → document.body. */
-  container?: HTMLElement | null;
   width?: string;
 }) {
   return (
@@ -43,7 +40,6 @@ export function ViewerHelpTooltip({
         side="right"
         sideOffset={8}
         showArrow={false}
-        portalProps={container ? { container } : undefined}
         className={cn(
           width,
           'rounded-xl border border-neutral-200 bg-white p-3 text-left shadow-xl text-neutral-800'

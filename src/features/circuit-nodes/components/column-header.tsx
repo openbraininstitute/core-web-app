@@ -9,6 +9,7 @@ import { Dropdown } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
+import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { CustomHeaderProps } from 'ag-grid-react';
 import type { MenuProps } from 'antd';
@@ -162,7 +163,7 @@ export function ColumnHeader(props: Props) {
       trigger={['click']}
       placement="bottomRight"
       overlayClassName={styles.columnMenu}
-      getPopupContainer={() => (document.fullscreenElement as HTMLElement | null) ?? document.body}
+      getPopupContainer={fullscreenPopupContainer}
     >
       <button type="button" className={styles.iconButton} aria-label="Column menu">
         <RiMore2Fill size={14} />

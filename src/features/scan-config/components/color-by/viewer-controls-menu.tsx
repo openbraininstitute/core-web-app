@@ -55,8 +55,6 @@ export interface ViewerControlsMenuProps {
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
-  /** portal target for the popover (fullscreen element); null → document.body */
-  container?: HTMLElement | null;
   className?: string;
 }
 
@@ -88,7 +86,6 @@ export function ViewerControlsMenu({
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
-  container,
   className,
 }: ViewerControlsMenuProps) {
   const [open, setOpen] = useState(false);
@@ -111,10 +108,11 @@ export function ViewerControlsMenu({
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
     const onFullscreenChange = () => setOpen(false);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
+  }, [open]);
 
   const handleCaptureImage = () => {
     setOpen(false);
@@ -153,7 +151,6 @@ export function ViewerControlsMenu({
         </TooltipContent>
       </Tooltip>
       <PopoverContent
-        container={container}
         side="right"
         align="start"
         sideOffset={8}
