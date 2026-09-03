@@ -61,8 +61,6 @@ function SelectContent({
   /** Portal mount node. Defaults to whatever is fullscreen, else the body. */
   container?: HTMLElement | null;
 }) {
-  // See the note in `PopoverContent`: the body is outside the fullscreen
-  // subtree, so a menu portalled there is not drawn.
   const fullscreen = useFullscreenElement();
 
   return (

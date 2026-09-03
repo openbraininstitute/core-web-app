@@ -3,11 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 
-/**
- * A panel portalled to the body while a viewer is fullscreen sits outside the
- * fullscreen subtree, and the browser draws none of it. jsdom has no fullscreen
- * API, so the element is stubbed onto the document the store reads it from.
- */
+/** jsdom has no fullscreen API, so stub the property the store reads. */
 function setFullscreenElement(element: Element | null) {
   Object.defineProperty(document, 'fullscreenElement', {
     configurable: true,

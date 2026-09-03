@@ -6,11 +6,7 @@ function emit() {
   for (const listener of listeners) listener();
 }
 
-/**
- * One `fullscreenchange` listener for the whole app, however many components
- * ask. Every portalled panel reads this to find its mount node, so a listener
- * apiece would mean one per tooltip on the page.
- */
+/** One `fullscreenchange` listener for the app: every tooltip reads this. */
 function subscribe(onChange: () => void) {
   if (listeners.size === 0) document.addEventListener('fullscreenchange', emit);
   listeners.add(onChange);
@@ -23,11 +19,7 @@ function subscribe(onChange: () => void) {
 const getSnapshot = () => (document.fullscreenElement as HTMLElement | null) ?? null;
 const getServerSnapshot = () => null;
 
-/**
- * The element currently displayed fullscreen (or null). Portalled overlays must
- * render inside this element to be visible in fullscreen — anything portalled to
- * `document.body` sits outside the fullscreen subtree and the browser hides it.
- */
+/** The element currently displayed fullscreen, or null. */
 export function useFullscreenElement(): HTMLElement | null {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
