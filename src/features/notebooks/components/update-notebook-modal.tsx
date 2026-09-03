@@ -38,6 +38,7 @@ import {
   patchNotebookMetadataInProjects,
   syncNotebookToProjects,
 } from '@/services/notebooks/sync-template-notebooks';
+import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
@@ -567,14 +568,7 @@ export function UpdateNotebookModal({
       return studentProjects;
     },
     onSuccess: async (studentProjects) => {
-      await queryClient.invalidateQueries({
-        predicate: (query) => {
-          const first = query.queryKey[0] as
-            | { context?: { extendedEntityType?: string } }
-            | undefined;
-          return first?.context?.extendedEntityType === record.type;
-        },
-      });
+      await invalidateExtendedEntityQueries(queryClient, record.type);
       await queryClient.invalidateQueries({ queryKey: ['update-notebook-assets', record.id] });
       await queryClient.invalidateQueries({
         queryKey: ['update-notebook-contributions', record.id],

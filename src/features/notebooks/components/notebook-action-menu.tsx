@@ -22,6 +22,7 @@ import { type TViewVariant, ViewVariant } from '@/constants';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
+import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { cn } from '@/utils/css-class';
 
@@ -95,14 +96,7 @@ export function NotebookActionMenu({
         context: ctx,
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        predicate(query) {
-          const first = query.queryKey[0] as
-            | { context?: { extendedEntityType?: string } }
-            | undefined;
-          return first?.context?.extendedEntityType === entity.type;
-        },
-      });
+      await invalidateExtendedEntityQueries(queryClient, entity.type);
       notification.success({
         message: 'Deleted successfully',
         description: `The ${isTemplate ? 'notebook' : 'result'} has been successfully deleted.`,

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { get } from 'es-toolkit/compat';
 
 import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
 import {
@@ -11,13 +10,13 @@ import {
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS } from '@/ui/segments/contribute/analysis-notebook-template/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
 import { getNotebookFiles } from './steps/assets';
 
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type { TAnalysisNotebookTemplateForm } from '@/ui/segments/contribute/analysis-notebook-template/schema';
 import type {
   IMutationKeyConfig,
@@ -33,21 +32,7 @@ export function useAnalysisNotebookTemplatePipeline({
   const { projectId, virtualLabId } = useWorkspace();
 
   const invalidateNotebookQueries = () =>
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const firstKeySegment = query.queryKey[0];
-
-        const matchesEntityCount =
-          firstKeySegment ===
-          `data-entity-count-${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}`;
-
-        const matchesExtendedEntity =
-          get(firstKeySegment as ExtendedEntityTypeQueryKey[0], 'context.extendedEntityType') ===
-          ExtendedEntitiesTypeDict.AnalysisNotebookTemplate;
-
-        return matchesEntityCount || matchesExtendedEntity;
-      },
-    });
+    invalidateExtendedEntityQueries(queryClient, ExtendedEntitiesTypeDict.AnalysisNotebookTemplate);
 
   const createNotebookAsync = useMutation({
     mutationFn: (values: TAnalysisNotebookTemplateForm) =>

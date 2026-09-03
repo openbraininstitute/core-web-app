@@ -3,7 +3,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { compact, get } from 'es-toolkit/compat';
+import { compact } from 'es-toolkit/compat';
 
 import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 import { createExperimentalSynapsesPerConnection } from '@/api/entitycore/queries/experimental/synapses-per-connection';
@@ -11,13 +11,13 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 // NOTE: The import for MeasurementUnit has been intentionally removed as it was failing to resolve at runtime.
+import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS } from '@/ui/segments/contribute/synapses-per-connection/config';
 
 import type { z } from 'zod';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -78,26 +78,10 @@ export function useExperimentalSynapsesPerConnectionPipeline({
     },
 
     onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          predicate(query) {
-            return (
-              query.queryKey.at(0) ===
-              `data-entity-count-${ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection}`
-            );
-          },
-        }),
-        queryClient.invalidateQueries({
-          predicate(query) {
-            return (
-              get(
-                (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
-              ) === ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection
-            );
-          },
-        }),
-      ]);
+      await invalidateExtendedEntityQueries(
+        queryClient,
+        ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection
+      );
     },
   });
 

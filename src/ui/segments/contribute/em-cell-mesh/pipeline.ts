@@ -1,7 +1,6 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { get } from 'es-toolkit/compat';
 
 import { createEMCellMesh } from '@/api/entitycore/queries';
 import {
@@ -11,6 +10,7 @@ import {
 import { createAsset } from '@/api/entitycore/queries/assets';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EM_CELL_MESH_PROGRESS_STEPS } from '@/ui/segments/contribute/em-cell-mesh/config';
 import {
@@ -19,7 +19,6 @@ import {
 } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -60,19 +59,8 @@ export function useEMCellMeshPipeline({
         },
       });
     },
-    onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.EMCellMesh}`,
-        }),
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            get((query.queryKey as ExtendedEntityTypeQueryKey)[0], 'context.extendedEntityType') ===
-            ExtendedEntitiesTypeDict.EMCellMesh,
-        }),
-      ]);
-    },
+    onSettled: () =>
+      invalidateExtendedEntityQueries(queryClient, ExtendedEntitiesTypeDict.EMCellMesh),
   });
 
   const createAssetsAsync = useMutation({

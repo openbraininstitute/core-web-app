@@ -1,11 +1,12 @@
 import {
   hashKey,
   keepPreviousData,
+  type QueryClient,
   type QueryFunction,
   type UseQueryOptions,
   useQuery,
 } from '@tanstack/react-query';
-import { isEmpty } from 'es-toolkit/compat';
+import { castArray, get, isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
@@ -75,6 +76,33 @@ export function buildQueryKey({
 }
 
 export type ExtendedEntityTypeQueryKey = ReturnType<typeof buildQueryKey>;
+
+// count widgets, non-grid lists, and the data-grid each key their queries differently
+export function invalidateExtendedEntityQueries(
+  queryClient: QueryClient,
+  extendedEntityType: TExtendedEntitiesTypeDict | TExtendedEntitiesTypeDict[]
+) {
+  const types = castArray(extendedEntityType);
+
+  return queryClient.invalidateQueries({
+    predicate: (query) => {
+      const [first, second, third] = query.queryKey;
+
+      const matchesEntityCount =
+        typeof first === 'string' && types.some((type) => first === `data-entity-count-${type}`);
+
+      const matchesExtendedEntity = types.some(
+        (type) => get(first, 'context.extendedEntityType') === type
+      );
+
+      const matchesDataGrid =
+        first === 'data-grid' &&
+        types.some((type) => second === type || (second === 'facets' && third === type));
+
+      return matchesEntityCount || matchesExtendedEntity || matchesDataGrid;
+    },
+  });
+}
 
 export function useQueryParameters(
   { context, workspace }: { context: QueryContext; workspace?: WorkspaceContext },
