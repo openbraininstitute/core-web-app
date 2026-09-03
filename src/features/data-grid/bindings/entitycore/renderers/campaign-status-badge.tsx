@@ -78,10 +78,10 @@ const STATUS_BADGE: Record<ActivityStatus, ICampaignStatusBadgeSpec> = {
   [ActivityStatus.CANCELLED]: {
     label: 'Cancelled',
     tone: CampaignStatusTone.Neutral,
-    bg: 'bg-gray-50',
-    border: 'border-gray-400',
-    text: 'text-gray-600',
-    chip: 'bg-gray-400',
+    bg: 'bg-zinc-100',
+    border: 'border-zinc-600',
+    text: 'text-zinc-700',
+    chip: 'bg-zinc-600',
   },
 };
 
@@ -127,6 +127,109 @@ export function aggregateCampaignStatus(
 ): ActivityStatus | undefined {
   if (!statusCountMap || statusCountMap.size === 0) return undefined;
   return STATUS_PRECEDENCE.find((status) => (statusCountMap.get(status) ?? 0) > 0);
+}
+
+/** Lifecycle order used when a campaign's members span several statuses. */
+const STATUS_DISPLAY_ORDER: ActivityStatus[] = [
+  ActivityStatus.CREATED,
+  ActivityStatus.PENDING,
+  ActivityStatus.RUNNING,
+  ActivityStatus.DONE,
+  ActivityStatus.ERROR,
+  ActivityStatus.CANCELLED,
+];
+
+export interface ICampaignStatusCount {
+  status: ActivityStatus;
+  count: number;
+}
+
+export function getCampaignStatusBreakdown(
+  statusCountMap: Map<ActivityStatus, number> | undefined | null
+): ICampaignStatusCount[] {
+  if (!statusCountMap || statusCountMap.size === 0) return [];
+  return STATUS_DISPLAY_ORDER.flatMap((status) => {
+    const count = statusCountMap.get(status) ?? 0;
+    return count > 0 ? [{ status, count }] : [];
+  });
+}
+
+export function describeCampaignStatusBreakdown(breakdown: ICampaignStatusCount[]): string {
+  return breakdown
+    .map(({ status, count }) => `${count} ${getCampaignStatusBadgeSpec(status).label}`)
+    .join(', ');
+}
+
+const MAX_VISIBLE_SEGMENTS = 4;
+
+export const CAMPAIGN_STATUS_COLUMN_MIN_WIDTH = 190;
+
+export interface ICampaignStatusSegments {
+  /** drawn by the pill, in lifecycle order */
+  visible: ICampaignStatusCount[];
+  /** left to the tooltip */
+  hidden: ICampaignStatusCount[];
+}
+
+export function splitCampaignStatusSegments(
+  breakdown: ICampaignStatusCount[]
+): ICampaignStatusSegments {
+  if (breakdown.length <= MAX_VISIBLE_SEGMENTS) return { visible: breakdown, hidden: [] };
+
+  const ranked = [...breakdown].sort((a, b) => {
+    if (a.status === ActivityStatus.ERROR) return -1;
+    if (b.status === ActivityStatus.ERROR) return 1;
+    return b.count - a.count;
+  });
+  const keep = new Set(ranked.slice(0, MAX_VISIBLE_SEGMENTS - 1).map((bucket) => bucket.status));
+
+  return {
+    visible: breakdown.filter((bucket) => keep.has(bucket.status)),
+    hidden: breakdown.filter((bucket) => !keep.has(bucket.status)),
+  };
+}
+
+interface CampaignStatusCountsProps {
+  breakdown: ICampaignStatusCount[];
+  className?: string;
+}
+
+export function CampaignStatusCounts({ breakdown, className }: CampaignStatusCountsProps) {
+  const { visible, hidden } = splitCampaignStatusSegments(breakdown);
+
+  return (
+    <Badge
+      rounded
+      size="sm"
+      variant="outline"
+      role="img"
+      aria-label={describeCampaignStatusBreakdown(breakdown)}
+      className={cn(
+        'max-w-full select-none gap-0 divide-x divide-neutral-200 border-neutral-300 bg-white px-0 font-semibold',
+        className
+      )}
+    >
+      {visible.map(({ status, count }) => {
+        const spec = getCampaignStatusBadgeSpec(status);
+        return (
+          <span key={status} className={cn('inline-flex items-center gap-0.5 px-1.5', spec.text)}>
+            <span>{count}</span>
+            <span
+              className={cn(
+                'inline-flex size-3.5 shrink-0 items-center justify-center rounded-full text-white [&_svg]:size-2',
+                spec.chip
+              )}
+            >
+              {executionStatusIconMap[status]}
+            </span>
+          </span>
+        );
+      })}
+      {hidden.length > 0 ? (
+        <span className="inline-flex items-center px-1.5 text-neutral-500">…</span>
+      ) : null}
+    </Badge>
+  );
 }
 
 interface CampaignStatusBadgeProps {
