@@ -14,12 +14,6 @@ const MENU: ViewerControlsMenuProps = {
   onResetConfig: vi.fn(),
 };
 
-/**
- * One control, and only where the host has somewhere to put the view. Which
- * element goes fullscreen is the host's to say — the scene is rarely the whole
- * of what the user means by the view — so the chrome only draws the button when
- * it is handed the way to do it.
- */
 describe('CircuitViewerChrome fullscreen', () => {
   it('leaves the button out for a host that offers fullscreen itself', () => {
     render(<CircuitViewerChrome vizActive viz={{ menu: MENU }} />);
@@ -39,9 +33,8 @@ describe('CircuitViewerChrome fullscreen', () => {
     expect(onToggleFullscreen).toHaveBeenCalledOnce();
   });
 
-  // The 3D controls stand down with the scene, but fullscreen is about the
-  // viewer rather than the view inside it: a designer image is worth filling
-  // the screen with too.
+  // A designer image is worth filling the screen with too, so the button sits
+  // outside the 3D cluster that stands down with the scene.
   it('stays on offer in a view that is not the 3D one', () => {
     render(
       <CircuitViewerChrome vizActive={false} onToggleFullscreen={vi.fn()} viz={{ menu: MENU }} />

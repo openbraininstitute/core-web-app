@@ -262,10 +262,9 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const splitHeight = clampSplitHeight(rasterHeight, containerHeight);
 
   return (
-    // Fullscreen takes the whole view — raster, replay and transport together —
-    // so the element blown up is this root rather than the 3D pane inside it,
-    // and the scene is left without a fullscreen button of its own. The white
-    // ground is the panel's, and the panel is outside the fullscreen element.
+    // This root goes fullscreen, not the 3D pane inside it, so the raster and
+    // transport bar go with it; the scene is handed no fullscreen button of its
+    // own. The white ground comes from the panel outside.
     <div ref={rootRef} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
       <div className="mb-2 flex items-center gap-3 px-3 pt-3">
         <div className="flex items-center gap-2">

@@ -2,13 +2,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 /**
- * A round icon button in the language the viewer chrome speaks: white, shadowed
- * and ringed, so it reads against whatever colour the scene happens to leave
- * behind it. Filled while `active`, the way the mode pill fills its current
- * view.
- *
- * `label` is both the tooltip and the accessible name — the button carries no
- * text of its own.
+ * A round icon button for the viewer chrome: white and shadowed so it reads over
+ * the 3D canvas, filled while `active`. `label` is both the tooltip and the
+ * accessible name.
  */
 export function ChromeButton({
   label,

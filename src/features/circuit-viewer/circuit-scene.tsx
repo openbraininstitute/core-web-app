@@ -106,13 +106,10 @@ interface ICircuitSceneOptions {
   /** Extra icons for the view-mode pill. Omit when this is the only view. */
   modeToggle?: readonly IViewerModeOption[];
   /**
-   * Blow the view up to fill the screen, for the chrome's fullscreen button.
-   *
-   * The host supplies it because the scene is rarely the whole of what the user
-   * means by the view: the preview keeps a designer image beside it, spike
-   * replay a raster and a transport bar, and either would be left outside the
-   * fullscreen element if the scene blew up only itself. Omit where the host
-   * offers fullscreen of its own, and the chrome's button drops away.
+   * Fullscreen toggle for the chrome. The host owns it because the scene is only
+   * part of the view: blowing it up alone would leave the preview's designer
+   * image, or spike replay's raster, outside the fullscreen element. Omit to
+   * leave the button out.
    */
   onToggleFullscreen?: () => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
@@ -495,8 +492,8 @@ export function CircuitScene({
       // Transparent to the pointer as a whole: whatever a host stacks
       // underneath, a designer image or a raster, has to stay clickable through
       // the gaps. The canvas and the chrome buttons each opt back in. In
-      // fullscreen too — the element blown up is the host's, an ancestor of
-      // this one, so the image beside the scene is still under it there.
+      // fullscreen too: the element blown up is the host's, an ancestor of this
+      // one.
       className="pointer-events-none relative h-full min-h-0 overflow-hidden"
     >
       <div

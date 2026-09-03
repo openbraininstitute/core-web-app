@@ -142,11 +142,9 @@ export function CircuitPreview({
   }
 
   return (
-    // The fullscreen element is this wrapper rather than the 3D scene inside
-    // it, so the designer image — a sibling of the scene — is still on screen
-    // when the user blows the preview up and switches to it. Rounded corners
-    // and the white ground below them both come from outside in the panel, and
-    // neither survives fullscreen, so state them here for that case.
+    // The wrapper goes fullscreen, not the scene inside it, so the designer
+    // image beside the scene is still on screen there. Corners and ground come
+    // from the panel outside, which fullscreen leaves behind.
     <div
       ref={previewRef}
       className="relative h-full min-h-0 overflow-hidden rounded-2xl [&:fullscreen]:rounded-none [&:fullscreen]:bg-white"

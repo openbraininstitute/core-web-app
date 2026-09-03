@@ -39,10 +39,9 @@ export interface ICircuitViewerChromeProps {
   /** nodes-table toggle (always visible in the top-left cluster) */
   table?: { active: boolean; onToggle: () => void };
   /**
-   * Blow the viewer up to fill the screen. One control for both directions,
-   * beside the table toggle and visible whatever view is on show — what goes
-   * fullscreen is usually more than the 3D scene, so the host supplies it. Omit
-   * where the host offers fullscreen itself.
+   * Fullscreen toggle, beside the table one and visible in every view. The host
+   * supplies it because what goes fullscreen is more than the 3D scene; omit to
+   * leave the button out.
    */
   onToggleFullscreen?: () => void;
   /**
