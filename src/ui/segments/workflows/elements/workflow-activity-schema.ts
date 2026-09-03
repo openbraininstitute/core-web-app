@@ -178,7 +178,8 @@ export function buildWorkflowActivitySchema({
         // however far the row scrolls, and there is no state in which hiding, moving or
         // resizing it helps.
         id: 'actions',
-        header: 'Actions',
+        // No header title: the "Action" trigger in each cell names the column already.
+        header: '',
         align: Align.Center,
         getValue: () => '',
         cellRenderer: WORKFLOW_ACTIVITY_ACTIONS_RENDERER,

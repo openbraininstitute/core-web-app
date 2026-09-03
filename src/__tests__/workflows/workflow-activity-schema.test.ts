@@ -134,8 +134,8 @@ describe('workflow-activity schema — filter wire params', () => {
 describe('workflow-activity schema — the actions column', () => {
   const actions = () => schema.columns.find((c) => c.id === 'actions');
 
-  it('is named, so the column chooser has a label for it', () => {
-    expect(actions()?.header).toBe('Actions');
+  it('carries no header title — the in-cell "Action" trigger names it', () => {
+    expect(actions()?.header).toBe('');
   });
 
   it('is the last column, frozen to the right edge', () => {

@@ -13,6 +13,15 @@ export interface IGridSearchProps {
   className?: string;
   /** Current term from the grid store, including one hydrated from session storage. */
   value?: string;
+  /** Hint inside the input; say what the endpoint actually matches (default: generic). */
+  placeholder?: string;
+  /**
+   * Tailwind width of the opened input (default `w-64`). Widen it for a listing whose
+   * placeholder spells out several searchable fields — a hint the user cannot read is
+   * no hint at all. Drives the reveal animation and the input's own layout together, so
+   * one token keeps the two in step.
+   */
+  inputWidthClass?: string;
 }
 
 /**
@@ -20,7 +29,14 @@ export interface IGridSearchProps {
  * clear affordance. Debounced text is pushed to the grid store's free-text search via
  * {@link onSearch}.
  */
-export function GridSearch({ onSearch, openOnMount = false, className, value }: IGridSearchProps) {
+export function GridSearch({
+  onSearch,
+  openOnMount = false,
+  className,
+  value,
+  placeholder = 'Search for entities…',
+  inputWidthClass = 'w-64',
+}: IGridSearchProps) {
   const [open, setOpen] = useState(openOnMount || Boolean(value));
   const [text, setText] = useState(value ?? '');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -108,18 +124,20 @@ export function GridSearch({ onSearch, openOnMount = false, className, value }: 
         className={cn(
           'overflow-hidden opacity-0 [transition:width_360ms_cubic-bezier(0.22,1,0.36,1),opacity_220ms_ease-out]',
           'will-change-[width] motion-reduce:transition-none',
-          open ? 'w-64 opacity-100' : 'w-0'
+          open ? cn(inputWidthClass, 'opacity-100') : 'w-0'
         )}
         aria-hidden={!open}
       >
-        <div className="flex h-10 w-64 items-center rounded-r-full bg-white pr-1.5">
+        <div
+          className={cn('flex h-10 items-center rounded-r-full bg-white pr-1.5', inputWidthClass)}
+        >
           <input
             ref={inputRef}
             type="text"
             value={text}
             onChange={onChange}
             onKeyDown={onKeyDown}
-            placeholder="Search for entities…"
+            placeholder={placeholder}
             aria-label="Search"
             tabIndex={open ? 0 : -1}
             className={cn(

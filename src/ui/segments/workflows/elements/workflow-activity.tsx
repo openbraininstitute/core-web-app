@@ -25,6 +25,7 @@ import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/brows
 import { NotAllowedResultsActionEntityTypes } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
+import { withWorkflowIdSearch } from '@/ui/segments/workflows/elements/workflow-activity-search';
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -145,6 +146,8 @@ export function WorkflowActivity() {
         dataType: resolvedEntityType,
         schema,
         context: { virtualLabId, projectId },
+        // workflow-only: a pasted UUID in the search box looks up that record by id
+        transformParams: withWorkflowIdSearch,
       }),
     [resolvedEntityType, schema, virtualLabId, projectId]
   );
@@ -187,7 +190,16 @@ export function WorkflowActivity() {
                 onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
               />
             ),
-            search: <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />,
+            search: (
+              <GridSearch
+                openOnMount
+                onSearch={handleSearch}
+                value={freeTextSearch}
+                // wider than the default so the whole hint is readable
+                inputWidthClass="w-96"
+                placeholder="Search entities by name, ID"
+              />
+            ),
           }}
         />
       </div>

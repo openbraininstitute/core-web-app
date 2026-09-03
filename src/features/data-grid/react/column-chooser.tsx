@@ -29,8 +29,16 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
   const hidden = useMemo(() => new Set(state.hiddenColumns), [state.hiddenColumns]);
   const value = columns.filter((c) => !hidden.has(c.id)).map((c) => c.id);
-  const regular = columns.filter((c) => !c.auxiliary);
-  const auxiliary = columns.filter((c) => c.auxiliary);
+  /**
+   * A column that has no header AND can never be hidden has nothing to offer here: its
+   * checkbox would be blank and permanently disabled. An unnamed column the user CAN
+   * hide still appears, blank label and all, rather than vanishing from their control.
+   * Excluding a column from the list does not exclude it from `setVisible`, where
+   * `alwaysVisible` is what actually keeps it on screen.
+   */
+  const listed = columns.filter((c) => c.header.trim() !== '' || !c.alwaysVisible);
+  const regular = listed.filter((c) => !c.auxiliary);
+  const auxiliary = listed.filter((c) => c.auxiliary);
 
   const setVisible = (visibleIds: Array<string>) => {
     const visible = new Set(visibleIds);

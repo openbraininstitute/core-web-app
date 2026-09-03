@@ -2,7 +2,13 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
-import { RiBarChartBoxLine, RiFileCopyLine, RiMore2Line, RiSettings3Line } from '@remixicon/react';
+import {
+  RiBarChartBoxLine,
+  RiCheckLine,
+  RiFileAddLine,
+  RiFileCopyLine,
+  RiSettings3Line,
+} from '@remixicon/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
@@ -19,6 +25,7 @@ import {
   GRID_ICON_BUTTON_ACTIVE_CLASS,
   GRID_OVERLAY_Z_CLASS,
 } from '@/features/data-grid/react/molecules-theme';
+import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   DropdownMenu,
@@ -51,12 +58,8 @@ export const WORKFLOW_ACTIVITY_TYPE_RENDERER = 'workflowActivityType';
 export const WORKFLOW_ACTIVITY_DATE_RENDERER = 'workflowActivityDate';
 export const WORKFLOW_ACTIVITY_ACTIONS_RENDERER = 'workflowActivityActions';
 
-/**
- * Width of the pinned actions column. Wide enough for the "Actions" header, which the
- * column carries so the column chooser has something to name it by — the cell itself
- * shows only the 28px trigger.
- */
-export const WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH = 88;
+/** Width of the pinned actions column — enough for the "Action" trigger plus padding. */
+export const WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH = 96;
 
 /** Leading icon size in the actions menu — matches the `size-4` DropdownMenuItem sets. */
 const ACTION_ICON_SIZE = 16;
@@ -159,6 +162,7 @@ export function WorkflowActivityActionsCell({
   const notification = useAppNotification();
   const searchParams = useSearchParams();
   const [isResolvingResults, setIsResolvingResults] = useState(false);
+  const [, copyId, , hasCopiedId] = useCopyToClipboard();
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
   const tableRow = row as unknown as TWorkflowActivityTableRow;
@@ -249,15 +253,14 @@ export function WorkflowActivityActionsCell({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label="Activity actions"
             data-testid="workflow-activity-row-actions"
             className={cn(
-              'inline-flex size-7 items-center justify-center rounded-full',
-              'text-gray-600 hover:text-white',
+              'inline-flex items-center justify-center rounded-full px-3 py-1',
+              'border border-neutral-2 text-xs text-primary-9 hover:text-white',
               GRID_ICON_BUTTON_ACTIVE_CLASS
             )}
           >
-            <RiMore2Line size={16} />
+            Action
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -324,8 +327,23 @@ export function WorkflowActivityActionsCell({
             onSelect={onDuplicate}
             className={ACTION_ITEM_CLASS}
           >
-            <RiFileCopyLine size={ACTION_ICON_SIZE} />
+            <RiFileAddLine size={ACTION_ICON_SIZE} />
             <span>Duplicate</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={(event) => {
+              // hold the menu open long enough for the tick to register
+              event.preventDefault();
+              void copyId(row.id);
+            }}
+            className={ACTION_ITEM_CLASS}
+          >
+            {hasCopiedId ? (
+              <RiCheckLine size={ACTION_ICON_SIZE} />
+            ) : (
+              <RiFileCopyLine size={ACTION_ICON_SIZE} />
+            )}
+            <span>{hasCopiedId ? 'Copied' : 'Copy ID'}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

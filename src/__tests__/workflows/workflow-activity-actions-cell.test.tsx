@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe('WorkflowActivityActionsCell', () => {
-  it('always lists all three actions, so the menu reads the same for every row', async () => {
+  it('always lists every action, so the menu reads the same for every row', async () => {
     const item = await openMenu(
       <WorkflowActivityActionsCell
         row={row()}
@@ -59,7 +59,7 @@ describe('WorkflowActivityActionsCell', () => {
       />
     );
 
-    for (const label of ['View configuration', 'View results', 'Duplicate']) {
+    for (const label of ['View configuration', 'View results', 'Duplicate', 'Copy ID']) {
       expect(item(label), `expected "${label}" in the menu`).toBeTruthy();
     }
   });
@@ -77,9 +77,61 @@ describe('WorkflowActivityActionsCell', () => {
       />
     );
 
-    for (const label of ['View configuration', 'View results', 'Duplicate']) {
+    for (const label of ['View configuration', 'View results', 'Duplicate', 'Copy ID']) {
       expect(item(label)?.querySelector('svg'), `expected an icon on "${label}"`).toBeTruthy();
     }
+  });
+
+  it('gives Copy ID and Duplicate DIFFERENT icons', async () => {
+    const item = await openMenu(
+      <WorkflowActivityActionsCell
+        row={row()}
+        value=""
+        rowIndex={0}
+        params={{
+          activity: ActivityValues.Build,
+          entityType: ExtendedEntitiesTypeDict.Memodel,
+        }}
+      />
+    );
+
+    // remixicon renders its glyph as a <path d="…">, so the path data identifies the icon
+    const glyph = (label: string) =>
+      item(label)?.querySelector('svg path')?.getAttribute('d') ?? null;
+
+    expect(glyph('Copy ID')).toBeTruthy();
+    expect(glyph('Duplicate')).toBeTruthy();
+    expect(glyph('Copy ID')).not.toBe(glyph('Duplicate'));
+  });
+
+  it('copies the row id to the clipboard and confirms in place', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+
+    const item = await openMenu(
+      <WorkflowActivityActionsCell
+        row={row()}
+        value=""
+        rowIndex={0}
+        params={{
+          activity: ActivityValues.Build,
+          entityType: ExtendedEntitiesTypeDict.Memodel,
+        }}
+      />
+    );
+
+    const copy = item('Copy ID');
+    expect(copy).toBeTruthy();
+    fireEvent.click(copy as HTMLElement);
+
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111')
+    );
+    // the menu stays open so the "Copied" confirmation is actually visible
+    await waitFor(() => expect(screen.getByRole('menu').textContent).toContain('Copied'));
   });
 
   it('carries the interactive styling on both the link and the plain rows', async () => {
@@ -97,7 +149,7 @@ describe('WorkflowActivityActionsCell', () => {
 
     // "View configuration" renders through `asChild` into a <Link>; "Duplicate" does
     // not. Radix has to forward the class through Slot for the first to be styled.
-    for (const label of ['View configuration', 'Duplicate']) {
+    for (const label of ['View configuration', 'Duplicate', 'Copy ID']) {
       const el = item(label);
       expect(el?.className, `expected a hand cursor on "${label}"`).toContain('cursor-pointer');
       expect(el?.className, `expected the primary-8 highlight on "${label}"`).toContain(
