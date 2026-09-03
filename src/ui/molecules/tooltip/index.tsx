@@ -3,6 +3,7 @@
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 import { cn } from '@/utils/css-class';
+import { useFullscreenElement } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -48,8 +49,15 @@ function TooltipContent({
   showArrow?: boolean;
   portalProps?: TooltipPrimitive.TooltipPortalProps;
 }) {
+  // See the note in `PopoverContent`: the body is outside the fullscreen
+  // subtree, so a tooltip portalled there is not drawn.
+  const fullscreen = useFullscreenElement();
+
   return (
-    <TooltipPrimitive.Portal {...portalProps}>
+    <TooltipPrimitive.Portal
+      {...portalProps}
+      container={portalProps?.container ?? fullscreen ?? undefined}
+    >
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

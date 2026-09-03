@@ -8,10 +8,10 @@ import { FamilyTree } from '@/components/icons/FamilyTree';
 import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
 import { View3d } from '@/components/icons/View3d';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
-import { toggleFullscreen } from '@/features/scan-config/components/color-by/fullscreen';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
+import { toggleFullscreen } from '@/utils/fullscreen';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
