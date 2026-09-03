@@ -2,29 +2,34 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
-import { Card } from 'antd';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/types';
-import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
-import { EmptyValue, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
-import { CAMPAIGN_STATUS_COLUMN_MIN_WIDTH } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
-import { SelectionMode } from '@/features/data-grid/core';
-import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
-import { ServerGridStateStatus } from '@/features/data-grid/react';
+import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
+import {
+  createDefaultOperatorRegistry,
+  GridActionType,
+  GridController,
+  SelectionMode,
+} from '@/features/data-grid/core';
+import { GridSearch } from '@/features/data-grid/host/grid-search';
+import {
+  createDefaultPersistence,
+  DataGrid,
+  layoutKeyFor,
+  useGridStateSlice,
+} from '@/features/data-grid/react';
+import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { CardContent } from '@/ui/molecules/card';
 import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import {
@@ -34,14 +39,13 @@ import {
   canDuplicateWorkflowActivityRow,
   type TWorkflowActivityTableRow,
 } from '@/ui/segments/workflows/elements/workflow-activity-actions';
-import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
-import { renderDateAndHour } from '@/util/date';
+import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
+import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { cn } from '@/utils/css-class';
 
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
-import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
-import type { IServerGridState } from '@/features/data-grid/react';
+import type { IGridState } from '@/features/data-grid/core';
 
 /**
  * Campaign and simulation types whose row offers no "View results" action.
@@ -64,7 +68,13 @@ export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
 ];
 
-const IDLE_GRID_META: IServerGridState = { total: 0, status: ServerGridStateStatus.Idle };
+/** Grid section id — namespaces the persisted column layout away from the browse pages. */
+const WORKFLOW_ACTIVITY_SECTION = 'workflow-activity';
+
+const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
+
+/** One registry for every workflow-activity grid, so remounts resolve the same objects. */
+const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
 
 export interface WorkflowActivityRef {
   dataCount: number;
@@ -119,11 +129,9 @@ export function WorkflowActivity() {
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  // Also the SimpleGrid `key`, so a change remounts the grid on page 1.
   const gridKey = `${resolvedActivityType}-${resolvedEntityType}`;
 
   const [selectedRow, setSelectedRow] = useState<EntityCoreObjectTypes | undefined>(undefined);
-  const [gridMeta, setGridMeta] = useState<IServerGridState>(IDLE_GRID_META);
   const [metaKey, setMetaKey] = useState(gridKey);
   const [isResolvingResults, setIsResolvingResults] = useState(false);
 
@@ -131,36 +139,71 @@ export function WorkflowActivity() {
   // browser navigation swaps them without either handler running.
   if (metaKey !== gridKey) {
     setMetaKey(gridKey);
-    setGridMeta(IDLE_GRID_META);
     setSelectedRow(undefined);
   }
 
-  // server data source: the grid owns paging and reports status/total back through
-  // `serverSide.onStateChange`, which drives the empty state
-  const entity = getEntityByExtendedType({ type: resolvedEntityType });
-  const listQuery = entity?.api.query?.list;
-  const dataSource = useMemo<IGridDataSource<EntityCoreObjectTypes>>(
-    () => ({
-      fetch: async (q): Promise<IGridPage<EntityCoreObjectTypes>> => {
-        if (!listQuery) {
-          return { rows: [], total: 0 };
-        }
-        const response = await listQuery({
-          withFacets: false,
-          context: { virtualLabId, projectId },
-          filters: {
-            page: q.page,
-            page_size: q.pageSize,
-            authorized_project_id: projectId,
-            authorized_public: false,
-          },
-        });
-        const total = response?.pagination?.total_items ?? 0;
-        // per-entity list queries return a union of entity arrays; the table is entity-agnostic
-        return { rows: (response?.data ?? []) as EntityCoreObjectTypes[], total };
-      },
-    }),
-    [listQuery, virtualLabId, projectId]
+  const activityName = getActivity(resolvedActivityType)?.name ?? '';
+
+  const schema = useMemo(
+    () =>
+      buildWorkflowActivitySchema({
+        activityName,
+        entityType: resolvedEntityType,
+        workspace,
+      }),
+    [activityName, resolvedEntityType, workspace]
+  );
+
+  const operators = useMemo(() => createDefaultOperatorRegistry(), []);
+
+  const controller = useMemo(
+    () =>
+      new GridController<EntityCoreObjectTypes>({
+        schema,
+        context: {
+          dataType: resolvedEntityType,
+          section: WORKFLOW_ACTIVITY_SECTION,
+          factors: { activity: resolvedActivityType },
+        },
+        instanceKey: `${WORKFLOW_ACTIVITY_SECTION}:${virtualLabId}:${projectId}:${gridKey}`,
+        // The layout slice is keyed by section + entity type only, so a chosen column
+        // set follows the type across projects the way the browse listings do.
+        persistence: createDefaultPersistence(
+          layoutKeyFor(WORKFLOW_ACTIVITY_SECTION, resolvedEntityType)
+        ),
+        defaultPageSize: DEFAULT_PAGE_MEDIUM_SIZE,
+      }),
+    [schema, resolvedEntityType, resolvedActivityType, virtualLabId, projectId, gridKey]
+  );
+  useEffect(() => controller.connect(), [controller]);
+
+  const handleSearch = useCallback(
+    (text: string) => controller.store.dispatch({ type: GridActionType.SetFreeTextSearch, text }),
+    [controller]
+  );
+  const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
+
+  // The grid contributes page/sort/filter/search; the entity's domain config owns the
+  // endpoint, and `params` below pins the workspace scope.
+  const dataSource = useMemo(
+    () =>
+      createEntitycorePagedDataSource<EntityCoreObjectTypes>({
+        dataType: resolvedEntityType,
+        schema,
+        context: { virtualLabId, projectId },
+      }),
+    [resolvedEntityType, schema, virtualLabId, projectId]
+  );
+
+  const params = useMemo(
+    () => ({ authorized_project_id: projectId, authorized_public: false }),
+    [projectId]
+  );
+
+  const selectedRows = useMemo(() => (selectedRow ? [selectedRow] : []), [selectedRow]);
+  const onSelectionChange = useCallback(
+    (rows: EntityCoreObjectTypes[]) => setSelectedRow(rows.at(0)),
+    []
   );
 
   const appendCurrentQueryParams = useCallback(
@@ -266,80 +309,6 @@ export function WorkflowActivity() {
     });
   }, [entityType, resolvedActivityType, selectedRow]);
 
-  const shouldShowEmptyState =
-    gridMeta.status === ServerGridStateStatus.Loaded && gridMeta.total === 0;
-
-  const columns: Array<ISimpleColumn<EntityCoreObjectTypes>> = useMemo(
-    () => [
-      {
-        id: 'name',
-        header: 'Name',
-        width: { minWidth: 160, flex: 2 },
-        renderCell: (record) => <span className="text-primary-9">{record.name}</span>,
-      },
-      {
-        id: 'category',
-        header: 'Category',
-        width: { minWidth: 120, flex: 1 },
-        renderCell: () => (
-          <span className={cn('text-primary-9 flex items-center capitalize')}>
-            {getActivity(activityType)?.name}
-          </span>
-        ),
-      },
-      {
-        id: 'type',
-        header: 'Type',
-        width: { minWidth: 140, flex: 1 },
-        renderCell: (record) => {
-          const extractionTitle =
-            record.type === EntityTypeDict.TaskConfig &&
-            (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
-              TaskConfigType.CircuitExtractionCampaign
-              ? getEntityByExtendedType({
-                  type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-                })?.title
-              : undefined;
-          const title =
-            extractionTitle ??
-            getEntityByExtendedType({
-              type: record.type as unknown as TExtendedEntitiesTypeDict,
-            })?.title ??
-            getEntityByExtendedType({ type: entityType ?? undefined })?.title ??
-            '-';
-
-          return <span className={cn('text-primary-9 flex items-center capitalize')}>{title}</span>;
-        },
-      },
-      {
-        id: 'creation_date',
-        header: 'Date',
-        width: { minWidth: 150, flex: 1 },
-        renderCell: (record) => (
-          <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>
-        ),
-      },
-      {
-        id: 'created_by',
-        header: 'Created by',
-        width: { minWidth: 140, flex: 1 },
-        renderCell: (record) => {
-          const createdBy =
-            'created_by' in record ? renderEmptyOrValue(record.created_by?.pref_label) : EmptyValue;
-          return <span className="text-primary-9">{createdBy}</span>;
-        },
-      },
-      {
-        id: 'status',
-        header: 'Status',
-        align: 'center',
-        width: { minWidth: CAMPAIGN_STATUS_COLUMN_MIN_WIDTH, flex: 1 },
-        renderCell: (record) => <WorkflowStatusCell record={record} workspace={workspace} />,
-      },
-    ],
-    [activityType, entityType, workspace]
-  );
-
   return (
     <section
       id="activity-table-with-filters"
@@ -347,132 +316,105 @@ export function WorkflowActivity() {
       className={cn('flex h-full w-full min-w-0 flex-col before:shadow-lg after:shadow-md')}
     >
       <div
-        id="workflow-activity-type-selectors"
-        className={cn(
-          'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5',
-          '[grid-template-areas:"selectors_filters"]'
-        )}
-      >
-        <div
-          id="activity-table-filters"
-          className="flex w-full items-start justify-start [grid-area:selectors]"
-        >
-          <ActivityAndTypeSelectors
-            activity={activityType}
-            entityType={entityType}
-            onActivityChange={(activityType) => updateActivityState({ activityType })}
-            onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
-          />
-        </div>
-      </div>
-      <div
-        className="h-full w-full"
+        className="flex h-full w-full min-h-0 flex-col"
         id="workflow-activities-table"
         data-testid="workflow-activities-table"
       >
-        {shouldShowEmptyState ? (
-          <Card className="text-neutral-4 bg-background border-none">
-            <CardContent className="flex w-full items-center justify-center py-10">
-              You don't have any activities yet
-            </CardContent>
-          </Card>
-        ) : (
-          <div
-            className="flex h-full w-full flex-col"
-            id="workflow-activities-full-table"
-            data-testid="workflow-activities-full-table"
-          >
-            <div className="relative min-h-0 flex-1">
-              <div className="h-full overflow-hidden">
-                <SimpleGrid<EntityCoreObjectTypes>
-                  key={gridKey}
-                  columns={columns}
-                  getRowId={(o) => o.id}
-                  autoHeight={false}
-                  pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
-                  loadingLabel="activities"
-                  className={cn('[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4')}
-                  rowSelection={{
-                    mode: SelectionMode.Single,
-                    selectedIds: selectedRow ? [selectedRow.id] : [],
-                    onSelectionChange: (_ids, rows) => setSelectedRow(rows.at(0)),
-                  }}
-                  serverSide={{
-                    dataSource,
-                    queryKey: [
-                      'workflow-activity',
-                      virtualLabId,
-                      projectId,
-                      resolvedActivityType,
-                      resolvedEntityType,
-                    ],
-                    enabled: Boolean(resolvedActivityType && resolvedEntityType),
-                    onStateChange: setGridMeta,
-                  }}
+        <div
+          className="flex h-full w-full min-h-0 flex-col"
+          id="workflow-activities-full-table"
+          data-testid="workflow-activities-full-table"
+        >
+          <DataGrid<EntityCoreObjectTypes>
+            key={gridKey}
+            controller={controller}
+            dataSource={dataSource}
+            renderer={AgGridRenderer}
+            operators={operators}
+            cellRenderers={CELL_RENDERERS}
+            queryKey={['workflow-activity', virtualLabId, projectId, gridKey]}
+            params={params}
+            enabled={Boolean(resolvedActivityType && resolvedEntityType)}
+            loadingLabel="activities"
+            className="min-h-0 flex-1"
+            gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
+            selection={{
+              mode: SelectionMode.Single,
+              selectedRows,
+              onChange: onSelectionChange,
+            }}
+            toolbarSlots={{
+              entityType: (
+                <ActivityAndTypeSelectors
+                  activity={activityType}
+                  entityType={entityType}
+                  onActivityChange={(activityType) => updateActivityState({ activityType })}
+                  onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
                 />
+              ),
+              search: <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />,
+            }}
+          />
+          <div className="relative flex h-15 w-full items-end justify-end">
+            {selectedRow && configurationHref && (
+              <div className="flex h-15 shrink-0 items-center justify-center gap-2">
+                <Button
+                  rounded
+                  asChild
+                  variant="outline"
+                  size={breakpoint === 'l' ? 'md' : 'lg'}
+                  className="select-none"
+                >
+                  <Link href={configurationHref} className="text-primary-9! hover:text-white!">
+                    View configuration
+                  </Link>
+                </Button>
+                {canShowResultsAction &&
+                  resultsActionLink &&
+                  (isIonChannelModelingCampaign ? (
+                    <Button
+                      rounded
+                      variant="outline"
+                      size={breakpoint === 'l' ? 'md' : 'lg'}
+                      disabled={isResolvingResults}
+                      onClick={onViewIonChannelResults}
+                      className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
+                    >
+                      {isResolvingResults && <LoadingOutlined />}
+                      <span>View results</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      rounded
+                      asChild={!isBuildActivity}
+                      variant="outline"
+                      size={breakpoint === 'l' ? 'md' : 'lg'}
+                      disabled={isBuildActivity}
+                      className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed group"
+                    >
+                      <Link
+                        href={resultsActionLink}
+                        aria-disabled={isBuildActivity}
+                        className="text-primary-9! hover:text-white!"
+                      >
+                        View results
+                      </Link>
+                    </Button>
+                  ))}
+                <Button
+                  rounded
+                  variant="outline"
+                  size={breakpoint === 'l' ? 'md' : 'lg'}
+                  onClick={onDuplicate}
+                  className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9! hover:text-white!"
+                  disabled={!canDuplicate}
+                >
+                  Duplicate
+                </Button>
               </div>
-            </div>
-            <div className="relative flex h-15 w-full items-end justify-end">
-              {selectedRow && configurationHref && (
-                <div className="flex h-15 shrink-0 items-center justify-center gap-2">
-                  <Button
-                    rounded
-                    asChild
-                    variant="outline"
-                    size={breakpoint === 'l' ? 'md' : 'lg'}
-                    className="select-none"
-                  >
-                    <Link href={configurationHref} className="text-primary-9! hover:text-white!">
-                      View configuration
-                    </Link>
-                  </Button>
-                  {canShowResultsAction &&
-                    resultsActionLink &&
-                    (isIonChannelModelingCampaign ? (
-                      <Button
-                        rounded
-                        variant="outline"
-                        size={breakpoint === 'l' ? 'md' : 'lg'}
-                        disabled={isResolvingResults}
-                        onClick={onViewIonChannelResults}
-                        className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
-                      >
-                        {isResolvingResults && <LoadingOutlined />}
-                        <span>View results</span>
-                      </Button>
-                    ) : (
-                      <Button
-                        rounded
-                        asChild={!isBuildActivity}
-                        variant="outline"
-                        size={breakpoint === 'l' ? 'md' : 'lg'}
-                        disabled={isBuildActivity}
-                        className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed group"
-                      >
-                        <Link
-                          href={resultsActionLink}
-                          aria-disabled={isBuildActivity}
-                          className="text-primary-9! hover:text-white!"
-                        >
-                          View results
-                        </Link>
-                      </Button>
-                    ))}
-                  <Button
-                    rounded
-                    variant="outline"
-                    size={breakpoint === 'l' ? 'md' : 'lg'}
-                    onClick={onDuplicate}
-                    className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9! hover:text-white!"
-                    disabled={!canDuplicate}
-                  >
-                    Duplicate
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
