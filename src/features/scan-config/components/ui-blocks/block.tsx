@@ -138,6 +138,7 @@ export default function Block({
                     {canCollapseSweep && (
                       <SweepIconButton
                         label="Use a single value"
+                        testId="scan-config-sweep-collapse"
                         className="ml-auto"
                         onClick={() => {
                           setState({ ...state, [k]: sweepSingleValue(value as (number | null)[]) });

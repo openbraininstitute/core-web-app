@@ -1,11 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { LeftMenuTab, Tab } from '@/features/scan-config/components/components';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import {
   type ConfigSchema,
   ScanConfigUIElementDict,
   type TBlock,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 
 // E2E tests address a field by its property key, scoped to its block, because a
@@ -64,5 +66,44 @@ describe('scan config block test ids', () => {
     renderBlock({ rootElement: 'recordings', selectedEntry: 'Soma' });
 
     expect(screen.getByTestId('scan-config-block-recordings-Soma')).toBeInTheDocument();
+  });
+});
+
+// The left-hand root elements and the activity tabs are named from a live
+// schema and restyled by CSS, so an E2E test cannot address them by their
+// visible text. These ids are the handle it uses instead.
+describe('scan config navigation test ids', () => {
+  it('identifies a root element by its property key', () => {
+    render(
+      <LeftMenuTab
+        tab="synaptic_models"
+        selectedTab="info"
+        testId="scan-config-root-element-synaptic_models"
+      >
+        Synaptic models
+      </LeftMenuTab>
+    );
+
+    expect(screen.getByTestId('scan-config-root-element-synaptic_models')).toBeInTheDocument();
+  });
+
+  it('identifies a root element that is not selected', () => {
+    render(
+      <LeftMenuTab tab="info" selectedTab="info" testId="scan-config-root-element-info">
+        Info
+      </LeftMenuTab>
+    );
+
+    expect(screen.getByTestId('scan-config-root-element-info')).toBeInTheDocument();
+  });
+
+  it('identifies a tab by its id', () => {
+    render(
+      <Tab tab="results" selectedTab={{ id: 'configuration' } as TScanConfigTabs}>
+        Results
+      </Tab>
+    );
+
+    expect(screen.getByTestId('scan-config-tab-results')).toBeInTheDocument();
   });
 });

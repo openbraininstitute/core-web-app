@@ -203,6 +203,7 @@ export default function BlockDictionary({
             <TooltipTrigger asChild>
               <button
                 key={o.title}
+                data-testid={`scan-config-variant-${o.properties?.type.const ?? o.title}`}
                 type="button"
                 disabled={disable}
                 className={cn(

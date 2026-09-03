@@ -120,6 +120,7 @@ export default function BlockUnion({
         return (
           <button
             data-scan-config-block-element-item={`${blockUnionSchema.ui_element}_item`}
+            data-testid={`scan-config-variant-${o.properties?.type.const ?? o.title}`}
             key={o.title}
             type="button"
             className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
