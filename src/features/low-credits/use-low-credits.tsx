@@ -111,11 +111,12 @@ export function useLowCredits(options: UseLowCreditsOptions = {}): UseLowCredits
         key: NOTIFICATION_KEY,
         message: copy.title,
         description: (
-          <div className="flex flex-col items-start gap-2">
+          <div className="flex flex-col items-start gap-2" data-testid="low-credits-notice">
             <p>{isVirtualLabAdmin ? copy.adminDescription : copy.nonAdminDescription}</p>
             {isVirtualLabAdmin ? (
               <button
                 type="button"
+                data-testid="low-credits-action"
                 name="low-credits-action-button"
                 onClick={() => {
                   notification.destroy(NOTIFICATION_KEY);
