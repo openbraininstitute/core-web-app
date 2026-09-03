@@ -74,9 +74,9 @@ type Result = {
  * Sessions come from the registry the nodes table and colour-by share, so a
  * population any of them has open is not downloaded again, and each session is
  * released as soon as its positions are read. Two populations stored in one
- * file are opened one after the other: the download URL is stable, so the
- * second read comes from the first's cache rather than fetching a second copy
- * of a very large file.
+ * file are opened one after the other: the download URL is stable and
+ * `fetchToFS` waits for its cache write, so the second read comes from the
+ * first's cache rather than a second copy of a very large file.
  */
 export function usePopulationsPlacement({
   circuit,

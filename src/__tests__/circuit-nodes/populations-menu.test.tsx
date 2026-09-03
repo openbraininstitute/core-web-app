@@ -6,6 +6,8 @@ import {
   PopulationsMenu,
 } from '@/features/circuit-nodes/components/populations-menu';
 
+import { installLocalStorage } from '../auth-manager/install-local-storage';
+
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 
 const POPULATIONS: NodePopulation[] = [
@@ -147,6 +149,20 @@ describe('PopulationsMenu', () => {
     expect(screen.queryByTestId('populations-menu-content')).toBeNull();
   });
 
+  // And why it listens in the capture phase: the panel sits over a WebGL canvas
+  // that stops pointerdown from bubbling.
+  it('closes on a pointer the page stops from bubbling', () => {
+    open();
+    const canvas = document.createElement('div');
+    canvas.addEventListener('pointerdown', (event) => event.stopPropagation());
+    document.body.append(canvas);
+
+    fireEvent.pointerDown(canvas);
+
+    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
+    canvas.remove();
+  });
+
   it('offers no way to change what is on show when the host pins it', () => {
     open({ selected: 'cortex', onSelect: undefined });
 
@@ -158,14 +174,16 @@ describe('PopulationsMenu', () => {
 });
 
 describe('PopulationsMenu introduction', () => {
-  // No record of a previous visit, the only case it opens itself in.
-  beforeEach(() => localStorage.clear());
+  // `localStorage` is Node's own global from Node 24 on, undefined without a
+  // flag. A fresh one each time is also the no-previous-visit case, the only
+  // one the checklist opens itself in.
+  beforeEach(() => installLocalStorage());
 
-  function introduce(autoOpen: boolean) {
+  function introduce(autoOpen: boolean, hidden: string[] = ['vpm']) {
     return (
       <PopulationsMenu
         populations={POPULATIONS}
-        hidden={['vpm']}
+        hidden={hidden}
         onChange={vi.fn()}
         autoOpen={autoOpen}
       />
@@ -195,6 +213,15 @@ describe('PopulationsMenu introduction', () => {
 
     render(introduce(true));
     expect(screen.queryByTestId('populations-menu-content')).toBeNull();
+  });
+
+  // The panel opens itself to say what is missing from the scene. With nothing
+  // missing, the one introduction is better kept for a circuit that has some.
+  it('keeps the introduction back on a circuit that hides nothing', () => {
+    render(introduce(true, []));
+
+    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
+    expect(localStorage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)).toBeNull();
   });
 
   // The host holds it back while the checklist is mounted but off screen,

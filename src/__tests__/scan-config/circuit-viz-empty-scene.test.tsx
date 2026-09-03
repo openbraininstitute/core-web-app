@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitVisualization } from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import { QUIET_MS } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { SmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources';
@@ -85,33 +86,44 @@ const CELL = {
   somaRadius: 8,
 };
 
+/** Past the quiet period the indicator holds itself back for. */
+function waitOutTheQuietPeriod() {
+  act(() => vi.advanceTimersByTime(QUIET_MS + 1));
+}
+
 describe('CircuitVisualization on an empty scene', () => {
+  // Driven rather than waited out: on a slow runner an indicator that should
+  // not be there can outlast whatever timeout the assertion carries.
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
   // The indicator waits on the viewer's own paint progress, and with no cells
   // the viewer is never mounted to report any. Waiting on it would leave the
   // indicator up for good over a scene the user emptied on purpose.
-  it('reads a finished, empty scene as finished', async () => {
+  it('reads a finished, empty scene as finished', () => {
     draw({ cells: [], isLoading: false });
+    waitOutTheQuietPeriod();
 
-    // Waited out: the indicator holds itself back for a moment before it
-    // appears, so an immediate check would read as absence either way. By role,
-    // since which phase it would have named is not the point.
-    await expect(screen.findByRole('status', {}, { timeout: 400 })).rejects.toThrow();
+    // By role, since which phase it would have named is not the point.
+    expect(screen.queryByRole('status')).toBeNull();
     expect(fixtures.mounted).toHaveLength(0);
   });
 
-  it('still covers an empty scene that has not arrived yet', async () => {
+  it('still covers an empty scene that has not arrived yet', () => {
     draw({ cells: [], isLoading: true });
+    waitOutTheQuietPeriod();
 
-    expect(await screen.findByLabelText(LOADING)).toBeInTheDocument();
+    expect(screen.getByLabelText(LOADING)).toBeInTheDocument();
   });
 
-  it('keeps covering a scene whose cells are placed but not yet painted', async () => {
+  it('keeps covering a scene whose cells are placed but not yet painted', () => {
     draw({ cells: [CELL], isLoading: false });
+    waitOutTheQuietPeriod();
 
     // Mounted, and reporting no progress: the morphologies are still on their
     // way from OBI-One, which is what the cover says it is waiting for.
     expect(fixtures.mounted).toHaveLength(1);
-    expect(await screen.findByLabelText('Drawing morphologies… 0 of 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Drawing morphologies… 0 of 1')).toBeInTheDocument();
   });
 });
 

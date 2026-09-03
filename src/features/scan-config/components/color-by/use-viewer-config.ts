@@ -95,11 +95,20 @@ function readConfig(circuitId: string, defaults: ViewerConfig): ViewerConfig | n
   }
 }
 
+/**
+ * A patch, or what to patch given what is already there. The second form is for
+ * the per-population and per-property settings, whose patch has to carry every
+ * entry but the one being changed.
+ */
+type ViewerConfigPatch =
+  | Partial<ViewerConfig>
+  | ((previous: ViewerConfig) => Partial<ViewerConfig>);
+
 interface UseViewerConfig {
   config: ViewerConfig;
   /** true when a saved config already exists for this circuit (gates the reset toggle) */
   hasSavedConfig: boolean;
-  update: (patch: Partial<ViewerConfig>) => void;
+  update: (patch: ViewerConfigPatch) => void;
   reset: () => void;
 }
 
@@ -131,13 +140,14 @@ export function useViewerConfig(
   }, [circuitId, defaults]);
 
   const update = useCallback(
-    (patch: Partial<ViewerConfig>) => {
+    (patch: ViewerConfigPatch) => {
       setConfig((prev) => {
+        const resolved = typeof patch === 'function' ? patch(prev) : patch;
         const next = {
           ...prev,
-          ...patch,
-          ...(patch.backgroundColor !== undefined && {
-            backgroundColor: normalizeCanvasBackground(patch.backgroundColor),
+          ...resolved,
+          ...(resolved.backgroundColor !== undefined && {
+            backgroundColor: normalizeCanvasBackground(resolved.backgroundColor),
           }),
         };
         if (PERSIST_VIEWER_CONFIG && hydratedRef.current) {

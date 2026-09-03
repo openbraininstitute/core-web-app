@@ -150,17 +150,19 @@ export function useCircuitColorBy(
     }
   }, []);
 
+  // Merged inside the update rather than from the rendered config, so two
+  // swatches changed in one tick do not both start from the same overrides.
   const onChangeCategoryColor = useCallback(
     (value: string, color: string) => {
       if (!property) return;
-      update({
+      update((previous) => ({
         colorOverrides: {
-          ...config.colorOverrides,
-          [property]: { ...config.colorOverrides[property], [value]: color },
+          ...previous.colorOverrides,
+          [property]: { ...previous.colorOverrides[property], [value]: color },
         },
-      });
+      }));
     },
-    [property, config.colorOverrides, update]
+    [property, update]
   );
 
   const onHiddenPopulationsChange = useCallback(
@@ -171,9 +173,12 @@ export function useCircuitColorBy(
   const colorBy: ColorByControls = useMemo(
     () => ({
       selectedProperty: property,
+      // @see onChangeCategoryColor: the same merge, one entry per population.
       onSelectProperty: (p) => {
         if (populationName === undefined) return;
-        update({ colorByProperty: { ...config.colorByProperty, [populationName]: p } });
+        update((previous) => ({
+          colorByProperty: { ...previous.colorByProperty, [populationName]: p },
+        }));
       },
       properties,
       propertiesLoading: !columns && status !== 'error',
@@ -186,7 +191,6 @@ export function useCircuitColorBy(
     [
       property,
       populationName,
-      config.colorByProperty,
       properties,
       columns,
       status,

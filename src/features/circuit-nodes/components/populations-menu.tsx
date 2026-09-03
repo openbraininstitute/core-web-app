@@ -68,13 +68,17 @@ export function PopulationsMenu({
 
   // The pill counts what is on screen without saying that the populations
   // missing from it were left out by default, or that a click brings them back.
-  // The panel says so itself, once.
+  // The panel says so itself, once, and only where something is missing.
+  //
+  // Statements rather than `||` and `?.`: React Compiler will not lower a
+  // conditional inside a try, and drops the whole component when it cannot.
   useEffect(() => {
-    if (!autoOpen) return;
+    if (!autoOpen || hidden.length === 0) return;
 
     try {
       const storage = globalThis.localStorage;
-      if (!storage || storage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)) return;
+      if (!storage) return;
+      if (storage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)) return;
       storage.setItem(POPULATIONS_MENU_INTRODUCED_KEY, '1');
     } catch {
       // Storage blocked or full. An introduction we cannot record is one given
@@ -82,7 +86,7 @@ export function PopulationsMenu({
       return;
     }
     setOpen(true);
-  }, [autoOpen]);
+  }, [autoOpen, hidden.length]);
 
   useEffect(() => {
     if (!open) return;

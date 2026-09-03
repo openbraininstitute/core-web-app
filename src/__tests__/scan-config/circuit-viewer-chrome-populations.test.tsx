@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { POPULATIONS_MENU_INTRODUCED_KEY } from '@/features/circuit-nodes/components/populations-menu';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 
+import { installLocalStorage } from '../auth-manager/install-local-storage';
+
 import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type {
   ColorByControls,
@@ -49,9 +51,14 @@ function renderChrome(viz: ICircuitViewerChromeProps['viz'], vizActive = true) {
   render(<CircuitViewerChrome vizActive={vizActive} viz={viz} />);
 }
 
+// `localStorage` is Node's own global from Node 24 on, undefined without a flag.
+//
 // Seeded as already introduced, so the checklist stays shut and its "Show all"
 // is not on screen beside the notices below.
-beforeEach(() => localStorage.setItem(POPULATIONS_MENU_INTRODUCED_KEY, '1'));
+beforeEach(() => {
+  installLocalStorage();
+  localStorage.setItem(POPULATIONS_MENU_INTRODUCED_KEY, '1');
+});
 
 /** The checklist's props with a given hidden set, and a fresh `onChange` to read. */
 function withHidden(hidden: string[], overrides: Partial<PopulationsControls> = {}) {
@@ -158,10 +165,13 @@ describe('CircuitViewerChrome population notices', () => {
 });
 
 describe('CircuitViewerChrome checklist introduction', () => {
+  // No record of a previous visit, and a hidden population: the two conditions
+  // the checklist opens itself under.
   beforeEach(() => localStorage.clear());
+  const introducing = () => withHidden(['vpm']).populations;
 
   it('opens the checklist the first time the 3D view is on show', () => {
-    renderChrome({ menu: MENU, populations: POPULATIONS });
+    renderChrome({ menu: MENU, populations: introducing() });
 
     expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
   });
@@ -169,7 +179,7 @@ describe('CircuitViewerChrome checklist introduction', () => {
   // The chrome stays mounted behind the views it is not on, invisible and
   // inert, so the introduction waits for the 3D one.
   it('keeps it back while another view is on show', () => {
-    renderChrome({ menu: MENU, populations: POPULATIONS }, false);
+    renderChrome({ menu: MENU, populations: introducing() }, false);
 
     expect(screen.queryByTestId('populations-menu-content')).toBeNull();
     expect(localStorage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)).toBeNull();

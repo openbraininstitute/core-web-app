@@ -20,7 +20,7 @@ const LOADING_LABEL = 'Loading visualization…';
  * The veil waits too, so switching populations leaves the previous scene on
  * screen instead of flashing white over it.
  */
-const QUIET_MS = 300;
+export const QUIET_MS = 300;
 
 interface VisualizationLoadingIndicatorProps {
   /** Node-file bytes still coming, summed over the files being read. */

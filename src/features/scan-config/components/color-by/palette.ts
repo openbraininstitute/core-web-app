@@ -227,6 +227,9 @@ function buildKey(
   return { categorical, palette, columnByValue };
 }
 
+/** What the key calls a node whose enum index the library does not name. */
+const UNNAMED_VALUE = 'unknown';
+
 /** a categorical column: the key comes from its library, the per-node pass from its indices */
 function buildCategoricalColumn(
   property: string,
@@ -235,20 +238,21 @@ function buildCategoricalColumn(
   overrides?: Record<string, string>,
   background?: string
 ): ColorMapping {
-  // occurrences per library slot. Indices past the library (malformed files)
-  // count under their own `String(slot)` name, as before.
-  let slotCount = library.length;
+  // Occurrences per library slot, plus one slot for the indices the library
+  // does not name. Only a malformed file has any, and sizing the counts by the
+  // largest of them would ask for up to 2^32 entries.
+  const stray = library.length;
+  const counts = new Uint32Array(stray + 1);
   for (let i = 0; i < indices.length; i++) {
-    if (indices[i] >= slotCount) slotCount = indices[i] + 1;
+    const slot = indices[i];
+    counts[slot < stray ? slot : stray] += 1;
   }
-  const counts = new Uint32Array(slotCount);
-  for (let i = 0; i < indices.length; i++) counts[indices[i]] += 1;
 
   // distinct *present* values, merged by name in case a library repeats one
   const slotsByName = new Map<string, { count: number; slots: number[] }>();
-  for (let slot = 0; slot < slotCount; slot++) {
+  for (let slot = 0; slot <= stray; slot++) {
     if (counts[slot] === 0) continue;
-    const name = library[slot] ?? String(slot);
+    const name = library[slot] ?? UNNAMED_VALUE;
     const entry = slotsByName.get(name);
     if (entry) {
       entry.count += counts[slot];
@@ -263,13 +267,16 @@ function buildCategoricalColumn(
     .sort((a, b) => compareValues(a.value, b.value));
 
   const { categorical, palette, columnByValue } = buildKey(ordered, overrides, background);
-  const slotToColumn = new Uint16Array(slotCount);
+  const slotToColumn = new Uint16Array(stray + 1);
   for (const { value, slots } of ordered) {
     const column = columnByValue.get(value) ?? 0;
     for (const slot of slots) slotToColumn[slot] = column;
   }
   const columnByNode = new Uint16Array(indices.length);
-  for (let i = 0; i < indices.length; i++) columnByNode[i] = slotToColumn[indices[i]];
+  for (let i = 0; i < indices.length; i++) {
+    const slot = indices[i];
+    columnByNode[i] = slotToColumn[slot < stray ? slot : stray];
+  }
   return { mode: 'categorical', property, palette, columnByNode, categorical };
 }
 

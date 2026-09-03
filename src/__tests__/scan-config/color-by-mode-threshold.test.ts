@@ -101,4 +101,29 @@ describe('colour-by mode', () => {
       mapping.categorical?.[1].color,
     ]);
   });
+
+  // An index the library does not name comes only from a malformed file, and
+  // can be anything up to 2^32. A slot of its own would size the counts by it.
+  it('holds a whole malformed library in one entry rather than sizing itself by it', () => {
+    const mapping = buildColorMapping({
+      property: 'mtype',
+      column: {
+        kind: 'categorical',
+        library: ['L5_TPC'],
+        indices: Uint32Array.from([0, 4_000_000_000, 4_294_967_294]),
+      },
+    });
+
+    expect(mapping.categorical?.map(({ value, count }) => ({ value, count }))).toEqual([
+      { value: 'L5_TPC', count: 1 },
+      { value: 'unknown', count: 2 },
+    ]);
+    // Both stray indices draw as the one unnamed value.
+    const byNode = [...mapping.columnByNode].map((column) => mapping.palette[column]);
+    expect(byNode).toEqual([
+      mapping.categorical?.[0].color,
+      mapping.categorical?.[1].color,
+      mapping.categorical?.[1].color,
+    ]);
+  });
 });

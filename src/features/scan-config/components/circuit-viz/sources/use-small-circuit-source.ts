@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   centroidOf,
@@ -192,6 +192,10 @@ export function useSmallCircuitSource({
       // viewer reads as the same scene and does not re-frame the camera around.
       if (hidden.has(candidate.name)) return [];
       const onShow = candidate.name === population.name;
+      // The rest recede behind the population on show, unless that one could
+      // not be placed: an input population carries no positions, and there is
+      // then nothing on screen to recede behind.
+      const flat = onShow || !subject ? paint : recededColor;
       const result = new Array<MorphoViewerSmallCircuitCell>(geometry.count);
       for (let i = 0; i < geometry.count; i++) {
         result[i] = {
@@ -199,7 +203,7 @@ export function useSmallCircuitSource({
           center: positionAt(geometry, i),
           orientation: placementAt(geometry, i)?.orientation ?? IDENTITY_QUATERNION,
           somaRadius: PLACEHOLDER_SOMA_RADIUS,
-          color: onShow ? (palette[columnByNode[i]] ?? paint) : recededColor,
+          color: onShow ? (palette[columnByNode[i]] ?? flat) : flat,
           // Told to the viewer, not left for it to discover by asking: it counts the cells it
           // is waiting on, and a scene where most of them will never answer would otherwise
           // report itself nearly loaded before the first morphology arrived.
@@ -242,11 +246,10 @@ export function useSmallCircuitSource({
   // meanwhile would unmount the viewer, giving a black frame and then a camera
   // reset. This does not apply after a failure: the error panel would sit on
   // cells that 'Try again' is about to replace.
-  const shownRef = useRef<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
-  const cells = built ?? (error ? NO_CELLS : shownRef.current);
-  useEffect(() => {
-    shownRef.current = cells;
-  }, [cells]);
+  // State rather than a ref: React Compiler will not read a ref in render.
+  const [shown, setShown] = useState<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
+  const cells = built ?? (error ? NO_CELLS : shown);
+  if (cells !== shown) setShown(cells);
 
   // Drawn for every population, marked for one. The morphology locations of a
   // neuron set are section ids without a cell, so they are read against the

@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
+import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
@@ -336,6 +337,9 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.cells.map((cell) => cell.id)).toEqual([
       'circuit-id/default #0?axons=false',
     ]);
+    // Painted, not receded: with the population on show nowhere on screen,
+    // there is nothing for the rest to recede behind.
+    expect(result.current.cells[0].color).toBe(DEFAULT_NEURON_COLOR);
   });
 
   it('fails only once no population at all could be placed', () => {

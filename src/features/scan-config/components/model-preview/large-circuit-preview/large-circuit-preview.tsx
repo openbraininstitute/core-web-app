@@ -238,6 +238,8 @@ export function LargeCircuitPreview({
     // to a single hue; and `false`, which the viewer reads as a soma to skip
     // entirely, so it is undrawn, unpickable and has no hover of its own. Each
     // takes a palette column on first use.
+    // Spelt out rather than `??=`, which React Compiler 1.0.0 cannot lower,
+    // leaving this recolour path uncompiled.
     let ownRampColumn: number | undefined;
     let recededColumn: number | undefined;
     let hiddenColumn: number | undefined;
@@ -246,7 +248,7 @@ export function LargeCircuitPreview({
     let index = 0;
     for (const { population: candidate, geometry } of placed) {
       if (hidden.has(candidate.name)) {
-        hiddenColumn ??= palette.push(false) - 1;
+        if (hiddenColumn === undefined) hiddenColumn = palette.push(false) - 1;
         columnByCell.fill(hiddenColumn, index, index + geometry.count);
       } else if (candidate.name === subjectName && nodeColors) {
         // The mapping's palette sits at the same indices here, so its columns
@@ -254,10 +256,10 @@ export function LargeCircuitPreview({
         columnByCell.set(nodeColors.columnByNode.subarray(0, geometry.count), index);
       } else if (candidate.name !== subjectName && recede !== undefined) {
         // One colour for a whole population: allocate the column once, then fill.
-        recededColumn ??= palette.push(recede) - 1;
+        if (recededColumn === undefined) recededColumn = palette.push(recede) - 1;
         columnByCell.fill(recededColumn, index, index + geometry.count);
       } else {
-        ownRampColumn ??= palette.push(null) - 1;
+        if (ownRampColumn === undefined) ownRampColumn = palette.push(null) - 1;
         columnByCell.fill(ownRampColumn, index, index + geometry.count);
       }
       index += geometry.count;
