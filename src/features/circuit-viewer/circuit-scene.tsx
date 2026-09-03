@@ -401,6 +401,7 @@ export function CircuitScene({
     // canvas and the chrome buttons each opt back in.
     <div ref={containerRef} className="pointer-events-none relative h-full min-h-0 overflow-hidden">
       <div
+        data-testid="viewer-scene"
         className={classNames(
           'absolute inset-0',
           active ? 'pointer-events-auto' : 'invisible pointer-events-none'
