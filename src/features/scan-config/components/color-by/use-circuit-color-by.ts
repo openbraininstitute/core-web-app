@@ -140,16 +140,6 @@ export function useCircuitColorBy(
     if (image) downloadCircuitImage(image, shown?.name ?? '', config.backgroundColor);
   }, [signals, shown?.name, config.backgroundColor]);
 
-  const toggleFullscreen = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-    } else {
-      void el.requestFullscreen?.();
-    }
-  }, []);
-
   // Merged inside the update rather than from the rendered config, so two
   // swatches changed in one tick do not both start from the same overrides.
   const onChangeCategoryColor = useCallback(
@@ -204,7 +194,6 @@ export function useCircuitColorBy(
 
   const menu: ViewerControlsMenuProps = useMemo(
     () => ({
-      onFullscreen: toggleFullscreen,
       onResetView: () => signals.cameraReset.dispatch(),
       onCaptureImage: captureImage,
       backgroundDark,
@@ -249,7 +238,6 @@ export function useCircuitColorBy(
     }),
     [
       signals,
-      toggleFullscreen,
       captureImage,
       backgroundDark,
       config.showAxons,

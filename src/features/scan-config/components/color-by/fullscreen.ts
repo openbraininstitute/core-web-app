@@ -17,3 +17,19 @@ export function useFullscreenElement(): HTMLElement | null {
 
   return element;
 }
+
+/**
+ * Blow `element` up to fill the screen, or leave fullscreen if anything is in it.
+ *
+ * Which element that is belongs to the host: a viewer is rarely the whole of
+ * what the user means by the view — the circuit preview keeps the designer image
+ * beside its 3D scene, spike replay the raster and the transport bar.
+ */
+export function toggleFullscreen(element: HTMLElement | null) {
+  if (!element) return;
+  if (document.fullscreenElement) {
+    void document.exitFullscreen();
+  } else {
+    void element.requestFullscreen?.();
+  }
+}
