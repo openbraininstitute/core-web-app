@@ -55,10 +55,15 @@ export default function Block({
 
   if (!blockSchema) return null;
 
+  // A property key is only unique inside its block: two recordings can both
+  // have `dt`. E2E tests scope a field by its block before looking it up.
+  const blockTestId = ['scan-config-block', rootElement, selectedEntry].filter(Boolean).join('-');
+
   return (
     <div
       className="flex w-full min-w-0 max-w-full flex-col gap-2"
       data-scan-config-block={ScanConfigUIElementDict.BlockSingle}
+      data-testid={blockTestId}
     >
       {!hideTitle && (
         <>
@@ -113,6 +118,7 @@ export default function Block({
                       isBooleanInput,
                   })}
                   data-scan-config-block-element-container-of={blockElementSchema.ui_element}
+                  data-testid={`scan-config-field-${k}`}
                 >
                   <div
                     className={cn('flex gap-0.5 w-full items-center', { 'mb-2': !isBooleanInput })}
