@@ -16,10 +16,6 @@ import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
-import {
-  toggleFullscreen,
-  useFullscreenElement,
-} from '@/features/scan-config/components/color-by/fullscreen';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
@@ -27,6 +23,7 @@ import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-rende
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { classNames } from '@/util/utils';
+import { toggleFullscreen, useFullscreenElement } from '@/utils/fullscreen';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';

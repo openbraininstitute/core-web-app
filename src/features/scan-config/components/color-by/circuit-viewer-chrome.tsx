@@ -9,6 +9,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
 import { cn } from '@/utils/css-class';
+import { useFullscreenElement } from '@/utils/fullscreen';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { MorphologyLocationHelp } from '../circuit-viz/morphology-location/help';
@@ -16,7 +17,6 @@ import { ZoomSlider } from '../zoom-slider/zoom-slider';
 import { ChromeButton } from './chrome-button';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
-import { useFullscreenElement } from './fullscreen';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 

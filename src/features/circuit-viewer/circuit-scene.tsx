@@ -12,7 +12,6 @@ import {
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
-import { useFullscreenElement } from '@/features/scan-config/components/color-by/fullscreen';
 import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
@@ -34,6 +33,7 @@ import {
 } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use-viewer-zoom';
 import { classNames } from '@/util/utils';
+import { useFullscreenElement } from '@/utils/fullscreen';
 
 import { PaneResizeHandle } from './pane-resize-handle';
 

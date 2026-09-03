@@ -5,6 +5,7 @@
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 import { cn } from '@/utils/css-class';
+import { useFullscreenElement } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -23,11 +24,15 @@ function PopoverContent({
   container,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content> & {
-  /** Portal mount node; required in fullscreen so panels stay interactive. */
+  /** Portal mount node. Defaults to whatever is fullscreen, else the body. */
   container?: HTMLElement | null;
 }) {
+  // Portalled to the body, a panel opened over a fullscreen viewer is outside
+  // the fullscreen subtree, and the browser draws none of it.
+  const fullscreen = useFullscreenElement();
+
   return (
-    <PopoverPrimitive.Portal container={container ?? undefined}>
+    <PopoverPrimitive.Portal container={container ?? fullscreen ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}
