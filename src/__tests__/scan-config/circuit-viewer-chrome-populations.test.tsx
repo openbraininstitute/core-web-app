@@ -111,9 +111,8 @@ describe('CircuitViewerChrome population notices', () => {
 
     const notice = screen.getByRole('status');
     expect(notice).toHaveTextContent('“cortex” is selected but hidden');
-    // Under the checklist it is about, so the way back sits beside the control
-    // that got the user here.
-    expect(screen.getByTestId('viewer-chrome-left')).toContainElement(notice);
+    // Placed over the canvas, clear of the control cluster.
+    expect(screen.getByTestId('viewer-chrome-left')).not.toContainElement(notice);
     fireEvent.click(screen.getByRole('button', { name: 'Show' }));
     // That one back, and only that one: the notice is about the population on
     // show, not about everything the user has taken out of the scene.

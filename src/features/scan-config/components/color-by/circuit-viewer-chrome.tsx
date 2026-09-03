@@ -1,4 +1,4 @@
-import { RiArrowDownSLine, RiFullscreenExitLine, RiTableLine } from '@remixicon/react';
+import { RiAlertLine, RiArrowDownSLine, RiFullscreenExitLine, RiTableLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
@@ -58,7 +58,7 @@ export interface ICircuitViewerChromeProps {
  * absolutely-positioned control layer over a circuit viewer: mode toggle +
  * table + settings + populations checklist (top-left), color-by dropdown + key
  * (top-right), and what the checklist can leave the scene in (centre and
- * top-left). Sits above the 3D canvas
+ * top-centre). Sits above the 3D canvas
  */
 export function CircuitViewerChrome({
   modeToggle,
@@ -150,83 +150,85 @@ export function CircuitViewerChrome({
         </div>
       )}
       {/* What the scene is made of: which populations are in it, the table
-          listing the one on show, and how it is drawn. A column, because the
-          checklist has something to say below itself. */}
+          listing the one on show, and how it is drawn. */}
       <div
         data-testid="viewer-chrome-left"
-        className="pointer-events-auto absolute left-3 top-3 flex flex-col items-start gap-2"
+        className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2"
       >
-        <div className="flex items-center gap-2">
-          {modeToggle && <ModeToggle options={modeToggle} />}
-          {table && (
-            <ChromeButton
-              label={table.active ? 'Hide nodes table' : 'Show nodes table'}
-              onClick={table.onToggle}
-              active={table.active}
-            >
-              <RiTableLine className="size-4" />
-            </ChromeButton>
-          )}
-          {viz && (
-            <div
-              className={cn(
-                'flex items-center gap-2',
-                !showVizChrome && 'invisible pointer-events-none'
-              )}
-              aria-hidden={!showVizChrome}
-              inert={!showVizChrome || undefined}
-            >
-              {isFullscreen && (
-                <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
-                  <RiFullscreenExitLine className="size-4" />
-                </ChromeButton>
-              )}
-              <ViewerControlsMenu
-                {...viz.menu}
-                container={portalContainer}
-                isFullscreen={isFullscreen}
-              />
-              {/* Ahead of the help icons, which come and go with the mode: in a
+        {modeToggle && <ModeToggle options={modeToggle} />}
+        {table && (
+          <ChromeButton
+            label={table.active ? 'Hide nodes table' : 'Show nodes table'}
+            onClick={table.onToggle}
+            active={table.active}
+          >
+            <RiTableLine className="size-4" />
+          </ChromeButton>
+        )}
+        {viz && (
+          <div
+            className={cn(
+              'flex items-center gap-2',
+              !showVizChrome && 'invisible pointer-events-none'
+            )}
+            aria-hidden={!showVizChrome}
+            inert={!showVizChrome || undefined}
+          >
+            {isFullscreen && (
+              <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
+                <RiFullscreenExitLine className="size-4" />
+              </ChromeButton>
+            )}
+            <ViewerControlsMenu
+              {...viz.menu}
+              container={portalContainer}
+              isFullscreen={isFullscreen}
+            />
+            {/* Ahead of the help icons, which come and go with the mode: in a
                   row anchored to the left edge, only what precedes an element
                   can move it, and the pill's own width changes as populations
                   are ticked off. */}
-              {populations && (
-                <PopulationsMenu
-                  populations={populations.populations}
-                  hidden={populations.hidden}
-                  onChange={populations.onChange}
-                  selected={populations.selected}
-                  onSelect={populations.onSelect}
-                  theme={theme}
-                  container={portalContainer}
-                  autoOpen={showVizChrome}
-                />
+            {populations && (
+              <PopulationsMenu
+                populations={populations.populations}
+                hidden={populations.hidden}
+                onChange={populations.onChange}
+                selected={populations.selected}
+                onSelect={populations.onSelect}
+                theme={theme}
+                container={portalContainer}
+                autoOpen={showVizChrome}
+              />
+            )}
+            {viz.menu.onToggleElectrodes &&
+              viz.menu.showElectrodes !== false &&
+              viz.electrodesInteractive !== false && (
+                <ElectrodeInteractionHelp container={portalContainer} />
               )}
-              {viz.menu.onToggleElectrodes &&
-                viz.menu.showElectrodes !== false &&
-                viz.electrodesInteractive !== false && (
-                  <ElectrodeInteractionHelp container={portalContainer} />
-                )}
-              {viz.morphologyLocationsInteractive && (
-                <MorphologyLocationHelp container={portalContainer} />
-              )}
-            </div>
-          )}
-        </div>
-        {showVizChrome && populations && hiddenSubject !== undefined && (
+            {viz.morphologyLocationsInteractive && (
+              <MorphologyLocationHelp container={portalContainer} />
+            )}
+          </div>
+        )}
+      </div>
+      {/* Below the controls row: centred in that row it overlapped the
+          Populations pill on narrow screens. */}
+      {showVizChrome && populations && hiddenSubject !== undefined && (
+        <div className="pointer-events-auto absolute left-1/2 top-14 -translate-x-1/2">
           <ChromeNotice
             action="Show"
             onAction={() =>
               populations.onChange(populations.hidden.filter((name) => name !== hiddenSubject))
             }
             theme={theme}
+            warning
             style={panelStyle}
-            className="px-3 py-1 text-xs"
+            className="px-3 py-1.5 text-xs"
           >
             “{hiddenSubject}” is selected but hidden
           </ChromeNotice>
-        )}
-      </div>
+        </div>
+      )}
 
       {colorBy && (
         <div
@@ -322,6 +324,7 @@ function ChromeNotice({
   action,
   onAction,
   theme,
+  warning = false,
   style,
   className,
 }: {
@@ -330,19 +333,24 @@ function ChromeNotice({
   action: string;
   onAction: () => void;
   theme?: ViewerTheme | null;
+  warning?: boolean;
   style?: React.CSSProperties;
   className?: string;
 }) {
+  // Themed panels ring with a box-shadow in `style`, the fixed light one with a Tailwind ring.
+  const ringStyle = warning && theme ? { boxShadow: '0 0 0 1px var(--color-warning)' } : undefined;
   return (
     <div
       role="status"
-      style={style}
+      style={{ ...style, ...ringStyle }}
       className={cn(
         'flex items-center gap-2 rounded-full backdrop-blur-sm',
-        !theme && 'bg-white text-neutral-600 shadow-md ring-1 ring-black/5',
+        !theme && 'bg-white text-neutral-600 shadow-md ring-1',
+        !theme && (warning ? 'ring-warning' : 'ring-black/5'),
         className
       )}
     >
+      {warning && <RiAlertLine aria-hidden className="size-4 shrink-0 text-warning" />}
       <span>{children}</span>
       <button
         type="button"

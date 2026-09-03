@@ -1,4 +1,4 @@
-import { RiArrowDownSLine } from '@remixicon/react';
+import { RiArrowDownSLine, RiEyeLine } from '@remixicon/react';
 import { useEffect, useRef, useState } from 'react';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
@@ -148,6 +148,11 @@ export function PopulationsMenu({
           className
         )}
       >
+        <RiEyeLine
+          aria-hidden
+          className={cn('size-4', !theme && 'text-neutral-400')}
+          style={mutedStyle}
+        />
         <span className={cn(!theme && 'text-neutral-400')} style={mutedStyle}>
           Populations
         </span>
