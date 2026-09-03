@@ -27,8 +27,8 @@ function PopoverContent({
   /** Portal mount node. Defaults to whatever is fullscreen, else the body. */
   container?: HTMLElement | null;
 }) {
-  // Portalled to the body, a panel opened over a fullscreen viewer is outside
-  // the fullscreen subtree, and the browser draws none of it.
+  // The body sits outside the fullscreen subtree, so a panel portalled there
+  // is not drawn over a fullscreen viewer.
   const fullscreen = useFullscreenElement();
 
   return (

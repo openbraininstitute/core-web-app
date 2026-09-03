@@ -49,8 +49,8 @@ function TooltipContent({
   showArrow?: boolean;
   portalProps?: TooltipPrimitive.TooltipPortalProps;
 }) {
-  // See the note in `PopoverContent`: the body is outside the fullscreen
-  // subtree, so a tooltip portalled there is not drawn.
+  // Merged rather than replaced, so a caller's own container still wins. See
+  // `PopoverContent` for why the fallback is there.
   const fullscreen = useFullscreenElement();
 
   return (
