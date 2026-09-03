@@ -2,12 +2,11 @@
 
 import { ViewerHelpRow, ViewerHelpTooltip } from '../viewer-help-tooltip';
 
-export function MorphologyLocationHelp({ container }: { container?: HTMLElement | null }) {
+export function MorphologyLocationHelp() {
   return (
     <ViewerHelpTooltip
       label="Morphology location controls"
       title="Morphology locations"
-      container={container}
       width="w-72"
     >
       <p className="mb-2.5 text-xs leading-relaxed text-neutral-700">

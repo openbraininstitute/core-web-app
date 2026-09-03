@@ -49,8 +49,7 @@ function TooltipContent({
   showArrow?: boolean;
   portalProps?: TooltipPrimitive.TooltipPortalProps;
 }) {
-  // Merged rather than replaced, so a caller's own container still wins. See
-  // `PopoverContent` for why the fallback is there.
+  // See `PopoverContent` for why the fallback is there.
   const fullscreen = useFullscreenElement();
 
   return (
