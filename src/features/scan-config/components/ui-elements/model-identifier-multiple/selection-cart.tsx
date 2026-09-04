@@ -168,6 +168,7 @@ export function SelectionConfirmActions({
     >
       <Button
         type="button"
+        data-testid="scan-config-confirm-model"
         rounded
         variant="success"
         size="responsive"
