@@ -5,9 +5,9 @@ import { useRouter } from '@bprogress/next';
 import {
   RiBarChartBoxLine,
   RiCheckLine,
-  RiFileAddLine,
   RiFileCopyLine,
-  RiSettings3Line,
+  RiFolderLine,
+  RiGitBranchLine,
 } from '@remixicon/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -20,6 +20,10 @@ import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import {
+  LIFECYCLE_STATUS_RENDERER,
+  LifecycleStatusCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
 import { CellRendererRegistry } from '@/features/data-grid/react';
 import {
   GRID_ICON_BUTTON_ACTIVE_CLASS,
@@ -27,12 +31,7 @@ import {
 } from '@/features/data-grid/react/molecules-theme';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/ui/molecules/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { ActivityValues } from '@/ui/segments/workflows/config';
 import {
   buildWorkflowActivityConfigurationHref,
@@ -57,29 +56,74 @@ import type { TActivityValue } from '@/ui/segments/workflows/config';
 export const WORKFLOW_ACTIVITY_TYPE_RENDERER = 'workflowActivityType';
 export const WORKFLOW_ACTIVITY_DATE_RENDERER = 'workflowActivityDate';
 export const WORKFLOW_ACTIVITY_ACTIONS_RENDERER = 'workflowActivityActions';
+export const WORKFLOW_ACTIVITY_STATUS_RENDERER = 'workflowActivityStatus';
 
-/** Width of the pinned actions column — enough for the "Action" trigger plus padding. */
-export const WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH = 96;
+/** Fits four 32px action buttons, their gaps and the cell padding. */
+export const WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH = 160;
 
-/** Leading icon size in the actions menu — matches the `size-4` DropdownMenuItem sets. */
+/** Glyph size inside an action button. */
 const ACTION_ICON_SIZE = 16;
 
-/**
- * Actions-menu row: roomier than the DropdownMenuItem default and highlighted in
- * `primary-8`, matching the grid's icon buttons and the outline buttons this menu
- * replaced. Radix sets `data-highlighted` for BOTH pointer hover and keyboard
- * navigation, so styling it (rather than `:hover`) keeps the two in step. The icon
- * needs its own colour rule: the base class pins any untinted svg to
- * `text-muted-foreground`, which would otherwise survive the highlight.
- */
-const ACTION_ITEM_CLASS = cn(
-  'cursor-pointer gap-2.5 rounded-md px-3 py-2.5',
-  'data-[highlighted]:bg-primary-8 data-[highlighted]:text-white',
-  'data-[highlighted]:[&_svg]:text-white',
-  // a disabled row is inert: no hand cursor, no highlight
-  'data-[disabled]:cursor-default'
-);
-export const WORKFLOW_ACTIVITY_STATUS_RENDERER = 'workflowActivityStatus';
+/** Round, 32px to match the status pills in the same row. */
+const actionButtonClass = (disabled: boolean) =>
+  cn(
+    'inline-flex size-8 shrink-0 items-center justify-center rounded-full border',
+    disabled
+      ? 'cursor-not-allowed border-neutral-1 text-gray-300'
+      : cn('cursor-pointer border-neutral-2 text-primary-9', GRID_ICON_BUTTON_ACTIVE_CLASS)
+  );
+
+/** One row-level action, rendered as a link when it navigates and a button otherwise. */
+interface IRowAction {
+  /** React list key; not forwarded to {@link ActionButton} */
+  key: string;
+  /** tooltip text and accessible name */
+  label: string;
+  icon: ReactNode;
+  href?: string | null;
+  onClick?: () => void;
+  disabled?: boolean;
+}
+
+/** An icon action with its title on hover. */
+function ActionButton({
+  label,
+  icon,
+  href,
+  onClick,
+  disabled = false,
+}: Omit<IRowAction, 'key'>): ReactNode {
+  const className = actionButtonClass(disabled);
+
+  const control =
+    href && !disabled ? (
+      <Link href={href} aria-label={label} className={className}>
+        {icon}
+      </Link>
+    ) : (
+      <button
+        type="button"
+        aria-label={label}
+        disabled={disabled}
+        onClick={onClick}
+        className={className}
+      >
+        {icon}
+      </button>
+    );
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {/* a disabled button receives no pointer events, so the span owns the hover */}
+        {disabled ? <span className="inline-flex">{control}</span> : control}
+      </TooltipTrigger>
+      <TooltipContent side="top" className={GRID_OVERLAY_Z_CLASS}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 /** `cellRendererParams` the Type cell reads; supplied by the schema factory. */
 interface ITypeCellParams {
@@ -119,7 +163,7 @@ export function WorkflowActivityTypeCell({
   return <span className={cn('text-primary-9 flex items-center capitalize')}>{title}</span>;
 }
 
-/** Creation date as `dd.MM.yyyy | HHhMM`, the two-part layout the listing has always shown. */
+/** Creation date as `dd.MM.yyyy | HHhMM`. */
 export function WorkflowActivityDateCell({
   row,
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
@@ -144,13 +188,12 @@ interface IActionsCellParams {
 }
 
 /**
- * One row's action menu: the same three actions the selection-driven button bar used to
- * offer, behind a per-row trigger. An action the row does not support stays LISTED and
- * disabled rather than disappearing, so the menu reads the same for every row of a type.
+ * The row's actions. An action the row does not support is disabled rather than
+ * dropped, so every row of a type offers the same set.
  *
- * Self-contained by design: routing, workspace and notifications come from context
- * rather than `cellRendererParams`, because a callback passed through params would
- * change identity on every render and rebuild the whole grid controller.
+ * Routing, workspace and notifications come from context rather than
+ * `cellRendererParams`: a callback passed through params changes identity on every
+ * render, which would rebuild the grid controller.
  */
 export function WorkflowActivityActionsCell({
   row,
@@ -176,7 +219,7 @@ export function WorkflowActivityActionsCell({
       row: tableRow,
     });
     if (!href) return null;
-    // The listing's own query params (activity/type) ride along so Back returns here.
+    // carry the listing's own query params so Back returns to the same activity/type
     const current = searchParams.toString();
     if (!current) return href;
     return `${href}${href.includes('?') ? '&' : '?'}${current}`;
@@ -211,8 +254,8 @@ export function WorkflowActivityActionsCell({
     if (href) navigate(href);
   }, [activity, entityType, workspace, tableRow, navigate]);
 
-  // An ion-channel campaign has no direct results route: the generated model has to be
-  // resolved first, so this action navigates asynchronously instead of being a link.
+  // An ion-channel campaign has no direct results route: the generated model is
+  // resolved first, so this action navigates on click instead of linking.
   const onViewIonChannelResults = useCallback(async () => {
     setIsResolvingResults(true);
     try {
@@ -247,115 +290,72 @@ export function WorkflowActivityActionsCell({
     !isBuildActivity &&
     (isIonChannelModelingCampaign ? true : Boolean(resultsHref));
 
-  return (
-    <div className="flex h-full w-full items-center justify-center">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            data-testid="workflow-activity-row-actions"
-            className={cn(
-              'inline-flex items-center justify-center rounded-full px-3 py-1',
-              'border border-neutral-2 text-xs text-primary-9 hover:text-white',
-              GRID_ICON_BUTTON_ACTIVE_CLASS
-            )}
-          >
-            Action
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          side="bottom"
-          sideOffset={4}
-          className={cn(GRID_OVERLAY_Z_CLASS, 'min-w-48 border-gray-100 bg-white p-1.5')}
-        >
-          <DropdownMenuItem
-            asChild={Boolean(configurationHref)}
-            disabled={!configurationHref}
-            className={ACTION_ITEM_CLASS}
-          >
-            {configurationHref ? (
-              <Link href={configurationHref}>
-                <RiSettings3Line size={ACTION_ICON_SIZE} />
-                <span>View configuration</span>
-              </Link>
-            ) : (
-              <>
-                <RiSettings3Line size={ACTION_ICON_SIZE} />
-                <span>View configuration</span>
-              </>
-            )}
-          </DropdownMenuItem>
-          {isIonChannelModelingCampaign ? (
-            <DropdownMenuItem
-              disabled={!canViewResults || isResolvingResults}
-              className={ACTION_ITEM_CLASS}
-              onSelect={(event) => {
-                event.preventDefault();
-                void onViewIonChannelResults();
-              }}
-            >
-              {/* the spinner takes the icon's slot, so the label never shifts */}
-              {isResolvingResults ? (
-                <LoadingOutlined />
-              ) : (
-                <RiBarChartBoxLine size={ACTION_ICON_SIZE} />
-              )}
-              <span>View results</span>
-            </DropdownMenuItem>
+  const actions: IRowAction[] = [
+    {
+      key: 'configuration',
+      label: 'View configuration',
+      icon: <RiFolderLine size={ACTION_ICON_SIZE} />,
+      href: configurationHref,
+      disabled: !configurationHref,
+    },
+    isIonChannelModelingCampaign
+      ? {
+          key: 'results',
+          label: 'View results',
+          icon: isResolvingResults ? (
+            <LoadingOutlined />
           ) : (
-            <DropdownMenuItem
-              asChild={canViewResults}
-              disabled={!canViewResults}
-              className={ACTION_ITEM_CLASS}
-            >
-              {canViewResults && resultsHref ? (
-                <Link href={resultsHref}>
-                  <RiBarChartBoxLine size={ACTION_ICON_SIZE} />
-                  <span>View results</span>
-                </Link>
-              ) : (
-                <>
-                  <RiBarChartBoxLine size={ACTION_ICON_SIZE} />
-                  <span>View results</span>
-                </>
-              )}
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            disabled={!canDuplicate}
-            onSelect={onDuplicate}
-            className={ACTION_ITEM_CLASS}
-          >
-            <RiFileAddLine size={ACTION_ICON_SIZE} />
-            <span>Duplicate</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={(event) => {
-              // hold the menu open long enough for the tick to register
-              event.preventDefault();
-              void copyId(row.id);
-            }}
-            className={ACTION_ITEM_CLASS}
-          >
-            {hasCopiedId ? (
-              <RiCheckLine size={ACTION_ICON_SIZE} />
-            ) : (
-              <RiFileCopyLine size={ACTION_ICON_SIZE} />
-            )}
-            <span>{hasCopiedId ? 'Copied' : 'Copy ID'}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <RiBarChartBoxLine size={ACTION_ICON_SIZE} />
+          ),
+          onClick: () => void onViewIonChannelResults(),
+          disabled: !canViewResults || isResolvingResults,
+        }
+      : {
+          key: 'results',
+          label: 'View results',
+          icon: <RiBarChartBoxLine size={ACTION_ICON_SIZE} />,
+          href: resultsHref,
+          disabled: !canViewResults,
+        },
+    {
+      key: 'duplicate',
+      label: 'Duplicate',
+      // not a copy-family glyph: at 16px it would be indistinguishable from Copy ID's
+      icon: <RiGitBranchLine size={ACTION_ICON_SIZE} />,
+      onClick: onDuplicate,
+      disabled: !canDuplicate,
+    },
+    {
+      key: 'copyId',
+      // the label carries the confirmation; the glyph alone cannot
+      label: hasCopiedId ? 'Copied' : 'Copy ID',
+      icon: hasCopiedId ? (
+        <RiCheckLine size={ACTION_ICON_SIZE} />
+      ) : (
+        <RiFileCopyLine size={ACTION_ICON_SIZE} />
+      ),
+      onClick: () => void copyId(row.id),
+    },
+  ];
+
+  return (
+    <div
+      className="flex h-full w-full items-center justify-center gap-1"
+      data-testid="workflow-activity-row-actions"
+    >
+      {actions.map(({ key, ...action }) => (
+        <ActionButton key={key} {...action} />
+      ))}
     </div>
   );
 }
 
-/** Renderer registry for the workflow-activity grid. Built once at module scope. */
+/** Renderer registry for the workflow-activity grid. */
 export function buildWorkflowActivityCellRenderers(): CellRendererRegistry {
   return new CellRendererRegistry()
     .register(WORKFLOW_ACTIVITY_TYPE_RENDERER, WorkflowActivityTypeCell)
     .register(WORKFLOW_ACTIVITY_DATE_RENDERER, WorkflowActivityDateCell)
     .register(WORKFLOW_ACTIVITY_STATUS_RENDERER, WorkflowActivityStatusCell)
-    .register(WORKFLOW_ACTIVITY_ACTIONS_RENDERER, WorkflowActivityActionsCell);
+    .register(WORKFLOW_ACTIVITY_ACTIONS_RENDERER, WorkflowActivityActionsCell)
+    .register(LIFECYCLE_STATUS_RENDERER, LifecycleStatusCell);
 }

@@ -1,8 +1,16 @@
+import {
+  RiCheckboxMultipleBlankLine,
+  RiFileCopy2Line,
+  RiFileCopyLine,
+  RiFolderLine,
+  RiGitBranchLine,
+} from '@remixicon/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityLifecycleStatus, LifecycleStatusBadge } from '@/ui/molecules/lifecycle-status-badge';
 import { ActivityValues } from '@/ui/segments/workflows/config';
 import { WorkflowActivityActionsCell } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 
@@ -19,164 +27,119 @@ vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({ info: vi.fn() }),
 }));
 
+const ROW_ID = '11111111-1111-1111-1111-111111111111';
+
 const row = (over: Record<string, unknown> = {}) =>
   ({
-    id: '11111111-1111-1111-1111-111111111111',
+    id: ROW_ID,
     name: 'A campaign',
     type: EntityTypeDict.Memodel,
     ...over,
   }) as unknown as EntityCoreObjectTypes;
 
-/** Open the row's three-dot menu and return the rendered menu items by label. */
-async function openMenu(ui: React.ReactElement) {
-  render(ui);
-  // Radix opens a dropdown on keyboard activation too, which jsdom handles reliably
-  // (its pointer-event support is partial).
-  fireEvent.keyDown(screen.getByTestId('workflow-activity-row-actions'), { key: 'Enter' });
-  await waitFor(() => expect(screen.getByRole('menu')).toBeTruthy());
-  return (label: string) =>
-    screen.getAllByRole('menuitem').find((el) => el.textContent?.trim() === label);
+const BUILD_MEMODEL = {
+  activity: ActivityValues.Build,
+  entityType: ExtendedEntitiesTypeDict.Memodel,
+};
+
+function cell(params: Record<string, unknown> = BUILD_MEMODEL) {
+  return <WorkflowActivityActionsCell row={row()} value="" rowIndex={0} params={params} />;
 }
 
-/** Radix marks a disabled menu item with `data-disabled`, not the `disabled` attribute. */
-const isDisabled = (el: HTMLElement | undefined) => el?.hasAttribute('data-disabled') ?? false;
+/** Actions are icons: the accessible name is the only label, and it matches the tooltip. */
+const action = (label: string) => screen.queryByLabelText(label);
+
+/** Path data of a standalone icon, so a test can name the mark instead of a literal. */
+function glyph(icon: React.ReactElement): string | null {
+  const { container, unmount } = render(icon);
+  const d = container.querySelector('svg path')?.getAttribute('d') ?? null;
+  unmount();
+  return d;
+}
+
+const isDisabled = (label: string) =>
+  (action(label) as HTMLButtonElement | null)?.disabled ?? false;
 
 beforeEach(() => {
   navigate.mockClear();
 });
 
 describe('WorkflowActivityActionsCell', () => {
-  it('always lists every action, so the menu reads the same for every row', async () => {
-    const item = await openMenu(
-      <WorkflowActivityActionsCell
-        row={row()}
-        value=""
-        rowIndex={0}
-        params={{
-          activity: ActivityValues.Build,
-          entityType: ExtendedEntitiesTypeDict.Memodel,
-        }}
-      />
-    );
+  it('renders one control per action, always all of them', () => {
+    render(cell());
 
     for (const label of ['View configuration', 'View results', 'Duplicate', 'Copy ID']) {
-      expect(item(label), `expected "${label}" in the menu`).toBeTruthy();
+      expect(action(label), `expected a "${label}" control`).toBeTruthy();
     }
   });
 
-  it('gives every action a leading icon', async () => {
-    const item = await openMenu(
-      <WorkflowActivityActionsCell
-        row={row()}
-        value=""
-        rowIndex={0}
-        params={{
-          activity: ActivityValues.Build,
-          entityType: ExtendedEntitiesTypeDict.Memodel,
-        }}
-      />
-    );
-
-    for (const label of ['View configuration', 'View results', 'Duplicate', 'Copy ID']) {
-      expect(item(label)?.querySelector('svg'), `expected an icon on "${label}"`).toBeTruthy();
-    }
-  });
-
-  it('gives Copy ID and Duplicate DIFFERENT icons', async () => {
-    const item = await openMenu(
-      <WorkflowActivityActionsCell
-        row={row()}
-        value=""
-        rowIndex={0}
-        params={{
-          activity: ActivityValues.Build,
-          entityType: ExtendedEntitiesTypeDict.Memodel,
-        }}
-      />
-    );
+  it('gives each control a distinct icon', () => {
+    render(cell());
 
     // remixicon renders its glyph as a <path d="…">, so the path data identifies the icon
-    const glyph = (label: string) =>
-      item(label)?.querySelector('svg path')?.getAttribute('d') ?? null;
+    const glyphs = ['View configuration', 'View results', 'Duplicate', 'Copy ID'].map(
+      (label) => action(label)?.querySelector('svg path')?.getAttribute('d') ?? null
+    );
 
-    expect(glyph('Copy ID')).toBeTruthy();
-    expect(glyph('Duplicate')).toBeTruthy();
-    expect(glyph('Copy ID')).not.toBe(glyph('Duplicate'));
+    expect(glyphs.every(Boolean)).toBe(true);
+    expect(new Set(glyphs).size).toBe(glyphs.length);
   });
 
-  it('copies the row id to the clipboard and confirms in place', async () => {
-    const writeText = vi.fn(() => Promise.resolve());
-    Object.defineProperty(navigator, 'clipboard', {
-      value: { writeText },
-      configurable: true,
-    });
+  it('pins each action to its intended mark', () => {
+    render(cell());
+    const glyphOf = (label: string) =>
+      action(label)?.querySelector('svg path')?.getAttribute('d') ?? null;
 
-    const item = await openMenu(
-      <WorkflowActivityActionsCell
-        row={row()}
-        value=""
-        rowIndex={0}
-        params={{
-          activity: ActivityValues.Build,
-          entityType: ExtendedEntitiesTypeDict.Memodel,
-        }}
-      />
-    );
+    // "all four differ" passes for two copy variants that look alike at 16px
+    expect(glyphOf('View configuration')).toBe(glyph(<RiFolderLine />));
+    expect(glyphOf('Duplicate')).toBe(glyph(<RiGitBranchLine />));
+    expect(glyphOf('Copy ID')).toBe(glyph(<RiFileCopyLine />));
 
-    const copy = item('Copy ID');
-    expect(copy).toBeTruthy();
-    fireEvent.click(copy as HTMLElement);
-
-    await waitFor(() =>
-      expect(writeText).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111')
-    );
-    // the menu stays open so the "Copied" confirmation is actually visible
-    await waitFor(() => expect(screen.getByRole('menu').textContent).toContain('Copied'));
-  });
-
-  it('carries the interactive styling on both the link and the plain rows', async () => {
-    const item = await openMenu(
-      <WorkflowActivityActionsCell
-        row={row()}
-        value=""
-        rowIndex={0}
-        params={{
-          activity: ActivityValues.Build,
-          entityType: ExtendedEntitiesTypeDict.Memodel,
-        }}
-      />
-    );
-
-    // "View configuration" renders through `asChild` into a <Link>; "Duplicate" does
-    // not. Radix has to forward the class through Slot for the first to be styled.
-    for (const label of ['View configuration', 'Duplicate', 'Copy ID']) {
-      const el = item(label);
-      expect(el?.className, `expected a hand cursor on "${label}"`).toContain('cursor-pointer');
-      expect(el?.className, `expected the primary-8 highlight on "${label}"`).toContain(
-        'data-[highlighted]:bg-primary-8'
-      );
+    for (const copyFamily of [
+      <RiFileCopyLine key="a" />,
+      <RiFileCopy2Line key="b" />,
+      <RiCheckboxMultipleBlankLine key="c" />,
+    ]) {
+      expect(glyphOf('Duplicate')).not.toBe(glyph(copyFamily));
     }
   });
 
-  it('keeps View results DISABLED rather than hidden on a build activity', async () => {
-    const item = await openMenu(
-      <WorkflowActivityActionsCell
-        row={row()}
-        value=""
-        rowIndex={0}
-        params={{
-          activity: ActivityValues.Build,
-          entityType: ExtendedEntitiesTypeDict.Memodel,
-        }}
-      />
+  it('makes every control round and pill-height, so the row lines up', () => {
+    const { container } = render(
+      <>
+        {cell()}
+        <LifecycleStatusBadge status={EntityLifecycleStatus.Active} />
+      </>
     );
 
-    expect(item('View results')).toBeTruthy();
-    expect(isDisabled(item('View results'))).toBe(true);
+    const badge = container.querySelector<HTMLElement>('[data-slot="badge"]');
+    expect(badge?.className).toContain('h-8');
+
+    for (const label of ['View configuration', 'View results', 'Duplicate', 'Copy ID']) {
+      const el = action(label) as HTMLElement;
+      expect(el.className, `"${label}" should be round`).toContain('rounded-full');
+      expect(el.className, `"${label}" should match the pill height`).toContain('size-8');
+    }
   });
 
-  it('keeps View results disabled for a type whose results have no route', async () => {
-    const item = await openMenu(
+  it('navigates by link for the actions that are navigations', () => {
+    render(cell());
+
+    // a real anchor, so middle-click and open-in-new-tab work
+    expect(action('View configuration')?.tagName).toBe('A');
+    expect(action('View configuration')).toHaveAttribute('href');
+  });
+
+  it('DISABLES rather than hides an action the row does not support', () => {
+    render(cell());
+
+    // build activity → no results to view
+    expect(action('View results')).toBeTruthy();
+    expect(isDisabled('View results')).toBe(true);
+  });
+
+  it('keeps View results disabled for a type whose results have no route', () => {
+    render(
       <WorkflowActivityActionsCell
         row={row({ type: EntityTypeDict.TaskConfig })}
         value=""
@@ -188,12 +151,11 @@ describe('WorkflowActivityActionsCell', () => {
       />
     );
 
-    expect(item('View results')).toBeTruthy();
-    expect(isDisabled(item('View results'))).toBe(true);
+    expect(isDisabled('View results')).toBe(true);
   });
 
-  it('ENABLES View results on a simulate activity whose type has a results route', async () => {
-    const item = await openMenu(
+  it('ENABLES View results where the type does have one', () => {
+    render(
       <WorkflowActivityActionsCell
         row={row({ type: EntityTypeDict.SingleNeuronSynaptomeSimulation })}
         value=""
@@ -205,17 +167,60 @@ describe('WorkflowActivityActionsCell', () => {
       />
     );
 
-    // The negative cases above only prove the item exists; this proves the disabled
-    // check discriminates rather than always reporting true.
-    expect(isDisabled(item('View results'))).toBe(false);
+    // proves the disabled check discriminates, not that it always reports disabled
+    expect(action('View results')?.tagName).toBe('A');
   });
 
-  it('disables every action when the params carry no activity or type', async () => {
-    const item = await openMenu(
-      <WorkflowActivityActionsCell row={row()} value="" rowIndex={0} params={{}} />
+  it('disables every action when the params carry no activity or type', () => {
+    render(cell({}));
+
+    expect(isDisabled('View configuration')).toBe(true);
+    expect(isDisabled('Duplicate')).toBe(true);
+  });
+
+  it('shows the title on hover — including for a DISABLED action', async () => {
+    render(cell());
+    const tooltip = () => document.querySelector('[data-slot="tooltip-content"]');
+
+    // a disabled button receives no pointer events; the wrapping span owns the hover
+    expect(isDisabled('Duplicate')).toBe(true);
+    expect(tooltip()).toBeNull();
+
+    fireEvent.pointerEnter(action('Duplicate') as HTMLElement);
+    fireEvent.focus(action('Duplicate') as HTMLElement);
+
+    await waitFor(() => expect(tooltip()).toBeTruthy());
+    expect(tooltip()?.textContent).toContain('Duplicate');
+  });
+
+  it('copies the row id and confirms through the tooltip label', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+
+    render(cell());
+    fireEvent.click(action('Copy ID') as HTMLElement);
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(ROW_ID));
+    // the label carries the confirmation
+    await waitFor(() => expect(action('Copied')).toBeTruthy());
+  });
+
+  it('duplicates through the router when clicked', () => {
+    // duplication always supports an ion-channel modeling campaign row
+    render(
+      <WorkflowActivityActionsCell
+        row={row({ type: EntityTypeDict.IonChannelModelingCampaign })}
+        value=""
+        rowIndex={0}
+        params={{
+          activity: ActivityValues.Build,
+          entityType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+        }}
+      />
     );
 
-    expect(isDisabled(item('View configuration'))).toBe(true);
-    expect(isDisabled(item('Duplicate'))).toBe(true);
+    expect(isDisabled('Duplicate')).toBe(false);
+    fireEvent.click(action('Duplicate') as HTMLElement);
+    expect(navigate).toHaveBeenCalledTimes(1);
   });
 });

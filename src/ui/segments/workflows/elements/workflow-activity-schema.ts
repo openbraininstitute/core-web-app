@@ -3,8 +3,10 @@ import {
   EntityLifecycleStatusLabel,
 } from '@/api/entitycore/types/shared/global';
 import { CAMPAIGN_STATUS_COLUMN_MIN_WIDTH } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
+import { LIFECYCLE_STATUS_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
 import {
   Align,
+  ColumnPin,
   FilterOptionsKind,
   FreeEntryKind,
   OperatorId,
@@ -25,19 +27,13 @@ import type { WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 /**
- * ORDERING SAFETY — every activity type is listed either from its own entity endpoint
- * (`/memodel`, `/circuit`, `/simulation`, …) or, for campaigns, from `/task-config`.
- * `/task-config` is the narrowest: its `ordering_model_fields` are exactly
- * `name`, `creation_date` and `update_date`, and entitycore 422s on anything else.
- * So only those three fields may carry `sortable: true` here — `created_by__pref_label`
- * sorts on `/memodel` but NOT on `/task-config`, which is why Created by is display-only.
+ * SORT SAFETY — campaign rows list from `/task-config`, whose `ordering_model_fields`
+ * are exactly `name`, `creation_date` and `update_date`; entitycore 422s on anything
+ * else. Only those three may carry `sortable: true`, which is why Created by does not
+ * even though `/memodel` would order on it.
  */
 
-/**
- * ADVANCED FILTERS — `/task-config` params with no column in this grid. Each field was
- * checked against the live OpenAPI spec; every listing endpoint the activity table can
- * reach accepts all of them.
- */
+/** `/task-config` params with no column here. Auxiliary columns join the panel when hidden. */
 const workflowActivityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
   {
     id: 'record',
@@ -46,26 +42,9 @@ const workflowActivityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
       {
         id: 'id',
         label: 'ID',
-        // `id__in`; the scalar `id` adds nothing over a one-element list.
         field: 'id',
         operators: [OperatorId.In, OperatorId.Eq],
         description: 'The entity id of the activity itself',
-      },
-      {
-        id: 'lifecycleStatus',
-        label: 'Lifecycle status',
-        // `lifecycle_status__in` / `lifecycle_status`. NOT the Status column, which
-        // shows the campaign's aggregated *execution* status and has no wire filter.
-        field: 'lifecycle_status',
-        operators: [OperatorId.In, OperatorId.Eq],
-        options: {
-          kind: FilterOptionsKind.Static,
-          items: Object.values(EntityLifecycleStatus).map((status) => ({
-            id: status,
-            label: EntityLifecycleStatusLabel[status],
-          })),
-        },
-        description: 'Whether the record is a draft, active or disqualified',
       },
     ],
   },
@@ -83,9 +62,9 @@ export interface IWorkflowActivitySchemaArgs {
 }
 
 /**
- * The workflow-activity listing schema. Built per (activity, type, workspace) rather
- * than declared statically: Category, Type and Status all render from values the host
- * owns, and a column's `cellRendererParams` is the only channel into a keyed renderer.
+ * The workflow-activity listing schema. Built per (activity, type, workspace) rather than
+ * declared statically: `cellRendererParams` is the only channel into a keyed renderer,
+ * and Category, Type, Status and Actions all need host-owned values.
  */
 export function buildWorkflowActivitySchema({
   activity,
@@ -96,7 +75,7 @@ export function buildWorkflowActivitySchema({
   return {
     id: 'workflow-activity',
     getRowId: (row) => row.id,
-    defaultSort: [{ columnId: 'creation_date', direction: SortDirection.Desc }],
+    defaultSort: [{ columnId: 'creationDate', direction: SortDirection.Desc }],
     advancedFilters: workflowActivityAdvancedFilters,
     columns: [
       {
@@ -113,7 +92,7 @@ export function buildWorkflowActivitySchema({
             {
               id: 'name',
               label: 'Name',
-              // `name__ilike`, `name__in`, `name` — names, not UUIDs, so free entry is text.
+              // `name__ilike` / `name__in` / `name`; names, not UUIDs, so free entry is text
               field: 'name',
               operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
               freeEntry: FreeEntryKind.Text,
@@ -123,14 +102,14 @@ export function buildWorkflowActivitySchema({
         },
       },
       {
-        // Display-only: the activity is chosen in the toolbar, not filtered per row.
+        // display-only: the activity is chosen in the toolbar
         id: 'category',
         header: 'Category',
         getValue: () => activityName,
         width: { minWidth: 120, flex: 1 },
       },
       {
-        // Display-only: the entity type is pinned by the toolbar's Type selector.
+        // display-only: the entity type is pinned by the toolbar's Type selector
         id: 'type',
         header: 'Type',
         getValue: () => '',
@@ -139,7 +118,7 @@ export function buildWorkflowActivitySchema({
         width: { minWidth: 140, flex: 1 },
       },
       {
-        id: 'creation_date',
+        id: 'creationDate',
         header: 'Date',
         sortable: true,
         sortField: 'creation_date',
@@ -148,14 +127,13 @@ export function buildWorkflowActivitySchema({
         width: { minWidth: 150, flex: 1 },
       },
       {
-        id: 'created_by',
+        id: 'createdBy',
         header: 'Created by',
-        // Not sortable: `/task-config` omits `created_by__pref_label` from its
-        // ordering fields, and a campaign listing would 422.
+        // not sortable: `/task-config` omits `created_by__pref_label` — see SORT SAFETY
         getValue: (row) => ('created_by' in row ? (row.created_by?.pref_label ?? '') : ''),
         width: { minWidth: 140, flex: 1 },
         filter: {
-          // `created_by__pref_label__in` / `…__ilike`, options from the `created_by` facet.
+          // `created_by__pref_label__in` / `…__ilike`; options from the `created_by` facet
           operators: [OperatorId.In, OperatorId.Ilike],
           field: 'created_by__pref_label',
           facetKey: 'created_by',
@@ -163,8 +141,7 @@ export function buildWorkflowActivitySchema({
         },
       },
       {
-        // Aggregated execution status, resolved client-side per row — no wire filter
-        // and no ordering field. `lifecycle_status` is a separate advanced filter.
+        // aggregated execution status, resolved client-side; no wire filter, no ordering
         id: 'status',
         header: 'Status',
         align: Align.Center,
@@ -174,19 +151,48 @@ export function buildWorkflowActivitySchema({
         width: { minWidth: CAMPAIGN_STATUS_COLUMN_MIN_WIDTH, flex: 1 },
       },
       {
-        // The per-row action menu. Frozen right and locked down: it must stay reachable
-        // however far the row scrolls, and there is no state in which hiding, moving or
-        // resizing it helps.
+        /**
+         * Auxiliary, so its filter is offered by one surface at a time: the advanced
+         * panel while hidden, its column header once ticked on. Both key the entry by
+         * this column id, so an applied filter survives the move.
+         *
+         * Not the Status column, which is the campaign's execution status.
+         */
+        id: 'lifecycleStatus',
+        header: 'Lifecycle status',
+        auxiliary: true,
+        // `lifecycle_status` is in no endpoint's ordering fields
+        sortable: false,
+        getValue: (row) =>
+          'lifecycle_status' in row ? ((row.lifecycle_status as string) ?? '') : '',
+        cellRenderer: LIFECYCLE_STATUS_RENDERER,
+        width: { minWidth: 140, flex: 1 },
+        filter: {
+          operators: [OperatorId.In, OperatorId.Eq],
+          field: 'lifecycle_status',
+          options: {
+            kind: FilterOptionsKind.Static,
+            items: Object.values(EntityLifecycleStatus).map((status) => ({
+              id: status,
+              label: EntityLifecycleStatusLabel[status],
+            })),
+          },
+          description: 'Whether the record is a draft, active or disqualified',
+        },
+      },
+      {
+        // frozen right so the actions stay reachable however far the row scrolls
         id: 'actions',
-        // No header title: the "Action" trigger in each cell names the column already.
-        header: '',
+        header: 'Actions',
         align: Align.Center,
         getValue: () => '',
         cellRenderer: WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
         cellRendererParams: { activity, entityType },
-        pinned: 'right',
+        pinned: ColumnPin.Right,
         movable: false,
-        alwaysVisible: true,
+        // `essential`, not `alwaysVisible`: a bulk deselect keeps it, but its own
+        // checkbox still works, so the chooser entry is not permanently disabled
+        essential: true,
         width: {
           width: WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
           minWidth: WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,

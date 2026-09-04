@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
-import { FilterValueKind, OperatorId, SortDirection } from '@/features/data-grid/core';
+import {
+  ColumnPin,
+  defaultHiddenColumnIds,
+  essentialColumnIds,
+  FilterValueKind,
+  OperatorId,
+  resolveFilterPanelGroups,
+  SortDirection,
+} from '@/features/data-grid/core';
 import { ActivityValues } from '@/ui/segments/workflows/config';
+import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -22,6 +31,8 @@ const schema = buildWorkflowActivitySchema({
   entityType: 'memodel' as TExtendedEntitiesTypeDict,
   workspace: { virtualLabId: 'vlab', projectId: 'proj' },
 });
+
+const CTX = { dataType: 'memodel' };
 
 function query(over: Partial<IGridQuery> = {}): IGridQuery {
   return { page: 1, pageSize: 20, sort: [], filters: {}, ...over };
@@ -52,7 +63,7 @@ describe('workflow-activity schema — sort safety', () => {
   });
 
   it('leaves Created by unsortable — /task-config omits created_by__pref_label', () => {
-    expect(schema.columns.find((c) => c.id === 'created_by')?.sortable).toBeFalsy();
+    expect(schema.columns.find((c) => c.id === 'createdBy')?.sortable).toBeFalsy();
   });
 
   it('serializes the default sort as newest first', () => {
@@ -82,10 +93,10 @@ describe('workflow-activity schema — filter wire params', () => {
 
   it('created by filters through created_by__pref_label__in / __ilike', () => {
     expect(
-      withFilter('created_by', OperatorId.In, { kind: FilterValueKind.Set, values: ['Jane Doe'] })
+      withFilter('createdBy', OperatorId.In, { kind: FilterValueKind.Set, values: ['Jane Doe'] })
     ).toMatchObject({ created_by__pref_label__in: ['Jane Doe'] });
     expect(
-      withFilter('created_by', OperatorId.Ilike, { kind: FilterValueKind.Text, text: 'jane' })
+      withFilter('createdBy', OperatorId.Ilike, { kind: FilterValueKind.Text, text: 'jane' })
     ).toMatchObject({ created_by__pref_label__ilike: '%jane%' });
   });
 
@@ -98,9 +109,10 @@ describe('workflow-activity schema — filter wire params', () => {
     ).toMatchObject({ id__in: ['11111111-1111-1111-1111-111111111111'] });
   });
 
-  it('the lifecycle advanced filter emits lifecycle_status__in with wire values', () => {
+  it('the lifecycle column emits lifecycle_status__in with wire values', () => {
+    // keyed by COLUMN id, whichever surface the editor was opened from
     expect(
-      withAdvancedFilter('lifecycleStatus', OperatorId.In, {
+      withFilter('lifecycleStatus', OperatorId.In, {
         kind: FilterValueKind.Set,
         values: ['draft', 'active'],
       })
@@ -108,8 +120,7 @@ describe('workflow-activity schema — filter wire params', () => {
   });
 
   it('offers exactly the three lifecycle statuses entitycore defines', () => {
-    const lifecycle = schema.advancedFilters?.[0]?.filters.find((f) => f.id === 'lifecycleStatus');
-    const options = lifecycle?.options;
+    const options = schema.columns.find((c) => c.id === 'lifecycleStatus')?.filter?.options;
     expect(options?.kind).toBe('static');
     expect(options?.kind === 'static' ? options.items.map((i) => i.id) : []).toEqual([
       'draft',
@@ -125,28 +136,57 @@ describe('workflow-activity schema — filter wire params', () => {
   });
 
   it('leaves the display-only columns without a filter', () => {
-    for (const id of ['category', 'type', 'creation_date', 'status', 'actions']) {
+    for (const id of ['category', 'type', 'creationDate', 'status', 'actions']) {
       expect(schema.columns.find((c) => c.id === id)?.filter).toBeUndefined();
     }
+  });
+});
+
+describe('workflow-activity schema — the lifecycle-status column', () => {
+  const lifecycle = () => schema.columns.find((c) => c.id === 'lifecycleStatus');
+
+  it('is auxiliary: off by default, offered by the column chooser', () => {
+    expect(lifecycle()?.auxiliary).toBe(true);
+    expect(defaultHiddenColumnIds(schema, CTX)).toContain('lifecycleStatus');
+  });
+
+  it('is not sortable — no endpoint orders on lifecycle_status', () => {
+    expect(lifecycle()?.sortable).toBe(false);
+  });
+
+  it('is NOT also declared as an advanced filter', () => {
+    // a backend field is represented exactly once; the panel derives the rest
+    const declared = schema.advancedFilters?.flatMap((g) => g.filters).map((f) => f.id) ?? [];
+    expect(declared).toEqual(['id']);
+  });
+
+  it('sits in the panel while hidden, and leaves it once the column is shown', () => {
+    const panelIds = (hidden: string[]) =>
+      resolveFilterPanelGroups(schema, CTX, hidden).flatMap((g) => g.filters.map((f) => f.key));
+
+    expect(panelIds(['lifecycleStatus'])).toContain('lifecycleStatus');
+    expect(panelIds([])).not.toContain('lifecycleStatus');
   });
 });
 
 describe('workflow-activity schema — the actions column', () => {
   const actions = () => schema.columns.find((c) => c.id === 'actions');
 
-  it('carries no header title — the in-cell "Action" trigger names it', () => {
-    expect(actions()?.header).toBe('');
+  it('is named, so the header and the column chooser both read "Actions"', () => {
+    expect(actions()?.header).toBe('Actions');
   });
 
   it('is the last column, frozen to the right edge', () => {
     expect(schema.columns.at(-1)?.id).toBe('actions');
-    expect(actions()?.pinned).toBe('right');
+    expect(actions()?.pinned).toBe(ColumnPin.Right);
   });
 
-  it('cannot be moved, hidden or resized', () => {
+  it('cannot be moved or resized, and survives a bulk deselect', () => {
     expect(actions()?.movable).toBe(false);
-    expect(actions()?.alwaysVisible).toBe(true);
     expect(actions()?.width?.resizable).toBe(false);
+    // `essential`, so "Select all" cannot strip it, but its own checkbox still works
+    expect(essentialColumnIds(schema.columns)).toContain('actions');
+    expect(actions()?.alwaysVisible).toBeUndefined();
   });
 
   it('carries no sort or filter, so it never reaches the query', () => {
@@ -159,5 +199,21 @@ describe('workflow-activity schema — the actions column', () => {
       activity: ActivityValues.Build,
       entityType: 'memodel',
     });
+  });
+});
+
+describe('workflow-activity schema — renderer coverage', () => {
+  it('registers every cellRenderer key the schema names', () => {
+    // an unregistered key silently falls back to printing the raw value, so a badge
+    // column renders as bare text instead
+    const registry = buildWorkflowActivityCellRenderers();
+    const named = schema.columns
+      .map((c) => c.cellRenderer)
+      .filter((key): key is string => Boolean(key));
+
+    expect(named.length).toBeGreaterThan(0);
+    for (const key of named) {
+      expect(registry.has(key), `no renderer registered for "${key}"`).toBe(true);
+    }
   });
 });
