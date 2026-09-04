@@ -189,7 +189,7 @@ export function DataBreadcrumb({
 
   if (section !== WorkspaceSection.Data) return null;
   return (
-    <div className="flex flex-nowrap gap-3">
+    <div data-testid="data-view-breadcrumb" className="flex flex-nowrap gap-3">
       <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick, variant }} />
       <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick, variant }} />
       <BackToEntityType
