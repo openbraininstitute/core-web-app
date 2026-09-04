@@ -23,7 +23,7 @@ describe('GridSearch — placeholder and width', () => {
 
     expect(screen.getByLabelText('Search')).toHaveAttribute(
       'placeholder',
-      'Search entities by name, description, ID'
+      'Search entities by name, ID'
     );
   });
 
