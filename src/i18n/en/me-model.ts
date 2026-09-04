@@ -15,7 +15,6 @@ export const messages = {
     "We couldn't complete the compatibility check, so this combination can't be verified yet. Try again before building.",
   CompatibilityDetailsShow: 'Show details',
   CompatibilityDetailsHide: 'Hide details',
-  CompatibilityDetailsCopy: 'Copy details',
   CompatibilityRetry: 'Try again',
   CompatibilityBlockedTooltip: "We couldn't verify this combination. Try the check again.",
 };

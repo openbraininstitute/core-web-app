@@ -1,8 +1,6 @@
 'use client';
 
 import {
-  CheckOutlined,
-  CopyOutlined,
   DownOutlined,
   ExclamationCircleOutlined,
   LoadingOutlined,
@@ -11,7 +9,6 @@ import {
 } from '@ant-design/icons';
 import { useState } from 'react';
 
-import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { messages } from '@/i18n/en/me-model';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -78,7 +75,6 @@ type NoticeProps = {
 
 function Notice({ tone, icon, message, detail, action }: NoticeProps) {
   const [expanded, setExpanded] = useState(false);
-  const [, copy, , copying] = useCopyToClipboard();
 
   const toneClass = tone === 'destructive' ? 'text-destructive' : 'text-warning';
 
@@ -106,19 +102,9 @@ function Notice({ tone, icon, message, detail, action }: NoticeProps) {
           </button>
 
           {expanded && (
-            <div className="flex flex-col gap-1.5">
-              <pre className="border-neutral-2 text-neutral-7 max-h-56 overflow-auto rounded-md border bg-white/60 p-3 font-mono text-xs whitespace-pre-wrap">
-                {detail}
-              </pre>
-              <button
-                type="button"
-                onClick={() => copy(detail)}
-                className="flex w-fit items-center gap-1.5 text-sm underline-offset-2 hover:underline"
-              >
-                {copying ? <CheckOutlined /> : <CopyOutlined />}
-                {messages.CompatibilityDetailsCopy}
-              </button>
-            </div>
+            <pre className="border-neutral-2 text-neutral-7 max-h-56 overflow-auto rounded-md border bg-white/60 p-3 font-mono text-xs whitespace-pre-wrap">
+              {detail}
+            </pre>
           )}
         </>
       )}
