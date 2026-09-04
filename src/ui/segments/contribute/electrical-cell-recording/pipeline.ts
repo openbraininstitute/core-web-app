@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { get, isNil } from 'es-toolkit/compat';
+import { isNil } from 'es-toolkit/compat';
 
 import { createElectricalCellRecording } from '@/api/entitycore/queries';
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
@@ -10,11 +10,11 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS } from '@/ui/segments/contribute/electrical-cell-recording/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import type {
   IMutationKeyConfig,
@@ -64,28 +64,8 @@ export function useElectricalCellRecordingPipeline({
         },
       });
     },
-    onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          predicate(query) {
-            return (
-              query.queryKey.at(0) ===
-              `data-entity-count-${ExtendedEntitiesTypeDict.ElectricalCellRecording}`
-            );
-          },
-        }),
-        queryClient.invalidateQueries({
-          predicate(query) {
-            return (
-              get(
-                (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
-              ) === ExtendedEntitiesTypeDict.ElectricalCellRecording
-            );
-          },
-        }),
-      ]);
-    },
+    onSettled: () =>
+      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.ElectricalCellRecording),
   });
 
   const createContributionAsync = useMutation({

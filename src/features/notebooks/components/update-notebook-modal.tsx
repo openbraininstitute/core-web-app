@@ -12,8 +12,12 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { capitalize } from 'es-toolkit/compat';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import {
+  getAnalysisNotebookTemplates,
+  updateAnalysisNotebookTemplate,
+} from '@/api/entitycore/queries/analysis-notebook-template';
 import { deleteAsset, getAssets } from '@/api/entitycore/queries/assets';
 import { uploadNotebookTemplateFile } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
@@ -25,14 +29,22 @@ import {
 import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getRoles } from '@/api/entitycore/queries/general/role';
+import { isNotebook } from '@/api/entitycore/types';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { fetchEnrolments } from '@/api/virtual-lab-svc/queries/course';
 import { useAppNotification } from '@/components/notification';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
+import {
+  AssignmentIdConflictAlert,
+  clearAssignmentIdFromStudentCopies,
+  studentProjectIds,
+} from '@/features/notebooks/assignment-id-conflict';
+import { useDebouncedCallback } from '@/hooks/hooks';
 import { syncNotebookToProjects } from '@/services/notebooks/sync-template-notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
+import { Input } from '@/ui/molecules/input';
 import { Modal } from '@/ui/molecules/modal';
 import { SelectPopover } from '@/ui/molecules/select-popover';
 import { AssetUpload } from '@/ui/segments/contribute/shared/components/asset-upload';
@@ -64,6 +76,7 @@ async function syncChildProjects({
   entityType,
   notebookName,
   courseId,
+  targetProjectIds,
   onProgress,
 }: {
   virtualLabId: string;
@@ -72,20 +85,18 @@ async function syncChildProjects({
   entityType: EntityCoreObjectTypes['type'];
   notebookName: string;
   courseId: string;
+  /** Already-resolved enrolment projects, to save a second lookup of the same course. */
+  targetProjectIds?: string[];
   onProgress?: (completed: number, total: number) => void;
 }) {
-  const { enrolments } = await fetchEnrolments(courseId);
-  const targetProjectIds = enrolments
-    .map((e) => e.project_id)
-    .filter((id) => id !== templateProjectId);
-
   await syncNotebookToProjects({
     virtualLabId,
     templateProjectId,
     templateEntityId,
     entityType,
     notebookName,
-    targetProjectIds,
+    targetProjectIds:
+      targetProjectIds ?? (await studentProjectIds({ courseId, templateProjectId })),
     onProgress,
   });
 }
@@ -145,6 +156,9 @@ type PendingContribution = {
   agent_id: string;
   role_id: string;
 };
+
+/** Matches the debounce the contribute flow uses for its name-uniqueness check. */
+const CONFLICT_CHECK_DEBOUNCE_MS = 500;
 
 const STEPS = [
   { key: 'setup', label: 'Setup' },
@@ -303,6 +317,64 @@ export function UpdateNotebookModal({
 
   const name = 'name' in record ? (record.name as string) : '';
 
+  // Only notebook templates carry an assignment ID; the modal also opens for notebook results.
+  const notebook = isNotebook(record) ? record : null;
+  const savedAssignmentId = notebook?.assignment_id ?? '';
+
+  const [assignmentId, setAssignmentId] = useState(savedAssignmentId);
+  const [debouncedAssignmentId, setDebouncedAssignmentId] = useState(savedAssignmentId);
+  const [clearConflict, setClearConflict] = useState(false);
+
+  const resetAssignmentFields = useCallback((value: string) => {
+    setAssignmentId(value);
+    setDebouncedAssignmentId(value);
+    setClearConflict(false);
+  }, []);
+
+  // Re-seed on open so a reopened modal shows what the server now holds. Keyed on the saved value
+  // rather than the record object, so a background refetch cannot wipe what is being typed.
+  useEffect(() => {
+    if (!open) return;
+    resetAssignmentFields(savedAssignmentId);
+  }, [open, savedAssignmentId, resetAssignmentFields]);
+
+  const trimmedAssignmentId = assignmentId.trim();
+  const assignmentIdChanged = trimmedAssignmentId !== savedAssignmentId;
+
+  const scheduleConflictCheck = useDebouncedCallback(
+    (value: string) => setDebouncedAssignmentId(value),
+    [],
+    CONFLICT_CHECK_DEBOUNCE_MS
+  );
+
+  const { data: assignmentIdMatches, isFetching: conflictChecking } = useQuery({
+    queryKey: ['notebook-assignment-id-conflict', projectId, debouncedAssignmentId],
+    queryFn: () =>
+      getAnalysisNotebookTemplates({
+        // Only ever narrowed to one other holder of the ID; no need for a full page.
+        filters: { assignment_id: debouncedAssignmentId, page_size: 2 },
+        context: ctx,
+      }),
+    enabled:
+      open && !!notebook && !!debouncedAssignmentId && debouncedAssignmentId !== savedAssignmentId,
+  });
+
+  // Grading resolves an assignment to the first notebook the filter returns, so a second holder of
+  // the ID would make the launch pick an arbitrary one. Only trust a result once the debounce has
+  // caught up with the field, otherwise the warning trails a keystroke behind.
+  const conflict =
+    assignmentIdChanged && debouncedAssignmentId === trimmedAssignmentId
+      ? (assignmentIdMatches?.data.find((nb) => nb.id !== record.id) ?? null)
+      : null;
+
+  // Every row in a notebook list mounts its own modal, so the checkbox id has to be per-record.
+  const clearConflictId = `clear-conflict-assignment-id-${record.id}`;
+
+  const conflictCheckPending =
+    assignmentIdChanged &&
+    !!trimmedAssignmentId &&
+    (debouncedAssignmentId !== trimmedAssignmentId || conflictChecking);
+
   const { data: existingAssets, isLoading: assetsLoading } = useQuery({
     queryKey: ['update-notebook-assets', record.id],
     queryFn: () => getAssets({ entityType: record.type, entityId: record.id, ctx }),
@@ -342,7 +414,26 @@ export function UpdateNotebookModal({
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      const conflictToClear = clearConflict ? conflict : null;
+      const courseId = isCourseTemplate ? virtualLabData?.course?.id : undefined;
+      let studentProjects: string[] | null = null;
+
       const steps: typeof progressSteps = [];
+      if (conflictToClear) {
+        steps.push({
+          key: 'clear-conflict',
+          label: `Releasing the assignment ID from ${conflictToClear.name}`,
+          status: 'idle',
+        });
+        if (courseId)
+          steps.push({
+            key: 'sync-conflict',
+            label: `Updating student copies of ${conflictToClear.name}`,
+            status: 'idle',
+          });
+      }
+      if (assignmentIdChanged)
+        steps.push({ key: 'update-details', label: 'Updating notebook details', status: 'idle' });
       if (assetsToRemove.length > 0)
         steps.push({ key: 'remove-assets', label: 'Removing assets', status: 'idle' });
       if (newAssetFiles.size > 0)
@@ -361,19 +452,55 @@ export function UpdateNotebookModal({
       const markStep = (key: string, status: 'pending' | 'success' | 'error' | 'warning') =>
         setProgressSteps((prev) => prev.map((s) => (s.key === key ? { ...s, status } : s)));
 
-      const runStep = async (key: string, label: string, fn: () => Promise<unknown>) => {
+      const runStep = async <T,>(key: string, fn: () => Promise<T>) => {
         markStep(key, 'pending');
         try {
-          await fn();
+          const result = await fn();
           markStep(key, 'success');
+          return result;
         } catch (_) {
           markStep(key, 'error');
-          throw new Error(`Failed while: ${label}`);
+          throw new Error(`Failed while: ${steps.find((s) => s.key === key)?.label ?? key}`);
         }
       };
 
+      // Release the ID before claiming it, so no window exists where two notebooks answer the
+      // same grading lookup.
+      if (conflictToClear) {
+        await runStep('clear-conflict', () =>
+          updateAnalysisNotebookTemplate({
+            id: conflictToClear.id,
+            payload: { assignment_id: null },
+            context: ctx,
+          })
+        );
+
+        if (courseId) {
+          // Kept for the post-update sync below, so one submit resolves the enrolments once.
+          studentProjects = await runStep('sync-conflict', () =>
+            clearAssignmentIdFromStudentCopies({
+              virtualLabId,
+              courseId,
+              templateProjectId: projectId,
+              notebookName: conflictToClear.name,
+            })
+          );
+        }
+      }
+
+      if (assignmentIdChanged) {
+        await runStep('update-details', () =>
+          updateAnalysisNotebookTemplate({
+            id: record.id,
+            // An empty assignment ID is a 422 server side; `null` is how it is cleared.
+            payload: { assignment_id: trimmedAssignmentId || null },
+            context: ctx,
+          })
+        );
+      }
+
       if (assetsToRemove.length > 0) {
-        await runStep('remove-assets', 'Removing assets', () =>
+        await runStep('remove-assets', () =>
           Promise.all(
             assetsToRemove.map((a) =>
               deleteAsset({ entityType: record.type, entityId: record.id, id: a.id, ctx })
@@ -383,7 +510,7 @@ export function UpdateNotebookModal({
       }
 
       if (newAssetFiles.size > 0) {
-        await runStep('upload-assets', 'Uploading assets', async () => {
+        await runStep('upload-assets', async () => {
           for (const [, { file, config }] of newAssetFiles) {
             await uploadNotebookTemplateFile({
               context: ctx,
@@ -397,7 +524,7 @@ export function UpdateNotebookModal({
       }
 
       if (contributionsToRemove.length > 0) {
-        await runStep('remove-contributions', 'Removing contributions', () =>
+        await runStep('remove-contributions', () =>
           Promise.all(
             contributionsToRemove.map((c) => deleteContribution({ id: c.id, context: ctx }))
           )
@@ -406,7 +533,7 @@ export function UpdateNotebookModal({
 
       const validNewContributions = newContributions.filter((c) => c.agent_id && c.role_id);
       if (validNewContributions.length > 0) {
-        await runStep('add-contributions', 'Adding contributions', () =>
+        await runStep('add-contributions', () =>
           Promise.all(
             validNewContributions.map((c) =>
               createContribution({
@@ -417,16 +544,11 @@ export function UpdateNotebookModal({
           )
         );
       }
+
+      return studentProjects;
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        predicate: (query) => {
-          const first = query.queryKey[0] as
-            | { context?: { extendedEntityType?: string } }
-            | undefined;
-          return first?.context?.extendedEntityType === record.type;
-        },
-      });
+    onSuccess: async (studentProjects) => {
+      await invalidateEntityListings(queryClient, record.type);
       await queryClient.invalidateQueries({ queryKey: ['update-notebook-assets', record.id] });
       await queryClient.invalidateQueries({
         queryKey: ['update-notebook-contributions', record.id],
@@ -444,6 +566,7 @@ export function UpdateNotebookModal({
             entityType: record.type,
             notebookName: name,
             courseId: virtualLabData.course.id,
+            targetProjectIds: studentProjects ?? undefined,
             onProgress: (completed, total) => setSyncProgress({ completed, total }),
           });
           notification.success({
@@ -462,6 +585,7 @@ export function UpdateNotebookModal({
 
   function handleClose() {
     setActiveStep('setup');
+    resetAssignmentFields(savedAssignmentId);
     setAssetsToRemove([]);
     setNewAssetFiles(new Map());
     setContributionsToRemove([]);
@@ -478,6 +602,7 @@ export function UpdateNotebookModal({
   const isLastStep = activeStepIndex === STEPS.length - 1;
 
   const hasChanges =
+    assignmentIdChanged ||
     assetsToRemove.length > 0 ||
     newAssetFiles.size > 0 ||
     contributionsToRemove.length > 0 ||
@@ -490,7 +615,10 @@ export function UpdateNotebookModal({
   const hasAtLeastOneContribution =
     visibleContributions.length > 0 || newContributions.some((c) => c.agent_id && c.role_id);
 
-  const canSubmit = hasChanges && hasNotebookAsset && hasAtLeastOneContribution;
+  const conflictBlocksSubmit = (!!conflict && !clearConflict) || conflictCheckPending;
+
+  const canSubmit =
+    hasChanges && hasNotebookAsset && hasAtLeastOneContribution && !conflictBlocksSubmit;
 
   return (
     <Modal
@@ -580,11 +708,45 @@ export function UpdateNotebookModal({
             !submitMutation.isPending &&
             !submitMutation.isError &&
             activeStep === 'setup' && (
-              <div>
-                <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
-                <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
-                  {name}
+              <div className="flex flex-col gap-6">
+                <div>
+                  <span className="text-primary-9 mb-1 block text-sm font-semibold">Name</span>
+                  <div className="bg-neutral-1 text-primary-8 h-12 rounded-full px-4 leading-[3rem]">
+                    {name}
+                  </div>
                 </div>
+
+                {notebook && (
+                  <div>
+                    <span className="text-primary-9 mb-1 block text-sm font-semibold">
+                      Assignment ID
+                    </span>
+                    <Input
+                      value={assignmentId}
+                      placeholder="Optional — assignment ID this notebook grades"
+                      // `border-input` on the Input molecule resolves to nothing (no
+                      // --color-input token), and Tailwind v4 defaults a bare border to
+                      // currentColor — so state the antd border colour the rest of the
+                      // form uses.
+                      className="border-neutral-2 h-12 rounded-full px-4"
+                      onChange={(e) => {
+                        setAssignmentId(e.target.value);
+                        setClearConflict(false);
+                        scheduleConflictCheck(e.target.value.trim());
+                      }}
+                    />
+
+                    {conflict && (
+                      <AssignmentIdConflictAlert
+                        conflictName={conflict.name}
+                        checkboxId={clearConflictId}
+                        clear={clearConflict}
+                        onClearChange={setClearConflict}
+                        isCourseTemplate={isCourseTemplate}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

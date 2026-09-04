@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Popconfirm } from 'antd';
-import { compact, get } from 'es-toolkit/compat';
+import { get } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import { notFound, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -21,9 +21,10 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { type TViewVariant, ViewVariant, WorkspaceScope, WorkspaceSection } from '@/constants';
+import { type TViewVariant, ViewVariant } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useFlags } from '@/features/feature-flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -85,27 +86,7 @@ export default function ActionMenu({
       await deleteCellMorphology({ id: entity.id, context: ctx });
     },
     onSuccess: async () => {
-      const dataKey = compact([
-        ctx.virtualLabId,
-        ctx.projectId,
-        WorkspaceSection.Data,
-        type,
-        WorkspaceScope.Project,
-      ]).join('/');
-      await queryClient.invalidateQueries({
-        predicate(query) {
-          const key = get(query.queryKey[0], 'context.key');
-          if (key === dataKey) return true;
-          return false;
-        },
-      });
-      await queryClient.invalidateQueries({
-        predicate(query) {
-          const identifierKey = query.queryKey[0];
-          const key = `data-entity-count-${type}`;
-          return identifierKey === key;
-        },
-      });
+      await invalidateEntityListings(queryClient, type);
       notifySuccess({
         message: 'Deleted successfully',
         description: 'The item has been successfully deleted.',
