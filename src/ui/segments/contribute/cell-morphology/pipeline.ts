@@ -7,7 +7,7 @@ import { createMtypeClassification } from '@/api/entitycore/queries/annotations/
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
-import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
@@ -82,7 +82,7 @@ export function useCellMorphologyPipeline({
       return { id: result.id };
     },
     onSettled: () =>
-      invalidateExtendedEntityQueries(queryClient, [
+      invalidateEntityListings(queryClient, [
         ExtendedEntitiesTypeDict.CellMorphology,
         ExtendedEntitiesTypeDict.UniversalCellMorphology,
         ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,

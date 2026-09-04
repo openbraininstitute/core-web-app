@@ -10,7 +10,7 @@ import {
 import { createAsset } from '@/api/entitycore/queries/assets';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EM_CELL_MESH_PROGRESS_STEPS } from '@/ui/segments/contribute/em-cell-mesh/config';
 import {
@@ -59,8 +59,7 @@ export function useEMCellMeshPipeline({
         },
       });
     },
-    onSettled: () =>
-      invalidateExtendedEntityQueries(queryClient, ExtendedEntitiesTypeDict.EMCellMesh),
+    onSettled: () => invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.EMCellMesh),
   });
 
   const createAssetsAsync = useMutation({

@@ -33,12 +33,12 @@ import { isNotebook } from '@/api/entitycore/types';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { fetchEnrolments } from '@/api/virtual-lab-svc/queries/course';
 import { useAppNotification } from '@/components/notification';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useDebouncedCallback } from '@/hooks/hooks';
 import {
   patchNotebookMetadataInProjects,
   syncNotebookToProjects,
 } from '@/services/notebooks/sync-template-notebooks';
-import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
@@ -568,7 +568,7 @@ export function UpdateNotebookModal({
       return studentProjects;
     },
     onSuccess: async (studentProjects) => {
-      await invalidateExtendedEntityQueries(queryClient, record.type);
+      await invalidateEntityListings(queryClient, record.type);
       await queryClient.invalidateQueries({ queryKey: ['update-notebook-assets', record.id] });
       await queryClient.invalidateQueries({
         queryKey: ['update-notebook-contributions', record.id],

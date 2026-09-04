@@ -11,7 +11,7 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 // NOTE: The import for MeasurementUnit has been intentionally removed as it was failing to resolve at runtime.
-import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS } from '@/ui/segments/contribute/synapses-per-connection/config';
@@ -78,7 +78,7 @@ export function useExperimentalSynapsesPerConnectionPipeline({
     },
 
     onSettled: async () => {
-      await invalidateExtendedEntityQueries(
+      await invalidateEntityListings(
         queryClient,
         ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection
       );

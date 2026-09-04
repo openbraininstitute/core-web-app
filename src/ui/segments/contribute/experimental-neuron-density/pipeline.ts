@@ -14,7 +14,7 @@ import {
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
-import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
@@ -65,10 +65,7 @@ export function useExperimentalNeuronDensityPipeline({
       });
     },
     onSettled: () =>
-      invalidateExtendedEntityQueries(
-        queryClient,
-        ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
-      ),
+      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.ExperimentalNeuronDensity),
   });
 
   const createContributionAsync = useMutation({

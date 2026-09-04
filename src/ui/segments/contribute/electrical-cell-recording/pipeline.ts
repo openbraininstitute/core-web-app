@@ -10,7 +10,7 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { invalidateExtendedEntityQueries } from '@/ui/hooks/use-query-extended-entity-type';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS } from '@/ui/segments/contribute/electrical-cell-recording/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
@@ -65,10 +65,7 @@ export function useElectricalCellRecordingPipeline({
       });
     },
     onSettled: () =>
-      invalidateExtendedEntityQueries(
-        queryClient,
-        ExtendedEntitiesTypeDict.ElectricalCellRecording
-      ),
+      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.ElectricalCellRecording),
   });
 
   const createContributionAsync = useMutation({
