@@ -31,20 +31,19 @@ import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getRoles } from '@/api/entitycore/queries/general/role';
 import { isNotebook } from '@/api/entitycore/types';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { fetchEnrolments } from '@/api/virtual-lab-svc/queries/course';
 import { useAppNotification } from '@/components/notification';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
-import { useDebouncedCallback } from '@/hooks/hooks';
 import {
-  patchNotebookMetadataInProjects,
-  syncNotebookToProjects,
-} from '@/services/notebooks/sync-template-notebooks';
+  AssignmentIdConflictAlert,
+  clearAssignmentIdFromStudentCopies,
+  studentProjectIds,
+} from '@/features/notebooks/assignment-id-conflict';
+import { useDebouncedCallback } from '@/hooks/hooks';
+import { syncNotebookToProjects } from '@/services/notebooks/sync-template-notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
-import { Checkbox } from '@/ui/molecules/checkbox';
 import { Input } from '@/ui/molecules/input';
 import { Modal } from '@/ui/molecules/modal';
 import { SelectPopover } from '@/ui/molecules/select-popover';
@@ -65,20 +64,6 @@ interface UpdateNotebookModalProps {
   onClose: () => void;
   record: EntityCoreObjectTypes;
   virtualLabData?: TVirtualLab;
-}
-
-/**
- * The projects of everyone enrolled on a course, minus the template project itself.
- */
-async function studentProjectIds({
-  courseId,
-  templateProjectId,
-}: {
-  courseId: string;
-  templateProjectId: string;
-}) {
-  const { enrolments } = await fetchEnrolments(courseId);
-  return enrolments.map((e) => e.project_id).filter((id) => id !== templateProjectId);
 }
 
 /**
@@ -492,19 +477,14 @@ export function UpdateNotebookModal({
 
         if (courseId) {
           // Kept for the post-update sync below, so one submit resolves the enrolments once.
-          studentProjects = await runStep('sync-conflict', async () => {
-            const targetProjectIds = await studentProjectIds({
+          studentProjects = await runStep('sync-conflict', () =>
+            clearAssignmentIdFromStudentCopies({
+              virtualLabId,
               courseId,
               templateProjectId: projectId,
-            });
-            await patchNotebookMetadataInProjects({
-              virtualLabId,
               notebookName: conflictToClear.name,
-              targetProjectIds,
-              patch: { assignment_id: null },
-            });
-            return targetProjectIds;
-          });
+            })
+          );
         }
       }
 
@@ -757,32 +737,13 @@ export function UpdateNotebookModal({
                     />
 
                     {conflict && (
-                      <Alert variant="warning" appearance="light" className="mt-3">
-                        <AlertIcon>
-                          <WarningOutlined />
-                        </AlertIcon>
-                        <AlertContent>
-                          <AlertTitle>{conflict.name} already uses this assignment ID</AlertTitle>
-                          <AlertDescription>
-                            Grading launches whichever notebook it finds first, so only one may hold
-                            it.
-                          </AlertDescription>
-                          <label
-                            htmlFor={clearConflictId}
-                            className="mt-3 flex cursor-pointer items-center gap-2 text-sm"
-                          >
-                            <Checkbox
-                              id={clearConflictId}
-                              checked={clearConflict}
-                              onCheckedChange={(checked) => setClearConflict(checked === true)}
-                            />
-                            <span>
-                              Clear the assignment ID from {conflict.name}
-                              {isCourseTemplate ? ' and from its student copies' : ''}
-                            </span>
-                          </label>
-                        </AlertContent>
-                      </Alert>
+                      <AssignmentIdConflictAlert
+                        conflictName={conflict.name}
+                        checkboxId={clearConflictId}
+                        clear={clearConflict}
+                        onClearChange={setClearConflict}
+                        isCourseTemplate={isCourseTemplate}
+                      />
                     )}
                   </div>
                 )}
