@@ -116,6 +116,7 @@ export function AgHeader(props: CustomHeaderProps) {
             </button>
           </PopoverTrigger>
           <PopoverContent
+            data-testid="column-filter-panel"
             align="end"
             side="bottom"
             sideOffset={6}

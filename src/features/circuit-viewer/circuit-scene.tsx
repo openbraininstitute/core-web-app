@@ -497,6 +497,7 @@ export function CircuitScene({
       )}
     >
       <div
+        data-testid="viewer-scene"
         className={classNames(
           'absolute inset-0',
           active ? 'pointer-events-auto' : 'invisible pointer-events-none'

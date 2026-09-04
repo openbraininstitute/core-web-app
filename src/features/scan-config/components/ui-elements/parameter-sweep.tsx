@@ -55,12 +55,15 @@ export function sweepSingleValue(value: null | number | (number | null)[]): numb
  */
 export function SweepIconButton({
   label,
+  testId,
   onClick,
   pressed,
   className,
   children,
 }: {
   label: string;
+  /** E2E handle. The label is product copy; this is what a test addresses. */
+  testId?: string;
   onClick: () => void;
   /** Set for toggles so screen readers announce the active value. */
   pressed?: boolean;
@@ -70,6 +73,7 @@ export function SweepIconButton({
   return (
     <button
       type="button"
+      data-testid={testId}
       aria-label={label}
       aria-pressed={pressed}
       title={label}
@@ -160,6 +164,7 @@ export default function ParameterSweep({
         data-scan-config-block-element={`${ScanConfigUIElementDict.FloatParameterSweep}_single`}
       >
         <InputNumber
+          data-testid="scan-config-sweep-value"
           controls={false}
           disabled={disabled}
           status={errorMessage ? 'error' : undefined}
@@ -176,6 +181,7 @@ export default function ParameterSweep({
         {!disabled && allowMultiple && (
           <SweepIconButton
             label="Scan over several values"
+            testId="scan-config-sweep-expand"
             className="absolute top-1/2 right-2 -translate-y-1/2"
             onClick={() => {
               onChange(multipleValues);
@@ -207,6 +213,7 @@ export default function ParameterSweep({
                 <Fragment key={k + i}>
                   <div className="flex w-full items-center gap-1.5">
                     <InputNumber
+                      data-testid="scan-config-sweep-value"
                       className="min-w-0 flex-1"
                       status={v === null || errorMessage ? 'error' : undefined}
                       value={v}
@@ -248,6 +255,7 @@ export default function ParameterSweep({
                           {canRemove && (
                             <SweepIconButton
                               label="Remove this value"
+                              testId="scan-config-sweep-remove"
                               onClick={() => {
                                 const updated = [...multipleValues];
                                 updated.splice(i, 1);
@@ -264,6 +272,7 @@ export default function ParameterSweep({
                           {isLast && (
                             <SweepIconButton
                               label="Add a value"
+                              testId="scan-config-sweep-add"
                               onClick={() => {
                                 // The value you just added is the one you want
                                 // to see, so it becomes the active coordinate.

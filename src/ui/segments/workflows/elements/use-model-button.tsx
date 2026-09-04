@@ -49,6 +49,7 @@ export function WorkflowUseModelButton({
   return (
     <WorkflowBlockedActionTooltip reason={blockReason} side="top" align="end">
       <Button
+        data-testid="workflow-use-model"
         onClick={() => {
           if (blockReason) return;
           router.push(

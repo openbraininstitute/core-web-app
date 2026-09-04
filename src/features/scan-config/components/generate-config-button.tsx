@@ -138,6 +138,7 @@ export default function GenerateConfigButton({
       {creditsModal}
       <button
         type="button"
+        data-testid="scan-config-submit"
         className={classNames(
           'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
           hasBlockingErrors || loading

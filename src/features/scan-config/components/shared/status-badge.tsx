@@ -16,6 +16,7 @@ export function StatusBadge({ status, details }: { status?: TActivityStatus; det
         <LoadingOutlined className="mr-2 text-base animate-spin text-(--card-color)!" />
       )}
       <span
+        data-testid="scan-config-status"
         style={{ borderColor: color, color: `${color} !important` }}
         className={cn(
           'flex items-center rounded-full border px-4 py-1 text-sm capitalize transition-colors duration-300',

@@ -137,6 +137,7 @@ export function ViewerControlsMenu({
       <Tooltip open={open ? false : undefined}>
         <TooltipTrigger asChild>
           <PopoverTrigger
+            data-testid="viewer-settings"
             ref={triggerRef}
             aria-label={settingsLabel}
             className={cn(
@@ -180,31 +181,43 @@ export function ViewerControlsMenu({
               )
             }
             label={isFullscreen ? 'Exit full screen' : 'Full screen'}
+            testId="viewer-full-screen"
             onClick={handleFullscreen}
           />
           <MenuButton
             icon={<RiRefreshLine className="size-4 shrink-0" />}
             label="Reset view"
+            testId="viewer-reset-view"
             onClick={onResetView}
           />
           <MenuButton
             icon={<RiCameraLine className="size-4 shrink-0" />}
             label="Capture image"
+            testId="viewer-capture-image"
             onClick={handleCaptureImage}
           />
           {onToggleAxons && (
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showAxons} onChange={onToggleAxons} />
+              <ViewerSwitch
+                testId="viewer-toggle-axons"
+                checked={!!showAxons}
+                onChange={onToggleAxons}
+              />
             </MenuRow>
           )}
           {onToggleElectrodes && (
             <MenuRow label="Electrodes" icon={<ElectrodesIcon className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showElectrodes} onChange={onToggleElectrodes} />
+              <ViewerSwitch
+                testId="viewer-toggle-electrodes"
+                checked={!!showElectrodes}
+                onChange={onToggleElectrodes}
+              />
             </MenuRow>
           )}
           {onElectrodeRadiusChange && electrodeRadius !== undefined && showElectrodes !== false && (
             <MenuSlider
               label="Electrode size"
+              testId="viewer-slider-electrode-size"
               min={DEFAULT_ELECTRODE_RADIUS}
               max={80}
               step={5}
@@ -214,17 +227,26 @@ export function ViewerControlsMenu({
           )}
           {onToggleScalebar && (
             <MenuRow label="Scale bar" icon={<RulerMeasure className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showScalebar} onChange={onToggleScalebar} />
+              <ViewerSwitch
+                testId="viewer-toggle-scale-bar"
+                checked={!!showScalebar}
+                onChange={onToggleScalebar}
+              />
             </MenuRow>
           )}
           {onToggleZoomSlider && (
             <MenuRow label="Zoom slider" icon={<ZoomInArea className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showZoomSlider} onChange={onToggleZoomSlider} />
+              <ViewerSwitch
+                testId="viewer-toggle-zoom-slider"
+                checked={!!showZoomSlider}
+                onChange={onToggleZoomSlider}
+              />
             </MenuRow>
           )}
           {onToggleMorphologyLocationLabels && (
             <MenuRow label="Location labels" icon={<TooltipIcon className="size-4 shrink-0" />}>
               <ViewerSwitch
+                testId="viewer-toggle-location-labels"
                 checked={!!showMorphologyLocationLabels}
                 onChange={onToggleMorphologyLocationLabels}
               />
@@ -233,6 +255,7 @@ export function ViewerControlsMenu({
           {onMorphologyLocationRadiusChange && morphologyLocationRadius !== undefined && (
             <MenuSlider
               label="Location marker size"
+              testId="viewer-slider-location-marker-size"
               min={1}
               max={30}
               step={1}
@@ -243,6 +266,7 @@ export function ViewerControlsMenu({
           {onNeuronOpacityChange && neuronOpacity !== undefined && (
             <MenuSlider
               label="Neuron opacity"
+              testId="viewer-slider-neuron-opacity"
               min={5}
               max={100}
               step={5}
@@ -339,15 +363,19 @@ const menuItemIconClass =
 function MenuButton({
   icon,
   label,
+  testId,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
+  /** E2E handle. Several of these labels change with the state they toggle. */
+  testId?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      data-testid={testId}
       onClick={onClick}
       className="group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-neutral-100"
     >
@@ -368,13 +396,16 @@ const ON_COLOR = 'var(--color-primary-9)';
 /** A settings switch, primary-9 while on. */
 function ViewerSwitch({
   checked,
+  testId,
   onChange,
 }: {
   checked: boolean;
+  testId?: string;
   onChange: (value: boolean) => void;
 }) {
   return (
     <Switch
+      data-testid={testId}
       size="small"
       checked={checked}
       onChange={onChange}
@@ -385,6 +416,7 @@ function ViewerSwitch({
 
 function MenuSlider({
   label,
+  testId,
   min,
   max,
   step,
@@ -393,6 +425,7 @@ function MenuSlider({
   format,
 }: {
   label: string;
+  testId?: string;
   min: number;
   max: number;
   step: number;
@@ -401,7 +434,10 @@ function MenuSlider({
   format?: (value: number) => string;
 }) {
   return (
-    <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
+    <div
+      data-testid={testId}
+      className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
+    >
       <div className="flex items-center justify-between gap-2">
         <span>{label}</span>
         <span className="tabular-nums text-neutral-500">{format ? format(value) : value}</span>

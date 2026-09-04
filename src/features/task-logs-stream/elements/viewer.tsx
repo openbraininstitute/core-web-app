@@ -28,6 +28,7 @@ function TaskViewerFrame({ children }: { children: ReactNode }) {
   return (
     <div
       id="job-viewer"
+      data-testid="scan-config-logs"
       className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 px-4 w-full"
     >
       {children}

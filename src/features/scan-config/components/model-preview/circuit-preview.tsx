@@ -117,6 +117,7 @@ export function CircuitPreview({
   const modeToggle: IViewerModeOption[] = [
     {
       label: '3D visualization',
+      testId: 'viewer-mode-visualization',
       icon: <View3d className="size-4" />,
       active: activeMode === ViewerModeDict.Visualization,
       onSelect: () => setMode(ViewerModeDict.Visualization),
@@ -125,6 +126,7 @@ export function CircuitPreview({
   if (hasDesignerImage) {
     modeToggle.push({
       label: 'Image',
+      testId: 'viewer-mode-image',
       icon: <RiImageLine className="size-4" />,
       active: showImage,
       onSelect: () => setMode(ViewerModeDict.Image),
@@ -133,6 +135,7 @@ export function CircuitPreview({
   if (supportsDendrogram) {
     modeToggle.push({
       label: 'Dendrogram',
+      testId: 'viewer-mode-dendrogram',
       icon: <FamilyTree className="size-4" />,
       active: showDendrogram,
       onSelect: () => setMode(ViewerModeDict.Dendrogram),

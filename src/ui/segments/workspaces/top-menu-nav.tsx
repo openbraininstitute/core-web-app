@@ -303,6 +303,7 @@ export function TopMenuNavigation() {
                   <Badge
                     rounded
                     id={id}
+                    data-testid={id}
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
@@ -340,6 +341,7 @@ export function TopMenuNavigation() {
                     asChild
                     rounded
                     id={id}
+                    data-testid={id}
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
@@ -385,6 +387,7 @@ export function TopMenuNavigation() {
                   asChild
                   rounded
                   id={id}
+                  data-testid={id}
                   variant="outline"
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(

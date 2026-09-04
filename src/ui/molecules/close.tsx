@@ -18,6 +18,7 @@ export default function Close({
   return (
     <NextLink
       href={href}
+      data-testid="data-view-close"
       className={cn(
         'flex items-center justify-center rounded-full p-2',
         variant === ViewVariant.Default

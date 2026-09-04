@@ -68,6 +68,7 @@ export default function MorphologyLocationSelection({
   return (
     <div
       className="flex flex-col gap-2"
+      data-testid="scan-config-locations"
       data-scan-config-block-element={ScanConfigUIElementDict.MorphologyLocationSelection}
     >
       {!disabled && (
@@ -87,6 +88,7 @@ export default function MorphologyLocationSelection({
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional; two rows may hold identical values
           key={index}
+          data-testid="scan-config-location"
           className="flex items-end gap-2 border border-gray-200 p-2"
         >
           <div className="flex flex-1 flex-col gap-1">
@@ -95,6 +97,7 @@ export default function MorphologyLocationSelection({
             </label>
             {/* Always disabled, never only when the form is: the id comes from the viewer. */}
             <InputNumber
+              data-testid="scan-config-location-section"
               id={`${fieldId}-section-${index}`}
               // `!` because antd's disabled colour is a more specific selector.
               className="w-full [&_input]:cursor-default [&_input]:font-medium [&_input]:!text-neutral-10"
@@ -109,6 +112,7 @@ export default function MorphologyLocationSelection({
               OFFSET
             </label>
             <InputNumber
+              data-testid="scan-config-location-offset"
               id={`${fieldId}-offset-${index}`}
               className="w-full"
               disabled={disabled}
@@ -122,6 +126,7 @@ export default function MorphologyLocationSelection({
           {!disabled && rows.length > 1 && (
             <button
               type="button"
+              data-testid="scan-config-location-remove"
               className="pb-2 text-red-500"
               aria-label={`Remove location ${index + 1}`}
               onClick={() => onChange(rows.toSpliced(index, 1))}
