@@ -159,6 +159,33 @@ export type NodeGeometryOptions = {
   withOrientations?: boolean;
 };
 
+export type ColumnDistributionRequest = {
+  column: string;
+  filter?: FilterModel;
+  topN?: number;
+};
+
+export type NumericDistribution = {
+  kind: 'numeric';
+  binEdges: number[];
+  counts: number[];
+  total: number;
+  nullCount: number;
+  min: number;
+  max: number;
+};
+
+export type CategoricalDistribution = {
+  kind: 'categorical' | 'string';
+  labels: string[];
+  counts: number[];
+  total: number;
+  otherCount?: number;
+  distinctCount?: number;
+};
+
+export type ColumnDistributionResponse = NumericDistribution | CategoricalDistribution;
+
 export type { DownloadProgress } from '@/utils/h5/fs';
 
 export type NodePopulation = {
