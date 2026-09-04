@@ -5,6 +5,7 @@ import { RiArrowDownSLine, RiCheckFill } from '@remixicon/react';
 
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
+import { useFullscreenElement } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -57,11 +58,13 @@ function SelectContent({
   container,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content> & {
-  /** Portal mount node — required in fullscreen so menus stay interactive. */
+  /** Portal mount node. Defaults to whatever is fullscreen, else the body. */
   container?: HTMLElement | null;
 }) {
+  const fullscreen = useFullscreenElement();
+
   return (
-    <SelectPrimitive.Portal container={container ?? undefined}>
+    <SelectPrimitive.Portal container={container ?? fullscreen ?? undefined}>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(

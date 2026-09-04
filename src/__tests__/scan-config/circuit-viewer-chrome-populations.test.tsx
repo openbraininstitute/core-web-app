@@ -14,7 +14,6 @@ import type {
 import type { ViewerControlsMenuProps } from '@/features/scan-config/components/color-by/viewer-controls-menu';
 
 const MENU: ViewerControlsMenuProps = {
-  onFullscreen: vi.fn(),
   onResetView: vi.fn(),
   onCaptureImage: vi.fn(),
   backgroundDark: false,

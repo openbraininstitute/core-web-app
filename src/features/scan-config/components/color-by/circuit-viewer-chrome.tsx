@@ -1,17 +1,16 @@
-import { RiAlertLine, RiArrowDownSLine, RiFullscreenExitLine, RiTableLine } from '@remixicon/react';
+import { RiAlertLine, RiArrowDownSLine, RiTableLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { MorphologyLocationHelp } from '../circuit-viz/morphology-location/help';
 import { ZoomSlider } from '../zoom-slider/zoom-slider';
+import { ChromeButton, FullscreenButton } from './chrome-button';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
-import { useFullscreenElement } from './use-fullscreen-element';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
 import type { ViewerTheme } from './contrast';
@@ -32,6 +31,8 @@ export interface ICircuitViewerChromeProps {
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
   table?: { active: boolean; onToggle: () => void };
+  /** Fullscreen toggle, beside the table one and visible in every view. Omit to leave it out. */
+  onToggleFullscreen?: () => void;
   /**
    * 3D chrome (settings + color-by). Kept mounted across mode switches; hidden
    * in image mode so controls do not remount.
@@ -56,15 +57,16 @@ export interface ICircuitViewerChromeProps {
 
 /**
  * absolutely-positioned control layer over a circuit viewer: mode toggle +
- * table + settings + populations checklist (top-left), color-by dropdown + key
- * (top-right), and what the checklist can leave the scene in (centre and
- * top-centre). Sits above the 3D canvas
+ * table + fullscreen + settings + populations checklist (top-left), color-by
+ * dropdown + key (top-right), and what the checklist can leave the scene in
+ * (centre and top-centre). Sits above the 3D canvas
  */
 export function CircuitViewerChrome({
   modeToggle,
   vizActive,
   theme,
   table,
+  onToggleFullscreen,
   viz,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
@@ -97,10 +99,6 @@ export function CircuitViewerChrome({
   const [legendOpen, setLegendOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarWidth, setToolbarWidth] = useState<number>();
-  // Portalled overlays must render inside the fullscreen element to stay visible
-  // in fullscreen; null → the browser default (document.body).
-  const portalContainer = useFullscreenElement();
-  const isFullscreen = portalContainer !== null;
 
   useEffect(() => {
     setLegendOpen(!!selectedProperty);
@@ -165,6 +163,7 @@ export function CircuitViewerChrome({
             <RiTableLine className="size-4" />
           </ChromeButton>
         )}
+        {onToggleFullscreen && <FullscreenButton onToggle={onToggleFullscreen} />}
         {viz && (
           <div
             className={cn(
@@ -174,20 +173,11 @@ export function CircuitViewerChrome({
             aria-hidden={!showVizChrome}
             inert={!showVizChrome || undefined}
           >
-            {isFullscreen && (
-              <ChromeButton label="Exit full screen" onClick={viz.menu.onFullscreen}>
-                <RiFullscreenExitLine className="size-4" />
-              </ChromeButton>
-            )}
-            <ViewerControlsMenu
-              {...viz.menu}
-              container={portalContainer}
-              isFullscreen={isFullscreen}
-            />
+            <ViewerControlsMenu {...viz.menu} />
             {/* Ahead of the help icons, which come and go with the mode: in a
-                  row anchored to the left edge, only what precedes an element
-                  can move it, and the pill's own width changes as populations
-                  are ticked off. */}
+                row anchored to the left edge, only what precedes an element can
+                move it, and the pill's own width changes as populations are
+                ticked off. */}
             {populations && (
               <PopulationsMenu
                 populations={populations.populations}
@@ -196,18 +186,13 @@ export function CircuitViewerChrome({
                 selected={populations.selected}
                 onSelect={populations.onSelect}
                 theme={theme}
-                container={portalContainer}
                 autoOpen={showVizChrome}
               />
             )}
             {viz.menu.onToggleElectrodes &&
               viz.menu.showElectrodes !== false &&
-              viz.electrodesInteractive !== false && (
-                <ElectrodeInteractionHelp container={portalContainer} />
-              )}
-            {viz.morphologyLocationsInteractive && (
-              <MorphologyLocationHelp container={portalContainer} />
-            )}
+              viz.electrodesInteractive !== false && <ElectrodeInteractionHelp />}
+            {viz.morphologyLocationsInteractive && <MorphologyLocationHelp />}
           </div>
         )}
       </div>
@@ -255,7 +240,6 @@ export function CircuitViewerChrome({
               error={colorBy.propertiesError}
               onRetry={colorBy.onRetryProperties}
               theme={theme}
-              container={portalContainer}
             />
             {showLegendToggle && (
               <button
@@ -290,7 +274,6 @@ export function CircuitViewerChrome({
                 mapping={colorBy.mapping}
                 onChangeCategoryColor={colorBy.onChangeCategoryColor}
                 theme={theme}
-                container={portalContainer}
               />
             </div>
           )}
@@ -360,46 +343,5 @@ function ChromeNotice({
         {action}
       </button>
     </div>
-  );
-}
-
-function ChromeButton({
-  label,
-  onClick,
-  active,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  active?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={label}
-          aria-pressed={active}
-          onClick={onClick}
-          className={cn(
-            'inline-flex size-8 items-center justify-center rounded-full transition-colors',
-            'shadow-md ring-1 ring-black/5 focus-visible:outline-none',
-            active ? 'bg-primary-8 text-white' : 'bg-white text-neutral-500 hover:bg-neutral-100'
-          )}
-        >
-          {children}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent
-        align="center"
-        side="bottom"
-        sideOffset={0}
-        arrowClassName="bg-gray-200"
-        className="text-primary-9 bg-gray-200"
-      >
-        {label}
-      </TooltipContent>
-    </Tooltip>
   );
 }

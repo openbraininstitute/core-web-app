@@ -1,6 +1,6 @@
 import { RiImageLine } from '@remixicon/react';
 import { Image as AntdImage } from 'antd';
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import { getAsset } from '@/api/entitycore/selectors/assets';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -11,6 +11,7 @@ import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
+import { fullscreenPopupContainer, toggleFullscreen } from '@/utils/fullscreen';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -92,6 +93,7 @@ export function CircuitPreview({
   electrodes,
 }: TCircuitPreviewProps) {
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const hasDesignerImage = circuit ? circuitHasDesignerImage(circuit) : false;
   // The dendrogram tab is only offered on MEModels.
@@ -140,7 +142,12 @@ export function CircuitPreview({
   }
 
   return (
-    <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">
+    // The wrapper goes fullscreen, not the scene inside it, so the designer
+    // image beside the scene is still on screen there.
+    <div
+      ref={previewRef}
+      className="relative h-full min-h-0 overflow-hidden rounded-2xl [&:fullscreen]:rounded-none [&:fullscreen]:bg-white"
+    >
       {mountImage && circuit && (
         <div
           className={classNames('absolute inset-0', !showImage && 'invisible pointer-events-none')}
@@ -162,6 +169,7 @@ export function CircuitPreview({
             form={form}
             electrodes={electrodes}
             modeToggle={modeToggle}
+            onToggleFullscreen={() => toggleFullscreen(previewRef.current)}
           />
         </div>
       )}
@@ -212,6 +220,7 @@ export function CircuitImage({ className, circuit }: { className?: string; circu
             <AntdImage
               src={data}
               alt="Circuit preview"
+              preview={{ getContainer: fullscreenPopupContainer }}
               className="block! w-full! h-full!"
               style={{ width: '100%', height: '100%', display: 'block' }}
             />

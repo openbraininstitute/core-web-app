@@ -3,6 +3,7 @@ import { InputNumber, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 import { useDebouncedCallback } from '@/hooks/hooks';
+import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { CustomFilterProps } from 'ag-grid-react';
 import type { GetRef, InputNumber as InputNumberType } from 'antd';
@@ -53,8 +54,7 @@ export function NumericFilter({ model, onModelChange }: Params) {
   const hidePopupRef = useRef<(() => void) | null>(null);
   const valueInputRef = useRef<GetRef<typeof InputNumberType>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const getPopupContainer = () =>
-    containerRef.current ?? (document.fullscreenElement as HTMLElement | null) ?? document.body;
+  const getPopupContainer = () => containerRef.current ?? fullscreenPopupContainer();
   useGridFilter({
     doesFilterPass: () => true,
     afterGuiAttached: (params) => {

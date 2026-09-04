@@ -6,6 +6,7 @@ import { Slider } from 'antd';
 
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 /**
  * Playback rates, as simulated milliseconds per wall-clock second.
@@ -90,7 +91,10 @@ export function TransportBar({
         step={step}
         disabled={disabled}
         onChange={onSeek}
-        tooltip={{ formatter: (value) => `${(value ?? 0).toFixed(1)} ms` }}
+        tooltip={{
+          formatter: (value) => `${(value ?? 0).toFixed(1)} ms`,
+          getPopupContainer: fullscreenPopupContainer,
+        }}
       />
 
       <span className="shrink-0 tabular-nums text-xs text-gray-600">
