@@ -29,11 +29,6 @@ const badgeVariants = cva(
   }
 );
 
-/**
- * Shared base for the status pills (lifecycle status, campaign execution status), which
- * share table rows and must not drift apart. Pair with `size="sm"` — the source of the
- * height — and `variant="outline"`, then layer the per-status tone colours on top.
- */
 export const STATUS_PILL_CLASS = 'select-none border font-semibold';
 
 function Badge({

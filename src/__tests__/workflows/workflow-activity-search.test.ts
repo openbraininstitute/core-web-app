@@ -31,11 +31,16 @@ describe('withWorkflowIdSearch', () => {
     expect(withWorkflowIdSearch(params)).toEqual(params);
   });
 
-  it('narrows ALONGSIDE an applied id__in rather than replacing it', () => {
-    // both reach the endpoint, so the two conditions AND together
+  it('leaves an applied id__in filter alone rather than adding a second id condition', () => {
     expect(withWorkflowIdSearch({ id__in: ['other'], ilike_search: `*${UUID}*` })).toEqual({
       id__in: ['other'],
-      id: UUID,
+    });
+  });
+
+  it('never overwrites an explicit id filter with the search term', () => {
+    // clobbering the panel's own `id` would silently widen the result set
+    expect(withWorkflowIdSearch({ id: 'chosen-by-the-user', ilike_search: `*${UUID}*` })).toEqual({
+      id: 'chosen-by-the-user',
     });
   });
 

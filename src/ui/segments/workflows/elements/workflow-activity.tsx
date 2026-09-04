@@ -22,7 +22,6 @@ import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import { NotAllowedResultsActionEntityTypes } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { withWorkflowIdSearch } from '@/ui/segments/workflows/elements/workflow-activity-search';
@@ -32,12 +31,6 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IGridState } from '@/features/data-grid/core';
 
-/**
- * Re-exported from its home in `workflow-activity-actions`, where the actions cell can
- * read it without importing this component. Kept here for existing consumers.
- */
-export { NotAllowedResultsActionEntityTypes };
-
 /** Grid section id — namespaces the persisted column layout away from the browse pages. */
 const WORKFLOW_ACTIVITY_SECTION = 'workflow-activity';
 
@@ -45,19 +38,6 @@ const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch
 
 /** One registry for every workflow-activity grid, so remounts resolve the same objects. */
 const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
-
-export interface WorkflowActivityRef {
-  dataCount: number;
-  totalItems: number;
-  entityType: TExtendedEntitiesTypeDict | undefined;
-}
-
-export type WorkflowActivityProps = {
-  onActivityChange?: (activity: TActivityValue | undefined) => void;
-  onEntityTypeChange?: (entityType: TExtendedEntitiesTypeDict | undefined) => void;
-  onShouldRenderScrollableSelector: (shouldRenderScrollableSelector: boolean) => void;
-  onShouldOnlyRenderScrollableSelector: (shouldRenderOnlyScrollableSelector: boolean) => void;
-};
 
 export function WorkflowActivity() {
   const { virtualLabId, projectId } = useWorkspace();

@@ -88,7 +88,7 @@ export function buildColDefs<Row>(
       resizable: c.width?.resizable ?? true,
       // position-pinned columns (`movable: false`) keep their declared slot — no drag handle
       suppressMovable: c.movable === false,
-      // edge-frozen columns stay visible while the rest scrolls horizontally
+      // frozen against an edge; `lockPosition` keeps a drag from pulling it out
       pinned: c.pinned,
       lockPosition: c.pinned,
       cellClass:

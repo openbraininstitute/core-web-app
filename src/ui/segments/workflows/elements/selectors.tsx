@@ -41,8 +41,6 @@ export function EntityTypeSelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          // no fixed width: `SelectTrigger`'s `w-fit` sizes to content in every engine,
-          // whereas a fixed width clamped by `max-w-max` does not shrink in Safari
           'min-w-36 rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}

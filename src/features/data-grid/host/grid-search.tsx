@@ -16,10 +16,8 @@ export interface IGridSearchProps {
   /** Hint inside the input; say what the endpoint actually matches (default: generic). */
   placeholder?: string;
   /**
-   * Tailwind width of the opened input (default `w-64`). Widen it for a listing whose
-   * placeholder spells out several searchable fields — a hint the user cannot read is
-   * no hint at all. Drives the reveal animation and the input's own layout together, so
-   * one token keeps the two in step.
+   * Tailwind width of the opened input (default `w-64`). Drives the reveal animation and
+   * the input's own layout together, so the two cannot disagree.
    */
   inputWidthClass?: string;
 }
