@@ -63,7 +63,8 @@ function TooltipContent({
         {showArrow && (
           <TooltipPrimitive.Arrow
             className={cn(
-              'z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs bg-current fill-transparent',
+              // `bg-primary-9`, not `bg-current`: currentColor here is the panel's `text-white`
+              'z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs bg-primary-9 fill-transparent',
               arrowClassName
             )}
           />
