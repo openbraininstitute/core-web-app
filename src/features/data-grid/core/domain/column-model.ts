@@ -46,6 +46,14 @@ export const FreeEntryKind = {
 
 export type TFreeEntryKind = (typeof FreeEntryKind)[keyof typeof FreeEntryKind];
 
+/** Edge a column can be frozen against. See {@link IColumnModel.pinned}. */
+export const ColumnPin = {
+  Left: 'left',
+  Right: 'right',
+} as const;
+
+export type TColumnPin = (typeof ColumnPin)[keyof typeof ColumnPin];
+
 /**
  * One backend field a column can be filtered BY ("match by name" vs "match by id").
  * The editor shows a switch when a column declares more than one; the active
@@ -153,6 +161,13 @@ export interface IColumnModel<Row = unknown> {
    * one hosting a tree's expand chevron.
    */
   movable?: boolean;
+  /**
+   * Freeze the column against an edge so it stays put while the rest scrolls
+   * horizontally. Position within the frozen region still comes from the column order,
+   * so pair with {@link movable} `false` (and usually {@link alwaysVisible}) unless the
+   * user is meant to move or hide it.
+   */
+  pinned?: TColumnPin;
   filter?: IColumnFilter;
 }
 

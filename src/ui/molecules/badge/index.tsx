@@ -1,7 +1,8 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from '@radix-ui/react-slot';
+import { cva, type VariantProps } from 'class-variance-authority';
+
 import { cn } from '@/utils/css-class';
 
 const badgeVariants = cva(
@@ -27,6 +28,8 @@ const badgeVariants = cva(
     },
   }
 );
+
+export const STATUS_PILL_CLASS = 'select-none border font-semibold';
 
 function Badge({
   className,

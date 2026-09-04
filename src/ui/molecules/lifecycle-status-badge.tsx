@@ -3,7 +3,7 @@ import {
   EntityLifecycleStatusLabel,
   type TEntityLifecycleStatus,
 } from '@/api/entitycore/types/shared/global';
-import { Badge } from '@/ui/molecules/badge';
+import { Badge, STATUS_PILL_CLASS } from '@/ui/molecules/badge';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -90,13 +90,7 @@ export function LifecycleStatusBadge({
       rounded
       size="sm"
       variant="outline"
-      className={cn(
-        'select-none border font-semibold h-6!',
-        spec.bg,
-        spec.border,
-        spec.text,
-        className
-      )}
+      className={cn(STATUS_PILL_CLASS, spec.bg, spec.border, spec.text, className)}
     >
       {spec.label}
     </Badge>
