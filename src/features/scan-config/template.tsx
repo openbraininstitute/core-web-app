@@ -49,6 +49,7 @@ import { showRestoreAtom } from '../ai-assistant/message-item/collapsible-messag
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TAnyWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
@@ -75,6 +76,7 @@ type Props = {
   campaignEntityType?: TExtendedEntitiesTypeDict;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  seed?: TAnyWorkflowSeed;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
@@ -106,6 +108,7 @@ function ScanConfigTemplateContent({
   campaignOriginAction,
   workflowSessionSelection,
   resolveSessionFromIdType,
+  seed,
   taskTypeBindings,
 }: Props) {
   const browseOverlayContext = useScanConfigMainOverlayOptional();
@@ -121,7 +124,6 @@ function ScanConfigTemplateContent({
   const [campaignId, setCampaignId] = useState(isDuplicate ? '' : (origin ?? ''));
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
-  const allEntries = useEntries({ initialConfig, schema });
   const [config, setConfig] = useConfig({
     schema,
     initialConfig,
@@ -129,7 +131,9 @@ function ScanConfigTemplateContent({
     origin,
     workflowSessionSelection,
     resolveFromIdType: resolveSessionFromIdType,
+    seed,
   });
+  const allEntries = useEntries({ config, schema });
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 

@@ -149,7 +149,7 @@ export default function ActionMenu({
       workspace: ctx,
       extendedType: type,
       entityId: entity.id,
-      entity: 'scale' in entity ? { scale: entity.scale } : {},
+      entity,
       flags,
     });
   }, [isSimulatable, ctx, type, entity, flags]);

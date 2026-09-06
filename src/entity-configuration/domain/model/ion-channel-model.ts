@@ -41,5 +41,5 @@ export const IonChannelModel: EntityCoreTypeConfig<IIonChannelModel> = {
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: false,
+  isSimulatable: true,
 } as const;

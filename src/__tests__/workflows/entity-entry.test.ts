@@ -101,15 +101,16 @@ const cases: TCase[] = [
     selects: { type: ExtendedEntitiesTypeDict.MemodelCircuit, id: ENTITY_ID },
   },
   {
-    // static-type workflow: its editor picks the ion channel models itself, so the route carries
-    // no session id and no pre-selection
+    // the editor still picks ion channel models itself, but the session carries the model this
+    // link started from so configure opens with it already in the config
     name: 'ion channel model → ion channel simulation',
     fixture: { entity: { type: EntityTypeDict.IonChannelModel } },
     covers: {
       activity: simulate,
       targetType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
     },
-    href: `${base}/simulate/configure/ion-channel-model-simulation?panel=configuration`,
+    href: `${base}/simulate/configure/ion-channel-model-simulation/{session}?panel=configuration`,
+    selects: { type: ExtendedEntitiesTypeDict.IonChannelModel, id: ENTITY_ID },
   },
   {
     name: 'single-neuron circuit → synaptome (beta) simulation',
@@ -264,7 +265,7 @@ const cases: TCase[] = [
       activity: simulate,
       targetType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
     },
-    href: `${base}/simulate/configure/ion-channel-model-simulation?origin=${ENTITY_ID}`,
+    href: `${base}/simulate/configure/ion-channel-model-simulation/{session}?origin=${ENTITY_ID}`,
   },
 
   // task-config campaigns: matched through the workflow's task bindings ───
