@@ -2,6 +2,7 @@
 
 import { use } from 'react';
 
+import { ScanConfigWorkflowBreadcrumb } from '@/features/scan-config/workflow/breadcrumb';
 import { ScanConfigWorkflow } from '@/features/scan-config/workflow/components';
 import { ScanConfigWorkflowProvider } from '@/features/scan-config/workflow/context';
 
@@ -31,10 +32,13 @@ export type ScanConfigWorkflowConfigurePageProps = ServerSideComponentProp<
 function DefaultScanConfigWorkflowLayout({ aside }: { aside?: React.ReactNode }) {
   return (
     <ScanConfigWorkflow.Gate>
-      <ScanConfigWorkflow.Frame>
-        <ScanConfigWorkflow.Editor />
-        {aside ? <ScanConfigWorkflow.Aside>{aside}</ScanConfigWorkflow.Aside> : null}
-      </ScanConfigWorkflow.Frame>
+      <div className="relative h-full min-h-0 pt-5">
+        <ScanConfigWorkflow.Frame>
+          <ScanConfigWorkflow.Editor />
+          {aside ? <ScanConfigWorkflow.Aside>{aside}</ScanConfigWorkflow.Aside> : null}
+        </ScanConfigWorkflow.Frame>
+        <ScanConfigWorkflowBreadcrumb className="absolute inset-x-0 top-5 z-10 ml-2 -translate-y-1/2" />
+      </div>
     </ScanConfigWorkflow.Gate>
   );
 }
