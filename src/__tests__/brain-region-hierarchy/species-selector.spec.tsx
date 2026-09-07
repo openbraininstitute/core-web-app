@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { SpeciesSelector } from '@/features/brain-region-hierarchy/components/species-selector';
+import { speciesAtlasCardTestId } from '@/features/brain-atlas-viewer/all-species/helpers';
+import {
+  SpeciesSelector,
+  speciesOptionTestId,
+} from '@/features/brain-region-hierarchy/components/species-selector';
 
 import type {
   IHierarchyWithSpecies,
@@ -71,5 +75,29 @@ describe('SpeciesSelector (species view)', () => {
     renderSelector({ isAllMode: true, displaySpecies: null });
 
     expect(screen.getAllByText('All').length).toBeGreaterThan(0);
+  });
+});
+
+describe('species test ids', () => {
+  it('keys a dropdown option on the scientific name', () => {
+    expect(speciesOptionTestId('Homo sapiens')).toBe('species-selector-option__homo-sapiens');
+    expect(speciesOptionTestId('Drosophila melanogaster')).toBe(
+      'species-selector-option__drosophila-melanogaster'
+    );
+    expect(speciesOptionTestId('Hybrid human-mouse')).toBe(
+      'species-selector-option__hybrid-human-mouse'
+    );
+  });
+
+  it('gives every species card its own id, under one countable prefix', () => {
+    const ids = ['Homo sapiens', 'Mus musculus', 'Loligo pealeii'].map(speciesAtlasCardTestId);
+
+    expect(ids).toEqual([
+      'all-species-atlas-card__homo-sapiens',
+      'all-species-atlas-card__mus-musculus',
+      'all-species-atlas-card__loligo-pealeii',
+    ]);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.every((id) => id.startsWith('all-species-atlas-card__'))).toBe(true);
   });
 });
