@@ -95,8 +95,6 @@ export function ModelPreview({
           // The form binding lets a 3D click write a morphology location back into the form.
           form={viewerForm}
           enableVisualization
-          // Colour-by, the nodes table and hover are the scene's own call on an
-          // MEModel — there is one cell and no nodes file behind it.
           features={{ ...viewerFeatures, electrodes: false }}
           defaultNeuronOpacity={defaultNeuronOpacity}
         />

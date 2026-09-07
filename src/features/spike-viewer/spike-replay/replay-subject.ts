@@ -5,18 +5,10 @@ import type { TSceneMemodel, TSceneSubject } from '@/features/circuit-viewer/cir
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
 /**
- * What a simulation's spikes can be replayed over in 3D, if anything.
- *
- * Nothing is what keeps the 3D and split icons out of the viewer for campaigns
- * that scanned something with no cells to light up — an ion channel, a bare
- * morphology — instead of offering a view that cannot be drawn.
- *
- * Every circuit scale qualifies, and so does an MEModel: a single-neuron
- * campaign scans the model itself rather than a circuit built from it, and its
- * one recorded cell is that model. The viewers behind this draw a cell very
- * differently — a whole neurite tree, a point — but all take a brightness per
- * cell, so which one runs is a rendering detail rather than a limit on what can
- * be replayed.
+ * What a simulation's spikes can be replayed over in 3D, if anything. Every
+ * circuit scale qualifies, and so does an MEModel: a single-neuron campaign
+ * scans the model itself rather than a circuit built from it, so its one
+ * recorded cell is that model.
  */
 export function replaySubject(
   model: TSupportedEntitiesForScanConfiguration | null

@@ -60,22 +60,21 @@ const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
 
 interface SpikeReplayViewProps {
   data: SpikeData;
-  /** The circuit or MEModel that produced the spikes; omit when there is nothing to replay over. */
+  /** The circuit or MEModel to replay the spikes over; omit when there is none. */
   subject?: TSceneSubject;
 }
 
 /**
- * A simulation's spikes as a raster, as a 3D replay over the model that
- * produced them — a circuit or a single MEModel — or both at once.
+ * A simulation's spikes as a raster, as a 3D replay over the circuit or MEModel
+ * that produced them, or both at once.
  *
- * Without a subject — an ion-channel campaign — the view pill drops away and
- * the raster has the panel to itself: the split's divider and gutter would be
- * chrome for a pane that will never hold anything.
+ * Without a subject the view pill drops away and the raster has the panel to
+ * itself: the split's divider and gutter would frame a pane that never holds
+ * anything.
  *
  * The 3D scene mounts the first time it is asked for and stays mounted from
  * then on, so switching views never tears down the WebGL context and
- * re-downloads every morphology. Without a subject it never mounts at all —
- * there is nothing to replay.
+ * re-downloads every morphology. Without a subject it never mounts at all.
  */
 export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
@@ -133,10 +132,8 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   // lists as virtual, has no cells to light; the scene then draws its own
   // default and the notice in the header says why.
   //
-  // Nothing recorded is nothing to replay, whatever produced it. Past that an
-  // MEModel is drawn from the model itself and has exactly one cell, so there
-  // is no config to ask and nothing to disqualify: what it recorded is that
-  // cell's.
+  // Nothing recorded is nothing to replay. Past that, an MEModel is drawn from
+  // the model itself and has one cell, so there is no config to ask.
   const replayable =
     recorded !== undefined &&
     (memodel !== undefined || replayablePopulation(circuitConfig?.nodes, populationName));
@@ -144,9 +141,8 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
     () => (replayable ? spikesToViewer(data, populationName) : null),
     [data, populationName, replayable]
   );
-  // With nothing to replay over, the raster is the only view whatever the mode
-  // says: a split would rule off a pane that stays empty and leave a playhead
-  // on the raster that nothing can move.
+  // With nothing to replay over the raster is the only view, whatever the mode
+  // says: a split would show an empty pane and a playhead nothing can move.
   const view = subject ? mode : MODES.Raster;
   const showScene = view !== MODES.Raster;
   const isSplit = view === MODES.Split;
@@ -327,8 +323,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
                 // cannot draw would make it fall back on its own — with no name
                 // it falls back deliberately, to the same default, and the
                 // notice in the header explains what is on show. An MEModel
-                // resolves no populations at all, so a name means nothing to it
-                // either way.
+                // resolves no populations, so the name means nothing to it.
                 populationName={replayable ? populationName : undefined}
                 // The population above the panes is the one being replayed,
                 // and the spikes' cell indices are relative to it. The
@@ -425,7 +420,7 @@ function replayablePopulation(
   return listed !== undefined && isBiophysical(listed);
 }
 
-/** Why what is on show cannot be replayed, told apart by cause. */
+/** Why what is on show cannot be replayed. */
 function replayNotice(
   recorded: SpikePopulation | undefined,
   name: string | undefined,

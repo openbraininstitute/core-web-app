@@ -28,7 +28,7 @@ describe('replaySubject', () => {
     expect(replaySubject(memodel)).toEqual({ memodel });
   });
 
-  it('has nothing to offer when the campaign scanned something with no cells to light up', () => {
+  it('has nothing to offer when the campaign scanned neither a circuit nor an MEModel', () => {
     const ionChannel = {
       id: 'i1',
       type: EntityTypeDict.IonChannelModel,

@@ -23,9 +23,8 @@ type SpikeViewerProps = {
 export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeViewerProps) {
   const [spikes, error] = useSpikeTrace({ entityId, entityType, asset, ctx });
   const { model, run } = useSimulation();
-  // Only a campaign with cells to light up has somewhere to replay spikes; an
-  // ion-channel one gets the raster it has always had, with no toggle offering
-  // a view that cannot be drawn.
+  // An ion-channel campaign has no cells to replay over, so it keeps the raster
+  // it has always had and no toggle offers a view that cannot be drawn.
   const subject = replaySubject(model);
   const data = useMemo(() => spikes && withSimulationTimeWindow(spikes, run), [spikes, run]);
 
