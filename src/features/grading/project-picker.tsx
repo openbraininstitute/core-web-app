@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Select } from 'antd';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { messages } from '@/i18n/en/grading';
 
@@ -14,10 +14,18 @@ interface Props {
   projects: AccessibleProject[];
   virtualLabName: string;
   params: VerifiedParams;
+  templateProjectId: string | null;
+  defaultProjectId: string | null;
 }
 
-export function ProjectPicker({ projects, virtualLabName, params }: Props) {
-  const [projectId, setProjectId] = useState<string | undefined>(undefined);
+export function ProjectPicker({
+  projects,
+  virtualLabName,
+  params,
+  templateProjectId,
+  defaultProjectId,
+}: Props) {
+  const [projectId, setProjectId] = useState<string | undefined>(defaultProjectId ?? undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<LaunchErrorReason | null>(null);
 
@@ -34,6 +42,21 @@ export function ProjectPicker({ projects, virtualLabName, params }: Props) {
     setError(result.reason);
     setLoading(false);
   }
+
+  const options = useMemo(
+    () =>
+      [...projects]
+        .sort((a, b) => {
+          if (a.id === templateProjectId) return -1;
+          if (b.id === templateProjectId) return 1;
+          return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        })
+        .map((p) => ({
+          value: p.id,
+          label: p.id === templateProjectId ? `${p.name} — Template` : p.name,
+        })),
+    [projects, templateProjectId]
+  );
 
   return (
     <div className="flex w-full max-w-md flex-col items-center gap-6 px-6 text-center">
@@ -53,7 +76,7 @@ export function ProjectPicker({ projects, virtualLabName, params }: Props) {
         size="large"
         value={projectId}
         onChange={setProjectId}
-        options={projects.map((p) => ({ value: p.id, label: p.name }))}
+        options={options}
       />
 
       <Button
