@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
+import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
@@ -124,6 +125,19 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
     populations[0]?.name;
   const recordedIndex = data.populations.findIndex((p) => p.name === populationName);
   const recorded = recordedIndex < 0 ? undefined : data.populations[recordedIndex];
+
+  // The spike file holds the cells that fired and says nothing about the rest,
+  // so the axis span comes from the node file. This is the session the scene
+  // and the nodes table share, so in the split it is already open.
+  const { rowCount, status: nodesStatus } = useNodesWorker({
+    enabled: circuit !== undefined,
+    circuitId: circuit?.id ?? '',
+    circuitAssetId: circuitConfig?.circuitAssetId ?? '',
+    population: circuitConfig?.nodes.find((n) => n.name === populationName),
+  });
+  const countedCells = nodesStatus === 'ready' ? rowCount : undefined;
+  // An MEModel is one cell drawn from the model itself, with no node file.
+  const cellCount = memodel === undefined ? countedCells : 1;
 
   // Decided against the host's own copy of the circuit config — the same
   // query the scene resolves against — so the answer never lags the scene by
@@ -372,6 +386,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
             <RasterPlot
               data={data}
               populationName={populationName}
+              cellCount={cellCount}
               markerSize={markerSize}
               playheadRef={isSplit ? playheadRef : undefined}
               onSeek={canSeek ? handleSeek : undefined}
