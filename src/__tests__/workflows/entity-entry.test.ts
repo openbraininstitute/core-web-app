@@ -7,12 +7,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkflowActivityDictValue } from '@/constants';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
-import {
-  brainRegionSimulationFlag,
-  eFeatureExtractionFlag,
-  extracellularRecordingArrayBuildFlag,
-  extractionActivityFlag,
-} from '@/features/feature-flags/flags';
+import { extractionActivityFlag, flags } from '@/features/feature-flags/flags';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   readWorkflowSessionSelection,
@@ -56,13 +51,9 @@ vi.mock('@/api/entitycore/queries/task/task-config', async (importOriginal) => (
 
 const workspace = { virtualLabId: 'lab-1', projectId: 'project-1' };
 
-/** every flag on, so flag-gated workflows are reachable in the table below */
-const allFlags = {
-  [extractionActivityFlag.key]: true,
-  [eFeatureExtractionFlag.key]: true,
-  [brainRegionSimulationFlag.key]: true,
-  [extracellularRecordingArrayBuildFlag.key]: true,
-} as FeatureFlags;
+const allFlags = Object.fromEntries(
+  flags.map((flag) => [flag.key, typeof flag.defaultValue === 'boolean' ? true : flag.defaultValue])
+) as FeatureFlags;
 
 const ENTITY_ID = 'entity-id';
 const INPUT_ID = 'input-id';
