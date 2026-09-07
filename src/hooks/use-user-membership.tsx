@@ -105,6 +105,8 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
   const isVirtualLabOwner = ownerVirtualLabId === virtualLabId;
   const virtualLabAdmins = currentVirtualLab?.admins;
   const virtualLabOwnerId = currentVirtualLab?.created_by;
+  // list endpoints return a trimmed course; the single-lab fetch has the full one
+  const course = currentVirtualLab?.course ?? null;
   const projectAdmins = currentProject?.admins;
   const isLoading =
     loadingGroups || loadingVirtualLab || loadingCurrentVirtualLab || loadingCurrentProject;
@@ -112,6 +114,7 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
   return {
     isLoading,
     userGroups,
+    course,
     virtualLabAdmins,
     virtualLabOwnerId,
     projectAdmins,
