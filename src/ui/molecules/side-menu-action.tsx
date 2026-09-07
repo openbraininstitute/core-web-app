@@ -24,6 +24,8 @@ type Props = {
   disabled?: boolean;
   /** shown in a tooltip when {@link disabled} is true */
   disabledReason?: string;
+  /** lands on the rendered control, whether it is a button or a link */
+  testId?: string;
 } & (
   | {
       kind: typeof ActionKind.Button;
@@ -45,6 +47,7 @@ export function Action(props: Props) {
     destructive,
     disabled,
     disabledReason,
+    testId,
   } = props;
   const className = cn(
     'group border flex w-full items-center justify-between gap-3 pl-4 pr-2! py-2! rounded-full',
@@ -96,6 +99,7 @@ export function Action(props: Props) {
       type="button"
       variant={buttonVariant}
       className={className}
+      data-testid={testId}
       asChild
     >
       <Link href={props.href} className={className}>
@@ -110,6 +114,7 @@ export function Action(props: Props) {
       onClick={disabled || props.kind === ActionKind.Link ? undefined : props.onClick}
       disabled={disabled}
       className={className}
+      data-testid={testId}
     >
       {content}
     </Button>

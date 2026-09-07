@@ -159,6 +159,7 @@ export default function ActionMenu({
 
   return (
     <div
+      data-testid="data-view-actions"
       className={cn(
         'mt-5 flex flex-col gap-2 px-5 text-base font-bold',
         variant === ViewVariant.Default ? 'text-white' : 'text-primary-9'
@@ -167,6 +168,7 @@ export default function ActionMenu({
       <Action
         variant={variant}
         kind={ActionKind.Button}
+        testId="data-view-action-copy-id"
         onClick={() => !copying && copy(entity.id)}
         icon={
           !copying ? (
@@ -189,6 +191,7 @@ export default function ActionMenu({
           <Action
             variant={variant}
             kind={ActionKind.Button}
+            testId="data-view-action-simulate"
             disabled
             disabledReason={simulateBlockReason}
             icon={<ExperimentOutlined />}
@@ -199,6 +202,7 @@ export default function ActionMenu({
           <Action
             variant={variant}
             kind={ActionKind.Link}
+            testId="data-view-action-simulate"
             href={simulateHref}
             icon={<ExperimentOutlined />}
           >
@@ -210,6 +214,7 @@ export default function ActionMenu({
         <Action
           variant={variant}
           kind={ActionKind.Button}
+          testId="data-view-action-download"
           onClick={downloadArchiveMutation.mutateAsync}
           icon={downloadArchiveMutation.isPending ? <LoadingOutlined /> : <DownloadOutlined />}
         >
@@ -249,6 +254,7 @@ export default function ActionMenu({
             <Action
               variant={variant}
               kind={ActionKind.Button}
+              testId="data-view-action-delete"
               icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}
             >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
