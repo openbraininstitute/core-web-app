@@ -40,7 +40,19 @@ const fixtures = vi.hoisted(() => ({
     ],
     edges: [],
     circuitAssetId: 'asset',
-    raw: { components: { morphologies_dir: 'morphologies' } },
+    // Every population inherits the components directory, so `type` is the only
+    // thing keeping `inputs` off the detailed path.
+    raw: {
+      components: { morphologies_dir: 'morphologies' },
+      networks: {
+        nodes: [
+          {
+            nodes_file: 'nodes.h5',
+            populations: { default: { type: 'biophysical' }, inputs: { type: 'virtual' } },
+          },
+        ],
+      },
+    },
   } as unknown,
   configError: null as Error | null,
   placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
@@ -205,6 +217,23 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
     // The anchor stays on the population on show; the other one sits 10 away.
     expect(result.current.anchor).toEqual([0, 0, 0]);
+    await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
+  });
+
+  it('stands a virtual population as somas even where it names morphologies', async () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
+        { population: INPUTS, geometry: placement([10, 0, 0], ['morph-b']) },
+      ],
+      failures: new Map(),
+      settled: true,
+      download: null,
+    };
+    const { result } = render(false, [DEFAULT, INPUTS]);
+
+    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
+    // The two must agree, or the viewer waits on a morphology that never arrives.
     await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
   });
 

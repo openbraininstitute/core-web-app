@@ -8,6 +8,7 @@ import {
 import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
 
 type PopulationConfig = {
+  type?: 'biophysical' | 'virtual';
   morphologies_dir?: string;
   alternate_morphologies?: Record<string, string>;
 };
@@ -122,6 +123,15 @@ describe('resolveMorphologyLocation', () => {
 
   it('returns null when the population declares no morphologies at all', () => {
     expect(resolveMorphologyLocation(makeConfig({}), 'All')).toBeNull();
+  });
+
+  it('returns null for a virtual population, inherited directory or not', () => {
+    const config = makeConfig({
+      components: { morphologies_dir: 'shared/morphologies' },
+      population: { type: 'virtual' },
+    });
+
+    expect(resolveMorphologyLocation(config, 'All')).toBeNull();
   });
 
   it('returns null for a population the config does not describe', () => {

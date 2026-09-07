@@ -131,8 +131,9 @@ export type NodeGeometry = {
   orientations: Float32Array | null;
   /**
    * Morphology name per node; null when not requested (see
-   * {@link NodeGeometryOptions.withMorphologies}) or when the population has no
-   * `morphology` column.
+   * {@link NodeGeometryOptions.withMorphologies}), when the population has no
+   * `morphology` column, or when `usePopulationsPlacement` skipped it for a
+   * `virtual` population, which is drawn as somas and has no use for it.
    */
   morphologies: string[] | null;
 };

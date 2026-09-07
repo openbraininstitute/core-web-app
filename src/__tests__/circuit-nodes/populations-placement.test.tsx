@@ -9,7 +9,11 @@ import type {
   NodesSessionState,
   NodesSessionStatus,
 } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
-import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
+import type {
+  NodeGeometry,
+  NodeGeometryOptions,
+  NodePopulation,
+} from '@/features/circuit-nodes/types';
 
 /**
  * A registry the test drives by hand: a session opens as `loading` on the
@@ -44,6 +48,8 @@ const registry = vi.hoisted(() => {
     acquired: [] as string[],
     released: [] as string[],
     geometryAsked: [] as string[],
+    /** What each session's read was asked for, by key. */
+    geometryOptions: new Map<string, NodeGeometryOptions | undefined>(),
     acquire(key: string) {
       this.acquired.push(key);
       session(key);
@@ -60,8 +66,9 @@ const registry = vi.hoisted(() => {
     getState(key: string): NodesSessionState {
       return sessions.get(key)?.state ?? IDLE;
     },
-    getGeometry(key: string): Promise<NodeGeometry> {
+    getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {
       this.geometryAsked.push(key);
+      this.geometryOptions.set(key, options);
       const geometry = sessions.get(key)?.geometry;
       return geometry
         ? Promise.resolve(geometry)
@@ -86,6 +93,7 @@ const registry = vi.hoisted(() => {
       this.acquired = [];
       this.released = [];
       this.geometryAsked = [];
+      this.geometryOptions.clear();
     },
   };
 });
@@ -125,16 +133,36 @@ const CORTEX: NodePopulation = { name: 'cortex', type: 'biophysical', file: 'cor
 const THALAMUS: NodePopulation = { name: 'thalamus', type: 'biophysical', file: 'thalamus.h5' };
 const INPUTS: NodePopulation = { name: 'inputs', type: 'virtual', file: 'inputs.h5' };
 
-function render(populations: NodePopulation[]) {
+function render(populations: NodePopulation[], options?: NodeGeometryOptions) {
   return renderHook(
     ({ populations: list }: { populations: NodePopulation[] }) =>
-      usePopulationsPlacement({ circuit, populations: list }),
+      usePopulationsPlacement({ circuit, populations: list, ...options }),
     { initialProps: { populations } }
   );
 }
 
 describe('usePopulationsPlacement', () => {
   beforeEach(() => registry.reset());
+
+  it('reads the morphology and orientation columns for biophysical populations only', async () => {
+    const { result } = render([CORTEX, INPUTS], {
+      withMorphologies: true,
+      withOrientations: true,
+    });
+
+    act(() => registry.settle(key(CORTEX), 'ready', geometry(2)));
+    act(() => registry.settle(key(INPUTS), 'ready', geometry(3)));
+    await waitFor(() => expect(result.current.settled).toBe(true));
+
+    expect(registry.geometryOptions.get(key(CORTEX))).toEqual({
+      withMorphologies: true,
+      withOrientations: true,
+    });
+    expect(registry.geometryOptions.get(key(INPUTS))).toEqual({
+      withMorphologies: false,
+      withOrientations: false,
+    });
+  });
 
   it('places the populations in the given order, reporting those without positions', async () => {
     const { result } = render([CORTEX, INPUTS, THALAMUS]);
