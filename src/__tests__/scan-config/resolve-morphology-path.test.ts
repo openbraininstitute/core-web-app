@@ -125,10 +125,6 @@ describe('resolveMorphologyLocation', () => {
     expect(resolveMorphologyLocation(makeConfig({}), 'All')).toBeNull();
   });
 
-  // An input projection inherits the circuit-wide directory like any other
-  // population, and some of them do name a morphology per node. Only `type`
-  // says there is no biophysics there to draw, and drawing one anyway is a
-  // request and a tessellation for each of a few hundred thousand nodes.
   it('returns null for a virtual population, inherited directory or not', () => {
     const config = makeConfig({
       components: { morphologies_dir: 'shared/morphologies' },

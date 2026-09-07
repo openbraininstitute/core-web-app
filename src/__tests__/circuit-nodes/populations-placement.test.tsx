@@ -144,8 +144,6 @@ function render(populations: NodePopulation[], options?: NodeGeometryOptions) {
 describe('usePopulationsPlacement', () => {
   beforeEach(() => registry.reset());
 
-  // Columns a virtual population cannot draw with are read and copied for
-  // nothing; see the hook's own note on what that costs.
   it('reads the morphology and orientation columns for biophysical populations only', async () => {
     const { result } = render([CORTEX, INPUTS], {
       withMorphologies: true,

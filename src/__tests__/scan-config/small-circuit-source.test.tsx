@@ -40,9 +40,8 @@ const fixtures = vi.hoisted(() => ({
     ],
     edges: [],
     circuitAssetId: 'asset',
-    // A circuit-wide morphology directory and no per-population override, which
-    // every population inherits — so `type` is the only thing that keeps the
-    // input projection off the detailed path.
+    // Every population inherits the components directory, so `type` is the only
+    // thing keeping `inputs` off the detailed path.
     raw: {
       components: { morphologies_dir: 'morphologies' },
       networks: {
@@ -221,8 +220,6 @@ describe('useSmallCircuitSource', () => {
     await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
   });
 
-  // The case the neighbour above does not cover: the virtual population names
-  // morphologies, so only its `type` keeps it off the detailed path.
   it('stands a virtual population as somas even where it names morphologies', async () => {
     fixtures.placement = {
       placed: [
@@ -236,7 +233,7 @@ describe('useSmallCircuitSource', () => {
     const { result } = render(false, [DEFAULT, INPUTS]);
 
     expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
-    // The two answers agree, or the viewer waits on a morphology never coming.
+    // The two must agree, or the viewer waits on a morphology that never arrives.
     await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
   });
 

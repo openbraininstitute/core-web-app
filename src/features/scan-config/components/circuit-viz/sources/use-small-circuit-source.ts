@@ -82,13 +82,11 @@ type TOptions = {
  * selecting an input emptied the scene of every morphology in it.
  *
  * A virtual population is drawn as placeholder somas even where it names
- * morphologies, which some do. It is an input projection — spikes played into
- * the circuit, with no biophysics of its own to see — and it is routinely
- * hundreds of thousands of nodes inside a circuit whose biophysical population
- * is a handful. One OBI-One request and one tessellation per cell is not a cost
- * the scale gate ever priced in: `circuitDrawsMorphologies` counts the circuit,
- * not the population, so a small microcircuit reaches this path whatever its
- * inputs weigh.
+ * morphologies, which some do. It is an input projection, with no biophysics of
+ * its own to show, and it is routinely hundreds of thousands of nodes in a
+ * circuit whose biophysical population is a handful. The scale gate does not
+ * catch that: `circuitDrawsMorphologies` measures the circuit rather than the
+ * population, so such a circuit still counts as small.
  *
  * A hidden population is not drawn at all: it contributes no cells.
  */
@@ -202,16 +200,14 @@ export function useSmallCircuitSource({
     // cell keeps its id, its position and its morphology whichever population
     // is selected. Colour is all the selection changes.
     //
-    // One pre-sized array rather than one per population and a `flatMap`, which
-    // copies the lot again. The copy is a couple of milliseconds at a few
-    // hundred thousand nodes, and pre-sizing costs nothing to avoid it.
+    // One pre-sized array rather than an array per population plus a `flatMap`
+    // copy, which costs a couple of milliseconds at a few hundred thousand nodes.
     const cells = new Array<MorphoViewerSmallCircuitCell>(total);
-    // Drawn for every population, marked for one: a morphology location is a
-    // section id without a cell of its own, so it is read against the population
-    // on show, and offered the whole scene it would mark every cell whose
-    // sections happen to number the same way. Taken as the scene is written
-    // rather than parsed back out of the ids: the loop already knows which
-    // population each cell belongs to.
+    // A morphology location is a section id with no cell of its own, so it only
+    // means anything against the population on show; matched against another's
+    // morphologies it would mark every cell whose sections number the same way.
+    // Sliced here because the loop already knows which population each cell
+    // belongs to, where a later pass would have to parse it back out of the ids.
     let locationCells = NO_CELLS;
     let n = 0;
 
@@ -222,19 +218,18 @@ export function useSmallCircuitSource({
       // not be placed: an input population carries no positions, and there is
       // then nothing on screen to recede behind.
       const flat = onShow || !subject ? paint : recededColor;
-      // The first thing `morphologyRequest` checks, hoisted: it is the same for
-      // every node of a population, and asking per cell built and threw away a
-      // request object for every node of an input projection. So the two terms
-      // of `somaOnly` below are one condition short-circuited, not two.
+      // The first check inside `morphologyRequest`, hoisted: it is the same for
+      // every node, and asking per cell allocated a request object per node only
+      // to discard it. The two terms of `somaOnly` below are therefore one
+      // condition, short-circuited.
       const drawsMorphologies = locations.get(candidate.name) != null;
       const start = n;
       for (let i = 0; i < geometry.count; i++) {
         cells[n++] = {
           id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), { showAxons }),
           center: positionAt(geometry, i),
-          // Read only where it is drawn: `placementAt` allocates a placement, a
-          // second position and a quaternion, and a soma is a sphere that no
-          // rotation moves.
+          // Skipped for somas: `placementAt` allocates a placement object and a
+          // position tuple per call, and a soma sphere looks the same rotated.
           orientation: drawsMorphologies
             ? (placementAt(geometry, i)?.orientation ?? IDENTITY_QUATERNION)
             : IDENTITY_QUATERNION,

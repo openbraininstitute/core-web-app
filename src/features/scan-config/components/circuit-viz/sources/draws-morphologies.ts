@@ -13,9 +13,9 @@ import {
  * One predicate rather than a scale list per caller: several places have to
  * agree on which renderer a circuit gets, and they must not drift apart.
  *
- * A circuit, not a population: the small-circuit renderer it picks then draws
- * only its biophysical populations with neurites, so a circuit can answer yes
- * here and still be mostly somas.
+ * This answers for the circuit, not for each population. The small-circuit
+ * renderer draws only biophysical populations with neurites, so a circuit can
+ * pass here and still be mostly somas.
  */
 export function circuitDrawsMorphologies(scale: TCircuitScaleDictionary): boolean {
   return (

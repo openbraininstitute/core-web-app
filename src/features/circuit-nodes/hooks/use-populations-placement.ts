@@ -58,11 +58,10 @@ type Result = {
  * two parts of a read that scale with the cell count in earnest, which is why
  * the somas-only viewer leaves them alone.
  *
- * Asked for or not, they are read only where they can be drawn: a virtual
- * population is somas whatever the viewer, so its morphology names would cross
- * the worker boundary — as strings, which cannot be transferred and so are
- * copied — to be thrown away. A virtual population of a few hundred thousand
- * nodes is the ordinary case in a circuit small enough for this path.
+ * Both are skipped for a virtual population even when asked for, since every
+ * viewer draws one as somas. Morphology names are strings, which cannot be
+ * transferred and so are copied across the worker boundary; an input projection
+ * of a few hundred thousand nodes makes that copy expensive.
  *
  * Placements are kept for the lifetime of the hook, so a population that
  * leaves the list and comes back (the one on show, once another is selected)

@@ -44,11 +44,10 @@ export type MorphologyLocation = {
  *    components. "First" is the order the key appears in `circuit_config.json`,
  *    which `JSON.parse` preserves.
  *
- * Returns null when the population has nothing to draw: a `virtual` one, or
- * one that declares no morphologies. A virtual population is asked about
- * explicitly rather than left to fall out of the lookup, because an absent
- * declaration inherits `components.morphologies_dir` and a circuit with a
- * global one would otherwise resolve morphologies for its input projections.
+ * Returns null for a `virtual` population, and for one that declares no
+ * morphologies. The `virtual` check is explicit because a population that
+ * declares nothing inherits `components.morphologies_dir`, so without it an
+ * input projection would resolve to the circuit's global directory.
  */
 export function resolveMorphologyLocation(
   config: ICircuitSonataConfiguration,

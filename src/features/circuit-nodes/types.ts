@@ -132,9 +132,8 @@ export type NodeGeometry = {
   /**
    * Morphology name per node; null when not requested (see
    * {@link NodeGeometryOptions.withMorphologies}), when the population has no
-   * `morphology` column, or when the reader declined a request it could not use
-   * — `usePopulationsPlacement` does not read the column for a `virtual`
-   * population, whose nodes are drawn as somas whatever the viewer.
+   * `morphology` column, or when `usePopulationsPlacement` skipped it for a
+   * `virtual` population, which is drawn as somas and has no use for it.
    */
   morphologies: string[] | null;
 };
