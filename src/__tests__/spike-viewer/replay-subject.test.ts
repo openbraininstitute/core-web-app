@@ -34,10 +34,10 @@ describe('replaySubject', () => {
       type: EntityTypeDict.IonChannelModel,
     } as TSupportedEntitiesForScanConfiguration;
 
-    expect(replaySubject(ionChannel)).toBeNull();
+    expect(replaySubject(ionChannel)).toBeUndefined();
   });
 
   it('has nothing to offer before the model has loaded', () => {
-    expect(replaySubject(null)).toBeNull();
+    expect(replaySubject(null)).toBeUndefined();
   });
 });

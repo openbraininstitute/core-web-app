@@ -180,9 +180,11 @@ export function CircuitScene({
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
-  const enableColorBy = features?.colorBy ?? true;
-  const enableCellHover = features?.cellHover ?? true;
-  // An MEModel has no nodes file to list.
+  // An MEModel is a single cell drawn from the model itself: no nodes file to
+  // list or colour by, and nothing to pick out of a crowd on hover. Decided
+  // here rather than asked of every host, none of which could answer otherwise.
+  const enableColorBy = Boolean(circuit) && (features?.colorBy ?? true);
+  const enableCellHover = Boolean(circuit) && (features?.cellHover ?? true);
   const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
 
   const [showTable, setShowTable] = useState(false);
