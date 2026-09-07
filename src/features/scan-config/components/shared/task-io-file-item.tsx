@@ -17,7 +17,6 @@ type Props = {
 export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
   const isDirectory = isDirectoryAsset(file.asset);
-  // a SONATA circuit is opened through its config file, but the entry itself is the directory
   const isCircuitDirectory = isDirectory && file.asset.label === AssetLabel.sonata_circuit;
   const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
