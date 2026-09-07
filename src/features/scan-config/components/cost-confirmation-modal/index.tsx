@@ -80,6 +80,7 @@ export function CostConfirmationModal({
     <div className="flex items-center justify-center gap-4">
       <button
         type="button"
+        data-testid="scan-config-cost-cancel"
         className="text-primary-9 cursor-pointer px-4 py-2 text-lg transition-colors hover:opacity-80"
         onClick={onClose}
       >
@@ -87,6 +88,7 @@ export function CostConfirmationModal({
       </button>
       <button
         type="button"
+        data-testid="scan-config-cost-confirm"
         className="bg-primary-9 hover:bg-primary-8 cursor-pointer rounded-full px-8 py-2.5 text-lg text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         onClick={handleConfirm}
         disabled={checkedCount === 0 || isLoading}

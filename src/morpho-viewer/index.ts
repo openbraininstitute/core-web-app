@@ -19,6 +19,7 @@ export { MorphoViewerTreeItemType } from './tree-item-type';
 
 export type {
   ColoringType,
+  MorphoViewerCellColors,
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
   MorphoViewerMorphologyLocationHover,

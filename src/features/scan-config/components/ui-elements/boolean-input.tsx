@@ -53,6 +53,7 @@ export default function BooleanInput({
   return (
     <span data-scan-config-block-element={ScanConfigUIElementDict.BooleanInput} className="ml-4">
       <Checkbox
+        data-testid="scan-config-control"
         key={id}
         id={fieldKey}
         checked={normalizedValue}

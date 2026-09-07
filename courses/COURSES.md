@@ -33,7 +33,7 @@ When the course ends, the students will lose access to their projects, but facul
 
 ### Assigning Students
 
-Through the UI you can add students to the course, you will need to provide a CSV with no headres and 2 columns:
+Through the UI you can add students to the course, you will need to provide a CSV with no headers and 2 columns:
 
 - Unique ID
 - Email

@@ -136,6 +136,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         <TooltipTrigger asChild>
           <Button
             rounded
+            data-testid="mini-detail-download"
             title="download"
             className={cn(
               'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
@@ -170,6 +171,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         <Button
           rounded
           asChild
+          data-testid="mini-detail-view-details"
           title="Go to details page"
           variant="default"
           className={cn(

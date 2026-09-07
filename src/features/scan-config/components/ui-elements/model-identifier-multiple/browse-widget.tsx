@@ -297,7 +297,6 @@ export function ModelIdentifierBrowseWidget({
               selectionType: isSingleSelect ? 'radio' : 'checkbox',
               selectedRows: activeSelectedRows,
               onRowsSelected: handleRowsSelected,
-              keepSelectionOnScopeChange: true,
             }}
             requireEntityTypeSelector={{
               options: entityTypeSelectorOptions,

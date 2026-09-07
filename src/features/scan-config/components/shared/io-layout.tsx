@@ -34,7 +34,7 @@ export function IoLayout({
       showArrow: false,
       collapsible: 'disabled' as const,
       children: (
-        <div className="mt-1 mb-2 flex flex-col gap-4">
+        <div className="mt-1 mb-2 flex flex-col gap-4" data-testid="scan-config-inputs">
           {inputIsEmpty && <div className="text-gray-400">{inputEmptyMessage}</div>}
           {inputItems}
         </div>
@@ -48,7 +48,7 @@ export function IoLayout({
             showArrow: false,
             collapsible: 'disabled' as const,
             children: (
-              <div className="mt-1 mb-2 flex flex-col gap-4">
+              <div className="mt-1 mb-2 flex flex-col gap-4" data-testid="scan-config-outputs">
                 {outputIsEmpty && <div className="text-gray-400">{outputEmptyMessage}</div>}
                 {outputItems}
               </div>

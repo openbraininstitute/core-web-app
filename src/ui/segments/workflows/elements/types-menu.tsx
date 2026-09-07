@@ -1,4 +1,5 @@
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
+import { kebabCase } from 'es-toolkit/compat';
 
 import { useFlags } from '@/features/feature-flags';
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
@@ -12,6 +13,11 @@ import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
+
+/** Kebab, so the id reads the same as the `/configure/{type}` URL segment. */
+function typeTestId(targetType: TExtendedEntitiesTypeDict | undefined): string | undefined {
+  return targetType ? `workflow-type-${kebabCase(targetType)}` : undefined;
+}
 
 export function TypesMenu({
   current,
@@ -61,6 +67,7 @@ export function TypesMenu({
               className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
             >
               <MenuItem<TExtendedEntitiesTypeDict | null>
+                testId={typeTestId(targetType)}
                 group={entity.group}
                 active={current === targetType}
                 value={targetType ?? null}

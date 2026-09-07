@@ -124,6 +124,7 @@ export function StringSelectionEnhanced({
         <PopoverTrigger asChild disabled={disabled}>
           <button
             type="button"
+            data-testid="scan-config-control"
             data-scan-config-block-element={ScanConfigUIElementDict.StringSelectionEnhanced}
             disabled={disabled}
             className={cn(
@@ -158,6 +159,7 @@ export function StringSelectionEnhanced({
               return (
                 <div
                   key={key}
+                  data-testid={`scan-config-option-${key}`}
                   role="option"
                   aria-selected={selected}
                   tabIndex={0}

@@ -23,12 +23,14 @@ export function ResultsLayout({ left, middle, right, campaignId }: Props) {
       </div>
       <div
         id={middleId}
+        data-testid="scan-config-results-files"
         className="relative border-r border-gray-200 secondary-scrollbar my-2 flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
       >
         {middle}
       </div>
       <div
         id={rightId}
+        data-testid="scan-config-file-view"
         className="relative secondary-scrollbar flex w-full py-2 min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
       >
         {right}

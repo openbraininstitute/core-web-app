@@ -54,11 +54,12 @@ export function ActivityAndTypeSelectors({
     onNavigate?.(v);
   };
 
+  // `w-fit` rather than `w-full` + `max-w-max`; see the note in `selectors.tsx`
   return (
     <div
       id="workflow-category-and-type-selector"
       data-testid="workflow-category-and-type-selector"
-      className="inline-flex w-full max-w-max items-center justify-start gap-2 px-2 py-2 select-none"
+      className="inline-flex w-fit items-center justify-start gap-2 px-2 py-2 select-none"
     >
       <div className="shadow-bnb flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Category

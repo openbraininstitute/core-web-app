@@ -88,6 +88,7 @@ export function UIElementRender({
       },
       () => (
         <Input
+          data-testid="scan-config-control"
           data-scan-config-block-element={ScanConfigUIElementDict.StringInput}
           disabled={disabled}
           value={typeof value === 'string' ? value : ''}

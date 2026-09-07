@@ -51,6 +51,8 @@ export interface RulerSliderProps extends SliderOptions {
   /** Size the ruler's window; a vertical ruler needs a height from its host. */
   style?: CSSProperties;
   className?: string;
+  /** E2E handle. The ruler is a drawn scale with no text of its own to address. */
+  testId?: string;
 }
 
 /**
@@ -67,6 +69,7 @@ export function RulerSlider({
   showValue = 'always',
   style,
   className,
+  testId,
   ...options
 }: RulerSliderProps) {
   const vertical = orientation === 'vertical';
@@ -163,6 +166,7 @@ export function RulerSlider({
     <div
       {...rootProps}
       id="ruler-slider"
+      data-testid={testId}
       aria-label="Ruler slider"
       style={style}
       className={cn(

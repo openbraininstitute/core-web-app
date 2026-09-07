@@ -282,6 +282,7 @@ export default function BlockDictionaryEntries({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <EntryTab
+                          data-testid={`scan-config-entry-${rootElement}-${subkey}`}
                           entryKey={subkey}
                           isSelected={isSelected}
                           diffClass={entryDiffClass}
@@ -447,6 +448,7 @@ export default function BlockDictionaryEntries({
 
           {!campaignId && !loading && !readOnly && isChatReady && highlights.length === 0 && (
             <button
+              data-testid={`scan-config-add-entry-${rootElement}`}
               className={cn(
                 'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center ',
                 'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow mt-1.5',

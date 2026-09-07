@@ -2,6 +2,7 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
   IAnalysisNotebookTemplate,
+  TAnalysisNotebookTemplateBase,
   TAnalysisNotebookTemplateFilter,
 } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -97,6 +98,41 @@ export async function createAnalysisNotebookTemplate({
 }) {
   const api = await entityCoreApi();
   return await api.post<IAnalysisNotebookTemplate>('/analysis-notebook-template', {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
+  });
+}
+
+/**
+ * Partial payload for a notebook template update. Every field is optional — entitycore's update
+ * schema forbids unknown keys, so send only what changes. Pass `assignment_id: null` to clear it;
+ * an empty string is rejected server side (`min_length=1`).
+ */
+export type TAnalysisNotebookTemplateUpdate = Partial<TAnalysisNotebookTemplateBase>;
+
+/**
+ * Updates an existing notebook template.
+ *
+ * @param {Object} params - The parameters object
+ * @param {string} params.id - The unique identifier of the notebook to update
+ * @param {TAnalysisNotebookTemplateUpdate} params.payload - The fields to update
+ * @returns {Promise<IAnalysisNotebookTemplate>} A promise that resolves to the updated notebook
+ */
+export async function updateAnalysisNotebookTemplate({
+  id,
+  payload,
+  context,
+}: {
+  id: string;
+  payload: TAnalysisNotebookTemplateUpdate;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.patch<IAnalysisNotebookTemplate>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

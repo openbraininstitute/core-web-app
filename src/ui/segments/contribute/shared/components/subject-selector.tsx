@@ -16,6 +16,7 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { formatDurationFromSeconds } from '@/utils/format';
 
 import type { ZodObject, ZodRawShape } from 'zod';
 import type { ISubject } from '@/api/entitycore/types/shared/global';
@@ -42,16 +43,18 @@ function SubjectDataTooltip(data: ISubject) {
     fields.push(`Weight: ${data.weight}g`);
   }
   if (!isNil(data.age_value)) {
-    fields.push(`Age: ${data.age_value} days`);
+    fields.push(`Age: ${formatDurationFromSeconds(data.age_value)}`);
   }
   if (!isNil(data.age_min) && !isNil(data.age_max)) {
-    fields.push(`Age Range: ${data.age_min}-${data.age_max} days`);
+    fields.push(
+      `Age Range: ${formatDurationFromSeconds(data.age_min)}–${formatDurationFromSeconds(data.age_max)}`
+    );
   } else {
     if (!isNil(data.age_min)) {
-      fields.push(`Min Age: ${data.age_min} days`);
+      fields.push(`Min Age: ${formatDurationFromSeconds(data.age_min)}`);
     }
     if (!isNil(data.age_max)) {
-      fields.push(`Max Age: ${data.age_max} days`);
+      fields.push(`Max Age: ${formatDurationFromSeconds(data.age_max)}`);
     }
   }
   if (data.age_period && data.age_period !== 'unknown') {

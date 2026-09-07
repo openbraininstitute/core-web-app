@@ -112,14 +112,20 @@ export function adaptCircuitColumns(
 }
 
 /** The "↳ SUBCIRCUITS" detail wrapper shared by every expanded level. */
-export function SubcircuitsDetail({ children }: { children: ReactNode }) {
+export function SubcircuitsDetail({
+  children,
+  label = 'subcircuits',
+}: {
+  children: ReactNode;
+  label?: string;
+}) {
   return (
     // Nested wrappers are DOM-nested, so this indent step compounds per level; the left
     // border is the tree guide line.
     <div className="border-neutral-3 ml-5 flex w-full flex-col items-start gap-3 border-l-2 py-3 pl-4">
       <div className="flex flex-row items-center gap-2">
         <ArrowReturnRight className="text-neutral-4 text-2xl" />
-        <div className="text-neutral-4 text-base font-semibold uppercase">subcircuits</div>
+        <div className="text-neutral-4 text-base font-semibold uppercase">{label}</div>
       </div>
       <div className="w-full">{children}</div>
     </div>
@@ -144,10 +150,20 @@ export type CircuitRecursiveGridProps = {
   depth?: number;
   /** Circuit id of the parent whose subcircuits this grid renders; undefined at the top level. */
   parentId?: string;
+  /**
+   * Disambiguates sibling grids rendered in the same view; folded into the DOM id and threaded
+   * down the recursion. Without it every top-level grid on a page is `circuit-grid-level-0`.
+   */
+  gridId?: string;
   /** Show a loading spinner instead of the (empty) grid. */
   loading?: boolean;
   /** Column id whose cell hosts the expander; omit for a fixed leading expander column. */
   expandColumnId?: string;
+  /**
+   * Renames the expanded panel's "↳ SUBCIRCUITS" label at every depth. The derived tabs nest
+   * derivation children there, not subcircuits. The column header is untouched.
+   */
+  expandLabel?: string;
   /** Resolves schema columns' `cellRenderer` keys; threaded down every level. */
   cellRenderers?: CellRendererRegistry;
   /** Enable per-column custom header filters (top level only). */
@@ -175,8 +191,10 @@ export function CircuitRecursiveGrid({
   rowClassName,
   depth = 0,
   parentId,
+  gridId,
   loading = false,
   expandColumnId,
+  expandLabel,
   cellRenderers,
   filterable = false,
   showColumnChooser = false,
@@ -220,7 +238,7 @@ export function CircuitRecursiveGrid({
             isExpandable: (row: ICircuit) => subCircuitsOf(row).length > 0,
             initialHeight: 96,
             renderDetail: (row: ICircuit) => (
-              <SubcircuitsDetail>
+              <SubcircuitsDetail label={expandLabel}>
                 <CircuitRecursiveGrid
                   circuits={subCircuitsOf(row)}
                   simpleColumns={visibleColumns}
@@ -231,6 +249,8 @@ export function CircuitRecursiveGrid({
                   rowClassName={rowClassName}
                   depth={depth + 1}
                   parentId={row.id}
+                  gridId={gridId}
+                  expandLabel={expandLabel}
                 />
               </SubcircuitsDetail>
             ),
@@ -246,6 +266,8 @@ export function CircuitRecursiveGrid({
       onCellClick,
       rowClassName,
       depth,
+      gridId,
+      expandLabel,
     ]
   );
 
@@ -258,9 +280,9 @@ export function CircuitRecursiveGrid({
   }
 
   return (
-    // level + parent id make any depth of the tree addressable in the DOM
+    // grid id + level + parent id make any depth of any grid addressable in the DOM
     <div
-      id={`circuit-grid-level-${depth}${parentId ? `-${parentId}` : ''}`}
+      id={`circuit-grid-level-${depth}${gridId ? `-${gridId}` : ''}${parentId ? `-${parentId}` : ''}`}
       data-grid-level={depth}
       data-parent-id={parentId}
       className="w-full"

@@ -30,15 +30,26 @@ export interface ContinuousLegend {
 }
 
 /**
- * the result of mapping a node property onto colors: a per-node color array
- * aligned by node index, plus the legend needed to render the key
+ * compact per-node coloring: a bounded palette of display colors plus the
+ * palette column each node samples. The typed array is the only per-node
+ * allocation, so recoloring a region-scale circuit costs one array copy
+ * instead of a string per node.
  */
-export interface ColorMapping {
+export interface NodeColors {
+  /** distinct display colors: at most MAX_DISTINCT_COLORS for a key, CONTINUOUS_STOPS for a scale */
+  palette: string[];
+  /** palette index per node, aligned by node index. Empty when mode === 'none' */
+  columnByNode: Uint16Array;
+}
+
+/**
+ * the result of mapping a node property onto colors: the per-node palette
+ * (see {@link NodeColors}), plus the legend needed to render the key
+ */
+export interface ColorMapping extends NodeColors {
   mode: ColorMode;
   /** property name being colored by, or null when mode === 'none' */
   property: string | null;
-  /** per-node colors, aligned by node index. Empty when mode === 'none' */
-  colorsByNode: string[];
   categorical?: CategoricalLegendEntry[];
   continuous?: ContinuousLegend;
 }
@@ -59,8 +70,24 @@ export type ColorOverrides = Record<string, Record<string, string>>;
 
 /** persisted, per-circuit viewer configuration */
 export interface ViewerConfig {
-  /** selected color-by property name, or null for the default (blue) */
-  colorByProperty: string | null;
+  /**
+   * Selected colour-by property, by population name; absent or null for the
+   * default (blue). Stored per population because the property list is per
+   * population: a property one population has, another may not. Returning to a
+   * population restores the choice made there.
+   */
+  colorByProperty: Record<string, string | null>;
+  /**
+   * Populations the user has taken out of the scene, by name; anything not
+   * named is drawn. The exceptions are stored, not the visible set, so a
+   * population this list has never heard of is on screen rather than missing.
+   *
+   * `null` while the user has not touched the checklist, which is when the
+   * default applies: a circuit's virtual populations start out of the scene.
+   * Distinct from `[]`, which the user can ask for with "Show all" or by
+   * unticking the last hidden row, and which has to stick.
+   */
+  hiddenPopulations: string[] | null;
   backgroundColor: string;
   showAxons: boolean;
   /**

@@ -170,9 +170,16 @@ export default function Reference({
 
   return (
     <Select
+      data-testid="scan-config-control"
       data-scan-config-block-element={ScanConfigUIElementDict.Reference}
       className="w-full"
       disabled={disabled}
+      // antd renders its options without a role and mirrors them in a hidden
+      // list for screen readers, so an E2E test has nothing stable to click.
+      // This puts the option's own value on the element a user clicks.
+      optionRender={(option) => (
+        <span data-testid={`scan-config-option-${String(option.value)}`}>{option.label}</span>
+      )}
       onChange={(newV: string) =>
         onChange(
           newV === DEFAULT_SENTINEL ? null : newV,

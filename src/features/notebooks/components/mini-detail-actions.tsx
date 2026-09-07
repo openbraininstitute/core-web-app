@@ -28,6 +28,7 @@ import { DownloadIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { type TViewVariant, ViewVariant } from '@/constants';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -44,7 +45,6 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 
 function MiniActionIcon({
   label,
@@ -201,14 +201,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
       });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        predicate(query) {
-          return (
-            (query.queryKey as ExtendedEntityTypeQueryKey)[0]?.context?.extendedEntityType ===
-            record.type
-          );
-        },
-      });
+      await invalidateEntityListings(queryClient, record.type);
       setMdv(false);
       notification.success({
         message: 'Deleted successfully',

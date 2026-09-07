@@ -287,6 +287,7 @@ function ScanConfigTemplateContent({
         {isConfigurationTab && browseOverlay ? (
           <div
             id="scan-config-model-selection-overlay"
+            data-testid="scan-config-model-picker"
             // the picker replaces the whole main area — fade + slight rise on open
             // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
             // reduced motion keeps the fade, drops the movement

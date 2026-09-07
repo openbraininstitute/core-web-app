@@ -4,6 +4,7 @@ import { cellMorphologyGridDefinition } from '@/features/data-grid/bindings/enti
 import { circuitGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
 import { circuitModelGridDefinitions } from '@/features/data-grid/bindings/entitycore/schemas/circuit-models';
 import { circuitSimulationGridDefinitions } from '@/features/data-grid/bindings/entitycore/schemas/circuit-simulations';
+import { efeatureExtractionResultGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/efeature-extraction-result';
 import { electricalCellRecordingGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/electrical-cell-recording';
 import { emCellMeshGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/em-cell-mesh';
 import { emodelGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/emodel';
@@ -51,9 +52,9 @@ export interface IEntityGridDefinition<Row> {
 export type TAnyEntityGridDefinition = IEntityGridDefinition<any>;
 
 /**
- * dataType → grid definition. Per-entity flip switch: a registered dataType routes
- * `BrowseEntityScope` to the AG Grid host, removing the entry falls back to the legacy
- * antd table.
+ * dataType → grid definition. Every dataType routed to `BrowseEntityScope` needs an
+ * entry: there is no second listing implementation to fall back to, so removing one
+ * breaks that listing rather than reverting it.
  */
 const definitions: Record<string, TAnyEntityGridDefinition> = {
   [cellMorphologyGridDefinition.dataType]: cellMorphologyGridDefinition,
@@ -73,6 +74,7 @@ const definitions: Record<string, TAnyEntityGridDefinition> = {
   [ionChannelModelGridDefinition.dataType]: ionChannelModelGridDefinition,
   [analysisNotebookTemplateGridDefinition.dataType]: analysisNotebookTemplateGridDefinition,
   [analysisNotebookResultGridDefinition.dataType]: analysisNotebookResultGridDefinition,
+  [efeatureExtractionResultGridDefinition.dataType]: efeatureExtractionResultGridDefinition,
   [extracellularRecordingArrayGridDefinition.dataType]: extracellularRecordingArrayGridDefinition,
   [singleNeuronSimulationGridDefinition.dataType]: singleNeuronSimulationGridDefinition,
   [singleNeuronSynaptomeSimulationGridDefinition.dataType]:

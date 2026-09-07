@@ -1,52 +1,18 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useSyncExternalStore } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
 
+import { WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
-
-type ListQueryKeyContext = {
-  context?: { extendedEntityType?: string; workspaceScope?: string };
-};
-
-/**
- * live filtered total for the currently-rendered notebook table
- * subscribes to the React Query cache and reads `pagination.total_items` from the *observed* list query for this type/scope,
- * so the count tracks the table's search/filter without re-implementing its query key.
- */
-function useActiveTableTotal({
-  extendedType,
-  scope,
-  enabled,
-}: {
-  extendedType: TExtendedEntitiesTypeDict;
-  scope: TWorkspaceScope;
-  enabled: boolean;
-}) {
-  const cache = useQueryClient().getQueryCache();
-
-  const getSnapshot = useCallback(() => {
-    if (!enabled) return undefined;
-    const matches = cache.getAll().filter((q) => {
-      const ctx = (q.queryKey?.[0] as ListQueryKeyContext | undefined)?.context;
-      return ctx?.extendedEntityType === extendedType && ctx?.workspaceScope === scope;
-    });
-    // the table's current query is the observed one; stale filter entries have no observers
-    const current = matches.find((q) => q.getObserversCount() > 0) ?? matches.at(-1);
-    return (current?.state?.data as EntityCoreResponse<unknown> | undefined)?.pagination
-      ?.total_items;
-  }, [cache, enabled, extendedType, scope]);
-
-  const subscribe = useCallback((onChange: () => void) => cache.subscribe(onChange), [cache]);
-
-  return useSyncExternalStore(subscribe, getSnapshot, () => undefined);
-}
 
 /**
  * resolves the sidebar count for a notebook type as `{ filtered } of { total }`:
@@ -81,7 +47,15 @@ export function useNotebookCount({
     staleTime: 60 * 60 * 1000, // 1 hour
   });
 
-  const liveCount = useActiveTableTotal({ extendedType, scope, enabled: isActive });
+  // the grid publishes its filtered total under this dataKey while it is mounted
+  const { dataKey } = makeDataKey({
+    virtualLabId,
+    projectId,
+    section: WorkspaceSection.Notebooks,
+    dataType: extendedType,
+    scope,
+  });
+  const liveCount = useAtomValue(gridFilteredTotalAtom(dataKey));
   const filtered = isActive ? (liveCount ?? total) : total;
 
   return { filtered, total, isLoading: isLoading && total == null };

@@ -5,6 +5,8 @@ import { cn } from '@/utils/css-class';
 export interface IViewerModeOption {
   /** Tooltip text and accessible name. */
   label: string;
+  /** E2E handle. The label is product copy and changes with state. */
+  testId?: string;
   icon: React.ReactNode;
   active: boolean;
   onSelect: () => void;
@@ -40,6 +42,7 @@ export function ModeToggle({ options, className }: ModeToggleProps) {
       {options.map((option) => (
         <ModeButton
           key={option.label}
+          testId={option.testId}
           active={option.active}
           label={option.label}
           icon={option.icon}
@@ -53,11 +56,13 @@ export function ModeToggle({ options, className }: ModeToggleProps) {
 function ModeButton({
   active,
   label,
+  testId,
   icon,
   onClick,
 }: {
   active: boolean;
   label: string;
+  testId?: string;
   icon: React.ReactNode;
   onClick: () => void;
 }) {
@@ -66,6 +71,7 @@ function ModeButton({
       <TooltipTrigger asChild>
         <button
           type="button"
+          data-testid={testId}
           aria-label={label}
           aria-pressed={active}
           onClick={onClick}

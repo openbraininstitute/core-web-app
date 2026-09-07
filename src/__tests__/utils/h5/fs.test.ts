@@ -124,6 +124,9 @@ function createFakeCaches() {
     },
     put: async (url: string, response: Response) => {
       const bytes = new Uint8Array(await response.arrayBuffer());
+      // A disk write does not land in the same microtask as its caller. Without a real turn of
+      // the loop here, an unawaited put would still commit in time to hide the race below.
+      await new Promise((resolve) => setTimeout(resolve, 0));
       entries.set(url, { bytes, headers: Object.fromEntries(response.headers.entries()) });
     },
     delete: async (url: string) => entries.delete(url),
@@ -136,11 +139,11 @@ let FS: ReturnType<typeof createFakeFS>['FS'];
 let files: Map<string, FakeFile>;
 let entries: Map<string, FakeEntry>;
 
-function fetchAsset(onProgress?: (progress: DownloadProgress) => void) {
+function fetchAsset(onProgress?: (progress: DownloadProgress) => void, fileKey = 'cell') {
   return fetchToFS({
     url: DOWNLOAD_URL,
     headers: {},
-    fileKey: 'cell',
+    fileKey,
     cacheName: 'test-bucket',
     extension: '.nwb',
     onProgress,
@@ -173,8 +176,7 @@ describe('fetchToFS', () => {
     expect(files.get('cell.nwb')?.bytes).toEqual(bytes);
     expect(files.has('cell.nwb.part')).toBe(false);
     expect(progress.at(-1)).toEqual({ received: 4096, total: 4096 });
-    // The put is deliberately not awaited, so give it a turn to land.
-    await vi.waitFor(() => expect(entries.get(DOWNLOAD_URL)?.bytes).toEqual(bytes));
+    expect(entries.get(DOWNLOAD_URL)?.bytes).toEqual(bytes);
   });
 
   it('rejects a body that ends short of its content-length, leaving nothing behind', async () => {
@@ -260,6 +262,21 @@ describe('fetchToFS', () => {
     expect(files.get(filename)?.bytes).toEqual(bytes);
     // Nothing a later read could check it against, so it is not worth keeping.
     expect(entries.size).toBe(0);
+  });
+
+  // Two SONATA populations kept in one file are read one after the other, each in its own
+  // worker with its own FS copy. The second asks the cache for the file as soon as the first
+  // has released it, so an entry still being written is an entry it misses.
+  it('has the file in the cache by the time it returns, for the next reader of it', async () => {
+    const bytes = hdf5Bytes(2048);
+    const fetchMock = vi.fn(async () => responseOf(bytes));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchAsset(undefined, 'population-a');
+    await fetchAsset(undefined, 'population-b');
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(files.get('population-b.nwb')?.bytes).toEqual(bytes);
   });
 
   it('reuses a file already in the FS', async () => {

@@ -5,7 +5,7 @@ import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
 import type {
-  ColumnKind,
+  ColumnValues,
   DownloadProgress,
   GetRowsRequest,
   GetRowsResponse,
@@ -43,9 +43,20 @@ const api = {
     return session.getRows(req);
   },
 
-  async getColumn(name: string): Promise<{ kind: ColumnKind; values: (string | number)[] }> {
+  async getColumn(name: string): Promise<ColumnValues> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
-    return session.getColumnValues(name);
+    const column = session.getColumnValues(name);
+    // Transferred rather than cloned, as `getGeometry` does. A categorical
+    // column travels as its library plus one Uint32 per node, not a string per
+    // node. `getColumnValues` returns fresh arrays, so detaching them does not
+    // touch the session's column cache.
+    if (column.kind === 'categorical') {
+      return Comlink.transfer(column, [column.indices.buffer as ArrayBuffer]);
+    }
+    if (column.kind === 'numeric') {
+      return Comlink.transfer(column, [column.values.buffer as ArrayBuffer]);
+    }
+    return column;
   },
 
   async getGeometry(options?: NodeGeometryOptions): Promise<NodeGeometry> {

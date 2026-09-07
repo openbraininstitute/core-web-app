@@ -15,6 +15,7 @@ export {
 } from './domain/column-layout';
 export {
   Align,
+  ColumnPin,
   essentialColumnIds,
   FilterOptionsKind,
   FreeEntryKind,
@@ -88,6 +89,7 @@ export type {
   IWidthSpec,
   TAlign,
   TCellValue,
+  TColumnPin,
   TFilterOptionsKind,
   TFilterOptionsSource,
   TFreeEntryKind,

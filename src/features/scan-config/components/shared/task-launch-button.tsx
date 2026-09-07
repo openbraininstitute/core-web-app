@@ -21,6 +21,7 @@ export function TaskLaunchButton({
 }: Props) {
   return (
     <button
+      data-testid="scan-config-launch"
       className={classNames(
         'min-h-12.5 w-full cursor-pointer rounded-full p-2 text-white',
         'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',

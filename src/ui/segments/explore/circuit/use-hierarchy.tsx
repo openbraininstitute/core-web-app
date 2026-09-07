@@ -4,7 +4,6 @@
 
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { chunk, flatMap, get, isArray, keyBy, mergeWith, uniqBy } from 'es-toolkit/compat';
-import { useAtomValue } from 'jotai';
 import pMap from 'p-map';
 
 import {
@@ -15,15 +14,10 @@ import {
   CIRCUIT_DERIVED_DERIVATION_TYPES,
   DerivationTypeDictionary,
 } from '@/api/entitycore/types/entities/derivation';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
-import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
-import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
-  buildFilteredHierarchyTree,
   CircuitRepresentationView,
   collectIdsFromNode,
   filterAndEnrichTree,
@@ -32,17 +26,11 @@ import {
   getAllCircuitIds,
 } from '@/ui/segments/explore/circuit/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
-import type {
-  EntityCoreResponse,
-  Pagination,
-  TFacets,
-} from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope } from '@/constants';
+import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   HierarchyOutputNode,
@@ -178,145 +166,6 @@ export function useHierarchyDerivationTree({
   return {
     hierarchyByDerivation,
     loadingDerivation,
-  };
-}
-
-export function useHierarchy({
-  scope = WorkspaceScope.Public,
-  view = CircuitRepresentationView.Flat,
-  dataKey,
-}: {
-  scope: TWorkspaceScope | null;
-  view: TCircuitRepresentationView | null;
-  dataKey: string;
-}) {
-  const queryClient = useQueryClient();
-  const { virtualLabId, projectId } = useWorkspace();
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
-  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
-
-  const { hierarchyByDerivation, loadingDerivation } = useHierarchyDerivationTree({
-    view,
-    derivationType: DerivationTypeDictionary.CircuitExtraction,
-  });
-  const { circuitHierarchy, isLoadingFullHierarchy } = useFullRawHierarchy({
-    view,
-  });
-
-  const {
-    data: circuitHierarchyFiltered,
-    isFetching: isFetchingFilteredHierarchy,
-    isPending: isPendingFilteredHierarchy,
-    queryKeyHash,
-  } = useQueryExtendedEntityType({
-    context: {
-      key: dataKey,
-      workspaceScope: scope!,
-      extendedEntityType: ExtendedEntitiesTypeDict.Circuit,
-      hierarchy: true,
-    },
-    workspace: { virtualLabId, projectId },
-    queryFn: async ({ queryKey }) => {
-      const [{ workspace, queryParameters }] = queryKey;
-      const first = await queryClient.ensureQueryData<EntityCoreResponse<ICircuit>>({
-        queryKey: keyBuilder.manyCircuits({
-          ...circuitScaleFilter,
-          ...queryParameters,
-          ...workspace,
-          page: 1,
-          page_size: DEFAULT_PAGE_SIZE,
-        }),
-        queryFn: () =>
-          getCircuits({
-            withFacets: false,
-            context: workspace,
-            filters: {
-              ...circuitScaleFilter,
-              ...queryParameters,
-              ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
-              page: 1,
-              page_size: DEFAULT_PAGE_SIZE,
-            },
-          }),
-      });
-      const totalPages = Math.ceil(first.pagination.total_items / first.pagination.page_size);
-      const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-
-      const responses = await pMap(
-        pages,
-        (page) =>
-          queryClient.ensureQueryData<EntityCoreResponse<ICircuit>>({
-            queryKey: keyBuilder.manyCircuits({
-              ...queryParameters,
-              page,
-              virtualLabId,
-              projectId,
-              page_size: DEFAULT_PAGE_SIZE,
-            }),
-            queryFn: () =>
-              getCircuits({
-                withFacets: false,
-                context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-                filters: {
-                  ...circuitScaleFilter,
-                  ...queryParameters,
-                  page,
-                  page_size: DEFAULT_PAGE_SIZE,
-                },
-              }),
-          }),
-        { concurrency: 5 }
-      );
-      const allData = flatMap(responses, (r) => r.data);
-      return {
-        data: allData.map((p) => ({ ...p, isFiltered: true })),
-        facets: undefined,
-        pagination: {
-          total_items: allData.length,
-          page: 1,
-          page_size: allData.length,
-        } as Pagination,
-      };
-    },
-    requireBrainRegion: true,
-    useKeepPreviousData: false,
-    enabled: ({ queryKey }) => {
-      const [{ queryParameters }] = queryKey;
-      if (view !== CircuitRepresentationView.Hierarchy) return false;
-
-      if (isAllSpeciesMode) return true;
-
-      return Boolean(get(queryParameters, 'within_brain_region_brain_region_id', null));
-    },
-  });
-
-  if (hierarchyByDerivation && circuitHierarchy && circuitHierarchyFiltered) {
-    const dataSource = buildFilteredHierarchyTree(
-      hierarchyByDerivation,
-      circuitHierarchy,
-      circuitHierarchyFiltered
-    ) as unknown as Array<HierarchyOutputNode>;
-    const { pagination, facets } = circuitHierarchy;
-    return {
-      queryKeyHash,
-      dataSource,
-      pagination,
-      facets,
-    };
-  }
-
-  const isLoading =
-    loadingDerivation ||
-    isFetchingFilteredHierarchy ||
-    isPendingFilteredHierarchy ||
-    isLoadingFullHierarchy;
-
-  return {
-    isLoading,
-    queryKeyHash,
-    dataSource: [],
-    pagination: undefined,
-    facets: {},
   };
 }
 

@@ -4,7 +4,8 @@ import { CANVAS_LIGHT, normalizeCanvasBackground } from './contrast';
 
 import type { ViewerConfig } from './types';
 
-const STORAGE_PREFIX = 'obi:circuit-viewer-config:v1:';
+// v2: `colorByProperty` went from `string | null` to a per-population record.
+const STORAGE_PREFIX = 'obi:circuit-viewer-config:v2:';
 
 /**
  * in-house flag: when true, the per-circuit viewer config is persisted to (and
@@ -41,7 +42,10 @@ export const DEFAULT_MORPHOLOGY_LOCATION_RADIUS = 3;
 
 /** Baseline viewer defaults (full neuron opacity, electrode size 5). */
 export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
-  colorByProperty: null,
+  colorByProperty: {},
+  // Not decided here: the populations arrive long after the config is built.
+  // @see ViewerConfig.hiddenPopulations
+  hiddenPopulations: null,
   backgroundColor: CANVAS_LIGHT,
   showAxons: false,
   neuronOpacity: DEFAULT_NEURON_OPACITY,
@@ -91,11 +95,20 @@ function readConfig(circuitId: string, defaults: ViewerConfig): ViewerConfig | n
   }
 }
 
+/**
+ * A patch, or what to patch given what is already there. The second form is for
+ * the per-population and per-property settings, whose patch has to carry every
+ * entry but the one being changed.
+ */
+type ViewerConfigPatch =
+  | Partial<ViewerConfig>
+  | ((previous: ViewerConfig) => Partial<ViewerConfig>);
+
 interface UseViewerConfig {
   config: ViewerConfig;
   /** true when a saved config already exists for this circuit (gates the reset toggle) */
   hasSavedConfig: boolean;
-  update: (patch: Partial<ViewerConfig>) => void;
+  update: (patch: ViewerConfigPatch) => void;
   reset: () => void;
 }
 
@@ -127,13 +140,14 @@ export function useViewerConfig(
   }, [circuitId, defaults]);
 
   const update = useCallback(
-    (patch: Partial<ViewerConfig>) => {
+    (patch: ViewerConfigPatch) => {
       setConfig((prev) => {
+        const resolved = typeof patch === 'function' ? patch(prev) : patch;
         const next = {
           ...prev,
-          ...patch,
-          ...(patch.backgroundColor !== undefined && {
-            backgroundColor: normalizeCanvasBackground(patch.backgroundColor),
+          ...resolved,
+          ...(resolved.backgroundColor !== undefined && {
+            backgroundColor: normalizeCanvasBackground(resolved.backgroundColor),
           }),
         };
         if (PERSIST_VIEWER_CONFIG && hydratedRef.current) {

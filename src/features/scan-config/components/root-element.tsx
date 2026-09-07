@@ -91,6 +91,7 @@ export function RootElement({
           <span>
             <LeftMenuTab
               tab={rootElement}
+              testId={`scan-config-root-element-${rootElement}`}
               selectedTab={selectedRootElement}
               onClick={() => {
                 const isDictionary =

@@ -49,6 +49,52 @@ describe('CampaignStatusBadgePopover fetcher injection', () => {
     expect(container.querySelector('button[type="button"]')).toBeNull();
   });
 
+  it('shows per-status counts for a mixed campaign', async () => {
+    const { container } = withQuery(
+      <CampaignStatusBadgePopover
+        statusCountMap={map([
+          [ActivityStatus.DONE, 2],
+          [ActivityStatus.CREATED, 4],
+        ])}
+      />
+    );
+
+    await waitFor(() =>
+      expect(container.querySelector('[aria-label="4 Generated, 2 Done"]')).not.toBeNull()
+    );
+    // labels are dropped once several statuses are present
+    expect(container.textContent).not.toContain('Generated');
+    expect(container.textContent).not.toContain('Done');
+    expect(container.textContent).toContain('4');
+    expect(container.textContent).toContain('2');
+  });
+
+  it('collapses a crowded breakdown to an ellipsis', async () => {
+    const { container } = withQuery(
+      <CampaignStatusBadgePopover
+        statusCountMap={map([
+          [ActivityStatus.CREATED, 2],
+          [ActivityStatus.PENDING, 1],
+          [ActivityStatus.RUNNING, 1],
+          [ActivityStatus.DONE, 4],
+          [ActivityStatus.ERROR, 1],
+        ])}
+      />
+    );
+
+    const pill = await waitFor(() => {
+      const found = container.querySelector('[data-slot="badge"]');
+      expect(found).not.toBeNull();
+      return found as HTMLElement;
+    });
+    expect(pill.textContent).toContain('…');
+    expect(pill.children).toHaveLength(4);
+    // hidden buckets stay in the label
+    expect(pill.getAttribute('aria-label')).toBe(
+      '2 Generated, 1 Pending, 1 Running, 4 Done, 1 Error'
+    );
+  });
+
   it('wires a hover popover trigger when a scan fetcher is injected', async () => {
     const fetchScanRows = vi.fn(() => Promise.resolve([]));
     const { container } = withQuery(

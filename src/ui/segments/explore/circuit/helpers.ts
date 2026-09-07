@@ -146,3 +146,17 @@ export function buildFilteredHierarchyTree(
 
   return filteredTree;
 }
+
+/** Per-row class for the circuit listing: highlight filtered-in rows, dim filtered-out hierarchy rows. */
+export function circuitListingRowClass(
+  record: ICircuit,
+  view: TCircuitRepresentationView | null
+): string {
+  if ('isFiltered' in record && (record as { isFiltered?: boolean }).isFiltered) {
+    return 'filtered-in [&_.ag-cell_svg]:text-primary-8!';
+  }
+  if (view === CircuitRepresentationView.Hierarchy) {
+    return 'filtered-out [&_.ag-cell]:bg-background! [&_.ag-cell]:text-neutral-4!';
+  }
+  return '[&_.ag-cell_svg]:text-primary-8!';
+}

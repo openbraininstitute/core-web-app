@@ -208,6 +208,7 @@ function SimulationListItem({
 
   return (
     <button
+      data-testid={`scan-config-coordinate-${simulation.id}`}
       className={cn(
         'flex-none cursor-pointer group rounded-2xl border border-gray-200',
         'hover:border-gray-300 hover:border-1.5 transition-all duration-300',
