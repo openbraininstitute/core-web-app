@@ -30,7 +30,7 @@ export const analysisNotebookResultSchema: IGridSchema<IAnalysisNotebookResult> 
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'updateDate', direction: SortDirection.Desc }],
   rowHeight: 118,
-  selection: { enabled: true },
+  selection: { enabled: false },
   columns: [
     previewColumn<IAnalysisNotebookResult>({
       id: 'notebook_image_preview',
