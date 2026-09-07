@@ -8,6 +8,7 @@ import {
 } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import {
   projectionCellLoader,
   SequentialLoaderClearedError,
@@ -40,6 +41,18 @@ import type { TSmallCircuitSource } from './types';
  */
 export const PLACEHOLDER_SOMA_RADIUS = 8;
 
+/**
+ * Every cell drawn, and the subset of them the population on show contributes.
+ * Kept together because the second is a slice of the first: the two would have
+ * to be rebuilt together in any case, and separating them cost a scan of every
+ * cell's id to recover what building them knew.
+ */
+type TScene = {
+  cells: MorphoViewerSmallCircuitCell[];
+  /** @see TSmallCircuitSource.locationCells */
+  locationCells: MorphoViewerSmallCircuitCell[];
+};
+
 type TOptions = {
   circuit: ICircuit;
   /** Host-owned, so `nodeColors` is indexed against the cells it colours. */
@@ -69,17 +82,19 @@ type TOptions = {
  * MorphIO over all three and hands back sections carrying the
  * `sonata_section_id` a click needs to become a morphology location.
  *
- * Every population that names morphologies is drawn with them, whichever one is
+ * Every biophysical population is drawn with its morphologies, whichever one is
  * on show: the one on show is coloured by property and the rest recede, but
- * they all keep their shape. A population that names none (SONATA's `virtual`,
- * an input projection) is drawn as placeholder somas, because that is all there
- * is to draw for it. Drawing only the population on show meant selecting an
- * input emptied the scene of every morphology in it.
+ * they all keep their shape. Drawing only the population on show meant
+ * selecting an input emptied the scene of every morphology in it.
  *
- * Affordable because of the scale gate: `circuitDrawsMorphologies` sends
- * anything above a small microcircuit to the somas-only viewer, so the cells
- * summed over every population here are few, and one OBI-One request each is
- * within budget.
+ * A virtual population is drawn as placeholder somas even where it names
+ * morphologies, which some do. It is an input projection — spikes played into
+ * the circuit, with no biophysics of its own to see — and it is routinely
+ * hundreds of thousands of nodes inside a circuit whose biophysical population
+ * is a handful. One OBI-One request and one tessellation per cell is not a cost
+ * the scale gate ever priced in: `circuitDrawsMorphologies` counts the circuit,
+ * not the population, so a small microcircuit reaches this path whatever its
+ * inputs weigh.
  *
  * A hidden population is not drawn at all: it contributes no cells.
  */
@@ -123,12 +138,17 @@ export function useSmallCircuitSource({
   );
 
   // Resolved once per population rather than per cell: every node of a
-  // population draws from the same directory or container.
+  // population draws from the same directory or container. Null is the whole of
+  // 'draws no morphologies', so the virtual gate belongs here too, where it is
+  // asked once per population and every reader already handles the answer.
   const locations = useMemo(() => {
     const byPopulation = new Map<string, MorphologyLocation | null>();
     if (!config) return byPopulation;
     for (const { population: candidate } of placed) {
-      byPopulation.set(candidate.name, resolveMorphologyLocation(config.raw, candidate.name));
+      byPopulation.set(
+        candidate.name,
+        isBiophysical(candidate) ? resolveMorphologyLocation(config.raw, candidate.name) : null
+      );
     }
     return byPopulation;
   }, [config, placed]);
@@ -168,7 +188,7 @@ export function useSmallCircuitSource({
     [locations, virtualLabId, projectId, circuitId]
   );
 
-  const built = useMemo((): MorphoViewerSmallCircuitCell[] | null => {
+  const built = useMemo((): TScene | null => {
     // Wait until every population has been read. The viewer re-fits the camera
     // whenever the set of ids changes, so the scene has to be built one time
     // only.
@@ -181,37 +201,64 @@ export function useSmallCircuitSource({
     const paint = subject?.geometry.count === 1 ? SECTION_TYPE_COLORS : defaultColor;
     const { palette, columnByNode } = nodeColors ?? EMPTY_NODE_COLORS;
 
+    // Dropped rather than drawn dark: a hidden population contributes no cells,
+    // so nothing is drawn for it and nothing is asked of OBI-One for it either.
+    // What stays is a subset of what was on screen, which the viewer reads as
+    // the same scene and does not re-frame the camera around.
+    const drawn = placed.filter((entry) => !hidden.has(entry.population.name));
+    let total = 0;
+    for (const entry of drawn) total += entry.geometry.count;
+
     // In declared order, with the population on show in its own place, so a
     // cell keeps its id, its position and its morphology whichever population
     // is selected. Colour is all the selection changes.
-    return placed.flatMap((entry) => {
+    //
+    // One pre-sized array rather than one per population and a `flatMap`, which
+    // copies the lot again: at a few hundred thousand nodes that copy is a
+    // frame of its own, on every colour change and every axon toggle.
+    const cells = new Array<MorphoViewerSmallCircuitCell>(total);
+    // Drawn for every population, marked for one: a morphology location is a
+    // section id without a cell of its own, so it is read against the population
+    // on show, and offered the whole scene it would mark every cell whose
+    // sections happen to number the same way. Taken as the scene is written
+    // rather than parsed back out of the ids: the loop already knows which
+    // population each cell belongs to.
+    let locationCells = NO_CELLS;
+    let n = 0;
+
+    for (const entry of drawn) {
       const { population: candidate, geometry } = entry;
-      // Dropped rather than drawn dark: a hidden population contributes no
-      // cells, so nothing is drawn for it and nothing is asked of OBI-One for
-      // it either. What stays is a subset of what was on screen, which the
-      // viewer reads as the same scene and does not re-frame the camera around.
-      if (hidden.has(candidate.name)) return [];
       const onShow = candidate.name === population.name;
       // The rest recede behind the population on show, unless that one could
       // not be placed: an input population carries no positions, and there is
       // then nothing on screen to recede behind.
       const flat = onShow || !subject ? paint : recededColor;
-      const result = new Array<MorphoViewerSmallCircuitCell>(geometry.count);
+      // Once per population: a population either draws morphologies or is somas
+      // throughout, and asking per cell built and threw away a request object
+      // for every node of an input projection.
+      const drawsMorphologies = locations.get(candidate.name) != null;
+      const start = n;
       for (let i = 0; i < geometry.count; i++) {
-        result[i] = {
+        cells[n++] = {
           id: makeVizCellId(makeNodeKey(circuitId, candidate.name, i), { showAxons }),
           center: positionAt(geometry, i),
-          orientation: placementAt(geometry, i)?.orientation ?? IDENTITY_QUATERNION,
+          // Read only where it is drawn: `placementAt` allocates a placement, a
+          // second position and a quaternion, and a soma is a sphere that no
+          // rotation moves.
+          orientation: drawsMorphologies
+            ? (placementAt(geometry, i)?.orientation ?? IDENTITY_QUATERNION)
+            : IDENTITY_QUATERNION,
           somaRadius: PLACEHOLDER_SOMA_RADIUS,
           color: onShow ? (palette[columnByNode[i]] ?? flat) : flat,
           // Told to the viewer, not left for it to discover by asking: it counts the cells it
           // is waiting on, and a scene where most of them will never answer would otherwise
           // report itself nearly loaded before the first morphology arrived.
-          somaOnly: morphologyRequest(entry, i, showAxons) === null,
+          somaOnly: !drawsMorphologies || morphologyRequest(entry, i, showAxons) === null,
         };
       }
-      return result;
-    });
+      if (onShow) locationCells = cells.slice(start, n);
+    }
+    return { cells, locationCells };
   }, [
     population,
     placed,
@@ -220,6 +267,7 @@ export function useSmallCircuitSource({
     subject,
     circuitId,
     showAxons,
+    locations,
     morphologyRequest,
     nodeColors,
     defaultColor,
@@ -247,18 +295,10 @@ export function useSmallCircuitSource({
   // reset. This does not apply after a failure: the error panel would sit on
   // cells that 'Try again' is about to replace.
   // State rather than a ref: React Compiler will not read a ref in render.
-  const [shown, setShown] = useState<MorphoViewerSmallCircuitCell[]>(NO_CELLS);
-  const cells = built ?? (error ? NO_CELLS : shown);
-  if (cells !== shown) setShown(cells);
-
-  // Drawn for every population, marked for one. The morphology locations of a
-  // neuron set are section ids without a cell, so they are read against the
-  // population on show; matched against another's morphologies they would put a
-  // marker on every cell whose sections happen to number the same way.
-  const locationCells = useMemo(
-    () => cells.filter((cell) => parseNodeKey(cell.id)?.population === populationName),
-    [cells, populationName]
-  );
+  const [shown, setShown] = useState<TScene>(NO_SCENE);
+  const scene = built ?? (error ? NO_SCENE : shown);
+  if (scene !== shown) setShown(scene);
+  const { cells, locationCells } = scene;
 
   const loadCell = useCallback(
     async (cellId: string) => {
@@ -364,4 +404,5 @@ export function useSmallCircuitSource({
 
 const EMPTY_SECTION_IDS = new Map<string, Map<number, string>>();
 const NO_CELLS: MorphoViewerSmallCircuitCell[] = [];
+const NO_SCENE: TScene = { cells: NO_CELLS, locationCells: NO_CELLS };
 const EMPTY_NODE_COLORS: NodeColors = { palette: [], columnByNode: new Uint16Array(0) };

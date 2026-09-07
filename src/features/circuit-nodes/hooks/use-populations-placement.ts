@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { nodesWorkerRegistry } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesOpenParams, nodesSessionKey } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -56,6 +57,12 @@ type Result = {
  * `morphology` and `orientation_*` columns too, and pays for them: they are the
  * two parts of a read that scale with the cell count in earnest, which is why
  * the somas-only viewer leaves them alone.
+ *
+ * Asked for or not, they are read only where they can be drawn: a virtual
+ * population is somas whatever the viewer, so its morphology names would cross
+ * the worker boundary — as strings, which cannot be transferred and so are
+ * copied — to be thrown away. A virtual population of a few hundred thousand
+ * nodes is the ordinary case in a circuit small enough for this path.
  *
  * Placements are kept for the lifetime of the hook, so a population that
  * leaves the list and comes back (the one on show, once another is selected)
@@ -170,8 +177,12 @@ export function usePopulationsPlacement({
           forget(population);
         } else if (state.status === 'ready' && !reading) {
           reading = true;
+          const drawsMorphologies = isBiophysical(population);
           nodesWorkerRegistry
-            .getGeometry(key, { withMorphologies, withOrientations })
+            .getGeometry(key, {
+              withMorphologies: withMorphologies && drawsMorphologies,
+              withOrientations: withOrientations && drawsMorphologies,
+            })
             .then(
               (geometry) => settle(population, geometry),
               (reason: unknown) =>

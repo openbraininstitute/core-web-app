@@ -209,6 +209,30 @@ describe('useSmallCircuitSource', () => {
   });
 
   /**
+   * The regression this pins: an input projection is routinely hundreds of
+   * thousands of nodes, and some of them name a morphology apiece. Drawn as
+   * neurites that is one OBI-One request and one tessellation per node, inside
+   * a circuit the scale gate called small because its biophysical population
+   * is two cells.
+   */
+  it('stands a virtual population as somas even where it names morphologies', async () => {
+    fixtures.placement = {
+      placed: [
+        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
+        { population: INPUTS, geometry: placement([10, 0, 0], ['morph-b']) },
+      ],
+      failures: new Map(),
+      settled: true,
+      download: null,
+    };
+    const { result } = render(false, [DEFAULT, INPUTS]);
+
+    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
+    // The two answers agree, or the viewer waits on a morphology never coming.
+    await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
+  });
+
+  /**
    * The regression this pins: a `virtual` population has no morphology to draw,
    * so making it the one on show used to take every morphology in the scene off
    * the screen and leave a field of grey dots with no way back but a click on
