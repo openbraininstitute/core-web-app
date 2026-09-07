@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import {
   formatScanValue,
+  scanValueEntityId,
   toScanCardData,
 } from '@/features/data-grid/bindings/entitycore/renderers/campaign-scan-cards';
 import {
@@ -285,5 +286,57 @@ describe('toScanCardData (records → cards)', () => {
     expect(toScanCardData(undefined)).toEqual([]);
     expect(toScanCardData(null)).toEqual([]);
     expect(toScanCardData('nope')).toEqual([]);
+  });
+});
+
+describe('scanValueEntityId (entity references in scan parameters)', () => {
+  const UUID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+
+  it('reads the id out of an obi-one FromID ref', () => {
+    expect(scanValueEntityId({ type: 'EMCellMeshFromID', id_str: UUID })).toBe(UUID);
+  });
+
+  it('reads a bare { id_str } or { id }', () => {
+    expect(scanValueEntityId({ id_str: UUID })).toBe(UUID);
+    expect(scanValueEntityId({ id: UUID })).toBe(UUID);
+  });
+
+  it('is undefined for values that are not references', () => {
+    expect(scanValueEntityId(42)).toBeUndefined();
+    expect(scanValueEntityId(null)).toBeUndefined();
+    expect(scanValueEntityId('plain string')).toBeUndefined();
+    expect(scanValueEntityId([{ id: UUID }])).toBeUndefined();
+    expect(scanValueEntityId({ type: 'Something', value: 3 })).toBeUndefined();
+    expect(scanValueEntityId({ id: '  ' })).toBeUndefined();
+  });
+});
+
+describe('formatScanValue with entity references', () => {
+  const UUID = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+
+  it('shows the id instead of the raw JSON', () => {
+    expect(formatScanValue({ type: 'EMCellMeshFromID', id_str: UUID })).toBe(UUID);
+  });
+
+  it('still stringifies an object that carries no id', () => {
+    expect(formatScanValue({ a: 1 })).toBe('{"a":1}');
+  });
+
+  it('marks a referencing parameter as copyable, and a plain one not', () => {
+    const [card] = toScanCardData([
+      {
+        id: 'sim-1',
+        name: 'Skeletonization 0',
+        scan_parameters: {
+          'initialize.cell_mesh': { type: 'EMCellMeshFromID', id_str: UUID },
+          'initialize.random_seed': 7,
+        },
+      },
+    ]);
+
+    const byLabel = Object.fromEntries((card?.params ?? []).map((p) => [p.label, p]));
+    expect(byLabel['Cell mesh']?.value).toBe(UUID);
+    expect(byLabel['Cell mesh']?.entityId).toBe(UUID);
+    expect(byLabel['Random seed']?.entityId).toBeUndefined();
   });
 });

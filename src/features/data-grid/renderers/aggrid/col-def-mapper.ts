@@ -86,8 +86,11 @@ export function buildColDefs<Row>(
       // a user-resized width must win over any flex sizing
       flex: userWidth != null ? undefined : c.width?.flex,
       resizable: c.width?.resizable ?? true,
-      // pinned columns (`movable: false`) keep their declared slot — no drag handle
+      // position-pinned columns (`movable: false`) keep their declared slot — no drag handle
       suppressMovable: c.movable === false,
+      // frozen against an edge; `lockPosition` keeps a drag from pulling it out
+      pinned: c.pinned,
+      lockPosition: c.pinned,
       cellClass:
         c.align === Align.Right
           ? 'ag-right-aligned-cell'

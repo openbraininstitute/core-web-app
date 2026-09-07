@@ -41,11 +41,9 @@ registerDataGridModules();
 /**
  * A column for {@link SimpleGrid}: the renderer-agnostic {@link IColumnModel} plus
  * the extras a static/nested table needs in place of the server grid's registries —
- * an inline `renderCell`, a rich `headerNode`, and AG Grid column pinning.
+ * an inline `renderCell` and a rich `headerNode`. Pinning comes from the base model.
  */
 export interface ISimpleColumn<Row = unknown> extends IColumnModel<Row> {
-  /** Pin the column to an edge. */
-  pinned?: 'left' | 'right';
   /** Inline React cell renderer. Wins over `getValue`/`field` when present. */
   renderCell?: (row: Row) => ReactNode;
   /** Rich header node; falls back to the plain `header` string when omitted. */

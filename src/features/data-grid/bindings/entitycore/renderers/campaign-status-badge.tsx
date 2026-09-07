@@ -2,7 +2,7 @@
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { executionStatusIconMap } from '@/components/icons/activity-execution';
-import { Badge } from '@/ui/molecules/badge';
+import { Badge, STATUS_PILL_CLASS } from '@/ui/molecules/badge';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -260,11 +260,12 @@ export function CampaignStatusBadge({
       size="sm"
       variant="outline"
       className={cn(
-        'select-none border',
+        STATUS_PILL_CLASS,
         spec.bg,
         spec.border,
         spec.text,
-        compact ? 'h-[18px] gap-1 px-1.5 py-0 text-[9px] font-medium' : 'gap-1.5 font-semibold',
+        // the compact pill leaves the shared footprint on purpose (scan-parameter cards)
+        compact ? 'h-[18px] gap-1 px-1.5 py-0 text-[9px] font-medium' : 'gap-1.5',
         fixedWidth ? 'min-w-[7.5rem] justify-center' : '',
         className
       )}

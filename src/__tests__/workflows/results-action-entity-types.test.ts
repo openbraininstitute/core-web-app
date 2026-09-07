@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { NotAllowedResultsActionEntityTypes } from '@/ui/segments/workflows/elements/workflow-activity';
+import { NotAllowedResultsActionEntityTypes } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 
 describe('workflow activity "View results" action', () => {
   it.each([
