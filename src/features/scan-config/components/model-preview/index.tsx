@@ -95,14 +95,7 @@ export function ModelPreview({
           // The form binding lets a 3D click write a morphology location back into the form.
           form={viewerForm}
           enableVisualization
-          features={{
-            ...viewerFeatures,
-            colorBy: false,
-            nodesTable: false,
-            electrodes: false,
-            // Hover highlight is pointless with a single neuron.
-            cellHover: false,
-          }}
+          features={{ ...viewerFeatures, electrodes: false }}
           defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))

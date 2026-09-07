@@ -180,9 +180,9 @@ export function CircuitScene({
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
-  const enableColorBy = features?.colorBy ?? true;
-  const enableCellHover = features?.cellHover ?? true;
-  // An MEModel has no nodes file to list.
+  // An MEModel is one cell with no nodes file: nothing to colour by, list, or highlight.
+  const enableColorBy = Boolean(circuit) && (features?.colorBy ?? true);
+  const enableCellHover = Boolean(circuit) && (features?.cellHover ?? true);
   const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
 
   const [showTable, setShowTable] = useState(false);

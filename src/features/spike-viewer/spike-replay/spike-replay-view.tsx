@@ -17,10 +17,10 @@ import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-v
 import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { classNames } from '@/util/utils';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { SpikeData } from '@/features/spike-viewer/spike-trace';
+import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
+import type { SpikeData, SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const MODES = {
   Raster: 'raster',
@@ -60,24 +60,23 @@ const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
 
 interface SpikeReplayViewProps {
   data: SpikeData;
-  /** The circuit that produced the spikes; omit when there is none to replay over. */
-  circuit?: ICircuit;
+  /** The circuit or MEModel to replay the spikes over; omit when there is none. */
+  subject?: TSceneSubject;
 }
 
 /**
- * A simulation's spikes as a raster, as a 3D replay over the circuit that
- * produced them, or both at once.
+ * A simulation's spikes as a raster, as a 3D replay over the circuit or MEModel
+ * that produced them, or both at once.
  *
- * Without a circuit — an ion-channel or single-cell campaign — only the raster
- * is on offer and the view pill drops away, but the population above it and the
- * layout under it stay exactly as they are here.
+ * Without a subject the view pill drops away and the raster has the panel to
+ * itself: the split's divider and gutter would frame a pane that never holds
+ * anything.
  *
  * The 3D scene mounts the first time it is asked for and stays mounted from
  * then on, so switching views never tears down the WebGL context and
- * re-downloads every morphology. Without a circuit it never mounts at all —
- * there is nothing to replay.
+ * re-downloads every morphology. Without a subject it never mounts at all.
  */
-export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
+export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [chosenPopulationName, setChosenPopulationName] = useState<string>();
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
@@ -96,6 +95,8 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   const playheadRef = useRef<((timeInMs: number | null) => void) | null>(null);
   const liveTimeRef = useRef(data.timeRange.min);
 
+  const circuit = subject?.circuit;
+  const memodel = subject?.memodel;
   const {
     config: circuitConfig,
     isLoading: configLoading,
@@ -130,13 +131,21 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
   // below on exactly that lag. A population the config does not list, or
   // lists as virtual, has no cells to light; the scene then draws its own
   // default and the notice in the header says why.
-  const replayable = replayablePopulation(circuitConfig?.nodes, populationName);
+  //
+  // Nothing recorded is nothing to replay. Past that, an MEModel is drawn from
+  // the model itself and has one cell, so there is no config to ask.
+  const replayable =
+    recorded !== undefined &&
+    (memodel !== undefined || replayablePopulation(circuitConfig?.nodes, populationName));
   const spikes = useMemo(
     () => (replayable ? spikesToViewer(data, populationName) : null),
     [data, populationName, replayable]
   );
-  const showScene = circuit !== undefined && mode !== MODES.Raster;
-  const isSplit = mode === MODES.Split;
+  // With nothing to replay over the raster is the only view, whatever the mode
+  // says: a split would show an empty pane and a playhead nothing can move.
+  const view = subject ? mode : MODES.Raster;
+  const showScene = view !== MODES.Raster;
+  const isSplit = view === MODES.Split;
   const showRaster = !showScene || isSplit;
   const canSeek = isSplit && replayable;
 
@@ -223,7 +232,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
     if (isSplit) playheadRef.current?.(liveTimeRef.current);
   }, [isSplit]);
 
-  const modeOptions = circuit
+  const modeOptions = subject
     ? [
         {
           label: 'Raster plot',
@@ -283,6 +292,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
         {showScene && !replayable && (
           <span role="status" className="text-xs text-amber-600">
             {replayNotice(
+              recorded,
               populationName,
               circuitConfig?.nodes,
               configLoading,
@@ -293,7 +303,7 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
       </div>
 
       <div ref={containerRef} className="relative min-h-0 flex-1">
-        {circuit && (
+        {subject && (
           <div
             className={classNames(
               'absolute left-0 right-0 top-0',
@@ -305,14 +315,15 @@ export function SpikeReplayView({ data, circuit }: SpikeReplayViewProps) {
           >
             {sceneMounted && (
               <CircuitScene
-                circuit={circuit}
-                largeCircuit={!circuitDrawsMorphologies(circuit.scale)}
+                {...subject}
+                largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
                 active={showScene}
                 features={SCENE_FEATURES}
                 // Only a name the config backs with cells. A name the scene
                 // cannot draw would make it fall back on its own — with no name
                 // it falls back deliberately, to the same default, and the
-                // notice in the header explains what is on show.
+                // notice in the header explains what is on show. An MEModel
+                // resolves no populations, so the name means nothing to it.
                 populationName={replayable ? populationName : undefined}
                 // The population above the panes is the one being replayed,
                 // and the spikes' cell indices are relative to it. The
@@ -409,13 +420,16 @@ function replayablePopulation(
   return listed !== undefined && isBiophysical(listed);
 }
 
-/** Why the population on show cannot be replayed, told apart by cause. */
+/** Why what is on show cannot be replayed. */
 function replayNotice(
+  recorded: SpikePopulation | undefined,
   name: string | undefined,
   nodes: NodePopulation[] | undefined,
   loading: boolean,
   failed: boolean
 ): string {
+  if (recorded === undefined)
+    return 'This simulation recorded no spikes, so there is nothing to replay.';
   if (loading) return 'Reading the circuit’s node populations…';
   if (failed)
     return 'The circuit’s node populations could not be read, so there is nothing to replay these spikes over.';
