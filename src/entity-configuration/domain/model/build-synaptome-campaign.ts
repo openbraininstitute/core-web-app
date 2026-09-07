@@ -10,6 +10,7 @@ import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { Task, type TTaskFlowTypes } from '@/entity-configuration/domain/task-functions';
+import { buildSynaptomeFlag } from '@/features/feature-flags/flags';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -125,6 +126,7 @@ export const BuildSynaptomeCampaign: EntityCoreTypeConfig<
   group: EntityTypeGroup.Models,
   title: 'Synaptome',
   extendedType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
+  requiredFeatures: [buildSynaptomeFlag.key],
   type: EntityTypeDict.TaskConfig,
   slug: EntitySlug.BuildSynaptomeCampaign,
   api: {
