@@ -8,10 +8,13 @@ import { useGeneratedOutputs } from '@/features/scan-config/outputs/use-generate
 import type { ReactNode } from 'react';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 
-const invalidateDataListings = vi.hoisted(() => vi.fn());
+const invalidateEntityListings = vi.hoisted(() => vi.fn());
 const resolveStrategyForRef = vi.hoisted(() => vi.fn());
 
-vi.mock('@/features/scan-config/outputs/invalidate-listings', () => ({ invalidateDataListings }));
+vi.mock('@/features/data-grid/listing-queries', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  invalidateEntityListings,
+}));
 vi.mock('@/features/scan-config/outputs/registry', () => ({
   resolveStrategyForRef,
   getOutputStrategyById: () => ({ toFiles: () => [] }),
@@ -40,7 +43,7 @@ const execution = (id: string, generated: Array<{ id: string; type?: string }>) 
 
 describe('useGeneratedOutputs listing invalidation', () => {
   beforeEach(() => {
-    invalidateDataListings.mockClear();
+    invalidateEntityListings.mockClear();
     resolveStrategyForRef.mockReset();
   });
 
@@ -54,8 +57,8 @@ describe('useGeneratedOutputs listing invalidation', () => {
       }
     );
 
-    await waitFor(() => expect(invalidateDataListings).toHaveBeenCalledTimes(1));
-    expect(invalidateDataListings.mock.calls[0][0].listingTypes).toEqual([RESULT]);
+    await waitFor(() => expect(invalidateEntityListings).toHaveBeenCalledTimes(1));
+    expect(invalidateEntityListings.mock.calls[0][1]).toEqual([RESULT]);
   });
 
   it('still refreshes when one generated ref cannot be resolved', async () => {
@@ -71,7 +74,7 @@ describe('useGeneratedOutputs listing invalidation', () => {
       { wrapper }
     );
 
-    await waitFor(() => expect(invalidateDataListings).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(invalidateEntityListings).toHaveBeenCalledTimes(1));
   });
 
   it('refreshes again for the next run, even though it feeds the same listing', async () => {
@@ -83,11 +86,11 @@ describe('useGeneratedOutputs listing invalidation', () => {
       { wrapper, initialProps: { activity: execution('run-1', [{ id: 'r1' }]) } }
     );
 
-    await waitFor(() => expect(invalidateDataListings).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(invalidateEntityListings).toHaveBeenCalledTimes(1));
 
     // selecting another config swaps the execution without remounting the panel
     rerender({ activity: execution('run-2', [{ id: 'r2' }]) });
 
-    await waitFor(() => expect(invalidateDataListings).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(invalidateEntityListings).toHaveBeenCalledTimes(2));
   });
 });

@@ -20,6 +20,9 @@ export const AnalysisNotebookTemplateSchema = z.object({
       .nonempty({ message: 'Description is required' }),
     scale: ScaleEnum,
     assignment_id: z.string().trim().optional(),
+    // Consent token, not user input: the id of the notebook the user agreed to release the
+    // assignment ID from. Never sent to the API — the pipeline builds its payload field by field.
+    assignment_conflict_id: z.string().optional(),
   }),
 
   assets: AnalysisNotebookTemplateAssetsSchema,

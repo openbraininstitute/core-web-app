@@ -9,8 +9,9 @@ import pMap from 'p-map';
 import { type ReactNode, useMemo } from 'react';
 
 import { useAppNotification } from '@/components/notification';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 // direct module import: the react barrel would close a module-init cycle via the grid host
 import {
   EXPANDING_PILL_BASE_CLASS,
@@ -18,7 +19,6 @@ import {
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { useScope } from '@/ui/hooks/use-scope';
 import { Button } from '@/ui/molecules/button';
-import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { IconType } from 'antd/es/notification/interface';
@@ -145,14 +145,6 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   const queryClient = useQueryClient();
   const { scope: currentScope } = useScope();
 
-  const { dataKey } = makeDataKey({
-    virtualLabId: workspace?.virtualLabId,
-    projectId: workspace?.projectId,
-    section: WorkspaceSection.Data,
-    dataType,
-    scope: currentScope,
-  });
-
   const entityCount = selectedRows.length;
   const isSingular = entityCount === 1;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
@@ -205,12 +197,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       );
     },
     onSuccess: async (resp) => {
-      queryClient.invalidateQueries({
-        predicate: (query) => get(query.queryKey[0], 'context.key') === dataKey,
-      });
-      queryClient.invalidateQueries({
-        predicate: (query) => query.queryKey[0] === `data-entity-count-${dataType}`,
-      });
+      invalidateEntityListings(queryClient, dataType);
 
       const message = buildBulkDeleteNotification({
         success: resp.filter((e) => e.deleted),

@@ -39,6 +39,7 @@ import {
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
+import { gridQueryKey } from '@/features/data-grid/listing-queries';
 import {
   createDefaultPersistence,
   DataGrid,
@@ -359,7 +360,7 @@ export function EntityDataGrid({
   // to be fetched here or set filters show "No options". Same request scope as the
   // grid, minus the grid's own column filters.
   const facetsQuery = useQuery({
-    queryKey: ['data-grid', 'facets', dataType, dataKey, params],
+    queryKey: gridQueryKey(dataType, dataKey, 'host-facets', params),
     queryFn: () =>
       facetsQueryFn?.({
         filters: { ...params, ...FACETS_ONLY_PAGE },
@@ -421,7 +422,7 @@ export function EntityDataGrid({
           renderer={AgGridRenderer}
           operators={operators}
           cellRenderers={cellRenderers}
-          queryKey={['data-grid', dataType, dataKey]}
+          queryKey={gridQueryKey(dataType, dataKey)}
           params={params}
           enabled={enabled}
           facets={externalFacets}

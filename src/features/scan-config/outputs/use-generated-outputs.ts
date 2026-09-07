@@ -1,7 +1,7 @@
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { invalidateDataListings } from '@/features/scan-config/outputs/invalidate-listings';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { orderOutputFiles } from '@/features/scan-config/outputs/order';
 import {
   getOutputStrategyById,
@@ -59,7 +59,7 @@ function outputIdentity(data: TResolvedOutput | null | undefined): string {
  * strategy is registered for it.
  *
  * As a side effect, the Data listings the resolved entities belong to are refetched once every ref
- * has settled — see {@link invalidateDataListings}.
+ * has settled — see {@link invalidateEntityListings}.
  */
 export function useGeneratedOutputs({ execution, context, pollingEnabled = true }: Args): Result {
   const queryClient = useQueryClient();
@@ -126,7 +126,7 @@ export function useGeneratedOutputs({ execution, context, pollingEnabled = true 
     if (!invalidation || invalidated.current === invalidation) return;
 
     invalidated.current = invalidation;
-    invalidateDataListings({ queryClient, listingTypes });
+    invalidateEntityListings(queryClient, listingTypes);
   }, [invalidation, listingTypes, queryClient]);
 
   return { files, isLoading: queries.some((query) => query.isLoading) };

@@ -1,26 +1,19 @@
 'use client';
 
-import { hashKey, useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
-import {
-  dataBrowseListingUsesBrainRegionHierarchy,
-  type TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
-import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
-import { buildQueryKey, useQueryParameters } from '@/ui/hooks/use-query-extended-entity-type';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
 
 /**
- * Reads `pagination.total_items` from the data table's React Query cache entry so
- * the sidebar count stays in sync with filters, search, sort, and pagination.
+ * Reads the filtered total the browse grid publishes for this listing, so the sidebar
+ * count stays in sync with filters, search, sort and pagination. `undefined` when this
+ * type is not the mounted listing — the caller falls back to its own count query.
  */
 export function useTableQueryCount({
   extendedType,
@@ -33,10 +26,7 @@ export function useTableQueryCount({
   workspace: WorkspaceContext;
   isActiveEntity: boolean;
 }) {
-  const queryClient = useQueryClient();
   const { virtualLabId, projectId } = workspace;
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
-  const requireBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
 
   const { dataKey } = makeDataKey({
     virtualLabId,
@@ -46,75 +36,7 @@ export function useTableQueryCount({
     scope,
   });
 
-  const queryParameters = useQueryParameters(
-    {
-      context: {
-        key: dataKey,
-        extendedEntityType: extendedType,
-        workspaceScope: scope,
-      },
-      workspace,
-    },
-    { requireBrainRegion }
-  );
-
-  const queryKey = useMemo(
-    () =>
-      buildQueryKey({
-        workspace,
-        context: {
-          key: dataKey,
-          extendedEntityType: extendedType,
-          workspaceScope: scope,
-        },
-        queryParameters,
-        requireBrainRegion,
-        speciesSelectionMode,
-      }),
-    [
-      workspace,
-      dataKey,
-      extendedType,
-      scope,
-      queryParameters,
-      requireBrainRegion,
-      speciesSelectionMode,
-    ]
-  );
-
-  const queryKeyHash = useMemo(() => hashKey(queryKey), [queryKey]);
-  const cache = queryClient.getQueryCache();
-
-  const getSnapshot = useCallback(() => {
-    if (!isActiveEntity) return undefined;
-    const data = cache.find({ queryKey })?.state?.data as EntityCoreResponse<unknown> | undefined;
-    return data?.pagination?.total_items;
-  }, [cache, isActiveEntity, queryKey]);
-
-  const subscribe = useCallback(
-    (onStoreChange: () => void) =>
-      cache.subscribe((event) => {
-        if (hashKey(event.query.queryKey) === queryKeyHash) {
-          onStoreChange();
-        }
-      }),
-    [cache, queryKeyHash]
-  );
-
-  const legacyCount = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
-
-  // the grid publishes its filtered total under the same dataKey and wins when present;
-  // a grid-backed entity never writes the legacy query-cache count
   const gridTotal = useAtomValue(gridFilteredTotalAtom(dataKey));
-  const count = isActiveEntity ? (gridTotal ?? legacyCount) : legacyCount;
 
-  const queryState = isActiveEntity ? cache.find({ queryKey })?.state : undefined;
-  const isFetching = queryState?.fetchStatus === 'fetching';
-
-  return {
-    dataKey,
-    count,
-    isLoading: isActiveEntity && isFetching && count === undefined,
-    isError: count === undefined && queryState?.status === 'error',
-  };
+  return { dataKey, count: isActiveEntity ? gridTotal : undefined };
 }
