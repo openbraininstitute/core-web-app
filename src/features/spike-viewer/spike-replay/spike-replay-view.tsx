@@ -19,8 +19,8 @@ import { classNames } from '@/util/utils';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { TSceneMemodel, TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
-import type { SpikeData } from '@/features/spike-viewer/spike-trace';
+import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
+import type { SpikeData, SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const MODES = {
   Raster: 'raster',
@@ -133,12 +133,13 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   // lists as virtual, has no cells to light; the scene then draws its own
   // default and the notice in the header says why.
   //
-  // An MEModel is drawn from the model itself and has exactly one cell, so
-  // there is no config to ask and nothing to disqualify: whatever it recorded
-  // is that cell's.
-  const replayable = memodel
-    ? recorded !== undefined
-    : replayablePopulation(circuitConfig?.nodes, populationName);
+  // Nothing recorded is nothing to replay, whatever produced it. Past that an
+  // MEModel is drawn from the model itself and has exactly one cell, so there
+  // is no config to ask and nothing to disqualify: what it recorded is that
+  // cell's.
+  const replayable =
+    recorded !== undefined &&
+    (memodel !== undefined || replayablePopulation(circuitConfig?.nodes, populationName));
   const spikes = useMemo(
     () => (replayable ? spikesToViewer(data, populationName) : null),
     [data, populationName, replayable]
@@ -295,7 +296,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
         {showScene && !replayable && (
           <span role="status" className="text-xs text-amber-600">
             {replayNotice(
-              memodel,
+              recorded,
               populationName,
               circuitConfig?.nodes,
               configLoading,
@@ -426,13 +427,14 @@ function replayablePopulation(
 
 /** Why what is on show cannot be replayed, told apart by cause. */
 function replayNotice(
-  memodel: TSceneMemodel | undefined,
+  recorded: SpikePopulation | undefined,
   name: string | undefined,
   nodes: NodePopulation[] | undefined,
   loading: boolean,
   failed: boolean
 ): string {
-  if (memodel) return 'This simulation recorded no spikes, so there is nothing to replay.';
+  if (recorded === undefined)
+    return 'This simulation recorded no spikes, so there is nothing to replay.';
   if (loading) return 'Reading the circuit’s node populations…';
   if (failed)
     return 'The circuit’s node populations could not be read, so there is nothing to replay these spikes over.';
