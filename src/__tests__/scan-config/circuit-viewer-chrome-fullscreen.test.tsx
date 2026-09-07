@@ -29,6 +29,7 @@ describe('CircuitViewerChrome fullscreen', () => {
 
     const button = screen.getByRole('button', { name: 'Full screen' });
     expect(screen.getByTestId('viewer-chrome-left')).toContainElement(button);
+    expect(button).toBe(screen.getByTestId('viewer-full-screen'));
     fireEvent.click(button);
     expect(onToggleFullscreen).toHaveBeenCalledOnce();
   });

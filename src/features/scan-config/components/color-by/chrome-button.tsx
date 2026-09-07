@@ -11,11 +11,14 @@ import { useFullscreenElement } from '@/utils/fullscreen';
  */
 export function ChromeButton({
   label,
+  testId,
   onClick,
   active,
   children,
 }: {
   label: string;
+  /** E2E handle, for the buttons whose label flips with the state they toggle. */
+  testId?: string;
   onClick: () => void;
   active?: boolean;
   children: React.ReactNode;
@@ -25,6 +28,7 @@ export function ChromeButton({
       <TooltipTrigger asChild>
         <button
           type="button"
+          data-testid={testId}
           aria-label={label}
           aria-pressed={active}
           onClick={onClick}
@@ -61,6 +65,7 @@ export function FullscreenButton({ onToggle }: { onToggle: () => void }) {
   return (
     <ChromeButton
       label={isFullscreen ? 'Exit full screen' : 'Full screen'}
+      testId="viewer-full-screen"
       onClick={onToggle}
       active={isFullscreen}
     >
