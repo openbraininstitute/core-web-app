@@ -9,7 +9,7 @@ Once we've received your payment we'll provision a special virtual lab for your 
 `https://openbraininstitute.org/app/virtual-lab/{virtual-lab-id}/{project-id}/course`
 
 
-Before we provision your course you have to provide the course start date, period 1 end date and course end date.
+Before we can provision your course, you need to provide three dates: the course start date, the Period 1 end date (the deadline for new student assignments, at most 2 weeks after the start date), and the course end date.
 
 
 ### Course start date
@@ -33,7 +33,7 @@ When the course ends, the students will lose access to their projects, but facul
 
 ### Assigning Students
 
-Through the UI you can add students to the course, you will need to provide a CSV file with 2 columns:
+Through the UI you can add students to the course, you will need to provide a CSV with no headres and 2 columns:
 
 - Unique ID
 - Email
