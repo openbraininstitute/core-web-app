@@ -5,7 +5,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
-import { replayableCircuit } from '@/features/spike-viewer/spike-replay/replayable-circuit';
+import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
 
@@ -23,10 +23,10 @@ type SpikeViewerProps = {
 export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeViewerProps) {
   const [spikes, error] = useSpikeTrace({ entityId, entityType, asset, ctx });
   const { model, run } = useSimulation();
-  // Only a circuit simulation has somewhere to replay spikes; an ion-channel or
-  // single-cell campaign gets the raster it has always had, with no toggle
-  // offering a view that cannot be drawn.
-  const circuit = replayableCircuit(model);
+  // Only a campaign with cells to light up has somewhere to replay spikes; an
+  // ion-channel one gets the raster it has always had, with no toggle offering
+  // a view that cannot be drawn.
+  const subject = replaySubject(model);
   const data = useMemo(() => spikes && withSimulationTimeWindow(spikes, run), [spikes, run]);
 
   if (error) {
@@ -50,7 +50,7 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
   // where the circuit preview's does.
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[data]}>
-      <SpikeReplayView data={data} circuit={circuit ?? undefined} />
+      <SpikeReplayView data={data} subject={subject ?? undefined} />
     </ErrorBoundary>
   );
 }

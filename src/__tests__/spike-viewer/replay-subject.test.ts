@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { replayableCircuit } from '@/features/spike-viewer/spike-replay/replayable-circuit';
+import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
@@ -11,23 +11,33 @@ function circuit(scale: string): TSupportedEntitiesForScanConfiguration {
   return { id: 'c1', type: EntityTypeDict.Circuit, scale } as ICircuit;
 }
 
-describe('replayableCircuit', () => {
+describe('replaySubject', () => {
   it.each(
     Object.values(CircuitScaleDictionary)
   )('replays over a %s circuit, whichever way its cells are drawn', (scale) => {
-    expect(replayableCircuit(circuit(scale))).not.toBeNull();
+    expect(replaySubject(circuit(scale))).toEqual({ circuit: circuit(scale) });
   });
 
-  it('has nothing to offer when the campaign scanned something other than a circuit', () => {
+  it('replays over the MEModel a single-neuron campaign scanned', () => {
     const memodel = {
       id: 'm1',
+      name: 'ME-model',
       type: EntityTypeDict.Memodel,
     } as TSupportedEntitiesForScanConfiguration;
 
-    expect(replayableCircuit(memodel)).toBeNull();
+    expect(replaySubject(memodel)).toEqual({ memodel });
+  });
+
+  it('has nothing to offer when the campaign scanned something with no cells to light up', () => {
+    const ionChannel = {
+      id: 'i1',
+      type: EntityTypeDict.IonChannelModel,
+    } as TSupportedEntitiesForScanConfiguration;
+
+    expect(replaySubject(ionChannel)).toBeNull();
   });
 
   it('has nothing to offer before the model has loaded', () => {
-    expect(replayableCircuit(null)).toBeNull();
+    expect(replaySubject(null)).toBeNull();
   });
 });
