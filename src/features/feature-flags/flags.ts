@@ -25,7 +25,7 @@ export const eFeatureExtractionFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Intracellular e-feature extraction',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
 export const brainRegionSimulationFlag = defineFlag<boolean>({
@@ -41,7 +41,7 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Extracellular recording array build',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
 export const buildSynaptomeFlag = defineFlag<boolean>({
@@ -49,7 +49,7 @@ export const buildSynaptomeFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Synaptome build',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
 /** Interactive electrode overlays in circuit preview (independent of the build workflow). */
@@ -58,7 +58,7 @@ export const electrodeOverlaysFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Interactive electrode overlays in circuit preview',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
 export const flags = [
