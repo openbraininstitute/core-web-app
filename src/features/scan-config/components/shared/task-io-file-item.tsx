@@ -16,12 +16,12 @@ type Props = {
 
 export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const displayName = name ?? fileName;
+  const isDirectory = isDirectoryAsset(file.asset);
+  // a SONATA circuit is opened through its config file, but the entry itself is the directory
+  const isCircuitDirectory = isDirectory && file.asset.label === AssetLabel.sonata_circuit;
+  const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
-  const directoryBadge =
-    file.asset.label === AssetLabel.sonata_circuit ? 'circuit directory' : 'folder';
-  const badgeContent =
-    label ?? (isDirectoryAsset(file.asset) ? directoryBadge : fileName?.split('.').at(-1));
+  const badgeContent = label ?? (isDirectory ? 'folder' : fileName?.split('.').at(-1));
 
   return (
     <button

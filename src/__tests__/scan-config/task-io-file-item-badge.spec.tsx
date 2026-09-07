@@ -18,7 +18,7 @@ function makeFile(asset: Partial<IAsset>, assetPath?: string): TActivityCustomFi
 }
 
 describe('TaskIOFileItem badge', () => {
-  it('labels the SONATA circuit directory rather than calling it a folder', () => {
+  it('names the SONATA circuit entry after the directory, not its config file', () => {
     render(
       <TaskIOFileItem
         file={makeFile(
@@ -29,9 +29,9 @@ describe('TaskIOFileItem badge', () => {
       />
     );
 
-    expect(screen.getByText('circuit directory')).toBeInTheDocument();
-    // the name stays rendered in full next to the longer badge
-    expect(screen.getByText('circuit_config.json')).toBeInTheDocument();
+    expect(screen.getByText('Circuit directory')).toBeInTheDocument();
+    expect(screen.getByText('folder')).toBeInTheDocument();
+    expect(screen.queryByText('circuit_config.json')).not.toBeInTheDocument();
   });
 
   it('keeps the generic folder badge for any other directory asset', () => {
