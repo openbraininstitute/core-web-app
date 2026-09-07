@@ -9,9 +9,9 @@ import {
 } from '@remixicon/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { listAllProjects } from '@/api/virtual-lab-svc/queries/project';
 import { authFetch } from '@/auth-fetch';
 import { useConfig } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
@@ -50,6 +50,31 @@ export function Item({
   toggleLabExpansion,
 }: Props) {
   const {
+    isLoading: membershipLoading,
+    isVirtualLabAdmin,
+    isVirtualLabOwner,
+    course: fullCourse,
+  } = useWorkspaceMembership({ virtualLabId: lab.id });
+  const canCreateProject = isVirtualLabAdmin || isVirtualLabOwner;
+
+  const isCourseAdmin = !!lab.course && isVirtualLabAdmin;
+  // the virtual-lab list only returns a trimmed course, so template_project_id
+  // comes from the full lab fetched by useWorkspaceMembership
+  const templateProjectId =
+    fullCourse?.template_project_id ?? lab.course?.template_project_id ?? null;
+  // on a course the final order needs the template id (only on the full course);
+  // until membership has resolved we keep showing the skeleton rather than a
+  // list that reshuffles once the template id arrives
+  const orderingInputsReady = !lab.course || !membershipLoading;
+  const projectListFilter = useMemo(
+    () =>
+      isCourseAdmin
+        ? ({ order_by: 'name', order_direction: 'asc' } as const)
+        : ({ order_by: 'updated_at', order_direction: 'desc' } as const),
+    [isCourseAdmin]
+  );
+
+  const {
     isLoading: projectsLoading,
     data: projects,
     isFetched,
@@ -57,20 +82,14 @@ export function Item({
   } = useQuery({
     queryKey: keyBuilder.listWorkspaceProjects({
       virtualLabId: lab.id,
-      filter: { order_by: 'updated_at', order_direction: 'desc' },
+      filter: projectListFilter,
     }),
-    queryFn: async () =>
-      await listProjects({
-        virtualLabId: lab.id,
-        // TODO: do not fetch by fixed page_size
-        // make it loop through pages until it gets all projects
-        pagination: { page: 1, page_size: 40 },
-        filter: { order_by: 'updated_at', order_direction: 'desc' },
-      }),
+    // fetch every page instead of a fixed page_size so no project is hidden
+    queryFn: async () => ({
+      data: await listAllProjects({ virtualLabId: lab.id, filter: projectListFilter }),
+    }),
     enabled: !!lab.id && (isOpen || tryingToExpand.has(lab.id)),
   });
-  const { isVirtualLabAdmin, isVirtualLabOwner } = useWorkspaceMembership({ virtualLabId: lab.id });
-  const canCreateProject = isVirtualLabAdmin || isVirtualLabOwner;
 
   useEffect(() => {
     if (tryingToExpand.has(lab.id) && isSuccess && isFetched) {
@@ -160,7 +179,7 @@ export function Item({
           queryClient.invalidateQueries({
             queryKey: keyBuilder.listWorkspaceProjects({
               virtualLabId: lab.id,
-              filter: { order_by: 'updated_at', order_direction: 'desc' },
+              filter: projectListFilter,
             }),
           });
           onSuccess();
@@ -170,14 +189,28 @@ export function Item({
           setActivationError(err instanceof Error ? err : new Error('An error occurred'));
         });
     },
-    [config.VIRTUAL_LAB_API_URL, lab.course?.id, lab.id, queryClient]
+    [config.VIRTUAL_LAB_API_URL, lab.course?.id, lab.id, projectListFilter, queryClient]
   );
 
-  const projectRows = projects?.data ?? [];
+  // On a course, admins get a class roster: template project first, then every
+  // student project by name.
+  const projectRows = useMemo(() => {
+    const rows = [...(projects?.data ?? [])];
+    if (isCourseAdmin) {
+      return rows.sort((a, b) => {
+        if (a.id === templateProjectId) return -1;
+        if (b.id === templateProjectId) return 1;
+        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+      });
+    }
+    return rows.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  }, [projects?.data, isCourseAdmin, templateProjectId]);
   const hasProjects = projectRows.length > 0;
   const isExpanded = expandedLabs.has(lab.id);
-  const showProjectsSkeleton = isExpanded && !hasProjects && (projectsLoading || !isFetched);
-  const showProjectsEmpty = isExpanded && !projectsLoading && isFetched && !hasProjects;
+  const showProjectsSkeleton =
+    isExpanded && (!orderingInputsReady || (!hasProjects && (projectsLoading || !isFetched)));
+  const showProjectsEmpty =
+    isExpanded && orderingInputsReady && !projectsLoading && isFetched && !hasProjects;
 
   // Which lab/project (if any) currently has a manager modal open.
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
@@ -315,6 +348,7 @@ export function Item({
                 />
               ))}
             {hasProjects &&
+              !showProjectsSkeleton &&
               projectRows.map((project, projectIndex) => {
                 const isProjectActive = project.id === activeProjectId;
                 const isProjectSelected = project.id === selectedProjectId;
