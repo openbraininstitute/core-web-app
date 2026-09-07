@@ -177,11 +177,11 @@ export function usePopulationsPlacement({
           forget(population);
         } else if (state.status === 'ready' && !reading) {
           reading = true;
-          const drawsMorphologies = isBiophysical(population);
+          const biophysical = isBiophysical(population);
           nodesWorkerRegistry
             .getGeometry(key, {
-              withMorphologies: withMorphologies && drawsMorphologies,
-              withOrientations: withOrientations && drawsMorphologies,
+              withMorphologies: withMorphologies && biophysical,
+              withOrientations: withOrientations && biophysical,
             })
             .then(
               (geometry) => settle(population, geometry),

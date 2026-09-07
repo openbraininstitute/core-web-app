@@ -15,8 +15,6 @@ import type {
   NodePopulation,
 } from '@/features/circuit-nodes/types';
 
-type TGeometryOptions = NodeGeometryOptions | undefined;
-
 /**
  * A registry the test drives by hand: a session opens as `loading` on the
  * first acquire and only moves on when the test settles it. A session settled
@@ -51,7 +49,7 @@ const registry = vi.hoisted(() => {
     released: [] as string[],
     geometryAsked: [] as string[],
     /** What each session's read was asked for, by key. */
-    geometryOptions: new Map<string, TGeometryOptions>(),
+    geometryOptions: new Map<string, NodeGeometryOptions | undefined>(),
     acquire(key: string) {
       this.acquired.push(key);
       session(key);
@@ -68,7 +66,7 @@ const registry = vi.hoisted(() => {
     getState(key: string): NodesSessionState {
       return sessions.get(key)?.state ?? IDLE;
     },
-    getGeometry(key: string, options: TGeometryOptions): Promise<NodeGeometry> {
+    getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {
       this.geometryAsked.push(key);
       this.geometryOptions.set(key, options);
       const geometry = sessions.get(key)?.geometry;
@@ -135,10 +133,10 @@ const CORTEX: NodePopulation = { name: 'cortex', type: 'biophysical', file: 'cor
 const THALAMUS: NodePopulation = { name: 'thalamus', type: 'biophysical', file: 'thalamus.h5' };
 const INPUTS: NodePopulation = { name: 'inputs', type: 'virtual', file: 'inputs.h5' };
 
-function render(populations: NodePopulation[], columns?: NodeGeometryOptions) {
+function render(populations: NodePopulation[], options?: NodeGeometryOptions) {
   return renderHook(
     ({ populations: list }: { populations: NodePopulation[] }) =>
-      usePopulationsPlacement({ circuit, populations: list, ...columns }),
+      usePopulationsPlacement({ circuit, populations: list, ...options }),
     { initialProps: { populations } }
   );
 }
@@ -146,13 +144,8 @@ function render(populations: NodePopulation[], columns?: NodeGeometryOptions) {
 describe('usePopulationsPlacement', () => {
   beforeEach(() => registry.reset());
 
-  /**
-   * The regression this pins: a virtual population is drawn as somas whatever
-   * the viewer, so its morphology names cross the worker boundary — as strings,
-   * which structured-clone rather than transfer — only to be thrown away. At
-   * the few hundred thousand nodes an input projection routinely carries, that
-   * is a read and a copy of tens of megabytes for nothing.
-   */
+  // Columns a virtual population cannot draw with are read and copied for
+  // nothing; see the hook's own note on what that costs.
   it('reads the morphology and orientation columns for biophysical populations only', async () => {
     const { result } = render([CORTEX, INPUTS], {
       withMorphologies: true,

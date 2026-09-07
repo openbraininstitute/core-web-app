@@ -8,7 +8,6 @@ import {
 } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
-import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import {
   projectionCellLoader,
   SequentialLoaderClearedError,
@@ -41,12 +40,7 @@ import type { TSmallCircuitSource } from './types';
  */
 export const PLACEHOLDER_SOMA_RADIUS = 8;
 
-/**
- * Every cell drawn, and the subset of them the population on show contributes.
- * Kept together because the second is a slice of the first: the two would have
- * to be rebuilt together in any case, and separating them cost a scan of every
- * cell's id to recover what building them knew.
- */
+/** Every cell drawn, and the slice of them the population on show contributes. */
 type TScene = {
   cells: MorphoViewerSmallCircuitCell[];
   /** @see TSmallCircuitSource.locationCells */
@@ -138,17 +132,12 @@ export function useSmallCircuitSource({
   );
 
   // Resolved once per population rather than per cell: every node of a
-  // population draws from the same directory or container. Null is the whole of
-  // 'draws no morphologies', so the virtual gate belongs here too, where it is
-  // asked once per population and every reader already handles the answer.
+  // population draws from the same directory or container.
   const locations = useMemo(() => {
     const byPopulation = new Map<string, MorphologyLocation | null>();
     if (!config) return byPopulation;
     for (const { population: candidate } of placed) {
-      byPopulation.set(
-        candidate.name,
-        isBiophysical(candidate) ? resolveMorphologyLocation(config.raw, candidate.name) : null
-      );
+      byPopulation.set(candidate.name, resolveMorphologyLocation(config.raw, candidate.name));
     }
     return byPopulation;
   }, [config, placed]);
@@ -214,8 +203,8 @@ export function useSmallCircuitSource({
     // is selected. Colour is all the selection changes.
     //
     // One pre-sized array rather than one per population and a `flatMap`, which
-    // copies the lot again: at a few hundred thousand nodes that copy is a
-    // frame of its own, on every colour change and every axon toggle.
+    // copies the lot again. The copy is a couple of milliseconds at a few
+    // hundred thousand nodes, and pre-sizing costs nothing to avoid it.
     const cells = new Array<MorphoViewerSmallCircuitCell>(total);
     // Drawn for every population, marked for one: a morphology location is a
     // section id without a cell of its own, so it is read against the population
@@ -233,9 +222,10 @@ export function useSmallCircuitSource({
       // not be placed: an input population carries no positions, and there is
       // then nothing on screen to recede behind.
       const flat = onShow || !subject ? paint : recededColor;
-      // Once per population: a population either draws morphologies or is somas
-      // throughout, and asking per cell built and threw away a request object
-      // for every node of an input projection.
+      // The first thing `morphologyRequest` checks, hoisted: it is the same for
+      // every node of a population, and asking per cell built and threw away a
+      // request object for every node of an input projection. So the two terms
+      // of `somaOnly` below are one condition short-circuited, not two.
       const drawsMorphologies = locations.get(candidate.name) != null;
       const start = n;
       for (let i = 0; i < geometry.count; i++) {

@@ -40,7 +40,20 @@ const fixtures = vi.hoisted(() => ({
     ],
     edges: [],
     circuitAssetId: 'asset',
-    raw: { components: { morphologies_dir: 'morphologies' } },
+    // A circuit-wide morphology directory and no per-population override, which
+    // every population inherits — so `type` is the only thing that keeps the
+    // input projection off the detailed path.
+    raw: {
+      components: { morphologies_dir: 'morphologies' },
+      networks: {
+        nodes: [
+          {
+            nodes_file: 'nodes.h5',
+            populations: { default: { type: 'biophysical' }, inputs: { type: 'virtual' } },
+          },
+        ],
+      },
+    },
   } as unknown,
   configError: null as Error | null,
   placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
@@ -208,13 +221,8 @@ describe('useSmallCircuitSource', () => {
     await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
   });
 
-  /**
-   * The regression this pins: an input projection is routinely hundreds of
-   * thousands of nodes, and some of them name a morphology apiece. Drawn as
-   * neurites that is one OBI-One request and one tessellation per node, inside
-   * a circuit the scale gate called small because its biophysical population
-   * is two cells.
-   */
+  // The case the neighbour above does not cover: the virtual population names
+  // morphologies, so only its `type` keeps it off the detailed path.
   it('stands a virtual population as somas even where it names morphologies', async () => {
     fixtures.placement = {
       placed: [

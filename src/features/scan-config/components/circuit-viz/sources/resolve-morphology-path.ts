@@ -1,3 +1,4 @@
+import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import { resolveCircuitAssetPath } from '@/utils/circuit-manifest';
 
 import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
@@ -43,14 +44,18 @@ export type MorphologyLocation = {
  *    components. "First" is the order the key appears in `circuit_config.json`,
  *    which `JSON.parse` preserves.
  *
- * Returns null when the population declares no morphologies at all — a virtual
- * or point-neuron population, which has nothing to draw.
+ * Returns null when the population has nothing to draw: a `virtual` one, or
+ * one that declares no morphologies. A virtual population is asked about
+ * explicitly rather than left to fall out of the lookup, because an absent
+ * declaration inherits `components.morphologies_dir` and a circuit with a
+ * global one would otherwise resolve morphologies for its input projections.
  */
 export function resolveMorphologyLocation(
   config: ICircuitSonataConfiguration,
   populationName: string
 ): MorphologyLocation | null {
   const population = findPopulation(config, populationName);
+  if (population && !isBiophysical(population)) return null;
   const components = config.components;
 
   const directory = population?.morphologies_dir || components?.morphologies_dir;
