@@ -478,6 +478,7 @@ export function EntityDataGrid({
             loading ? (
               <span
                 role="status"
+                data-testid="data-grid-result-count-loading"
                 aria-label="Loading results count"
                 className="flex items-center gap-1.5"
               >
@@ -485,7 +486,10 @@ export function EntityDataGrid({
                 <span className="inline-block h-4 w-14 animate-pulse rounded-full bg-gray-200" />
               </span>
             ) : (
-              <span className="text-xs text-gray-600">{`${total.toLocaleString()} results`}</span>
+              <span
+                data-testid="data-grid-result-count"
+                className="text-xs text-gray-600"
+              >{`${total.toLocaleString()} results`}</span>
             )
           }
           renderError={(error) => renderListingError(error, entity?.title)}
@@ -559,11 +563,13 @@ function renderListingError(error: unknown, entityTitle?: string): ReactNode {
   }
 
   return (
-    <GenericError
-      shouldContactSupport={shouldContactSupport}
-      content={content}
-      icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
-      cls={{ content: 'max-w-3xl' }}
-    />
+    <div data-testid="data-grid-error">
+      <GenericError
+        shouldContactSupport={shouldContactSupport}
+        content={content}
+        icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
+        cls={{ content: 'max-w-3xl' }}
+      />
+    </div>
   );
 }

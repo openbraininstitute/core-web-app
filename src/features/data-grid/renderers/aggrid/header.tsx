@@ -102,6 +102,7 @@ export function AgHeader(props: CustomHeaderProps) {
           <PopoverTrigger asChild>
             <button
               type="button"
+              data-testid={`column-filter-trigger-${props.displayName}`}
               aria-label={`Filter ${props.displayName}`}
               className={cn(
                 'flex size-7 shrink-0 items-center justify-center rounded-full transition-colors',

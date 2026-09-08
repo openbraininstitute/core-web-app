@@ -388,6 +388,7 @@ function ScanConfigTemplateContent({
         </div>
         <div
           id="scan-config-results"
+          data-testid="scan-config-results"
           className={cn(
             'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
             { hidden: isConfigurationTab },

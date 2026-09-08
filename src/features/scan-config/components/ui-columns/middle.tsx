@@ -72,6 +72,7 @@ export default function Middle({
     <div
       className={cn(styles.animateFadeUp, 'w-full min-w-0 max-w-full')}
       id="scan-config-middle-content"
+      data-testid="scan-config-middle-content"
     >
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
