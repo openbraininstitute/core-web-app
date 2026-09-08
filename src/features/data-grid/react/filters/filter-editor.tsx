@@ -3,8 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { getEtype } from '@/api/entitycore/queries/annotations/etype';
-import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
+import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
+import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import {
   DEFAULT_FILTER_COMMIT_MODE,
   FilterCommitMode,
@@ -44,6 +44,7 @@ import {
 } from '@/ui/molecules/select';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 import { hasSubSupMarkup, stripHtmlTags } from '@/utils/safe-html-markup';
 
 import type { ReactNode } from 'react';
@@ -680,13 +681,18 @@ function SetEditor({
   );
 }
 
-/** An m-type/e-type definition, clamped to two lines behind a See more/See less toggle. */
-export function CheckListDescription({ id, type }: { id: string; type: 'mtype' | 'etype' }) {
+/** All definitions of one type, read once. Fetching per option was one request per option. */
+function useAnnotationDefinitions(type: 'mtype' | 'etype') {
   const { data } = useQuery({
-    queryKey: keyBuilder.annotation({ entityId: id }),
+    queryKey: keyBuilder.annotationDefinitions({ type }),
     queryFn: async () => {
-      if (type === 'mtype') return await getMtype({ id });
-      return await getEtype({ id });
+      const entries = await fetchAllPaginatedData({
+        fn: (page, pageSize) => {
+          const filters = { page, page_size: pageSize };
+          return type === 'mtype' ? getMtypes({ filters }) : getEtypes({ filters });
+        },
+      });
+      return new Map(entries.map((entry) => [entry.id, entry.definition]));
     },
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -695,7 +701,12 @@ export function CheckListDescription({ id, type }: { id: string; type: 'mtype' |
     gcTime: Infinity,
   });
 
-  const definition = data?.definition ?? '';
+  return data;
+}
+
+/** An m-type/e-type definition, clamped to two lines behind a See more/See less toggle. */
+export function CheckListDescription({ id, type }: { id: string; type: 'mtype' | 'etype' }) {
+  const definition = useAnnotationDefinitions(type)?.get(id) ?? '';
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const textRef = useRef<HTMLSpanElement>(null);
