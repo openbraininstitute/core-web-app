@@ -14,6 +14,7 @@ import {
 } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { config } from '@/config';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
@@ -44,7 +45,16 @@ export default async function Layout({ children, params: promisedParams }: Props
     redirect(`${config.ROOT_ROUTE}/sync`, RedirectType.replace);
   }
 
-  if (data.is_waitlisted) {
+  const userGroups = await tryCatch(
+    queryClient.fetchQuery({
+      queryKey: keyBuilder.membership(),
+      queryFn: getUserGroups,
+    })
+  );
+
+  const { isVirtualLabAdmin } = makeRoles(userGroups.data ?? undefined, virtualLabId, projectId);
+
+  if (data.is_waitlisted && !isVirtualLabAdmin) {
     const lab = await getVirtualLab({ id: virtualLabId });
     const startDate = lab?.course?.start_date ? new Date(lab.course.start_date) : null;
     const courseId = lab?.course?.id;
@@ -93,11 +103,6 @@ export default async function Layout({ children, params: promisedParams }: Props
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
     queryFn: () => getWorkspaceHierarchySpeciesPreference(),
     staleTime: Infinity,
-  });
-
-  queryClient.prefetchQuery({
-    queryKey: keyBuilder.membership(),
-    queryFn: getUserGroups,
   });
 
   return (
