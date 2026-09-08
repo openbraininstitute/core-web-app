@@ -29,7 +29,7 @@ import type { PlacedPopulation } from '@/features/circuit-nodes/hooks/use-popula
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { TMorphologyRequest } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
-import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
+import type { MorphoViewerCameraFocus, MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
 import type { MorphologyLocation } from './resolve-morphology-path';
 import type { TSmallCircuitSource } from './types';
 
@@ -45,6 +45,8 @@ type TScene = {
   cells: MorphoViewerSmallCircuitCell[];
   /** @see TSmallCircuitSource.locationCells */
   locationCells: MorphoViewerSmallCircuitCell[];
+  /** @see TSmallCircuitSource.cameraFocus */
+  cameraFocus: MorphoViewerCameraFocus | null;
 };
 
 type TOptions = {
@@ -209,6 +211,7 @@ export function useSmallCircuitSource({
     // Sliced here because the loop already knows which population each cell
     // belongs to, where a later pass would have to parse it back out of the ids.
     let locationCells = NO_CELLS;
+    let cameraFocus: MorphoViewerCameraFocus | null = null;
     let n = 0;
 
     for (const entry of drawn) {
@@ -241,9 +244,14 @@ export function useSmallCircuitSource({
           somaOnly: !drawsMorphologies || morphologyRequest(entry, i, showAxons) === null,
         };
       }
-      if (onShow) locationCells = cells.slice(start, n);
+      if (onShow) {
+        locationCells = cells.slice(start, n);
+        // A population with no nodes is framed by nothing, and a range of none
+        // is what the viewer rejects rather than reads.
+        if (n > start) cameraFocus = { from: start, count: n - start };
+      }
     }
-    return { cells, locationCells };
+    return { cells, locationCells, cameraFocus };
   }, [
     population,
     placed,
@@ -283,7 +291,7 @@ export function useSmallCircuitSource({
   const [shown, setShown] = useState<TScene>(NO_SCENE);
   const scene = built ?? (error ? NO_SCENE : shown);
   if (scene !== shown) setShown(scene);
-  const { cells, locationCells } = scene;
+  const { cells, locationCells, cameraFocus } = scene;
 
   const loadCell = useCallback(
     async (cellId: string) => {
@@ -384,10 +392,11 @@ export function useSmallCircuitSource({
     synapses,
     sonataSectionIds,
     anchor,
+    cameraFocus,
   };
 }
 
 const EMPTY_SECTION_IDS = new Map<string, Map<number, string>>();
 const NO_CELLS: MorphoViewerSmallCircuitCell[] = [];
-const NO_SCENE: TScene = { cells: NO_CELLS, locationCells: NO_CELLS };
+const NO_SCENE: TScene = { cells: NO_CELLS, locationCells: NO_CELLS, cameraFocus: null };
 const EMPTY_NODE_COLORS: NodeColors = { palette: [], columnByNode: new Uint16Array(0) };

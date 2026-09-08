@@ -454,4 +454,45 @@ describe('useSmallCircuitSource', () => {
       'circuit-id/inputs #0?axons=false',
     ]);
   });
+
+  describe('camera focus', () => {
+    beforeEach(() => {
+      fixtures.placement = {
+        placed: [
+          { population: INPUTS, geometry: placement([10, 0, 0, 11, 0, 0]) },
+          { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
+        ],
+        failures: new Map(),
+        settled: true,
+        download: null,
+      };
+    });
+
+    it('names where the population on show sits among the cells', () => {
+      const { result } = render(false, [INPUTS, DEFAULT], DEFAULT);
+
+      // Declared order, so the two input somas come first.
+      expect(result.current.cameraFocus).toEqual({ from: 2, count: 1 });
+      const { from, count } = result.current.cameraFocus ?? { from: 0, count: 0 };
+      expect(from + count).toBeLessThanOrEqual(result.current.cells.length);
+    });
+
+    // A hidden population contributes no cells at all, so there is no range
+    // into `cells` that would name it, and nothing on screen to frame.
+    it('names nothing when the population on show is hidden', () => {
+      const { result } = render(false, [INPUTS, DEFAULT], DEFAULT, ['default']);
+
+      expect(result.current.cameraFocus).toBeNull();
+    });
+
+    it('moves the range with the selection, and keeps it inside the cells', () => {
+      const { result, rerender } = render(false, [INPUTS, DEFAULT], DEFAULT);
+      expect(result.current.cameraFocus).toEqual({ from: 2, count: 1 });
+
+      rerender({ population: INPUTS, populations: [INPUTS, DEFAULT], showAxons: false });
+
+      expect(result.current.cameraFocus).toEqual({ from: 0, count: 2 });
+      expect(result.current.cells).toHaveLength(3);
+    });
+  });
 });

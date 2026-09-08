@@ -279,6 +279,7 @@ export function CircuitScene({
     colorBy,
     onHiddenPopulationsChange,
     menu,
+    onResetView,
   } = useCircuitColorBy(circuit, {
     supportsAxons,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
@@ -557,6 +558,7 @@ export function CircuitScene({
         onToggleFullscreen={onToggleFullscreen}
         viz={{
           menu,
+          onResetView,
           colorBy: enableColorBy ? colorBy : undefined,
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,

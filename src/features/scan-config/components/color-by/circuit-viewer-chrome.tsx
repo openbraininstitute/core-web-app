@@ -1,4 +1,4 @@
-import { RiAlertLine, RiArrowDownSLine, RiTableLine } from '@remixicon/react';
+import { RiAlertLine, RiArrowDownSLine, RiFocus3Line, RiTableLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
@@ -18,6 +18,12 @@ import type { ColorByControls, PopulationsControls } from './use-circuit-color-b
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 import styles from './chrome-animations.module.css';
+
+/** `left-3 top-3` and `gap-2` as numbers, for what is placed from the column's height. */
+const LEFT_TOP = 12;
+const GAP = 8;
+/** Its two rows of round buttons, until the observer has measured the real thing. */
+const LEFT_HEIGHT = 32 + GAP + 32;
 
 export interface ICircuitViewerChromeProps {
   /** The view-mode pill. Omit when the host has only one view to offer. */
@@ -39,6 +45,8 @@ export interface ICircuitViewerChromeProps {
    */
   viz?: {
     menu: ViewerControlsMenuProps;
+    /** Frame the population on show again. Its own button, below the controls row. */
+    onResetView: () => void;
     /** Omit to hide the color-by dropdown + legend. */
     colorBy?: ColorByControls;
     /** Omit to hide the populations checklist. */
@@ -99,6 +107,11 @@ export function CircuitViewerChrome({
   const [legendOpen, setLegendOpen] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarWidth, setToolbarWidth] = useState<number>();
+  const leftRef = useRef<HTMLDivElement>(null);
+  // Where the left column ends, so what sits under it can start there. It is
+  // two rows deep now and grows with the pill's own width, so a fixed offset
+  // would be wrong on the first narrow screen.
+  const [leftBottom, setLeftBottom] = useState(LEFT_TOP + LEFT_HEIGHT);
 
   useEffect(() => {
     setLegendOpen(!!selectedProperty);
@@ -119,6 +132,18 @@ export function CircuitViewerChrome({
     return () => observer.disconnect();
   }, [syncToolbarWidth]);
 
+  useLayoutEffect(() => {
+    const el = leftRef.current;
+    if (!el) return;
+
+    const sync = () => setLeftBottom(LEFT_TOP + el.getBoundingClientRect().height);
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const belowLeft = leftBottom + GAP;
+
   const panelStyle = theme
     ? {
         background: theme.panelBackground,
@@ -130,76 +155,109 @@ export function CircuitViewerChrome({
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       {viz?.zoom && (
+        // Centred in what the left column leaves rather than in the canvas: the
+        // ruler is 200px tall and shares this edge, so on a short viewer the
+        // two were in the same place.
         <div
-          className={cn(
-            'pointer-events-auto absolute left-1 top-1/2 -translate-y-1/2',
-            // Frosted so a morphology drawn behind the ruler cannot swallow its ticks.
-            // No ring or shadow, unlike the chrome's other panels: this one sits over the
-            // canvas rather than beside it, and an edge would draw the eye to the panel.
-            'rounded-xl px-1 py-1.5 backdrop-blur-md',
-            !theme && 'bg-white/70',
-            !showVizChrome && 'invisible pointer-events-none'
-          )}
-          style={theme ? { background: theme.panelBackground, color: theme.foreground } : undefined}
-          aria-hidden={!showVizChrome}
-          inert={!showVizChrome || undefined}
+          className="pointer-events-none absolute bottom-0 left-1 flex items-center"
+          style={{ top: belowLeft }}
         >
-          <ZoomSlider zoom={viz.zoom.value} onZoomChange={viz.zoom.onChange} theme={theme} />
+          <div
+            className={cn(
+              'pointer-events-auto',
+              // Frosted so a morphology drawn behind the ruler cannot swallow its ticks.
+              // No ring or shadow, unlike the chrome's other panels: this one sits over the
+              // canvas rather than beside it, and an edge would draw the eye to the panel.
+              'rounded-xl px-1 py-1.5 backdrop-blur-md',
+              !theme && 'bg-white/70',
+              !showVizChrome && 'invisible pointer-events-none'
+            )}
+            style={
+              theme ? { background: theme.panelBackground, color: theme.foreground } : undefined
+            }
+            aria-hidden={!showVizChrome}
+            inert={!showVizChrome || undefined}
+          >
+            <ZoomSlider zoom={viz.zoom.value} onZoomChange={viz.zoom.onChange} theme={theme} />
+          </div>
         </div>
       )}
       {/* What the scene is made of: which populations are in it, the table
           listing the one on show, and how it is drawn. */}
       <div
+        ref={leftRef}
         data-testid="viewer-chrome-left"
-        className="pointer-events-auto absolute left-3 top-3 flex items-center gap-2"
+        className="pointer-events-auto absolute left-3 top-3 flex flex-col items-start gap-2"
       >
-        {modeToggle && <ModeToggle options={modeToggle} />}
-        {table && (
-          <ChromeButton
-            label={table.active ? 'Hide nodes table' : 'Show nodes table'}
-            onClick={table.onToggle}
-            active={table.active}
-          >
-            <RiTableLine className="size-4" />
-          </ChromeButton>
-        )}
-        {onToggleFullscreen && <FullscreenButton onToggle={onToggleFullscreen} />}
+        <div className="flex items-center gap-2">
+          {modeToggle && <ModeToggle options={modeToggle} />}
+          {table && (
+            <ChromeButton
+              label={table.active ? 'Hide nodes table' : 'Show nodes table'}
+              onClick={table.onToggle}
+              active={table.active}
+            >
+              <RiTableLine className="size-4" />
+            </ChromeButton>
+          )}
+          {onToggleFullscreen && <FullscreenButton onToggle={onToggleFullscreen} />}
+          {viz && (
+            <div
+              className={cn(
+                'flex items-center gap-2',
+                !showVizChrome && 'invisible pointer-events-none'
+              )}
+              aria-hidden={!showVizChrome}
+              inert={!showVizChrome || undefined}
+            >
+              <ViewerControlsMenu {...viz.menu} />
+              {/* Ahead of the help icons, which come and go with the mode: in a
+                  row anchored to the left edge, only what precedes an element can
+                  move it, and the pill's own width changes as populations are
+                  ticked off. */}
+              {populations && (
+                <PopulationsMenu
+                  populations={populations.populations}
+                  hidden={populations.hidden}
+                  onChange={populations.onChange}
+                  selected={populations.selected}
+                  onSelect={populations.onSelect}
+                  theme={theme}
+                  autoOpen={showVizChrome}
+                />
+              )}
+              {viz.menu.onToggleElectrodes &&
+                viz.menu.showElectrodes !== false &&
+                viz.electrodesInteractive !== false && <ElectrodeInteractionHelp />}
+              {viz.morphologyLocationsInteractive && <MorphologyLocationHelp />}
+            </div>
+          )}
+        </div>
+        {/* Under the row rather than in it: it acts on the scene, where the row
+            above decides what the scene is made of. */}
         {viz && (
           <div
-            className={cn(
-              'flex items-center gap-2',
-              !showVizChrome && 'invisible pointer-events-none'
-            )}
+            className={cn(!showVizChrome && 'invisible pointer-events-none')}
             aria-hidden={!showVizChrome}
             inert={!showVizChrome || undefined}
           >
-            <ViewerControlsMenu {...viz.menu} />
-            {/* Ahead of the help icons, which come and go with the mode: in a
-                row anchored to the left edge, only what precedes an element can
-                move it, and the pill's own width changes as populations are
-                ticked off. */}
-            {populations && (
-              <PopulationsMenu
-                populations={populations.populations}
-                hidden={populations.hidden}
-                onChange={populations.onChange}
-                selected={populations.selected}
-                onSelect={populations.onSelect}
-                theme={theme}
-                autoOpen={showVizChrome}
-              />
-            )}
-            {viz.menu.onToggleElectrodes &&
-              viz.menu.showElectrodes !== false &&
-              viz.electrodesInteractive !== false && <ElectrodeInteractionHelp />}
-            {viz.morphologyLocationsInteractive && <MorphologyLocationHelp />}
+            <ChromeButton
+              label="Re-centre view"
+              testId="viewer-reset-view"
+              onClick={viz.onResetView}
+            >
+              <RiFocus3Line className="size-4" />
+            </ChromeButton>
           </div>
         )}
       </div>
-      {/* Below the controls row: centred in that row it overlapped the
-          Populations pill on narrow screens. */}
+      {/* Below the controls, whose height is measured: centred among them it
+          overlapped the Populations pill on narrow screens. */}
       {showVizChrome && populations && hiddenSubject !== undefined && (
-        <div className="pointer-events-auto absolute left-1/2 top-14 -translate-x-1/2">
+        <div
+          className="pointer-events-auto absolute left-1/2 -translate-x-1/2"
+          style={{ top: belowLeft }}
+        >
           <ChromeNotice
             action="Show"
             onAction={() =>
