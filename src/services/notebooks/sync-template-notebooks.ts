@@ -29,8 +29,8 @@ async function findChildNotebook({
   notebookName: string;
   context: WorkspaceContext;
 }) {
-  const res = await getAnalysisNotebookTemplates({ filters: { search: notebookName }, context });
-  return res.data.find((nb) => nb.name === notebookName);
+  const res = await getAnalysisNotebookTemplates({ filters: { name: notebookName }, context });
+  return res.data[0] ?? null;
 }
 
 /**
