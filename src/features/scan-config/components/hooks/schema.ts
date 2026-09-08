@@ -544,12 +544,20 @@ export function useReferenceTypeDict(schema: ConfigSchema) {
  * builds a lookup from a reference type name to the block variant types it accepts
  *
  * every reference type declares which block variants it accepts via `allowed_block_types`, e.g.:
- *   { title: "VirtualNeuronSetReference",  allowed_block_types: ["VirtualPopulationNeuronSet", ..., "AllVirtualNeurons"] }
- *   { title: "BiophysicalNeuronSetReference", allowed_block_types: ["BiophysicalPopulationNeuronSet", ...] }
+ *   { properties: { type: { const: "VirtualNeuronSetReference" } }, allowed_block_types: ["VirtualPopulationNeuronSet", ..., "AllVirtualNeurons"] }
+ *   { properties: { type: { const: "BiophysicalNeuronSetReference" } }, allowed_block_types: ["BiophysicalPopulationNeuronSet", ...] }
  *
  * these definitions are scattered through the schema (inside reference fields' `anyOf`), so this
  * walks the schema once and merges them into a single map keyed by reference type:
  *   { "VirtualNeuronSetReference": Set(["VirtualPopulationNeuronSet", ...]), ... }
+ *
+ * the key is the definition's own `type` discriminator, which is the class name a field cites in
+ * `reference_types`. it is deliberately NOT `title`: a title is a display string, and keying on it
+ * makes an unrelated rename silently empty an entry. obi-one #878 retitled MorphologyLocationsReference
+ * to "Morphology Locations Reference" and every morphology-location option disappeared from the
+ * continuous-stimulus Target, which unions that reference with neuron-set ones - the neuron sets kept
+ * the filter switched on while the morphology lookup missed, so all five options were filtered away
+ * with nothing logged. `title` remains only as a fallback for a definition carrying no `type` const.
  *
  * this is the schema's source of truth for "which neuron-set variants does a reference accept",
  * which is what lets a combined (virtual) field show only virtual sets, etc.
@@ -575,12 +583,27 @@ function collectAllowedBlockTypesByReferenceType(
     }
     if (!isPlainObject(node)) return;
 
-    if (typeof node.title === 'string' && Array.isArray(node.allowed_block_types)) {
-      const set = registry[node.title] ?? new Set<string>();
-      for (const t of node.allowed_block_types) {
-        if (typeof t === 'string') set.add(t);
+    if (Array.isArray(node.allowed_block_types)) {
+      const definitionProperties = isPlainObject(node.properties) ? node.properties : undefined;
+      const typeNode =
+        definitionProperties && isPlainObject(definitionProperties.type)
+          ? definitionProperties.type
+          : undefined;
+      const typeConst = typeNode?.const;
+      const key =
+        typeof typeConst === 'string'
+          ? typeConst
+          : typeof node.title === 'string'
+            ? node.title
+            : null;
+
+      if (key) {
+        const set = registry[key] ?? new Set<string>();
+        for (const t of node.allowed_block_types) {
+          if (typeof t === 'string') set.add(t);
+        }
+        registry[key] = set;
       }
-      registry[node.title] = set;
     }
 
     for (const value of Object.values(node)) visit(value);
