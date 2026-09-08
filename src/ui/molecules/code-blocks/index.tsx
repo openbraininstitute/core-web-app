@@ -97,7 +97,10 @@ export async function highlightCode(
     });
 
   // shiki throws on an unknown language, and the block would be left blank
-  return render(EXTRA_LANGUAGES[language] ?? language).catch(() => render(PLAIN_TEXT));
+  // the routing side lowercases extensions, so match on the lowercased key
+  return render(EXTRA_LANGUAGES[language.toLowerCase()] ?? language).catch(() =>
+    render(PLAIN_TEXT)
+  );
 }
 
 export function CodeBlock({

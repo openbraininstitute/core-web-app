@@ -85,6 +85,8 @@ export const nmodl: LanguageRegistration = {
       begin: '\\bCOMMENT\\b',
       end: '\\bENDCOMMENT\\b',
     },
+    // embedded C: none of the NMODL rules apply inside
+    { begin: '\\bVERBATIM\\b', end: '\\bENDVERBATIM\\b' },
     { name: 'comment.line.colon.nmodl', match: '[:?].*$' },
     {
       name: 'string.quoted.double.nmodl',
@@ -101,8 +103,8 @@ export const nmodl: LanguageRegistration = {
     { name: 'keyword.other.nmodl', match: `\\b(${BLOCKS})\\b` },
     { name: 'support.function.nmodl', match: `\\b(${DECLARATIONS})\\b` },
     { name: 'keyword.control.nmodl', match: `\\b(${CONTROL})\\b` },
-    // a unit follows a space; a call's arguments do not
-    { name: 'support.type.unit.nmodl', match: '(?<=\\s)\\([^()\\n]*\\)' },
+    // a unit follows a space and holds no operators or spaces; calls and conditions do
+    { name: 'support.type.unit.nmodl', match: '(?<=\\s)\\([A-Za-z0-9_/*.\\-]*\\)' },
     {
       name: 'constant.numeric.nmodl',
       match: '\\b\\d+(\\.\\d*)?([eE][-+]?\\d+)?\\b|(?<![\\w.])\\.\\d+([eE][-+]?\\d+)?',
