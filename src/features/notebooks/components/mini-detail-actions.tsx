@@ -23,12 +23,12 @@ import {
   getContributions,
 } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
+import { studentProjectIds } from '@/features/notebooks/assignment-id-conflict';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -159,10 +159,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
         ]);
       };
 
-      if (isTemplate && isCourseTemplateProject) {
-        // Delete matching notebooks in all child projects first
-        const allProjectIds = await listAllProjectIds(virtualLabId);
-        const otherProjectIds = allProjectIds.filter((id) => id !== projectId);
+      if (isTemplate && isCourseTemplateProject && virtualLabData?.course) {
+        // Delete matching notebooks in all enrolled students' projects first
+        const otherProjectIds = await studentProjectIds({
+          courseId: virtualLabData.course.id,
+          templateProjectId: projectId,
+        });
 
         const results = await Promise.allSettled(
           otherProjectIds.map(async (pid) => {
