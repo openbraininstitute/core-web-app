@@ -26,6 +26,11 @@ export default function EntityPropertyDropdown({
     [schemaMappingConfig?.properties, property]
   );
 
+  const chosen = useMemo(
+    () => new Set((Array.isArray(value) ? value : [value]).filter(Boolean).map(String)),
+    [value]
+  );
+
   useEffect(() => {
     if (options.length > 0 && value.length === 0) {
       onChange([options[0]]);
@@ -34,7 +39,16 @@ export default function EntityPropertyDropdown({
 
   return (
     <Select
+      data-testid="scan-config-control"
       data-scan-config-block-element={`${ScanConfigUIElementDict.EntityPropertyDropdown}__${multiple ? 'multiple' : 'singular'}`}
+      optionRender={(option) => (
+        <span
+          data-testid={`scan-config-option-${String(option.value)}`}
+          data-selected={chosen.has(String(option.value))}
+        >
+          {option.label}
+        </span>
+      )}
       showSearch
       mode={multiple ? 'multiple' : undefined}
       disabled={disabled}
