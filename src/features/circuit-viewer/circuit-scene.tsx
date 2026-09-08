@@ -3,6 +3,7 @@ import chroma from 'chroma-js';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
@@ -305,7 +306,7 @@ export function CircuitScene({
       hasPopulationsChecklist
         ? (config.hiddenPopulations ??
           populations
-            .filter((p) => p.type === 'virtual' && p.name !== population?.name)
+            .filter((p) => p.type === NodePopulationType.Virtual && p.name !== population?.name)
             .map((p) => p.name))
         : NOTHING_HIDDEN,
     [hasPopulationsChecklist, config.hiddenPopulations, populations, population?.name]

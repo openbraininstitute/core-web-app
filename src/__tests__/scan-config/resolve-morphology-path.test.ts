@@ -8,7 +8,7 @@ import {
 import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
 
 type PopulationConfig = {
-  type?: 'biophysical' | 'virtual';
+  type?: string;
   morphologies_dir?: string;
   alternate_morphologies?: Record<string, string>;
 };

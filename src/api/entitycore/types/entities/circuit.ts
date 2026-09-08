@@ -143,12 +143,26 @@ export type SonataCircuitNetworkEdgeConfigItem = {
   >;
 };
 
+/**
+ * The node population types the app branches on.
+ *
+ * Not the full set, and the field it names is not a union of it: SONATA also
+ * has `point_neuron`, `astrocyte`, `single_compartment` and `vasculature`, and
+ * simulators add their own — FlyWire's whole brain is `brian2_point`, which is
+ * not in the spec at all.
+ */
+export const NodePopulationType = {
+  Biophysical: 'biophysical',
+  Virtual: 'virtual',
+} as const;
+
 export type SonataCircuitNetworkNodeConfigItem = {
   nodes_file: string;
   populations: Record<
     string,
     {
-      type: 'biophysical' | 'virtual';
+      /** Open-ended — see {@link NodePopulationType}. */
+      type: string;
       biophysical_neuron_models_dir?: string;
       morphologies_dir?: string;
       alternate_morphologies?: Record<string, string>;
