@@ -3,6 +3,7 @@
 import { RiBarChart2Line, RiBox3Line, RiLayoutRowLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
@@ -431,7 +432,7 @@ function replayablePopulation(
   name: string | undefined
 ): boolean {
   const listed = name === undefined ? undefined : nodes?.find((n) => n.name === name);
-  return listed !== undefined && listed.type !== 'virtual';
+  return listed !== undefined && listed.type !== NodePopulationType.Virtual;
 }
 
 /** Why what is on show cannot be replayed. */
