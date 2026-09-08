@@ -6,7 +6,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import { isBiophysical } from '@/features/circuit-nodes/population-utils';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
@@ -432,7 +431,7 @@ function replayablePopulation(
   name: string | undefined
 ): boolean {
   const listed = name === undefined ? undefined : nodes?.find((n) => n.name === name);
-  return listed !== undefined && isBiophysical(listed);
+  return listed !== undefined && listed.type !== 'virtual';
 }
 
 /** Why what is on show cannot be replayed. */

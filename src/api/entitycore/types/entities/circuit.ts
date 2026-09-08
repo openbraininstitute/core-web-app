@@ -148,7 +148,8 @@ export type SonataCircuitNetworkNodeConfigItem = {
   populations: Record<
     string,
     {
-      type: 'biophysical' | 'virtual';
+      /** Open-ended: `biophysical`, `virtual`, `point_neuron`, `astrocyte`, `brian2_point`. */
+      type: string;
       biophysical_neuron_models_dir?: string;
       morphologies_dir?: string;
       alternate_morphologies?: Record<string, string>;
