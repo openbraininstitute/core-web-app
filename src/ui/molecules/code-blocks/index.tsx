@@ -13,7 +13,10 @@ import {
 import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
 
 import { Button } from '@/ui/molecules/button';
+import { nmodl } from '@/ui/molecules/code-blocks/nmodl';
 import { cn } from '@/utils/css-class';
+
+import type { LanguageRegistration } from 'shiki';
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -28,9 +31,19 @@ type CodeBlockContextType = {
   language: BundledLanguage;
 };
 
+/** Shiki always accepts this one, so it is a safe last resort. */
+const PLAIN_TEXT = 'text' as BundledLanguage;
+
+/** Languages shiki does not ship, pointed at our own grammar or the closest one it has. */
+const EXTRA_LANGUAGES: Record<string, LanguageRegistration | BundledLanguage> = {
+  mod: nmodl,
+  nmodl,
+  hoc: 'c',
+};
+
 const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
-  language: 'text' as BundledLanguage,
+  language: PLAIN_TEXT,
 });
 
 type THastLikeElement = {
@@ -71,16 +84,20 @@ export async function highlightCode(
 ) {
   const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : [];
 
-  // Use dual themes with CSS variables for class-based switching
-  return codeToHtml(code, {
-    lang: language,
-    themes: {
-      light: 'catppuccin-latte',
-      dark: 'catppuccin-mocha',
-    },
-    defaultColor: false, // Use CSS variables instead of inline colors
-    transformers,
-  });
+  const render = (lang: BundledLanguage | LanguageRegistration) =>
+    // Use dual themes with CSS variables for class-based switching
+    codeToHtml(code, {
+      lang: lang as BundledLanguage,
+      themes: {
+        light: 'catppuccin-latte',
+        dark: 'catppuccin-mocha',
+      },
+      defaultColor: false, // Use CSS variables instead of inline colors
+      transformers,
+    });
+
+  // shiki throws on an unknown language, and the block would be left blank
+  return render(EXTRA_LANGUAGES[language] ?? language).catch(() => render(PLAIN_TEXT));
 }
 
 export function CodeBlock({

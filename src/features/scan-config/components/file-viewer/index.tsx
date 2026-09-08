@@ -34,8 +34,23 @@ const IMAGE_CONTENT_TYPES = new Set([
   AssetContentType.webp,
 ]);
 
+/** Text formats the code viewer can show. `text` is left out on purpose: it also marks a file of
+ * unknown format, which must stay on the placeholder instead of being printed as source. */
+const CODE_CONTENT_TYPES = new Set([
+  AssetContentType.json,
+  AssetContentType.mod,
+  AssetContentType.hoc,
+]);
+
 function isImageFile(file: TActivityCustomFile): boolean {
   return IMAGE_CONTENT_TYPES.has(file.asset.content_type);
+}
+
+function isCodeFile(file: TActivityCustomFile): boolean {
+  return (
+    CODE_CONTENT_TYPES.has(file.asset.content_type) ||
+    (!!file.enforcedRenderType && CODE_CONTENT_TYPES.has(file.enforcedRenderType))
+  );
 }
 
 /**
@@ -61,14 +76,9 @@ function renderFileContent(
         />
       )
     )
-    .with(
-      P.when(
-        (f) =>
-          f.asset.content_type === AssetContentType.json ||
-          f.enforcedRenderType === AssetContentType.json
-      ),
-      (f) => <JsonFileViewer file={f} context={context} />
-    )
+    .with(P.when(isCodeFile), (f) => (
+      <CodeFileViewer asset={f.asset} assetPath={f.assetPath} entity={f.entity} context={context} />
+    ))
     .with(P.when(isImageFile), (f) => <ImageFileViewer file={f} context={context} />)
     .with(
       P.when(
@@ -100,9 +110,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 
   const isFilePreloading = file && file !== displayFile;
 
-  const isJson =
-    displayFile?.asset.content_type === AssetContentType.json ||
-    file?.enforcedRenderType === AssetContentType.json;
+  const isCode = !!displayFile && isCodeFile(displayFile);
   const isImage = !!displayFile && isImageFile(displayFile);
   // the directory grid and the paged document lay out their own padding and scrolling, and the
   // file a directory opens should fill the pane
@@ -116,7 +124,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     displayFile?.asset.content_type === AssetContentType.h5 &&
     (displayFile.asset.label === AssetLabel.spike_report ||
       displayFile.asset.label === AssetLabel.replay_spikes);
-  const edgeToEdge = isJson || isImage || isDirectory || isPdf || isSpikeReport;
+  const edgeToEdge = isCode || isImage || isDirectory || isPdf || isSpikeReport;
 
   const viewerContent = renderFileContent(displayFile, context);
 
@@ -189,22 +197,6 @@ function DataPreloader({ file, context, onLoaded }: FilePreloaderProps) {
   }, [onLoaded]);
 
   return null;
-}
-
-type JsonFileViewerProps = {
-  file: TActivityCustomFile;
-  context: WorkspaceContext;
-};
-
-function JsonFileViewer({ file, context }: JsonFileViewerProps) {
-  return (
-    <CodeFileViewer
-      asset={file.asset}
-      assetPath={file.assetPath}
-      entity={file.entity}
-      context={context}
-    />
-  );
 }
 
 type NwbFileViewerProps = {
