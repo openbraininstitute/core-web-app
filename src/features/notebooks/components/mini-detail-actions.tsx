@@ -168,7 +168,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
           otherProjectIds.map(async (pid) => {
             const ctx = { virtualLabId, projectId: pid };
             const res = await getAnalysisNotebookTemplates({
-              filters: { search: notebookName },
+              filters: { name: notebookName },
               context: ctx,
             });
             const matches = res.data.filter((nb) => nb.name === notebookName);
