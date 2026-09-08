@@ -1,15 +1,15 @@
-import { useAtom } from 'jotai';
 import { Tooltip } from 'antd';
+import { useAtom } from 'jotai';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
+import { WorkspaceSection } from '@/constants';
+import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import {
   CircuitRepresentationView,
   circuitRepresentationViewAtom,
 } from '@/ui/segments/explore/circuit/helpers';
-import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
-import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceSection } from '@/constants';
 
 type Props = {
   dataKey: string;
@@ -48,6 +48,7 @@ export function CircuitViewToggle({ dataKey }: Props) {
           className="relative h-6 w-12 rounded-xl border border-solid border-gray-200"
           onClick={handleViewChange}
           aria-label="Toggle view"
+          data-testid="view-toggle"
           id="toggle-view"
         >
           <div

@@ -1,5 +1,7 @@
 'use client';
 
+import { kebabCase } from 'es-toolkit/compat';
+
 import { cn } from '@/utils/css-class';
 
 import type { ComponentPropsWithRef, ReactNode } from 'react';
@@ -97,6 +99,7 @@ export function ExpandingToolbarButton({
       type="button"
       aria-label={label}
       title={label}
+      data-testid={`toolbar-pill-${kebabCase(label)}`}
       {...rest}
       className={cn(EXPANDING_PILL_BASE_CLASS, EXPANDING_PILL_SURFACE_CLASS, className)}
     >

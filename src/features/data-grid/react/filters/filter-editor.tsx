@@ -648,6 +648,7 @@ function SetEditor({
                 title={stripHtmlTags(o.label)}
               >
                 <Checkbox
+                  data-testid="column-filter-option-checkbox"
                   checked={selectedSet.has(o.value)}
                   onCheckedChange={(checked) => toggle(o.value, checked === true)}
                   className="shrink-0 **:data-[slot=checkbox-indicator]:text-white!"
