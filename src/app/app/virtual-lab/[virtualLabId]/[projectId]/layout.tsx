@@ -73,24 +73,22 @@ export default async function Layout({ children, params: promisedParams }: Props
 
   queryClient.prefetchQuery({
     queryKey: keyBuilderHierarchy.hierarchies(),
-    queryFn: async () => {
-      const result = await getBrainRegionHierarchiesWithSpecies();
-      result.data
-        .map((o) => o.id)
-        .filter((id) => !config.EXCLUDED_HIERARCHY_IDS.includes(id))
-        .forEach((id) => {
-          queryClient.prefetchQuery({
-            queryKey: keyBuilderHierarchy.hierarchy({ id }),
-            queryFn: () => getBrainRegionHierarchy({ id }),
-            staleTime: Infinity,
-            gcTime: Infinity,
-          });
-        });
-      return result;
-    },
+    queryFn: getBrainRegionHierarchiesWithSpecies,
     staleTime: Infinity,
     gcTime: Infinity,
   });
+
+  // Default species tree only. Prefetching all of them cost one request each, on
+  // every server render. Another species is fetched when the user picks it.
+  const defaultHierarchyId = config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
+  if (!config.EXCLUDED_HIERARCHY_IDS.includes(defaultHierarchyId)) {
+    queryClient.prefetchQuery({
+      queryKey: keyBuilderHierarchy.hierarchy({ id: defaultHierarchyId }),
+      queryFn: () => getBrainRegionHierarchy({ id: defaultHierarchyId }),
+      staleTime: Infinity,
+      gcTime: Infinity,
+    });
+  }
 
   queryClient.prefetchQuery({
     queryKey: keyBuilderAtlas.all(),
