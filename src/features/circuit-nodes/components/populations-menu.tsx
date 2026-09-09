@@ -26,8 +26,6 @@ interface PopulationsMenuProps {
   onSelect?: (name: string) => void;
   /** background-derived theme (adaptive mode); null → fixed light styling. */
   theme?: ViewerTheme | null;
-  /** portal target for the popover (fullscreen element); null → document.body. */
-  container?: HTMLElement | null;
   /**
    * Whether the checklist may open itself, which it does once and never again
    * ({@link POPULATIONS_MENU_INTRODUCED_KEY}). The host says when, since the
@@ -58,7 +56,6 @@ export function PopulationsMenu({
   selected,
   onSelect,
   theme,
-  container,
   autoOpen = false,
   className,
 }: PopulationsMenuProps) {
@@ -103,12 +100,13 @@ export function PopulationsMenu({
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
     // The panel is portalled into whichever element is fullscreen, so entering
     // or leaving fullscreen moves the ground out from under it.
     const onFullscreenChange = () => setOpen(false);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
+  }, [open]);
 
   const hiddenSet = new Set(hidden);
   const shownCount = populations.filter((p) => !hiddenSet.has(p.name)).length;
@@ -168,7 +166,6 @@ export function PopulationsMenu({
       </PopoverTrigger>
       <PopoverContent
         ref={contentRef}
-        container={container}
         data-testid="populations-menu-content"
         onOpenAutoFocus={(event) => {
           // Radix focuses the first control, "Show all": a ring on a panel

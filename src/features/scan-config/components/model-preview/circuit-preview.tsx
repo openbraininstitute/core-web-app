@@ -11,6 +11,7 @@ import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circuit';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
+import { FullscreenPortalScope, fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -92,6 +93,9 @@ export function CircuitPreview({
   electrodes,
 }: TCircuitPreviewProps) {
   const [mode, setMode] = useState<ViewerMode>(ViewerModeDict.Visualization);
+  // State, not a ref: the chrome's button and the portal scope read it while
+  // rendering.
+  const [previewRoot, setPreviewRoot] = useState<HTMLDivElement | null>(null);
 
   const hasDesignerImage = circuit ? circuitHasDesignerImage(circuit) : false;
   // The dendrogram tab is only offered on MEModels.
@@ -143,31 +147,42 @@ export function CircuitPreview({
   }
 
   return (
-    <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      {mountImage && circuit && (
-        <div
-          className={classNames('absolute inset-0', !showImage && 'invisible pointer-events-none')}
-          aria-hidden={!showImage}
-          inert={!showImage || undefined}
-        >
-          <CircuitImage className={className} circuit={circuit} />
-        </div>
-      )}
-      {mountViz && (
-        <div className="absolute inset-0">
-          <CircuitScene
-            {...(circuit ? { circuit } : { memodel: memodel as TSceneMemodel })}
-            largeCircuit={largeCircuit}
-            active={showViz}
-            dendrogram={showDendrogram}
-            features={features}
-            defaultNeuronOpacity={defaultNeuronOpacity}
-            form={form}
-            electrodes={electrodes}
-            modeToggle={modeToggle}
-          />
-        </div>
-      )}
+    // The wrapper goes fullscreen, not the scene inside it, so the designer
+    // image beside the scene is still on screen there.
+    <div
+      ref={setPreviewRoot}
+      className="relative h-full min-h-0 overflow-hidden rounded-2xl [&:fullscreen]:rounded-none [&:fullscreen]:bg-white"
+    >
+      <FullscreenPortalScope root={previewRoot}>
+        {mountImage && circuit && (
+          <div
+            className={classNames(
+              'absolute inset-0',
+              !showImage && 'invisible pointer-events-none'
+            )}
+            aria-hidden={!showImage}
+            inert={!showImage || undefined}
+          >
+            <CircuitImage className={className} circuit={circuit} />
+          </div>
+        )}
+        {mountViz && (
+          <div className="absolute inset-0">
+            <CircuitScene
+              {...(circuit ? { circuit } : { memodel: memodel as TSceneMemodel })}
+              largeCircuit={largeCircuit}
+              active={showViz}
+              dendrogram={showDendrogram}
+              features={features}
+              defaultNeuronOpacity={defaultNeuronOpacity}
+              form={form}
+              electrodes={electrodes}
+              modeToggle={modeToggle}
+              fullscreen={{ target: previewRoot }}
+            />
+          </div>
+        )}
+      </FullscreenPortalScope>
     </div>
   );
 }
@@ -215,6 +230,7 @@ export function CircuitImage({ className, circuit }: { className?: string; circu
             <AntdImage
               src={data}
               alt="Circuit preview"
+              preview={{ getContainer: fullscreenPopupContainer }}
               className="block! w-full! h-full!"
               style={{ width: '100%', height: '100%', display: 'block' }}
             />
