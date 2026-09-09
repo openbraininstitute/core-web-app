@@ -9,7 +9,7 @@ ul.sanityContentItems > li {
   clear: both;
 }
 
-ul.sanityContentItems > li h3 {
+ul.sanityContentItems > li h2 {
   font-size: var(--font-size-L);
   font-family: var(--font-serif);
   margin-bottom: 0.2em;

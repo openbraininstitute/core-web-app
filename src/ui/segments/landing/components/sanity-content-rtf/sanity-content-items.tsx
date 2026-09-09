@@ -1,6 +1,4 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
-
 import { styleBlockSmall } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
 
@@ -19,7 +17,7 @@ export default function SanityContentItems({ value }: SanityContentItemsProps) {
     <ul className={classNames(styles.sanityContentItems, styleBlockSmall)}>
       {value.content.map((item, index) => (
         <li key={`${index}`}>
-          {item.title && <h3>{item.title}</h3>}
+          {item.title && <h2>{item.title}</h2>}
           <div className={styles.content}>
             {item.imageURL && item.imageWidth && item.imageHeight && (
               <ProgressiveImage
