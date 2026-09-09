@@ -214,10 +214,10 @@ const cases: TCase[] = [
     href: `${base}/build/configure/em-synapse-mapping-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
-    name: 'ion channel modeling campaign falls back to its detail view',
+    name: 'ion channel modeling campaign opens its scan-config editor',
     fixture: { entity: { type: EntityTypeDict.IonChannelModelingCampaign } },
     covers: { activity: build, targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign },
-    href: `${base}/view/ion-channel-modeling-campaign/${ENTITY_ID}/overview`,
+    href: `${base}/build/configure/ion-channel-modeling-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
     name: 'legacy single neuron simulation falls back to its detail view',

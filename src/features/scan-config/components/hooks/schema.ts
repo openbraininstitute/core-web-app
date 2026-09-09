@@ -226,6 +226,7 @@ const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
   [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'ElectricalCellRecordingFromID',
+  [ExtendedEntitiesTypeDict.IonChannelRecording]: 'IonChannelRecordingFromID',
 };
 
 function buildInitialConfigState(
@@ -312,6 +313,10 @@ function buildInitialConfigState(
             .with(
               { type: EntityTypeDict.ElectricalCellRecording },
               () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.ElectricalCellRecording]
+            )
+            .with(
+              { type: EntityTypeDict.IonChannelRecording },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.IonChannelRecording]
             )
             .otherwise(() => {
               throw new Error(`Unsupported entity type: ${model.type}`);
