@@ -33,7 +33,10 @@ function OptionContent({
   onExpandLatex?: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    // min-w-0: as a flex item of the trigger button this defaults to min-width:auto, which
+    // refuses to shrink below the rendered formula — so a wide one (the tau_m combination)
+    // spilled past the card instead of scrolling inside it.
+    <div className="flex min-w-0 flex-col gap-2">
       <span className="text-primary-8 text-lg font-bold">{content.title}</span>
       {content.description && <span className="text-sm text-gray-700">{content.description}</span>}
       {content.latexHtml && (
