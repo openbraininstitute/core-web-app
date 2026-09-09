@@ -466,10 +466,12 @@ export type ConfigSchema = {
   /** keyed by reference type. decides whether a reference field is shown at all. */
   default_block_reference_labels: Record<string, string>;
   /**
-   * keyed by reference tag. the block a field carrying that tag resolves to when unset,
-   * shown as that field's default option. absent on configs that do not tag their fields.
+   * keyed by reference tag: what a field carrying that tag resolves to when left unset.
+   * `name` is what the block is registered under once the config is filled, and is shown as
+   * that field's default option; `block` is the serialized block behind it, so the values can
+   * be read without asking the server for them. absent on configs that do not tag their fields.
    */
-  reference_tag_defaults?: Record<string, string>;
+  reference_tag_defaults?: Record<string, { name: string; block?: Record<string, unknown> }>;
   description: string;
   group_order: string[];
   properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {

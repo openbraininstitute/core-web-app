@@ -75,8 +75,11 @@ export function resolveDefaultReferenceLabel(
   referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
   schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
 ): string {
+  // the tagged answer carries the block alongside its name; only the name is shown here, but
+  // `schema.reference_tag_defaults[tag].block` is the distribution behind it, for a caller that
+  // wants to render its values or materialise it rather than accept it unseen.
   const taggedLabel = referenceSchema.reference_tag
-    ? schema.reference_tag_defaults?.[referenceSchema.reference_tag]
+    ? schema.reference_tag_defaults?.[referenceSchema.reference_tag]?.name
     : undefined;
 
   return (

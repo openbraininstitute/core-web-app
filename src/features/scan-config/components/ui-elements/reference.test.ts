@@ -7,9 +7,17 @@ const TYPE_LABELS = {
   TimestampsReference: 'Default: Simulation Start (0 ms)',
 };
 
+// obi-one carries the name and the block it names together, so the UI can label the field
+// and also read the values behind that label without a second request.
 const TAG_DEFAULTS = {
-  stimulus_target: 'Default: Simulation Target',
-  recording_target: 'Default: All Recorded Neurons',
+  stimulus_target: {
+    name: 'Default: Simulation Target',
+    block: { type: 'AllBiophysicalNeurons' },
+  },
+  recording_target: {
+    name: 'Default: All Recorded Neurons',
+    block: { type: 'AllNeurons' },
+  },
 };
 
 describe('resolveDefaultReferenceLabel', () => {
@@ -86,5 +94,23 @@ describe('resolveDefaultReferenceLabel', () => {
     );
 
     expect(label).toBe('Default');
+  });
+
+  it('reads the name out of the tagged answer, not the answer itself', () => {
+    // The answer is an object; a label resolver that returned it whole would render
+    // "[object Object]" in the dropdown.
+    const label = resolveDefaultReferenceLabel(
+      { reference_types: ['BiophysicalNeuronSetReference'], reference_tag: 'stimulus_target' },
+      { default_block_reference_labels: TYPE_LABELS, reference_tag_defaults: TAG_DEFAULTS }
+    );
+
+    expect(typeof label).toBe('string');
+    expect(label).toBe(TAG_DEFAULTS.stimulus_target.name);
+  });
+
+  it('leaves the block available beside the name', () => {
+    // Not read by this function, but this is the contract the UI relies on to render the
+    // default's values or materialise it.
+    expect(TAG_DEFAULTS.stimulus_target.block).toHaveProperty('type');
   });
 });
