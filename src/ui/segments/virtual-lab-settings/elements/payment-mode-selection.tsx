@@ -90,11 +90,16 @@ function PaymentModeOptionButton({
   footerClassName,
   glowClassName,
   glowHoverClassName,
-}: Omit<PaymentModeOptionConfig, 'mode' | 'ownerOnly'> & { onClick: () => void }) {
+  testId,
+}: Omit<PaymentModeOptionConfig, 'mode' | 'ownerOnly'> & {
+  onClick: () => void;
+  testId?: string;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
+      data-testid={testId}
       className={cn(
         'group relative w-full overflow-hidden rounded-2xl bg-linear-to-br',
         'p-8 text-left backdrop-blur-lg transition-all hover:shadow-bnb',
@@ -132,7 +137,9 @@ export function PaymentModeSelection({
     root?: string;
   };
 }) {
-  const { isVirtualLabOwner: isOwner } = useWorkspaceMembership({ virtualLabId });
+  const { isVirtualLabOwner: isOwner } = useWorkspaceMembership({
+    virtualLabId,
+  });
   const visibleOptions = PaymentModeOptions.filter((option) => !option.ownerOnly || isOwner);
 
   return (
@@ -148,7 +155,12 @@ export function PaymentModeSelection({
       )}
     >
       {visibleOptions.map(({ mode, ownerOnly: _ownerOnly, ...option }) => (
-        <PaymentModeOptionButton key={mode} {...option} onClick={() => onModeChange(mode)} />
+        <PaymentModeOptionButton
+          key={mode}
+          {...option}
+          onClick={() => onModeChange(mode)}
+          testId={mode === PurchaseModeDictionary.Buy ? 'purchase-credits-btn' : undefined}
+        />
       ))}
     </div>
   );
