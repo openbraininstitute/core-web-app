@@ -61,6 +61,33 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  * //   → that reference type carries NO `allowed_block_types`
  * //   → no per-type filter; every entry in the `distributions` dictionary is listed.
  */
+/**
+ * the label for the dropdown's default option: what the field resolves to when left unset.
+ *
+ * a field that declares a `reference_tag` names the *role* it plays, and the config answers
+ * per role through `reference_tag_defaults`. that is what the type-keyed
+ * `default_block_reference_labels` cannot express: two fields of the same reference type
+ * that mean different things -- a stimulus target and a recording target are both neuron set
+ * references, and resolve to different neuron sets. the type-keyed map remains the fallback
+ * for untagged fields, and it alone still decides whether a reference field is shown at all.
+ */
+export function resolveDefaultReferenceLabel(
+  referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
+  schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
+): string {
+  const taggedLabel = referenceSchema.reference_tag
+    ? schema.reference_tag_defaults?.[referenceSchema.reference_tag]
+    : undefined;
+
+  return (
+    taggedLabel ??
+    referenceSchema.reference_types
+      .map((refType) => schema.default_block_reference_labels?.[refType])
+      .find(Boolean) ??
+    'Default'
+  );
+}
+
 export default function Reference({
   value,
   onChange,
@@ -138,11 +165,7 @@ export default function Reference({
     }
   }
 
-  // find the first available default label across accepted reference types
-  const defaultLabel =
-    referenceSchema.reference_types
-      .map((refType) => schema.default_block_reference_labels?.[refType])
-      .find(Boolean) ?? 'Default';
+  const defaultLabel = resolveDefaultReferenceLabel(referenceSchema, schema);
 
   options.unshift({
     label: defaultLabel,

@@ -244,6 +244,13 @@ export interface IntParameterSweep extends TBlockElement {
 export interface Reference extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.Reference;
   reference_types: Array<string>;
+  /**
+   * the role this field plays, when leaving it unset means something specific. the config's
+   * `reference_tag_defaults` names the block it then resolves to, and that is what the
+   * dropdown shows as its default option. keyed by role rather than by reference type, so
+   * two fields of the same type that mean different things get their own answer.
+   */
+  reference_tag?: string;
   anyOf?: Array<
     | {
         title?: string;
@@ -456,7 +463,13 @@ export interface IBlockDictionary extends TRootElement {
 
 export type ConfigSchema = {
   additionalProperties: false;
+  /** keyed by reference type. decides whether a reference field is shown at all. */
   default_block_reference_labels: Record<string, string>;
+  /**
+   * keyed by reference tag. the block a field carrying that tag resolves to when unset,
+   * shown as that field's default option. absent on configs that do not tag their fields.
+   */
+  reference_tag_defaults?: Record<string, string>;
   description: string;
   group_order: string[];
   properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {
