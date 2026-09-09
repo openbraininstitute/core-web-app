@@ -23,6 +23,14 @@ const EVERY_ACTIVITY = [
 
 const LEGACY_SUFFIX = '(legacy)';
 
+/**
+ * `(beta)` was retired from workflow labels in favour of the `legacy` flag, and the guard below
+ * keeps it that way. The scan-config ion channel build is the one deliberate exception: it runs
+ * beside the bespoke build page under the same name, and the suffix is what tells the two apart
+ * in the menu. Remove it from here when that workflow supersedes the bespoke one.
+ */
+const BETA_LABEL_EXCEPTIONS: ReadonlySet<string> = new Set(['Ion channel build (beta)']);
+
 function enabledWorkflowsInOrder(activity: string) {
   return listWorkflows({
     activity,
@@ -42,12 +50,15 @@ describe('workflow naming', () => {
     );
 
     expect(everyLabel.length).toBeGreaterThan(0);
-    expect(everyLabel.filter((label) => label.includes('(beta)'))).toEqual([]);
+    expect(
+      everyLabel.filter((label) => label.includes('(beta)') && !BETA_LABEL_EXCEPTIONS.has(label))
+    ).toEqual([]);
   });
 
   it('orders Build with the superseded synaptome workflow last', () => {
     expect(enabledLabelsInOrder(WorkspaceSection.BuildWorkflow)).toEqual([
       'Ion channel',
+      'Ion channel build (beta)',
       'Single neuron',
       'Synaptome',
       'Electron microscopy circuit',

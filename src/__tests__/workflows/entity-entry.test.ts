@@ -330,11 +330,16 @@ const cases: TCase[] = [
 /**
  * workflows no entity id can reach, because the type they consume resolves to another workflow
  * first: an ME-model opens the simulation editor, a synaptome likewise. Their build editors are
- * reached from the workflows page, not from an entity link
+ * reached from the workflows page, not from an entity link.
+ *
+ * The beta ion channel build is the same case for a different reason: it produces an ordinary
+ * `IonChannelModelingCampaign`, so a campaign id resolves to the bespoke build page ahead of it.
+ * Its own target type exists only to give it a route, and is reached from the workflows page.
  */
 const UNREACHABLE_FROM_AN_ENTITY_ID: ReadonlySet<string> = new Set([
   `${build}/${ExtendedEntitiesTypeDict.Memodel}`,
   `${build}/${ExtendedEntitiesTypeDict.SingleNeuronSynaptome}`,
+  `${build}/${ExtendedEntitiesTypeDict.IonChannelModelingCampaignBeta}`,
 ]);
 
 function applyFixture(fixture: TFixture) {

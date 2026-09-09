@@ -115,6 +115,8 @@ const BASE_ENTITY_TYPE_FALLBACK: Partial<
   [ExtendedEntitiesTypeDict.WholeBrain]: ExtendedEntitiesTypeDict.Circuit,
   [ExtendedEntitiesTypeDict.BrainRegion]: ExtendedEntitiesTypeDict.Circuit,
   [ExtendedEntitiesTypeDict.IonChannelModelingCampaign]: ExtendedEntitiesTypeDict.IonChannelModel,
+  [ExtendedEntitiesTypeDict.IonChannelModelingCampaignBeta]:
+    ExtendedEntitiesTypeDict.IonChannelRecording,
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: ExtendedEntitiesTypeDict.Circuit,
 };
 
