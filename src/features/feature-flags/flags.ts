@@ -52,14 +52,6 @@ export const buildSynaptomeFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const ionChannelBuildBetaFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.IonChannelModelingCampaignBeta,
-  defaultValue: false,
-  values: [true, false],
-  description: 'Ion channel build (beta) — scan-config editor instead of the bespoke form',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 /** Interactive electrode overlays in circuit preview (independent of the build workflow). */
 export const electrodeOverlaysFlag = defineFlag<boolean>({
   key: 'electrode-overlays',
@@ -76,7 +68,6 @@ export const flags = [
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   buildSynaptomeFlag,
-  ionChannelBuildBetaFlag,
   electrodeOverlaysFlag,
 ] as const;
 

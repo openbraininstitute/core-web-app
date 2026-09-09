@@ -8,15 +8,12 @@ import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 /**
- * Ion channel build through the generic scan-config editor, from obi-one's
- * `IonChannelFittingBetaScanConfig`.
- *
- * Runs alongside the bespoke RJSF build page, which stays on
- * `IonChannelFittingScanConfig`; the two produce the same `IonChannelModelingCampaign`
- * entity, so this one is keyed on a target type of its own to get its own route.
+ * Ion channel build, from obi-one's `IonChannelFittingScanConfig`. Replaced the bespoke RJSF
+ * build page, which rendered the same schema itself and submitted to the small-scale
+ * simulator rather than to a generate-grid endpoint.
  */
-export const buildIonChannelBetaWorkflow = defineScanConfigWorkflow({
-  id: 'build-ion-channel-beta',
+export const buildIonChannelWorkflow = defineScanConfigWorkflow({
+  id: 'build-ion-channel',
   activity: ScanConfigActivity.Build,
   entity: {
     mode: ScanConfigEntitySourceMode.Session,
@@ -28,7 +25,7 @@ export const buildIonChannelBetaWorkflow = defineScanConfigWorkflow({
     },
   },
   taskTypeBindings: {
-    obiOne: ObiOneTaskTypeDict.IonChannelFittingBeta,
+    obiOne: ObiOneTaskTypeDict.IonChannelFitting,
     configGeneration: TaskActivityType.IonChannelModelingConfigGeneration,
     execution: TaskActivityType.IonChannelModelingExecution,
     config: TaskConfigType.IonChannelModelingConfig,

@@ -4,8 +4,9 @@ import { isNil } from 'es-toolkit/compat';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
-import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { cn } from '@/utils/css-class';
+
+import { renderMathInText } from './render-mathematic-symbol';
 
 import 'katex/dist/katex.min.css';
 

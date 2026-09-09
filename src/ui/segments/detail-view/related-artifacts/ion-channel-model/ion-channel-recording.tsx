@@ -127,7 +127,10 @@ export function IonChannelRecordingRelatedArtifacts({
         campaignConfigs.map(async (response) => await response.json())
       )) as Array<IonChannelFittingGridScanGenerationTask>;
 
-      return parsed.map((o) => o.form.initialize.recordings.id_str);
+      return parsed.flatMap((o) => {
+        const { recordings } = o.form.initialize;
+        return (Array.isArray(recordings) ? recordings : [recordings]).map((r) => r.id_str);
+      });
     },
     refetchOnWindowFocus: false,
     staleTime: Infinity,

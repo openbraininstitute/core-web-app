@@ -33,7 +33,7 @@ export const ScanConfigGeneratedApiPath = {
   CreateExtracellularRecordingArray:
     'create-extracellular-recording-array-scan-config-generate-grid',
   BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
-  IonChannelFittingBeta: 'ion-channel-fitting-beta-scan-config-generate-grid',
+  IonChannelFitting: 'ion-channel-fitting-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -240,7 +240,7 @@ export function buildSynaptomeConfigureBinding(): TScanConfigConfigureBinding {
   };
 }
 
-export function buildIonChannelBetaConfigureBinding(): TScanConfigConfigureBinding {
+export function buildIonChannelConfigureBinding(): TScanConfigConfigureBinding {
   return {
     browseType: ExtendedEntitiesTypeDict.IonChannelRecording,
     scanConfigEntityType: ExtendedEntitiesTypeDict.IonChannelRecording,
@@ -248,7 +248,7 @@ export function buildIonChannelBetaConfigureBinding(): TScanConfigConfigureBindi
       [ExtendedEntitiesTypeDict.IonChannelRecording]:
         ScanConfigFromIdType.IonChannelRecordingFromID,
     },
-    generatedApiPath: ScanConfigGeneratedApiPath.IonChannelFittingBeta,
+    generatedApiPath: ScanConfigGeneratedApiPath.IonChannelFitting,
   };
 }
 

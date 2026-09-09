@@ -4,11 +4,10 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import {
   buildSynaptomeFlag,
   extracellularRecordingArrayBuildFlag,
-  ionChannelBuildBetaFlag,
 } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
-import { buildIonChannelBetaWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel-beta';
+import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 import { createExtracellularRecordingArrayWorkflow } from '@/features/scan-config/workflow/definitions/create-extracellular-recording-array';
 import {
@@ -20,7 +19,7 @@ import { EmSynapseMappingDatasetPrerequisiteCards } from '@/ui/segments/workflow
 
 import {
   buildEmSynapseMappingConfigureBinding,
-  buildIonChannelBetaConfigureBinding,
+  buildIonChannelConfigureBinding,
   buildSynaptomeConfigureBinding,
   createExtracellularRecordingArrayConfigureBinding,
 } from '../scan-config-binding';
@@ -66,45 +65,33 @@ function resolveRecordingArrayCircuitScales(filters: Record<string, unknown>): s
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.DirectConfigure,
-    sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
-    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
-    order: 1,
-    disabled: false,
-  },
-  // scan-config-driven ion channel build. Runs alongside the bespoke build page above:
-  // both produce an IonChannelModelingCampaign, so this one carries a target type of its
-  // own rather than replacing it.
-  {
-    ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.IonChannelRecording,
-    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaignBeta,
-    label: 'Ion channel build (beta)',
+    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    label: 'Ion channel',
     breadcrumb: {
-      root: 'Ion channel build (beta)',
+      root: 'Ion channel build',
       steps: {
         selection: 'Select ion channel recordings',
       },
     },
     scanConfig: {
-      definition: buildIonChannelBetaWorkflow,
-      schemaName: SchemaNameDict.IonChannelFittingBetaScanConfig,
-      configureBinding: buildIonChannelBetaConfigureBinding(),
+      definition: buildIonChannelWorkflow,
+      schemaName: SchemaNameDict.IonChannelFittingScanConfig,
+      configureBinding: buildIonChannelConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.IonChannelRecording }],
     requireFilters: false,
     requireSpecies: false,
-    order: 2,
+    order: 1,
     disabled: false,
-    requiredFeatures: [ionChannelBuildBetaFlag.key],
   },
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.DirectConfigure,
     sourceType: ExtendedEntitiesTypeDict.Memodel,
     targetType: ExtendedEntitiesTypeDict.Memodel,
-    order: 3,
+    order: 2,
     disabled: false,
   },
   // OBI-One form-driven synaptome build. Runs alongside the legacy `SingleNeuronSynaptome`
@@ -128,7 +115,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Memodel }],
     requireFilters: true,
-    order: 4,
+    order: 3,
     disabled: false,
     requiredFeatures: [buildSynaptomeFlag.key],
   },
@@ -153,7 +140,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     requireFilters: false,
     requireSpecies: false,
-    order: 5,
+    order: 4,
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -233,7 +220,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
         },
       },
     },
-    order: 6,
+    order: 5,
     disabled: false,
     requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
   },
@@ -242,7 +229,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.DirectConfigure,
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    order: 7,
+    order: 6,
     disabled: false,
   },
   {
@@ -250,7 +237,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
     targetType: ExtendedEntitiesTypeDict.MemodelCircuit,
-    order: 8,
+    order: 7,
     disabled: true,
   },
   {
@@ -258,7 +245,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
-    order: 9,
+    order: 8,
     disabled: true,
   },
   {
@@ -266,7 +253,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.Disabled,
     sourceType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
     targetType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
-    order: 10,
+    order: 9,
     disabled: true,
   },
   {

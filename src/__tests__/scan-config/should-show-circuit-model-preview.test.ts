@@ -199,6 +199,7 @@ describe('RightPreviewModeDict', () => {
       Settings: 'settings',
       EntityPreview: 'entity-preview',
       IonChannel: 'ion-channel',
+      IonChannelRecording: 'ion-channel-recording',
       EFeatures: 'efeatures',
       CircuitModel: 'circuit-model',
       Empty: 'empty',

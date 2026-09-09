@@ -24,10 +24,6 @@ export const ExtendedEntitiesTypeDict = {
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   SkeletonizationCampaign: 'skeletonization_campaign',
   ExtracellularRecordingArrayCampaign: 'extracellular_recording_array_campaign',
-  // routes and the workflow registry are keyed by target type, so the scan-config ion
-  // channel build needs one of its own to sit beside the bespoke build page. the entity it
-  // actually produces is still an `IonChannelModelingCampaign`.
-  IonChannelModelingCampaignBeta: 'ion_channel_modeling_campaign_beta',
   BuildSynaptomeCampaign: 'build_synaptome_campaign',
   RegionCircuitSimulation: 'region_circuit_simulation',
   WholeBrainCircuitSimulation: 'whole_brain_circuit_simulation',

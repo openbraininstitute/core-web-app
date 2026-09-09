@@ -1,57 +1,23 @@
-export interface IonChannelFittingGridScanGenerationTask {
-  obi_one_version: string;
-  type: 'GridScanGenerationTask';
-  output_root: string;
-  form: IonChannelFittingScanConfigWrapper;
-  coordinate_directory_option: string;
-}
-
-export interface IonChannelFittingScanConfigWrapper {
-  type: 'IonChannelFittingScanConfig';
-  initialize: InitializeConfig;
-  info: Info;
-  minf_eq: SigFitMInf;
-  mtau_eq: ThermoFitMTau;
-  hinf_eq: SigFitHInf;
-  htau_eq: SigFitHTau;
-  gate_exponents: GateExponents;
-}
-
-export interface InitializeConfig {
-  type: 'IonChannelFittingScanConfig.Initialize';
-  recordings: IonChannelRecordingFromID;
-  ion_channel_name: string;
-}
-
+/**
+ * The shape of a campaign's `campaign_generation_config` asset, narrowed to the part that is
+ * read back: which recordings the campaign was fitted from.
+ *
+ * `recordings` is a scan dimension, so a campaign over several holds an array here and one
+ * over a single recording holds the ref on its own.
+ */
 export interface IonChannelRecordingFromID {
   id_str: string;
   type: 'IonChannelRecordingFromID';
 }
 
-export interface Info {
-  type: 'Info';
-  campaign_name: string;
-  campaign_description: string;
-}
-
-export interface SigFitMInf {
-  type: 'SigFitMInf';
-}
-
-export interface ThermoFitMTau {
-  type: 'ThermoFitMTau';
-}
-
-export interface SigFitHInf {
-  type: 'SigFitHInf';
-}
-
-export interface SigFitHTau {
-  type: 'SigFitHTau';
-}
-
-export interface GateExponents {
-  type: 'IonChannelFittingScanConfig.GateExponents';
-  m_power: number;
-  h_power: number;
+export interface IonChannelFittingGridScanGenerationTask {
+  type: 'GridScanGenerationTask';
+  form: {
+    type: 'IonChannelFittingScanConfig';
+    initialize: {
+      type: 'IonChannelFittingScanConfig.Initialize';
+      recordings: IonChannelRecordingFromID | IonChannelRecordingFromID[];
+      ion_channel_name: string;
+    };
+  };
 }
