@@ -25,7 +25,10 @@ export function BalanceCard({ onTransferCredits, onBuyCredits }: Props) {
     queryFn: () => getVirtualLabAccountBalance({ virtualLabId, includeProjects: true }),
   });
 
-  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({
+    virtualLabId,
+    projectId,
+  });
   const ProjectBalance = data?.data.projects?.find((p) => p.proj_id === projectId);
   const virtualLabBalance = data?.data?.balance ?? 0;
 
@@ -55,6 +58,7 @@ export function BalanceCard({ onTransferCredits, onBuyCredits }: Props) {
             size="md"
             variant="outline"
             onClick={onBuyCredits}
+            data-testid="buy-credits-btn"
           >
             Buy credits
             <RiShoppingCart2Line className="size-4" />

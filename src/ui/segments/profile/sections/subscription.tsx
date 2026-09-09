@@ -98,7 +98,9 @@ function CurrentSubscriptionCard({
           }}
         >
           <div className="relative z-10 max-w-80">
-            <h2 className="text-2xl font-bold">{tierContent.name}</h2>
+            <h2 className="text-2xl font-bold" data-testid="subscription-current-tier">
+              {tierContent.name}
+            </h2>
             <p className="mt-2 text-lg leading-7 text-primary-4">{tierContent.description}</p>
           </div>
         </div>
@@ -118,6 +120,7 @@ function CurrentSubscriptionCard({
           label="Change subscription"
           classNames={{ label: 'font-semibold' }}
           onClick={onChangeSubscription}
+          data-testid="change-subscription-btn"
         />
       </div>
     </section>

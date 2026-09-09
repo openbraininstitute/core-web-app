@@ -86,7 +86,10 @@ export function Item({
     }),
     // fetch every page instead of a fixed page_size so no project is hidden
     queryFn: async () => ({
-      data: await listAllProjects({ virtualLabId: lab.id, filter: projectListFilter }),
+      data: await listAllProjects({
+        virtualLabId: lab.id,
+        filter: projectListFilter,
+      }),
     }),
     enabled: !!lab.id && (isOpen || tryingToExpand.has(lab.id)),
   });
@@ -200,7 +203,10 @@ export function Item({
       return rows.sort((a, b) => {
         if (a.id === templateProjectId) return -1;
         if (b.id === templateProjectId) return 1;
-        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        return a.name.localeCompare(b.name, undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        });
       });
     }
     return rows.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
@@ -261,7 +267,9 @@ export function Item({
         className={cn(
           'group flex cursor-pointer items-center justify-between pl-4 pr-2 py-3 transition-colors duration-150 rounded-md',
           { 'rounded-b-none': expandedLabs.has(lab.id) },
-          { 'bg-[#E9F7FF]! hover:bg-[#c5e8ff]! hover:border-[#c5e8ff]!': isActive },
+          {
+            'bg-[#E9F7FF]! hover:bg-[#c5e8ff]! hover:border-[#c5e8ff]!': isActive,
+          },
           { 'hover:bg-neutral-1': !isActive }
         )}
         onKeyDown={onToggleClick}
@@ -380,7 +388,9 @@ export function Item({
                           'text-primary-8 scale-101 hover:text-primary-9 bg-gray-50! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
                             isProjectActive && !isDisabled,
                         },
-                        { 'border-3! border-gray-200! bg-gray-50!': isProjectSelected }
+                        {
+                          'border-3! border-gray-200! bg-gray-50!': isProjectSelected,
+                        }
                       )}
                       title={project.name}
                       onClick={() => {
@@ -435,6 +445,7 @@ export function Item({
                     'min-w-32 justify-between rounded-full bg-white px-4 text-sm font-semibold'
                   )}
                   onClick={onCreateProject}
+                  data-testid="add-project-btn"
                 >
                   Add project
                   <PlusOutlined className="ml-3 text-sm" />

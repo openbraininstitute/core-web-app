@@ -75,7 +75,9 @@ export function RequestCodeForm({
       data-testid="request-code-form"
       className={cn('text-primary-9 w-full px-2', classname)}
     >
-      <h4 className="text-lg font-bold">Verify your email to continue</h4>
+      <h4 className="text-lg font-bold" data-testid="credit-verification-heading">
+        Verify your email to continue
+      </h4>
       <p className="text-base font-light">
         We'll send a one-time code to your email. Enter it to confirm your identity and proceed with
         your purchase
@@ -115,6 +117,7 @@ export function RequestCodeForm({
             ]}
           >
             <Input
+              data-testid="purchase-email"
               className={cn(
                 'h-12 border-none focus-visible:ring-0 pr-52! w-full placeholder:text-white/80',
                 'text-primary-8! font-semibold text-lg! rounded-full',
@@ -132,6 +135,7 @@ export function RequestCodeForm({
               'hover:border-gray-400 hover:bg-primary-8 hover:text-white group'
             )}
             disabled={isLocked}
+            data-testid="send-verification-email-btn"
           >
             {isPending ? (
               <LoadingOutlined />
