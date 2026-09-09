@@ -2,7 +2,7 @@ import { RiFullscreenExitLine, RiFullscreenLine } from '@remixicon/react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
-import { useFullscreenElement } from '@/utils/fullscreen';
+import { toggleFullscreen, useFullscreenElement } from '@/utils/fullscreen';
 
 /**
  * A round icon button for the viewer chrome: white and shadowed so it reads over
@@ -55,18 +55,19 @@ export function ChromeButton({
 }
 
 /**
- * The one fullscreen control a view offers. Which element is blown up is the
- * host's business, so it passes `onToggle`; what state that left it in is read
- * here.
+ * The one fullscreen control a view offers. Both the label and the click read
+ * `target` rather than whatever fills the screen: a second viewer on the page
+ * has a button of its own.
  */
-export function FullscreenButton({ onToggle }: { onToggle: () => void }) {
-  const isFullscreen = useFullscreenElement() !== null;
+export function FullscreenButton({ target }: { target: HTMLElement | null }) {
+  const fullscreen = useFullscreenElement();
+  const isFullscreen = target !== null && fullscreen === target;
 
   return (
     <ChromeButton
       label={isFullscreen ? 'Exit full screen' : 'Full screen'}
       testId="viewer-full-screen"
-      onClick={onToggle}
+      onClick={() => toggleFullscreen(target)}
       active={isFullscreen}
     >
       {isFullscreen ? (

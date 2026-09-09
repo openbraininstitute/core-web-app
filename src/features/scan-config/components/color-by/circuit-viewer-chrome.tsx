@@ -31,8 +31,11 @@ export interface ICircuitViewerChromeProps {
   theme?: ViewerTheme | null;
   /** nodes-table toggle (always visible in the top-left cluster) */
   table?: { active: boolean; onToggle: () => void };
-  /** Fullscreen toggle, beside the table one and visible in every view. Omit to leave it out. */
-  onToggleFullscreen?: () => void;
+  /**
+   * Fullscreen toggle, beside the table one and visible in every view. Omit to
+   * leave it out; the host may not have the element to blow up on first render.
+   */
+  fullscreen?: { target: HTMLElement | null };
   /**
    * 3D chrome (settings + color-by). Kept mounted across mode switches; hidden
    * in image mode so controls do not remount.
@@ -66,7 +69,7 @@ export function CircuitViewerChrome({
   vizActive,
   theme,
   table,
-  onToggleFullscreen,
+  fullscreen,
   viz,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
@@ -163,7 +166,7 @@ export function CircuitViewerChrome({
             <RiTableLine className="size-4" />
           </ChromeButton>
         )}
-        {onToggleFullscreen && <FullscreenButton onToggle={onToggleFullscreen} />}
+        {fullscreen && <FullscreenButton target={fullscreen.target} />}
         {viz && (
           <div
             className={cn(

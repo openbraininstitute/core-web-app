@@ -106,12 +106,12 @@ interface ICircuitSceneOptions {
   /** Extra icons for the view-mode pill. Omit when this is the only view. */
   modeToggle?: readonly IViewerModeOption[];
   /**
-   * Fullscreen toggle for the chrome. The host owns it because the scene is only
-   * part of the view: blowing it up alone would leave the preview's designer
-   * image, or spike replay's raster, outside the fullscreen element. Omit to
-   * leave the button out.
+   * Element the fullscreen button blows up. The host owns it because the scene
+   * is only part of the view: blowing it up alone would leave the preview's
+   * designer image, or spike replay's raster, outside the fullscreen element.
+   * Omit to leave the button out.
    */
-  onToggleFullscreen?: () => void;
+  fullscreen?: { target: HTMLElement | null };
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
@@ -171,7 +171,7 @@ export function CircuitScene({
   form,
   electrodes,
   modeToggle,
-  onToggleFullscreen,
+  fullscreen,
   spikes,
   dendrogram = false,
   populationName: hostPopulationName,
@@ -554,7 +554,7 @@ export function CircuitScene({
         vizActive={active}
         theme={theme}
         table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
-        onToggleFullscreen={onToggleFullscreen}
+        fullscreen={fullscreen}
         viz={{
           menu,
           colorBy: enableColorBy ? colorBy : undefined,

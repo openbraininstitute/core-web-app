@@ -18,7 +18,7 @@ import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-rende
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { classNames } from '@/util/utils';
-import { toggleFullscreen } from '@/utils/fullscreen';
+import { FullscreenPortalScope } from '@/utils/fullscreen';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
@@ -94,7 +94,8 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   const [rasterHeight, setRasterHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState(0);
 
-  const rootRef = useRef<HTMLDivElement>(null);
+  // State, not a ref: the button and the portal scope read it while rendering.
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<((timeInMs: number | null) => void) | null>(null);
   const liveTimeRef = useRef(data.timeRange.min);
@@ -277,159 +278,163 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   return (
     // This root goes fullscreen, not the 3D pane inside it, so the raster and
     // transport bar go with it; the scene is handed no fullscreen button of its own.
-    <div ref={rootRef} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
-      <div className="mb-2 flex items-center gap-3 px-3 pt-3">
-        <div className="flex items-center gap-2">
-          <ModeToggle options={modeOptions} />
-          <FullscreenButton onToggle={() => toggleFullscreen(rootRef.current)} />
-        </div>
-        {populationName && (
-          <div className="flex min-w-0 items-center gap-2">
-            {recorded && (
-              <span
-                className="size-2 shrink-0 rounded-full"
-                style={{ background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length] }}
-              />
-            )}
-            {populations.length > 1 ? (
-              <PopulationSelect
-                variant="chrome"
-                populations={populations}
-                value={populationName}
-                onChange={setChosenPopulationName}
-              />
-            ) : (
-              <span className="text-primary-9 text-sm font-semibold">
-                <span className="mr-1 font-normal text-neutral-400">Population</span>
-                {populationName}
-              </span>
-            )}
-            {recorded && (
-              <span className="whitespace-nowrap text-xs text-neutral-400">
-                {recorded.timestamps.length.toLocaleString()} spikes
-              </span>
-            )}
+    <div ref={setRoot} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
+      <FullscreenPortalScope root={root}>
+        <div className="mb-2 flex items-center gap-3 px-3 pt-3">
+          <div className="flex items-center gap-2">
+            <ModeToggle options={modeOptions} />
+            <FullscreenButton target={root} />
           </div>
-        )}
-        {showScene && !replayable && (
-          <span role="status" className="text-xs text-amber-600">
-            {replayNotice(
-              recorded,
-              populationName,
-              circuitConfig?.nodes,
-              configLoading,
-              configError !== null
-            )}
-          </span>
-        )}
-      </div>
+          {populationName && (
+            <div className="flex min-w-0 items-center gap-2">
+              {recorded && (
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{
+                    background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length],
+                  }}
+                />
+              )}
+              {populations.length > 1 ? (
+                <PopulationSelect
+                  variant="chrome"
+                  populations={populations}
+                  value={populationName}
+                  onChange={setChosenPopulationName}
+                />
+              ) : (
+                <span className="text-primary-9 text-sm font-semibold">
+                  <span className="mr-1 font-normal text-neutral-400">Population</span>
+                  {populationName}
+                </span>
+              )}
+              {recorded && (
+                <span className="whitespace-nowrap text-xs text-neutral-400">
+                  {recorded.timestamps.length.toLocaleString()} spikes
+                </span>
+              )}
+            </div>
+          )}
+          {showScene && !replayable && (
+            <span role="status" className="text-xs text-amber-600">
+              {replayNotice(
+                recorded,
+                populationName,
+                circuitConfig?.nodes,
+                configLoading,
+                configError !== null
+              )}
+            </span>
+          )}
+        </div>
 
-      <div ref={containerRef} className="relative min-h-0 flex-1">
-        {subject && (
+        <div ref={containerRef} className="relative min-h-0 flex-1">
+          {subject && (
+            <div
+              className={classNames(
+                'absolute left-0 right-0 top-0',
+                !showScene && 'invisible pointer-events-none'
+              )}
+              style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
+              aria-hidden={!showScene}
+              inert={!showScene || undefined}
+            >
+              {sceneMounted && (
+                <CircuitScene
+                  {...subject}
+                  largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
+                  active={showScene}
+                  features={SCENE_FEATURES}
+                  // Only a name the config backs with cells. A name the scene
+                  // cannot draw would make it fall back on its own — with no name
+                  // it falls back deliberately, to the same default, and the
+                  // notice in the header explains what is on show. An MEModel
+                  // resolves no populations, so the name means nothing to it.
+                  populationName={replayable ? populationName : undefined}
+                  // The population above the panes is the one being replayed,
+                  // and the spikes' cell indices are relative to it. The
+                  // circuit's other populations are not drawn here.
+                  showUnselectedPopulations={false}
+                  spikes={{
+                    data: spikes ?? undefined,
+                    timeInMs: seekToMs,
+                    onTimeChange: handleTimeChange,
+                    playing,
+                    onPlayingChange: setPlaying,
+                    speed,
+                    afterglowInSeconds,
+                  }}
+                />
+              )}
+            </div>
+          )}
+
           <div
             className={classNames(
-              'absolute left-0 right-0 top-0',
-              !showScene && 'invisible pointer-events-none'
+              // A margin rather than padding, so the rule below stops short of
+              // the panel's edges: full-bleed it reads as a section break, and
+              // the header above it as chrome belonging to the 3D pane alone.
+              'absolute left-0 right-0 bottom-0 mx-3 pb-3',
+              // Two white panes meet along this edge, so without a rule they read
+              // as one view with a gap in it. The grab bar rides on top of it.
+              isSplit && 'border-t border-neutral-2',
+              !showRaster && 'invisible pointer-events-none'
             )}
-            style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
-            aria-hidden={!showScene}
-            inert={!showScene || undefined}
+            style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}
+            aria-hidden={!showRaster}
+            inert={!showRaster || undefined}
           >
-            {sceneMounted && (
-              <CircuitScene
-                {...subject}
-                largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
-                active={showScene}
-                features={SCENE_FEATURES}
-                // Only a name the config backs with cells. A name the scene
-                // cannot draw would make it fall back on its own — with no name
-                // it falls back deliberately, to the same default, and the
-                // notice in the header explains what is on show. An MEModel
-                // resolves no populations, so the name means nothing to it.
-                populationName={replayable ? populationName : undefined}
-                // The population above the panes is the one being replayed,
-                // and the spikes' cell indices are relative to it. The
-                // circuit's other populations are not drawn here.
-                showUnselectedPopulations={false}
-                spikes={{
-                  data: spikes ?? undefined,
-                  timeInMs: seekToMs,
-                  onTimeChange: handleTimeChange,
-                  playing,
-                  onPlayingChange: setPlaying,
-                  speed,
-                  afterglowInSeconds,
-                }}
+            {isSplit && (
+              // The floor lives in `clampSplitHeight`, which knows when the
+              // panel is too short to honour it. A floor here as well would
+              // stop the drag at exactly the heights where the clamp relents.
+              <PaneResizeHandle
+                containerRef={containerRef}
+                minHeight={0}
+                onResize={setRasterHeight}
               />
             )}
-          </div>
-        )}
-
-        <div
-          className={classNames(
-            // A margin rather than padding, so the rule below stops short of
-            // the panel's edges: full-bleed it reads as a section break, and
-            // the header above it as chrome belonging to the 3D pane alone.
-            'absolute left-0 right-0 bottom-0 mx-3 pb-3',
-            // Two white panes meet along this edge, so without a rule they read
-            // as one view with a gap in it. The grab bar rides on top of it.
-            isSplit && 'border-t border-neutral-2',
-            !showRaster && 'invisible pointer-events-none'
-          )}
-          style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}
-          aria-hidden={!showRaster}
-          inert={!showRaster || undefined}
-        >
-          {isSplit && (
-            // The floor lives in `clampSplitHeight`, which knows when the
-            // panel is too short to honour it. A floor here as well would
-            // stop the drag at exactly the heights where the clamp relents.
-            <PaneResizeHandle
-              containerRef={containerRef}
-              minHeight={0}
-              onResize={setRasterHeight}
-            />
-          )}
-          <div className="relative h-full min-h-0">
-            <RasterPlot
-              data={data}
-              populationName={populationName}
-              cellCount={cellCount}
-              markerSize={markerSize}
-              playheadRef={isSplit ? playheadRef : undefined}
-              onSeek={canSeek ? handleSeek : undefined}
-            />
-            {/* Inside the pane it belongs to, the way the scene's chrome sits in
+            <div className="relative h-full min-h-0">
+              <RasterPlot
+                data={data}
+                populationName={populationName}
+                cellCount={cellCount}
+                markerSize={markerSize}
+                playheadRef={isSplit ? playheadRef : undefined}
+                onSeek={canSeek ? handleSeek : undefined}
+              />
+              {/* Inside the pane it belongs to, the way the scene's chrome sits in
                 its own: in the split these controls are the raster's alone, and
                 the row above the panes is for what governs both. */}
-            {recorded && recorded.timestamps.length > 0 && (
-              <div className="absolute right-0 top-0 z-10">
-                <RasterPlotControls
-                  markerSize={markerSize}
-                  onMarkerSizeChange={setMarkerSize}
-                  canSeek={canSeek}
-                />
-              </div>
-            )}
+              {recorded && recorded.timestamps.length > 0 && (
+                <div className="absolute right-0 top-0 z-10">
+                  <RasterPlotControls
+                    markerSize={markerSize}
+                    onMarkerSizeChange={setMarkerSize}
+                    canSeek={canSeek}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {showScene && (
-        <TransportBar
-          playing={playing}
-          onPlayingChange={setPlaying}
-          timeInMs={readoutTimeInMs}
-          timeMinInMs={data.timeRange.min}
-          timeMaxInMs={data.timeRange.max}
-          onSeek={handleSeek}
-          speed={speed}
-          onSpeedChange={setSpeed}
-          afterglowInSeconds={afterglowInSeconds}
-          onAfterglowChange={setAfterglowInSeconds}
-          disabled={!replayable}
-        />
-      )}
+        {showScene && (
+          <TransportBar
+            playing={playing}
+            onPlayingChange={setPlaying}
+            timeInMs={readoutTimeInMs}
+            timeMinInMs={data.timeRange.min}
+            timeMaxInMs={data.timeRange.max}
+            onSeek={handleSeek}
+            speed={speed}
+            onSpeedChange={setSpeed}
+            afterglowInSeconds={afterglowInSeconds}
+            onAfterglowChange={setAfterglowInSeconds}
+            disabled={!replayable}
+          />
+        )}
+      </FullscreenPortalScope>
     </div>
   );
 }

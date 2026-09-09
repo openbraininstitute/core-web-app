@@ -3,7 +3,7 @@
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 import { cn } from '@/utils/css-class';
-import { useFullscreenElement } from '@/utils/fullscreen';
+import { useFullscreenPortalTarget } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -42,21 +42,16 @@ function TooltipContent({
   showArrow = true,
   sideOffset = 0,
   children,
-  portalProps,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content> & {
   arrowClassName?: React.ComponentProps<'span'>['className'];
   showArrow?: boolean;
-  portalProps?: TooltipPrimitive.TooltipPortalProps;
 }) {
-  // See `PopoverContent` for why the fallback is there.
-  const fullscreen = useFullscreenElement();
+  // Same reason as `PopoverContent`.
+  const container = useFullscreenPortalTarget();
 
   return (
-    <TooltipPrimitive.Portal
-      {...portalProps}
-      container={portalProps?.container ?? fullscreen ?? undefined}
-    >
+    <TooltipPrimitive.Portal container={container ?? undefined}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

@@ -1,7 +1,11 @@
 import { render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { FullscreenPortalScope } from '@/utils/fullscreen';
+
+import type { ReactNode } from 'react';
 
 /** jsdom has no fullscreen API, so stub the property the store reads. */
 function setFullscreenElement(element: Element | null) {
@@ -13,35 +17,60 @@ function setFullscreenElement(element: Element | null) {
 
 afterEach(() => setFullscreenElement(null));
 
-function renderPopover(container?: HTMLElement) {
-  render(
-    <Popover open>
-      <PopoverTrigger>open</PopoverTrigger>
-      <PopoverContent container={container}>panel</PopoverContent>
-    </Popover>
+/** A viewer host, publishing its own root the way the two real ones do. */
+function Viewer({ children }: { children: ReactNode }) {
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
+
+  return (
+    <div ref={setRoot} data-testid="viewer">
+      <FullscreenPortalScope root={root}>{children}</FullscreenPortalScope>
+    </div>
   );
-  return screen.getByText('panel');
 }
+
+const panel = (
+  <Popover open>
+    <PopoverTrigger>open</PopoverTrigger>
+    <PopoverContent>panel</PopoverContent>
+  </Popover>
+);
 
 describe('portalled panels in fullscreen', () => {
   it('lands in the body when nothing is fullscreen', () => {
-    expect(document.body).toContainElement(renderPopover());
+    render(<Viewer>{panel}</Viewer>);
+
+    expect(document.body).toContainElement(screen.getByText('panel'));
   });
 
-  it('follows the element into fullscreen', () => {
+  it('follows its own viewer into fullscreen', () => {
+    const fullscreen = document.body.appendChild(document.createElement('div'));
+    const host = fullscreen.appendChild(document.createElement('div'));
+    setFullscreenElement(fullscreen);
+
+    render(<Viewer>{panel}</Viewer>, { container: host });
+
+    expect(fullscreen).toContainElement(screen.getByText('panel'));
+    expect(host).not.toContainElement(screen.getByText('panel'));
+  });
+
+  // Moving this panel into the viewer would strand it over something its own
+  // trigger has nothing to do with.
+  it('leaves a panel outside any viewer in the body', () => {
     const fullscreen = document.body.appendChild(document.createElement('div'));
     setFullscreenElement(fullscreen);
 
-    expect(fullscreen).toContainElement(renderPopover());
+    render(panel);
+
+    expect(fullscreen).not.toContainElement(screen.getByText('panel'));
+    expect(document.body).toContainElement(screen.getByText('panel'));
   });
 
-  it('lets a host name a mount node of its own', () => {
+  it('leaves a second viewer alone while the first one is fullscreen', () => {
     const fullscreen = document.body.appendChild(document.createElement('div'));
-    const chosen = document.body.appendChild(document.createElement('div'));
     setFullscreenElement(fullscreen);
 
-    const panel = renderPopover(chosen);
-    expect(chosen).toContainElement(panel);
-    expect(fullscreen).not.toContainElement(panel);
+    render(<Viewer>{panel}</Viewer>);
+
+    expect(fullscreen).not.toContainElement(screen.getByText('panel'));
   });
 });

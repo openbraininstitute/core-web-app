@@ -5,7 +5,7 @@
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 import { cn } from '@/utils/css-class';
-import { useFullscreenElement } from '@/utils/fullscreen';
+import { useFullscreenPortalTarget } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -21,18 +21,14 @@ function PopoverContent({
   className,
   align = 'center',
   sideOffset = 4,
-  container,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content> & {
-  /** Portal mount node. Defaults to whatever is fullscreen, else the body. */
-  container?: HTMLElement | null;
-}) {
-  // The body sits outside the fullscreen subtree, so a panel portalled there
-  // is not drawn over a fullscreen viewer.
-  const fullscreen = useFullscreenElement();
+}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  // The browser paints nothing outside the fullscreen element, so a viewer
+  // names itself for the subtree inside it.
+  const container = useFullscreenPortalTarget();
 
   return (
-    <PopoverPrimitive.Portal container={container ?? fullscreen ?? undefined}>
+    <PopoverPrimitive.Portal container={container ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}

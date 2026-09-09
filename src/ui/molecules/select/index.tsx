@@ -5,7 +5,7 @@ import { RiArrowDownSLine, RiCheckFill } from '@remixicon/react';
 
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
-import { useFullscreenElement } from '@/utils/fullscreen';
+import { useFullscreenPortalTarget } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -55,16 +55,12 @@ function SelectContent({
   className,
   children,
   position = 'popper',
-  container,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content> & {
-  /** Portal mount node. Defaults to whatever is fullscreen, else the body. */
-  container?: HTMLElement | null;
-}) {
-  const fullscreen = useFullscreenElement();
+}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const container = useFullscreenPortalTarget();
 
   return (
-    <SelectPrimitive.Portal container={container ?? fullscreen ?? undefined}>
+    <SelectPrimitive.Portal container={container ?? undefined}>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
