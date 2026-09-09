@@ -2,7 +2,7 @@
 
 import { RiArrowDownSLine, RiExpandDiagonalLine } from '@remixicon/react';
 import katex from 'katex';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 
 import 'katex/dist/katex.min.css';
 
@@ -15,7 +15,11 @@ import type { StringSelectionEnhanced as TStringSelectionEnhanced } from '@/feat
 
 /** renders a raw LaTeX expression (e.g. `A_{latex}`) to a KaTeX HTML string */
 function renderLatex(latex: string): string {
-  return katex.renderToString(latex, { throwOnError: false, displayMode: true, output: 'html' });
+  return katex.renderToString(latex, {
+    throwOnError: false,
+    displayMode: true,
+    output: 'html',
+  });
 }
 
 /** a single enum option's content: title, description and optional rendered formula */
@@ -88,6 +92,7 @@ export function StringSelectionEnhanced({
   paramSchema,
 }: IStringSelectionEnhancedProps) {
   const [open, setOpen] = useState(false);
+  const optionsId = useId();
   const [expandedLatexHtml, setExpandedLatexHtml] = useState<string | null>(null);
 
   // Pre-render each option's content once per schema — KaTeX rendering is the only non-trivial cost.
@@ -125,6 +130,10 @@ export function StringSelectionEnhanced({
           <button
             type="button"
             data-testid="scan-config-control"
+            data-scan-config-options={optionsId}
+            data-scan-config-value={value ?? ''}
+            aria-controls={optionsId}
+            aria-expanded={open}
             data-scan-config-block-element={ScanConfigUIElementDict.StringSelectionEnhanced}
             disabled={disabled}
             className={cn(
@@ -151,7 +160,12 @@ export function StringSelectionEnhanced({
             'max-h-100 w-(--radix-popover-trigger-width) overflow-y-auto rounded-2xl border border-gray-100 bg-white p-2 shadow-md'
           )}
         >
-          <div role="listbox" className="flex flex-col gap-2">
+          <div
+            id={optionsId}
+            data-testid="scan-config-options"
+            role="listbox"
+            className="flex flex-col gap-2"
+          >
             {paramSchema.enum.map((key) => {
               const content = optionContentByKey.get(key);
               if (!content) return null;
@@ -160,6 +174,7 @@ export function StringSelectionEnhanced({
                 <div
                   key={key}
                   data-testid={`scan-config-option-${key}`}
+                  data-scan-config-option-of={optionsId}
                   role="option"
                   aria-selected={selected}
                   tabIndex={0}

@@ -3,6 +3,7 @@
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { App, ConfigProvider } from 'antd';
 import { Provider as JotaiProvider } from 'jotai';
+import { MotionConfig } from 'motion/react';
 import { SessionProvider } from 'next-auth/react';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
@@ -26,30 +27,32 @@ type ProvidersProps = {
 
 export function Providers({ children, session, flags }: ProvidersProps) {
   return (
-    <ConfigProvider theme={commonAntdTheme}>
-      <App>
-        <AntdRegistry>
-          <AtomProvider>
-            <NuqsAdapter>
-              <QueryProvider>
-                <JotaiProvider>
-                  <JotaiDevTools />
-                  <ThemeProvider>
-                    <SessionProvider session={session} refetchInterval={2 * 60}>
-                      <SessionStateProvider>
-                        <FlagsProvider flags={flags}>
-                          <ProgressBarProvider>{children}</ProgressBarProvider>
-                        </FlagsProvider>
-                      </SessionStateProvider>
-                    </SessionProvider>
-                  </ThemeProvider>
-                </JotaiProvider>
-              </QueryProvider>
-            </NuqsAdapter>
-          </AtomProvider>
-        </AntdRegistry>
-      </App>
-    </ConfigProvider>
+    <MotionConfig reducedMotion="user">
+      <ConfigProvider theme={commonAntdTheme}>
+        <App>
+          <AntdRegistry>
+            <AtomProvider>
+              <NuqsAdapter>
+                <QueryProvider>
+                  <JotaiProvider>
+                    <JotaiDevTools />
+                    <ThemeProvider>
+                      <SessionProvider session={session} refetchInterval={2 * 60}>
+                        <SessionStateProvider>
+                          <FlagsProvider flags={flags}>
+                            <ProgressBarProvider>{children}</ProgressBarProvider>
+                          </FlagsProvider>
+                        </SessionStateProvider>
+                      </SessionProvider>
+                    </ThemeProvider>
+                  </JotaiProvider>
+                </QueryProvider>
+              </NuqsAdapter>
+            </AtomProvider>
+          </AntdRegistry>
+        </App>
+      </ConfigProvider>
+    </MotionConfig>
   );
 }
 

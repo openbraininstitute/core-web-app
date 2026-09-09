@@ -33,6 +33,7 @@ import type {
   GetRowIdParams,
   GridApi,
   GridReadyEvent,
+  ProcessRowPostCreateParams,
   RowClassParams,
   RowHeightParams,
   RowSelectionOptions,
@@ -74,6 +75,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     onRowClick,
     activeRowId,
     getRowClass,
+    getRowTestId,
     isRowSelectable,
     expandColumn,
     loadingLabel,
@@ -191,7 +193,11 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
             suppressMovable: true,
             lockPosition: 'left' as const,
             // DEFAULT_COL_DEF does not reach the selection column, so centre it here
-            cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+            cellStyle: {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            },
             headerClass: 'flex items-center justify-center',
           }
         : undefined,
@@ -213,7 +219,10 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         rows.map(getRowId),
         selectedOnPage
       );
-      controller.store.dispatch({ type: GridActionType.SetSelection, ids: next });
+      controller.store.dispatch({
+        type: GridActionType.SetSelection,
+        ids: next,
+      });
     },
     [controller, rows, getRowId, effectiveSelectionMode]
   );
@@ -298,6 +307,15 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [activeRowId, onRowClick, getRowId]
   );
 
+  const processRowPostCreate = useCallback(
+    (event: ProcessRowPostCreateParams<TDisplayRow<Row>>) => {
+      const data = event.node.data;
+      if (!getRowTestId || data == null || isDetailRow(data)) return;
+      event.eRow.dataset.testid = getRowTestId(data);
+    },
+    [getRowTestId]
+  );
+
   // Optional per-row class (e.g. hierarchy gray-out); never applied to detail rows.
   const rowClass = useCallback(
     (p: RowClassParams<TDisplayRow<Row>>): string | undefined =>
@@ -349,6 +367,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         onCellClicked={onCellClicked}
         getRowStyle={getRowStyle}
         getRowClass={getRowClass ? rowClass : undefined}
+        processRowPostCreate={getRowTestId ? processRowPostCreate : undefined}
       />
     </div>
   );

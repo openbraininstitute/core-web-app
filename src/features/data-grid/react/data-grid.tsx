@@ -67,6 +67,8 @@ export interface IDataGridProps<Row> {
   activeRowId?: string;
   /** optional per-row css class hook (e.g. hierarchy filtered-in/out styling) */
   getRowClass?: (row: Row) => string | undefined;
+  /** stable test id for a rendered row. */
+  getRowTestId?: (row: Row) => string;
   /** optional placement of the expand control (default: fixed leading column) */
   expandColumn?: IExpandColumnConfig;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */
@@ -106,6 +108,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     onRowClick,
     activeRowId,
     getRowClass,
+    getRowTestId,
     expandColumn,
     loadingLabel,
     toolbarSlots,
@@ -167,7 +170,11 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     const current = controller.store.getSnapshot().selection;
     const same =
       current.length === controlledIds.length && current.every((id, i) => id === controlledIds[i]);
-    if (!same) controller.store.dispatch({ type: GridActionType.SetSelection, ids: controlledIds });
+    if (!same)
+      controller.store.dispatch({
+        type: GridActionType.SetSelection,
+        ids: controlledIds,
+      });
   }, [controlledIds, controller]);
 
   // store → parent, on user-driven changes only. The mount baseline is captured without
@@ -211,6 +218,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     onRowClick,
     activeRowId,
     getRowClass,
+    getRowTestId,
     isRowSelectable: selection?.isRowSelectable,
     expandColumn,
     loadingLabel,
@@ -274,7 +282,10 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
               <button
                 type="button"
                 onClick={() =>
-                  controller.store.dispatch({ type: GridActionType.SetSelection, ids: [] })
+                  controller.store.dispatch({
+                    type: GridActionType.SetSelection,
+                    ids: [],
+                  })
                 }
                 className="rounded-full px-1.5 py-0.5 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
               >
