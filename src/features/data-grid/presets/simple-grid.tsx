@@ -128,6 +128,8 @@ export interface ISimpleGridProps<Row> {
    * away, pager below the fold, and anything rendered after the grid pushed off-screen.
    */
   autoHeight?: boolean;
+  /** Fixed data-row height in pixels; useful for rows containing fixed-size previews. */
+  rowHeight?: number;
   /** Enable a pinned checkbox/radio selection column. Omit to disable selection. */
   rowSelection?: ISimpleRowSelection<Row>;
   /** Draw the divider border on pinned columns (default: true). */
@@ -270,7 +272,11 @@ const SELECTION_COLUMN_DEF: ColDef = {
   resizable: false,
   suppressMovable: true,
   lockPosition: 'left',
-  cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  cellStyle: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerClass: 'flex items-center justify-center',
 };
 
@@ -287,6 +293,7 @@ function SimpleGridBasic<Row>({
   pageSize = 20,
   sortable = false,
   hideHeader = false,
+  rowHeight = 44,
   rowSelection,
   pinnedColumnBorder = true,
   className,
@@ -307,7 +314,11 @@ function SimpleGridBasic<Row>({
   const agRowSelection = useMemo<RowSelectionOptions<Row> | undefined>(() => {
     if (!selectionMode) return undefined;
     if (selectionMode === SelectionMode.Single) {
-      return { mode: 'singleRow', checkboxes: true, enableClickSelection: false };
+      return {
+        mode: 'singleRow',
+        checkboxes: true,
+        enableClickSelection: false,
+      };
     }
     return {
       mode: 'multiRow',
@@ -372,6 +383,7 @@ function SimpleGridBasic<Row>({
         suppressCellFocus
         animateRows={false}
         headerHeight={hideHeader ? 0 : 48}
+        rowHeight={rowHeight}
         rowSelection={agRowSelection}
         selectionColumnDef={rowSelection ? SELECTION_COLUMN_DEF : undefined}
         onSelectionChanged={rowSelection ? onSelectionChanged : undefined}
@@ -422,6 +434,7 @@ export function SimpleGrid<Row>(props: ISimpleGridProps<Row>) {
       pageSize={props.pageSize}
       pageSizeOptions={props.pageSizeOptions}
       hideHeader={props.hideHeader}
+      rowHeight={props.rowHeight}
       autoHeight={props.autoHeight}
       rowSelection={props.rowSelection}
       operators={props.operators}
