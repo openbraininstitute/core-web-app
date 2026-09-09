@@ -227,8 +227,7 @@ function CircuitVizView({
   });
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
-  const { cells, isLoading, error, loadCell, retry, synapses, anchor, cameraFocus, download } =
-    source;
+  const { cells, isLoading, error, loadCell, retry, synapses, anchor, download } = source;
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
 
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -344,7 +343,6 @@ function CircuitVizView({
           backgroundColor={backgroundColor}
           signals={signals}
           circuit={cells}
-          cameraFocus={cameraFocus}
           onCellHover={enableCellHover ? handleCellHover : undefined}
           // Not while a location is being placed: morphoviewer dispatches the
           // cell click and the location pick from the same tap, so a tap meant

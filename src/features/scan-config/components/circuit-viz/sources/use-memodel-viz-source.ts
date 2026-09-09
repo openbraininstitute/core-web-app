@@ -87,8 +87,6 @@ export function useMemodelVisualizationSource({
     retry,
     sonataSectionIds,
     anchor: cells.length > 0 ? ORIGIN : null,
-    // Every cell is the subject here, so there is nothing to frame it against.
-    cameraFocus: null,
   };
 }
 

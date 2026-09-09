@@ -267,27 +267,6 @@ export function LargeCircuitPreview({
     return { palette, columnByCell };
   }, [placed, subjectName, positions.length, nodeColors, recede, hidden]);
 
-  // Where the population on show sits in `positions`, for the camera to frame.
-  // A memo of its own rather than a field of `positions`: that array has to keep
-  // its identity across a selection change or the viewer reads a new scene and
-  // refits the camera — which is the very thing framing is here to stop.
-  const cameraFocus = React.useMemo(() => {
-    if (!subjectName || hidden.has(subjectName)) return null;
-
-    let from = 0;
-    for (const { population: candidate, geometry } of placed) {
-      // A population with no somas is framed by nothing, and a range of none is
-      // what the viewer rejects rather than reads.
-      if (candidate.name === subjectName) {
-        return geometry.count > 0 ? { from, count: geometry.count } : null;
-      }
-      from += geometry.count;
-    }
-    // Never placed: an input population carries no positions, and there is
-    // nothing on screen to frame.
-    return null;
-  }, [placed, subjectName, hidden]);
-
   const handleCellClick = React.useCallback(
     (index: number) => {
       let end = 0;
@@ -337,7 +316,6 @@ export function LargeCircuitPreview({
           scalebar={scalebar}
           positions={positions}
           cellColors={cellColors}
-          cameraFocus={cameraFocus}
           backgroundColor={backgroundColor}
           signals={signals}
           overlays={morphoOverlays}

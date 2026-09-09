@@ -1,6 +1,5 @@
 import type { DownloadProgress } from '@/features/circuit-nodes/types';
 import type {
-  MorphoViewerCameraFocus,
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
   MorphoViewerSmallCircuitProps,
@@ -56,10 +55,4 @@ export type TSmallCircuitSource = {
    * populations that would pull it away from the cells being recorded.
    */
   anchor: [x: number, y: number, z: number] | null;
-  /**
-   * Where that same population sits in {@link cells}, for the camera to frame.
-   * Null when it is hidden or could not be placed, and the whole scene is
-   * framed instead.
-   */
-  cameraFocus: MorphoViewerCameraFocus | null;
 };

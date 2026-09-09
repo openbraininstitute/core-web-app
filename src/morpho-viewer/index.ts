@@ -19,7 +19,6 @@ export { MorphoViewerTreeItemType } from './tree-item-type';
 
 export type {
   ColoringType,
-  MorphoViewerCameraFocus,
   MorphoViewerCellColors,
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
