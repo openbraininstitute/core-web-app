@@ -1,6 +1,6 @@
 import { Select } from 'antd';
 import { get } from 'es-toolkit/compat';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useId, useMemo } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -26,6 +26,11 @@ export default function EntityPropertyDropdown({
     [schemaMappingConfig?.properties, property]
   );
 
+  /** Ties this select's options to this select: antd leaves every dropdown it has
+   * opened in the page, so an option is otherwise indistinguishable from the same
+   * option in a field filled minutes ago. */
+  const dropdownId = useId();
+
   const chosen = useMemo(
     () => new Set((Array.isArray(value) ? value : [value]).filter(Boolean).map(String)),
     [value]
@@ -40,10 +45,12 @@ export default function EntityPropertyDropdown({
   return (
     <Select
       data-testid="scan-config-control"
+      data-scan-config-options={dropdownId}
       data-scan-config-block-element={`${ScanConfigUIElementDict.EntityPropertyDropdown}__${multiple ? 'multiple' : 'singular'}`}
       optionRender={(option) => (
         <span
           data-testid={`scan-config-option-${String(option.value)}`}
+          data-scan-config-option-of={dropdownId}
           data-selected={chosen.has(String(option.value))}
         >
           {option.label}

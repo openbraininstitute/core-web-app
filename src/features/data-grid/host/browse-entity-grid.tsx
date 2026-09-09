@@ -189,7 +189,14 @@ export function EntityDataGrid({
   const brainRegionId = defaultBrainRegion ?? selectedBrainRegion?.id;
   const hasBrainRegion = Boolean(brainRegionId);
 
-  const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
+  const { dataKey } = makeDataKey({
+    virtualLabId,
+    projectId,
+    section,
+    dataType,
+    scope,
+    id,
+  });
 
   // Publish the grid's filtered total under this dataKey so the data sidebar's
   // "x of y" counters follow the grid's filters/search. Cleared on unmount so a
@@ -252,7 +259,13 @@ export function EntityDataGrid({
     () =>
       new GridController<EntityCoreIdentifiableNamed>({
         schema: definition.schema,
-        context: { dataType, section, scope, species: speciesKey, factors: extraFactors },
+        context: {
+          dataType,
+          section,
+          scope,
+          species: speciesKey,
+          factors: extraFactors,
+        },
         instanceKey: dataKey,
         // The session slice is keyed by the full `dataKey`, but the layout slice by
         // section + entity type only, so a layout is shared across projects/scopes.
@@ -264,7 +277,11 @@ export function EntityDataGrid({
   useEffect(() => controller.connect(), [controller]);
 
   const handleSearch = useCallback(
-    (text: string) => controller.store.dispatch({ type: GridActionType.SetFreeTextSearch, text }),
+    (text: string) =>
+      controller.store.dispatch({
+        type: GridActionType.SetFreeTextSearch,
+        text,
+      }),
     [controller]
   );
 
@@ -432,6 +449,7 @@ export function EntityDataGrid({
           className="h-full"
           gridClassName={classNames?.tableClassNames?.container}
           onRowClick={handleRowClick}
+          getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
           selection={pickerSelection}
           toolbarSlots={{

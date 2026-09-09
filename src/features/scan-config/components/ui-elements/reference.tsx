@@ -1,4 +1,5 @@
 import { Select } from 'antd';
+import { useId } from 'react';
 
 import {
   type Reference as ReferenceSchema,
@@ -79,6 +80,11 @@ export default function Reference({
   /** block names to exclude from the dropdown (e.g. a combined set excluding itself) */
   omit?: string[];
 }) {
+  /** Ties this select's options to this select: antd leaves every dropdown it has
+   * opened in the page, so an option is otherwise indistinguishable from the same
+   * option in a field filled minutes ago. */
+  const dropdownId = useId();
+
   const referenceTypeDict = useReferenceTypeDict(schema);
   const allowedByReferenceType = useAllowedBlockTypesByReferenceType(schema);
   const blockTypeToConfigKey = useBlockTypeToConfigKey(schema);
@@ -171,11 +177,17 @@ export default function Reference({
   return (
     <Select
       data-testid="scan-config-control"
+      data-scan-config-options={dropdownId}
       data-scan-config-block-element={ScanConfigUIElementDict.Reference}
       className="w-full"
       disabled={disabled}
       optionRender={(option) => (
-        <span data-testid={`scan-config-option-${String(option.value)}`}>{option.label}</span>
+        <span
+          data-testid={`scan-config-option-${String(option.value)}`}
+          data-scan-config-option-of={dropdownId}
+        >
+          {option.label}
+        </span>
       )}
       onChange={(newV: string) =>
         onChange(
