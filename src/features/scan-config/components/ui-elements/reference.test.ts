@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveDefaultReferenceLabel } from '@/features/scan-config/components/ui-elements/reference';
+import {
+  isReferenceFieldVisible,
+  resolveDefaultReferenceLabel,
+} from '@/features/scan-config/components/ui-elements/reference';
 
 const TYPE_LABELS = {
   BiophysicalNeuronSetReference: 'Default: All Biophysical Neurons',
@@ -112,5 +115,45 @@ describe('resolveDefaultReferenceLabel', () => {
     // Not read by this function, but this is the contract the UI relies on to render the
     // default's values or materialise it.
     expect(TAG_DEFAULTS.stimulus_target.block).toHaveProperty('type');
+  });
+});
+
+describe('isReferenceFieldVisible', () => {
+  it('shows a field whose role the config answers, with no type-keyed map at all', () => {
+    // What lets a config drop default_block_reference_labels once every field is tagged.
+    const visible = isReferenceFieldVisible(
+      { reference_types: ['AllDistributionsReference'], reference_tag: 'stimulus_target' },
+      { default_block_reference_labels: {}, reference_tag_defaults: TAG_DEFAULTS }
+    );
+
+    expect(visible).toBe(true);
+  });
+
+  it('still shows an untagged field whose type is labelled', () => {
+    // Configs that tag nothing must render exactly as before.
+    const visible = isReferenceFieldVisible(
+      { reference_types: ['TimestampsReference'] },
+      { default_block_reference_labels: TYPE_LABELS }
+    );
+
+    expect(visible).toBe(true);
+  });
+
+  it('hides a field the config says nothing about', () => {
+    const visible = isReferenceFieldVisible(
+      { reference_types: ['UnlabelledReference'] },
+      { default_block_reference_labels: {} }
+    );
+
+    expect(visible).toBe(false);
+  });
+
+  it('hides a tagged field whose role the config leaves unanswered and whose type is unlabelled', () => {
+    const visible = isReferenceFieldVisible(
+      { reference_types: ['UnlabelledReference'], reference_tag: 'a_role_nobody_declared' },
+      { default_block_reference_labels: {}, reference_tag_defaults: TAG_DEFAULTS }
+    );
+
+    expect(visible).toBe(false);
   });
 });
