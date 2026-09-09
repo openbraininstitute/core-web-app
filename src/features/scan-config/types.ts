@@ -245,9 +245,9 @@ export interface Reference extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.Reference;
   reference_types: Array<string>;
   /**
-   * the role this field plays, when leaving it unset means something specific. the config's
+   * what this field is for, when leaving it unset means something specific. the config's
    * `reference_tag_defaults` names the block it then resolves to, and that is what the
-   * dropdown shows as its default option. keyed by role rather than by reference type, so
+   * dropdown shows as its default option. keyed by tag rather than by reference type, so
    * two fields of the same type that mean different things get their own answer.
    */
   reference_tag?: string;

@@ -64,7 +64,7 @@ const DEFAULT_SENTINEL = '__default_as_null__';
 /**
  * whether a reference field is shown at all.
  *
- * a field is shown once the config says what it resolves to when left unset -- by role through
+ * a field is shown once the config says what it resolves to when left unset -- by tag through
  * `reference_tag_defaults`, or by reference type through `default_block_reference_labels`.
  * either answer suffices, which is what lets a config drop the type-keyed map once every one of
  * its fields is tagged, while configs that tag nothing keep rendering exactly as before.
@@ -92,8 +92,8 @@ export function isReferenceFieldVisible(
 /**
  * the label for the dropdown's default option: what the field resolves to when left unset.
  *
- * a field that declares a `reference_tag` names the *role* it plays, and the config answers
- * per role through `reference_tag_defaults`. that is what the type-keyed
+ * a field that declares a `reference_tag` names what it is *for*, and the config answers
+ * per tag through `reference_tag_defaults`. that is what the type-keyed
  * `default_block_reference_labels` cannot express: two fields of the same reference type
  * that mean different things -- a stimulus target and a recording target are both neuron set
  * references, and resolve to different neuron sets. the type-keyed map remains the fallback

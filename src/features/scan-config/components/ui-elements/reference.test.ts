@@ -24,7 +24,7 @@ const TAG_DEFAULTS = {
 };
 
 describe('resolveDefaultReferenceLabel', () => {
-  it('answers per role when the field declares a reference tag', () => {
+  it('answers per tag when the field declares a reference tag', () => {
     const label = resolveDefaultReferenceLabel(
       { reference_types: ['BiophysicalNeuronSetReference'], reference_tag: 'stimulus_target' },
       { default_block_reference_labels: TYPE_LABELS, reference_tag_defaults: TAG_DEFAULTS }
@@ -61,8 +61,8 @@ describe('resolveDefaultReferenceLabel', () => {
     expect(label).toBe('Default: Simulation Start (0 ms)');
   });
 
-  it('falls back to the type-keyed label when the config answers no such role', () => {
-    // a config that tags its fields need not supply every role; an unanswered one is not an
+  it('falls back to the type-keyed label when the config answers no such tag', () => {
+    // a config that tags its fields need not supply every tag; an unanswered one is not an
     // error, it just means nothing better than the type-keyed label is known.
     const label = resolveDefaultReferenceLabel(
       { reference_types: ['TimestampsReference'], reference_tag: 'a_role_nobody_declared' },
@@ -119,7 +119,7 @@ describe('resolveDefaultReferenceLabel', () => {
 });
 
 describe('isReferenceFieldVisible', () => {
-  it('shows a field whose role the config answers, with no type-keyed map at all', () => {
+  it('shows a field whose tag the config answers, with no type-keyed map at all', () => {
     // What lets a config drop default_block_reference_labels once every field is tagged.
     const visible = isReferenceFieldVisible(
       { reference_types: ['AllDistributionsReference'], reference_tag: 'stimulus_target' },
@@ -148,7 +148,7 @@ describe('isReferenceFieldVisible', () => {
     expect(visible).toBe(false);
   });
 
-  it('hides a tagged field whose role the config leaves unanswered and whose type is unlabelled', () => {
+  it('hides a tagged field whose tag the config leaves unanswered and whose type is unlabelled', () => {
     const visible = isReferenceFieldVisible(
       { reference_types: ['UnlabelledReference'], reference_tag: 'a_role_nobody_declared' },
       { default_block_reference_labels: {}, reference_tag_defaults: TAG_DEFAULTS }
