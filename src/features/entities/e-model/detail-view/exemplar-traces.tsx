@@ -15,7 +15,10 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { Header } from '@/features/entities/e-model/detail-view/header';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { detailViewInsetPanelClass } from '@/ui/segments/detail-view/variant-styles';
+import {
+  detailViewInsetPanelClass,
+  detailViewPaginationClass,
+} from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -32,7 +35,10 @@ import type { NormalizeChars } from '@/utils/type';
  * A failed fetch is not an empty listing: reporting every error as "no traces" hides a
  * permission problem behind a wording the user cannot act on.
  */
-function describeTracesError(error: unknown): { title: string; description: string } {
+function describeTracesError(error: unknown): {
+  title: string;
+  description: string;
+} {
   if (isNotAuthorizedError(error)) {
     return {
       title: 'No access to exemplar traces',
@@ -61,6 +67,7 @@ function makeColumns(
     id: key,
     header: isString(field.title) ? field.title.toUpperCase() : key,
     headerNode: isString(field.title) ? undefined : field.title,
+    // The table supplies a fixed preview row height so custom renderers cannot collapse it.
     renderCell: (entity) => {
       const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/electrical-cell-recording/${
         entity.id
@@ -117,6 +124,8 @@ export function ExemplarTraces({ source, variant = ViewVariant.Light }: Props) {
       <div className={cn(detailViewInsetPanelClass(variant))}>
         <SimpleGrid<IElectricalCellRecording>
           columns={columns}
+          rowHeight={118}
+          className={detailViewPaginationClass(variant)}
           getRowId={(row) => row.id}
           pageSize={DEFAULT_PAGE_XSMALL_SIZE}
           serverSide={{
