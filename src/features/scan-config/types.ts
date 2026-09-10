@@ -146,6 +146,7 @@ export const ScanConfigUIElementDict = {
   EntityPropertyDropdown: 'entity_property_dropdown',
   NeuronIds: 'neuron_ids',
   BooleanInput: 'boolean_input',
+  DiscreteProbabilities: 'discrete_probabilities',
   ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
   IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
   ModelSelectorSingle: 'model_selector_single',
@@ -384,6 +385,16 @@ export interface VoltageDuration extends TBlockElement {
   };
 }
 
+/**
+ * the `values` array of a discrete distribution. it owns the sibling `probabilities` array
+ * too, which is `ui_hidden` for that reason -- the two are edited as one table of rows, since
+ * they must stay the same length.
+ */
+export interface DiscreteProbabilities extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DiscreteProbabilities;
+  items: { type: 'integer' };
+}
+
 export interface NeuronPropertyFilter extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter;
   population_source_dropdown_key: string;
@@ -429,6 +440,7 @@ export type ParamSchema =
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
   | VoltageDuration
+  | DiscreteProbabilities
   | StringSelectionEnhanced
   | NeuronPropertyFilter
   | NeuronSetCombination;
