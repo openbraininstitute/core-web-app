@@ -33,7 +33,7 @@ import type {
   GetRowIdParams,
   GridApi,
   GridReadyEvent,
-  ProcessRowPostCreateParams,
+  ProcessRowParams,
   RowClassParams,
   RowHeightParams,
   RowSelectionOptions,
@@ -308,12 +308,44 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   );
 
   const processRowPostCreate = useCallback(
-    (event: ProcessRowPostCreateParams<TDisplayRow<Row>>) => {
+    (event: ProcessRowParams<TDisplayRow<Row>>) => {
       const data = event.node.data;
-      if (!getRowTestId || data == null || isDetailRow(data)) return;
-      event.eRow.dataset.testid = getRowTestId(data);
+      if (data == null || isDetailRow(data)) return;
+
+      if (getRowTestId) event.eRow.dataset.testid = getRowTestId(data);
+      if (!selectionEnabled) return;
+
+      // AG Grid v35 renders its selection widget as a div, not a native input,
+      // and may mount that widget just after this row callback runs.
+      const roots = [event.ePinnedLeftRow, event.eRow].filter(
+        (root): root is HTMLElement => root != null
+      );
+      const testId = `data-grid-selection-${getRowId(data)}`;
+      const selector = '[role="checkbox"], [role="radio"], .ag-checkbox-input-wrapper';
+      let observer: MutationObserver | undefined;
+      let timeout: number | undefined;
+      const stop = () => {
+        observer?.disconnect();
+        if (timeout !== undefined) window.clearTimeout(timeout);
+      };
+      const tagControl = () => {
+        for (const root of roots) {
+          const control = root.querySelector<HTMLElement>(selector);
+          if (!control) continue;
+          control.setAttribute('data-testid', testId);
+          stop();
+          return true;
+        }
+        return false;
+      };
+
+      if (tagControl()) return;
+
+      observer = new MutationObserver(tagControl);
+      for (const root of roots) observer.observe(root, { childList: true, subtree: true });
+      timeout = window.setTimeout(stop, 1000);
     },
-    [getRowTestId]
+    [getRowId, getRowTestId, selectionEnabled]
   );
 
   // Optional per-row class (e.g. hierarchy gray-out); never applied to detail rows.
@@ -367,7 +399,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         onCellClicked={onCellClicked}
         getRowStyle={getRowStyle}
         getRowClass={getRowClass ? rowClass : undefined}
-        processRowPostCreate={getRowTestId ? processRowPostCreate : undefined}
+        processRowPostCreate={getRowTestId || selectionEnabled ? processRowPostCreate : undefined}
       />
     </div>
   );
