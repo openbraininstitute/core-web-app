@@ -79,7 +79,6 @@ const config: NextConfig = {
       }
     : false,
   reactStrictMode: true,
-  compress: false,
   output: 'standalone',
   serverExternalPackages: [
     '@sentry/nextjs',

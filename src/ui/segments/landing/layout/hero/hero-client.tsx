@@ -35,9 +35,46 @@ export default function HeroClient({ className, section, data }: HeroClientProps
     next,
   } = data;
   const [videoReady, setVideoReady] = React.useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = React.useState(false);
+  const heroRef = React.useRef<HTMLDivElement>(null);
   const height = useFullHeight();
+
+  React.useEffect(() => {
+    if (!videoURL || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isWideScreen = window.matchMedia('(min-width: 769px)').matches;
+    const connection = (
+      navigator as Navigator & {
+        connection?: { effectiveType?: string; saveData?: boolean };
+      }
+    ).connection;
+    const isSlowConnection =
+      connection?.saveData ||
+      connection?.effectiveType === 'slow-2g' ||
+      connection?.effectiveType === '2g';
+
+    if (prefersReducedMotion || !isWideScreen || isSlowConnection) return;
+
+    const hero = heroRef.current;
+    if (!hero) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(hero);
+
+    return () => observer.disconnect();
+  }, [videoURL]);
+
   return (
-    <div className={classNames(className, styles.hero)} style={{ height }}>
+    <div ref={heroRef} className={classNames(className, styles.hero)} style={{ height }}>
       <div className={classNames(styles.background)}>
         {backgroundType === 'video' && (
           <>
@@ -47,18 +84,23 @@ export default function HeroClient({ className, section, data }: HeroClientProps
                 width={posterWidth}
                 height={posterHeight}
                 alt="Hero image"
+                priority
+                sizes="100vw"
               />
             )}
-            <video
-              className={videoReady ? styles.show : styles.hide}
-              loop
-              muted
-              autoPlay
-              playsInline
-              disablePictureInPicture
-              src={videoURL ?? ''}
-              onCanPlay={() => setVideoReady(true)}
-            />
+            {shouldLoadVideo && (
+              <video
+                className={videoReady ? styles.show : styles.hide}
+                loop
+                muted
+                autoPlay
+                playsInline
+                preload="none"
+                disablePictureInPicture
+                src={videoURL ?? ''}
+                onCanPlay={() => setVideoReady(true)}
+              />
+            )}
           </>
         )}
         {backgroundType === 'image' && imageURL && <img src={imageURL} alt="Background" />}

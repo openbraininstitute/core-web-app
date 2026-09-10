@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 
 import { DEFAULT_SECTION, MENU_ITEMS } from '@/ui/segments/landing/constants';
 import { IconClose } from '@/ui/segments/landing/icons/icon-close';
@@ -13,6 +14,20 @@ interface PopupMenuProps {
 }
 
 export default function PopupMenu({ className, visible, onChange }: PopupMenuProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      previouslyFocusedRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      closeButtonRef.current?.focus();
+    } else {
+      previouslyFocusedRef.current?.focus();
+      previouslyFocusedRef.current = null;
+    }
+  }, [visible]);
+
   return (
     <div
       className={classNames(
@@ -24,6 +39,10 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
       )}
       onClick={() => onChange(false)}
       role="dialog"
+      aria-label="Site navigation"
+      aria-modal="true"
+      aria-hidden={!visible}
+      tabIndex={-1}
       onKeyDown={(evt) => {
         if (evt.key === 'Escape') onChange(false);
       }}
@@ -31,6 +50,7 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
       <menu className="border-neutral-3 absolute top-4 right-4 bottom-4 left-4 grid h-[calc(100%-2rem)] max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] grid-rows-[auto_1fr] gap-4 border bg-white">
         <header className="absolute top-0 left-0 flex h-auto w-full justify-end">
           <button
+            ref={closeButtonRef}
             className="text-[1em]"
             type="button"
             aria-label="Close popup menu"

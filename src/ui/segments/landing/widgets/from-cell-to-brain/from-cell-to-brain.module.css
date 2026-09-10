@@ -20,7 +20,7 @@
   font-size: var(--font-size-M);
   font-weight: 400;
   letter-spacing: 0.02em;
-  color: var(--color-neutral);
+  color: #595959;
 }
 
 .card {

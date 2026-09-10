@@ -44,7 +44,7 @@ export const DEFAULT_METADATA: Metadata = {
       noimageindex: true,
     },
   },
-  metadataBase: new URL('https://www.openbrainplatform.com'),
+  metadataBase: new URL('https://www.openbraininstitute.org'),
   alternates: {
     canonical: '/',
     languages: {

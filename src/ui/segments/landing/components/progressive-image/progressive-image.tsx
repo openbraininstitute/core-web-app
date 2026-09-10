@@ -15,6 +15,8 @@ interface ProgressiveImageProps {
   alt?: string;
   background?: string;
   forceAspectRatio?: boolean;
+  priority?: boolean;
+  sizes?: string;
 }
 
 export default function ProgressiveImage({
@@ -25,6 +27,8 @@ export default function ProgressiveImage({
   alt = 'Vignette',
   background = 'var(--color-primary)',
   forceAspectRatio = false,
+  priority = false,
+  sizes,
 }: ProgressiveImageProps) {
   const [loaded, setLoaded] = useState(false);
 
@@ -43,6 +47,9 @@ export default function ProgressiveImage({
         width={width}
         height={height}
         alt={alt}
+        priority={priority}
+        fetchPriority={priority ? 'high' : undefined}
+        sizes={sizes}
       />
     </div>
   );
