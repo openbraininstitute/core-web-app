@@ -30,7 +30,7 @@ const simulatableCircuitFilters = { has_electrical_cell_models: true } as const;
 export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.ScanConfig,
+    ...WorkflowStagePresets.ScanConfigInEditorSelection,
     sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
     targetType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
     breadcrumb: {

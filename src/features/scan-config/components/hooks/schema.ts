@@ -24,10 +24,11 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { applyWorkflowSessionSelectionPatch } from '@/features/scan-config/workflow/workflow-session-selection';
+import { defaultWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TAnyWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { Nullish } from '@/utils/type';
@@ -376,6 +377,19 @@ function shouldApplyWorkflowSessionSelection(opts: {
   return true;
 }
 
+type TBuildConfigStateArgs = {
+  schema: ConfigSchema;
+  /** origin campaign form when resuming or duplicating */
+  initialConfig?: Config;
+  model: TSupportedEntitiesForScanConfiguration | Nullish;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  /** campaign id from `?origin=` when resuming or duplicating */
+  origin?: string;
+  /** the workflow's seeding policy; the generic one is used when omitted */
+  seed?: TAnyWorkflowSeed;
+};
+
 /**
  * builds the scan-config editor state from schema defaults, optional origin form,
  * entity model, and optional workflow browse session selection
@@ -383,22 +397,17 @@ function shouldApplyWorkflowSessionSelection(opts: {
  * session selection is applied only when {@link shouldApplyWorkflowSessionSelection}
  * returns `true`; otherwise the origin/initial form is returned unchanged
  *
- * @param schema: scan-config schema
- * @param initialConfig: optional origin form
- * @param model: entity model
- * @param workflowSessionSelection: optional workflow browse session selection
- * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
- * @param origin: optional campaign id from `?origin=` when resuming or duplicating
  * @returns the scan-config editor state
  */
-function buildConfigState(
-  schema: ConfigSchema,
-  initialConfig: Config | undefined,
-  model: TSupportedEntitiesForScanConfiguration | Nullish,
-  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null,
-  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined,
-  origin?: string
-): Config {
+function buildConfigState({
+  schema,
+  initialConfig,
+  model,
+  workflowSessionSelection,
+  resolveFromIdType,
+  origin,
+  seed,
+}: TBuildConfigStateArgs): Config {
   const baseConfig = buildInitialConfigState(schema, initialConfig, model);
 
   // new browse → configure: seed the initialize model field from sessionStorage
@@ -418,7 +427,7 @@ function buildConfigState(
     return baseConfig;
   }
 
-  return applyWorkflowSessionSelectionPatch({
+  return (seed ?? defaultWorkflowSeed).applyTo({
     config: baseConfig,
     schema,
     sessionSelection: workflowSessionSelection,
@@ -447,6 +456,7 @@ export function useConfig({
   origin,
   workflowSessionSelection,
   resolveFromIdType,
+  seed,
 }: {
   schema: ConfigSchema;
   initialConfig?: Config;
@@ -454,16 +464,19 @@ export function useConfig({
   origin?: string;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  /** the workflow's seeding policy; the generic one is used when omitted */
+  seed?: TAnyWorkflowSeed;
 }) {
   const [configState, setConfigState] = useState<Config>(() =>
-    buildConfigState(
+    buildConfigState({
       schema,
       initialConfig,
       model,
       workflowSessionSelection,
       resolveFromIdType,
-      origin
-    )
+      origin,
+      seed,
+    })
   );
   const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
 
@@ -474,16 +487,17 @@ export function useConfig({
 
     appliedInitialConfigRef.current = initialConfig;
     setConfigState(
-      buildConfigState(
+      buildConfigState({
         schema,
         initialConfig,
         model,
         workflowSessionSelection,
         resolveFromIdType,
-        origin
-      )
+        origin,
+        seed,
+      })
     );
-  }, [initialConfig, model, origin, resolveFromIdType, schema, workflowSessionSelection]);
+  }, [initialConfig, model, origin, resolveFromIdType, schema, seed, workflowSessionSelection]);
 
   return [configState, setConfigState] as const;
 }
