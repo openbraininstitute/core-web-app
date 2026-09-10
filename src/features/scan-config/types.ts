@@ -146,6 +146,7 @@ export const ScanConfigUIElementDict = {
   EntityPropertyDropdown: 'entity_property_dropdown',
   NeuronIds: 'neuron_ids',
   BooleanInput: 'boolean_input',
+  DiscreteProbabilities: 'discrete_probabilities',
   ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
   IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
   ModelSelectorSingle: 'model_selector_single',
@@ -244,6 +245,13 @@ export interface IntParameterSweep extends TBlockElement {
 export interface Reference extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.Reference;
   reference_types: Array<string>;
+  /**
+   * what this field is for, when leaving it unset means something specific. the config's
+   * `reference_tag_defaults` names the block it then resolves to, and that is what the
+   * dropdown shows as its default option. keyed by tag rather than by reference type, so
+   * two fields of the same type that mean different things get their own answer.
+   */
+  reference_tag?: string;
   anyOf?: Array<
     | {
         title?: string;
@@ -377,6 +385,16 @@ export interface VoltageDuration extends TBlockElement {
   };
 }
 
+/**
+ * the `values` array of a discrete distribution. it owns the sibling `probabilities` array
+ * too, which is `ui_hidden` for that reason -- the two are edited as one table of rows, since
+ * they must stay the same length.
+ */
+export interface DiscreteProbabilities extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DiscreteProbabilities;
+  items: { type: 'integer' };
+}
+
 export interface NeuronPropertyFilter extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter;
   population_source_dropdown_key: string;
@@ -422,6 +440,7 @@ export type ParamSchema =
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
   | VoltageDuration
+  | DiscreteProbabilities
   | StringSelectionEnhanced
   | NeuronPropertyFilter
   | NeuronSetCombination;
@@ -456,7 +475,15 @@ export interface IBlockDictionary extends TRootElement {
 
 export type ConfigSchema = {
   additionalProperties: false;
+  /** keyed by reference type. decides whether a reference field is shown at all. */
   default_block_reference_labels: Record<string, string>;
+  /**
+   * keyed by reference tag: what a field carrying that tag resolves to when left unset.
+   * `name` is what the block is registered under once the config is filled, and is shown as
+   * that field's default option; `block` is the serialized block behind it, so the values can
+   * be read without asking the server for them. absent on configs that do not tag their fields.
+   */
+  reference_tag_defaults?: Record<string, { name: string; block?: Record<string, unknown> }>;
   description: string;
   group_order: string[];
   properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {

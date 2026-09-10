@@ -61,6 +61,64 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  * //   → that reference type carries NO `allowed_block_types`
  * //   → no per-type filter; every entry in the `distributions` dictionary is listed.
  */
+/**
+ * whether a reference field is shown at all.
+ *
+ * a field is shown once the config says what it resolves to when left unset -- by tag through
+ * `reference_tag_defaults`, or by reference type through `default_block_reference_labels`.
+ * either answer suffices, which is what lets a config drop the type-keyed map once every one of
+ * its fields is tagged, while configs that tag nothing keep rendering exactly as before.
+ *
+ * the coupling itself is odd -- whether a field is *visible* has no reason to depend on whether
+ * a default has been *named* -- and it is why a config that declared neither rendered its blocks
+ * with no fields at all. widening it is the smallest step that does not change any config that
+ * relies on the old behaviour.
+ */
+export function isReferenceFieldVisible(
+  referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
+  schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
+): boolean {
+  if (
+    referenceSchema.reference_tag &&
+    schema.reference_tag_defaults?.[referenceSchema.reference_tag]
+  ) {
+    return true;
+  }
+  return referenceSchema.reference_types.some(
+    (refType) => !!schema.default_block_reference_labels?.[refType]
+  );
+}
+
+/**
+ * the label for the dropdown's default option: what the field resolves to when left unset.
+ *
+ * a field that declares a `reference_tag` names what it is *for*, and the config answers
+ * per tag through `reference_tag_defaults`. that is what the type-keyed
+ * `default_block_reference_labels` cannot express: two fields of the same reference type
+ * that mean different things -- a stimulus target and a recording target are both neuron set
+ * references, and resolve to different neuron sets. the type-keyed map remains the fallback
+ * for untagged fields, and it alone still decides whether a reference field is shown at all.
+ */
+export function resolveDefaultReferenceLabel(
+  referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
+  schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
+): string {
+  // the tagged answer carries the block alongside its name; only the name is shown here, but
+  // `schema.reference_tag_defaults[tag].block` is the distribution behind it, for a caller that
+  // wants to render its values or materialise it rather than accept it unseen.
+  const taggedLabel = referenceSchema.reference_tag
+    ? schema.reference_tag_defaults?.[referenceSchema.reference_tag]?.name
+    : undefined;
+
+  return (
+    taggedLabel ??
+    referenceSchema.reference_types
+      .map((refType) => schema.default_block_reference_labels?.[refType])
+      .find(Boolean) ??
+    'Default'
+  );
+}
+
 export default function Reference({
   value,
   onChange,
@@ -110,12 +168,7 @@ export default function Reference({
     if (configKey) matchingConfigKeys.add(configKey);
   }
 
-  // check visibility: at least one reference type must have a default label
-  const hasDefaultLabel = referenceSchema.reference_types.some(
-    (refType) => schema?.default_block_reference_labels?.[refType]
-  );
-
-  if (!schema || !hasDefaultLabel) return null;
+  if (!schema || !isReferenceFieldVisible(referenceSchema, schema)) return null;
 
   // build dropdown options from all matching dictionaries
   const options: Array<{ label: string; value: string }> = [];
@@ -138,11 +191,7 @@ export default function Reference({
     }
   }
 
-  // find the first available default label across accepted reference types
-  const defaultLabel =
-    referenceSchema.reference_types
-      .map((refType) => schema.default_block_reference_labels?.[refType])
-      .find(Boolean) ?? 'Default';
+  const defaultLabel = resolveDefaultReferenceLabel(referenceSchema, schema);
 
   options.unshift({
     label: defaultLabel,
