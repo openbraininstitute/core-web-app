@@ -18,6 +18,7 @@ import {
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { useScope } from '@/ui/hooks/use-scope';
+import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -145,8 +146,28 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   const queryClient = useQueryClient();
   const { scope: currentScope } = useScope();
 
-  const entityCount = selectedRows.length;
+  const projectRows = selectedRows.filter((row) => {
+    const candidate = row as T & {
+      authorized_project_id?: string | null;
+      authorized_public?: boolean;
+    };
+    return (
+      candidate.authorized_public === false &&
+      candidate.authorized_project_id === workspace?.projectId
+    );
+  });
+  const entityCount = projectRows.length;
   const isSingular = entityCount === 1;
+  const selectionBadge =
+    entityCount > 0 ? (
+      <Badge
+        rounded
+        aria-label={`${entityCount} project items selected`}
+        className="h-5 min-w-5 border-2 border-white bg-white px-1 text-[11px] font-bold leading-none text-destructive shadow-sm"
+      >
+        {entityCount}
+      </Badge>
+    ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
 
   const getButtonLabel = (): string => {
@@ -166,7 +187,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!workspace) throw new Error('No workspace context found');
-      const rows = compact(selectedRows) as unknown as EntityCoreIdentifiableNamed[];
+      const rows = compact(projectRows) as unknown as EntityCoreIdentifiableNamed[];
       return await pMap(
         rows,
         async (row) => {
@@ -257,7 +278,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   const buttonLabel = getButtonLabel();
   /** gradient + chrome marking this as destructive */
   const destructivePalette = cn(
-    'overflow-hidden border border-white/20 font-semibold text-white',
+    'border border-white/20 font-semibold text-white',
     'bg-linear-to-r from-destructive via-destructive/80 to-destructive bg-size-[200%_100%]',
     'disabled:cursor-not-allowed disabled:opacity-70'
   );
@@ -308,7 +329,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
             )}
             data-testid="bulk-delete-button"
           >
-            <ExpandingPillContent icon={renderButtonIcon()} label={buttonLabel} />
+            <ExpandingPillContent
+              icon={renderButtonIcon()}
+              label={buttonLabel}
+              badge={selectionBadge}
+            />
           </Button>
         ) : (
           <Button
@@ -329,6 +354,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
               {renderButtonIcon()}
               <span className="whitespace-nowrap">{children ?? buttonLabel}</span>
             </span>
+            {selectionBadge ? (
+              <span className="pointer-events-none absolute -top-2 right-2 z-10 *:ring-2 *:ring-white">
+                {selectionBadge}
+              </span>
+            ) : null}
           </Button>
         )}
       </motion.div>

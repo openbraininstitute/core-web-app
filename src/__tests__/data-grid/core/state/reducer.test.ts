@@ -80,13 +80,13 @@ describe('reducer — filters', () => {
     value: { kind: FilterValueKind.Text, text: 'foo' },
   } as const;
 
-  it('sets and clears a filter, resetting page and selection', () => {
+  it('sets and clears a filter, resetting page while preserving selection', () => {
     let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
     s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, { type: GridActionType.SetFilter, columnId: 'a', entry });
     expect(s.filters.a).toEqual(entry);
     expect(s.page).toBe(1);
-    expect(s.selection).toEqual([]);
+    expect(s.selection).toEqual(['r1']);
 
     s = reducer(s, {
       type: GridActionType.SetFilter,
@@ -94,6 +94,7 @@ describe('reducer — filters', () => {
       entry: null,
     });
     expect(s.filters).toEqual({});
+    expect(s.selection).toEqual(['r1']);
   });
 
   it('returns the same reference for no-op transitions', () => {
@@ -118,9 +119,11 @@ describe('reducer — filters', () => {
       entry,
     });
     s = reducer(s, { type: GridActionType.SetPage, page: 4 });
+    s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, { type: GridActionType.ClearFilters });
     expect(s.filters).toEqual({});
     expect(s.page).toBe(1);
+    expect(s.selection).toEqual(['r1']);
   });
 });
 
@@ -145,13 +148,13 @@ describe('reducer — pagination', () => {
 });
 
 describe('reducer — free-text search', () => {
-  it('resets page and selection on text change by default', () => {
+  it('resets page while preserving selection on text change', () => {
     let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
     s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, { type: GridActionType.SetFreeTextSearch, text: 'mouse' });
     expect(s.freeTextSearch).toBe('mouse');
     expect(s.page).toBe(1);
-    expect(s.selection).toEqual([]);
+    expect(s.selection).toEqual(['r1']);
   });
 
   it('keeps the full controlled picker selection while replacing and clearing a search', () => {
@@ -162,13 +165,11 @@ describe('reducer — free-text search', () => {
     s = reducer(s, {
       type: GridActionType.SetFreeTextSearch,
       text: second,
-      preserveSelection: true,
     });
     s = reducer(s, { type: GridActionType.SetSelection, ids: [first, second] });
     s = reducer(s, {
       type: GridActionType.SetFreeTextSearch,
       text: '',
-      preserveSelection: true,
     });
 
     expect(s.page).toBe(1);

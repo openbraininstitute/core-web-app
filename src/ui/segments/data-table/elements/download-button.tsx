@@ -14,6 +14,7 @@ import {
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
+import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -151,9 +152,19 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   if (!session) return null;
 
   const label = getButtonLabel();
+  const selectionBadge =
+    entityCount > 0 ? (
+      <Badge
+        rounded
+        aria-label={`${entityCount} selected`}
+        className="h-5 min-w-5 border-2 border-white bg-white px-1 text-[11px] font-bold leading-none text-primary-9 shadow-sm"
+      >
+        {entityCount}
+      </Badge>
+    ) : undefined;
   /** gradient + chrome marking this as the primary bulk action */
   const palette = cn(
-    'overflow-hidden border border-white/20 font-semibold text-white',
+    'border border-white/20 font-semibold text-white',
     'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
     'disabled:cursor-not-allowed disabled:opacity-70'
   );
@@ -181,7 +192,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           onClick={download}
           data-testid="bulk-download-button"
         >
-          <ExpandingPillContent icon={renderButtonIcon()} label={label} />
+          <ExpandingPillContent icon={renderButtonIcon()} label={label} badge={selectionBadge} />
         </Button>
       </motion.div>
     );
@@ -199,7 +210,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
         variant="default"
         disabled={downloadState === DownloadStateDict.loading}
         className={cn(
-          'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+          'relative h-12 min-w-45 border border-white/20 px-6 font-semibold',
           'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
           'transition-all duration-300 ease-out',
           'hover:scale-[1.02] active:scale-[0.98]',
@@ -213,6 +224,11 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           {renderButtonIcon()}
           <span className="whitespace-nowrap">{children ?? getButtonLabel()}</span>
         </span>
+        {selectionBadge ? (
+          <span className="pointer-events-none absolute -top-2 right-2 z-10 *:ring-2 *:ring-white">
+            {selectionBadge}
+          </span>
+        ) : null}
         <div
           className={cn(
             'pointer-events-none absolute inset-0',

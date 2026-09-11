@@ -69,8 +69,6 @@ export type TGridAction =
   | {
       type: typeof GridActionType.SetFreeTextSearch;
       text: string;
-      /** Controlled pickers retain picks while their search results change. */
-      preserveSelection?: boolean;
     }
   | { type: typeof GridActionType.Hydrate; state: Partial<IGridState> }
   | { type: typeof GridActionType.Reset; state: IGridState };

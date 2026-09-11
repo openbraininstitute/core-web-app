@@ -133,6 +133,24 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
 
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
 
+  // Scope changes replace the controller. Restore the prior id-only selection only when
+  // the replacement has no persisted selection; same-controller clears remain untouched.
+  const previousControllerRef = useRef<GridController<Row> | null>(null);
+  useEffect(() => {
+    const previousController = previousControllerRef.current;
+    if (previousController && previousController !== controller) {
+      const previousSelection = previousController.store.getSnapshot().selection;
+      const nextSelection = controller.store.getSnapshot().selection;
+      if (nextSelection.length === 0 && previousSelection.length > 0) {
+        controller.store.dispatch({
+          type: GridActionType.SetSelection,
+          ids: previousSelection,
+        });
+      }
+    }
+    previousControllerRef.current = controller;
+  }, [controller]);
+
   // Effect-time, never during render, so a host can publish the total into external state.
   useEffect(() => {
     onTotalChange?.({ total, loading });

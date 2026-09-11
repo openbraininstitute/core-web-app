@@ -63,7 +63,7 @@ export function ExpandingPillContent({ icon, label, badge }: IExpandingPillConte
           data-testid="toolbar-pill-badge-anchor"
           className={cn(
             'pointer-events-none relative z-10 h-5 w-0 shrink-0',
-            'translate-x-1.5 -translate-y-1.5',
+            'translate-x-0.5 -translate-y-2',
             '*:ring-2 *:ring-white'
           )}
         >
