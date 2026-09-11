@@ -471,14 +471,13 @@ export function EntityDataGrid({
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
           }}
-          renderBulkActions={({ selectedRows, selectedCount, clearSelection }) => (
+          renderBulkActions={({ selectedRows, clearSelection }) => (
             // Buttons only — the "N selected" count and Clear live in the footer.
             <div className="flex items-center gap-2">
               {allowDownload && (
                 <EntityDownloadButton<EntityCoreIdentifiableNamed>
                   expanding
                   selectedRows={selectedRows}
-                  selectionCount={selectedCount}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
@@ -488,7 +487,6 @@ export function EntityDataGrid({
                 <EntityDeleteButton<EntityCoreIdentifiableNamed>
                   expanding
                   selectedRows={selectedRows}
-                  selectionCount={selectedCount}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}

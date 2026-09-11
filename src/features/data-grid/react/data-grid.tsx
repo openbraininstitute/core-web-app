@@ -2,7 +2,12 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { GridActionType, isSelectionEnabled, SelectionMode } from '@/features/data-grid/core';
+import {
+  GridActionType,
+  isSelectionEnabled,
+  SelectionMode,
+  selectionScope,
+} from '@/features/data-grid/core';
 import { ActiveFiltersButton } from '@/features/data-grid/react/active-filters';
 import { BulkActions, countSelectionInScope } from '@/features/data-grid/react/bulk-actions';
 import { ColumnChooser } from '@/features/data-grid/react/column-chooser';
@@ -18,6 +23,7 @@ import type {
   OperatorRegistry,
   TFacets,
   TSelectionMode,
+  TSelectionScope,
 } from '@/features/data-grid/core';
 import type { IBulkActionsRenderArgs } from '@/features/data-grid/react/bulk-actions';
 import type { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
@@ -88,7 +94,7 @@ export interface IDataGridProps<Row> {
    * Selection scope behavior. `shared` keeps one basket when the controller changes
    * (the default); `isolated` starts empty for each controller/scope.
    */
-  selectionScope?: 'shared' | 'isolated';
+  selectionScope?: TSelectionScope;
   /** picker selection (single/multi) that propagates chosen rows to a host form. */
   selection?: IDataGridSelection<Row>;
 }
@@ -122,7 +128,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     onTotalChange,
     renderError,
     showColumnChooser = true,
-    selectionScope = 'shared',
+    selectionScope: selectionScopeValue = selectionScope.Shared,
     className,
     gridClassName,
     selection,
@@ -148,7 +154,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       const previousSelection = previousController.store.getSnapshot().selection;
       const nextSelection = controller.store.getSnapshot().selection;
       if (
-        selectionScope === 'shared' &&
+        selectionScopeValue === selectionScope.Shared &&
         nextSelection.length === 0 &&
         previousSelection.length > 0
       ) {
@@ -159,7 +165,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       }
     }
     previousControllerRef.current = controller;
-  }, [controller, selectionScope]);
+  }, [controller, selectionScopeValue]);
 
   // Effect-time, never during render, so a host can publish the total into external state.
   useEffect(() => {
@@ -268,7 +274,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   }
 
   const selectionCount =
-    selectionScope === 'shared'
+    selectionScopeValue === selectionScope.Shared
       ? countSelectionInScope(state.selection, rowScopeCacheRef.current, controller.context.scope)
       : state.selection.length;
 

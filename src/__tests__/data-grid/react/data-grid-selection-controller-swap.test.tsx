@@ -18,6 +18,7 @@ import {
   GridActionType,
   GridController,
   SelectionMode,
+  selectionScope,
 } from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
@@ -181,7 +182,7 @@ describe('DataGrid selection survives a controller swap', () => {
           operators={createDefaultOperatorRegistry()}
           cellRenderers={new CellRendererRegistry()}
           queryKey={['t', scopeKey]}
-          selectionScope="isolated"
+          selectionScope={selectionScope.Isolated}
           showColumnChooser={false}
         />
       );
