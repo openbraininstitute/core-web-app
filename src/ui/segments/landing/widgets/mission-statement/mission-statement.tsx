@@ -24,6 +24,7 @@ export function WidgetMissionStatement({ className, data }: WidgetMissionStateme
       target="_blank"
       rel="noopener noreferrer"
       className={classNames(className, styles.missionStatement, styleBlockSmall)}
+      data-testid="mission-statement-download"
     >
       <div className={styles.text}>
         <h2>{title}</h2>

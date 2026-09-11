@@ -12,12 +12,13 @@ import styles from './title.module.css';
 
 interface TitleProps {
   className?: string;
+  testId?: string;
   value: string;
   margin?: string;
   children?: React.ReactNode;
 }
 
-export default function Title({ className, value, children, margin }: TitleProps) {
+export default function Title({ className, testId, value, children, margin }: TitleProps) {
   const style: CSSProperties = {};
   if (margin) {
     style.marginTop = margin;
@@ -30,7 +31,9 @@ export default function Title({ className, value, children, margin }: TitleProps
           <div />
         </div>
         <div className={classNames(className, styleBlockSmallExpandRight, styles.flex)}>
-          <h1 style={style}>{value}</h1>
+          <h1 data-testid={testId} style={style}>
+            {value}
+          </h1>
           <div>{children}</div>
         </div>
       </div>
@@ -44,7 +47,7 @@ export default function Title({ className, value, children, margin }: TitleProps
       >
         <div />
       </div>
-      <h1 style={style} className={styleBlockSmall}>
+      <h1 data-testid={testId} style={style} className={styleBlockSmall}>
         {value}
       </h1>
     </>

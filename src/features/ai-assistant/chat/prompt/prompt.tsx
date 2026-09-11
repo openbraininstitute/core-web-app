@@ -101,8 +101,8 @@ export default function Prompt({
     }
   }, [value, fitTextarea]);
 
-  // Re-measure on text change and attachment count change
-  useLayoutEffect(measure, [measure, attachments.length]);
+  // Re-measure on text changes.
+  useLayoutEffect(measure, [measure]);
 
   // Re-measure on container resize
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function Prompt({
   // --- Height-reveal animation (FLIP) ---
   useLayoutEffect(() => {
     const main = mainRef.current;
-    if (!main) return;
+    if (!main || (!expanded && fromHeightRef.current == null)) return;
 
     fitTextarea();
 
@@ -285,6 +285,7 @@ export default function Prompt({
                 handleSendClick();
               }}
               aria-label={disabledReason ?? 'Send prompt'}
+              data-testid="ai-assistant-send-button"
               className={styles.sendButton}
               disabled={(value.trim().length === 0 && attachments.length === 0) || disabled}
               title={disabledReason}

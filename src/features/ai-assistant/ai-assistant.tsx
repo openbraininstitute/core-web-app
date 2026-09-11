@@ -93,6 +93,7 @@ export default function AiAssistant({
                 onClick={handleNewChat}
                 aria-label="New Chat"
                 title="New Chat"
+                data-testid="ai-assistant-new-chat-button"
               >
                 <IconNewChat />
               </button>
@@ -106,6 +107,7 @@ export default function AiAssistant({
                 onClick={() => setTab(tab === 'history' ? 'chat' : 'history')}
                 aria-label="History"
                 title="History"
+                data-testid="ai-assistant-history-button"
               >
                 <IconHistory />
               </button>
@@ -133,6 +135,7 @@ export default function AiAssistant({
                   className={classNames(styles.headerBtn, styles.collapseBtn)}
                   aria-label="Collapse"
                   title="Collapse"
+                  data-testid="ai-assistant-collapse-button"
                 >
                   <MinusOutlined />
                 </button>

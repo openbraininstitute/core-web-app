@@ -14,7 +14,7 @@ export default function PortalCard({ value }: PortalCardProps) {
   const { title, description, link, imageURL, imageWidth, imageHeight } = value;
 
   return (
-    <Link href={link} className={styles.card} target="_BLANK">
+    <Link href={link} className={styles.card} target="_BLANK" data-testid="portal-card">
       <div className={styles.content}>
         <div>
           <div>Portal</div>

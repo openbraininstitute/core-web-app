@@ -9,15 +9,17 @@ import styles from './next-panel.module.css';
 
 interface NextPanelProps {
   className?: string;
+  testId?: string;
   children: string | null;
 }
 
-export default function NextPanel({ className, children }: NextPanelProps) {
+export default function NextPanel({ className, testId, children }: NextPanelProps) {
   return (
     <button
       className={classNames(className, styles.nextPanel)}
       type="button"
       aria-label={children ?? 'Button'}
+      data-testid={testId}
       onClick={handleNextPage}
     >
       <div>{children}</div>

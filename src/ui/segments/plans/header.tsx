@@ -15,12 +15,14 @@ export default function PlanHeader({
   setBillingInterval,
   isCurrentTier,
   hideContactButton,
+  testId,
 }: {
   plan: PlanV2;
   billingInterval: 'month' | 'year';
   setBillingInterval: (billingInterval: 'month' | 'year') => void;
   isCurrentTier?: boolean;
   hideContactButton?: boolean;
+  testId?: string;
 }) {
   const displayedFeatures = plan.has_subscription
     ? ((billingInterval === 'month'
@@ -71,6 +73,7 @@ export default function PlanHeader({
         <div className="w-full">
           <Link
             href="mailto:subscription@openbraininstitute.org"
+            data-testid={testId ? `${testId}-contact` : undefined}
             className={cn(
               'block w-full border py-4 text-center text-base',
               isCurrentTier ? 'border-primary-5 text-white' : 'text-primary border-primary'

@@ -37,12 +37,18 @@ export function BalanceCard({ onTransferCredits, onBuyCredits }: Props) {
       <CardContent className="flex items-center justify-between">
         <div className="flex items-center justify-center gap-10">
           {isAdmin && (
-            <div className="text-primary-9 flex flex-col gap-1.5">
+            <div
+              className="text-primary-9 flex flex-col gap-1.5"
+              data-testid="virtual-lab-credits-balance"
+            >
               <div className="font-light">Virtual lab credits</div>
               <div className="text-xl font-bold">{virtualLabBalance}</div>
             </div>
           )}
-          <div className="text-primary-9 flex flex-col gap-1.5">
+          <div
+            className="text-primary-9 flex flex-col gap-1.5"
+            data-testid="project-credits-balance"
+          >
             <div className="font-light">Project credits</div>
             <div className="text-xl font-bold">{ProjectBalance?.balance}</div>
           </div>
@@ -74,6 +80,7 @@ export function BalanceCard({ onTransferCredits, onBuyCredits }: Props) {
                   size="md"
                   variant="outline"
                   onClick={onTransferCredits}
+                  data-testid="transfer-credits-button"
                   disabled={!isAdmin}
                 >
                   Transfer credits

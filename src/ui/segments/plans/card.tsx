@@ -13,11 +13,13 @@ export function PlanCard({
   isCurrentTier,
   className,
   hideContactButton,
+  testId,
 }: {
   plan: PlanV2;
   isCurrentTier?: boolean;
   className?: string;
   hideContactButton?: boolean;
+  testId?: string;
 }) {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
@@ -28,6 +30,7 @@ export function PlanCard({
         isCurrentTier ? 'border-primary-7 bg-bg-white text-primary-9' : 'border-neutral-2 bg-white',
         className
       )}
+      data-testid={testId}
     >
       <PlanHeader
         plan={plan}
@@ -35,6 +38,7 @@ export function PlanCard({
         setBillingInterval={setBillingInterval}
         isCurrentTier={isCurrentTier}
         hideContactButton={hideContactButton}
+        testId={testId}
       />
       <PlanBody plan={plan} isCurrentTier={isCurrentTier} />
     </div>

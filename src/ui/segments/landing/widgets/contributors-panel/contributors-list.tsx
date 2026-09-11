@@ -17,8 +17,15 @@ interface ContributorsListProps {
 
 export default function ContributorsList({ className, list }: ContributorsListProps) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const listSignature = list.map(({ full_name }) => full_name).join('\u0000');
+  const previousListSignature = useRef(listSignature);
   const [pagesToDisplay, setPagesToDisplay] = React.useState(1);
-  useEffect(() => setPagesToDisplay(1), [list]);
+  useEffect(() => {
+    if (previousListSignature.current !== listSignature) {
+      previousListSignature.current = listSignature;
+      setPagesToDisplay(1);
+    }
+  }, [listSignature]);
   const [contributorsPerPage, setContributorsPerPage] = React.useState(6);
   useResizeObserver(ref.current, setContributorsPerPage);
 
@@ -26,6 +33,7 @@ export default function ContributorsList({ className, list }: ContributorsListPr
     <>
       <div
         className={classNames(className, styles.contributorsList, styleBlockFullWidthPadded)}
+        data-testid="contributors-list"
         ref={ref}
       >
         {list.slice(0, pagesToDisplay * contributorsPerPage).map((contributor) => (

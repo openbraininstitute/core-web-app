@@ -48,11 +48,13 @@ import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 function MiniActionIcon({
   label,
+  testId,
   theme,
   onClick,
   children,
 }: {
   label: string;
+  testId?: string;
   theme: TViewVariant;
   onClick: () => void;
   children: ReactNode;
@@ -63,9 +65,12 @@ function MiniActionIcon({
         <Button
           rounded
           title={label}
+          data-testid={testId}
           className={cn(
             'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-            { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+            {
+              'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+            }
           )}
           onClick={onClick}
         >
@@ -124,7 +129,10 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
   const handleDownload = async () => {
     setPendingDownload(true);
     try {
-      await downloadArchive(record.type, [record.id], { virtualLabId, projectId });
+      await downloadArchive(record.type, [record.id], {
+        virtualLabId,
+        projectId,
+      });
     } catch {
       // download errors are surfaced by the download service
     }
@@ -177,7 +185,10 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
             await Promise.all(
               matches.map(async (nb) => {
                 await deleteAssetsAndContributions(nb.id, ctx);
-                await deleteAnalysisNotebookTemplate({ id: nb.id, context: ctx });
+                await deleteAnalysisNotebookTemplate({
+                  id: nb.id,
+                  context: ctx,
+                });
               })
             );
           })
@@ -193,7 +204,10 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
 
       // Delete assets/contributions only for templates
       if (isTemplate) {
-        await deleteAssetsAndContributions(record.id, { virtualLabId, projectId });
+        await deleteAssetsAndContributions(record.id, {
+          virtualLabId,
+          projectId,
+        });
       }
 
       // Delete the entity itself
@@ -247,7 +261,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               key="checkmark"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30, duration: 0.2 }}
+              transition={{
+                type: 'spring',
+                stiffness: 500,
+                damping: 30,
+                duration: 0.2,
+              }}
             >
               <RiCheckFill className="text-accent-light size-6" />
             </m.div>
@@ -256,7 +275,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
           )}
         </MiniActionIcon>
 
-        <MiniActionIcon label="Download" theme={theme} onClick={handleDownload}>
+        <MiniActionIcon
+          label="Download"
+          testId="notebook-download-button"
+          theme={theme}
+          onClick={handleDownload}
+        >
           {pendingDownload ? <LoadingOutlined spin className="text-primary-3" /> : <DownloadIcon />}
         </MiniActionIcon>
 
@@ -271,6 +295,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
             <MiniActionIcon
               key={target.key}
               label={target.label}
+              testId={`notebook-run-${target.key}-button`}
               theme={theme}
               onClick={() => run(target)}
             >
@@ -282,7 +307,12 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
             </MiniActionIcon>
           ))
         ) : (
-          <MiniActionIcon label="Run" theme={theme} onClick={() => run()}>
+          <MiniActionIcon
+            label="Run"
+            testId="notebook-run-button"
+            theme={theme}
+            onClick={() => run()}
+          >
             {running ? (
               <LoadingOutlined spin className="text-primary-3" />
             ) : (
@@ -338,7 +368,9 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               title="Delete"
               className={cn(
                 'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-                { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+                {
+                  'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+                }
               )}
             >
               {deleteMutation.isPending ? (
@@ -367,7 +399,9 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
               title="Sync notebook to students"
               className={cn(
                 'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-                { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+                {
+                  'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+                }
               )}
               onClick={() => setSyncOpen(true)}
             >
@@ -391,13 +425,16 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
           variant="default"
           className={cn(
             'hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-            { 'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light }
+            {
+              'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+            }
           )}
         >
           <Link
             href={{
               pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/view/${typeParam}/${record.id}/overview`,
             }}
+            data-testid="notebook-view-details-link"
           >
             View details
           </Link>

@@ -10,6 +10,7 @@ import styles from './temporary-go-to-lab-button.module.css';
 
 interface TemporaryGoToLabButtonProps {
   className?: string;
+  testId?: string;
   title: string;
   subTitle?: string;
   href: string;
@@ -17,6 +18,7 @@ interface TemporaryGoToLabButtonProps {
 
 export function TemporaryGoToLabButton({
   className,
+  testId,
   title,
   subTitle,
   href,
@@ -24,6 +26,7 @@ export function TemporaryGoToLabButton({
   return (
     <Link
       className={classNames(className, styles.temporaryGoToLabButton, styleBlockSmall)}
+      data-testid={testId}
       href={href}
     >
       <ProgressiveImage

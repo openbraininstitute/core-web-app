@@ -19,15 +19,20 @@ export default function TeamMember({ className, value, big }: TeamMemberProps) {
   const { firstName, lastName, role, imageURL, imageWidth, imageHeight } = value;
   const [ready, setReady] = useState(false);
   const name = `${firstName} ${lastName}`;
+  const testId = `team-member-${`${firstName}-${lastName}`.toLowerCase().replaceAll(' ', '-')}`;
 
   return (
-    <div className={classNames(className, styles.teamMember, big && styles.big)}>
+    <div
+      className={classNames(className, styles.teamMember, big && styles.big)}
+      data-testid={testId}
+    >
       <div className={styles.image}>
         <NextImage
           src={imageURL}
           alt={name}
           width={imageWidth}
           height={imageHeight}
+          data-testid={`${testId}-photo`}
           onLoad={() => setReady(true)}
           className={classNames(ready && styles.ready)}
         />
