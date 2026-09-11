@@ -48,7 +48,9 @@ function handleUploadData() {
 
 export function NotebooksLayout({ children }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
-  const { scope, changeScope } = useScope({ defaultScope: WorkspaceScope.Public });
+  const { scope, changeScope } = useScope({
+    defaultScope: WorkspaceScope.Public,
+  });
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
   const [isGridAnimating, setIsGridAnimating] = useState(false);
@@ -163,6 +165,7 @@ export function NotebooksLayout({ children }: Props) {
               disabled={loading}
               type="button"
               className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
+              data-testid="open-jupyterhub-button"
               onClick={handleRunNotebook}
             >
               <div>Open JupyterHub</div>
@@ -176,7 +179,6 @@ export function NotebooksLayout({ children }: Props) {
 
         <m.div
           id="notebooks-inner-layout"
-          data-testid="notebooks-layout"
           className="bg-background border-neutral-2 mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]"
           initial={{
             gridTemplateColumns: '22rem 1fr',
@@ -186,7 +188,12 @@ export function NotebooksLayout({ children }: Props) {
             gridTemplateColumns: mdv ? '3fr 2fr' : '22rem 1fr',
             gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",
           }}
-          transition={{ type: 'spring', stiffness: 320, damping: 30, mass: 0.6 }}
+          transition={{
+            type: 'spring',
+            stiffness: 320,
+            damping: 30,
+            mass: 0.6,
+          }}
           style={
             isGridAnimating
               ? { willChange: 'grid-template-columns, grid-template-areas' }

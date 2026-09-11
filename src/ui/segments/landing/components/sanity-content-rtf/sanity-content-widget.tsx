@@ -84,7 +84,14 @@ export default async function SanityContentWidget({ value }: SanityContentWidget
     case 'supportEmailButton':
     case 'infoEmailButton': {
       const data = await getEmailContent(value.name as EmailType);
-      return <WidgetEmail data={data} />;
+      return (
+        <WidgetEmail
+          data={data}
+          testId={
+            value.name === 'supportEmailButton' ? 'contact-email-support' : 'contact-email-general'
+          }
+        />
+      );
     }
     case 'itemPriceList': {
       const data = await getPricingFeatures();

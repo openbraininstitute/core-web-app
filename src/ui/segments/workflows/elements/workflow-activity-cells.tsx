@@ -91,19 +91,21 @@ function ActionButton({
   icon,
   href,
   onClick,
+  testId,
   disabled = false,
-}: Omit<IRowAction, 'key'>): ReactNode {
+}: Omit<IRowAction, 'key'> & { testId: string }): ReactNode {
   const className = actionButtonClass(disabled);
 
   const control =
     href && !disabled ? (
-      <Link href={href} aria-label={label} className={className}>
+      <Link href={href} aria-label={label} data-testid={testId} className={className}>
         {icon}
       </Link>
     ) : (
       <button
         type="button"
         aria-label={label}
+        data-testid={testId}
         disabled={disabled}
         onClick={onClick}
         className={className}
@@ -151,12 +153,16 @@ export function WorkflowActivityTypeCell({
     row.type === EntityTypeDict.TaskConfig &&
     (row as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
       TaskConfigType.CircuitExtractionCampaign
-      ? getEntityByExtendedType({ type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign })?.title
+      ? getEntityByExtendedType({
+          type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+        })?.title
       : undefined;
 
   const title =
     extractionTitle ??
-    getEntityByExtendedType({ type: row.type as unknown as TExtendedEntitiesTypeDict })?.title ??
+    getEntityByExtendedType({
+      type: row.type as unknown as TExtendedEntitiesTypeDict,
+    })?.title ??
     getEntityByExtendedType({ type: entityType })?.title ??
     '-';
 
@@ -344,7 +350,7 @@ export function WorkflowActivityActionsCell({
       data-testid="workflow-activity-row-actions"
     >
       {actions.map(({ key, ...action }) => (
-        <ActionButton key={key} {...action} />
+        <ActionButton key={key} testId={`workflow-activity-action-${key}`} {...action} />
       ))}
     </div>
   );

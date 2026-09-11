@@ -176,6 +176,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
             type="email"
             placeholder="Enter your email here..."
             autoComplete="email"
+            data-testid="footer-newsletter-email"
             className={emailInputClassName}
           />
         </Form.Item>
@@ -188,7 +189,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
             getValueFromEvent={(checked) => checked === true}
             noStyle
           >
-            <Checkbox id={id} className={checkboxClassName} />
+            <Checkbox id={id} className={checkboxClassName} data-testid="footer-privacy-checkbox" />
           </Form.Item>
           <label htmlFor={id} className="cursor-pointer">
             I have read and accept the{' '}
@@ -204,6 +205,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
         <button
           type="submit"
           disabled={subscribing || !canSubmit}
+          data-testid="footer-newsletter-submit"
           className={submitButtonClassName}
         >
           {subscribing ? 'Subscribing…' : 'Subscribe'}

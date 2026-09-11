@@ -19,6 +19,7 @@ export function DensityOrCountToggle({
         <Switch.Root
           className="group relative mx-4 flex h-[16px] w-8 items-center rounded-full border border-white data-[state=checked]:bg-white"
           title="density or count"
+          data-testid="atlas-density-count-toggle"
           onCheckedChange={(checked) => {
             if (checked) {
               selectDensityOrCount('density');

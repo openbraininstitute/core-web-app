@@ -36,7 +36,7 @@ const FOOTER_LINKS: FooterLink[] = [
 
 export default function FooterPanel({ className, socialMediaLinks }: FooterPanelProps) {
   return (
-    <div className={classNames(className, styles.footerPanel)}>
+    <div className={classNames(className, styles.footerPanel)} data-testid="site-footer">
       <div className={styles.title}>
         <h2>Open Brain Institute</h2>
         <div className={styles.copyright}>
@@ -46,7 +46,12 @@ export default function FooterPanel({ className, socialMediaLinks }: FooterPanel
       <div className={styles.links}>
         {FOOTER_LINKS.map((link) => (
           <div key={link.href} className={styles.section}>
-            <Link href={link.href}>{link.label}</Link>
+            <Link
+              href={link.href}
+              data-testid={`footer-link-${link.href.slice(1).replaceAll('/', '-')}`}
+            >
+              {link.label}
+            </Link>
           </div>
         ))}
         <div className={styles.socialmedia}>

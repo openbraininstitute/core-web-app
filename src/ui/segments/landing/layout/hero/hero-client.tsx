@@ -1,12 +1,13 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 
 import NewsletterForm from '@/ui/segments/landing/components/coming-soon/newsletter-form';
 import ProgressiveImage from '@/ui/segments/landing/components/progressive-image/progressive-image';
 import { EnumSection } from '@/ui/segments/landing/sections/sections';
+import { getSection } from '@/ui/segments/landing/utils';
 import { classNames } from '@/util/utils';
 import useFullHeight from '@/utils/use-full-height';
 
@@ -36,6 +37,8 @@ export default function HeroClient({ className, section, data }: HeroClientProps
   } = data;
   const [videoReady, setVideoReady] = React.useState(false);
   const height = useFullHeight();
+  const sectionSlug = getSection(section).slug.replace(/^\//, '') || 'home';
+  const heroTestIdPrefix = `landing-${sectionSlug}-hero`;
   return (
     <div className={classNames(className, styles.hero)} style={{ height }}>
       <div className={classNames(styles.background)}>
@@ -47,6 +50,7 @@ export default function HeroClient({ className, section, data }: HeroClientProps
                 width={posterWidth}
                 height={posterHeight}
                 alt="Hero image"
+                testId={`${heroTestIdPrefix}-image`}
               />
             )}
             <video
@@ -61,7 +65,16 @@ export default function HeroClient({ className, section, data }: HeroClientProps
             />
           </>
         )}
-        {backgroundType === 'image' && imageURL && <img src={imageURL} alt="Background" />}
+        {backgroundType === 'image' && imageURL && (
+          <Image
+            src={imageURL}
+            alt=""
+            fill
+            sizes="100vw"
+            preload
+            data-testid={`${heroTestIdPrefix}-image`}
+          />
+        )}
       </div>
       {section === EnumSection.ComingSoon ? (
         <div className={styles.comingSoon}>
@@ -70,7 +83,12 @@ export default function HeroClient({ className, section, data }: HeroClientProps
       ) : (
         <div className={styles.text}>
           <div className="flex flex-col items-center">
-            <h1 className={styles.largeTitle} data-testid="home-hero-heading">
+            <h1
+              className={styles.largeTitle}
+              data-testid={
+                section === EnumSection.Home ? 'home-hero-heading' : `${heroTestIdPrefix}-heading`
+              }
+            >
               {title}
             </h1>
             {section === EnumSection.Home && (
@@ -92,7 +110,7 @@ export default function HeroClient({ className, section, data }: HeroClientProps
         </div>
       )}
       <footer>
-        <NextPanel>{next}</NextPanel>
+        <NextPanel testId={`${heroTestIdPrefix}-next`}>{next}</NextPanel>
       </footer>
     </div>
   );

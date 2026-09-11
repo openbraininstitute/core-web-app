@@ -12,6 +12,7 @@ export function PricingButton({ className }: { className?: string }) {
       size="md"
       variant="outline"
       type="button"
+      data-testid="credits-pricing-button"
       className={cn(
         'border-gray-100 group shrink-0 bg-white px-4 text-primary-9 select-none hover:border-gray-300 hover:text-primary-8',
         className
