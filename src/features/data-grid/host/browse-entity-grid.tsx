@@ -231,6 +231,7 @@ export function EntityDataGrid({
   const selectionType = mainTableProps?.selectionType;
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
+  const selectionScope = mainTableProps?.selectionScope;
   const applyLifecycleGating = isWorkflowPickerSection(section);
   const pickerSelection = useMemo<
     IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
@@ -451,6 +452,7 @@ export function EntityDataGrid({
           onRowClick={handleRowClick}
           getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
+          selectionScope={selectionScope}
           selection={pickerSelection}
           toolbarSlots={{
             scope: toolbarScope,

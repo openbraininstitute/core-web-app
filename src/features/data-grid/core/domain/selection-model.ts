@@ -8,4 +8,10 @@ export const SelectionMode = {
   Multi: 'multi',
 } as const;
 
+export const selectionScope = {
+  Isolated: 'isolated',
+  Shared: 'shared',
+} as const;
+
 export type TSelectionMode = (typeof SelectionMode)[keyof typeof SelectionMode];
+export type TSelectionScope = (typeof selectionScope)[keyof typeof selectionScope];

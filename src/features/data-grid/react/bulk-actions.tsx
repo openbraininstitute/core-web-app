@@ -9,8 +9,10 @@ import type { GridController } from '@/features/data-grid/core';
 export interface IBulkActionsRenderArgs<Row> {
   /** ids of the currently selected rows (across pages) */
   selectedIds: string[];
-  /** full selected rows, including rows selected on other pages */
+  /** full selected rows, including rows selected on other pages or scopes */
   selectedRows: Row[];
+  /** number selected in the currently displayed scope; the basket may contain more */
+  selectedCount: number;
   clearSelection: () => void;
 }
 
@@ -18,6 +20,8 @@ export interface IBulkActionsProps<Row> {
   controller: GridController<Row>;
   rows: Row[];
   selection: string[];
+  /** number selected in the currently displayed scope */
+  selectedCount: number;
   /** host-provided actions (download / delete buttons) receiving the selection */
   children: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
   className?: string;
@@ -44,6 +48,15 @@ export function accumulateSeenRows<Row>(
   return next;
 }
 
+export function countSelectionInScope(
+  selection: ReadonlyArray<string>,
+  rowScopes: ReadonlyMap<string, string | undefined>,
+  scope?: string
+): number {
+  if (scope === undefined) return selection.length;
+  return selection.filter((id) => rowScopes.get(id) === scope).length;
+}
+
 /**
  * Bridges the store's id-only, cross-page selection to host-owned bulk-action buttons,
  * keeping an id→row cache so they receive full rows. Renders nothing until a row is
@@ -53,6 +66,7 @@ export function BulkActions<Row>({
   controller,
   rows,
   selection,
+  selectedCount,
   children,
   className,
 }: IBulkActionsProps<Row>) {
@@ -77,6 +91,7 @@ export function BulkActions<Row>({
       {children({
         selectedIds: selection,
         selectedRows,
+        selectedCount,
         clearSelection: () =>
           controller.store.dispatch({ type: GridActionType.SetSelection, ids: [] }),
       })}

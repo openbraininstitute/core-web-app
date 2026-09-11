@@ -32,7 +32,11 @@ export {
   filterTargetForEntry,
   summarizeFilterEntry,
 } from './domain/filter-labels';
-export { FilterValueKind, isEmptyFilterValue, summarizeFilter } from './domain/filter-model';
+export {
+  FilterValueKind,
+  isEmptyFilterValue,
+  summarizeFilter,
+} from './domain/filter-model';
 export {
   AUXILIARY_FILTER_GROUP_ID,
   AUXILIARY_FILTER_GROUP_LABEL,
@@ -53,9 +57,13 @@ export {
   isSelectionEnabled,
   resolveColumns,
 } from './domain/resolve-schema';
-export { SelectionMode } from './domain/selection-model';
+export { SelectionMode, selectionScope } from './domain/selection-model';
 export { SortDirection } from './domain/sort-model';
-export { buildGridQuery, createInitialState, GridController } from './grid-controller';
+export {
+  buildGridQuery,
+  createInitialState,
+  GridController,
+} from './grid-controller';
 export {
   createDefaultOperatorRegistry,
   DEFAULT_OPERATORS,
@@ -107,13 +115,26 @@ export type {
   TFilterValueKind,
   TFilterValueLabeler,
 } from './domain/filter-model';
-export type { IGridContext, TContextualValue, TGridContextValue } from './domain/grid-context';
+export type {
+  IGridContext,
+  TContextualValue,
+  TGridContextValue,
+} from './domain/grid-context';
 export type { TColumnOverride } from './domain/merge-column';
-export type { IFacetBucket, IGridPage, IGridQuery, TFacets } from './domain/query';
+export type {
+  IFacetBucket,
+  IGridPage,
+  IGridQuery,
+  TFacets,
+} from './domain/query';
 export type { IResolvedColumn } from './domain/resolve-schema';
 export type { IDetailSpec, IGridSchema, ISelectionSpec } from './domain/schema';
-export type { TSelectionMode } from './domain/selection-model';
-export type { ISortEntry, TSortDirection, TSortModel } from './domain/sort-model';
+export type { TSelectionMode, TSelectionScope } from './domain/selection-model';
+export type {
+  ISortEntry,
+  TSortDirection,
+  TSortModel,
+} from './domain/sort-model';
 export type { IGridControllerOptions } from './grid-controller';
 export type { TOperatorId } from './operators/default-operators';
 export type {
@@ -124,5 +145,9 @@ export type {
 export type { IGridDataSource } from './ports/data-source';
 export type { IDetailProvider } from './ports/detail-provider';
 export type { IStatePersistence } from './ports/state-persistence';
-export type { IGridState, TGridAction, TGridActionType } from './state/grid-state';
+export type {
+  IGridState,
+  TGridAction,
+  TGridActionType,
+} from './state/grid-state';
 export type { TUnsubscribe } from './state/grid-state-store';

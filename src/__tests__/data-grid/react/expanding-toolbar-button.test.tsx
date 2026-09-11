@@ -50,13 +50,15 @@ describe('ExpandingToolbarButton', () => {
     );
   });
 
-  it('anchors the badge after the label so it rides the pill open, without layout cost', () => {
+  it('anchors the badge to the button corner without layout cost', () => {
     const { getByTestId, getByText } = render(
       <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
     );
     const anchor = getByTestId('toolbar-pill-badge-anchor');
     expect(anchor).toContainElement(getByText('3'));
-    expect(anchor.className).toContain('w-0');
+    expect(anchor.className).toContain('absolute');
+    expect(anchor.className).toContain('top-[-2px]');
+    expect(anchor.className).toContain('right-[-2px]');
     expect(anchor.previousElementSibling).toHaveAttribute('aria-hidden', 'true');
     expect(anchor.nextElementSibling).toBeNull();
   });
@@ -68,18 +70,15 @@ describe('ExpandingToolbarButton', () => {
     expect(getByTestId('toolbar-pill-badge-anchor').className).toContain('pointer-events-none');
   });
 
-  // regression: the corner offset used to be hover/focus-only, so the collapsed circle
-  // showed the badge ~10px inside its own edge
-  it('offsets the badge to the corner in BOTH the collapsed and expanded states', () => {
+  it('pins the badge to the top-right border in both collapsed and expanded states', () => {
     const { getByTestId } = render(
       <ExpandingToolbarButton icon={null} label="Advanced filters" badge={<span>3</span>} />
     );
-    const cls = getByTestId('toolbar-pill-badge-anchor').className;
-    // the exact distance is tuning; what must hold is that it is unconditional
-    expect(cls).toMatch(/(^|\s)translate-x-[\d.]+/);
-    expect(cls).toMatch(/(^|\s)-translate-y-[\d.]+/);
-    expect(cls).not.toContain('group-hover/toolbar-pill:translate-x');
-    expect(cls).not.toContain('group-focus-visible/toolbar-pill:translate-x');
+    const anchor = getByTestId('toolbar-pill-badge-anchor');
+    expect(anchor.className).toContain('absolute');
+    expect(anchor.className).toContain('top-[-2px]');
+    expect(anchor.className).toContain('right-[-2px]');
+    expect(anchor.firstElementChild?.className).toContain('-translate-y-1/2');
   });
 
   it('renders no badge anchor at all when there is no badge', () => {

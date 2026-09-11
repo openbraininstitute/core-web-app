@@ -7,7 +7,7 @@
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -15,8 +15,10 @@ import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import {
   createDefaultOperatorRegistry,
+  GridActionType,
   GridController,
   SelectionMode,
+  selectionScope,
 } from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 import { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
@@ -97,7 +99,106 @@ function wrap(ui: ReactNode) {
   return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
 }
 
-describe('DataGrid picker selection survives a controller swap', () => {
+describe('DataGrid selection survives a controller swap', () => {
+  it('restores ordinary grid selection when the scope creates a new controller', async () => {
+    const renderedSelections: string[][] = [];
+
+    function Host({ scopeKey }: { scopeKey: string }) {
+      const controller = useMemo(
+        () =>
+          new GridController<Row>({
+            schema,
+            context: { dataType: 't', scope: scopeKey },
+            defaultPageSize: 30,
+          }),
+        [scopeKey]
+      );
+      useEffect(() => {
+        if (scopeKey === 'public') {
+          controller.store.dispatch({
+            type: GridActionType.SetSelection,
+            ids: [PICKED.id],
+          });
+        }
+      }, [controller, scopeKey]);
+
+      return (
+        <DataGrid<Row>
+          controller={controller}
+          dataSource={emptySource}
+          renderer={(props) => {
+            renderedSelections.push([...props.state.selection]);
+            return null;
+          }}
+          operators={createDefaultOperatorRegistry()}
+          cellRenderers={new CellRendererRegistry()}
+          queryKey={['t', scopeKey]}
+          showColumnChooser={false}
+        />
+      );
+    }
+
+    const { rerender } = wrap(<Host scopeKey="public" />);
+    await waitFor(() => expect(renderedSelections.at(-1)).toEqual([PICKED.id]));
+
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <Host scopeKey="project" />
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(renderedSelections.at(-1)).toEqual([PICKED.id]));
+  });
+
+  it('does not restore selection when the scope is explicitly isolated', async () => {
+    const renderedSelections: string[][] = [];
+
+    function Host({ scopeKey }: { scopeKey: string }) {
+      const controller = useMemo(
+        () =>
+          new GridController<Row>({
+            schema,
+            context: { dataType: 't', scope: scopeKey },
+            defaultPageSize: 30,
+          }),
+        [scopeKey]
+      );
+      useEffect(() => {
+        if (scopeKey === 'public') {
+          controller.store.dispatch({
+            type: GridActionType.SetSelection,
+            ids: [PICKED.id],
+          });
+        }
+      }, [controller, scopeKey]);
+
+      return (
+        <DataGrid<Row>
+          controller={controller}
+          dataSource={emptySource}
+          renderer={(props) => {
+            renderedSelections.push([...props.state.selection]);
+            return null;
+          }}
+          operators={createDefaultOperatorRegistry()}
+          cellRenderers={new CellRendererRegistry()}
+          queryKey={['t', scopeKey]}
+          selectionScope={selectionScope.Isolated}
+          showColumnChooser={false}
+        />
+      );
+    }
+
+    const { rerender } = wrap(<Host scopeKey="public" />);
+    await waitFor(() => expect(renderedSelections.at(-1)).toEqual([PICKED.id]));
+
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <Host scopeKey="project" />
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(renderedSelections.at(-1)).toEqual([]));
+  });
+
   it('settles (bounded emits) and keeps the host picks when the controller is replaced', async () => {
     const emitted: Row[][] = [];
 

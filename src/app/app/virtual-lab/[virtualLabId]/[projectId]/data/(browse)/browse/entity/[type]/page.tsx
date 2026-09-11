@@ -4,6 +4,7 @@ import { match, P } from 'ts-pattern';
 
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { selectionScope } from '@/features/data-grid/core';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities } from '@/features/views/listing/data-browse-entities';
 
@@ -41,6 +42,7 @@ export default async function Page({
             dataType={dataType}
             mainTableProps={{
               selectionType: 'checkbox',
+              selectionScope: selectionScope.Shared,
             }}
             allowDownload
             allowDelete

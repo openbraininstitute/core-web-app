@@ -1,10 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { GridActionType, isSelectionEnabled, SelectionMode } from '@/features/data-grid/core';
+import {
+  GridActionType,
+  isSelectionEnabled,
+  SelectionMode,
+  selectionScope,
+} from '@/features/data-grid/core';
 import { ActiveFiltersButton } from '@/features/data-grid/react/active-filters';
-import { BulkActions } from '@/features/data-grid/react/bulk-actions';
+import { BulkActions, countSelectionInScope } from '@/features/data-grid/react/bulk-actions';
 import { ColumnChooser } from '@/features/data-grid/react/column-chooser';
 import { GridPagination } from '@/features/data-grid/react/pagination';
 import { DataGridToolbar } from '@/features/data-grid/react/toolbar';
@@ -18,6 +23,7 @@ import type {
   OperatorRegistry,
   TFacets,
   TSelectionMode,
+  TSelectionScope,
 } from '@/features/data-grid/core';
 import type { IBulkActionsRenderArgs } from '@/features/data-grid/react/bulk-actions';
 import type { CellRendererRegistry } from '@/features/data-grid/react/cell-renderer-registry';
@@ -84,6 +90,11 @@ export interface IDataGridProps<Row> {
   showColumnChooser?: boolean;
   className?: string;
   gridClassName?: string;
+  /**
+   * Selection scope behavior. `shared` keeps one basket when the controller changes
+   * (the default); `isolated` starts empty for each controller/scope.
+   */
+  selectionScope?: TSelectionScope;
   /** picker selection (single/multi) that propagates chosen rows to a host form. */
   selection?: IDataGridSelection<Row>;
 }
@@ -117,6 +128,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     onTotalChange,
     renderError,
     showColumnChooser = true,
+    selectionScope: selectionScopeValue = selectionScope.Shared,
     className,
     gridClassName,
     selection,
@@ -132,6 +144,28 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   });
 
   const columns = useMemo(() => controller.resolvedColumns(), [controller]);
+
+  // Scope changes replace the controller. Restore the prior id-only selection only when
+  // the replacement has no persisted selection; same-controller clears remain untouched.
+  const previousControllerRef = useRef<GridController<Row> | null>(null);
+  useLayoutEffect(() => {
+    const previousController = previousControllerRef.current;
+    if (previousController && previousController !== controller) {
+      const previousSelection = previousController.store.getSnapshot().selection;
+      const nextSelection = controller.store.getSnapshot().selection;
+      if (
+        selectionScopeValue === selectionScope.Shared &&
+        nextSelection.length === 0 &&
+        previousSelection.length > 0
+      ) {
+        controller.store.dispatch({
+          type: GridActionType.SetSelection,
+          ids: previousSelection,
+        });
+      }
+    }
+    previousControllerRef.current = controller;
+  }, [controller, selectionScopeValue]);
 
   // Effect-time, never during render, so a host can publish the total into external state.
   useEffect(() => {
@@ -152,6 +186,13 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   // for rows selected on a page that is no longer visible.
   const getRowId = controller.schema.getRowId;
   const rowCacheRef = useRef(new Map<string, Row>());
+  const rowScopeCacheRef = useRef(new Map<string, string | undefined>());
+  if (!loading) {
+    for (const row of rows) {
+      const id = getRowId(row);
+      rowScopeCacheRef.current.set(id, controller.context.scope);
+    }
+  }
   const controlledRows = selection?.selectedRows;
   useEffect(() => {
     if (!pickerMode) return;
@@ -232,14 +273,22 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     );
   }
 
+  const selectionCount =
+    selectionScopeValue === selectionScope.Shared
+      ? countSelectionInScope(state.selection, rowScopeCacheRef.current, controller.context.scope)
+      : state.selection.length;
+
   const bulkActions =
     !pickerMode && selectionEnabled && renderBulkActions ? (
-      <BulkActions controller={controller} rows={rows} selection={state.selection}>
+      <BulkActions
+        controller={controller}
+        rows={rows}
+        selection={state.selection}
+        selectedCount={selectionCount}
+      >
         {renderBulkActions}
       </BulkActions>
     ) : undefined;
-
-  const selectionCount = state.selection.length;
 
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>

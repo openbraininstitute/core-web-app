@@ -46,11 +46,18 @@ describe('reducer — sort', () => {
   });
 
   it('single-sort replaces other columns; multi-sort appends as tie-breaker', () => {
-    let s = reducer(initial(), { type: GridActionType.ToggleSort, columnId: 'a' });
+    let s = reducer(initial(), {
+      type: GridActionType.ToggleSort,
+      columnId: 'a',
+    });
     s = reducer(s, { type: GridActionType.ToggleSort, columnId: 'b' });
     expect(s.sort).toEqual([{ columnId: 'b', direction: SortDirection.Desc }]);
 
-    s = reducer(s, { type: GridActionType.ToggleSort, columnId: 'a', allowMulti: true });
+    s = reducer(s, {
+      type: GridActionType.ToggleSort,
+      columnId: 'a',
+      allowMulti: true,
+    });
     expect(s.sort).toEqual([
       { columnId: 'a', direction: SortDirection.Desc },
       { columnId: 'b', direction: SortDirection.Desc },
@@ -73,21 +80,32 @@ describe('reducer — filters', () => {
     value: { kind: FilterValueKind.Text, text: 'foo' },
   } as const;
 
-  it('sets and clears a filter, resetting page and selection', () => {
+  it('sets and clears a filter, resetting page while preserving selection', () => {
     let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
     s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, { type: GridActionType.SetFilter, columnId: 'a', entry });
     expect(s.filters.a).toEqual(entry);
     expect(s.page).toBe(1);
-    expect(s.selection).toEqual([]);
+    expect(s.selection).toEqual(['r1']);
 
-    s = reducer(s, { type: GridActionType.SetFilter, columnId: 'a', entry: null });
+    s = reducer(s, {
+      type: GridActionType.SetFilter,
+      columnId: 'a',
+      entry: null,
+    });
     expect(s.filters).toEqual({});
+    expect(s.selection).toEqual(['r1']);
   });
 
   it('returns the same reference for no-op transitions', () => {
     const s = initial();
-    expect(reducer(s, { type: GridActionType.SetFilter, columnId: 'a', entry: null })).toBe(s);
+    expect(
+      reducer(s, {
+        type: GridActionType.SetFilter,
+        columnId: 'a',
+        entry: null,
+      })
+    ).toBe(s);
     expect(reducer(s, { type: GridActionType.ClearFilters })).toBe(s);
     expect(reducer(s, { type: GridActionType.SetPage, page: 1 })).toBe(s);
     expect(reducer(s, { type: GridActionType.SetPageSize, pageSize: 20 })).toBe(s);
@@ -95,11 +113,17 @@ describe('reducer — filters', () => {
   });
 
   it('clearFilters empties all filters and resets page', () => {
-    let s = reducer(initial(), { type: GridActionType.SetFilter, columnId: 'a', entry });
+    let s = reducer(initial(), {
+      type: GridActionType.SetFilter,
+      columnId: 'a',
+      entry,
+    });
     s = reducer(s, { type: GridActionType.SetPage, page: 4 });
+    s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, { type: GridActionType.ClearFilters });
     expect(s.filters).toEqual({});
     expect(s.page).toBe(1);
+    expect(s.selection).toEqual(['r1']);
   });
 });
 
@@ -112,7 +136,10 @@ describe('reducer — pagination', () => {
   });
 
   it('setPage keeps selection (cross-page bulk actions) but collapses expansion', () => {
-    let s = reducer(initial(), { type: GridActionType.SetSelection, ids: ['r1'] });
+    let s = reducer(initial(), {
+      type: GridActionType.SetSelection,
+      ids: ['r1'],
+    });
     s = reducer(s, { type: GridActionType.SetExpanded, ids: ['r2'] });
     s = reducer(s, { type: GridActionType.SetPage, page: 2 });
     expect(s.selection).toEqual(['r1']);
@@ -121,31 +148,66 @@ describe('reducer — pagination', () => {
 });
 
 describe('reducer — free-text search', () => {
-  it('resets page and selection on text change', () => {
+  it('resets page while preserving selection on text change', () => {
     let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
     s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, { type: GridActionType.SetFreeTextSearch, text: 'mouse' });
     expect(s.freeTextSearch).toBe('mouse');
     expect(s.page).toBe(1);
-    expect(s.selection).toEqual([]);
+    expect(s.selection).toEqual(['r1']);
+  });
+
+  it('keeps the full controlled picker selection while replacing and clearing a search', () => {
+    const first = '864691135405224174';
+    const second = '864691135684809458';
+    let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
+    s = reducer(s, { type: GridActionType.SetSelection, ids: [first] });
+    s = reducer(s, {
+      type: GridActionType.SetFreeTextSearch,
+      text: second,
+    });
+    s = reducer(s, { type: GridActionType.SetSelection, ids: [first, second] });
+    s = reducer(s, {
+      type: GridActionType.SetFreeTextSearch,
+      text: '',
+    });
+
+    expect(s.page).toBe(1);
+    expect(s.selection).toEqual([first, second]);
   });
 });
 
 describe('reducer — column layout', () => {
   it('persable layout transitions: order, visibility, width', () => {
-    let s = reducer(initial(), { type: GridActionType.SetColumnOrder, order: ['b', 'a', 'c'] });
+    let s = reducer(initial(), {
+      type: GridActionType.SetColumnOrder,
+      order: ['b', 'a', 'c'],
+    });
     expect(s.columnOrder).toEqual(['b', 'a', 'c']);
     s = reducer(s, { type: GridActionType.SetHiddenColumns, hidden: ['a'] });
     expect(s.hiddenColumns).toEqual(['a']);
-    s = reducer(s, { type: GridActionType.SetColumnWidth, columnId: 'b', width: 240 });
+    s = reducer(s, {
+      type: GridActionType.SetColumnWidth,
+      columnId: 'b',
+      width: 240,
+    });
     expect(s.columnWidths).toEqual({ b: 240 });
-    expect(reducer(s, { type: GridActionType.SetColumnWidth, columnId: 'b', width: 240 })).toBe(s);
+    expect(
+      reducer(s, {
+        type: GridActionType.SetColumnWidth,
+        columnId: 'b',
+        width: 240,
+      })
+    ).toBe(s);
   });
 });
 
 describe('reducer — expansion', () => {
   it('toggleExpanded adds and removes row ids', () => {
-    let s = reducer(initial(), { type: GridActionType.ToggleExpanded, id: 'r1' });
+    let s = reducer(initial(), {
+      type: GridActionType.ToggleExpanded,
+      id: 'r1',
+    });
     expect(s.expanded).toEqual(['r1']);
     s = reducer(s, { type: GridActionType.ToggleExpanded, id: 'r2' });
     expect(s.expanded).toEqual(['r1', 'r2']);

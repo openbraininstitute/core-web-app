@@ -1,6 +1,13 @@
+import { render } from '@testing-library/react';
+import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { accumulateSeenRows } from '@/features/data-grid/react/bulk-actions';
+import { GridController } from '@/features/data-grid/core';
+import {
+  accumulateSeenRows,
+  BulkActions,
+  countSelectionInScope,
+} from '@/features/data-grid/react/bulk-actions';
 
 type Row = { id: string; name: string };
 
@@ -31,5 +38,56 @@ describe('accumulateSeenRows — cross-page selection cache (legacy use-row-sele
     const stale = new Map([['a', { id: 'a', name: 'stale' }]]);
     const cache = accumulateSeenRows(stale, [row('a')], ['a'], getRowId);
     expect(cache.get('a')?.name).toBe('row-a');
+  });
+});
+
+describe('countSelectionInScope', () => {
+  it('counts the current scope while keeping the selection basket shared', () => {
+    const scopes = new Map([
+      ['public-row', 'public'],
+      ['project-row-1', 'project'],
+      ['project-row-2', 'project'],
+    ]);
+
+    expect(
+      countSelectionInScope(['public-row', 'project-row-1', 'project-row-2'], scopes, 'public')
+    ).toBe(1);
+    expect(
+      countSelectionInScope(['public-row', 'project-row-1', 'project-row-2'], scopes, 'project')
+    ).toBe(2);
+  });
+
+  it('counts the whole basket when no scope is supplied', () => {
+    expect(countSelectionInScope(['a', 'b'], new Map(), undefined)).toBe(2);
+  });
+
+  it('passes the full cross-scope basket while preserving the current-scope count', () => {
+    const controller = new GridController<Row>({
+      schema: {
+        id: 'bulk-actions',
+        getRowId,
+        columns: [{ id: 'name', header: 'Name', getValue: (r) => r.name }],
+      },
+      context: { dataType: 'test' },
+      defaultPageSize: 30,
+    });
+    const renders: Array<{
+      selectedIds: string[];
+      selectedRows: Row[];
+      selectedCount: number;
+    }> = [];
+
+    const renderActions = (rows: Row[], selection: string[]) =>
+      createElement(BulkActions<Row>, { controller, rows, selection, selectedCount: 1 }, (args) => {
+        renders.push(args);
+        return null;
+      });
+
+    const { rerender } = render(renderActions([row('public')], ['public']));
+    rerender(renderActions([row('project')], ['public', 'project']));
+
+    expect(renders.at(-1)?.selectedIds).toEqual(['public', 'project']);
+    expect(renders.at(-1)?.selectedRows.map((r) => r.id)).toEqual(['public', 'project']);
+    expect(renders.at(-1)?.selectedCount).toBe(1);
   });
 });

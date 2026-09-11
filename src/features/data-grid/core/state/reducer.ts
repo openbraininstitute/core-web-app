@@ -24,7 +24,8 @@ function toggleSort(sort: TSortModel, columnId: string, allowMulti: boolean): TS
 /**
  * Pure state transitions. Returns the same reference when nothing changes, so
  * `useSyncExternalStore` consumers don't re-render. Filter/sort/page-size/free-text search
- * changes reset the page to 1; data-changing transitions also clear the selection.
+ * changes reset the page to 1; selection is intentionally independent of query criteria so
+ * selected rows remain selected when they move off the visible page.
  */
 export function reducer(state: IGridState, action: TGridAction): IGridState {
   switch (action.type) {
@@ -36,12 +37,12 @@ export function reducer(state: IGridState, action: TGridAction): IGridState {
       } else {
         next[action.columnId] = action.entry;
       }
-      return { ...state, filters: next, page: 1, selection: [], expanded: [] };
+      return { ...state, filters: next, page: 1, expanded: [] };
     }
     case GridActionType.ClearFilters:
       return Object.keys(state.filters).length === 0
         ? state
-        : { ...state, filters: {}, page: 1, selection: [], expanded: [] };
+        : { ...state, filters: {}, page: 1, expanded: [] };
     case GridActionType.SetSort:
       return { ...state, sort: action.sort, page: 1, expanded: [] };
     case GridActionType.ToggleSort:
@@ -70,7 +71,10 @@ export function reducer(state: IGridState, action: TGridAction): IGridState {
         ? state
         : {
             ...state,
-            columnWidths: { ...state.columnWidths, [action.columnId]: action.width },
+            columnWidths: {
+              ...state.columnWidths,
+              [action.columnId]: action.width,
+            },
           };
     case GridActionType.SetSelection:
       return sameIds(state.selection, action.ids) ? state : { ...state, selection: action.ids };
@@ -86,7 +90,12 @@ export function reducer(state: IGridState, action: TGridAction): IGridState {
     case GridActionType.SetFreeTextSearch:
       return state.freeTextSearch === action.text
         ? state
-        : { ...state, freeTextSearch: action.text, page: 1, selection: [], expanded: [] };
+        : {
+            ...state,
+            freeTextSearch: action.text,
+            page: 1,
+            expanded: [],
+          };
     case GridActionType.Hydrate:
       return { ...state, ...action.state };
     case GridActionType.Reset:
