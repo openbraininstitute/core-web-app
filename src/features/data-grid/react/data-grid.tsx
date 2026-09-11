@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { GridActionType, isSelectionEnabled, SelectionMode } from '@/features/data-grid/core';
 import { ActiveFiltersButton } from '@/features/data-grid/react/active-filters';
@@ -136,7 +136,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   // Scope changes replace the controller. Restore the prior id-only selection only when
   // the replacement has no persisted selection; same-controller clears remain untouched.
   const previousControllerRef = useRef<GridController<Row> | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previousController = previousControllerRef.current;
     if (previousController && previousController !== controller) {
       const previousSelection = previousController.store.getSnapshot().selection;

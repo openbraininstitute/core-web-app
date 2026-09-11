@@ -11,10 +11,7 @@ export interface IExpandingToolbarButtonProps extends ComponentPropsWithRef<'but
   icon: ReactNode;
   /** sentence-case name — the accessible name AND the text revealed on hover/focus */
   label: string;
-  /**
-   * Optional count overlay. Positioned by the consumer against a 20px-tall, zero-width
-   * anchor, so absolute offsets like `-right-2 -top-1.5` are relative to that.
-   */
+  /** Optional count overlay, pinned to the button's top-right border. */
   badge?: ReactNode;
 }
 
@@ -61,13 +58,9 @@ export function ExpandingPillContent({ icon, label, badge }: IExpandingPillConte
       {badge ? (
         <span
           data-testid="toolbar-pill-badge-anchor"
-          className={cn(
-            'pointer-events-none relative z-10 h-5 w-0 shrink-0',
-            'translate-x-0.5 -translate-y-2',
-            '*:ring-2 *:ring-white'
-          )}
+          className="pointer-events-none absolute top-0 right-2 z-10"
         >
-          {badge}
+          <span className="block -translate-y-1/2 *:ring-2 *:ring-white">{badge}</span>
         </span>
       ) : null}
     </>

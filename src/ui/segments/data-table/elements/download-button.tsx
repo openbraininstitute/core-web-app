@@ -91,10 +91,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   }, [selectedRows, dataType, clearSelectedRows, notify.error, workspace]);
 
   const getButtonLabel = (): string => {
-    if (isSingular) {
-      return `Download entity (${entityCount})`;
-    }
-    return `Download entities (${entityCount})`;
+    return isSingular ? 'Download entity' : 'Download entities';
   };
 
   const renderButtonIcon = () => {
@@ -225,8 +222,8 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           <span className="whitespace-nowrap">{children ?? getButtonLabel()}</span>
         </span>
         {selectionBadge ? (
-          <span className="pointer-events-none absolute -top-2 right-2 z-10 *:ring-2 *:ring-white">
-            {selectionBadge}
+          <span className="pointer-events-none absolute top-0 right-2 z-10">
+            <span className="block -translate-y-1/2 *:ring-2 *:ring-white">{selectionBadge}</span>
           </span>
         ) : null}
         <div

@@ -355,8 +355,10 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
               <span className="whitespace-nowrap">{children ?? buttonLabel}</span>
             </span>
             {selectionBadge ? (
-              <span className="pointer-events-none absolute -top-2 right-2 z-10 *:ring-2 *:ring-white">
-                {selectionBadge}
+              <span className="pointer-events-none absolute top-0 right-2 z-10">
+                <span className="block -translate-y-1/2 *:ring-2 *:ring-white">
+                  {selectionBadge}
+                </span>
               </span>
             ) : null}
           </Button>
