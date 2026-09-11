@@ -42,18 +42,35 @@ export const GridActionType = {
 export type TGridActionType = (typeof GridActionType)[keyof typeof GridActionType];
 
 export type TGridAction =
-  | { type: typeof GridActionType.SetFilter; columnId: string; entry: IFilterEntry | null }
+  | {
+      type: typeof GridActionType.SetFilter;
+      columnId: string;
+      entry: IFilterEntry | null;
+    }
   | { type: typeof GridActionType.ClearFilters }
   | { type: typeof GridActionType.SetSort; sort: TSortModel }
-  | { type: typeof GridActionType.ToggleSort; columnId: string; allowMulti?: boolean }
+  | {
+      type: typeof GridActionType.ToggleSort;
+      columnId: string;
+      allowMulti?: boolean;
+    }
   | { type: typeof GridActionType.SetPage; page: number }
   | { type: typeof GridActionType.SetPageSize; pageSize: number }
   | { type: typeof GridActionType.SetColumnOrder; order: string[] }
   | { type: typeof GridActionType.SetHiddenColumns; hidden: string[] }
-  | { type: typeof GridActionType.SetColumnWidth; columnId: string; width: number }
+  | {
+      type: typeof GridActionType.SetColumnWidth;
+      columnId: string;
+      width: number;
+    }
   | { type: typeof GridActionType.SetSelection; ids: string[] }
   | { type: typeof GridActionType.SetExpanded; ids: string[] }
   | { type: typeof GridActionType.ToggleExpanded; id: string }
-  | { type: typeof GridActionType.SetFreeTextSearch; text: string }
+  | {
+      type: typeof GridActionType.SetFreeTextSearch;
+      text: string;
+      /** Controlled pickers retain picks while their search results change. */
+      preserveSelection?: boolean;
+    }
   | { type: typeof GridActionType.Hydrate; state: Partial<IGridState> }
   | { type: typeof GridActionType.Reset; state: IGridState };

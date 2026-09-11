@@ -281,8 +281,9 @@ export function EntityDataGrid({
       controller.store.dispatch({
         type: GridActionType.SetFreeTextSearch,
         text,
+        preserveSelection: Boolean(selectionType && onRowsSelected),
       }),
-    [controller]
+    [controller, selectionType, onRowsSelected]
   );
 
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);

@@ -24,7 +24,8 @@ function toggleSort(sort: TSortModel, columnId: string, allowMulti: boolean): TS
 /**
  * Pure state transitions. Returns the same reference when nothing changes, so
  * `useSyncExternalStore` consumers don't re-render. Filter/sort/page-size/free-text search
- * changes reset the page to 1; data-changing transitions also clear the selection.
+ * changes reset the page to 1; data-changing transitions clear selection unless a controlled
+ * picker explicitly preserves it while its visible results change.
  */
 export function reducer(state: IGridState, action: TGridAction): IGridState {
   switch (action.type) {
@@ -70,7 +71,10 @@ export function reducer(state: IGridState, action: TGridAction): IGridState {
         ? state
         : {
             ...state,
-            columnWidths: { ...state.columnWidths, [action.columnId]: action.width },
+            columnWidths: {
+              ...state.columnWidths,
+              [action.columnId]: action.width,
+            },
           };
     case GridActionType.SetSelection:
       return sameIds(state.selection, action.ids) ? state : { ...state, selection: action.ids };
@@ -86,7 +90,13 @@ export function reducer(state: IGridState, action: TGridAction): IGridState {
     case GridActionType.SetFreeTextSearch:
       return state.freeTextSearch === action.text
         ? state
-        : { ...state, freeTextSearch: action.text, page: 1, selection: [], expanded: [] };
+        : {
+            ...state,
+            freeTextSearch: action.text,
+            page: 1,
+            selection: action.preserveSelection ? state.selection : [],
+            expanded: [],
+          };
     case GridActionType.Hydrate:
       return { ...state, ...action.state };
     case GridActionType.Reset:
