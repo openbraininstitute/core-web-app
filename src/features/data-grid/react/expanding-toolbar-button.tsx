@@ -58,7 +58,7 @@ export function ExpandingPillContent({ icon, label, badge }: IExpandingPillConte
       {badge ? (
         <span
           data-testid="toolbar-pill-badge-anchor"
-          className="pointer-events-none absolute top-0 right-2 z-10"
+          className="pointer-events-none absolute top-[-2px] right-[-2px] z-10"
         >
           <span className="block -translate-y-1/2 *:ring-2 *:ring-white">{badge}</span>
         </span>

@@ -148,6 +148,56 @@ describe('DataGrid selection survives a controller swap', () => {
     await waitFor(() => expect(renderedSelections.at(-1)).toEqual([PICKED.id]));
   });
 
+  it('does not restore selection when the scope is explicitly isolated', async () => {
+    const renderedSelections: string[][] = [];
+
+    function Host({ scopeKey }: { scopeKey: string }) {
+      const controller = useMemo(
+        () =>
+          new GridController<Row>({
+            schema,
+            context: { dataType: 't', scope: scopeKey },
+            defaultPageSize: 30,
+          }),
+        [scopeKey]
+      );
+      useEffect(() => {
+        if (scopeKey === 'public') {
+          controller.store.dispatch({
+            type: GridActionType.SetSelection,
+            ids: [PICKED.id],
+          });
+        }
+      }, [controller, scopeKey]);
+
+      return (
+        <DataGrid<Row>
+          controller={controller}
+          dataSource={emptySource}
+          renderer={(props) => {
+            renderedSelections.push([...props.state.selection]);
+            return null;
+          }}
+          operators={createDefaultOperatorRegistry()}
+          cellRenderers={new CellRendererRegistry()}
+          queryKey={['t', scopeKey]}
+          selectionScope="isolated"
+          showColumnChooser={false}
+        />
+      );
+    }
+
+    const { rerender } = wrap(<Host scopeKey="public" />);
+    await waitFor(() => expect(renderedSelections.at(-1)).toEqual([PICKED.id]));
+
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <Host scopeKey="project" />
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(renderedSelections.at(-1)).toEqual([]));
+  });
+
   it('settles (bounded emits) and keeps the host picks when the controller is replaced', async () => {
     const emitted: Row[][] = [];
 

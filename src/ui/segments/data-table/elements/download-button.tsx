@@ -36,6 +36,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   selectedRows,
   dataType,
   clearSelectedRows,
+  selectionCount,
   workspace,
   className,
   expanding = false,
@@ -50,6 +51,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
   const notify = useAppNotification();
   const entityCount = selectedRows.length;
+  const badgeCount = selectionCount ?? entityCount;
   const isSingular = entityCount === 1;
 
   const download = useCallback(async () => {
@@ -150,13 +152,13 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
 
   const label = getButtonLabel();
   const selectionBadge =
-    entityCount > 0 ? (
+    badgeCount > 0 ? (
       <Badge
         rounded
-        aria-label={`${entityCount} selected`}
+        aria-label={`${badgeCount} selected`}
         className="h-5 min-w-5 border-2 border-white bg-white px-1 text-[11px] font-bold leading-none text-primary-9 shadow-sm"
       >
-        {entityCount}
+        {badgeCount}
       </Badge>
     ) : undefined;
   /** gradient + chrome marking this as the primary bulk action */

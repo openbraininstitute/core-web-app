@@ -57,8 +57,8 @@ describe('ExpandingToolbarButton', () => {
     const anchor = getByTestId('toolbar-pill-badge-anchor');
     expect(anchor).toContainElement(getByText('3'));
     expect(anchor.className).toContain('absolute');
-    expect(anchor.className).toContain('top-0');
-    expect(anchor.className).toContain('right-2');
+    expect(anchor.className).toContain('top-[-2px]');
+    expect(anchor.className).toContain('right-[-2px]');
     expect(anchor.previousElementSibling).toHaveAttribute('aria-hidden', 'true');
     expect(anchor.nextElementSibling).toBeNull();
   });
@@ -76,8 +76,8 @@ describe('ExpandingToolbarButton', () => {
     );
     const anchor = getByTestId('toolbar-pill-badge-anchor');
     expect(anchor.className).toContain('absolute');
-    expect(anchor.className).toContain('top-0');
-    expect(anchor.className).toContain('right-2');
+    expect(anchor.className).toContain('top-[-2px]');
+    expect(anchor.className).toContain('right-[-2px]');
     expect(anchor.firstElementChild?.className).toContain('-translate-y-1/2');
   });
 

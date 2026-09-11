@@ -17,6 +17,11 @@ export type ListingTableProps<Row = EntityCoreIdentifiableNamed> = {
   /** controlled selection; pair with {@link onRowsSelected} */
   selectedRows?: Row[];
   onRowsSelected?: (rows: Row[]) => void;
+  /**
+   * Whether selection survives a scope/controller change. Shared is the default single
+   * basket; isolated starts a fresh selection for each scope.
+   */
+  selectionScope?: 'shared' | 'isolated';
   /** row click handler; when set it replaces opening the mini-detail panel */
   onCellClick?: (basePath: string, record: Row, type: TExtendedEntitiesTypeDict) => void;
 };

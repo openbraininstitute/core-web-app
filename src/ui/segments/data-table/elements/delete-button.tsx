@@ -133,6 +133,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   dataType,
   workspace,
   clearSelectedRows,
+  selectionCount,
   className,
   expanding = false,
 }: RenderButtonProps<T> & {
@@ -157,21 +158,22 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
     );
   });
   const entityCount = projectRows.length;
+  const badgeCount = selectionCount ?? entityCount;
   const isSingular = entityCount === 1;
   const selectionBadge =
-    entityCount > 0 ? (
+    badgeCount > 0 ? (
       <Badge
         rounded
-        aria-label={`${entityCount} project items selected`}
+        aria-label={`${badgeCount} project items selected`}
         className="h-5 min-w-5 border-2 border-white bg-white px-1 text-[11px] font-bold leading-none text-destructive shadow-sm"
       >
-        {entityCount}
+        {badgeCount}
       </Badge>
     ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
 
   const getButtonLabel = (): string => {
-    return isSingular ? `Delete entity (${entityCount})` : `Delete entities (${entityCount})`;
+    return isSingular ? `Delete entity` : `Delete entities`;
   };
 
   const entityTypeConfig = getEntityByExtendedType({ type: dataType });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { accumulateSeenRows } from '@/features/data-grid/react/bulk-actions';
+import { accumulateSeenRows, countSelectionInScope } from '@/features/data-grid/react/bulk-actions';
 
 type Row = { id: string; name: string };
 
@@ -31,5 +31,26 @@ describe('accumulateSeenRows — cross-page selection cache (legacy use-row-sele
     const stale = new Map([['a', { id: 'a', name: 'stale' }]]);
     const cache = accumulateSeenRows(stale, [row('a')], ['a'], getRowId);
     expect(cache.get('a')?.name).toBe('row-a');
+  });
+});
+
+describe('countSelectionInScope', () => {
+  it('counts the current scope while keeping the selection basket shared', () => {
+    const scopes = new Map([
+      ['public-row', 'public'],
+      ['project-row-1', 'project'],
+      ['project-row-2', 'project'],
+    ]);
+
+    expect(
+      countSelectionInScope(['public-row', 'project-row-1', 'project-row-2'], scopes, 'public')
+    ).toBe(1);
+    expect(
+      countSelectionInScope(['public-row', 'project-row-1', 'project-row-2'], scopes, 'project')
+    ).toBe(2);
+  });
+
+  it('counts the whole basket when no scope is supplied', () => {
+    expect(countSelectionInScope(['a', 'b'], new Map(), undefined)).toBe(2);
   });
 });

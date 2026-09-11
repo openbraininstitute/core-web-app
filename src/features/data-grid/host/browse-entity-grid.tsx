@@ -231,6 +231,7 @@ export function EntityDataGrid({
   const selectionType = mainTableProps?.selectionType;
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
+  const selectionScope = mainTableProps?.selectionScope;
   const applyLifecycleGating = isWorkflowPickerSection(section);
   const pickerSelection = useMemo<
     IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
@@ -451,6 +452,7 @@ export function EntityDataGrid({
           onRowClick={handleRowClick}
           getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
+          selectionScope={selectionScope}
           selection={pickerSelection}
           toolbarSlots={{
             scope: toolbarScope,
@@ -469,13 +471,14 @@ export function EntityDataGrid({
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
           }}
-          renderBulkActions={({ selectedRows, clearSelection }) => (
+          renderBulkActions={({ selectedRows, selectedCount, clearSelection }) => (
             // Buttons only — the "N selected" count and Clear live in the footer.
             <div className="flex items-center gap-2">
               {allowDownload && (
                 <EntityDownloadButton<EntityCoreIdentifiableNamed>
                   expanding
                   selectedRows={selectedRows}
+                  selectionCount={selectedCount}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
@@ -485,6 +488,7 @@ export function EntityDataGrid({
                 <EntityDeleteButton<EntityCoreIdentifiableNamed>
                   expanding
                   selectedRows={selectedRows}
+                  selectionCount={selectedCount}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
