@@ -136,6 +136,17 @@
   color: var(--color-primary-9);
 }
 
+.settingsBtn {
+  color: var(--color-primary-4);
+  font-size: 1.6rem;
+  background: none;
+}
+
+.settingsBtn:hover:not(:disabled) {
+  background: var(--color-neutral-5);
+  color: var(--color-primary-9);
+}
+
 .fullscreenBtn {
   color: var(--color-primary-4);
   font-size: 1.5rem;
