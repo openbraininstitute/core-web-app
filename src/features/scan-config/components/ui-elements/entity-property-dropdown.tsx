@@ -6,7 +6,7 @@ import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
-export default function EntityPropertyDropdown({
+export function EntityPropertyDropdown({
   value,
   onChange,
   property,

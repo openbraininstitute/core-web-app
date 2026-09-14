@@ -3,7 +3,8 @@ import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
-import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
+import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
+import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
 import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
@@ -13,7 +14,7 @@ import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/m
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import MorphologyLocationSelection from '@/features/scan-config/components/ui-elements/morphology-location-selection';
-import MorphologySectionTypeSelection from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
+import { MorphologySectionTypeSelection } from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import NeuronPropertyFilter, {
   type INeuronPropertyFilter,
@@ -24,7 +25,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/neuron-set-combination';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
-import Reference from '@/features/scan-config/components/ui-elements/reference';
+import { Reference } from '@/features/scan-config/components/ui-elements/reference';
 import { SelectEFeaturesByProtocol } from '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol';
 import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import {
@@ -53,6 +54,9 @@ import type { TSchemaMappingConfiguration } from '@/features/scan-config/compone
 import type { Nullish } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
+
+/** the sibling field a DiscreteProbabilities element edits alongside its own. */
+const DISCRETE_PROBABILITIES_FIELD = 'probabilities';
 
 export function UIElementRender({
   k,
@@ -612,6 +616,33 @@ export function UIElementRender({
 
               setState({ ...state, [k]: getNewValue() as ConfigValue });
             }}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.DiscreteProbabilities },
+      },
+      () => {
+        // this element owns two fields: the one it is declared on, and the sibling holding
+        // the probability for each value. they are written together so their lengths cannot
+        // drift apart.
+        const asNumbers = (v: ConfigValue): number[] =>
+          Array.isArray(v) ? v.filter((n): n is number => typeof n === 'number') : [];
+
+        return (
+          <DiscreteProbabilities
+            values={asNumbers(value)}
+            probabilities={asNumbers(state[DISCRETE_PROBABILITIES_FIELD])}
+            disabled={disabled}
+            onChange={(values, probabilities) =>
+              setState({
+                ...state,
+                [k]: values as unknown as ConfigValue,
+                [DISCRETE_PROBABILITIES_FIELD]: probabilities as unknown as ConfigValue,
+              })
+            }
           />
         );
       }
