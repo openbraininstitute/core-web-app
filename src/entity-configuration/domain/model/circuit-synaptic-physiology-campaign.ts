@@ -19,7 +19,6 @@ export type TCircuitSynapticPhysiologyCampaignMeta = {
   scan_parameters?: Record<string, unknown>;
 };
 
-// The build campaign is tracked through the launchable synaptic-physiology-assignment task family.
 const TaskFlow: TTaskFlowTypes = {
   campaignConfigType: TaskConfigType.CircuitSynapticPhysiologyCampaign,
 };

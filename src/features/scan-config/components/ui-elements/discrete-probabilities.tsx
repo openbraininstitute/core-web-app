@@ -1,22 +1,7 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
 
-/**
- * the value/probability table of a discrete distribution.
- *
- * the two arrays are one control, not two. they have to stay the same length -- each value
- * needs its own probability -- so editing them as separate lists would let a user leave them
- * mismatched, which is a state the distribution cannot sample from. a row owns both halves,
- * so the lengths cannot drift.
- *
- * probabilities are normalised before sampling, so they need not sum to 1. that is a
- * convenience which is invisible if the raw numbers are all that is shown: typing 1, 1, 1
- * gives thirds, and nothing on screen would say so. the share column is that feedback.
- *
- * neither array is sweepable, deliberately. a swept discrete distribution would be a list of
- * whole tuples, which in the schema is the same shape as one tuple of values -- there would be
- * no way to tell "my five values" from "five separate configurations to run".
- */
+/** Edits paired discrete values and probabilities without changing their row alignment. */
 export function DiscreteProbabilities({
   values,
   probabilities,
@@ -28,8 +13,6 @@ export function DiscreteProbabilities({
   onChange: (values: number[], probabilities: number[]) => void;
   disabled: boolean;
 }) {
-  // the pair can arrive mismatched from a hand-edited config; render the rows that exist and
-  // let the shorter array show blanks rather than dropping the extra values silently.
   const rowCount = Math.max(values.length, probabilities.length);
   const rows = Array.from({ length: rowCount }, (_, i) => ({
     value: values[i],
