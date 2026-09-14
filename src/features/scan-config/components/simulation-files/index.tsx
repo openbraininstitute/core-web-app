@@ -136,8 +136,6 @@ export function SimulationFiles({
 
   return (
     <IoLayout
-      inputTitle="Input files"
-      outputTitle="Output files"
       showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFilesWithLogs.length === 0}
       outputIsEmpty={outputFilesWithLogs.length === 0 && !outputLoading}
