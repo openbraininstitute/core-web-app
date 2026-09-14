@@ -43,7 +43,7 @@ function toSelectedValues(value: ConfigValue, optionValues: number[]): number[] 
  * axon / basal / apical) are discovered from the mapped morphology-source
  * endpoint declared in `schema.property_endpoints[propertyGroup]`.
  */
-export default function MorphologySectionTypeSelection({
+export function MorphologySectionTypeSelection({
   value,
   onChange,
   disabled,
