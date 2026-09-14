@@ -12,6 +12,8 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IDatasource } from 'ag-grid-community';
 import type {
+  ColumnDistributionRequest,
+  ColumnDistributionResponse,
   ColumnMeta,
   NodeGeometryOptions,
   NodePopulation,
@@ -129,6 +131,14 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const getColumnDistribution = useCallback(
+    async (req: ColumnDistributionRequest): Promise<ColumnDistributionResponse> => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getColumnDistribution(key, req);
+    },
+    [key]
+  );
+
   const getGeometry = useCallback(
     async (options?: NodeGeometryOptions) => {
       if (!key) throw new Error('Nodes worker not ready');
@@ -147,6 +157,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     columns: state.columns,
     datasource,
     getColumn,
+    getColumnDistribution,
     getGeometry,
     status: state.status,
     isLoading: state.status === 'loading',

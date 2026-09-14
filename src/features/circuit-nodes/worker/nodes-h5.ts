@@ -2,6 +2,9 @@ import { Dataset, File, Group } from 'h5wasm';
 import { match } from 'ts-pattern';
 
 import {
+  type CategoricalDistribution,
+  type ColumnDistributionRequest,
+  type ColumnDistributionResponse,
   type ColumnFilter,
   type ColumnKind,
   ColumnKindDict,
@@ -12,6 +15,7 @@ import {
   type NodeGeometry,
   type NodeGeometryOptions,
   type NumberFilter,
+  type NumericDistribution,
   type SortItem,
   type TextFilter,
 } from '@/features/circuit-nodes/types';
@@ -30,6 +34,16 @@ const MORPHOLOGY_COLUMN = 'morphology';
 const LOADED_COLUMN_CACHE_SIZE = 12;
 const VIEW_CACHE_SIZE = 8;
 
+const AUTO_PROMOTE_MAX_DISTINCT = 100;
+const H5_READ_CHUNK_ROWS = 65_536;
+// h5wasm 0.7.9 crashes with "memory access out of bounds" inside
+// `reclaim_vlen_memory` when `dataset.slice([[start, end]])` is called on a
+// variable-length string dataset with a sub-range. For vlen strings we have
+// to read the whole column at once via `dataset.value`. We cap the row count
+// to keep that one-shot allocation bounded; very large vlen string columns
+// are left unprobed and continue to render as raw text columns.
+const AUTO_PROMOTE_MAX_ROWS = 1_000_000;
+
 type CategoricalHandle = {
   kind: 'categorical';
   name: string;
@@ -37,6 +51,10 @@ type CategoricalHandle = {
   dtype: string;
   library: string[];
   librarySortRank: Uint32Array;
+  // True when this column was originally string-typed and auto-promoted by the
+  // distinct-value probe at session open. The H5 dataset stores raw label
+  // strings, not integer indices into @library — readers must reindex.
+  isPromoted?: boolean;
 };
 
 type NumericHandle = {
@@ -97,6 +115,18 @@ function alphabeticRank(library: string[]): Uint32Array {
     rank[order[i]] = i;
   }
   return rank;
+}
+
+function probeStringColumnForPromotion(dataset: Dataset, rowCount: number): string[] | null {
+  if (rowCount === 0) return [];
+  if (rowCount > AUTO_PROMOTE_MAX_ROWS) return null;
+  const values = ensureStringArray(dataset.value);
+  const set = new Set<string>();
+  for (let i = 0; i < values.length; i++) {
+    set.add(values[i]);
+    if (set.size > AUTO_PROMOTE_MAX_DISTINCT) return null;
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
 function readLibrary(group: Group, name: string): string[] | null {
@@ -176,8 +206,23 @@ export class NodesSession {
         handles.push({ kind: 'numeric', name: key, dataset: node, dtype });
         columnMeta.push({ name: key, kind: 'numeric', dtype });
       } else {
-        handles.push({ kind: 'string', name: key, dataset: node, dtype });
-        columnMeta.push({ name: key, kind: 'string', dtype });
+        const promotedLibrary = probeStringColumnForPromotion(node, rowCount);
+        if (promotedLibrary) {
+          const librarySortRank = alphabeticRank(promotedLibrary);
+          handles.push({
+            kind: 'categorical',
+            name: key,
+            dataset: node,
+            dtype,
+            library: promotedLibrary,
+            librarySortRank,
+            isPromoted: true,
+          });
+          columnMeta.push({ name: key, kind: 'categorical', dtype, library: promotedLibrary });
+        } else {
+          handles.push({ kind: 'string', name: key, dataset: node, dtype });
+          columnMeta.push({ name: key, kind: 'string', dtype });
+        }
       }
     }
 
@@ -203,8 +248,23 @@ export class NodesSession {
           handles.push({ kind: 'numeric', name: key, dataset: node, dtype });
           columnMeta.push({ name: key, kind: 'numeric', dtype });
         } else {
-          handles.push({ kind: 'string', name: key, dataset: node, dtype });
-          columnMeta.push({ name: key, kind: 'string', dtype });
+          const promotedLibrary = probeStringColumnForPromotion(node, rowCount);
+          if (promotedLibrary) {
+            const librarySortRank = alphabeticRank(promotedLibrary);
+            handles.push({
+              kind: 'categorical',
+              name: key,
+              dataset: node,
+              dtype,
+              library: promotedLibrary,
+              librarySortRank,
+              isPromoted: true,
+            });
+            columnMeta.push({ name: key, kind: 'categorical', dtype, library: promotedLibrary });
+          } else {
+            handles.push({ kind: 'string', name: key, dataset: node, dtype });
+            columnMeta.push({ name: key, kind: 'string', dtype });
+          }
         }
       }
     }
@@ -458,7 +518,9 @@ export class NodesSession {
     const raw = handle.dataset.value;
     let loaded: LoadedColumn;
     if (handle.kind === 'categorical') {
-      loaded = ensureUint32(raw);
+      loaded = handle.isPromoted
+        ? reindexStringsToLibrary(ensureStringArray(raw), handle.library)
+        : ensureUint32(raw);
     } else if (handle.kind === 'numeric') {
       loaded = ensureFloatArray(raw);
     } else {
@@ -488,7 +550,7 @@ export class NodesSession {
       return out;
     }
 
-    if (!useGather && !this.loaded.has(name) && !isVariableLengthString(handle)) {
+    if (!useGather && !this.loaded.has(name) && !requiresFullColumnRead(handle)) {
       const sliced = handle.dataset.slice([[sliceStart, sliceEnd]]);
       return decodeSliceForPage(handle, sliced);
     }
@@ -570,13 +632,215 @@ export class NodesSession {
     for (let i = 0; i < decoded.length; i++) values[i] = String(decoded[i]);
     return values;
   }
+
+  getColumnDistribution(req: ColumnDistributionRequest): ColumnDistributionResponse {
+    const { column: colName, filter, topN = 50 } = req;
+    const handle = this.columnIndex.get(colName);
+    if (!handle) throw new Error(`Unknown column '${colName}'`);
+
+    const filterEntries = Object.entries(filter ?? {}).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey([], filterEntries);
+    const view = viewKey === null ? null : this.resolveView(viewKey, [], filterEntries);
+
+    if (handle.kind === ColumnKindDict.Numeric || handle.kind === ColumnKindDict.SyntheticNodeId) {
+      return this.computeNumericDistribution(handle, view);
+    }
+    if (handle.kind === ColumnKindDict.Categorical) {
+      return this.computeCategoricalDistribution(handle, view);
+    }
+    return this.computeTextDistribution(handle, view, topN);
+  }
+
+  private computeNumericDistribution(
+    handle: NumericHandle | SyntheticNodeIdHandle,
+    view: Uint32Array | null
+  ): NumericDistribution {
+    let min = Infinity;
+    let max = -Infinity;
+    let n = 0;
+    let nullCount = 0;
+
+    const updateStats = (v: number) => {
+      if (Number.isNaN(v)) {
+        nullCount++;
+        return;
+      }
+      if (v < min) min = v;
+      if (v > max) max = v;
+      n++;
+    };
+
+    if (handle.kind === ColumnKindDict.SyntheticNodeId) {
+      if (view) {
+        for (let i = 0; i < view.length; i++) updateStats(view[i]);
+      } else if (this.rowCount > 0) {
+        min = 0;
+        max = this.rowCount - 1;
+        n = this.rowCount;
+      }
+    } else if (view) {
+      const data = this.loadColumn(handle.name) as Float32Array | Float64Array;
+      for (let i = 0; i < view.length; i++) updateStats(data[view[i]]);
+    } else {
+      for (let start = 0; start < this.rowCount; start += H5_READ_CHUNK_ROWS) {
+        const end = Math.min(this.rowCount, start + H5_READ_CHUNK_ROWS);
+        const chunk = ensureFloatArray(handle.dataset.slice([[start, end]]));
+        for (let i = 0; i < chunk.length; i++) updateStats(chunk[i]);
+      }
+    }
+
+    if (n === 0) {
+      return { kind: 'numeric', binEdges: [], counts: [], total: 0, nullCount, min: 0, max: 0 };
+    }
+
+    let binCount = Math.max(1, Math.min(50, Math.ceil(Math.log2(Math.max(2, n)) + 1)));
+    const isInteger =
+      handle.kind === ColumnKindDict.SyntheticNodeId || /^[<>|]?[bhiqBHIQ]\d*$/.test(handle.dtype);
+    const integerSnapped = isInteger && max - min + 1 <= 50 && max - min + 1 >= 1;
+    if (integerSnapped) {
+      binCount = Math.max(1, max - min + 1);
+    }
+
+    const binEdges: number[] = new Array(binCount + 1);
+    if (integerSnapped) {
+      for (let i = 0; i <= binCount; i++) binEdges[i] = min - 0.5 + i;
+    } else if (min === max) {
+      for (let i = 0; i <= binCount; i++) binEdges[i] = min - 0.5 + i / binCount;
+    } else {
+      const w = (max - min) / binCount;
+      for (let i = 0; i <= binCount; i++) binEdges[i] = min + i * w;
+    }
+
+    const counts = new Array<number>(binCount).fill(0);
+    const lower = binEdges[0];
+    const span = binEdges[binCount] - lower;
+    const assign = (v: number): number => {
+      if (binCount <= 1) return 0;
+      const t = (v - lower) / span;
+      let idx = Math.floor(t * binCount);
+      if (idx < 0) idx = 0;
+      else if (idx >= binCount) idx = binCount - 1;
+      return idx;
+    };
+
+    if (handle.kind === ColumnKindDict.SyntheticNodeId) {
+      if (view) {
+        for (let i = 0; i < view.length; i++) counts[assign(view[i])]++;
+      } else {
+        for (let i = 0; i < this.rowCount; i++) counts[assign(i)]++;
+      }
+    } else if (view) {
+      const data = this.loadColumn(handle.name) as Float32Array | Float64Array;
+      for (let i = 0; i < view.length; i++) {
+        const v = data[view[i]];
+        if (!Number.isNaN(v)) counts[assign(v)]++;
+      }
+    } else {
+      for (let start = 0; start < this.rowCount; start += H5_READ_CHUNK_ROWS) {
+        const end = Math.min(this.rowCount, start + H5_READ_CHUNK_ROWS);
+        const chunk = ensureFloatArray(handle.dataset.slice([[start, end]]));
+        for (let i = 0; i < chunk.length; i++) {
+          const v = chunk[i];
+          if (!Number.isNaN(v)) counts[assign(v)]++;
+        }
+      }
+    }
+
+    return { kind: 'numeric', binEdges, counts, total: n, nullCount, min, max };
+  }
+
+  private computeCategoricalDistribution(
+    handle: CategoricalHandle,
+    view: Uint32Array | null
+  ): CategoricalDistribution {
+    const counts = new Uint32Array(handle.library.length);
+    let total = 0;
+
+    if (view) {
+      const data = this.loadColumn(handle.name) as Uint32Array;
+      for (let i = 0; i < view.length; i++) counts[data[view[i]]]++;
+      total = view.length;
+    } else if (handle.isPromoted) {
+      // Promoted columns are vlen-string-backed; loadColumn full-reads and
+      // reindexes to library, so we can histogram by index directly.
+      const data = this.loadColumn(handle.name) as Uint32Array;
+      for (let i = 0; i < data.length; i++) counts[data[i]]++;
+      total = data.length;
+    } else {
+      for (let start = 0; start < this.rowCount; start += H5_READ_CHUNK_ROWS) {
+        const end = Math.min(this.rowCount, start + H5_READ_CHUNK_ROWS);
+        const chunk = ensureUint32(handle.dataset.slice([[start, end]]));
+        for (let i = 0; i < chunk.length; i++) {
+          const idx = chunk[i];
+          if (idx < counts.length) counts[idx]++;
+        }
+        total += chunk.length;
+      }
+    }
+
+    const labels: string[] = [];
+    const finalCounts: number[] = [];
+    for (let i = 0; i < counts.length; i++) {
+      if (counts[i] > 0) {
+        labels.push(handle.library[i]);
+        finalCounts.push(counts[i]);
+      }
+    }
+    return { kind: 'categorical', labels, counts: finalCounts, total };
+  }
+
+  private computeTextDistribution(
+    handle: StringHandle,
+    view: Uint32Array | null,
+    topN: number
+  ): CategoricalDistribution {
+    const map = new Map<string, number>();
+    let total = 0;
+
+    if (view) {
+      const data = this.loadColumn(handle.name) as string[];
+      for (let i = 0; i < view.length; i++) {
+        const v = data[view[i]];
+        map.set(v, (map.get(v) ?? 0) + 1);
+      }
+      total = view.length;
+    } else {
+      // Raw string columns are vlen-backed; full-read once via loadColumn.
+      const data = this.loadColumn(handle.name) as string[];
+      for (let i = 0; i < data.length; i++) {
+        const v = data[i];
+        map.set(v, (map.get(v) ?? 0) + 1);
+      }
+      total = data.length;
+    }
+
+    const distinctCount = map.size;
+    const entries = Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+    const limit = Math.max(1, topN);
+    const top = entries.slice(0, limit);
+    let otherCount = 0;
+    for (let i = limit; i < entries.length; i++) otherCount += entries[i][1];
+
+    return {
+      kind: 'string',
+      labels: top.map(([l]) => l),
+      counts: top.map(([, c]) => c),
+      total,
+      distinctCount,
+      otherCount: otherCount > 0 ? otherCount : undefined,
+    };
+  }
 }
 
-function isVariableLengthString(handle: ColumnHandle): boolean {
+function requiresFullColumnRead(handle: ColumnHandle): boolean {
   // h5wasm reports variable-length strings as "S" (no size suffix) and
   // fixed-length strings as "S<n>". Dataset.slice() aborts on vlen strings,
   // so route them through the full-column path (Dataset.value), which works.
-  return handle.kind === 'string' && handle.dtype === 'S';
+  if (handle.kind === ColumnKindDict.String) return handle.dtype === 'S';
+  // A promoted categorical is a string dataset read through a library: the
+  // column cache holds library indices, but a slice of the dataset hands back
+  // the raw strings, so it has to take the full-column path as well.
+  return handle.kind === ColumnKindDict.Categorical && handle.isPromoted === true;
 }
 
 function range(start: number, end: number): number[] {
@@ -629,6 +893,14 @@ function ensureStringArray(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw.map((v) => String(v));
   if (typeof raw === 'string') return [raw];
   return [];
+}
+
+function reindexStringsToLibrary(values: string[], library: string[]): Uint32Array {
+  const indexByLabel = new Map<string, number>();
+  for (let i = 0; i < library.length; i++) indexByLabel.set(library[i], i);
+  const out = new Uint32Array(values.length);
+  for (let i = 0; i < values.length; i++) out[i] = indexByLabel.get(values[i]) ?? 0;
+  return out;
 }
 
 function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: number): number {

@@ -5,6 +5,8 @@ import { NodesSession } from '@/features/circuit-nodes/worker/nodes-h5';
 import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
 import type {
+  ColumnDistributionRequest,
+  ColumnDistributionResponse,
   ColumnValues,
   DownloadProgress,
   GetRowsRequest,
@@ -68,6 +70,11 @@ const api = {
     const buffers: ArrayBuffer[] = [geometry.positions.buffer as ArrayBuffer];
     if (geometry.orientations) buffers.push(geometry.orientations.buffer as ArrayBuffer);
     return Comlink.transfer(geometry, buffers);
+  },
+
+  async getColumnDistribution(req: ColumnDistributionRequest): Promise<ColumnDistributionResponse> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    return session.getColumnDistribution(req);
   },
 
   async close(): Promise<void> {

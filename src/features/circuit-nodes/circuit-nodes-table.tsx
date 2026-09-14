@@ -52,6 +52,7 @@ export default function CircuitNodesTable({
     filteredCount,
     columns,
     datasource,
+    getColumnDistribution,
     isLoading: workerLoading,
     progress: downloadProgress,
     error: workerError,
@@ -94,6 +95,7 @@ export default function CircuitNodesTable({
           rowCount,
           filteredCount,
           datasource,
+          getColumnDistribution,
           visibleColumns,
           setVisibleColumns,
         })}
@@ -113,6 +115,7 @@ function renderBody({
   rowCount,
   filteredCount,
   datasource,
+  getColumnDistribution,
   visibleColumns,
   setVisibleColumns,
 }: {
@@ -126,6 +129,7 @@ function renderBody({
   rowCount: number;
   filteredCount: number | null;
   datasource: ReturnType<typeof useNodesWorker>['datasource'];
+  getColumnDistribution: ReturnType<typeof useNodesWorker>['getColumnDistribution'];
   visibleColumns: Set<string>;
   setVisibleColumns: (next: Set<string>) => void;
 }) {
@@ -172,6 +176,7 @@ function renderBody({
       datasource={datasource}
       visibleColumns={visibleColumns}
       onVisibleColumnsChange={setVisibleColumns}
+      getColumnDistribution={getColumnDistribution}
     />
   );
 }
