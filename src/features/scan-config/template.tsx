@@ -130,7 +130,11 @@ function ScanConfigTemplateContent({
     workflowSessionSelection,
     resolveFromIdType: resolveSessionFromIdType,
   });
-  const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
+  const editingLocked = useScanConfigEditingLocked({
+    campaignId,
+    loading,
+    readOnly,
+  });
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 
   const createEntry = useCallback(
@@ -142,7 +146,10 @@ function ScanConfigTemplateContent({
         (previous) =>
           ({
             ...previous,
-            [rootElement]: { ...(previous[rootElement] as object), [entry]: block },
+            [rootElement]: {
+              ...(previous[rootElement] as object),
+              [entry]: block,
+            },
           }) as Config
       );
 
@@ -342,6 +349,7 @@ function ScanConfigTemplateContent({
           />
           <div
             id="scan-config-controls-middle"
+            data-testid="scan-config-middle-content"
             className={cn(
               styles.scrollable,
               'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
