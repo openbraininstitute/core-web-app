@@ -1,6 +1,11 @@
 'use client';
 
-import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
+import {
+  FullscreenExitOutlined,
+  FullscreenOutlined,
+  MinusOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
@@ -12,7 +17,6 @@ import History from './history';
 import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } from './hooks';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
-import { IconSettings } from './icons/settings';
 import PanelSplitter from './panel-splitter';
 import Settings from './settings';
 
@@ -131,7 +135,7 @@ export default function AiAssistant({
                 title="Settings"
                 data-testid="ai-assistant-settings-button"
               >
-                <IconSettings />
+                <SettingOutlined />
               </button>
             </nav>
 

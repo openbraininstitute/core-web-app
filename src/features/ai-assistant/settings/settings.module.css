@@ -37,15 +37,21 @@
   border: 1px solid var(--color-primary-5);
   background: var(--color-neutral-9);
   color: var(--color-primary-5);
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .closeBtn:hover {
   background: var(--color-primary-5);
-  color: var(--color-on-primary, #fff);
+  border-color: var(--color-primary-5);
+  color: var(--color-neutral-9);
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 .content {
@@ -61,7 +67,7 @@
   width: 100%;
   max-width: 600px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.1rem;

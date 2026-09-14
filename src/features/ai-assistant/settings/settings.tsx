@@ -1,7 +1,7 @@
 'use client';
 
+import { CloseOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React from 'react';
 
 import { Switch } from '@/components/common/Switch/Switch';
 import { useAccessToken } from '@/hooks/useAccessToken';
@@ -67,9 +67,9 @@ export default function Settings({ className, onBack }: SettingsProps) {
           className={styles.closeBtn}
           onClick={onBack}
           aria-label="Close settings"
-          title="Close"
+          title="Close settings"
         >
-          ×
+          <CloseOutlined />
         </button>
       </div>
 
