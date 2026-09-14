@@ -17,6 +17,8 @@ import {
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
+import { useFlag } from '@/features/feature-flags';
+import { smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -42,8 +44,8 @@ import { MessageType } from '@/services/small-scale-simulator/types';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
+import type { TSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
-import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -51,11 +53,6 @@ type SimulationTabProps = {
   projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
-  /**
-   * obi-one + entitycore task types for this workflow, resolved from its definition. For circuit
-   * simulations the `obiOne` launch type is resolved from the circuit's `target_simulator`.
-   */
-  taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
 export default function SimulationsTab({
@@ -64,7 +61,6 @@ export default function SimulationsTab({
   projectId,
   campaignOriginAction,
   isCampaignIdChanged,
-  taskTypeBindings,
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
@@ -80,26 +76,22 @@ export default function SimulationsTab({
     enabled: Boolean(campaignId),
   });
 
-  const { entity: model, entityType } = useModelQuery({
+  const {
+    entity: model,
+    entityType,
+    isLoading: modelLoading,
+  } = useModelQuery({
     context,
     id: simulations[0]?.entity_id,
   });
 
-  const scale = get(model, 'scale', null);
-  const targetSimulator = get(model, 'target_simulator', null);
+  const smallScalesViaLaunchSystem = !!useFlag(smallScalesViaLaunchSystemFlag.key);
   const launchTarget = resolveSimulationLaunchTarget({
     entityType: entityType ?? null,
-    scale,
-    targetSimulator,
+    scale: get(model, 'scale', null),
+    targetSimulator: get(model, 'target_simulator', null),
+    smallScalesViaLaunchSystem,
   });
-  // Prefer the workflow definition's resolved binding; fall back to deriving it from the model so
-  // simulate workflows without an explicit binding (me-model) keep working. `null` means the
-  // campaign is not launchable via obi-one and goes to the small-scale simulator instead.
-  const launchTaskType = taskTypeBindings?.obiOne ?? launchTarget?.taskType ?? null;
-  const shouldTreatSimulationAsTask = launchTaskType !== null;
-  // Defaults to asking while the model is still loading: an unnecessary prompt is an annoyance,
-  // whereas a launch that needs consent and doesn't have it fails at job creation.
-  const launchRequiresOfflineTokenConsent = launchTarget?.requiresOfflineTokenConsent ?? true;
 
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [filesLoading, setFilesLoading] = useState(false);
@@ -156,6 +148,8 @@ export default function SimulationsTab({
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
 
+  // Only launch-system executions carry an `execution_id` — the small-scale simulator never sets
+  // one — so this follows how the simulation was actually launched, not the current flag.
   const { data: recoveredJobId } = useQuery({
     queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
     queryFn: async () => {
@@ -166,15 +160,10 @@ export default function SimulationsTab({
       });
       return getLatestSimulationExecution({ executions })?.execution_id ?? null;
     },
-    enabled:
-      shouldTreatSimulationAsTask &&
-      Boolean(activeSimulation?.id) &&
-      !activeSimulationJobIdFromLaunch,
+    enabled: Boolean(activeSimulation?.id) && !activeSimulationJobIdFromLaunch,
   });
 
-  const activeJobId = shouldTreatSimulationAsTask
-    ? (activeSimulationJobIdFromLaunch ?? recoveredJobId ?? undefined)
-    : undefined;
+  const activeJobId = activeSimulationJobIdFromLaunch ?? recoveredJobId ?? undefined;
   const taskLogsViewerEnabled = !!activeSimulation && !!activeJobId;
   const taskLogsShouldReadSnapshot =
     !!activeSimulationExecStatus && isTerminalActivityStatus(activeSimulationExecStatus);
@@ -186,8 +175,11 @@ export default function SimulationsTab({
     onSimulationStatusLoad,
   } = act;
 
-  const runViaLaunchSystem = async (simIds: string[]) => {
-    if (launchRequiresOfflineTokenConsent) {
+  const runViaLaunchSystem = async (
+    simIds: string[],
+    { taskType, requiresOfflineTokenConsent }: TSimulationLaunchTarget
+  ) => {
+    if (requiresOfflineTokenConsent) {
       const consentResult = await ensureOfflineTokenConsent();
       if (!consentResult.ok) {
         if (consentResult.reason !== 'cancelled') {
@@ -203,8 +195,6 @@ export default function SimulationsTab({
 
     let nSubmissions = 0;
     let lowFundsError = false;
-
-    const taskType = launchTaskType ?? ObiOneTaskTypeDict.CircuitSimulation;
 
     for (const simId of simIds) {
       try {
@@ -248,8 +238,8 @@ export default function SimulationsTab({
   // TODO Refactor
   const run = async (simIds: string[]) => {
     setSimRequestInProgress(true);
-    if (shouldTreatSimulationAsTask) {
-      return runViaLaunchSystem(simIds);
+    if (launchTarget) {
+      return runViaLaunchSystem(simIds, launchTarget);
     }
 
     try {
@@ -298,18 +288,12 @@ export default function SimulationsTab({
     }
   };
 
-  // The obi-one task type used to estimate cost — the same one `run` launches, so the quoted price
-  // matches what is reserved. Ion-channel campaigns still launch via the small-scale simulator, so
-  // they have no launch type of their own but are estimable under their obi-one type.
-  const simTaskType = useMemo(() => {
-    if (launchTaskType) {
-      return launchTaskType;
-    }
-    if (entityType === EntityTypeDict.IonChannelModel) {
-      return ObiOneTaskTypeDict.IonChannelModelSimulationExecution;
-    }
-    return ObiOneTaskTypeDict.CircuitSimulation;
-  }, [launchTaskType, entityType]);
+  // Campaigns launched via the small-scale simulator are still estimated under an obi-one type.
+  const simTaskType =
+    launchTarget?.taskType ??
+    (entityType === EntityTypeDict.IonChannelModel
+      ? ObiOneTaskTypeDict.IonChannelModelSimulationExecution
+      : ObiOneTaskTypeDict.CircuitSimulation);
 
   const costModalItems = useMemo(
     () =>
@@ -327,6 +311,15 @@ export default function SimulationsTab({
     onConfirm: run,
   });
 
+  // Me-model campaigns on the small-scale simulator have no cost estimator, so they launch directly.
+  const onLaunch = (simIds: string[]) => {
+    if (entityType === EntityTypeDict.Memodel && !launchTarget) {
+      run(simIds);
+      return;
+    }
+    openModal();
+  };
+
   const onToggleSelectAll = (checked: boolean) => {
     act.onToggleSelectAll(checked);
   };
@@ -335,7 +328,8 @@ export default function SimulationsTab({
     ? `(${resolvedSelectedSimulationIds.length})`
     : '';
 
-  const loading = simulationsLoading;
+  // The launch path depends on the model, so keep Launch out of reach until it resolves.
+  const loading = simulationsLoading || modelLoading;
 
   return (
     <>
@@ -354,7 +348,7 @@ export default function SimulationsTab({
         onActiveSimulationChange={onActiveSimulationChange}
         onSelectedForSimChange={onSelectedForSimChange}
         onSimulationStatusLoad={onSimulationStatusLoad}
-        onRun={openModal}
+        onRun={onLaunch}
         middle={
           <div className="h-full bg-background! w-full">
             {loading ? (

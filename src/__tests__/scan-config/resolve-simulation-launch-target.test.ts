@@ -1,109 +1,126 @@
 import { describe, expect, it } from 'vitest';
 
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import {
+  CircuitScaleDictionary,
+  type TCircuitScaleDictionary,
+} from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 
-const circuit = (
-  scale: (typeof CircuitScaleDictionary)[keyof typeof CircuitScaleDictionary],
-  targetSimulator: string | null = 'NEURON'
-) => ({ entityType: EntityTypeDict.Circuit, scale, targetSimulator });
+type TLaunchInput = Omit<
+  Parameters<typeof resolveSimulationLaunchTarget>[0],
+  'smallScalesViaLaunchSystem'
+>;
 
-const CLUSTER_SCALES = [
+const memodel: TLaunchInput = {
+  entityType: EntityTypeDict.Memodel,
+  scale: null,
+  targetSimulator: null,
+};
+
+const circuit = (
+  scale: TCircuitScaleDictionary,
+  targetSimulator: string | null = 'NEURON'
+): TLaunchInput => ({ entityType: EntityTypeDict.Circuit, scale, targetSimulator });
+
+const SMALL_SCALES = [
+  CircuitScaleDictionary.Single,
+  CircuitScaleDictionary.PairNeuron,
+  CircuitScaleDictionary.SmallMicrocircuit,
+];
+
+const LARGE_SCALES = [
   CircuitScaleDictionary.Microcircuit,
   CircuitScaleDictionary.Region,
   CircuitScaleDictionary.System,
   CircuitScaleDictionary.WholeBrain,
 ];
 
+const withFlag = (smallScalesViaLaunchSystem: boolean) => (input: TLaunchInput) =>
+  resolveSimulationLaunchTarget({ ...input, smallScalesViaLaunchSystem });
+
 describe('resolveSimulationLaunchTarget', () => {
-  it('routes me-model campaigns to the single-neuron task type', () => {
-    // "Single neuron (beta)" hangs off a me-model, so it carries neither scale nor simulator.
-    expect(
-      resolveSimulationLaunchTarget({
-        entityType: EntityTypeDict.Memodel,
-        scale: null,
-        targetSimulator: null,
-      })
-    ).toEqual({
-      taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
-      requiresOfflineTokenConsent: false,
-    });
-  });
+  describe('with small scales on the launch system', () => {
+    const resolve = withFlag(true);
 
-  it('routes single-scale circuits to the synaptome task type', () => {
-    expect(resolveSimulationLaunchTarget(circuit(CircuitScaleDictionary.Single))).toEqual({
-      taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
-      requiresOfflineTokenConsent: false,
-    });
-  });
-
-  it('routes pair and small microcircuits to the generic circuit task, resolved server-side', () => {
-    for (const scale of [
-      CircuitScaleDictionary.PairNeuron,
-      CircuitScaleDictionary.SmallMicrocircuit,
-    ]) {
-      expect(resolveSimulationLaunchTarget(circuit(scale))).toEqual({
-        taskType: ObiOneTaskTypeDict.CircuitSimulation,
+    it('routes me-model campaigns to the single-neuron task type', () => {
+      expect(resolve(memodel)).toEqual({
+        taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
         requiresOfflineTokenConsent: false,
       });
-    }
-  });
+    });
 
-  it('keeps the larger scales on the generic circuit task', () => {
-    for (const scale of CLUSTER_SCALES) {
-      expect(resolveSimulationLaunchTarget(circuit(scale))?.taskType).toBe(
-        ObiOneTaskTypeDict.CircuitSimulation
-      );
-    }
-  });
+    it('routes single-scale circuits to the synaptome task type', () => {
+      expect(resolve(circuit(CircuitScaleDictionary.Single))).toEqual({
+        taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
+        requiresOfflineTokenConsent: false,
+      });
+    });
 
-  it('picks the simulator over the scale for Brian2 and LearningEngine circuits', () => {
-    expect(
-      resolveSimulationLaunchTarget(circuit(CircuitScaleDictionary.WholeBrain, 'Brian2'))?.taskType
-    ).toBe(ObiOneTaskTypeDict.CircuitSimulationBrian2);
-    expect(
-      resolveSimulationLaunchTarget(circuit(CircuitScaleDictionary.Single, 'LearningEngine'))
-        ?.taskType
-    ).toBe(ObiOneTaskTypeDict.CircuitSimulation);
-  });
+    it('routes pair and small microcircuits to the generic circuit task', () => {
+      for (const scale of [
+        CircuitScaleDictionary.PairNeuron,
+        CircuitScaleDictionary.SmallMicrocircuit,
+      ]) {
+        expect(resolve(circuit(scale))).toEqual({
+          taskType: ObiOneTaskTypeDict.CircuitSimulation,
+          requiresOfflineTokenConsent: false,
+        });
+      }
+    });
 
-  it('prefers the me-model branch even when a scale is somehow present', () => {
-    expect(
-      resolveSimulationLaunchTarget({
-        entityType: EntityTypeDict.Memodel,
-        scale: CircuitScaleDictionary.Single,
-        targetSimulator: 'Brian2',
-      })?.taskType
-    ).toBe(ObiOneTaskTypeDict.SingleNeuronSimulationExecution);
-  });
-
-  it('returns null for ion-channel campaigns, which still use the small-scale simulator', () => {
-    expect(
-      resolveSimulationLaunchTarget({
-        entityType: EntityTypeDict.IonChannelModel,
-        scale: null,
-        targetSimulator: null,
-      })
-    ).toBeNull();
-  });
-
-  it('requires offline-token consent only for NEURON scales above small', () => {
-    for (const scale of CLUSTER_SCALES) {
-      expect(resolveSimulationLaunchTarget(circuit(scale))?.requiresOfflineTokenConsent).toBe(true);
-    }
-  });
-
-  it('does not require offline-token consent for simulators that never reach the cluster', () => {
-    // Brian2 and LearningEngine run as machine jobs whatever the circuit scale is.
-    for (const scale of CLUSTER_SCALES) {
+    it('prefers the me-model branch even when a scale is somehow present', () => {
       expect(
-        resolveSimulationLaunchTarget(circuit(scale, 'Brian2'))?.requiresOfflineTokenConsent
-      ).toBe(false);
+        resolve({ ...memodel, scale: CircuitScaleDictionary.Single, targetSimulator: 'Brian2' })
+          ?.taskType
+      ).toBe(ObiOneTaskTypeDict.SingleNeuronSimulationExecution);
+    });
+  });
+
+  describe('with small scales on the small-scale simulator', () => {
+    const resolve = withFlag(false);
+
+    it('leaves me-model campaigns to the small-scale simulator', () => {
+      expect(resolve(memodel)).toBeNull();
+    });
+
+    it('leaves single, pair and small microcircuits to the small-scale simulator', () => {
+      for (const scale of SMALL_SCALES) {
+        expect(resolve(circuit(scale))).toBeNull();
+      }
+    });
+  });
+
+  describe.each([true, false])('with smallScalesViaLaunchSystem=%s', (flag) => {
+    const resolve = withFlag(flag);
+
+    it('launches the larger NEURON scales on the generic circuit task, asking for consent', () => {
+      for (const scale of LARGE_SCALES) {
+        expect(resolve(circuit(scale))).toEqual({
+          taskType: ObiOneTaskTypeDict.CircuitSimulation,
+          requiresOfflineTokenConsent: true,
+        });
+      }
+    });
+
+    it('picks the simulator over the scale for Brian2 and LearningEngine, asking for consent', () => {
+      for (const scale of [...SMALL_SCALES, ...LARGE_SCALES]) {
+        expect(resolve(circuit(scale, 'Brian2'))).toEqual({
+          taskType: ObiOneTaskTypeDict.CircuitSimulationBrian2,
+          requiresOfflineTokenConsent: true,
+        });
+        expect(resolve(circuit(scale, 'LearningEngine'))).toEqual({
+          taskType: ObiOneTaskTypeDict.CircuitSimulation,
+          requiresOfflineTokenConsent: true,
+        });
+      }
+    });
+
+    it('returns null for ion-channel campaigns', () => {
       expect(
-        resolveSimulationLaunchTarget(circuit(scale, 'LearningEngine'))?.requiresOfflineTokenConsent
-      ).toBe(false);
-    }
+        resolve({ entityType: EntityTypeDict.IonChannelModel, scale: null, targetSimulator: null })
+      ).toBeNull();
+    });
   });
 });

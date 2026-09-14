@@ -13,56 +13,27 @@ import { ObiOneTaskTypeDict, type TObiOneTaskType } from '@/api/one/types/task';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
 
-type TSimulationLaunchInput = {
-  entityType: TEntityTypeDict | null;
-  scale: TCircuitScaleDictionary | null;
-  targetSimulator: string | null;
-};
-
 export type TSimulationLaunchTarget = {
   taskType: TObiOneTaskType;
   requiresOfflineTokenConsent: boolean;
 };
 
-/**
- * How each circuit scale is launched. A scale that is absent is not launchable through the task
- * system and falls back to the small-scale simulator.
- */
-const LAUNCH_TARGET_BY_SCALE: Partial<Record<TCircuitScaleDictionary, TSimulationLaunchTarget>> = {
-  [CircuitScaleDictionary.Single]: {
-    taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
-    requiresOfflineTokenConsent: false,
-  },
-  [CircuitScaleDictionary.PairNeuron]: {
-    taskType: ObiOneTaskTypeDict.CircuitSimulation,
-    requiresOfflineTokenConsent: false,
-  },
-  [CircuitScaleDictionary.SmallMicrocircuit]: {
-    taskType: ObiOneTaskTypeDict.CircuitSimulation,
-    requiresOfflineTokenConsent: false,
-  },
-  [CircuitScaleDictionary.Microcircuit]: {
-    taskType: ObiOneTaskTypeDict.CircuitSimulation,
-    requiresOfflineTokenConsent: true,
-  },
-  [CircuitScaleDictionary.Region]: {
-    taskType: ObiOneTaskTypeDict.CircuitSimulation,
-    requiresOfflineTokenConsent: true,
-  },
-  [CircuitScaleDictionary.System]: {
-    taskType: ObiOneTaskTypeDict.CircuitSimulation,
-    requiresOfflineTokenConsent: true,
-  },
-  [CircuitScaleDictionary.WholeBrain]: {
-    taskType: ObiOneTaskTypeDict.CircuitSimulation,
-    requiresOfflineTokenConsent: true,
-  },
+/** Launched through the task system only when `smallScalesViaLaunchSystem` is on. */
+const SMALL_SCALE_TASK_TYPES: Partial<Record<TCircuitScaleDictionary, TObiOneTaskType>> = {
+  [CircuitScaleDictionary.Single]: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
+  [CircuitScaleDictionary.PairNeuron]: ObiOneTaskTypeDict.CircuitSimulation,
+  [CircuitScaleDictionary.SmallMicrocircuit]: ObiOneTaskTypeDict.CircuitSimulation,
 };
 
+const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
+  CircuitScaleDictionary.Microcircuit,
+  CircuitScaleDictionary.Region,
+  CircuitScaleDictionary.System,
+  CircuitScaleDictionary.WholeBrain,
+]);
+
 /**
- * Single source of truth for how a simulation campaign is launched, and therefore for whether it
- * goes through the task system at all — `null` means launch via the small-scale simulator instead,
- * and no task configuration/log stream entries.
+ * `null` means the campaign launches via the small-scale simulator.
  *
  * Order matters: a Brian2 circuit also carries a scale, and a me-model campaign carries neither.
  */
@@ -70,31 +41,39 @@ export function resolveSimulationLaunchTarget({
   entityType,
   scale,
   targetSimulator,
-}: TSimulationLaunchInput): TSimulationLaunchTarget | null {
-  // "Single neuron (beta)" campaigns hang off a me-model, not a circuit, so obi-one's
-  // `circuit_simulation` group can't resolve them — it reads `simulation.entity_id` as a Circuit.
+  smallScalesViaLaunchSystem,
+}: {
+  entityType: TEntityTypeDict | null;
+  scale: TCircuitScaleDictionary | null;
+  targetSimulator: string | null;
+  smallScalesViaLaunchSystem: boolean;
+}): TSimulationLaunchTarget | null {
+  // The small scales run as machine jobs, which the launch system never issues an offline token for.
+  const smallScaleTarget = (taskType: TObiOneTaskType) =>
+    smallScalesViaLaunchSystem ? { taskType, requiresOfflineTokenConsent: false } : null;
+
+  // Single neuron campaigns hang off a me-model, not a circuit, so obi-one's `circuit_simulation`
+  // group can't resolve them — it reads `simulation.entity_id` as a Circuit.
   if (entityType === EntityTypeDict.Memodel) {
-    return {
-      taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
-      requiresOfflineTokenConsent: false,
-    };
+    return smallScaleTarget(ObiOneTaskTypeDict.SingleNeuronSimulationExecution);
   }
   if (targetSimulator === 'Brian2') {
     return {
       taskType: ObiOneTaskTypeDict.CircuitSimulationBrian2,
-      requiresOfflineTokenConsent: false,
+      requiresOfflineTokenConsent: true,
     };
   }
   if (targetSimulator === 'LearningEngine') {
-    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: false };
+    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true };
   }
-  return (scale !== null ? LAUNCH_TARGET_BY_SCALE[scale] : undefined) ?? null;
-}
+  if (scale === null) return null;
 
-export function resolveSimulationLaunchTaskType(
-  input: TSimulationLaunchInput
-): TObiOneTaskType | null {
-  return resolveSimulationLaunchTarget(input)?.taskType ?? null;
+  const smallScaleTaskType = SMALL_SCALE_TASK_TYPES[scale];
+  if (smallScaleTaskType) return smallScaleTarget(smallScaleTaskType);
+
+  return TASK_LAUNCH_SCALES.has(scale)
+    ? { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true }
+    : null;
 }
 
 // TODO Remove this after the data is migrated
