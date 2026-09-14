@@ -2,9 +2,9 @@ import { Input } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
-import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
+import { BooleanInput } from '@/features/scan-config/components/ui-elements/boolean-input';
 import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
-import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
+import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
@@ -12,7 +12,7 @@ import { Range } from '@/features/scan-config/components/ui-elements/ion-channel
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
-import MorphologySectionTypeSelection from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
+import { MorphologySectionTypeSelection } from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import NeuronPropertyFilter, {
   type INeuronPropertyFilter,
@@ -23,7 +23,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/neuron-set-combination';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
-import Reference from '@/features/scan-config/components/ui-elements/reference';
+import { Reference } from '@/features/scan-config/components/ui-elements/reference';
 import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import {
   VoltageDuration,

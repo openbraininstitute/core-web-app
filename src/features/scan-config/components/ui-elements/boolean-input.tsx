@@ -30,12 +30,7 @@ export interface BooleanInputProps {
  *   }
  * }
  */
-export default function BooleanInput({
-  value,
-  onChange,
-  disabled = false,
-  ariaLabel,
-}: BooleanInputProps) {
+export function BooleanInput({ value, onChange, disabled = false, ariaLabel }: BooleanInputProps) {
   const id = useId();
 
   // Normalize null to false for the checkbox component

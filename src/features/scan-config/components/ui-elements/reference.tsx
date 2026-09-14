@@ -119,7 +119,7 @@ export function resolveDefaultReferenceLabel(
   );
 }
 
-export default function Reference({
+export function Reference({
   value,
   onChange,
   disabled,
