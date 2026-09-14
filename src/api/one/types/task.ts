@@ -1,14 +1,17 @@
 export const ObiOneTaskTypeDict = {
-  CircuitExtraction: 'circuit_extraction',
-  EFeatureExtraction: 'efeature_extraction',
-  CircuitSimulation: 'circuit_simulation',
-  CircuitSimulationBrian2: 'circuit_simulation_brian2_machine',
-  Skeletonization: 'morphology_skeletonization',
-  MorphologySkeletonization: 'morphology_skeletonization',
-  IonChannelModelSimulationExecution: 'ion_channel_model_simulation_execution',
-  EmSynapseMapping: 'em_synapse_mapping',
-  ExtracellularRecordingWeightsCalculation: 'extracellular_recording_weights_calculation',
-  BuildSynaptome: 'circuit_single_build',
+  CircuitExtraction: "circuit_extraction",
+  EFeatureExtraction: "efeature_extraction",
+  CircuitSimulation: "circuit_simulation",
+  CircuitSimulationBrian2: "circuit_simulation_brian2_machine",
+  Skeletonization: "morphology_skeletonization",
+  MorphologySkeletonization: "morphology_skeletonization",
+  IonChannelModelSimulationExecution: "ion_channel_model_simulation_execution",
+  EmSynapseMapping: "em_synapse_mapping",
+  ExtracellularRecordingWeightsCalculation:
+    "extracellular_recording_weights_calculation",
+  BuildSynaptome: "circuit_single_build",
+  CircuitSynapticPhysiology: "circuit_synaptic_physiology_assignment",
 } as const;
 
-export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];
+export type TObiOneTaskType =
+  (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];

@@ -559,6 +559,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
           miniView: browseLayoutClassNames.miniView,
         }}
         dataType={activeEntityType}
+        gridDefinitionOverride={activeBrowseEntry?.gridDefinitionOverride}
         extraQueryParams={extraQueryParams}
         listQueryFn={loaderListQueryFn}
         facetsQueryFn={loaderFacetsQueryFn}

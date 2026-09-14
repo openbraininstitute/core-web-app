@@ -62,7 +62,41 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  * //   → that reference type carries NO `allowed_block_types`
  * //   → no per-type filter; every entry in the `distributions` dictionary is listed.
  */
-export default function Reference({
+/** Visible when a tag-specific or type-specific default exists. */
+export function isReferenceFieldVisible(
+  referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
+  schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
+): boolean {
+  if (
+    referenceSchema.reference_tag &&
+    schema.reference_tag_defaults?.[referenceSchema.reference_tag]
+  ) {
+    return true;
+  }
+  return referenceSchema.reference_types.some(
+    (refType) => !!schema.default_block_reference_labels?.[refType]
+  );
+}
+
+/** Prefers a tag-specific default label, then falls back to the reference type. */
+export function resolveDefaultReferenceLabel(
+  referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
+  schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
+): string {
+  const taggedLabel = referenceSchema.reference_tag
+    ? schema.reference_tag_defaults?.[referenceSchema.reference_tag]?.name
+    : undefined;
+
+  return (
+    taggedLabel ??
+    referenceSchema.reference_types
+      .map((refType) => schema.default_block_reference_labels?.[refType])
+      .find(Boolean) ??
+    'Default'
+  );
+}
+
+export function Reference({
   value,
   onChange,
   disabled,
@@ -116,12 +150,7 @@ export default function Reference({
     if (configKey) matchingConfigKeys.add(configKey);
   }
 
-  // check visibility: at least one reference type must have a default label
-  const hasDefaultLabel = referenceSchema.reference_types.some(
-    (refType) => schema?.default_block_reference_labels?.[refType]
-  );
-
-  if (!schema || !hasDefaultLabel) return null;
+  if (!schema || !isReferenceFieldVisible(referenceSchema, schema)) return null;
 
   // build dropdown options from all matching dictionaries
   const options: Array<{ label: string; value: string }> = [];
@@ -144,11 +173,7 @@ export default function Reference({
     }
   }
 
-  // find the first available default label across accepted reference types
-  const defaultLabel =
-    referenceSchema.reference_types
-      .map((refType) => schema.default_block_reference_labels?.[refType])
-      .find(Boolean) ?? 'Default';
+  const defaultLabel = resolveDefaultReferenceLabel(referenceSchema, schema);
 
   options.unshift({
     label: defaultLabel,

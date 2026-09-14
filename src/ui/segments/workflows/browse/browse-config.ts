@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/response';
+import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import type { WorkspaceContext } from '@/types/common';
 
 /**
@@ -20,6 +21,8 @@ export type TWorkflowBrowseConfig = Partial<
 >;
 
 export type TWorkflowBrowseEntry = {
+  /** optional per-workflow grid definition, for a scoped schema without changing data browsing */
+  gridDefinitionOverride?: TAnyEntityGridDefinition;
   /** optional pre-step the user resolves before the entity table renders */
   prerequisite?: TBrowsePrerequisite;
   /** optional fetch override, when omitted the table uses the entity's domain query */
@@ -119,5 +122,7 @@ export type TBrowseLoader =
   | {
       kind: 'custom';
       build: (prerequisite: TBrowsePrerequisiteValue | null) => TBrowseListQueryFn;
-      facets?: { build: (prerequisite: TBrowsePrerequisiteValue | null) => TBrowseFacetsQueryFn };
+      facets?: {
+        build: (prerequisite: TBrowsePrerequisiteValue | null) => TBrowseFacetsQueryFn;
+      };
     };

@@ -44,6 +44,14 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const circuitSynapticPhysiologyBuildFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Circuit synaptic physiology build',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const buildSynaptomeFlag = defineFlag<boolean>({
   key: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
   defaultValue: false,
@@ -67,6 +75,7 @@ export const flags = [
   eFeatureExtractionFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
+  circuitSynapticPhysiologyBuildFlag,
   buildSynaptomeFlag,
   electrodeOverlaysFlag,
 ] as const;
