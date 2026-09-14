@@ -1,6 +1,9 @@
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScale, CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { circuitGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
+import { FilterOptionsKind } from '@/features/data-grid/core';
 import {
   buildSynaptomeFlag,
   circuitSynapticPhysiologyBuildFlag,
@@ -50,6 +53,35 @@ const SMALL_SCALE_CIRCUIT_BUILD_SCALES: string[] = [
   CircuitScaleDictionary.SmallMicrocircuit,
 ];
 
+let smallScaleCircuitGridDefinitionCache: typeof circuitGridDefinition | null = null;
+
+/** Built on demand: this module and the circuit grid schema import each other. */
+function getSmallScaleCircuitGridDefinition(): typeof circuitGridDefinition {
+  smallScaleCircuitGridDefinitionCache ??= {
+    ...circuitGridDefinition,
+    schema: {
+      ...circuitGridDefinition.schema,
+      columns: circuitGridDefinition.schema.columns.map((column) =>
+        column.id === EntityCoreFields.CircuitScale && column.filter
+          ? {
+              ...column,
+              filter: {
+                ...column.filter,
+                options: {
+                  kind: FilterOptionsKind.Static,
+                  items: Object.values(CircuitScale)
+                    .filter(({ key }) => SMALL_SCALE_CIRCUIT_BUILD_SCALES.includes(key))
+                    .map(({ key, label }) => ({ id: key, label })),
+                },
+              },
+            }
+          : column
+      ),
+    },
+  };
+  return smallScaleCircuitGridDefinitionCache;
+}
+
 /** Keeps selected scales within the supported circuit-build range. */
 function resolveSmallScaleCircuitBuildScales(filters: Record<string, unknown>): string[] {
   const requested = filters.scale__in;
@@ -65,6 +97,9 @@ function resolveSmallScaleCircuitBuildScales(filters: Record<string, unknown>): 
 
 const smallScaleCircuitBrowseConfig = {
   [ExtendedEntitiesTypeDict.Circuit]: {
+    get gridDefinitionOverride() {
+      return getSmallScaleCircuitGridDefinition();
+    },
     loader: {
       kind: 'custom' as const,
       build:

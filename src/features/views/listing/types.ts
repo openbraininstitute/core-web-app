@@ -3,6 +3,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TViewVariant, TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import type { TSelectionScope } from '@/features/data-grid/core';
 import type { WorkspaceContext } from '@/types/common';
 import type { MiniDetailView } from '@/ui/segments/mini-detail-view';
@@ -49,6 +50,8 @@ export type BrowseEntityScopeProps = {
   scope?: TWorkspaceScope;
   defaultBrainRegion?: string;
   dataType: TExtendedEntitiesTypeDict;
+  /** Replaces the entity's grid schema/definition for this one listing. */
+  gridDefinitionOverride?: TAnyEntityGridDefinition;
   mainTableProps?: ListingTableProps;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   /** whether to display the download button */
