@@ -3,6 +3,7 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   buildSynaptomeFlag,
+  circuitSynapticPhysiologyBuildFlag,
   extracellularRecordingArrayBuildFlag,
 } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
@@ -237,6 +238,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     browseConfig: smallScaleCircuitBrowseConfig,
     order: 6,
     disabled: false,
+    requiredFeatures: [circuitSynapticPhysiologyBuildFlag.key],
   },
   {
     ...WorkflowBrowseDefaults,
