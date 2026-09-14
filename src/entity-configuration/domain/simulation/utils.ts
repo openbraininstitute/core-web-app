@@ -18,7 +18,6 @@ export type TSimulationLaunchTarget = {
   requiresOfflineTokenConsent: boolean;
 };
 
-/** Launched through the task system only when `smallScalesViaLaunchSystem` is on. */
 const SMALL_SCALE_TASK_TYPES: Partial<Record<TCircuitScaleDictionary, TObiOneTaskType>> = {
   [CircuitScaleDictionary.Single]: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
   [CircuitScaleDictionary.PairNeuron]: ObiOneTaskTypeDict.CircuitSimulation,
@@ -32,11 +31,6 @@ const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
   CircuitScaleDictionary.WholeBrain,
 ]);
 
-/**
- * `null` means the campaign launches via the small-scale simulator.
- *
- * Order matters: a Brian2 circuit also carries a scale, and a me-model campaign carries neither.
- */
 export function resolveSimulationLaunchTarget({
   entityType,
   scale,
@@ -48,12 +42,11 @@ export function resolveSimulationLaunchTarget({
   targetSimulator: string | null;
   smallScalesViaLaunchSystem: boolean;
 }): TSimulationLaunchTarget | null {
-  // The small scales run as machine jobs, which the launch system never issues an offline token for.
+  // Small scales run as machine jobs, which don't need an offline token.
   const smallScaleTarget = (taskType: TObiOneTaskType) =>
     smallScalesViaLaunchSystem ? { taskType, requiresOfflineTokenConsent: false } : null;
 
-  // Single neuron campaigns hang off a me-model, not a circuit, so obi-one's `circuit_simulation`
-  // group can't resolve them — it reads `simulation.entity_id` as a Circuit.
+  // `circuit_simulation` loads `simulation.entity_id` as a Circuit, which a me-model isn't.
   if (entityType === EntityTypeDict.Memodel) {
     return smallScaleTarget(ObiOneTaskTypeDict.SingleNeuronSimulationExecution);
   }

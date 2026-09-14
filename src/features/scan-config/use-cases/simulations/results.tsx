@@ -148,8 +148,7 @@ export default function SimulationsTab({
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
 
-  // Only launch-system executions carry an `execution_id` — the small-scale simulator never sets
-  // one — so this follows how the simulation was actually launched, not the current flag.
+  // Only launch-system executions have an `execution_id`, so this doesn't need the flag.
   const { data: recoveredJobId } = useQuery({
     queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
     queryFn: async () => {
@@ -288,7 +287,6 @@ export default function SimulationsTab({
     }
   };
 
-  // Campaigns launched via the small-scale simulator are still estimated under an obi-one type.
   const simTaskType =
     launchTarget?.taskType ??
     (entityType === EntityTypeDict.IonChannelModel
@@ -311,7 +309,7 @@ export default function SimulationsTab({
     onConfirm: run,
   });
 
-  // Me-model campaigns on the small-scale simulator have no cost estimator, so they launch directly.
+  // Me-models on the small-scale simulator have no cost estimator.
   const onLaunch = (simIds: string[]) => {
     if (entityType === EntityTypeDict.Memodel && !launchTarget) {
       run(simIds);
@@ -328,7 +326,7 @@ export default function SimulationsTab({
     ? `(${resolvedSelectedSimulationIds.length})`
     : '';
 
-  // The launch path depends on the model, so keep Launch out of reach until it resolves.
+  // Until the model resolves, Launch would go to the small-scale simulator.
   const loading = simulationsLoading || modelLoading;
 
   return (
