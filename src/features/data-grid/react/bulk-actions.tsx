@@ -11,16 +11,18 @@ export interface IBulkActionsRenderArgs<Row> {
   selectedIds: string[];
   /** full selected rows, including rows selected on other pages or scopes */
   selectedRows: Row[];
-  /** number selected in the currently displayed scope; the basket may contain more */
+  /** how many rows are selected; the same number the footer shows */
   selectedCount: number;
   clearSelection: () => void;
+  /** drop just these ids from the selection, leaving the rest of the basket alone */
+  deselectRows: (ids: string[]) => void;
 }
 
 export interface IBulkActionsProps<Row> {
   controller: GridController<Row>;
   rows: Row[];
   selection: string[];
-  /** number selected in the currently displayed scope */
+  /** how many rows are selected; the same number the footer shows */
   selectedCount: number;
   /** host-provided actions (download / delete buttons) receiving the selection */
   children: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
@@ -46,15 +48,6 @@ export function accumulateSeenRows<Row>(
     next.set(getRowId(row), row);
   }
   return next;
-}
-
-export function countSelectionInScope(
-  selection: ReadonlyArray<string>,
-  rowScopes: ReadonlyMap<string, string | undefined>,
-  scope?: string
-): number {
-  if (scope === undefined) return selection.length;
-  return selection.filter((id) => rowScopes.get(id) === scope).length;
 }
 
 /**
@@ -94,6 +87,13 @@ export function BulkActions<Row>({
         selectedCount,
         clearSelection: () =>
           controller.store.dispatch({ type: GridActionType.SetSelection, ids: [] }),
+        deselectRows: (ids) => {
+          const dropped = new Set(ids);
+          controller.store.dispatch({
+            type: GridActionType.SetSelection,
+            ids: controller.store.getSnapshot().selection.filter((id) => !dropped.has(id)),
+          });
+        },
       })}
     </div>
   );

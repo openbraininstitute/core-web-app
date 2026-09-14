@@ -8,10 +8,14 @@ export const SelectionMode = {
   Multi: 'multi',
 } as const;
 
-export const selectionScope = {
+/**
+ * Whether the selection basket survives a controller swap (scope/species/factor change).
+ * `Shared` keeps one basket per listing; `Isolated` starts each controller empty.
+ */
+export const SelectionScope = {
   Isolated: 'isolated',
   Shared: 'shared',
 } as const;
 
 export type TSelectionMode = (typeof SelectionMode)[keyof typeof SelectionMode];
-export type TSelectionScope = (typeof selectionScope)[keyof typeof selectionScope];
+export type TSelectionScope = (typeof SelectionScope)[keyof typeof SelectionScope];

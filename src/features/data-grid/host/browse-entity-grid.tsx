@@ -36,6 +36,7 @@ import {
   GridActionType,
   GridController,
   SelectionMode,
+  SelectionScope,
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
@@ -44,6 +45,7 @@ import {
   createDefaultPersistence,
   DataGrid,
   layoutKeyFor,
+  selectionKeyFor,
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
@@ -231,7 +233,7 @@ export function EntityDataGrid({
   const selectionType = mainTableProps?.selectionType;
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
-  const selectionScope = mainTableProps?.selectionScope;
+  const selectionScope = mainTableProps?.selectionScope ?? SelectionScope.Shared;
   const applyLifecycleGating = isWorkflowPickerSection(section);
   const pickerSelection = useMemo<
     IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
@@ -269,11 +271,31 @@ export function EntityDataGrid({
         },
         instanceKey: dataKey,
         // The session slice is keyed by the full `dataKey`, but the layout slice by
-        // section + entity type only, so a layout is shared across projects/scopes.
-        persistence: createDefaultPersistence(layoutKeyFor(section, dataType)),
+        // section + entity type only, so a layout is shared across projects/scopes. The
+        // selection slice drops the scope too, which is what carries the basket across a
+        // scope toggle — and it does so at construction, so the store is never observed
+        // empty mid-swap.
+        persistence: createDefaultPersistence(
+          layoutKeyFor(section, dataType),
+          selectionScope === SelectionScope.Shared
+            ? selectionKeyFor({ section, dataType, virtualLabId, projectId, id })
+            : undefined
+        ),
         defaultPageSize: DEFAULT_PAGE_SIZE,
       }),
-    [definition, dataKey, dataType, section, scope, speciesKey, extraFactors]
+    [
+      definition,
+      dataKey,
+      dataType,
+      section,
+      scope,
+      speciesKey,
+      extraFactors,
+      selectionScope,
+      virtualLabId,
+      projectId,
+      id,
+    ]
   );
   useEffect(() => controller.connect(), [controller]);
 
@@ -452,7 +474,6 @@ export function EntityDataGrid({
           onRowClick={handleRowClick}
           getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
-          selectionScope={selectionScope}
           selection={pickerSelection}
           toolbarSlots={{
             scope: toolbarScope,
@@ -471,13 +492,17 @@ export function EntityDataGrid({
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
           }}
-          renderBulkActions={({ selectedRows, clearSelection }) => (
-            // Buttons only — the "N selected" count and Clear live in the footer.
+          renderBulkActions={({ selectedRows, selectedCount, clearSelection, deselectRows }) => (
+            // Buttons only — the "N selected" count and Clear live in the footer. Each
+            // badge shows what ITS action will touch: Download takes the whole basket, so
+            // it gets `selectedCount`; Delete can only reach this project's rows, so it
+            // counts those itself rather than promising a number it will not deliver.
             <div className="flex items-center gap-2">
               {allowDownload && (
                 <EntityDownloadButton<EntityCoreIdentifiableNamed>
                   expanding
                   selectedRows={selectedRows}
+                  selectionCount={selectedCount}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
@@ -489,6 +514,7 @@ export function EntityDataGrid({
                   selectedRows={selectedRows}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
+                  deselectRows={deselectRows}
                   workspace={{ virtualLabId, projectId }}
                 />
               )}

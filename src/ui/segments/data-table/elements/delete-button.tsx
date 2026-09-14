@@ -18,9 +18,13 @@ import {
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { useScope } from '@/ui/hooks/use-scope';
-import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
+import {
+  SelectionBadgeAnchor,
+  SelectionCountBadge,
+} from '@/ui/segments/data-table/elements/selection-count-badge';
 import { cn } from '@/utils/css-class';
+import { isProjectPrivateRecord } from '@/utils/workspace-scope';
 
 import type { IconType } from 'antd/es/notification/interface';
 import type {
@@ -133,6 +137,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   dataType,
   workspace,
   clearSelectedRows,
+  deselectRows,
   selectionCount,
   className,
   expanding = false,
@@ -147,34 +152,30 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   const queryClient = useQueryClient();
   const { scope: currentScope } = useScope();
 
-  const projectRows = selectedRows.filter((row) => {
-    const candidate = row as T & {
-      authorized_project_id?: string | null;
-      authorized_public?: boolean;
-    };
-    return (
-      candidate.authorized_public === false &&
-      candidate.authorized_project_id === workspace?.projectId
-    );
-  });
+  // Only rows this project owns can be deleted; a cross-scope basket can hold public
+  // rows that are not ours to touch.
+  const projectRows = selectedRows.filter((row) =>
+    isProjectPrivateRecord(
+      row as T & { authorized_public: boolean; authorized_project_id: string },
+      workspace?.projectId
+    )
+  );
   const entityCount = projectRows.length;
   const badgeCount = selectionCount ?? entityCount;
   const isSingular = entityCount === 1;
   const selectionBadge =
     badgeCount > 0 ? (
-      <Badge
-        rounded
-        aria-label={`${badgeCount} project items selected`}
-        className="h-5 min-w-5 border-2 border-white bg-white px-1 text-[11px] font-bold leading-none text-destructive shadow-sm"
-      >
-        {badgeCount}
-      </Badge>
+      <SelectionCountBadge count={badgeCount} className="text-destructive" />
     ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
 
   const getButtonLabel = (): string => {
     return isSingular ? `Delete entity` : `Delete entities`;
   };
+  // The badge is a plain `div`, so its own `aria-label` is never announced; the count
+  // has to ride on the button's accessible name instead.
+  const accessibleLabel =
+    badgeCount > 0 ? `${getButtonLabel()} (${badgeCount} selected)` : getButtonLabel();
 
   const entityTypeConfig = getEntityByExtendedType({ type: dataType });
 
@@ -243,7 +244,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
         placement: 'topRight',
       });
 
-      if (clearSelectedRows) clearSelectedRows();
+      // Only the rows that actually went away leave the basket: a public row the user
+      // picked in another scope was never touched and must survive.
+      const deletedIds = resp.filter((e) => e.deleted).map((e) => e.id);
+      if (deselectRows) deselectRows(deletedIds);
+      else if (clearSelectedRows) clearSelectedRows();
     },
   });
 
@@ -275,7 +280,10 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
     );
   };
 
-  if (!permissions.delete) return null;
+  // Nothing deletable in the basket (e.g. every pick is a public row): a button here
+  // would confirm "delete 0 items", run the mutation on an empty list and then clear
+  // picks it never touched.
+  if (!permissions.delete || entityCount === 0) return null;
 
   const buttonLabel = getButtonLabel();
   /** gradient + chrome marking this as destructive */
@@ -319,7 +327,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <Button
             rounded
             type="button"
-            aria-label={buttonLabel}
+            aria-label={accessibleLabel}
             title={buttonLabel}
             variant="default"
             disabled={deleteMutation.isPending}
@@ -341,6 +349,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <Button
             rounded
             type="button"
+            aria-label={accessibleLabel}
             variant="default"
             disabled={deleteMutation.isPending}
             className={cn(
@@ -357,11 +366,9 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
               <span className="whitespace-nowrap">{children ?? buttonLabel}</span>
             </span>
             {selectionBadge ? (
-              <span className="pointer-events-none absolute top-0 right-2 z-10">
-                <span className="block -translate-y-1/2 *:ring-2 *:ring-white">
-                  {selectionBadge}
-                </span>
-              </span>
+              <SelectionBadgeAnchor className="top-0 right-2">
+                {selectionBadge}
+              </SelectionBadgeAnchor>
             ) : null}
           </Button>
         )}

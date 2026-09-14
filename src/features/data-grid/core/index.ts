@@ -57,7 +57,7 @@ export {
   isSelectionEnabled,
   resolveColumns,
 } from './domain/resolve-schema';
-export { SelectionMode, selectionScope } from './domain/selection-model';
+export { SelectionMode, SelectionScope } from './domain/selection-model';
 export { SortDirection } from './domain/sort-model';
 export {
   buildGridQuery,

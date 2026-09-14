@@ -14,8 +14,11 @@ import {
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
-import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
+import {
+  SelectionBadgeAnchor,
+  SelectionCountBadge,
+} from '@/ui/segments/data-table/elements/selection-count-badge';
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
@@ -150,16 +153,13 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
 
   if (!session) return null;
 
+  // The badge is a plain `div`, so its own `aria-label` is never announced; the count
+  // has to ride on the button's accessible name instead.
   const label = getButtonLabel();
+  const accessibleLabel = badgeCount > 0 ? `${label} (${badgeCount} selected)` : label;
   const selectionBadge =
     badgeCount > 0 ? (
-      <Badge
-        rounded
-        aria-label={`${badgeCount} selected`}
-        className="h-5 min-w-5 border-2 border-white bg-white px-1 text-[11px] font-bold leading-none text-primary-9 shadow-sm"
-      >
-        {badgeCount}
-      </Badge>
+      <SelectionCountBadge count={badgeCount} className="text-primary-9" />
     ) : undefined;
   /** gradient + chrome marking this as the primary bulk action */
   const palette = cn(
@@ -178,7 +178,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
       >
         <Button
           rounded
-          aria-label={label}
+          aria-label={accessibleLabel}
           title={label}
           variant="default"
           disabled={downloadState === DownloadStateDict.loading}
@@ -206,6 +206,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
     >
       <Button
         rounded
+        aria-label={accessibleLabel}
         variant="default"
         disabled={downloadState === DownloadStateDict.loading}
         className={cn(
@@ -224,9 +225,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           <span className="whitespace-nowrap">{children ?? getButtonLabel()}</span>
         </span>
         {selectionBadge ? (
-          <span className="pointer-events-none absolute top-0 right-2 z-10">
-            <span className="block -translate-y-1/2 *:ring-2 *:ring-white">{selectionBadge}</span>
-          </span>
+          <SelectionBadgeAnchor className="top-0 right-2">{selectionBadge}</SelectionBadgeAnchor>
         ) : null}
         <div
           className={cn(

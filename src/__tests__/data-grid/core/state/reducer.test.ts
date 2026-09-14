@@ -80,21 +80,23 @@ describe('reducer — filters', () => {
     value: { kind: FilterValueKind.Text, text: 'foo' },
   } as const;
 
-  it('sets and clears a filter, resetting page while preserving selection', () => {
+  it('sets and clears a filter, resetting page AND selection', () => {
     let s = reducer(initial(), { type: GridActionType.SetPage, page: 2 });
     s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, { type: GridActionType.SetFilter, columnId: 'a', entry });
     expect(s.filters.a).toEqual(entry);
     expect(s.page).toBe(1);
-    expect(s.selection).toEqual(['r1']);
+    // a bulk action must never reach rows the active filter hides
+    expect(s.selection).toEqual([]);
 
+    s = reducer(s, { type: GridActionType.SetSelection, ids: ['r1'] });
     s = reducer(s, {
       type: GridActionType.SetFilter,
       columnId: 'a',
       entry: null,
     });
     expect(s.filters).toEqual({});
-    expect(s.selection).toEqual(['r1']);
+    expect(s.selection).toEqual([]);
   });
 
   it('returns the same reference for no-op transitions', () => {
@@ -123,7 +125,7 @@ describe('reducer — filters', () => {
     s = reducer(s, { type: GridActionType.ClearFilters });
     expect(s.filters).toEqual({});
     expect(s.page).toBe(1);
-    expect(s.selection).toEqual(['r1']);
+    expect(s.selection).toEqual([]);
   });
 });
 
