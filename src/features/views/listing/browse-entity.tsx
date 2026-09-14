@@ -31,7 +31,7 @@ export type { BrowseEntityScopeProps };
  * explanation, which is how this last went unnoticed.
  */
 export function BrowseEntityScope(props: BrowseEntityScopeProps) {
-  const definition = getEntityGridDefinition(props.dataType);
+  const definition = props.gridDefinitionOverride ?? getEntityGridDefinition(props.dataType);
   if (!definition) {
     log('error', `[BrowseEntityScope] no grid definition registered for "${props.dataType}"`);
     return (

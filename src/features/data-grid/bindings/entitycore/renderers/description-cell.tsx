@@ -1,3 +1,5 @@
+'use client';
+
 import { RiMoreLine } from '@remixicon/react';
 import { useLayoutEffect, useRef, useState } from 'react';
 
