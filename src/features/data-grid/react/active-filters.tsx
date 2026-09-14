@@ -105,7 +105,7 @@ export function ActiveFiltersButton<Row>({
           label="Filters"
           badge={
             active.length > 0 ? (
-              <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-8 px-1 text-[10px] font-semibold text-white">
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-8 px-1 text-[10px] font-semibold text-white">
                 {active.length}
               </span>
             ) : null

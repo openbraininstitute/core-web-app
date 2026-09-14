@@ -18,6 +18,7 @@ import type {
   CellMorphologyProtocolNestedFilter,
   NestedCellMorphologyProtocolRead,
 } from '@/api/entitycore/types/entities/cell-morphology-protocol';
+import type { EntityDerivationFilter } from '@/api/entitycore/types/entities/derivation';
 import type { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
 import type {
   EntityAuthorization,
@@ -90,9 +91,10 @@ export type CellMorphologyFilter = Partial<
     CellMorphologyProtocolNestedFilter &
     IlikeSearchFilter &
     IOrderBy<TCellMorphologyOrderBy>
-> & {
-  has_segmented_spines?: boolean;
-};
+> &
+  EntityDerivationFilter & {
+    has_segmented_spines?: boolean;
+  };
 interface ICellMorphologyBase extends EntityCoreIdentifiable {
   name: string;
   description: string;

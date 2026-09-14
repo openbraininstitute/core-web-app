@@ -9,15 +9,21 @@ import type { GridController } from '@/features/data-grid/core';
 export interface IBulkActionsRenderArgs<Row> {
   /** ids of the currently selected rows (across pages) */
   selectedIds: string[];
-  /** full selected rows, including rows selected on other pages */
+  /** full selected rows, including rows selected on other pages or scopes */
   selectedRows: Row[];
+  /** how many rows are selected; the same number the footer shows */
+  selectedCount: number;
   clearSelection: () => void;
+  /** drop just these ids from the selection, leaving the rest of the basket alone */
+  deselectRows: (ids: string[]) => void;
 }
 
 export interface IBulkActionsProps<Row> {
   controller: GridController<Row>;
   rows: Row[];
   selection: string[];
+  /** how many rows are selected; the same number the footer shows */
+  selectedCount: number;
   /** host-provided actions (download / delete buttons) receiving the selection */
   children: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
   className?: string;
@@ -53,6 +59,7 @@ export function BulkActions<Row>({
   controller,
   rows,
   selection,
+  selectedCount,
   children,
   className,
 }: IBulkActionsProps<Row>) {
@@ -77,8 +84,16 @@ export function BulkActions<Row>({
       {children({
         selectedIds: selection,
         selectedRows,
+        selectedCount,
         clearSelection: () =>
           controller.store.dispatch({ type: GridActionType.SetSelection, ids: [] }),
+        deselectRows: (ids) => {
+          const dropped = new Set(ids);
+          controller.store.dispatch({
+            type: GridActionType.SetSelection,
+            ids: controller.store.getSnapshot().selection.filter((id) => !dropped.has(id)),
+          });
+        },
       })}
     </div>
   );

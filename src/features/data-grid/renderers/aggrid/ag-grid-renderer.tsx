@@ -208,7 +208,11 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   // ids selected on other pages, which the grid cannot see.
   const onSelectionChanged = useCallback(
     (e: SelectionChangedEvent<TDisplayRow<Row>>) => {
-      if (e.source === 'api') return; // our own store → grid sync
+      // `api` is our own store → grid sync. `rowDataChanged` fires when selected rows
+      // leave `rowData` (a search, a page change) and arrives BEFORE `onRowDataUpdated`
+      // re-applies the store selection, so merging it would drop every id that is on the
+      // new page but not re-selected on it yet.
+      if (e.source === 'api' || e.source === 'rowDataChanged') return;
       const selectedOnPage = e.api
         .getSelectedRows()
         .filter((r): r is Row => !isDetailRow(r))

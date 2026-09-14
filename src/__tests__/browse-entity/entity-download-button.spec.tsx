@@ -83,18 +83,24 @@ describe('EntityDownloadButton (data listing bulk download)', () => {
     expect(screen.queryByTestId('bulk-download-button')).not.toBeInTheDocument();
   });
 
-  it('labels a single selection as Download entity (1)', () => {
+  it('labels a single selection without putting the count in the label', () => {
     renderDownloadButton({ selectedRows: [makeRow('m1')] });
 
-    expect(screen.getByTestId('bulk-download-button')).toHaveTextContent('Download entity (1)');
+    const button = screen.getByTestId('bulk-download-button');
+    expect(button).toHaveTextContent('Download entity');
+    expect(button).not.toHaveTextContent('Download entity (1)');
+    expect(button).toHaveTextContent('1');
   });
 
-  it('labels a multi selection as Download entities (N)', () => {
+  it('labels a multi selection without putting the count in the label', () => {
     renderDownloadButton({
       selectedRows: [makeRow('m1'), makeRow('m2'), makeRow('m3')],
     });
 
-    expect(screen.getByTestId('bulk-download-button')).toHaveTextContent('Download entities (3)');
+    const button = screen.getByTestId('bulk-download-button');
+    expect(button).toHaveTextContent('Download entities');
+    expect(button).not.toHaveTextContent('Download entities (3)');
+    expect(button).toHaveTextContent('3');
   });
 
   it('downloads the selected entity ids through downloadArchive', async () => {

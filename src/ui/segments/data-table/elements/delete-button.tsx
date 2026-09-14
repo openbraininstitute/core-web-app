@@ -19,7 +19,12 @@ import {
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { useScope } from '@/ui/hooks/use-scope';
 import { Button } from '@/ui/molecules/button';
+import {
+  SelectionBadgeAnchor,
+  SelectionCountBadge,
+} from '@/ui/segments/data-table/elements/selection-count-badge';
 import { cn } from '@/utils/css-class';
+import { isProjectPrivateRecord } from '@/utils/workspace-scope';
 
 import type { IconType } from 'antd/es/notification/interface';
 import type {
@@ -132,6 +137,8 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   dataType,
   workspace,
   clearSelectedRows,
+  deselectRows,
+  selectionCount,
   className,
   expanding = false,
 }: RenderButtonProps<T> & {
@@ -145,13 +152,30 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   const queryClient = useQueryClient();
   const { scope: currentScope } = useScope();
 
-  const entityCount = selectedRows.length;
+  // Only rows this project owns can be deleted; a cross-scope basket can hold public
+  // rows that are not ours to touch.
+  const projectRows = selectedRows.filter((row) =>
+    isProjectPrivateRecord(
+      row as T & { authorized_public: boolean; authorized_project_id: string },
+      workspace?.projectId
+    )
+  );
+  const entityCount = projectRows.length;
+  const badgeCount = selectionCount ?? entityCount;
   const isSingular = entityCount === 1;
+  const selectionBadge =
+    badgeCount > 0 ? (
+      <SelectionCountBadge count={badgeCount} className="text-destructive" />
+    ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
 
   const getButtonLabel = (): string => {
-    return isSingular ? `Delete entity (${entityCount})` : `Delete entities (${entityCount})`;
+    return isSingular ? `Delete entity` : `Delete entities`;
   };
+  // The badge is a plain `div`, so its own `aria-label` is never announced; the count
+  // has to ride on the button's accessible name instead.
+  const accessibleLabel =
+    badgeCount > 0 ? `${getButtonLabel()} (${badgeCount} selected)` : getButtonLabel();
 
   const entityTypeConfig = getEntityByExtendedType({ type: dataType });
 
@@ -166,7 +190,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!workspace) throw new Error('No workspace context found');
-      const rows = compact(selectedRows) as unknown as EntityCoreIdentifiableNamed[];
+      const rows = compact(projectRows) as unknown as EntityCoreIdentifiableNamed[];
       return await pMap(
         rows,
         async (row) => {
@@ -220,7 +244,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
         placement: 'topRight',
       });
 
-      if (clearSelectedRows) clearSelectedRows();
+      // Only the rows that actually went away leave the basket: a public row the user
+      // picked in another scope was never touched and must survive.
+      const deletedIds = resp.filter((e) => e.deleted).map((e) => e.id);
+      if (deselectRows) deselectRows(deletedIds);
+      else if (clearSelectedRows) clearSelectedRows();
     },
   });
 
@@ -252,12 +280,15 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
     );
   };
 
-  if (!permissions.delete) return null;
+  // Nothing deletable in the basket (e.g. every pick is a public row): a button here
+  // would confirm "delete 0 items", run the mutation on an empty list and then clear
+  // picks it never touched.
+  if (!permissions.delete || entityCount === 0) return null;
 
   const buttonLabel = getButtonLabel();
   /** gradient + chrome marking this as destructive */
   const destructivePalette = cn(
-    'overflow-hidden border border-white/20 font-semibold text-white',
+    'border border-white/20 font-semibold text-white',
     'bg-linear-to-r from-destructive via-destructive/80 to-destructive bg-size-[200%_100%]',
     'disabled:cursor-not-allowed disabled:opacity-70'
   );
@@ -296,7 +327,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <Button
             rounded
             type="button"
-            aria-label={buttonLabel}
+            aria-label={accessibleLabel}
             title={buttonLabel}
             variant="default"
             disabled={deleteMutation.isPending}
@@ -308,12 +339,17 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
             )}
             data-testid="bulk-delete-button"
           >
-            <ExpandingPillContent icon={renderButtonIcon()} label={buttonLabel} />
+            <ExpandingPillContent
+              icon={renderButtonIcon()}
+              label={buttonLabel}
+              badge={selectionBadge}
+            />
           </Button>
         ) : (
           <Button
             rounded
             type="button"
+            aria-label={accessibleLabel}
             variant="default"
             disabled={deleteMutation.isPending}
             className={cn(
@@ -329,6 +365,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
               {renderButtonIcon()}
               <span className="whitespace-nowrap">{children ?? buttonLabel}</span>
             </span>
+            {selectionBadge ? (
+              <SelectionBadgeAnchor className="top-0 right-2">
+                {selectionBadge}
+              </SelectionBadgeAnchor>
+            ) : null}
           </Button>
         )}
       </motion.div>
