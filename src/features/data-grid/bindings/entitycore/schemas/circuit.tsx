@@ -189,13 +189,9 @@ export const circuitSchema: IGridSchema<Row> = {
       filter: {
         operators: [OperatorId.In],
         field: 'scale',
-        // All scales except "Single".
-        options: {
-          kind: FilterOptionsKind.Static,
-          items: Object.values(CircuitScale)
-            .filter((s) => s.key !== CircuitScale.Single.key)
-            .map((s) => ({ id: s.key, label: s.label })),
-        },
+        // Backed by the loader-scoped `scale` facet, so workflow-specific loaders
+        // expose only the scales their result set permits.
+        options: { kind: FilterOptionsKind.Facets },
       },
     } satisfies IColumnModel<Row>,
     numberColumn(EntityCoreFields.CircuitNumberNeurons, 'Number of neurons', 'number_neurons', {
