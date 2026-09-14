@@ -55,7 +55,6 @@ import type { Nullish } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
-/** the sibling field a DiscreteProbabilities element edits alongside its own. */
 const DISCRETE_PROBABILITIES_FIELD = 'probabilities';
 
 export function UIElementRender({
@@ -625,9 +624,6 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.DiscreteProbabilities },
       },
       () => {
-        // this element owns two fields: the one it is declared on, and the sibling holding
-        // the probability for each value. they are written together so their lengths cannot
-        // drift apart.
         const asNumbers = (v: ConfigValue): number[] =>
           Array.isArray(v) ? v.filter((n): n is number => typeof n === 'number') : [];
 

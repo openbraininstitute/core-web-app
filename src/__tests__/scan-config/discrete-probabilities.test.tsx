@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
 
-/** Renders the table and returns the change spy, so a test can read what an edit wrote. */
 function renderTable(
   values: number[],
   probabilities: number[],
@@ -31,8 +30,6 @@ describe('DiscreteProbabilities', () => {
   });
 
   it('shows each probability as a share of the total, since they are normalised', () => {
-    // The whole reason the column exists: 1, 1, 1 samples thirds, and the raw numbers alone
-    // give a user no way to know that.
     renderTable([1, 2, 3], [1, 1, 1]);
 
     expect(screen.getAllByText('33.3%')).toHaveLength(3);
@@ -78,8 +75,6 @@ describe('DiscreteProbabilities', () => {
   });
 
   it('renders a mismatched pair rather than silently dropping the extra values', () => {
-    // Reachable from a hand-edited config. Showing four rows makes the mismatch visible;
-    // truncating to two would hide values the config still holds.
     renderTable([1, 2, 3, 4], [0.5, 0.5]);
 
     expect(screen.getByLabelText('Value 4')).toBeInTheDocument();
