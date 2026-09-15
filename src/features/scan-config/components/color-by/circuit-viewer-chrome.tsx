@@ -19,10 +19,9 @@ import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 import styles from './chrome-animations.module.css';
 
-/** `left-3 top-3` and `gap-2` as numbers, for what is placed from the column's height. */
+// `left-3 top-3` and `gap-2` in px.
 const LEFT_TOP = 12;
 const GAP = 8;
-/** Its two rows of round buttons, until the observer has measured the real thing. */
 const LEFT_HEIGHT = 32 + GAP + 32;
 
 export interface ICircuitViewerChromeProps {
@@ -48,7 +47,6 @@ export interface ICircuitViewerChromeProps {
    */
   viz?: {
     menu: ViewerControlsMenuProps;
-    /** Frame the population on show again. Its own button, below the controls row. */
     onResetView: () => void;
     /** Omit to hide the color-by dropdown + legend. */
     colorBy?: ColorByControls;
@@ -111,9 +109,6 @@ export function CircuitViewerChrome({
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [toolbarWidth, setToolbarWidth] = useState<number>();
   const leftRef = useRef<HTMLDivElement>(null);
-  // Where the left column ends, so what sits under it can start there. It is
-  // two rows deep now and grows with the pill's own width, so a fixed offset
-  // would be wrong on the first narrow screen.
   const [leftBottom, setLeftBottom] = useState(LEFT_TOP + LEFT_HEIGHT);
 
   useEffect(() => {
@@ -158,9 +153,8 @@ export function CircuitViewerChrome({
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       {viz?.zoom && (
-        // Centred in what the left column leaves rather than in the canvas: the
-        // ruler is 200px tall and shares this edge, so on a short viewer the
-        // two were in the same place.
+        // Centred below the left column: centred in the canvas, the 200px ruler
+        // overlapped it on short viewers.
         <div
           className="pointer-events-none absolute bottom-0 left-1 flex items-center"
           style={{ top: belowLeft }}
@@ -236,8 +230,6 @@ export function CircuitViewerChrome({
             </div>
           )}
         </div>
-        {/* Under the row rather than in it: it acts on the scene, where the row
-            above decides what the scene is made of. */}
         {viz && (
           <div
             className={cn(!showVizChrome && 'invisible pointer-events-none')}
@@ -254,8 +246,7 @@ export function CircuitViewerChrome({
           </div>
         )}
       </div>
-      {/* Below the controls, whose height is measured: centred among them it
-          overlapped the Populations pill on narrow screens. */}
+      {/* Below the left column: in its row it overlapped the Populations pill on narrow screens. */}
       {showVizChrome && populations && hiddenSubject !== undefined && (
         <div
           className="pointer-events-auto absolute left-1/2 -translate-x-1/2"

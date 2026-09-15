@@ -272,7 +272,6 @@ export function useCircuitColorBy(
     theme,
     /** signal bus passed to the viewer to trigger camera reset / snapshot */
     signals,
-    /** Frame the population on show again; the chrome gives it its own button. */
     onResetView,
     colorBy,
     /** Take populations out of the scene, or put them back; see {@link PopulationsControls}. */
