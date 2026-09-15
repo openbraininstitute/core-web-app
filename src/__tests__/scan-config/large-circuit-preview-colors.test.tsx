@@ -69,6 +69,7 @@ type TProps = {
   nodeColors?: NodeColors;
   recededColor?: string;
   onPopulationClick?: (name: string) => void;
+  somaSizeScale?: number;
 };
 
 /** The element, so a rerender can vary one prop without restating the rest. */
@@ -271,5 +272,18 @@ describe('LargeCircuitPreview colours', () => {
 
     rerender(preview({ ...props, hiddenPopulations: ['vpm'] }));
     expect(lastRender().onCellClick).toBeUndefined();
+  });
+
+  it('scales the species soma radius without handing the viewer a new scene', () => {
+    const { rerender } = draw({ population: CORTEX });
+    const first = lastRender();
+    // No species on the fixture, so the base is the fallback radius.
+    expect(first.somaRadius).toBe(10);
+
+    rerender(preview({ population: CORTEX, somaSizeScale: 0.5 }));
+    const second = lastRender();
+
+    expect(second.somaRadius).toBe(5);
+    expect(second.positions).toBe(first.positions);
   });
 });
