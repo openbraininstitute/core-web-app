@@ -17,6 +17,7 @@ import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-c
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
+import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { classNames } from '@/util/utils';
 import { FullscreenPortalScope } from '@/utils/fullscreen';
 
@@ -167,6 +168,9 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   const showRaster = !showScene || isSplit;
   const canSeek = isSplit && replayable;
 
+  // Waits for a replay that works, so the last step never points at a disabled play button.
+  useNextStepOnboarding({ condition: replayable && showScene, tour: spikeReplayTour });
+
   // Latches on: see the note above about what unmounting would cost.
   const [sceneMounted, setSceneMounted] = useState(false);
   useEffect(() => {
@@ -282,7 +286,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
       <FullscreenPortalScope root={root}>
         <div className="mb-2 flex items-center gap-3 px-3 pt-3">
           <div className="flex items-center gap-2">
-            <ModeToggle options={modeOptions} />
+            <ModeToggle id="spike-replay-mode-toggle" options={modeOptions} />
             <FullscreenButton target={root} />
           </div>
           {populationName && (
@@ -331,6 +335,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
         <div ref={containerRef} className="relative min-h-0 flex-1">
           {subject && (
             <div
+              id="spike-replay-scene"
               className={classNames(
                 'absolute left-0 right-0 top-0',
                 !showScene && 'invisible pointer-events-none'
