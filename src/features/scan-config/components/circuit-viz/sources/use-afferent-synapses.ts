@@ -9,8 +9,8 @@ import {
   Report,
 } from '@/features/scan-config/components/circuit-viz/synapses';
 import {
-  categoricalColor,
   SYNAPSE_TYPE_COLORS,
+  untypedSynapseColor,
 } from '@/features/scan-config/components/color-by/palette';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { unlinkFromFS, writeToFS } from '@/utils/h5/fs';
@@ -112,14 +112,14 @@ export function useAfferentSynapses({
         // Colour says synapse type, from a fixed two-colour map, so excitatory
         // and inhibitory read the same in every circuit.
         //
-        // A population that states no `syn_type_id` falls back to one colour
-        // per population, from the colourblind-safe categorical set. Offset so
-        // the first population lands on bluish green: slot 0 is the blue that
-        // DEFAULT_NEURON_COLOR and the first colour-by category both already
-        // use, and synapses sit directly on the morphology wearing it.
+        // A population stating no `syn_type_id` falls back to a colour of its
+        // own. Counted over untyped populations only: numbering it by its place
+        // in `loaded` would both move its colour when a population ahead of it
+        // splits, and walk it onto the type colours.
+        let untyped = 0;
         setGroups(
-          loaded.map(({ coordinates, synapseType }, index) => ({
-            color: synapseType ? SYNAPSE_TYPE_COLORS[synapseType] : categoricalColor(index + 2),
+          loaded.map(({ coordinates, synapseType }) => ({
+            color: synapseType ? SYNAPSE_TYPE_COLORS[synapseType] : untypedSynapseColor(untyped++),
             coordinates,
           }))
         );

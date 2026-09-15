@@ -57,6 +57,30 @@ export const CATEGORICAL_PALETTE: readonly string[] = [
 ];
 
 /**
+ * Categorical slots an untyped synapse group may not take: slot 0 is the blue
+ * DEFAULT_NEURON_COLOR wears and synapses sit on the morphology wearing it,
+ * slot 2 IS {@link SYNAPSE_TYPE_COLORS}.inhibitory, and slot 4's vermillion is
+ * a shade off its excitatory. Landing on one would call an untyped synapse a
+ * type it never stated.
+ */
+const SYNAPSE_TYPE_RESERVED_SLOTS = new Set([0, 2, 4]);
+
+/** The slots left, so the palette is the source of what is free rather than a second list. */
+const UNTYPED_SYNAPSE_SLOTS = CATEGORICAL_PALETTE.map((_, slot) => slot).filter(
+  (slot) => !SYNAPSE_TYPE_RESERVED_SLOTS.has(slot)
+);
+
+/**
+ * Color for the Nth edge population whose synapses state no type.
+ *
+ * Numbered across untyped populations only, so a population's color does not
+ * move when another population ahead of it splits by type.
+ */
+export function untypedSynapseColor(index: number): string {
+  return categoricalColor(UNTYPED_SYNAPSE_SLOTS[index % UNTYPED_SYNAPSE_SLOTS.length]);
+}
+
+/**
  * above this many distinct numeric categorical values we switch from a discrete
  * key to a continuous color range (per the acceptance criteria)
  */
