@@ -95,6 +95,11 @@ export interface ViewerConfig {
    * initial value (e.g. 0.2) when electrode overlays should dominate.
    */
   neuronOpacity: number;
+  /**
+   * Multiplier on the per-species soma radius of the somas-only viewer.
+   * Defaults to {@link DEFAULT_SOMA_SIZE_SCALE}.
+   */
+  somaSizeScale: number;
   /** Show electrode location overlays when present. Default on. */
   showElectrodes: boolean;
   /**
