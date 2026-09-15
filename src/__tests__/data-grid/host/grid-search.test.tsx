@@ -47,10 +47,39 @@ describe('GridSearch — placeholder and width', () => {
     const onSearch = vi.fn();
     render(<GridSearch openOnMount onSearch={onSearch} />);
 
-    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'abc' } });
+    fireEvent.change(screen.getByLabelText('Search'), {
+      target: { value: 'abc' },
+    });
     fireEvent.click(screen.getByLabelText('Clear search'));
 
     // clearing commits immediately, bypassing the debounce
     expect(onSearch).toHaveBeenCalledWith('');
+  });
+});
+
+describe('GridSearch — a host that swaps onSearch mid-debounce', () => {
+  it('delivers a term typed just before the swap to the NEW onSearch', () => {
+    vi.useFakeTimers();
+    try {
+      const before = vi.fn();
+      const after = vi.fn();
+
+      const { rerender } = render(<GridSearch openOnMount value="" onSearch={before} />);
+
+      fireEvent.change(screen.getByLabelText('Search'), {
+        target: { value: 'Visualize' },
+      });
+
+      // The controller is rebuilt 100ms in, well inside the 300ms debounce.
+      vi.advanceTimersByTime(100);
+      rerender(<GridSearch openOnMount value="" onSearch={after} />);
+
+      vi.advanceTimersByTime(400);
+
+      expect(after).toHaveBeenCalledWith('Visualize');
+      expect(before).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

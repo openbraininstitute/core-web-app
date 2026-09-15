@@ -41,12 +41,17 @@ export function GridSearch({
   /** last term this input pushed, so its own echo is not adopted back */
   const lastCommittedRef = useRef(value ?? '');
 
+  const onSearchRef = useRef(onSearch);
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
+
   const commit = useDebouncedCallback(
     (t: string) => {
       lastCommittedRef.current = t;
-      onSearch(t);
+      onSearchRef.current(t);
     },
-    [onSearch],
+    [],
     300
   );
 
@@ -69,7 +74,7 @@ export function GridSearch({
     commit.cancel();
     lastCommittedRef.current = t;
     setText(t);
-    onSearch(t);
+    onSearchRef.current(t);
   };
 
   const toggle = () => {
