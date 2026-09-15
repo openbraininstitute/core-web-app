@@ -5,10 +5,12 @@ import type { WorkspaceContext } from '@/types/common';
 import type { ApiResponse } from '@/types/small-scale-simulator/common';
 
 export type CompatibilityCheckResponse = {
+  status?: 'compatible' | 'incompatible' | 'check_failed';
   compatible: boolean;
   morphology_id: string;
   emodel_id: string;
   error?: string | null;
+  details?: string | null;
 };
 
 type CheckCompatibilityParams = {
