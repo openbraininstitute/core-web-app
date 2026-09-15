@@ -8,6 +8,7 @@ import {
 } from 'nextstepjs';
 import { type ReactNode, useLayoutEffect } from 'react';
 
+import { OnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
 import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
@@ -190,7 +191,7 @@ export const projectTour = `${defaultWorkspaceTour}-project`;
 export const dataTour = `${defaultWorkspaceTour}-data`;
 export const workflowTour = `${defaultWorkspaceTour}-workflow`;
 export const notebookTour = `${defaultWorkspaceTour}-notebook`;
-export const spikeReplayTour = 'simulation-spike-replay';
+export const spikeReplayTour = OnboardingFeature.SimulationSpikeReplay;
 
 export const OnboardingDiscoverSteps: Tour[] = [
   {

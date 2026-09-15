@@ -26,7 +26,7 @@ interface ModeToggleProps {
  * raster and a split — so the options come in whole rather than being enumerated
  * here.
  */
-export function ModeToggle({ options, id = 'preview-mode-toggle', className }: ModeToggleProps) {
+export function ModeToggle({ options, id, className }: ModeToggleProps) {
   // Nothing to switch between: a single-option pill reads as a button that
   // does nothing.
   if (options.length < 2) return null;
