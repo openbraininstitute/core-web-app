@@ -223,7 +223,6 @@ function ScanConfigTemplateContent({
           projectId={projectId}
           campaignOriginAction={campaignOriginAction}
           isCampaignIdChanged={isCampaignIdChanged}
-          taskTypeBindings={taskTypeBindings}
         />
       </Suspense>
     ))

@@ -52,6 +52,15 @@ export const buildSynaptomeFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const smallScalesViaLaunchSystemFlag = defineFlag<boolean>({
+  key: 'small-scales-via-launch-system',
+  defaultValue: false,
+  values: [true, false],
+  description:
+    'Launch single neuron, synaptome, paired neurons and small microcircuit simulations via the launch system',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** Interactive electrode overlays in circuit preview (independent of the build workflow). */
 export const electrodeOverlaysFlag = defineFlag<boolean>({
   key: 'electrode-overlays',
@@ -68,6 +77,7 @@ export const flags = [
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   buildSynaptomeFlag,
+  smallScalesViaLaunchSystemFlag,
   electrodeOverlaysFlag,
 ] as const;
 
