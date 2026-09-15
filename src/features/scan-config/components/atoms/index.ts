@@ -7,6 +7,7 @@ import { match } from 'ts-pattern';
 import { getCellMorphology, getEmCellMesh, getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getElectricalCellRecording } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
+import { getIonChannelRecording } from '@/api/entitycore/queries/experimental/ion-channel-recording';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
@@ -25,6 +26,7 @@ import { fetchAllPaginatedData } from '@/utils/pagination';
 import type {
   ICellMorphology,
   IElectricalCellRecording,
+  IIonChannelRecording,
   IMEModel,
   TEntityTypeDict,
 } from '@/api/entitycore/types';
@@ -243,9 +245,16 @@ export function useModelQuery({
     | IonChannelModel
     | IEMCellMesh
     | ICellMorphology
-    | IElectricalCellRecording,
+    | IElectricalCellRecording
+    | IIonChannelRecording,
     Error,
-    ICircuit | IMEModel | IonChannelModel | IEMCellMesh | ICellMorphology | IElectricalCellRecording
+    | ICircuit
+    | IMEModel
+    | IonChannelModel
+    | IEMCellMesh
+    | ICellMorphology
+    | IElectricalCellRecording
+    | IIonChannelRecording
   >({
     // @ts-expect-error this query won't start without the id
     queryKey: keyBuilder.entity({ id, context, type: entityType }),
@@ -264,6 +273,8 @@ export function useModelQuery({
           .with(EntityTypeDict.CellMorphology, () => getCellMorphology(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.ElectricalCellRecording, () => getElectricalCellRecording(params))
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.IonChannelRecording, () => getIonChannelRecording(params))
           .otherwise((entityType) => {
             throw new Error(`Unsupported model entity type ${entityType}`);
           })
