@@ -57,8 +57,8 @@ importers:
         specifier: ^7.0.6
         version: 7.0.6
       '@openbraininstitute/morphoviewer':
-        specifier: 0.36.0
-        version: 0.36.0(react@19.2.6)
+        specifier: 0.37.0
+        version: 0.37.0(react@19.2.6)
       '@portabletext/react':
         specifier: ^6.2.0
         version: 6.2.0(react@19.2.6)
@@ -413,7 +413,7 @@ importers:
         version: 29.1.1(@noble/hashes@2.2.0)
       knip:
         specifier: ^5.88.1
-        version: 5.88.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(typescript@7.0.2)
+        version: 5.88.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3)(@types/node@25.7.0)(typescript@7.0.2)
       lefthook:
         specifier: ^2.1.6
         version: 2.1.6
@@ -2912,8 +2912,8 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
-  '@openbraininstitute/morphoviewer@0.36.0':
-    resolution: {integrity: sha512-OZL0qyvmnaVf4/LPklC+yqr9AlqggSsUPd01a+BdqjIrGnWqWxMmy91JLDJ6yi2OwM3Uh0XVs00TWq+lTo5IYA==}
+  '@openbraininstitute/morphoviewer@0.37.0':
+    resolution: {integrity: sha512-J1jD//OIb2disQzvubPjGVe/+neDluPGgixbx1r4LA2QIpIDkgcIDKKyUF+6H71whOycExoQ+iuLzeI2TZQlTA==}
     peerDependencies:
       react: ^19.2.5
 
@@ -13454,6 +13454,13 @@ snapshots:
       '@tybys/wasm-util': 0.10.2
     optional: true
 
+  '@napi-rs/wasm-runtime@1.1.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3)':
+    dependencies:
+      '@emnapi/core': 1.10.0
+      '@emnapi/runtime': 1.11.3
+      '@tybys/wasm-util': 0.10.2
+    optional: true
+
   '@next/env@16.3.3': {}
 
   '@next/swc-darwin-arm64@16.3.3':
@@ -13591,7 +13598,7 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
-  '@openbraininstitute/morphoviewer@0.36.0(react@19.2.6)':
+  '@openbraininstitute/morphoviewer@0.37.0(react@19.2.6)':
     dependencies:
       '@tolokoban/tgd': 2.4.0
       fflate: 0.8.3
@@ -13922,9 +13929,9 @@ snapshots:
   '@oxc-resolver/binding-openharmony-arm64@11.19.1':
     optional: true
 
-  '@oxc-resolver/binding-wasm32-wasi@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
+  '@oxc-resolver/binding-wasm32-wasi@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3)':
     dependencies:
-      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.1.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -19204,7 +19211,7 @@ snapshots:
 
   kind-of@6.0.3: {}
 
-  knip@5.88.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.7.0)(typescript@7.0.2):
+  knip@5.88.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3)(@types/node@25.7.0)(typescript@7.0.2):
     dependencies:
       '@nodelib/fs.walk': 1.2.8
       '@types/node': 25.7.0
@@ -19212,7 +19219,7 @@ snapshots:
       formatly: 0.3.0
       jiti: 2.7.0
       minimist: 1.2.8
-      oxc-resolver: 11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      oxc-resolver: 11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3)
       picocolors: 1.1.1
       picomatch: 4.0.4
       smol-toml: 1.6.1
@@ -20269,7 +20276,7 @@ snapshots:
       '@oxc-parser/binding-win32-arm64-msvc': 0.72.3
       '@oxc-parser/binding-win32-x64-msvc': 0.72.3
 
-  oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
+  oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3):
     optionalDependencies:
       '@oxc-resolver/binding-android-arm-eabi': 11.19.1
       '@oxc-resolver/binding-android-arm64': 11.19.1
@@ -20287,7 +20294,7 @@ snapshots:
       '@oxc-resolver/binding-linux-x64-gnu': 11.19.1
       '@oxc-resolver/binding-linux-x64-musl': 11.19.1
       '@oxc-resolver/binding-openharmony-arm64': 11.19.1
-      '@oxc-resolver/binding-wasm32-wasi': 11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@oxc-resolver/binding-wasm32-wasi': 11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.11.3)
       '@oxc-resolver/binding-win32-arm64-msvc': 11.19.1
       '@oxc-resolver/binding-win32-ia32-msvc': 11.19.1
       '@oxc-resolver/binding-win32-x64-msvc': 11.19.1

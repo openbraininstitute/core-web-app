@@ -4,7 +4,6 @@ import {
   RiEqualizerLine,
   RiMoonFill,
   RiMoonLine,
-  RiRefreshLine,
   RiResetLeftLine,
   RiSunFill,
   RiSunLine,
@@ -23,7 +22,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 export interface ViewerControlsMenuProps {
-  onResetView: () => void;
   /** capture a PNG of the circuit canvas (excludes gizmo, scalebar, chrome) */
   onCaptureImage: () => void;
   backgroundDark: boolean;
@@ -64,7 +62,6 @@ export interface ViewerControlsMenuProps {
  * right of the trigger
  */
 export function ViewerControlsMenu({
-  onResetView,
   onCaptureImage,
   backgroundDark,
   onBackgroundDarkChange,
@@ -158,12 +155,6 @@ export function ViewerControlsMenu({
         className="w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl"
       >
         <div ref={contentRef}>
-          <MenuButton
-            icon={<RiRefreshLine className="size-4 shrink-0" />}
-            label="Reset view"
-            testId="viewer-reset-view"
-            onClick={onResetView}
-          />
           <MenuButton
             icon={<RiCameraLine className="size-4 shrink-0" />}
             label="Capture image"
