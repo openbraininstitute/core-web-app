@@ -28,10 +28,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { CompatibilityNotice } from '@/ui/segments/workflows/build/memodel/compatibility-notice';
-import {
-  blocksBuild,
-  deriveCompatibilityState,
-} from '@/ui/segments/workflows/build/memodel/compatibility-state';
+import { deriveCompatibilityState } from '@/ui/segments/workflows/build/memodel/compatibility-state';
 import {
   BuildStep,
   type BuildStepKeys,
@@ -88,20 +85,12 @@ export function Menu({ sessionId }: { sessionId: string }) {
         signal,
       }),
     enabled: selectionComplete,
-    // A failed check blocks the build, so let a transport blip heal itself rather than
-    // making the user click Try again. Only reaches this path when the request itself
-    // failed: a check that ran but could not finish comes back as a 200.
-    retry: 2,
+    retry: false,
     refetchOnWindowFocus: false,
     staleTime: Infinity,
   });
 
-  const compatibility = deriveCompatibilityState({
-    selectionComplete,
-    isFetching: compatibilityCheck.isFetching,
-    isError: compatibilityCheck.isError,
-    data: compatibilityCheck.data,
-  });
+  const compatibility = deriveCompatibilityState(selectionComplete, compatibilityCheck);
 
   const onStepChange = (s: BuildStepKeys) => {
     const query = new URLSearchParams(searchParams);
@@ -179,24 +168,24 @@ export function Menu({ sessionId }: { sessionId: string }) {
   });
 
   const result = CreateSingleNeuronContextSchema.safeParse(payload);
-  const disabled = mutate.isPending || !!result.error || blocksBuild(compatibility);
+  // `idle` can briefly occur with a complete selection, so block everything but `compatible`.
+  const disabled = mutate.isPending || !!result.error || compatibility.kind !== 'compatible';
 
-  // Why the button is disabled, so the tooltip stops claiming the selection is at fault
-  // when the real reason is that the check could not reach a verdict.
-  const disabledReason = ((): React.ReactNode => {
-    if (mutate.isPending) return null;
-    if (result.error)
-      return (
-        <>
-          Please fill all the required information along with <br /> selecting compatible M-model
-          and E-model
-        </>
-      );
-    if (compatibility.kind === 'checking') return messages.CheckingCompatibility;
-    if (compatibility.kind === 'incompatible') return messages.IncompatibleModels;
-    if (compatibility.kind === 'check-failed') return messages.CompatibilityBlockedTooltip;
-    return null;
-  })();
+  const compatibilityReason: Partial<Record<typeof compatibility.kind, string>> = {
+    checking: messages.CheckingCompatibility,
+    incompatible: messages.IncompatibleModels,
+    check_failed: messages.CompatibilityBlockedTooltip,
+  };
+
+  const selectionReason = result.error && (
+    <>
+      Please fill all the required information along with <br /> selecting compatible M-model and
+      E-model
+    </>
+  );
+
+  const disabledReason =
+    !mutate.isPending && (selectionReason || compatibilityReason[compatibility.kind]);
 
   return (
     <>
@@ -332,12 +321,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
             />
           </div>
         </Button>
-        <CompatibilityNotice
-          state={compatibility}
-          onRetry={() => {
-            compatibilityCheck.refetch();
-          }}
-        />
+        <CompatibilityNotice state={compatibility} onRetry={() => compatibilityCheck.refetch()} />
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="mt-auto w-full">

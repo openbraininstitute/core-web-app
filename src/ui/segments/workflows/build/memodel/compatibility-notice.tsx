@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  DownOutlined,
   ExclamationCircleOutlined,
   LoadingOutlined,
   RightOutlined,
@@ -20,11 +19,6 @@ type Props = {
   onRetry: () => void;
 };
 
-/**
- * Explains why a combination was rejected instead of only saying that it was.
- * The detail is NEURON's own wording, so it is shown verbatim behind a disclosure
- * rather than paraphrased.
- */
 export function CompatibilityNotice({ state, onRetry }: Props) {
   if (state.kind === 'checking') {
     return (
@@ -38,21 +32,21 @@ export function CompatibilityNotice({ state, onRetry }: Props) {
   if (state.kind === 'incompatible') {
     return (
       <Notice
-        tone="destructive"
+        className="text-destructive"
         icon={<ExclamationCircleOutlined />}
         message={messages.IncompatibleModels}
-        detail={state.details ?? state.summary}
+        detail={state.detail}
       />
     );
   }
 
-  if (state.kind === 'check-failed') {
+  if (state.kind === 'check_failed') {
     return (
       <Notice
-        tone="warning"
+        className="text-warning"
         icon={<WarningOutlined />}
         message={messages.CompatibilityCheckFailed}
-        detail={state.details ?? state.summary}
+        detail={state.detail}
         action={
           <Button rounded variant="outline" size="sm" onClick={onRetry} className="self-start">
             {messages.CompatibilityRetry}
@@ -66,20 +60,18 @@ export function CompatibilityNotice({ state, onRetry }: Props) {
 }
 
 type NoticeProps = {
-  tone: 'destructive' | 'warning';
+  className: string;
   icon: React.ReactNode;
   message: string;
   detail?: string;
   action?: React.ReactNode;
 };
 
-function Notice({ tone, icon, message, detail, action }: NoticeProps) {
+function Notice({ className, icon, message, detail, action }: NoticeProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const toneClass = tone === 'destructive' ? 'text-destructive' : 'text-warning';
-
   return (
-    <div className={cn('flex flex-col gap-2 p-4 pl-6', toneClass)}>
+    <div className={cn('flex flex-col gap-2 p-4 pl-6', className)}>
       <div className="flex items-start gap-3 font-semibold">
         <span className="mt-0.5 shrink-0">{icon}</span>
         <span>{message}</span>
@@ -93,11 +85,7 @@ function Notice({ tone, icon, message, detail, action }: NoticeProps) {
             onClick={() => setExpanded((open) => !open)}
             className="flex w-fit items-center gap-1.5 text-sm underline-offset-2 hover:underline"
           >
-            {expanded ? (
-              <DownOutlined className="text-[10px]" />
-            ) : (
-              <RightOutlined className="text-[10px]" />
-            )}
+            <RightOutlined className={cn('text-[10px]', expanded && 'rotate-90')} />
             {expanded ? messages.CompatibilityDetailsHide : messages.CompatibilityDetailsShow}
           </button>
 
