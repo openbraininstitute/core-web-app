@@ -22,11 +22,28 @@ import type { Vec3 } from '@/features/scan-config/components/drawn-surface';
 import type { MorphoViewerTree } from '@/morpho-viewer';
 import type { Report } from './report';
 
-/** One edge population's afferent synapses, as flat `[x, y, z, …]` world coordinates. */
+/** What `syn_type_id` says a synapse is. */
+export type SynapseType = 'excitatory' | 'inhibitory';
+
+/**
+ * One drawable group of afferent synapses, as flat `[x, y, z, …]` world
+ * coordinates: an edge population, split by synapse type where the population
+ * states one.
+ */
 export type AfferentSynapseGroup = {
   coordinates: Float32Array;
   populationName: string;
+  /** Null when the population carries no `syn_type_id`. */
+  synapseType: SynapseType | null;
 };
+
+/**
+ * SONATA reserves `syn_type_id` >= 100 for excitatory synapses and below 100
+ * for inhibitory ones.
+ *
+ * @see https://sonata-extension.readthedocs.io/en/latest/sonata_tech.html#fields-for-edges
+ */
+const EXCITATORY_MIN_SYN_TYPE_ID = 100;
 
 /** Everything the pipeline needs that it cannot work out for itself. */
 export type SynapseLoaderInput = {
@@ -132,8 +149,7 @@ export async function loadAfferentSynapses(
     try {
       for (const populationName of edge.populations) {
         try {
-          const group = await readPopulation(input, opened.file, populationName);
-          if (group) results.push(group);
+          results.push(...(await readPopulation(input, opened.file, populationName)));
         } catch (error) {
           // Contained here so one malformed population costs only its own
           // synapses. Reading them is a per-population job; letting the throw
@@ -153,7 +169,7 @@ async function readPopulation(
   input: SynapseLoaderInput,
   edgesFile: H5File,
   populationName: string
-): Promise<AfferentSynapseGroup | null> {
+): Promise<AfferentSynapseGroup[]> {
   const { report } = input;
   report.logTask(`Reading afferent synapse positions for population "${populationName}"...`);
   // Every dataset this function goes on to read, not just the first: a population
@@ -174,7 +190,7 @@ async function readPopulation(
     report.logTask(
       `Population "${populationName}" has no afferent surfaces: ${missing.join(', ')}`
     );
-    return null;
+    return [];
   }
   const ds = (name: string) => getNumberArray(report, edgesFile, `edges/${populationName}/${name}`);
   const arrXs = ds('0/afferent_surface_x');
@@ -234,7 +250,66 @@ async function readPopulation(
   if (isMorphoViewerDebugMode()) {
     probeNeuriteSynapses(report, populationName, coordinates, arrSectionId, arrTarget, surfaces);
   }
-  return { coordinates, populationName };
+  const typePath = `edges/${populationName}/0/syn_type_id`;
+  return splitBySynapseType(
+    report,
+    populationName,
+    coordinates,
+    hasDataset(edgesFile, typePath) ? ds('0/syn_type_id') : null
+  );
+}
+
+/**
+ * Split one population's synapses into an excitatory and an inhibitory group,
+ * so each can be drawn in its own color. An empty group is left out.
+ *
+ * One untyped group back whenever the split cannot be trusted: no
+ * `syn_type_id`, or one without an entry per synapse. Drawing a synapse in the
+ * wrong type's color is worse than drawing it in no type's color.
+ */
+function splitBySynapseType(
+  report: Report,
+  populationName: string,
+  coordinates: Float32Array,
+  synTypeIds: number[] | null
+): AfferentSynapseGroup[] {
+  const count = coordinates.length / 3;
+  if (synTypeIds?.length !== count) {
+    report.logTask(
+      `Population "${populationName}" states ${synTypeIds?.length ?? 'no'} syn_type_id(s) ` +
+        `for ${count} synapse(s); leaving them untyped.`
+    );
+    return [{ coordinates, populationName, synapseType: null }];
+  }
+
+  const isExcitatory = (index: number) => synTypeIds[index] >= EXCITATORY_MIN_SYN_TYPE_ID;
+  let excitatoryCount = 0;
+  for (let i = 0; i < count; i++) if (isExcitatory(i)) excitatoryCount += 1;
+
+  const excitatory = new Float32Array(excitatoryCount * 3);
+  const inhibitory = new Float32Array(coordinates.length - excitatory.length);
+  let e = 0;
+  let n = 0;
+  for (let i = 0; i < count; i++) {
+    if (isExcitatory(i)) {
+      excitatory[e++] = coordinates[i * 3];
+      excitatory[e++] = coordinates[i * 3 + 1];
+      excitatory[e++] = coordinates[i * 3 + 2];
+    } else {
+      inhibitory[n++] = coordinates[i * 3];
+      inhibitory[n++] = coordinates[i * 3 + 1];
+      inhibitory[n++] = coordinates[i * 3 + 2];
+    }
+  }
+
+  report.logTask(
+    `Split "${populationName}" by synapse type: ${excitatoryCount} excitatory, ` +
+      `${count - excitatoryCount} inhibitory.`
+  );
+  return [
+    { coordinates: excitatory, populationName, synapseType: 'excitatory' as const },
+    { coordinates: inhibitory, populationName, synapseType: 'inhibitory' as const },
+  ].filter((group) => group.coordinates.length > 0);
 }
 
 /**

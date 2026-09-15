@@ -28,6 +28,15 @@ export const SECTION_TYPE_COLORS = {
 } as const;
 
 /**
+ * Afferent synapse colors by synapse type, fixed rather than drawn from the
+ * categorical palette so the same type reads the same in every circuit.
+ */
+export const SYNAPSE_TYPE_COLORS = {
+  excitatory: '#cc3311',
+  inhibitory: '#009e73',
+} as const;
+
+/**
  * colorblind-safe categorical palette: the Okabe–Ito set (minus black, which
  * disappears on dark backgrounds) extended with a few Tableau-10 hues. Ordering
  * is fixed so the same category always maps to the same color across sessions
