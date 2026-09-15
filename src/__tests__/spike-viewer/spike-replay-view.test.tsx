@@ -16,6 +16,12 @@ vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
     error: null,
   }),
 }));
+// The tour needs the app's NextStep provider and the signed-in user's onboarding status.
+const { useNextStepOnboarding } = vi.hoisted(() => ({ useNextStepOnboarding: vi.fn() }));
+vi.mock('@/ui/segments/app-setup/discover-app', () => ({
+  spikeReplayTour: 'simulation-spike-replay',
+  useNextStepOnboarding,
+}));
 
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
 
@@ -39,5 +45,23 @@ describe('SpikeReplayView', () => {
 
     expect(screen.getByRole('button', { name: 'Play spike replay' })).toBeEnabled();
     expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('announces the replay once it can play', () => {
+    render(<SpikeReplayView data={data} subject={subject} />);
+
+    expect(useNextStepOnboarding).toHaveBeenLastCalledWith({
+      condition: true,
+      tour: 'simulation-spike-replay',
+    });
+  });
+
+  it('holds the announcement back when there is nothing to replay over', () => {
+    render(<SpikeReplayView data={data} />);
+
+    expect(useNextStepOnboarding).toHaveBeenLastCalledWith({
+      condition: false,
+      tour: 'simulation-spike-replay',
+    });
   });
 });

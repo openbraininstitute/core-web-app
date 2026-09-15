@@ -190,6 +190,7 @@ export const projectTour = `${defaultWorkspaceTour}-project`;
 export const dataTour = `${defaultWorkspaceTour}-data`;
 export const workflowTour = `${defaultWorkspaceTour}-workflow`;
 export const notebookTour = `${defaultWorkspaceTour}-notebook`;
+export const spikeReplayTour = 'simulation-spike-replay';
 
 export const OnboardingDiscoverSteps: Tour[] = [
   {
@@ -451,6 +452,54 @@ export const OnboardingDiscoverSteps: Tour[] = [
         ),
         selector: '#workflow-activities-table',
         side: 'top',
+        showControls: true,
+        blockKeyboardControl: true,
+        pointerPadding: 0,
+        pointerRadius: 14,
+      },
+    ],
+  },
+  {
+    tour: spikeReplayTour,
+    steps: [
+      {
+        icon: null,
+        title: 'New: 3D spike replay',
+        content: (
+          <>
+            Watch the spikes of your simulation light up the neurons that fired, in 3D over the
+            circuit or model that produced them.
+          </>
+        ),
+        selector: '#spike-replay-scene',
+        side: 'bottom',
+        showControls: true,
+        blockKeyboardControl: true,
+        pointerPadding: 4,
+        pointerRadius: 16,
+      },
+      {
+        icon: null,
+        title: 'Choose your view',
+        content: <>Switch between the raster plot, the 3D replay, or both at once.</>,
+        selector: '#spike-replay-mode-toggle',
+        side: 'bottom-left',
+        showControls: true,
+        blockKeyboardControl: true,
+        pointerPadding: 4,
+        pointerRadius: 25,
+      },
+      {
+        icon: null,
+        title: 'Press play',
+        content: (
+          <>
+            Play the recording, scrub through it, and set the replay speed and how long each spike
+            glows.
+          </>
+        ),
+        selector: '#spike-replay-transport',
+        side: 'top-left',
         showControls: true,
         blockKeyboardControl: true,
         pointerPadding: 0,
