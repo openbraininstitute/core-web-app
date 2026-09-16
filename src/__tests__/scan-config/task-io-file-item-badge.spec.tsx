@@ -49,6 +49,25 @@ describe('TaskIOFileItem badge', () => {
     expect(screen.getByText('folder')).toBeInTheDocument();
   });
 
+  it('pins the tail of a long name so the run id survives truncation', () => {
+    const name = 'EFeature Extraction Result — Dm_16Sept2026_1129';
+    const { container } = render(
+      <TaskIOFileItem file={makeFile({ path: 'result.json' })} name={name} onSelect={vi.fn()} />
+    );
+
+    // the head is what the ellipsis eats; the tail cannot shrink, so it is always readable, and it
+    // is cut at the last separator rather than mid-token
+    expect(screen.getByText('EFeature Extraction Result — Dm_16Sept2026')).toBeInTheDocument();
+    expect(screen.getByText('_1129')).toBeInTheDocument();
+    expect(container.querySelector('[data-file-name]')).toHaveAttribute('data-file-name', name);
+  });
+
+  it('leaves a short name in one piece', () => {
+    render(<TaskIOFileItem file={makeFile({ path: 'result.json' })} onSelect={vi.fn()} />);
+
+    expect(screen.getByText('result.json')).toBeInTheDocument();
+  });
+
   it('falls back to the extension for a plain file', () => {
     render(
       <TaskIOFileItem

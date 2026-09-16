@@ -1,5 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
@@ -47,6 +48,9 @@ export function orderOutputFiles(
   if (!order || files.length < 2) return files;
 
   const rank = (file: TActivityCustomFile): number => {
+    // the entity row stands for the output as a whole, so it is listed ahead of its own artefacts
+    if (file.renderer === ActivityCustomFileRenderer.MiniDetailView) return -1;
+
     const index = order.indexOf(file.asset?.label ?? '');
     return index === -1 ? order.length : index;
   };
