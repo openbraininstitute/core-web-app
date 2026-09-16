@@ -14,6 +14,7 @@ export interface IViewerModeOption {
 
 interface ModeToggleProps {
   options: readonly IViewerModeOption[];
+  id?: string;
   className?: string;
 }
 
@@ -25,14 +26,14 @@ interface ModeToggleProps {
  * raster and a split — so the options come in whole rather than being enumerated
  * here.
  */
-export function ModeToggle({ options, className }: ModeToggleProps) {
+export function ModeToggle({ options, id, className }: ModeToggleProps) {
   // Nothing to switch between: a single-option pill reads as a button that
   // does nothing.
   if (options.length < 2) return null;
 
   return (
     <div
-      id="preview-mode-toggle"
+      id={id}
       data-slot="preview-mode-toggle"
       className={cn(
         'inline-flex items-center gap-0.5 rounded-full bg-white p-0.5 shadow-md ring-1 ring-black/5',
