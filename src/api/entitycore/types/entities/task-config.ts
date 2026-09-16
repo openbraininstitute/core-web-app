@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import type { TEntityTypeDict } from "@/api/entitycore/types/entity-type";
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -10,7 +10,7 @@ import type {
   IContributor,
   IEntityLifecycleStatus,
   Timestamps,
-} from "@/api/entitycore/types/shared/global";
+} from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
   IDFilter,
@@ -20,37 +20,34 @@ import type {
   PaginationFilter,
   SearchFilter,
   TimestampsFilter,
-} from "@/api/entitycore/types/shared/request";
+} from '@/api/entitycore/types/shared/request';
 
 export const TaskConfigType = {
-  CircuitSimulationCampaign: "circuit_simulation__campaign",
-  CircuitSimulationConfig: "circuit_simulation__config",
-  CircuitExtractionCampaign: "circuit_extraction__campaign",
-  CircuitExtractionConfig: "circuit_extraction__config",
-  EFeatureExtractionCampaign: "efeature_extraction__campaign",
-  EFeatureExtractionConfig: "efeature_extraction__config",
-  IonChannelModelingCampaign: "ion_channel_modeling__campaign",
-  IonChannelModelingConfig: "ion_channel_modeling__config",
-  SkeletonizationCampaign: "skeletonization__campaign",
-  SkeletonizationConfig: "skeletonization__config",
-  IonChannelSimulationCampaign: "ion_channel_simulation__campaign",
-  IonChannelSimulationConfig: "ion_channel_simulation__config",
-  EmSynapseMappingCampaign: "em_synapse_mapping__campaign",
-  EmSynapseMappingConfig: "em_synapse_mapping__config",
+  CircuitSimulationCampaign: 'circuit_simulation__campaign',
+  CircuitSimulationConfig: 'circuit_simulation__config',
+  CircuitExtractionCampaign: 'circuit_extraction__campaign',
+  CircuitExtractionConfig: 'circuit_extraction__config',
+  EFeatureExtractionCampaign: 'efeature_extraction__campaign',
+  EFeatureExtractionConfig: 'efeature_extraction__config',
+  IonChannelModelingCampaign: 'ion_channel_modeling__campaign',
+  IonChannelModelingConfig: 'ion_channel_modeling__config',
+  SkeletonizationCampaign: 'skeletonization__campaign',
+  SkeletonizationConfig: 'skeletonization__config',
+  IonChannelSimulationCampaign: 'ion_channel_simulation__campaign',
+  IonChannelSimulationConfig: 'ion_channel_simulation__config',
+  EmSynapseMappingCampaign: 'em_synapse_mapping__campaign',
+  EmSynapseMappingConfig: 'em_synapse_mapping__config',
   ExtracellularRecordingWeightsCalculationCampaign:
-    "extracellular_recording_weights_calculation__campaign",
+    'extracellular_recording_weights_calculation__campaign',
   ExtracellularRecordingWeightsCalculationConfig:
-    "extracellular_recording_weights_calculation__config",
-  BuildSynaptomeCampaign: "circuit_single_build__campaign",
-  BuildSynaptomeConfig: "circuit_single_build__config",
-  CircuitSynapticPhysiologyCampaign:
-    "circuit_synaptic_physiology_assignment__campaign",
-  CircuitSynapticPhysiologyConfig:
-    "circuit_synaptic_physiology_assignment__config",
+    'extracellular_recording_weights_calculation__config',
+  BuildSynaptomeCampaign: 'circuit_single_build__campaign',
+  BuildSynaptomeConfig: 'circuit_single_build__config',
+  CircuitSynapticPhysiologyCampaign: 'circuit_synaptic_physiology_assignment__campaign',
+  CircuitSynapticPhysiologyConfig: 'circuit_synaptic_physiology_assignment__config',
 } as const;
 
-export type TTaskConfigType =
-  (typeof TaskConfigType)[keyof typeof TaskConfigType];
+export type TTaskConfigType = (typeof TaskConfigType)[keyof typeof TaskConfigType];
 
 export interface ITaskConfigInputEntity {
   id: string;
@@ -69,8 +66,7 @@ export interface ITaskConfigBase<T extends Record<string, unknown>> {
 }
 
 export interface ITaskConfig<T extends Record<string, unknown>>
-  extends
-    ITaskConfigBase<T>,
+  extends ITaskConfigBase<T>,
     EntityCoreIdentifiable,
     EntityCoreBaseAsset,
     Timestamps,
@@ -91,8 +87,7 @@ export interface ITaskConfigGeneratorFilter {
 }
 
 export interface ITaskConfigFilter
-  extends
-    PaginationFilter,
+  extends PaginationFilter,
     NameFilter,
     TimestampsFilter,
     ContributionFilter,
@@ -106,11 +101,9 @@ export interface ITaskConfigFilter
 }
 
 const CreateTaskConfigSchema = z.object({
-  name: z.string().nonempty({ message: "Name is required" }),
-  description: z.string().nonempty({ message: "Description is required" }),
-  task_config_type: z
-    .string()
-    .nonempty({ message: "Task config type is required" }),
+  name: z.string().nonempty({ message: 'Name is required' }),
+  description: z.string().nonempty({ message: 'Description is required' }),
+  task_config_type: z.string().nonempty({ message: 'Task config type is required' }),
   meta: z.record(z.string(), z.unknown()),
   task_config_generator_id: z.uuid().nullish(),
   inputs: z.array(z.object({ id: z.string().uuid() })).default([]),

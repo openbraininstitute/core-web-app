@@ -14,5 +14,4 @@ export const ObiOneTaskTypeDict = {
   CircuitSynapticPhysiology: 'circuit_synaptic_physiology_assignment',
 } as const;
 
-export type TObiOneTaskType =
-  (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];
+export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];

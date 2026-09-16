@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';

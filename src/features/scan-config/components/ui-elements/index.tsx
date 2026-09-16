@@ -624,7 +624,7 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.DiscreteProbabilities },
       },
       () => {
-        const asNumbers = (v: ConfigValue): number[] =>
+        const asNumbers = (v: unknown): number[] =>
           Array.isArray(v) ? v.filter((n): n is number => typeof n === 'number') : [];
 
         return (

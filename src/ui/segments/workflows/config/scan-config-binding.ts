@@ -1,45 +1,39 @@
-import { ExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
-import { config as appConfig } from "@/config";
-import {
-  SchemaMappingKeyDict,
-  SchemaNameDict,
-} from "@/features/scan-config/types";
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config as appConfig } from '@/config';
+import { SchemaMappingKeyDict, SchemaNameDict } from '@/features/scan-config/types';
 import {
   ScanConfigFromIdType,
   type TScanConfigFromIdType,
-} from "@/features/scan-config/workflow/scan-config-from-id-type";
+} from '@/features/scan-config/workflow/scan-config-from-id-type';
 
-import type { TCircuitTargetSimulator } from "@/api/entitycore/types/entities/circuit";
-import type { TExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
+import type { TCircuitTargetSimulator } from '@/api/entitycore/types/entities/circuit';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   SchemaName,
   TSchemaMappingKey,
   TSupportedEntityTypesForScanConfiguration,
-} from "@/features/scan-config/types";
-import type { IWorkflowDescriptor } from "./types";
+} from '@/features/scan-config/types';
+import type { IWorkflowDescriptor } from './types';
 
 // re-exported so existing consumers of this module keep their import path
 export { ScanConfigFromIdType, type TScanConfigFromIdType };
 
 export const ScanConfigGeneratedApiPath = {
-  CircuitSimulation: "circuit-simulation-scan-config-generate-grid",
-  Brian2CircuitSimulation:
-    "brian-2-circuit-simulation-scan-config-generate-grid",
-  LearningEngineCircuitSimulation:
-    "learning-engine-circuit-simulation-scan-config-generate-grid",
+  CircuitSimulation: 'circuit-simulation-scan-config-generate-grid',
+  Brian2CircuitSimulation: 'brian-2-circuit-simulation-scan-config-generate-grid',
+  LearningEngineCircuitSimulation: 'learning-engine-circuit-simulation-scan-config-generate-grid',
   MEModelWithSynapsesCircuitSimulation:
-    "me-model-with-synapses-circuit-simulation-scan-config-generate-grid",
-  MEModelSimulation: "me-model-simulation-scan-config-generate-grid",
-  IonChannelModelSimulation:
-    "ion-channel-model-simulation-scan-config-generate-grid",
-  CircuitExtraction: "circuit-extraction-scan-config-generate-grid",
-  EFeatureExtraction: "e-model-e-feature-extraction-scan-config-generate-grid",
-  Skeletonization: "skeletonization-scan-config-generate-grid",
-  EMSynapseMapping: "em-synapse-mapping-scan-config-generate-grid",
+    'me-model-with-synapses-circuit-simulation-scan-config-generate-grid',
+  MEModelSimulation: 'me-model-simulation-scan-config-generate-grid',
+  IonChannelModelSimulation: 'ion-channel-model-simulation-scan-config-generate-grid',
+  CircuitExtraction: 'circuit-extraction-scan-config-generate-grid',
+  EFeatureExtraction: 'e-model-e-feature-extraction-scan-config-generate-grid',
+  Skeletonization: 'skeletonization-scan-config-generate-grid',
+  EMSynapseMapping: 'em-synapse-mapping-scan-config-generate-grid',
   CreateExtracellularRecordingArray:
-    "create-extracellular-recording-array-scan-config-generate-grid",
-  BuildSynaptome: "me-model-synaptic-model-placement-scan-config-generate-grid",
-  SynapseParameterization: "synapse-parameterization-scan-config-generate-grid",
+    'create-extracellular-recording-array-scan-config-generate-grid',
+  BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
+  SynapseParameterization: 'synapse-parameterization-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -65,7 +59,7 @@ export type TScanConfigConfigureBinding = {
 
 export function resolveScanConfigFromIdType(
   binding: TScanConfigConfigureBinding,
-  browseType: TExtendedEntitiesTypeDict,
+  browseType: TExtendedEntitiesTypeDict
 ): TScanConfigFromIdType | undefined {
   return binding.fromIdTypeByBrowseType[browseType];
 }
@@ -74,9 +68,7 @@ export function buildGeneratedApiUrl(generatedApiPath: string): string {
   return `${appConfig.OBI_ONE_URL}/generated/${generatedApiPath}`;
 }
 
-export function resolveScanConfigGeneratedApiUrl(
-  binding: TScanConfigConfigureBinding,
-): string {
+export function resolveScanConfigGeneratedApiUrl(binding: TScanConfigConfigureBinding): string {
   return buildGeneratedApiUrl(binding.generatedApiPath);
 }
 
@@ -87,18 +79,17 @@ export function resolveScanConfigGeneratedApiUrl(
  * LearningEngine (INAIT) obi-one endpoint without scale-pinned descriptors.
  */
 export function resolveSimulatorScanConfigOverride(
-  targetSimulator: TCircuitTargetSimulator | null | undefined,
+  targetSimulator: TCircuitTargetSimulator | null | undefined
 ): { generatedApiPath: string; schemaName: SchemaName } | null {
   switch (targetSimulator) {
-    case "Brian2":
+    case 'Brian2':
       return {
         generatedApiPath: ScanConfigGeneratedApiPath.Brian2CircuitSimulation,
         schemaName: SchemaNameDict.Brian2CircuitSimulationScanConfig,
       };
-    case "LearningEngine":
+    case 'LearningEngine':
       return {
-        generatedApiPath:
-          ScanConfigGeneratedApiPath.LearningEngineCircuitSimulation,
+        generatedApiPath: ScanConfigGeneratedApiPath.LearningEngineCircuitSimulation,
         schemaName: SchemaNameDict.LearningEngineCircuitSimulationScanConfig,
       };
     default:
@@ -114,31 +105,26 @@ export type TScanConfigRegistryConfig = {
   targetType?: TExtendedEntitiesTypeDict;
 };
 
-export function resolveScanConfigFromRegistry(
-  config: TScanConfigRegistryConfig,
-) {
+export function resolveScanConfigFromRegistry(config: TScanConfigRegistryConfig) {
   return {
     entityType: config.configureBinding.scanConfigEntityType,
     schemaName: config.schemaName,
-    generatedEndpoint: resolveScanConfigGeneratedApiUrl(
-      config.configureBinding,
-    ),
+    generatedEndpoint: resolveScanConfigGeneratedApiUrl(config.configureBinding),
     schemaMappingKey: config.configureBinding.schemaMappingKey,
     targetType: config.targetType,
   };
 }
 
 export function getScanConfigConfigureBinding(
-  workflow: IWorkflowDescriptor | null | undefined,
+  workflow: IWorkflowDescriptor | null | undefined
 ): TScanConfigConfigureBinding | null {
   return workflow?.scanConfig?.configureBinding ?? null;
 }
 
 export function circuitSimulationConfigureBinding(
-  browseType: TExtendedEntitiesTypeDict,
+  browseType: TExtendedEntitiesTypeDict
 ): TScanConfigConfigureBinding {
-  const isSingleNeuronCircuit =
-    browseType === ExtendedEntitiesTypeDict.SingleNeuronCircuit;
+  const isSingleNeuronCircuit = browseType === ExtendedEntitiesTypeDict.SingleNeuronCircuit;
 
   return {
     browseType,
@@ -162,8 +148,7 @@ export function memodelCircuitSimulationConfigureBinding(): TScanConfigConfigure
     browseType: ExtendedEntitiesTypeDict.MemodelCircuit,
     scanConfigEntityType: ExtendedEntitiesTypeDict.MemodelCircuit,
     fromIdTypeByBrowseType: {
-      [ExtendedEntitiesTypeDict.MemodelCircuit]:
-        ScanConfigFromIdType.MEModelFromID,
+      [ExtendedEntitiesTypeDict.MemodelCircuit]: ScanConfigFromIdType.MEModelFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.MEModelSimulation,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
@@ -175,8 +160,7 @@ export function ionChannelSimulationConfigureBinding(): TScanConfigConfigureBind
     browseType: ExtendedEntitiesTypeDict.IonChannelModel,
     scanConfigEntityType: ExtendedEntitiesTypeDict.IonChannelModel,
     fromIdTypeByBrowseType: {
-      [ExtendedEntitiesTypeDict.IonChannelModel]:
-        ScanConfigFromIdType.IonChannelModelFromID,
+      [ExtendedEntitiesTypeDict.IonChannelModel]: ScanConfigFromIdType.IonChannelModelFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.IonChannelModelSimulation,
     schemaMappingKey: SchemaMappingKeyDict.IonChannelModel,
@@ -213,8 +197,7 @@ export function processEmCellMeshConfigureBinding(): TScanConfigConfigureBinding
     browseType: ExtendedEntitiesTypeDict.EMCellMesh,
     scanConfigEntityType: ExtendedEntitiesTypeDict.EMCellMesh,
     fromIdTypeByBrowseType: {
-      [ExtendedEntitiesTypeDict.EMCellMesh]:
-        ScanConfigFromIdType.EMCellMeshFromID,
+      [ExtendedEntitiesTypeDict.EMCellMesh]: ScanConfigFromIdType.EMCellMeshFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.Skeletonization,
   };
@@ -225,8 +208,7 @@ export function buildEmSynapseMappingConfigureBinding(): TScanConfigConfigureBin
     browseType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
     scanConfigEntityType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
     fromIdTypeByBrowseType: {
-      [ExtendedEntitiesTypeDict.UniversalCellMorphology]:
-        ScanConfigFromIdType.CellMorphologyFromID,
+      [ExtendedEntitiesTypeDict.UniversalCellMorphology]: ScanConfigFromIdType.CellMorphologyFromID,
       [ExtendedEntitiesTypeDict.Memodel]: ScanConfigFromIdType.MEModelFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.EMSynapseMapping,
@@ -241,8 +223,7 @@ export function createExtracellularRecordingArrayConfigureBinding(): TScanConfig
     fromIdTypeByBrowseType: {
       [ExtendedEntitiesTypeDict.Circuit]: ScanConfigFromIdType.CircuitFromID,
     },
-    generatedApiPath:
-      ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray,
+    generatedApiPath: ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }
