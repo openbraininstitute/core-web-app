@@ -16,6 +16,7 @@ import type {
 } from '@/api/entitycore/types';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { MorphoViewerTreeItem } from '@/morpho-viewer/tree-item-type';
@@ -566,6 +567,8 @@ export type TActivityCustomFile = {
   entity: IEntity;
   assetPath?: string;
   name?: string;
+  /** Extended type to render the entity under; refs only carry the entitycore type. */
+  dataType?: TExtendedEntitiesTypeDict;
   enforcedRenderType?: AssetContentType;
   renderer: TActivityCustomFileRenderer;
 };

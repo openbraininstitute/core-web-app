@@ -299,7 +299,7 @@ function ScanConfigTemplateContent({
             // reduced motion keeps the fade, drops the movement
             className={cn(
               'h-[calc(100%-0.5rem)] min-h-0',
-              'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
+              'transition-[opacity,transform] duration-200 ease-out-expo',
               'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
             )}
           >

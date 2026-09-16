@@ -8,9 +8,9 @@ import { cn } from '@/utils/css-class';
 import type { ReactNode } from 'react';
 
 const INPUT_FILES_TOOLTIP =
-  'Input files to launch individual tasks/coordinates in a campaign. These include files such as the [obi-one](https://github.com/openbraininstitute/obi-one/) configuration, [SONATA](https://sonata-extension.readthedocs.io/en/latest/sonata_overview.html) circuit files and configurations (`simulation_config.json`, `node_sets.json`), etc.';
+  'Input files to launch individual tasks/coordinates in a campaign, such as the [obi-one](https://github.com/openbraininstitute/obi-one/) configuration, [SONATA](https://sonata-extension.readthedocs.io/en/latest/sonata_overview.html) circuit files, additional .json configuration files, etc.';
 const OUTPUT_FILES_TOOLTIP =
-  'The results generated after running a task such as the SONATA [reports](https://sonata-extension.readthedocs.io/en/latest/sonata_report.html) h5 (spikes and trace recordings) files, entities (such as Skeletonised morphologies, Extracted circuits, Ion channel model). The entities and files can be clicked for a preview.';
+  'Results files generated after running a task, such as the [SONATA reports](https://sonata-extension.readthedocs.io/en/latest/sonata_report.html) .h5 files (spikes and trace recordings), output entities (e.g., skeletonized morphologies, extracted circuits, ion channel models), etc. The entities and files can be clicked for a preview.';
 
 type InfoSectionLabelProps = {
   title: string;
@@ -20,7 +20,7 @@ type InfoSectionLabelProps = {
 
 function InfoSectionLabel({ title, ariaLabel, description }: InfoSectionLabelProps) {
   return (
-    <div className="flex items-center gap-2 uppercase text-primary-9">
+    <div className="flex items-center gap-2 font-semibold uppercase text-primary-9">
       <span>{title}</span>
       <Tooltip>
         <TooltipTrigger asChild>
