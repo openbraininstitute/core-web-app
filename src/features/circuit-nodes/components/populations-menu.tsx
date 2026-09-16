@@ -62,6 +62,8 @@ export function PopulationsMenu({
   const [open, setOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  /** Whether this opening is the introduction rather than a click. */
+  const introducing = useRef(false);
 
   // The pill counts what is on screen without saying that the populations
   // missing from it were left out by default, or that a click brings them back.
@@ -82,6 +84,7 @@ export function PopulationsMenu({
       // on every visit, which is worse than none.
       return;
     }
+    introducing.current = true;
     setOpen(true);
   }, [autoOpen, hidden.length]);
 
@@ -169,10 +172,14 @@ export function PopulationsMenu({
         data-testid="populations-menu-content"
         onOpenAutoFocus={(event) => {
           // Radix focuses the first control, "Show all": a ring on a panel
-          // that opened itself, and one Enter from putting back every
-          // population the user has hidden. The panel takes the focus, so Tab
-          // still walks the rows from here.
+          // nobody opened, and one Enter from putting back every population the
+          // user has hidden. The panel takes the focus instead, so Tab still
+          // walks the rows from here.
           event.preventDefault();
+          if (introducing.current) {
+            introducing.current = false;
+            return;
+          }
           contentRef.current?.focus();
         }}
         // Opens under the pill's left edge, which is the one that stays put:

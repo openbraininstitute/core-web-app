@@ -197,10 +197,31 @@ describe('PopulationsMenu introduction', () => {
     expect(checkbox('vpm').checked).toBe(false);
   });
 
-  // Left to Radix the focus lands on "Show all": a ring on a panel nobody
-  // opened, and Enter puts every population back.
-  it('takes the focus itself rather than putting it on a control', () => {
+  /*
+   * The introduction opens on the viewer's clock, so the user is elsewhere by
+   * then — often in a dropdown that closes as soon as it loses focus. Left to
+   * Radix the focus would land on "Show all", one Enter from putting every
+   * population back; taking it to the panel is no better, since the dropdown is
+   * dismissed either way.
+   */
+  it('leaves the focus where the user left it', () => {
+    const elsewhere = document.createElement('button');
+    document.body.append(elsewhere);
+    elsewhere.focus();
+
     render(introduce(true));
+
+    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
+    expect(elsewhere).toHaveFocus();
+    elsewhere.remove();
+  });
+
+  // Opened by hand it is the thing the user is looking at, so it does take the
+  // focus — just not onto "Show all".
+  it('takes the focus itself when the user opens it', () => {
+    render(introduce(false));
+
+    fireEvent.click(screen.getByTestId('populations-menu-trigger'));
 
     expect(screen.getByTestId('populations-menu-content')).toHaveFocus();
     expect(screen.getByTestId('populations-menu-show-all')).not.toHaveFocus();
