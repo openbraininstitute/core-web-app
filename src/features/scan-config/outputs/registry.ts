@@ -40,7 +40,10 @@ function assetsOf(entity: TOutputEntity): readonly IAsset[] {
   return hasAssets(entity) && Array.isArray(entity.assets) ? entity.assets : [];
 }
 
-function makeMiniDetailFile(entity: TOutputEntity): TActivityCustomFile[] {
+function makeMiniDetailFile(
+  entity: TOutputEntity,
+  dataType: TExtendedEntitiesTypeDict | undefined
+): TActivityCustomFile[] {
   const [asset] = assetsOf(entity);
   if (!asset) return [];
 
@@ -50,6 +53,7 @@ function makeMiniDetailFile(entity: TOutputEntity): TActivityCustomFile[] {
       entity,
       asset,
       name: entity.name,
+      dataType: dataType ?? (entity.type as TExtendedEntitiesTypeDict),
       renderer: ActivityCustomFileRenderer.MiniDetailView,
     },
   ];
@@ -75,14 +79,16 @@ const taskResultStrategy: TOutputStrategy = {
       extendedType: TASK_RESULT_EXTENDED_TYPE[entity.task_result_type],
     };
   },
-  toFiles: ({ entity }) =>
-    assetsOf(entity).map((asset) => ({
+  toFiles: ({ entity, extendedType }) => [
+    ...(extendedType ? makeMiniDetailFile(entity, extendedType) : []),
+    ...assetsOf(entity).map((asset) => ({
       id: asset.id,
       entity,
       asset,
       name: asset.path,
       renderer: ActivityCustomFileRenderer.Default,
     })),
+  ],
 };
 
 function makeRegisteredEntityResolver(strategyId: string) {
@@ -111,7 +117,7 @@ const circuitStrategy: TOutputStrategy = {
   id: 'circuit',
   matches: (ref) => ref.type === EntityTypeDict.Circuit,
   resolve: makeRegisteredEntityResolver('circuit'),
-  toFiles: ({ entity }) => makeMiniDetailFile(entity),
+  toFiles: ({ entity, extendedType }) => makeMiniDetailFile(entity, extendedType),
   refetchInterval: ({ data, dataUpdateCount }) => {
     const hasVisualization = data
       ? assetsOf(data.entity).some((asset) => asset.label === AssetLabel.circuit_visualization)
@@ -131,7 +137,7 @@ const registeredEntityStrategy: TOutputStrategy = {
   id: 'registered-entity',
   matches: (ref) => !!ref.type,
   resolve: makeRegisteredEntityResolver('registered-entity'),
-  toFiles: ({ entity }) => makeMiniDetailFile(entity),
+  toFiles: ({ entity, extendedType }) => makeMiniDetailFile(entity, extendedType),
 };
 
 /** First match wins, so the specific strategies come before the catch-all. */

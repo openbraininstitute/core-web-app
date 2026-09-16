@@ -15,7 +15,12 @@ import { WorkflowItemCopyIdButton } from '@/features/scan-config/components/shar
 import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { cn } from '@/utils/css-class';
 
+import './workflow-checkbox.css';
+
 import type { CSSProperties } from 'react';
+
+/** Paints the box with primary-8, checked or checked-and-disabled — see globals.css. */
+export const WORKFLOW_CHECKBOX = 'workflow-checkbox';
 
 type Props = {
   configId: string;
@@ -72,7 +77,7 @@ export function TaskConfigSelectionCard({
     >
       <div
         className={cn(
-          'rounded-2xl cursor-pointer px-4 pb-4 transition-colors duration-300 group group-hover:bg-gray-50!',
+          'rounded-2xl cursor-pointer p-4 transition-colors duration-300 group group-hover:bg-gray-50!',
           statusLoading && 'animate-pulse'
         )}
         style={
@@ -84,38 +89,23 @@ export function TaskConfigSelectionCard({
         }
       >
         <div className="mb-2 flex min-h-18 w-full items-start justify-between gap-2">
-          <div className="min-w-0 flex-1 overflow-hidden pt-1 text-left font-bold">
-            {isSelectable ? (
-              <div className="flex min-w-0 items-start" style={{ maxWidth: '100%' }}>
-                <Checkbox
-                  className={cn(
-                    'mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:max-w-full [&_.ant-checkbox+span]:break-words [&_.ant-checkbox+span]:line-clamp-3 [&_.ant-checkbox+span]:whitespace-normal',
-                    '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6! [&_.ant-checkbox-checked_.ant-checkbox]:border-primary-6!',
-                    '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!',
-                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
-                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox]:border-primary-6!',
-                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
-                  )}
-                  disabled={selectionDisabled}
-                  onChange={(e) => onCheckedChange(configId, e.target.checked)}
-                  checked={isChecked}
-                  style={{ color, maxWidth: '100%', display: 'flex' }}
-                >
-                  <span className="text-lg leading-6 transition-colors duration-300">
-                    {configName}
-                  </span>
-                </Checkbox>
-              </div>
-            ) : (
-              <span
-                style={{ color }}
-                className="block break-words text-lg leading-6 transition-colors duration-300 line-clamp-3"
-              >
-                {configName}
-              </span>
+          <div className="flex min-w-0 flex-1 items-start gap-2 overflow-hidden text-left font-bold">
+            {isSelectable && (
+              <Checkbox
+                className={cn('mt-1 shrink-0 transition-colors duration-300', WORKFLOW_CHECKBOX)}
+                disabled={selectionDisabled}
+                onChange={(e) => onCheckedChange(configId, e.target.checked)}
+                checked={isChecked}
+              />
             )}
+            <span
+              style={{ color }}
+              className="block min-w-0 break-words text-lg leading-6 transition-colors duration-300 line-clamp-3"
+            >
+              {configName}
+            </span>
           </div>
-          <div className="ml-2 flex shrink-0 items-center justify-center gap-0.5 pt-1">
+          <div className="ml-2 flex shrink-0 items-center justify-center gap-0.5">
             <div
               className={cn(
                 'flex items-center justify-center overflow-hidden transition-[width,opacity] duration-200',

@@ -2,7 +2,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
 import { useEffect } from 'react';
 
-import { TaskConfigSelectionCard } from '@/features/scan-config/components/shared/task-config-selection-card';
+import {
+  TaskConfigSelectionCard,
+  WORKFLOW_CHECKBOX,
+} from '@/features/scan-config/components/shared/task-config-selection-card';
 import { TASK_STATUS_QUERY_KEY_HEAD } from '@/features/task-runner';
 import { useTaskConfigExecution } from '@/features/task-runner/hooks/queries';
 import { useBalanceRefreshOnTaskCompletion } from '@/features/task-runner/hooks/use-balance-refresh';
@@ -56,14 +59,7 @@ export function SelectAllCheckbox({
       onChange={(e) => onToggleSelectAll(e.target.checked)}
       checked={allSelected}
       disabled={disabled || selectableCount === 0}
-      className={cn(
-        'ml-4.5 [&_.ant-checkbox-checked_.ant-checkbox]:border-primary-6!',
-        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
-        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!',
-        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
-        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-6!',
-        '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
-      )}
+      className={cn('ml-4.5', WORKFLOW_CHECKBOX)}
     >
       Select all
     </Checkbox>

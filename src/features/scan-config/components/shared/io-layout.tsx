@@ -20,7 +20,7 @@ type InfoSectionLabelProps = {
 
 function InfoSectionLabel({ title, ariaLabel, description }: InfoSectionLabelProps) {
   return (
-    <div className="flex items-center gap-2 uppercase text-primary-9">
+    <div className="flex items-center gap-2 font-semibold uppercase text-primary-9">
       <span>{title}</span>
       <Tooltip>
         <TooltipTrigger asChild>
