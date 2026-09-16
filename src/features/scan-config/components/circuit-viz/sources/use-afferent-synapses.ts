@@ -8,7 +8,10 @@ import {
   loadAfferentSynapses,
   Report,
 } from '@/features/scan-config/components/circuit-viz/synapses';
-import { categoricalColor } from '@/features/scan-config/components/color-by/palette';
+import {
+  SYNAPSE_TYPE_COLORS,
+  untypedSynapseColor,
+} from '@/features/scan-config/components/color-by/palette';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { unlinkFromFS, writeToFS } from '@/utils/h5/fs';
 import { logError } from '@/utils/logger';
@@ -106,19 +109,17 @@ export function useAfferentSynapses({
     })
       .then((loaded) => {
         if (cancelled) return;
-        // One colour per edge population, from the colourblind-safe categorical
-        // set. Offset so the first population lands on bluish green: slot 0 is
-        // the blue that DEFAULT_NEURON_COLOR and the first colour-by category
-        // both already use, and synapses sit directly on the morphology wearing
-        // it.
+        // Colour says synapse type, from a fixed two-colour map, so excitatory
+        // and inhibitory read the same in every circuit.
         //
-        // The offset is temporary: it moves the clash rather than removing it,
-        // since slot 2 is also the third colour-by category. Synapses need a
-        // palette of their own, split from the node one, once the colour
-        // requirements are formalized.
+        // A population stating no `syn_type_id` falls back to a colour of its
+        // own. Counted over untyped populations only: numbering it by its place
+        // in `loaded` would both move its colour when a population ahead of it
+        // splits, and walk it onto the type colours.
+        let untyped = 0;
         setGroups(
-          loaded.map(({ coordinates }, index) => ({
-            color: categoricalColor(index + 2),
+          loaded.map(({ coordinates, synapseType }) => ({
+            color: synapseType ? SYNAPSE_TYPE_COLORS[synapseType] : untypedSynapseColor(untyped++),
             coordinates,
           }))
         );

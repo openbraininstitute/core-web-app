@@ -13,6 +13,9 @@ import type { MorphoViewerTree } from '@/morpho-viewer';
 /** Soma radius of the one-sphere cell every test here draws. */
 const SOMA_RADIUS = 10;
 
+/** Stands in for a synapse that states no type, so the dataset is left out entirely. */
+const NO_SYN_TYPE = -1;
+
 /** Unrotated, at the origin, so world coordinates are morphology coordinates. */
 const AT_ORIGIN: NodePlacement = { center: [0, 0, 0], orientation: [0, 0, 0, 1] };
 
@@ -21,6 +24,8 @@ type Synapse = {
   /** 0 is the soma; see `isSomaSection`. */
   sectionId: number;
   targetNodeId: number;
+  /** SONATA: >= 100 excitatory, below it inhibitory. Left out writes no dataset. */
+  synTypeId?: number;
 };
 
 /**
@@ -34,7 +39,9 @@ function writeEdgesFile(
   name: string,
   populations: Record<string, Synapse[] | null>,
   /** Datasets to leave out, per population, for the half-written cases. */
-  omit: Record<string, string[]> = {}
+  omit: Record<string, string[]> = {},
+  /** `syn_type_id` written verbatim, for the cases where it disagrees with the synapses. */
+  synTypeIds: Record<string, number[]> = {}
 ) {
   const file = new H5File(name, 'w');
   file.create_group('edges');
@@ -63,6 +70,8 @@ function writeEdgesFile(
       'target_node_id',
       synapses.map((s) => s.targetNodeId)
     );
+    const types = synTypeIds[population] ?? synapses.map((s) => s.synTypeId ?? NO_SYN_TYPE);
+    if (!types.includes(NO_SYN_TYPE)) write('0/syn_type_id', types);
   }
 
   file.close();
@@ -170,6 +179,56 @@ describe('loadAfferentSynapses', () => {
     const groups = await harness(file).run([{ file, populations: ['bare', 'full'] }]);
 
     expect(groups.map((g) => g.populationName)).toEqual(['full']);
+  });
+
+  it('splits a population into one group per synapse type', async () => {
+    const file = writeEdgesFile('edges-syn-types.h5', {
+      default: [
+        { position: [100, 0, 0], sectionId: 7, targetNodeId: 0, synTypeId: 110 },
+        { position: [0, 100, 0], sectionId: 7, targetNodeId: 0, synTypeId: 10 },
+        { position: [0, 0, 100], sectionId: 7, targetNodeId: 0, synTypeId: 120 },
+      ],
+    });
+
+    const groups = await harness(file).run([{ file, populations: ['default'] }]);
+
+    expect(groups.map((g) => g.synapseType)).toEqual(['excitatory', 'inhibitory']);
+    expect(pointAt(groups[0].coordinates, 0)).toEqual([100, 0, 0]);
+    expect(pointAt(groups[0].coordinates, 1)).toEqual([0, 0, 100]);
+    expect(pointAt(groups[1].coordinates, 0)).toEqual([0, 100, 0]);
+  });
+
+  it('leaves a population with no syn_type_id as one untyped group', async () => {
+    const file = writeEdgesFile('edges-no-syn-type.h5', {
+      default: [{ position: [100, 0, 0], sectionId: 7, targetNodeId: 0 }],
+    });
+
+    const groups = await harness(file).run([{ file, populations: ['default'] }]);
+
+    // Untyped, not guessed: a wrong type colour is worse than no type colour.
+    expect(groups.map((g) => g.synapseType)).toEqual([null]);
+    expect(pointAt(groups[0].coordinates, 0)).toEqual([100, 0, 0]);
+  });
+
+  it('leaves a population whose syn_type_id disagrees with its synapses untyped', async () => {
+    const file = writeEdgesFile(
+      'edges-short-syn-type.h5',
+      {
+        default: [
+          { position: [100, 0, 0], sectionId: 7, targetNodeId: 0 },
+          { position: [0, 100, 0], sectionId: 7, targetNodeId: 0 },
+        ],
+      },
+      {},
+      // One id for two synapses: indexing it per synapse would type the second
+      // one off the end of the dataset.
+      { default: [110] }
+    );
+
+    const groups = await harness(file).run([{ file, populations: ['default'] }]);
+
+    expect(groups.map((g) => g.synapseType)).toEqual([null]);
+    expect(groups[0].coordinates).toHaveLength(6);
   });
 
   it('reads every population of a file from one open handle', async () => {
