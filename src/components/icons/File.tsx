@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
 type FileIconProps = {
   className?: string;

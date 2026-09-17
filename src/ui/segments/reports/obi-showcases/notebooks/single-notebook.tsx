@@ -3,11 +3,10 @@
 import { PortableText } from 'next-sanity';
 import { useState } from 'react';
 
-import { NotebooksProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
-
 import { ChevronRight, ReadMeIcon } from '@/components/icons';
-
 import { classNames } from '@/util/utils';
+
+import type { NotebooksProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 import styles from '@/ui/segments/reports/obi-showcases/notebooks/notebook.module.css';
 
@@ -35,6 +34,7 @@ export default function SingleNotebook({
             href={content.url}
             className="border-primary-9 hover:bg-primary-9 rounded-full border border-solid px-6 py-3 text-lg whitespace-nowrap transition-colors duration-300 hover:text-white"
             target="_blank"
+            rel="noopener"
           >
             View Notebook
           </a>

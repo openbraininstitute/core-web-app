@@ -1,12 +1,13 @@
 import { PortableText } from 'next-sanity';
-import { RefObject } from 'react';
-import { StepProps } from '../type';
-
-import playVideoAtTime from '@/util/play-video-at-time';
 
 import useMouseHover from '@/hooks/useMouveHover';
 import secondsToMMSS from '@/util/convert-seconds-to-minutes';
+import playVideoAtTime from '@/util/play-video-at-time';
 import { classNames } from '@/util/utils';
+
+import type { RefObject } from 'react';
+import type { StepProps } from '../type';
+
 import styles from './text-content-bloc.module.css';
 
 export default function SingleStep({

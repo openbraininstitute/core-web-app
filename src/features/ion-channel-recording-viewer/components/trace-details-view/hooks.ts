@@ -1,8 +1,9 @@
-import React from 'react';
 import { TgdColor } from '@tolokoban/tgd';
+import React from 'react';
 
 import { createPalette } from '../../colors';
-import {
+
+import type {
   IonChannelRecordingPlot,
   IonChannelRecordingProtocol,
   IonChannelRecordingRepetition,

@@ -1,7 +1,9 @@
-import { HTMLProps, PropsWithChildren, useState } from 'react';
-import ControlPanel from './ControlPanel';
+import { type HTMLProps, type PropsWithChildren, useState } from 'react';
+
 import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
+
+import ControlPanel from './ControlPanel';
 
 export default function FilterControls({
   filtersCount,
