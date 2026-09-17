@@ -60,13 +60,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 0.75rem 0.75rem;
   background: var(--color-neutral-9);
   border-radius: 1em 1em 0 0;
   border-bottom: 1px solid #d9d9d9;
   box-shadow: 0 3px 6px rgba(200, 200, 200, 0.3);
   position: relative;
   z-index: 11;
+  overflow: visible;
 }
 
 .headerNav {
@@ -75,6 +76,7 @@
   gap: 0.4rem;
   flex: 1;
   min-width: 0;
+  overflow: visible;
 }
 
 .headerTitle {
@@ -107,10 +109,26 @@
   background: none;
   cursor: pointer;
   font-size: 1.6rem;
+  line-height: 1;
   color: var(--color-primary-4);
   transition:
     background 0.15s ease,
     color 0.15s ease;
+  overflow: visible;
+}
+
+.navBtn :global(.anticon),
+.headerBtn :global(.anticon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.navBtn :global(svg),
+.headerBtn :global(svg) {
+  display: block;
+  overflow: visible;
 }
 
 .navBtn:hover,
@@ -136,6 +154,17 @@
   color: var(--color-primary-9);
 }
 
+.settingsBtn {
+  color: var(--color-primary-4);
+  font-size: 1.35rem;
+  background: none;
+}
+
+.settingsBtn:hover:not(:disabled) {
+  background: var(--color-neutral-5);
+  color: var(--color-primary-9);
+}
+
 .fullscreenBtn {
   color: var(--color-primary-4);
   font-size: 1.5rem;
@@ -157,7 +186,7 @@
 .navBtnActive::after {
   content: "";
   position: absolute;
-  bottom: -0.5rem;
+  bottom: 0.15rem;
   left: 0.25rem;
   right: 0.25rem;
   height: 2px;

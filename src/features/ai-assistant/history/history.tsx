@@ -1,5 +1,6 @@
 'use client';
 
+import { CloseOutlined } from '@ant-design/icons';
 import React from 'react';
 
 import IconPlus from '@/components/icons/Plus';
@@ -63,7 +64,7 @@ export default function History({ className, onBack }: HistoryProps) {
             aria-label="Close history"
             title="Close history"
           >
-            ✕
+            <CloseOutlined />
           </button>
         </div>
 

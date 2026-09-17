@@ -828,3 +828,34 @@
   background-color: rgba(74, 224, 90, 0.25);
   border-color: #4ae05a;
 }
+
+.approvalBarAlwaysAllow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary-5) 45%, transparent);
+  background-color: color-mix(in srgb, var(--color-primary-5) 10%, var(--color-neutral-9));
+  color: var(--color-primary-5);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+
+.approvalBarAlwaysAllow:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-primary-5) 16%, var(--color-neutral-9));
+  border-color: var(--color-primary-5);
+}
+
+.approvalBarReject:disabled,
+.approvalBarApprove:disabled,
+.approvalBarAlwaysAllow:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
