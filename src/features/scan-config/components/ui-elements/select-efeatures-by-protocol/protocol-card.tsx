@@ -215,6 +215,7 @@ function usePanel(panelKey: string) {
 function SettingsButton({
   panelKey,
   title,
+  testId,
   disabled,
   children,
   light,
@@ -222,6 +223,7 @@ function SettingsButton({
 }: {
   panelKey: string;
   title: string;
+  testId: string;
   disabled: boolean;
   children: React.ReactNode;
   light?: boolean;
@@ -233,6 +235,7 @@ function SettingsButton({
     <>
       <button
         type="button"
+        data-testid={testId}
         disabled={disabled}
         aria-label={title}
         aria-expanded={isOpen}
@@ -302,12 +305,17 @@ function AmplitudeSettings({
   }
 
   return (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-col gap-1" data-testid="scan-config-amplitudes">
       {amplitudeOptions.map((amplitude) => {
         const isSelected = selectedByAmplitude.has(amplitude);
         return (
-          <li key={amplitude} className="flex items-center justify-between gap-3">
+          <li
+            key={amplitude}
+            data-testid={`scan-config-amplitude-row-${amplitude}`}
+            className="flex items-center justify-between gap-3"
+          >
             <Checkbox
+              data-testid="scan-config-amplitude-extract"
               disabled={disabled}
               checked={isSelected}
               onChange={(event) =>
@@ -322,6 +330,7 @@ function AmplitudeSettings({
             </Checkbox>
             {isSelected && (
               <Checkbox
+                data-testid="scan-config-amplitude-validation"
                 disabled={disabled}
                 checked={selectedByAmplitude.get(amplitude) === true}
                 onChange={(event) =>
@@ -727,6 +736,7 @@ function FeatureRow({
       <SettingsButton
         panelKey={panelKey}
         title={`${label} settings`}
+        testId={`scan-config-feature-settings-${value.type}`}
         disabled={disabled}
         className={cn(
           'flex size-7 items-center justify-center rounded-full transition-colors',
@@ -748,6 +758,7 @@ function FeatureRow({
       {!disabled && (
         <button
           type="button"
+          data-testid={`scan-config-feature-remove-${value.type}`}
           aria-label={`Remove ${label}`}
           onClick={onRemove}
           className="shrink-0 text-white/70 transition-colors hover:text-white"
@@ -812,6 +823,7 @@ export function ProtocolCard({
   return (
     <section
       id={`protocol-card-${def.typeName}`}
+      data-testid={`scan-config-protocol-${def.typeName}`}
       className={cn(
         'rounded-lg border transition-all duration-200',
         selected
@@ -842,6 +854,7 @@ export function ProtocolCard({
             light
             panelKey={def.typeName}
             title={`${def.label} settings`}
+            testId={`scan-config-protocol-settings-${def.typeName}`}
             disabled={disabled}
             className={cn(
               'flex size-7 items-center justify-center rounded-full transition-colors',
@@ -882,6 +895,7 @@ export function ProtocolCard({
         )}
 
         <Checkbox
+          data-testid={`scan-config-protocol-select-${def.typeName}`}
           disabled={disabled}
           checked={selected}
           aria-label={`Extract features from ${def.label}`}
@@ -890,6 +904,7 @@ export function ProtocolCard({
 
         <button
           type="button"
+          data-testid={`scan-config-protocol-expand-${def.typeName}`}
           aria-label={expanded ? `Collapse ${def.label}` : `Expand ${def.label}`}
           aria-expanded={expanded}
           onClick={onToggleExpanded}
