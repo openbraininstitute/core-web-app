@@ -87,14 +87,10 @@ export default function GenerateConfigButton({
   const fieldErrors = useFieldErrors();
   const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
   const notification = useAppNotification();
-  const {
-    guard,
-    reportError: reportLowCredits,
-    creditsModal,
-  } = useLowCredits({
+  // Generation doesn't consume credits (issue #250): don't gate on balance.
+  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
     context: { virtualLabId, projectId },
     subject: LOW_CREDITS_SUBJECT[activity],
-    watchBalance: true,
   });
 
   const generateCampaign = useGenerateScanConfigCampaign({
@@ -127,7 +123,6 @@ export default function GenerateConfigButton({
       setCampaignId('');
       return;
     }
-    if (guard()) return;
 
     setLoading(true);
     generateCampaign.mutate({ config, generatedApiUrl }, { onSettled: () => setLoading(false) });
