@@ -34,7 +34,7 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     // The legacy `*.nodetest.*` files target Node's built-in runner (`pnpm test:node`),
     // not vitest, so keep them out of this suite.
-    exclude: ['**/node_modules/**', '**/.next/**', 'src/__tests__/e2e/**', '**/*.nodetest.*'],
+    exclude: ['**/node_modules/**', '**/.next/**', '**/*.nodetest.*'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
