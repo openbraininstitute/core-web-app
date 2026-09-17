@@ -98,6 +98,7 @@ const config: NextConfig = {
   },
   images: {
     loader: 'default',
+    maximumDiskCacheSize: 8 * 1024 ** 3,
     remotePatterns: [
       {
         protocol: 'https',
