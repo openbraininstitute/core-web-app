@@ -23,7 +23,7 @@ import { cn } from '@/utils/css-class';
 
 export interface ViewerControlsMenuProps {
   /** capture a PNG of the circuit canvas (excludes gizmo, scalebar, chrome) */
-  onCaptureImage: () => void;
+  onCaptureImage?: () => void;
   backgroundDark: boolean;
   onBackgroundDarkChange: (dark: boolean) => void;
   /** axons toggle — omit for viewers that have no axons (point cloud) */
@@ -51,8 +51,9 @@ export interface ViewerControlsMenuProps {
   showScalebar?: boolean;
   onToggleScalebar?: (value: boolean) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
-  hasSavedConfig: boolean;
-  onResetConfig: () => void;
+  hasSavedConfig?: boolean;
+  onResetConfig?: () => void;
+  children?: React.ReactNode;
   className?: string;
 }
 
@@ -83,6 +84,7 @@ export function ViewerControlsMenu({
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
+  children,
   className,
 }: ViewerControlsMenuProps) {
   const [open, setOpen] = useState(false);
@@ -113,7 +115,7 @@ export function ViewerControlsMenu({
 
   const handleCaptureImage = () => {
     setOpen(false);
-    onCaptureImage();
+    onCaptureImage?.();
   };
 
   return (
@@ -155,12 +157,14 @@ export function ViewerControlsMenu({
         className="w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl"
       >
         <div ref={contentRef}>
-          <MenuButton
-            icon={<RiCameraLine className="size-4 shrink-0" />}
-            label="Capture image"
-            testId="viewer-capture-image"
-            onClick={handleCaptureImage}
-          />
+          {onCaptureImage && (
+            <MenuButton
+              icon={<RiCameraLine className="size-4 shrink-0" />}
+              label="Capture image"
+              testId="viewer-capture-image"
+              onClick={handleCaptureImage}
+            />
+          )}
           {onToggleAxons && (
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
               <ViewerSwitch
@@ -243,7 +247,8 @@ export function ViewerControlsMenu({
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
             <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />
           </MenuRow>
-          {hasSavedConfig && (
+          {children}
+          {hasSavedConfig && onResetConfig && (
             <MenuButton
               icon={<RiResetLeftLine className="size-4 shrink-0" />}
               label="Reset saved view"
@@ -325,7 +330,7 @@ function BackgroundButton({
 const menuItemIconClass =
   'inline-flex size-4 shrink-0 items-center justify-center text-neutral-700 transition-colors group-hover:text-primary-8';
 
-function MenuButton({
+export function MenuButton({
   icon,
   label,
   testId,
@@ -359,18 +364,21 @@ function MenuButton({
 const ON_COLOR = 'var(--color-primary-9)';
 
 /** A settings switch, primary-9 while on. */
-function ViewerSwitch({
+export function ViewerSwitch({
   checked,
+  label,
   testId,
   onChange,
 }: {
   checked: boolean;
+  label?: string;
   testId?: string;
   onChange: (value: boolean) => void;
 }) {
   return (
     <Switch
       data-testid={testId}
+      aria-label={label}
       size="small"
       checked={checked}
       onChange={onChange}
@@ -379,7 +387,7 @@ function ViewerSwitch({
   );
 }
 
-function MenuSlider({
+export function MenuSlider({
   label,
   testId,
   min,
@@ -423,7 +431,7 @@ function MenuSlider({
   );
 }
 
-function MenuRow({
+export function MenuRow({
   label,
   icon,
   children,

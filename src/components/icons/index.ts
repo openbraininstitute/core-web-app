@@ -25,7 +25,6 @@ import PauseIcon from './PauseIcon';
 import IconPlus from './Plus';
 import RangeIcon from './Range';
 import ReadMeIcon from './ReadMeIcon';
-import ResetIcon from './ResetIcon';
 import { SettingsIcon } from './Settings';
 import UndoIcon from './UndoIcon';
 import UserIcon from './UserIcon';
@@ -60,7 +59,6 @@ export {
   PauseIcon,
   RangeIcon,
   ReadMeIcon,
-  ResetIcon,
   SettingsIcon,
   UndoIcon,
   UserIcon,

@@ -54,6 +54,7 @@ function RawViewer({ meshId }: { meshId?: string }) {
       gizmo
       scalebar={{
         unit: 1e-9,
+        hiDPI: true,
       }}
     />
   );

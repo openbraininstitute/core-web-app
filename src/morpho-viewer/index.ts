@@ -6,6 +6,7 @@ import { isMorphoViewerDebugMode } from './debug-mode';
 
 export {
   MorphologyCanvas,
+  MorphoViewerScalebar,
   MorphoViewerSignals,
   morphoViewerConvertMorphologyIntoTree,
   TgdColor,
