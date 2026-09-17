@@ -5,7 +5,10 @@ import React from 'react';
 import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
-import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
+import {
+  DEFAULT_ELECTRODE_RADIUS,
+  DEFAULT_SOMA_SIZE_SCALE,
+} from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
@@ -88,6 +91,8 @@ export interface LargeCircuitPreviewProps {
   highlightedOverlayId?: string | null;
   /** Soma paint opacity (0–1); electrodes stay fully opaque independently. */
   neuronOpacity?: number;
+  /** Multiplier on the per-species soma radius. */
+  somaSizeScale?: number;
   /** Electrode marker radius (world units). */
   electrodeRadius?: number;
   /**
@@ -123,11 +128,12 @@ export function LargeCircuitPreview({
   onOverlayTransform,
   highlightedOverlayId = null,
   neuronOpacity,
+  somaSizeScale = DEFAULT_SOMA_SIZE_SCALE,
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   spikes,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
-  const somaRadius = useSomaRadius(circuit);
+  const somaRadius = useSomaRadius(circuit) * somaSizeScale;
   const { config, error: configError } = useCircuitConfig(circuit);
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population

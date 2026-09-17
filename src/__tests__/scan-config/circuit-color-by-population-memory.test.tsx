@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
+import { DEFAULT_SOMA_SIZE_SCALE } from '@/features/scan-config/components/color-by/use-viewer-config';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
@@ -97,5 +98,24 @@ describe('useCircuitColorBy', () => {
 
     rerender({ population: CORTEX });
     expect(result.current.colorBy.selectedProperty).toBeNull();
+  });
+
+  it('offers the soma size control only to viewers that draw soma points', () => {
+    const { result } = render(CORTEX);
+
+    expect(result.current.menu.somaSizeScale).toBeUndefined();
+    expect(result.current.menu.onSomaSizeScaleChange).toBeUndefined();
+  });
+
+  it('starts the soma size at the default scale and takes a new one', () => {
+    const { result } = renderHook(() =>
+      useCircuitColorBy(circuit, { population: CORTEX, supportsSomaSize: true })
+    );
+    expect(result.current.menu.somaSizeScale).toBe(DEFAULT_SOMA_SIZE_SCALE);
+
+    act(() => result.current.menu.onSomaSizeScaleChange?.(1.5));
+
+    expect(result.current.menu.somaSizeScale).toBe(1.5);
+    expect(result.current.config.somaSizeScale).toBe(1.5);
   });
 });

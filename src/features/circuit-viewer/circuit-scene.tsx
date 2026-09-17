@@ -284,6 +284,7 @@ export function CircuitScene({
     supportsAxons,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
+    supportsSomaSize: largeCircuit,
     defaultNeuronOpacity,
     population,
     subject: memodel,
@@ -521,6 +522,7 @@ export function CircuitScene({
             onOverlayTransform={handleOverlayTransform}
             highlightedOverlayId={highlightedOverlayId}
             neuronOpacity={config.neuronOpacity}
+            somaSizeScale={config.somaSizeScale}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
             spikes={spikes}
