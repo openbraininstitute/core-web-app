@@ -14,6 +14,8 @@ export function DiscreteProbabilities({
   disabled: boolean;
 }) {
   const rowCount = Math.max(values.length, probabilities.length);
+  /** Both arrays are addressed by row, so the shorter one is filled out before any write. */
+  const pad = (arr: number[]) => Array.from({ length: rowCount }, (_, i) => arr[i] ?? 0);
   const rows = Array.from({ length: rowCount }, (_, i) => ({
     value: values[i],
     probability: probabilities[i],
@@ -22,8 +24,8 @@ export function DiscreteProbabilities({
   const total = probabilities.reduce((sum, p) => sum + (Number.isFinite(p) ? p : 0), 0);
 
   const update = (i: number, next: Partial<{ value: number; probability: number }>) => {
-    const nextValues = [...values];
-    const nextProbabilities = [...probabilities];
+    const nextValues = pad(values);
+    const nextProbabilities = pad(probabilities);
     if (next.value !== undefined) nextValues[i] = next.value;
     if (next.probability !== undefined) nextProbabilities[i] = next.probability;
     onChange(nextValues, nextProbabilities);
@@ -68,7 +70,8 @@ export function DiscreteProbabilities({
               className="w-6 text-red-500"
               aria-label={`Remove value ${i + 1}`}
               onClick={() =>
-                rowCount > 1 && onChange(values.toSpliced(i, 1), probabilities.toSpliced(i, 1))
+                rowCount > 1 &&
+                onChange(pad(values).toSpliced(i, 1), pad(probabilities).toSpliced(i, 1))
               }
             />
           )}
@@ -84,8 +87,8 @@ export function DiscreteProbabilities({
           type="button"
           className="mt-2 flex min-h-[40px] min-w-[150px] items-center justify-between float-right rounded-full border border-gray-200 px-3 py-2 font-bold text-primary-8"
           onClick={() => {
-            const last = values.at(-1);
-            onChange([...values, (last ?? 0) + 1], [...probabilities, 0]);
+            const paddedValues = pad(values);
+            onChange([...paddedValues, (paddedValues.at(-1) ?? 0) + 1], [...pad(probabilities), 0]);
           }}
         >
           Add value

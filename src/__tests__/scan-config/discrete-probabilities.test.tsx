@@ -81,6 +81,22 @@ describe('DiscreteProbabilities', () => {
     expect(screen.getByLabelText('Probability 4')).toHaveValue('');
   });
 
+  it('keeps rows aligned when editing past the end of the shorter array', () => {
+    const onChange = renderTable([1, 2, 3, 4], [0.5, 0.5]);
+
+    fireEvent.change(screen.getByLabelText('Probability 4'), { target: { value: '0.3' } });
+
+    expect(onChange).toHaveBeenCalledWith([1, 2, 3, 4], [0.5, 0.5, 0, 0.3]);
+  });
+
+  it('adds the new row after the last one when the arrays differ in length', () => {
+    const onChange = renderTable([1, 2, 3, 4], [0.5, 0.5]);
+
+    fireEvent.click(screen.getByText('Add value'));
+
+    expect(onChange).toHaveBeenCalledWith([1, 2, 3, 4, 5], [0.5, 0.5, 0, 0, 0]);
+  });
+
   it('offers no editing controls when disabled', () => {
     renderTable([1, 2], [0.5, 0.5], { disabled: true });
 
