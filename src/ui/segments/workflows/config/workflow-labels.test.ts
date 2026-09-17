@@ -52,6 +52,7 @@ describe('workflow naming', () => {
       'Synaptome',
       'Electron microscopy circuit',
       'Extracellular recording array',
+      'Circuit synaptic physiology',
       'Synaptome (legacy)',
     ]);
   });

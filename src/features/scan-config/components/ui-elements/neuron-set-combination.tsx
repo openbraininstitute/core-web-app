@@ -1,10 +1,9 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
 
+import { Reference } from '@/features/scan-config/components/ui-elements/reference';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-
-import Reference from './reference';
 
 import type {
   Config,

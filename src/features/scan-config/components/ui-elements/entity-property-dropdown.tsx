@@ -8,7 +8,7 @@ import { scanConfigHeldTestId } from '../utils';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
-export default function EntityPropertyDropdown({
+export function EntityPropertyDropdown({
   value,
   onChange,
   property,
@@ -80,3 +80,5 @@ export default function EntityPropertyDropdown({
     />
   );
 }
+
+export default EntityPropertyDropdown;
