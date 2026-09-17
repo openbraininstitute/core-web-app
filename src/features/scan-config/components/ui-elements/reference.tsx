@@ -11,6 +11,7 @@ import {
   useBlockTypeToConfigKey,
   useReferenceTypeDict,
 } from '../hooks/schema';
+import { scanConfigHeldTestId } from '../utils';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -181,6 +182,13 @@ export default function Reference({
       data-scan-config-block-element={ScanConfigUIElementDict.Reference}
       className="w-full"
       disabled={disabled}
+      labelRender={({ label, value: chosen }) =>
+        chosen === DEFAULT_SENTINEL ? (
+          label
+        ) : (
+          <span data-testid={scanConfigHeldTestId(String(chosen))}>{label}</span>
+        )
+      }
       optionRender={(option) => (
         <span
           data-testid={`scan-config-option-${String(option.value)}`}

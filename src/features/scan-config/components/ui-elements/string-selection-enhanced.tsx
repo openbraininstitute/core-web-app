@@ -11,6 +11,8 @@ import { Modal } from '@/ui/molecules/modal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
+import { scanConfigHeldTestId } from '../utils';
+
 import type { StringSelectionEnhanced as TStringSelectionEnhanced } from '@/features/scan-config/types';
 
 /** renders a raw LaTeX expression (e.g. `A_{latex}`) to a KaTeX HTML string */
@@ -32,12 +34,15 @@ type TOptionContent = {
 function OptionContent({
   content,
   onExpandLatex,
+  testId,
 }: {
   content: TOptionContent;
   onExpandLatex?: () => void;
+  /** Set only where this content is the chosen value, never in the list. */
+  testId?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-testid={testId}>
       <span className="text-primary-8 text-lg font-bold">{content.title}</span>
       {content.description && <span className="text-sm text-gray-700">{content.description}</span>}
       {content.latexHtml && (
@@ -131,7 +136,6 @@ export function StringSelectionEnhanced({
             type="button"
             data-testid="scan-config-control"
             data-scan-config-options={optionsId}
-            data-scan-config-value={value ?? ''}
             aria-controls={optionsId}
             aria-expanded={open}
             data-scan-config-block-element={ScanConfigUIElementDict.StringSelectionEnhanced}
@@ -142,7 +146,10 @@ export function StringSelectionEnhanced({
             )}
           >
             {selectedContent ? (
-              <OptionContent content={selectedContent} />
+              <OptionContent
+                content={selectedContent}
+                testId={value ? scanConfigHeldTestId(value) : undefined}
+              />
             ) : (
               <span className="text-gray-400">Select option</span>
             )}
