@@ -1,11 +1,10 @@
 'use client';
 
-import query from './query';
-import { isOBIShowcaseProjectProps, type OBIShowcaseProjectType } from './types';
-
+import { useSanity } from '@/services/sanity';
 import ShowcaseCard from '@/ui/segments/reports/obi-showcases/obi-showcase-card';
 
-import { useSanity } from '@/services/sanity';
+import query from './query';
+import { isOBIShowcaseProjectProps, type OBIShowcaseProjectType } from './types';
 
 export default function OBIShowcasesPage() {
   const projects = useSanity(query, isOBIShowcaseProjectProps) as

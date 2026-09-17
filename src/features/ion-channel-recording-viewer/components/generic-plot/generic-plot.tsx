@@ -1,5 +1,5 @@
+import Plotly, { type Data, type Layout } from 'plotly.js-dist-min';
 import React from 'react';
-import Plotly, { Data, Layout } from 'plotly.js-dist-min';
 
 import { classNames } from '@/util/utils';
 

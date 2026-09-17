@@ -1,4 +1,4 @@
-import { File, Group, Dataset, Entity } from 'h5wasm';
+import { Dataset, type Entity, type File, Group } from 'h5wasm';
 
 import { logWarn } from '@/utils/logger';
 

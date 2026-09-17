@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
+
 import type { IEType, IMType, TypeFilter } from '@/api/entitycore/types/shared/global';
-import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 export const useFetchEntityTypes = ({
   cellType,

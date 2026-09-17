@@ -1,9 +1,11 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import { tgdCalcMapRange, TgdVec4 } from '@tolokoban/tgd';
 
-import { PainterManager } from '../painter';
+import { TgdVec4, tgdCalcMapRange } from '@tolokoban/tgd';
+import React from 'react';
+
 import { getColorFromGeneratedPalette } from '../colors';
+
+import type { PainterManager } from '../painter';
 
 export interface LegendTarget {
   section: string;

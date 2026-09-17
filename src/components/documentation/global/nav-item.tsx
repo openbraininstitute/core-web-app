@@ -5,11 +5,12 @@ import { useAtom } from 'jotai';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { SingleSectionProps } from '../type';
 
 import { ChevronRight } from '@/components/icons';
 import { activeNavItemAtom } from '@/state/documentation/currentSection';
 import { classNames } from '@/util/utils';
+
+import type { SingleSectionProps } from '../type';
 
 function ItemDisabled({ name }: { name: string }) {
   return (

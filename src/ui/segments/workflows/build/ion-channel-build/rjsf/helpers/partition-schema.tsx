@@ -1,5 +1,6 @@
-import { RJSFSchema } from '@rjsf/utils';
 import { cloneDeep } from 'es-toolkit/compat';
+
+import type { RJSFSchema } from '@rjsf/utils';
 
 /**
  * splits a JSON Schema into multiple sub-schemas based on required properties.

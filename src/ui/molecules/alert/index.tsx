@@ -1,10 +1,11 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
 import { CloseCircleOutlined } from '@ant-design/icons';
+import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/utils/css-class';
+
+import type * as React from 'react';
 
 const alertVariants = cva('flex items-stretch w-full gap-2 group-[.toaster]:w-(--width)', {
   variants: {

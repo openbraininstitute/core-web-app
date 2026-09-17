@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Button, Modal } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Button, Modal } from 'antd';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { InviteErrorCodes } from '@/types/virtual-lab/invites';
 import { generateLabUrl, generateVlProjectUrl } from '@/util/virtual-lab/urls';
@@ -118,7 +118,7 @@ function InviteRedirectButton() {
   const projectId = searchParams.get('project_id');
   const { push } = useRouter();
 
-  if (origin === 'Lab' && !!labId) {
+  if (origin === 'Lab' && labId) {
     return (
       <Button
         htmlType="button"
@@ -132,7 +132,7 @@ function InviteRedirectButton() {
     );
   }
 
-  if (origin === 'Project' && !!labId && !!projectId) {
+  if (origin === 'Project' && labId && projectId) {
     return (
       <Button
         htmlType="button"

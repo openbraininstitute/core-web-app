@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { get, isNil } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 
@@ -8,8 +8,8 @@ import {
 } from '@/api/virtual-lab-svc/queries/onboarding';
 
 import type {
-  VlmOnboardingResponse,
   TOnboardingFeature,
+  VlmOnboardingResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
 export const onboardingKeys = {

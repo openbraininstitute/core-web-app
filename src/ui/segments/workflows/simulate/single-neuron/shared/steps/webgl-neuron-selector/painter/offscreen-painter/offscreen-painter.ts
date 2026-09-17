@@ -7,9 +7,11 @@ import {
   TgdPainterState,
   webglPresetDepth,
 } from '@tolokoban/tgd';
-import { Structure, StructureItem } from '../structure';
+
 import { makeSegments } from '../segments';
 import { MaterialIndex } from './material-index';
+
+import type { Structure, StructureItem } from '../structure';
 
 export class OffscreenPainter {
   private readonly offscreenCanvas = new OffscreenCanvas(1, 1);

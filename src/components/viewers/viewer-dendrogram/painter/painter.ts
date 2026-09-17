@@ -1,11 +1,13 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
+
 import { clamp } from 'es-toolkit/compat';
+import React from 'react';
 
-import { createTreeStructure, TreeItem } from './tree';
-
-import { Morphology } from '@/services/bluenaas-single-cell/types';
 import GenericEvent from '@/util/generic-event';
+
+import { createTreeStructure, type TreeItem } from './tree';
+
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
 const MARGIN = 32;
 

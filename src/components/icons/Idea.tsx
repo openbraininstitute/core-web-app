@@ -1,4 +1,5 @@
 import { classNames } from '@/util/utils';
+
 import styles from './icon.module.css';
 
 type IconProps = {

@@ -1,12 +1,11 @@
 'use client';
 
-import type { ReactNode } from 'react';
-
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
+import type { ICellMorphology, IEModel } from '@/api/entitycore/types';
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import type { IEModel, ICellMorphology } from '@/api/entitycore/types';
 
 export const BuildStep = {
   Info: 'info',

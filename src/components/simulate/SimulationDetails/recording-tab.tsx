@@ -1,12 +1,13 @@
 'use client';
 
-import { Fragment } from 'react';
 import dynamic from 'next/dynamic';
+import { Fragment } from 'react';
 
 // import PlotRenderer from '@/features/entities/neuron-simulation/experiment/visualization/plot-renderer';
 
-import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),

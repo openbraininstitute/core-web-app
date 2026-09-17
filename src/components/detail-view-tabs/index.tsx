@@ -1,6 +1,7 @@
 'use client';
 
 import { parseAsString, useQueryState } from 'nuqs';
+
 import { classNames } from '@/util/utils';
 
 type Props<T> = {

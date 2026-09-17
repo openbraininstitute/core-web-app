@@ -1,6 +1,6 @@
 import {
-  ArrayNumber2,
-  TgdContext,
+  type ArrayNumber2,
+  type TgdContext,
   TgdLight,
   TgdMaterialDiffuse,
   TgdPainterGroup,
@@ -13,7 +13,7 @@ import {
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
-import { StructureItem, StructureItemType } from '../structure';
+import { type StructureItem, StructureItemType } from '../structure';
 
 export class PainterHover extends TgdPainterGroup {
   constructor(

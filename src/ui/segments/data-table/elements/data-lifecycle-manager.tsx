@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import type { PropsWithChildren } from 'react';
 
 import { DataListStateSnapshotContext } from '@/ui/segments/data-table/elements/context';
+
+import type { PropsWithChildren } from 'react';
 
 /**
  * component that manages the lifecycle of data table atoms and session storage.

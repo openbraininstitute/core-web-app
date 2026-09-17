@@ -1,4 +1,4 @@
-import { OriginalComposition, OriginalCompositionUnit } from '@/types/composition/original';
+import type { OriginalComposition, OriginalCompositionUnit } from '@/types/composition/original';
 
 type CompositionNodeBase = {
   about: string;
