@@ -1,14 +1,13 @@
 import { readFileSync } from 'node:fs';
 
 import { loadEnv } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  // `tsconfigPaths` resolves the `@/* -> src/*` alias from tsconfig.json so tests
-  // import modules the same way the app does.
+  // `resolve.tsconfigPaths` resolves the `@/* -> src/*` alias from tsconfig.json
+  // so tests import modules the same way the app does.
+  resolve: { tsconfigPaths: true },
   plugins: [
-    tsconfigPaths(),
     // Mirrors the `raw-loader` rules for `.frag`/`.vert` in next.config.ts;
     // without them rolldown parses GLSL as JavaScript.
     {
@@ -19,9 +18,6 @@ export default defineConfig({
       },
     },
   ],
-  // Use the automatic JSX runtime so vitest's esbuild can transpile `.tsx`
-  // component tests without the React vite plugin.
-  esbuild: { jsx: 'automatic' },
   test: {
     // Load the committed dev env files (.env, .env.development) into process.env
     // so modules that validate config at import time (src/config/client.ts) work.
