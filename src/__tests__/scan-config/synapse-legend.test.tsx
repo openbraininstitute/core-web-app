@@ -32,6 +32,16 @@ describe('SynapseLegend', () => {
     ]);
   });
 
+  it('takes the corner unless the host draws controls there', () => {
+    const { rerender } = render(<SynapseLegend groups={[group('Excitatory', '#cc3311')]} />);
+
+    expect(screen.getByRole('complementary').className).toContain('top-3');
+
+    rerender(<SynapseLegend belowChrome groups={[group('Excitatory', '#cc3311')]} />);
+
+    expect(screen.getByRole('complementary').className).toContain('top-14');
+  });
+
   it('draws nothing when the scene has no synapses', () => {
     render(<SynapseLegend groups={[]} />);
 

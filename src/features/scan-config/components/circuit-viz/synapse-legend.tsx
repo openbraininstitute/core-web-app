@@ -10,14 +10,16 @@ import type { TSmallCircuitSynapseGroup } from './sources/types';
 /**
  * Key for the synapse marker colours, one row per distinct label.
  *
- * Read off the groups being drawn rather than from the palette, so it cannot
- * name a colour the scene is not using — an untyped population is listed under
- * its own name, since its type is the thing that is unknown.
- *
  * Dismissable and stays dismissed for the life of the viewer: the mapping is
  * fixed, so once it has been read it is only covering the circuit.
  */
-export function SynapseLegend({ groups }: { groups?: readonly TSmallCircuitSynapseGroup[] }) {
+export function SynapseLegend({
+  groups,
+  belowChrome = false,
+}: {
+  groups?: readonly TSmallCircuitSynapseGroup[];
+  belowChrome?: boolean;
+}) {
   const [dismissed, setDismissed] = useState(false);
   const entries = useMemo(() => distinctEntries(groups), [groups]);
 
@@ -27,8 +29,9 @@ export function SynapseLegend({ groups }: { groups?: readonly TSmallCircuitSynap
     <aside
       aria-label="Synapse colours"
       className={cn(
-        'absolute right-3 top-14 z-10 flex flex-col gap-1.5 rounded-xl p-3 pr-2',
-        'bg-white/70 text-neutral-800 shadow-lg ring-1 ring-black/5 backdrop-blur-md'
+        'absolute right-3 z-10 flex flex-col gap-1.5 rounded-xl p-3 pr-2',
+        'bg-white/70 text-neutral-800 shadow-lg ring-1 ring-black/5 backdrop-blur-md',
+        belowChrome ? 'top-14' : 'top-3'
       )}
     >
       <div className="flex items-start justify-between gap-3">
