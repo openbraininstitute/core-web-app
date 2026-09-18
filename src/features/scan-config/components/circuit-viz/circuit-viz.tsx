@@ -17,6 +17,7 @@ import {
   useSmallCircuitSource,
 } from './sources';
 import { parseNodeKey } from './sources/node-key';
+import { SynapseLegend } from './synapse-legend';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -122,6 +123,12 @@ interface CircuitVizProps {
   onZoomChange?: (zoom: number) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
+  /**
+   * Whether the host draws its own controls in the viewer's top-right corner.
+   * The synapse legend sits below them when it does and takes the corner itself
+   * when it does not.
+   */
+  chromeTopRight?: boolean;
 }
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
@@ -211,6 +218,7 @@ function CircuitVizView({
   dendrogram = false,
   onZoomChange,
   spikes,
+  chromeTopRight = false,
   onCellClick,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
@@ -374,6 +382,7 @@ function CircuitVizView({
           spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
         />
       )}
+      <SynapseLegend groups={synapses} belowChrome={chromeTopRight} />
       <MorphologyLocationLabels labels={locationLabels} />
       <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
       {loading && (
