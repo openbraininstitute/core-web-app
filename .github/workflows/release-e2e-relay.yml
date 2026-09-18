@@ -1,0 +1,21 @@
+name: Request E2E run on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  dispatch:
+    if: '!github.event.release.prerelease && !github.event.release.draft'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch to obi-e2e
+        env:
+          GH_TOKEN: ${{ secrets.OBI_E2E_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/openbraininstitute/obi-e2e/dispatches \
+            --field event_type=core-web-app-release \
+            --field 'client_payload[release]=${{ github.event.release.tag_name }}' \
+            --field 'client_payload[release_url]=${{ github.event.release.html_url }}' \
+            --field 'client_payload[commit]=${{ github.sha }}' \
+            --field 'client_payload[repository]=${{ github.repository }}'
