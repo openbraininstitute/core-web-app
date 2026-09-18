@@ -63,6 +63,7 @@ export function VisualizationLoadingIndicator({
       role="status"
       aria-live="polite"
       aria-label={label}
+      data-testid="visualization-loading"
     >
       <div className="absolute inset-x-0 top-3 flex justify-center px-3">
         <div
