@@ -11,7 +11,10 @@ import type {
  */
 export type TSmallCircuitSynapseGroup = NonNullable<
   MorphoViewerSmallCircuitProps['synapses']
->[number];
+>[number] & {
+  /** What the legend calls this group. Extra fields are ignored by the viewer. */
+  label: string;
+};
 
 /**
  * Normalized data contract for {@link MorphoViewerSmallCircuit}.

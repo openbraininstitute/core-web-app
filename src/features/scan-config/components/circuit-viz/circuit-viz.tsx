@@ -17,6 +17,7 @@ import {
   useSmallCircuitSource,
 } from './sources';
 import { parseNodeKey } from './sources/node-key';
+import { SynapseLegend } from './synapse-legend';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -374,6 +375,7 @@ function CircuitVizView({
           spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
         />
       )}
+      <SynapseLegend groups={synapses} />
       <MorphologyLocationLabels labels={locationLabels} />
       <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
       {loading && (
