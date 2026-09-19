@@ -11,9 +11,11 @@ import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-elemen
 import {
   type Config,
   type ConfigSchema,
+  EMODEL_OPTIMISATION_MECHANISMS_TABS,
+  EModelOptimisationMechanismsTabs,
   type IBlockDictionary,
-  type IBlockOrdered,
   type IBlockSingle,
+  type IEModelOptimisationParameters,
   type IRootBlockUnion,
   isType,
   ScanConfigUIElementDict,
@@ -49,12 +51,16 @@ export function RootElement({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
-  selectedOrderedBlock,
-  setSelectedOrderedBlock,
+  selectedMechanismsTab,
+  setSelectedMechanismsTab,
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IBlockOrdered;
+  rootElementSchema:
+    | IBlockSingle
+    | IBlockDictionary
+    | IRootBlockUnion
+    | IEModelOptimisationParameters;
   selectedRootElement: string;
   setSelectedRootElement: (configTab: string) => void;
   config: Config;
@@ -71,8 +77,8 @@ export function RootElement({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
-  selectedOrderedBlock: string;
-  setSelectedOrderedBlock: (block: string) => void;
+  selectedMechanismsTab: string;
+  setSelectedMechanismsTab: (tab: string) => void;
 }) {
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
@@ -99,16 +105,25 @@ export function RootElement({
               testId={`scan-config-root-element-${rootElement}`}
               selectedTab={selectedRootElement}
               onClick={() => {
-                // block_ordered: select the root and default to its first child block;
-                // the nested block list below drives further selection.
-                if (rootElementSchema.ui_element === ScanConfigUIElementDict.BlockOrdered) {
+                // emodel_optimisation_parameters: custom hardcoded layout — select the root and
+                // default the inner tab to Mechanism Selection.
+                if (
+                  rootElementSchema.ui_element ===
+                  ScanConfigUIElementDict.EModelOptimisationParameters
+                ) {
                   setSelectedRootElement(rootElement);
                   setSelectedEntry('');
-                  setExpandedRootElements((prev) => new Set(prev).add(rootElement));
-                  if (!selectedOrderedBlock) {
-                    const firstBlock = orderChildBlocks(rootElementSchema)[0]?.[0];
-                    if (firstBlock) setSelectedOrderedBlock(firstBlock);
-                  }
+                  // toggle expand/collapse of the inner tabs
+                  setExpandedRootElements((prev) => {
+                    const next = new Set(prev);
+                    if (isExpanded) {
+                      next.delete(rootElement);
+                    } else {
+                      next.add(rootElement);
+                    }
+                    return next;
+                  });
+                  setSelectedMechanismsTab(EModelOptimisationMechanismsTabs.MechanismSelection);
                   setEditing(true);
                   return;
                 }
@@ -185,7 +200,10 @@ export function RootElement({
                   rotate={
                     rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
                       ? 90
-                      : 0
+                      : rootElementSchema.ui_element ===
+                            ScanConfigUIElementDict.EModelOptimisationParameters && isExpanded
+                        ? 90
+                        : 0
                   }
                 />
               </div>
@@ -208,26 +226,25 @@ export function RootElement({
         </TooltipContent>
       </Tooltip>
 
-      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockOrdered &&
-        selectedRootElement === rootElement && (
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters &&
+        isExpanded && (
           <div className="ml-3 flex flex-col gap-0.5 border-l border-gray-200 pl-2">
-            {orderChildBlocks(rootElementSchema).map(([blockKey, blockSchema]) => (
+            {EMODEL_OPTIMISATION_MECHANISMS_TABS.map(({ key, label }) => (
               <LeftMenuTab
-                key={blockKey}
-                tab={blockKey}
-                testId={`scan-config-ordered-block-${blockKey}`}
-                selectedTab={selectedOrderedBlock}
+                key={key}
+                tab={key}
+                testId={`scan-config-emodel-mechanisms-tab-${key}`}
+                // only highlight the inner tab while this root element is the selected one
+                selectedTab={selectedRootElement === rootElement ? selectedMechanismsTab : ''}
                 onClick={() => {
                   setSelectedRootElement(rootElement);
-                  setSelectedOrderedBlock(blockKey);
+                  setSelectedMechanismsTab(key);
                   setEditing(true);
                 }}
-                extraClass="w-full flex text-left justify-start min-h-[40px] items-center px-2"
+                extraClass="w-full flex text-left justify-start min-h-[40px] items-center px-2 ml-2"
                 style={undefined}
               >
-                <span className="wrap-break-word min-w-0 text-sm">
-                  {blockSchema.title ?? blockKey}
-                </span>
+                <span className="wrap-break-word min-w-0 text-sm">{label}</span>
               </LeftMenuTab>
             ))}
           </div>
@@ -266,25 +283,17 @@ export function RootElement({
   );
 }
 
-/**
- * Child blocks of a `block_ordered` root element, sorted by their unique `order` int
- * (uniqueness guaranteed by the backend). Returns `[key, blockSchema]` pairs for the Left nav.
- */
-function orderChildBlocks(
-  schema: IBlockOrdered
-): Array<[string, IBlockOrdered['properties'][string]]> {
-  return Object.entries(schema.properties)
-    .filter(([, block]) => !isType(block))
-    .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0));
-}
-
 function SelectedUnionVariantLabel({
   rootElementSchema,
   config,
   rootElement,
   fallbackTitle,
 }: {
-  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IBlockOrdered;
+  rootElementSchema:
+    | IBlockSingle
+    | IBlockDictionary
+    | IRootBlockUnion
+    | IEModelOptimisationParameters;
   config: Config;
   rootElement: string;
   fallbackTitle?: string;

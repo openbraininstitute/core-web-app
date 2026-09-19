@@ -46,8 +46,8 @@ export default function Left({
   entityType,
   campaignEntityType,
   aiEnabled,
-  selectedOrderedBlock,
-  setSelectedOrderedBlock,
+  selectedMechanismsTab,
+  setSelectedMechanismsTab,
 }: {
   schema: ConfigSchema;
   selectedRootElement: string;
@@ -74,8 +74,8 @@ export default function Left({
   entityType: TSupportedEntityTypesForScanConfiguration;
   campaignEntityType?: TExtendedEntitiesTypeDict;
   aiEnabled?: boolean;
-  selectedOrderedBlock: string;
-  setSelectedOrderedBlock: (block: string) => void;
+  selectedMechanismsTab: string;
+  setSelectedMechanismsTab: (tab: string) => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig, setAiConfig } = useAIConfig();
@@ -151,8 +151,8 @@ export default function Left({
                         setNewKey={setNewKey}
                         isEditingKey={isEditingKey}
                         setIsEditingKey={setIsEditingKey}
-                        selectedOrderedBlock={selectedOrderedBlock}
-                        setSelectedOrderedBlock={setSelectedOrderedBlock}
+                        selectedMechanismsTab={selectedMechanismsTab}
+                        setSelectedMechanismsTab={setSelectedMechanismsTab}
                       />
                     );
                   })}

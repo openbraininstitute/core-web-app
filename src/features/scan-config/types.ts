@@ -183,7 +183,7 @@ export const ScanConfigUIElementDict = {
   MorphologyLocationSelection: 'morphology_location_selection',
   TaskResultSelector: 'task_result_selector',
   EtypeSelector: 'etype_selector',
-  BlockOrdered: 'block_ordered',
+  EModelOptimisationParameters: 'emodel_optimisation_parameters',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -510,26 +510,33 @@ export interface IBlockUnion extends TRootElement {
 export interface IRootBlockUnion extends TRootElement, IBlockUnion {}
 
 /**
- * One child block of an {@link IBlockOrdered}. A static, schema-defined property carrying a
- * unique `order` int (uniqueness guaranteed by the backend) used to sort the Left sub-navigation.
- * Its inner shape is rendered by the block-ordered component, so it is intentionally loose here.
+ * E-Model optimisation parameters. A fully custom root element: its layout is hardcoded on the
+ * frontend (a single "Mechanisms" outer tab with fixed inner tabs), NOT derived from schema
+ * properties. Rendered by a bespoke component, not the generic block machinery.
  */
-export type TOrderedBlock = {
-  title: string;
-  description?: string;
-  order: number;
-  [key: string]: unknown;
-};
-
-/**
- * Root element whose child `properties` are ordered blocks: each is shown as a nested list item
- * in the Left panel (sorted by `order`), and selecting one renders that child's schema in the
- * Middle panel. See {@link ScanConfigUIElementDict.BlockOrdered}.
- */
-export interface IBlockOrdered extends TRootElement {
-  ui_element: typeof ScanConfigUIElementDict.BlockOrdered;
-  properties: Record<string, TOrderedBlock>;
+export interface IEModelOptimisationParameters extends TRootElement {
+  ui_element: typeof ScanConfigUIElementDict.EModelOptimisationParameters;
 }
+
+/** Hardcoded inner tabs of the E-Model optimisation parameters "Mechanisms" section. */
+export const EModelOptimisationMechanismsTabs = {
+  MechanismSelection: 'mechanism_selection',
+  RegionAssignment: 'region_assignment',
+  ParametersSelection: 'parameters_selection',
+} as const;
+
+export type TEModelOptimisationMechanismsTab =
+  (typeof EModelOptimisationMechanismsTabs)[keyof typeof EModelOptimisationMechanismsTabs];
+
+/** Label per inner tab, in display order. */
+export const EMODEL_OPTIMISATION_MECHANISMS_TABS: ReadonlyArray<{
+  key: TEModelOptimisationMechanismsTab;
+  label: string;
+}> = [
+  { key: EModelOptimisationMechanismsTabs.MechanismSelection, label: 'Mechanism Selection' },
+  { key: EModelOptimisationMechanismsTabs.RegionAssignment, label: 'Region Assignment' },
+  { key: EModelOptimisationMechanismsTabs.ParametersSelection, label: 'Parameters Selection' },
+];
 
 export type TBlockElement = {
   default?: ConfigValue;
@@ -597,7 +604,10 @@ export type ConfigSchema = {
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion | IBlockOrdered> & {
+  properties: Record<
+    string,
+    IBlockSingle | IBlockDictionary | IRootBlockUnion | IEModelOptimisationParameters
+  > & {
     type: Type;
   };
   title: string;

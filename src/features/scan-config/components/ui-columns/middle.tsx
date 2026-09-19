@@ -1,7 +1,7 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
-import { BlockOrdered } from '@/features/scan-config/components/ui-blocks/block-ordered';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
+import { EModelOptimisationParameters } from '@/features/scan-config/components/ui-blocks/emodel-optimisation-parameters';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
@@ -9,8 +9,8 @@ import {
   type Config,
   type ConfigSchema,
   type IBlockDictionary,
-  type IBlockOrdered,
   type IBlockSingle,
+  type IEModelOptimisationParameters,
   type IRootBlockUnion,
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
@@ -40,10 +40,10 @@ type MiddleProps = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IBlockOrdered;
+  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IEModelOptimisationParameters;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
-  /** selected child-block key when the root element is `block_ordered` */
-  selectedOrderedBlock: string;
+  /** selected inner mechanisms tab key when the root element is `emodel_optimisation_parameters` */
+  selectedMechanismsTab: string;
 };
 
 export default function Middle({
@@ -61,7 +61,7 @@ export default function Middle({
   selectedSchema,
   schemaMappingConfig,
   entityType,
-  selectedOrderedBlock,
+  selectedMechanismsTab,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
@@ -139,8 +139,8 @@ export default function Middle({
         />
       )}
 
-      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockOrdered && (
-        <BlockOrdered schema={selectedSchema} selectedBlock={selectedOrderedBlock} />
+      {selectedSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
+        <EModelOptimisationParameters selectedTab={selectedMechanismsTab} />
       )}
     </div>
   );
