@@ -182,6 +182,8 @@ export const ScanConfigUIElementDict = {
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
   MorphologyLocationSelection: 'morphology_location_selection',
   TaskResultSelector: 'task_result_selector',
+  EtypeSelector: 'etype_selector',
+  EModelOptimisationParameters: 'emodel_optimisation_parameters',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -355,6 +357,24 @@ export interface TaskResultSelector extends TBlockElement {
   };
 }
 
+export interface ETypeSelectorField extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.EtypeSelector;
+  /** dereferenced `$ref: ETypeClassFromID` — supplies the stored ref's `type` const */
+  properties: {
+    id_str: {
+      type: string;
+      title: string;
+      description: string;
+    };
+    type: {
+      type: string;
+      const: 'ETypeClassFromID';
+      title: string;
+      default: 'ETypeClassFromID';
+    };
+  };
+}
+
 export interface SelectRecordableIonChannelVariable extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.SelectRecordableIonChannelVariable;
   property: string;
@@ -513,6 +533,7 @@ export type ParamSchema =
   | IonChannelGlobalVariableModification
   | ModelSelectorSingle
   | TaskResultSelector
+  | ETypeSelectorField
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
   | IMorphologyLocationSelection

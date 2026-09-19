@@ -5,6 +5,7 @@ import { match, P } from 'ts-pattern';
 import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
+import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
 import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
@@ -500,6 +501,21 @@ export function UIElementRender({
           />
         );
       }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.EtypeSelector },
+      },
+      ({ paramSchema }) => (
+        <ETypeSelector
+          disabled={disabled}
+          value={value}
+          state={state}
+          fieldKey={k}
+          valueType={paramSchema.properties?.type?.const}
+          onChange={setState}
+        />
+      )
     )
     .with(
       {
