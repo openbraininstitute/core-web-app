@@ -4,6 +4,7 @@ import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, LeftMenuTab } from '@/features/scan-config/components/components';
+import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -11,7 +12,6 @@ import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-elemen
 import {
   type Config,
   type ConfigSchema,
-  EMODEL_OPTIMISATION_MECHANISMS_TABS,
   EModelOptimisationMechanismsTabs,
   type IBlockDictionary,
   type IBlockSingle,
@@ -228,26 +228,16 @@ export function RootElement({
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters &&
         isExpanded && (
-          <div className="ml-3 flex flex-col gap-0.5 border-l border-gray-200 pl-2">
-            {EMODEL_OPTIMISATION_MECHANISMS_TABS.map(({ key, label }) => (
-              <LeftMenuTab
-                key={key}
-                tab={key}
-                testId={`scan-config-emodel-mechanisms-tab-${key}`}
-                // only highlight the inner tab while this root element is the selected one
-                selectedTab={selectedRootElement === rootElement ? selectedMechanismsTab : ''}
-                onClick={() => {
-                  setSelectedRootElement(rootElement);
-                  setSelectedMechanismsTab(key);
-                  setEditing(true);
-                }}
-                extraClass="w-full flex text-left justify-start min-h-[40px] items-center px-2 ml-2"
-                style={undefined}
-              >
-                <span className="wrap-break-word min-w-0 text-sm">{label}</span>
-              </LeftMenuTab>
-            ))}
-          </div>
+          <EModelOptimisationMechanismsTabList
+            rootElement={rootElement}
+            selectedRootElement={selectedRootElement}
+            selectedMechanismsTab={selectedMechanismsTab}
+            onSelectTab={(key) => {
+              setSelectedRootElement(rootElement);
+              setSelectedMechanismsTab(key);
+              setEditing(true);
+            }}
+          />
         )}
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&

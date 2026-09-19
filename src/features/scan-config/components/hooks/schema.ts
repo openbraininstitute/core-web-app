@@ -245,6 +245,14 @@ function buildInitialConfigState(
       return;
     }
 
+    // emodel_optimisation_parameters is a custom element with no seedable schema properties.
+    // Leave it null when absent (rather than defaulting to {}) so a root-level `required`
+    // constraint fails on an empty config and the validation marker reflects it.
+    if (v.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters) {
+      state[k] = safeInitialConfig[k] ?? null;
+      return;
+    }
+
     const safeInitialConfigforKey = safeInitialConfig[k] ?? {};
 
     if (!isPlainObject(safeInitialConfigforKey)) return;
