@@ -29,6 +29,8 @@ export const TaskConfigType = {
   CircuitExtractionConfig: 'circuit_extraction__config',
   EFeatureExtractionCampaign: 'efeature_extraction__campaign',
   EFeatureExtractionConfig: 'efeature_extraction__config',
+  EModelOptimizationCampaign: 'emodel_optimization__campaign',
+  EModelOptimizationConfig: 'emodel_optimization__config',
   IonChannelModelingCampaign: 'ion_channel_modeling__campaign',
   IonChannelModelingConfig: 'ion_channel_modeling__config',
   SkeletonizationCampaign: 'skeletonization__campaign',

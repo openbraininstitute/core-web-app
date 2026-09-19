@@ -29,6 +29,7 @@ import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/singl
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { WholeBrain } from '@/entity-configuration/domain/model/whole-brain';
+import { EModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   SimulationCampaign,
@@ -105,6 +106,10 @@ const EntityCoreProcessingConfiguration = {
   SkeletonizationCampaign,
 };
 
+const EntityCoreOptimizationConfiguration = {
+  EModelOptimizationCampaign,
+};
+
 export const EntityCoreConfiguration = {
   ...UniversalTypesCoreConfiguration,
   ...EntityCoreExperimentalConfiguration,
@@ -112,6 +117,7 @@ export const EntityCoreConfiguration = {
   ...EntityCoreSimulationConfiguration,
   ...EntityCoreExtractionConfiguration,
   ...EntityCoreProcessingConfiguration,
+  ...EntityCoreOptimizationConfiguration,
   AnalysisNotebookTemplate,
   AnalysisNotebookResult,
 } as const;

@@ -52,12 +52,17 @@ const ProcessingEntitySlug = {
   Skeletonization: 'skeletonization',
 } as const;
 
+const OptimizationEntitySlug = {
+  EModelOptimization: 'emodel-optimization',
+} as const;
+
 export const EntitySlug = {
   ...ExperimentalEntitySlug,
   ...ModelEntitySlug,
   ...SimulationEntitySlug,
   ...ExtractionEntitySlug,
   ...ProcessingEntitySlug,
+  ...OptimizationEntitySlug,
   AnalysisNotebookTemplate: 'template',
   AnalysisNotebookResult: 'results',
 } as const;
