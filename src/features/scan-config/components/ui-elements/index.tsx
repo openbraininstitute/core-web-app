@@ -2,6 +2,7 @@ import { Input } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
+import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
@@ -468,6 +469,36 @@ export function UIElementRender({
             />
           );
         }
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.TaskResultSelector },
+      },
+      ({ paramSchema }) => {
+        // Field carries the concrete entitycore task_result_type (e.g. `efeature_extraction__result`).
+        // Resolve it to the frontend view that lists it — browse + display use that specific type,
+        // while the stored ref stays the generic `TaskResultFromID` the backend expects.
+        const taskResultType = get(paramSchema, 'task_result_type') as string | undefined;
+        const resolvedType = taskResultType
+          ? getExtendedTypeByTaskResultType(taskResultType)
+          : undefined;
+        if (!resolvedType) {
+          return null;
+        }
+        return (
+          <EntitySelectorSingle
+            entityType={resolvedType as unknown as TEntityTypeDict}
+            resolveAsType={resolvedType}
+            disabled={disabled}
+            value={value}
+            state={state}
+            fieldKey={k}
+            paramSchema={paramSchema as unknown as Record<string, unknown>}
+            valueType={paramSchema.properties?.type?.const}
+            onChange={setState}
+          />
+        );
       }
     )
     .with(

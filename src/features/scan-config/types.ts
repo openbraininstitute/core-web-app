@@ -181,6 +181,7 @@ export const ScanConfigUIElementDict = {
   FloatOptional: 'float_optional',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
   MorphologyLocationSelection: 'morphology_location_selection',
+  TaskResultSelector: 'task_result_selector',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -330,6 +331,26 @@ export interface ModelSelectorSingle extends TBlockElement {
       const: 'IonChannelModelFromID';
       title: string;
       default: 'IonChannelModelFromID';
+    };
+  };
+}
+
+export interface TaskResultSelector extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.TaskResultSelector;
+  /** entitycore task_result_type (double-underscore), e.g. `efeature_extraction__result` */
+  task_result_type: string;
+  /** dereferenced `$ref: TaskResultFromID` — supplies the stored ref's `type` const */
+  properties: {
+    id_str: {
+      type: string;
+      title: string;
+      description: string;
+    };
+    type: {
+      type: string;
+      const: 'TaskResultFromID';
+      title: string;
+      default: 'TaskResultFromID';
     };
   };
 }
@@ -491,6 +512,7 @@ export type ParamSchema =
   | IonChannelRangeVariableModification
   | IonChannelGlobalVariableModification
   | ModelSelectorSingle
+  | TaskResultSelector
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
   | IMorphologyLocationSelection

@@ -65,6 +65,8 @@ type TProps = {
   /** prerequisites picked during browse, keyed by share-key; used to rebuild the filtered loader */
   prerequisites?: TWorkflowSessionPrerequisites;
   disabled?: boolean;
+  /** FromID type stamped on confirmed rows when no binding/registry mapping resolves one */
+  fallbackFromIdType?: string;
   onConfirm: (refs: TFromIdRef[], groupName?: string) => void;
   onCancel: () => void;
 };
@@ -108,6 +110,7 @@ export function ModelIdentifierBrowseWidget({
   browseConfig,
   prerequisites,
   disabled,
+  fallbackFromIdType,
   onConfirm,
   onCancel,
 }: TProps) {
@@ -234,9 +237,13 @@ export function ModelIdentifierBrowseWidget({
   );
 
   const handleConfirm = useCallback(() => {
-    const refs = selectionsByTypeToFromIdRefs(selectionsByType, configureBinding);
+    const refs = selectionsByTypeToFromIdRefs(
+      selectionsByType,
+      configureBinding,
+      fallbackFromIdType
+    );
     onConfirm(refs, showGroupName ? groupName : undefined);
-  }, [configureBinding, groupName, onConfirm, selectionsByType, showGroupName]);
+  }, [configureBinding, fallbackFromIdType, groupName, onConfirm, selectionsByType, showGroupName]);
 
   if (!activeEntityType) {
     return null;

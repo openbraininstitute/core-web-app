@@ -172,11 +172,19 @@ export function resolveEntityFetchTarget(ref: TFromIdRef | TWorkflowSessionSelec
 export function entityRowToFromIdRef(
   row: EntityCoreIdentifiableNamed,
   entityType: TExtendedEntitiesTypeDict,
-  configureBinding?: TScanConfigConfigureBinding
+  configureBinding?: TScanConfigConfigureBinding,
+  /**
+   * Used when neither the binding nor the global FromID map resolves a type — e.g. a
+   * `task_result_selector` browsing a specific task-result view that has no `ScanConfigFromIdType`
+   * entry. The consumer's `valueType` (the schema `type` const) is authoritative for the stored
+   * ref anyway, so this only needs to be non-null to keep the row from being dropped.
+   */
+  fallbackFromIdType?: string
 ): TFromIdRef | null {
   const fromIdType =
     (configureBinding ? resolveScanConfigFromIdType(configureBinding, entityType) : undefined) ??
-    scanConfigFromIdTypeForEntityType(entityType);
+    scanConfigFromIdTypeForEntityType(entityType) ??
+    fallbackFromIdType;
 
   if (!fromIdType) {
     return null;
@@ -225,7 +233,8 @@ export function mergeConfigurationInputs(opts: {
  */
 export function selectionsByTypeToFromIdRefs(
   selectionsByType: TModelIdentifierBrowseSelectionsByType,
-  configureBinding?: TScanConfigConfigureBinding
+  configureBinding?: TScanConfigConfigureBinding,
+  fallbackFromIdType?: string
 ): TFromIdRef[] {
   const refs: TFromIdRef[] = [];
 
@@ -234,7 +243,8 @@ export function selectionsByTypeToFromIdRefs(
       const ref = entityRowToFromIdRef(
         row,
         entityType as TExtendedEntitiesTypeDict,
-        configureBinding
+        configureBinding,
+        fallbackFromIdType
       );
       if (ref) {
         refs.push(ref);
