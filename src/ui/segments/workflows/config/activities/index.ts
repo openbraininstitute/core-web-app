@@ -3,6 +3,7 @@ import { eFeatureExtractionFlag, extractionActivityFlag } from '@/features/featu
 
 import { BuildWorkflows } from './build';
 import { ExtractionWorkflows } from './extract';
+import { OptimizeWorkflows } from './optimize';
 import { ProcessingWorkflows } from './process';
 import { SimulateWorkflows } from './simulate';
 
@@ -39,8 +40,8 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     label: 'Optimize',
     name: 'Optimization',
     order: 5,
-    disabled: true,
-    workflows: [],
+    disabled: false,
+    workflows: OptimizeWorkflows,
   },
   [WorkflowActivityDictValue.validate]: {
     value: WorkflowActivityDictValue.validate,
