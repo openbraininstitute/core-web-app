@@ -1,13 +1,8 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { eFeatureExtractionFlag, extractionActivityFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
-import { extractCircuitWorkflow } from '@/features/scan-config/workflow/definitions/extract-circuit';
-import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
+import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 
-import {
-  extractCircuitConfigureBinding,
-  extractEFeaturesConfigureBinding,
-} from '../scan-config-binding';
+import { optimizeEModelConfigureBinding } from '../scan-config-binding';
 import {
   WorkflowBrowseDefaults,
   WorkflowConfigureRoutingDict,
@@ -20,20 +15,21 @@ export const OptimizeWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfigInEditorSelection,
+    // This scan-config has no `model_identifier` field — no input entity is selected, so there
+    // is no meaningful source type. `IWorkflowDescriptor` requires the field, so it mirrors
+    // `targetType` (the pattern used by other no-input workflow entries).
     sourceType: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
     targetType: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
     breadcrumb: {
-      root: 'EModel Optimization',
+      root: 'E-Model optimization',
     },
     configureRouting: WorkflowConfigureRoutingDict.Standalone,
     scanConfig: {
-      definition: extractEFeaturesWorkflow,
-      schemaName: SchemaNameDict.EModelEFeatureExtractionScanConfig,
-      configureBinding: extractEFeaturesConfigureBinding(),
+      definition: optimizeEModelWorkflow,
+      schemaName: SchemaNameDict.EModelOptimizationScanConfig,
+      configureBinding: optimizeEModelConfigureBinding(),
     },
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }],
-    label: 'EModelOptimization',
+    label: 'E-Model optimization',
     disabled: false,
-    requiredFeatures: [eFeatureExtractionFlag.key],
   },
 ];

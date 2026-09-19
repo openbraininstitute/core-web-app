@@ -44,6 +44,7 @@ export const ScanConfigActivity = {
   Extract: 'extract',
   Process: 'process',
   Build: 'build',
+  Optimize: 'optimize',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -75,11 +76,17 @@ export type TProcessScanConfigTabs = {
   __activity: 'process';
 };
 
+export type TOptimizeScanConfigTabs = {
+  id: keyof typeof OptimizeScanConfigTabs;
+  __activity: 'optimize';
+};
+
 export type TScanConfigTabs =
   | Prettify<TSimulateScanConfigTabs>
   | Prettify<TExtractScanConfigTabs>
   | Prettify<TProcessScanConfigTabs>
-  | Prettify<TBuildScanConfigTabs>;
+  | Prettify<TBuildScanConfigTabs>
+  | Prettify<TOptimizeScanConfigTabs>;
 
 export const SimulateScanConfigTabs = {
   ...BaseScanConfigTabs,
@@ -96,11 +103,17 @@ export const BuildScanConfigTabs = {
   results: 'results',
 } as const;
 
+export const OptimizeScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  optimizations: 'optimizations',
+} as const;
+
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
   [ScanConfigActivity.Process]: ProcessScanConfigTabs,
   [ScanConfigActivity.Build]: BuildScanConfigTabs,
+  [ScanConfigActivity.Optimize]: OptimizeScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -128,6 +141,8 @@ export const SchemaNameDict = {
   BuildSynaptomeScanConfig: 'MEModelSynapticModelPlacementScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
+  // optimization
+  EModelOptimizationScanConfig: 'EModelOptimizationScanConfig',
 } as const;
 
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
@@ -608,4 +623,5 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
   | typeof ExtendedEntitiesTypeDict.ElectricalCellRecording
+  | typeof ExtendedEntitiesTypeDict.Emodel
   | typeof ExtendedEntitiesTypeDict.WholeBrain;

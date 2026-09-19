@@ -35,6 +35,7 @@ import {
 } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
+import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { usePrevious } from '@/hooks/hooks';
@@ -258,6 +259,7 @@ function ScanConfigTemplateContent({
         </Suspense>
       ) : null
     )
+    .with(ScanConfigActivity.Optimize, () => <OptimizationTab />)
     .otherwise(() => {
       throw new Error(`${activity} is not supported yet`);
     });
