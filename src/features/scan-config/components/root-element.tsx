@@ -12,6 +12,7 @@ import {
   type Config,
   type ConfigSchema,
   type IBlockDictionary,
+  type IBlockOrdered,
   type IBlockSingle,
   type IRootBlockUnion,
   isType,
@@ -48,10 +49,12 @@ export function RootElement({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
+  selectedOrderedBlock,
+  setSelectedOrderedBlock,
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IBlockOrdered;
   selectedRootElement: string;
   setSelectedRootElement: (configTab: string) => void;
   config: Config;
@@ -68,6 +71,8 @@ export function RootElement({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
+  selectedOrderedBlock: string;
+  setSelectedOrderedBlock: (block: string) => void;
 }) {
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
@@ -94,6 +99,20 @@ export function RootElement({
               testId={`scan-config-root-element-${rootElement}`}
               selectedTab={selectedRootElement}
               onClick={() => {
+                // block_ordered: select the root and default to its first child block;
+                // the nested block list below drives further selection.
+                if (rootElementSchema.ui_element === ScanConfigUIElementDict.BlockOrdered) {
+                  setSelectedRootElement(rootElement);
+                  setSelectedEntry('');
+                  setExpandedRootElements((prev) => new Set(prev).add(rootElement));
+                  if (!selectedOrderedBlock) {
+                    const firstBlock = orderChildBlocks(rootElementSchema)[0]?.[0];
+                    if (firstBlock) setSelectedOrderedBlock(firstBlock);
+                  }
+                  setEditing(true);
+                  return;
+                }
+
                 const isDictionary =
                   !isRootBlock(schema, rootElement) &&
                   rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
@@ -189,6 +208,31 @@ export function RootElement({
         </TooltipContent>
       </Tooltip>
 
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockOrdered &&
+        selectedRootElement === rootElement && (
+          <div className="ml-3 flex flex-col gap-0.5 border-l border-gray-200 pl-2">
+            {orderChildBlocks(rootElementSchema).map(([blockKey, blockSchema]) => (
+              <LeftMenuTab
+                key={blockKey}
+                tab={blockKey}
+                testId={`scan-config-ordered-block-${blockKey}`}
+                selectedTab={selectedOrderedBlock}
+                onClick={() => {
+                  setSelectedRootElement(rootElement);
+                  setSelectedOrderedBlock(blockKey);
+                  setEditing(true);
+                }}
+                extraClass="w-full flex text-left justify-start min-h-[40px] items-center px-2"
+                style={undefined}
+              >
+                <span className="wrap-break-word min-w-0 text-sm">
+                  {blockSchema.title ?? blockKey}
+                </span>
+              </LeftMenuTab>
+            ))}
+          </div>
+        )}
+
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         (config[rootElement] || hasHighlights) && (
           <BlockDictionaryEntries
@@ -222,13 +266,25 @@ export function RootElement({
   );
 }
 
+/**
+ * Child blocks of a `block_ordered` root element, sorted by their unique `order` int
+ * (uniqueness guaranteed by the backend). Returns `[key, blockSchema]` pairs for the Left nav.
+ */
+function orderChildBlocks(
+  schema: IBlockOrdered
+): Array<[string, IBlockOrdered['properties'][string]]> {
+  return Object.entries(schema.properties)
+    .filter(([, block]) => !isType(block))
+    .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0));
+}
+
 function SelectedUnionVariantLabel({
   rootElementSchema,
   config,
   rootElement,
   fallbackTitle,
 }: {
-  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IBlockOrdered;
   config: Config;
   rootElement: string;
   fallbackTitle?: string;

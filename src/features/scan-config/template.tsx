@@ -116,6 +116,8 @@ function ScanConfigTemplateContent({
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState('');
+  // selected child block when the root element is `block_ordered`
+  const [selectedOrderedBlock, setSelectedOrderedBlock] = useState('');
 
   const [loading, setLoading] = useState(false);
   const isDuplicate = campaignOriginAction === ScanConfigCampaignOriginActionDict.Duplicate;
@@ -176,6 +178,7 @@ function ScanConfigTemplateContent({
     if (previousSchemaName !== undefined && previousSchemaName !== schemaName) {
       setTab(defaultTab);
       setSelectedRootElement(firstRoot ?? '');
+      setSelectedOrderedBlock('');
       // Selections live in module state that outlives the route and are keyed
       // by block name, which repeats across workflows. Drop them so the next
       // workflow starts on each sweep's first value.
@@ -341,6 +344,8 @@ function ScanConfigTemplateContent({
             entityType={entityType}
             campaignEntityType={campaignEntityType}
             aiEnabled={aiEnabled}
+            selectedOrderedBlock={selectedOrderedBlock}
+            setSelectedOrderedBlock={setSelectedOrderedBlock}
           />
           <div
             id="scan-config-controls-middle"
@@ -351,7 +356,7 @@ function ScanConfigTemplateContent({
           >
             {editing && selectedSchema !== undefined && (
               <Middle
-                key={`${schemaName}_${selectedRootElement}_${selectedEntry}`}
+                key={`${schemaName}_${selectedRootElement}_${selectedEntry}_${selectedOrderedBlock}`}
                 schema={schema}
                 selectedRootElement={selectedRootElement}
                 editing={editing}
@@ -370,6 +375,7 @@ function ScanConfigTemplateContent({
                 selectedSchema={selectedSchema}
                 schemaMappingConfig={schemaMappingConfig}
                 entityType={entityType}
+                selectedOrderedBlock={selectedOrderedBlock}
               />
             )}
           </div>

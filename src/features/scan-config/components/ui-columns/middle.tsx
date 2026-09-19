@@ -1,5 +1,6 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
+import { BlockOrdered } from '@/features/scan-config/components/ui-blocks/block-ordered';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
@@ -8,6 +9,7 @@ import {
   type Config,
   type ConfigSchema,
   type IBlockDictionary,
+  type IBlockOrdered,
   type IBlockSingle,
   type IRootBlockUnion,
   ScanConfigUIElementDict,
@@ -38,8 +40,10 @@ type MiddleProps = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IBlockOrdered;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  /** selected child-block key when the root element is `block_ordered` */
+  selectedOrderedBlock: string;
 };
 
 export default function Middle({
@@ -57,6 +61,7 @@ export default function Middle({
   selectedSchema,
   schemaMappingConfig,
   entityType,
+  selectedOrderedBlock,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
@@ -132,6 +137,10 @@ export default function Middle({
           schemaMappingConfig={schemaMappingConfig}
           errorPathPrefix={errorPathPrefix}
         />
+      )}
+
+      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockOrdered && (
+        <BlockOrdered schema={selectedSchema} selectedBlock={selectedOrderedBlock} />
       )}
     </div>
   );
