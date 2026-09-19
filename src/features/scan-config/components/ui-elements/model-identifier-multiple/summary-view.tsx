@@ -88,6 +88,8 @@ type Props = {
   onAddGroup?: () => void;
   onGroupNameChange?: (groupIndex: number, name: string) => void;
   onRemoveGroup?: (groupIndex: number) => void;
+  /** max rows before the list scrolls; raise it when the field stands alone in its column */
+  visibleItemCount?: number;
 };
 
 function findEntityForRef(
@@ -137,6 +139,7 @@ export function ModelIdentifierSummaryView({
   onAddGroup,
   onGroupNameChange,
   onRemoveGroup,
+  visibleItemCount,
 }: Props) {
   const instanceId = useId();
   const entityPreview = useScanConfigEntityPreview();
@@ -277,7 +280,7 @@ export function ModelIdentifierSummaryView({
           <p className="-mt-2 text-sm text-red-500">Group names must be unique.</p>
         ) : null}
 
-        <ScrollableList itemCount={group.elements.length}>
+        <ScrollableList itemCount={group.elements.length} visibleItemCount={visibleItemCount}>
           {renderEntityCards(group.elements, groupIndex)}
         </ScrollableList>
 
@@ -315,7 +318,7 @@ export function ModelIdentifierSummaryView({
         'rounded-2xl border border-neutral-2 bg-white p-4'
       )}
     >
-      <ScrollableList itemCount={parsedValue.items.length}>
+      <ScrollableList itemCount={parsedValue.items.length} visibleItemCount={visibleItemCount}>
         {renderEntityCards(parsedValue.items)}
       </ScrollableList>
       <ModelIdentifierAddActionButton

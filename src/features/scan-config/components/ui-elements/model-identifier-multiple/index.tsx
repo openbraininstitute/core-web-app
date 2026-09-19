@@ -26,6 +26,7 @@ import {
 } from '@/features/scan-config/types';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { cn } from '@/utils/css-class';
 
 import type { TModelIdentifierParsedValue } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
 import type { TFromIdRef } from '@/features/scan-config/helpers';
@@ -39,6 +40,10 @@ type Props = {
   disabled?: boolean;
   /** root-element-scoped path (e.g. `initialize/neurons`) for left-menu field-error matching */
   errorPathPrefix?: string;
+  /** extra classes for the root container; lets a standalone field fill its column height */
+  className?: string;
+  /** max rows before the list scrolls; raise it when the field stands alone in its column */
+  visibleItemCount?: number;
 };
 
 function updateParsedValue(
@@ -56,6 +61,8 @@ export function ModelIdentifierMultiple({
   paramSchema,
   disabled = false,
   errorPathPrefix,
+  className,
+  visibleItemCount,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const workflowField = useScanConfigWorkflowEditorField();
@@ -317,7 +324,7 @@ export function ModelIdentifierMultiple({
 
   return (
     <div
-      className="w-full max-w-full min-w-0 overflow-hidden"
+      className={cn('w-full max-w-full min-w-0 overflow-hidden', className)}
       data-scan-config-block-element={ScanConfigUIElementDict.ModelIdentifierMultiple}
     >
       <ModelIdentifierSummaryView
@@ -337,6 +344,7 @@ export function ModelIdentifierMultiple({
         }
         onGroupNameChange={handleGroupNameChange}
         onRemoveGroup={handleRemoveGroup}
+        visibleItemCount={visibleItemCount}
       />
     </div>
   );
