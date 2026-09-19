@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { SynapseLegend } from '@/features/scan-config/components/circuit-viz/synapse-legend';
 
@@ -48,11 +48,55 @@ describe('SynapseLegend', () => {
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 
-  it('stays gone once dismissed', () => {
+  it('collapses to its icon and comes back', () => {
     render(<SynapseLegend groups={[group('Excitatory', '#cc3311')]} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Hide synapse colours' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse synapse colours' }));
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+
+    // Reversible, unlike the close button it replaced: hiding a type is only
+    // undoable from the legend.
+    fireEvent.click(screen.getByRole('button', { name: 'Show synapse colours' }));
+
+    expect(screen.getByRole('complementary')).toBeInTheDocument();
+  });
+
+  it('shows every group by default and reports each toggle by label', () => {
+    const onToggle = vi.fn();
+    render(
+      <SynapseLegend
+        groups={[group('Excitatory', '#cc3311'), group('Inhibitory', '#009e73')]}
+        onToggle={onToggle}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Hide Excitatory synapses' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide Inhibitory synapses' }));
+
+    expect(onToggle).toHaveBeenCalledWith('Inhibitory');
+  });
+
+  it('offers to show back a hidden group, and leaves its colour alone', () => {
+    render(
+      <SynapseLegend
+        groups={[group('Excitatory', '#cc3311'), group('Inhibitory', '#009e73')]}
+        hidden={new Set(['Inhibitory'])}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Show Inhibitory synapses' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    // Still listed, still its own colour: hiding is not unmapping.
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      'Excitatory',
+      'Inhibitory',
+    ]);
   });
 });

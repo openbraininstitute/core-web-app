@@ -43,6 +43,9 @@ import styles from './circuit-viz.module.css';
  */
 const SYNAPSE_RADIUS = 0.5;
 
+/** Nothing hidden, shared so the initial state is one object rather than one per viewer. */
+const EMPTY_LABELS: ReadonlySet<string> = new Set();
+
 /** Per-pixel floor so synapses stay visible once the camera pulls back. */
 const SYNAPSE_MIN_RADIUS_IN_PIXELS = 2;
 
@@ -236,6 +239,25 @@ function CircuitVizView({
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
   const { cells, isLoading, error, loadCell, retry, synapses, anchor, download } = source;
+  // Labels the legend is hiding. Held here because the legend names them and
+  // the viewer is handed what is left.
+  const [hiddenSynapses, setHiddenSynapses] = useState<ReadonlySet<string>>(EMPTY_LABELS);
+  const toggleSynapseLabel = useCallback((label: string) => {
+    setHiddenSynapses((current) => {
+      const next = new Set(current);
+      if (!next.delete(label)) next.add(label);
+      return next;
+    });
+  }, []);
+  // Memoized because morphoviewer compares the array by identity and rebuilds
+  // the whole point cloud when it changes.
+  const visibleSynapses = useMemo(
+    () =>
+      hiddenSynapses.size === 0
+        ? synapses
+        : synapses?.filter((group) => !hiddenSynapses.has(group.label)),
+    [synapses, hiddenSynapses]
+  );
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
 
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -370,7 +392,7 @@ function CircuitVizView({
           onOverlayTransform={onOverlayTransform}
           highlightedOverlayId={highlightedOverlayId}
           neuronOpacity={neuronOpacity}
-          synapses={synapses}
+          synapses={visibleSynapses}
           synapsesRadius={SYNAPSE_RADIUS}
           synapsesMinRadiusInPixels={SYNAPSE_MIN_RADIUS_IN_PIXELS}
           spikes={spikes?.data}
@@ -382,7 +404,12 @@ function CircuitVizView({
           spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
         />
       )}
-      <SynapseLegend groups={synapses} belowChrome={chromeTopRight} />
+      <SynapseLegend
+        groups={synapses}
+        belowChrome={chromeTopRight}
+        hidden={hiddenSynapses}
+        onToggle={toggleSynapseLabel}
+      />
       <MorphologyLocationLabels labels={locationLabels} />
       <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
       {loading && (
