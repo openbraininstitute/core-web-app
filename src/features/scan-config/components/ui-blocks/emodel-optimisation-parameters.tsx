@@ -4,31 +4,46 @@
  * Bespoke Middle-panel renderer for the `emodel_optimisation_parameters` root element.
  *
  * Fully custom (not schema-driven): the Left panel hardcodes a single "Mechanisms" outer tab with
- * three inner tabs; this renders the currently selected inner tab.
+ * three inner tabs; this dispatches to the component for the currently selected inner tab.
  *
- * SCAFFOLD: for now it only reports which inner tab is selected.
+ * `value`/`onChange` are scoped to the `emodel_optimisation_parameters` key of the outer config —
+ * each tab reads and writes that slice.
  */
 
-import { EMODEL_OPTIMISATION_MECHANISMS_TABS } from '@/features/scan-config/types';
+import { match } from 'ts-pattern';
+
+import { MechanismSelection } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-selection';
+import { ParametersSelection } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameters-selection';
+import { RegionAssignment } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-assignment';
+import {
+  type ConfigValue,
+  EModelOptimisationMechanismsTabs,
+  type IEModelOptimisationParameters,
+} from '@/features/scan-config/types';
 
 type Props = {
   /** selected inner-tab key (one of `EModelOptimisationMechanismsTabs`) */
   selectedTab: string;
+  /** the `emodel_optimisation_parameters` root element schema (source of sub-field schemas) */
+  rootSchema: IEModelOptimisationParameters;
+  /** current value of the `emodel_optimisation_parameters` config key */
+  value: ConfigValue;
+  /** writes the next value back to the `emodel_optimisation_parameters` config key */
+  onChange: (next: ConfigValue) => void;
 };
 
-export function EModelOptimisationParameters({ selectedTab }: Props) {
-  const tab = EMODEL_OPTIMISATION_MECHANISMS_TABS.find((t) => t.key === selectedTab);
-
-  return (
-    <div className="flex h-full w-full flex-col gap-2 p-4">
-      {tab ? (
-        <>
-          <h3 className="text-primary-8 text-lg font-bold">{tab.label}</h3>
-          <p className="text-sm text-gray-500">Selected: {tab.key}</p>
-        </>
-      ) : (
-        <p className="text-sm text-gray-400 italic">Select a tab from the left.</p>
-      )}
-    </div>
-  );
+export function EModelOptimisationParameters({ selectedTab, rootSchema, value, onChange }: Props) {
+  return match(selectedTab)
+    .with(EModelOptimisationMechanismsTabs.MechanismSelection, () => (
+      <MechanismSelection rootSchema={rootSchema} value={value} onChange={onChange} />
+    ))
+    .with(EModelOptimisationMechanismsTabs.RegionAssignment, () => (
+      <RegionAssignment value={value} onChange={onChange} />
+    ))
+    .with(EModelOptimisationMechanismsTabs.ParametersSelection, () => (
+      <ParametersSelection value={value} onChange={onChange} />
+    ))
+    .otherwise(() => (
+      <p className="p-4 text-sm text-gray-400 italic">Select a tab from the left.</p>
+    ));
 }

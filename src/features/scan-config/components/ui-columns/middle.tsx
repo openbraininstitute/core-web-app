@@ -140,7 +140,12 @@ export default function Middle({
       )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
-        <EModelOptimisationParameters selectedTab={selectedMechanismsTab} />
+        <EModelOptimisationParameters
+          selectedTab={selectedMechanismsTab}
+          rootSchema={selectedSchema}
+          value={config[selectedRootElement]}
+          onChange={(next) => setConfig({ ...config, [selectedRootElement]: next })}
+        />
       )}
     </div>
   );

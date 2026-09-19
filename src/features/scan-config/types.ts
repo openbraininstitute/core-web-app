@@ -510,12 +510,20 @@ export interface IBlockUnion extends TRootElement {
 export interface IRootBlockUnion extends TRootElement, IBlockUnion {}
 
 /**
- * E-Model optimisation parameters. A fully custom root element: its layout is hardcoded on the
- * frontend (a single "Mechanisms" outer tab with fixed inner tabs), NOT derived from schema
- * properties. Rendered by a bespoke component, not the generic block machinery.
+ * E-Model optimisation parameters. A fully custom root element: the tab *layout* is hardcoded on
+ * the frontend (a single "Mechanisms" outer tab with fixed inner tabs), but the individual field
+ * schemas (e.g. `mechanisms.ion_channel_models`) are still read from `properties` — so the bespoke
+ * tab components render real schema-driven widgets rather than duplicating the schema.
  */
 export interface IEModelOptimisationParameters extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.EModelOptimisationParameters;
+  properties: {
+    mechanisms: {
+      properties: {
+        ion_channel_models: TModelIdentifierMultiple;
+      };
+    };
+  };
 }
 
 /** Hardcoded inner tabs of the E-Model optimisation parameters "Mechanisms" section. */
