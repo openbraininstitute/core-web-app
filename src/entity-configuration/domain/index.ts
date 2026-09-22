@@ -124,3 +124,5 @@ export type TEntityCoreConfigurationItem =
 type InnerEntityType<T> = T extends EntityCoreTypeConfig<infer U> ? U : never;
 
 export type EntityTypeValue = InnerEntityType<TEntityCoreConfigurationItem>;
+
+export { protocolTypeFilter } from '@/entity-configuration/domain/model/synthesized-morphology';

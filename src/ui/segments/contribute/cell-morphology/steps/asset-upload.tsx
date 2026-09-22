@@ -2,7 +2,7 @@
 
 'use client';
 
-import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
+import { AlertOutlined, InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Form, Spin } from 'antd';
 import { isNil, reject } from 'es-toolkit/compat';
 import JSZip from 'jszip';
@@ -64,6 +64,7 @@ export function AssetUpload({
   };
   const [resolveNeuronFileLoading, setResolveNeuronFileLoading] = useState(false);
   const [originalFileType, setOriginalFileType] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const [
     { isDragging, errors },
@@ -86,6 +87,7 @@ export function AssetUpload({
     async onFilesAdded(addedFiles, setState) {
       const file = addedFiles[0].file as File;
       setResolveNeuronFileLoading(true);
+      setValidationError(null);
       const { data: resolution, error } = await tryCatch(resolveNeuronFile(file as File));
 
       if (error) {
@@ -96,6 +98,24 @@ export function AssetUpload({
         setState((prev) => ({
           ...prev,
           errors: [messages.ResolveNeuronFileFailed.replace('$$', file.name), detailMessage],
+        }));
+        return;
+      }
+
+      const invalidFileType = getFileExtensionByTypeOrMimeType(file);
+      if (resolution && !resolution.isValid && invalidFileType) {
+        // The file is not a readable morphology, but obi-one can still store it as
+        // disqualified. Keep it in the box, unconverted, with the reason next to it.
+        setResolveNeuronFileLoading(false);
+        setOriginalFileType(invalidFileType);
+        setValidationError(resolution.validationError);
+        form.setFieldsValue({
+          assets: { swc: undefined, asc: undefined, h5: undefined, [invalidFileType]: file },
+        });
+        form.validateFields(['assets']);
+        setState((prev) => ({
+          ...prev,
+          files: [...prev.files, { file, id: crypto.randomUUID(), type: invalidFileType }],
         }));
         return;
       }
@@ -161,6 +181,7 @@ export function AssetUpload({
       },
     });
     setOriginalFileType(null);
+    setValidationError(null);
     clearFiles();
     form.validateFields(['assets']);
   };
@@ -319,6 +340,36 @@ export function AssetUpload({
                 );
               })}
           </div>
+        )}
+
+        {!isNil(validationError) && (
+          <Alert variant="warning" appearance="light" className="mt-5">
+            <AlertIcon>
+              <AlertOutlined />
+            </AlertIcon>
+            <AlertContent>
+              <AlertTitle>This file failed morphology validation</AlertTitle>
+              <AlertDescription>
+                <p className="font-mono text-xs whitespace-pre-wrap wrap-anywhere">
+                  {validationError}
+                </p>
+              </AlertDescription>
+            </AlertContent>
+          </Alert>
+        )}
+
+        {!isNil(validationError) && (
+          <Alert variant="info" appearance="light" className="mt-3">
+            <AlertIcon>
+              <InfoCircleOutlined />
+            </AlertIcon>
+            <AlertContent>
+              <AlertDescription>
+                It can still be registered, but it will be marked as disqualified and no metrics or
+                format conversions will be computed. You can continue or pick another file.
+              </AlertDescription>
+            </AlertContent>
+          </Alert>
         )}
 
         {errors.length > 0 && (

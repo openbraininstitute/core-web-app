@@ -26,7 +26,12 @@ export const CELL_MORPHOLOGY_FILE_TYPES = [
   { type: 'h5', extension: 'h5', mimeType: 'application/x-hdf5' },
 ] as const;
 
-export const CellMorphologyAssetsSchema = createFileSchema(['swc', 'asc', 'h5']);
+// A file that fails validation is kept as-is, with no conversions, so only one format is present.
+export const CellMorphologyAssetsSchema = createFileSchema(['swc', 'asc', 'h5'])
+  .partial()
+  .refine((assets) => Object.values(assets).some((file) => file instanceof File), {
+    error: 'A morphology file is required',
+  });
 
 export const CellMorphologySchema = z.object({
   setup: BaseSetupSchema,
@@ -35,6 +40,8 @@ export const CellMorphologySchema = z.object({
   cell_morphology_protocol_id: ProtocolSchema,
   mtype_class_id: MTypeClassIdSchema,
   repair_pipeline_state: RepairPipelineTypeSchema,
+  /** Written by the protocol step; steers the post-create redirect, never sent to the API. */
+  _protocol_generation_type: z.string().nullish(),
   assets: CellMorphologyAssetsSchema,
   contribution: ContributionArraySchema,
 });
