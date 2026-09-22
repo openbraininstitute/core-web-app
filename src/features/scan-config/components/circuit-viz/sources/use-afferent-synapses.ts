@@ -21,6 +21,12 @@ import type { NodeGeometry, ParsedCircuitConfig } from '@/features/circuit-nodes
 import type { MorphoViewerTree } from '@/morpho-viewer';
 import type { TSmallCircuitSynapseGroup } from './types';
 
+/** Legend wording per synapse type. */
+const SYNAPSE_TYPE_LABELS = {
+  excitatory: 'Excitatory',
+  inhibitory: 'Inhibitory',
+} as const;
+
 type Options = {
   /** Off for circuits whose cell count puts the projection out of budget. */
   enabled: boolean;
@@ -111,17 +117,17 @@ export function useAfferentSynapses({
         if (cancelled) return;
         // Colour says synapse type, from a fixed two-colour map, so excitatory
         // and inhibitory read the same in every circuit.
-        //
-        // A population stating no `syn_type_id` falls back to a colour of its
-        // own. Counted over untyped populations only: numbering it by its place
-        // in `loaded` would both move its colour when a population ahead of it
-        // splits, and walk it onto the type colours.
         let untyped = 0;
         setGroups(
-          loaded.map(({ coordinates, synapseType }) => ({
-            color: synapseType ? SYNAPSE_TYPE_COLORS[synapseType] : untypedSynapseColor(untyped++),
-            coordinates,
-          }))
+          loaded.map(({ coordinates, populationName, synapseType }) =>
+            synapseType
+              ? {
+                  coordinates,
+                  color: SYNAPSE_TYPE_COLORS[synapseType],
+                  label: SYNAPSE_TYPE_LABELS[synapseType],
+                }
+              : { coordinates, color: untypedSynapseColor(untyped++), label: populationName }
+          )
         );
       })
       .catch((e) => {
