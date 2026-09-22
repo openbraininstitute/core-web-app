@@ -30,15 +30,32 @@ type Props = {
   value: ConfigValue;
   /** writes the next value back to the `emodel_optimisation_parameters` config key */
   onChange: (next: ConfigValue) => void;
+  /** selected Region Assignment section-list choice (`name`), or '' when none is selected */
+  selectedRegionChoice: string;
+  /** sets the selected Region Assignment section-list choice */
+  setSelectedRegionChoice: (choice: string) => void;
 };
 
-export function EModelOptimisationParameters({ selectedTab, rootSchema, value, onChange }: Props) {
+export function EModelOptimisationParameters({
+  selectedTab,
+  rootSchema,
+  value,
+  onChange,
+  selectedRegionChoice,
+  setSelectedRegionChoice,
+}: Props) {
   return match(selectedTab)
     .with(EModelOptimisationMechanismsTabs.MechanismSelection, () => (
       <MechanismSelection rootSchema={rootSchema} value={value} onChange={onChange} />
     ))
     .with(EModelOptimisationMechanismsTabs.RegionAssignment, () => (
-      <RegionAssignment value={value} onChange={onChange} />
+      <RegionAssignment
+        rootSchema={rootSchema}
+        value={value}
+        onChange={onChange}
+        selectedRegionChoice={selectedRegionChoice}
+        setSelectedRegionChoice={setSelectedRegionChoice}
+      />
     ))
     .with(EModelOptimisationMechanismsTabs.ParametersSelection, () => (
       <ParametersSelection value={value} onChange={onChange} />

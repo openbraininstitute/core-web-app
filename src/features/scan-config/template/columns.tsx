@@ -78,6 +78,8 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
       schemaMappingConfig={props.schemaMappingConfig}
       entityType={props.entityType}
       selectedMechanismsTab={state.selectedMechanismsTab}
+      selectedRegionChoice={state.selectedRegionChoice}
+      setSelectedRegionChoice={state.setSelectedRegionChoice}
     />
   );
 }

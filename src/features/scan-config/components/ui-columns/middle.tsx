@@ -44,6 +44,10 @@ type MiddleProps = {
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   /** selected inner mechanisms tab key when the root element is `emodel_optimisation_parameters` */
   selectedMechanismsTab: string;
+  /** selected Region Assignment section-list choice (`name`), or '' when none is selected */
+  selectedRegionChoice: string;
+  /** sets the selected Region Assignment section-list choice */
+  setSelectedRegionChoice: (choice: string) => void;
 };
 
 export default function Middle({
@@ -62,6 +66,8 @@ export default function Middle({
   schemaMappingConfig,
   entityType,
   selectedMechanismsTab,
+  selectedRegionChoice,
+  setSelectedRegionChoice,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
@@ -145,6 +151,8 @@ export default function Middle({
           rootSchema={selectedSchema}
           value={config[selectedRootElement]}
           onChange={(next) => setConfig({ ...config, [selectedRootElement]: next })}
+          selectedRegionChoice={selectedRegionChoice}
+          setSelectedRegionChoice={setSelectedRegionChoice}
         />
       )}
     </div>

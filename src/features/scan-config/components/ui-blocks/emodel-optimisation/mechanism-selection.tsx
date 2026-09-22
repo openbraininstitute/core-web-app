@@ -15,6 +15,57 @@ type Props = {
 };
 
 const ION_CHANNEL_MODELS_KEY = 'ion_channel_models';
+const MECHANISM_REGIONS_KEY = 'mechanism_regions';
+
+/** Collects the `id_str`s present in a `mechanisms.ion_channel_models` value. */
+function collectModelIds(ionChannelModels: ConfigValue): Set<string> {
+  const ids = new Set<string>();
+  if (!Array.isArray(ionChannelModels)) return ids;
+
+  for (const model of ionChannelModels) {
+    if (isPlainObject(model) && typeof model.id_str === 'string') {
+      ids.add(model.id_str);
+    }
+  }
+  return ids;
+}
+
+/**
+ * Drops any region-assigned model whose `id_str` is no longer in the master
+ * `mechanisms.ion_channel_models` list, so removing a model in this tab also removes it from every
+ * `mechanism_regions.*.ion_channel_models` that referenced it. Regions are otherwise left intact.
+ */
+function pruneRegionsToSelectedModels(
+  mechanisms: Record<string, ConfigValue>
+): Record<string, ConfigValue> {
+  const regions = mechanisms[MECHANISM_REGIONS_KEY];
+  if (!isPlainObject(regions)) return mechanisms;
+
+  const selectedIds = collectModelIds(mechanisms[ION_CHANNEL_MODELS_KEY]);
+
+  const nextRegions: Record<string, ConfigValue> = {};
+  for (const [regionKey, region] of Object.entries(regions)) {
+    if (!isPlainObject(region)) {
+      nextRegions[regionKey] = region;
+      continue;
+    }
+
+    const models = region[ION_CHANNEL_MODELS_KEY];
+    if (!Array.isArray(models)) {
+      nextRegions[regionKey] = region;
+      continue;
+    }
+
+    nextRegions[regionKey] = {
+      ...region,
+      [ION_CHANNEL_MODELS_KEY]: models.filter(
+        (model) => isPlainObject(model) && selectedIds.has(model.id_str as string)
+      ),
+    };
+  }
+
+  return { ...mechanisms, [MECHANISM_REGIONS_KEY]: nextRegions };
+}
 
 /**
  * "Mechanism Selection" tab of the E-Model optimisation parameters.
@@ -29,7 +80,8 @@ export function MechanismSelection({ rootSchema, value, onChange }: Props) {
   const mechanisms = isPlainObject(root.mechanisms) ? root.mechanisms : {};
 
   const setMechanismsState = (nextMechanisms: Record<string, ConfigValue>) => {
-    onChange({ ...root, mechanisms: nextMechanisms });
+    // Keep region assignments in sync: a model removed here must also leave every region.
+    onChange({ ...root, mechanisms: pruneRegionsToSelectedModels(nextMechanisms) });
   };
 
   return (

@@ -56,6 +56,9 @@ export function useScanConfigTemplate({
   const [selectedEntry, setSelectedEntry] = useState('');
   // selected inner mechanisms tab when the root element is `emodel_optimisation_parameters`
   const [selectedMechanismsTab, setSelectedMechanismsTab] = useState('');
+  // selected Region Assignment section-list choice (`name`) driving the adjacent
+  // ion-channel-models panel; empty when no card is selected
+  const [selectedRegionChoice, setSelectedRegionChoice] = useState('');
 
   const [loading, setLoading] = useState(false);
   const isDuplicate = campaignOriginAction === ScanConfigCampaignOriginActionDict.Duplicate;
@@ -117,6 +120,7 @@ export function useScanConfigTemplate({
       setTab(defaultTab);
       setSelectedRootElement(firstRoot ?? '');
       setSelectedMechanismsTab('');
+      setSelectedRegionChoice('');
       // Selections live in module state that outlives the route and are keyed
       // by block name, which repeats across workflows. Drop them so the next
       // workflow starts on each sweep's first value.
@@ -169,6 +173,8 @@ export function useScanConfigTemplate({
     setSelectedEntry,
     selectedMechanismsTab,
     setSelectedMechanismsTab,
+    selectedRegionChoice,
+    setSelectedRegionChoice,
     loading,
     setLoading,
     campaignId,

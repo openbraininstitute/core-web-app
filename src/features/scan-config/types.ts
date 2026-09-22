@@ -515,6 +515,27 @@ export interface IRootBlockUnion extends TRootElement, IBlockUnion {}
  * schemas (e.g. `mechanisms.ion_channel_models`) are still read from `properties` — so the bespoke
  * tab components render real schema-driven widgets rather than duplicating the schema.
  */
+/**
+ * A selectable section-list choice offered by the E-Model optimisation parameters schema
+ * (`base_parameters.choices`). Unavailable choices carry a `disabled_reason` explaining why.
+ */
+export type TEModelSectionListChoice = {
+  /** stable identifier used as the config value (e.g. `all`, `somatic`) */
+  name: string;
+  /** human-readable label for display */
+  label: string;
+  /** longer explanation of which sections the choice covers */
+  description: string;
+  /** ordering hint for display, ascending */
+  display_order: number;
+  /** whether the choice can be selected */
+  available: boolean;
+  /** availability tag mirroring `available` (`'available'` | `'unavailable'`) */
+  availability: string;
+  /** why the choice is disabled; present only when `available` is `false` */
+  disabled_reason?: string;
+};
+
 export interface IEModelOptimisationParameters extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.EModelOptimisationParameters;
   properties: {
@@ -522,6 +543,10 @@ export interface IEModelOptimisationParameters extends TRootElement {
       properties: {
         ion_channel_models: TModelIdentifierMultiple;
       };
+    };
+    /** Base and passive parameters, including the section-list `choices` to render. */
+    base_parameters: {
+      choices: TEModelSectionListChoice[];
     };
   };
 }
