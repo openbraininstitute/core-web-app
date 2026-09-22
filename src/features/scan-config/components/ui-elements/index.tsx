@@ -3,6 +3,7 @@ import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
 import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
+import { AxonModifier } from '@/features/scan-config/components/ui-elements/axon-modifier';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
@@ -28,6 +29,9 @@ import ParameterSweep from '@/features/scan-config/components/ui-elements/parame
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
 import { SelectEFeaturesByProtocol } from '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol';
+import { Stochasticity } from '@/features/scan-config/components/ui-elements/stochasticity';
+import { StringListInput } from '@/features/scan-config/components/ui-elements/string-list-input';
+import { StringSelection } from '@/features/scan-config/components/ui-elements/string-selection';
 import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import {
   VoltageDuration,
@@ -343,6 +347,25 @@ export function UIElementRender({
     )
     .with(
       {
+        paramSchema: { ui_element: ScanConfigUIElementDict.Stochasticity },
+      },
+      ({ paramSchema }) => {
+        const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
+        return (
+          <Stochasticity
+            fieldKey={k}
+            value={currentValue}
+            disabled={disabled}
+            onChange={(value: boolean) => {
+              setState({ ...state, [k]: value });
+            }}
+            ariaLabel={paramSchema.description}
+          />
+        );
+      }
+    )
+    .with(
+      {
         paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelVariableModificationByNeuron },
       },
       ({ paramSchema }) => {
@@ -558,10 +581,55 @@ export function UIElementRender({
     )
     .with(
       {
+        paramSchema: { ui_element: ScanConfigUIElementDict.StringSelection },
+      },
+      ({ paramSchema }) => (
+        <StringSelection
+          value={typeof value === 'string' ? value : null}
+          disabled={disabled}
+          paramSchema={paramSchema}
+          onChange={(newValue: string) => setState({ ...state, [k]: newValue })}
+        />
+      )
+    )
+    .with(
+      {
         paramSchema: { ui_element: ScanConfigUIElementDict.StringSelectionEnhanced },
       },
       ({ paramSchema }) => (
         <StringSelectionEnhanced
+          value={typeof value === 'string' ? value : null}
+          disabled={disabled}
+          paramSchema={paramSchema}
+          onChange={(newValue: string) => setState({ ...state, [k]: newValue })}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.StringListInput },
+      },
+      () => {
+        const currentValue = Array.isArray(value)
+          ? value.filter((item): item is string => typeof item === 'string')
+          : [];
+        return (
+          <StringListInput
+            value={currentValue}
+            disabled={disabled}
+            // a disabled field has no editable controls — show the plain list
+            readOnly={disabled}
+            onChange={(newValue: string[]) => setState({ ...state, [k]: newValue })}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.AxonModifier },
+      },
+      ({ paramSchema }) => (
+        <AxonModifier
           value={typeof value === 'string' ? value : null}
           disabled={disabled}
           paramSchema={paramSchema}

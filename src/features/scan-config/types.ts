@@ -176,7 +176,10 @@ export const ScanConfigUIElementDict = {
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
   VoltageDuration: 'voltage_duration',
   ModelIdentifierMultiple: 'model_identifier_multiple',
+  StringSelection: 'string_selection',
   StringSelectionEnhanced: 'string_selection_enhanced',
+  StringListInput: 'string_list_input',
+  Stochasticity: 'stochasticity',
   NeuronPropertyFilter: 'neuron_property_filter',
   NeuronSetCombination: 'neuron_set_combination',
   MorphologySectionTypeSelection: 'morphology_section_type_selection',
@@ -186,6 +189,7 @@ export const ScanConfigUIElementDict = {
   TaskResultSelector: 'task_result_selector',
   EtypeSelector: 'etype_selector',
   EModelOptimisationParameters: 'emodel_optimisation_parameters',
+  AxonModifier: 'axon_modifier',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -456,12 +460,44 @@ export interface BooleanInput extends TBlockElement {
  * together with at least one of `description_by_key` / `latex_by_key`, each holding a value for
  * every enum key.
  */
+/** Plain single-select over `enum` — a simple dropdown with no per-option content. */
+export interface StringSelection extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringSelection;
+  enum: string[];
+}
+
+/**
+ * Stochasticity toggle. Rendered as a boolean input via a thin wrapper over `BooleanInput`; the
+ * schema's `anyOf` also permits a protocol-name list, but the UI edits the boolean case.
+ */
+export interface Stochasticity extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.Stochasticity;
+}
+
+/** Free-form editable list of strings (`{ type: 'array', items: { type: 'string' } }`). */
+export interface StringListInput extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringListInput;
+}
+
 export interface StringSelectionEnhanced extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringSelectionEnhanced;
   enum: string[];
   title_by_key?: Record<string, string>;
   description_by_key?: Record<string, string>;
   latex_by_key?: Record<string, string>;
+}
+
+/**
+ * Axon replacement strategy picker. Structurally identical to `string_selection_enhanced` (the
+ * `enum` is inlined from the `AxonModifier` schema at dereference time, alongside the
+ * `title_by_key` / `description_by_key` maps); it just carries its own `ui_element` so the schema
+ * can flag the field. Rendered by a thin wrapper over `StringSelectionEnhanced`.
+ */
+export interface AxonModifier extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.AxonModifier;
+  enum: string[];
+  title_by_key?: Record<string, string>;
+  description_by_key?: Record<string, string>;
 }
 
 export interface VoltageDuration extends TBlockElement {
@@ -602,7 +638,11 @@ export type ParamSchema =
   | MorphologySectionTypeSelection
   | IMorphologyLocationSelection
   | VoltageDuration
+  | StringSelection
   | StringSelectionEnhanced
+  | StringListInput
+  | AxonModifier
+  | Stochasticity
   | NeuronPropertyFilter
   | NeuronSetCombination;
 
