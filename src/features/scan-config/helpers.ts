@@ -4,10 +4,15 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import {
+  BuildScanConfigTabs,
   type ConfigValue,
+  ExtractScanConfigTabs,
   type NeuronPropertyFilter,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
+  SimulateScanConfigTabs,
   type TScanConfigActivity,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -90,6 +95,29 @@ export const ScanConfigOriginSearchParam = 'origin' as const;
 
 /** query param flagging the editor mode, e.g. `?mode=duplicate` to open editable. */
 export const ScanConfigModeSearchParam = 'mode' as const;
+
+/** query param holding the editor's active tab (`?tab=simulations`). */
+export const ScanConfigTabSearchParam = 'tab' as const;
+
+/** each activity's results tab — the one tab that is not `configuration`. */
+export const ScanConfigResultsTab = {
+  [ScanConfigActivity.Simulate]: {
+    id: SimulateScanConfigTabs.simulations,
+    __activity: ScanConfigActivity.Simulate,
+  },
+  [ScanConfigActivity.Extract]: {
+    id: ExtractScanConfigTabs.extractions,
+    __activity: ScanConfigActivity.Extract,
+  },
+  [ScanConfigActivity.Process]: {
+    id: ProcessScanConfigTabs.skeletonizations,
+    __activity: ScanConfigActivity.Process,
+  },
+  [ScanConfigActivity.Build]: {
+    id: BuildScanConfigTabs.results,
+    __activity: ScanConfigActivity.Build,
+  },
+} as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
 export function parseScanConfigMode(
   value: string | string[] | undefined

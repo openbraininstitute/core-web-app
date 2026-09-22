@@ -3,12 +3,15 @@ import { kebabCase } from 'es-toolkit/compat';
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
+import { WorkflowActivityDictValue } from '@/constants';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   ScanConfigCampaignOriginActionDict,
   ScanConfigModeSearchParam,
   ScanConfigOriginSearchParam,
+  ScanConfigResultsTab,
+  ScanConfigTabSearchParam,
 } from '@/features/scan-config/helpers';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { getWorkflow } from '@/ui/segments/workflows/config/helpers';
@@ -21,11 +24,12 @@ import type { WorkspaceContext } from '@/types/common';
 import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
 
 /**
- * Campaign and simulation types whose row offers no "View results" action.
+ * Campaign and simulation types the detail-view results route cannot open.
  *
  * Their results are not reachable from a single generated entity — an e-feature extraction, for
- * instance, registers one task result per config rather than one entity for the campaign — so the
- * detail results route has nothing to open.
+ * instance, registers one task result per config rather than one entity for the campaign.
+ * Scan-config workflows are unaffected: {@link buildWorkflowActivityResultsHref} opens their own
+ * editor on its results tab, which lists every task result of the campaign.
  */
 export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
@@ -246,6 +250,57 @@ export function buildWorkflowActivityDetailResultsHref(opts: {
   }
 
   return base;
+}
+
+/**
+ * results URL for an activities-table row
+ *
+ * A scan-config campaign opens its own editor — the same URL "View configuration" uses, with
+ * {@link ScanConfigTabSearchParam} set to the activity's results tab. That tab reads the campaign's
+ * task results directly, so it works for the campaigns {@link NotAllowedResultsActionEntityTypes}
+ * rules out. Everything else falls back to the detail-view results route.
+ *
+ * @returns results href, or `null` when the row has no results view
+ */
+export function buildWorkflowActivityResultsHref(opts: {
+  activity: TActivityValue;
+  listEntityType: TExtendedEntitiesTypeDict;
+  workspace: WorkspaceContext;
+  row: TWorkflowActivityTableRow;
+  query?: Record<string, string | undefined>;
+}): string | null {
+  const scanConfigActivity = getWorkflow({
+    activity: opts.activity,
+    targetType: opts.listEntityType,
+  })?.scanConfig?.definition.activity;
+
+  if (scanConfigActivity) {
+    const href = buildConfigureUrlForActivityRow({
+      ...opts,
+      query: {
+        ...opts.query,
+        [ScanConfigTabSearchParam]: ScanConfigResultsTab[scanConfigActivity].id,
+      },
+    });
+
+    if (href) {
+      return href;
+    }
+  }
+
+  // a build row's own detail view is the model it produced, not a results listing
+  if (
+    opts.activity === WorkflowActivityDictValue.build ||
+    NotAllowedResultsActionEntityTypes.includes(opts.listEntityType)
+  ) {
+    return null;
+  }
+
+  return buildWorkflowActivityDetailResultsHref({
+    workspace: opts.workspace,
+    listEntityType: opts.listEntityType,
+    rowId: opts.row.id,
+  });
 }
 
 /** prefer registry-based configure URL; fall back to detail-view configuration tab */

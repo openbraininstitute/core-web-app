@@ -138,8 +138,9 @@ describe('WorkflowActivityActionsCell', () => {
     expect(isDisabled('View results')).toBe(true);
   });
 
-  it('keeps View results disabled for a type whose results have no route', () => {
+  it('keeps View results disabled for a row that resolves to no results view', () => {
     render(
+      // a campaign row with no input entity: its scan-config editor URL cannot be built
       <WorkflowActivityActionsCell
         row={row({ type: EntityTypeDict.TaskConfig })}
         value=""
@@ -152,6 +153,23 @@ describe('WorkflowActivityActionsCell', () => {
     );
 
     expect(isDisabled('View results')).toBe(true);
+  });
+
+  it('ENABLES View results for a scan-config campaign, on its own results tab', () => {
+    render(
+      <WorkflowActivityActionsCell
+        row={row({ type: EntityTypeDict.TaskConfig, inputs: [{ id: 'source-entity' }] })}
+        value=""
+        rowIndex={0}
+        params={{
+          activity: ActivityValues.Extract,
+          entityType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+        }}
+      />
+    );
+
+    // the detail-view results route has nothing to open for this campaign; the editor does
+    expect(action('View results')?.getAttribute('href')).toContain('tab=extractions');
   });
 
   it('ENABLES View results where the type does have one', () => {

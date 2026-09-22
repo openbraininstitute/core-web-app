@@ -20,6 +20,7 @@ import {
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
+import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
   type Config,
   type ConfigSchema,
@@ -110,7 +111,7 @@ function ScanConfigTemplateContent({
 }: Props) {
   const browseOverlayContext = useScanConfigMainOverlayOptional();
   const browseOverlay = browseOverlayContext?.overlay;
-  const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
+  const [tab, setTab] = useScanConfigTab(activity, defaultTab);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);
@@ -194,6 +195,7 @@ function ScanConfigTemplateContent({
     previousSchemaName,
     defaultTab,
     firstRoot,
+    setTab,
   ]);
 
   useEffect(
