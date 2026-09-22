@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Checkbox } from 'antd';
+import { Checkbox, Radio } from 'antd';
 import { useEffect, useMemo } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -16,6 +16,43 @@ import type { ConfigValue } from '@/features/scan-config/types';
 
 const MECHANISM_REGIONS_KEY = 'mechanism_regions';
 const PARAMETERS_KEY = 'parameters';
+
+const ParameterMode = {
+  Fixed: 'fixed',
+  Bounds: 'bounds',
+} as const;
+type TParameterMode = (typeof ParameterMode)[keyof typeof ParameterMode];
+
+/** A bounds pair; each end may be `null` until the user fills it in. */
+type TBounds = [number | null, number | null];
+
+/** Shape stored per checked parameter under `mechanism_regions.<choice>.parameters`. */
+type TParameterEntry = {
+  mode: TParameterMode;
+  value: number | null;
+  bounds: TBounds | null;
+};
+
+function defaultParameterEntry(): TParameterEntry {
+  return { mode: ParameterMode.Fixed, value: null, bounds: null };
+}
+
+/** Reads a stored parameter entry into the typed shape, defaulting missing/invalid fields. */
+function readParameterEntry(raw: ConfigValue): TParameterEntry {
+  if (!isPlainObject(raw)) return defaultParameterEntry();
+
+  const mode = raw.mode === ParameterMode.Bounds ? ParameterMode.Bounds : ParameterMode.Fixed;
+  const value = typeof raw.value === 'number' ? raw.value : null;
+  const bounds =
+    Array.isArray(raw.bounds) && raw.bounds.length === 2
+      ? ([
+          typeof raw.bounds[0] === 'number' ? raw.bounds[0] : null,
+          typeof raw.bounds[1] === 'number' ? raw.bounds[1] : null,
+        ] as TBounds)
+      : null;
+
+  return { mode, value, bounds };
+}
 
 type Props = {
   /** the selected section-list choice `name` (config key under `mechanism_regions`) */
@@ -130,16 +167,7 @@ function NeuronBlockParameters({
 
   const paramKey = (parameterName: string) => `${parameterName}_${modelName}`;
 
-  const toggleParameter = (parameterName: string, checked: boolean) => {
-    const nextParameters = { ...parametersDict };
-    const key = paramKey(parameterName);
-
-    if (checked) {
-      nextParameters[key] = {};
-    } else {
-      delete nextParameters[key];
-    }
-
+  const writeParameters = (nextParameters: Record<string, ConfigValue>) => {
     onChange({
       ...root,
       mechanisms: {
@@ -153,6 +181,25 @@ function NeuronBlockParameters({
         },
       },
     });
+  };
+
+  const toggleParameter = (parameterName: string, checked: boolean) => {
+    const nextParameters = { ...parametersDict };
+    const key = paramKey(parameterName);
+
+    if (checked) {
+      // Check adds the entry, defaulting to `fixed` mode with empty values.
+      nextParameters[key] = defaultParameterEntry();
+    } else {
+      // Uncheck clears everything for this param/model combination.
+      delete nextParameters[key];
+    }
+
+    writeParameters(nextParameters);
+  };
+
+  const setParameterEntry = (parameterName: string, entry: TParameterEntry) => {
+    writeParameters({ ...parametersDict, [paramKey(parameterName)]: entry });
   };
 
   if (parameters === null) {
@@ -169,22 +216,137 @@ function NeuronBlockParameters({
 
   return (
     <ul className="mt-2 flex flex-col gap-2">
-      {parameters.map((param) => (
-        <li
-          key={`${param.source}:${param.name}`}
-          className="flex items-center justify-between gap-3 rounded border border-gray-200 bg-white p-3"
-        >
-          <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{param.name}</span>
-          <div className="flex shrink-0 items-center gap-3">
-            {param.unit && <span className="text-xs text-gray-500">{param.unit}</span>}
-            <Checkbox
-              checked={paramKey(param.name) in parametersDict}
-              disabled={!modelName}
-              onChange={(e) => toggleParameter(param.name, e.target.checked)}
-            />
-          </div>
-        </li>
-      ))}
+      {parameters.map((param) => {
+        const key = paramKey(param.name);
+        const checked = key in parametersDict;
+
+        return (
+          <ParameterRow
+            key={`${param.source}:${param.name}`}
+            name={param.name}
+            unit={param.unit}
+            checked={checked}
+            disabled={!modelName}
+            entry={checked ? readParameterEntry(parametersDict[key]) : null}
+            onToggle={(next) => toggleParameter(param.name, next)}
+            onEntryChange={(entry) => setParameterEntry(param.name, entry)}
+          />
+        );
+      })}
     </ul>
+  );
+}
+
+/** True when the string parses to a finite number. Empty input is treated as "not yet a value". */
+function parseFiniteNumber(raw: string): number | null {
+  if (raw.trim() === '') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * A single parameter row: a checkbox to include the parameter, and — once checked — a fixed/bounds
+ * mode selector with the matching number input(s). Switching mode clears the other mode's field(s).
+ */
+function ParameterRow({
+  name,
+  unit,
+  checked,
+  disabled,
+  entry,
+  onToggle,
+  onEntryChange,
+}: {
+  name: string;
+  unit: string | null;
+  checked: boolean;
+  disabled: boolean;
+  entry: TParameterEntry | null;
+  onToggle: (next: boolean) => void;
+  onEntryChange: (entry: TParameterEntry) => void;
+}) {
+  const mode = entry?.mode ?? ParameterMode.Fixed;
+
+  const setMode = (nextMode: TParameterMode) => {
+    if (!entry || nextMode === entry.mode) return;
+    // Switching mode clears the other mode's field(s). Bounds mode seeds an empty pair so each
+    // input can mutate its own slot independently.
+    onEntryChange({
+      mode: nextMode,
+      value: null,
+      bounds: nextMode === ParameterMode.Bounds ? [null, null] : null,
+    });
+  };
+
+  const setValue = (raw: string) => {
+    if (!entry) return;
+    onEntryChange({ ...entry, value: parseFiniteNumber(raw), bounds: null });
+  };
+
+  const setBound = (index: 0 | 1, raw: string) => {
+    if (!entry) return;
+    const current: TBounds = entry.bounds ?? [null, null];
+    const nextBounds: TBounds = [current[0], current[1]];
+    nextBounds[index] = parseFiniteNumber(raw);
+    onEntryChange({ ...entry, value: null, bounds: nextBounds });
+  };
+
+  return (
+    <li className="flex flex-col gap-2 rounded border border-gray-200 bg-white p-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
+        <div className="flex shrink-0 items-center gap-3">
+          {unit && <span className="text-xs text-gray-500">{unit}</span>}
+          <Checkbox
+            checked={checked}
+            disabled={disabled}
+            onChange={(e) => onToggle(e.target.checked)}
+          />
+        </div>
+      </div>
+
+      {checked && entry && (
+        <div className="flex flex-col gap-2">
+          <Radio.Group
+            value={mode}
+            onChange={(e) => setMode(e.target.value as TParameterMode)}
+            options={[
+              { label: 'Fixed', value: ParameterMode.Fixed },
+              { label: 'Bounds', value: ParameterMode.Bounds },
+            ]}
+          />
+
+          {mode === ParameterMode.Fixed ? (
+            <input
+              type="number"
+              inputMode="decimal"
+              className="w-full rounded border border-gray-200 px-2 py-1 text-sm"
+              placeholder="Value"
+              value={entry.value ?? ''}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                className="w-full rounded border border-gray-200 px-2 py-1 text-sm"
+                placeholder="Min"
+                value={entry.bounds?.[0] ?? ''}
+                onChange={(e) => setBound(0, e.target.value)}
+              />
+              <input
+                type="number"
+                inputMode="decimal"
+                className="w-full rounded border border-gray-200 px-2 py-1 text-sm"
+                placeholder="Max"
+                value={entry.bounds?.[1] ?? ''}
+                onChange={(e) => setBound(1, e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </li>
   );
 }
