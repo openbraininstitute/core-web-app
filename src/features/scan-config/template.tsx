@@ -2,7 +2,7 @@
 
 import { get } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Activity, Suspense, useCallback, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -395,17 +395,17 @@ function ScanConfigTemplateContent({
             />
           </div>
         </div>
-        <div
-          id="scan-config-results"
-          data-testid="scan-config-results"
-          className={cn(
-            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
-            { hidden: isConfigurationTab },
-            { 'h-full': !isConfigurationTab }
-          )}
-        >
-          {results}
-        </div>
+        {/* Activity rather than a `hidden` class: hidden unmounts the tab's effects, so its
+            campaign queries do not run until it is opened. State survives the switch either way. */}
+        <Activity mode={isConfigurationTab ? 'hidden' : 'visible'} name="scan-config-results">
+          <div
+            id="scan-config-results"
+            data-testid="scan-config-results"
+            className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden"
+          >
+            {results}
+          </div>
+        </Activity>
       </div>
     </div>
   );
