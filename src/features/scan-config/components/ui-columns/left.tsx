@@ -121,7 +121,10 @@ export default function Left({
                 Object.entries(schema.properties)
                   .filter(
                     ([_, rootElementSchema]) =>
-                      'group' in rootElementSchema && rootElementSchema.group === group
+                      'group' in rootElementSchema &&
+                      rootElementSchema.group === group &&
+                      // schema-driven hide: skip root elements flagged `ui_hidden`
+                      !('ui_hidden' in rootElementSchema && rootElementSchema.ui_hidden)
                   )
                   .sort(([_, a], [__, b]) => {
                     if (isType(a) || isType(b)) return 0;

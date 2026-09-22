@@ -152,6 +152,8 @@ export type TRootElement = {
   title: string;
   group: string;
   group_order: number;
+  /** when true, the root element is not rendered in the left column */
+  ui_hidden?: boolean;
 };
 
 export const ScanConfigUIElementDict = {

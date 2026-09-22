@@ -1,9 +1,14 @@
 'use client';
 
 import { RiArrowRightSLine } from '@remixicon/react';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { useModelNameRegistry } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/model-name-registry-context';
+import {
+  assignedModelIds,
+  ION_CHANNEL_MODELS_KEY,
+  IonChannelModelFromIdType,
+  readMechanisms,
+} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -11,9 +16,6 @@ import { cn } from '@/utils/css-class';
 
 import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { ConfigValue } from '@/features/scan-config/types';
-
-const ION_CHANNEL_MODELS_KEY = 'ion_channel_models';
-const MECHANISM_REGIONS_KEY = 'mechanism_regions';
 
 type Props = {
   /** the selected section-list choice `name` (config key under `mechanism_regions`) */
@@ -31,9 +33,9 @@ type Props = {
 /**
  * Second column of the Parameters Selection tab.
  *
- * Lists only the ion channel models already assigned to the selected region (read from
- * `mechanisms.mechanism_regions.<choiceName>.ion_channel_models`). Each row carries a chevron that
- * selects the model and opens the third detail drawer.
+ * Lists only the ion channel models already assigned to the selected region (read from the
+ * `mechanisms.mechanism_regions.<choiceName>` entry array). Each row carries a chevron that selects
+ * the model and opens the third detail drawer.
  */
 export function RegionModelsPanel({
   choiceName,
@@ -44,34 +46,17 @@ export function RegionModelsPanel({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
-  const mechanisms = useMemo(() => {
-    const root = isPlainObject(value) ? value : {};
-    return isPlainObject(root.mechanisms) ? root.mechanisms : {};
-  }, [value]);
+  const mechanisms = useMemo(() => readMechanisms(value), [value]);
 
   // The ids assigned to this region (the subset we actually display).
-  const assignedIds = useMemo(() => {
-    const regions = isPlainObject(mechanisms[MECHANISM_REGIONS_KEY])
-      ? mechanisms[MECHANISM_REGIONS_KEY]
-      : {};
-    const region = isPlainObject(regions[choiceName]) ? regions[choiceName] : {};
-    const models = Array.isArray(region[ION_CHANNEL_MODELS_KEY])
-      ? region[ION_CHANNEL_MODELS_KEY]
-      : [];
-
-    const ids: string[] = [];
-    for (const model of models) {
-      if (isPlainObject(model) && typeof model.id_str === 'string') {
-        ids.push(model.id_str);
-      }
-    }
-    return ids;
-  }, [mechanisms, choiceName]);
+  const assignedIds = useMemo(
+    () => assignedModelIds(mechanisms, choiceName),
+    [mechanisms, choiceName]
+  );
 
   // Resolve names off the *full* picked list (`mechanisms.ion_channel_models`), not this region's
   // subset. Mechanism Selection already resolved that exact list, so this hits the shared query
-  // cache instead of firing a fresh, narrower request (which flashed "Loading…"). We only need
-  // names here — no per-region fetch is warranted.
+  // cache instead of firing a fresh, narrower request (which flashed "Loading…").
   const refs = useMemo<TFromIdRef[]>(() => {
     const picked = Array.isArray(mechanisms[ION_CHANNEL_MODELS_KEY])
       ? mechanisms[ION_CHANNEL_MODELS_KEY]
@@ -79,7 +64,7 @@ export function RegionModelsPanel({
 
     return picked.flatMap((model) =>
       isPlainObject(model) && typeof model.id_str === 'string'
-        ? [{ type: 'IonChannelModelFromID', id_str: model.id_str }]
+        ? [{ type: IonChannelModelFromIdType, id_str: model.id_str }]
         : []
     );
   }, [mechanisms]);
@@ -88,13 +73,6 @@ export function RegionModelsPanel({
     refs,
     context: { virtualLabId, projectId },
   });
-
-  const { registerModelNames } = useModelNameRegistry();
-
-  // Keep the template-scoped registry warm so prune helpers can resolve names by id.
-  useEffect(() => {
-    registerModelNames(entities);
-  }, [entities, registerModelNames]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">

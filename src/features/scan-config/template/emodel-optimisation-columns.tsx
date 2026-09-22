@@ -3,9 +3,12 @@
 import { useEffect } from 'react';
 
 import { IonChannelModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-models-panel';
+import {
+  assignedModelIds,
+  readMechanisms,
+} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { RegionModelDetail } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-model-detail';
 import { RegionModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-models-panel';
-import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type ConfigValue,
   EModelOptimisationMechanismsTabs,
@@ -29,19 +32,7 @@ type Props = {
 
 /** The model `id_str`s assigned to a region in `mechanisms.mechanism_regions.<choice>`. */
 function regionModelIds(value: ConfigValue, choiceName: string): Set<string> {
-  const root = isPlainObject(value) ? value : {};
-  const mechanisms = isPlainObject(root.mechanisms) ? root.mechanisms : {};
-  const regions = isPlainObject(mechanisms.mechanism_regions) ? mechanisms.mechanism_regions : {};
-  const region = isPlainObject(regions[choiceName]) ? regions[choiceName] : {};
-  const models = Array.isArray(region.ion_channel_models) ? region.ion_channel_models : [];
-
-  const ids = new Set<string>();
-  for (const model of models) {
-    if (isPlainObject(model) && typeof model.id_str === 'string') {
-      ids.add(model.id_str);
-    }
-  }
-  return ids;
+  return new Set(assignedModelIds(readMechanisms(value), choiceName));
 }
 
 /**

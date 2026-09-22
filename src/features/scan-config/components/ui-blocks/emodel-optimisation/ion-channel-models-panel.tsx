@@ -1,22 +1,25 @@
 'use client';
 
 import { Checkbox } from 'antd';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { useModelNameRegistry } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/model-name-registry-context';
-import { pruneRegionParametersForModelNames } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/prune-region-parameters';
+import {
+  assignedModelIds,
+  entryModelId,
+  ION_CHANNEL_MODELS_KEY,
+  makeRegionEntry,
+  readMechanisms,
+  readRegionEntries,
+  writeRegionEntries,
+} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
   getAllRefsFromParsed,
   parseModelIdentifierFieldValue,
 } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
-import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
-
-const ION_CHANNEL_MODELS_KEY = 'ion_channel_models';
-const MECHANISM_REGIONS_KEY = 'mechanism_regions';
 
 type Props = {
   /** the selected section-list choice `name` (config key under `mechanism_regions`) */
@@ -35,9 +38,9 @@ type Props = {
  * Panel that opens beside the Region Assignment cards once a section-list choice is selected.
  *
  * Lists the ion channel models the user picked in "Mechanism Selection" (read from
- * `mechanisms.ion_channel_models`). Checking a model assigns it to the selected region: it is
- * stored under `mechanisms.mechanism_regions.<choiceName>.ion_channel_models` as `{ id_str }`,
- * creating the region entry on first check and dropping it back to an empty list on uncheck.
+ * `mechanisms.ion_channel_models`). Checking a model assigns it to the selected region by adding a
+ * `MechanismRegionSelection` entry to `mechanisms.mechanism_regions.<choiceName>` (an array);
+ * unchecking removes that entry (and, with it, any parameters it held).
  */
 export function IonChannelModelsPanel({
   choiceName,
@@ -51,8 +54,7 @@ export function IonChannelModelsPanel({
   const fieldSchema = rootSchema.properties.mechanisms.properties
     .ion_channel_models as unknown as Record<string, unknown>;
 
-  const root = useMemo(() => (isPlainObject(value) ? value : {}), [value]);
-  const mechanisms = useMemo(() => (isPlainObject(root.mechanisms) ? root.mechanisms : {}), [root]);
+  const mechanisms = useMemo(() => readMechanisms(value), [value]);
 
   // Available models to assign: the ones picked in Mechanism Selection.
   const refs = useMemo(() => {
@@ -60,71 +62,29 @@ export function IonChannelModelsPanel({
     return getAllRefsFromParsed(parsed);
   }, [mechanisms, fieldSchema]);
 
-  // The set of model ids already assigned to this region, for the checkbox state.
-  const assignedIds = useMemo(() => {
-    const regions = isPlainObject(mechanisms[MECHANISM_REGIONS_KEY])
-      ? mechanisms[MECHANISM_REGIONS_KEY]
-      : {};
-    const region = isPlainObject(regions[choiceName]) ? regions[choiceName] : {};
-    const models = Array.isArray(region[ION_CHANNEL_MODELS_KEY])
-      ? region[ION_CHANNEL_MODELS_KEY]
-      : [];
-
-    const ids = new Set<string>();
-    for (const model of models) {
-      if (isPlainObject(model) && typeof model.id_str === 'string') {
-        ids.add(model.id_str);
-      }
-    }
-    return ids;
-  }, [mechanisms, choiceName]);
+  // Ids already assigned to this region, for the checkbox state.
+  const assignedIds = useMemo(
+    () => new Set(assignedModelIds(mechanisms, choiceName)),
+    [mechanisms, choiceName]
+  );
 
   const { entities, isLoading } = useResolvedModelIdentifierEntities({
     refs,
     context: { virtualLabId, projectId },
   });
 
-  const { registerModelNames } = useModelNameRegistry();
-
-  // Keep the template-scoped registry warm so prune helpers can resolve names by id.
-  useEffect(() => {
-    registerModelNames(entities);
-  }, [entities, registerModelNames]);
-
   const toggleModel = (idStr: string, checked: boolean) => {
-    const nextIds = new Set(assignedIds);
-    if (checked) {
-      nextIds.add(idStr);
-    } else {
-      nextIds.delete(idStr);
-    }
+    const entries = readRegionEntries(mechanisms, choiceName);
 
-    const regions = isPlainObject(mechanisms[MECHANISM_REGIONS_KEY])
-      ? mechanisms[MECHANISM_REGIONS_KEY]
-      : {};
-    const region = isPlainObject(regions[choiceName]) ? regions[choiceName] : {};
+    const nextEntries = checked
+      ? // assign: add an entry for this model if not already present
+        entries.some((entry) => entryModelId(entry) === idStr)
+        ? entries
+        : [...entries, makeRegionEntry(idStr)]
+      : // unassign: drop this model's entry, taking any parameters it held with it
+        entries.filter((entry) => entryModelId(entry) !== idStr);
 
-    let nextMechanisms: Record<string, ConfigValue> = {
-      ...mechanisms,
-      [MECHANISM_REGIONS_KEY]: {
-        ...regions,
-        [choiceName]: {
-          ...region,
-          [ION_CHANNEL_MODELS_KEY]: [...nextIds].map((id_str) => ({ id_str })),
-        },
-      },
-    };
-
-    // Unassigning a model must also drop its parameter entries. This panel has the model's name
-    // resolved locally, so route it through the same shared prune the deletion path uses.
-    if (!checked) {
-      const modelName = entities.find((e) => e.id === idStr)?.name;
-      if (modelName) {
-        nextMechanisms = pruneRegionParametersForModelNames(nextMechanisms, [modelName]);
-      }
-    }
-
-    onChange({ ...root, mechanisms: nextMechanisms });
+    onChange(writeRegionEntries(value, choiceName, nextEntries));
   };
 
   return (

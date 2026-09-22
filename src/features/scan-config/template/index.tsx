@@ -9,7 +9,6 @@ import {
   useScanConfigMainOverlayOptional,
 } from '@/features/scan-config/bridge/main-overlay-context';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
-import { ModelNameRegistryProvider } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/model-name-registry-context';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
@@ -33,10 +32,7 @@ import type { ScanConfigTemplateProps } from './types';
 export function ScanConfigTemplate(props: ScanConfigTemplateProps) {
   return (
     <ScanConfigMainOverlayProvider>
-      {/* id->name registry scoped to this template: cleared when the template unmounts */}
-      <ModelNameRegistryProvider>
-        <ScanConfigTemplateContent {...props} />
-      </ModelNameRegistryProvider>
+      <ScanConfigTemplateContent {...props} />
     </ScanConfigMainOverlayProvider>
   );
 }

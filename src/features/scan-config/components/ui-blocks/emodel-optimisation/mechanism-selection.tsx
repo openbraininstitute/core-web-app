@@ -1,7 +1,11 @@
 'use client';
 
-import { useModelNameRegistry } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/model-name-registry-context';
-import { pruneRegionParametersForModelNames } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/prune-region-parameters';
+import {
+  ION_CHANNEL_MODELS_KEY,
+  MECHANISMS_KEY,
+  pruneRegionsToModelIds,
+  readMechanisms,
+} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
@@ -15,9 +19,6 @@ type Props = {
   /** writes the next value back to the `emodel_optimisation_parameters` config key */
   onChange: (next: ConfigValue) => void;
 };
-
-const ION_CHANNEL_MODELS_KEY = 'ion_channel_models';
-const MECHANISM_REGIONS_KEY = 'mechanism_regions';
 
 /** Collects the `id_str`s present in a `mechanisms.ion_channel_models` value. */
 function collectModelIds(ionChannelModels: ConfigValue): Set<string> {
@@ -33,64 +34,16 @@ function collectModelIds(ionChannelModels: ConfigValue): Set<string> {
 }
 
 /**
- * Keeps region assignments consistent with the master `mechanisms.ion_channel_models` list.
- *
- * For every model dropped from the master list, this:
- *  - removes it from each `mechanism_regions.<choice>.ion_channel_models`, and
- *  - strips its `mechanism_regions.<choice>.parameters` entries (keys `${param}_${modelName}`),
- *    resolving the name from the template-scoped model-name registry.
+ * Keeps region assignments consistent with the master `mechanisms.ion_channel_models` list: a model
+ * dropped from the master list is removed from every `mechanism_regions.<choice>` entry array,
+ * taking its parameters with it. Pruning is purely by `id_str` since each region entry references
+ * its model directly.
  */
 function pruneRegionsToSelectedModels(
-  mechanisms: Record<string, ConfigValue>,
-  getModelName: (idStr: string) => string | undefined
+  mechanisms: Record<string, ConfigValue>
 ): Record<string, ConfigValue> {
-  const regions = mechanisms[MECHANISM_REGIONS_KEY];
-  if (!isPlainObject(regions)) return mechanisms;
-
   const selectedIds = collectModelIds(mechanisms[ION_CHANNEL_MODELS_KEY]);
-
-  const removedIds = new Set<string>();
-  const nextRegions: Record<string, ConfigValue> = {};
-
-  for (const [regionKey, region] of Object.entries(regions)) {
-    if (!isPlainObject(region)) {
-      nextRegions[regionKey] = region;
-      continue;
-    }
-
-    const models = region[ION_CHANNEL_MODELS_KEY];
-    if (!Array.isArray(models)) {
-      nextRegions[regionKey] = region;
-      continue;
-    }
-
-    for (const model of models) {
-      if (
-        isPlainObject(model) &&
-        typeof model.id_str === 'string' &&
-        !selectedIds.has(model.id_str)
-      ) {
-        removedIds.add(model.id_str);
-      }
-    }
-
-    nextRegions[regionKey] = {
-      ...region,
-      [ION_CHANNEL_MODELS_KEY]: models.filter(
-        (model) => isPlainObject(model) && selectedIds.has(model.id_str as string)
-      ),
-    };
-  }
-
-  const withPrunedModels = { ...mechanisms, [MECHANISM_REGIONS_KEY]: nextRegions };
-
-  // Also drop the removed models' parameter entries from every region, resolving their names from
-  // the template-scoped registry the panels populated as they resolved these models.
-  const removedNames = [...removedIds]
-    .map((id) => getModelName(id))
-    .filter((name): name is string => Boolean(name));
-
-  return pruneRegionParametersForModelNames(withPrunedModels, removedNames);
+  return pruneRegionsToModelIds(mechanisms, selectedIds);
 }
 
 /**
@@ -101,14 +54,13 @@ function pruneRegionsToSelectedModels(
  */
 export function MechanismSelection({ rootSchema, value, onChange }: Props) {
   const ionChannelModelsSchema = rootSchema.properties.mechanisms.properties.ion_channel_models;
-  const { getModelName } = useModelNameRegistry();
 
   const root = isPlainObject(value) ? value : {};
-  const mechanisms = isPlainObject(root.mechanisms) ? root.mechanisms : {};
+  const mechanisms = readMechanisms(value);
 
   const setMechanismsState = (nextMechanisms: Record<string, ConfigValue>) => {
     // Keep region assignments in sync: a model removed here must also leave every region.
-    onChange({ ...root, mechanisms: pruneRegionsToSelectedModels(nextMechanisms, getModelName) });
+    onChange({ ...root, [MECHANISMS_KEY]: pruneRegionsToSelectedModels(nextMechanisms) });
   };
 
   return (
