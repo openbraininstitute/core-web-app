@@ -3,6 +3,7 @@
 import { RiArrowUpSLine, RiBubbleChartLine, RiEyeLine, RiEyeOffLine } from '@remixicon/react';
 import { useMemo, useState } from 'react';
 
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { TSmallCircuitSynapseGroup } from './sources/types';
@@ -45,19 +46,21 @@ export function SynapseLegend({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        aria-label="Show synapse colours"
-        aria-expanded={false}
-        onClick={() => setOpen(true)}
-        className={cn(
-          position,
-          SURFACE,
-          'inline-flex size-8 items-center justify-center rounded-full hover:bg-white/85'
-        )}
-      >
-        <RiBubbleChartLine className="size-4" />
-      </button>
+      <LegendTooltip label="Show synapse colours">
+        <button
+          type="button"
+          aria-label="Show synapse colours"
+          aria-expanded={false}
+          onClick={() => setOpen(true)}
+          className={cn(
+            position,
+            SURFACE,
+            'inline-flex size-8 items-center justify-center rounded-full hover:bg-white/85'
+          )}
+        >
+          <RiBubbleChartLine className="size-4" />
+        </button>
+      </LegendTooltip>
     );
   }
 
@@ -69,20 +72,23 @@ export function SynapseLegend({
       <div className="flex items-center gap-2">
         <RiBubbleChartLine aria-hidden className="size-3.5 shrink-0 text-primary-9" />
         <p className="mr-auto text-[11px] font-medium text-primary-9">Synapses</p>
-        <button
-          type="button"
-          aria-label="Collapse synapse colours"
-          aria-expanded
-          onClick={() => setOpen(false)}
-          className={ICON_BUTTON}
-        >
-          <RiArrowUpSLine className="size-3.5" />
-        </button>
+        <LegendTooltip label="Collapse synapse colours">
+          <button
+            type="button"
+            aria-label="Collapse synapse colours"
+            aria-expanded
+            onClick={() => setOpen(false)}
+            className={ICON_BUTTON}
+          >
+            <RiArrowUpSLine className="size-3.5" />
+          </button>
+        </LegendTooltip>
       </div>
       <ul className="flex flex-col gap-0.5">
         {entries.map(({ color, label }) => {
           const isHidden = hidden?.has(label) ?? false;
           const EyeIcon = isHidden ? RiEyeOffLine : RiEyeLine;
+          const action = isHidden ? `Show ${label} synapses` : `Hide ${label} synapses`;
           return (
             <li key={label} className="flex items-center gap-2">
               <span
@@ -101,20 +107,40 @@ export function SynapseLegend({
               >
                 {label}
               </span>
-              <button
-                type="button"
-                aria-label={isHidden ? `Show ${label} synapses` : `Hide ${label} synapses`}
-                aria-pressed={isHidden}
-                onClick={() => onToggle?.(label)}
-                className={ICON_BUTTON}
-              >
-                <EyeIcon className="size-3.5" />
-              </button>
+              <LegendTooltip label={action}>
+                <button
+                  type="button"
+                  aria-label={action}
+                  aria-pressed={isHidden}
+                  onClick={() => onToggle?.(label)}
+                  className={ICON_BUTTON}
+                >
+                  <EyeIcon className="size-3.5" />
+                </button>
+              </LegendTooltip>
             </li>
           );
         })}
       </ul>
     </aside>
+  );
+}
+
+/** The chrome's own tooltip, so the legend's buttons read like every other viewer control. */
+function LegendTooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent
+        align="center"
+        side="bottom"
+        sideOffset={0}
+        arrowClassName="bg-gray-200"
+        className="text-primary-9 bg-gray-200"
+      >
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
