@@ -33,6 +33,7 @@ import type {
   GetRowIdParams,
   GridApi,
   GridReadyEvent,
+  ProcessRowParams,
   RowClassParams,
   RowHeightParams,
   RowSelectionOptions,
@@ -74,6 +75,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     onRowClick,
     activeRowId,
     getRowClass,
+    getRowTestId,
     isRowSelectable,
     expandColumn,
     loadingLabel,
@@ -191,7 +193,11 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
             suppressMovable: true,
             lockPosition: 'left' as const,
             // DEFAULT_COL_DEF does not reach the selection column, so centre it here
-            cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+            cellStyle: {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            },
             headerClass: 'flex items-center justify-center',
           }
         : undefined,
@@ -202,7 +208,11 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   // ids selected on other pages, which the grid cannot see.
   const onSelectionChanged = useCallback(
     (e: SelectionChangedEvent<TDisplayRow<Row>>) => {
-      if (e.source === 'api') return; // our own store → grid sync
+      // `api` is our own store → grid sync. `rowDataChanged` fires when selected rows
+      // leave `rowData` (a search, a page change) and arrives BEFORE `onRowDataUpdated`
+      // re-applies the store selection, so merging it would drop every id that is on the
+      // new page but not re-selected on it yet.
+      if (e.source === 'api' || e.source === 'rowDataChanged') return;
       const selectedOnPage = e.api
         .getSelectedRows()
         .filter((r): r is Row => !isDetailRow(r))
@@ -213,7 +223,10 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         rows.map(getRowId),
         selectedOnPage
       );
-      controller.store.dispatch({ type: GridActionType.SetSelection, ids: next });
+      controller.store.dispatch({
+        type: GridActionType.SetSelection,
+        ids: next,
+      });
     },
     [controller, rows, getRowId, effectiveSelectionMode]
   );
@@ -298,6 +311,47 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     [activeRowId, onRowClick, getRowId]
   );
 
+  const processRowPostCreate = useCallback(
+    (event: ProcessRowParams<TDisplayRow<Row>>) => {
+      const data = event.node.data;
+      if (data == null || isDetailRow(data)) return;
+
+      if (getRowTestId) event.eRow.dataset.testid = getRowTestId(data);
+      if (!selectionEnabled) return;
+
+      // AG Grid v35 renders its selection widget as a div, not a native input,
+      // and may mount that widget just after this row callback runs.
+      const roots = [event.ePinnedLeftRow, event.eRow].filter(
+        (root): root is HTMLElement => root != null
+      );
+      const testId = `data-grid-selection-${getRowId(data)}`;
+      const selector = '[role="checkbox"], [role="radio"], .ag-checkbox-input-wrapper';
+      let observer: MutationObserver | undefined;
+      let timeout: number | undefined;
+      const stop = () => {
+        observer?.disconnect();
+        if (timeout !== undefined) window.clearTimeout(timeout);
+      };
+      const tagControl = () => {
+        for (const root of roots) {
+          const control = root.querySelector<HTMLElement>(selector);
+          if (!control) continue;
+          control.setAttribute('data-testid', testId);
+          stop();
+          return true;
+        }
+        return false;
+      };
+
+      if (tagControl()) return;
+
+      observer = new MutationObserver(tagControl);
+      for (const root of roots) observer.observe(root, { childList: true, subtree: true });
+      timeout = window.setTimeout(stop, 1000);
+    },
+    [getRowId, getRowTestId, selectionEnabled]
+  );
+
   // Optional per-row class (e.g. hierarchy gray-out); never applied to detail rows.
   const rowClass = useCallback(
     (p: RowClassParams<TDisplayRow<Row>>): string | undefined =>
@@ -349,6 +403,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         onCellClicked={onCellClicked}
         getRowStyle={getRowStyle}
         getRowClass={getRowClass ? rowClass : undefined}
+        processRowPostCreate={getRowTestId || selectionEnabled ? processRowPostCreate : undefined}
       />
     </div>
   );

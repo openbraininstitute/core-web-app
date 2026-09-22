@@ -4,7 +4,7 @@ import { TemporaryGoToLabButton } from '../temporary-go-to-lab-button/temporary-
 
 const RX_CODE = /^[ \t]*\{\{([a-zA-Z0-9-]+)\}/g;
 
-export function makeSpecialWidget(rawCode: string) {
+export function makeSpecialWidget(rawCode: string, testId?: string) {
   const code = rawCode.trim();
   RX_CODE.lastIndex = -1;
   const m = RX_CODE.exec(code);
@@ -18,6 +18,7 @@ export function makeSpecialWidget(rawCode: string) {
       const [href, title, subTitle] = args;
       return (
         <TemporaryGoToLabButton
+          testId={testId}
           title={title}
           subTitle={subTitle ?? 'Start exploring, discover public projects, and more'}
           href={href}
@@ -26,7 +27,7 @@ export function makeSpecialWidget(rawCode: string) {
     }
     default:
       return (
-        <div className={styleBlockSmall}>
+        <div className={styleBlockSmall} data-testid={testId}>
           <pre>
             {JSON.stringify(
               {

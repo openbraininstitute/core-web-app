@@ -4,6 +4,7 @@ import { useAppNotification } from '@/components/notification';
 import {
   resolveSpeciesAtlasPreview,
   type SpeciesRuntimeHierarchy,
+  speciesAtlasCardTestId,
 } from '@/features/brain-atlas-viewer/all-species/helpers';
 import { SpeciesAtlasPreview } from '@/features/brain-atlas-viewer/all-species/species-atlas-preview';
 import { ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/constants';
@@ -47,8 +48,8 @@ export function AllSpeciesAtlasCard({ hierarchy }: AllSpeciesAtlasCardProps) {
 
   return (
     <article
-      data-testid="all-species-atlas-card"
-      id={`all-species-atlas-card-${species.id}`}
+      data-testid={speciesAtlasCardTestId(species.name)}
+      id={speciesAtlasCardTestId(species.name)}
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
       className={cn(

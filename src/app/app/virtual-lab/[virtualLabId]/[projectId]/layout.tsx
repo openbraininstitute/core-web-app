@@ -14,6 +14,7 @@ import {
 } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { config } from '@/config';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
@@ -44,7 +45,16 @@ export default async function Layout({ children, params: promisedParams }: Props
     redirect(`${config.ROOT_ROUTE}/sync`, RedirectType.replace);
   }
 
-  if (data.is_waitlisted) {
+  const userGroups = await tryCatch(
+    queryClient.fetchQuery({
+      queryKey: keyBuilder.membership(),
+      queryFn: getUserGroups,
+    })
+  );
+
+  const { isVirtualLabAdmin } = makeRoles(userGroups.data ?? undefined, virtualLabId, projectId);
+
+  if (data.is_waitlisted && !isVirtualLabAdmin) {
     const lab = await getVirtualLab({ id: virtualLabId });
     const startDate = lab?.course?.start_date ? new Date(lab.course.start_date) : null;
     const courseId = lab?.course?.id;
@@ -63,24 +73,22 @@ export default async function Layout({ children, params: promisedParams }: Props
 
   queryClient.prefetchQuery({
     queryKey: keyBuilderHierarchy.hierarchies(),
-    queryFn: async () => {
-      const result = await getBrainRegionHierarchiesWithSpecies();
-      result.data
-        .map((o) => o.id)
-        .filter((id) => !config.EXCLUDED_HIERARCHY_IDS.includes(id))
-        .forEach((id) => {
-          queryClient.prefetchQuery({
-            queryKey: keyBuilderHierarchy.hierarchy({ id }),
-            queryFn: () => getBrainRegionHierarchy({ id }),
-            staleTime: Infinity,
-            gcTime: Infinity,
-          });
-        });
-      return result;
-    },
+    queryFn: getBrainRegionHierarchiesWithSpecies,
     staleTime: Infinity,
     gcTime: Infinity,
   });
+
+  // Default species tree only. Prefetching all of them cost one request each, on
+  // every server render. Another species is fetched when the user picks it.
+  const defaultHierarchyId = config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
+  if (!config.EXCLUDED_HIERARCHY_IDS.includes(defaultHierarchyId)) {
+    queryClient.prefetchQuery({
+      queryKey: keyBuilderHierarchy.hierarchy({ id: defaultHierarchyId }),
+      queryFn: () => getBrainRegionHierarchy({ id: defaultHierarchyId }),
+      staleTime: Infinity,
+      gcTime: Infinity,
+    });
+  }
 
   queryClient.prefetchQuery({
     queryKey: keyBuilderAtlas.all(),
@@ -93,11 +101,6 @@ export default async function Layout({ children, params: promisedParams }: Props
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
     queryFn: () => getWorkspaceHierarchySpeciesPreference(),
     staleTime: Infinity,
-  });
-
-  queryClient.prefetchQuery({
-    queryKey: keyBuilder.membership(),
-    queryFn: getUserGroups,
   });
 
   return (

@@ -2,7 +2,7 @@
 
 import { RiArrowDownSLine, RiExpandDiagonalLine } from '@remixicon/react';
 import katex from 'katex';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 
 import 'katex/dist/katex.min.css';
 
@@ -11,11 +11,17 @@ import { Modal } from '@/ui/molecules/modal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
+import { scanConfigHeldTestId } from '../utils';
+
 import type { StringSelectionEnhanced as TStringSelectionEnhanced } from '@/features/scan-config/types';
 
 /** renders a raw LaTeX expression (e.g. `A_{latex}`) to a KaTeX HTML string */
 function renderLatex(latex: string): string {
-  return katex.renderToString(latex, { throwOnError: false, displayMode: true, output: 'html' });
+  return katex.renderToString(latex, {
+    throwOnError: false,
+    displayMode: true,
+    output: 'html',
+  });
 }
 
 /** a single enum option's content: title, description and optional rendered formula */
@@ -28,12 +34,15 @@ type TOptionContent = {
 function OptionContent({
   content,
   onExpandLatex,
+  testId,
 }: {
   content: TOptionContent;
   onExpandLatex?: () => void;
+  /** Set only where this content is the chosen value, never in the list. */
+  testId?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-testid={testId}>
       <span className="text-primary-8 text-lg font-bold">{content.title}</span>
       {content.description && <span className="text-sm text-gray-700">{content.description}</span>}
       {content.latexHtml && (
@@ -88,6 +97,7 @@ export function StringSelectionEnhanced({
   paramSchema,
 }: IStringSelectionEnhancedProps) {
   const [open, setOpen] = useState(false);
+  const optionsId = useId();
   const [expandedLatexHtml, setExpandedLatexHtml] = useState<string | null>(null);
 
   // Pre-render each option's content once per schema — KaTeX rendering is the only non-trivial cost.
@@ -124,6 +134,10 @@ export function StringSelectionEnhanced({
         <PopoverTrigger asChild disabled={disabled}>
           <button
             type="button"
+            data-testid="scan-config-control"
+            data-scan-config-options={optionsId}
+            aria-controls={optionsId}
+            aria-expanded={open}
             data-scan-config-block-element={ScanConfigUIElementDict.StringSelectionEnhanced}
             disabled={disabled}
             className={cn(
@@ -132,7 +146,10 @@ export function StringSelectionEnhanced({
             )}
           >
             {selectedContent ? (
-              <OptionContent content={selectedContent} />
+              <OptionContent
+                content={selectedContent}
+                testId={value ? scanConfigHeldTestId(value) : undefined}
+              />
             ) : (
               <span className="text-gray-400">Select option</span>
             )}
@@ -150,7 +167,12 @@ export function StringSelectionEnhanced({
             'max-h-100 w-(--radix-popover-trigger-width) overflow-y-auto rounded-2xl border border-gray-100 bg-white p-2 shadow-md'
           )}
         >
-          <div role="listbox" className="flex flex-col gap-2">
+          <div
+            id={optionsId}
+            data-testid="scan-config-options"
+            role="listbox"
+            className="flex flex-col gap-2"
+          >
             {paramSchema.enum.map((key) => {
               const content = optionContentByKey.get(key);
               if (!content) return null;
@@ -158,6 +180,8 @@ export function StringSelectionEnhanced({
               return (
                 <div
                   key={key}
+                  data-testid={`scan-config-option-${key}`}
+                  data-scan-config-option-of={optionsId}
                   role="option"
                   aria-selected={selected}
                   tabIndex={0}

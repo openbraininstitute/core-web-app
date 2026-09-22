@@ -193,6 +193,8 @@ export interface IInMemoryGridProps<Row> {
   pageSizeOptions?: number[];
   hideHeader?: boolean;
   headerHeight?: number;
+  /** Fixed data-row height in pixels; defaults to the compact 44px grid row. */
+  rowHeight?: number;
   rowSelection?: ISimpleRowSelection<Row>;
   /** operator catalog for the filter editors (default: the standard registry). */
   operators?: OperatorRegistry;
@@ -319,6 +321,7 @@ export function InMemoryGrid<Row>({
   pageSizeOptions,
   hideHeader = false,
   headerHeight = 48,
+  rowHeight = 44,
   rowSelection,
   operators,
   cellRenderers = EMPTY_CELL_RENDERERS,
@@ -370,7 +373,10 @@ export function InMemoryGrid<Row>({
   );
 
   const context = useMemo<IGridContext>(() => ({ dataType: 'in-memory-grid' }), []);
-  const controllerRef = useRef<{ sig: string; controller: GridController<Row> } | null>(null);
+  const controllerRef = useRef<{
+    sig: string;
+    controller: GridController<Row>;
+  } | null>(null);
   if (!controllerRef.current || controllerRef.current.sig !== signature) {
     const schema: IGridSchema<Row> = {
       id: 'in-memory-grid',
@@ -386,7 +392,11 @@ export function InMemoryGrid<Row>({
     };
     controllerRef.current = {
       sig: signature,
-      controller: new GridController<Row>({ schema, context, defaultPageSize: pageSize }),
+      controller: new GridController<Row>({
+        schema,
+        context,
+        defaultPageSize: pageSize,
+      }),
     };
   }
   const controller = controllerRef.current.controller;
@@ -399,7 +409,13 @@ export function InMemoryGrid<Row>({
   const query = useMemo<IGridQuery>(
     () =>
       buildGridQuery(
-        { page: statePage, pageSize: statePageSize, sort, filters, freeTextSearch },
+        {
+          page: statePage,
+          pageSize: statePageSize,
+          sort,
+          filters,
+          freeTextSearch,
+        },
         serverParams
       ),
     [statePage, statePageSize, sort, filters, freeTextSearch, serverParams]
@@ -433,11 +449,17 @@ export function InMemoryGrid<Row>({
     () =>
       isServerMode
         ? EMPTY_PAGE
-        : runInMemoryQuery(rows, query, { columns, disablePagination: !pagination }),
+        : runInMemoryQuery(rows, query, {
+            columns,
+            disablePagination: !pagination,
+          }),
     [isServerMode, rows, query, columns, pagination]
   );
   const page: IGridPage<Row> = isServerMode
-    ? { rows: serverResult.data?.rows ?? [], total: serverResult.data?.total ?? total ?? 0 }
+    ? {
+        rows: serverResult.data?.rows ?? [],
+        total: serverResult.data?.total ?? total ?? 0,
+      }
     : clientPage;
 
   // Derived from the query, not from `dataSource.fetch`: a cache hit never calls the
@@ -460,7 +482,10 @@ export function InMemoryGrid<Row>({
   }, [onServerStateChange]);
   useEffect(() => {
     if (!isServerMode) return;
-    onServerStateChangeRef.current?.({ status: serverStatus, total: serverTotal });
+    onServerStateChangeRef.current?.({
+      status: serverStatus,
+      total: serverTotal,
+    });
   }, [isServerMode, serverStatus, serverTotal]);
 
   const agContext = useMemo<IAgGridContext<Row>>(
@@ -512,7 +537,10 @@ export function InMemoryGrid<Row>({
   const isExpandable = expansion?.isExpandable ?? ALWAYS_EXPANDABLE;
   const toggleExpand = useCallback(
     (row: Row) =>
-      controller.store.dispatch({ type: GridActionType.ToggleExpanded, id: rowId(row) }),
+      controller.store.dispatch({
+        type: GridActionType.ToggleExpanded,
+        id: rowId(row),
+      }),
     [controller, rowId]
   );
   const expandedSet = useMemo(() => new Set(state.expanded), [state.expanded]);
@@ -655,7 +683,11 @@ export function InMemoryGrid<Row>({
         sortable: false,
         suppressMovable: true,
         lockPosition: 'left',
-        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+        cellStyle: {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
         cellRenderer: InMemoryRenderCell,
         cellRendererParams: { render: (row: Row) => renderExpander(row) },
       };
@@ -842,7 +874,7 @@ export function InMemoryGrid<Row>({
           animateRows={false}
           isFullWidthRow={(p) => isDetailRow(p.rowNode.data)}
           fullWidthCellRenderer={InMemoryDetailCell}
-          getRowHeight={(p) => (isDetailRow(p.data) ? initialDetailHeight : undefined)}
+          getRowHeight={(p) => (isDetailRow(p.data) ? initialDetailHeight : rowHeight)}
           getRowClass={(p) =>
             !isDetailRow(p.data) && getRowClass ? getRowClass(p.data as Row) : undefined
           }

@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { verifyLaunchParams } from './launch';
+import { pickDefaultProjectId, verifyLaunchParams } from './launch';
 
 import type { RawParams } from './launch';
 
@@ -75,5 +75,26 @@ describe('verifyLaunchParams', () => {
       sig: 'anything',
     };
     expect(verifyLaunchParams(raw, SECRET)).toEqual({ ok: false, reason: 'invalid' });
+  });
+});
+
+describe('pickDefaultProjectId', () => {
+  const template = { id: 'proj-template', name: 'Template' };
+  const student = { id: 'proj-student', name: 'alice.smith' };
+
+  it('defaults to the template project when the caller can write to it', () => {
+    expect(pickDefaultProjectId([template, student], template.id, true)).toBe(template.id);
+  });
+
+  it('leaves the picker empty when the caller cannot write to the template', () => {
+    expect(pickDefaultProjectId([template, student], template.id, false)).toBeNull();
+  });
+
+  it('leaves the picker empty when the lab has no course', () => {
+    expect(pickDefaultProjectId([student], null, true)).toBeNull();
+  });
+
+  it('never defaults to a template the caller cannot launch into', () => {
+    expect(pickDefaultProjectId([student], template.id, true)).toBeNull();
   });
 });

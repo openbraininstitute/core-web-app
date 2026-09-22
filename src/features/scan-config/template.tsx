@@ -134,7 +134,11 @@ function ScanConfigTemplateContent({
     seed,
   });
   const allEntries = useEntries({ config, schema });
-  const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
+  const editingLocked = useScanConfigEditingLocked({
+    campaignId,
+    loading,
+    readOnly,
+  });
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 
   const createEntry = useCallback(
@@ -146,7 +150,10 @@ function ScanConfigTemplateContent({
         (previous) =>
           ({
             ...previous,
-            [rootElement]: { ...(previous[rootElement] as object), [entry]: block },
+            [rootElement]: {
+              ...(previous[rootElement] as object),
+              [entry]: block,
+            },
           }) as Config
       );
 
@@ -220,7 +227,6 @@ function ScanConfigTemplateContent({
           projectId={projectId}
           campaignOriginAction={campaignOriginAction}
           isCampaignIdChanged={isCampaignIdChanged}
-          taskTypeBindings={taskTypeBindings}
         />
       </Suspense>
     ))
@@ -291,12 +297,13 @@ function ScanConfigTemplateContent({
         {isConfigurationTab && browseOverlay ? (
           <div
             id="scan-config-model-selection-overlay"
+            data-testid="scan-config-model-picker"
             // the picker replaces the whole main area — fade + slight rise on open
             // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
             // reduced motion keeps the fade, drops the movement
             className={cn(
               'h-[calc(100%-0.5rem)] min-h-0',
-              'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
+              'transition-[opacity,transform] duration-200 ease-out-expo',
               'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
             )}
           >
@@ -345,6 +352,7 @@ function ScanConfigTemplateContent({
           />
           <div
             id="scan-config-controls-middle"
+            data-testid="scan-config-middle-content"
             className={cn(
               styles.scrollable,
               'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
@@ -391,6 +399,7 @@ function ScanConfigTemplateContent({
         </div>
         <div
           id="scan-config-results"
+          data-testid="scan-config-results"
           className={cn(
             'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
             { hidden: isConfigurationTab },

@@ -7,12 +7,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkflowActivityDictValue } from '@/constants';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
-import {
-  brainRegionSimulationFlag,
-  eFeatureExtractionFlag,
-  extracellularRecordingArrayBuildFlag,
-  extractionActivityFlag,
-} from '@/features/feature-flags/flags';
+import { circuitSynapticPhysiologyBuildFlag, flags } from '@/features/feature-flags/flags';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   readWorkflowSessionSelection,
@@ -56,13 +51,9 @@ vi.mock('@/api/entitycore/queries/task/task-config', async (importOriginal) => (
 
 const workspace = { virtualLabId: 'lab-1', projectId: 'project-1' };
 
-/** every flag on, so flag-gated workflows are reachable in the table below */
-const allFlags = {
-  [extractionActivityFlag.key]: true,
-  [eFeatureExtractionFlag.key]: true,
-  [brainRegionSimulationFlag.key]: true,
-  [extracellularRecordingArrayBuildFlag.key]: true,
-} as FeatureFlags;
+const allFlags = Object.fromEntries(
+  flags.map((flag) => [flag.key, typeof flag.defaultValue === 'boolean' ? true : flag.defaultValue])
+) as FeatureFlags;
 
 const ENTITY_ID = 'entity-id';
 const INPUT_ID = 'input-id';
@@ -96,7 +87,10 @@ const cases: TCase[] = [
   {
     name: 'ME-model → single neuron (beta) simulation',
     fixture: { entity: { type: EntityTypeDict.Memodel } },
-    covers: { activity: simulate, targetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation },
+    covers: {
+      activity: simulate,
+      targetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+    },
     href: `${base}/simulate/configure/me-model-circuit-simulation/{session}?panel=configuration`,
     selects: { type: ExtendedEntitiesTypeDict.MemodelCircuit, id: ENTITY_ID },
   },
@@ -114,55 +108,96 @@ const cases: TCase[] = [
   },
   {
     name: 'single-neuron circuit → synaptome (beta) simulation',
-    fixture: { entity: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single } },
+    fixture: {
+      entity: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.Single,
+      },
+    },
     covers: {
       activity: simulate,
       targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
     },
     href: `${base}/simulate/configure/single-neuron-circuit-simulation/{session}?panel=configuration`,
-    selects: { type: ExtendedEntitiesTypeDict.SingleNeuronCircuit, id: ENTITY_ID },
+    selects: {
+      type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+      id: ENTITY_ID,
+    },
   },
   {
     name: 'paired-neuron circuit → paired neurons simulation',
-    fixture: { entity: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.PairNeuron } },
+    fixture: {
+      entity: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.PairNeuron,
+      },
+    },
     covers: {
       activity: simulate,
       targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
     },
     href: `${base}/simulate/configure/paired-neuron-circuit-simulation/{session}?panel=configuration`,
-    selects: { type: ExtendedEntitiesTypeDict.PairedNeuronCircuit, id: ENTITY_ID },
+    selects: {
+      type: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+      id: ENTITY_ID,
+    },
   },
   {
     name: 'small microcircuit → small microcircuit simulation',
     fixture: {
-      entity: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.SmallMicrocircuit },
+      entity: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.SmallMicrocircuit,
+      },
     },
     covers: {
       activity: simulate,
       targetType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
     },
     href: `${base}/simulate/configure/small-microcircuit-simulation/{session}?panel=configuration`,
-    selects: { type: ExtendedEntitiesTypeDict.SmallMicrocircuit, id: ENTITY_ID },
+    selects: {
+      type: ExtendedEntitiesTypeDict.SmallMicrocircuit,
+      id: ENTITY_ID,
+    },
   },
   {
     name: 'microcircuit → microcircuit simulation',
     fixture: {
-      entity: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Microcircuit },
+      entity: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.Microcircuit,
+      },
     },
-    covers: { activity: simulate, targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation },
+    covers: {
+      activity: simulate,
+      targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+    },
     href: `${base}/simulate/configure/microcircuit-simulation/{session}?panel=configuration`,
     selects: { type: ExtendedEntitiesTypeDict.Microcircuit, id: ENTITY_ID },
   },
   {
     name: 'region circuit → brain region simulation',
-    fixture: { entity: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Region } },
-    covers: { activity: simulate, targetType: ExtendedEntitiesTypeDict.RegionCircuitSimulation },
+    fixture: {
+      entity: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.Region,
+      },
+    },
+    covers: {
+      activity: simulate,
+      targetType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+    },
     href: `${base}/simulate/configure/region-circuit-simulation/{session}?panel=configuration`,
     selects: { type: ExtendedEntitiesTypeDict.BrainRegion, id: ENTITY_ID },
   },
   {
     name: 'whole-brain circuit → whole brain simulation',
-    fixture: { entity: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.WholeBrain } },
+    fixture: {
+      entity: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.WholeBrain,
+      },
+    },
     covers: {
       activity: simulate,
       targetType: ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
@@ -173,7 +208,10 @@ const cases: TCase[] = [
   {
     name: 'EM cell mesh → skeletonization',
     fixture: { entity: { type: EntityTypeDict.EMCellMesh } },
-    covers: { activity: process, targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign },
+    covers: {
+      activity: process,
+      targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+    },
     href: `${base}/process/configure/skeletonization-campaign/{session}`,
     selects: { type: ExtendedEntitiesTypeDict.EMCellMesh, id: ENTITY_ID },
   },
@@ -190,19 +228,28 @@ const cases: TCase[] = [
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
   },
   {
-    name: 'scale-less circuit → circuit extraction when only extraction is enabled',
+    name: 'scale-less circuit → circuit synaptic physiology build when recording array is off',
     fixture: { entity: { type: EntityTypeDict.Circuit } },
-    covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign },
-    href: `${base}/extract/configure/circuit-extraction-campaign/{session}`,
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+    },
+    href: `${base}/build/configure/circuit-synaptic-physiology-campaign/{session}`,
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
-    flags: { [extractionActivityFlag.key]: true } as FeatureFlags,
+    flags: { [circuitSynapticPhysiologyBuildFlag.key]: true } as FeatureFlags,
   },
   {
     name: 'electrical cell recording → intracellular e-feature extraction',
     fixture: { entity: { type: EntityTypeDict.ElectricalCellRecording } },
-    covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign },
+    covers: {
+      activity: extract,
+      targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+    },
     href: `${base}/extract/configure/efeature-extraction-campaign/{session}`,
-    selects: { type: ExtendedEntitiesTypeDict.ElectricalCellRecording, id: ENTITY_ID },
+    selects: {
+      type: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+      id: ENTITY_ID,
+    },
   },
 
   // legacy browse-first workflows: configure keyed by the entity itself ───
@@ -220,19 +267,28 @@ const cases: TCase[] = [
   {
     name: 'EM synapse mapping campaign reopens its own configuration',
     fixture: { entity: { type: EntityTypeDict.EmSynapseMappingCampaign } },
-    covers: { activity: build, targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+    },
     href: `${base}/build/configure/em-synapse-mapping-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
     name: 'ion channel modeling campaign falls back to its detail view',
     fixture: { entity: { type: EntityTypeDict.IonChannelModelingCampaign } },
-    covers: { activity: build, targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    },
     href: `${base}/view/ion-channel-modeling-campaign/${ENTITY_ID}/overview`,
   },
   {
     name: 'legacy single neuron simulation falls back to its detail view',
     fixture: { entity: { type: EntityTypeDict.SingleNeuronSimulation } },
-    covers: { activity: simulate, targetType: ExtendedEntitiesTypeDict.SingleNeuronSimulation },
+    covers: {
+      activity: simulate,
+      targetType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+    },
     href: `${base}/view/single-neuron-simulation/${ENTITY_ID}/configuration`,
   },
 
@@ -243,16 +299,25 @@ const cases: TCase[] = [
       entity: { type: EntityTypeDict.SimulationCampaign },
       input: { type: EntityTypeDict.Memodel },
     },
-    covers: { activity: simulate, targetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation },
+    covers: {
+      activity: simulate,
+      targetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+    },
     href: `${base}/simulate/configure/me-model-circuit-simulation/{session}?origin=${ENTITY_ID}`,
   },
   {
     name: 'circuit campaign → editor matching the circuit scale',
     fixture: {
       entity: { type: EntityTypeDict.SimulationCampaign },
-      input: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Microcircuit },
+      input: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.Microcircuit,
+      },
     },
-    covers: { activity: simulate, targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation },
+    covers: {
+      activity: simulate,
+      targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+    },
     href: `${base}/simulate/configure/microcircuit-simulation/{session}?origin=${ENTITY_ID}`,
   },
   {
@@ -276,7 +341,10 @@ const cases: TCase[] = [
       input: { type: EntityTypeDict.Circuit },
       taskConfigType: TaskConfigType.CircuitExtractionCampaign,
     },
-    covers: { activity: extract, targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign },
+    covers: {
+      activity: extract,
+      targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+    },
     href: `${base}/extract/configure/circuit-extraction-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
@@ -286,7 +354,10 @@ const cases: TCase[] = [
       input: { type: EntityTypeDict.EMCellMesh },
       taskConfigType: TaskConfigType.SkeletonizationCampaign,
     },
-    covers: { activity: process, targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign },
+    covers: {
+      activity: process,
+      targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+    },
     href: `${base}/process/configure/skeletonization-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
@@ -296,7 +367,10 @@ const cases: TCase[] = [
       input: { type: EntityTypeDict.Memodel },
       taskConfigType: TaskConfigType.EmSynapseMappingCampaign,
     },
-    covers: { activity: build, targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+    },
     href: `${base}/build/configure/em-synapse-mapping-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
@@ -326,13 +400,32 @@ const cases: TCase[] = [
     href: `${base}/build/configure/build-synaptome-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
+    name: 'circuit synaptic physiology task config → build editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.Circuit },
+      taskConfigType: TaskConfigType.CircuitSynapticPhysiologyCampaign,
+    },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+    },
+    href: `${base}/build/configure/circuit-synaptic-physiology-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
     name: 'circuit simulation task config picks the workflow matching its input scale',
     fixture: {
       entity: { type: EntityTypeDict.TaskConfig },
-      input: { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Microcircuit },
+      input: {
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.Microcircuit,
+      },
       taskConfigType: TaskConfigType.CircuitSimulationCampaign,
     },
-    covers: { activity: simulate, targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation },
+    covers: {
+      activity: simulate,
+      targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+    },
     href: `${base}/simulate/configure/microcircuit-simulation/{session}?origin=${ENTITY_ID}`,
   },
 ];
@@ -356,7 +449,10 @@ function applyFixture(fixture: TFixture) {
     const entity = id === ENTITY_ID ? fixture.entity : fixture.input;
     return { id, scale: entity?.scale };
   });
-  getSimulationCampaign.mockResolvedValue({ id: ENTITY_ID, entity_id: INPUT_ID });
+  getSimulationCampaign.mockResolvedValue({
+    id: ENTITY_ID,
+    entity_id: INPUT_ID,
+  });
   getTaskConfig.mockResolvedValue({
     id: ENTITY_ID,
     task_config_type: fixture.taskConfigType,
@@ -408,20 +504,19 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
     expect(uncovered).toEqual([]);
   });
 
-  it('skips workflows the user has no feature flag for', async () => {
-    applyFixture({ entity: { type: EntityTypeDict.Circuit } });
-
-    await expect(
-      resolveWorkflowConfigureHrefForEntity({ entityId: ENTITY_ID, workspace })
-    ).resolves.toEqual({ outcome: WorkflowConfigureOutcomeDict.NoWorkflow, href: null });
-  });
-
   it('returns null when no workflow accepts the entity', async () => {
     applyFixture({ entity: { type: EntityTypeDict.Subject } });
 
     await expect(
-      resolveWorkflowConfigureHrefForEntity({ entityId: ENTITY_ID, workspace, flags: allFlags })
-    ).resolves.toEqual({ outcome: WorkflowConfigureOutcomeDict.NoWorkflow, href: null });
+      resolveWorkflowConfigureHrefForEntity({
+        entityId: ENTITY_ID,
+        workspace,
+        flags: allFlags,
+      })
+    ).resolves.toEqual({
+      outcome: WorkflowConfigureOutcomeDict.NoWorkflow,
+      href: null,
+    });
   });
 
   it('opens stored campaigns editable when mode is duplicate', async () => {

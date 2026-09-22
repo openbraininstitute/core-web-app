@@ -4,8 +4,7 @@ frontend:
     preBuild:
       commands:
         - echo "Node.js $(node -v)"
-        - corepack enable
-        - corepack prepare pnpm@latest --activate
+        - npm install -g pnpm@11.25.0
         - pnpm config set store-dir .pnpm-store
         - pnpm install --frozen-lockfile
     build:

@@ -314,11 +314,10 @@ export async function fetchToFS({
     throw err;
   }
 
-  // Deliberately not awaited. The FS copy is complete and is the only one this session reads;
-  // `cache.put` is disk-bound and still draining the tee's backlog, so waiting for it would park
-  // the viewer on a finished progress bar. It already has a `.catch`, and a worker torn down
-  // mid-put can leave a partial entry — which is why `restoreFromCache` verifies every read.
-  void cachePut;
+  // Awaited: a second population stored in the same file opens its own worker as soon as this one
+  // is released, and `cache.match` cannot see an entry whose put has not committed. Returning
+  // first costs a second download of the whole file.
+  await cachePut;
 
   return { filename };
 }

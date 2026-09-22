@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { get, includes } from 'es-toolkit/compat';
+import { includes } from 'es-toolkit/compat';
 import { useEffect } from 'react';
 
 import { hasAssets } from '@/api/entitycore/guards';
@@ -16,6 +16,7 @@ import {
   type IAsset,
 } from '@/api/entitycore/types/shared/global';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
@@ -235,15 +236,7 @@ export function InOutFiles({
   useEffect(() => {
     if (!outputAvailable || !builtEntity || !isCircuitBuild) return;
 
-    queryClient.invalidateQueries({
-      predicate: (query) =>
-        query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.SingleNeuronCircuit}`,
-    });
-    queryClient.invalidateQueries({
-      predicate: (query) =>
-        get(query.queryKey[0], 'context.extendedEntityType') ===
-        ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-    });
+    invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.SingleNeuronCircuit);
   }, [outputAvailable, builtEntity, isCircuitBuild, queryClient]);
 
   useAutoSelectFileOnConfigChange({

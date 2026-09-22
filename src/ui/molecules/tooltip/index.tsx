@@ -3,6 +3,7 @@
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 import { cn } from '@/utils/css-class';
+import { useFullscreenPortalTarget } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -41,15 +42,16 @@ function TooltipContent({
   showArrow = true,
   sideOffset = 0,
   children,
-  portalProps,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content> & {
   arrowClassName?: React.ComponentProps<'span'>['className'];
   showArrow?: boolean;
-  portalProps?: TooltipPrimitive.TooltipPortalProps;
 }) {
+  // Same reason as `PopoverContent`.
+  const container = useFullscreenPortalTarget();
+
   return (
-    <TooltipPrimitive.Portal {...portalProps}>
+    <TooltipPrimitive.Portal container={container ?? undefined}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
@@ -63,7 +65,7 @@ function TooltipContent({
         {showArrow && (
           <TooltipPrimitive.Arrow
             className={cn(
-              'z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs bg-current fill-transparent',
+              'z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs bg-primary-9 fill-transparent',
               arrowClassName
             )}
           />

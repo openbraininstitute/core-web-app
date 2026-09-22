@@ -59,6 +59,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
 
   const content = (
     <div
+      data-testid="column-chooser-panel"
       className={cn(
         'max-h-80 overflow-auto',
         // checked state uses primary-9 (not antd's default blue)
@@ -76,6 +77,7 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between gap-4">
           <Checkbox
+            data-testid="column-chooser-select-all"
             checked={allVisible}
             indeterminate={mixed}
             // antd draws the mixed state but sets no ARIA for it, so a screen reader would
@@ -107,7 +109,12 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
           className="flex flex-col gap-1"
         >
           {regular.map((c) => (
-            <Checkbox key={c.id} value={c.id} disabled={c.alwaysVisible}>
+            <Checkbox
+              key={c.id}
+              value={c.id}
+              disabled={c.alwaysVisible}
+              data-testid={`column-chooser-option-${c.header}`}
+            >
               {c.header}
             </Checkbox>
           ))}
@@ -116,7 +123,12 @@ export function ColumnChooser<Row>({ controller, state, className }: IColumnChoo
               {/* `<hr>` carries the implicit `separator` role, so the break is announced */}
               {separator}
               {auxiliary.map((c) => (
-                <Checkbox key={c.id} value={c.id} disabled={c.alwaysVisible}>
+                <Checkbox
+                  key={c.id}
+                  value={c.id}
+                  disabled={c.alwaysVisible}
+                  data-testid={`column-chooser-option-${c.header}`}
+                >
                   {c.header}
                 </Checkbox>
               ))}

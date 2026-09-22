@@ -6,28 +6,67 @@ import {
   CircuitScaleDictionary,
   type TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { ObiOneTaskTypeDict, type TObiOneTaskType } from '@/api/one/types/task';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
 
-export const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
+export type TSimulationLaunchTarget = {
+  taskType: TObiOneTaskType;
+  requiresOfflineTokenConsent: boolean;
+};
+
+const SMALL_SCALE_TASK_TYPES: Partial<Record<TCircuitScaleDictionary, TObiOneTaskType>> = {
+  [CircuitScaleDictionary.Single]: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
+  [CircuitScaleDictionary.PairNeuron]: ObiOneTaskTypeDict.CircuitSimulation,
+  [CircuitScaleDictionary.SmallMicrocircuit]: ObiOneTaskTypeDict.CircuitSimulation,
+};
+
+const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
   CircuitScaleDictionary.Microcircuit,
   CircuitScaleDictionary.Region,
   CircuitScaleDictionary.System,
   CircuitScaleDictionary.WholeBrain,
 ]);
 
-/** simulations launched via obi-one also expose task configuration/log stream entries. */
-export function shouldLaunchSimulationViaTaskSystem({
+export function resolveSimulationLaunchTarget({
+  entityType,
   scale,
   targetSimulator,
+  smallScalesViaLaunchSystem,
 }: {
+  entityType: TEntityTypeDict | null;
   scale: TCircuitScaleDictionary | null;
   targetSimulator: string | null;
-}): boolean {
-  const isSupportedSimulator = targetSimulator === 'Brian2' || targetSimulator === 'LearningEngine';
-  return isSupportedSimulator || (scale !== null && TASK_LAUNCH_SCALES.has(scale));
+  smallScalesViaLaunchSystem: boolean;
+}): TSimulationLaunchTarget | null {
+  // Small scales run as machine jobs, which don't need an offline token.
+  const smallScaleTarget = (taskType: TObiOneTaskType) =>
+    smallScalesViaLaunchSystem ? { taskType, requiresOfflineTokenConsent: false } : null;
+
+  // `circuit_simulation` loads `simulation.entity_id` as a Circuit, which a me-model isn't.
+  if (entityType === EntityTypeDict.Memodel) {
+    return smallScaleTarget(ObiOneTaskTypeDict.SingleNeuronSimulationExecution);
+  }
+  if (targetSimulator === 'Brian2') {
+    return {
+      taskType: ObiOneTaskTypeDict.CircuitSimulationBrian2,
+      requiresOfflineTokenConsent: true,
+    };
+  }
+  if (targetSimulator === 'LearningEngine') {
+    return { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true };
+  }
+  if (scale === null) return null;
+
+  const smallScaleTaskType = SMALL_SCALE_TASK_TYPES[scale];
+  if (smallScaleTaskType) return smallScaleTarget(smallScaleTaskType);
+
+  return TASK_LAUNCH_SCALES.has(scale)
+    ? { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true }
+    : null;
 }
 
 // TODO Remove this after the data is migrated

@@ -3,7 +3,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { compact, get } from 'es-toolkit/compat';
+import { compact } from 'es-toolkit/compat';
 
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
@@ -14,12 +14,12 @@ import {
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import type {
   IMutationKeyConfig,
@@ -64,28 +64,8 @@ export function useExperimentalNeuronDensityPipeline({
         },
       });
     },
-    onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          predicate(query) {
-            return (
-              query.queryKey.at(0) ===
-              `data-entity-count-${ExtendedEntitiesTypeDict.ExperimentalNeuronDensity}`
-            );
-          },
-        }),
-        queryClient.invalidateQueries({
-          predicate(query) {
-            return (
-              get(
-                (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
-              ) === ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
-            );
-          },
-        }),
-      ]);
-    },
+    onSettled: () =>
+      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.ExperimentalNeuronDensity),
   });
 
   const createContributionAsync = useMutation({

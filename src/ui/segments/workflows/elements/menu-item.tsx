@@ -9,6 +9,8 @@ import type { ComponentProps } from 'react';
 type Props<T> = {
   title: string;
   value: T;
+  /** E2E handle. Titles are product copy and two of them can differ by a suffix. */
+  testId?: string;
   group?: string;
   active: boolean;
   disabled: boolean;
@@ -26,6 +28,7 @@ export function MenuItem<T>({
   active,
   legacy,
   className,
+  testId,
   onClick,
 }: Props<T>) {
   return (
@@ -42,6 +45,7 @@ export function MenuItem<T>({
         className
       )}
       role="button"
+      data-testid={testId}
       aria-disabled={disabled}
       onClick={() => onClick(value)}
     >

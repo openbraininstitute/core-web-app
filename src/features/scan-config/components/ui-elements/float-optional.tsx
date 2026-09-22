@@ -52,6 +52,7 @@ export function FloatOptional({
       data-scan-config-block-element={ScanConfigUIElementDict.FloatOptional}
     >
       <InputNumber
+        data-testid="scan-config-optional-value"
         controls={false}
         disabled={disabled}
         status={errorMessage ? 'error' : undefined}
@@ -66,6 +67,7 @@ export function FloatOptional({
       {!disabled && !isNil(value) && (
         <button
           type="button"
+          data-testid="scan-config-optional-clear"
           aria-label="Clear value"
           title="Clear value"
           className="absolute top-[10px] right-[8px]"

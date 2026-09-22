@@ -14,5 +14,5 @@ export default async function SectionGeneric({ section }: SectionGenericProps) {
   const slug = sectionData.slug.split('/').pop() || '/';
   const content = await getRTFContent(slug);
 
-  return <SanityContentRTF value={content} />;
+  return <SanityContentRTF sectionSlug={slug} value={content} />;
 }

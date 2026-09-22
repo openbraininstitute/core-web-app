@@ -248,11 +248,7 @@ export function BrowseLink({
   const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType;
 
-  const {
-    count: tableCount,
-    isLoading: tableCountLoading,
-    isError: isTableCountError,
-  } = useTableQueryCount({
+  const { count: tableCount } = useTableQueryCount({
     extendedType,
     scope,
     workspace: { virtualLabId, projectId },
@@ -311,9 +307,9 @@ export function BrowseLink({
   });
 
   const resolvedCount = isActiveEntity ? (tableCount ?? fallbackData) : fallbackData;
-  const loadingCurrent = isActiveEntity ? tableCountLoading && tableCount == null : loadingFallback;
+  const loadingCurrent = isActiveEntity ? false : loadingFallback;
   const count = resolvedCount;
-  const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
+  const isCurrentError = isActiveEntity ? false : isFallbackError;
   const isLoading = loadingCurrent && loadingRoot && resolvedCount == null;
 
   const countRenderer = match({

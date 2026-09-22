@@ -56,6 +56,12 @@ describe('resolveConcreteEntityPathParam', () => {
         resolveConcreteEntityPathParam(ExtendedEntitiesTypeDict.EmSynapseMappingCampaign)
       ).toBe('circuit');
     });
+
+    it('routes circuit synaptic physiology campaigns to the circuit listing (no browse page of their own)', () => {
+      expect(
+        resolveConcreteEntityPathParam(ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign)
+      ).toBe('circuit');
+    });
   });
 
   describe('other entities map to themselves (kebab-cased)', () => {
@@ -94,6 +100,10 @@ describe('resolveConcreteEntityPathParam', () => {
       [ExtendedEntitiesTypeDict.Microcircuit, ExtendedEntitiesTypeDict.Circuit],
       [ExtendedEntitiesTypeDict.PairedNeuronCircuit, ExtendedEntitiesTypeDict.Circuit],
       [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign, ExtendedEntitiesTypeDict.Circuit],
+      [
+        ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+        ExtendedEntitiesTypeDict.Circuit,
+      ],
       [ExtendedEntitiesTypeDict.SingleNeuronCircuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
       [ExtendedEntitiesTypeDict.Emodel, ExtendedEntitiesTypeDict.Emodel],
       [ExtendedEntitiesTypeDict.Memodel, ExtendedEntitiesTypeDict.Memodel],

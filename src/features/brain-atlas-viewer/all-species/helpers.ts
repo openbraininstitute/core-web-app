@@ -1,3 +1,5 @@
+import { kebabCase } from 'es-toolkit/compat';
+
 import { SPECIES_IMAGE_MAP } from '@/features/brain-region-hierarchy/types';
 
 import type { IHierarchyWithSpecies } from '@/features/brain-region-hierarchy/types';
@@ -5,6 +7,10 @@ import type { IHierarchyWithSpecies } from '@/features/brain-region-hierarchy/ty
 export type SpeciesRuntimeHierarchy = IHierarchyWithSpecies & {
   atlasId?: string;
 };
+
+export function speciesAtlasCardTestId(scientificName: string): string {
+  return `all-species-atlas-card__${kebabCase(scientificName)}`;
+}
 
 export const AtlasKindDict = {
   Atlas: 'atlas',

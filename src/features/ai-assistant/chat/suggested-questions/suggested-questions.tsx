@@ -27,7 +27,10 @@ export default function SuggestedQuestions({
   const showSkeletons = isLoading && suggestions.length === 0;
 
   return (
-    <div className={classNames(className, styles.suggestedQuestions, styles.container)}>
+    <div
+      className={classNames(className, styles.suggestedQuestions, styles.container)}
+      data-testid="ai-assistant-suggestions"
+    >
       {isRefreshing && suggestions.length > 0 && <div className={styles.refreshingOverlay} />}
       <div className={styles.suggestions}>
         {showSkeletons
@@ -39,6 +42,7 @@ export default function SuggestedQuestions({
               <button
                 key={prompt}
                 type="button"
+                data-testid="ai-assistant-suggestion"
                 disabled={isRefreshing}
                 className={classNames(isRefreshing && styles.disabled)}
                 onClick={() => {

@@ -112,10 +112,18 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
       event.preventDefault();
     };
 
-    element.addEventListener('wheel', preventBrowserPinchZoom, { passive: false });
-    element.addEventListener('gesturestart', preventGestureZoom, { passive: false });
-    element.addEventListener('gesturechange', preventGestureZoom, { passive: false });
-    element.addEventListener('gestureend', preventGestureZoom, { passive: false });
+    element.addEventListener('wheel', preventBrowserPinchZoom, {
+      passive: false,
+    });
+    element.addEventListener('gesturestart', preventGestureZoom, {
+      passive: false,
+    });
+    element.addEventListener('gesturechange', preventGestureZoom, {
+      passive: false,
+    });
+    element.addEventListener('gestureend', preventGestureZoom, {
+      passive: false,
+    });
 
     return () => {
       element.removeEventListener('wheel', preventBrowserPinchZoom);
@@ -131,6 +139,7 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
       <header className={classNames(showResetCamera && styles.show)}>
         <button
           type="button"
+          data-testid="atlas-reset-camera-button"
           onClick={() => {
             painter?.resetCamera();
             setShowResetCamera(false);

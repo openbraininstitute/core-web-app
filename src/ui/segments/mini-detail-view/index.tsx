@@ -388,7 +388,11 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                 }
               )}
             >
-              <h1 className="text-2xl font-bold break-all" title={record.name}>
+              <h1
+                data-testid="mini-detail-name"
+                className="text-2xl font-bold break-all"
+                title={record.name}
+              >
                 {record.name}
               </h1>
               {onClose && (
@@ -455,6 +459,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   return (
                     <div
                       key={o.field}
+                      data-testid={`mini-detail-property-${o.field}`}
                       className={cn(
                         'flex flex-col items-baseline justify-start gap-1',
                         o.className

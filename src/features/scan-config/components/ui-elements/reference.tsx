@@ -1,4 +1,5 @@
 import { Select } from 'antd';
+import { useId } from 'react';
 
 import {
   type Reference as ReferenceSchema,
@@ -10,6 +11,7 @@ import {
   useBlockTypeToConfigKey,
   useReferenceTypeDict,
 } from '../hooks/schema';
+import { scanConfigHeldTestId } from '../utils';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -61,7 +63,41 @@ const DEFAULT_SENTINEL = '__default_as_null__';
  * //   → that reference type carries NO `allowed_block_types`
  * //   → no per-type filter; every entry in the `distributions` dictionary is listed.
  */
-export default function Reference({
+/** Visible when a tag-specific or type-specific default exists. */
+export function isReferenceFieldVisible(
+  referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
+  schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
+): boolean {
+  if (
+    referenceSchema.reference_tag &&
+    schema.reference_tag_defaults?.[referenceSchema.reference_tag]
+  ) {
+    return true;
+  }
+  return referenceSchema.reference_types.some(
+    (refType) => !!schema.default_block_reference_labels?.[refType]
+  );
+}
+
+/** Prefers a tag-specific default label, then falls back to the reference type. */
+export function resolveDefaultReferenceLabel(
+  referenceSchema: Pick<ReferenceSchema, 'reference_types' | 'reference_tag'>,
+  schema: Pick<ConfigSchema, 'default_block_reference_labels' | 'reference_tag_defaults'>
+): string {
+  const taggedLabel = referenceSchema.reference_tag
+    ? schema.reference_tag_defaults?.[referenceSchema.reference_tag]?.name
+    : undefined;
+
+  return (
+    taggedLabel ??
+    referenceSchema.reference_types
+      .map((refType) => schema.default_block_reference_labels?.[refType])
+      .find(Boolean) ??
+    'Default'
+  );
+}
+
+export function Reference({
   value,
   onChange,
   disabled,
@@ -79,6 +115,11 @@ export default function Reference({
   /** block names to exclude from the dropdown (e.g. a combined set excluding itself) */
   omit?: string[];
 }) {
+  /** Ties this select's options to this select: antd leaves every dropdown it has
+   * opened in the page, so an option is otherwise indistinguishable from the same
+   * option in a field filled minutes ago. */
+  const dropdownId = useId();
+
   const referenceTypeDict = useReferenceTypeDict(schema);
   const allowedByReferenceType = useAllowedBlockTypesByReferenceType(schema);
   const blockTypeToConfigKey = useBlockTypeToConfigKey(schema);
@@ -110,12 +151,7 @@ export default function Reference({
     if (configKey) matchingConfigKeys.add(configKey);
   }
 
-  // check visibility: at least one reference type must have a default label
-  const hasDefaultLabel = referenceSchema.reference_types.some(
-    (refType) => schema?.default_block_reference_labels?.[refType]
-  );
-
-  if (!schema || !hasDefaultLabel) return null;
+  if (!schema || !isReferenceFieldVisible(referenceSchema, schema)) return null;
 
   // build dropdown options from all matching dictionaries
   const options: Array<{ label: string; value: string }> = [];
@@ -138,11 +174,7 @@ export default function Reference({
     }
   }
 
-  // find the first available default label across accepted reference types
-  const defaultLabel =
-    referenceSchema.reference_types
-      .map((refType) => schema.default_block_reference_labels?.[refType])
-      .find(Boolean) ?? 'Default';
+  const defaultLabel = resolveDefaultReferenceLabel(referenceSchema, schema);
 
   options.unshift({
     label: defaultLabel,
@@ -170,9 +202,26 @@ export default function Reference({
 
   return (
     <Select
+      data-testid="scan-config-control"
+      data-scan-config-options={dropdownId}
       data-scan-config-block-element={ScanConfigUIElementDict.Reference}
       className="w-full"
       disabled={disabled}
+      labelRender={({ label, value: chosen }) =>
+        chosen === DEFAULT_SENTINEL ? (
+          label
+        ) : (
+          <span data-testid={scanConfigHeldTestId(String(chosen))}>{label}</span>
+        )
+      }
+      optionRender={(option) => (
+        <span
+          data-testid={`scan-config-option-${String(option.value)}`}
+          data-scan-config-option-of={dropdownId}
+        >
+          {option.label}
+        </span>
+      )}
       onChange={(newV: string) =>
         onChange(
           newV === DEFAULT_SENTINEL ? null : newV,
@@ -184,3 +233,5 @@ export default function Reference({
     />
   );
 }
+
+export default Reference;

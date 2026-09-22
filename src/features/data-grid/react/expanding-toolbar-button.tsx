@@ -1,5 +1,7 @@
 'use client';
 
+import { kebabCase } from 'es-toolkit/compat';
+
 import { cn } from '@/utils/css-class';
 
 import type { ComponentPropsWithRef, ReactNode } from 'react';
@@ -9,10 +11,7 @@ export interface IExpandingToolbarButtonProps extends ComponentPropsWithRef<'but
   icon: ReactNode;
   /** sentence-case name — the accessible name AND the text revealed on hover/focus */
   label: string;
-  /**
-   * Optional count overlay. Positioned by the consumer against a 20px-tall, zero-width
-   * anchor, so absolute offsets like `-right-2 -top-1.5` are relative to that.
-   */
+  /** Optional count overlay, pinned to the button's top-right border. */
   badge?: ReactNode;
 }
 
@@ -59,13 +58,9 @@ export function ExpandingPillContent({ icon, label, badge }: IExpandingPillConte
       {badge ? (
         <span
           data-testid="toolbar-pill-badge-anchor"
-          className={cn(
-            'pointer-events-none relative z-10 h-5 w-0 shrink-0',
-            'translate-x-1.5 -translate-y-1.5',
-            '*:ring-2 *:ring-white'
-          )}
+          className="pointer-events-none absolute top-[-2px] right-[-2px] z-10"
         >
-          {badge}
+          <span className="block -translate-y-1/2 *:ring-2 *:ring-white">{badge}</span>
         </span>
       ) : null}
     </>
@@ -97,6 +92,7 @@ export function ExpandingToolbarButton({
       type="button"
       aria-label={label}
       title={label}
+      data-testid={`toolbar-pill-${kebabCase(label)}`}
       {...rest}
       className={cn(EXPANDING_PILL_BASE_CLASS, EXPANDING_PILL_SURFACE_CLASS, className)}
     >

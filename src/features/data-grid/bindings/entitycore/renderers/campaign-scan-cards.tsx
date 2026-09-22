@@ -1,6 +1,11 @@
 'use client';
 
+import { RiCheckLine, RiFileCopyLine } from '@remixicon/react';
+
+import { isFromIdRef } from '@/features/scan-config/helpers';
 import { getParamLabel } from '@/features/task-runner/expanded-view';
+import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
+import { cn } from '@/utils/css-class';
 
 import { EMPTY_PLACEHOLDER } from '../../../renderers/aggrid/empty-cell';
 import { CampaignStatusBadge } from './campaign-status-badge';
@@ -13,6 +18,8 @@ export interface IScanCardParam {
   name: string;
   label: string;
   value: string;
+  /** set when the value is an entity reference, so the card offers a copy control */
+  entityId?: string;
 }
 
 /** A single scan-parameter set rendered as a card in the popover grid. */
@@ -31,6 +38,19 @@ interface RawScanRow {
   scan_parameters?: Record<string, unknown> | null;
 }
 
+/**
+ * The entity uuid a scan-parameter value points at, for the reference shapes obi-one
+ * writes: a `FromID` ref (`{ type, id_str }`) or a bare `{ id }` / `{ id_str }`.
+ * `undefined` for anything else, including a plain uuid string, which needs no unwrapping.
+ */
+export function scanValueEntityId(value: unknown): string | undefined {
+  if (isFromIdRef(value)) return value.id_str;
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const { id_str: idStr, id } = value as { id_str?: unknown; id?: unknown };
+  const candidate = idStr ?? id;
+  return typeof candidate === 'string' && candidate.trim() !== '' ? candidate : undefined;
+}
+
 /** Format an arbitrary scan-parameter value for compact display inside a card. */
 export function formatScanValue(value: unknown): string {
   if (value == null) return EMPTY_PLACEHOLDER;
@@ -39,6 +59,9 @@ export function formatScanValue(value: unknown): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value === 'string') return value.trim() === '' ? EMPTY_PLACEHOLDER : value;
   if (typeof value === 'object') {
+    // an entity reference reads as its id; raw JSON is unusable in a card this narrow
+    const entityId = scanValueEntityId(value);
+    if (entityId) return entityId;
     try {
       return JSON.stringify(value);
     } catch {
@@ -60,6 +83,7 @@ export function toScanCardData(records: unknown): IScanCard[] {
       name,
       label: getParamLabel(name),
       value: formatScanValue(value),
+      entityId: scanValueEntityId(value),
     }));
     return { id: String(id), title: String(title), status: row.status, params };
   });
@@ -77,6 +101,35 @@ function scanCardColumns(count: number): number {
 /** Popover content width for a column count — driven by the cards, not the title. */
 function scanCardsWidth(cols: number): string {
   return `${cols * CARD_W_REM + (cols - 1) * GAP_REM}rem`;
+}
+
+const VALUE_CLASS = 'max-w-[70%] shrink-0 truncate text-right font-semibold text-primary-8';
+
+/** An entity id, copied to the clipboard by clicking anywhere on it. */
+function CopyableId({ id }: { id: string }): ReactNode {
+  const [, copy, , copied] = useCopyToClipboard();
+
+  return (
+    <dd className={cn(VALUE_CLASS, 'min-w-0')}>
+      <button
+        type="button"
+        title={copied ? 'Copied' : id}
+        aria-label={`Copy ID ${id}`}
+        onClick={() => void copy(id)}
+        className={cn(
+          'flex w-full min-w-0 cursor-pointer items-center justify-end gap-1',
+          'text-primary-8 transition-colors hover:text-primary-6'
+        )}
+      >
+        <span className="min-w-0 truncate">{id}</span>
+        {copied ? (
+          <RiCheckLine size={12} className="shrink-0 text-green-600" />
+        ) : (
+          <RiFileCopyLine size={12} className="shrink-0 opacity-60" />
+        )}
+      </button>
+    </dd>
+  );
 }
 
 function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
@@ -103,12 +156,13 @@ function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
                     broken across two lines reads as two numbers. It keeps its natural
                     width (so the label wraps first) and only ellipsizes past the cap. */}
                 <dt className="min-w-0 break-words text-neutral-6">{param.label}</dt>
-                <dd
-                  title={param.value}
-                  className="max-w-[70%] shrink-0 truncate text-right font-semibold text-primary-8"
-                >
-                  {param.value}
-                </dd>
+                {param.entityId ? (
+                  <CopyableId id={param.entityId} />
+                ) : (
+                  <dd title={param.value} className={VALUE_CLASS}>
+                    {param.value}
+                  </dd>
+                )}
               </div>
             ))}
           </dl>

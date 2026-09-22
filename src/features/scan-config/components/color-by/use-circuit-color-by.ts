@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { downloadCircuitImage } from '@/features/scan-config/components/shared/3d-viewer';
 import { useMorphoViewerSignals } from '@/morpho-viewer';
@@ -10,7 +10,7 @@ import {
   CANVAS_LIGHT,
   viewerTheme,
 } from './contrast';
-import { defaultNeuronColor } from './palette';
+import { defaultNeuronColor, recededNeuronColor } from './palette';
 import { buildColorByProperties } from './properties';
 import { useNodeColorMapping } from './use-node-color-mapping';
 import { useViewerConfig } from './use-viewer-config';
@@ -29,6 +29,8 @@ interface Options {
   supportsElectrodes?: boolean;
   /** whether morphology-location markers are on screen, which the marker controls act on */
   supportsMorphologyLocations?: boolean;
+  /** whether the viewer draws cells as soma points, which the soma size control scales */
+  supportsSomaSize?: boolean;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
@@ -60,12 +62,31 @@ export interface ColorByControls {
   onChangeCategoryColor: (value: string, color: string) => void;
 }
 
+/** props the chrome needs to render the populations checklist */
+export interface PopulationsControls {
+  /** Every population the circuit declares, in declared order. */
+  populations: readonly NodePopulation[];
+  /** The ones taken out of the scene, by name; the rest are drawn. */
+  hidden: readonly string[];
+  /**
+   * Replace the hidden set. One setter rather than a callback per gesture:
+   * showing all of them and showing only one are both a set, worked out where
+   * the list is on hand.
+   */
+  onChange: (hidden: string[]) => void;
+  /** The population on show, drawn in full and listed in the nodes table. */
+  selected?: string;
+  /** Put another population on show. Absent where the host pins that choice. */
+  onSelect?: (name: string) => void;
+}
+
 /**
  * central state for the color-by feature on a single circuit viewer: the
  * persisted config, the per-node color mapping (with user overrides), and
- * ready-made control props for the chrome. `colorsByNode` is aligned by node
- * index for the viewer. owned by the preview host, which passes `colorsByNode`
- * and the config down to the actual viewers. Also serves the MEModel viewer, which
+ * ready-made control props for the chrome. `nodeColors` is the mapping's
+ * palette plus a palette column per node, aligned by node index for the
+ * viewer. owned by the preview host, which passes `nodeColors` and the config
+ * down to the actual viewers. Also serves the MEModel viewer, which
  * has no colour-by.
  */
 export function useCircuitColorBy(
@@ -74,6 +95,7 @@ export function useCircuitColorBy(
     supportsAxons,
     supportsElectrodes,
     supportsMorphologyLocations,
+    supportsSomaSize,
     defaultNeuronOpacity,
     population,
     subject,
@@ -83,7 +105,9 @@ export function useCircuitColorBy(
   const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
   });
-  const property = config.colorByProperty;
+  const populationName = population?.name;
+  const property =
+    populationName === undefined ? null : (config.colorByProperty[populationName] ?? null);
   const overridesForProperty = property ? config.colorOverrides[property] : undefined;
   const backgroundDark = backgroundIsDark(config.backgroundColor);
   const adaptiveBackground = BACKGROUND_ADAPTIVE
@@ -91,13 +115,6 @@ export function useCircuitColorBy(
       ? CANVAS_DARK
       : CANVAS_LIGHT
     : undefined;
-
-  const prevPopulationRef = useRef(population?.name);
-  useEffect(() => {
-    if (prevPopulationRef.current === population?.name) return;
-    prevPopulationRef.current = population?.name;
-    if (property) update({ colorByProperty: null });
-  }, [population?.name, property, update]);
 
   const { mapping, loading, columns, status, retry } = useNodeColorMapping(
     circuit,
@@ -112,6 +129,10 @@ export function useCircuitColorBy(
     [backgroundDark]
   );
   const defaultColor = useMemo(() => defaultNeuronColor(adaptiveBackground), [adaptiveBackground]);
+  const recededColor = useMemo(
+    () => recededNeuronColor(config.backgroundColor),
+    [config.backgroundColor]
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
   // one signal bus per viewer instance: dispatch to trigger camera reset /
@@ -122,33 +143,36 @@ export function useCircuitColorBy(
     if (image) downloadCircuitImage(image, shown?.name ?? '', config.backgroundColor);
   }, [signals, shown?.name, config.backgroundColor]);
 
-  const toggleFullscreen = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (document.fullscreenElement) {
-      void document.exitFullscreen();
-    } else {
-      void el.requestFullscreen?.();
-    }
-  }, []);
-
+  // Merged inside the update rather than from the rendered config, so two
+  // swatches changed in one tick do not both start from the same overrides.
   const onChangeCategoryColor = useCallback(
     (value: string, color: string) => {
       if (!property) return;
-      update({
+      update((previous) => ({
         colorOverrides: {
-          ...config.colorOverrides,
-          [property]: { ...config.colorOverrides[property], [value]: color },
+          ...previous.colorOverrides,
+          [property]: { ...previous.colorOverrides[property], [value]: color },
         },
-      });
+      }));
     },
-    [property, config.colorOverrides, update]
+    [property, update]
+  );
+
+  const onHiddenPopulationsChange = useCallback(
+    (hiddenPopulations: string[]) => update({ hiddenPopulations }),
+    [update]
   );
 
   const colorBy: ColorByControls = useMemo(
     () => ({
       selectedProperty: property,
-      onSelectProperty: (p) => update({ colorByProperty: p }),
+      // @see onChangeCategoryColor: the same merge, one entry per population.
+      onSelectProperty: (p) => {
+        if (populationName === undefined) return;
+        update((previous) => ({
+          colorByProperty: { ...previous.colorByProperty, [populationName]: p },
+        }));
+      },
       properties,
       propertiesLoading: !columns && status !== 'error',
       mapping,
@@ -157,13 +181,26 @@ export function useCircuitColorBy(
       onRetryProperties: retry,
       onChangeCategoryColor,
     }),
-    [property, properties, columns, status, retry, mapping, loading, update, onChangeCategoryColor]
+    [
+      property,
+      populationName,
+      properties,
+      columns,
+      status,
+      retry,
+      mapping,
+      loading,
+      update,
+      onChangeCategoryColor,
+    ]
   );
+
+  const onResetView = useCallback(() => {
+    signals.cameraReset.dispatch(undefined).catch(() => {});
+  }, [signals]);
 
   const menu: ViewerControlsMenuProps = useMemo(
     () => ({
-      onFullscreen: toggleFullscreen,
-      onResetView: () => signals.cameraReset.dispatch(),
       onCaptureImage: captureImage,
       backgroundDark,
       onBackgroundDarkChange: (dark) =>
@@ -172,6 +209,10 @@ export function useCircuitColorBy(
       onToggleAxons: supportsAxons ? (value) => update({ showAxons: value }) : undefined,
       neuronOpacity: config.neuronOpacity,
       onNeuronOpacityChange: (value) => update({ neuronOpacity: value }),
+      somaSizeScale: supportsSomaSize ? config.somaSizeScale : undefined,
+      onSomaSizeScaleChange: supportsSomaSize
+        ? (value: number) => update({ somaSizeScale: value })
+        : undefined,
       showElectrodes: supportsElectrodes ? config.showElectrodes : undefined,
       onToggleElectrodes: supportsElectrodes
         ? (value) => update({ showElectrodes: value })
@@ -206,12 +247,11 @@ export function useCircuitColorBy(
       onResetConfig: reset,
     }),
     [
-      signals,
-      toggleFullscreen,
       captureImage,
       backgroundDark,
       config.showAxons,
       config.neuronOpacity,
+      config.somaSizeScale,
       config.showElectrodes,
       config.electrodeRadius,
       config.morphologyLocationRadius,
@@ -221,6 +261,7 @@ export function useCircuitColorBy(
       supportsAxons,
       supportsElectrodes,
       supportsMorphologyLocations,
+      supportsSomaSize,
       hasSavedConfig,
       update,
       reset,
@@ -230,14 +271,20 @@ export function useCircuitColorBy(
   return {
     containerRef,
     config,
-    colorsByNode: mapping?.colorsByNode,
+    /** the mapping's palette + palette column per node, for the viewers */
+    nodeColors: mapping ?? undefined,
     /** default neuron color (adapted to the background in adaptive mode) */
     defaultColor,
+    /** colour for the somas of the populations drawn but not on show */
+    recededColor,
     /** chrome theme derived from the background, or null when adaptive mode is off */
     theme,
     /** signal bus passed to the viewer to trigger camera reset / snapshot */
     signals,
+    onResetView,
     colorBy,
+    /** Take populations out of the scene, or put them back; see {@link PopulationsControls}. */
+    onHiddenPopulationsChange,
     menu,
   };
 }

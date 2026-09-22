@@ -123,6 +123,33 @@ export async function listProjects({
   });
 }
 
+/**
+ * Fetches every project of a virtual lab, looping through all pages instead of
+ * relying on a single fixed `page_size`.
+ *
+ * @param {Object} params - Request parameters.
+ * @param {string} params.virtualLabId - The ID of the virtual lab.
+ * @param {Object} [params.filter] - Optional search/sort forwarded to each page request.
+ * @returns {Promise<IProject[]>} All projects in the virtual lab.
+ */
+export async function listAllProjects({
+  virtualLabId,
+  filter,
+}: {
+  virtualLabId: string;
+  filter?: {
+    order_by?: 'created_at' | 'updated_at' | 'name' | 'owner';
+    order_direction?: 'asc' | 'desc';
+    query?: string;
+  };
+}) {
+  return await fetchAllPaginatedData<IProject>({
+    fn: (page, pageSize) =>
+      listProjects({ virtualLabId, pagination: { page, page_size: pageSize }, filter }),
+    pageSize: 100,
+  });
+}
+
 export async function listAllProjectIds(virtualLabId: string) {
   const projects = await fetchAllPaginatedData<IProject>({
     fn: (page, pageSize) =>

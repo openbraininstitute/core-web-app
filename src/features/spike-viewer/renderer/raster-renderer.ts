@@ -142,10 +142,12 @@ export class RasterRenderer {
    * population is on show the axis should span its ids — against the
    * file-wide range, a small population beside a large one flattens into a
    * sliver along the bottom. Resets the viewport the way new data does: a new
-   * scale makes the old zoom meaningless.
+   * scale makes the old zoom meaningless. Unchanged bounds return early, so a
+   * cell count landing after the first frame keeps whatever zoom the user set.
    */
   setYBounds(yMin: number, yMax: number) {
     if (!this.hasData) return;
+    if (this.dataBounds.yMin === yMin && this.dataBounds.yMax === yMax) return;
 
     this.dataBounds = { ...this.dataBounds, yMin, yMax };
     this.initialView = paddedView(this.dataBounds);

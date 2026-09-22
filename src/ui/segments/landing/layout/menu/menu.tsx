@@ -79,6 +79,7 @@ export default function Menu({
     <>
       <div
         id={ID_MENU}
+        data-testid="site-header"
         className={classNames(
           className,
           styles.menuContainer,
@@ -100,6 +101,7 @@ export default function Menu({
               {item.submenu ? (
                 <div
                   role="menuitem"
+                  data-testid={`header-desktop-menu-${item.slug.slice(1)}`}
                   aria-haspopup="menu"
                   tabIndex={0}
                   className={styles.menuItemWithSubmenu}
@@ -108,6 +110,7 @@ export default function Menu({
                 >
                   <button
                     type="button"
+                    data-testid={`header-desktop-menu-${item.slug.slice(1)}-toggle`}
                     className={classNames(
                       styles.menuButton,
                       (item.index === section || parentItem?.slug === item.slug) && styles.selected
@@ -128,7 +131,12 @@ export default function Menu({
                     )}
                   >
                     {item.submenu.map((subItem) => (
-                      <Link key={subItem.slug} href={subItem.slug} className={styles.submenuItem}>
+                      <Link
+                        key={subItem.slug}
+                        href={subItem.slug}
+                        className={styles.submenuItem}
+                        data-testid={`header-desktop-link-${subItem.slug.slice(1)}`}
+                      >
                         {subItem.caption}
                       </Link>
                     ))}
@@ -138,6 +146,7 @@ export default function Menu({
                 <Link
                   href={item.slug}
                   className={classNames(styles.menuLink, item.index === section && styles.selected)}
+                  data-testid={`header-desktop-link-${item.slug.slice(1)}`}
                 >
                   {item.caption}
                 </Link>
@@ -145,7 +154,11 @@ export default function Menu({
             </div>
           ))}
 
-          <Link href="/app/virtual-lab" className={classNames(styles.menuLink)}>
+          <Link
+            href="/app/virtual-lab"
+            className={classNames(styles.menuLink)}
+            data-testid="header-desktop-link-app-virtual-lab"
+          >
             Login
           </Link>
         </div>

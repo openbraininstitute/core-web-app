@@ -122,8 +122,8 @@ describe('NodesSession.getGeometry', () => {
     const session = open(writeNodesFile('unasked-quat.h5', 2, { orientation: true }));
 
     // Same reasoning as the morphology column: a somas-only viewer never turns a
-    // cell, and packing these costs a `count * 4` Float64Array — 128 MB on a
-    // four-million-node circuit — to transfer and drop.
+    // cell, and packing these costs a `count * 4` Float32Array to transfer and
+    // drop, 64 MB on a four-million-node circuit.
     expect(session.getGeometry().orientations).toBeNull();
   });
 
@@ -145,7 +145,7 @@ describe('NodesSession.getGeometry', () => {
     file.create_group(`nodes/${POPULATION}`);
     file.create_group(`nodes/${POPULATION}/0`);
     const base = `/nodes/${POPULATION}/0`;
-    // A `Float64Array` write runs ToNumber on what it is handed, so reading this
+    // A `Float32Array` write runs ToNumber on what it is handed, so reading this
     // without checking the kind would draw the whole population at NaN rather
     // than say it cannot be drawn.
     file.create_dataset({ name: `${base}/x`, data: ['a', 'b'] });

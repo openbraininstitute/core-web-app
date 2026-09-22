@@ -1,4 +1,4 @@
-import { RefObject, useRef, useEffect } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 
 /**
  * Hook to observe resize events on a DOM element

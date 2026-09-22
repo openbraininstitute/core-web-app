@@ -51,6 +51,7 @@ export function ModelIdentifierAddActionButton({
   return (
     <button
       type="button"
+      data-testid="scan-config-select-model"
       disabled={disabled}
       onClick={onClick}
       className={cn(

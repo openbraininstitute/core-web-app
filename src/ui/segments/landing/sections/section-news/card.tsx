@@ -18,7 +18,12 @@ interface CardsProps {
 
 export default function Cards({ className, news }: CardsProps) {
   return (
-    <div className={classNames(className, styles.card, news.isEPFL && styles.small)}>
+    <div
+      className={classNames(className, styles.card, news.isEPFL && styles.small)}
+      data-testid={
+        news.slug ? `news-card-${news.slug}` : news.id ? `news-card-${news.id}` : undefined
+      }
+    >
       <h1>{news.title}</h1>
       <div className={styles.subtitle}>
         <div>Published {formatDate(news.date)}</div>

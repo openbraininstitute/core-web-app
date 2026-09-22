@@ -100,6 +100,7 @@ export default function SectionNews({
         <CenteredColumn>
           <button
             type="button"
+            data-testid="news-load-more"
             className={styleButtonRounded}
             onClick={handleLoadMore}
             disabled={loading}

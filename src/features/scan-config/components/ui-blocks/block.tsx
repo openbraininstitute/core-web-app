@@ -6,6 +6,7 @@ import {
   SweepIconButton,
   sweepSingleValue,
 } from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
 import { resolveNeuronFilterProperties } from '@/features/scan-config/helpers';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
@@ -55,10 +56,15 @@ export default function Block({
 
   if (!blockSchema) return null;
 
+  // A property key is only unique inside its block: two recordings can both
+  // have `dt`. E2E tests scope a field by its block before looking it up.
+  const blockTestId = ['scan-config-block', rootElement, selectedEntry].filter(Boolean).join('-');
+
   return (
     <div
       className="flex w-full min-w-0 max-w-full flex-col gap-2"
       data-scan-config-block={ScanConfigUIElementDict.BlockSingle}
+      data-testid={blockTestId}
     >
       {!hideTitle && (
         <>
@@ -82,9 +88,7 @@ export default function Block({
                 !isType(paramSchema) &&
                 !paramSchema.ui_hidden &&
                 (paramSchema.ui_element !== ScanConfigUIElementDict.Reference ||
-                  paramSchema.reference_types.some(
-                    (refType) => !!schema.default_block_reference_labels?.[refType]
-                  ))
+                  isReferenceFieldVisible(paramSchema, schema))
             )
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;
@@ -113,6 +117,7 @@ export default function Block({
                       isBooleanInput,
                   })}
                   data-scan-config-block-element-container-of={blockElementSchema.ui_element}
+                  data-testid={`scan-config-field-${k}`}
                 >
                   <div
                     className={cn('flex gap-0.5 w-full items-center', { 'mb-2': !isBooleanInput })}
@@ -132,6 +137,7 @@ export default function Block({
                     {canCollapseSweep && (
                       <SweepIconButton
                         label="Use a single value"
+                        testId="scan-config-sweep-collapse"
                         className="ml-auto"
                         onClick={() => {
                           setState({ ...state, [k]: sweepSingleValue(value as (number | null)[]) });

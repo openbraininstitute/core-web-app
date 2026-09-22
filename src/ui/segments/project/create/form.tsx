@@ -62,7 +62,9 @@ export function CreationForm({
 
   const mutateRecentWorkspace = useMutation({
     mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
-      setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+      setUserRecentWorkspace({
+        workspace: { virtualLabId: vlabId, projectId: prjId },
+      }),
   });
 
   const { isPending, mutateAsync } = useMutation({
@@ -118,7 +120,11 @@ export function CreationForm({
       if (result?.id) {
         const virLabId = result.virtual_lab_id;
         const projectId = result.id;
-        makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
+        makeTriggerWorkspaceConfigurationClickEvent({
+          on: false,
+          data: null,
+          type: null,
+        });
         navigate(`${config.ROOT_ROUTE}/${virLabId}/${projectId}`);
       }
     },
@@ -231,7 +237,10 @@ export function CreationForm({
 
                 setValidName({ loading: true, status: null });
                 try {
-                  const exists = await checkProjectExists({ vlabId: virtualLabIdForCheck, name });
+                  const exists = await checkProjectExists({
+                    vlabId: virtualLabIdForCheck,
+                    name,
+                  });
                   if (exists) {
                     setValidName({ loading: false, status: 'non-valid' });
                     return Promise.reject(new Error('This project name is already taken.'));
@@ -252,6 +261,7 @@ export function CreationForm({
         >
           <XInput
             autoComplete="off"
+            data-testid="project-creation-name"
             size="large"
             maxLength={60}
             placeholder="Enter your project's name here..."
@@ -281,6 +291,7 @@ export function CreationForm({
           <Input.TextArea
             rows={4}
             autoComplete="off"
+            data-testid="project-creation-description"
             size="large"
             className={cn(
               'border-gray-300 rounded-lg px-3 text-primary-9! focus:ring-0',
@@ -306,6 +317,7 @@ export function CreationForm({
             label: 'text-white',
             iconWrapper: 'bg-primary-9 text-white! group-hover:bg-primary-8!',
           }}
+          data-testid="create-project-btn"
         />
       </div>
     </Form>

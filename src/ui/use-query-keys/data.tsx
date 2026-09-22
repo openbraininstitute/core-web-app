@@ -206,6 +206,10 @@ export const keyBuilder = {
   ],
   simCampaign: ({ entityId }: { entityId: string }) => [`${prefix}-sim-campaign`, { entityId }],
   annotation: ({ entityId }: { entityId: string }) => [`${prefix}-annotation`, { entityId }],
+  annotationDefinitions: ({ type }: { type: 'mtype' | 'etype' }) => [
+    `${prefix}-annotation-definitions`,
+    { type },
+  ],
   neuronMorphology3DData: ({
     virtualLabId,
     projectId,

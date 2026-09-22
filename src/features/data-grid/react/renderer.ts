@@ -80,6 +80,8 @@ export interface IGridRendererProps<Row> {
   activeRowId?: string;
   /** optional per-row css class hook (e.g. hierarchy filtered-in/out styling) */
   getRowClass?: (row: Row) => string | undefined;
+  /** stable test id for a rendered row; omitted outside flows that need row-level automation. */
+  getRowTestId?: (row: Row) => string;
   /** when false, the row's checkbox/radio is disabled and cannot be picked. */
   isRowSelectable?: (row: Row) => boolean;
   /** optional placement of the expand control (default: fixed leading column) */

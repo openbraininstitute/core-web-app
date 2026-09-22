@@ -120,6 +120,7 @@ export function EmDatasetPrerequisiteCards({
           return (
             <Card
               key={dataset.id}
+              data-testid={`workflow-prerequisite-${dataset.id}`}
               role="radio"
               aria-checked={selected}
               tabIndex={0}

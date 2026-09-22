@@ -1,12 +1,13 @@
-import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
 import {
   DEFAULT_PROTOCOL,
   PROTOCOL_DETAILS,
   SIMULATION_COLORS,
 } from '@/constants/simulate/single-neuron';
-import { PlotData } from '@/services/bluenaas-single-cell/types';
-import { CurrentInjectionSimulationConfig } from '@/types/small-scale-simulator/single-neuron';
+import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
 import { classNames } from '@/util/utils';
+
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
+import type { CurrentInjectionSimulationConfig } from '@/types/small-scale-simulator/single-neuron';
 
 type Props = {
   currentInjection: CurrentInjectionSimulationConfig;

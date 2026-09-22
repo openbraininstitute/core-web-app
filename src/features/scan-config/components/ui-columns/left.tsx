@@ -100,7 +100,11 @@ export default function Left({
   }, [pendingRestoreConfig, setConfig, setPendingRestoreConfig]);
 
   return (
-    <div id="scan-config-controls-left" className="flex h-full min-h-0 flex-col">
+    <div
+      id="scan-config-controls-left"
+      data-testid="scan-config-controls-left"
+      className="flex h-full min-h-0 flex-col"
+    >
       <div className="secondary-scrollbar flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto overflow-x-hidden px-2 pb-5">
         {schema.group_order.map((group, groupIndex) => {
           return (

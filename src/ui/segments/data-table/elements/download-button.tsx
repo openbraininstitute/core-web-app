@@ -15,11 +15,15 @@ import {
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
 import { Button } from '@/ui/molecules/button';
+import {
+  SelectionBadgeAnchor,
+  SelectionCountBadge,
+} from '@/ui/segments/data-table/elements/selection-count-badge';
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/bulk-action-props';
 
 const DownloadStateDict = {
   idle: 'idle',
@@ -35,6 +39,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   selectedRows,
   dataType,
   clearSelectedRows,
+  selectionCount,
   workspace,
   className,
   expanding = false,
@@ -49,6 +54,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
   const notify = useAppNotification();
   const entityCount = selectedRows.length;
+  const badgeCount = selectionCount ?? entityCount;
   const isSingular = entityCount === 1;
 
   const download = useCallback(async () => {
@@ -90,10 +96,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   }, [selectedRows, dataType, clearSelectedRows, notify.error, workspace]);
 
   const getButtonLabel = (): string => {
-    if (isSingular) {
-      return `Download entity (${entityCount})`;
-    }
-    return `Download entities (${entityCount})`;
+    return isSingular ? 'Download entity' : 'Download entities';
   };
 
   const renderButtonIcon = () => {
@@ -150,10 +153,17 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
 
   if (!session) return null;
 
+  // The badge is a plain `div`, so its own `aria-label` is never announced; the count
+  // has to ride on the button's accessible name instead.
   const label = getButtonLabel();
+  const accessibleLabel = badgeCount > 0 ? `${label} (${badgeCount} selected)` : label;
+  const selectionBadge =
+    badgeCount > 0 ? (
+      <SelectionCountBadge count={badgeCount} className="text-primary-9" />
+    ) : undefined;
   /** gradient + chrome marking this as the primary bulk action */
   const palette = cn(
-    'overflow-hidden border border-white/20 font-semibold text-white',
+    'border border-white/20 font-semibold text-white',
     'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
     'disabled:cursor-not-allowed disabled:opacity-70'
   );
@@ -168,7 +178,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
       >
         <Button
           rounded
-          aria-label={label}
+          aria-label={accessibleLabel}
           title={label}
           variant="default"
           disabled={downloadState === DownloadStateDict.loading}
@@ -181,7 +191,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           onClick={download}
           data-testid="bulk-download-button"
         >
-          <ExpandingPillContent icon={renderButtonIcon()} label={label} />
+          <ExpandingPillContent icon={renderButtonIcon()} label={label} badge={selectionBadge} />
         </Button>
       </motion.div>
     );
@@ -196,10 +206,11 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
     >
       <Button
         rounded
+        aria-label={accessibleLabel}
         variant="default"
         disabled={downloadState === DownloadStateDict.loading}
         className={cn(
-          'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+          'relative h-12 min-w-45 border border-white/20 px-6 font-semibold',
           'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
           'transition-all duration-300 ease-out',
           'hover:scale-[1.02] active:scale-[0.98]',
@@ -213,6 +224,9 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           {renderButtonIcon()}
           <span className="whitespace-nowrap">{children ?? getButtonLabel()}</span>
         </span>
+        {selectionBadge ? (
+          <SelectionBadgeAnchor className="top-0 right-2">{selectionBadge}</SelectionBadgeAnchor>
+        ) : null}
         <div
           className={cn(
             'pointer-events-none absolute inset-0',

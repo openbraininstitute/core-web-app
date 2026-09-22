@@ -2,11 +2,8 @@ import {
   RiCameraLine,
   RiCloseLine,
   RiEqualizerLine,
-  RiFullscreenExitLine,
-  RiFullscreenLine,
   RiMoonFill,
   RiMoonLine,
-  RiRefreshLine,
   RiResetLeftLine,
   RiSunFill,
   RiSunLine,
@@ -25,8 +22,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 export interface ViewerControlsMenuProps {
-  onFullscreen: () => void;
-  onResetView: () => void;
   /** capture a PNG of the circuit canvas (excludes gizmo, scalebar, chrome) */
   onCaptureImage: () => void;
   backgroundDark: boolean;
@@ -37,6 +32,9 @@ export interface ViewerControlsMenuProps {
   /** neuron / soma opacity (0–1); omit to hide the control */
   neuronOpacity?: number;
   onNeuronOpacityChange?: (value: number) => void;
+  /** multiplier on the soma radius; omit for viewers that draw morphologies */
+  somaSizeScale?: number;
+  onSomaSizeScaleChange?: (value: number) => void;
   /** electrode location overlays — omit when none are available */
   showElectrodes?: boolean;
   onToggleElectrodes?: (value: boolean) => void;
@@ -58,9 +56,6 @@ export interface ViewerControlsMenuProps {
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
-  /** portal target for the popover (fullscreen element); null → document.body */
-  container?: HTMLElement | null;
-  isFullscreen?: boolean;
   className?: string;
 }
 
@@ -70,8 +65,6 @@ export interface ViewerControlsMenuProps {
  * right of the trigger
  */
 export function ViewerControlsMenu({
-  onFullscreen,
-  onResetView,
   onCaptureImage,
   backgroundDark,
   onBackgroundDarkChange,
@@ -79,6 +72,8 @@ export function ViewerControlsMenu({
   onToggleAxons,
   neuronOpacity,
   onNeuronOpacityChange,
+  somaSizeScale,
+  onSomaSizeScaleChange,
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
@@ -93,8 +88,6 @@ export function ViewerControlsMenu({
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
-  container,
-  isFullscreen = false,
   className,
 }: ViewerControlsMenuProps) {
   const [open, setOpen] = useState(false);
@@ -117,15 +110,11 @@ export function ViewerControlsMenu({
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
     const onFullscreenChange = () => setOpen(false);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
-
-  const handleFullscreen = () => {
-    setOpen(false);
-    onFullscreen();
-  };
+  }, [open]);
 
   const handleCaptureImage = () => {
     setOpen(false);
@@ -137,6 +126,7 @@ export function ViewerControlsMenu({
       <Tooltip open={open ? false : undefined}>
         <TooltipTrigger asChild>
           <PopoverTrigger
+            data-testid="viewer-settings"
             ref={triggerRef}
             aria-label={settingsLabel}
             className={cn(
@@ -164,7 +154,6 @@ export function ViewerControlsMenu({
         </TooltipContent>
       </Tooltip>
       <PopoverContent
-        container={container}
         side="right"
         align="start"
         sideOffset={8}
@@ -172,39 +161,33 @@ export function ViewerControlsMenu({
       >
         <div ref={contentRef}>
           <MenuButton
-            icon={
-              isFullscreen ? (
-                <RiFullscreenExitLine className="size-4 shrink-0" />
-              ) : (
-                <RiFullscreenLine className="size-4 shrink-0" />
-              )
-            }
-            label={isFullscreen ? 'Exit full screen' : 'Full screen'}
-            onClick={handleFullscreen}
-          />
-          <MenuButton
-            icon={<RiRefreshLine className="size-4 shrink-0" />}
-            label="Reset view"
-            onClick={onResetView}
-          />
-          <MenuButton
             icon={<RiCameraLine className="size-4 shrink-0" />}
             label="Capture image"
+            testId="viewer-capture-image"
             onClick={handleCaptureImage}
           />
           {onToggleAxons && (
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showAxons} onChange={onToggleAxons} />
+              <ViewerSwitch
+                testId="viewer-toggle-axons"
+                checked={!!showAxons}
+                onChange={onToggleAxons}
+              />
             </MenuRow>
           )}
           {onToggleElectrodes && (
             <MenuRow label="Electrodes" icon={<ElectrodesIcon className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showElectrodes} onChange={onToggleElectrodes} />
+              <ViewerSwitch
+                testId="viewer-toggle-electrodes"
+                checked={!!showElectrodes}
+                onChange={onToggleElectrodes}
+              />
             </MenuRow>
           )}
           {onElectrodeRadiusChange && electrodeRadius !== undefined && showElectrodes !== false && (
             <MenuSlider
               label="Electrode size"
+              testId="viewer-slider-electrode-size"
               min={DEFAULT_ELECTRODE_RADIUS}
               max={80}
               step={5}
@@ -214,17 +197,26 @@ export function ViewerControlsMenu({
           )}
           {onToggleScalebar && (
             <MenuRow label="Scale bar" icon={<RulerMeasure className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showScalebar} onChange={onToggleScalebar} />
+              <ViewerSwitch
+                testId="viewer-toggle-scale-bar"
+                checked={!!showScalebar}
+                onChange={onToggleScalebar}
+              />
             </MenuRow>
           )}
           {onToggleZoomSlider && (
             <MenuRow label="Zoom slider" icon={<ZoomInArea className="size-4 shrink-0" />}>
-              <ViewerSwitch checked={!!showZoomSlider} onChange={onToggleZoomSlider} />
+              <ViewerSwitch
+                testId="viewer-toggle-zoom-slider"
+                checked={!!showZoomSlider}
+                onChange={onToggleZoomSlider}
+              />
             </MenuRow>
           )}
           {onToggleMorphologyLocationLabels && (
             <MenuRow label="Location labels" icon={<TooltipIcon className="size-4 shrink-0" />}>
               <ViewerSwitch
+                testId="viewer-toggle-location-labels"
                 checked={!!showMorphologyLocationLabels}
                 onChange={onToggleMorphologyLocationLabels}
               />
@@ -233,6 +225,7 @@ export function ViewerControlsMenu({
           {onMorphologyLocationRadiusChange && morphologyLocationRadius !== undefined && (
             <MenuSlider
               label="Location marker size"
+              testId="viewer-slider-location-marker-size"
               min={1}
               max={30}
               step={1}
@@ -243,12 +236,25 @@ export function ViewerControlsMenu({
           {onNeuronOpacityChange && neuronOpacity !== undefined && (
             <MenuSlider
               label="Neuron opacity"
+              testId="viewer-slider-neuron-opacity"
               min={5}
               max={100}
               step={5}
               value={Math.round(neuronOpacity * 100)}
               format={(percent) => `${percent}%`}
               onChange={(percent) => onNeuronOpacityChange(percent / 100)}
+            />
+          )}
+          {onSomaSizeScaleChange && somaSizeScale !== undefined && (
+            <MenuSlider
+              label="Soma size"
+              testId="viewer-slider-soma-size"
+              min={0.2}
+              max={2}
+              step={0.1}
+              value={somaSizeScale}
+              format={(scale) => `${scale.toFixed(1)}×`}
+              onChange={onSomaSizeScaleChange}
             />
           )}
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
@@ -339,15 +345,19 @@ const menuItemIconClass =
 function MenuButton({
   icon,
   label,
+  testId,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
+  /** E2E handle. Several of these labels change with the state they toggle. */
+  testId?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      data-testid={testId}
       onClick={onClick}
       className="group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-neutral-100"
     >
@@ -368,13 +378,16 @@ const ON_COLOR = 'var(--color-primary-9)';
 /** A settings switch, primary-9 while on. */
 function ViewerSwitch({
   checked,
+  testId,
   onChange,
 }: {
   checked: boolean;
+  testId?: string;
   onChange: (value: boolean) => void;
 }) {
   return (
     <Switch
+      data-testid={testId}
       size="small"
       checked={checked}
       onChange={onChange}
@@ -385,6 +398,7 @@ function ViewerSwitch({
 
 function MenuSlider({
   label,
+  testId,
   min,
   max,
   step,
@@ -393,6 +407,7 @@ function MenuSlider({
   format,
 }: {
   label: string;
+  testId?: string;
   min: number;
   max: number;
   step: number;
@@ -401,7 +416,10 @@ function MenuSlider({
   format?: (value: number) => string;
 }) {
   return (
-    <div className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
+    <div
+      data-testid={testId}
+      className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
+    >
       <div className="flex items-center justify-between gap-2">
         <span>{label}</span>
         <span className="tabular-nums text-neutral-500">{format ? format(value) : value}</span>

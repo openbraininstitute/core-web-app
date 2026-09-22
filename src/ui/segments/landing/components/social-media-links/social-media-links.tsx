@@ -15,7 +15,16 @@ export default function SocialMediaLinks({ className, links }: SocialMediaLinksP
   return (
     <div className={classNames(className, styles.socialMediaLinks)}>
       {links.map((link) => (
-        <a key={link.url} href={link.url} target="_BLANK">
+        <a
+          key={link.url}
+          href={link.url}
+          target="_BLANK"
+          data-testid={
+            link.title
+              ? `footer-social-${link.title.toLowerCase().replaceAll(' ', '-')}`
+              : undefined
+          }
+        >
           <ProgressiveImage
             className={styles.image}
             background="transparent"

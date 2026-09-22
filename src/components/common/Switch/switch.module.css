@@ -37,7 +37,6 @@
 }
 
 .SwitchRoot {
-  border: 1px solid currentColor;
   border: 1px solid color-mix(in srgb, currentColor, transparent 50%);
   flex: 0 0 auto;
   box-sizing: border-box;
@@ -46,6 +45,8 @@
   border-radius: 9999px;
   position: relative;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
   --size: calc(var(--custom-height) - 2 * var(--custom-padding));
   background-color: var(--custom-switch-color-back);
   filter: grayscale(100%);
@@ -65,6 +66,7 @@
   transform: translateX(var(--custom-padding));
   will-change: transform;
   margin: 0;
+  flex-shrink: 0;
   background-color: var(--custom-switch-color-front);
 }
 

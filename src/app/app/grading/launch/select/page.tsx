@@ -35,6 +35,8 @@ export default async function Page({ searchParams }: ServerSideComponentProp<nul
       projects={launch.projects}
       virtualLabName={launch.virtualLab.name}
       params={launch.params}
+      templateProjectId={launch.templateProjectId}
+      defaultProjectId={launch.defaultProjectId}
     />
   );
 }

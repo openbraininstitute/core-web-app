@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'motion/react';
-import type { ReactNode } from 'react';
 
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;

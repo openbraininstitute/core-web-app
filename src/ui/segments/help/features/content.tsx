@@ -2,12 +2,11 @@
 
 import { useSearchParams } from 'next/navigation';
 
-import FeaturesCard from '@/ui/segments/help/features/features-card';
-
 import {
-  useSanityContentForFeatureItems,
   type ContentForFeatureItem,
+  useSanityContentForFeatureItems,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
+import FeaturesCard from '@/ui/segments/help/features/features-card';
 import Slugify from '@/util/slugify';
 
 export default function FeaturesContent() {

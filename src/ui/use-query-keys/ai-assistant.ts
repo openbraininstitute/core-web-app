@@ -3,6 +3,7 @@ const prefix = 'ai-assistant';
 export const keyBuilderAI = {
   tools: () => [prefix, 'tools'],
   tool: (toolId: string) => [prefix, 'tool', toolId],
+  settings: () => [prefix, 'settings'],
   history: (virtualLabId: string | null, projectId: string | null) => [
     prefix,
     'history',

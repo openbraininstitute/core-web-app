@@ -6,6 +6,7 @@ import {
 } from '@/features/scan-config/components/hooks/use-scan-configuration';
 import ScanConfigSkeleton from '@/features/scan-config/components/skeletons/full-page';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 export type ScanConfigContainerProps = TUseScanConfigurationParams & {
   className?: string;
@@ -33,5 +34,10 @@ export function ScanConfigContainer(props: ScanConfigContainerProps) {
     return null;
   }
 
-  return <ScanConfigTemplate {...ready} className={className} />;
+  return (
+    <>
+      <ScanConfigTemplate {...ready} className={className} />
+      <DownloadPanel />
+    </>
+  );
 }

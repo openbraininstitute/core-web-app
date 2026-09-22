@@ -1,4 +1,5 @@
 import { RiCloseLine } from '@remixicon/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from 'ai';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -6,8 +7,11 @@ import { useState } from 'react';
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
+import { useAccessToken } from '@/hooks/useAccessToken';
+import { serviceAiAgentPatchSettings } from '@/services/ai-agent/api/settings';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
@@ -18,6 +22,9 @@ import { ViewToggle } from './tool-payload/ViewToggle';
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-progress.module.css';
+
+/** Tools gated by the requireApprovalForCodeExecution user setting. */
+const SANDBOX_HIL_TOOLS = new Set(['execute-python', 'execute-shell', 'kill-sandbox']);
 
 export type ApprovalResponseFn = (params: {
   id: string;
@@ -38,9 +45,12 @@ export default function ToolsProgress({
 }: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
+  const accessToken = useAccessToken() ?? '';
+  const queryClient = useQueryClient();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'arguments' | 'result'>('arguments');
   const [viewMode] = useViewMode();
+  const [isAutoApproving, setIsAutoApproving] = useState(false);
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -62,6 +72,8 @@ export default function ToolsProgress({
   const { tool, state, key } = toolsState;
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
+  const toolName = getToolName(part);
+  const isSandboxHilTool = Boolean(toolName && SANDBOX_HIL_TOOLS.has(toolName));
 
   // Approval states
   const isApprovalRequested = state === 'approval-requested';
@@ -91,6 +103,34 @@ export default function ToolsProgress({
     }
   };
 
+  const handleAlwaysAllow = async () => {
+    if (
+      !addToolApprovalResponse ||
+      !isApprovalRequested ||
+      !('approval' in part) ||
+      !part.approval ||
+      !accessToken ||
+      isAutoApproving
+    ) {
+      return;
+    }
+
+    setIsAutoApproving(true);
+    try {
+      await serviceAiAgentPatchSettings({
+        accessToken,
+        requireApprovalForCodeExecution: false,
+      });
+      queryClient.setQueryData(keyBuilderAI.settings(), {
+        requireApprovalForCodeExecution: false,
+      });
+      void queryClient.invalidateQueries({ queryKey: keyBuilderAI.settings() });
+      addToolApprovalResponse({ id: part.approval.id, approved: true });
+    } catch {
+      setIsAutoApproving(false);
+    }
+  };
+
   // Approval-requested: inline card using the same layout as other states
   if (isApprovalRequested) {
     return (
@@ -103,14 +143,12 @@ export default function ToolsProgress({
           )}
           key={key}
         >
-          <div
+          <button
+            type="button"
             className={styles.header}
             onClick={() => toggleExpanded(key)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') toggleExpanded(key);
-            }}
+            aria-label={isEffectivelyExpanded ? 'Collapse details' : 'Expand details'}
+            aria-expanded={isEffectivelyExpanded}
           >
             <div className={cn(styles.iconWrapper, styles.iconWrapperApproval)}>
               <Icon />
@@ -122,16 +160,15 @@ export default function ToolsProgress({
               </div>
             </div>
             <div className={styles.actions}></div>
-          </div>
+          </button>
 
           {/* Expandable Details — always open for approval */}
-          <div
+          <section
             className={cn(
               styles.details,
               isEffectivelyExpanded ? styles.detailsOpen : styles.detailsClosed
             )}
             aria-hidden={!isEffectivelyExpanded}
-            role="region"
             aria-label={`${tool.name} details`}
           >
             <div className={styles.detailsInner}>
@@ -153,15 +190,38 @@ export default function ToolsProgress({
                 </div>
               ) : null}
             </div>
-          </div>
+          </section>
 
           {/* Approval action bar */}
           <div className={styles.approvalBar}>
-            <button type="button" className={styles.approvalBarReject} onClick={handleReject}>
+            <button
+              type="button"
+              className={styles.approvalBarReject}
+              onClick={handleReject}
+              disabled={isAutoApproving}
+            >
               <RiCloseLine size={14} />
               <span>Reject</span>
             </button>
-            <button type="button" className={styles.approvalBarApprove} onClick={handleApprove}>
+            {isSandboxHilTool && (
+              <button
+                type="button"
+                className={styles.approvalBarAlwaysAllow}
+                onClick={() => {
+                  void handleAlwaysAllow();
+                }}
+                disabled={isAutoApproving}
+                title="Approve this call and stop asking for code-execution approval. You can turn it back on in Settings."
+              >
+                <span>{isAutoApproving ? 'Saving…' : 'Always allow'}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className={styles.approvalBarApprove}
+              onClick={handleApprove}
+              disabled={isAutoApproving}
+            >
               <CheckIcon style={{ width: 12, height: 9 }} />
               <span>Run tool</span>
             </button>
@@ -229,10 +289,9 @@ export default function ToolsProgress({
           </button>
 
           {/* Expandable Details */}
-          <div
+          <section
             className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
             aria-hidden={!isExpanded}
-            role="region"
             aria-label={`${tool.name} details`}
           >
             <div className={styles.detailsInner}>
@@ -254,7 +313,7 @@ export default function ToolsProgress({
                 </div>
               ) : null}
             </div>
-          </div>
+          </section>
         </div>
       </div>
     );
@@ -290,10 +349,9 @@ export default function ToolsProgress({
           </button>
 
           {/* Expandable Details */}
-          <div
+          <section
             className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
             aria-hidden={!isExpanded}
-            role="region"
             aria-label={`${tool.name} details`}
           >
             <div className={styles.detailsInner}>
@@ -315,7 +373,7 @@ export default function ToolsProgress({
                 </div>
               ) : null}
             </div>
-          </div>
+          </section>
         </div>
       </div>
     );
@@ -393,10 +451,9 @@ export default function ToolsProgress({
         </button>
 
         {/* Expandable Details */}
-        <div
+        <section
           className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
           aria-hidden={!isExpanded}
-          role="region"
           aria-label={`${tool.name} details`}
         >
           <div className={styles.detailsInner}>
@@ -439,7 +496,7 @@ export default function ToolsProgress({
               </div>
             ) : null}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

@@ -6,9 +6,12 @@ export const ObiOneTaskTypeDict = {
   Skeletonization: 'morphology_skeletonization',
   MorphologySkeletonization: 'morphology_skeletonization',
   IonChannelModelSimulationExecution: 'ion_channel_model_simulation_execution',
+  SingleNeuronSimulationExecution: 'single_neuron_simulation_execution',
+  SingleNeuronSynaptomeSimulationExecution: 'single_neuron_synaptome_simulation_execution',
   EmSynapseMapping: 'em_synapse_mapping',
   ExtracellularRecordingWeightsCalculation: 'extracellular_recording_weights_calculation',
   BuildSynaptome: 'circuit_single_build',
+  CircuitSynapticPhysiology: 'circuit_synaptic_physiology_assignment',
 } as const;
 
 export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];

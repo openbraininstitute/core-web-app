@@ -119,6 +119,7 @@ function EmailInput({
     <div>
       <XInput
         id="email"
+        data-testid="virtual-lab-admin-invite-email"
         size="large"
         autoComplete="off"
         placeholder="Enter email address..."
@@ -321,6 +322,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
               label="Add administrator"
               iconPosition="start"
               onClick={addEmailField}
+              data-testid="virtual-lab-admin-invite-add-btn"
               disabled={mutate.isPending}
               classNames={{ root: 'w-max' }}
             />
@@ -337,6 +339,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
             }
             label={`Send ${userToInviteCount} invitation(s)`}
             onClick={() => mutate.mutateAsync()}
+            data-testid="virtual-lab-admin-invite-send-btn"
             disabled={mutate.isPending || !inviteList.some((invite) => invite.email)}
             classNames={{
               root: 'bg-primary-9 text-white hover:bg-primary-8 group',
@@ -592,6 +595,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
             icon={<PlusOutlined />}
             label="Add administrator"
             onClick={onInviteMemberClick}
+            data-testid="add-administrator-btn"
             classNames={{ root: 'w-max' }}
           />
         </div>

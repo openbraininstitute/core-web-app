@@ -71,6 +71,7 @@ function EmailInput({
     <div>
       <Input
         id="email"
+        data-testid="project-invite-email"
         size="large"
         placeholder="Enter email address..."
         value={value}
@@ -218,7 +219,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-8 py-4 pb-8">
-        <h2 className="text-primary-9 text-xl font-semibold">
+        <h2 className="text-primary-9 text-xl font-semibold" data-testid="project-invite-heading">
           Invite new members to virtual lab
           <div className="flex items-center gap-2">
             <small className="text-primary-8 text-sm font-light">
@@ -275,6 +276,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
                     <Select
                       value={invite?.role || 'member'}
                       onChange={(role) => onRoleChange(invite, role)}
+                      data-testid="project-invite-role"
                       options={roleOptions}
                       disabled={!emailSchema.safeParse(invite.email).success}
                       size="large"
@@ -316,6 +318,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
           variant="outline"
           size="md"
           onClick={addEmailField}
+          data-testid="project-invite-add-btn"
           className={cn(
             'border-primary-4 group bg-primary-9 hover:text-primary-4',
             'px-4 text-white select-none hover:border-white',
@@ -346,6 +349,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
             variant="outline"
             size="lg"
             onClick={() => mutate.mutateAsync()}
+            data-testid="project-invite-send-btn"
             disabled={mutate.isPending || !inviteList.some((invite) => invite.email)}
           >
             Send{' '}

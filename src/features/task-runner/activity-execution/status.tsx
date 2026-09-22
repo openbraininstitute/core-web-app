@@ -44,7 +44,7 @@ const StatusConfig = {
 export function ActivityAggregatedStatusSkeleton() {
   return (
     <div className="flex">
-      <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full px-0.5 border">
+      <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full border bg-white px-0.5">
         <div className="flex items-center gap-1 px-0.5 py-0.5">
           <span className="h-4.5 w-6 animate-pulse rounded-full bg-neutral-200" />
           <span className="h-4.5 w-4.5 animate-pulse rounded-full bg-neutral-200" />
@@ -95,7 +95,7 @@ export default function ActivityAggregatedStatus({
     <div className="flex">
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full border px-1.5">
+          <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full border bg-white px-1.5">
             {statuses
               .map((status) => StatusConfig[status])
               .map((statusConfig) => (

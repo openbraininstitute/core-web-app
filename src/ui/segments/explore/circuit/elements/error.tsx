@@ -1,7 +1,8 @@
 import { InfoCircleFilled } from '@ant-design/icons';
-import { ReactNode } from 'react';
 
 import { classNames } from '@/util/utils';
+
+import type { ReactNode } from 'react';
 
 export function Error({
   title,

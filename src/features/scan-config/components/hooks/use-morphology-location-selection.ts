@@ -38,7 +38,11 @@ import type {
 } from '@/morpho-viewer';
 
 interface IOptions extends IFormBindingOptions {
-  /** Cells currently in the viewer, needed to place markers. */
+  /**
+   * The cells a location applies to, which markers are placed on and picks are
+   * taken from. Not every cell in the viewer: a scene may draw several
+   * populations, and a location belongs to one of them.
+   */
   cells: MorphoViewerSmallCircuitCell[];
   /** Per cell, SONATA section id → the section name the viewer addresses. */
   sonataSectionIds?: ReadonlyMap<string, ReadonlyMap<number, string>>;
@@ -71,7 +75,9 @@ type TLocationMarker = MorphoViewerMorphologyLocationMarker & {
  *
  * A row has a section id and an offset but no cell, so it applies to every morphology in the
  * neuron set. That is only unambiguous for one cell, which is what OBI-One allows today; the
- * mapping below still spans every cell, so the view keeps matching what gets simulated.
+ * mapping below still spans every cell it is given, so the view keeps matching what gets
+ * simulated. Which cells those are is the caller's to say: a circuit scene draws populations
+ * this block has nothing to do with.
  */
 export function useMorphologyLocationSelection({
   config,
@@ -139,6 +145,16 @@ export function useMorphologyLocationSelection({
 
   const onPick = useCallback(
     (pick: MorphoViewerMorphologyLocationPick) => {
+      // The viewer picks on whatever cell the tap landed near, and the scene
+      // holds every population's cells. Only the ones this hook was given carry
+      // section ids these rows can be read against.
+      if (!cells.some((cell) => cell.id === pick.cell.id)) {
+        message.info(
+          'That cell belongs to another population. Select it to place a location there.'
+        );
+        return;
+      }
+
       const { sonataSectionId } = pick;
       if (sonataSectionId === undefined) {
         message.info(
@@ -183,7 +199,7 @@ export function useMorphologyLocationSelection({
 
       onConfigChange((previous) => writeLocation(previous, entry, location, existing));
     },
-    [onConfigChange, selectedEntry, message, ownLocationCount, canEdit, onCreateEntry]
+    [onConfigChange, selectedEntry, message, ownLocationCount, canEdit, onCreateEntry, cells]
   );
 
   // Mirrors `hover !== null`, which only this handler sets, so it cannot go stale. A ref and

@@ -33,6 +33,7 @@ export function Tab({
   return (
     <button
       id={`tab-${tab}`}
+      data-testid={`scan-config-tab-${tab}`}
       aria-label={tab}
       disabled={disabled}
       aria-disabled={disabled}
@@ -64,6 +65,7 @@ export function LeftMenuTab({
   extraClass,
   disabled,
   style,
+  testId,
 }: {
   tab: string;
   selectedTab: string;
@@ -73,11 +75,15 @@ export function LeftMenuTab({
   extraClass?: string;
   disabled?: boolean;
   style?: React.CSSProperties;
+  /** E2E handle. Titles come from a live schema and are restyled by CSS, so a
+   * test cannot address these tabs by their visible text. */
+  testId?: string;
 }) {
   const isSelected = tab === selectedTab;
   return (
     <button
       data-scan-config-menu="left-menu-top-item"
+      data-testid={testId}
       data-active={isSelected}
       onClick={!disabled ? onClick : undefined}
       type="button"

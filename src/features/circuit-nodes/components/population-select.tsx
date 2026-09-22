@@ -34,8 +34,6 @@ type Props = {
   theme?: ViewerTheme | null;
   disabled?: boolean;
   className?: string;
-  /** Portal mount for the dropdown (fullscreen-safe). */
-  portalContainer?: HTMLElement | null;
 };
 
 export function PopulationSelect({
@@ -46,7 +44,6 @@ export function PopulationSelect({
   theme,
   disabled,
   className,
-  portalContainer,
 }: Props) {
   const chrome = variant === 'chrome';
   const panelStyle =
@@ -93,7 +90,6 @@ export function PopulationSelect({
         )}
       </SelectTrigger>
       <SelectContent
-        container={portalContainer}
         className={
           chrome ? 'rounded-xl border-gray-100 p-1 shadow-xl backdrop-blur-xl' : toolbarContentCls
         }

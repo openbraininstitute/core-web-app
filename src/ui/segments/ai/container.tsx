@@ -48,6 +48,7 @@ export function Container() {
             onClick={() => updateState(PanelState.Expanded)}
             className={styles.collapsed}
             aria-label="expand AI assistant"
+            data-testid="ai-assistant-open-button"
           >
             <IconPlus />
             <div>OBI Assistant</div>

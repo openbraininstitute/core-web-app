@@ -25,6 +25,7 @@ export const ExtendedEntitiesTypeDict = {
   SkeletonizationCampaign: 'skeletonization_campaign',
   ExtracellularRecordingArrayCampaign: 'extracellular_recording_array_campaign',
   BuildSynaptomeCampaign: 'build_synaptome_campaign',
+  CircuitSynapticPhysiologyCampaign: 'circuit_synaptic_physiology_campaign',
   RegionCircuitSimulation: 'region_circuit_simulation',
   WholeBrainCircuitSimulation: 'whole_brain_circuit_simulation',
 } as const;

@@ -101,6 +101,37 @@ describe('FileViewer dispatch for the e-feature extraction figures asset', () =>
     expect(screen.queryByText(/is not supported yet/)).not.toBeInTheDocument();
   });
 
+  it('opens a mechanism file from the listing in the code viewer', async () => {
+    listDirectoryOfAssets.mockResolvedValue({
+      files: { 'Na.mod': { name: 'Na.mod', size: 40, last_modified: '' } },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('NEURON { SUFFIX na }'))
+    );
+
+    const file = {
+      id: figuresAsset.id,
+      asset: figuresAsset,
+      entity: { id: '866f9605-b854-49b4-a86c-9a997c229dd5', type: 'task_result' },
+      name: 'figures',
+      renderer: 'default',
+    } as TActivityCustomFile;
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <FileViewer file={file} context={{ virtualLabId: 'vl-1', projectId: 'proj-1' }} />
+      </QueryClientProvider>
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /Na\.mod/ }));
+
+    expect(await screen.findByTitle('Na.mod')).toBeInTheDocument();
+    expect(screen.queryByText(/is not supported yet/)).not.toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
   it('shows the placeholder for a child whose format has no viewer, not the folder again', async () => {
     listDirectoryOfAssets.mockResolvedValue({
       files: { 'raw.bin': { name: 'raw.bin', size: 12, last_modified: '' } },

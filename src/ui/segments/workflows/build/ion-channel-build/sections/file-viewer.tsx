@@ -95,7 +95,7 @@ export function FileViewer({
       <CodeFileViewer
         url={presignedData.url}
         filename={asset.path}
-        language={isJson ? 'json' : 'shellscript'}
+        language={isJson ? 'json' : ('mod' as BundledLanguage)}
       />
     );
   }

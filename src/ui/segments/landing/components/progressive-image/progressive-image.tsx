@@ -9,6 +9,7 @@ import styles from './progressive-image.module.css';
 
 interface ProgressiveImageProps {
   className?: string;
+  testId?: string;
   src: string;
   width: number;
   height: number;
@@ -19,6 +20,7 @@ interface ProgressiveImageProps {
 
 export default function ProgressiveImage({
   className,
+  testId,
   src,
   width,
   height,
@@ -35,6 +37,7 @@ export default function ProgressiveImage({
         '--custom-aspect-ratio': forceAspectRatio ? `${width}/${height}` : 'none',
       }}
       className={classNames(className, styles.progressiveImage)}
+      data-testid={testId}
     >
       <Image
         className={classNames(styles.image, loaded && styles.show)}

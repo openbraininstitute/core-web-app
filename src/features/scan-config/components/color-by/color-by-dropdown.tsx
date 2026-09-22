@@ -25,8 +25,6 @@ interface ColorByDropdownProps {
   onRetry?: () => void;
   /** background-derived theme (adaptive mode); null → fixed light styling. */
   theme?: ViewerTheme | null;
-  /** portal target for the popover (fullscreen element); null → document.body. */
-  container?: HTMLElement | null;
   className?: string;
 }
 
@@ -39,7 +37,6 @@ export function ColorByDropdown({
   error,
   onRetry,
   theme,
-  container,
   className,
 }: ColorByDropdownProps) {
   const [open, setOpen] = useState(false);
@@ -69,10 +66,11 @@ export function ColorByDropdown({
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
     const onFullscreenChange = () => setOpen(false);
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
+  }, [open]);
 
   const select = (property: string | null) => {
     onChange(property);
@@ -128,7 +126,6 @@ export function ColorByDropdown({
         )}
       </PopoverTrigger>
       <PopoverContent
-        container={container}
         data-testid="color-by-dropdown-content"
         id="color-by-dropdown-content"
         align="end"

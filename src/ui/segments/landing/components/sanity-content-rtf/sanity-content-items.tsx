@@ -11,14 +11,15 @@ import type { ContentForRichTextItems } from '@/services/sanity/types/rtf-conten
 import styles from './sanity-content-items.module.css';
 
 interface SanityContentItemsProps {
+  testIdPrefix?: string;
   value: ContentForRichTextItems;
 }
 
-export default function SanityContentItems({ value }: SanityContentItemsProps) {
+export default function SanityContentItems({ testIdPrefix, value }: SanityContentItemsProps) {
   return (
     <ul className={classNames(styles.sanityContentItems, styleBlockSmall)}>
       {value.content.map((item, index) => (
-        <li key={`${index}`}>
+        <li key={`${index}`} data-testid={testIdPrefix ? `${testIdPrefix}-${index}` : undefined}>
           {item.title && <h3>{item.title}</h3>}
           <div className={styles.content}>
             {item.imageURL && item.imageWidth && item.imageHeight && (

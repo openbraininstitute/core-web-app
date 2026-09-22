@@ -4,7 +4,7 @@ import { logError } from '@/utils/logger';
 
 export interface ContentForSocialMediaLink {
   url: string;
-  title: string;
+  title: string | null;
   imageURL: string;
   imageWidth: number;
   imageHeight: number;

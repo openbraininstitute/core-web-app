@@ -31,7 +31,7 @@ export const analysisNotebookTemplateSchema: IGridSchema<Row> = {
   getRowId: (row) => row.id,
   defaultSort: [{ columnId: 'registrationDate', direction: SortDirection.Desc }],
   rowHeight: 118,
-  selection: { enabled: true },
+  selection: { enabled: false },
   columns: [
     nameColumn<Row>({ essential: true }),
     descriptionColumn<Row>(),

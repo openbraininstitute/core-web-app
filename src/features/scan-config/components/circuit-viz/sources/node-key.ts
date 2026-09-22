@@ -1,38 +1,47 @@
 /**
- * The id morphoviewer knows a cell by, and how to get its node index back.
+ * The id morphoviewer knows a cell by, and how to get the node back out of it.
  *
- * Two ids, because they answer different questions. {@link makeNodeKey} names
- * the node itself and is what the synapse projection and error logs cite;
- * {@link makeVizCellId} adds the axon flag, so toggling axons yields new ids
- * and the viewer re-requests each cell's geometry instead of repainting the
- * cached tree.
+ * There are two ids, answering different questions. {@link makeNodeKey} names
+ * the node itself, by population and index, since every population counts its
+ * nodes from 0; it is what the synapse projection and error logs cite.
+ * {@link makeVizCellId} adds a reload key, so a change in what `loadCell` would
+ * answer yields new ids and the viewer re-requests each cell's geometry instead
+ * of repainting the cached tree. Only what `loadCell` answers belongs there:
+ * whether a cell is asked at all is `somaOnly` on the cell itself, and putting
+ * it in the key as well would make putting another population on show read as a
+ * different scene, throwing away every morphology already drawn.
  */
-export function makeNodeKey(circuitId: string, index: number): string {
-  return `${circuitId} #${index}`;
+export function makeNodeKey(circuitId: string, population: string, index: number): string {
+  return `${circuitId}/${population} #${index}`;
 }
 
+type TVizCellOptions = {
+  showAxons: boolean;
+};
+
 /**
- * The id the viewer addresses a cell by; the query part is its axon-toggle
- * reload key.
+ * The id the viewer addresses a cell by; the query part is its reload key.
  *
  * Worth knowing when reading it back: morphoviewer splits the id on `?` and
  * calls `loadCell` with the path part alone, so a handler is handed the node
  * key rather than the id the viewer is holding. Anything indexed against what
  * the viewer knows — `sonataSectionIds`, say — has to be re-keyed through this.
  */
-export function makeVizCellId(nodeKey: string, showAxons: boolean): string {
+export function makeVizCellId(nodeKey: string, { showAxons }: TVizCellOptions) {
   return `${nodeKey}?axons=${showAxons}`;
 }
 
 /**
- * Recover the node index from an id either function produced, or null for
- * anything else.
+ * Recover the node from an id either function produced, or null for anything
+ * else.
  *
- * Matched rather than parsed from the last `#`: `Number('')` is 0, so an id
- * without an index would otherwise resolve to node 0 and quietly load the
- * wrong cell's morphology.
+ * Matched with a regex rather than split: `Number('')` is 0, so an id without
+ * an index would resolve to node 0 and load the wrong cell's morphology. The
+ * population is everything between the circuit id and the trailing ` #index`,
+ * which is unambiguous because a SONATA population is an HDF5 group and its
+ * name cannot contain `/`.
  */
-export function indexOfNodeKey(cellId: string): number | null {
-  const match = /#(\d+)(?:\?|$)/.exec(cellId);
-  return match ? Number(match[1]) : null;
+export function parseNodeKey(cellId: string): { population: string; index: number } | null {
+  const match = /^[^/]+\/(.+) #(\d+)(?:\?|$)/.exec(cellId);
+  return match ? { population: match[1], index: Number(match[2]) } : null;
 }

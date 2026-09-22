@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { CAMPAIGN_STATUS_COLUMN_MIN_WIDTH } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Header } from '@/ui/segments/project/activities/elements/header';
@@ -100,6 +101,7 @@ export function ProjectActivities({
     {
       id: 'status',
       header: 'Status',
+      width: { minWidth: CAMPAIGN_STATUS_COLUMN_MIN_WIDTH },
       // per-type aggregated status (badge + scan-cards popover)
       renderCell: (record) => (
         <WorkflowStatusCell record={record} workspace={{ virtualLabId, projectId }} />

@@ -63,6 +63,7 @@ export function ZoomSlider({ zoom, onZoomChange, theme, className }: IZoomSlider
 
   return (
     <RulerSlider
+      testId="viewer-zoom-slider"
       className={className}
       // The ruler paints in `currentColor`, so this is what makes it read on either canvas.
       style={{ height: HEIGHT, width: WIDTH, color: theme?.foreground ?? DEFAULT_COLOR }}

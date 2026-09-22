@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Align } from '@/features/data-grid/core';
+import { Align, ColumnPin } from '@/features/data-grid/core';
 import { AgCellHost } from '@/features/data-grid/renderers/aggrid/cell-host';
 import { buildColDefs, EXPAND_COL_ID } from '@/features/data-grid/renderers/aggrid/col-def-mapper';
 import { AgExpandHostCell } from '@/features/data-grid/renderers/aggrid/expand-host-cell';
@@ -72,5 +72,31 @@ describe('buildColDefs — expander placement (backward-compatible default)', ()
     const defs = buildColDefs(columns, { ...OPTIONS, withExpandColumn: false });
     const withRenderer = defs.find((d) => d.colId === 'subcircuit');
     expect(withRenderer?.cellRenderer).toBe(AgCellHost);
+  });
+});
+
+describe('buildColDefs — edge-pinned columns', () => {
+  it('freezes a pinned column against its edge and locks it there', () => {
+    const defs = buildColDefs(
+      [...columns, col('actions', { pinned: ColumnPin.Right, movable: false })],
+      {
+        ...OPTIONS,
+        withExpandColumn: false,
+      }
+    );
+    const actions = defs.find((d) => d.colId === 'actions');
+
+    expect(actions?.pinned).toBe(ColumnPin.Right);
+    // without lockPosition AG lets a drag pull the column out of the frozen region
+    expect(actions?.lockPosition).toBe(ColumnPin.Right);
+    expect(actions?.suppressMovable).toBe(true);
+  });
+
+  it('leaves an unpinned column unpinned and unlocked', () => {
+    const defs = buildColDefs(columns, { ...OPTIONS, withExpandColumn: false });
+    const name = defs.find((d) => d.colId === 'name');
+
+    expect(name?.pinned).toBeUndefined();
+    expect(name?.lockPosition).toBeUndefined();
   });
 });

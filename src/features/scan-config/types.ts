@@ -16,6 +16,7 @@ import type {
 } from '@/api/entitycore/types';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { MorphoViewerTreeItem } from '@/morpho-viewer/tree-item-type';
@@ -126,6 +127,7 @@ export const SchemaNameDict = {
   EMSynapseMappingScanConfig: 'EMSynapseMappingScanConfig',
   ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
   BuildSynaptomeScanConfig: 'MEModelSynapticModelPlacementScanConfig',
+  SynapseParameterizationScanConfig: 'SynapseParameterizationScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
 } as const;
@@ -153,6 +155,7 @@ export const ScanConfigUIElementDict = {
   EntityPropertyDropdown: 'entity_property_dropdown',
   NeuronIds: 'neuron_ids',
   BooleanInput: 'boolean_input',
+  DiscreteProbabilities: 'discrete_probabilities',
   ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
   IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
   ModelSelectorSingle: 'model_selector_single',
@@ -283,6 +286,8 @@ export interface TSelectEFeaturesByProtocol extends TBlockElement {
 export interface Reference extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.Reference;
   reference_types: Array<string>;
+  /** Identifies a tag-specific default. */
+  reference_tag?: string;
   anyOf?: Array<
     | {
         title?: string;
@@ -427,9 +432,19 @@ export interface IMorphologyLocationSelection extends TBlockElement {
   items: {
     properties: {
       section_id: { title?: string; description?: string; minimum?: number };
-      offset: { title?: string; description?: string; minimum?: number; maximum?: number };
+      offset: {
+        title?: string;
+        description?: string;
+        minimum?: number;
+        maximum?: number;
+      };
     };
   };
+}
+
+export interface DiscreteProbabilities extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DiscreteProbabilities;
+  items: { type: 'integer' };
 }
 
 export interface NeuronPropertyFilter extends TBlockElement {
@@ -480,6 +495,7 @@ export type ParamSchema =
   | MorphologySectionTypeSelection
   | IMorphologyLocationSelection
   | VoltageDuration
+  | DiscreteProbabilities
   | StringSelectionEnhanced
   | NeuronPropertyFilter
   | NeuronSetCombination;
@@ -515,6 +531,8 @@ export interface IBlockDictionary extends TRootElement {
 export type ConfigSchema = {
   additionalProperties: false;
   default_block_reference_labels: Record<string, string>;
+  /** Tag-specific default blocks, keyed by `reference_tag`. */
+  reference_tag_defaults?: Record<string, { name: string; block?: Record<string, unknown> }>;
   description: string;
   group_order: string[];
   properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {
@@ -549,6 +567,8 @@ export type TActivityCustomFile = {
   entity: IEntity;
   assetPath?: string;
   name?: string;
+  /** Extended type to render the entity under; refs only carry the entitycore type. */
+  dataType?: TExtendedEntitiesTypeDict;
   enforcedRenderType?: AssetContentType;
   renderer: TActivityCustomFileRenderer;
 };

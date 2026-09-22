@@ -168,6 +168,7 @@ export function SelectionConfirmActions({
     >
       <Button
         type="button"
+        data-testid="scan-config-confirm-model"
         rounded
         variant="success"
         size="responsive"
@@ -189,6 +190,7 @@ export function SelectionConfirmActions({
       <Button
         rounded
         type="button"
+        data-testid="scan-config-cancel-model"
         variant="ghost"
         size="responsive"
         disabled={disabled}

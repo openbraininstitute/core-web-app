@@ -39,7 +39,7 @@ function makeColumns(
     // legacy uppercased string titles; a rich (ReactNode) title becomes a headerNode
     header: isString(field.title) ? field.title.toUpperCase() : key,
     headerNode: isString(field.title) ? undefined : field.title,
-    // preview keeps its fixed width; other columns size to content (legacy 'max-content')
+    // preview keeps its fixed width; the table row height matches the shared preview-grid height
     width: key === EntityCoreFields.Preview ? { width: 200 } : undefined,
     renderCell: (entity) => {
       const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/cell-morphology/${
@@ -89,6 +89,7 @@ export function ExemplarMorphology({ exemplarMorphology, variant = ViewVariant.L
         <SimpleGrid<ICellMorphology>
           rows={morphologies}
           columns={columns}
+          rowHeight={118}
           getRowId={(row) => row.id}
         />
       </div>

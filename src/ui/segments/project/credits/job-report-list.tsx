@@ -130,8 +130,16 @@ export function JobReportList() {
         header: 'Category',
         getValue: (record) => categoryRenderFn(record.subtype),
       },
-      { id: 'type', header: 'Type', getValue: (record) => typeRenderFn(record.subtype) },
-      { id: 'user', header: 'Member', getValue: (record) => userRenderFn(record.user_id) },
+      {
+        id: 'type',
+        header: 'Type',
+        getValue: (record) => typeRenderFn(record.subtype),
+      },
+      {
+        id: 'user',
+        header: 'Member',
+        getValue: (record) => userRenderFn(record.user_id),
+      },
       {
         id: 'date',
         header: 'Date',
@@ -148,8 +156,10 @@ export function JobReportList() {
 
   return (
     <div className="mb-4 flex w-full flex-col items-start gap-2">
-      <h3 className="text-primary-9 text-xl font-bold">History</h3>
-      <Card shadowless className={cn('w-full')}>
+      <h3 className="text-primary-9 text-xl font-bold" data-testid="credits-history-heading">
+        History
+      </h3>
+      <Card shadowless className={cn('w-full')} data-testid="credits-history">
         <CardContent>
           <SimpleGrid<JobReport>
             columns={columns}

@@ -3,6 +3,7 @@ import { ColorPicker } from 'antd';
 import { useEffect, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
+import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import { CATEGORICAL_PALETTE } from './palette';
 import { type ColorMapping, ColorModeDict } from './types';
@@ -25,8 +26,6 @@ interface ColorLegendProps {
   editable?: boolean;
   /** background-derived theme (adaptive mode); null → fixed light styling. */
   theme?: ViewerTheme | null;
-  /** portal target for the color picker (fullscreen element); null → document.body. */
-  container?: HTMLElement | null;
   className?: string;
 }
 
@@ -40,7 +39,6 @@ export function ColorLegend({
   onChangeCategoryColor,
   editable = COLOR_EDITING_ENABLED,
   theme,
-  container,
   className,
 }: ColorLegendProps) {
   // which swatch's picker is open (controlled, so we can close on outside click).
@@ -85,7 +83,6 @@ export function ColorLegend({
           entries={mapping.categorical}
           editable={editable}
           theme={theme}
-          container={container}
           openValue={openValue}
           setOpenValue={setOpenValue}
           onChangeCategoryColor={onChangeCategoryColor}
@@ -108,7 +105,6 @@ function CategoricalList({
   entries,
   editable,
   theme,
-  container,
   openValue,
   setOpenValue,
   onChangeCategoryColor,
@@ -116,7 +112,6 @@ function CategoricalList({
   entries: NonNullable<ColorMapping['categorical']>;
   editable: boolean;
   theme?: ViewerTheme | null;
-  container?: HTMLElement | null;
   openValue: string | null;
   setOpenValue: (value: string | null) => void;
   onChangeCategoryColor: (value: string, color: string) => void;
@@ -181,9 +176,7 @@ function CategoricalList({
                   arrow={false}
                   presets={PRESETS}
                   open
-                  // portal into the fullscreen element so the panel stays visible
-                  // in fullscreen (default document.body is outside it)
-                  getPopupContainer={container ? () => container : undefined}
+                  getPopupContainer={fullscreenPopupContainer}
                   onOpenChange={(o) => setOpenValue(o ? entry.value : null)}
                   onChangeComplete={(c) => onChangeCategoryColor(entry.value, c.toHexString())}
                 >

@@ -5,6 +5,8 @@ import { cn } from '@/utils/css-class';
 export interface IViewerModeOption {
   /** Tooltip text and accessible name. */
   label: string;
+  /** E2E handle. The label is product copy and changes with state. */
+  testId?: string;
   icon: React.ReactNode;
   active: boolean;
   onSelect: () => void;
@@ -12,6 +14,7 @@ export interface IViewerModeOption {
 
 interface ModeToggleProps {
   options: readonly IViewerModeOption[];
+  id?: string;
   className?: string;
 }
 
@@ -23,14 +26,14 @@ interface ModeToggleProps {
  * raster and a split — so the options come in whole rather than being enumerated
  * here.
  */
-export function ModeToggle({ options, className }: ModeToggleProps) {
+export function ModeToggle({ options, id, className }: ModeToggleProps) {
   // Nothing to switch between: a single-option pill reads as a button that
   // does nothing.
   if (options.length < 2) return null;
 
   return (
     <div
-      id="preview-mode-toggle"
+      id={id}
       data-slot="preview-mode-toggle"
       className={cn(
         'inline-flex items-center gap-0.5 rounded-full bg-white p-0.5 shadow-md ring-1 ring-black/5',
@@ -40,6 +43,7 @@ export function ModeToggle({ options, className }: ModeToggleProps) {
       {options.map((option) => (
         <ModeButton
           key={option.label}
+          testId={option.testId}
           active={option.active}
           label={option.label}
           icon={option.icon}
@@ -53,11 +57,13 @@ export function ModeToggle({ options, className }: ModeToggleProps) {
 function ModeButton({
   active,
   label,
+  testId,
   icon,
   onClick,
 }: {
   active: boolean;
   label: string;
+  testId?: string;
   icon: React.ReactNode;
   onClick: () => void;
 }) {
@@ -66,6 +72,7 @@ function ModeButton({
       <TooltipTrigger asChild>
         <button
           type="button"
+          data-testid={testId}
           aria-label={label}
           aria-pressed={active}
           onClick={onClick}

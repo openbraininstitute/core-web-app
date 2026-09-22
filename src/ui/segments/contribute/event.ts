@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import noop from 'es-toolkit/compat/noop';
+import { useEffect } from 'react';
 
 import { isBrowser } from '@/utils/environment';
 

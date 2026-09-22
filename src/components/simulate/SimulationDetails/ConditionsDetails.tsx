@@ -1,4 +1,4 @@
-import { SimulationExperimentalSetup } from '@/types/small-scale-simulator/single-neuron';
+import type { SimulationExperimentalSetup } from '@/types/small-scale-simulator/single-neuron';
 
 type Props = {
   conditions: SimulationExperimentalSetup;

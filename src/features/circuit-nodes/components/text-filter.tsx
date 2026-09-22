@@ -4,6 +4,7 @@ import { Input, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 import { useDebouncedCallback } from '@/hooks/hooks';
+import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { CustomFilterProps } from 'ag-grid-react';
 import type { InputRef } from 'antd';
@@ -41,8 +42,7 @@ export function TextFilter({ model, onModelChange }: Params) {
   const hidePopupRef = useRef<(() => void) | null>(null);
   const inputRef = useRef<InputRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const getPopupContainer = () =>
-    containerRef.current ?? (document.fullscreenElement as HTMLElement | null) ?? document.body;
+  const getPopupContainer = () => containerRef.current ?? fullscreenPopupContainer();
   useGridFilter({
     doesFilterPass: () => true,
     afterGuiAttached: (params) => {

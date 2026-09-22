@@ -41,9 +41,10 @@ export function EntityTypeSelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'w-80 max-w-max min-w-36 rounded-full border-none text-lg cursor-pointer',
+          'min-w-36 rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
+        data-testid="workflow-type-filter"
       >
         <SelectValue placeholder={<span className="text-base font-light!">Select a type</span>} />
       </SelectTrigger>
@@ -53,9 +54,11 @@ export function EntityTypeSelectScrollable({
         sideOffset={3}
       >
         {groupWorkflowsByEntityGroup(
-          listWorkflows({ activity: category, flags: featureFlags, context: 'configure' }).filter(
-            (w) => !w.disabled
-          )
+          listWorkflows({
+            activity: category,
+            flags: featureFlags,
+            context: 'configure',
+          }).filter((w) => !w.disabled)
         ).map(({ group, options }) => {
           return (
             <SelectGroup key={`entity-type-group-${group}`}>
@@ -101,9 +104,10 @@ export function CategorySelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg cursor-pointer',
+          'min-w-36 rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
+        data-testid="workflow-category-filter"
       >
         <SelectValue
           placeholder={<span className="text-base font-light!">Select a category</span>}

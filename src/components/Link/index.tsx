@@ -1,8 +1,9 @@
 'use client';
 
-import { HTMLAttributeAnchorTarget, PropsWithChildren } from 'react';
 import NextLink from 'next/link';
 import { useSearchParams } from 'next/navigation';
+
+import type { HTMLAttributeAnchorTarget, PropsWithChildren } from 'react';
 
 type LinkProps = {
   href: string;

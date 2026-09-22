@@ -19,6 +19,7 @@ import { deleteAnalysisNotebookResult } from '@/api/entitycore/queries/analysis-
 import { deleteAnalysisNotebookTemplate } from '@/api/entitycore/queries/analysis-notebook-template';
 import { useAppNotification } from '@/components/notification';
 import { type TViewVariant, ViewVariant } from '@/constants';
+import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -95,14 +96,7 @@ export function NotebookActionMenu({
         context: ctx,
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        predicate(query) {
-          const first = query.queryKey[0] as
-            | { context?: { extendedEntityType?: string } }
-            | undefined;
-          return first?.context?.extendedEntityType === entity.type;
-        },
-      });
+      await invalidateEntityListings(queryClient, entity.type);
       notification.success({
         message: 'Deleted successfully',
         description: `The ${isTemplate ? 'notebook' : 'result'} has been successfully deleted.`,

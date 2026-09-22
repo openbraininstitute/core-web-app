@@ -16,7 +16,6 @@ import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
-import { circuitListingRowClass } from '@/ui/segments/explore/circuit/elements/circuit-listing-grid';
 import {
   CircuitRecursiveGrid,
   SubcircuitsDetail,
@@ -25,6 +24,7 @@ import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-t
 import {
   CIRCUIT_VIEW_FACTOR,
   CircuitRepresentationView,
+  circuitListingRowClass,
   circuitRepresentationViewAtom,
 } from '@/ui/segments/explore/circuit/helpers';
 import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';

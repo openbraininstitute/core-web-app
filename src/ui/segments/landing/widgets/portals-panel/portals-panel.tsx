@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { styleBlockFullWidthPadded } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
 
@@ -19,7 +17,10 @@ export function WidgetPortalsPanel({ className, title, list }: WidgetPortalsPane
   return (
     <>
       <h1>{title}</h1>
-      <div className={classNames(className, styles.portalsPanel, styleBlockFullWidthPadded)}>
+      <div
+        className={classNames(className, styles.portalsPanel, styleBlockFullWidthPadded)}
+        data-testid="portal-cards"
+      >
         {list.map((portal) => (
           <PortalCard key={portal.link} value={portal} />
         ))}

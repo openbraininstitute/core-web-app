@@ -25,11 +25,21 @@ import type {
 } from '@/services/sanity/types/rtf-content';
 
 interface SanityContentRTFProps {
+  sectionSlug?: string;
   value: ContentForRichText;
 }
 
-export default function SanityContentRTF({ value }: SanityContentRTFProps) {
-  return value.map(renderItem);
+export default function SanityContentRTF({ sectionSlug, value }: SanityContentRTFProps) {
+  let storyTitleIndex = 0;
+
+  return value.map((item, index) => {
+    const testId =
+      sectionSlug === 'the-real-digital-brain-story' && item._type === 'titleHeadline'
+        ? `story-chapter-${storyTitleIndex++}`
+        : undefined;
+
+    return renderItem(item, index, sectionSlug, testId);
+  });
 }
 
 function renderItem(
@@ -43,18 +53,26 @@ function renderItem(
     | ContentForRichTextImage
     | ContentForRichTextVideo
     | ContentForRichTextMultipleButton,
-  index: number
+  index: number,
+  sectionSlug?: string,
+  testId?: string
 ) {
   const key = `${item._type}/${index}`;
   switch (item._type) {
     case 'verticalDivider':
       return <SanityContentVerticalDivider key={key} value={item} />;
     case 'titleHeadline':
-      return <SanityContentTitle key={key} value={item} />;
+      return <SanityContentTitle key={key} testId={testId} value={item} />;
     case 'richContent':
       return <SanityContentParagraph key={key} value={item} />;
     case 'bulletList':
-      return <SanityContentItems key={key} value={item} />;
+      return (
+        <SanityContentItems
+          key={key}
+          testIdPrefix={sectionSlug === 'mission' ? 'mission-purpose' : undefined}
+          value={item}
+        />
+      );
     case 'section':
       return <SanityContentWidget key={key} value={item} />;
     case 'previewBlock':

@@ -36,13 +36,16 @@ import {
   GridActionType,
   GridController,
   SelectionMode,
+  SelectionScope,
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
+import { gridQueryKey } from '@/features/data-grid/listing-queries';
 import {
   createDefaultPersistence,
   DataGrid,
   layoutKeyFor,
+  selectionKeyFor,
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
@@ -82,7 +85,7 @@ import type {
   IDetailRuntime,
   IExpandColumnConfig,
 } from '@/features/data-grid/react';
-import type { BrowseEntityScopeProps } from '@/features/views/listing/browse-entity-legacy';
+import type { BrowseEntityScopeProps } from '@/features/views/listing/types';
 
 /** Module-level so the slice subscription's reader identity stays stable. */
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
@@ -188,7 +191,14 @@ export function EntityDataGrid({
   const brainRegionId = defaultBrainRegion ?? selectedBrainRegion?.id;
   const hasBrainRegion = Boolean(brainRegionId);
 
-  const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
+  const { dataKey } = makeDataKey({
+    virtualLabId,
+    projectId,
+    section,
+    dataType,
+    scope,
+    id,
+  });
 
   // Publish the grid's filtered total under this dataKey so the data sidebar's
   // "x of y" counters follow the grid's filters/search. Cleared on unmount so a
@@ -223,6 +233,7 @@ export function EntityDataGrid({
   const selectionType = mainTableProps?.selectionType;
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
+  const selectionScope = mainTableProps?.selectionScope ?? SelectionScope.Shared;
   const applyLifecycleGating = isWorkflowPickerSection(section);
   const pickerSelection = useMemo<
     IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
@@ -251,19 +262,49 @@ export function EntityDataGrid({
     () =>
       new GridController<EntityCoreIdentifiableNamed>({
         schema: definition.schema,
-        context: { dataType, section, scope, species: speciesKey, factors: extraFactors },
+        context: {
+          dataType,
+          section,
+          scope,
+          species: speciesKey,
+          factors: extraFactors,
+        },
         instanceKey: dataKey,
         // The session slice is keyed by the full `dataKey`, but the layout slice by
-        // section + entity type only, so a layout is shared across projects/scopes.
-        persistence: createDefaultPersistence(layoutKeyFor(section, dataType)),
+        // section + entity type only, so a layout is shared across projects/scopes. The
+        // selection slice drops the scope too, which is what carries the basket across a
+        // scope toggle — and it does so at construction, so the store is never observed
+        // empty mid-swap.
+        persistence: createDefaultPersistence(
+          layoutKeyFor(section, dataType),
+          selectionScope === SelectionScope.Shared
+            ? selectionKeyFor({ section, dataType, virtualLabId, projectId, id })
+            : undefined
+        ),
         defaultPageSize: DEFAULT_PAGE_SIZE,
       }),
-    [definition, dataKey, dataType, section, scope, speciesKey, extraFactors]
+    [
+      definition,
+      dataKey,
+      dataType,
+      section,
+      scope,
+      speciesKey,
+      extraFactors,
+      selectionScope,
+      virtualLabId,
+      projectId,
+      id,
+    ]
   );
   useEffect(() => controller.connect(), [controller]);
 
   const handleSearch = useCallback(
-    (text: string) => controller.store.dispatch({ type: GridActionType.SetFreeTextSearch, text }),
+    (text: string) =>
+      controller.store.dispatch({
+        type: GridActionType.SetFreeTextSearch,
+        text,
+      }),
     [controller]
   );
 
@@ -359,7 +400,7 @@ export function EntityDataGrid({
   // to be fetched here or set filters show "No options". Same request scope as the
   // grid, minus the grid's own column filters.
   const facetsQuery = useQuery({
-    queryKey: ['data-grid', 'facets', dataType, dataKey, params],
+    queryKey: gridQueryKey(dataType, dataKey, 'host-facets', params),
     queryFn: () =>
       facetsQueryFn?.({
         filters: { ...params, ...FACETS_ONLY_PAGE },
@@ -421,7 +462,7 @@ export function EntityDataGrid({
           renderer={AgGridRenderer}
           operators={operators}
           cellRenderers={cellRenderers}
-          queryKey={['data-grid', dataType, dataKey]}
+          queryKey={gridQueryKey(dataType, dataKey)}
           params={params}
           enabled={enabled}
           facets={externalFacets}
@@ -431,6 +472,7 @@ export function EntityDataGrid({
           className="h-full"
           gridClassName={classNames?.tableClassNames?.container}
           onRowClick={handleRowClick}
+          getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
           selection={pickerSelection}
           toolbarSlots={{
@@ -450,13 +492,17 @@ export function EntityDataGrid({
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
           }}
-          renderBulkActions={({ selectedRows, clearSelection }) => (
-            // Buttons only — the "N selected" count and Clear live in the footer.
+          renderBulkActions={({ selectedRows, selectedCount, clearSelection, deselectRows }) => (
+            // Buttons only — the "N selected" count and Clear live in the footer. Each
+            // badge shows what ITS action will touch: Download takes the whole basket, so
+            // it gets `selectedCount`; Delete can only reach this project's rows, so it
+            // counts those itself rather than promising a number it will not deliver.
             <div className="flex items-center gap-2">
               {allowDownload && (
                 <EntityDownloadButton<EntityCoreIdentifiableNamed>
                   expanding
                   selectedRows={selectedRows}
+                  selectionCount={selectedCount}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
@@ -468,6 +514,7 @@ export function EntityDataGrid({
                   selectedRows={selectedRows}
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
+                  deselectRows={deselectRows}
                   workspace={{ virtualLabId, projectId }}
                 />
               )}
@@ -477,6 +524,7 @@ export function EntityDataGrid({
             loading ? (
               <span
                 role="status"
+                data-testid="data-grid-result-count-loading"
                 aria-label="Loading results count"
                 className="flex items-center gap-1.5"
               >
@@ -484,7 +532,10 @@ export function EntityDataGrid({
                 <span className="inline-block h-4 w-14 animate-pulse rounded-full bg-gray-200" />
               </span>
             ) : (
-              <span className="text-xs text-gray-600">{`${total.toLocaleString()} results`}</span>
+              <span
+                data-testid="data-grid-result-count"
+                className="text-xs text-gray-600"
+              >{`${total.toLocaleString()} results`}</span>
             )
           }
           renderError={(error) => renderListingError(error, entity?.title)}
@@ -558,11 +609,13 @@ function renderListingError(error: unknown, entityTitle?: string): ReactNode {
   }
 
   return (
-    <GenericError
-      shouldContactSupport={shouldContactSupport}
-      content={content}
-      icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
-      cls={{ content: 'max-w-3xl' }}
-    />
+    <div data-testid="data-grid-error">
+      <GenericError
+        shouldContactSupport={shouldContactSupport}
+        content={content}
+        icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
+        cls={{ content: 'max-w-3xl' }}
+      />
+    </div>
   );
 }

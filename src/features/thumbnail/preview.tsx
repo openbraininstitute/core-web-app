@@ -2,17 +2,17 @@
 
 'use client';
 
-import { useInView } from 'react-intersection-observer';
 import { useQuery } from '@tanstack/react-query';
 import { Empty, Skeleton } from 'antd';
-import { match, P } from 'ts-pattern';
 import Image from 'next/image';
+import { useInView } from 'react-intersection-observer';
+import { match, P } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { getPreviewBlob } from '@/api/thumbnail-svc';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { getPreviewBlob } from '@/api/thumbnail-svc';
 import { cn } from '@/utils/css-class';
 
 import type { AssetLabel, EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -47,6 +47,9 @@ type EntityAssetTargetProps = BaseProps & {
 };
 
 type PreviewThumbnailProps = ThumbnailServiceTargetProps | EntityAssetTargetProps;
+
+/** Declared once: an inline `select` re-runs every render and leaks a new object URL. */
+const toObjectUrl = (data: Blob): string => URL.createObjectURL(data);
 
 export function PreviewThumbnail({
   entity,
@@ -105,7 +108,13 @@ export function PreviewThumbnail({
         target as TThumbnailServiceTarget
       );
     },
-    select: (data) => URL.createObjectURL(data),
+    select: toObjectUrl,
+    // A thumbnail never changes. Without this it refetched on every row remount.
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     enabled: inView && !!entity,
   });
 

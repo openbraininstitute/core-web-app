@@ -1,5 +1,6 @@
 'use client';
 
+import { kebabCase } from 'es-toolkit';
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
@@ -14,6 +15,11 @@ import {
 import { PlanCard } from '@/ui/segments/plans/card';
 
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
+
+function planTestId(plan: PlanV2, viewport?: 'mobile') {
+  const name = kebabCase(plan.name);
+  return viewport ? `pricing-${viewport}-plan-${name}` : `pricing-plan-${name}`;
+}
 
 export default function Plans({ plans }: { plans: PlanV2[] }) {
   const fallbackOrder = ['Free', 'Pro', 'Enterprise', 'Education'];
@@ -81,7 +87,7 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
       {/* Desktop */}
       <div className="relative hidden w-screen grid-cols-4 gap-3 px-16 xl:grid pt-12">
         {sortedPlans.map((plan) => (
-          <PlanCard key={plan.name} plan={plan} />
+          <PlanCard key={plan.name} plan={plan} testId={planTestId(plan)} />
         ))}
       </div>
 
@@ -122,7 +128,7 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
                 className="basis-full pl-4 md:basis-1/3"
                 data-index={index}
               >
-                <PlanCard plan={plan} />
+                <PlanCard plan={plan} testId={planTestId(plan, 'mobile')} />
               </CarouselItem>
             ))}
           </CarouselContent>

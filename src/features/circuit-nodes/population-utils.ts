@@ -1,3 +1,5 @@
+import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
+
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 
 /**
@@ -14,7 +16,7 @@ export function pickDefaultPopulation(populations: NodePopulation[]): NodePopula
 }
 
 export function isBiophysical(population: Pick<NodePopulation, 'type'>): boolean {
-  return (population.type || 'biophysical') === 'biophysical';
+  return (population.type || NodePopulationType.Biophysical) === NodePopulationType.Biophysical;
 }
 
 export function resolvePopulation(

@@ -5,6 +5,7 @@
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 import { cn } from '@/utils/css-class';
+import { useFullscreenPortalTarget } from '@/utils/fullscreen';
 
 import type * as React from 'react';
 
@@ -22,8 +23,12 @@ function PopoverContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+  // The browser paints nothing outside the fullscreen element, so a viewer
+  // names itself for the subtree inside it.
+  const container = useFullscreenPortalTarget();
+
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={container ?? undefined}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         align={align}

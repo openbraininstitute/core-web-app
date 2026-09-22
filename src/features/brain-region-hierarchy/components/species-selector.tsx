@@ -1,6 +1,7 @@
 'use client';
 
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
+import { kebabCase } from 'es-toolkit/compat';
 
 import { AllSpeciesDisplayName } from '@/features/brain-region-hierarchy/context';
 import { orderHierarchiesBySpeciesDisplayNames } from '@/features/brain-region-hierarchy/helpers';
@@ -13,6 +14,10 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/ui/molecules/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
+
+export function speciesOptionTestId(scientificName: string): string {
+  return `species-selector-option__${kebabCase(scientificName)}`;
+}
 
 /**
  * value emitted by the dropdown when the user picks "All":
@@ -142,8 +147,8 @@ export function SpeciesSelector({
           )}
           {options.map((species) => (
             <SelectItem
-              id={`species-selector-option__${species.hierarchId}`}
-              data-testid={`species-selector-option__${species.hierarchId}`}
+              id={speciesOptionTestId(species.name)}
+              data-testid={speciesOptionTestId(species.name)}
               data-hierarchy-id={species.hierarchId}
               key={species.hierarchId}
               value={species.hierarchId}

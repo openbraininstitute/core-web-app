@@ -2,44 +2,16 @@ import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { SelectionScope } from '@/features/data-grid/core';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities } from '@/features/views/listing/data-browse-entities';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
-
-const AllowedEntities = [
-  ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
-  ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
-  ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
-  ExtendedEntitiesTypeDict.CellMorphology,
-  ExtendedEntitiesTypeDict.ElectricalCellRecording,
-  ExtendedEntitiesTypeDict.EFeatureExtractionResult,
-  ExtendedEntitiesTypeDict.IonChannelRecording,
-  ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-  ExtendedEntitiesTypeDict.Memodel,
-  ExtendedEntitiesTypeDict.Circuit,
-  ExtendedEntitiesTypeDict.Emodel,
-  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
-  ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
-  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
-  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
-  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
-  ExtendedEntitiesTypeDict.MicrocircuitSimulation,
-  ExtendedEntitiesTypeDict.SingleNeuronSimulation,
-  ExtendedEntitiesTypeDict.IonChannelModel,
-  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
-  ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
-  ExtendedEntitiesTypeDict.EMCellMesh,
-  ExtendedEntitiesTypeDict.IonChannelModelSimulation,
-  ExtendedEntitiesTypeDict.RegionCircuitSimulation,
-  ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
-] as const;
 
 export default async function Page({
   params,
@@ -70,7 +42,7 @@ export default async function Page({
             dataType={dataType}
             mainTableProps={{
               selectionType: 'checkbox',
-              searchOpenOnMount: true,
+              selectionScope: SelectionScope.Shared,
             }}
             allowDownload
             allowDelete

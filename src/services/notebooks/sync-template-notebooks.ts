@@ -2,6 +2,7 @@ import {
   createAnalysisNotebookTemplate,
   getAnalysisNotebookTemplate,
   getAnalysisNotebookTemplates,
+  updateAnalysisNotebookTemplate,
 } from '@/api/entitycore/queries/analysis-notebook-template';
 import { deleteAsset, downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
 import { uploadNotebookTemplateFile } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
@@ -12,9 +13,25 @@ import {
 } from '@/api/entitycore/queries/general/contribution';
 import { fetchAllPaginatedData } from '@/utils/pagination';
 
+import type { TAnalysisNotebookTemplateUpdate } from '@/api/entitycore/queries/analysis-notebook-template';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { AssetContentType } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
+
+/**
+ * Finds a project's copy of a notebook by name. The list endpoint has no exact-name filter, so it
+ * searches and then narrows. Returns undefined when the project has no copy.
+ */
+async function findChildNotebook({
+  notebookName,
+  context,
+}: {
+  notebookName: string;
+  context: WorkspaceContext;
+}) {
+  const res = await getAnalysisNotebookTemplates({ filters: { name: notebookName }, context });
+  return res.data[0] ?? null;
+}
 
 /**
  * Syncs a single notebook (assets + contributions) to a list of target projects.
@@ -66,70 +83,124 @@ export async function syncNotebookToProjects({
 
   onProgress?.(0, total);
 
-  for (const pid of targetProjectIds) {
-    try {
-      const childCtx: WorkspaceContext = { virtualLabId, projectId: pid };
-      const res = await getAnalysisNotebookTemplates({
-        filters: { search: notebookName },
+  const syncOneProject = async (pid: string) => {
+    const childCtx: WorkspaceContext = { virtualLabId, projectId: pid };
+    const match = await findChildNotebook({ notebookName, context: childCtx });
+    const targetId = match
+      ? match.id
+      : (await createAnalysisNotebookTemplate({ payload: templateEntity, context: childCtx })).id;
+
+    // A copy created by an earlier sync keeps the metadata it was created with. Grading resolves
+    // a notebook by `assignment_id` within the student's project, so a stale copy would answer
+    // for the wrong assignment — or for none at all. Fresh copies inherit it from the payload.
+    if (match && (match.assignment_id ?? null) !== (templateEntity.assignment_id ?? null)) {
+      await updateAnalysisNotebookTemplate({
+        id: targetId,
+        payload: { assignment_id: templateEntity.assignment_id ?? null },
         context: childCtx,
       });
-      const match = res.data.find((nb) => nb.name === notebookName);
-      const targetId = match
-        ? match.id
-        : (await createAnalysisNotebookTemplate({ payload: templateEntity, context: childCtx })).id;
-
-      // Assets: wipe and re-upload
-      const childAssets = await getAssets({ entityType, entityId: targetId, ctx: childCtx });
-      await Promise.all(
-        childAssets.data.map((a) =>
-          deleteAsset({ entityType, entityId: targetId, id: a.id, ctx: childCtx })
-        )
-      );
-      for (const { file, contentType, label } of templateFiles) {
-        await uploadNotebookTemplateFile({
-          context: childCtx,
-          entityId: targetId,
-          file,
-          contentType,
-          assetLabel: label,
-        });
-      }
-
-      // Contributions: diff
-      const childContribs = await getContributions({
-        context: childCtx,
-        filters: { entity__id: targetId },
-      });
-
-      const toDelete = childContribs.data.filter(
-        (cc) =>
-          !templateContribs.data.some(
-            (tc) => tc.agent.id === cc.agent.id && tc.role.id === cc.role.id
-          )
-      );
-      await Promise.all(toDelete.map((c) => deleteContribution({ id: c.id, context: childCtx })));
-
-      const toCreate = templateContribs.data.filter(
-        (tc) =>
-          !childContribs.data.some((cc) => cc.agent.id === tc.agent.id && cc.role.id === tc.role.id)
-      );
-      await Promise.all(
-        toCreate.map((tc) =>
-          createContribution({
-            context: childCtx,
-            contributor: { agent_id: tc.agent.id, role_id: tc.role.id, entity_id: targetId },
-          })
-        )
-      );
-    } catch (_) {
-      failures++;
     }
-    completed++;
-    onProgress?.(completed, total);
+
+    // Assets: wipe and re-upload
+    const childAssets = await getAssets({ entityType, entityId: targetId, ctx: childCtx });
+    await Promise.all(
+      childAssets.data.map((a) =>
+        deleteAsset({ entityType, entityId: targetId, id: a.id, ctx: childCtx })
+      )
+    );
+    for (const { file, contentType, label } of templateFiles) {
+      await uploadNotebookTemplateFile({
+        context: childCtx,
+        entityId: targetId,
+        file,
+        contentType,
+        assetLabel: label,
+      });
+    }
+
+    // Contributions: diff
+    const childContribs = await getContributions({
+      context: childCtx,
+      filters: { entity__id: targetId },
+    });
+
+    const toDelete = childContribs.data.filter(
+      (cc) =>
+        !templateContribs.data.some(
+          (tc) => tc.agent.id === cc.agent.id && tc.role.id === cc.role.id
+        )
+    );
+    await Promise.all(toDelete.map((c) => deleteContribution({ id: c.id, context: childCtx })));
+
+    const toCreate = templateContribs.data.filter(
+      (tc) =>
+        !childContribs.data.some((cc) => cc.agent.id === tc.agent.id && cc.role.id === tc.role.id)
+    );
+    await Promise.all(
+      toCreate.map((tc) =>
+        createContribution({
+          context: childCtx,
+          contributor: { agent_id: tc.agent.id, role_id: tc.role.id, entity_id: targetId },
+        })
+      )
+    );
+  };
+
+  // Process projects in batches so a large course syncs in parallel instead of one-by-one.
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < targetProjectIds.length; i += BATCH_SIZE) {
+    const batch = targetProjectIds.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (pid) => {
+        try {
+          await syncOneProject(pid);
+        } catch (_) {
+          failures++;
+        }
+        completed++;
+        onProgress?.(completed, total);
+      })
+    );
   }
 
   if (failures > 0) {
     throw new Error(`Failed to sync ${failures} child project(s)`);
+  }
+}
+
+/**
+ * Applies a metadata patch to a notebook's copies across the given projects, matching copies by
+ * name. Metadata only — unlike `syncNotebookToProjects` it moves no assets, so it is cheap enough
+ * to run for a notebook the user is not otherwise editing (releasing an assignment ID it holds,
+ * say). Projects without a copy of the notebook are skipped.
+ */
+export async function patchNotebookMetadataInProjects({
+  virtualLabId,
+  notebookName,
+  targetProjectIds,
+  patch,
+}: {
+  virtualLabId: string;
+  notebookName: string;
+  targetProjectIds: string[];
+  patch: TAnalysisNotebookTemplateUpdate;
+}) {
+  let failures = 0;
+
+  for (const pid of targetProjectIds) {
+    try {
+      const childCtx: WorkspaceContext = { virtualLabId, projectId: pid };
+      const match = await findChildNotebook({ notebookName, context: childCtx });
+      if (!match) continue;
+
+      await updateAnalysisNotebookTemplate({ id: match.id, payload: patch, context: childCtx });
+    } catch (_) {
+      failures++;
+    }
+  }
+
+  if (failures > 0) {
+    throw new Error(`Failed to update ${failures} child project(s)`);
   }
 }
 

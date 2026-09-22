@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+import { nodeIdAxisRange } from '@/features/spike-viewer/node-id-range';
 import { RasterRenderer } from '@/features/spike-viewer/renderer/raster-renderer';
 
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
@@ -9,6 +10,7 @@ export function useRasterRenderer(
   data: SpikeData | null,
   /** The population on show; scales the y-axis to its own node-id range. */
   populationName?: string,
+  cellCount?: number,
   /** Called with a time in ms when the user clicks in the plot. */
   onSeek?: (timeInMs: number) => void
 ) {
@@ -38,22 +40,26 @@ export function useRasterRenderer(
   useEffect(() => {
     if (!rendererRef.current || !data) return;
 
+    // The cell count arrives later and belongs to the effect below. Re-running
+    // this one for it would re-upload every spike to move an axis.
+    const { min, max } = nodeIdAxisRange(data.nodeIdRange.max);
     rendererRef.current.setData(data.populations, {
       xMin: data.timeRange.min,
       xMax: data.timeRange.max,
-      yMin: data.nodeIdRange.min,
-      yMax: data.nodeIdRange.max,
+      yMin: min,
+      yMax: max,
     });
   }, [data]);
 
   // Node ids are per-population row indices, not a shared scale — so the one
-  // population on show gets the axis scaled to its own ids, where the
+  // population on show gets the axis scaled to its own cells, where the
   // file-wide range above would squash it beside a larger sibling.
   useEffect(() => {
     const pop = data?.populations.find((p) => p.name === populationName);
     if (!rendererRef.current || !pop) return;
-    rendererRef.current.setYBounds(pop.nodeIdRange.min, pop.nodeIdRange.max);
-  }, [data, populationName]);
+    const { min, max } = nodeIdAxisRange(pop.nodeIdRange.max, cellCount);
+    rendererRef.current.setYBounds(min, max);
+  }, [data, populationName, cellCount]);
 
   const setVisiblePopulations = useCallback((names: Set<string>) => {
     rendererRef.current?.setVisiblePopulations(names);

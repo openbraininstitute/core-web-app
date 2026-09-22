@@ -18,6 +18,8 @@ import { cn } from '@/utils/css-class';
 
 import type { GridController } from '@/features/data-grid/core';
 
+import styles from './pagination.module.css';
+
 export interface IGridPaginationProps<Row> {
   controller: GridController<Row>;
   total: number;
@@ -29,6 +31,9 @@ export interface IGridPaginationProps<Row> {
 /**
  * Renderer-agnostic server pagination: antd `Pagination` for the page buttons, with the
  * page-size selector supplied by the app's `ui/molecules` Select rather than antd's.
+ *
+ * The page-button states live in `pagination.module.css` — beating antd needs `!important`
+ * throughout, which makes rule order load-bearing and is unreadable as arbitrary variants.
  */
 export function GridPagination<Row>({
   controller,
@@ -42,17 +47,12 @@ export function GridPagination<Row>({
   const options = controller.schema.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS;
 
   return (
-    <div className={cn('flex items-center justify-center gap-3', className)}>
+    <div
+      data-testid="data-grid-pagination"
+      className={cn('flex items-center justify-center gap-3', className)}
+    >
       <Pagination
-        className={cn(
-          'flex items-center gap-1',
-          '[&_.ant-pagination-item]:rounded-full [&_.ant-pagination-item]:border-transparent [&_.ant-pagination-item]:transition-colors',
-          '[&_.ant-pagination-item>a]:text-primary-8 [&_.ant-pagination-item:hover]:bg-gray-100',
-          '[&_.ant-pagination-item-active]:border-transparent [&_.ant-pagination-item-active]:bg-primary-8',
-          '[&_.ant-pagination-item-active:hover]:bg-primary-9 [&_.ant-pagination-item-active>a]:font-semibold [&_.ant-pagination-item-active>a]:text-white!',
-          '[&_.ant-pagination-prev_.ant-pagination-item-link]:rounded-full [&_.ant-pagination-next_.ant-pagination-item-link]:rounded-full',
-          '[&_.ant-pagination-prev:hover_.ant-pagination-item-link]:bg-gray-100 [&_.ant-pagination-next:hover_.ant-pagination-item-link]:bg-gray-100'
-        )}
+        className={cn('flex items-center gap-1', styles.pagination)}
         current={page}
         pageSize={pageSize}
         total={total}
@@ -68,7 +68,11 @@ export function GridPagination<Row>({
           controller.store.dispatch({ type: GridActionType.SetPageSize, pageSize: Number(v) })
         }
       >
-        <SelectTrigger size="sm" className={GRID_SELECT_TRIGGER_CLASS}>
+        <SelectTrigger
+          data-testid="data-grid-page-size"
+          size="sm"
+          className={GRID_SELECT_TRIGGER_CLASS}
+        >
           {/* render the label explicitly — Radix can't derive it until the menu opens once */}
           <SelectValue>{pageSize} / page</SelectValue>
         </SelectTrigger>

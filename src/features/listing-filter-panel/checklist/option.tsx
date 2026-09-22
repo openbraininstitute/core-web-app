@@ -1,13 +1,14 @@
 'use client';
 
-import { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
-import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
 import { getEtype } from '@/api/entitycore/queries/annotations/etype';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
 import { Checkbox } from '@/ui/molecules/checkbox';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { ReactNode } from 'react';
 
 const DisplayLabel = (filterField: string, key: string): string | null => {
   switch (filterField) {

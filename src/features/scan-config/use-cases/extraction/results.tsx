@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
@@ -19,7 +18,8 @@ import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
@@ -167,8 +167,10 @@ export function ExtractionTab({
               <div className="h-full w-full">
                 <MiniDetailViewRenderer
                   section={WorkspaceSection.Data}
-                  record={selectedFile.entity as ICircuit}
-                  dataType={ExtendedEntitiesTypeDict.Circuit}
+                  record={selectedFile.entity as EntityCoreObjectTypes}
+                  dataType={
+                    selectedFile.dataType ?? (selectedFile.entity.type as TExtendedEntitiesTypeDict)
+                  }
                   theme={ViewVariant.Light}
                   enableAnimation={false}
                 />

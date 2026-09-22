@@ -1,6 +1,11 @@
 'use client';
 
-import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
+import {
+  FullscreenExitOutlined,
+  FullscreenOutlined,
+  MinusOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
@@ -13,6 +18,7 @@ import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } f
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
 import PanelSplitter from './panel-splitter';
+import Settings from './settings';
 
 import type { TAppUInterfaceSection } from '@/utils/key-builder';
 
@@ -28,6 +34,8 @@ interface AiAssistantProps {
   disabled?: boolean;
 }
 
+type AssistantTab = 'chat' | 'history' | 'settings';
+
 export default function AiAssistant({
   className,
   fullscreen,
@@ -39,7 +47,7 @@ export default function AiAssistant({
 }: AiAssistantProps) {
   const { panelWidth } = usePanelWidth();
   const isDragging = useIsDragging();
-  const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
+  const [tab, setTab] = React.useState<AssistantTab>('chat');
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
   const isEmptyThread = assistant.isEmptyThread.useValue();
@@ -59,6 +67,10 @@ export default function AiAssistant({
       assistant.threadId.set(undefined);
       await assistant.createThread();
     }
+  };
+
+  const toggleTab = (next: Exclude<AssistantTab, 'chat'>) => {
+    setTab((current) => (current === next ? 'chat' : next));
   };
 
   const animationProps = {
@@ -93,6 +105,7 @@ export default function AiAssistant({
                 onClick={handleNewChat}
                 aria-label="New Chat"
                 title="New Chat"
+                data-testid="ai-assistant-new-chat-button"
               >
                 <IconNewChat />
               </button>
@@ -103,11 +116,26 @@ export default function AiAssistant({
                   styles.historyBtn,
                   tab === 'history' && styles.navBtnActive
                 )}
-                onClick={() => setTab(tab === 'history' ? 'chat' : 'history')}
+                onClick={() => toggleTab('history')}
                 aria-label="History"
                 title="History"
+                data-testid="ai-assistant-history-button"
               >
                 <IconHistory />
+              </button>
+              <button
+                type="button"
+                className={classNames(
+                  styles.navBtn,
+                  styles.settingsBtn,
+                  tab === 'settings' && styles.navBtnActive
+                )}
+                onClick={() => toggleTab('settings')}
+                aria-label="Settings"
+                title="Settings"
+                data-testid="ai-assistant-settings-button"
+              >
+                <SettingOutlined />
               </button>
             </nav>
 
@@ -133,6 +161,7 @@ export default function AiAssistant({
                   className={classNames(styles.headerBtn, styles.collapseBtn)}
                   aria-label="Collapse"
                   title="Collapse"
+                  data-testid="ai-assistant-collapse-button"
                 >
                   <MinusOutlined />
                 </button>
@@ -162,6 +191,20 @@ export default function AiAssistant({
                   transition={{ duration: 0.22, ease: 'easeOut' }}
                 >
                   <History onBack={() => setTab('chat')} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {tab === 'settings' && (
+                <motion.div
+                  className={styles.historyOverlay}
+                  initial={{ opacity: 0, scale: 0.985, y: 200 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.985, y: 200 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                >
+                  <Settings onBack={() => setTab('chat')} />
                 </motion.div>
               )}
             </AnimatePresence>

@@ -1,0 +1,64 @@
+.pagination :global(.ant-pagination-item),
+.pagination :global(.ant-pagination-item > a),
+.pagination :global(.ant-pagination-prev .ant-pagination-item-link),
+.pagination :global(.ant-pagination-next .ant-pagination-item-link) {
+  border-radius: calc(infinity * 1px) !important;
+}
+
+.pagination :global(.ant-pagination-item) {
+  border-color: transparent !important;
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+
+/* regular */
+.pagination :global(.ant-pagination-item:not(.ant-pagination-item-active) > a) {
+  color: var(--color-primary-8) !important;
+}
+
+/* hover */
+.pagination :global(.ant-pagination-item:not(.ant-pagination-item-active):hover) {
+  background-color: var(--color-neutral-1) !important;
+}
+
+.pagination :global(.ant-pagination-item:not(.ant-pagination-item-active):hover > a) {
+  color: var(--color-primary-9) !important;
+}
+
+/* pressed — `:hover` added only to outrank the hover rule above deterministically */
+.pagination :global(.ant-pagination-item:not(.ant-pagination-item-active):hover:active) {
+  background-color: var(--color-neutral-2) !important;
+}
+
+/* selected */
+.pagination :global(.ant-pagination-item-active) {
+  background-color: var(--color-primary-8) !important;
+}
+
+.pagination :global(.ant-pagination-item-active > a) {
+  color: var(--color-light) !important;
+  font-weight: 600 !important;
+}
+
+.pagination :global(.ant-pagination-item-active:hover) {
+  background-color: var(--color-primary-9) !important;
+}
+
+/* focus — antd clears the item outline, so the ring goes on the focusable child */
+.pagination :global(.ant-pagination-item > a:focus-visible),
+.pagination :global(.ant-pagination-item-link:focus-visible) {
+  outline: 2px solid var(--color-primary-8) !important;
+  outline-offset: 2px !important;
+}
+
+/* prev / next */
+.pagination :global(.ant-pagination-prev:hover .ant-pagination-item-link),
+.pagination :global(.ant-pagination-next:hover .ant-pagination-item-link) {
+  background-color: var(--color-neutral-1) !important;
+}
+
+.pagination :global(.ant-pagination-prev:hover:active .ant-pagination-item-link),
+.pagination :global(.ant-pagination-next:hover:active .ant-pagination-item-link) {
+  background-color: var(--color-neutral-2) !important;
+}

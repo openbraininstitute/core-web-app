@@ -3,8 +3,9 @@ import { PERSIST_COLUMN_LAYOUT } from '@/features/data-grid/config';
 import type { IGridState, IStatePersistence } from '@/features/data-grid/core';
 
 /**
- * Two slices stored apart: session = transient browse state, cleared with the tab;
- * local = durable view layout. Selection and expansion are never persisted. Keys are
+ * Slices stored apart: session = transient browse state, cleared with the tab; local =
+ * durable view layout; selection = in-memory basket (see `createSelectionPersistence`).
+ * Expansion is never persisted. Keys are
  * namespaced `data-grid:<version>:*`; the session slice is at v2 after the
  * `quickFilter` → `freeTextSearch` rename, which a v1 entry cannot satisfy.
  */
@@ -109,12 +110,45 @@ export function createLocalLayoutPersistence(layoutKey?: string): IStatePersiste
 }
 
 /**
- * The standard pair for entity listings: always-on session slice plus flag-gated layout
- * slice. `layoutKey` scopes the layout slice independently of the controller's
- * `instanceKey` — see {@link layoutKeyFor}.
+ * Selection baskets, in memory and keyed by {@link selectionKeyFor}. Not storage-backed:
+ * the ids would outlive the entities they point at, and a reload should start clean.
  */
-export function createDefaultPersistence(layoutKey?: string): IStatePersistence[] {
-  return [createSessionStatePersistence(), createLocalLayoutPersistence(layoutKey)];
+const selectionBaskets = new Map<string, string[]>();
+
+/**
+ * Selection slice: hands the basket to the controller at construction, so a scope/species
+ * swap never renders with an empty selection. Without it the restore has to happen in an
+ * effect, and everything downstream (the picker's `onChange`, the bulk-action row cache)
+ * sees that empty frame first and reacts to it.
+ */
+export function createSelectionPersistence(selectionKey: string): IStatePersistence {
+  return {
+    load: () => {
+      const selection = selectionBaskets.get(selectionKey);
+      return selection ? { selection: [...selection] } : null;
+    },
+    save: (_key, state) => {
+      selectionBaskets.set(selectionKey, state.selection);
+    },
+    clear: () => {
+      selectionBaskets.delete(selectionKey);
+    },
+  };
+}
+
+/**
+ * The standard set for entity listings: always-on session slice, flag-gated layout slice,
+ * and — when `selectionKey` is given — the shared selection basket. `layoutKey` and
+ * `selectionKey` scope their slices independently of the controller's `instanceKey` — see
+ * {@link layoutKeyFor} and {@link selectionKeyFor}.
+ */
+export function createDefaultPersistence(
+  layoutKey?: string,
+  selectionKey?: string
+): IStatePersistence[] {
+  const slices = [createSessionStatePersistence(), createLocalLayoutPersistence(layoutKey)];
+  if (selectionKey) slices.push(createSelectionPersistence(selectionKey));
+  return slices;
 }
 
 /**
@@ -125,4 +159,20 @@ export function createDefaultPersistence(layoutKey?: string): IStatePersistence[
  */
 export function layoutKeyFor(section: string, dataType: string): string {
   return `${section}/${dataType}`;
+}
+
+/**
+ * Selection key for an entity listing: everything that identifies the listing except the
+ * parts a controller swap changes (scope, species, extra factors). That is what makes the
+ * basket survive a scope toggle while never leaking into another project or entity type.
+ */
+export function selectionKeyFor(parts: {
+  section: string;
+  dataType: string;
+  virtualLabId?: string;
+  projectId?: string;
+  id?: string;
+}): string {
+  const { section, dataType, virtualLabId = '', projectId = '', id = '' } = parts;
+  return [virtualLabId, projectId, section, dataType, id].join('/');
 }

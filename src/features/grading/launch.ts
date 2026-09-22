@@ -2,11 +2,12 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 import { getAnalysisNotebookTemplates } from '@/api/entitycore/queries/analysis-notebook-template';
 import { tryCatch } from '@/api/utils';
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { auth } from '@/auth';
 import { serverConfig } from '@/config/server';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { startNotebook } from '@/services/notebooks';
 import { log } from '@/utils/logger';
 
@@ -114,8 +115,25 @@ export interface AccessibleProject {
 }
 
 type AccessibleProjectsResolution =
-  | { ok: true; virtualLab: IVirtualLabExpandedResponse; projects: AccessibleProject[] }
+  | {
+      ok: true;
+      virtualLab: IVirtualLabExpandedResponse;
+      projects: AccessibleProject[];
+      templateProjectId: string | null;
+      defaultProjectId: string | null;
+    }
   | { ok: false; reason: LaunchErrorReason };
+
+export function pickDefaultProjectId(
+  projects: AccessibleProject[],
+  templateProjectId: string | null,
+  canWriteTemplate: boolean
+): string | null {
+  if (!templateProjectId || !canWriteTemplate) {
+    return null;
+  }
+  return projects.some((p) => p.id === templateProjectId) ? templateProjectId : null;
+}
 
 async function resolveAccessibleProjects(
   virtualLabId: string
@@ -149,11 +167,43 @@ async function resolveAccessibleProjects(
     }
   }
 
-  const projects: AccessibleProject[] = (projectsResult.data.data ?? [])
+  const listedProjects = projectsResult.data.data ?? [];
+  const projects: AccessibleProject[] = listedProjects
     .filter((p) => memberProjectIds.has(p.id))
     .map((p) => ({ id: p.id, name: p.name }));
 
-  return { ok: true, virtualLab: vlResult.data, projects };
+  const templateProjectId = vlResult.data.course?.template_project_id ?? null;
+  const { isVirtualLabAdmin, isProjectAdmin } = makeRoles(
+    groupsResult.data,
+    virtualLabId,
+    templateProjectId ?? undefined
+  );
+
+  // A vlab admin can write to the template project without holding its project group.
+  if (templateProjectId && isVirtualLabAdmin && !memberProjectIds.has(templateProjectId)) {
+    const listed = listedProjects.find((p) => p.id === templateProjectId);
+    if (listed) {
+      projects.push({ id: listed.id, name: listed.name });
+    } else {
+      // The template project sits past the listing's page_size cap in a large course.
+      const { data } = await tryCatch(getProject({ virtualLabId, projectId: templateProjectId }));
+      if (data) {
+        projects.push({ id: data.id, name: data.name });
+      }
+    }
+  }
+
+  return {
+    ok: true,
+    virtualLab: vlResult.data,
+    projects,
+    templateProjectId,
+    defaultProjectId: pickDefaultProjectId(
+      projects,
+      templateProjectId,
+      isVirtualLabAdmin || isProjectAdmin
+    ),
+  };
 }
 
 export type LaunchResolution =
@@ -162,6 +212,8 @@ export type LaunchResolution =
       params: VerifiedParams;
       virtualLab: IVirtualLabExpandedResponse;
       projects: AccessibleProject[];
+      templateProjectId: string | null;
+      defaultProjectId: string | null;
       cloud: string;
     }
   // Authenticated session is missing/expired — caller decides how to re-auth (redirect vs. error).
@@ -205,6 +257,8 @@ export async function resolveGradingLaunch(raw: RawParams): Promise<LaunchResolu
     params: verified.params,
     virtualLab: acc.virtualLab,
     projects: acc.projects,
+    templateProjectId: acc.templateProjectId,
+    defaultProjectId: acc.defaultProjectId,
     cloud: acc.virtualLab.compute_cell ?? DEFAULT_COMPUTE_CELL,
   };
 }

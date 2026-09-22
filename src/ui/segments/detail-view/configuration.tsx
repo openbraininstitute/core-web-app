@@ -9,7 +9,6 @@ import {
   applyEntityExpansions,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import {
   singleNeuronSimulationApiQueryExpand,
@@ -19,6 +18,7 @@ import EModelConfig from '@/features/entities/e-model/detail-view/wrapper';
 import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
+import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 
 import type {
   ICellMorphology,

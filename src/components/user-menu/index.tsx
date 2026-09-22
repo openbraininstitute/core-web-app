@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
-
 import { useSession } from 'next-auth/react';
+
+import { SignOutFill } from '@/components/icons/EditorIcons';
 import {
   Menubar,
   MenubarContent,
@@ -9,8 +9,9 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from '@/components/Menu';
-import { SignOutFill } from '@/components/icons/EditorIcons';
 import { classNames } from '@/util/utils';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;

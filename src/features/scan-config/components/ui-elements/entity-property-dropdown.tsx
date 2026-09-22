@@ -1,12 +1,14 @@
 import { Select } from 'antd';
 import { get } from 'es-toolkit/compat';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useId, useMemo } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
+import { scanConfigHeldTestId } from '../utils';
+
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
-export default function EntityPropertyDropdown({
+export function EntityPropertyDropdown({
   value,
   onChange,
   property,
@@ -26,6 +28,16 @@ export default function EntityPropertyDropdown({
     [schemaMappingConfig?.properties, property]
   );
 
+  /** Ties this select's options to this select: antd leaves every dropdown it has
+   * opened in the page, so an option is otherwise indistinguishable from the same
+   * option in a field filled minutes ago. */
+  const dropdownId = useId();
+
+  const chosen = useMemo(
+    () => new Set((Array.isArray(value) ? value : [value]).filter(Boolean).map(String)),
+    [value]
+  );
+
   useEffect(() => {
     if (options.length > 0 && value.length === 0) {
       onChange([options[0]]);
@@ -34,7 +46,23 @@ export default function EntityPropertyDropdown({
 
   return (
     <Select
+      data-testid="scan-config-control"
+      data-scan-config-options={dropdownId}
       data-scan-config-block-element={`${ScanConfigUIElementDict.EntityPropertyDropdown}__${multiple ? 'multiple' : 'singular'}`}
+      // One mark per value held, which is what a multi-value control needs: it
+      // draws each value as its own tag and its text reads back as one word.
+      labelRender={({ label, value: held }) => (
+        <span data-testid={scanConfigHeldTestId(String(held))}>{label}</span>
+      )}
+      optionRender={(option) => (
+        <span
+          data-testid={`scan-config-option-${String(option.value)}`}
+          data-scan-config-option-of={dropdownId}
+          data-selected={chosen.has(String(option.value))}
+        >
+          {option.label}
+        </span>
+      )}
       showSearch
       mode={multiple ? 'multiple' : undefined}
       disabled={disabled}
@@ -52,3 +80,5 @@ export default function EntityPropertyDropdown({
     />
   );
 }
+
+export default EntityPropertyDropdown;

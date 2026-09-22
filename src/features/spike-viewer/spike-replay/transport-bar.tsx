@@ -6,6 +6,7 @@ import { Slider } from 'antd';
 
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 /**
  * Playback rates, as simulated milliseconds per wall-clock second.
@@ -60,7 +61,10 @@ export function TransportBar({
   const step = Math.max(duration / 1000, 1e-3);
 
   return (
-    <div className="flex items-center gap-3 border-t border-neutral-200 px-3 py-2">
+    <div
+      id="spike-replay-transport"
+      className="flex items-center gap-3 border-t border-neutral-200 px-3 py-2"
+    >
       <Button
         type="button"
         variant="icon"
@@ -90,7 +94,10 @@ export function TransportBar({
         step={step}
         disabled={disabled}
         onChange={onSeek}
-        tooltip={{ formatter: (value) => `${(value ?? 0).toFixed(1)} ms` }}
+        tooltip={{
+          formatter: (value) => `${(value ?? 0).toFixed(1)} ms`,
+          getPopupContainer: fullscreenPopupContainer,
+        }}
       />
 
       <span className="shrink-0 tabular-nums text-xs text-gray-600">

@@ -3,8 +3,8 @@ import * as Comlink from 'comlink';
 import { config } from '@/config';
 
 import type {
-  ColumnKind,
   ColumnMeta,
+  ColumnValues,
   DownloadProgress,
   GetRowsRequest,
   GetRowsResponse,
@@ -13,8 +13,6 @@ import type {
   OpenRequest,
 } from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
-
-export type LoadedColumnResult = { kind: ColumnKind; values: (string | number)[] };
 
 export type NodesSessionStatus = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -139,7 +137,7 @@ class NodesWorkerRegistry {
     return session.proxy.getRows(req);
   }
 
-  getColumn(key: string, name: string): Promise<LoadedColumnResult> {
+  getColumn(key: string, name: string): Promise<ColumnValues> {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
     return session.proxy.getColumn(name);

@@ -16,6 +16,8 @@ type RasterPlotProps = {
    * replay beside it are always reading the same cells.
    */
   populationName: string | undefined;
+  /** Cells in that population, or undefined where the host could not find out. */
+  cellCount: number | undefined;
   markerSize: number;
   /**
    * Filled in with a setter that moves the playhead rule, and cleared on
@@ -33,6 +35,7 @@ type RasterPlotProps = {
 export default function RasterPlot({
   data,
   populationName,
+  cellCount,
   markerSize,
   playheadRef,
   onSeek,
@@ -42,6 +45,7 @@ export default function RasterPlot({
     containerRef,
     data,
     populationName,
+    cellCount,
     onSeek
   );
 

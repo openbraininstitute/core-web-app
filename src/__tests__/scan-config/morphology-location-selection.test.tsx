@@ -253,6 +253,28 @@ describe('useMorphologyLocationSelection picking', () => {
     expect(infos.join(' ')).toMatch(/at least one location/i);
   });
 
+  // The viewer picks on whatever cell the tap landed near, and a circuit scene
+  // holds every population's cells. Another population's section ids number its
+  // own morphologies, and answer to nothing in this block.
+  it('refuses a pick on a cell the block has nothing to do with', () => {
+    infos.length = 0;
+    const onConfigChange = vi.fn();
+
+    const { result } = render({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      onConfigChange,
+    });
+
+    act(() => {
+      result.current.selection?.onPick?.(
+        pick({ cell: { ...CELLS[0], id: 'circuit#7?axons=false' } })
+      );
+    });
+
+    expect(onConfigChange).not.toHaveBeenCalled();
+    expect(infos.join(' ')).toMatch(/another population/i);
+  });
+
   it('explains a click it cannot store rather than ignoring it', () => {
     infos.length = 0;
     const onConfigChange = vi.fn();

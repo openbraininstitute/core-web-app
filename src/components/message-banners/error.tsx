@@ -1,6 +1,8 @@
 import { CloseCircleFilled } from '@ant-design/icons';
-import { ReactNode } from 'react';
+
 import { classNames } from '@/util/utils';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   title: ReactNode;

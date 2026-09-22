@@ -14,8 +14,10 @@ export { GridPagination } from './pagination';
 export {
   createDefaultPersistence,
   createLocalLayoutPersistence,
+  createSelectionPersistence,
   createSessionStatePersistence,
   layoutKeyFor,
+  selectionKeyFor,
 } from './persistence/storage-persistence';
 export { ServerGridStateStatus } from './renderer';
 export { DataGridToolbar } from './toolbar';
