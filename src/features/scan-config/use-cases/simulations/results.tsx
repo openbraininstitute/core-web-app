@@ -41,6 +41,7 @@ import { invalidateProjectBalance } from '@/features/task-runner/hooks/use-balan
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
@@ -49,22 +50,18 @@ import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config
 
 type SimulationTabProps = {
   campaignId: string;
-  virtualLabId: string;
-  projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
 };
 
 export default function SimulationsTab({
   campaignId,
-  virtualLabId,
-  projectId,
   campaignOriginAction,
   isCampaignIdChanged,
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
-  const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
+  const context = useWorkspace();
 
   const { data: simulations = [], isLoading: simulationsLoading } = useQuery({
     queryKey: ['scan-config-simulations', context, campaignId],
@@ -198,7 +195,7 @@ export default function SimulationsTab({
     for (const simId of simIds) {
       try {
         const res = await runTask({
-          ctx: { virtualLabId, projectId },
+          ctx: context,
           task_type: taskType,
           config_id: simId,
         });
@@ -243,7 +240,7 @@ export default function SimulationsTab({
 
     try {
       await runSimulationBatch({
-        ctx: { virtualLabId, projectId },
+        ctx: context,
         simulationIds: simIds,
         onInit: () => {
           // Earliest signal the batch was accepted — credits are reserved from here.

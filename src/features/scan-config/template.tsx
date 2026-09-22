@@ -2,7 +2,7 @@
 
 import { get } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Activity, Suspense, useCallback, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -16,10 +16,12 @@ import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
   getConfigKeyForEntity,
+  resolveScanConfigTab,
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
+import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
   type Config,
   type ConfigSchema,
@@ -57,8 +59,6 @@ import styles from '@/features/scan-config/scan-config.module.css';
 
 type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  virtualLabId: string;
-  projectId: string;
   origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
@@ -88,8 +88,6 @@ export function ScanConfigTemplate(props: Props) {
 
 function ScanConfigTemplateContent({
   entity,
-  virtualLabId,
-  projectId,
   origin,
   initialConfig,
   defaultTab = ScanConfigDefaultTab,
@@ -110,7 +108,7 @@ function ScanConfigTemplateContent({
 }: Props) {
   const browseOverlayContext = useScanConfigMainOverlayOptional();
   const browseOverlay = browseOverlayContext?.overlay;
-  const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
+  const [urlTab, setTab] = useScanConfigTab(activity, defaultTab);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);
@@ -194,6 +192,7 @@ function ScanConfigTemplateContent({
     previousSchemaName,
     defaultTab,
     firstRoot,
+    setTab,
   ]);
 
   useEffect(
@@ -212,15 +211,13 @@ function ScanConfigTemplateContent({
   );
   useAIConfig();
 
-  const configurationTabId = ScanConfigTabs[activity].configuration;
-  const isConfigurationTab = tab.id === configurationTabId;
+  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId));
+  const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
         <SimulationsTab
           campaignId={campaignId}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
           campaignOriginAction={campaignOriginAction}
           isCampaignIdChanged={isCampaignIdChanged}
         />
@@ -243,8 +240,6 @@ function ScanConfigTemplateContent({
         <Suspense>
           <SkeletonizationTab
             campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
             campaignOriginAction={campaignOriginAction}
             isCampaignIdChanged={isCampaignIdChanged}
             taskTypeBindings={taskTypeBindings}
@@ -393,17 +388,15 @@ function ScanConfigTemplateContent({
             />
           </div>
         </div>
-        <div
-          id="scan-config-results"
-          data-testid="scan-config-results"
-          className={cn(
-            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
-            { hidden: isConfigurationTab },
-            { 'h-full': !isConfigurationTab }
-          )}
-        >
-          {results}
-        </div>
+        <Activity mode={isConfigurationTab ? 'hidden' : 'visible'} name="scan-config-results">
+          <div
+            id="scan-config-results"
+            data-testid="scan-config-results"
+            className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 h-full overflow-hidden"
+          >
+            {results}
+          </div>
+        </Activity>
       </div>
     </div>
   );

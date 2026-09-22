@@ -6,12 +6,9 @@ import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
+import { ScanConfigResultsTab } from '@/features/scan-config/helpers';
 import {
-  BuildScanConfigTabs,
-  ExtractScanConfigTabs,
-  ProcessScanConfigTabs,
   ScanConfigActivity,
-  SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntityTypesForScanConfiguration,
@@ -37,25 +34,6 @@ const FAILURE_MESSAGE_KEY: Record<string, string> = {
   [ScanConfigGenerationStep.EmptyCampaignId]: 'ScanConfigGenerateGridCampaignIdFailed',
 };
 
-const ACTIVITY_RESULTS_TAB: Record<TScanConfigActivity, TScanConfigTabs> = {
-  [ScanConfigActivity.Simulate]: {
-    id: SimulateScanConfigTabs.simulations,
-    __activity: ScanConfigActivity.Simulate,
-  },
-  [ScanConfigActivity.Extract]: {
-    id: ExtractScanConfigTabs.extractions,
-    __activity: ScanConfigActivity.Extract,
-  },
-  [ScanConfigActivity.Process]: {
-    id: ProcessScanConfigTabs.skeletonizations,
-    __activity: ScanConfigActivity.Process,
-  },
-  [ScanConfigActivity.Build]: {
-    id: BuildScanConfigTabs.results,
-    __activity: ScanConfigActivity.Build,
-  },
-};
-
 export default function GenerateConfigButton({
   loading,
   errors,
@@ -75,7 +53,7 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
-  setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
+  setTab: (tab: TScanConfigTabs) => void;
   activity: TScanConfigActivity;
   generatedApiUrl: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
@@ -100,7 +78,7 @@ export default function GenerateConfigButton({
     campaignEntityType,
     onSuccess: (newCampaignId) => {
       setCampaignId(newCampaignId);
-      setTab(ACTIVITY_RESULTS_TAB[activity]);
+      setTab(ScanConfigResultsTab[activity]);
     },
     onError: (error) => {
       if (!(error instanceof ScanConfigGenerationError)) {

@@ -16,6 +16,7 @@ import { isTerminalActivityStatus } from '@/features/task-runner';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import { InOutFiles } from './in-out-files';
@@ -27,8 +28,6 @@ import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/
 
 type Props = {
   campaignId: string;
-  virtualLabId: string;
-  projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
   /** obi-one + entitycore task types for this workflow (from its definition) */
@@ -37,13 +36,11 @@ type Props = {
 
 export function SkeletonizationTab({
   campaignId,
-  virtualLabId,
-  projectId,
   campaignOriginAction,
   isCampaignIdChanged,
   taskTypeBindings,
 }: Props) {
-  const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
+  const context = useWorkspace();
 
   const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
     useTaskLaunchMutation({

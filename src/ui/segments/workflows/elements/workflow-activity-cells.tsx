@@ -32,13 +32,11 @@ import {
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { ActivityValues } from '@/ui/segments/workflows/config';
 import {
   buildWorkflowActivityConfigurationHref,
-  buildWorkflowActivityDetailResultsHref,
   buildWorkflowActivityDuplicateHref,
+  buildWorkflowActivityResultsHref,
   canDuplicateWorkflowActivityRow,
-  NotAllowedResultsActionEntityTypes,
   type TWorkflowActivityTableRow,
 } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
@@ -232,13 +230,14 @@ export function WorkflowActivityActionsCell({
   }, [activity, entityType, workspace, tableRow, searchParams]);
 
   const resultsHref = useMemo(() => {
-    if (!entityType) return null;
-    return buildWorkflowActivityDetailResultsHref({
-      workspace,
+    if (!activity || !entityType) return null;
+    return buildWorkflowActivityResultsHref({
+      activity,
       listEntityType: entityType,
-      rowId: row.id,
+      workspace,
+      row: tableRow,
     });
-  }, [entityType, workspace, row.id]);
+  }, [activity, entityType, workspace, tableRow]);
 
   const canDuplicate = useMemo(() => {
     if (!activity || !entityType) return false;
@@ -287,14 +286,7 @@ export function WorkflowActivityActionsCell({
 
   const isIonChannelModelingCampaign =
     entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
-  const isBuildActivity = activity === ActivityValues.Build;
-  const resultsSupported = Boolean(
-    entityType && !NotAllowedResultsActionEntityTypes.includes(entityType)
-  );
-  const canViewResults =
-    resultsSupported &&
-    !isBuildActivity &&
-    (isIonChannelModelingCampaign ? true : Boolean(resultsHref));
+  const canViewResults = Boolean(resultsHref);
 
   const actions: IRowAction[] = [
     {
