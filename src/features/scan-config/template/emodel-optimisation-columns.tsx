@@ -1,7 +1,13 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { IonChannelModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-models-panel';
+import { RegionModelDetail } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-model-detail';
+import { RegionModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-models-panel';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
+  type ConfigValue,
   EModelOptimisationMechanismsTabs,
   isType,
   ScanConfigUIElementDict,
@@ -10,6 +16,7 @@ import { cn } from '@/utils/css-class';
 
 import { LeftColumn, MIDDLE_WRAPPER_BASE, MiddleColumnContent } from './columns';
 
+import type { ReactNode } from 'react';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -20,17 +27,51 @@ type Props = {
   state: ScanConfigTemplateState;
 };
 
+/** The model `id_str`s assigned to a region in `mechanisms.mechanism_regions.<choice>`. */
+function regionModelIds(value: ConfigValue, choiceName: string): Set<string> {
+  const root = isPlainObject(value) ? value : {};
+  const mechanisms = isPlainObject(root.mechanisms) ? root.mechanisms : {};
+  const regions = isPlainObject(mechanisms.mechanism_regions) ? mechanisms.mechanism_regions : {};
+  const region = isPlainObject(regions[choiceName]) ? regions[choiceName] : {};
+  const models = Array.isArray(region.ion_channel_models) ? region.ion_channel_models : [];
+
+  const ids = new Set<string>();
+  for (const model of models) {
+    if (isPlainObject(model) && typeof model.id_str === 'string') {
+      ids.add(model.id_str);
+    }
+  }
+  return ids;
+}
+
 /**
- * Bespoke layout for the `emodel_optimisation_parameters` root element: no
- * preview column, and the middle panel takes the freed space. The first
- * sub-column holds the existing Middle form; selecting a Region Assignment card
- * opens the ion-channel-models panel beside it, and clicking the card again
- * closes it.
+ * A sticky, one-third-width drawer column. `sticky top-0` + `self-start` pin it to the top of the
+ * scrolling middle area so it stays put while the first column scrolls; its height is capped to the
+ * visible area and it scrolls internally if longer.
+ */
+function DrawerColumn({ children }: { children: ReactNode }) {
+  return (
+    <div className="sticky top-0 z-10 max-h-[calc(100vh-12rem)] min-w-0 shrink-0 grow-0 basis-1/3 self-start overflow-y-auto rounded-lg border border-gray-200 bg-gray-50">
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Bespoke layout for the `emodel_optimisation_parameters` root element: no preview column, and the
+ * middle panel takes the freed space split into up to three one-third columns.
+ *
+ * - The first column always holds the Middle form (the active mechanisms tab's cards).
+ * - Region Assignment: selecting a card opens the ion-channel-models drawer (checkboxes).
+ * - Parameters Selection: selecting a card opens the assigned-models drawer (chevrons); selecting a
+ *   model there opens a third detail drawer.
  */
 export function EModelOptimisationColumns({ props, state }: Props) {
   const {
     selectedSchema,
     selectedRegionChoice,
+    selectedRegionModel,
+    setSelectedRegionModel,
     selectedMechanismsTab,
     config,
     setConfig,
@@ -38,7 +79,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
   } = state;
 
   // The layout only renders when the selected root is the emodel element, but narrow
-  // the union here so the panel gets a correctly typed schema.
+  // the union here so the panels get a correctly typed schema.
   const rootSchema =
     selectedSchema !== undefined &&
     !isType(selectedSchema) &&
@@ -50,12 +91,34 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     (choice) => choice.name === selectedRegionChoice
   );
 
-  // The panel belongs to Region Assignment; a selection made there must not leak the panel
-  // into the other mechanisms tabs (e.g. Mechanism Selection).
   const onRegionAssignmentTab =
     selectedMechanismsTab === EModelOptimisationMechanismsTabs.RegionAssignment;
+  const onParametersSelectionTab =
+    selectedMechanismsTab === EModelOptimisationMechanismsTabs.ParametersSelection;
 
-  const panelOpen = Boolean(rootSchema && selectedChoice && onRegionAssignmentTab);
+  const value = config[selectedRootElement];
+  const writeValue = (next: typeof value) => setConfig({ ...config, [selectedRootElement]: next });
+
+  // Region Assignment: second column is the ion-channel-models picker (checkboxes).
+  const assignmentDrawerOpen = Boolean(rootSchema && selectedChoice && onRegionAssignmentTab);
+  // Parameters Selection: second column is the assigned-models list (chevrons); the third is the
+  // model detail, shown once a model row is selected.
+  const modelsDrawerOpen = Boolean(rootSchema && selectedChoice && onParametersSelectionTab);
+
+  // A selected model that has since been removed from the region (e.g. deleted from the master
+  // list) must not keep the detail drawer open, so gate it on the model still being assigned.
+  const selectedModelStillAssigned =
+    Boolean(selectedRegionModel) &&
+    Boolean(selectedChoice) &&
+    regionModelIds(value, selectedChoice?.name ?? '').has(selectedRegionModel);
+  const detailDrawerOpen = modelsDrawerOpen && selectedModelStillAssigned;
+
+  // Drop the stale selection from state too, so it can't resurface if the model is re-added.
+  useEffect(() => {
+    if (selectedRegionModel && !selectedModelStillAssigned) {
+      setSelectedRegionModel('');
+    }
+  }, [selectedRegionModel, selectedModelStillAssigned, setSelectedRegionModel]);
 
   return (
     <>
@@ -69,19 +132,34 @@ export function EModelOptimisationColumns({ props, state }: Props) {
           <MiddleColumnContent props={props} state={state} />
         </div>
 
-        {panelOpen && rootSchema && selectedChoice && (
-          // `sticky top-0` + `self-start` pin the panel to the top of the scrolling middle area so
-          // it stays put while the first column scrolls. Its height is capped to the scroll
-          // container's visible height (`max-h-[calc(...)]`) and it scrolls internally if longer.
-          <div className="sticky top-0 z-10 max-h-[calc(100vh-12rem)] min-w-0 shrink-0 grow-0 basis-1/3 self-start overflow-y-auto rounded-lg border border-gray-200 bg-gray-50">
+        {assignmentDrawerOpen && rootSchema && selectedChoice && (
+          <DrawerColumn>
             <IonChannelModelsPanel
               choiceName={selectedChoice.name}
               choiceLabel={selectedChoice.label}
               rootSchema={rootSchema}
-              value={config[selectedRootElement]}
-              onChange={(next) => setConfig({ ...config, [selectedRootElement]: next })}
+              value={value}
+              onChange={writeValue}
             />
-          </div>
+          </DrawerColumn>
+        )}
+
+        {modelsDrawerOpen && selectedChoice && (
+          <DrawerColumn>
+            <RegionModelsPanel
+              choiceName={selectedChoice.name}
+              choiceLabel={selectedChoice.label}
+              value={value}
+              selectedRegionModel={selectedRegionModel}
+              setSelectedRegionModel={setSelectedRegionModel}
+            />
+          </DrawerColumn>
+        )}
+
+        {detailDrawerOpen && (
+          <DrawerColumn>
+            <RegionModelDetail modelId={selectedRegionModel} />
+          </DrawerColumn>
         )}
       </div>
     </>

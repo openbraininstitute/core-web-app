@@ -59,6 +59,9 @@ export function useScanConfigTemplate({
   // selected Region Assignment section-list choice (`name`) driving the adjacent
   // ion-channel-models panel; empty when no card is selected
   const [selectedRegionChoice, setSelectedRegionChoice] = useState('');
+  // selected model (`id_str`) within a region on the Parameters Selection tab, driving the
+  // third detail drawer; empty when no model is selected
+  const [selectedRegionModel, setSelectedRegionModel] = useState('');
 
   const [loading, setLoading] = useState(false);
   const isDuplicate = campaignOriginAction === ScanConfigCampaignOriginActionDict.Duplicate;
@@ -121,6 +124,7 @@ export function useScanConfigTemplate({
       setSelectedRootElement(firstRoot ?? '');
       setSelectedMechanismsTab('');
       setSelectedRegionChoice('');
+      setSelectedRegionModel('');
       // Selections live in module state that outlives the route and are keyed
       // by block name, which repeats across workflows. Drop them so the next
       // workflow starts on each sweep's first value.
@@ -151,6 +155,13 @@ export function useScanConfigTemplate({
   );
   useAIConfig();
 
+  // Changing the region choice must drop any model selected under the previous region, so the
+  // third (detail) drawer doesn't linger with a stale model when a new region opens.
+  const selectRegionChoice = useCallback((choice: string) => {
+    setSelectedRegionChoice(choice);
+    setSelectedRegionModel('');
+  }, []);
+
   const configurationTabId = ScanConfigTabs[activity].configuration;
   const isConfigurationTab = tab.id === configurationTabId;
 
@@ -174,7 +185,10 @@ export function useScanConfigTemplate({
     selectedMechanismsTab,
     setSelectedMechanismsTab,
     selectedRegionChoice,
-    setSelectedRegionChoice,
+    // exposed as `setSelectedRegionChoice` but also clears the selected model on change
+    setSelectedRegionChoice: selectRegionChoice,
+    selectedRegionModel,
+    setSelectedRegionModel,
     loading,
     setLoading,
     campaignId,

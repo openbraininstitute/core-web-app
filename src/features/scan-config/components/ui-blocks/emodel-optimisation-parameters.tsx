@@ -58,7 +58,13 @@ export function EModelOptimisationParameters({
       />
     ))
     .with(EModelOptimisationMechanismsTabs.ParametersSelection, () => (
-      <ParametersSelection value={value} onChange={onChange} />
+      <ParametersSelection
+        rootSchema={rootSchema}
+        value={value}
+        onChange={onChange}
+        selectedRegionChoice={selectedRegionChoice}
+        setSelectedRegionChoice={setSelectedRegionChoice}
+      />
     ))
     .otherwise(() => (
       <p className="p-4 text-sm text-gray-400 italic">Select a tab from the left.</p>
