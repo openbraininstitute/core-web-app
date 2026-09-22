@@ -46,10 +46,10 @@ export function SynapseLegend({
 
   if (!open) {
     return (
-      <LegendTooltip label="Show synapse colours">
+      <LegendTooltip label="Show synapses">
         <button
           type="button"
-          aria-label="Show synapse colours"
+          aria-label="Show synapses"
           aria-expanded={false}
           onClick={() => setOpen(true)}
           className={cn(
@@ -72,17 +72,15 @@ export function SynapseLegend({
       <div className="flex items-center gap-2">
         <RiBubbleChartLine aria-hidden className="size-3.5 shrink-0 text-primary-9" />
         <p className="mr-auto text-[11px] font-medium text-primary-9">Synapses</p>
-        <LegendTooltip label="Collapse synapse colours">
-          <button
-            type="button"
-            aria-label="Collapse synapse colours"
-            aria-expanded
-            onClick={() => setOpen(false)}
-            className={ICON_BUTTON}
-          >
-            <RiArrowUpSLine className="size-3.5" />
-          </button>
-        </LegendTooltip>
+        <button
+          type="button"
+          aria-label="Collapse synapse colours"
+          aria-expanded
+          onClick={() => setOpen(false)}
+          className={ICON_BUTTON}
+        >
+          <RiArrowUpSLine className="size-3.5" />
+        </button>
       </div>
       <ul className="flex flex-col gap-0.5">
         {entries.map(({ color, label }) => {
@@ -107,17 +105,15 @@ export function SynapseLegend({
               >
                 {label}
               </span>
-              <LegendTooltip label={action}>
-                <button
-                  type="button"
-                  aria-label={action}
-                  aria-pressed={isHidden}
-                  onClick={() => onToggle?.(label)}
-                  className={ICON_BUTTON}
-                >
-                  <EyeIcon className="size-3.5" />
-                </button>
-              </LegendTooltip>
+              <button
+                type="button"
+                aria-label={action}
+                aria-pressed={isHidden}
+                onClick={() => onToggle?.(label)}
+                className={ICON_BUTTON}
+              >
+                <EyeIcon className="size-3.5" />
+              </button>
             </li>
           );
         })}
@@ -126,7 +122,10 @@ export function SynapseLegend({
   );
 }
 
-/** The chrome's own tooltip, so the legend's buttons read like every other viewer control. */
+/**
+ * The chrome's own tooltip, on the collapsed pill alone: an icon with no label
+ * beside it needs saying, and the open card names every row already.
+ */
 function LegendTooltip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Tooltip>

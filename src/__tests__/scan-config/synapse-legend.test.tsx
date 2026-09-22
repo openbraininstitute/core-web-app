@@ -57,7 +57,7 @@ describe('SynapseLegend', () => {
 
     // Reversible, unlike the close button it replaced: hiding a type is only
     // undoable from the legend.
-    fireEvent.click(screen.getByRole('button', { name: 'Show synapse colours' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show synapses' }));
 
     expect(screen.getByRole('complementary')).toBeInTheDocument();
   });
