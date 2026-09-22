@@ -16,6 +16,7 @@ import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
   getConfigKeyForEntity,
+  resolveScanConfigTab,
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
@@ -107,7 +108,7 @@ function ScanConfigTemplateContent({
 }: Props) {
   const browseOverlayContext = useScanConfigMainOverlayOptional();
   const browseOverlay = browseOverlayContext?.overlay;
-  const [tab, setTab] = useScanConfigTab(activity, defaultTab);
+  const [urlTab, setTab] = useScanConfigTab(activity, defaultTab);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);
@@ -210,8 +211,8 @@ function ScanConfigTemplateContent({
   );
   useAIConfig();
 
-  const configurationTabId = ScanConfigTabs[activity].configuration;
-  const isConfigurationTab = tab.id === configurationTabId;
+  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId));
+  const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>

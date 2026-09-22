@@ -119,6 +119,37 @@ export const ScanConfigResultsTab = {
   },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
+/** each activity's configuration tab — the editor's landing tab. */
+export const ScanConfigConfigurationTab = {
+  [ScanConfigActivity.Simulate]: {
+    id: SimulateScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Simulate,
+  },
+  [ScanConfigActivity.Extract]: {
+    id: ExtractScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Extract,
+  },
+  [ScanConfigActivity.Process]: {
+    id: ProcessScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Process,
+  },
+  [ScanConfigActivity.Build]: {
+    id: BuildScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Build,
+  },
+} as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
+
+/**
+ * The tab to actually render, given the campaign the editor holds.
+ */
+export function resolveScanConfigTab(
+  tab: TScanConfigTabs,
+  activity: TScanConfigActivity,
+  hasCampaign: boolean
+): TScanConfigTabs {
+  return hasCampaign ? tab : ScanConfigConfigurationTab[activity];
+}
+
 export function parseScanConfigMode(
   value: string | string[] | undefined
 ): TScanConfigCampaignOriginActionDict | undefined {
