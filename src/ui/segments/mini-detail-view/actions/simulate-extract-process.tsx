@@ -112,6 +112,7 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
           <WorkflowBlockedActionTooltip reason={useModelBlockReason} side="top" align="end">
             <Button
               rounded
+              data-testid="workflow-use-model"
               asChild={!useModelBlockReason}
               title={useModelBlockReason ? undefined : 'Start simulation'}
               variant="default"
