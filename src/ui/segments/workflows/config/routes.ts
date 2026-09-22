@@ -27,6 +27,7 @@ import { makePathParamUrlFromExtendedType } from '@/utils/url-builder';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { FeatureFlags } from '@/features/feature-flags/flags';
+import type { TWorkflowEntitySeed } from '@/features/scan-config/workflow/seeding/types';
 import type { TWorkflowSchemaSelection } from '@/features/scan-config/workflow/workflow-schema-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
@@ -214,6 +215,7 @@ export function buildConfigureUrlForEntity({
   entityType,
   selection,
   skipSelectionPersist,
+  seed,
   query = {},
 }: {
   activity: TActivityValue;
@@ -223,6 +225,8 @@ export function buildConfigureUrlForEntity({
   entityType?: TExtendedEntitiesTypeDict;
   selection?: TWorkflowSessionSelectionPayload;
   skipSelectionPersist?: boolean;
+  /** extra configuration the editor seeds from the source entity (see workflow seeding) */
+  seed?: TWorkflowEntitySeed | null;
   query?: Record<string, string | undefined>;
 }): string {
   const workflow = getWorkflow({ activity, targetType });
@@ -263,7 +267,10 @@ export function buildConfigureUrlForEntity({
     targetType,
     workspace,
     skipSelectionPersist,
-    entityRef: skipSelectionPersist || !entityType ? undefined : { type: entityType, id: entityId },
+    entityRef:
+      skipSelectionPersist || !entityType
+        ? undefined
+        : { type: entityType, id: entityId, ...(seed ?? {}) },
     selection,
     query,
   });
@@ -344,10 +351,14 @@ export function buildSimulateConfigureUrlFromDataViewEntity({
   workspace: WorkspaceContext;
   extendedType: TExtendedEntitiesTypeDict;
   entityId: string;
-  entity: { scale?: ICircuit['scale'] };
+  /** the source entity: its `scale` picks the workflow, and the workflow's seed reads the rest */
+  entity: object;
   flags?: FeatureFlags;
 }): string | null {
-  const sourceType = resolveSimulateSourceTypeFromDataView(extendedType, entity);
+  const sourceType = resolveSimulateSourceTypeFromDataView(
+    extendedType,
+    entity as { scale?: ICircuit['scale'] }
+  );
   if (!sourceType) {
     return null;
   }
@@ -369,6 +380,8 @@ export function buildSimulateConfigureUrlFromDataViewEntity({
     workspace,
     entityId,
     entityType: sourceType,
+    // the workflow decides what else travels with the entity (see `workflow/seeding`)
+    seed: workflow.scanConfig?.definition.seed?.build(entity as never),
     query: {
       [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
       [WORKFLOW_SESSION_ID_SEARCH_PARAM]: createWorkflowSessionId(),

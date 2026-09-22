@@ -6,6 +6,7 @@ import { findInitializeModelProperty } from '@/features/scan-config/workflow/wor
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/types';
+import type { TWorkflowEntitySeed } from '@/features/scan-config/workflow/seeding/types';
 
 export const WorkflowSessionSelectionMode = {
   Single: 'single',
@@ -16,11 +17,25 @@ export const WorkflowSessionSelectionMode = {
 export type TWorkflowSessionSelectionRef = {
   type: TExtendedEntitiesTypeDict;
   id: string;
-};
+} & TWorkflowEntitySeed;
+
+const workflowSeedAttributesSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean(), z.null()])
+);
+
+const workflowSeedPropertySchema = z.object({
+  property: z.string(),
+  values: z.array(z.record(z.string(), z.unknown())),
+});
 
 const workflowSessionSelectionRefSchema = z.object({
   type: z.string(),
   id: z.string(),
+  /** entity facts a schema's `entity_query.filters` may test when picking a block variant */
+  attributes: workflowSeedAttributesSchema.optional(),
+  /** values derived from the entity, keyed by ObiOne's `property` annotation */
+  properties: z.array(workflowSeedPropertySchema).optional(),
 });
 
 /**
@@ -135,7 +150,7 @@ function selectionRefToFromIdValue(
   };
 }
 
-function collectSessionSelectionRefs(
+export function collectSessionSelectionRefs(
   sessionSelection: TWorkflowSessionSelectionPayload
 ): TWorkflowSessionSelectionRef[] {
   switch (sessionSelection.mode) {

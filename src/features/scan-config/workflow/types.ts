@@ -10,6 +10,7 @@ import type {
   TScanConfigTabs,
   TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import type { TAnyWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { TScanConfigRegistryConfig } from '@/ui/segments/workflows/config/scan-config-binding';
@@ -106,6 +107,12 @@ export type TScanConfigWorkflowDefinition = {
   activity: TScanConfigActivity;
   entity: TScanConfigEntitySource;
   campaign: TScanConfigCampaignSource;
+  /**
+   * how this workflow pre-fills its editor from the entity a launcher started on: what the link
+   * carries (`build`) and how it is written into the config (`do`). Defaults to the generic
+   * schema-driven behaviour when omitted.
+   */
+  seed?: TAnyWorkflowSeed;
   editor?: TScanConfigEditorOptions;
   /** obi-one + entitycore task identifiers used by the workflow's results tab (launch + polling) */
   taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
