@@ -1,8 +1,9 @@
 'use client';
 
 import { RiArrowRightSLine } from '@remixicon/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
+import { useModelNameRegistry } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/model-name-registry-context';
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -43,10 +44,13 @@ export function RegionModelsPanel({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
-  // The models assigned to this region, as `{ id_str }` refs.
-  const assignedIds = useMemo(() => {
+  const mechanisms = useMemo(() => {
     const root = isPlainObject(value) ? value : {};
-    const mechanisms = isPlainObject(root.mechanisms) ? root.mechanisms : {};
+    return isPlainObject(root.mechanisms) ? root.mechanisms : {};
+  }, [value]);
+
+  // The ids assigned to this region (the subset we actually display).
+  const assignedIds = useMemo(() => {
     const regions = isPlainObject(mechanisms[MECHANISM_REGIONS_KEY])
       ? mechanisms[MECHANISM_REGIONS_KEY]
       : {};
@@ -62,19 +66,35 @@ export function RegionModelsPanel({
       }
     }
     return ids;
-  }, [value, choiceName]);
+  }, [mechanisms, choiceName]);
 
-  // Resolve to entity records so we can show real names; the model-identifier config type is used
-  // because these ids come from that same `ion_channel_models` field.
-  const refs = useMemo<TFromIdRef[]>(
-    () => assignedIds.map((id_str) => ({ type: 'IonChannelModelFromID', id_str })),
-    [assignedIds]
-  );
+  // Resolve names off the *full* picked list (`mechanisms.ion_channel_models`), not this region's
+  // subset. Mechanism Selection already resolved that exact list, so this hits the shared query
+  // cache instead of firing a fresh, narrower request (which flashed "Loading…"). We only need
+  // names here — no per-region fetch is warranted.
+  const refs = useMemo<TFromIdRef[]>(() => {
+    const picked = Array.isArray(mechanisms[ION_CHANNEL_MODELS_KEY])
+      ? mechanisms[ION_CHANNEL_MODELS_KEY]
+      : [];
+
+    return picked.flatMap((model) =>
+      isPlainObject(model) && typeof model.id_str === 'string'
+        ? [{ type: 'IonChannelModelFromID', id_str: model.id_str }]
+        : []
+    );
+  }, [mechanisms]);
 
   const { entities, isLoading } = useResolvedModelIdentifierEntities({
     refs,
     context: { virtualLabId, projectId },
   });
+
+  const { registerModelNames } = useModelNameRegistry();
+
+  // Keep the template-scoped registry warm so prune helpers can resolve names by id.
+  useEffect(() => {
+    registerModelNames(entities);
+  }, [entities, registerModelNames]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">

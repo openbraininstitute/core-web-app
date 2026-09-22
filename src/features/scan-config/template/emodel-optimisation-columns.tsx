@@ -156,9 +156,14 @@ export function EModelOptimisationColumns({ props, state }: Props) {
           </DrawerColumn>
         )}
 
-        {detailDrawerOpen && (
+        {detailDrawerOpen && selectedChoice && (
           <DrawerColumn>
-            <RegionModelDetail modelId={selectedRegionModel} />
+            <RegionModelDetail
+              choiceName={selectedChoice.name}
+              modelId={selectedRegionModel}
+              value={value}
+              onChange={writeValue}
+            />
           </DrawerColumn>
         )}
       </div>

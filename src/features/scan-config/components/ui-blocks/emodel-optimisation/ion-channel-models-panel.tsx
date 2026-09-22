@@ -1,8 +1,10 @@
 'use client';
 
 import { Checkbox } from 'antd';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
+import { useModelNameRegistry } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/model-name-registry-context';
+import { pruneRegionParametersForModelNames } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/prune-region-parameters';
 import {
   getAllRefsFromParsed,
   parseModelIdentifierFieldValue,
@@ -82,6 +84,13 @@ export function IonChannelModelsPanel({
     context: { virtualLabId, projectId },
   });
 
+  const { registerModelNames } = useModelNameRegistry();
+
+  // Keep the template-scoped registry warm so prune helpers can resolve names by id.
+  useEffect(() => {
+    registerModelNames(entities);
+  }, [entities, registerModelNames]);
+
   const toggleModel = (idStr: string, checked: boolean) => {
     const nextIds = new Set(assignedIds);
     if (checked) {
@@ -95,19 +104,27 @@ export function IonChannelModelsPanel({
       : {};
     const region = isPlainObject(regions[choiceName]) ? regions[choiceName] : {};
 
-    onChange({
-      ...root,
-      mechanisms: {
-        ...mechanisms,
-        [MECHANISM_REGIONS_KEY]: {
-          ...regions,
-          [choiceName]: {
-            ...region,
-            [ION_CHANNEL_MODELS_KEY]: [...nextIds].map((id_str) => ({ id_str })),
-          },
+    let nextMechanisms: Record<string, ConfigValue> = {
+      ...mechanisms,
+      [MECHANISM_REGIONS_KEY]: {
+        ...regions,
+        [choiceName]: {
+          ...region,
+          [ION_CHANNEL_MODELS_KEY]: [...nextIds].map((id_str) => ({ id_str })),
         },
       },
-    });
+    };
+
+    // Unassigning a model must also drop its parameter entries. This panel has the model's name
+    // resolved locally, so route it through the same shared prune the deletion path uses.
+    if (!checked) {
+      const modelName = entities.find((e) => e.id === idStr)?.name;
+      if (modelName) {
+        nextMechanisms = pruneRegionParametersForModelNames(nextMechanisms, [modelName]);
+      }
+    }
+
+    onChange({ ...root, mechanisms: nextMechanisms });
   };
 
   return (
