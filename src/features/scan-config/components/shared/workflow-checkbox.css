@@ -1,0 +1,35 @@
+/*
+  Workflow results-panel checkboxes.
+
+  antd paints a checked box with its own `colorPrimary`, and the app's root ConfigProvider runs
+  `hashed: false` — every antd component in the app then shares one unhashed class name, so a nested
+  provider cannot theme a subtree on its own. These rules match antd's own specificity, `:not()`
+  chains included, which is what it takes to outrank them.
+*/
+.workflow-checkbox.ant-checkbox-wrapper .ant-checkbox-checked .ant-checkbox-inner,
+.workflow-checkbox.ant-checkbox-wrapper
+  .ant-checkbox-disabled.ant-checkbox-checked
+  .ant-checkbox-inner {
+  background-color: var(--color-primary-8);
+  border-color: var(--color-primary-8);
+}
+
+.workflow-checkbox.ant-checkbox-wrapper .ant-checkbox-checked .ant-checkbox-inner::after,
+.workflow-checkbox.ant-checkbox-wrapper
+  .ant-checkbox-disabled.ant-checkbox-checked
+  .ant-checkbox-inner::after {
+  border-color: var(--color-light);
+}
+
+.workflow-checkbox.ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover
+  .ant-checkbox-checked:not(.ant-checkbox-disabled)
+  .ant-checkbox-inner {
+  background-color: var(--color-primary-7);
+  border-color: var(--color-primary-7);
+}
+
+.workflow-checkbox.ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover
+  .ant-checkbox:not(.ant-checkbox-disabled):not(.ant-checkbox-checked)
+  .ant-checkbox-inner {
+  border-color: var(--color-primary-8);
+}
