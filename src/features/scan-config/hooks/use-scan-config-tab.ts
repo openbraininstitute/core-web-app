@@ -14,11 +14,6 @@ type TScanConfigTabId = TScanConfigTabs['id'];
 
 /**
  * Active scan-config tab, held in the URL instead of component state.
- *
- * Only the id travels; `__activity` is always the editor's own activity. Ids are validated
- * against that activity's tab set, so one left over from another workflow falls back to
- * `defaultTab`. Updates are shallow and replace the history entry, so switching tabs neither
- * re-runs the server render nor stacks back-button steps.
  */
 export function useScanConfigTab(
   activity: TScanConfigActivity,

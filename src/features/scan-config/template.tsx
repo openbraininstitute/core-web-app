@@ -58,8 +58,6 @@ import styles from '@/features/scan-config/scan-config.module.css';
 
 type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  virtualLabId: string;
-  projectId: string;
   origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
@@ -89,8 +87,6 @@ export function ScanConfigTemplate(props: Props) {
 
 function ScanConfigTemplateContent({
   entity,
-  virtualLabId,
-  projectId,
   origin,
   initialConfig,
   defaultTab = ScanConfigDefaultTab,
@@ -221,8 +217,6 @@ function ScanConfigTemplateContent({
       <Suspense>
         <SimulationsTab
           campaignId={campaignId}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
           campaignOriginAction={campaignOriginAction}
           isCampaignIdChanged={isCampaignIdChanged}
         />
@@ -245,8 +239,6 @@ function ScanConfigTemplateContent({
         <Suspense>
           <SkeletonizationTab
             campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
             campaignOriginAction={campaignOriginAction}
             isCampaignIdChanged={isCampaignIdChanged}
             taskTypeBindings={taskTypeBindings}
@@ -395,13 +387,11 @@ function ScanConfigTemplateContent({
             />
           </div>
         </div>
-        {/* Activity rather than a `hidden` class: hidden unmounts the tab's effects, so its
-            campaign queries do not run until it is opened. State survives the switch either way. */}
         <Activity mode={isConfigurationTab ? 'hidden' : 'visible'} name="scan-config-results">
           <div
             id="scan-config-results"
             data-testid="scan-config-results"
-            className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden"
+            className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 h-full overflow-hidden"
           >
             {results}
           </div>

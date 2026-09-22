@@ -76,8 +76,6 @@ export type TScanConfigurationReadyState = {
    * resolved back from `entityType`.
    */
   campaignEntityType?: TExtendedEntitiesTypeDict;
-  virtualLabId: string;
-  projectId: string;
   origin?: string;
   initialConfig?: Config;
   defaultTab: TScanConfigTabs;
@@ -260,8 +258,6 @@ export function useScanConfiguration({
         entity,
         entityType: resolved.usedType,
         campaignEntityType: resolved.targetType,
-        virtualLabId,
-        projectId,
         origin,
         initialConfig,
         defaultTab,
@@ -287,14 +283,12 @@ export function useScanConfiguration({
     origin,
     initialConfig,
     isLoading,
-    projectId,
     readOnly,
     resolveSessionFromIdType,
     resolved,
     schema,
     schemaMappingConfig,
     taskTypeBindings,
-    virtualLabId,
     workflowSessionSelection,
   ]);
 }

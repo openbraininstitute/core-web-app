@@ -8,12 +8,13 @@ import {
   ScanConfigActivity,
   ScanConfigDefaultTab,
   SimulateScanConfigTabs,
+  type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
 
 function renderTab(
   searchParams: string,
-  activity = ScanConfigActivity.Simulate,
+  activity: TScanConfigActivity = ScanConfigActivity.Simulate,
   defaultTab: TScanConfigTabs = ScanConfigDefaultTab
 ) {
   return renderHook(() => useScanConfigTab(activity, defaultTab), {
