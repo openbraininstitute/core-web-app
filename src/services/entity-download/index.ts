@@ -36,3 +36,18 @@ export async function downloadArchive(
   link.click();
   document.body.removeChild(link);
 }
+
+/**
+ * Notification arguments for a download that could not be started.
+ *
+ * @remarks `downloadArchive` cannot raise this itself — antd notifications come from `App.useApp()`,
+ * so only a component can. This keeps the wording in one place until a `useDownloadArchive` hook
+ * owns the pending state too.
+ */
+export function downloadFailedNotification(error: unknown) {
+  return {
+    message: 'Download failed',
+    description: (error instanceof Error && error.message) || 'The download could not be started.',
+    placement: 'topRight' as const,
+  };
+}

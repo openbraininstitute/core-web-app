@@ -8,7 +8,7 @@ import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 /**
  * Streams a tar.gz of all files under `ticket.prefix` inside a single asset.
  */
-export async function GET(_request: NextRequest, { params }: { params: { ticketId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { ticketId: string } }) {
   const { ticketId } = await params;
 
   const session = await auth();
@@ -32,7 +32,7 @@ export async function GET(_request: NextRequest, { params }: { params: { ticketI
 
     ticketStore.deleteTicket(ticketId);
 
-    const downloadStream = await createDownloadStream(ticket);
+    const downloadStream = await createDownloadStream(ticket, request.signal);
 
     return new NextResponse(downloadStream, {
       headers: getDownloadStreamHeaders({ filename: ticket.filename }),

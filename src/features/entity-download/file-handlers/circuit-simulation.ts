@@ -9,10 +9,7 @@ import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaig
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { ASSET_BASE_PATH, OUTPUT_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import {
-  createAssetFileEntry,
-  getMetadataSimulationCsvEntryBase,
-} from '@/features/entity-download/utils';
+import { getMetadataSimulationCsvEntryBase, tryAssetEntry } from '@/features/entity-download/utils';
 
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
@@ -25,7 +22,6 @@ const CONCURRENCY = {
   CAMPAIGNS: 3,
   SIMULATIONS: 5,
   RESULTS: 10,
-  ASSET_DOWNLOADS: 8,
 } as const;
 
 type SimulationData = {
@@ -69,26 +65,6 @@ async function fetchSimulationResults(
   );
 
   return { executions: executions.data, results };
-}
-
-/**
- * creates asset file entries with concurrent downloads and graceful error handling
- * returns only successfully created entries.
- */
-async function createAssetFileEntriesBatch(
-  assets: AssetEntry[],
-  ctx: WorkspaceContext | undefined,
-  downloadLimit: ReturnType<typeof pLimit>
-): Promise<FileEntry[]> {
-  const promises = assets.map(({ entity, asset, path }) =>
-    downloadLimit(() => createAssetFileEntry({ entity, asset, path, ctx }))
-  );
-
-  const settled = await Promise.allSettled(promises);
-
-  return settled
-    .filter((r): r is PromiseFulfilledResult<FileEntry> => r.status === 'fulfilled')
-    .map((r) => r.value);
 }
 
 /**
@@ -161,8 +137,23 @@ async function fetchCampaignData(
   };
 }
 
-export async function* getCircuitSimulationFiles(entityIds: string[], ctx?: WorkspaceContext) {
+export async function* getCircuitSimulationFiles(
+  entityIds: string[],
+  ctx?: WorkspaceContext,
+  signal?: AbortSignal,
+  failed: string[] = []
+) {
   const metadata = new Metadata<Record<string, unknown>>();
+
+  /**
+   * Opens one asset at a time, right before the archive writes it, so no S3 body ever sits idle.
+   */
+  async function* streamAssetEntries(assets: AssetEntry[]): AsyncGenerator<FileEntry> {
+    for (const { entity, asset, path } of assets) {
+      if (signal?.aborted) return;
+      yield* tryAssetEntry({ entity, asset, path, ctx, signal }, failed);
+    }
+  }
 
   // TODO: add readme file when provided
   /* try {
@@ -173,7 +164,6 @@ export async function* getCircuitSimulationFiles(entityIds: string[], ctx?: Work
 
   // build shared limiters for resource management
   const resultLimit = pLimit(CONCURRENCY.RESULTS);
-  const downloadLimit = pLimit(CONCURRENCY.ASSET_DOWNLOADS);
   const campaignLimit = pLimit(CONCURRENCY.CAMPAIGNS);
 
   // fetch all campaigns concurrently with limit
@@ -195,23 +185,12 @@ export async function* getCircuitSimulationFiles(entityIds: string[], ctx?: Work
       (asset) => asset.label === AssetLabel.campaign_generation_config
     );
     if (configAsset) {
-      const configEntries = await createAssetFileEntriesBatch(
-        [
-          {
-            entity: campaign,
-            asset: configAsset,
-            path: `${dataPath}/${configAsset.path}`,
-          },
-        ],
-        ctx,
-        downloadLimit
-      );
-      for (const entry of configEntries) {
-        yield entry;
-      }
+      yield* streamAssetEntries([
+        { entity: campaign, asset: configAsset, path: `${dataPath}/${configAsset.path}` },
+      ]);
     }
 
-    // process all simulations concurrently
+    // fetch every simulation's results concurrently; only metadata, no asset bodies
     const simulationResults = await pMap(
       simulations,
       (sim) => processSimulation(sim, dataPath, ctx, resultLimit),
@@ -229,11 +208,7 @@ export async function* getCircuitSimulationFiles(entityIds: string[], ctx?: Work
       allAssetEntries.push(...assetEntries);
     }
 
-    // download all assets concurrently and yield as they complete
-    const fileEntries = await createAssetFileEntriesBatch(allAssetEntries, ctx, downloadLimit);
-    for (const entry of fileEntries) {
-      yield entry;
-    }
+    yield* streamAssetEntries(allAssetEntries);
 
     metadata.add({
       csv: { ...idxExtra, ...getMetadataSimulationCsvEntryBase(campaign) },

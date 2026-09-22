@@ -53,6 +53,13 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
       name: reqData.name,
     });
 
+    if (!ticketId) {
+      return NextResponse.json(
+        { error: 'Too many downloads are being prepared right now. Please try again in a minute.' },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json({ ticketId });
   } catch (error) {
     if (error instanceof z.ZodError) {

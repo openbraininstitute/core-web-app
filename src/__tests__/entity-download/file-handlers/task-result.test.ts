@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTaskResult } from '@/api/entitycore/queries/task';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import ApiError from '@/api/error';
 import { getTaskResultFiles } from '@/features/entity-download/file-handlers/task-result';
 
 import { collectFileEntries, makeAsset, makeEntityBase, pathsOf, readEntryText } from '../fixtures';
@@ -113,13 +114,17 @@ describe('getTaskResultFiles', () => {
     });
   });
 
-  it('keeps the archive when one asset cannot be fetched', async () => {
+  it('records an asset it cannot fetch instead of silently shipping a short archive', async () => {
     vi.mocked(getTaskResult).mockResolvedValue(makeEFeatureResult('result-1'));
-    downloadAssetMock.mockRejectedValueOnce(new Error('gone'));
+    downloadAssetMock.mockRejectedValueOnce(new ApiError('gone', { status: 404 }));
 
-    const entries = await collectFileEntries(getTaskResultFiles(['result-1']));
+    const failed: string[] = [];
+    const entries = await collectFileEntries(
+      getTaskResultFiles(['result-1'], undefined, undefined, failed)
+    );
 
     expect(pathsOf(entries)).not.toContain('data/0/extracted_features.json');
     expect(pathsOf(entries)).toContain('metadata.json');
+    expect(failed).toEqual(['data/0/extracted_features.json']);
   });
 });

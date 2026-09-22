@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import {
@@ -6,6 +6,7 @@ import {
   getEntityArchiveFilename,
   getMetadataCsvEntryBase,
   getMetadataSimulationCsvEntryBase,
+  readWithRangeResume,
 } from '@/features/entity-download/utils';
 
 import { makeEntityBase } from './fixtures';
@@ -111,5 +112,74 @@ describe('getMetadataSimulationCsvEntryBase', () => {
       name: 'Campaign',
       description: 'Sim campaign',
     });
+  });
+});
+
+describe('readWithRangeResume', () => {
+  it('re-fetches from the last written byte when the body dies mid-transfer', async () => {
+    const full = Buffer.from('0123456789');
+    let pulls = 0;
+    const dying = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1;
+        if (pulls === 1) {
+          controller.enqueue(full.subarray(0, 4));
+          return undefined;
+        }
+        // let the first chunk reach the consumer before the socket "dies"
+        return new Promise<void>((resolve) => {
+          setTimeout(() => {
+            controller.error(new TypeError('terminated'));
+            resolve();
+          }, 10);
+        });
+      },
+    });
+    const response = new Response(dying, { headers: { 'content-length': '10' } });
+    Object.defineProperty(response, 'url', { value: 'https://s3.example/asset' });
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const range = String((init?.headers as Record<string, string>).Range);
+      const from = Number(/bytes=(\d+)-/.exec(range)?.[1]);
+      return new Response(full.subarray(from), { status: 206 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      const chunks: Buffer[] = [];
+      for await (const chunk of readWithRangeResume(response, 10)) chunks.push(chunk);
+
+      expect(Buffer.concat(chunks).toString()).toBe('0123456789');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://s3.example/asset',
+        expect.objectContaining({ headers: { Range: 'bytes=4-' } })
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('gives up when the resume is not a partial response', async () => {
+    const dying = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(new TypeError('terminated'));
+      },
+    });
+    const response = new Response(dying);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('nope', { status: 200 }))
+    );
+
+    try {
+      const chunks: Buffer[] = [];
+      await expect(
+        (async () => {
+          for await (const chunk of readWithRangeResume(response, 10)) chunks.push(chunk);
+        })()
+      ).rejects.toThrow('terminated');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

@@ -44,11 +44,14 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
   const reqDataRaw = await request.json();
   const reqData = downloadRequestSchema.parse(reqDataRaw);
 
-  const downloadStream = await createDownloadStream({
-    kind: 'entity-batch',
-    entityType,
-    ...reqData,
-  });
+  const downloadStream = await createDownloadStream(
+    {
+      kind: 'entity-batch',
+      entityType,
+      ...reqData,
+    },
+    request.signal
+  );
 
   return new NextResponse(downloadStream, {
     headers: getDownloadStreamHeaders({

@@ -16,7 +16,7 @@ import type { TEntityTypeDict } from '@/api/entitycore/types';
  * Handles GET requests for downloading an entity archive via a download ticket
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { entityType: string; ticketId: string } }
 ) {
   const { entityType: entityTypeRaw, ticketId } = await params;
@@ -53,7 +53,7 @@ export async function GET(
 
     ticketStore.deleteTicket(ticketId);
 
-    const downloadStream = await createDownloadStream(ticket);
+    const downloadStream = await createDownloadStream(ticket, request.signal);
 
     return new NextResponse(downloadStream, {
       headers: getDownloadStreamHeaders({
