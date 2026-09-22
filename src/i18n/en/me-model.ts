@@ -13,8 +13,6 @@ export const messages = {
   IncompatibleModels: 'Incompatible M-model and E-model, please select a different combination.',
   CompatibilityCheckFailed:
     "We couldn't complete the compatibility check, so this combination can't be verified yet. Try again before building.",
-  CompatibilityDetailsShow: 'Show details',
-  CompatibilityDetailsHide: 'Hide details',
   CompatibilityRetry: 'Try again',
   CompatibilityBlockedTooltip: "We couldn't verify this combination. Try the check again.",
 };

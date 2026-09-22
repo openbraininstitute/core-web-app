@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  ExclamationCircleOutlined,
-  LoadingOutlined,
-  RightOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
-import { useState } from 'react';
+import { ExclamationCircleOutlined, LoadingOutlined, WarningOutlined } from '@ant-design/icons';
 
 import { messages } from '@/i18n/en/me-model';
 import { Button } from '@/ui/molecules/button';
@@ -68,8 +62,6 @@ type NoticeProps = {
 };
 
 function Notice({ className, icon, message, detail, action }: NoticeProps) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
     <div className={cn('flex flex-col gap-2 p-4 pl-6', className)}>
       <div className="flex items-start gap-3 font-semibold">
@@ -78,23 +70,9 @@ function Notice({ className, icon, message, detail, action }: NoticeProps) {
       </div>
 
       {detail && (
-        <>
-          <button
-            type="button"
-            aria-expanded={expanded}
-            onClick={() => setExpanded((open) => !open)}
-            className="flex w-fit items-center gap-1.5 text-sm underline-offset-2 hover:underline"
-          >
-            <RightOutlined className={cn('text-[10px]', expanded && 'rotate-90')} />
-            {expanded ? messages.CompatibilityDetailsHide : messages.CompatibilityDetailsShow}
-          </button>
-
-          {expanded && (
-            <pre className="border-neutral-2 text-neutral-7 max-h-56 overflow-auto rounded-md border bg-white/60 p-3 font-mono text-xs whitespace-pre-wrap">
-              {detail}
-            </pre>
-          )}
-        </>
+        <pre className="border-neutral-2 text-neutral-7 max-h-56 overflow-auto rounded-md border bg-white/60 p-3 font-mono text-xs whitespace-pre-wrap">
+          {detail}
+        </pre>
       )}
 
       {action}
