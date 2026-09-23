@@ -455,6 +455,8 @@ export interface NeuronPropertyFilter extends TBlockElement {
 export interface NeuronSetCombination extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronSetCombination;
   reference_types: Array<string>;
+  /** Identifies a tag-specific default. */
+  reference_tag?: string;
 }
 
 export interface IBlockUnion extends TRootElement {
