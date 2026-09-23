@@ -6,6 +6,7 @@ import {
   pruneRegionsToModelIds,
   readMechanisms,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import { SectionHeader } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/section-header';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
@@ -67,6 +68,10 @@ export function MechanismSelection({ rootSchema, value, onChange, disabled }: Pr
 
   return (
     <div className="flex h-full w-full min-h-0 flex-col gap-2 p-4">
+      <SectionHeader
+        title="Ion channel models"
+        description="Ion channel model entities available for assignment to morphology section lists."
+      />
       <ModelIdentifierMultiple
         fieldKey={ION_CHANNEL_MODELS_KEY}
         value={mechanisms[ION_CHANNEL_MODELS_KEY]}

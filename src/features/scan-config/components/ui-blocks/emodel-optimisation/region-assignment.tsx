@@ -1,6 +1,7 @@
 'use client';
 
 import { RegionChoiceCards } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-choice-cards';
+import { SectionHeader } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/section-header';
 
 import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
 
@@ -30,10 +31,18 @@ export function RegionAssignment({
   setSelectedRegionChoice,
 }: Props) {
   return (
-    <RegionChoiceCards
-      rootSchema={rootSchema}
-      selectedRegionChoice={selectedRegionChoice}
-      setSelectedRegionChoice={setSelectedRegionChoice}
-    />
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <div className="px-4 pt-4">
+        <SectionHeader
+          title="Mechanisms by section list"
+          description="Assign selected ion channel models to BluePyEModel section lists. The same model may be assigned to multiple section lists."
+        />
+      </div>
+      <RegionChoiceCards
+        rootSchema={rootSchema}
+        selectedRegionChoice={selectedRegionChoice}
+        setSelectedRegionChoice={setSelectedRegionChoice}
+      />
+    </div>
   );
 }

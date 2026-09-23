@@ -70,13 +70,15 @@ export function RegionModelDetail({ choiceName, modelId, value, onChange, disabl
   });
 
   const modelName = isPlainObject(model) && typeof model.name === 'string' ? model.name : '';
+  const modelDescription =
+    isPlainObject(model) && typeof model.description === 'string' ? model.description : '';
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">
       <h3 className="text-primary-9 text-lg font-bold">
         {isPending ? 'Loading…' : modelName || 'Ion channel model'}
       </h3>
-      <p className="text-sm text-gray-500">Ion channel model</p>
+      <p className="text-sm text-gray-500">{modelDescription || 'Ion channel model parameters'}</p>
 
       {isError ? (
         <p className="mt-2 text-sm text-red-500">
