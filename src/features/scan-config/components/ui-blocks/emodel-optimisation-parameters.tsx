@@ -34,6 +34,8 @@ type Props = {
   selectedRegionChoice: string;
   /** sets the selected Region Assignment section-list choice */
   setSelectedRegionChoice: (choice: string) => void;
+  /** read-only/locked: disables the editable widgets (picker, checkboxes, inputs) */
+  disabled?: boolean;
 };
 
 export function EModelOptimisationParameters({
@@ -43,10 +45,16 @@ export function EModelOptimisationParameters({
   onChange,
   selectedRegionChoice,
   setSelectedRegionChoice,
+  disabled,
 }: Props) {
   return match(selectedTab)
     .with(EModelOptimisationMechanismsTabs.MechanismSelection, () => (
-      <MechanismSelection rootSchema={rootSchema} value={value} onChange={onChange} />
+      <MechanismSelection
+        rootSchema={rootSchema}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+      />
     ))
     .with(EModelOptimisationMechanismsTabs.RegionAssignment, () => (
       <RegionAssignment

@@ -67,6 +67,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     config,
     setConfig,
     selectedRootElement,
+    editingLocked,
   } = state;
 
   // The layout only renders when the selected root is the emodel element, but narrow
@@ -131,6 +132,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               rootSchema={rootSchema}
               value={value}
               onChange={writeValue}
+              disabled={editingLocked}
             />
           </DrawerColumn>
         )}
@@ -154,6 +156,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               modelId={selectedRegionModel}
               value={value}
               onChange={writeValue}
+              disabled={editingLocked}
             />
           </DrawerColumn>
         )}

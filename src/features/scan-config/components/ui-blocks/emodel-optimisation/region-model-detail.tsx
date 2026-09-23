@@ -37,6 +37,8 @@ type Props = {
   value: ConfigValue;
   /** writes the next value back to the `emodel_optimisation_parameters` config key */
   onChange: (next: ConfigValue) => void;
+  /** read-only mode: disables the parameter checkboxes, mode radios and value inputs */
+  disabled?: boolean;
 };
 
 /**
@@ -45,7 +47,7 @@ type Props = {
  * `neuron_block` parameters. Each parameter maps to an entry in the model's `parameters` object on
  * its `MechanismRegionSelection` entry in `mechanisms.mechanism_regions.<choiceName>`.
  */
-export function RegionModelDetail({ choiceName, modelId, value, onChange }: Props) {
+export function RegionModelDetail({ choiceName, modelId, value, onChange, disabled }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const context = { virtualLabId, projectId };
 
@@ -89,6 +91,7 @@ export function RegionModelDetail({ choiceName, modelId, value, onChange }: Prop
           modelId={modelId}
           value={value}
           onChange={onChange}
+          disabled={disabled}
         />
       )}
     </div>
@@ -107,12 +110,14 @@ function NeuronBlockParameters({
   modelId,
   value,
   onChange,
+  disabled,
 }: {
   neuronBlock: unknown;
   choiceName: string;
   modelId: string;
   value: ConfigValue;
   onChange: (next: ConfigValue) => void;
+  disabled?: boolean;
 }) {
   const parameters = extractNeuronBlockParameters(neuronBlock);
 
@@ -188,6 +193,7 @@ function NeuronBlockParameters({
             name={param.name}
             unit={param.unit}
             checked={checked}
+            disabled={disabled}
             optimizationValue={checked ? readOptimizationValue(parametersDict[param.name]) : null}
             onToggle={(next) => toggleParameter(param.name, next)}
             onValueChange={(next) => setParameterValue(param.name, next)}
@@ -213,6 +219,7 @@ function ParameterRow({
   name,
   unit,
   checked,
+  disabled,
   optimizationValue,
   onToggle,
   onValueChange,
@@ -220,6 +227,7 @@ function ParameterRow({
   name: string;
   unit: string | null;
   checked: boolean;
+  disabled?: boolean;
   optimizationValue: TOptimizationValue | null;
   onToggle: (next: boolean) => void;
   onValueChange: (next: TOptimizationValue) => void;
@@ -256,7 +264,11 @@ function ParameterRow({
         <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
         <div className="flex shrink-0 items-center gap-3">
           {unit && <span className="text-xs text-gray-500">{unit}</span>}
-          <Checkbox checked={checked} onChange={(e) => onToggle(e.target.checked)} />
+          <Checkbox
+            checked={checked}
+            disabled={disabled}
+            onChange={(e) => onToggle(e.target.checked)}
+          />
         </div>
       </div>
 
@@ -264,6 +276,7 @@ function ParameterRow({
         <div className="flex flex-col gap-2">
           <Radio.Group
             value={mode}
+            disabled={disabled}
             onChange={(e) => setMode(e.target.value as TParameterMode)}
             options={[
               { label: 'Fixed', value: ParameterMode.Fixed },
@@ -275,7 +288,8 @@ function ParameterRow({
             <input
               type="number"
               inputMode="decimal"
-              className="w-full rounded border border-gray-200 px-2 py-1 text-sm"
+              disabled={disabled}
+              className="w-full rounded border border-gray-200 px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Value"
               value={optimizationValue.value ?? ''}
               onChange={(e) => setValue(e.target.value)}
@@ -285,7 +299,8 @@ function ParameterRow({
               <input
                 type="number"
                 inputMode="decimal"
-                className="w-full rounded border border-gray-200 px-2 py-1 text-sm"
+                disabled={disabled}
+                className="w-full rounded border border-gray-200 px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Min"
                 value={optimizationValue.bounds?.[0] ?? ''}
                 onChange={(e) => setBound(0, e.target.value)}
@@ -293,7 +308,8 @@ function ParameterRow({
               <input
                 type="number"
                 inputMode="decimal"
-                className="w-full rounded border border-gray-200 px-2 py-1 text-sm"
+                disabled={disabled}
+                className="w-full rounded border border-gray-200 px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Max"
                 value={optimizationValue.bounds?.[1] ?? ''}
                 onChange={(e) => setBound(1, e.target.value)}

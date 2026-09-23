@@ -73,6 +73,16 @@ export default function Middle({
   const showingDiffs = useShowingDiffs();
   const preview = useDiffPreview(selectedRootElement);
 
+  // Same read-only/locked signal the generic Block uses, so the bespoke emodel widgets disable
+  // their editable controls (pickers, checkboxes, inputs) once the campaign is generated / locked.
+  const editingLocked = resolveScanConfigEditingLocked({
+    campaignId,
+    loading,
+    aiConfig,
+    isChatReady,
+    showingDiffs,
+  });
+
   // for BlockDictionary the path includes the entry; for others just the root element
   const errorPathPrefix =
     selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
@@ -108,13 +118,7 @@ export default function Middle({
         isPlainObject(config[selectedRootElement]) && (
           <Block
             schema={schema}
-            disabled={resolveScanConfigEditingLocked({
-              campaignId,
-              loading,
-              aiConfig,
-              isChatReady,
-              showingDiffs,
-            })}
+            disabled={editingLocked}
             config={config}
             blockSchema={selectedSchema}
             state={preview ?? config[selectedRootElement] ?? {}}
@@ -153,6 +157,7 @@ export default function Middle({
           onChange={(next) => setConfig({ ...config, [selectedRootElement]: next })}
           selectedRegionChoice={selectedRegionChoice}
           setSelectedRegionChoice={setSelectedRegionChoice}
+          disabled={editingLocked}
         />
       )}
     </div>

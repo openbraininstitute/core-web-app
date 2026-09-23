@@ -18,6 +18,8 @@ type Props = {
   value: ConfigValue;
   /** writes the next value back to the `emodel_optimisation_parameters` config key */
   onChange: (next: ConfigValue) => void;
+  /** read-only mode: the picker shows the selected models but hides add/remove controls */
+  disabled?: boolean;
 };
 
 /** Collects the `id_str`s present in a `mechanisms.ion_channel_models` value. */
@@ -52,7 +54,7 @@ function pruneRegionsToSelectedModels(
  * Renders the ion channel models multi-picker, scoped to
  * `emodel_optimisation_parameters.mechanisms.ion_channel_models`.
  */
-export function MechanismSelection({ rootSchema, value, onChange }: Props) {
+export function MechanismSelection({ rootSchema, value, onChange, disabled }: Props) {
   const ionChannelModelsSchema = rootSchema.properties.mechanisms.properties.ion_channel_models;
 
   const root = isPlainObject(value) ? value : {};
@@ -71,6 +73,7 @@ export function MechanismSelection({ rootSchema, value, onChange }: Props) {
         state={mechanisms}
         setState={setMechanismsState}
         paramSchema={ionChannelModelsSchema}
+        disabled={disabled}
         // standalone in this tab: show many rows before scrolling instead of the compact default
         visibleItemCount={12}
       />

@@ -32,6 +32,8 @@ type Props = {
   value: ConfigValue;
   /** writes the next value back to the `emodel_optimisation_parameters` config key */
   onChange: (next: ConfigValue) => void;
+  /** read-only mode: disables the assignment checkboxes */
+  disabled?: boolean;
 };
 
 /**
@@ -48,6 +50,7 @@ export function IonChannelModelsPanel({
   rootSchema,
   value,
   onChange,
+  disabled,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -110,6 +113,7 @@ export function IonChannelModelsPanel({
                 <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{label}</span>
                 <Checkbox
                   checked={assignedIds.has(ref.id_str)}
+                  disabled={disabled}
                   onChange={(e) => toggleModel(ref.id_str, e.target.checked)}
                 />
               </li>

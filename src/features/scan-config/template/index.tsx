@@ -1,7 +1,7 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -18,7 +18,6 @@ import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletoniza
 import { messages } from '@/i18n/en/scan-config';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
-import { log } from '@/utils/logger';
 
 import { DEFAULT_COLUMNS_GRID, DefaultConfigColumns } from './default-columns';
 import {
@@ -41,11 +40,6 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   const state = useScanConfigTemplate(props);
   const browseOverlay = useScanConfigMainOverlayOptional()?.overlay;
   const { isConfigurationTab, isEModelOptimisationParameters } = state;
-
-  // debugging: log the scan-config as it changes
-  useEffect(() => {
-    log('log', 'scan-config config', state.config);
-  }, [state.config]);
 
   return (
     <div className={cn('flex h-full flex-col', props.className)}>
@@ -186,7 +180,18 @@ function ScanConfigResults({
         </Suspense>
       ) : null
     )
-    .with(ScanConfigActivity.Optimize, () => <OptimizationTab />)
+    .with(ScanConfigActivity.Optimize, () =>
+      props.taskTypeBindings ? (
+        <Suspense>
+          <OptimizationTab
+            isCampaignIdChanged={state.isCampaignIdChanged}
+            campaignOriginAction={props.campaignOriginAction}
+            campaignId={state.campaignId}
+            taskTypeBindings={props.taskTypeBindings}
+          />
+        </Suspense>
+      ) : null
+    )
     .otherwise(() => {
       throw new Error(`${props.activity} is not supported yet`);
     });

@@ -9,6 +9,7 @@ import { useGenerateScanConfigCampaign } from '@/features/scan-config/components
 import {
   BuildScanConfigTabs,
   ExtractScanConfigTabs,
+  OptimizeScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
@@ -29,6 +30,7 @@ const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Extract]: 'run the extraction',
   [ScanConfigActivity.Process]: 'run the skeletonization',
   [ScanConfigActivity.Build]: 'build the model',
+  [ScanConfigActivity.Optimize]: 'run the optimization',
 };
 
 const FAILURE_MESSAGE_KEY: Record<string, string> = {
@@ -53,6 +55,10 @@ const ACTIVITY_RESULTS_TAB: Record<TScanConfigActivity, TScanConfigTabs> = {
   [ScanConfigActivity.Build]: {
     id: BuildScanConfigTabs.results,
     __activity: ScanConfigActivity.Build,
+  },
+  [ScanConfigActivity.Optimize]: {
+    id: OptimizeScanConfigTabs.optimizations,
+    __activity: ScanConfigActivity.Optimize,
   },
 };
 
