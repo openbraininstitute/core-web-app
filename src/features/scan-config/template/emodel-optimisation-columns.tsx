@@ -129,6 +129,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
             <IonChannelModelsPanel
               choiceName={selectedChoice.name}
               choiceLabel={selectedChoice.label}
+              choiceDescription={selectedChoice.description}
               rootSchema={rootSchema}
               value={value}
               onChange={writeValue}

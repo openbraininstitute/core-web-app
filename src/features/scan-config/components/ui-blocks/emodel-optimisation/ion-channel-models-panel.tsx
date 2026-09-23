@@ -26,6 +26,8 @@ type Props = {
   choiceName: string;
   /** the selected section-list choice label, shown as the panel heading */
   choiceLabel: string;
+  /** the selected section-list choice description, shown under the heading */
+  choiceDescription: string;
   /** the `emodel_optimisation_parameters` root element schema (source of the field schema) */
   rootSchema: IEModelOptimisationParameters;
   /** value of the `emodel_optimisation_parameters` config key */
@@ -47,6 +49,7 @@ type Props = {
 export function IonChannelModelsPanel({
   choiceName,
   choiceLabel,
+  choiceDescription,
   rootSchema,
   value,
   onChange,
@@ -93,7 +96,7 @@ export function IonChannelModelsPanel({
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">
       <h3 className="text-primary-9 text-lg font-bold">{choiceLabel}</h3>
-      <p className="text-sm text-gray-500">Ion channel models</p>
+      <p className="text-sm text-gray-500">{choiceDescription || 'Ion channel models'}</p>
 
       {refs.length === 0 ? (
         <p className="mt-2 text-sm text-gray-400 italic">
