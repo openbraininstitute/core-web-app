@@ -22,6 +22,8 @@ type Props = {
   choiceName: string;
   /** the selected section-list choice label, shown as the panel heading */
   choiceLabel: string;
+  /** the selected section-list choice description, shown under the heading */
+  choiceDescription: string;
   /** value of the `emodel_optimisation_parameters` config key */
   value: ConfigValue;
   /** currently selected model (`id_str`), or '' when none is selected */
@@ -40,6 +42,7 @@ type Props = {
 export function RegionModelsPanel({
   choiceName,
   choiceLabel,
+  choiceDescription,
   value,
   selectedRegionModel,
   setSelectedRegionModel,
@@ -77,7 +80,7 @@ export function RegionModelsPanel({
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">
       <h3 className="text-primary-9 text-lg font-bold">{choiceLabel}</h3>
-      <p className="text-sm text-gray-500">Assigned ion channel models</p>
+      <p className="text-sm text-gray-500">{choiceDescription || 'Assigned ion channel models'}</p>
 
       {assignedIds.length === 0 ? (
         <p className="mt-2 text-sm text-gray-400 italic">

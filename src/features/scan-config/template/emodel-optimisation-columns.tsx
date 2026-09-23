@@ -142,6 +142,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
             <RegionModelsPanel
               choiceName={selectedChoice.name}
               choiceLabel={selectedChoice.label}
+              choiceDescription={selectedChoice.description}
               value={value}
               selectedRegionModel={selectedRegionModel}
               setSelectedRegionModel={setSelectedRegionModel}
