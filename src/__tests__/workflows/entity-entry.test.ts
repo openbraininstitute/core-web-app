@@ -80,7 +80,7 @@ type TCase = {
 };
 
 const base = `/app/virtual-lab/${workspace.virtualLabId}/${workspace.projectId}/workflows`;
-const { build, simulate, extract, process } = WorkflowActivityDictValue;
+const { build, simulate, extract, optimize, process } = WorkflowActivityDictValue;
 
 const cases: TCase[] = [
   // source models: a new configure session, entity pre-selected ───
@@ -359,6 +359,19 @@ const cases: TCase[] = [
       targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
     },
     href: `${base}/process/configure/skeletonization-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
+    name: 'e-model optimization task config → optimize editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.CellMorphology },
+      taskConfigType: TaskConfigType.EModelOptimizationCampaign,
+    },
+    covers: {
+      activity: optimize,
+      targetType: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
+    },
+    href: `${base}/optimize/configure/emodel-optimization-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
     name: 'EM synapse mapping task config → build editor',
