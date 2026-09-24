@@ -16,7 +16,10 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     name: 'Build',
     order: 1,
     disabled: false,
-    workflows: BuildWorkflows,
+    /** Getter: build workflows and the circuit grid schema import each other. */
+    get workflows() {
+      return BuildWorkflows;
+    },
   },
   [WorkflowActivityDictValue.simulate]: {
     value: WorkflowActivityDictValue.simulate,

@@ -2,7 +2,6 @@
 
 import {
   CheckCircleFilled,
-  ExclamationCircleOutlined,
   LoadingOutlined,
   RightOutlined,
   SettingFilled,
@@ -28,6 +27,8 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { CompatibilityNotice } from '@/ui/segments/workflows/build/memodel/compatibility-notice';
+import { deriveCompatibilityState } from '@/ui/segments/workflows/build/memodel/compatibility-state';
 import {
   BuildStep,
   type BuildStepKeys,
@@ -89,11 +90,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     staleTime: Infinity,
   });
 
-  const isCheckingCompatibility = selectionComplete && compatibilityCheck.isFetching;
-  const isIncompatible =
-    selectionComplete &&
-    compatibilityCheck.isSuccess &&
-    compatibilityCheck.data?.data.compatible === false;
+  const compatibility = deriveCompatibilityState(selectionComplete, compatibilityCheck);
 
   const onStepChange = (s: BuildStepKeys) => {
     const query = new URLSearchParams(searchParams);
@@ -171,7 +168,24 @@ export function Menu({ sessionId }: { sessionId: string }) {
   });
 
   const result = CreateSingleNeuronContextSchema.safeParse(payload);
-  const disabled = mutate.isPending || !!result.error || isCheckingCompatibility || isIncompatible;
+  // `idle` can briefly occur with a complete selection, so block everything but `compatible`.
+  const disabled = mutate.isPending || !!result.error || compatibility.kind !== 'compatible';
+
+  const compatibilityReason: Partial<Record<typeof compatibility.kind, string>> = {
+    checking: messages.CheckingCompatibility,
+    incompatible: messages.IncompatibleModels,
+    check_failed: messages.CompatibilityBlockedTooltip,
+  };
+
+  const selectionReason = result.error && (
+    <>
+      Please fill all the required information along with <br /> selecting compatible M-model and
+      E-model
+    </>
+  );
+
+  const disabledReason =
+    !mutate.isPending && (selectionReason || compatibilityReason[compatibility.kind]);
 
   return (
     <>
@@ -307,18 +321,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
             />
           </div>
         </Button>
-        {isCheckingCompatibility && (
-          <div className="p-4 pl-6 font-semibold text-primary-9 flex items-center gap-3">
-            <LoadingOutlined />
-            {messages.CheckingCompatibility}
-          </div>
-        )}
-        {isIncompatible && (
-          <div className="p-4 pl-6 font-semibold text-destructive flex items-center gap-3">
-            <ExclamationCircleOutlined />
-            {messages.IncompatibleModels}
-          </div>
-        )}
+        <CompatibilityNotice state={compatibility} onRetry={() => compatibilityCheck.refetch()} />
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="mt-auto w-full">
@@ -337,12 +340,9 @@ export function Menu({ sessionId }: { sessionId: string }) {
               </Button>
             </div>
           </TooltipTrigger>
-          {disabled && (
+          {disabledReason && (
             <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
-              <p className={cn('text-justify text-base')}>
-                Please fill all the required information along with <br /> selecting compatible
-                M-model and E-model
-              </p>
+              <p className={cn('text-justify text-base')}>{disabledReason}</p>
             </TooltipContent>
           )}
         </Tooltip>

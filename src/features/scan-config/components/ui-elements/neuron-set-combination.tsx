@@ -1,10 +1,9 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
 
+import { Reference } from '@/features/scan-config/components/ui-elements/reference';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-
-import Reference from './reference';
 
 import type {
   Config,
@@ -50,9 +49,11 @@ export function NeuronSetCombination({
   selfName?: string;
 }) {
   // synthetic reference schema so we can reuse the existing `Reference` picker for each row.
-  // `Reference` only reads `reference_types`; `anyOf` is an unused placeholder for the type cast.
+  // `Reference` only reads `reference_types` and `reference_tag`; `anyOf` is an unused placeholder
+  // for the type cast.
   const referenceSchema = {
     reference_types: paramSchema.reference_types,
+    reference_tag: paramSchema.reference_tag,
     anyOf: [],
   } as unknown as ReferenceSchema;
 

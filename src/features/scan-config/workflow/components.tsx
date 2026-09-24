@@ -136,6 +136,7 @@ function ScanConfigWorkflowEditor() {
         campaignOriginAction={editor.campaignOriginAction}
         className={editor.className}
         scanConfig={scanConfig}
+        seed={definition.seed}
         taskTypeBindings={definition.taskTypeBindings}
       />
     </ScanConfigWorkflowEditorFieldProvider>

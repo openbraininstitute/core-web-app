@@ -8,7 +8,7 @@ import {
   type IElectricalCellRecording,
   type ISingleNeuronSynaptome,
 } from '@/api/entitycore/types';
-import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { TaskConfigType, type TTaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
@@ -26,6 +26,7 @@ import {
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain/model/circuit-synaptic-physiology-campaign';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
@@ -59,7 +60,6 @@ import {
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
-import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
@@ -72,6 +72,32 @@ import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/t
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
+
+/** Build campaigns whose overview is the read-only scan configuration editor. */
+const BuildScanConfigCampaigns: Partial<
+  Record<
+    TTaskConfigType,
+    {
+      extendedType: TExtendedEntitiesTypeDict;
+      resolve: (args: { id: string; context: WorkspaceContext }) => Promise<{
+        campaign: { id: string };
+        config: { form?: Config } | null;
+        sourceEntityId: string | null;
+      }>;
+    }
+  >
+> = {
+  [TaskConfigType.EmSynapseMappingCampaign]: {
+    extendedType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    resolve: EmSynapseMappingCampaign.api.query.resolve!,
+  },
+  [TaskConfigType.CircuitSynapticPhysiologyCampaign]: {
+    extendedType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    resolve: CircuitSynapticPhysiologyCampaign.api.query.resolve!,
+  },
+};
 
 const LegacySimulationCampaigns = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
@@ -166,66 +192,59 @@ export default async function Overview({
       }
 
       return (
-        <>
-          <ScanConfiguration
-            entityId={extractionConfig.circuitId}
-            scanConfig={scanConfig}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-            origin={extractionConfig.campaign.id}
-            initialConfig={extractionConfig.config?.form}
-            readOnly={!isWorkflow}
-            defaultTab={{
-              __activity: ScanConfigActivity.Extract,
-              id: ExtractScanConfigTabs.configuration,
-            }}
-            activity={ScanConfigActivity.Extract}
-            campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
-          />
-          <DownloadPanel />
-        </>
+        <ScanConfiguration
+          entityId={extractionConfig.circuitId}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={extractionConfig.campaign.id}
+          initialConfig={extractionConfig.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Extract,
+            id: ExtractScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Extract}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+        />
       );
     }
 
-    if (
-      'task_config_type' in entity &&
-      entity.task_config_type === TaskConfigType.EmSynapseMappingCampaign
-    ) {
+    const buildCampaign =
+      'task_config_type' in entity
+        ? BuildScanConfigCampaigns[entity.task_config_type as TTaskConfigType]
+        : undefined;
+
+    if (buildCampaign) {
       const { data: config, error } = await tryCatch(
-        // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
-        EmSynapseMappingCampaign.api.query.resolve!({ id: entity.id, context: context })
+        buildCampaign.resolve({ id: entity.id, context: context })
       );
 
-      if (error || !config.sourceEntityId) {
+      if (error) {
         notFound();
       }
 
-      const scanConfig = findScanConfigRegistryByTargetType(
-        ExtendedEntitiesTypeDict.EmSynapseMappingCampaign
-      );
+      const scanConfig = findScanConfigRegistryByTargetType(buildCampaign.extendedType);
       if (!scanConfig) {
         notFound();
       }
 
       return (
-        <>
-          <ScanConfiguration
-            entityId={config.sourceEntityId}
-            scanConfig={scanConfig}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-            origin={config.campaign.id}
-            initialConfig={config.config?.form}
-            readOnly={!isWorkflow}
-            defaultTab={{
-              __activity: ScanConfigActivity.Build,
-              id: BuildScanConfigTabs.configuration,
-            }}
-            activity={ScanConfigActivity.Build}
-            campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
-          />
-          <DownloadPanel />
-        </>
+        <ScanConfiguration
+          entityId={config.sourceEntityId}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={config.campaign.id}
+          initialConfig={config.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Build,
+            id: BuildScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Build}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+        />
       );
     }
   }
@@ -342,24 +361,21 @@ export default async function Overview({
     }
 
     return (
-      <>
-        <ScanConfiguration
-          entityId={extractionConfig.circuitId}
-          scanConfig={scanConfig}
-          virtualLabId={context.virtualLabId}
-          projectId={context.projectId}
-          origin={extractionConfig.campaign.id}
-          initialConfig={extractionConfig.config?.form}
-          readOnly={!isWorkflow}
-          defaultTab={{
-            __activity: ScanConfigActivity.Extract,
-            id: ExtractScanConfigTabs.configuration,
-          }}
-          activity={ScanConfigActivity.Extract}
-          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
-        />
-        <DownloadPanel />
-      </>
+      <ScanConfiguration
+        entityId={extractionConfig.circuitId}
+        scanConfig={scanConfig}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        origin={extractionConfig.campaign.id}
+        initialConfig={extractionConfig.config?.form}
+        readOnly={!isWorkflow}
+        defaultTab={{
+          __activity: ScanConfigActivity.Extract,
+          id: ExtractScanConfigTabs.configuration,
+        }}
+        activity={ScanConfigActivity.Extract}
+        campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+      />
     );
   }
   if (extendedType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
@@ -401,23 +417,20 @@ export default async function Overview({
     }
 
     return (
-      <>
-        <ScanConfiguration
-          entityId={extractionConfig.emCellMeshId}
-          scanConfig={scanConfig}
-          virtualLabId={context.virtualLabId}
-          projectId={context.projectId}
-          origin={extractionConfig.campaign.id}
-          initialConfig={extractionConfig.config?.form}
-          readOnly={!isWorkflow}
-          defaultTab={{
-            __activity: ScanConfigActivity.Process,
-            id: ProcessScanConfigTabs.configuration,
-          }}
-          activity={ScanConfigActivity.Process}
-        />
-        <DownloadPanel />
-      </>
+      <ScanConfiguration
+        entityId={extractionConfig.emCellMeshId}
+        scanConfig={scanConfig}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        origin={extractionConfig.campaign.id}
+        initialConfig={extractionConfig.config?.form}
+        readOnly={!isWorkflow}
+        defaultTab={{
+          __activity: ScanConfigActivity.Process,
+          id: ProcessScanConfigTabs.configuration,
+        }}
+        activity={ScanConfigActivity.Process}
+      />
     );
   }
 

@@ -73,6 +73,26 @@ describe('workflow output strategies', () => {
     expect(files?.every((file) => file.renderer === ActivityCustomFileRenderer.Default)).toBe(true);
   });
 
+  it('lists a task result itself ahead of its assets when it has a detail view', () => {
+    const strategy = resolveOutputStrategy({ id: 'e2', type: EntityTypeDict.TaskResult });
+
+    const files = strategy?.toFiles({
+      ref: { id: 'ref-id', type: EntityTypeDict.TaskResult },
+      strategyId: 'task-result',
+      entity: {
+        id: 'result-id',
+        name: 'Efeature extraction 0',
+        type: EntityTypeDict.TaskResult,
+        assets: [{ id: 'asset-1', path: 'extracted_features.json' }],
+      } as unknown as TOutputEntity,
+      extendedType: ExtendedEntitiesTypeDict.EFeatureExtractionResult,
+    });
+
+    expect(files?.map((file) => file.id)).toEqual(['result-id', 'asset-1']);
+    expect(files?.[0].renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
+    expect(files?.[0].dataType).toBe(ExtendedEntitiesTypeDict.EFeatureExtractionResult);
+  });
+
   it('shows an entity output as a single mini-detail row', () => {
     const strategy = resolveOutputStrategy({ id: 'f', type: EntityTypeDict.Circuit });
 

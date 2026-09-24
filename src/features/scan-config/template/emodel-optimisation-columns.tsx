@@ -117,6 +117,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
       <LeftColumn props={props} state={state} />
       <div
         id="scan-config-controls-middle"
+        data-testid="scan-config-middle-content"
         className={cn(styles.scrollable, MIDDLE_WRAPPER_BASE, 'flex gap-[5px] *:min-w-0')}
       >
         {/* First sub-column: always one third wide, never growing to fill the freed space. */}

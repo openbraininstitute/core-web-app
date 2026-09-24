@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { ThemeConfig } from 'antd';
+import type { ThemeConfig } from 'antd';
 
 const commonAntdTheme: ThemeConfig = {
   token: {

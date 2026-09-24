@@ -24,6 +24,8 @@ export const DEFAULT_NEURON_OPACITY = 1;
  */
 export const ELECTRODE_FOCUSED_NEURON_OPACITY = 0.2;
 
+export const DEFAULT_SOMA_SIZE_SCALE = 1;
+
 /**
  * Electrode marker radius in world units — also the viewer-controls slider min.
  *
@@ -49,6 +51,7 @@ export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   backgroundColor: CANVAS_LIGHT,
   showAxons: false,
   neuronOpacity: DEFAULT_NEURON_OPACITY,
+  somaSizeScale: DEFAULT_SOMA_SIZE_SCALE,
   showElectrodes: true,
   electrodeRadius: DEFAULT_ELECTRODE_RADIUS,
   morphologyLocationRadius: DEFAULT_MORPHOLOGY_LOCATION_RADIUS,

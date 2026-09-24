@@ -1,36 +1,14 @@
 import Ajv, { type AnySchema } from 'ajv';
-import { capitalize } from 'es-toolkit';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { log } from '@/utils/logger';
 
 import { isPlainObject } from '../utils';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
 
-/**
- * Name for a new block: the root element's singular name plus the first free number.
- *
- * Checked against every entry in the config, not just this root element's, because a rename
- * rewrites references by name across all of them.
- */
-export function nextEntryName(
-  schema: ConfigSchema,
-  rootElement: string,
-  allEntries: Set<string>
-): string {
-  const element = schema.properties?.[rootElement];
-  const baseName =
-    element?.ui_element === ScanConfigUIElementDict.BlockDictionary
-      ? capitalize(element.singular_name)
-      : 'element';
-
-  let counter = 0;
-  while (allEntries.has(`${baseName} ${counter}`)) counter += 1;
-  return `${baseName} ${counter}`;
-}
+export { nextEntryName } from '@/features/scan-config/components/hooks/entry-name';
 
 export function useValidateSchema({
   initialConfig,
@@ -72,31 +50,32 @@ export function useValidateSchema({
   return errors ?? null;
 }
 
+/**
+ * Entry names taken across every block dictionary, captured once on first render.
+ *
+ * Reads the built editor config, so names seeded from a workflow selection are reserved too and
+ * the next block the user adds cannot reuse one.
+ */
 export function useEntries({
-  initialConfig,
+  config,
   schema,
 }: {
   schema: ConfigSchema | undefined;
-  initialConfig?: Config;
+  config?: Config;
 }): Set<string> {
-  const allEntries = useRef<Set<string> | null>(null);
+  // lazy state, not a ref: the set is built once and then mutated by callers from event
+  // handlers, so it must not be written during render
+  const [allEntries] = useState(() => {
+    const entries = new Set<string>();
+    if (!config || !schema) return entries;
 
-  const newSet = new Set<string>();
+    for (const [key, value] of Object.entries(config)) {
+      if (isRootBlock(schema, key) || !isPlainObject(value)) continue;
+      for (const entryKey of Object.keys(value)) entries.add(entryKey);
+    }
 
-  if (!allEntries.current) {
-    allEntries.current = newSet;
-    if (!initialConfig || !schema) return allEntries.current;
+    return entries;
+  });
 
-    Object.entries(initialConfig)
-      .filter(([k]) => !isRootBlock(schema, k))
-      .forEach(([_key, value]) => {
-        if (!isPlainObject(value)) return;
-        Object.keys(value).forEach((entryKey) => {
-          if (!allEntries.current) return;
-          allEntries.current.add(entryKey);
-        });
-      });
-  }
-
-  return allEntries.current;
+  return allEntries;
 }

@@ -14,7 +14,6 @@ import type {
 import type { ViewerControlsMenuProps } from '@/features/scan-config/components/color-by/viewer-controls-menu';
 
 const MENU: ViewerControlsMenuProps = {
-  onResetView: vi.fn(),
   onCaptureImage: vi.fn(),
   backgroundDark: false,
   onBackgroundDarkChange: vi.fn(),
@@ -46,8 +45,11 @@ const POPULATIONS: PopulationsControls = {
   onSelect: vi.fn(),
 };
 
-function renderChrome(viz: ICircuitViewerChromeProps['viz'], vizActive = true) {
-  render(<CircuitViewerChrome vizActive={vizActive} viz={viz} />);
+function renderChrome(
+  viz: Omit<NonNullable<ICircuitViewerChromeProps['viz']>, 'onResetView'>,
+  vizActive = true
+) {
+  render(<CircuitViewerChrome vizActive={vizActive} viz={{ onResetView: vi.fn(), ...viz }} />);
 }
 
 // `localStorage` is Node's own global from Node 24 on, undefined without a flag.

@@ -179,9 +179,11 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
 
   // store → parent, on user-driven changes only. The mount baseline is captured without
   // emitting, so a restored/empty selection never wipes the host form on first render.
-  // A CONTROLLER SWAP re-baselines the same way: it restarts the store on a fresh, empty
-  // selection while this component (and `lastEmittedRef`) survives. Without that, this
-  // effect and the controlled sync above ping-pong into "Maximum update depth exceeded".
+  // A CONTROLLER SWAP re-baselines the same way: the new store is constructed with the
+  // shared basket already in it (see `createSelectionPersistence`), so nothing changed
+  // from the host's point of view and emitting would look like a user pick. Without the
+  // re-baseline this effect and the controlled sync above also ping-pong into "Maximum
+  // update depth exceeded".
   const onPickerChange = selection?.onChange;
   const lastEmittedRef = useRef<string | null>(null);
   const emitBaselineControllerRef = useRef<GridController<Row> | null>(null);
@@ -232,14 +234,22 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     );
   }
 
+  // One number for the whole feature: footer, Download badge and Delete badge all read
+  // this. The basket is deliberately cross-scope, so a per-scope count would disagree
+  // with what the buttons act on.
+  const selectionCount = state.selection.length;
+
   const bulkActions =
     !pickerMode && selectionEnabled && renderBulkActions ? (
-      <BulkActions controller={controller} rows={rows} selection={state.selection}>
+      <BulkActions
+        controller={controller}
+        rows={rows}
+        selection={state.selection}
+        selectedCount={selectionCount}
+      >
         {renderBulkActions}
       </BulkActions>
     ) : undefined;
-
-  const selectionCount = state.selection.length;
 
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>

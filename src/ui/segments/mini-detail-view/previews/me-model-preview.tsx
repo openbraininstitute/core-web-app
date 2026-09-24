@@ -1,12 +1,12 @@
-import { ComponentProps, JSX } from 'react';
 import { Image } from 'antd';
 
-import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { hasAssets } from '@/api/entitycore/guards';
+import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { cn } from '@/utils/css-class';
 
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { ComponentProps, JSX } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 type Props = {
   record: IMEModel;

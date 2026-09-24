@@ -4,7 +4,6 @@ import {
   RiEqualizerLine,
   RiMoonFill,
   RiMoonLine,
-  RiRefreshLine,
   RiResetLeftLine,
   RiSunFill,
   RiSunLine,
@@ -23,7 +22,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 export interface ViewerControlsMenuProps {
-  onResetView: () => void;
   /** capture a PNG of the circuit canvas (excludes gizmo, scalebar, chrome) */
   onCaptureImage: () => void;
   backgroundDark: boolean;
@@ -34,6 +32,9 @@ export interface ViewerControlsMenuProps {
   /** neuron / soma opacity (0–1); omit to hide the control */
   neuronOpacity?: number;
   onNeuronOpacityChange?: (value: number) => void;
+  /** multiplier on the soma radius; omit for viewers that draw morphologies */
+  somaSizeScale?: number;
+  onSomaSizeScaleChange?: (value: number) => void;
   /** electrode location overlays — omit when none are available */
   showElectrodes?: boolean;
   onToggleElectrodes?: (value: boolean) => void;
@@ -64,7 +65,6 @@ export interface ViewerControlsMenuProps {
  * right of the trigger
  */
 export function ViewerControlsMenu({
-  onResetView,
   onCaptureImage,
   backgroundDark,
   onBackgroundDarkChange,
@@ -72,6 +72,8 @@ export function ViewerControlsMenu({
   onToggleAxons,
   neuronOpacity,
   onNeuronOpacityChange,
+  somaSizeScale,
+  onSomaSizeScaleChange,
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
@@ -159,12 +161,6 @@ export function ViewerControlsMenu({
       >
         <div ref={contentRef}>
           <MenuButton
-            icon={<RiRefreshLine className="size-4 shrink-0" />}
-            label="Reset view"
-            testId="viewer-reset-view"
-            onClick={onResetView}
-          />
-          <MenuButton
             icon={<RiCameraLine className="size-4 shrink-0" />}
             label="Capture image"
             testId="viewer-capture-image"
@@ -247,6 +243,18 @@ export function ViewerControlsMenu({
               value={Math.round(neuronOpacity * 100)}
               format={(percent) => `${percent}%`}
               onChange={(percent) => onNeuronOpacityChange(percent / 100)}
+            />
+          )}
+          {onSomaSizeScaleChange && somaSizeScale !== undefined && (
+            <MenuSlider
+              label="Soma size"
+              testId="viewer-slider-soma-size"
+              min={0.2}
+              max={2}
+              step={0.1}
+              value={somaSizeScale}
+              format={(scale) => `${scale.toFixed(1)}×`}
+              onChange={onSomaSizeScaleChange}
             />
           )}
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>

@@ -48,6 +48,9 @@ export const TaskActivityType = {
   BuildSynaptomeExecution: 'circuit_single_build__execution',
   EModelOptimizationConfigGeneration: 'emodel_optimization__config_generation',
   EModelOptimizationExecution: 'emodel_optimization__execution',
+  CircuitSynapticPhysiologyConfigGeneration:
+    'circuit_synaptic_physiology_assignment__config_generation',
+  CircuitSynapticPhysiologyExecution: 'circuit_synaptic_physiology_assignment__execution',
 } as const;
 
 export type TTaskActivityType = (typeof TaskActivityType)[keyof typeof TaskActivityType];

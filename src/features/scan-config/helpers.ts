@@ -4,10 +4,16 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import {
+  BuildScanConfigTabs,
   type ConfigValue,
+  ExtractScanConfigTabs,
   type NeuronPropertyFilter,
+  OptimizeScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
+  SimulateScanConfigTabs,
   type TScanConfigActivity,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -90,6 +96,68 @@ export const ScanConfigOriginSearchParam = 'origin' as const;
 
 /** query param flagging the editor mode, e.g. `?mode=duplicate` to open editable. */
 export const ScanConfigModeSearchParam = 'mode' as const;
+
+/** query param holding the editor's active tab (`?tab=simulations`). */
+export const ScanConfigTabSearchParam = 'tab' as const;
+
+/** each activity's results tab — the one tab that is not `configuration`. */
+export const ScanConfigResultsTab = {
+  [ScanConfigActivity.Simulate]: {
+    id: SimulateScanConfigTabs.simulations,
+    __activity: ScanConfigActivity.Simulate,
+  },
+  [ScanConfigActivity.Extract]: {
+    id: ExtractScanConfigTabs.extractions,
+    __activity: ScanConfigActivity.Extract,
+  },
+  [ScanConfigActivity.Process]: {
+    id: ProcessScanConfigTabs.skeletonizations,
+    __activity: ScanConfigActivity.Process,
+  },
+  [ScanConfigActivity.Build]: {
+    id: BuildScanConfigTabs.results,
+    __activity: ScanConfigActivity.Build,
+  },
+  [ScanConfigActivity.Optimize]: {
+    id: OptimizeScanConfigTabs.optimizations,
+    __activity: ScanConfigActivity.Optimize,
+  },
+} as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
+
+/** each activity's configuration tab — the editor's landing tab. */
+export const ScanConfigConfigurationTab = {
+  [ScanConfigActivity.Simulate]: {
+    id: SimulateScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Simulate,
+  },
+  [ScanConfigActivity.Extract]: {
+    id: ExtractScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Extract,
+  },
+  [ScanConfigActivity.Process]: {
+    id: ProcessScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Process,
+  },
+  [ScanConfigActivity.Build]: {
+    id: BuildScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Build,
+  },
+  [ScanConfigActivity.Optimize]: {
+    id: OptimizeScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Optimize,
+  },
+} as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
+
+/**
+ * The tab to actually render, given the campaign the editor holds.
+ */
+export function resolveScanConfigTab(
+  tab: TScanConfigTabs,
+  activity: TScanConfigActivity,
+  hasCampaign: boolean
+): TScanConfigTabs {
+  return hasCampaign ? tab : ScanConfigConfigurationTab[activity];
+}
 
 export function parseScanConfigMode(
   value: string | string[] | undefined

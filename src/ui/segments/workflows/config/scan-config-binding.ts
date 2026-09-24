@@ -34,6 +34,7 @@ export const ScanConfigGeneratedApiPath = {
     'create-extracellular-recording-array-scan-config-generate-grid',
   BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
   EModelOptimization: 'e-model-optimization-scan-config-generate-grid',
+  SynapseParameterization: 'synapse-parameterization-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -224,6 +225,18 @@ export function createExtracellularRecordingArrayConfigureBinding(): TScanConfig
       [ExtendedEntitiesTypeDict.Circuit]: ScanConfigFromIdType.CircuitFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.CreateExtracellularRecordingArray,
+    schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function buildCircuitSynapticPhysiologyConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Circuit,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Circuit,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.Circuit]: ScanConfigFromIdType.CircuitFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.SynapseParameterization,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }

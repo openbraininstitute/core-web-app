@@ -1,7 +1,7 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { Suspense } from 'react';
+import { Activity, Suspense } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -75,7 +75,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
             // reduced motion keeps the fade, drops the movement
             className={cn(
               'h-[calc(100%-0.5rem)] min-h-0',
-              'transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)]',
+              'transition-[opacity,transform] duration-200 ease-out-expo',
               'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
             )}
           >
@@ -105,17 +105,15 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
             <DefaultConfigColumns props={props} state={state} />
           )}
         </div>
-        <div
-          id="scan-config-results"
-          data-testid="scan-config-results"
-          className={cn(
-            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
-            { hidden: isConfigurationTab },
-            { 'h-full': !isConfigurationTab }
-          )}
-        >
-          <ScanConfigResults props={props} state={state} />
-        </div>
+        <Activity mode={isConfigurationTab ? 'hidden' : 'visible'} name="scan-config-results">
+          <div
+            id="scan-config-results"
+            data-testid="scan-config-results"
+            className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 h-full overflow-hidden"
+          >
+            <ScanConfigResults props={props} state={state} />
+          </div>
+        </Activity>
       </div>
     </div>
   );
@@ -134,11 +132,8 @@ function ScanConfigResults({
       <Suspense>
         <SimulationsTab
           campaignId={state.campaignId}
-          virtualLabId={props.virtualLabId}
-          projectId={props.projectId}
           campaignOriginAction={props.campaignOriginAction}
           isCampaignIdChanged={state.isCampaignIdChanged}
-          taskTypeBindings={props.taskTypeBindings}
         />
       </Suspense>
     ))
@@ -159,8 +154,6 @@ function ScanConfigResults({
         <Suspense>
           <SkeletonizationTab
             campaignId={state.campaignId}
-            virtualLabId={props.virtualLabId}
-            projectId={props.projectId}
             campaignOriginAction={props.campaignOriginAction}
             isCampaignIdChanged={state.isCampaignIdChanged}
             taskTypeBindings={props.taskTypeBindings}

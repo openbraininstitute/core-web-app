@@ -91,7 +91,11 @@ const MIDDLE_WRAPPER_BASE = cn(
 /** Standard scrollable middle wrapper used by the default layout. */
 export function MiddleColumn({ props, state }: ColumnProps) {
   return (
-    <div id="scan-config-controls-middle" className={cn(styles.scrollable, MIDDLE_WRAPPER_BASE)}>
+    <div
+      id="scan-config-controls-middle"
+      data-testid="scan-config-middle-content"
+      className={cn(styles.scrollable, MIDDLE_WRAPPER_BASE)}
+    >
       <MiddleColumnContent props={props} state={state} />
     </div>
   );

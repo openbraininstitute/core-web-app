@@ -24,7 +24,6 @@ import {
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 
 type Props = {
@@ -143,8 +142,8 @@ export function InOutFiles({
       outputItems={outputFiles.map((file) => {
         // the label names whatever the run generated, which is no longer always a circuit
         const entityLabel =
-          file.renderer === ActivityCustomFileRenderer.MiniDetailView
-            ? getEntityTypeTagLabel(file.entity.type as TExtendedEntitiesTypeDict)
+          file.renderer === ActivityCustomFileRenderer.MiniDetailView && file.dataType
+            ? getEntityTypeTagLabel(file.dataType)
             : null;
         return (
           <TaskIOFileItem

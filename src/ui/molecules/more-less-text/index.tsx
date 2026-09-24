@@ -1,4 +1,11 @@
-import { ComponentProps, ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { cn } from '@/utils/css-class';
 

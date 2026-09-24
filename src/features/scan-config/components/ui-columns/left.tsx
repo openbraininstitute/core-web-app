@@ -62,7 +62,7 @@ export default function Left({
   readOnly?: boolean;
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
+  setTab: (tab: TScanConfigTabs) => void;
   initialConfig?: Config;
   allEntries: Set<string>;
   newKey: string;

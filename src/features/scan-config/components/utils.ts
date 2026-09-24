@@ -1,3 +1,5 @@
+import { kebabCase } from 'es-toolkit';
+
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 
 import type { ConfigValue } from '../types';
@@ -50,6 +52,10 @@ export function numericSchemaBounds(paramSchema: unknown): TNumericBounds {
 
 export function isPlainObject(value: unknown): value is Record<string, ConfigValue> {
   return typeof value === 'object' && !Array.isArray(value) && value !== null;
+}
+
+export function scanConfigHeldTestId(value: string): string {
+  return `scan-config-held_${kebabCase(value)}`;
 }
 
 const simExecStatusListOrdered = [

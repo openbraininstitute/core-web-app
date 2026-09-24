@@ -4,9 +4,9 @@ import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import TermCard from '@/ui/segments/help/glossary/term-card';
+import Slugify from '@/util/slugify';
 
 import type { ContentForGlossaryItem } from '@/components/documentation/type';
-import Slugify from '@/util/slugify';
 
 export type CellGroup = {
   name: string;

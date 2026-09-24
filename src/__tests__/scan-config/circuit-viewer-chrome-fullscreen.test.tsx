@@ -6,13 +6,14 @@ import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/
 import type { ViewerControlsMenuProps } from '@/features/scan-config/components/color-by/viewer-controls-menu';
 
 const MENU: ViewerControlsMenuProps = {
-  onResetView: vi.fn(),
   onCaptureImage: vi.fn(),
   backgroundDark: false,
   onBackgroundDarkChange: vi.fn(),
   hasSavedConfig: false,
   onResetConfig: vi.fn(),
 };
+
+const VIZ = { menu: MENU, onResetView: vi.fn() };
 
 /** The host's root, with the fullscreen call jsdom does not implement. */
 function viewerRoot() {
@@ -30,14 +31,14 @@ afterEach(() => setFullscreenElement(null));
 
 describe('CircuitViewerChrome fullscreen', () => {
   it('leaves the button out for a host that offers fullscreen itself', () => {
-    render(<CircuitViewerChrome vizActive viz={{ menu: MENU }} />);
+    render(<CircuitViewerChrome vizActive viz={VIZ} />);
 
     expect(screen.queryByRole('button', { name: 'Full screen' })).toBeNull();
   });
 
   it('blows up the element the host named', () => {
     const root = viewerRoot();
-    render(<CircuitViewerChrome vizActive fullscreen={{ target: root }} viz={{ menu: MENU }} />);
+    render(<CircuitViewerChrome vizActive fullscreen={{ target: root }} viz={VIZ} />);
 
     const button = screen.getByRole('button', { name: 'Full screen' });
     expect(screen.getByTestId('viewer-chrome-left')).toContainElement(button);
@@ -49,7 +50,7 @@ describe('CircuitViewerChrome fullscreen', () => {
   // A button that came and went between renders would be worse than one that
   // does nothing.
   it('stands there inert until the host has an element to offer', () => {
-    render(<CircuitViewerChrome vizActive fullscreen={{ target: null }} viz={{ menu: MENU }} />);
+    render(<CircuitViewerChrome vizActive fullscreen={{ target: null }} viz={VIZ} />);
 
     const button = screen.getByRole('button', { name: 'Full screen' });
     expect(button).toBeInTheDocument();
@@ -61,7 +62,7 @@ describe('CircuitViewerChrome fullscreen', () => {
     document.exitFullscreen = vi.fn();
     setFullscreenElement(root);
 
-    render(<CircuitViewerChrome vizActive fullscreen={{ target: root }} viz={{ menu: MENU }} />);
+    render(<CircuitViewerChrome vizActive fullscreen={{ target: root }} viz={VIZ} />);
 
     const button = screen.getByRole('button', { name: 'Exit full screen' });
     fireEvent.click(button);
@@ -75,7 +76,7 @@ describe('CircuitViewerChrome fullscreen', () => {
     const root = viewerRoot();
     setFullscreenElement(document.createElement('div'));
 
-    render(<CircuitViewerChrome vizActive fullscreen={{ target: root }} viz={{ menu: MENU }} />);
+    render(<CircuitViewerChrome vizActive fullscreen={{ target: root }} viz={VIZ} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Full screen' }));
     expect(root.requestFullscreen).toHaveBeenCalledOnce();
@@ -85,11 +86,7 @@ describe('CircuitViewerChrome fullscreen', () => {
   // outside the 3D cluster that stands down with the scene.
   it('stays on offer in a view that is not the 3D one', () => {
     render(
-      <CircuitViewerChrome
-        vizActive={false}
-        fullscreen={{ target: viewerRoot() }}
-        viz={{ menu: MENU }}
-      />
+      <CircuitViewerChrome vizActive={false} fullscreen={{ target: viewerRoot() }} viz={VIZ} />
     );
 
     expect(screen.getByRole('button', { name: 'Full screen' })).toBeInTheDocument();

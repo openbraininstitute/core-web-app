@@ -10,9 +10,11 @@ import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import {
   getConfigKeyForEntity,
+  resolveScanConfigTab,
   ScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
+import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
   type Config,
   isType,
@@ -20,7 +22,6 @@ import {
   ScanConfigDefaultTab,
   ScanConfigTabs,
   ScanConfigUIElementDict,
-  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 import { usePrevious } from '@/hooks/hooks';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
@@ -48,8 +49,9 @@ export function useScanConfigTemplate({
   campaignOriginAction,
   workflowSessionSelection,
   resolveSessionFromIdType,
+  seed,
 }: ScanConfigTemplateProps) {
-  const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
+  const [urlTab, setTab] = useScanConfigTab(activity, defaultTab);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);
@@ -68,7 +70,6 @@ export function useScanConfigTemplate({
   const [campaignId, setCampaignId] = useState(isDuplicate ? '' : (origin ?? ''));
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
-  const allEntries = useEntries({ initialConfig, schema });
   const [config, setConfig] = useConfig({
     schema,
     initialConfig,
@@ -76,7 +77,9 @@ export function useScanConfigTemplate({
     origin,
     workflowSessionSelection,
     resolveFromIdType: resolveSessionFromIdType,
+    seed,
   });
+  const allEntries = useEntries({ config, schema });
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 
@@ -137,6 +140,7 @@ export function useScanConfigTemplate({
     previousSchemaName,
     defaultTab,
     firstRoot,
+    setTab,
   ]);
 
   useEffect(
@@ -162,8 +166,8 @@ export function useScanConfigTemplate({
     setSelectedRegionModel('');
   }, []);
 
-  const configurationTabId = ScanConfigTabs[activity].configuration;
-  const isConfigurationTab = tab.id === configurationTabId;
+  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId));
+  const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
 
   // The `emodel_optimisation_parameters` root element gets a bespoke layout: no
   // preview column, and the middle panel spans the freed space split into

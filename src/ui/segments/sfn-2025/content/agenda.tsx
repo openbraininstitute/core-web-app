@@ -4,7 +4,6 @@ import { CalendarFilled, CloseOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 
 import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
-
 import {
   generateGoogleCalendar,
   generateICalendar,

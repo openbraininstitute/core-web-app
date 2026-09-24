@@ -4,9 +4,11 @@ import { useEffect, useId, useMemo } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
+import { scanConfigHeldTestId } from '../utils';
+
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
-export default function EntityPropertyDropdown({
+export function EntityPropertyDropdown({
   value,
   onChange,
   property,
@@ -47,6 +49,11 @@ export default function EntityPropertyDropdown({
       data-testid="scan-config-control"
       data-scan-config-options={dropdownId}
       data-scan-config-block-element={`${ScanConfigUIElementDict.EntityPropertyDropdown}__${multiple ? 'multiple' : 'singular'}`}
+      // One mark per value held, which is what a multi-value control needs: it
+      // draws each value as its own tag and its text reads back as one word.
+      labelRender={({ label, value: held }) => (
+        <span data-testid={scanConfigHeldTestId(String(held))}>{label}</span>
+      )}
       optionRender={(option) => (
         <span
           data-testid={`scan-config-option-${String(option.value)}`}
@@ -73,3 +80,5 @@ export default function EntityPropertyDropdown({
     />
   );
 }
+
+export default EntityPropertyDropdown;

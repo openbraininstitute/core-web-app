@@ -1,8 +1,7 @@
 'use client';
 
-import { ReactNode, Suspense } from 'react';
-
 import { LoadingOutlined } from '@ant-design/icons';
+import { type ReactNode, Suspense } from 'react';
 
 type Props = {
   children: ReactNode;

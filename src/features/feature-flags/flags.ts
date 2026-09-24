@@ -44,11 +44,28 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const circuitSynapticPhysiologyBuildFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Circuit synaptic physiology build',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const buildSynaptomeFlag = defineFlag<boolean>({
   key: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
   defaultValue: false,
   values: [true, false],
   description: 'Synaptome build',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const smallScalesViaLaunchSystemFlag = defineFlag<boolean>({
+  key: 'small-scales-via-launch-system',
+  defaultValue: false,
+  values: [true, false],
+  description:
+    'Launch single neuron, synaptome, paired neurons and small microcircuit simulations via the launch system',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
@@ -67,7 +84,9 @@ export const flags = [
   eFeatureExtractionFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
+  circuitSynapticPhysiologyBuildFlag,
   buildSynaptomeFlag,
+  smallScalesViaLaunchSystemFlag,
   electrodeOverlaysFlag,
 ] as const;
 

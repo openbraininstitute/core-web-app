@@ -2,8 +2,10 @@
 
 import { PortableText, type PortableTextReactComponents } from 'next-sanity';
 
-import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
 import VideoBlocks from '../video-blocks';
+
+import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+
 import styles from './portable-text.module.css';
 
 function VideoBlockDropdown({ value }: { value: { url?: string; title?: string } }) {

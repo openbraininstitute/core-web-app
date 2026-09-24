@@ -111,8 +111,6 @@ export function InOutFiles({
 
   return (
     <IoLayout
-      inputTitle="Input files"
-      outputTitle="Output files"
       showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFiles.length === 0}
       outputIsEmpty={outputFiles.length === 0 && !isLoading}

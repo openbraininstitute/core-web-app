@@ -10,14 +10,13 @@ import type {
   TSupportedEntitiesForScanConfiguration,
   TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import type { TAnyWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
 export type ScanConfigTemplateProps = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  virtualLabId: string;
-  projectId: string;
   origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
@@ -34,5 +33,6 @@ export type ScanConfigTemplateProps = {
   campaignEntityType?: TExtendedEntitiesTypeDict;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  seed?: TAnyWorkflowSeed;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
 };

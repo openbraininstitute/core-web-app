@@ -47,6 +47,7 @@ import {
 } from '@/ui/segments/workflows/config/scan-config-binding';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TAnyWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
@@ -64,6 +65,8 @@ export type TUseScanConfigurationParams = {
   scanConfig: TScanConfigRegistryConfig;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  /** the workflow's seeding policy; omitted workflows fall back to the generic one */
+  seed?: TAnyWorkflowSeed;
   taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
 };
 
@@ -76,8 +79,6 @@ export type TScanConfigurationReadyState = {
    * resolved back from `entityType`.
    */
   campaignEntityType?: TExtendedEntitiesTypeDict;
-  virtualLabId: string;
-  projectId: string;
   origin?: string;
   initialConfig?: Config;
   defaultTab: TScanConfigTabs;
@@ -91,6 +92,7 @@ export type TScanConfigurationReadyState = {
   aiEnabled: boolean;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  seed?: TAnyWorkflowSeed;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
 };
 
@@ -119,6 +121,7 @@ export function useScanConfiguration({
   scanConfig,
   workflowSessionSelection,
   resolveSessionFromIdType,
+  seed,
   taskTypeBindings,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
   const registryResolved = useMemo(() => resolveScanConfigFromRegistry(scanConfig), [scanConfig]);
@@ -260,8 +263,6 @@ export function useScanConfiguration({
         entity,
         entityType: resolved.usedType,
         campaignEntityType: resolved.targetType,
-        virtualLabId,
-        projectId,
         origin,
         initialConfig,
         defaultTab,
@@ -275,6 +276,7 @@ export function useScanConfiguration({
         aiEnabled,
         workflowSessionSelection,
         resolveSessionFromIdType,
+        seed,
         taskTypeBindings: resolveWorkflowTaskTypeBindings(taskTypeBindings, { entity }),
       },
     };
@@ -287,14 +289,13 @@ export function useScanConfiguration({
     origin,
     initialConfig,
     isLoading,
-    projectId,
     readOnly,
     resolveSessionFromIdType,
     resolved,
     schema,
     schemaMappingConfig,
+    seed,
     taskTypeBindings,
-    virtualLabId,
     workflowSessionSelection,
   ]);
 }

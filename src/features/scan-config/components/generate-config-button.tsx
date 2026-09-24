@@ -6,13 +6,9 @@ import { useAppNotification } from '@/components/notification';
 import { useLowCredits } from '@/features/low-credits';
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { useGenerateScanConfigCampaign } from '@/features/scan-config/components/hooks/use-generate-scan-config-campaign';
+import { ScanConfigResultsTab } from '@/features/scan-config/helpers';
 import {
-  BuildScanConfigTabs,
-  ExtractScanConfigTabs,
-  OptimizeScanConfigTabs,
-  ProcessScanConfigTabs,
   ScanConfigActivity,
-  SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntityTypesForScanConfiguration,
@@ -39,29 +35,6 @@ const FAILURE_MESSAGE_KEY: Record<string, string> = {
   [ScanConfigGenerationStep.EmptyCampaignId]: 'ScanConfigGenerateGridCampaignIdFailed',
 };
 
-const ACTIVITY_RESULTS_TAB: Record<TScanConfigActivity, TScanConfigTabs> = {
-  [ScanConfigActivity.Simulate]: {
-    id: SimulateScanConfigTabs.simulations,
-    __activity: ScanConfigActivity.Simulate,
-  },
-  [ScanConfigActivity.Extract]: {
-    id: ExtractScanConfigTabs.extractions,
-    __activity: ScanConfigActivity.Extract,
-  },
-  [ScanConfigActivity.Process]: {
-    id: ProcessScanConfigTabs.skeletonizations,
-    __activity: ScanConfigActivity.Process,
-  },
-  [ScanConfigActivity.Build]: {
-    id: BuildScanConfigTabs.results,
-    __activity: ScanConfigActivity.Build,
-  },
-  [ScanConfigActivity.Optimize]: {
-    id: OptimizeScanConfigTabs.optimizations,
-    __activity: ScanConfigActivity.Optimize,
-  },
-};
-
 export default function GenerateConfigButton({
   loading,
   errors,
@@ -81,7 +54,7 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
-  setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
+  setTab: (tab: TScanConfigTabs) => void;
   activity: TScanConfigActivity;
   generatedApiUrl: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
@@ -93,14 +66,10 @@ export default function GenerateConfigButton({
   const fieldErrors = useFieldErrors();
   const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
   const notification = useAppNotification();
-  const {
-    guard,
-    reportError: reportLowCredits,
-    creditsModal,
-  } = useLowCredits({
+  // Generation doesn't consume credits (issue #250): don't gate on balance.
+  const { reportError: reportLowCredits, creditsModal } = useLowCredits({
     context: { virtualLabId, projectId },
     subject: LOW_CREDITS_SUBJECT[activity],
-    watchBalance: true,
   });
 
   const generateCampaign = useGenerateScanConfigCampaign({
@@ -110,7 +79,7 @@ export default function GenerateConfigButton({
     campaignEntityType,
     onSuccess: (newCampaignId) => {
       setCampaignId(newCampaignId);
-      setTab(ACTIVITY_RESULTS_TAB[activity]);
+      setTab(ScanConfigResultsTab[activity]);
     },
     onError: (error) => {
       if (!(error instanceof ScanConfigGenerationError)) {
@@ -133,7 +102,6 @@ export default function GenerateConfigButton({
       setCampaignId('');
       return;
     }
-    if (guard()) return;
 
     setLoading(true);
     generateCampaign.mutate({ config, generatedApiUrl }, { onSettled: () => setLoading(false) });

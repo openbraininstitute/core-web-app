@@ -29,6 +29,8 @@ interface Options {
   supportsElectrodes?: boolean;
   /** whether morphology-location markers are on screen, which the marker controls act on */
   supportsMorphologyLocations?: boolean;
+  /** whether the viewer draws cells as soma points, which the soma size control scales */
+  supportsSomaSize?: boolean;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
@@ -93,6 +95,7 @@ export function useCircuitColorBy(
     supportsAxons,
     supportsElectrodes,
     supportsMorphologyLocations,
+    supportsSomaSize,
     defaultNeuronOpacity,
     population,
     subject,
@@ -192,9 +195,12 @@ export function useCircuitColorBy(
     ]
   );
 
+  const onResetView = useCallback(() => {
+    signals.cameraReset.dispatch(undefined).catch(() => {});
+  }, [signals]);
+
   const menu: ViewerControlsMenuProps = useMemo(
     () => ({
-      onResetView: () => signals.cameraReset.dispatch(),
       onCaptureImage: captureImage,
       backgroundDark,
       onBackgroundDarkChange: (dark) =>
@@ -203,6 +209,10 @@ export function useCircuitColorBy(
       onToggleAxons: supportsAxons ? (value) => update({ showAxons: value }) : undefined,
       neuronOpacity: config.neuronOpacity,
       onNeuronOpacityChange: (value) => update({ neuronOpacity: value }),
+      somaSizeScale: supportsSomaSize ? config.somaSizeScale : undefined,
+      onSomaSizeScaleChange: supportsSomaSize
+        ? (value: number) => update({ somaSizeScale: value })
+        : undefined,
       showElectrodes: supportsElectrodes ? config.showElectrodes : undefined,
       onToggleElectrodes: supportsElectrodes
         ? (value) => update({ showElectrodes: value })
@@ -237,11 +247,11 @@ export function useCircuitColorBy(
       onResetConfig: reset,
     }),
     [
-      signals,
       captureImage,
       backgroundDark,
       config.showAxons,
       config.neuronOpacity,
+      config.somaSizeScale,
       config.showElectrodes,
       config.electrodeRadius,
       config.morphologyLocationRadius,
@@ -251,6 +261,7 @@ export function useCircuitColorBy(
       supportsAxons,
       supportsElectrodes,
       supportsMorphologyLocations,
+      supportsSomaSize,
       hasSavedConfig,
       update,
       reset,
@@ -270,6 +281,7 @@ export function useCircuitColorBy(
     theme,
     /** signal bus passed to the viewer to trigger camera reset / snapshot */
     signals,
+    onResetView,
     colorBy,
     /** Take populations out of the scene, or put them back; see {@link PopulationsControls}. */
     onHiddenPopulationsChange,

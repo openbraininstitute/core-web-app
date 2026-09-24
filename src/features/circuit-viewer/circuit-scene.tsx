@@ -279,10 +279,12 @@ export function CircuitScene({
     colorBy,
     onHiddenPopulationsChange,
     menu,
+    onResetView,
   } = useCircuitColorBy(circuit, {
     supportsAxons,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
+    supportsSomaSize: largeCircuit,
     defaultNeuronOpacity,
     population,
     subject: memodel,
@@ -443,6 +445,9 @@ export function CircuitScene({
       electrodeRadius: config.electrodeRadius,
       features: vizFeatures,
       spikes,
+      // The colour-by toolbar is what sits in the viewer's top-right, so the
+      // synapse legend drops below it exactly when that toolbar is drawn.
+      chromeTopRight: enableColorBy,
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
       onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
@@ -466,6 +471,7 @@ export function CircuitScene({
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
+      enableColorBy,
       theme?.foreground,
       signals,
       styledOverlays,
@@ -520,6 +526,7 @@ export function CircuitScene({
             onOverlayTransform={handleOverlayTransform}
             highlightedOverlayId={highlightedOverlayId}
             neuronOpacity={config.neuronOpacity}
+            somaSizeScale={config.somaSizeScale}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
             spikes={spikes}
@@ -557,6 +564,7 @@ export function CircuitScene({
         fullscreen={fullscreen}
         viz={{
           menu,
+          onResetView,
           colorBy: enableColorBy ? colorBy : undefined,
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,

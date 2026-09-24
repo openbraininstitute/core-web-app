@@ -644,6 +644,7 @@ export const OnboardingFeature = {
   WorkspaceData: 'workspace-data',
   WorkspaceProject: 'workspace-project',
   WorkspaceWorkflow: 'workspace-workflow',
+  SimulationSpikeReplay: 'simulation-spike-replay',
 } as const;
 
 export type TOnboardingFeature = (typeof OnboardingFeature)[keyof typeof OnboardingFeature];

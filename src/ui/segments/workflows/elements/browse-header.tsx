@@ -61,11 +61,11 @@ export function ActivityAndTypeSelectors({
       data-testid="workflow-category-and-type-selector"
       className="inline-flex w-fit items-center justify-start gap-2 px-2 py-2 select-none"
     >
-      <div className="shadow-bnb flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
+      <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Category
         <CategorySelectScrollable value={activity} onSelect={handleActivitySelect} />
       </div>
-      <div className="shadow-bnb flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
+      <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Type
         <EntityTypeSelectScrollable
           category={activity}

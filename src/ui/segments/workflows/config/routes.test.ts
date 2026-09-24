@@ -55,4 +55,39 @@ describe('buildSimulateConfigureUrlFromDataViewEntity', () => {
       item: { type: ExtendedEntitiesTypeDict.MemodelCircuit, id: 'me-model-id' },
     });
   });
+
+  it("stores what the workflow's seed derives from the ion channel model", () => {
+    const href = buildSimulateConfigureUrlFromDataViewEntity({
+      workspace,
+      extendedType: ExtendedEntitiesTypeDict.IonChannelModel,
+      entityId: 'ion-channel-id',
+      entity: {
+        id: 'ion-channel-id',
+        nmodl_suffix: 'HCN3_0063',
+        conductance_name: 'gIhbar',
+        max_permeability_name: null,
+        neuron_block: { global: [], range: [], useion: [], nonspecific: [{ ihcn: 'mA/cm2' }] },
+      },
+    });
+
+    const match = href?.match(
+      /\/workflows\/simulate\/configure\/ion-channel-model-simulation\/(wf_[a-z0-9]{10})\?/
+    );
+    expect(match).not.toBeNull();
+
+    expect(readWorkflowSessionSelection(match?.[1] as string)).toEqual({
+      mode: WorkflowSessionSelectionMode.Single,
+      item: {
+        type: ExtendedEntitiesTypeDict.IonChannelModel,
+        id: 'ion-channel-id',
+        attributes: { conductance_name: 'gIhbar', max_permeability_name: null },
+        properties: [
+          {
+            property: 'RecordableVariables',
+            values: [{ ion_channel_id: 'ion-channel-id', variable_name: 'ihcn_HCN3_0063' }],
+          },
+        ],
+      },
+    });
+  });
 });

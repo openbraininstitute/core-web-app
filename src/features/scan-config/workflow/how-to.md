@@ -180,11 +180,13 @@ Most simulate / extract / build / process configure URLs already use a **catch-a
 
 That page reads `targetType` from the URL, finds your registry entry, and opens configure.
 
-**You only need a new page file** if your route is special (legacy static URL, no session id, custom layout). Examples today:
+**You only need a new page file** if your route is special (legacy static URL, no session id, custom layout).
 
-- `simulate/configure/ion-channel-model-simulation/page.tsx` — static type, no session
-
-For a normal browse → configure flow, **skip this step**.
+For a normal browse → configure flow, **skip this step**. A workflow whose editor picks its own
+entities still goes through the catch-all: give the definition
+`entity: { mode: Session, picksEntitiesInEditor: true }` so configure opens on a session that is
+empty from the hub and carries a seeded entity when a detail page's Simulate action started it
+(see `workflow/seeding`).
 
 ---
 

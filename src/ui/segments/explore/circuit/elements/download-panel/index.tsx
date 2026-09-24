@@ -6,6 +6,7 @@ import kebabCase from 'es-toolkit/compat/kebabCase';
 import sum from 'es-toolkit/compat/sum';
 import { saveAs } from 'file-saver';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useEffect } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { DownloadIcon } from '@/components/icons';
@@ -35,6 +36,7 @@ export function DownloadPanel() {
   };
 
   useHotkeys('Escape', onClose);
+  useEffect(() => () => setCircuit(null), [setCircuit]);
 
   const onDownloadMetadata = () => {
     if (!circuit) return;
