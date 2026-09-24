@@ -35,14 +35,33 @@ function regionModelIds(value: ConfigValue, choiceName: string): Set<string> {
   return new Set(assignedModelIds(readMechanisms(value), choiceName));
 }
 
+/** Stacking per drawer tier: each tier sits under the column before it, so it can slide out of it. */
+const DRAWER_TIER_Z = { 1: 'z-20', 2: 'z-10' } as const;
+
 /**
  * A sticky, one-third-width drawer column. `sticky top-0` + `self-start` pin it to the top of the
  * scrolling middle area so it stays put while the first column scrolls; its height is capped to the
  * visible area and it scrolls internally if longer.
+ *
+ * On open it slides out from under the previous column, like a tiered drawer. Entry-only (no JS);
+ * reduced motion keeps the fade and drops the slide.
  */
-function DrawerColumn({ children }: { children: ReactNode }) {
+function DrawerColumn({
+  tier,
+  children,
+}: {
+  tier: keyof typeof DRAWER_TIER_Z;
+  children: ReactNode;
+}) {
   return (
-    <div className="sticky top-0 z-10 max-h-[calc(100vh-12rem)] min-w-0 shrink-0 grow-0 basis-1/3 self-start overflow-y-auto rounded-lg border border-gray-200 bg-gray-50">
+    <div
+      className={cn(
+        'sticky top-0 max-h-[calc(100vh-12rem)] min-w-0 shrink-0 grow-0 basis-1/3 self-start overflow-y-auto rounded-lg border border-gray-200 bg-gray-50',
+        'transition-[opacity,translate] duration-300 ease-out-expo',
+        'starting:-translate-x-full starting:opacity-0 motion-reduce:starting:translate-x-0',
+        DRAWER_TIER_Z[tier]
+      )}
+    >
       {children}
     </div>
   );
@@ -121,12 +140,12 @@ export function EModelOptimisationColumns({ props, state }: Props) {
         className={cn(styles.scrollable, MIDDLE_WRAPPER_BASE, 'flex gap-[5px] *:min-w-0')}
       >
         {/* First sub-column: always one third wide, never growing to fill the freed space. */}
-        <div className="min-w-0 shrink-0 grow-0 basis-1/3">
+        <div className="relative z-30 min-w-0 shrink-0 grow-0 basis-1/3 bg-white">
           <MiddleColumnContent props={props} state={state} />
         </div>
 
         {assignmentDrawerOpen && rootSchema && selectedChoice && (
-          <DrawerColumn>
+          <DrawerColumn tier={1}>
             <IonChannelModelsPanel
               choiceName={selectedChoice.name}
               choiceLabel={selectedChoice.label}
@@ -140,7 +159,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
         )}
 
         {modelsDrawerOpen && selectedChoice && (
-          <DrawerColumn>
+          <DrawerColumn tier={1}>
             <RegionModelsPanel
               choiceName={selectedChoice.name}
               choiceLabel={selectedChoice.label}
@@ -153,7 +172,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
         )}
 
         {detailDrawerOpen && selectedChoice && (
-          <DrawerColumn>
+          <DrawerColumn tier={2}>
             <RegionModelDetail
               choiceName={selectedChoice.name}
               modelId={selectedRegionModel}
