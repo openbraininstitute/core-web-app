@@ -20,11 +20,8 @@ const DEFAULT_GLOBAL_PARAMETERS: Record<string, ConfigValue> = {
 };
 
 type Props = {
-  /** value of the `emodel_optimisation_parameters` config key */
   value: ConfigValue;
-  /** writes the next value back to the `emodel_optimisation_parameters` config key */
   onChange: (next: ConfigValue) => void;
-  /** read-only mode: disables the mode radios and value inputs */
   disabled?: boolean;
 };
 
