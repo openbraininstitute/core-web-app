@@ -17,6 +17,7 @@ import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-con
 import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
   type Config,
+  EModelOptimisationMechanismsTabs,
   isType,
   ScanConfigActivity,
   ScanConfigDefaultTab,
@@ -57,7 +58,9 @@ export function useScanConfigTemplate({
   const [editing, setEditing] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState('');
   // selected inner mechanisms tab when the root element is `emodel_optimisation_parameters`
-  const [selectedMechanismsTab, setSelectedMechanismsTab] = useState('');
+  const [selectedMechanismsTab, setSelectedMechanismsTab] = useState<string>(
+    EModelOptimisationMechanismsTabs.MechanismSelection
+  );
   // selected Region Assignment section-list choice (`name`) driving the adjacent
   // ion-channel-models panel; empty when no card is selected
   const [selectedRegionChoice, setSelectedRegionChoice] = useState('');
@@ -125,7 +128,7 @@ export function useScanConfigTemplate({
     if (previousSchemaName !== undefined && previousSchemaName !== schemaName) {
       setTab(defaultTab);
       setSelectedRootElement(firstRoot ?? '');
-      setSelectedMechanismsTab('');
+      setSelectedMechanismsTab(EModelOptimisationMechanismsTabs.MechanismSelection);
       setSelectedRegionChoice('');
       setSelectedRegionModel('');
       // Selections live in module state that outlives the route and are keyed
@@ -166,16 +169,6 @@ export function useScanConfigTemplate({
     setSelectedRegionModel('');
   }, []);
 
-  // Clearing the mechanisms tab (collapsing the root element) also drops the region and model
-  // selections, so no drawer reopens with them the next time a tab is picked.
-  const selectMechanismsTab = useCallback((tab: string) => {
-    setSelectedMechanismsTab(tab);
-    if (!tab) {
-      setSelectedRegionChoice('');
-      setSelectedRegionModel('');
-    }
-  }, []);
-
   const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId));
   const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
 
@@ -197,8 +190,7 @@ export function useScanConfigTemplate({
     selectedEntry,
     setSelectedEntry,
     selectedMechanismsTab,
-    // exposed as `setSelectedMechanismsTab` but also clears the region selections when cleared
-    setSelectedMechanismsTab: selectMechanismsTab,
+    setSelectedMechanismsTab,
     selectedRegionChoice,
     // exposed as `setSelectedRegionChoice` but also clears the selected model on change
     setSelectedRegionChoice: selectRegionChoice,

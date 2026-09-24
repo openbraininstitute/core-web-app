@@ -12,7 +12,6 @@ import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-elemen
 import {
   type Config,
   type ConfigSchema,
-  EModelOptimisationMechanismsTabs,
   type IBlockDictionary,
   type IBlockSingle,
   type IEModelOptimisationParameters,
@@ -105,34 +104,13 @@ export function RootElement({
               testId={`scan-config-root-element-${rootElement}`}
               selectedTab={selectedRootElement}
               onClick={() => {
-                // emodel_optimisation_parameters: collapses only when already selected
+                // emodel_optimisation_parameters: always expanded, keeps its inner tab
                 if (
                   rootElementSchema.ui_element ===
                   ScanConfigUIElementDict.EModelOptimisationParameters
                 ) {
-                  const collapsing = isExpanded && selectedRootElement === rootElement;
                   setSelectedRootElement(rootElement);
                   setSelectedEntry('');
-
-                  if (collapsing) {
-                    setExpandedRootElements((prev) => {
-                      const next = new Set(prev);
-                      next.delete(rootElement);
-                      return next;
-                    });
-                    setSelectedMechanismsTab('');
-                    setEditing(false);
-                    return;
-                  }
-
-                  if (!isExpanded) {
-                    setExpandedRootElements((prev) => new Set(prev).add(rootElement));
-                  }
-                  setSelectedMechanismsTab(
-                    isExpanded && selectedMechanismsTab
-                      ? selectedMechanismsTab
-                      : EModelOptimisationMechanismsTabs.MechanismSelection
-                  );
                   setEditing(true);
                   return;
                 }
@@ -207,12 +185,11 @@ export function RootElement({
 
                 <Chevron
                   rotate={
-                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ||
+                    rootElementSchema.ui_element ===
+                      ScanConfigUIElementDict.EModelOptimisationParameters
                       ? 90
-                      : rootElementSchema.ui_element ===
-                            ScanConfigUIElementDict.EModelOptimisationParameters && isExpanded
-                        ? 90
-                        : 0
+                      : 0
                   }
                 />
               </div>
@@ -235,19 +212,18 @@ export function RootElement({
         </TooltipContent>
       </Tooltip>
 
-      {rootElementSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters &&
-        isExpanded && (
-          <EModelOptimisationMechanismsTabList
-            rootElement={rootElement}
-            selectedRootElement={selectedRootElement}
-            selectedMechanismsTab={selectedMechanismsTab}
-            onSelectTab={(key) => {
-              setSelectedRootElement(rootElement);
-              setSelectedMechanismsTab(key);
-              setEditing(true);
-            }}
-          />
-        )}
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
+        <EModelOptimisationMechanismsTabList
+          rootElement={rootElement}
+          selectedRootElement={selectedRootElement}
+          selectedMechanismsTab={selectedMechanismsTab}
+          onSelectTab={(key) => {
+            setSelectedRootElement(rootElement);
+            setSelectedMechanismsTab(key);
+            setEditing(true);
+          }}
+        />
+      )}
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         (config[rootElement] || hasHighlights) && (

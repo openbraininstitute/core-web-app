@@ -74,7 +74,5 @@ export function EModelOptimisationParameters({
         setSelectedRegionChoice={setSelectedRegionChoice}
       />
     ))
-    .otherwise(() => (
-      <p className="p-4 text-sm text-gray-400 italic">Select a tab from the left.</p>
-    ));
+    .otherwise(() => null);
 }
