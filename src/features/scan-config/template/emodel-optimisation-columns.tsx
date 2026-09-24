@@ -140,7 +140,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
         className={cn(styles.scrollable, MIDDLE_WRAPPER_BASE, 'flex gap-[5px] *:min-w-0')}
       >
         {/* First sub-column: always one third wide, never growing to fill the freed space. */}
-        <div className="relative z-30 min-w-0 shrink-0 grow-0 basis-1/3 bg-white">
+        <div className="relative z-30 min-w-0 shrink-0 grow-0 basis-1/3 bg-gray-50">
           <MiddleColumnContent props={props} state={state} />
         </div>
 
