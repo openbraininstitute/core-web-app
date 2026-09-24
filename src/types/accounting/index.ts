@@ -60,6 +60,14 @@ export enum ServiceSubtype {
   WholeBrainSimulation = 'whole-brain-sim',
   EM_SYNAPSE_MAPPING = 'em-synapse-mapping',
   // } CircuitScale simulations
+  CircuitExtraction = 'circuit-extraction',
+  CircuitSimplification = 'circuit-simplification',
+  Brian2CircuitSimulation = 'brian2-circuit-simulation',
+  EModelFeaturesExtraction = 'emodel-features-extraction',
+  EModelOptimisation = 'emodel-optimisation',
+  EModelValidation = 'emodel-validation',
+  SynapseParameterizationSmall = 'synapse-parameterization-small',
+  SynapseParameterizationLarge = 'synapse-parameterization-large',
 }
 
 export type JobReport = {
