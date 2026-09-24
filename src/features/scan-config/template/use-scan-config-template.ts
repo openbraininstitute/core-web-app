@@ -166,6 +166,16 @@ export function useScanConfigTemplate({
     setSelectedRegionModel('');
   }, []);
 
+  // Clearing the mechanisms tab (collapsing the root element) also drops the region and model
+  // selections, so no drawer reopens with them the next time a tab is picked.
+  const selectMechanismsTab = useCallback((tab: string) => {
+    setSelectedMechanismsTab(tab);
+    if (!tab) {
+      setSelectedRegionChoice('');
+      setSelectedRegionModel('');
+    }
+  }, []);
+
   const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId));
   const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
 
@@ -187,7 +197,8 @@ export function useScanConfigTemplate({
     selectedEntry,
     setSelectedEntry,
     selectedMechanismsTab,
-    setSelectedMechanismsTab,
+    // exposed as `setSelectedMechanismsTab` but also clears the region selections when cleared
+    setSelectedMechanismsTab: selectMechanismsTab,
     selectedRegionChoice,
     // exposed as `setSelectedRegionChoice` but also clears the selected model on change
     setSelectedRegionChoice: selectRegionChoice,

@@ -105,25 +105,34 @@ export function RootElement({
               testId={`scan-config-root-element-${rootElement}`}
               selectedTab={selectedRootElement}
               onClick={() => {
-                // emodel_optimisation_parameters: custom hardcoded layout — select the root and
-                // default the inner tab to Mechanism Selection.
+                // emodel_optimisation_parameters: collapses only when already selected
                 if (
                   rootElementSchema.ui_element ===
                   ScanConfigUIElementDict.EModelOptimisationParameters
                 ) {
+                  const collapsing = isExpanded && selectedRootElement === rootElement;
                   setSelectedRootElement(rootElement);
                   setSelectedEntry('');
-                  // toggle expand/collapse of the inner tabs
-                  setExpandedRootElements((prev) => {
-                    const next = new Set(prev);
-                    if (isExpanded) {
+
+                  if (collapsing) {
+                    setExpandedRootElements((prev) => {
+                      const next = new Set(prev);
                       next.delete(rootElement);
-                    } else {
-                      next.add(rootElement);
-                    }
-                    return next;
-                  });
-                  setSelectedMechanismsTab(EModelOptimisationMechanismsTabs.MechanismSelection);
+                      return next;
+                    });
+                    setSelectedMechanismsTab('');
+                    setEditing(false);
+                    return;
+                  }
+
+                  if (!isExpanded) {
+                    setExpandedRootElements((prev) => new Set(prev).add(rootElement));
+                  }
+                  setSelectedMechanismsTab(
+                    isExpanded && selectedMechanismsTab
+                      ? selectedMechanismsTab
+                      : EModelOptimisationMechanismsTabs.MechanismSelection
+                  );
                   setEditing(true);
                   return;
                 }
