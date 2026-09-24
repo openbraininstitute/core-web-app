@@ -27,14 +27,13 @@ type Props = {
 
 /**
  * "Global Parameters" tab (step 4) of the E-Model optimisation parameters: the simulation
- * conditions (`v_init`, `celsius`), always present and never removable. Any other entry already in
- * `global_parameters` is kept as is.
+ * conditions (`v_init`, `celsius`), always present and never removable.
  */
 export function GlobalParametersSelection({ value, onChange, disabled }: Props) {
   const root = isPlainObject(value) ? value : {};
   const globals = {
     ...DEFAULT_GLOBAL_PARAMETERS,
-    ...(isPlainObject(root.global_parameters) ? root.global_parameters : {}),
+    ...(root.global_parameters as Record<string, ConfigValue>),
   };
 
   const setGlobal = (key: 'v_init' | 'celsius', next: TOptimizationValue) =>

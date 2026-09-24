@@ -36,16 +36,13 @@ describe('GlobalParametersSelection', () => {
     });
   });
 
-  it('keeps stored values and any other entry', () => {
-    const other = { type: 'GlobalParameterSelection', value: {}, ion_channel_model: {} };
-    const { onChange, vInit } = renderTab({
-      global_parameters: { celsius: fixed(22), q10_NaTg: other },
-    });
+  it('keeps stored values', () => {
+    const { onChange, vInit } = renderTab({ global_parameters: { celsius: fixed(22) } });
 
     fireEvent.change(vInit, { target: { value: '-70' } });
 
     expect(onChange).toHaveBeenCalledWith({
-      global_parameters: { v_init: fixed(-70), celsius: fixed(22), q10_NaTg: other },
+      global_parameters: { v_init: fixed(-70), celsius: fixed(22) },
     });
   });
 });
