@@ -11,7 +11,7 @@ import type { TEntityTypeDict } from '@/api/entitycore/types';
 const createTicketSchema = z.object({
   virtualLabId: z.uuid().optional().nullable(),
   projectId: z.uuid().optional().nullable(),
-  entityIds: z.uuid().array().max(100),
+  entityIds: z.uuid().array().max(100, 'You can download at most 100 items at once.'),
   name: z.string().max(200).optional().nullable(),
 });
 
@@ -63,7 +63,10 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
     return NextResponse.json({ ticketId });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: error.issues.map((issue) => issue.message).join('; '), issues: error.issues },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({ error: 'Failed to create download ticket' }, { status: 500 });

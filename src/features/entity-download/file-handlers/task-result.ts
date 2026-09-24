@@ -41,6 +41,8 @@ async function* getDirectoryAssetFiles({
   signal?: AbortSignal;
   failed: string[];
 }): AsyncGenerator<FileEntry> {
+  const folderPath = `${dataPath}/${asset.path}`;
+  const missing: string[] = [];
   const files = getAssetFolderFiles({
     entityType: EntityTypeDict.TaskResult,
     entityId,
@@ -48,12 +50,14 @@ async function* getDirectoryAssetFiles({
     prefix: '',
     ctx,
     signal,
-    failed,
+    failed: missing,
   });
 
   for await (const file of files) {
-    yield { ...file, path: `${dataPath}/${asset.path}/${file.path}` };
+    yield { ...file, path: `${folderPath}/${file.path}` };
   }
+
+  failed.push(...missing.map((path) => `${folderPath}/${path}`));
 }
 
 /**

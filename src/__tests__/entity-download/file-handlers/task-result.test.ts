@@ -127,4 +127,25 @@ describe('getTaskResultFiles', () => {
     expect(pathsOf(entries)).toContain('metadata.json');
     expect(failed).toEqual(['data/0/extracted_features.json']);
   });
+
+  it('reports a missing folder file under its archive path, so two results never collide', async () => {
+    vi.mocked(getTaskResult)
+      .mockResolvedValueOnce(makeEFeatureResult('result-1'))
+      .mockResolvedValueOnce(makeEFeatureResult('result-2'));
+    listDirectoryOfAssetsMock.mockResolvedValue({
+      files: { 'spikes.h5': { name: 'spikes.h5', size: 10, last_modified: '' } },
+    } as never);
+    downloadAssetMock.mockImplementation((async ({ assetPath }: { assetPath?: string }) => {
+      if (assetPath === 'spikes.h5') throw new ApiError('gone', { status: 404 });
+      const buffer = Buffer.from('asset-bytes');
+      return new Response(buffer, { headers: { 'content-length': String(buffer.length) } });
+    }) as never);
+
+    const failed: string[] = [];
+    await collectFileEntries(
+      getTaskResultFiles(['result-1', 'result-2'], undefined, undefined, failed)
+    );
+
+    expect(failed).toEqual(['data/0/figures/spikes.h5', 'data/1/figures/spikes.h5']);
+  });
 });

@@ -27,8 +27,10 @@ export async function requestDownloadTicket(
 
   if (response.ok) return response.json();
 
+  // a validation failure answers `{ error: ZodIssue[] }`; only a string is fit to show
   const failure = await response.json().catch(() => null);
-  throw new Error(failure?.error || `Download could not be prepared (error ${response.status}).`);
+  const reason = typeof failure?.error === 'string' ? failure.error : '';
+  throw new Error(reason || `Download could not be prepared (error ${response.status}).`);
 }
 
 export default async function createDownloadTicket({

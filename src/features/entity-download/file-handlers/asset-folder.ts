@@ -49,7 +49,7 @@ export async function* getAssetFolderFiles({
   prefix: string;
   ctx?: WorkspaceContext;
   signal?: AbortSignal;
-  /** Paths of files that could not be opened; the archive ends with the list. */
+  /** Paths, relative to `prefix` like the yielded entries, of files that could not be opened. */
   failed?: string[];
 }): AsyncGenerator<FileEntry> {
   const listing = await listDirectoryOfAssets({ entityType, entityId, id: assetId, ctx });
@@ -61,6 +61,8 @@ export async function* getAssetFolderFiles({
 
   for (const filePath of matchingPaths) {
     if (signal?.aborted) return;
+
+    const relativePath = normalized === '' ? filePath : filePath.slice(normalized.length);
 
     let response: Response;
     try {
@@ -74,11 +76,10 @@ export async function* getAssetFolderFiles({
       });
     } catch {
       if (signal?.aborted) return;
-      failed.push(filePath);
+      failed.push(relativePath);
       continue;
     }
 
-    const relativePath = normalized === '' ? filePath : filePath.slice(normalized.length);
     const sizeHeader = Number(response.headers.get('content-length'));
     const size =
       Number.isFinite(sizeHeader) && sizeHeader > 0
