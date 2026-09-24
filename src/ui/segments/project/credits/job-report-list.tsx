@@ -41,6 +41,14 @@ const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.SystemSimulation]: 'Simulate',
   [ServiceSubtype.WholeBrainSimulation]: 'Simulate',
   [ServiceSubtype.EM_SYNAPSE_MAPPING]: 'Build',
+  [ServiceSubtype.CircuitExtraction]: 'Build',
+  [ServiceSubtype.CircuitSimplification]: 'Build',
+  [ServiceSubtype.Brian2CircuitSimulation]: 'Simulate',
+  [ServiceSubtype.EModelFeaturesExtraction]: 'Build',
+  [ServiceSubtype.EModelOptimisation]: 'Build',
+  [ServiceSubtype.EModelValidation]: 'Build',
+  [ServiceSubtype.SynapseParameterizationSmall]: 'Build',
+  [ServiceSubtype.SynapseParameterizationLarge]: 'Build',
 };
 
 export function categoryRenderFn(subtype: ServiceSubtype) {
@@ -76,6 +84,14 @@ const typeLabel: Record<ServiceSubtype, string> = {
     'System: Non-continuous circuit consisting of at least two microcircuits/regions that are connected by inter-region connectivity',
   [ServiceSubtype.WholeBrainSimulation]: 'Circuit representing an entire brain',
   [ServiceSubtype.EM_SYNAPSE_MAPPING]: 'Electron microscopy circuit',
+  [ServiceSubtype.CircuitExtraction]: 'Circuit extraction',
+  [ServiceSubtype.CircuitSimplification]: 'Circuit simplification',
+  [ServiceSubtype.Brian2CircuitSimulation]: 'Circuit (Brian2)',
+  [ServiceSubtype.EModelFeaturesExtraction]: 'E-model feature extraction',
+  [ServiceSubtype.EModelOptimisation]: 'E-model optimization',
+  [ServiceSubtype.EModelValidation]: 'E-model validation',
+  [ServiceSubtype.SynapseParameterizationSmall]: 'Circuit synaptic physiology',
+  [ServiceSubtype.SynapseParameterizationLarge]: 'Circuit synaptic physiology',
 };
 
 export function typeRenderFn(subtype: ServiceSubtype) {
