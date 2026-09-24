@@ -30,7 +30,6 @@ import type { WorkspaceContext } from '@/types/common';
  */
 const TASK_RESULT_EXTENDED_TYPE: Partial<Record<TTaskResultType, TExtendedEntitiesTypeDict>> = {
   [TaskResultType.EFeatureExtractionResult]: ExtendedEntitiesTypeDict.EFeatureExtractionResult,
-  [TaskResultType.EModelOptimizationResult]: ExtendedEntitiesTypeDict.EModelOptimizationResult,
 };
 
 /**

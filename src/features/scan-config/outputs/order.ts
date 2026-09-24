@@ -23,13 +23,6 @@ const OUTPUT_FILE_ORDER: Partial<Record<TExtendedEntitiesTypeDict, readonly stri
     AssetLabel.efeature_extraction_features,
     AssetLabel.efeature_extraction_figures,
   ],
-  // the summary holds the best model's score and currents, the figures are drawn from it, and the
-  // checkpoint is only useful to resume a run
-  [ExtendedEntitiesTypeDict.EModelOptimizationResult]: [
-    AssetLabel.emodel_analysis_summary,
-    AssetLabel.emodel_analysis_figures,
-    AssetLabel.emodel_optimisation_checkpoint,
-  ],
 };
 
 /**

@@ -13,6 +13,7 @@ import {
 } from '@/features/scan-config/helpers';
 import { useGeneratedOutputs } from '@/features/scan-config/outputs/use-generated-outputs';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import { arrangeOptimizationOutputFiles } from '@/features/scan-config/use-cases/optimization/output-files';
 import {
   makeLogStreamFileDescriptors,
   makeTaskConfigurationFile,
@@ -38,11 +39,11 @@ type Props = {
 /**
  * Input/output file listing for one optimization config execution.
  *
- * Inputs: the task configuration (+ live config log stream). Outputs: everything the run
- * generated (+ live execution logs). A successful run registers a task result (analysis summary,
- * figures directory and checkpoint), a draft e-model and a draft me-model; each is resolved by the
- * output strategy that claims it, so the result's files open in the file viewer and the models in
- * their mini-detail view.
+ * Inputs: the task configuration (+ live config log stream). Outputs: the live execution logs, then
+ * what the run generated, arranged by {@link arrangeOptimizationOutputFiles}. A successful run
+ * registers a task result (analysis summary, figures directory and checkpoint), a draft e-model and
+ * a draft me-model; the models open in their mini-detail view and the result's files in the file
+ * viewer.
  */
 export function InOutFiles({
   config,
@@ -85,11 +86,15 @@ export function InOutFiles({
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
 
-  const { files: generatedFiles, isLoading } = useGeneratedOutputs({
+  const { files: resolvedFiles, isLoading } = useGeneratedOutputs({
     execution,
     context,
     pollingEnabled: campaignOrigin !== ScanConfigCampaignOriginActionDict.View,
   });
+  const generatedFiles = useMemo(
+    () => arrangeOptimizationOutputFiles(resolvedFiles),
+    [resolvedFiles]
+  );
 
   const outputFiles: TActivityCustomFile[] = useMemo(
     () =>
