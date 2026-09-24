@@ -1,5 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import { viewDefForEModelOptimizationResult } from './emodel-optimization-result';
 import { viewDefForIonChannelModelSimulation } from './ion-channel-model-simulation';
 import { viewDefForMEModelCircuitSimulation } from './memodel-circuit-simulation';
 import { viewDefForMicrocircuitSimulation } from './microcircuit-simulation';
@@ -27,4 +28,5 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: viewDefForIonChannelModelSimulation,
   [ExtendedEntitiesTypeDict.RegionCircuitSimulation]: viewDefForRegionCircuitSimulation,
   [ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation]: viewDefForWholeBrainCircuitSimulation,
+  [ExtendedEntitiesTypeDict.EModelOptimizationResult]: viewDefForEModelOptimizationResult,
 };
