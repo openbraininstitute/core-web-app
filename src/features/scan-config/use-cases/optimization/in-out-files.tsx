@@ -1,19 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
+import { useMemo } from 'react';
 
-import { hasAssets } from '@/api/entitycore/guards';
-import { getEntity } from '@/api/entitycore/queries/general/entity';
-import { getAsset } from '@/api/entitycore/selectors/assets';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
-import {
-  AssetLabel,
-  type EntityCoreBaseAsset,
-  type IAsset,
-} from '@/api/entitycore/types/shared/global';
-import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
+import {
+  getEntityTypeTagLabel,
+  ScanConfigCampaignOriginActionDict,
+  type TScanConfigCampaignOriginActionDict,
+} from '@/features/scan-config/helpers';
+import { useGeneratedOutputs } from '@/features/scan-config/outputs/use-generated-outputs';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import {
   makeLogStreamFileDescriptors,
@@ -21,17 +19,11 @@ import {
   makeTaskLogsFile,
   prependLogStreamFile,
 } from '@/features/task-logs-stream/descriptor';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
-import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
-
-type OptimizedEntity = EntityCoreObjectTypes & Partial<EntityCoreBaseAsset> & { name?: string };
-type OptimizedEntityWithAssets = OptimizedEntity & EntityCoreBaseAsset;
 
 type Props = {
   config: ITaskConfig<TTaskConfigMeta>;
@@ -43,33 +35,14 @@ type Props = {
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
 
-function findAssetByLabel(assets: readonly IAsset[], label: AssetLabel): IAsset | null {
-  return getAsset({ assets, label }).getOneOrNull();
-}
-
-/** The optimized e-model output shown as a mini-detail entry. */
-function makeOptimizedOutputFiles(
-  entity: OptimizedEntity | null | undefined
-): TActivityCustomFile[] {
-  if (!entity || !hasAssets(entity) || !entity.assets[0]) return [];
-  const withAssets = entity as OptimizedEntityWithAssets;
-  return [
-    {
-      id: withAssets.id,
-      entity: withAssets,
-      asset: withAssets.assets[0],
-      name: withAssets.name,
-      renderer: ActivityCustomFileRenderer.MiniDetailView,
-    },
-  ];
-}
-
 /**
  * Input/output file listing for one optimization config execution.
  *
- * Inputs: the task configuration (+ live config log stream). Outputs: the optimized e-model entity
- * mini-detail (+ live execution logs). Unlike the build variant there is no circuit-visualization
- * polling — the optimized entity is fetched once its execution reports it.
+ * Inputs: the task configuration (+ live config log stream). Outputs: everything the run
+ * generated (+ live execution logs). A successful run registers a task result (analysis summary,
+ * figures directory and checkpoint), a draft e-model and a draft me-model; each is resolved by the
+ * output strategy that claims it, so the result's files open in the file viewer and the models in
+ * their mini-detail view.
  */
 export function InOutFiles({
   config,
@@ -78,73 +51,62 @@ export function InOutFiles({
   selectedFile,
   onSelect,
   context,
+  campaignOrigin,
 }: Props) {
-  const generated = execution?.generated?.[0];
-  const generatedId = generated?.id;
-  const generatedTypeHint = generated?.type as TExtendedEntitiesTypeDict | undefined;
+  const configAsset = config.assets.find((asset) => asset.label === AssetLabel.task_config);
 
-  const { data: resolvedGeneratedType } = useQuery({
-    queryKey: keyBuilder.entity({ id: generatedId ?? '', context }),
-    // biome-ignore lint/style/noNonNullAssertion: enabled only when generatedId is present
-    queryFn: () => getEntity({ id: generatedId!, context }),
-    select: (entity) => entity.type as TExtendedEntitiesTypeDict,
-    enabled: !!generatedId && !generatedTypeHint,
-  });
+  const logStreamFiles = useMemo(
+    () =>
+      makeLogStreamFileDescriptors({
+        configId: config.id,
+        executionId: execution?.execution_id,
+      }),
+    [config.id, execution?.execution_id]
+  );
 
-  const generatedType = generatedTypeHint ?? resolvedGeneratedType;
-
-  const { data: optimizedEntity, isLoading } = useQuery({
-    queryKey: keyBuilder.entity({ id: generatedId ?? '', context, type: generatedType }),
-    queryFn: () =>
-      retrieveEntity({
-        // biome-ignore lint/style/noNonNullAssertion: enabled only when both are present
-        type: generatedType!,
-        // biome-ignore lint/style/noNonNullAssertion: enabled only when both are present
-        id: generatedId!,
-        ctx: context,
-      }) as Promise<OptimizedEntity>,
-    enabled: !!generatedId && !!generatedType,
-  });
-
-  const configAsset = findAssetByLabel(config.assets, AssetLabel.task_config);
-
-  const logStreamFiles = makeLogStreamFileDescriptors({
-    configId: config.id,
-    executionId: execution?.execution_id,
-  });
-
-  const inputFiles: TActivityCustomFile[] = [];
-  if (configAsset) {
-    inputFiles.push({
-      id: configAsset.id,
-      entity: config,
-      asset: configAsset,
-      renderer: ActivityCustomFileRenderer.Default,
+  const inputFiles: TActivityCustomFile[] = useMemo(() => {
+    const files: TActivityCustomFile[] = [];
+    if (configAsset) {
+      files.push({
+        id: configAsset.id,
+        entity: config,
+        asset: configAsset,
+        renderer: ActivityCustomFileRenderer.Default,
+      });
+    }
+    return prependLogStreamFile({
+      file: logStreamFiles.input
+        ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
+        : null,
+      files,
     });
-  }
-  const inputFilesWithLogs = prependLogStreamFile({
-    file: logStreamFiles.input
-      ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
-      : null,
-    files: inputFiles,
-  });
+  }, [config, configAsset, logStreamFiles.input]);
 
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
 
-  const optimizedOutputFiles = makeOptimizedOutputFiles(optimizedEntity);
-  const outputFiles = prependLogStreamFile({
-    file:
-      logStreamFiles.output && execution
-        ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
-        : null,
-    files: optimizedOutputFiles,
+  const { files: generatedFiles, isLoading } = useGeneratedOutputs({
+    execution,
+    context,
+    pollingEnabled: campaignOrigin !== ScanConfigCampaignOriginActionDict.View,
   });
+
+  const outputFiles: TActivityCustomFile[] = useMemo(
+    () =>
+      prependLogStreamFile({
+        file:
+          logStreamFiles.output && execution
+            ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+            : null,
+        files: generatedFiles,
+      }),
+    [generatedFiles, execution, logStreamFiles.output]
+  );
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,
     selectedFile,
-    inputFiles: inputFilesWithLogs,
+    inputFiles,
     outputFiles,
     onSelect,
   });
@@ -152,9 +114,9 @@ export function InOutFiles({
   return (
     <IoLayout
       showOutput={outputAvailable || logStreamFiles.showOutput}
-      inputIsEmpty={inputFilesWithLogs.length === 0}
-      outputIsEmpty={optimizedOutputFiles.length === 0 && !isLoading && !logStreamFiles.output}
-      inputItems={inputFilesWithLogs.map((file) => (
+      inputIsEmpty={inputFiles.length === 0}
+      outputIsEmpty={generatedFiles.length === 0 && !isLoading && !logStreamFiles.output}
+      inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
           id={file.asset.id}
           selected={file.asset.id === selectedFile?.id}
@@ -164,16 +126,24 @@ export function InOutFiles({
           name={file.name}
         />
       ))}
-      outputItems={outputFiles.map((file) => (
-        <TaskIOFileItem
-          id={file.id}
-          selected={file.id === selectedFile?.id}
-          key={file.id}
-          file={file}
-          name={file.name}
-          onSelect={onSelect}
-        />
-      ))}
+      outputItems={outputFiles.map((file) => {
+        // the draft e-model and me-model rows are told apart by their entity type
+        const entityLabel =
+          file.renderer === ActivityCustomFileRenderer.MiniDetailView
+            ? getEntityTypeTagLabel(file.entity.type as TExtendedEntitiesTypeDict)
+            : null;
+        return (
+          <TaskIOFileItem
+            id={file.id}
+            label={entityLabel ? <small className="uppercase">{entityLabel}</small> : undefined}
+            selected={file.id === selectedFile?.id}
+            key={file.id}
+            file={file}
+            name={file.name}
+            onSelect={onSelect}
+          />
+        );
+      })}
     />
   );
 }

@@ -46,6 +46,23 @@ describe('orderOutputFiles', () => {
     ]);
   });
 
+  it('lists the optimization summary, then its figures, then the checkpoint', () => {
+    const checkpoint = file(AssetLabel.emodel_optimisation_checkpoint, 'checkpoint.h5');
+    const figures = file(AssetLabel.emodel_analysis_figures, 'analysis_figures');
+    const summary = file(AssetLabel.emodel_analysis_summary, 'final.json');
+
+    const ordered = orderOutputFiles(
+      [checkpoint, figures, summary],
+      ExtendedEntitiesTypeDict.EModelOptimizationResult
+    );
+
+    expect(ordered.map((entry) => entry.asset.path)).toEqual([
+      'final.json',
+      'analysis_figures',
+      'checkpoint.h5',
+    ]);
+  });
+
   it('leaves an output type that declares no order exactly as it is', () => {
     const files = [figureA, features, other];
 
