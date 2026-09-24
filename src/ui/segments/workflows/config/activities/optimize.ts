@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { eModelOptimizationFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 
@@ -31,5 +32,6 @@ export const OptimizeWorkflows: readonly IWorkflowDescriptor[] = [
     },
     label: 'E-Model optimization',
     disabled: false,
+    requiredFeatures: [eModelOptimizationFlag.key],
   },
 ];
