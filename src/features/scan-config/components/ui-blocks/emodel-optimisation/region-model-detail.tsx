@@ -101,8 +101,8 @@ export function RegionModelDetail({ choiceName, modelId, value, onChange, disabl
 }
 
 /**
- * Validates the model's `neuron_block` and lists its flattened `global` + `range` parameters, each
- * with a checkbox. Checking a parameter adds it (keyed by its bare NMODL name) to the model's
+ * Validates the model's `neuron_block` and lists its `range` parameters (GLOBAL ones cannot be
+ * set per region, see `extractNeuronBlockParameters`), each with a checkbox. Checking a parameter adds it (keyed by its bare NMODL name) to the model's
  * `parameters` object on its region entry; unchecking removes it. Shows an error message when the
  * block is missing or fails validation.
  */
@@ -191,7 +191,7 @@ function NeuronBlockParameters({
 
         return (
           <ParameterRow
-            key={`${param.source}:${param.name}`}
+            key={param.name}
             name={param.name}
             unit={param.unit}
             checked={checked}
