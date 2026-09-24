@@ -5,13 +5,16 @@ import { useMemo } from 'react';
 
 import {
   assignedModelIds,
-  pickedModelRefs,
+  ION_CHANNEL_MODELS_KEY,
+  IonChannelModelFromIdType,
   readMechanisms,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
+import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { ConfigValue } from '@/features/scan-config/types';
 
 type Props = {
@@ -57,7 +60,17 @@ export function RegionModelsPanel({
   // Resolve names off the *full* picked list (`mechanisms.ion_channel_models`), not this region's
   // subset. Mechanism Selection already resolved that exact list, so this hits the shared query
   // cache instead of firing a fresh, narrower request (which flashed "Loading…").
-  const refs = useMemo(() => pickedModelRefs(mechanisms), [mechanisms]);
+  const refs = useMemo<TFromIdRef[]>(() => {
+    const picked = Array.isArray(mechanisms[ION_CHANNEL_MODELS_KEY])
+      ? mechanisms[ION_CHANNEL_MODELS_KEY]
+      : [];
+
+    return picked.flatMap((model) =>
+      isPlainObject(model) && typeof model.id_str === 'string'
+        ? [{ type: IonChannelModelFromIdType, id_str: model.id_str }]
+        : []
+    );
+  }, [mechanisms]);
 
   const { entities, isLoading } = useResolvedModelIdentifierEntities({
     refs,

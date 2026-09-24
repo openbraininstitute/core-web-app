@@ -1,12 +1,12 @@
 'use client';
 
 import {
-  asRecord,
   readOptimizationValue,
   type TOptimizationValue,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { ParameterRow } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameter-row';
 import { SectionHeader } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/section-header';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 
 import type { ConfigValue } from '@/features/scan-config/types';
 
@@ -31,8 +31,11 @@ type Props = {
  * `global_parameters` is kept as is.
  */
 export function GlobalParametersSelection({ value, onChange, disabled }: Props) {
-  const root = asRecord(value);
-  const globals = { ...DEFAULT_GLOBAL_PARAMETERS, ...asRecord(root.global_parameters) };
+  const root = isPlainObject(value) ? value : {};
+  const globals = {
+    ...DEFAULT_GLOBAL_PARAMETERS,
+    ...(isPlainObject(root.global_parameters) ? root.global_parameters : {}),
+  };
 
   const setGlobal = (key: 'v_init' | 'celsius', next: TOptimizationValue) =>
     onChange({

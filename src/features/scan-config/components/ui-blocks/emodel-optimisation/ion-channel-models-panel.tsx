@@ -82,37 +82,33 @@ export function IonChannelModelsPanel({
 
   const assignedCount = refs.filter((ref) => assignedIds.has(ref.id_str)).length;
 
-  const writeEntries = (nextEntries: Array<Record<string, ConfigValue>>) => {
-    onChange(writeRegionEntries(value, choiceName, nextEntries));
-  };
-
   const toggleModel = (idStr: string, checked: boolean) => {
     const entries = readRegionEntries(mechanisms, choiceName);
 
-    writeEntries(
-      checked
-        ? // assign: add an entry for this model if not already present
-          entries.some((entry) => entryModelId(entry) === idStr)
-          ? entries
-          : [...entries, makeRegionEntry(idStr)]
-        : // unassign: drop this model's entry, taking any parameters it held with it
-          entries.filter((entry) => entryModelId(entry) !== idStr)
-    );
+    const nextEntries = checked
+      ? // assign: add an entry for this model if not already present
+        entries.some((entry) => entryModelId(entry) === idStr)
+        ? entries
+        : [...entries, makeRegionEntry(idStr)]
+      : // unassign: drop this model's entry, taking any parameters it held with it
+        entries.filter((entry) => entryModelId(entry) !== idStr);
+
+    onChange(writeRegionEntries(value, choiceName, nextEntries));
   };
 
   const toggleAll = (checked: boolean) => {
-    writeEntries(
-      checked
-        ? // assign the models still missing, keeping the existing entries and their parameters
-          [
-            ...readRegionEntries(mechanisms, choiceName),
-            ...refs
-              .filter((ref) => !assignedIds.has(ref.id_str))
-              .map((ref) => makeRegionEntry(ref.id_str)),
-          ]
-        : // unassign every model, taking their parameters with them
-          []
-    );
+    const nextEntries = checked
+      ? // assign the models still missing, keeping the existing entries and their parameters
+        [
+          ...readRegionEntries(mechanisms, choiceName),
+          ...refs
+            .filter((ref) => !assignedIds.has(ref.id_str))
+            .map((ref) => makeRegionEntry(ref.id_str)),
+        ]
+      : // unassign every model, taking their parameters with them
+        [];
+
+    onChange(writeRegionEntries(value, choiceName, nextEntries));
   };
 
   return (
