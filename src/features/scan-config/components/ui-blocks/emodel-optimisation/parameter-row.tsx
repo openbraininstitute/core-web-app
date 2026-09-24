@@ -9,8 +9,6 @@ import {
   type TParameterMode,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 
-import type { ReactNode } from 'react';
-
 /** True when the string parses to a finite number. Empty input is treated as "not yet a value". */
 function parseFiniteNumber(raw: string): number | null {
   if (raw.trim() === '') return null;
@@ -27,7 +25,6 @@ function parseFiniteNumber(raw: string): number | null {
 export function ParameterRow({
   name,
   unit,
-  hint,
   checked,
   disabled,
   optimizationValue,
@@ -36,8 +33,6 @@ export function ParameterRow({
 }: {
   name: string;
   unit: string | null;
-  /** extra context shown under the name */
-  hint?: ReactNode;
   checked: boolean;
   disabled?: boolean;
   optimizationValue: TOptimizationValue | null;
@@ -73,10 +68,7 @@ export function ParameterRow({
   return (
     <li className="flex flex-col gap-2 rounded border border-gray-200 bg-white p-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-col">
-          <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
-          {hint && <span className="text-xs text-gray-500">{hint}</span>}
-        </div>
+        <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
         <div className="flex shrink-0 items-center gap-3">
           {unit && <span className="text-xs text-gray-500">{unit}</span>}
           {onToggle && (

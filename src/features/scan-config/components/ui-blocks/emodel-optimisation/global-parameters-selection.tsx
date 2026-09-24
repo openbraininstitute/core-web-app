@@ -1,26 +1,23 @@
 'use client';
 
-import { useMemo } from 'react';
-
 import {
-  CELSIUS_KEY,
-  makeGlobalParameterSelection,
-  readGlobalParameters,
-  SIMULATION_CONDITIONS,
-  writeGlobalParameters,
-} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/global-parameters';
-import {
-  modelIdsAssignedToAnyRegion,
-  pickedModelRefs,
-  readMechanisms,
+  asRecord,
   readOptimizationValue,
+  type TOptimizationValue,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { ParameterRow } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameter-row';
 import { SectionHeader } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/section-header';
-import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ConfigValue } from '@/features/scan-config/types';
+
+/**
+ * Schema default of `global_parameters`. Stored entries override it, and the merged dict is written
+ * back in full on every edit, so neither key goes missing.
+ */
+const DEFAULT_GLOBAL_PARAMETERS: Record<string, ConfigValue> = {
+  v_init: { type: 'GlobalParameterSelection', value: { mode: 'fixed', value: -80, bounds: null } },
+  celsius: { type: 'GlobalParameterSelection', value: { mode: 'fixed', value: 34, bounds: null } },
+};
 
 type Props = {
   /** value of the `emodel_optimisation_parameters` config key */
@@ -33,34 +30,21 @@ type Props = {
 
 /**
  * "Global Parameters" tab (step 4) of the E-Model optimisation parameters: the simulation
- * conditions (`v_init`, `celsius`), listed right under the header, always present and never
- * removable.
+ * conditions (`v_init`, `celsius`), always present and never removable. Any other entry already in
+ * `global_parameters` is kept as is.
  */
 export function GlobalParametersSelection({ value, onChange, disabled }: Props) {
-  const { virtualLabId, projectId } = useWorkspace();
+  const root = asRecord(value);
+  const globals = { ...DEFAULT_GLOBAL_PARAMETERS, ...asRecord(root.global_parameters) };
 
-  const mechanisms = useMemo(() => readMechanisms(value), [value]);
-  const globals = useMemo(() => readGlobalParameters(value), [value]);
-
-  // Resolve the picked models off the list Mechanism Selection already resolved (shared query
-  // cache), to show the temperatures the assigned ones were fitted at next to `celsius`.
-  const refs = useMemo(() => pickedModelRefs(mechanisms), [mechanisms]);
-  const { entities } = useResolvedModelIdentifierEntities({
-    refs,
-    context: { virtualLabId, projectId },
-  });
-
-  const fittedTemperatures = useMemo(() => {
-    const assignedIds = modelIdsAssignedToAnyRegion(mechanisms);
-    const temperatures = entities.flatMap((entity) =>
-      assignedIds.has(entity.id) &&
-      'temperature_celsius' in entity &&
-      typeof entity.temperature_celsius === 'number'
-        ? [entity.temperature_celsius]
-        : []
-    );
-    return [...new Set(temperatures)];
-  }, [mechanisms, entities]);
+  const setGlobal = (key: 'v_init' | 'celsius', next: TOptimizationValue) =>
+    onChange({
+      ...root,
+      global_parameters: {
+        ...globals,
+        [key]: { type: 'GlobalParameterSelection', value: next },
+      },
+    });
 
   return (
     <div className="flex h-full w-full min-h-0 flex-col gap-4 p-4">
@@ -70,29 +54,22 @@ export function GlobalParametersSelection({ value, onChange, disabled }: Props) 
       />
 
       <ul className="flex flex-col gap-2">
-        {SIMULATION_CONDITIONS.map(({ key, label, unit }) => (
-          <ParameterRow
-            key={key}
-            name={label}
-            unit={unit}
-            hint={
-              key === CELSIUS_KEY && fittedTemperatures.length > 0
-                ? `Assigned models were fitted at ${fittedTemperatures.map((t) => `${t} °C`).join(', ')}`
-                : undefined
-            }
-            checked
-            disabled={disabled}
-            optimizationValue={readOptimizationValue(globals[key])}
-            onValueChange={(next) =>
-              onChange(
-                writeGlobalParameters(value, {
-                  ...globals,
-                  [key]: makeGlobalParameterSelection(next),
-                })
-              )
-            }
-          />
-        ))}
+        <ParameterRow
+          name="Initial membrane potential"
+          unit="mV"
+          checked
+          disabled={disabled}
+          optimizationValue={readOptimizationValue(globals.v_init)}
+          onValueChange={(next) => setGlobal('v_init', next)}
+        />
+        <ParameterRow
+          name="Temperature"
+          unit="°C"
+          checked
+          disabled={disabled}
+          optimizationValue={readOptimizationValue(globals.celsius)}
+          onValueChange={(next) => setGlobal('celsius', next)}
+        />
       </ul>
     </div>
   );

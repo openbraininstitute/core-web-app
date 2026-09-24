@@ -112,15 +112,6 @@ export function assignedModelIds(
     .filter((id): id is string => Boolean(id));
 }
 
-/** Ids of models assigned to at least one region choice. */
-export function modelIdsAssignedToAnyRegion(mechanisms: Record<string, ConfigValue>): Set<string> {
-  return new Set(
-    Object.keys(readRegions(mechanisms)).flatMap((choiceName) =>
-      assignedModelIds(mechanisms, choiceName)
-    )
-  );
-}
-
 /** The `parameters` object of a region entry (nmodl variable name -> ParameterSelection). */
 export function entryParameters(entry: Record<string, ConfigValue>): Record<string, ConfigValue> {
   return asRecord(entry[PARAMETERS_KEY]);
@@ -180,21 +171,16 @@ export function makeRegionEntry(idStr: string): Record<string, ConfigValue> {
   };
 }
 
-/** Wraps a UI OptimizationValue into a schema `OptimizationValue`. */
-export function makeOptimizationValue(optimizationValue: TOptimizationValue): ConfigValue {
-  return {
-    type: OptimizationValueType,
-    mode: optimizationValue.mode,
-    value: optimizationValue.value,
-    bounds: optimizationValue.bounds,
-  };
-}
-
 /** Wraps a UI OptimizationValue into a schema `ParameterSelection`. */
 export function makeParameterSelection(optimizationValue: TOptimizationValue): ConfigValue {
   return {
     type: ParameterSelectionType,
-    value: makeOptimizationValue(optimizationValue),
+    value: {
+      type: OptimizationValueType,
+      mode: optimizationValue.mode,
+      value: optimizationValue.value,
+      bounds: optimizationValue.bounds,
+    },
     distribution: DEFAULT_DISTRIBUTION,
   };
 }
