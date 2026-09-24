@@ -15,8 +15,8 @@ import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/conf
 
 import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
-import { useValidateSchema } from '../hooks';
 
+import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
 
@@ -34,7 +34,7 @@ export default function Left({
   readOnly,
   setCampaignId,
   setLoading,
-  initialConfig,
+  errors,
   setTab,
   allEntries,
   newKey,
@@ -63,7 +63,8 @@ export default function Left({
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setTab: (tab: TScanConfigTabs) => void;
-  initialConfig?: Config;
+  /** ajv schema errors of the whole config */
+  errors: ErrorObject[] | null;
   allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
@@ -77,7 +78,6 @@ export default function Left({
   selectedMechanismsTab: string;
   setSelectedMechanismsTab: (tab: string) => void;
 }) {
-  const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig, setAiConfig } = useAIConfig();
   const [pendingRestoreConfig, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
   const [restorePreviewActive] = useAtom(restorePreviewActiveAtom);

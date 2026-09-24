@@ -1,11 +1,17 @@
 'use client';
 
+import { WarningFilled } from '@ant-design/icons';
 import { RiArrowRightSLine } from '@remixicon/react';
 
+import {
+  hasErrorAt,
+  regionPath,
+} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import type { ErrorObject } from 'ajv';
 import type { IEModelOptimisationParameters } from '@/features/scan-config/types';
 
 type Props = {
@@ -15,6 +21,8 @@ type Props = {
   selectedRegionChoice: string;
   /** selects a section-list choice, opening the adjacent drawer; reselecting the open one closes it */
   setSelectedRegionChoice: (choice: string) => void;
+  /** ajv errors inside the emodel config value (paths relative to it) that this tab flags */
+  errors: readonly ErrorObject[];
 };
 
 /**
@@ -24,12 +32,14 @@ type Props = {
  * Renders the `base_parameters.choices` in display order as cards matching the block-dictionary
  * variant picker. Each available card carries an arrow that toggles the adjacent drawer: clicking
  * opens it for that choice, clicking the open one again closes it. Unavailable choices are dimmed
- * and surface their `disabled_reason` in a tooltip.
+ * and surface their `disabled_reason` in a tooltip. A card whose region has an error in `errors`
+ * shows a warning icon; each tab passes only the errors of the keys it writes.
  */
 export function RegionChoiceCards({
   rootSchema,
   selectedRegionChoice,
   setSelectedRegionChoice,
+  errors,
 }: Props) {
   const choices = [...rootSchema.properties.base_parameters.choices].sort(
     (a, b) => a.display_order - b.display_order
@@ -70,6 +80,9 @@ export function RegionChoiceCards({
                     {choice.description}
                   </MarkdownDescription>
                 </div>
+                {hasErrorAt(errors, regionPath(choice.name)) && (
+                  <WarningFilled className="text-yellow-400!" />
+                )}
                 {/* points to the side the drawer opens on, so it doesn't rotate when open */}
                 <RiArrowRightSLine
                   aria-hidden

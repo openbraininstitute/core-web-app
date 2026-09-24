@@ -9,11 +9,13 @@ import {
   defaultOptimizationValue,
   entryModelId,
   entryParameters,
+  errorsUnder,
   makeParameterSelection,
   PARAMETERS_KEY,
   readMechanisms,
   readOptimizationValue,
   readRegionEntries,
+  regionPath,
   type TOptimizationValue,
   writeRegionEntries,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
@@ -23,6 +25,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import type { ErrorObject } from 'ajv';
 import type { ConfigValue } from '@/features/scan-config/types';
 
 type Props = {
@@ -36,6 +39,8 @@ type Props = {
   onChange: (next: ConfigValue) => void;
   /** read-only mode: disables the parameter checkboxes, mode radios and value inputs */
   disabled?: boolean;
+  /** ajv errors inside `value` (paths relative to it), to flag the parameters that fail */
+  errors: readonly ErrorObject[];
 };
 
 /**
@@ -44,7 +49,14 @@ type Props = {
  * `neuron_block` parameters. Each parameter maps to an entry in the model's `parameters` object on
  * its `MechanismRegionSelection` entry in `mechanisms.mechanism_regions.<choiceName>`.
  */
-export function RegionModelDetail({ choiceName, modelId, value, onChange, disabled }: Props) {
+export function RegionModelDetail({
+  choiceName,
+  modelId,
+  value,
+  onChange,
+  disabled,
+  errors,
+}: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const context = { virtualLabId, projectId };
 
@@ -91,6 +103,7 @@ export function RegionModelDetail({ choiceName, modelId, value, onChange, disabl
           value={value}
           onChange={onChange}
           disabled={disabled}
+          errors={errors}
         />
       )}
     </div>
@@ -110,6 +123,7 @@ function NeuronBlockParameters({
   value,
   onChange,
   disabled,
+  errors,
 }: {
   neuronBlock: unknown;
   choiceName: string;
@@ -117,6 +131,7 @@ function NeuronBlockParameters({
   value: ConfigValue;
   onChange: (next: ConfigValue) => void;
   disabled?: boolean;
+  errors: readonly ErrorObject[];
 }) {
   const parameters = extractNeuronBlockParameters(neuronBlock);
 
@@ -193,6 +208,10 @@ function NeuronBlockParameters({
             unit={param.unit}
             checked={checked}
             disabled={disabled}
+            errors={errorsUnder(
+              errors,
+              `${regionPath(choiceName)}/${entryIndex}/${PARAMETERS_KEY}/${param.name}/value`
+            )}
             optimizationValue={checked ? readOptimizationValue(parametersDict[param.name]) : null}
             onToggle={(next) => toggleParameter(param.name, next)}
             onValueChange={(next) => setParameterValue(param.name, next)}

@@ -13,6 +13,7 @@
  *   { type: "ParameterSelection", value: OptimizationValue, distribution: "uniform" }
  * with
  *   OptimizationValue = { mode: "fixed"|"bounds", value: number|null, bounds: [number, number] | null }
+ * where the schema requires a `value` in fixed mode, and increasing `bounds` in bounds mode.
  *
  * All the emodel panels go through these helpers so the persisted structure stays schema-valid and
  * the pruning/assignment logic reads/writes the array entries consistently.
@@ -20,6 +21,7 @@
 
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
+import type { ErrorObject } from 'ajv';
 import type { ConfigValue } from '@/features/scan-config/types';
 
 export const MECHANISMS_KEY = 'mechanisms';
@@ -119,6 +121,67 @@ export function readOptimizationValue(parameterSelection: ConfigValue): TOptimiz
       : null;
 
   return { mode, value, bounds };
+}
+
+// ---------------------------------------------------------------------------
+// Schema errors: ajv errors whose `instancePath` is made relative to the value being rendered
+// (the emodel config value, or one parameter's OptimizationValue)
+// ---------------------------------------------------------------------------
+
+function isAtOrBelow(instancePath: string, path: string): boolean {
+  return instancePath === path || instancePath.startsWith(`${path}/`);
+}
+
+/** The errors at or below `path`, with their `instancePath` made relative to it. */
+export function errorsUnder(
+  errors: readonly ErrorObject[] | null | undefined,
+  path: string
+): ErrorObject[] {
+  return (errors ?? []).flatMap((error) =>
+    isAtOrBelow(error.instancePath, path)
+      ? [{ ...error, instancePath: error.instancePath.slice(path.length) }]
+      : []
+  );
+}
+
+/** True when `path` or anything below it has an error. */
+export function hasErrorAt(errors: readonly ErrorObject[], path: string): boolean {
+  return errors.some((error) => isAtOrBelow(error.instancePath, path));
+}
+
+/** Path of a region choice's entry array. */
+export function regionPath(choiceName: string): string {
+  return `/${MECHANISMS_KEY}/${MECHANISM_REGIONS_KEY}/${choiceName}`;
+}
+
+/** Matches paths inside a region entry's `parameters`. */
+const PARAMETERS_PATH = /^\/mechanisms\/mechanism_regions\/[^/]+\/\d+\/parameters(\/|$)/;
+
+/**
+ * The errors inside region entries' `parameters`: the keys the Parameters Selection tab writes, so
+ * only that tab flags them.
+ */
+export function parameterErrors(errors: readonly ErrorObject[]): ErrorObject[] {
+  return errors.filter((error) => PARAMETERS_PATH.test(error.instancePath));
+}
+
+/** The errors outside region entries' `parameters`, e.g. in the Region Assignment entries. */
+export function nonParameterErrors(errors: readonly ErrorObject[]): ErrorObject[] {
+  return errors.filter((error) => !PARAMETERS_PATH.test(error.instancePath));
+}
+
+/** Ids of the models whose entry in a region has one of `errors`. */
+export function failingModelIds(
+  mechanisms: Record<string, ConfigValue>,
+  choiceName: string,
+  errors: readonly ErrorObject[]
+): Set<string> {
+  const ids = new Set<string>();
+  readRegionEntries(mechanisms, choiceName).forEach((entry, index) => {
+    const id = entryModelId(entry);
+    if (id && hasErrorAt(errors, `${regionPath(choiceName)}/${index}`)) ids.add(id);
+  });
+  return ids;
 }
 
 // ---------------------------------------------------------------------------

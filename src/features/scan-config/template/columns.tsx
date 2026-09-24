@@ -30,7 +30,7 @@ export function LeftColumn({ props, state }: ColumnProps) {
       readOnly={props.readOnly}
       setCampaignId={state.setCampaignId}
       setLoading={state.setLoading}
-      initialConfig={props.initialConfig}
+      errors={state.errors}
       setTab={state.setTab}
       allEntries={state.allEntries}
       newKey={state.newKey}
@@ -80,6 +80,7 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
       selectedMechanismsTab={state.selectedMechanismsTab}
       selectedRegionChoice={state.selectedRegionChoice}
       setSelectedRegionChoice={state.setSelectedRegionChoice}
+      errors={state.errors}
     />
   );
 }

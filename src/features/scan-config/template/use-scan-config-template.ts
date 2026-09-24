@@ -5,7 +5,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-diff-bar';
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
-import { nextEntryName, useEntries } from '@/features/scan-config/components/hooks';
+import {
+  nextEntryName,
+  useEntries,
+  useValidateSchema,
+} from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import {
@@ -83,6 +87,7 @@ export function useScanConfigTemplate({
     seed,
   });
   const allEntries = useEntries({ config, schema });
+  const errors = useValidateSchema({ initialConfig, config, schema });
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 
@@ -207,6 +212,7 @@ export function useScanConfigTemplate({
     allEntries,
     config,
     setConfig,
+    errors,
     editingLocked,
     createEntry,
     selectedSchema,

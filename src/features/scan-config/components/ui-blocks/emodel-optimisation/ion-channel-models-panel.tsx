@@ -1,11 +1,13 @@
 'use client';
 
+import { WarningFilled } from '@ant-design/icons';
 import { Checkbox } from 'antd';
 import { useMemo } from 'react';
 
 import {
   assignedModelIds,
   entryModelId,
+  failingModelIds,
   ION_CHANNEL_MODELS_KEY,
   makeRegionEntry,
   readMechanisms,
@@ -19,6 +21,7 @@ import {
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
+import type { ErrorObject } from 'ajv';
 import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
 
 type Props = {
@@ -36,6 +39,8 @@ type Props = {
   onChange: (next: ConfigValue) => void;
   /** read-only mode: disables the assignment checkboxes */
   disabled?: boolean;
+  /** ajv errors inside `value` (paths relative to it), without the parameter errors (Parameters Selection flags those) */
+  errors: readonly ErrorObject[];
 };
 
 /**
@@ -45,7 +50,8 @@ type Props = {
  * `mechanisms.ion_channel_models`). Checking a model assigns it to the selected region by adding a
  * `MechanismRegionSelection` entry to `mechanisms.mechanism_regions.<choiceName>` (an array);
  * unchecking removes that entry (and, with it, any parameters it held). A "Select all" checkbox
- * above the list assigns or unassigns every model at once.
+ * above the list assigns or unassigns every model at once. An assigned model whose region entry has
+ * an error in `errors` shows a warning icon.
  */
 export function IonChannelModelsPanel({
   choiceName,
@@ -55,6 +61,7 @@ export function IonChannelModelsPanel({
   value,
   onChange,
   disabled,
+  errors,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -74,6 +81,8 @@ export function IonChannelModelsPanel({
     () => new Set(assignedModelIds(mechanisms, choiceName)),
     [mechanisms, choiceName]
   );
+
+  const failingIds = failingModelIds(mechanisms, choiceName, errors);
 
   const { entities, isLoading } = useResolvedModelIdentifierEntities({
     refs,
@@ -141,7 +150,10 @@ export function IonChannelModelsPanel({
                 key={ref.id_str}
                 className="flex items-center justify-between gap-3 rounded border border-gray-200 bg-white p-3"
               >
-                <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{label}</span>
+                <span className="text-primary-8 min-w-0 flex-1 truncate text-sm font-medium">
+                  {label}
+                </span>
+                {failingIds.has(ref.id_str) && <WarningFilled className="text-yellow-400!" />}
                 <Checkbox
                   checked={assignedIds.has(ref.id_str)}
                   disabled={disabled}

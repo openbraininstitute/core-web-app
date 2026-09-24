@@ -1,6 +1,7 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
+import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { EModelOptimisationParameters } from '@/features/scan-config/components/ui-blocks/emodel-optimisation-parameters';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
@@ -21,6 +22,7 @@ import { cn } from '@/utils/css-class';
 
 import { isPlainObject } from '../utils';
 
+import type { ErrorObject } from 'ajv';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
@@ -48,6 +50,8 @@ type MiddleProps = {
   selectedRegionChoice: string;
   /** sets the selected Region Assignment section-list choice */
   setSelectedRegionChoice: (choice: string) => void;
+  /** ajv schema errors of the whole config */
+  errors: ErrorObject[] | null;
 };
 
 export default function Middle({
@@ -68,6 +72,7 @@ export default function Middle({
   selectedMechanismsTab,
   selectedRegionChoice,
   setSelectedRegionChoice,
+  errors,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
@@ -157,6 +162,7 @@ export default function Middle({
           selectedRegionChoice={selectedRegionChoice}
           setSelectedRegionChoice={setSelectedRegionChoice}
           disabled={editingLocked}
+          errors={errorsUnder(errors, `/${selectedRootElement}`)}
         />
       )}
     </div>

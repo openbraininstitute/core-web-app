@@ -5,6 +5,9 @@ import { useEffect } from 'react';
 import { IonChannelModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-models-panel';
 import {
   assignedModelIds,
+  errorsUnder,
+  nonParameterErrors,
+  parameterErrors,
   readMechanisms,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { RegionModelDetail } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-model-detail';
@@ -85,6 +88,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     selectedMechanismsTab,
     config,
     setConfig,
+    errors,
     selectedRootElement,
     editingLocked,
   } = state;
@@ -109,6 +113,11 @@ export function EModelOptimisationColumns({ props, state }: Props) {
 
   const value = config[selectedRootElement];
   const writeValue = (next: typeof value) => setConfig({ ...config, [selectedRootElement]: next });
+  // Each tab's drawers flag only the errors of the keys that tab writes: Region Assignment the region
+  // entries, Parameters Selection their parameters.
+  const emodelErrors = errorsUnder(errors, `/${selectedRootElement}`);
+  const assignmentErrors = nonParameterErrors(emodelErrors);
+  const parametersErrors = parameterErrors(emodelErrors);
 
   // Region Assignment: second column is the ion-channel-models picker (checkboxes).
   const assignmentDrawerOpen = Boolean(rootSchema && selectedChoice && onRegionAssignmentTab);
@@ -154,6 +163,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               value={value}
               onChange={writeValue}
               disabled={editingLocked}
+              errors={assignmentErrors}
             />
           </DrawerColumn>
         )}
@@ -167,6 +177,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               value={value}
               selectedRegionModel={selectedRegionModel}
               setSelectedRegionModel={setSelectedRegionModel}
+              errors={parametersErrors}
             />
           </DrawerColumn>
         )}
@@ -179,6 +190,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               value={value}
               onChange={writeValue}
               disabled={editingLocked}
+              errors={parametersErrors}
             />
           </DrawerColumn>
         )}

@@ -603,6 +603,10 @@ export interface IEModelOptimisationParameters extends TRootElement {
     base_parameters: {
       choices: TEModelSectionListChoice[];
     };
+    /** Global parameters; the schema default holds the `v_init` and `celsius` entries. */
+    global_parameters: {
+      default: Record<string, ConfigValue>;
+    };
   };
 }
 

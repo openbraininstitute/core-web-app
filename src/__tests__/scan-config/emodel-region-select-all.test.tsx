@@ -51,6 +51,7 @@ function renderPanel(value: ConfigValue) {
       rootSchema={rootSchema}
       value={value}
       onChange={onChange}
+      errors={[]}
     />
   );
   return { onChange, selectAll: screen.getByLabelText('Select all ion channel models') };

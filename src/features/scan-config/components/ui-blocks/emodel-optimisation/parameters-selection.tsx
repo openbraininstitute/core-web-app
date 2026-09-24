@@ -1,8 +1,10 @@
 'use client';
 
+import { parameterErrors } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { RegionChoiceCards } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-choice-cards';
 import { SectionHeader } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/section-header';
 
+import type { ErrorObject } from 'ajv';
 import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
 
 type Props = {
@@ -16,6 +18,8 @@ type Props = {
   selectedRegionChoice: string;
   /** selects a section-list choice, opening the adjacent assigned-models drawer */
   setSelectedRegionChoice: (choice: string) => void;
+  /** ajv errors inside the emodel config value (paths relative to it) */
+  errors: readonly ErrorObject[];
 };
 
 /**
@@ -23,12 +27,14 @@ type Props = {
  *
  * First column: the shared section-list choice cards (identical to Region Assignment). Selecting a
  * card opens the adjacent drawer (rendered by the columns layout) listing the models already
- * assigned to that region, each of which opens a further detail drawer.
+ * assigned to that region, each of which opens a further detail drawer. Cards flag only errors in
+ * the regions' parameters, the keys this tab writes.
  */
 export function ParametersSelection({
   rootSchema,
   selectedRegionChoice,
   setSelectedRegionChoice,
+  errors,
 }: Props) {
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
@@ -42,6 +48,7 @@ export function ParametersSelection({
         rootSchema={rootSchema}
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
+        errors={parameterErrors(errors)}
       />
     </div>
   );

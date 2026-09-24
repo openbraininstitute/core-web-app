@@ -1,10 +1,12 @@
 'use client';
 
+import { WarningFilled } from '@ant-design/icons';
 import { RiArrowRightSLine } from '@remixicon/react';
 import { useMemo } from 'react';
 
 import {
   assignedModelIds,
+  failingModelIds,
   ION_CHANNEL_MODELS_KEY,
   IonChannelModelFromIdType,
   readMechanisms,
@@ -14,6 +16,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
+import type { ErrorObject } from 'ajv';
 import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { ConfigValue } from '@/features/scan-config/types';
 
@@ -30,6 +33,8 @@ type Props = {
   selectedRegionModel: string;
   /** selects a model, opening the adjacent detail drawer; reselecting the open one closes it */
   setSelectedRegionModel: (idStr: string) => void;
+  /** ajv errors of the region entries' parameters (paths relative to the emodel value), to flag the models whose parameters fail */
+  errors: readonly ErrorObject[];
 };
 
 /**
@@ -37,7 +42,8 @@ type Props = {
  *
  * Lists only the ion channel models already assigned to the selected region (read from the
  * `mechanisms.mechanism_regions.<choiceName>` entry array). Each row carries a chevron that selects
- * the model and opens the third detail drawer.
+ * the model and opens the third detail drawer. A model whose parameters fail schema validation shows
+ * a warning icon.
  */
 export function RegionModelsPanel({
   choiceName,
@@ -46,6 +52,7 @@ export function RegionModelsPanel({
   value,
   selectedRegionModel,
   setSelectedRegionModel,
+  errors,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -71,6 +78,8 @@ export function RegionModelsPanel({
         : []
     );
   }, [mechanisms]);
+
+  const failingIds = failingModelIds(mechanisms, choiceName, errors);
 
   const { entities, isLoading } = useResolvedModelIdentifierEntities({
     refs,
@@ -109,12 +118,13 @@ export function RegionModelsPanel({
                 >
                   <span
                     className={cn(
-                      'min-w-0 truncate text-sm font-medium',
+                      'min-w-0 flex-1 truncate text-sm font-medium',
                       isSelected ? 'text-white' : 'text-primary-8'
                     )}
                   >
                     {label}
                   </span>
+                  {failingIds.has(idStr) && <WarningFilled className="text-yellow-400!" />}
                   {/* points to the side the drawer opens on, so it doesn't rotate when open */}
                   <RiArrowRightSLine
                     aria-hidden

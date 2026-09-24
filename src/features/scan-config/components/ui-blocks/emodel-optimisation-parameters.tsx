@@ -22,6 +22,8 @@ import {
   type IEModelOptimisationParameters,
 } from '@/features/scan-config/types';
 
+import type { ErrorObject } from 'ajv';
+
 type Props = {
   /** selected inner-tab key (one of `EModelOptimisationMechanismsTabs`) */
   selectedTab: string;
@@ -37,6 +39,8 @@ type Props = {
   setSelectedRegionChoice: (choice: string) => void;
   /** read-only/locked: disables the editable widgets (picker, checkboxes, inputs) */
   disabled?: boolean;
+  /** ajv errors inside `value` (paths relative to it), to flag the regions and parameters that fail */
+  errors: readonly ErrorObject[];
 };
 
 export function EModelOptimisationParameters({
@@ -47,6 +51,7 @@ export function EModelOptimisationParameters({
   selectedRegionChoice,
   setSelectedRegionChoice,
   disabled,
+  errors,
 }: Props) {
   return match(selectedTab)
     .with(EModelOptimisationMechanismsTabs.MechanismSelection, () => (
@@ -64,6 +69,7 @@ export function EModelOptimisationParameters({
         onChange={onChange}
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
+        errors={errors}
       />
     ))
     .with(EModelOptimisationMechanismsTabs.ParametersSelection, () => (
@@ -73,10 +79,17 @@ export function EModelOptimisationParameters({
         onChange={onChange}
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
+        errors={errors}
       />
     ))
     .with(EModelOptimisationMechanismsTabs.GlobalParameters, () => (
-      <GlobalParametersSelection value={value} onChange={onChange} disabled={disabled} />
+      <GlobalParametersSelection
+        rootSchema={rootSchema}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        errors={errors}
+      />
     ))
     .otherwise(() => null);
 }
