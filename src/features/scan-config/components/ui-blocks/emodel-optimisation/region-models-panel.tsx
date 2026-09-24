@@ -104,18 +104,21 @@ export function RegionModelsPanel({
                   className={cn(
                     'flex w-full items-center justify-between gap-3 rounded border border-gray-200 bg-white p-3',
                     'cursor-pointer text-left hover:shadow-xs',
-                    isSelected && 'border-primary-8 shadow-xs'
+                    isSelected && 'border-primary-8 bg-primary-8 shadow-xs'
                   )}
                 >
-                  <span className="text-primary-8 min-w-0 truncate text-sm font-medium">
+                  <span
+                    className={cn(
+                      'min-w-0 truncate text-sm font-medium',
+                      isSelected ? 'text-white' : 'text-primary-8'
+                    )}
+                  >
                     {label}
                   </span>
+                  {/* points to the side the drawer opens on, so it doesn't rotate when open */}
                   <RiArrowRightSLine
                     aria-hidden
-                    className={cn(
-                      'size-5 shrink-0 text-gray-400 transition-transform duration-300',
-                      isSelected && 'rotate-90 text-primary-8'
-                    )}
+                    className={cn('size-5 shrink-0', isSelected ? 'text-white' : 'text-gray-400')}
                   />
                 </button>
               </li>

@@ -53,20 +53,27 @@ export function RegionChoiceCards({
                 className={cn(
                   'flex min-h-25 w-full items-center gap-3 rounded-xl border border-gray-200 p-5 text-left',
                   'cursor-pointer hover:bg-white hover:shadow-xs',
-                  { 'border-primary-8 bg-white shadow-xs': isSelected },
+                  { 'border-primary-8 bg-primary-8 shadow-xs hover:bg-primary-8': isSelected },
                   { 'cursor-not-allowed opacity-50': !choice.available }
                 )}
               >
                 <div className="min-w-0 flex-1">
-                  <span className="text-primary-9 block text-lg font-bold">{choice.label}</span>
-                  <MarkdownDescription className="mt-3">{choice.description}</MarkdownDescription>
+                  <span
+                    className={cn(
+                      'block text-lg font-bold',
+                      isSelected ? 'text-white' : 'text-primary-9'
+                    )}
+                  >
+                    {choice.label}
+                  </span>
+                  <MarkdownDescription className={cn('mt-3', isSelected && 'text-primary-1')}>
+                    {choice.description}
+                  </MarkdownDescription>
                 </div>
+                {/* points to the side the drawer opens on, so it doesn't rotate when open */}
                 <RiArrowRightSLine
                   aria-hidden
-                  className={cn(
-                    'size-5 shrink-0 text-gray-400 transition-transform duration-300',
-                    isSelected && 'rotate-90 text-primary-8'
-                  )}
+                  className={cn('size-5 shrink-0', isSelected ? 'text-white' : 'text-gray-400')}
                 />
               </button>
             </TooltipTrigger>
