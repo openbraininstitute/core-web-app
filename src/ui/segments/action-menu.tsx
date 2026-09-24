@@ -27,7 +27,7 @@ import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/w
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useFlags } from '@/features/feature-flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
-import { downloadArchive } from '@/services/entity-download';
+import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { buildSimulateConfigureUrlFromDataViewEntity } from '@/ui/segments/workflows/config';
@@ -112,9 +112,10 @@ export default function ActionMenu({
     mutationFn: async () => {
       if (entity.type === ExtendedEntitiesTypeDict.Circuit) setCircuit(entity as ICircuit);
       else {
-        downloadArchive(entityType.type, [entity.id], ctx);
+        await downloadArchive(entityType.type, [entity.id], ctx);
       }
     },
+    onError: (error: Error) => notifyError(downloadFailedNotification(error)),
   });
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'

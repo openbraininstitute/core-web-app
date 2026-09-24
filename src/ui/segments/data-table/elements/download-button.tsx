@@ -12,7 +12,7 @@ import {
   EXPANDING_PILL_BASE_CLASS,
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
-import { downloadArchive } from '@/services/entity-download';
+import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -89,8 +89,9 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
         setDownloadState(DownloadStateDict.idle);
         clearSelectedRows?.();
       }, 2000);
-    } catch {
+    } catch (error) {
       setDownloadState(DownloadStateDict.error);
+      notify.error(downloadFailedNotification(error));
       setTimeout(() => setDownloadState(DownloadStateDict.idle), 2000);
     }
   }, [selectedRows, dataType, clearSelectedRows, notify.error, workspace]);

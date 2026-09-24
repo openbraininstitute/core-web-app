@@ -1,3 +1,5 @@
+import { requestDownloadTicket } from '@/api/entity-download';
+
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 type CreateAssetFolderTicketResponse = {
@@ -17,20 +19,9 @@ type CreateAssetFolderTicketParams = {
 export async function createAssetFolderDownloadTicket(
   params: CreateAssetFolderTicketParams
 ): Promise<CreateAssetFolderTicketResponse> {
-  const url = `${window.location.origin}/api/entity-download/asset-folder/ticket`;
-  const response = await fetch(url, {
-    method: 'post',
-    headers: {
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
-  if (response.ok) {
-    return response.json();
-  }
-  throw new Error(
-    `Error #${response.status} creating asset folder download ticket: ${response.statusText}`
+  return requestDownloadTicket(
+    `${window.location.origin}/api/entity-download/asset-folder/ticket`,
+    params
   );
 }
 

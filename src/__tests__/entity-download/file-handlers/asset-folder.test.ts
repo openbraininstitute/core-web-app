@@ -117,4 +117,32 @@ describe('getAssetFolderFiles', () => {
 
     expect(pathsOf(entries)).toEqual(['b.txt']);
   });
+
+  it('reports a file it cannot open relative to the prefix, like the entries it yields', async () => {
+    listDirectoryMock.mockResolvedValue({
+      files: {
+        'mechanisms/Na.mod': { name: 'Na.mod', size: 10, last_modified: '2024-01-01' },
+        'mechanisms/K.mod': { name: 'K.mod', size: 12, last_modified: '2024-01-01' },
+      },
+    });
+    downloadAssetMock.mockImplementation(async ({ assetPath }: { assetPath?: string }) => {
+      if (assetPath === 'mechanisms/Na.mod') throw new Error('gone');
+      const buffer = Buffer.from('ok');
+      return new Response(buffer, { headers: { 'content-length': String(buffer.length) } });
+    });
+
+    const failed: string[] = [];
+    const entries = await collectFileEntries(
+      getAssetFolderFiles({
+        entityType: EntityTypeDict.Circuit,
+        entityId: 'c1',
+        assetId: 'dir1',
+        prefix: './mechanisms',
+        failed,
+      })
+    );
+
+    expect(pathsOf(entries)).toEqual(['K.mod']);
+    expect(failed).toEqual(['Na.mod']);
+  });
 });

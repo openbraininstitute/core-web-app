@@ -3,12 +3,15 @@ import fsPath from 'node:path';
 import { Readable } from 'node:stream';
 
 import { format } from 'date-fns';
+import { delay } from 'es-toolkit';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import template from 'es-toolkit/compat/template';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import ApiError from '@/api/error';
 import { getSession } from '@/auth-fetch';
+import { logError } from '@/utils/logger';
 
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
@@ -108,50 +111,172 @@ export async function bufferStream(readable: Readable): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
+/** Open attempts for an asset before it is reported as failed; the tar receives nothing until one succeeds. */
+const OPEN_ATTEMPTS = 3;
+
+/** First backoff step between open attempts; doubled per attempt, with jitter. */
+const OPEN_RETRY_BASE_DELAY_MS = 500;
+
+/** Resumes allowed for one body after its socket dies mid-transfer. */
+const MAX_RANGE_RESUMES = 5;
+
+/**
+ * Whether another attempt could plausibly succeed: a network drop, or a status the server itself
+ * calls temporary. A 4xx is the asset's own answer, so retrying it only adds dead air to the tar.
+ */
+function isTransient(error: unknown): boolean {
+  if (error instanceof TypeError) return true; // fetch rejects with TypeError on network failure
+  const status = error instanceof ApiError ? error.cause?.status : undefined;
+  return status !== undefined && (status >= 500 || status === 429);
+}
+
+/**
+ * Reads a presigned-URL body to the end, re-fetching from the last byte written when the socket dies.
+ *
+ * The tar entry's header already declared this file's length, so a dead body cannot be retried as a
+ * whole — the only repair is to keep filling the same entry from where it stopped.
+ *
+ * @param response - Asset download response, already redirected to its presigned URL.
+ * @param size - Byte length the tar entry was declared with.
+ * @param signal - Aborts the read and any resume.
+ */
+export async function* readWithRangeResume(
+  response: Response,
+  size: number,
+  signal?: AbortSignal
+): AsyncGenerator<Buffer> {
+  let body = response.body as NodeReadableStream;
+  let written = 0;
+
+  for (let resumes = 0; ; resumes += 1) {
+    try {
+      for await (const chunk of Readable.fromWeb(body)) {
+        written += chunk.byteLength;
+        yield chunk;
+      }
+      return;
+    } catch (err) {
+      // every declared byte already reached the tar, so the entry is whole whatever just failed
+      if (written >= size) return;
+      if (signal?.aborted || resumes >= MAX_RANGE_RESUMES) throw err;
+
+      const resumed = await fetch(response.url, {
+        headers: { Range: `bytes=${written}-` },
+        signal,
+      });
+      if (resumed.status !== 206 || !resumed.body) {
+        logError(
+          `entity-download: cannot resume ${response.url} at byte ${written}`,
+          `(status ${resumed.status})`
+        );
+        throw err;
+      }
+      body = resumed.body as NodeReadableStream;
+    }
+  }
+}
+
+/**
+ * Opens an asset download, retrying a transient failure; nothing is written until an attempt succeeds.
+ *
+ * @remarks Mirrors `uploadPartWithRetry` in `api/entitycore/queries/assets/multipart`, the other half
+ * of the same transfer path.
+ */
+export async function openAsset({
+  ctx,
+  entityType,
+  entityId,
+  assetId,
+  assetPath,
+  signal,
+}: {
+  entityType: TEntityTypeDict;
+  entityId: string;
+  assetId: string;
+  assetPath?: string;
+  ctx?: WorkspaceContext;
+  signal?: AbortSignal;
+}): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    signal?.throwIfAborted();
+    try {
+      const response = await downloadAsset({
+        ctx,
+        entityType,
+        entityId,
+        id: assetId,
+        assetPath,
+        asRawResponse: true,
+        retryOnError: false,
+        signal,
+      });
+      if (!response.body) throw new Error('Response body is null');
+      return response;
+    } catch (error) {
+      if (attempt >= OPEN_ATTEMPTS || !isTransient(error)) throw error;
+      await delay(
+        OPEN_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1) + Math.random() * OPEN_RETRY_BASE_DELAY_MS,
+        { signal }
+      );
+    }
+  }
+}
+
 /**
  * Creates a file entry for downloading an entity asset.
  *
- * @param {Object} params - The parameters for creating an asset file entry.
- * @param {IEntity} params.entity - The entity containing the asset to download.
- * @param {IAsset} params.asset - The asset to download.
- * @param {string} params.path - The file path for the downloaded asset.
- * @param {WorkspaceContext} [params.ctx] - Optional workspace context for the download request.
- * @returns {Promise<FileEntry>} A promise that resolves to a file entry with stream, path, and size information.
- *
- * @description
- * - Downloads the asset using the entity type and ID
- * - Converts the response body to a readable stream
- * - Extracts content length from response headers for file size
- * - Returns a structured file entry ready for download processing
+ * @param params - The parameters for creating an asset file entry.
+ * @param params.entity - The entity containing the asset to download.
+ * @param params.asset - The asset to download.
+ * @param params.path - The file path for the downloaded asset.
+ * @param params.ctx - Optional workspace context for the download request.
+ * @param params.signal - Aborts the open and the body read.
+ * @returns A file entry whose stream retries the open and resumes a dead body.
  */
 export async function createAssetFileEntry({
   ctx,
   entity,
   asset,
   path,
+  signal,
 }: {
   entity: IEntity;
   asset: IAsset;
   path: string;
   ctx?: WorkspaceContext;
+  signal?: AbortSignal;
 }): Promise<FileEntry> {
-  const response = await downloadAsset({
+  const response = await openAsset({
     ctx,
     entityType: entity.type,
     entityId: entity.id,
-    id: asset.id,
-    asRawResponse: true,
-    retryOnError: false,
+    assetId: asset.id,
+    signal,
   });
+  const size = Number(response.headers.get('content-length')) || asset.size;
 
-  if (!response.body) {
-    throw new Error('Response body is null');
-  }
   return {
     path,
-    stream: Readable.fromWeb(response.body as NodeReadableStream),
-    size: Number(response.headers.get('content-length')),
+    stream: Readable.from(readWithRangeResume(response, size, signal)),
+    size,
   };
+}
+
+/**
+ * Yields one asset entry, recording its path in `failed` instead of ending the archive when it
+ * cannot be opened. Every handler collecting failures uses this, so `download-errors.txt` stays
+ * one format written in one place.
+ */
+export async function* tryAssetEntry(
+  params: Parameters<typeof createAssetFileEntry>[0],
+  failed: string[]
+): AsyncGenerator<FileEntry> {
+  try {
+    yield await createAssetFileEntry(params);
+  } catch {
+    if (params.signal?.aborted) return;
+    failed.push(params.path);
+  }
 }
 
 type TemplateRenderParams = {

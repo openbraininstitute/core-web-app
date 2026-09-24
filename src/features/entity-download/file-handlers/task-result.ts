@@ -4,9 +4,9 @@ import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { getAssetFolderFiles } from '@/features/entity-download/file-handlers/asset-folder';
 import { Metadata } from '@/features/entity-download/metadata';
 import {
-  createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
+  tryAssetEntry,
 } from '@/features/entity-download/utils';
 
 import type { IAsset } from '@/api/entitycore/types/shared/global';
@@ -31,23 +31,33 @@ async function* getDirectoryAssetFiles({
   asset,
   dataPath,
   ctx,
+  signal,
+  failed,
 }: {
   entityId: string;
   asset: IAsset;
   dataPath: string;
   ctx?: WorkspaceContext;
+  signal?: AbortSignal;
+  failed: string[];
 }): AsyncGenerator<FileEntry> {
+  const folderPath = `${dataPath}/${asset.path}`;
+  const missing: string[] = [];
   const files = getAssetFolderFiles({
     entityType: EntityTypeDict.TaskResult,
     entityId,
     assetId: asset.id,
     prefix: '',
     ctx,
+    signal,
+    failed: missing,
   });
 
   for await (const file of files) {
-    yield { ...file, path: `${dataPath}/${asset.path}/${file.path}` };
+    yield { ...file, path: `${folderPath}/${file.path}` };
   }
+
+  failed.push(...missing.map((path) => `${folderPath}/${path}`));
 }
 
 /**
@@ -62,7 +72,12 @@ async function* getDirectoryAssetFiles({
  * archive is built from the record's assets rather than from its `task_result_type`, so a new
  * result kind is downloadable without changing this handler.
  */
-export async function* getTaskResultFiles(entityIds: string[], ctx?: WorkspaceContext) {
+export async function* getTaskResultFiles(
+  entityIds: string[],
+  ctx?: WorkspaceContext,
+  signal?: AbortSignal,
+  failed: string[] = []
+) {
   const metadata = new Metadata<TaskResultJsonMetadata>();
 
   try {
@@ -82,19 +97,20 @@ export async function* getTaskResultFiles(entityIds: string[], ctx?: WorkspaceCo
     });
 
     for (const asset of result.assets ?? []) {
-      try {
-        if (asset.is_directory) {
-          yield* getDirectoryAssetFiles({ entityId, asset, dataPath, ctx });
-          continue;
-        }
+      if (signal?.aborted) return;
+      const path = `${dataPath}/${asset.path}`;
 
-        yield await createAssetFileEntry({
-          entity: result,
-          asset,
-          path: `${dataPath}/${asset.path}`,
-          ctx,
-        });
-      } catch {}
+      if (asset.is_directory) {
+        try {
+          yield* getDirectoryAssetFiles({ entityId, asset, dataPath, ctx, signal, failed });
+        } catch {
+          if (signal?.aborted) return;
+          failed.push(path);
+        }
+        continue;
+      }
+
+      yield* tryAssetEntry({ entity: result, asset, path, ctx, signal }, failed);
     }
   }
 

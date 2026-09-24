@@ -22,7 +22,7 @@ import { type TViewVariant, ViewVariant } from '@/constants';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
-import { downloadArchive } from '@/services/entity-download';
+import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { Action, ActionKind } from '@/ui/molecules/side-menu-action';
 import { cn } from '@/utils/css-class';
 
@@ -83,8 +83,8 @@ export function NotebookActionMenu({
     setPendingDownload(true);
     try {
       await downloadArchive(entity.type, [entity.id], ctx);
-    } catch {
-      // download errors are surfaced by the download service
+    } catch (error) {
+      notification.error(downloadFailedNotification(error));
     }
     setPendingDownload(false);
   };

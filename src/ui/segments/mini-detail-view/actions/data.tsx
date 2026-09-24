@@ -10,11 +10,12 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIcon } from '@/components/icons/buttons';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
-import { downloadArchive } from '@/services/entity-download';
+import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -36,6 +37,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   theme?: TViewVariant;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
+  const notify = useAppNotification();
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
 
@@ -62,6 +64,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         { virtualLabId, projectId },
         typeof recordName === 'string' ? recordName : undefined
       ),
+    onError: (error: Error) => notify.error(downloadFailedNotification(error)),
   });
   const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
   const onDownload = () => {

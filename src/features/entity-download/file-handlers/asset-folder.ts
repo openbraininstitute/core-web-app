@@ -1,8 +1,8 @@
 import { Readable } from 'node:stream';
 
-import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
+import { listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
+import { openAsset, readWithRangeResume } from '@/features/entity-download/utils';
 
-import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { FileEntry } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,12 +40,17 @@ export async function* getAssetFolderFiles({
   assetId,
   prefix,
   ctx,
+  signal,
+  failed = [],
 }: {
   entityType: TEntityTypeDict;
   entityId: string;
   assetId: string;
   prefix: string;
   ctx?: WorkspaceContext;
+  signal?: AbortSignal;
+  /** Paths, relative to `prefix` like the yielded entries, of files that could not be opened. */
+  failed?: string[];
 }): AsyncGenerator<FileEntry> {
   const listing = await listDirectoryOfAssets({ entityType, entityId, id: assetId, ctx });
   const normalized = normalizePrefix(prefix);
@@ -55,19 +60,26 @@ export async function* getAssetFolderFiles({
   );
 
   for (const filePath of matchingPaths) {
-    const response = await downloadAsset({
-      ctx,
-      entityType,
-      entityId,
-      id: assetId,
-      assetPath: filePath,
-      asRawResponse: true,
-      retryOnError: false,
-    });
-
-    if (!response.body) continue;
+    if (signal?.aborted) return;
 
     const relativePath = normalized === '' ? filePath : filePath.slice(normalized.length);
+
+    let response: Response;
+    try {
+      response = await openAsset({
+        ctx,
+        entityType,
+        entityId,
+        assetId,
+        assetPath: filePath,
+        signal,
+      });
+    } catch {
+      if (signal?.aborted) return;
+      failed.push(relativePath);
+      continue;
+    }
+
     const sizeHeader = Number(response.headers.get('content-length'));
     const size =
       Number.isFinite(sizeHeader) && sizeHeader > 0
@@ -76,7 +88,7 @@ export async function* getAssetFolderFiles({
 
     yield {
       path: relativePath,
-      stream: Readable.fromWeb(response.body as NodeReadableStream),
+      stream: Readable.from(readWithRangeResume(response, size, signal)),
       size,
     };
   }

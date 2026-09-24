@@ -31,7 +31,7 @@ import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 import { studentProjectIds } from '@/features/notebooks/assignment-id-conflict';
 import { useRunNotebook } from '@/features/notebooks/hooks/use-run-notebook';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
-import { downloadArchive } from '@/services/entity-download';
+import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -133,8 +133,8 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
         virtualLabId,
         projectId,
       });
-    } catch {
-      // download errors are surfaced by the download service
+    } catch (error) {
+      notification.error(downloadFailedNotification(error));
     }
     setPendingDownload(false);
   };

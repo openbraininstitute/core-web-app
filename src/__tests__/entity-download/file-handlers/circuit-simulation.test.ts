@@ -6,6 +6,7 @@ import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/cam
 import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import ApiError from '@/api/error';
 import { getCircuitSimulationFiles } from '@/features/entity-download/file-handlers/circuit-simulation';
 
 import { collectFileEntries, makeAsset, makeEntityBase, pathsOf, readEntryText } from '../fixtures';
@@ -141,5 +142,54 @@ describe('getCircuitSimulationFiles', () => {
 
     expect(pathsOf(entries)).toEqual(['metadata.json', 'metadata.csv']);
     expect(JSON.parse(await readEntryText(entries[0]))).toEqual([]);
+  });
+
+  it('records an asset it cannot open and keeps the rest of the archive', async () => {
+    vi.mocked(getSimulationCampaign).mockResolvedValue(
+      makeEntityBase({
+        id: 'camp1',
+        type: EntityTypeDict.SimulationCampaign,
+        assets: [
+          makeAsset({
+            id: 'cfg1',
+            path: 'campaign.json',
+            label: AssetLabel.campaign_generation_config,
+          }),
+        ],
+      }) as never
+    );
+    vi.mocked(getSimulations).mockResolvedValue({
+      data: [
+        makeEntityBase({
+          id: 'sim1',
+          type: EntityTypeDict.Simulation,
+          name: 'run-1',
+          assets: [
+            makeAsset({
+              id: 'sa1',
+              path: 'sim_config.json',
+              label: AssetLabel.sonata_simulation_config,
+            }),
+          ],
+        }),
+      ],
+    } as never);
+    vi.mocked(getSimulationExecutions).mockResolvedValue({ data: [] } as never);
+
+    // the campaign config is opened first; a 404 is the asset's own answer, so it is not retried
+    downloadAssetMock.mockRejectedValueOnce(new ApiError('gone', { status: 404 }));
+
+    const failed: string[] = [];
+    const entries = await collectFileEntries(
+      getCircuitSimulationFiles(['camp1'], undefined, undefined, failed)
+    );
+
+    expect(pathsOf(entries)).toEqual([
+      'data/0/run-1/sim_config.json',
+      'metadata.json',
+      'metadata.csv',
+    ]);
+    expect(failed).toEqual(['data/0/campaign.json']);
+    expect(downloadAssetMock).toHaveBeenCalledTimes(2);
   });
 });

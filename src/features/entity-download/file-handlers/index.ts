@@ -26,7 +26,9 @@ import type { WorkspaceContext } from '@/types/common';
 type GetEntityFilesHandler = (
   entityIds: string[],
   ctx?: WorkspaceContext,
-  abortSignal?: AbortSignal
+  abortSignal?: AbortSignal,
+  /** Paths of assets that could not be opened; `createDownloadStream` turns it into a manifest. */
+  failed?: string[]
 ) => AsyncGenerator<FileEntry>;
 
 export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntityFilesHandler>> = {
