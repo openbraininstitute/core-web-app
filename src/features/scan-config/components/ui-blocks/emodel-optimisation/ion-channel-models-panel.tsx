@@ -44,7 +44,8 @@ type Props = {
  * Lists the ion channel models the user picked in "Mechanism Selection" (read from
  * `mechanisms.ion_channel_models`). Checking a model assigns it to the selected region by adding a
  * `MechanismRegionSelection` entry to `mechanisms.mechanism_regions.<choiceName>` (an array);
- * unchecking removes that entry (and, with it, any parameters it held).
+ * unchecking removes that entry (and, with it, any parameters it held). A "Select all" checkbox
+ * above the list assigns or unassigns every model at once.
  */
 export function IonChannelModelsPanel({
   choiceName,
@@ -79,18 +80,39 @@ export function IonChannelModelsPanel({
     context: { virtualLabId, projectId },
   });
 
+  const assignedCount = refs.filter((ref) => assignedIds.has(ref.id_str)).length;
+
+  const writeEntries = (nextEntries: Array<Record<string, ConfigValue>>) => {
+    onChange(writeRegionEntries(value, choiceName, nextEntries));
+  };
+
   const toggleModel = (idStr: string, checked: boolean) => {
     const entries = readRegionEntries(mechanisms, choiceName);
 
-    const nextEntries = checked
-      ? // assign: add an entry for this model if not already present
-        entries.some((entry) => entryModelId(entry) === idStr)
-        ? entries
-        : [...entries, makeRegionEntry(idStr)]
-      : // unassign: drop this model's entry, taking any parameters it held with it
-        entries.filter((entry) => entryModelId(entry) !== idStr);
+    writeEntries(
+      checked
+        ? // assign: add an entry for this model if not already present
+          entries.some((entry) => entryModelId(entry) === idStr)
+          ? entries
+          : [...entries, makeRegionEntry(idStr)]
+        : // unassign: drop this model's entry, taking any parameters it held with it
+          entries.filter((entry) => entryModelId(entry) !== idStr)
+    );
+  };
 
-    onChange(writeRegionEntries(value, choiceName, nextEntries));
+  const toggleAll = (checked: boolean) => {
+    writeEntries(
+      checked
+        ? // assign the models still missing, keeping the existing entries and their parameters
+          [
+            ...readRegionEntries(mechanisms, choiceName),
+            ...refs
+              .filter((ref) => !assignedIds.has(ref.id_str))
+              .map((ref) => makeRegionEntry(ref.id_str)),
+          ]
+        : // unassign every model, taking their parameters with them
+          []
+    );
   };
 
   return (
@@ -104,6 +126,16 @@ export function IonChannelModelsPanel({
         </p>
       ) : (
         <ul className="mt-2 flex flex-col gap-2">
+          <li className="flex items-center justify-between gap-3 border border-transparent px-3">
+            <span className="text-sm text-gray-500">Select all</span>
+            <Checkbox
+              aria-label="Select all ion channel models"
+              checked={assignedCount === refs.length}
+              indeterminate={assignedCount > 0 && assignedCount < refs.length}
+              disabled={disabled}
+              onChange={(e) => toggleAll(e.target.checked)}
+            />
+          </li>
           {refs.map((ref) => {
             const entity = entities.find((e) => e.id === ref.id_str);
             const label = entity?.name ?? (isLoading ? 'Loading…' : ref.id_str);

@@ -4,7 +4,7 @@
  * Bespoke Middle-panel renderer for the `emodel_optimisation_parameters` root element.
  *
  * Fully custom (not schema-driven): the Left panel hardcodes a single "Mechanisms" outer tab with
- * three inner tabs; this dispatches to the component for the currently selected inner tab.
+ * four inner tabs; this dispatches to the component for the currently selected inner tab.
  *
  * `value`/`onChange` are scoped to the `emodel_optimisation_parameters` key of the outer config —
  * each tab reads and writes that slice.
@@ -12,6 +12,7 @@
 
 import { match } from 'ts-pattern';
 
+import { GlobalParametersSelection } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/global-parameters-selection';
 import { MechanismSelection } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-selection';
 import { ParametersSelection } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameters-selection';
 import { RegionAssignment } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-assignment';
@@ -73,6 +74,9 @@ export function EModelOptimisationParameters({
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
       />
+    ))
+    .with(EModelOptimisationMechanismsTabs.GlobalParameters, () => (
+      <GlobalParametersSelection value={value} onChange={onChange} disabled={disabled} />
     ))
     .otherwise(() => null);
 }

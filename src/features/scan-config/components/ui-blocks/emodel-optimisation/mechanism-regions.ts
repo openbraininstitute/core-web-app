@@ -21,6 +21,7 @@
 
 import { isPlainObject } from '@/features/scan-config/components/utils';
 
+import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { ConfigValue } from '@/features/scan-config/types';
 
 export const MECHANISMS_KEY = 'mechanisms';
@@ -58,13 +59,25 @@ export function defaultOptimizationValue(): TOptimizationValue {
 // Reads
 // ---------------------------------------------------------------------------
 
-function asRecord(v: ConfigValue): Record<string, ConfigValue> {
+export function asRecord(v: ConfigValue): Record<string, ConfigValue> {
   return isPlainObject(v) ? v : {};
 }
 
 /** The `mechanisms` object of the emodel config value. */
 export function readMechanisms(value: ConfigValue): Record<string, ConfigValue> {
   return asRecord(asRecord(value)[MECHANISMS_KEY]);
+}
+
+/** Refs of the models picked in Mechanism Selection (`ion_channel_models`), in picked order. */
+export function pickedModelRefs(mechanisms: Record<string, ConfigValue>): TFromIdRef[] {
+  const picked = mechanisms[ION_CHANNEL_MODELS_KEY];
+  if (!Array.isArray(picked)) return [];
+
+  return picked.flatMap((model) =>
+    isPlainObject(model) && typeof model.id_str === 'string'
+      ? [{ type: IonChannelModelFromIdType, id_str: model.id_str }]
+      : []
+  );
 }
 
 /** The `mechanism_regions` object (choice name -> entry array). */
@@ -97,6 +110,15 @@ export function assignedModelIds(
   return readRegionEntries(mechanisms, choiceName)
     .map(entryModelId)
     .filter((id): id is string => Boolean(id));
+}
+
+/** Ids of models assigned to at least one region choice. */
+export function modelIdsAssignedToAnyRegion(mechanisms: Record<string, ConfigValue>): Set<string> {
+  return new Set(
+    Object.keys(readRegions(mechanisms)).flatMap((choiceName) =>
+      assignedModelIds(mechanisms, choiceName)
+    )
+  );
 }
 
 /** The `parameters` object of a region entry (nmodl variable name -> ParameterSelection). */
@@ -158,16 +180,21 @@ export function makeRegionEntry(idStr: string): Record<string, ConfigValue> {
   };
 }
 
+/** Wraps a UI OptimizationValue into a schema `OptimizationValue`. */
+export function makeOptimizationValue(optimizationValue: TOptimizationValue): ConfigValue {
+  return {
+    type: OptimizationValueType,
+    mode: optimizationValue.mode,
+    value: optimizationValue.value,
+    bounds: optimizationValue.bounds,
+  };
+}
+
 /** Wraps a UI OptimizationValue into a schema `ParameterSelection`. */
 export function makeParameterSelection(optimizationValue: TOptimizationValue): ConfigValue {
   return {
     type: ParameterSelectionType,
-    value: {
-      type: OptimizationValueType,
-      mode: optimizationValue.mode,
-      value: optimizationValue.value,
-      bounds: optimizationValue.bounds,
-    },
+    value: makeOptimizationValue(optimizationValue),
     distribution: DEFAULT_DISTRIBUTION,
   };
 }

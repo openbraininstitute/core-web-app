@@ -1,7 +1,6 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Checkbox, Radio } from 'antd';
 import { useMemo } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -12,16 +11,14 @@ import {
   entryParameters,
   makeParameterSelection,
   PARAMETERS_KEY,
-  ParameterMode,
   readMechanisms,
   readOptimizationValue,
   readRegionEntries,
-  type TBounds,
   type TOptimizationValue,
-  type TParameterMode,
   writeRegionEntries,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { extractNeuronBlockParameters } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/neuron-block-parameters';
+import { ParameterRow } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameter-row';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -203,123 +200,5 @@ function NeuronBlockParameters({
         );
       })}
     </ul>
-  );
-}
-
-/** True when the string parses to a finite number. Empty input is treated as "not yet a value". */
-function parseFiniteNumber(raw: string): number | null {
-  if (raw.trim() === '') return null;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
-}
-
-/**
- * A single parameter row: a checkbox to include the parameter, and — once checked — a fixed/bounds
- * mode selector with the matching number input(s). Switching mode clears the other mode's field(s).
- */
-function ParameterRow({
-  name,
-  unit,
-  checked,
-  disabled,
-  optimizationValue,
-  onToggle,
-  onValueChange,
-}: {
-  name: string;
-  unit: string | null;
-  checked: boolean;
-  disabled?: boolean;
-  optimizationValue: TOptimizationValue | null;
-  onToggle: (next: boolean) => void;
-  onValueChange: (next: TOptimizationValue) => void;
-}) {
-  const mode = optimizationValue?.mode ?? ParameterMode.Fixed;
-
-  const setMode = (nextMode: TParameterMode) => {
-    if (!optimizationValue || nextMode === optimizationValue.mode) return;
-    // Switching mode clears the other mode's field(s). Bounds mode seeds an empty pair so each
-    // input can mutate its own slot independently.
-    onValueChange({
-      mode: nextMode,
-      value: null,
-      bounds: nextMode === ParameterMode.Bounds ? [null, null] : null,
-    });
-  };
-
-  const setValue = (raw: string) => {
-    if (!optimizationValue) return;
-    onValueChange({ ...optimizationValue, value: parseFiniteNumber(raw), bounds: null });
-  };
-
-  const setBound = (index: 0 | 1, raw: string) => {
-    if (!optimizationValue) return;
-    const current: TBounds = optimizationValue.bounds ?? [null, null];
-    const nextBounds: TBounds = [current[0], current[1]];
-    nextBounds[index] = parseFiniteNumber(raw);
-    onValueChange({ ...optimizationValue, value: null, bounds: nextBounds });
-  };
-
-  return (
-    <li className="flex flex-col gap-2 rounded border border-gray-200 bg-white p-3">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
-        <div className="flex shrink-0 items-center gap-3">
-          {unit && <span className="text-xs text-gray-500">{unit}</span>}
-          <Checkbox
-            checked={checked}
-            disabled={disabled}
-            onChange={(e) => onToggle(e.target.checked)}
-          />
-        </div>
-      </div>
-
-      {checked && optimizationValue && (
-        <div className="flex flex-col gap-2">
-          <Radio.Group
-            value={mode}
-            disabled={disabled}
-            onChange={(e) => setMode(e.target.value as TParameterMode)}
-            options={[
-              { label: 'Fixed', value: ParameterMode.Fixed },
-              { label: 'Bounds', value: ParameterMode.Bounds },
-            ]}
-          />
-
-          {mode === ParameterMode.Fixed ? (
-            <input
-              type="number"
-              inputMode="decimal"
-              disabled={disabled}
-              className="w-full rounded border border-gray-200 px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Value"
-              value={optimizationValue.value ?? ''}
-              onChange={(e) => setValue(e.target.value)}
-            />
-          ) : (
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                inputMode="decimal"
-                disabled={disabled}
-                className="w-full rounded border border-gray-200 px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Min"
-                value={optimizationValue.bounds?.[0] ?? ''}
-                onChange={(e) => setBound(0, e.target.value)}
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                disabled={disabled}
-                className="w-full rounded border border-gray-200 px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Max"
-                value={optimizationValue.bounds?.[1] ?? ''}
-                onChange={(e) => setBound(1, e.target.value)}
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </li>
   );
 }

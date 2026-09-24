@@ -90,6 +90,8 @@ type Props = {
   onRemoveGroup?: (groupIndex: number) => void;
   /** max rows before the list scrolls; raise it when the field stands alone in its column */
   visibleItemCount?: number;
+  /** replaces the default "Add <entity> to scan" label of the add button (flat lists only) */
+  addLabel?: string;
 };
 
 function findEntityForRef(
@@ -140,13 +142,14 @@ export function ModelIdentifierSummaryView({
   onGroupNameChange,
   onRemoveGroup,
   visibleItemCount,
+  addLabel,
 }: Props) {
   const instanceId = useId();
   const entityPreview = useScanConfigEntityPreview();
   const setEntityPreview = useSetScanConfigEntityPreview();
   const mergedInputs = mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs });
   const addEntitiesLabel = getAddEntitiesLabel(mergedInputs);
-  const addToScanLabel = getAddToScanLabel(mergedInputs);
+  const addToScanLabel = addLabel ?? getAddToScanLabel(mergedInputs);
 
   // group names must be unique (backend rejects duplicate NamedTuple names); flag
   // every name that collides so the offending inputs can surface the error

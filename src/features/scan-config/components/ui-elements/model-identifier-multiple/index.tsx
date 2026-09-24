@@ -44,6 +44,8 @@ type Props = {
   className?: string;
   /** max rows before the list scrolls; raise it when the field stands alone in its column */
   visibleItemCount?: number;
+  /** replaces the default "Add <entity> to scan" label of the add button (flat lists only) */
+  addLabel?: string;
 };
 
 function updateParsedValue(
@@ -63,6 +65,7 @@ export function ModelIdentifierMultiple({
   errorPathPrefix,
   className,
   visibleItemCount,
+  addLabel,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const workflowField = useScanConfigWorkflowEditorField();
@@ -345,6 +348,7 @@ export function ModelIdentifierMultiple({
         onGroupNameChange={handleGroupNameChange}
         onRemoveGroup={handleRemoveGroup}
         visibleItemCount={visibleItemCount}
+        addLabel={addLabel}
       />
     </div>
   );
