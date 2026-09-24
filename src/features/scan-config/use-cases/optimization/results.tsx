@@ -47,6 +47,7 @@ export function OptimizationTab({
       notificationKey: 'optimization-config-error',
       failureMessage: 'We ran into a problem launching your optimization. Please try again later.',
       logTopic: 'Optimization',
+      requiresConsent: true,
     }
   );
 
