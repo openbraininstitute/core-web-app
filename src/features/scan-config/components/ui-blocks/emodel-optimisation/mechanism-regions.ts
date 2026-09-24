@@ -12,8 +12,7 @@
  * and a ParameterSelection is
  *   { type: "ParameterSelection", value: OptimizationValue, distribution: "uniform" }
  * with
- *   OptimizationValue = { type: "OptimizationValue", mode: "fixed"|"bounds", value: number|null,
- *                         bounds: [number, number] | null }
+ *   OptimizationValue = { mode: "fixed"|"bounds", value: number|null, bounds: [number, number] | null }
  *
  * All the emodel panels go through these helpers so the persisted structure stays schema-valid and
  * the pruning/assignment logic reads/writes the array entries consistently.
@@ -31,7 +30,6 @@ export const PARAMETERS_KEY = 'parameters';
 export const IonChannelModelFromIdType = 'IonChannelModelFromID';
 export const MechanismRegionSelectionType = 'MechanismRegionSelection';
 export const ParameterSelectionType = 'ParameterSelection';
-export const OptimizationValueType = 'OptimizationValue';
 export const DEFAULT_DISTRIBUTION = 'uniform';
 
 export const ParameterMode = {
@@ -162,12 +160,7 @@ export function makeRegionEntry(idStr: string): Record<string, ConfigValue> {
 export function makeParameterSelection(optimizationValue: TOptimizationValue): ConfigValue {
   return {
     type: ParameterSelectionType,
-    value: {
-      type: OptimizationValueType,
-      mode: optimizationValue.mode,
-      value: optimizationValue.value,
-      bounds: optimizationValue.bounds,
-    },
+    value: optimizationValue,
     distribution: DEFAULT_DISTRIBUTION,
   };
 }
