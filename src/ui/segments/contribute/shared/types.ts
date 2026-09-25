@@ -29,6 +29,7 @@ export interface IContributionFormConfig<TFormValues, TSchema extends ZodObject<
     entityId: string;
     virtualLabId: string;
     projectId: string;
+    values: TFormValues;
   }) => string | '__NO_DETAILS_URL__';
 }
 
