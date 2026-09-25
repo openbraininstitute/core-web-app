@@ -1,5 +1,6 @@
 'use client';
 
+import { LinkOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
@@ -24,6 +25,7 @@ import { ParameterRow } from '@/features/scan-config/components/ui-blocks/emodel
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
 import type { ConfigValue } from '@/features/scan-config/types';
@@ -84,9 +86,24 @@ export function RegionModelDetail({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">
-      <h3 className="text-primary-9 text-lg font-bold">
-        {isPending ? 'Loading…' : modelName || 'Ion channel model'}
-      </h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-primary-9 text-lg font-bold">
+          {isPending ? 'Loading…' : modelName || 'Ion channel model'}
+        </h3>
+        {/* /app/entity/<id> redirects to the entity's page in the Data section */}
+        <a
+          href={`/app/entity/${modelId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            'inline-flex size-6 shrink-0 items-center justify-center rounded-full border',
+            'border-gray-200 bg-white transition-colors hover:bg-gray-100 hover:border-gray-300 hover:text-primary-8'
+          )}
+          aria-label={`View ion channel model ${modelName}`}
+        >
+          <LinkOutlined className="size-3 text-gray-400" />
+        </a>
+      </div>
       <p className="text-sm text-gray-500">{modelDescription || 'Ion channel model parameters'}</p>
 
       {isError ? (

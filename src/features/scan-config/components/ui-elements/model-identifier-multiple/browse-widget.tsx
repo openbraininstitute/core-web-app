@@ -314,6 +314,8 @@ export function ModelIdentifierBrowseWidget({
             miniViewProps={{
               section: workspaceSection,
               hideUseModelAction: true,
+              // leaving the page would lose the config being edited
+              openDetailsInNewTab: true,
             }}
             classNames={{
               container:

@@ -57,6 +57,8 @@ type Props = {
   section?: TWorkspaceSection;
   dataType: TExtendedEntitiesTypeDict;
   hideUseModelAction?: boolean;
+  /** open "View details" in a new tab, e.g. from a config editor that navigating away would lose */
+  openDetailsInNewTab?: boolean;
   workflowTargetType?: TExtendedEntitiesTypeDict;
   /** Pass a predicate where the listing can mix public and owned records. */
   isPrivate?: boolean | ((record: EntityCoreObjectTypes) => boolean);
@@ -67,6 +69,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
   dataType,
   hideUseModelAction,
+  openDetailsInNewTab,
   workflowTargetType,
   isPrivate = true,
   virtualLabData,
@@ -103,6 +106,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       dataType={dataType}
       onClose={onClose}
       hideUseModelAction={hideUseModelAction}
+      openDetailsInNewTab={openDetailsInNewTab}
       workflowTargetType={workflowTargetType}
       isPrivate={typeof isPrivate === 'function' ? Boolean(record && isPrivate(record)) : isPrivate}
       virtualLabData={virtualLabData}
@@ -118,6 +122,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   theme = 'default',
   enableAnimation = true,
   hideUseModelAction,
+  openDetailsInNewTab,
   workflowTargetType,
   isPrivate = true,
   virtualLabData,
@@ -129,6 +134,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   theme?: TViewVariant;
   enableAnimation?: boolean;
   hideUseModelAction?: boolean;
+  openDetailsInNewTab?: boolean;
   workflowTargetType?: TExtendedEntitiesTypeDict;
   isPrivate?: boolean;
   virtualLabData?: TVirtualLab;
@@ -320,7 +326,9 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
         section: P.union(
           WorkspaceSection.SimulateWorkflow,
           WorkspaceSection.ExtractWorkflow,
-          WorkspaceSection.ProcessWorkflow
+          WorkspaceSection.ProcessWorkflow,
+          // only reached from Optimize's scan-config pickers, which hide "Use model"
+          WorkspaceSection.OptimizeWorkflow
         ),
       },
       ({ section }) => (
@@ -329,6 +337,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           dataType={dataType}
           section={section}
           hideUseModelAction={hideUseModelAction}
+          openDetailsInNewTab={openDetailsInNewTab}
           workflowTargetType={workflowTargetType}
         />
       )
@@ -342,6 +351,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           record={record}
           dataType={dataType}
           hideUseModelAction={hideUseModelAction}
+          openDetailsInNewTab={openDetailsInNewTab}
           workflowTargetType={workflowTargetType}
         />
       )
