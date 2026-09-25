@@ -11,7 +11,6 @@ export const ObiOneTaskTypeDict = {
   EmSynapseMapping: 'em_synapse_mapping',
   ExtracellularRecordingWeightsCalculation: 'extracellular_recording_weights_calculation',
   BuildSynaptome: 'circuit_single_build',
-  // TODO(backend): confirm the obi-one task type string for e-model optimization.
   EModelOptimization: 'emodel_optimization',
   CircuitSynapticPhysiology: 'circuit_synaptic_physiology_assignment',
 } as const;
