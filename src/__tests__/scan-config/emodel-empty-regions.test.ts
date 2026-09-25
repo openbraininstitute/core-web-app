@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   makeRegionEntry,
+  pruneRegionsToModelIds,
   withoutEmptyRegions,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 
@@ -39,5 +40,16 @@ describe('withoutEmptyRegions', () => {
     const config: Config = { info: { campaign_name: 'c' } };
 
     expect(withoutEmptyRegions(config, schema)).toEqual(config);
+  });
+});
+
+describe('pruneRegionsToModelIds', () => {
+  it('removes a region whose only model was removed', () => {
+    const somatic = [makeRegionEntry('icm-1'), makeRegionEntry('icm-2')];
+    const mechanisms = { mechanism_regions: { axonal: [makeRegionEntry('icm-2')], somatic } };
+
+    expect(pruneRegionsToModelIds(mechanisms, new Set(['icm-1']))).toEqual({
+      mechanism_regions: { somatic: [makeRegionEntry('icm-1')] },
+    });
   });
 });

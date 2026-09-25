@@ -194,7 +194,10 @@ export function failingModelIds(
 // Writes (all return the next `emodel_optimisation_parameters` config value)
 // ---------------------------------------------------------------------------
 
-/** Replaces a region choice's entry array, writing back the full emodel value. */
+/**
+ * Replaces a region choice's entry array, writing back the full emodel value. An empty array
+ * removes the region instead: the schema requires at least one model per region.
+ */
 export function writeRegionEntries(
   value: ConfigValue,
   choiceName: string,
@@ -202,16 +205,17 @@ export function writeRegionEntries(
 ): ConfigValue {
   const root = asRecord(value);
   const mechanisms = readMechanisms(value);
-  const regions = readRegions(mechanisms);
+  const regions: Record<string, ConfigValue> = {
+    ...readRegions(mechanisms),
+    [choiceName]: nextEntries,
+  };
+  if (nextEntries.length === 0) delete regions[choiceName];
 
   return {
     ...root,
     [MECHANISMS_KEY]: {
       ...mechanisms,
-      [MECHANISM_REGIONS_KEY]: {
-        ...regions,
-        [choiceName]: nextEntries,
-      },
+      [MECHANISM_REGIONS_KEY]: regions,
     },
   };
 }
@@ -241,7 +245,8 @@ export function makeParameterSelection(optimizationValue: TOptimizationValue): C
 /**
  * Drops every region entry (across all region choices) whose `ion_channel_model.id_str` is not in
  * `keptIds`. Used when the master `ion_channel_models` list changes: a model removed there must
- * leave every region it was assigned to, taking its parameters with it.
+ * leave every region it was assigned to, taking its parameters with it. A region left without
+ * entries is removed: the schema requires at least one model per region.
  *
  * Returns the same `mechanisms` reference when nothing changed.
  */
@@ -267,7 +272,7 @@ export function pruneRegionsToModelIds(
     });
 
     if (kept.length !== entries.length) changed = true;
-    nextRegions[choiceName] = kept;
+    if (kept.length > 0) nextRegions[choiceName] = kept;
   }
 
   if (!changed) return mechanisms;

@@ -75,6 +75,15 @@ describe('IonChannelModelsPanel select all', () => {
     ]);
   });
 
+  it('removes the region when its last model is unchecked', () => {
+    const { onChange } = renderPanel(partlyAssigned());
+    // checkboxes: select all, then A (the only model in somatic), B, C
+    fireEvent.click(screen.getAllByRole('checkbox')[1]);
+
+    const next = onChange.mock.calls[0][0];
+    expect(next.mechanisms.mechanism_regions).not.toHaveProperty('somatic');
+  });
+
   it('unassigns every model', () => {
     const value = partlyAssigned() as {
       mechanisms: { mechanism_regions: Record<string, unknown> };
@@ -85,6 +94,7 @@ describe('IonChannelModelsPanel select all', () => {
     fireEvent.click(selectAll);
 
     const next = onChange.mock.calls[0][0];
-    expect(next.mechanisms.mechanism_regions.somatic).toEqual([]);
+    // an empty region is invalid, so it is removed rather than left as []
+    expect(next.mechanisms.mechanism_regions).not.toHaveProperty('somatic');
   });
 });
