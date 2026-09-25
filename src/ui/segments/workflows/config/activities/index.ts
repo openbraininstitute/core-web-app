@@ -1,5 +1,4 @@
 import { WorkflowActivityDictValue } from '@/constants';
-import { eFeatureExtractionFlag, extractionActivityFlag } from '@/features/feature-flags/flags';
 
 import { BuildWorkflows } from './build';
 import { ExtractionWorkflows } from './extract';
@@ -35,7 +34,6 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     name: 'Extraction',
     order: 3,
     disabled: false,
-    requiredAnyFeatures: [extractionActivityFlag.key, eFeatureExtractionFlag.key],
     workflows: ExtractionWorkflows,
   },
   [WorkflowActivityDictValue.optimize]: {

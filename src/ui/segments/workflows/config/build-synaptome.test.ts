@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { buildSynaptomeFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 
@@ -25,8 +24,8 @@ describe('build synaptome workflow registration', () => {
     expect(descriptor?.disabled).toBe(false);
   });
 
-  it('is gated behind its feature flag', () => {
-    expect(descriptor?.requiredFeatures).toContain(buildSynaptomeFlag.key);
+  it('is not gated behind a feature flag', () => {
+    expect(descriptor?.requiredFeatures ?? []).toEqual([]);
   });
 
   it('binds the obi-one MEModelSynapticModelPlacementScanConfig schema and generate endpoint', () => {
