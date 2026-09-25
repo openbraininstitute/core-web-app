@@ -1,0 +1,36 @@
+name: Request E2E run on main
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: e2e-main-preview
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for the main preview to serve this commit
+        timeout-minutes: 45
+        env:
+          PREVIEW_APP_URI: ${{ vars.PREVIEW_APP_URI }}
+          SHA: ${{ github.sha }}
+        run: |
+          : "${PREVIEW_APP_URI:?set the PREVIEW_APP_URI repository variable}"
+          until curl -sf "$PREVIEW_APP_URI/app/version" | jq -e --arg sha "${SHA:0:7}" \
+              '.version | contains("g" + $sha)' > /dev/null; do
+            echo "Waiting for $PREVIEW_APP_URI to serve ${SHA:0:7}…"
+            sleep 30
+          done
+
+      - name: Dispatch to obi-e2e
+        env:
+          # The same token `core-web-app-release.example.yml` uses.
+          GH_TOKEN: ${{ secrets.OBI_E2E_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/openbraininstitute/obi-e2e/dispatches \
+            --field event_type=core-web-app-main \
+            --field 'client_payload[commit]=${{ github.sha }}' \
+            --field 'client_payload[repository]=${{ github.repository }}'
