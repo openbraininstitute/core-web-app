@@ -182,6 +182,8 @@ export const ScanConfigUIElementDict = {
   StringSelection: 'string_selection',
   StringSelectionEnhanced: 'string_selection_enhanced',
   StringListInput: 'string_list_input',
+  StringListOptional: 'string_list_optional',
+  FloatInput: 'float_input',
   Stochasticity: 'stochasticity',
   NeuronPropertyFilter: 'neuron_property_filter',
   NeuronSetCombination: 'neuron_set_combination',
@@ -295,6 +297,16 @@ export interface FloatOptional extends TBlockElement {
     },
     { type: 'null' },
   ];
+}
+
+/** A required, non-nullable single number (`{ type: 'number' }`, no sweep, no null). */
+export interface FloatInput extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.FloatInput;
+  type: 'number';
+  minimum?: number;
+  maximum?: number;
+  exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
 }
 
 /**
@@ -484,6 +496,12 @@ export interface StringListInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringListInput;
 }
 
+/** Nullable list of strings (`anyOf: [{ array of string }, { null }]`); `null` means unset. */
+export interface StringListOptional extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringListOptional;
+  anyOf: [{ type: 'array'; items: { type: 'string' } }, { type: 'null' }];
+}
+
 export interface StringSelectionEnhanced extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringSelectionEnhanced;
   enum: string[];
@@ -665,6 +683,8 @@ export type ParamSchema =
   | DiscreteProbabilities
   | StringSelectionEnhanced
   | StringListInput
+  | StringListOptional
+  | FloatInput
   | AxonModifier
   | Stochasticity
   | NeuronPropertyFilter
