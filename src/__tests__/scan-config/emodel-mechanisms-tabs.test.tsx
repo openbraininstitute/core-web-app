@@ -34,10 +34,6 @@ describe('EModelOptimisationMechanismsTabList', () => {
     expect(screen.getAllByRole('img', { name: 'check-circle' })).toHaveLength(4);
   });
 
-  it('flags Mechanism Selection while nothing has been written', () => {
-    expect(warnedTabs([''])).toEqual([EModelOptimisationMechanismsTabs.MechanismSelection]);
-  });
-
   it('flags Mechanism Selection for ion channel model errors', () => {
     expect(warnedTabs(['/mechanisms/ion_channel_models/0/id_str'])).toEqual([
       EModelOptimisationMechanismsTabs.MechanismSelection,

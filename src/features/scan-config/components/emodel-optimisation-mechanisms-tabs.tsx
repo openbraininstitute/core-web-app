@@ -28,12 +28,8 @@ import type { ErrorObject } from 'ajv';
  */
 function tabHasErrors(tab: string, emodelErrors: readonly ErrorObject[]): boolean {
   return match(tab)
-    .with(
-      EModelOptimisationMechanismsTabs.MechanismSelection,
-      () =>
-        // '' is the emodel value itself
-        emodelErrors.some((error) => error.instancePath === '') ||
-        hasErrorAt(emodelErrors, '/mechanisms/ion_channel_models')
+    .with(EModelOptimisationMechanismsTabs.MechanismSelection, () =>
+      hasErrorAt(emodelErrors, '/mechanisms/ion_channel_models')
     )
     .with(EModelOptimisationMechanismsTabs.RegionAssignment, () =>
       hasErrorAt(nonParameterErrors(emodelErrors), '/mechanisms/mechanism_regions')

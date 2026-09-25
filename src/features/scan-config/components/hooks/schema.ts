@@ -246,11 +246,11 @@ function buildInitialConfigState(
       return;
     }
 
-    // emodel_optimisation_parameters is a custom element with no seedable schema properties.
-    // Leave it null when absent (rather than defaulting to {}) so a root-level `required`
-    // constraint fails on an empty config and the validation marker reflects it.
+    // start with the keys the tabs fill, empty, so the schema flags them until they are filled
     if (v.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters) {
-      state[k] = safeInitialConfig[k] ?? null;
+      state[k] = safeInitialConfig[k] ?? {
+        mechanisms: { ion_channel_models: [], mechanism_regions: {} },
+      };
       return;
     }
 
