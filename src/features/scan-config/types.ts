@@ -195,6 +195,7 @@ export const ScanConfigUIElementDict = {
   EtypeSelector: 'etype_selector',
   EModelOptimisationParameters: 'emodel_optimisation_parameters',
   AxonModifier: 'axon_modifier',
+  Object: 'object',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -317,6 +318,17 @@ export interface TSelectEFeaturesByProtocol extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.SelectEFeaturesByProtocol;
   type: 'object';
   property_endpoints?: string;
+}
+
+/**
+ * A fixed-shape object: a closed set of declared properties, each rendered by its own nested
+ * block-element `ui_element`. Becomes a plain dict; keys are written individually.
+ */
+export interface ObjectElement extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.Object;
+  type: 'object';
+  additionalProperties: false;
+  properties: Record<string, ParamSchema> & { type?: Type };
 }
 
 export interface Reference extends TBlockElement {
@@ -685,6 +697,7 @@ export type ParamSchema =
   | StringListInput
   | StringListOptional
   | FloatInput
+  | ObjectElement
   | AxonModifier
   | Stochasticity
   | NeuronPropertyFilter

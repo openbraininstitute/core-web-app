@@ -27,6 +27,7 @@ import {
   NeuronSetCombination,
   type NeuronSetCombinationEntry,
 } from '@/features/scan-config/components/ui-elements/neuron-set-combination';
+import { ObjectField } from '@/features/scan-config/components/ui-elements/object';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import { Reference } from '@/features/scan-config/components/ui-elements/reference';
@@ -825,5 +826,17 @@ export function UIElementRender({
         );
       }
     )
+    .with({ paramSchema: { ui_element: ScanConfigUIElementDict.Object } }, ({ paramSchema }) => (
+      <ObjectField
+        value={value}
+        paramSchema={paramSchema}
+        disabled={disabled}
+        config={config}
+        schema={schema}
+        entity={entity}
+        schemaMappingConfig={schemaMappingConfig}
+        onChange={(nextObject) => setState({ ...state, [k]: nextObject })}
+      />
+    ))
     .otherwise(() => null);
 }

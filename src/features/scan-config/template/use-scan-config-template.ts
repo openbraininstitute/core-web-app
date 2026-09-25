@@ -93,6 +93,12 @@ export function useScanConfigTemplate({
     seed,
   });
 
+  // Debug: log the scan config on change.
+  useEffect(() => {
+    // biome-ignore lint/suspicious/noConsole: temporary debugging of the scan config
+    console.log('[scan-config] config', config);
+  }, [config]);
+
   const allEntries = useEntries({ config, schema });
   const errors = useValidateSchema({ initialConfig, config, schema });
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
