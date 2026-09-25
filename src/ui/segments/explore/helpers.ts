@@ -14,6 +14,7 @@ import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
+import { EModelOptimizationResult } from '@/entity-configuration/domain/simulation/emodel-optimization-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -86,6 +87,7 @@ export const SimulationDataExtendedTypes = {
   MicrocircuitSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
+  EModelOptimizationResult,
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } as const;

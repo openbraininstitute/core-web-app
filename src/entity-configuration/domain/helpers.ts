@@ -30,6 +30,21 @@ export const getEntityByExtendedType = ({ type }: { type?: TExtendedEntitiesType
 export type TEntityByExtendedTypeConfig = ReturnType<typeof getEntityByExtendedType>;
 
 /**
+ * Resolves an entitycore `task_result_type` (e.g. `efeature_extraction__result`) to the
+ * frontend view that lists it. Reuses the `task_result_type` filter each task-result domain
+ * config already declares under `api.config.extraQueryKeyBuilder`, so no separate mapping table
+ * is maintained. Used by the `task_result_selector` UI element to browse/resolve the specific
+ * result kind the schema field asks for.
+ */
+export const getExtendedTypeByTaskResultType = (
+  taskResultType: string
+): TExtendedEntitiesTypeDict | undefined =>
+  find(
+    EntityCoreConfiguration,
+    (entity) => entity.api?.config?.extraQueryKeyBuilder?.task_result_type === taskResultType
+  )?.extendedType;
+
+/**
  * Resolve viewer features for an extended entity type from its domain config.
  *
  * Falls back to defaults when the type is unknown or omits `viewer`.

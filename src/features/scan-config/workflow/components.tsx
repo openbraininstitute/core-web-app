@@ -28,6 +28,8 @@ function scanConfigActivityToWorkspaceSection(activity: TScanConfigActivity): TW
       return WorkspaceSection.ProcessWorkflow;
     case ScanConfigActivity.Build:
       return WorkspaceSection.ScanConfigBuildWorkflow;
+    case ScanConfigActivity.Optimize:
+      return WorkspaceSection.OptimizeWorkflow;
     default:
       return WorkspaceSection.GeneralWorkflow;
   }

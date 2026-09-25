@@ -22,6 +22,20 @@ export function useValidateSchema({
   const initialConfigValidated = useRef(false);
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
+    // ObiOne's custom keyword for arrays whose items must increase, e.g. [lower, upper] bounds:
+    // JSON Schema has no keyword that compares items with each other. Only numbers are compared,
+    // a missing item is reported by the items' own `type`.
+    ajv.addKeyword({
+      keyword: 'strictly_increasing',
+      type: 'array',
+      schemaType: 'boolean',
+      validate: (enabled: boolean, data: unknown[]) =>
+        !enabled ||
+        data.every((item, index) => {
+          const previous = data[index - 1];
+          return typeof item !== 'number' || typeof previous !== 'number' || item > previous;
+        }),
+    });
     if (!schema) return;
     return ajv.compile(schema as AnySchema);
   }, [schema]);

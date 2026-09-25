@@ -33,6 +33,7 @@ export const ScanConfigGeneratedApiPath = {
   CreateExtracellularRecordingArray:
     'create-extracellular-recording-array-scan-config-generate-grid',
   BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
+  EModelOptimization: 'e-model-optimization-scan-config-generate-grid',
   SynapseParameterization: 'synapse-parameterization-scan-config-generate-grid',
 } as const;
 
@@ -264,5 +265,16 @@ export function wholeBrainCircuitSimulationConfigureBinding(): TScanConfigConfig
     // via `resolveSimulatorScanConfigOverride`.
     generatedApiPath: ScanConfigGeneratedApiPath.CircuitSimulation,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function optimizeEModelConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Emodel,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Emodel,
+    // The e-model optimization scan-config has no `model_identifier` field, so there is no
+    // FromID selection to write under `initialize` — configure opens with nothing picked.
+    fromIdTypeByBrowseType: {},
+    generatedApiPath: ScanConfigGeneratedApiPath.EModelOptimization,
   };
 }

@@ -55,6 +55,12 @@ interface SelectorModalProps {
   fieldKey: string;
   /** json schema fragment for the field; supplies accepted types when declared */
   paramSchema?: Record<string, unknown>;
+  /**
+   * When set, the selected ref is resolved (for the card + preview) as this extended type
+   * instead of deriving it from the stored ref's FromID via the global registry. Lets a picker
+   * store a generic FromID (e.g. `TaskResultFromID`) while displaying the specific view.
+   */
+  resolveAsType?: TExtendedEntitiesTypeDict;
 }
 
 export function EntitySelectorSingle({
@@ -67,6 +73,7 @@ export function EntitySelectorSingle({
   fieldKey,
   valueType,
   paramSchema,
+  resolveAsType,
 }: SelectorModalProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const workflowField = useScanConfigWorkflowEditorField();
@@ -95,6 +102,7 @@ export function EntitySelectorSingle({
     refs,
     sessionRefs,
     context: { virtualLabId, projectId },
+    resolveAsType,
   });
 
   const resolvedEntity = selectedRef
@@ -123,7 +131,10 @@ export function EntitySelectorSingle({
       if (!ref) {
         return;
       }
-      const target = resolveEntityFetchTarget(ref);
+      // resolveAsType wins over the FromID-registry lookup, matching the card resolution
+      const target = resolveAsType
+        ? { entityType: resolveAsType, id: ref.id_str }
+        : resolveEntityFetchTarget(ref);
       if (target) {
         setEntityPreview({
           dataType: target.entityType,
@@ -132,7 +143,7 @@ export function EntitySelectorSingle({
         });
       }
     },
-    [setEntityPreview]
+    [setEntityPreview, resolveAsType]
   );
 
   const handleConfirm = useCallback(
@@ -175,6 +186,9 @@ export function EntitySelectorSingle({
       browseConfig={workflowField?.browseConfig}
       prerequisites={workflowField?.workflowSessionSelection?.prerequisites}
       disabled={disabled}
+      // when the browse type has no FromID mapping (e.g. a task-result view), keep the confirmed
+      // row from being dropped by stamping the field's `type` const; handleConfirm overrides it anyway
+      fallbackFromIdType={valueType}
       onConfirm={handleConfirm}
       onCancel={handleCancel}
     />

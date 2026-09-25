@@ -95,10 +95,18 @@ export function useResolvedModelIdentifierEntities({
   refs,
   sessionRefs,
   context,
+  resolveAsType,
 }: {
   refs: readonly TResolvableRef[];
   sessionRefs?: readonly TWorkflowSessionSelectionRef[];
   context: WorkspaceContext;
+  /**
+   * When set, every ref is fetched as this extended type instead of deriving the type from the
+   * ref's FromID via the global registry. Lets a picker store a generic FromID (e.g.
+   * `TaskResultFromID`) yet resolve against the specific view (e.g. an efeature extraction
+   * result) without adding that generic type to `ScanConfigFromIdType`.
+   */
+  resolveAsType?: TExtendedEntitiesTypeDict;
 }) {
   const resolvedFetches = useMemo((): TResolvedFetch[] => {
     const sessionById = new Map(
@@ -108,6 +116,11 @@ export function useResolvedModelIdentifierEntities({
     return refs.flatMap((ref) => {
       const refId = 'id_str' in ref ? ref.id_str : ref.id;
       const fromIdType = isFromIdRef(ref) ? ref.type : '';
+
+      if (resolveAsType) {
+        return [{ entityType: resolveAsType, id: refId, fromIdType }];
+      }
+
       const sessionMatch = sessionById.get(refId);
 
       if (sessionMatch) {
@@ -121,7 +134,7 @@ export function useResolvedModelIdentifierEntities({
 
       return [{ ...fetchTarget, fromIdType }];
     });
-  }, [refs, sessionRefs]);
+  }, [refs, sessionRefs, resolveAsType]);
 
   const entityBatches = useMemo(() => buildEntityBatches(resolvedFetches), [resolvedFetches]);
   const entityCacheRef = useRef(new Map<string, EntityCoreIdentifiableNamed>());

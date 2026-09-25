@@ -43,4 +43,15 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
       "You don't have enough credits to launch this build. Please contact your administrator",
     GenericFailed: 'We are having trouble running the build, please try again later',
   },
+  [ScanConfigActivity.Optimize]: {
+    CoordinateCountFailed: 'An error occurred generating the optimization campaign coordinates',
+    ScanConfigGenerateGridFailed: 'An error occurred generating the optimization campaign',
+    ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the optimization',
+    Generate: 'Generate optimization(s)',
+    New: 'New optimization campaign',
+    CopyCampaignId: 'Copy optimization campaign ID',
+    InsufficientCreditsNonAdmin:
+      "You don't have enough credits to launch this optimization. Please contact your administrator",
+    GenericFailed: 'We are having trouble running the optimization, please try again later',
+  },
 };

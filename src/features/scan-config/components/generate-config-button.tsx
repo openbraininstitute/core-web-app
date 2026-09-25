@@ -26,6 +26,7 @@ const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Extract]: 'run the extraction',
   [ScanConfigActivity.Process]: 'run the skeletonization',
   [ScanConfigActivity.Build]: 'build the model',
+  [ScanConfigActivity.Optimize]: 'run the optimization',
 };
 
 const FAILURE_MESSAGE_KEY: Record<string, string> = {

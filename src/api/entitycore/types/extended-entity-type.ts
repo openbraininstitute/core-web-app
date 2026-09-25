@@ -55,8 +55,11 @@ const DATA_SIMULATION_LISTING_EXTENDED_TYPES: ReadonlySet<TExtendedEntitiesTypeD
  */
 export function dataBrowseListingUsesBrainRegionHierarchy(extendedType: TExtendedEntitiesTypeDict) {
   // a task result carries no brain region column of its own -- what it shows is copied from the
-  // recordings it was derived from -- so constraining the query by the hierarchy finds nothing
-  if (extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult) {
+  // entities it was derived from -- so constraining the query by the hierarchy finds nothing
+  if (
+    extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult ||
+    extendedType === ExtendedEntitiesTypeDict.EModelOptimizationResult
+  ) {
     return false;
   }
 

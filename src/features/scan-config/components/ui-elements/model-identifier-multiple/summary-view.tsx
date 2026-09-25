@@ -88,6 +88,10 @@ type Props = {
   onAddGroup?: () => void;
   onGroupNameChange?: (groupIndex: number, name: string) => void;
   onRemoveGroup?: (groupIndex: number) => void;
+  /** max rows before the list scrolls; raise it when the field stands alone in its column */
+  visibleItemCount?: number;
+  /** replaces the default "Add <entity> to scan" label of the add button (flat lists only) */
+  addLabel?: string;
 };
 
 function findEntityForRef(
@@ -137,13 +141,15 @@ export function ModelIdentifierSummaryView({
   onAddGroup,
   onGroupNameChange,
   onRemoveGroup,
+  visibleItemCount,
+  addLabel,
 }: Props) {
   const instanceId = useId();
   const entityPreview = useScanConfigEntityPreview();
   const setEntityPreview = useSetScanConfigEntityPreview();
   const mergedInputs = mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs });
   const addEntitiesLabel = getAddEntitiesLabel(mergedInputs);
-  const addToScanLabel = getAddToScanLabel(mergedInputs);
+  const addToScanLabel = addLabel ?? getAddToScanLabel(mergedInputs);
 
   // group names must be unique (backend rejects duplicate NamedTuple names); flag
   // every name that collides so the offending inputs can surface the error
@@ -277,7 +283,7 @@ export function ModelIdentifierSummaryView({
           <p className="-mt-2 text-sm text-red-500">Group names must be unique.</p>
         ) : null}
 
-        <ScrollableList itemCount={group.elements.length}>
+        <ScrollableList itemCount={group.elements.length} visibleItemCount={visibleItemCount}>
           {renderEntityCards(group.elements, groupIndex)}
         </ScrollableList>
 
@@ -315,7 +321,7 @@ export function ModelIdentifierSummaryView({
         'rounded-2xl border border-neutral-2 bg-white p-4'
       )}
     >
-      <ScrollableList itemCount={parsedValue.items.length}>
+      <ScrollableList itemCount={parsedValue.items.length} visibleItemCount={visibleItemCount}>
         {renderEntityCards(parsedValue.items)}
       </ScrollableList>
       <ModelIdentifierAddActionButton

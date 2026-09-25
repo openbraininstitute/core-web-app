@@ -9,6 +9,7 @@ import {
   BaseScanConfigTabs,
   BuildScanConfigTabs,
   ExtractScanConfigTabs,
+  OptimizeScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
   ScanConfigTabs,
@@ -41,7 +42,8 @@ export default function TabsSelector({
       (id === SimulateScanConfigTabs.simulations ||
         id === ExtractScanConfigTabs.extractions ||
         id === ProcessScanConfigTabs.skeletonizations ||
-        id === BuildScanConfigTabs.results) &&
+        id === BuildScanConfigTabs.results ||
+        id === OptimizeScanConfigTabs.optimizations) &&
       disableResultsTab
     );
     const disableConfiguration = disableConfigurationTab && id === BaseScanConfigTabs.configuration;
@@ -82,6 +84,11 @@ export default function TabsSelector({
           setTab({
             __activity: ScanConfigActivity.Build,
             id: id as keyof typeof BuildScanConfigTabs,
+          });
+        } else if (activity === ScanConfigActivity.Optimize) {
+          setTab({
+            __activity: ScanConfigActivity.Optimize,
+            id: id as keyof typeof OptimizeScanConfigTabs,
           });
         }
       },

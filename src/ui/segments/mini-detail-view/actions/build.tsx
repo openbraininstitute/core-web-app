@@ -32,11 +32,13 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
   record,
   dataType,
   hideUseModelAction,
+  openDetailsInNewTab,
   workflowTargetType,
 }: {
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
   hideUseModelAction?: boolean;
+  openDetailsInNewTab?: boolean;
   workflowTargetType?: TExtendedEntitiesTypeDict;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
@@ -74,7 +76,9 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
         variant="default"
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
-        <Link href={detailUrl}>View details</Link>
+        <Link href={detailUrl} target={openDetailsInNewTab ? '_blank' : undefined}>
+          View details
+        </Link>
       </Button>
       {!hideUseModelAction &&
         (workflowTargetType ? (

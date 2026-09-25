@@ -246,6 +246,14 @@ function buildInitialConfigState(
       return;
     }
 
+    // start with the keys the tabs fill, empty, so the schema flags them until they are filled
+    if (v.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters) {
+      state[k] = safeInitialConfig[k] ?? {
+        mechanisms: { ion_channel_models: [], mechanism_regions: {} },
+      };
+      return;
+    }
+
     const safeInitialConfigforKey = safeInitialConfig[k] ?? {};
 
     if (!isPlainObject(safeInitialConfigforKey)) return;

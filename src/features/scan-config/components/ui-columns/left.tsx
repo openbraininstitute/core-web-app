@@ -15,8 +15,8 @@ import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/conf
 
 import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
-import { useValidateSchema } from '../hooks';
 
+import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config } from '@/features/scan-config/types';
 
@@ -34,7 +34,7 @@ export default function Left({
   readOnly,
   setCampaignId,
   setLoading,
-  initialConfig,
+  errors,
   setTab,
   allEntries,
   newKey,
@@ -46,6 +46,8 @@ export default function Left({
   entityType,
   campaignEntityType,
   aiEnabled,
+  selectedMechanismsTab,
+  setSelectedMechanismsTab,
 }: {
   schema: ConfigSchema;
   selectedRootElement: string;
@@ -61,7 +63,8 @@ export default function Left({
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setTab: (tab: TScanConfigTabs) => void;
-  initialConfig?: Config;
+  /** ajv schema errors of the whole config */
+  errors: ErrorObject[] | null;
   allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
@@ -72,8 +75,9 @@ export default function Left({
   entityType: TSupportedEntityTypesForScanConfiguration;
   campaignEntityType?: TExtendedEntitiesTypeDict;
   aiEnabled?: boolean;
+  selectedMechanismsTab: string;
+  setSelectedMechanismsTab: (tab: string) => void;
 }) {
-  const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig, setAiConfig } = useAIConfig();
   const [pendingRestoreConfig, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
   const [restorePreviewActive] = useAtom(restorePreviewActiveAtom);
@@ -117,7 +121,10 @@ export default function Left({
                 Object.entries(schema.properties)
                   .filter(
                     ([_, rootElementSchema]) =>
-                      'group' in rootElementSchema && rootElementSchema.group === group
+                      'group' in rootElementSchema &&
+                      rootElementSchema.group === group &&
+                      // schema-driven hide: skip root elements flagged `ui_hidden`
+                      !('ui_hidden' in rootElementSchema && rootElementSchema.ui_hidden)
                   )
                   .sort(([_, a], [__, b]) => {
                     if (isType(a) || isType(b)) return 0;
@@ -147,6 +154,8 @@ export default function Left({
                         setNewKey={setNewKey}
                         isEditingKey={isEditingKey}
                         setIsEditingKey={setIsEditingKey}
+                        selectedMechanismsTab={selectedMechanismsTab}
+                        setSelectedMechanismsTab={setSelectedMechanismsTab}
                       />
                     );
                   })}

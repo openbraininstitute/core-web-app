@@ -1,6 +1,8 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
+import { errorsUnder } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import { EModelOptimisationParameters } from '@/features/scan-config/components/ui-blocks/emodel-optimisation-parameters';
 import { resolveScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
 import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
@@ -9,6 +11,7 @@ import {
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
+  type IEModelOptimisationParameters,
   type IRootBlockUnion,
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
@@ -19,6 +22,7 @@ import { cn } from '@/utils/css-class';
 
 import { isPlainObject } from '../utils';
 
+import type { ErrorObject } from 'ajv';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
@@ -38,8 +42,16 @@ type MiddleProps = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion | IEModelOptimisationParameters;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  /** selected inner mechanisms tab key when the root element is `emodel_optimisation_parameters` */
+  selectedMechanismsTab: string;
+  /** selected Region Assignment section-list choice (`name`), or '' when none is selected */
+  selectedRegionChoice: string;
+  /** sets the selected Region Assignment section-list choice */
+  setSelectedRegionChoice: (choice: string) => void;
+  /** ajv schema errors of the whole config */
+  errors: ErrorObject[] | null;
 };
 
 export default function Middle({
@@ -57,10 +69,24 @@ export default function Middle({
   selectedSchema,
   schemaMappingConfig,
   entityType,
+  selectedMechanismsTab,
+  selectedRegionChoice,
+  setSelectedRegionChoice,
+  errors,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
   const preview = useDiffPreview(selectedRootElement);
+
+  // Same read-only/locked signal the generic Block uses, so the bespoke emodel widgets disable
+  // their editable controls (pickers, checkboxes, inputs) once the campaign is generated / locked.
+  const editingLocked = resolveScanConfigEditingLocked({
+    campaignId,
+    loading,
+    aiConfig,
+    isChatReady,
+    showingDiffs,
+  });
 
   // for BlockDictionary the path includes the entry; for others just the root element
   const errorPathPrefix =
@@ -96,13 +122,7 @@ export default function Middle({
         isPlainObject(config[selectedRootElement]) && (
           <Block
             schema={schema}
-            disabled={resolveScanConfigEditingLocked({
-              campaignId,
-              loading,
-              aiConfig,
-              isChatReady,
-              showingDiffs,
-            })}
+            disabled={editingLocked}
             config={config}
             blockSchema={selectedSchema}
             state={preview ?? config[selectedRootElement] ?? {}}
@@ -130,6 +150,19 @@ export default function Middle({
           entityType={entityType}
           schemaMappingConfig={schemaMappingConfig}
           errorPathPrefix={errorPathPrefix}
+        />
+      )}
+
+      {selectedSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
+        <EModelOptimisationParameters
+          selectedTab={selectedMechanismsTab}
+          rootSchema={selectedSchema}
+          value={config[selectedRootElement]}
+          onChange={(next) => setConfig({ ...config, [selectedRootElement]: next })}
+          selectedRegionChoice={selectedRegionChoice}
+          setSelectedRegionChoice={setSelectedRegionChoice}
+          disabled={editingLocked}
+          errors={errorsUnder(errors, `/${selectedRootElement}`)}
         />
       )}
     </div>

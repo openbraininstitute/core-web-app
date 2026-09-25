@@ -4,6 +4,7 @@ import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, LeftMenuTab } from '@/features/scan-config/components/components';
+import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -13,6 +14,7 @@ import {
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
+  type IEModelOptimisationParameters,
   type IRootBlockUnion,
   isType,
   ScanConfigUIElementDict,
@@ -48,10 +50,16 @@ export function RootElement({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
+  selectedMechanismsTab,
+  setSelectedMechanismsTab,
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  rootElementSchema:
+    | IBlockSingle
+    | IBlockDictionary
+    | IRootBlockUnion
+    | IEModelOptimisationParameters;
   selectedRootElement: string;
   setSelectedRootElement: (configTab: string) => void;
   config: Config;
@@ -68,6 +76,8 @@ export function RootElement({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
+  selectedMechanismsTab: string;
+  setSelectedMechanismsTab: (tab: string) => void;
 }) {
   const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
@@ -94,6 +104,17 @@ export function RootElement({
               testId={`scan-config-root-element-${rootElement}`}
               selectedTab={selectedRootElement}
               onClick={() => {
+                // emodel_optimisation_parameters: always expanded, keeps its inner tab
+                if (
+                  rootElementSchema.ui_element ===
+                  ScanConfigUIElementDict.EModelOptimisationParameters
+                ) {
+                  setSelectedRootElement(rootElement);
+                  setSelectedEntry('');
+                  setEditing(true);
+                  return;
+                }
+
                 const isDictionary =
                   !isRootBlock(schema, rootElement) &&
                   rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
@@ -164,7 +185,9 @@ export function RootElement({
 
                 <Chevron
                   rotate={
-                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ||
+                    rootElementSchema.ui_element ===
+                      ScanConfigUIElementDict.EModelOptimisationParameters
                       ? 90
                       : 0
                   }
@@ -188,6 +211,20 @@ export function RootElement({
           {rootElementSchema.description}
         </TooltipContent>
       </Tooltip>
+
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters && (
+        <EModelOptimisationMechanismsTabList
+          rootElement={rootElement}
+          selectedRootElement={selectedRootElement}
+          selectedMechanismsTab={selectedMechanismsTab}
+          onSelectTab={(key) => {
+            setSelectedRootElement(rootElement);
+            setSelectedMechanismsTab(key);
+            setEditing(true);
+          }}
+          errors={errors}
+        />
+      )}
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         (config[rootElement] || hasHighlights) && (
@@ -228,7 +265,11 @@ function SelectedUnionVariantLabel({
   rootElement,
   fallbackTitle,
 }: {
-  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  rootElementSchema:
+    | IBlockSingle
+    | IBlockDictionary
+    | IRootBlockUnion
+    | IEModelOptimisationParameters;
   config: Config;
   rootElement: string;
   fallbackTitle?: string;

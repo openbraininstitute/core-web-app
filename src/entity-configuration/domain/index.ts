@@ -30,12 +30,14 @@ import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/singl
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { WholeBrain } from '@/entity-configuration/domain/model/whole-brain';
+import { EModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   SimulationCampaign,
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
+import { EModelOptimizationResult } from '@/entity-configuration/domain/simulation/emodel-optimization-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -96,6 +98,7 @@ const EntityCoreSimulationConfiguration = {
   IonChannelModelSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
+  EModelOptimizationResult,
 };
 
 const EntityCoreExtractionConfiguration = {
@@ -107,6 +110,10 @@ const EntityCoreProcessingConfiguration = {
   SkeletonizationCampaign,
 };
 
+const EntityCoreOptimizationConfiguration = {
+  EModelOptimizationCampaign,
+};
+
 export const EntityCoreConfiguration = {
   ...UniversalTypesCoreConfiguration,
   ...EntityCoreExperimentalConfiguration,
@@ -114,6 +121,7 @@ export const EntityCoreConfiguration = {
   ...EntityCoreSimulationConfiguration,
   ...EntityCoreExtractionConfiguration,
   ...EntityCoreProcessingConfiguration,
+  ...EntityCoreOptimizationConfiguration,
   AnalysisNotebookTemplate,
   AnalysisNotebookResult,
 } as const;

@@ -45,6 +45,7 @@ export const ScanConfigActivity = {
   Extract: 'extract',
   Process: 'process',
   Build: 'build',
+  Optimize: 'optimize',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -76,11 +77,17 @@ export type TProcessScanConfigTabs = {
   __activity: 'process';
 };
 
+export type TOptimizeScanConfigTabs = {
+  id: keyof typeof OptimizeScanConfigTabs;
+  __activity: 'optimize';
+};
+
 export type TScanConfigTabs =
   | Prettify<TSimulateScanConfigTabs>
   | Prettify<TExtractScanConfigTabs>
   | Prettify<TProcessScanConfigTabs>
-  | Prettify<TBuildScanConfigTabs>;
+  | Prettify<TBuildScanConfigTabs>
+  | Prettify<TOptimizeScanConfigTabs>;
 
 export const SimulateScanConfigTabs = {
   ...BaseScanConfigTabs,
@@ -97,11 +104,17 @@ export const BuildScanConfigTabs = {
   results: 'results',
 } as const;
 
+export const OptimizeScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  optimizations: 'optimizations',
+} as const;
+
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
   [ScanConfigActivity.Process]: ProcessScanConfigTabs,
   [ScanConfigActivity.Build]: BuildScanConfigTabs,
+  [ScanConfigActivity.Optimize]: OptimizeScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -130,6 +143,8 @@ export const SchemaNameDict = {
   SynapseParameterizationScanConfig: 'SynapseParameterizationScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
+  // optimization
+  EModelOptimizationScanConfig: 'EModelOptimizationScanConfig',
 } as const;
 
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
@@ -139,6 +154,8 @@ export type TRootElement = {
   title: string;
   group: string;
   group_order: number;
+  /** when true, the root element is not rendered in the left column */
+  ui_hidden?: boolean;
 };
 
 export const ScanConfigUIElementDict = {
@@ -162,13 +179,20 @@ export const ScanConfigUIElementDict = {
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
   VoltageDuration: 'voltage_duration',
   ModelIdentifierMultiple: 'model_identifier_multiple',
+  StringSelection: 'string_selection',
   StringSelectionEnhanced: 'string_selection_enhanced',
+  StringListInput: 'string_list_input',
+  Stochasticity: 'stochasticity',
   NeuronPropertyFilter: 'neuron_property_filter',
   NeuronSetCombination: 'neuron_set_combination',
   MorphologySectionTypeSelection: 'morphology_section_type_selection',
   FloatOptional: 'float_optional',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
   MorphologyLocationSelection: 'morphology_location_selection',
+  TaskResultSelector: 'task_result_selector',
+  EtypeSelector: 'etype_selector',
+  EModelOptimisationParameters: 'emodel_optimisation_parameters',
+  AxonModifier: 'axon_modifier',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -324,6 +348,44 @@ export interface ModelSelectorSingle extends TBlockElement {
   };
 }
 
+export interface TaskResultSelector extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.TaskResultSelector;
+  /** entitycore task_result_type (double-underscore), e.g. `efeature_extraction__result` */
+  task_result_type: string;
+  /** dereferenced `$ref: TaskResultFromID` — supplies the stored ref's `type` const */
+  properties: {
+    id_str: {
+      type: string;
+      title: string;
+      description: string;
+    };
+    type: {
+      type: string;
+      const: 'TaskResultFromID';
+      title: string;
+      default: 'TaskResultFromID';
+    };
+  };
+}
+
+export interface ETypeSelectorField extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.EtypeSelector;
+  /** dereferenced `$ref: ETypeClassFromID` — supplies the stored ref's `type` const */
+  properties: {
+    id_str: {
+      type: string;
+      title: string;
+      description: string;
+    };
+    type: {
+      type: string;
+      const: 'ETypeClassFromID';
+      title: string;
+      default: 'ETypeClassFromID';
+    };
+  };
+}
+
 export interface SelectRecordableIonChannelVariable extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.SelectRecordableIonChannelVariable;
   property: string;
@@ -403,12 +465,44 @@ export interface BooleanInput extends TBlockElement {
  * together with at least one of `description_by_key` / `latex_by_key`, each holding a value for
  * every enum key.
  */
+/** Plain single-select over `enum` — a simple dropdown with no per-option content. */
+export interface StringSelection extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringSelection;
+  enum: string[];
+}
+
+/**
+ * Stochasticity toggle. Rendered as a boolean input via a thin wrapper over `BooleanInput`; the
+ * schema's `anyOf` also permits a protocol-name list, but the UI edits the boolean case.
+ */
+export interface Stochasticity extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.Stochasticity;
+}
+
+/** Free-form editable list of strings (`{ type: 'array', items: { type: 'string' } }`). */
+export interface StringListInput extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringListInput;
+}
+
 export interface StringSelectionEnhanced extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringSelectionEnhanced;
   enum: string[];
   title_by_key?: Record<string, string>;
   description_by_key?: Record<string, string>;
   latex_by_key?: Record<string, string>;
+}
+
+/**
+ * Axon replacement strategy picker. Structurally identical to `string_selection_enhanced` (the
+ * `enum` is inlined from the `AxonModifier` schema at dereference time, alongside the
+ * `title_by_key` / `description_by_key` maps); it just carries its own `ui_element` so the schema
+ * can flag the field. Rendered by a thin wrapper over `StringSelectionEnhanced`.
+ */
+export interface AxonModifier extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.AxonModifier;
+  enum: string[];
+  title_by_key?: Record<string, string>;
+  description_by_key?: Record<string, string>;
 }
 
 export interface VoltageDuration extends TBlockElement {
@@ -470,6 +564,74 @@ export interface IBlockUnion extends TRootElement {
 /** root-level block union (single value that can be one of several types) */
 export interface IRootBlockUnion extends TRootElement, IBlockUnion {}
 
+/**
+ * E-Model optimisation parameters. A fully custom root element: the tab *layout* is hardcoded on
+ * the frontend (a single "Mechanisms" outer tab with fixed inner tabs), but the individual field
+ * schemas (e.g. `mechanisms.ion_channel_models`) are still read from `properties` — so the bespoke
+ * tab components render real schema-driven widgets rather than duplicating the schema.
+ */
+/**
+ * A selectable section-list choice offered by the E-Model optimisation parameters schema
+ * (`base_parameters.choices`). Unavailable choices carry a `disabled_reason` explaining why.
+ */
+export type TEModelSectionListChoice = {
+  /** stable identifier used as the config value (e.g. `all`, `somatic`) */
+  name: string;
+  /** human-readable label for display */
+  label: string;
+  /** longer explanation of which sections the choice covers */
+  description: string;
+  /** ordering hint for display, ascending */
+  display_order: number;
+  /** whether the choice can be selected */
+  available: boolean;
+  /** availability tag mirroring `available` (`'available'` | `'unavailable'`) */
+  availability: string;
+  /** why the choice is disabled; present only when `available` is `false` */
+  disabled_reason?: string;
+};
+
+export interface IEModelOptimisationParameters extends TRootElement {
+  ui_element: typeof ScanConfigUIElementDict.EModelOptimisationParameters;
+  properties: {
+    mechanisms: {
+      properties: {
+        ion_channel_models: TModelIdentifierMultiple;
+      };
+    };
+    /** Base and passive parameters, including the section-list `choices` to render. */
+    base_parameters: {
+      choices: TEModelSectionListChoice[];
+    };
+    /** Global parameters; the schema default holds the `v_init` and `celsius` entries. */
+    global_parameters: {
+      default: Record<string, ConfigValue>;
+    };
+  };
+}
+
+/** Hardcoded inner tabs of the E-Model optimisation parameters "Mechanisms" section. */
+export const EModelOptimisationMechanismsTabs = {
+  MechanismSelection: 'mechanism_selection',
+  RegionAssignment: 'region_assignment',
+  ParametersSelection: 'parameters_selection',
+  GlobalParameters: 'global_parameters',
+} as const;
+
+export type TEModelOptimisationMechanismsTab =
+  (typeof EModelOptimisationMechanismsTabs)[keyof typeof EModelOptimisationMechanismsTabs];
+
+/** Label per inner tab, in display order. */
+export const EMODEL_OPTIMISATION_MECHANISMS_TABS: ReadonlyArray<{
+  key: TEModelOptimisationMechanismsTab;
+  label: string;
+}> = [
+  { key: EModelOptimisationMechanismsTabs.MechanismSelection, label: 'Mechanism Selection' },
+  { key: EModelOptimisationMechanismsTabs.RegionAssignment, label: 'Region Assignment' },
+  { key: EModelOptimisationMechanismsTabs.ParametersSelection, label: 'Parameters Selection' },
+  { key: EModelOptimisationMechanismsTabs.GlobalParameters, label: 'Global Parameters' },
+];
+
 export type TBlockElement = {
   default?: ConfigValue;
   title: string;
@@ -493,12 +655,18 @@ export type ParamSchema =
   | IonChannelRangeVariableModification
   | IonChannelGlobalVariableModification
   | ModelSelectorSingle
+  | TaskResultSelector
+  | ETypeSelectorField
   | SelectRecordableIonChannelVariable
   | MorphologySectionTypeSelection
   | IMorphologyLocationSelection
   | VoltageDuration
+  | StringSelection
   | DiscreteProbabilities
   | StringSelectionEnhanced
+  | StringListInput
+  | AxonModifier
+  | Stochasticity
   | NeuronPropertyFilter
   | NeuronSetCombination;
 
@@ -537,7 +705,10 @@ export type ConfigSchema = {
   reference_tag_defaults?: Record<string, { name: string; block?: Record<string, unknown> }>;
   description: string;
   group_order: string[];
-  properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {
+  properties: Record<
+    string,
+    IBlockSingle | IBlockDictionary | IRootBlockUnion | IEModelOptimisationParameters
+  > & {
     type: Type;
   };
   title: string;
@@ -630,4 +801,5 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
   | typeof ExtendedEntitiesTypeDict.ElectricalCellRecording
+  | typeof ExtendedEntitiesTypeDict.Emodel
   | typeof ExtendedEntitiesTypeDict.WholeBrain;

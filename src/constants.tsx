@@ -60,6 +60,7 @@ export const WorkspaceSection = {
   SimulateWorkflow: WorkflowActivityDictValue.simulate,
   ExtractWorkflow: WorkflowActivityDictValue.extract,
   ProcessWorkflow: WorkflowActivityDictValue.process,
+  OptimizeWorkflow: WorkflowActivityDictValue.optimize,
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];

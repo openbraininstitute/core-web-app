@@ -42,6 +42,7 @@ const SimulationEntitySlug = {
   IonChannelModelSimulation: 'ion-channel-model-simulation',
   RegionCircuitSimulation: 'region-circuit-simulation',
   WholeBrainCircuitSimulation: 'whole-brain-circuit-simulation',
+  EModelOptimizationResult: 'emodel-optimization-result',
 } as const;
 
 const ExtractionEntitySlug = {
@@ -53,12 +54,17 @@ const ProcessingEntitySlug = {
   Skeletonization: 'skeletonization',
 } as const;
 
+const OptimizationEntitySlug = {
+  EModelOptimization: 'emodel-optimization',
+} as const;
+
 export const EntitySlug = {
   ...ExperimentalEntitySlug,
   ...ModelEntitySlug,
   ...SimulationEntitySlug,
   ...ExtractionEntitySlug,
   ...ProcessingEntitySlug,
+  ...OptimizationEntitySlug,
   AnalysisNotebookTemplate: 'template',
   AnalysisNotebookResult: 'results',
 } as const;

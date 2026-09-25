@@ -8,6 +8,7 @@ import {
   type ConfigValue,
   ExtractScanConfigTabs,
   type NeuronPropertyFilter,
+  OptimizeScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
@@ -117,6 +118,10 @@ export const ScanConfigResultsTab = {
     id: BuildScanConfigTabs.results,
     __activity: ScanConfigActivity.Build,
   },
+  [ScanConfigActivity.Optimize]: {
+    id: OptimizeScanConfigTabs.optimizations,
+    __activity: ScanConfigActivity.Optimize,
+  },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
 /** each activity's configuration tab — the editor's landing tab. */
@@ -136,6 +141,10 @@ export const ScanConfigConfigurationTab = {
   [ScanConfigActivity.Build]: {
     id: BuildScanConfigTabs.configuration,
     __activity: ScanConfigActivity.Build,
+  },
+  [ScanConfigActivity.Optimize]: {
+    id: OptimizeScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Optimize,
   },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
