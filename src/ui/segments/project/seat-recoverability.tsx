@@ -40,7 +40,7 @@ export function SeatRecoverability({ course, enrolment }: SeatRecoverabilityProp
   } = useQuery({
     queryKey: keyBuilder.wallet({ virtualLabId, projectId }),
     queryFn: () => getProjectAccountBalance({ virtualLabId, projectId }),
-    select: (res) => res.balance,
+    select: (res) => Number(res.balance),
     enabled: shouldFetchBalance,
   });
 
@@ -71,22 +71,21 @@ export function SeatRecoverability({ course, enrolment }: SeatRecoverabilityProp
     return <Skeleton className="h-4 w-24" />;
   }
 
-  const creditThreshold = course.credits_per_seat - RECOVERABLE_SEAT_MAX_SPEND;
-  const hasSpentMoreThanThreshold = typeof balance === 'number' && balance < creditThreshold;
+  if (isError) {
+    return <span className="text-gray-500">Unknown</span>;
+  }
 
-  if (hasSpentMoreThanThreshold) {
+  const spent = course.credits_per_seat - balance;
+
+  if (spent > RECOVERABLE_SEAT_MAX_SPEND) {
     return (
       <div className="flex items-center gap-2">
         <span className="font-semibold text-red-800">No</span>
         <span className="text-xs text-gray-600">
-          {`(Project has spent more than ${RECOVERABLE_SEAT_MAX_SPEND} credits)`})
+          {`(Project has spent ${spent} credits, the limit is ${RECOVERABLE_SEAT_MAX_SPEND})`}
         </span>
       </div>
     );
-  }
-
-  if (isError) {
-    return <span className="text-gray-500">Unknown</span>;
   }
 
   return (
