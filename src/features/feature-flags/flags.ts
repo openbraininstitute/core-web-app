@@ -28,14 +28,6 @@ export const eFeatureExtractionFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const eModelOptimizationFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
-  defaultValue: false,
-  values: [true, false],
-  description: 'E-model optimization',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const brainRegionSimulationFlag = defineFlag<boolean>({
   key: 'brain-region-simulation',
   defaultValue: false,
@@ -90,7 +82,6 @@ export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
   eFeatureExtractionFlag,
-  eModelOptimizationFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   circuitSynapticPhysiologyBuildFlag,

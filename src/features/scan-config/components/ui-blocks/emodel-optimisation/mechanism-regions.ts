@@ -20,9 +20,15 @@
  */
 
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import {
+  type Config,
+  type ConfigSchema,
+  type ConfigValue,
+  isType,
+  ScanConfigUIElementDict,
+} from '@/features/scan-config/types';
 
 import type { ErrorObject } from 'ajv';
-import type { ConfigValue } from '@/features/scan-config/types';
 
 export const MECHANISMS_KEY = 'mechanisms';
 export const ION_CHANNEL_MODELS_KEY = 'ion_channel_models';
@@ -266,4 +272,37 @@ export function pruneRegionsToModelIds(
 
   if (!changed) return mechanisms;
   return { ...mechanisms, [MECHANISM_REGIONS_KEY]: nextRegions };
+}
+
+/**
+ * `config` with the empty regions dropped from its emodel optimisation value. Unassigning a region's
+ * last model leaves the region with an empty entry array, which the schema rejects, so configs saved
+ * that way are cleaned when loaded.
+ */
+export function withoutEmptyRegions(config: Config, schema: ConfigSchema): Config {
+  return Object.fromEntries(
+    Object.entries(config).map(([key, value]) => {
+      const rootSchema = schema.properties[key];
+      const isEModelValue =
+        rootSchema !== undefined &&
+        !isType(rootSchema) &&
+        rootSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters;
+      const mechanisms = readMechanisms(value);
+      const regions = mechanisms[MECHANISM_REGIONS_KEY];
+      if (!isEModelValue || !isPlainObject(regions)) return [key, value];
+
+      const keptRegions = Object.fromEntries(
+        Object.entries(regions).filter(
+          ([, entries]) => !Array.isArray(entries) || entries.length > 0
+        )
+      );
+      return [
+        key,
+        {
+          ...asRecord(value),
+          [MECHANISMS_KEY]: { ...mechanisms, [MECHANISM_REGIONS_KEY]: keptRegions },
+        },
+      ];
+    })
+  );
 }

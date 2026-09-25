@@ -1,7 +1,7 @@
 'use client';
 
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { diffBarDataAtom } from '@/features/ai-assistant/chat/use-last-message-diff-bar';
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
@@ -12,6 +12,7 @@ import {
 } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import { clearScanValueSelectionAtom } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { withoutEmptyRegions } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
   getConfigKeyForEntity,
   resolveScanConfigTab,
@@ -43,7 +44,7 @@ import type { ScanConfigTemplateProps } from './types';
 export function useScanConfigTemplate({
   entity,
   origin,
-  initialConfig,
+  initialConfig: loadedConfig,
   defaultTab = ScanConfigDefaultTab,
   readOnly,
   activity = ScanConfigActivity.Simulate,
@@ -77,6 +78,11 @@ export function useScanConfigTemplate({
   const [campaignId, setCampaignId] = useState(isDuplicate ? '' : (origin ?? ''));
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
+  // memoized: useConfig re-applies the initial config whenever its identity changes
+  const initialConfig = useMemo(
+    () => loadedConfig && withoutEmptyRegions(loadedConfig, schema),
+    [loadedConfig, schema]
+  );
   const [config, setConfig] = useConfig({
     schema,
     initialConfig,

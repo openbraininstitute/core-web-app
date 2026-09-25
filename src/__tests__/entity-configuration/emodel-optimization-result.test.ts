@@ -9,7 +9,6 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
-import { eModelOptimizationFlag } from '@/features/feature-flags/flags';
 import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-browse-entities';
 import { SimulationDataExtendedTypes } from '@/ui/segments/explore/helpers';
 
@@ -28,10 +27,8 @@ describe('e-model optimization result', () => {
     );
   });
 
-  it('is hidden unless the e-model optimization flag is on', () => {
-    expect(EntityCoreConfiguration.EModelOptimizationResult.requiredFeatures).toEqual([
-      eModelOptimizationFlag.key,
-    ]);
+  it('is not behind a feature flag', () => {
+    expect(EntityCoreConfiguration.EModelOptimizationResult.requiredFeatures).toBeUndefined();
   });
 
   it('does not display fields a task result has no value for', () => {
