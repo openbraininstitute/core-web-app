@@ -5,7 +5,6 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import { circuitGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
 import { FilterOptionsKind } from '@/features/data-grid/core';
 import {
-  buildSynaptomeFlag,
   circuitSynapticPhysiologyBuildFlag,
   extracellularRecordingArrayBuildFlag,
 } from '@/features/feature-flags/flags';
@@ -170,7 +169,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     requireFilters: true,
     order: 3,
     disabled: false,
-    requiredFeatures: [buildSynaptomeFlag.key],
   },
   {
     ...WorkflowBrowseDefaults,
