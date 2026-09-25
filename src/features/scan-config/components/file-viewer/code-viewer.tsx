@@ -89,16 +89,16 @@ export function CodeFileViewer({
   const fileName = assetPath?.split('/').at(-1) ?? asset.path.split('/').at(-1);
   const language = fileName?.split('.').at(-1) as BundledLanguage;
 
-  const LARGE_FILE_CHAR_LIMIT = 10000;
-  const isLargeFile = content.length > LARGE_FILE_CHAR_LIMIT;
+  const LARGE_FILE_LINE_LIMIT = 10000;
 
-  const displayContent = getTruncatedContent(content, LARGE_FILE_CHAR_LIMIT);
+  const displayContent = getTruncatedContent(content, LARGE_FILE_LINE_LIMIT);
+  const isTruncated = displayContent !== content;
 
   return (
     <CodeBlock
       code={displayContent}
       language={language}
-      showLineNumbers={!isLargeFile}
+      showLineNumbers={!isTruncated}
       className={cn(
         'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
         '[&_pre]:whitespace-pre [&>div]:overflow-auto [&>div>div]:overflow-x-auto',
@@ -109,7 +109,7 @@ export function CodeFileViewer({
         <div className="flex items-center gap-3">
           <CodeBlockLanguageLabel title={fileName} />
 
-          {isLargeFile && (
+          {isTruncated && (
             <span className="rounded border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
               Large file truncated for performance
             </span>
