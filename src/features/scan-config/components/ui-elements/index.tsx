@@ -6,6 +6,7 @@ import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/h
 import { AxonModifier } from '@/features/scan-config/components/ui-elements/axon-modifier';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
+import { DistanceFunctionInput } from '@/features/scan-config/components/ui-elements/distance-function/distance-function-input';
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
 import { FloatInput } from '@/features/scan-config/components/ui-elements/float-input';
@@ -110,6 +111,21 @@ export function UIElementRender({
           className="w-full"
           onChange={(e) => {
             setState({ ...state, [k]: e.currentTarget.value || null });
+          }}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.DistanceFunctionInput },
+      },
+      () => (
+        <DistanceFunctionInput
+          value={typeof value === 'string' ? value : ''}
+          disabled={disabled}
+          declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
+          onChange={(next) => {
+            setState({ ...state, [k]: next || null });
           }}
         />
       )

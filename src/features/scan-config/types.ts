@@ -165,6 +165,7 @@ export const ScanConfigUIElementDict = {
   BlockDictionary: 'block_dictionary',
   // components
   StringInput: 'string_input',
+  DistanceFunctionInput: 'distance_function_input',
   ModelIdentifier: 'model_identifier',
   FloatParameterSweep: 'float_parameter_sweep',
   IntParameterSweep: 'int_parameter_sweep',
@@ -226,6 +227,10 @@ export function isCircuitNeuronalManipulationType(typeConst: string | undefined)
 }
 export interface StringInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringInput;
+}
+
+export interface DistanceFunctionInputField extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DistanceFunctionInput;
 }
 
 export interface ModelIdentifier extends TBlockElement {
@@ -672,6 +677,7 @@ export type TBlockElement = {
 
 export type ParamSchema =
   | StringInput
+  | DistanceFunctionInputField
   | ModelIdentifier
   | TModelIdentifierMultiple
   | FloatParameterSweep
