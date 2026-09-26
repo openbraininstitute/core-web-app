@@ -124,6 +124,7 @@ export function UIElementRender({
           value={typeof value === 'string' ? value : ''}
           disabled={disabled}
           declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
+          errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
           onChange={(next) => {
             setState({ ...state, [k]: next || null });
           }}

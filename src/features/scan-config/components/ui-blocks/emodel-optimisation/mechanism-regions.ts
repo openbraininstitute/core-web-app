@@ -39,6 +39,25 @@ export const IonChannelModelFromIdType = 'IonChannelModelFromID';
 export const MechanismRegionSelectionType = 'MechanismRegionSelection';
 export const ParameterSelectionType = 'ParameterSelection';
 export const DEFAULT_DISTRIBUTION = 'uniform';
+export const DISTANCE_DISTRIBUTIONS_KEY = 'distance_dependent_distributions';
+
+/**
+ * The ten built-in distance-dependent distributions, always selectable by name without being
+ * declared (mirrors bluepyemodel `STANDARD_DISTANCE_DEPENDENT_DISTRIBUTIONS`). Users can define
+ * more under the config's `distance_dependent_distributions`; those are merged in at runtime.
+ */
+export const STANDARD_DISTRIBUTIONS = [
+  'uniform',
+  'exp',
+  'step',
+  'exp_na_dend',
+  'linear_hd_apic',
+  'sigmoid_kad_apic',
+  'linear_e_pas_apic',
+  'linear_hdpas',
+  'sigmoid_kad',
+  'sigmoid_kdbm_apic',
+] as const;
 
 export const ParameterMode = {
   Fixed: 'fixed',
@@ -127,6 +146,33 @@ export function readOptimizationValue(parameterSelection: ConfigValue): TOptimiz
       : null;
 
   return { mode, value, bounds };
+}
+
+/** Reads a stored `ParameterSelection.distribution`, defaulting to uniform. */
+export function readDistribution(parameterSelection: ConfigValue): string {
+  const selection = asRecord(parameterSelection);
+  return typeof selection.distribution === 'string' && selection.distribution.length > 0
+    ? selection.distribution
+    : DEFAULT_DISTRIBUTION;
+}
+
+/**
+ * The distribution names a parameter may use: the ten built-ins plus any custom distributions
+ * declared under the root config's `distance_dependent_distributions`, de-duplicated and with the
+ * standard set first. `uniform` is always present.
+ */
+export function availableDistributions(config: Config): string[] {
+  const declared = asRecord(config.distance_dependent_distributions);
+  const custom = Object.keys(declared);
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const name of [...STANDARD_DISTRIBUTIONS, ...custom]) {
+    if (!seen.has(name)) {
+      seen.add(name);
+      result.push(name);
+    }
+  }
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -229,12 +275,15 @@ export function makeRegionEntry(idStr: string): Record<string, ConfigValue> {
   };
 }
 
-/** Wraps a UI OptimizationValue into a schema `ParameterSelection`. */
-export function makeParameterSelection(optimizationValue: TOptimizationValue): ConfigValue {
+/** Wraps a UI OptimizationValue into a schema `ParameterSelection`, keeping its distribution. */
+export function makeParameterSelection(
+  optimizationValue: TOptimizationValue,
+  distribution: string = DEFAULT_DISTRIBUTION
+): ConfigValue {
   return {
     type: ParameterSelectionType,
     value: optimizationValue,
-    distribution: DEFAULT_DISTRIBUTION,
+    distribution,
   };
 }
 
@@ -277,6 +326,71 @@ export function pruneRegionsToModelIds(
 
   if (!changed) return mechanisms;
   return { ...mechanisms, [MECHANISM_REGIONS_KEY]: nextRegions };
+}
+
+/**
+ * Rewrites every parameter's `distribution` across all emodel optimisation elements when a custom
+ * distribution is renamed or deleted. On rename, references to `oldName` become `newName`; on
+ * delete (`newName` omitted), they fall back to `uniform`. Only `mechanism_regions` parameters
+ * carry a distribution (global parameters do not). Returns a new config; unchanged keys are kept.
+ */
+export function remapParameterDistributions(
+  config: Config,
+  schema: ConfigSchema,
+  oldName: string,
+  newName: string | null
+): Config {
+  const replacement = newName ?? DEFAULT_DISTRIBUTION;
+  if (oldName === replacement) return config;
+
+  let changed = false;
+  const next = Object.fromEntries(
+    Object.entries(config).map(([key, value]) => {
+      const rootSchema = schema.properties[key];
+      const isEModelValue =
+        rootSchema !== undefined &&
+        !isType(rootSchema) &&
+        rootSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters;
+      if (!isEModelValue) return [key, value];
+
+      const mechanisms = readMechanisms(value);
+      const regions = mechanisms[MECHANISM_REGIONS_KEY];
+      if (!isPlainObject(regions)) return [key, value];
+
+      const nextRegions = Object.fromEntries(
+        Object.entries(regions).map(([choiceName, entries]) => {
+          if (!Array.isArray(entries)) return [choiceName, entries];
+          const nextEntries = entries.map((entry) => {
+            if (!isPlainObject(entry)) return entry;
+            const params = entryParameters(entry);
+            let entryChanged = false;
+            const nextParams = Object.fromEntries(
+              Object.entries(params).map(([paramName, selection]) => {
+                if (isPlainObject(selection) && selection.distribution === oldName) {
+                  entryChanged = true;
+                  changed = true;
+                  return [paramName, { ...selection, distribution: replacement }];
+                }
+                return [paramName, selection];
+              })
+            );
+            return entryChanged ? { ...entry, [PARAMETERS_KEY]: nextParams } : entry;
+          });
+          return [choiceName, nextEntries];
+        })
+      );
+
+      return [
+        key,
+        {
+          ...asRecord(value),
+          [MECHANISMS_KEY]: { ...mechanisms, [MECHANISM_REGIONS_KEY]: nextRegions },
+        },
+      ];
+    })
+  );
+
+  return changed ? next : config;
 }
 
 /**

@@ -7,12 +7,14 @@ import { useMemo } from 'react';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import {
+  DEFAULT_DISTRIBUTION,
   defaultOptimizationValue,
   entryModelId,
   entryParameters,
   errorsUnder,
   makeParameterSelection,
   PARAMETERS_KEY,
+  readDistribution,
   readMechanisms,
   readOptimizationValue,
   readRegionEntries,
@@ -43,6 +45,8 @@ type Props = {
   disabled?: boolean;
   /** ajv errors inside `value` (paths relative to it), to flag the parameters that fail */
   errors: readonly ErrorObject[];
+  /** distribution names selectable per parameter: built-ins plus user-declared custom ones */
+  availableDistributions: readonly string[];
 };
 
 /**
@@ -58,6 +62,7 @@ export function RegionModelDetail({
   onChange,
   disabled,
   errors,
+  availableDistributions,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const context = { virtualLabId, projectId };
@@ -121,6 +126,7 @@ export function RegionModelDetail({
           onChange={onChange}
           disabled={disabled}
           errors={errors}
+          availableDistributions={availableDistributions}
         />
       )}
     </div>
@@ -141,6 +147,7 @@ function NeuronBlockParameters({
   onChange,
   disabled,
   errors,
+  availableDistributions,
 }: {
   neuronBlock: unknown;
   choiceName: string;
@@ -149,6 +156,7 @@ function NeuronBlockParameters({
   onChange: (next: ConfigValue) => void;
   disabled?: boolean;
   errors: readonly ErrorObject[];
+  availableDistributions: readonly string[];
 }) {
   const parameters = extractNeuronBlockParameters(neuronBlock);
 
@@ -188,9 +196,20 @@ function NeuronBlockParameters({
   };
 
   const setParameterValue = (parameterName: string, optimizationValue: TOptimizationValue) => {
+    // Keep the parameter's chosen distribution when its value changes.
+    const current = readDistribution(parametersDict[parameterName]);
     writeParameters({
       ...parametersDict,
-      [parameterName]: makeParameterSelection(optimizationValue),
+      [parameterName]: makeParameterSelection(optimizationValue, current),
+    });
+  };
+
+  const setParameterDistribution = (parameterName: string, distribution: string) => {
+    // Keep the parameter's value when its distribution changes.
+    const optimizationValue = readOptimizationValue(parametersDict[parameterName]);
+    writeParameters({
+      ...parametersDict,
+      [parameterName]: makeParameterSelection(optimizationValue, distribution),
     });
   };
 
@@ -230,8 +249,13 @@ function NeuronBlockParameters({
               `${regionPath(choiceName)}/${entryIndex}/${PARAMETERS_KEY}/${param.name}/value`
             )}
             optimizationValue={checked ? readOptimizationValue(parametersDict[param.name]) : null}
+            distribution={
+              checked ? readDistribution(parametersDict[param.name]) : DEFAULT_DISTRIBUTION
+            }
+            availableDistributions={availableDistributions}
             onToggle={(next) => toggleParameter(param.name, next)}
             onValueChange={(next) => setParameterValue(param.name, next)}
+            onDistributionChange={(next) => setParameterDistribution(param.name, next)}
           />
         );
       })}

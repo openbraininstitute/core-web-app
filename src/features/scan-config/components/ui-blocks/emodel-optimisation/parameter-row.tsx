@@ -1,6 +1,6 @@
 'use client';
 
-import { Checkbox, Radio } from 'antd';
+import { Checkbox, Radio, Select } from 'antd';
 
 import {
   hasErrorAt,
@@ -35,8 +35,11 @@ export function ParameterRow({
   disabled,
   errors,
   optimizationValue,
+  distribution,
+  availableDistributions,
   onToggle,
   onValueChange,
+  onDistributionChange,
 }: {
   name: string;
   unit: string | null;
@@ -45,8 +48,13 @@ export function ParameterRow({
   /** ajv errors of the row's OptimizationValue, with paths relative to it (e.g. `/bounds/0`) */
   errors: readonly ErrorObject[];
   optimizationValue: TOptimizationValue | null;
+  /** the selected distance distribution name; omit for parameters that have no distribution */
+  distribution?: string;
+  /** distribution names to choose from: built-ins plus user-declared custom ones */
+  availableDistributions?: readonly string[];
   onToggle?: (next: boolean) => void;
   onValueChange: (next: TOptimizationValue) => void;
+  onDistributionChange?: (next: string) => void;
 }) {
   const mode = optimizationValue?.mode ?? ParameterMode.Fixed;
   // ObiOne's keyword on `bounds`: the upper bound must be greater than the lower one
@@ -152,6 +160,20 @@ export function ParameterRow({
                 <p className="text-xs text-red-500">Max must be greater than min.</p>
               )}
             </>
+          )}
+
+          {distribution !== undefined && availableDistributions && onDistributionChange && (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-gray-500">Distance distribution</span>
+              <Select
+                size="small"
+                disabled={disabled}
+                value={distribution}
+                onChange={onDistributionChange}
+                options={availableDistributions.map((d) => ({ label: d, value: d }))}
+                aria-label="Distance distribution"
+              />
+            </div>
           )}
         </div>
       )}

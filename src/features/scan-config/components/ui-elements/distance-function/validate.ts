@@ -18,6 +18,11 @@ import type { Node } from 'acorn';
 // of the SAME length so acorn parses it and every node offset still points at the original text.
 const PLACEHOLDER = /\{(\w+)\}/g;
 
+// Placeholders BluePyEModel substitutes at runtime (not user-declared): the `step` distribution's
+// hot-spot bounds. Mirrors obi-one `DistanceDependentDistribution._runtime_placeholders`. They are
+// always allowed and never required. Keep in sync with the backend.
+const RUNTIME_PLACEHOLDERS = ['step_begin', 'step_end'] as const;
+
 const ALLOWED_CALL_NAMES = new Set(['int', 'float', 'abs', 'min', 'max']);
 // `math` (Python) and `Math` (JS) both allowed: users write Python `math.exp`, and the same
 // expression parses in JS where `Math` is the native object.
@@ -153,7 +158,7 @@ function placeholderError(
   fn: string,
   declaredParameters: readonly string[]
 ): DistanceFunctionError | null {
-  const allowed = new Set(['value', 'distance', ...declaredParameters]);
+  const allowed = new Set(['value', 'distance', ...RUNTIME_PLACEHOLDERS, ...declaredParameters]);
   for (const match of fn.matchAll(PLACEHOLDER)) {
     const name = match[1];
     if (!allowed.has(name)) {

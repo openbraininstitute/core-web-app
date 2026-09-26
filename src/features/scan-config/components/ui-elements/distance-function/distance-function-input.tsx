@@ -13,6 +13,7 @@ import {
 } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'react';
 
+import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { validateDistanceFunction } from '@/features/scan-config/components/ui-elements/distance-function/validate';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
@@ -23,6 +24,12 @@ export interface DistanceFunctionInputProps {
   disabled?: boolean;
   /** Extra placeholder names the function may use, beyond {value}/{distance}. */
   declaredParameters?: readonly string[];
+  /**
+   * Field path used to publish a non-ajv validation error into the shared field-errors atom, so
+   * the enclosing dictionary entry (e.g. a custom distribution) shows the warning key. The schema
+   * only types this field as a string, so ajv cannot flag an unsafe/invalid function.
+   */
+  errorPath?: string;
 }
 
 // Build a linter bound to a specific set of declared parameters. Rebuilt (via a Compartment)
@@ -92,6 +99,7 @@ export function DistanceFunctionInput({
   onChange,
   disabled = false,
   declaredParameters = [],
+  errorPath,
 }: DistanceFunctionInputProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -110,6 +118,10 @@ export function DistanceFunctionInput({
       ? null
       : (validateDistanceFunction(value, declaredParameters)?.message ?? null)
   );
+
+  // Publish the same error into the shared field-errors atom so the enclosing dictionary entry
+  // (a custom distribution) shows the warning key. ajv cannot: the schema types this as a string.
+  useFieldError(errorPath, errorMessage ?? undefined);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `value` seeds the initial doc only; a separate effect syncs later changes so editing state (cursor, undo) survives.
   useEffect(() => {

@@ -1,7 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import { DistanceFunctionInput } from '@/features/scan-config/components/ui-elements/distance-function/distance-function-input';
+
+/** Renders the current field-error keys so a test can assert what was published. */
+function FieldErrorKeysProbe() {
+  const errors = useFieldErrors();
+  return <div data-testid="field-error-keys">{[...errors.keys()].join(',')}</div>;
+}
 
 describe('DistanceFunctionInput', () => {
   it('renders the editor with the given value', async () => {
@@ -60,5 +67,44 @@ describe('DistanceFunctionInput', () => {
       },
       { timeout: 3000 }
     );
+  });
+
+  it('publishes a field error at errorPath when the function is invalid', () => {
+    const path = 'distance_dependent_distributions/mouse_decay/function';
+    render(
+      <>
+        <DistanceFunctionInput value="a + b" onChange={() => {}} errorPath={path} />
+        <FieldErrorKeysProbe />
+      </>
+    );
+    expect(screen.getByTestId('field-error-keys')).toHaveTextContent(path);
+  });
+
+  it('publishes no field error when the function is valid', () => {
+    render(
+      <>
+        <DistanceFunctionInput
+          value="{value} + {distance}"
+          onChange={() => {}}
+          errorPath="distance_dependent_distributions/decay/function"
+        />
+        <FieldErrorKeysProbe />
+      </>
+    );
+    expect(screen.getByTestId('field-error-keys')).toHaveTextContent('');
+  });
+
+  it('clears the field error when the invalid entry unmounts', () => {
+    const path = 'distance_dependent_distributions/mouse_decay/function';
+    const { rerender } = render(
+      <>
+        <DistanceFunctionInput value="a + b" onChange={() => {}} errorPath={path} />
+        <FieldErrorKeysProbe />
+      </>
+    );
+    expect(screen.getByTestId('field-error-keys')).toHaveTextContent(path);
+    // Unmounting the input (e.g. switching entries) must drop its error.
+    rerender(<FieldErrorKeysProbe />);
+    expect(screen.getByTestId('field-error-keys')).toHaveTextContent('');
   });
 });

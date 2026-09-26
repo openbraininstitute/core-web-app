@@ -75,4 +75,11 @@ describe('validateDistanceFunction', () => {
     expect(validateDistanceFunction('{distance}')?.message).toContain('{value} placeholder');
     expect(validateDistanceFunction('{value}')?.message).toContain('{distance} placeholder');
   });
+
+  it('allows the runtime placeholders {step_begin} and {step_end}', () => {
+    // The built-in `step` distribution: BluePyEModel fills these from the morphology hot-spot.
+    const step =
+      '{value} * (0.1 + 0.9 * int(({distance} > {step_begin}) & ({distance} < {step_end})))';
+    expect(validateDistanceFunction(step)).toBeNull();
+  });
 });
