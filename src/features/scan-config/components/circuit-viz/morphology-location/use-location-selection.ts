@@ -13,6 +13,7 @@ import {
   EXPLICIT_BLOCK_TYPE,
   type IFormBindingOptions,
   type IStoredLocation,
+  type ITaggedLocation,
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   MorphologyLocationPickModeDict,
   morphologyLocationPickMode,
@@ -43,7 +44,14 @@ interface Options extends IFormBindingOptions {
   markerRadius?: number;
   /** Whether to tag each location with its section, from the viewer settings toggle. */
   showLabels?: boolean;
+  /** Locations previewed from the generated blocks, drawn beside the stored ones but read-only. */
+  generatedLocations?: ITaggedLocation[];
 }
+
+const NO_LOCATIONS: ITaggedLocation[] = [];
+
+/** Above this many markers the tags cover the cell, and tracking them costs a pass per frame. */
+const MAX_LABELLED_MARKERS = 200;
 
 /** The morphology location under the pointer: one stored, or one a click would add. */
 export interface LocationHover {
@@ -52,6 +60,8 @@ export interface LocationHover {
   sonataSectionId?: number;
   offset: number;
   screen: ScreenPoint;
+  /** Previewed from a generated block, so it moves with that block's parameters. */
+  generated?: boolean;
 }
 
 /** A stored location's tag, where its marker is drawn. */
@@ -70,6 +80,7 @@ interface Stored {
   offset: number;
   entry: string;
   locationIndex: number;
+  generated?: boolean;
 }
 
 const pickable: LocationOptions['pickable'] = (spot) => isTargetableSectionType(spot.type);
@@ -78,7 +89,8 @@ const pickable: LocationOptions['pickable'] = (spot) => isTargetableSectionType(
  * Two-way binding between the 3D view and an `ExplicitMorphologyLocations` block.
  *
  * Clicking a neurite adds a location to the open block, and the block's rows come back as markers. The config is the
- * only source of truth, so the list and the 3D view cannot drift apart. With no block open, a click creates one.
+ * only source of truth, so the list and the 3D view cannot drift apart. With no block open, a click creates one. Locations previewed from
+ * generated blocks are drawn the same way but cannot be picked.
  *
  * `locations` is `undefined` when there is nothing to draw and nothing to pick.
  *
@@ -97,6 +109,7 @@ export function useLocationSelection({
   backgroundColor,
   markerRadius = DEFAULT_MORPHOLOGY_LOCATION_RADIUS,
   showLabels = false,
+  generatedLocations = NO_LOCATIONS,
 }: Options): {
   locations: ViewLocations | undefined;
   hover: LocationHover | null;
@@ -117,7 +130,10 @@ export function useLocationSelection({
   const canEdit = pickMode === MorphologyLocationPickModeDict.Edit;
   // Read through the dictionary, not `config`: an edit elsewhere in the form must not rebuild the markers.
   const dictionary = readLocationsDictionary(config);
-  const storedLocations = useMemo(() => collectLocations(dictionary), [dictionary]);
+  const storedLocations = useMemo<ITaggedLocation[]>(
+    () => [...collectLocations(dictionary), ...generatedLocations],
+    [dictionary, generatedLocations]
+  );
   const ownLocationCount = readLocations(readEntry(config, selectedEntry)).length;
 
   // In step: the view tells of a marker by its index.
@@ -138,6 +154,7 @@ export function useLocationSelection({
           offset: location.offset,
           entry: location.entry,
           locationIndex: location.index,
+          generated: location.generated,
         });
       }
     }
@@ -151,6 +168,13 @@ export function useLocationSelection({
       if ('marker' in hit) {
         existing = stored[hit.marker];
         if (!existing) return;
+        // A generated location moves with its block's parameters, so a click has nothing to offer.
+        if (existing.generated) {
+          message.info(
+            `"${existing.entry}" places this location. Change its parameters to move it.`
+          );
+          return;
+        }
         if (!canEdit || existing.entry !== selectedEntry) {
           message.info(`That location belongs to "${existing.entry}". Open that block to edit it.`);
           return;
@@ -266,6 +290,8 @@ export function useLocationSelection({
     []
   );
 
+  const labelled = showLabels && markers.length > 0 && markers.length <= MAX_LABELLED_MARKERS;
+
   // Without `onPick` the view draws the markers read-only: no picking, no hand cursor.
   const locations = useMemo(
     (): ViewLocations | undefined =>
@@ -274,18 +300,18 @@ export function useLocationSelection({
         : {
             markers,
             radius: markerRadius,
-            onMarkersOnScreen: showLabels ? onMarkersOnScreen : undefined,
+            onMarkersOnScreen: labelled ? onMarkersOnScreen : undefined,
             onPick: pickMode ? onPick : undefined,
             onHover: pickMode ? onHover : undefined,
             pickable,
           },
-    [pickMode, markers, onPick, markerRadius, showLabels, onMarkersOnScreen, onHover]
+    [pickMode, markers, onPick, markerRadius, labelled, onMarkersOnScreen, onHover]
   );
 
   return {
     locations,
     hover: pickMode ? hover : null,
-    labels: showLabels && markers.length > 0 ? labels : [],
+    labels: labelled ? labels : [],
     pickMode,
   };
 }
@@ -310,6 +336,7 @@ function hoverOf(hit: LocationHit, stored: readonly Stored[]): LocationHover | n
     sonataSectionId: location.sonataId,
     offset: location.offset,
     screen: hit.screen,
+    generated: location.generated,
   };
 }
 

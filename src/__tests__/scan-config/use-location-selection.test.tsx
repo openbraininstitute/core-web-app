@@ -203,6 +203,40 @@ describe('a location picked', () => {
   });
 });
 
+describe('the generated locations', () => {
+  const SAMPLED = {
+    morphology_locations: { sampled: { type: 'RandomMorphologyLocations' } },
+  } as unknown as Config;
+  const GENERATED = [{ section_id: 3, offset: 0.4, entry: 'sampled', index: 0, generated: true }];
+
+  it('are drawn beside the stored ones', () => {
+    const { result } = render({ config: SAMPLED, generatedLocations: GENERATED });
+
+    expect(result.current.locations?.markers).toEqual([
+      expect.objectContaining({ cell: 4, sonataId: 3, offset: 0.4 }),
+    ]);
+  });
+
+  it('refuse to be edited, since they move with their block', () => {
+    infos.length = 0;
+    const onConfigChange = vi.fn();
+    const onCreateEntry = vi.fn();
+    const { result } = render({
+      config: SAMPLED,
+      selectedEntry: 'sampled',
+      generatedLocations: GENERATED,
+      onConfigChange,
+      onCreateEntry,
+    });
+
+    act(() => result.current.locations?.onPick?.(marker(0)));
+
+    expect(onConfigChange).not.toHaveBeenCalled();
+    expect(onCreateEntry).not.toHaveBeenCalled();
+    expect(infos.join(' ')).toMatch(/change its parameters/i);
+  });
+});
+
 describe('the locations on a model that takes no explicit locations', () => {
   it('pick nothing, wherever the form is', () => {
     const onCreateEntry = vi.fn();

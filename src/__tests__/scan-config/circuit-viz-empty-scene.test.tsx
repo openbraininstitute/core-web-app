@@ -38,6 +38,9 @@ vi.mock('@/features/circuit-viewer/morphologies/use-tree-morphologies', () => ({
   useTreeMorphologies: () => fixtures.morphologies,
 }));
 
+vi.mock('@/features/scan-config/components/hooks/use-morphology-location-previews', () => ({
+  useMorphologyLocationPreviews: () => ({ locations: [], errors: new Map(), isPending: false }),
+}));
 // Reads the form and raises antd messages; none of that is what these turn on.
 vi.mock(
   '@/features/scan-config/components/circuit-viz/morphology-location/use-location-selection',

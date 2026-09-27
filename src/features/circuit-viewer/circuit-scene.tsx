@@ -714,6 +714,8 @@ export function CircuitScene({
       // The colour-by toolbar is what sits in the viewer's top-right, so the
       // synapse legend drops below it exactly when that toolbar is drawn there.
       chromeTopRight: enableColorBy && colorByTarget === undefined,
+      // Background-derived chrome theme, for the legends drawn over the viewer.
+      theme,
       morphologyLocations: {
         config: scanConfig,
         onConfigChange: setConfig,
@@ -728,6 +730,7 @@ export function CircuitScene({
     [
       enableColorBy,
       colorByTarget,
+      theme,
       scanConfig,
       setConfig,
       selectedRootElement,
