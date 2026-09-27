@@ -44,6 +44,10 @@ vi.mock('@/features/scan-config/components/hooks/use-morphology-location-selecti
   }),
 }));
 
+vi.mock('@/features/scan-config/components/hooks/use-morphology-location-previews', () => ({
+  useMorphologyLocationPreviews: () => ({ locations: [], errors: new Map(), isPending: false }),
+}));
+
 /** A source in one of the states the view has to tell apart. */
 function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
   return {

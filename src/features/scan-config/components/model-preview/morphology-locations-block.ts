@@ -47,12 +47,23 @@ export type ITaggedLocation = IStoredLocation & {
   entry: string;
   /** Row number inside its own block, which is what an edit addresses. */
   index: number;
+  /** Previewed from a block's parameters rather than stored, so it cannot be edited alone. */
+  generated?: boolean;
 };
 
 /** Every explicit block's rows in a dictionary, each tagged with its block. */
 export function collectLocations(dictionary: Record<string, unknown> | null): ITaggedLocation[] {
   return blocksOf(dictionary).flatMap(([entry, block]) =>
     readLocations(block).map((location, index) => ({ ...location, entry, index }))
+  );
+}
+
+/** Every block that samples its locations from parameters, which only the backend can resolve. */
+export function readGeneratedBlocks(
+  dictionary: Record<string, unknown> | null
+): Array<[string, Record<string, unknown>]> {
+  return blocksOf(dictionary).filter(
+    ([, block]) => typeof block.type === 'string' && block.type !== EXPLICIT_BLOCK_TYPE
   );
 }
 

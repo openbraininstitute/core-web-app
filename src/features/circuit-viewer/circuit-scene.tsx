@@ -436,6 +436,7 @@ export function CircuitScene({
       backgroundColor: config.backgroundColor,
       scalebarColor: theme?.foreground,
       showScalebar: config.showScalebar,
+      theme,
       signals,
       overlays: styledOverlays,
       overlaysInteractive,
@@ -446,7 +447,7 @@ export function CircuitScene({
       features: vizFeatures,
       spikes,
       // The colour-by toolbar is what sits in the viewer's top-right, so the
-      // synapse legend drops below it exactly when that toolbar is drawn.
+      // legends drop below it exactly when that toolbar is drawn.
       chromeTopRight: enableColorBy,
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
@@ -472,7 +473,7 @@ export function CircuitScene({
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
       enableColorBy,
-      theme?.foreground,
+      theme,
       signals,
       styledOverlays,
       overlaysInteractive,

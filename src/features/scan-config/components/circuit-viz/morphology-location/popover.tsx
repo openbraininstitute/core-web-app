@@ -36,7 +36,9 @@ export function MorphologyLocationPopover({
 
   const isPreview = hover.kind === 'preview';
   const typeLabel = sectionTypeLabel(hover.sectionType);
-  const showPrompt = !isPreview || isTargetableSectionType(hover.sectionType);
+  // A generated location moves with its block's parameters, so a click has nothing to offer.
+  const generated = 'generated' in hover && hover.generated === true;
+  const showPrompt = isPreview ? isTargetableSectionType(hover.sectionType) : !generated;
   const prompt = clickPrompt(isPreview, pickMode);
 
   // Flip to the other side near an edge so the popover is never clipped by the canvas.

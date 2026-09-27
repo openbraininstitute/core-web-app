@@ -52,7 +52,14 @@ interface IOptions extends IFormBindingOptions {
   markerRadius?: number;
   /** Whether to publish label positions, from the viewer settings toggle. */
   showLabels?: boolean;
+  /** Locations previewed from the generated blocks, drawn beside the stored ones but read-only. */
+  generatedLocations?: ITaggedLocation[];
 }
+
+const NO_LOCATIONS: ITaggedLocation[] = [];
+
+/** Above this many markers the tags cover the cell, and tracking them costs a pass per frame. */
+const MAX_LABELLED_MARKERS = 200;
 
 /** Pointer rest time before the hover popover appears. The hand cursor is never delayed. */
 const HOVER_REST_DELAY_IN_MS = 300;
@@ -61,6 +68,7 @@ const HOVER_REST_DELAY_IN_MS = 300;
 type TLocationMarker = MorphoViewerMorphologyLocationMarker & {
   entry: string;
   locationIndex: number;
+  generated?: boolean;
 };
 
 /**
@@ -68,7 +76,8 @@ type TLocationMarker = MorphoViewerMorphologyLocationMarker & {
  *
  * Clicking a neurite adds a location to the open block, and the block's rows come back as
  * markers. The config is the only source of truth, so the list and the 3D view cannot drift
- * apart. With no block open, a click creates one.
+ * apart. With no block open, a click creates one. Locations previewed from generated blocks are
+ * drawn the same way but cannot be picked.
  *
  * `selection` is `undefined` when there is nothing to draw and nothing to pick, so the viewer
  * skips building the pick buffer.
@@ -91,6 +100,7 @@ export function useMorphologyLocationSelection({
   backgroundColor,
   markerRadius,
   showLabels = false,
+  generatedLocations = NO_LOCATIONS,
 }: IOptions): {
   selection: MorphoViewerMorphologyLocationSelection | undefined;
   hover: MorphoViewerMorphologyLocationHover | null;
@@ -112,17 +122,17 @@ export function useMorphologyLocationSelection({
   // Read through the dictionary, not `config`: an edit elsewhere in the form must not rebuild
   // the markers, which would recompile the viewer's palette on every keystroke.
   const dictionary = readLocationsDictionary(config);
-  const storedLocations = useMemo<ITaggedLocation[]>(
-    () => collectLocations(dictionary),
-    [dictionary]
+  const locations = useMemo<ITaggedLocation[]>(
+    () => [...collectLocations(dictionary), ...generatedLocations],
+    [dictionary, generatedLocations]
   );
   const ownLocationCount = readLocations(readEntry(config, selectedEntry)).length;
 
   const selected = useMemo<TLocationMarker[]>(() => {
-    if (storedLocations.length === 0) return [];
+    if (locations.length === 0) return [];
     return cells.flatMap((cell) => {
       const sectionIds = sonataSectionIds?.get(cell.id);
-      return storedLocations.flatMap((location) => {
+      return locations.flatMap((location) => {
         const sectionName = sectionNameFor(sectionIds, location.section_id);
         if (sectionName === undefined) return [];
 
@@ -137,11 +147,12 @@ export function useMorphologyLocationSelection({
               location.entry === selectedEntry ? color : recedeMarkerColor(color, backgroundColor),
             entry: location.entry,
             locationIndex: location.index,
+            generated: location.generated,
           },
         ];
       });
     });
-  }, [storedLocations, cells, sonataSectionIds, selectedEntry, backgroundColor]);
+  }, [locations, cells, sonataSectionIds, selectedEntry, backgroundColor]);
 
   const onPick = useCallback(
     (pick: MorphoViewerMorphologyLocationPick) => {
@@ -164,6 +175,10 @@ export function useMorphologyLocationSelection({
       }
 
       const existing = pick.existingMarker as Partial<TLocationMarker> | undefined;
+      if (existing?.generated) {
+        message.info(`"${existing.entry}" places this location. Change its parameters to move it.`);
+        return;
+      }
       if (existing && (!canEdit || existing.entry !== selectedEntry)) {
         message.info(`That location belongs to "${existing.entry}". Open that block to edit it.`);
         return;
@@ -247,6 +262,8 @@ export function useMorphologyLocationSelection({
     []
   );
 
+  const labelled = showLabels && selected.length > 0 && selected.length <= MAX_LABELLED_MARKERS;
+
   // Without `onPick` the viewer draws the markers read-only: no picking, no hand cursor.
   const selection = useMemo(
     () =>
@@ -255,18 +272,18 @@ export function useMorphologyLocationSelection({
         : {
             selected,
             radius: markerRadius,
-            onLabelsChange: showLabels ? onLabelsChange : undefined,
+            onLabelsChange: labelled ? onLabelsChange : undefined,
             onPick: pickMode ? onPick : undefined,
             onHover: pickMode ? onHoverChange : undefined,
             pickableSectionTypes: pickMode ? TARGETABLE_SECTION_TYPES : undefined,
           },
-    [pickMode, selected, onPick, markerRadius, showLabels, onLabelsChange, onHoverChange]
+    [pickMode, selected, onPick, markerRadius, labelled, onLabelsChange, onHoverChange]
   );
 
   return {
     selection,
     hover: pickMode ? hover : null,
-    labels: showLabels && selected.length > 0 ? labels : [],
+    labels: labelled ? labels : [],
     pickMode,
   };
 }

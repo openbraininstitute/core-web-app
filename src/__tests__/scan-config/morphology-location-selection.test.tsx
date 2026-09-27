@@ -14,6 +14,7 @@ import {
   collectLocations,
   MorphologyLocationPickModeDict,
   readEntry,
+  readGeneratedBlocks,
   readLocations,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -293,6 +294,44 @@ describe('useMorphologyLocationSelection picking', () => {
   });
 });
 
+describe('useMorphologyLocationSelection with generated locations', () => {
+  const SAMPLED: Config = {
+    morphology_locations: { sampled: { type: 'RandomMorphologyLocations' } },
+  } as unknown as Config;
+  const GENERATED = [{ section_id: 3, offset: 0.4, entry: 'sampled', index: 0, generated: true }];
+
+  it('draws them beside the stored ones', () => {
+    const { result } = render({ config: SAMPLED, generatedLocations: GENERATED });
+
+    expect(result.current.selection?.selected).toEqual([
+      expect.objectContaining({ sectionName: '0', offset: 0.4, generated: true }),
+    ]);
+  });
+
+  it('refuses to edit one, since it moves with its block', () => {
+    infos.length = 0;
+    const onConfigChange = vi.fn();
+    const onCreateEntry = vi.fn();
+
+    const { result } = render({
+      config: SAMPLED,
+      selectedEntry: 'sampled',
+      generatedLocations: GENERATED,
+      onConfigChange,
+      onCreateEntry,
+    });
+    const markers = result.current.selection?.selected ?? [];
+
+    act(() => {
+      result.current.selection?.onPick?.(pick({ existingMarker: markers[0] }));
+    });
+
+    expect(onConfigChange).not.toHaveBeenCalled();
+    expect(onCreateEntry).not.toHaveBeenCalled();
+    expect(infos.join(' ')).toMatch(/change its parameters/i);
+  });
+});
+
 describe('useMorphologyLocationSelection on a model that takes no explicit locations', () => {
   it('picks nothing, wherever the form is', () => {
     // A small microcircuit generates its locations, so the dictionary is in the config while
@@ -461,6 +500,17 @@ describe('collectLocations', () => {
 
   it('is empty when there is no morphology-locations dictionary at all', () => {
     expect(collectLocations(null)).toEqual([]);
+  });
+});
+
+describe('readGeneratedBlocks', () => {
+  it('keeps only the blocks that describe how to sample', () => {
+    const dictionary = {
+      ...TWO_BLOCKS,
+      sampled: { type: 'RandomMorphologyLocations', number_of_locations: 20 },
+    };
+
+    expect(readGeneratedBlocks(dictionary).map(([entry]) => entry)).toEqual(['sampled']);
   });
 });
 
