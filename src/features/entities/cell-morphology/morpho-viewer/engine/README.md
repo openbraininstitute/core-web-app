@@ -4,20 +4,24 @@ Turns an SWC skeleton into a single closed, smoothly blended surface mesh, in a 
 neurite runs alone its surface is swept as a tube; around branch points, the soma and near contacts a voxel field
 is meshed with surface nets and simplified with meshoptimizer's WASM quadric simplifier.
 
-Ported from the `local-morph-meshing` proof of concept. The notes below are the POC's own. Where they mention
-"the page", "the panel" or a control, that is the POC's developer page. Here the build parameters are fixed (the
-defaults of the table under *Build parameters*), and the platform viewer shows the morphology and mesh statistics.
+The in-depth reference: how each step works, why it is done that way, and what it was measured to cost. For the
+overview (what runs where, diagrams of a build, and where to change what) see [../README.md](../README.md).
+
+Ported from the `local-morph-meshing` proof of concept (the POC), whose notes these are. The build parameters are
+fixed in the platform (`BUILD_PARAMS` in `../constants.ts`; see *Build parameters*), and the viewer's statistics
+menu shows what a build did. "The sample cell" and "the bundled cell" are the mouse V1 L4 neuron in
+`src/__tests__/cell-morphology/fixtures/`.
 
 Coordinates are shifted so the soma centre is the origin (the bounding-box centre if the file has no soma
 points). The view orbits around that point and the exports use the same frame.
 
 ## How it works
 
-1. **Parse.** `src/swc.ts` reads the SWC columns, resolves parent links and
+1. **Parse.** `swc.ts` reads the SWC columns, resolves parent links and
    regroups the tree into *sections*: unbranched chains of points of one type.
    Each neurite section starts at its parent point so the chains connect. The
    soma becomes one sphere (single point, the three-point convention, or a
-   sphere fitted to a contour), which gives the centre. `src/soma.ts` sizes
+   sphere fitted to a contour), which gives the centre. `soma.ts` sizes
    the soma from its stems instead, ignoring the traced soma radius and
    contour: an arbor whose first sample is 5 µm or more from the centre is
    valid and emanates from that sample, the base sphere has 0.8 × the nearest
@@ -25,7 +29,7 @@ points). The view orbits around that point and the exports use the same frame.
    gets a first sample added 25 µm along the ray to it, which then stands for
    the traced one, with the radius interpolated between the base radius at
    the centre and the traced sample's. An arbor starting within 5 µm neither
-   sizes the soma nor emanates. The panel shows the counts and the base
+   sizes the soma nor emanates. The statistics show the counts and the base
    radius next to the fitted one. With no valid arbor, which is the case in
    the bundled cell and in the projection neurons from the platform (every
    stem starts within 3 µm of the centre), the fitted sphere stands, but it
@@ -39,7 +43,7 @@ points). The view orbits around that point and the exports use the same frame.
    the base sphere, at 0.8 × that distance, the radius itself.
 
    The mesh's soma is the base sphere with a *neck* to every valid or cut arbor
-   (`collectPrimitives` in `src/mesher.ts`): the cone tangent to the base
+   (`collectPrimitives` in `mesher.ts`): the cone tangent to the base
    sphere and to a sphere of the target's radius at the target, which is the
    side of their hull. The field measures a rounded cone from the orthogonal
    projection onto its axis, which sets the cone on the equators of its end
@@ -49,7 +53,7 @@ points). The view orbits around that point and the exports use the same frame.
    spheres instead, and leaves the base sphere without an edge. Sphere and
    necks are one primitive of the field, so within it the distances combine
    by a minimum and nothing adds up twice. It is a smooth minimum
-   (`smoothMin` in `src/field.ts`), folded over the parts in their order: a
+   (`smoothMin` in `field.ts`), folded over the parts in their order: a
    plain one leaves a crease wherever two necks cross, up to 90° deep between
    a thin neck and a thick one, and a simplified mesh zigzags across it, each
    vertex shaded as one side or the other. Folded, the parts meet in a round
@@ -67,7 +71,7 @@ points). The view orbits around that point and the exports use the same frame.
    it, and the neck follows it there; a cut arbor's neck ends where its
    section as prepared first gets the cut distance out. The mesh statistics
    say how many necks the soma has.
-2. **Prepare.** `src/prepare.ts` smooths radii and paths along each section
+2. **Prepare.** `prepare.ts` smooths radii and paths along each section
    (a running median over 3 µm against single-node spikes, then a Gaussian of
    the chosen σ; branch points and tips stay put, and a child section starts
    exactly where its smoothed parent ends), resamples every axon section at a
@@ -84,12 +88,12 @@ points). The view orbits around that point and the exports use the same frame.
    the default tolerance, but the mesher's cost scales with surface area, so
    it is about a cleaner mesh and lighter skeletons rather than speed.
 
-   *Untangling (the* Untangle fibres *switch, on by default).* A neuron is a tree, and its
+   *Untangling (on in the platform's build).* A neuron is a tree, and its
    fibres do not pass through each other. Tracings have them do it all the
    same: depth is the weak axis of a light microscope, and an axon that ran
    over a dendrite comes out running through it. The mesher can only weld what
    touches (step 3), and every weld is a handle that the cell does not have:
-   8 on the sample cell, 28 on a projection neuron. `src/untangle.ts` moves
+   8 on the sample cell, 28 on a projection neuron. `untangle.ts` moves
    such fibres apart between the smoothing and the simplification, until their
    surfaces are two and a half voxels from each other, which is what it takes
    for the layout not to see them touch once the paths are simplified. Only
@@ -114,7 +118,7 @@ points). The view orbits around that point and the exports use the same frame.
    It takes 40 ms and 200 ms, once for a cell and a smoothing: the result is
    kept. It edits the anatomy rather than rendering it, by less than a tracing
    is off in depth, and the statistics say what it did.
-3. **Field.** `src/mesher.ts` accumulates a scalar field on a sparse voxel
+3. **Field.** `mesher.ts` accumulates a scalar field on a sparse voxel
    grid. For each section it takes the exact signed distance to the section's
    surface (minimum over its rounded-cone segments, so consecutive segments
    never bead) and adds a compact kernel of that distance divided by a local
@@ -127,7 +131,7 @@ points). The view orbits around that point and the exports use the same frame.
    distinction, the kernels also act on whatever merely passes by: an axon
    within a dendrite's band (two blend scales, a radius at blend 0.5) comes out
    swollen towards it, and welded to it if the gap is small, and every such
-   place is a patch of voxels for step 9. So `src/kin.ts` divides the skeleton
+   place is a patch of voxels for step 9. So `kin.ts` divides the skeleton
    into *families*, and the field is the largest of the families' sums. The
    sections that meet at a fork, or the soma and its stems, are one family
    from the fork on for as long as they stay within each other's reach (a
@@ -168,9 +172,9 @@ points). The view orbits around that point and the exports use the same frame.
 5. **Project.** A surface-nets vertex is the mean of its cell's edge
    crossings, which on a tube a few voxels wide lands up to half a voxel
    inside the true surface, by an amount that depends on how the tube sits in
-   the grid: thin neurites come out notched. `src/field.ts` evaluates the
+   the grid: thin neurites come out notched. `field.ts` evaluates the
    field and its gradient anywhere from the slab's segments (it agrees with
-   the grid samples to float32 rounding), and `src/refine.ts` moves every
+   the grid samples to float32 rounding), and `refine.ts` moves every
    vertex onto F = 1 with up to three Newton steps. On the sample cell at
    0.2 µm this halves the RMS distance of the triangles from the surface and
    costs about a quarter of the extraction time. Where the GPU extracted the
@@ -249,7 +253,7 @@ points). The view orbits around that point and the exports use the same frame.
    pull on the normal as they fold in the field.
 8. **Spread over workers.** `planMesh` cuts the block grid into slabs of block
    layers along one axis, choosing the axis and the cut positions so that every
-   slab gets about the same amount of splatting work. `src/pool.ts` hands the
+   slab gets about the same amount of splatting work. `pool.ts` hands the
    slabs to a pool of workers (four slabs per worker, so uneven slabs even out
    and less field memory is live at once), then one worker stitches them.
 
@@ -264,9 +268,9 @@ points). The view orbits around that point and the exports use the same frame.
    whose owner was collapsed away by the simplification has all of its faces in
    the upper slab and simply becomes a vertex of its own.
 
-   A new build supersedes the running one: its queued slabs are dropped, so
-   dragging a slider no longer waits for the previous mesh to finish.
-9. **Tubes where a neurite runs alone (the *Tubes* switch, on by default).**
+   A new build supersedes the running one: its queued slabs are dropped, so a
+   rebuild does not wait for the previous mesh to finish.
+9. **Tubes where a neurite runs alone (always, in the platform's build).**
    Steps 3 to 7 cost in proportion to the surface, and nearly all of a
    neuron's surface is plain tube: no other section's band reaches it, so the
    field there is that one section's and F = 1 is exactly the surface of its
@@ -278,7 +282,7 @@ points). The view orbits around that point and the exports use the same frame.
    tube at the radius floor loses two fifths of its triangles where two rings
    would do.
 
-   `src/classify.ts` finds the plain stretches. Pieces of the sections' paths
+   `classify.ts` finds the plain stretches. Pieces of the sections' paths
    that are of one family (step 3) interact when one's band, plus a voxel,
    reaches the other's surface; pieces that are not, when their surfaces come
    within a voxel, which is what makes a weld of them. Both are then complex,
@@ -289,7 +293,7 @@ points). The view orbits around that point and the exports use the same frame.
    of chunks that share a cell are tested by their exact distance, and only a
    segment that comes close to something is cut into pieces.
 
-   `src/tubes.ts` sweeps a plain stretch: a ring at each end, at every skeleton
+   `tubes.ts` sweeps a plain stretch: a ring at each end, at every skeleton
    point (in the plane that bisects the bend, where the two cones meet) and
    along long segments up to the *Tube aspect*; vertices at equal angles in a
    rotation-minimising frame, each found by a ray cast from the axis, with the
@@ -312,7 +316,7 @@ points). The view orbits around that point and the exports use the same frame.
    Interacting pieces are clustered into patches, and a patch is meshed by
    steps 3 to 7 from a copy of the skeleton around it, whose sections are cut
    off a little beyond it. Its surface is therefore closed, with a capped stub
-   on every section that leaves it. `src/clip.ts` cuts each stub away at a
+   on every section that leaves it. `clip.ts` cuts each stub away at a
    plane across its section: the cut is the one curve of triangles, connected
    through edges that meet the plane, that goes round the axis and comes
    closest to it (the other arm of a hairpin may cross the plane nearby, and
@@ -321,7 +325,7 @@ points). The view orbits around that point and the exports use the same frame.
    plane are moved into it; the new vertices are put on the exact surface; and
    what hangs together beyond the plane is removed. That leaves a loop in the
    plane, and the tube starts a collar's length farther on with a ring of its
-   own. `src/hybrid.ts` fills the collar when it merges, by walking around
+   own. `hybrid.ts` fills the collar when it merges, by walking around
    both loops and advancing on the side where the new edge spans the smaller
    angle. Tubes and patches share no samples, so they are meshed in any order
    on any worker, in batches that are compact in space (they become the render
@@ -369,7 +373,7 @@ points). The view orbits around that point and the exports use the same frame.
    voxel meshes, checked against their own fields as ever. If a build fails (a
    clip that finds no loop, a ray that finds no surface) the pool builds the
    voxel mesh instead and the statistics say why.
-10. **GPU (experimental, the *GPU* switch, on by default).** `src/gpu-slab.ts`
+10. **GPU (wherever the browser has WebGPU).** `gpu-slab.ts`
    moves steps 3 and 4 of every slab into WebGPU compute shaders; the workers
    keep the planning, the simplification and the merge.
 
@@ -474,38 +478,45 @@ points). The view orbits around that point and the exports use the same frame.
    thousandth of a cosine, the volume agrees to six figures, and the
    simplifier, which sees the moved vertices, ends up within 0.07 % of the
    workers' triangle count, 0.03 % with the tubes on. If a GPU build ever
-   comes back with open quads, the page turns the GPU off and rebuilds on the
-   CPU, and so it does when the device raises an error or is lost. A
+   comes back with open quads, the viewer turns the GPU off for the session
+   and rebuilds on the CPU, and so it does when the device raises an error or
+   is lost (`use-morphology-mesh.ts`). A
    submission that uses a buffer the device could not allocate does nothing,
    and its readback brings back zeros or an earlier slab's data, so every
    readback also checks the device's error scopes, which come back long
    before the map does. Such a failure does not send a tubes build to the
    voxel mesher either, which would need the device too. A device that cannot
    compile the shaders is never used: the pipelines are built before the
-   probe answers, and the GPU switch stays off with the reason on its help card.
+   probe answers, and the statistics give the reason.
 
 
 ## Build parameters
 
-| Control | Meaning |
-| --- | --- |
-| Smoothing σ | Gaussian σ in µm along each section, applied to radii and positions. 0 keeps the traced values. |
-| Axon radius | *as traced*: the same σ as dendrites. *heavily smoothed*: 5 × σ for the axon radii (paths keep σ), the default since axon calibre estimates are mostly noise. *constant*: every axon radius becomes the axon's median. |
-| Axon step | Arc-length step in µm at which every axon section is resampled after smoothing and before untangling: the ends stay, the points between are evenly spaced by no more than the step, and each takes the arc-length-weighted mean radius over its step. Bounds the axon's point count by its cable length, where Simplify bounds the error by the voxel; the Simplify slider is then in effect a dendrite control. 1 to 5 µm: a finer step than the tracing would only add points. The bench's `--axon-step 0` keeps the traced points. |
-| Untangle fibres | Move fibres apart where the tracing has them touch without their belonging together, the thinner around the thicker, by 3 µm at most (step 2); on by default. Off, they are welded where they touch. |
-| Simplify | Ramer–Douglas–Peucker tolerance as a multiple of the voxel, on path and diameter. The default of half a voxel drops about half the points of a typical tracing without changing the mesh. |
-| Voxel size | Grid resolution in µm, 0.126 by default. Triangle count and time scale roughly with 1/voxel². With the tubes on it is the coarsest grid: around fibres thinner than the minimum radius the voxels get finer, down to a quarter of it, where that is cheap (step 9). |
-| Neurite blend | Blend scale as a fraction of the local radius. Larger values give rounder branch points, and rounder welds where fibres touch. |
-| Soma blend | Same for the soma, sphere and necks alike; controls how smoothly dendrites and axon emerge from it. Along a neck the band follows the neck's own radius, wide at the sphere and narrow at the target. The round where the soma's own parts meet does not follow it: it is 0.4 of the local radius wide at any blend. |
-| Min radius | The smallest radius a grid is given, in its voxels. The mesher never goes below 1.0: thinner tubes fall between grid samples and break into pieces (straight tubes survive down to 0.85, the sample axon breaks below 0.9). With the tubes on, the grid around thin fibres gets finer voxels to keep to it; with voxels throughout, thinner fibres are thickened to it. |
-| Mesh simplify | Largest distance of a triangle from the true surface, as a multiple of the voxel: what the simplified voxel mesh is checked against the field for, and what sets the number of vertices around a tube. 0 keeps the raw surface-nets mesh in the patches (the tubes then work to a tenth of a voxel). Whatever the value, a simplified triangle never leaves the surface by more than half the local radius, so thin axons are not cut. |
-| Tube aspect | Most that two rings of a tube may be apart, as a multiple of the edge length around them; 16 by default, the slider's top. The surface is the same at any value; larger means fewer and longer triangles. |
-| Tubes | Sweep tubes where a neurite runs alone, at its traced calibre, and use voxels only for the patches around branch points, the soma and near contacts, as fine as the fibres there need. Off: the whole surface comes from one voxel grid, which thickens whatever is thinner than a voxel. |
-| Neurite types | Include or exclude axon / basal / apical sections. The soma is always included. |
-| GPU | Field, surface extraction, projection and the simplification's check in WebGPU compute shaders instead of on the workers. With the tubes on, every patch worth a dispatch goes there as a slab of its own rather than riding in a batch. On whenever the browser has WebGPU and the device builds the shaders; a failed or defective GPU build turns it off for the session and rebuilds on the CPU. Disabled where the browser has no WebGPU or the device cannot compile the shaders; its help card says which. |
+The POC had a control for each of these. The platform fixes them in `BUILD_PARAMS` (`../constants.ts`), with the
+POC's defaults; the voxel is 10^−0.9 ≈ 0.126 µm.
+
+| Parameter | In the platform | Meaning |
+| --- | --- | --- |
+| Smoothing σ (`smoothing`) | 1 µm | Gaussian σ in µm along each section, applied to radii and positions. 0 keeps the traced values. |
+| Axon radius (`axonRadius`) | heavily smoothed | *as traced*: the same σ as dendrites. *heavily smoothed*: 5 × σ for the axon radii (paths keep σ), since axon calibre estimates are mostly noise. *constant*: every axon radius becomes the axon's median. |
+| Axon step (`axonStep`) | 5 µm | Arc-length step in µm at which every axon section is resampled after smoothing and before untangling: the ends stay, the points between are evenly spaced by no more than the step, and each takes the arc-length-weighted mean radius over its step. Bounds the axon's point count by its cable length, where Simplify bounds the error by the voxel; Simplify is then in effect a dendrite setting. 1 to 5 µm: a finer step than the tracing would only add points. 0 keeps the traced points. |
+| Untangle fibres (`untangle`) | on, 2.5 voxels | Move fibres apart where the tracing has them touch without their belonging together, the thinner around the thicker, by 3 µm at most (step 2), until their surfaces are this far apart. Off (0), they are welded where they touch. |
+| Simplify (`simplify`) | half a voxel | Ramer–Douglas–Peucker tolerance on path and diameter, in µm. Half a voxel drops about half the points of a typical tracing without changing the mesh. |
+| Voxel size (`voxel`) | 0.126 µm | Grid resolution in µm. Triangle count and time scale roughly with 1/voxel². With the tubes it is the coarsest grid: around fibres thinner than the minimum radius the voxels get finer, down to a quarter of it, where that is cheap (step 9). |
+| Neurite blend (`blend`) | 0.1 | Blend scale as a fraction of the local radius. Larger values give rounder branch points, and rounder welds where fibres touch. |
+| Soma blend (`somaBlend`) | 1 | Same for the soma, sphere and necks alike; controls how smoothly dendrites and axon emerge from it. Along a neck the band follows the neck's own radius, wide at the sphere and narrow at the target. The round where the soma's own parts meet does not follow it: it is 0.4 of the local radius wide at any blend. |
+| Min radius (`minRadius`) | 1 voxel | The smallest radius a grid is given, in its voxels. The mesher never goes below 1.0: thinner tubes fall between grid samples and break into pieces (straight tubes survive down to 0.85, the sample axon breaks below 0.9). With the tubes, the grid around thin fibres gets finer voxels to keep to it; with voxels throughout, thinner fibres are thickened to it. |
+| Mesh simplify (`simplifyMesh`) | 1 voxel | Largest distance of a triangle from the true surface: what the simplified voxel mesh is checked against the field for, and what sets the number of vertices around a tube. 0 keeps the raw surface-nets mesh in the patches (the tubes then work to a tenth of a voxel). Whatever the value, a simplified triangle never leaves the surface by more than half the local radius, so thin axons are not cut. |
+| Tube aspect (`tubeAspect`) | 16 | Most that two rings of a tube may be apart, as a multiple of the edge length around them. The surface is the same at any value; larger means fewer and longer triangles. |
+| Tubes | always | Sweep tubes where a neurite runs alone, at its traced calibre, and use voxels only for the patches around branch points, the soma and near contacts, as fine as the fibres there need. Without them (`mesher: 'voxel'`, or when a hybrid build failed) the whole surface comes from one voxel grid, which thickens whatever is thinner than a voxel. |
+| Neurite types (`includeTypes`) | the eyes in the key | The axon, basal and apical sections to include. The soma is always included. |
+| GPU | where available | Field, surface extraction, projection and the simplification's check in WebGPU compute shaders instead of on the workers. With the tubes, every patch worth a dispatch goes there as a slab of its own rather than riding in a batch. Used whenever the browser has WebGPU and the device builds the shaders; a failed or defective GPU build turns it off for the session and rebuilds on the CPU. The statistics say which backend built the mesh, and why. |
 
 
 ## Timings
+
+Measured on the POC, with its bench script (`npm run bench`, whose flags appear below) and its `gpu-bench.html`
+page; neither is ported. Some runs use settings other than the platform's, as each says.
 
 ### Tubes and patches against voxels throughout
 
@@ -623,13 +634,13 @@ slows the workers several times over and drowns the difference.
   sheets pass through the same voxel can still share a vertex or, very rarely,
   an edge (one edge in the 1.3 M-triangle sample at 0.5 µm), so it is
   watertight but not strictly 2-manifold there; refining the voxel size
-  resolves them. The statistics count those edges, and the page says "closed
-  surface ✓" only where there are none.
+  resolves them. The statistics count those edges, and say "closed surface ✓"
+  only where there are none.
 - Fibres that touch are welded, and tracings have them touch: the sample cell
   in 9 places at a blend of 0.5, a projection neuron in 17, most of them axons
   traced straight through a dendrite or another axon. The statistics give the
   count. Fibres that pass within a voxel of each other count as touching.
-  *Untangle*, on by default, moves them apart instead. It leaves alone what it
+  Untangling (step 2) moves them apart instead. It leaves alone what it
   cannot tell from anatomy: the arms of a fold in one section, which lie
   against each other up to the turn, and sections of one fork or of the soma
   that cross while they still blend.
@@ -641,7 +652,7 @@ slows the workers several times over and drowns the difference.
   slabs keeps a few percent more triangles than a single-slab run would.
 - The GPU backend has been run on one GPU (Apple, Metal). It depends on the
   device giving the same result for the same shader and inputs in different
-  dispatches; `/gpu-bench.html?verify` checks a device against the CPU mesh.
+  dispatches; the POC's `gpu-bench.html?verify` checks a device against the CPU mesh.
   The tests run in Node, which has no WebGPU: they cover the binning (by
   replaying the shader's gather on the CPU), not the shaders. A slab of more
   than 65 535 blocks, or whose field exceeds the device's buffer limit, runs
@@ -659,11 +670,11 @@ files. Light rigs ride on the camera so the lighting stays put while orbiting.
 | Clay | Matcap shading from a procedural gradient: sculpted, lighting-independent, reads shape well. |
 | Glossy | Clear-coated physical material reflecting a prefiltered procedural room. |
 | Pearl | Physical material with velvet sheen and a bright rim under the same environment. |
-| Toon | Four-step cel shading plus an inverted-hull outline 1.5 CSS pixels wide at any distance, in the single view and the compare tiles alike. |
+| Toon | Four-step cel shading plus an inverted-hull outline 1.5 CSS pixels wide at any distance. |
 | Depth cue | Matte shading with fog towards the background; the fog range follows the orbit distance so far branches always recede. |
 | SEM | Scanning electron microscope: grayscale matcap with edges brighter than faces (the secondary-electron edge effect), detector grain, black field. Ignores type colours. |
 | EM segmentation | A render of a segmented electron-microscopy volume: one matte, waxy grey for the whole cell, a lumpy membrane, occlusion in the creases, a dark field in either theme. Turns the bumps and the ambient occlusion on. Ignores type colours unless **Type tint** is on. |
-| Fluorescence | Confocal-style projection: additive fresnel glow, GFP-green dendrites and soma, red axon, with a bloom pass in the single view. Overlapping fibres add up like a maximum-intensity projection. |
+| Fluorescence | Confocal-style projection: additive fresnel glow, GFP-green dendrites and soma, red axon, with a bloom pass. Overlapping fibres add up like a maximum-intensity projection. |
 | Golgi | Golgi-Cox impregnation: an opaque dark neuron on a sepia slide with photographic grain. Ignores type colours. |
 | Cajal | Ink drawing: screen-space cross-hatching that adds a second and third stroke direction as the shading darkens, plus a fresnel contour line. Sepia ink on paper; chalk on slate in the dark theme. |
 | Cutaway | A clipping plane through the orbit target, facing the camera, removes everything nearer than the point you look at. Exposed back faces are drawn in a flat cut colour, so tubes read as hollow cross-sections. Pan to move the cut. |
@@ -706,7 +717,7 @@ fifth of the radius. The noise is a gradient noise of the position with up to
 three octaves, hashed on integer cells so it does not swim a millimetre from
 the soma; the smoothness slider fades the finer octaves out, which is the
 low-pass that makes the displacement read as a segmented surface rather than
-as grain. The View section has a *Bumps* switch, off by default, and sliders under it for
+as grain. The settings have a *Bumps* switch, off by default, and sliders under it for
 height (× radius, 0.06 when turned on), scale (µm, 1.5) and smoothness (0.5),
 all live without a build. The wireframe shows the bumped mesh, the
 ambient-occlusion pass sees it, and the toon outline follows it. The exports
@@ -745,6 +756,7 @@ growable.ts       typed arrays that grow, for the meshes the meshers build
 classify.ts       which stretches of the skeleton are plain tubes, the patches around the rest and the voxel of each
 tubes.ts          swept tubes: stations, rotation-minimising frames, rings cast onto the surface, caps
 clip.ts           cutting a patch's closed mesh open at the planes where tubes take over
+distances.ts      path distances to the soma, of mesh vertices and skeleton segments, for Colour by Distance
 hybrid.ts         tubes + voxel patches: planning into batches, meshing a batch, merging with collars
 gpu-slab.ts       WebGPU backend: segment binning, field / count / vertex / face / projection / check shaders, readback
 protocol.ts       types and transfer lists shared by the pool and the workers
@@ -757,6 +769,8 @@ colors.ts         neurite and distance colours written into the 8-bit vertex col
 camera.ts         orthographic / perspective equivalence, orthographic framing and pixel scale
 framing.ts        camera framing around the soma, clip ranges, depth-coded range
 ```
+
+The viewer around the engine (hooks, chrome, help cards, export) is described in [../README.md](../README.md).
 
 Tests: `src/__tests__/cell-morphology/mesher/` (node environment), with the sample cell in
 `src/__tests__/cell-morphology/fixtures/`.
