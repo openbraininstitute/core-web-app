@@ -84,7 +84,7 @@ function makeEntityMiniDetailFile(entity: BuiltEntityWithAssets): TActivityCusto
 }
 
 function makeAssetOutputFiles(entity: BuiltEntityWithAssets): TActivityCustomFile[] {
-  return entity.assets.map((asset) => ({
+  return entity.assets.map((asset: IAsset) => ({
     id: asset.id,
     entity,
     asset,
@@ -254,9 +254,9 @@ export function InOutFiles({
       outputIsEmpty={builtOutputFiles.length === 0 && !isLoading && !logStreamFiles.output}
       inputItems={inputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.asset.id}
-          selected={file.asset.id === selectedFile?.id}
-          key={file.asset?.id}
+          id={file.id ?? file.asset?.id}
+          selected={(file.id ?? file.asset?.id) === selectedFile?.id}
+          key={file.id ?? file.asset?.id}
           file={file}
           onSelect={onSelect}
           name={file.name}

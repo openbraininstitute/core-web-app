@@ -86,40 +86,40 @@ export function SimulationFiles({
   const loading = inputLoading || outputLoading;
 
   const prioritizedInputFiles = useMemo(() => {
-    const selectedPath = selectedFile?.asset.path;
+    const selectedPath = selectedFile?.asset?.path;
 
     return [...inputFilesWithLogs].sort((a, b) => {
-      const aSelected = a.asset.path === selectedPath;
-      const bSelected = b.asset.path === selectedPath;
+      const aSelected = a.asset?.path === selectedPath;
+      const bSelected = b.asset?.path === selectedPath;
       if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
-      const aPreferred = a.asset.label === AssetLabel.sonata_circuit;
-      const bPreferred = b.asset.label === AssetLabel.sonata_circuit;
+      const aPreferred = a.asset?.label === AssetLabel.sonata_circuit;
+      const bPreferred = b.asset?.label === AssetLabel.sonata_circuit;
       if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
 
       return 0;
     });
-  }, [inputFilesWithLogs, selectedFile?.asset.path]);
+  }, [inputFilesWithLogs, selectedFile?.asset?.path]);
 
   const prioritizedOutputFiles = useMemo(() => {
-    const selectedPath = selectedFile?.asset.path;
+    const selectedPath = selectedFile?.asset?.path;
 
     return [...outputFilesWithLogs].sort((a, b) => {
-      const aSelected = a.asset.path === selectedPath;
-      const bSelected = b.asset.path === selectedPath;
+      const aSelected = a.asset?.path === selectedPath;
+      const bSelected = b.asset?.path === selectedPath;
       if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
       const aPreferred =
-        a.asset.label === AssetLabel.voltage_report &&
-        a.asset.content_type === AssetContentType.nwb;
+        a.asset?.label === AssetLabel.voltage_report &&
+        a.asset?.content_type === AssetContentType.nwb;
       const bPreferred =
-        b.asset.label === AssetLabel.voltage_report &&
-        b.asset.content_type === AssetContentType.nwb;
+        b.asset?.label === AssetLabel.voltage_report &&
+        b.asset?.content_type === AssetContentType.nwb;
       if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
 
       return 0;
     });
-  }, [outputFilesWithLogs, selectedFile?.asset.path]);
+  }, [outputFilesWithLogs, selectedFile?.asset?.path]);
 
   // Notify parent component about the loading state
   useEffect(() => {
@@ -141,11 +141,11 @@ export function SimulationFiles({
       outputIsEmpty={outputFilesWithLogs.length === 0 && !outputLoading}
       inputItems={inputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.id ?? file.asset.id}
+          id={file.id ?? file.asset?.id}
           selected={
-            file.id ? file.id === selectedFile?.id : file.asset.path === selectedFile?.asset.path
+            file.id ? file.id === selectedFile?.id : file.asset?.path === selectedFile?.asset?.path
           }
-          key={file.id ?? file.asset.id}
+          key={file.id ?? file.asset?.id}
           file={file}
           name={file.name}
           onSelect={onSelect}
@@ -153,11 +153,11 @@ export function SimulationFiles({
       ))}
       outputItems={outputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.id ?? file.asset.id}
+          id={file.id ?? file.asset?.id}
           selected={
-            file.id ? file.id === selectedFile?.id : file.asset.path === selectedFile?.asset.path
+            file.id ? file.id === selectedFile?.id : file.asset?.path === selectedFile?.asset?.path
           }
-          key={file.id ?? file.asset.id}
+          key={file.id ?? file.asset?.id}
           file={file}
           name={file.name}
           onSelect={onSelect}

@@ -749,7 +749,7 @@ type TActivityCustomFileBase = {
  * A row backed by a concrete asset: a file opened in a viewer, or a log stream backed by a
  * synthetic asset. These always carry an `asset`.
  */
-type TAssetBackedFile = TActivityCustomFileBase & {
+export type TAssetBackedFile = TActivityCustomFileBase & {
   renderer:
     | typeof ActivityCustomFileRenderer.Default
     | typeof ActivityCustomFileRenderer.TaskConfigurationViewer

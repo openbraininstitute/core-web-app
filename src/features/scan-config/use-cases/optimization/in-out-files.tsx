@@ -123,9 +123,9 @@ export function InOutFiles({
       outputIsEmpty={generatedFiles.length === 0 && !isLoading && !logStreamFiles.output}
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
-          id={file.asset.id}
-          selected={file.asset.id === selectedFile?.id}
-          key={file.asset?.id}
+          id={file.id ?? file.asset?.id}
+          selected={(file.id ?? file.asset?.id) === selectedFile?.id}
+          key={file.id ?? file.asset?.id}
           file={file}
           onSelect={onSelect}
           name={file.name}

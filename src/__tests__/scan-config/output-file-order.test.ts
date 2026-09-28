@@ -26,7 +26,7 @@ describe('orderOutputFiles', () => {
       ExtendedEntitiesTypeDict.EFeatureExtractionResult
     );
 
-    expect(ordered.map((entry) => entry.asset.path)).toEqual([
+    expect(ordered.map((entry) => entry.asset?.path)).toEqual([
       'extracted_features.json',
       'figures/IDRest_amp.png',
       'figures/SAHP_amp.png',
@@ -39,7 +39,7 @@ describe('orderOutputFiles', () => {
       ExtendedEntitiesTypeDict.EFeatureExtractionResult
     );
 
-    expect(ordered.map((entry) => entry.asset.path)).toEqual([
+    expect(ordered.map((entry) => entry.asset?.path)).toEqual([
       'extracted_features.json',
       'figures/IDRest_amp.png',
       'protocols.json',

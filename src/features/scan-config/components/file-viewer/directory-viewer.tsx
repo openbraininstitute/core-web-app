@@ -24,7 +24,7 @@ import {
 
 import type { ReactNode } from 'react';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TAssetBackedFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { TDirectoryFileEntry } from './directory-entries';
 
@@ -35,14 +35,14 @@ const THUMBNAIL_CONTENT_TYPES = new Set([
 ]);
 
 type DirectoryFileViewerProps = {
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
   context: WorkspaceContext;
   /**
    * Renders a file the user opened from the listing. Passed in rather than imported so the
    * directory viewer stays one of the viewers `FileViewer` dispatches to, instead of a second
    * place that has to know about every content type.
    */
-  renderChild: (file: TActivityCustomFile) => ReactNode;
+  renderChild: (file: TAssetBackedFile) => ReactNode;
 };
 
 /**
@@ -246,7 +246,7 @@ function FileGlyph() {
 
 type ImageThumbnailProps = {
   entry: TDirectoryFileEntry;
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
   context: WorkspaceContext;
 };
 
