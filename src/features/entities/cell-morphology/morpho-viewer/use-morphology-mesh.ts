@@ -85,16 +85,17 @@ function turnGpuOff(reason: unknown): GpuStatus {
 }
 
 /**
- * On the GPU where there is one and it is wanted, and on the CPU where it fails. Null if a later build or load
+ * On the GPU where the session has one and it is wanted, and on the CPU where it fails. Null if a later build or load
  * superseded it.
  */
 async function buildMesh(
   pool: MeshPool,
   params: HybridParams,
+  gpuFound: GpuStatus,
   useGpu: boolean,
   options: BuildOptions
 ): Promise<{ result: MeshResult; backend: string } | null> {
-  let gpu = await gpuStatus(pool);
+  let gpu = gpuFound;
   if (useGpu && gpu.adapter !== null) {
     try {
       const result = await pool.build(params, { ...options, backend: 'gpu' });
@@ -144,7 +145,7 @@ export function useMorphologyMesh(
   const shown = useRef<string | null>(null);
   /** The morphology whose first build has started. */
   const started = useRef<MorphologySummary | null>(null);
-  /** The morphology and the settings of the processed skeleton on show. */
+  /** The morphology and the settings of the processed skeleton on show, which are the mesh's. */
   const planned = useRef<{ summary: MorphologySummary; settingsKey: string } | null>(null);
 
   useEffect(() => {
@@ -215,10 +216,14 @@ export function useMorphologyMesh(
       }
       // A tick per worker task, hundreds a build: the pill shows whole per cents.
       let percent = 0;
+      // Set in a callback: a plain `null` would narrow it to null below.
+      let processed = null as SkeletonData | null;
       try {
-        // For the Debug menu's switch, before the build: it can take seconds.
-        patch({ gpu: await gpuStatus(pool) });
-        const built = await buildMesh(pool, buildParams(b, types), b.gpu, {
+        const gpu = await gpuStatus(pool);
+        // The first probe can outlast the pause: a build started now would cancel the newer one.
+        if (!live) return;
+        patch({ gpu });
+        const built = await buildMesh(pool, buildParams(b, types), gpu, b.gpu, {
           mesher: b.tubes ? 'hybrid' : 'voxel',
           onProgress: (done, total) => {
             const next = total > 0 ? Math.round((100 * done) / total) : 0;
@@ -226,26 +231,32 @@ export function useMorphologyMesh(
             percent = next;
             patch({ progress: next / 100 });
           },
-          // The same for every build with these settings: the types left out are only left out of the mesh.
-          onPlanned: (processed) => {
-            const now = planned.current;
-            if (!live || (now?.summary === summary && now.settingsKey === settingsKey)) return;
-            planned.current = { summary, settingsKey };
-            viewer.setSkeleton('processed', processed);
-            show({ processed });
+          onPlanned: (skeleton) => {
+            processed = skeleton;
           },
         });
         if (!live || !built) return;
         showMesh(built.result);
+        // With its mesh, not ahead of it: a build superseded after its plan would leave its skeleton by another's
+        // mesh. The same for every build with these settings: the types left out are only left out of the mesh.
+        const now = planned.current;
+        if (processed && !(now?.summary === summary && now.settingsKey === settingsKey)) {
+          planned.current = { summary, settingsKey };
+          viewer.setSkeleton('processed', processed);
+          show({ processed });
+        }
         shown.current = key;
-        patch({ backend: built.backend, progress: null, gpu: gpuSession });
+        patch({ backend: built.backend, progress: null });
       } catch (e) {
         if (!live) return;
         logError('Could not build the morphology mesh', e);
         // The mesh on show has the hidden types in it; the skeleton, without them, stands in.
         showMesh(null);
         shown.current = null;
-        patch({ buildError: errorMessage(e), progress: null, gpu: gpuSession });
+        patch({ buildError: errorMessage(e), progress: null });
+      } finally {
+        // A GPU that failed this build is off for the session.
+        patch({ gpu: gpuSession });
       }
     };
     // The first build starts at once; after that, the eyes and the sliders wait for the next change.

@@ -13,6 +13,7 @@ import { MAX_BUMP_AMPLITUDE } from '../engine/looks';
 import { MIN_RADIUS_VOXELS } from '../engine/mesher';
 import { Heading, HelpRow, ICON, Note, SectionTitle, SliderRow, ToggleRow } from './menu-rows';
 
+import type { Look } from '../engine/looks';
 import type { AxonRadiusMode } from '../engine/prepare';
 import type { GpuStatus } from '../use-morphology-mesh';
 import type { UpdateSettings, ViewerSettings } from '../use-viewer-settings';
@@ -28,12 +29,14 @@ const unit =
 interface DebugControlsProps {
   settings: ViewerSettings;
   update: UpdateSettings;
+  /** Reset gives the bumps this look's own, where it has them. */
+  look: Look;
   /** Whether the session has a GPU to build on; null until the first build has asked. */
   gpu: GpuStatus | null;
 }
 
 /** How the mesh is built, as the POC's panel had it, and the bumps' shape. */
-export function DebugControls({ settings, update, gpu }: DebugControlsProps) {
+export function DebugControls({ settings, update, look, gpu }: DebugControlsProps) {
   const { build, bump } = settings;
   const set = (patch: Partial<BuildSettings>) => update({ build: { ...build, ...patch } });
   const setBump = (patch: Partial<typeof bump>) => update({ bump: { ...bump, ...patch } });
@@ -45,7 +48,7 @@ export function DebugControls({ settings, update, gpu }: DebugControlsProps) {
         <button
           type="button"
           aria-label="Reset the controls"
-          onClick={() => update({ build: DEFAULT_BUILD, bump: DEFAULT_BUMPS })}
+          onClick={() => update({ build: DEFAULT_BUILD, bump: look.bumps ?? DEFAULT_BUMPS })}
           className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-normal text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-primary-9"
         >
           <RiResetLeftLine aria-hidden className="size-3.5" />

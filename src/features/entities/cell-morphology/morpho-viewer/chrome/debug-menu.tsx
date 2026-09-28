@@ -12,6 +12,7 @@ import { Note, SectionTitle } from './menu-rows';
 import { Stats } from './stats';
 
 import type { Palette } from '../engine/colors';
+import type { Look } from '../engine/looks';
 import type { MeshResult } from '../engine/mesher';
 import type { ExportFormat } from '../export';
 import type { MorphologyMeshState } from '../use-morphology-mesh';
@@ -56,6 +57,7 @@ interface DebugMenuProps {
   state: MorphologyMeshState;
   settings: ViewerSettings;
   update: UpdateSettings;
+  look: Look;
 }
 
 /** Why nothing can be exported now, or null: during a rebuild the mesh on show is not the one the key describes. */
@@ -73,7 +75,7 @@ function unavailable({ summary, progress, loadError, buildError, layers }: Morph
  * The statistics of the file and of the last build, the controls of the build, and below them the mesh on show to
  * download. The exporter loads on the first download and writes the file in a worker of its own.
  */
-export function DebugMenu({ name, state, settings, update }: DebugMenuProps) {
+export function DebugMenu({ name, state, settings, update, look }: DebugMenuProps) {
   const palette = currentPalette(settings);
   // Here and not in the menu's content, so that an export survives the menu closing.
   const [running, setRunning] = useState<ExportFormat | null>(null);
@@ -109,7 +111,7 @@ export function DebugMenu({ name, state, settings, update }: DebugMenuProps) {
               <Stats name={name} state={state} palette={palette} />
             </div>
             <div className="border-t border-neutral-200 p-1 pb-2">
-              <DebugControls settings={settings} update={update} gpu={state.gpu} />
+              <DebugControls settings={settings} update={update} look={look} gpu={state.gpu} />
             </div>
           </div>
           <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">

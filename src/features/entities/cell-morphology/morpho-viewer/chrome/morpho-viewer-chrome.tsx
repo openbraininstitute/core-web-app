@@ -89,7 +89,9 @@ export function MorphoViewerChrome({
             onLook={chooseLook}
             hasMesh={mesh.layers.mesh !== null}
           />
-          {debug && <DebugMenu name={name} state={mesh} settings={settings} update={update} />}
+          {debug && (
+            <DebugMenu name={name} state={mesh} settings={settings} update={update} look={look} />
+          )}
         </div>
         <ChromeButton
           label="Re-centre view"

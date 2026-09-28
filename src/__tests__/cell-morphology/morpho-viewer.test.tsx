@@ -266,6 +266,25 @@ beforeEach(() => {
 
 // First, and in this order: the GPU's state lasts the session, as the module does.
 describe('GPU', () => {
+  // Before any other: the GPU is probed only once a session.
+  it('starts no build that a change superseded while the GPU was probed', async () => {
+    const probe = Promise.withResolvers<string | null>();
+    h.setup = (pool) => pool.probeGpu.mockReturnValue(probe.promise);
+    const { pool } = await renderViewer();
+    await waitFor(() => expect(pool.probeGpu).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide axon' }));
+    await waitFor(() => expect(pool.probeGpu).toHaveBeenCalledTimes(2));
+    await act(async () => probe.resolve('test adapter'));
+    await waitFor(() => expect(pool.build).toHaveBeenCalled());
+    await waitFor(() => expect(screen.queryByText(/Building mesh/)).toBeNull());
+    expect(pool.build).toHaveBeenCalledTimes(1);
+    expect(pool.build).toHaveBeenCalledWith(
+      expect.objectContaining({ includeTypes: [3] }),
+      expect.anything()
+    );
+  });
+
   it('builds on the CPU when the GPU build fails for another reason, and keeps the GPU on', async () => {
     h.setup = (pool) => {
       pool.probeGpu.mockResolvedValue('test adapter');
@@ -329,10 +348,10 @@ describe('GPU', () => {
     await renderViewer();
     fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
 
-    const gpu = await screen.findByRole('switch', { name: 'GPU' });
-    await waitFor(() => expect(gpu).toBeDisabled());
+    expect(await screen.findByText('GPU turned off: 3 open quads')).toBeInTheDocument();
+    const gpu = screen.getByRole('switch', { name: 'GPU' });
+    expect(gpu).toBeDisabled();
     expect(gpu).not.toBeChecked();
-    expect(screen.getByText('GPU turned off: 3 open quads')).toBeInTheDocument();
   });
 });
 
@@ -719,6 +738,62 @@ describe('MorphoViewer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset the controls' }));
     await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(3));
     expect(pool.build.mock.calls[2]).toMatchObject([{ smoothing: 1 }, { mesher: 'hybrid' }]);
+  });
+
+  it('draws the processed skeleton with its mesh, not before', async () => {
+    const plans = [
+      { ...h.skeleton, count: 1 },
+      { ...h.skeleton, count: 2 },
+    ];
+    const superseded = Promise.withResolvers<unknown>();
+    h.setup = (pool) =>
+      pool.build
+        .mockImplementationOnce((_params, options) => {
+          options?.onPlanned?.(plans[0]);
+          return Promise.resolve(h.result);
+        })
+        .mockImplementationOnce((_params, options) => {
+          options?.onPlanned?.(plans[1]);
+          return superseded.promise;
+        });
+    const { viewer, pool } = await renderViewer();
+    await waitFor(() => expect(viewer.setSkeleton).toHaveBeenCalledWith('processed', plans[0]));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    const row = (await screen.findByText('Smoothing σ')).closest('[data-help-anchor]');
+    const smoothing = row!.querySelector('[role="slider"]')!;
+    fireEvent.keyDown(smoothing, { keyCode: 39 });
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(2));
+    // Planned, but its mesh is not in: the skeleton on show stays the mesh's.
+    expect(viewer.setSkeleton).not.toHaveBeenCalledWith('processed', plans[1]);
+
+    // Back to the mesh on show's settings before the build is done: nothing to build, nothing to draw.
+    fireEvent.keyDown(smoothing, { keyCode: 37 });
+    await act(async () => superseded.resolve(h.result));
+    expect(viewer.setSkeleton).not.toHaveBeenCalledWith('processed', plans[1]);
+    expect(pool.build).toHaveBeenCalledTimes(2);
+  });
+
+  it("resets the bumps to the look's own", async () => {
+    const { viewer } = await renderViewer();
+    await chooseLook('EM segmentation');
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    const row = (await screen.findByText('Bump height')).closest('[data-help-anchor]');
+    fireEvent.keyDown(row!.querySelector('[role="slider"]')!, { keyCode: 39 });
+    await waitFor(() =>
+      expect(viewer.setBumps).toHaveBeenLastCalledWith(
+        expect.objectContaining({ amplitude: 0.105 })
+      )
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset the controls' }));
+    await waitFor(() =>
+      expect(viewer.setBumps).toHaveBeenLastCalledWith({
+        amplitude: 0.1,
+        scale: 2,
+        smoothness: 0.3,
+      })
+    );
   });
 
   it('has the bump sliders in the Debug menu, held while the bumps are off', async () => {

@@ -200,7 +200,7 @@ export const HELP = {
     text:
       "How the mesh is built, and the bumps' shape, for this viewer until the page is reloaded. A change to the " +
       'skeleton or the mesh builds it again after a short pause; the old mesh stays until the new one is in. Reset ' +
-      'puts them all back to the defaults.',
+      "puts them back to the defaults, and the bumps to the look's own where it has them.",
   },
   smoothing: {
     text:
