@@ -4,10 +4,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { circuitGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
 import { FilterOptionsKind } from '@/features/data-grid/core';
-import {
-  circuitSynapticPhysiologyBuildFlag,
-  extracellularRecordingArrayBuildFlag,
-} from '@/features/feature-flags/flags';
+import { extracellularRecordingArrayBuildFlag } from '@/features/feature-flags/flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildCircuitSynapticPhysiologyWorkflow } from '@/features/scan-config/workflow/definitions/build-circuit-synaptic-physiology';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
@@ -271,7 +268,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     browseConfig: smallScaleCircuitBrowseConfig,
     order: 6,
     disabled: false,
-    requiredFeatures: [circuitSynapticPhysiologyBuildFlag.key],
   },
   {
     ...WorkflowBrowseDefaults,
