@@ -7,9 +7,9 @@ is meshed with surface nets and simplified with meshoptimizer's WASM quadric sim
 The in-depth reference: how each step works, why it is done that way, and what it was measured to cost. For the
 overview (what runs where, diagrams of a build, and where to change what) see [../README.md](../README.md).
 
-Ported from the `local-morph-meshing` proof of concept (the POC), whose notes these are. The build parameters are
-fixed in the platform (`BUILD_PARAMS` in `../constants.ts`; see *Build parameters*), and the viewer's statistics
-menu shows what a build did. "The sample cell" and "the bundled cell" are the mouse V1 L4 neuron in
+Ported from the `local-morph-meshing` proof of concept (the POC), whose notes these are. The build parameters have
+fixed defaults in the platform (`DEFAULT_BUILD` in `../constants.ts`; see *Build parameters*), and the viewer's
+Debug menu shows what a build did and has the POC's controls. "The sample cell" and "the bundled cell" are the mouse V1 L4 neuron in
 `src/__tests__/cell-morphology/fixtures/`.
 
 Coordinates are shifted so the soma centre is the origin (the bounding-box centre if the file has no soma
@@ -492,8 +492,9 @@ points). The view orbits around that point and the exports use the same frame.
 
 ## Build parameters
 
-The POC had a control for each of these. The platform fixes them in `BUILD_PARAMS` (`../constants.ts`), with the
-POC's defaults; the voxel is 10^−0.9 ≈ 0.126 µm.
+The POC had a control for each of these. The platform builds with the POC's defaults, `DEFAULT_BUILD` in
+`../constants.ts`; the voxel is 10^−0.9 ≈ 0.126 µm. The Debug menu, behind the `morphology-debug` flag, has the
+POC's controls for them, but not for the neurite types, which the eyes set.
 
 | Parameter | In the platform | Meaning |
 | --- | --- | --- |

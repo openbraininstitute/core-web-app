@@ -12,8 +12,8 @@ In short:
 - Where a neurite runs alone, its surface is swept as a tube. Around branch points, the soma and places where
   fibres touch, a voxel field is meshed instead, and the two are joined by collars.
 - The voxel work runs on the GPU (WebGPU) where the browser has it, and on the CPU otherwise.
-- The build parameters are fixed (`BUILD_PARAMS` in [constants.ts](constants.ts)). What the user changes is how
-  the mesh is drawn, and which neurite types it includes.
+- The build parameters have fixed defaults (`DEFAULT_BUILD` in [constants.ts](constants.ts)), which only the
+  Debug menu changes. What the user changes is how the mesh is drawn, and which neurite types it includes.
 
 ## From the SWC to the screen
 
@@ -200,9 +200,20 @@ flowchart TD
 
 ## Debug menu and export
 
-[chrome/debug-menu.tsx](chrome/debug-menu.tsx) holds the statistics of the file and the build, and under them the
-downloads. It shows only where the `morphology-debug` flag is on (`morphologyDebugFlag` in
+[chrome/debug-menu.tsx](chrome/debug-menu.tsx) holds, in this order:
+
+- the statistics of the file and the build;
+- the controls ([chrome/debug-controls.tsx](chrome/debug-controls.tsx)): the POC's build parameters, a GPU switch
+  and the bumps' shape;
+- the downloads.
+
+It shows only where the `morphology-debug` flag is on (`morphologyDebugFlag` in
 `src/features/feature-flags/flags.ts`). The Feature Flags tab lists it in local, preview and staging, off by default.
+
+The controls live in the viewer's settings (`build` and `bump`) for as long as the page is open. A change to the
+build rebuilds the mesh after the same pause as the eyes, and draws the processed skeleton again. The GPU switch is
+held off, with the reason, once the session has no GPU. `buildParams` in [constants.ts](constants.ts) turns the
+controls' units (µm, or × voxel) into the mesher's.
 
 The menu loads [export/](export/index.ts) on the first download. That module starts
 [export/export.worker.ts](export/export.worker.ts), which writes the file and is terminated after:
@@ -218,12 +229,12 @@ are not part of it.
 
 | To change | Look in |
 | --- | --- |
-| Build parameters (voxel size, smoothing, blends, tolerances) | `BUILD_PARAMS` in [constants.ts](constants.ts), described in [engine/README.md](engine/README.md#build-parameters) |
+| Build parameters (voxel size, smoothing, blends, tolerances) | `DEFAULT_BUILD` in [constants.ts](constants.ts), described in [engine/README.md](engine/README.md#build-parameters); their controls in [chrome/debug-controls.tsx](chrome/debug-controls.tsx) |
 | Default palettes, bumps and min. width | [constants.ts](constants.ts) |
 | Number of workers | `defaultPoolSize` in [engine/pool.ts](engine/pool.ts) |
 | Rebuild delay, GPU and CPU policy | [use-morphology-mesh.ts](use-morphology-mesh.ts) |
 | Looks | `createLooks` in [engine/looks.ts](engine/looks.ts) |
-| Settings, key, Debug menu (statistics and export) | [chrome/](chrome/morpho-viewer-chrome.tsx) |
+| Settings, key, Debug menu (statistics, controls and export) | [chrome/](chrome/morpho-viewer-chrome.tsx) |
 | Help card texts | [help/help-text.ts](help/help-text.ts) |
 | Menu shell shared with the circuit viewer | `src/features/scan-config/components/color-by/chrome-menu.tsx` |
 

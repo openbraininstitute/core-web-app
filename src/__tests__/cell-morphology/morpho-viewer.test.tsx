@@ -103,7 +103,10 @@ const h = vi.hoisted(() => {
   class FakePool {
     load = vi.fn(() => Promise.resolve({ summary: state.summary, skeleton: state.skeleton }));
     probeGpu = vi.fn((): Promise<string | null> => Promise.resolve(null));
-    build = vi.fn((): Promise<unknown> => Promise.resolve(state.result));
+    build = vi.fn(
+      (_params?: unknown, _options?: { onPlanned?(skeleton: unknown): void }): Promise<unknown> =>
+        Promise.resolve(state.result)
+    );
     distances = vi.fn((request: { mesh?: { types: Uint8Array } }) =>
       Promise.resolve({
         max: 1234.4,
@@ -281,7 +284,26 @@ describe('GPU', () => {
     expect(await screen.findByText('built on the CPU')).toBeInTheDocument();
   });
 
-  // The GPU is still on from the test before: its first build is on the GPU.
+  it('builds on the CPU while the GPU is switched off in the Debug menu, and on it again after', async () => {
+    h.setup = (pool) => pool.probeGpu.mockResolvedValue('test adapter');
+    const { pool } = await renderViewer();
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    fireEvent.click(await screen.findByRole('switch', { name: 'GPU' }));
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('built on the CPU (GPU switched off)')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('switch', { name: 'GPU' }));
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(3));
+    expect(pool.build.mock.calls.map((call) => (call as unknown[])[1])).toMatchObject([
+      { backend: 'gpu' },
+      { backend: 'cpu' },
+      { backend: 'gpu' },
+    ]);
+  });
+
+  // The GPU is still on from the tests before: its first build is on the GPU.
   it('builds on the CPU when the GPU leaves the surface open, and says why', async () => {
     h.setup = (pool) => {
       pool.probeGpu.mockResolvedValue('test adapter');
@@ -300,6 +322,17 @@ describe('GPU', () => {
     expect(
       await screen.findByText(/built on the CPU \(GPU turned off: 3 open quads\)/)
     ).toBeInTheDocument();
+  });
+
+  // The GPU was turned off by the test before.
+  it('keeps the GPU switch off, and says why, once the GPU is turned off', async () => {
+    await renderViewer();
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+
+    const gpu = await screen.findByRole('switch', { name: 'GPU' });
+    await waitFor(() => expect(gpu).toBeDisabled());
+    expect(gpu).not.toBeChecked();
+    expect(screen.getByText('GPU turned off: 3 open quads')).toBeInTheDocument();
   });
 });
 
@@ -657,6 +690,50 @@ describe('MorphoViewer', () => {
     const name = screen.getByText('Cell A');
     const glb = screen.getByRole('button', { name: 'GLB' });
     expect(name.compareDocumentPosition(glb) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('builds with the settings of the Debug menu, draws the processed skeleton again, and resets them', async () => {
+    h.setup = (pool) =>
+      pool.build.mockImplementation((_params, options) => {
+        options?.onPlanned?.(h.skeleton);
+        return Promise.resolve(h.result);
+      });
+    const { viewer, pool } = await renderViewer();
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(1));
+    const processed = () =>
+      viewer.setSkeleton.mock.calls.filter(([kind, data]) => kind === 'processed' && data).length;
+    expect(processed()).toBe(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    fireEvent.click(await screen.findByRole('switch', { name: 'Tubes' }));
+    const smoothing = screen.getByText('Smoothing σ').closest('[data-help-anchor]');
+    fireEvent.keyDown(smoothing!.querySelector('[role="slider"]')!, { keyCode: 39 });
+    // One build for both changes, after the pause.
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(2));
+    expect(pool.build.mock.calls[1]).toMatchObject([
+      { smoothing: 1.1, voxel: 10 ** -0.9 },
+      { mesher: 'voxel' },
+    ]);
+    expect(processed()).toBe(2);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset the controls' }));
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(3));
+    expect(pool.build.mock.calls[2]).toMatchObject([{ smoothing: 1 }, { mesher: 'hybrid' }]);
+  });
+
+  it('has the bump sliders in the Debug menu, held while the bumps are off', async () => {
+    await renderViewer();
+    await openSettings();
+    expect(screen.queryByText('Bump height')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
+    await waitFor(() => expect(screen.queryByRole('switch', { name: 'Mesh' })).toBeNull());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    expect(
+      await screen.findByText('Turn on Bumps in the settings to see them.')
+    ).toBeInTheDocument();
+    const height = screen.getByText('Bump height').closest('[data-help-anchor]');
+    expect(height!.querySelector('[role="slider"]')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('has no Debug menu where its flag is off', async () => {

@@ -197,6 +197,7 @@ export function MenuSlider({
   value,
   onChange,
   format,
+  disabled,
 }: {
   label: ReactNode;
   testId?: string;
@@ -206,6 +207,7 @@ export function MenuSlider({
   value: number;
   onChange: (value: number) => void;
   format?: (value: number) => string;
+  disabled?: boolean;
 }) {
   return (
     <div
@@ -213,7 +215,7 @@ export function MenuSlider({
       className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center">{label}</span>
+        <span className={cn('flex items-center', disabled && 'opacity-50')}>{label}</span>
         <span className="tabular-nums text-neutral-500">{format ? format(value) : value}</span>
       </div>
       <Slider
@@ -222,11 +224,13 @@ export function MenuSlider({
         step={step}
         value={value}
         onChange={onChange}
+        disabled={disabled}
         tooltip={{ formatter: null }}
-        styles={{
-          track: { backgroundColor: ON_COLOR },
-          handle: { borderColor: ON_COLOR },
-        }}
+        styles={
+          disabled
+            ? undefined
+            : { track: { backgroundColor: ON_COLOR }, handle: { borderColor: ON_COLOR } }
+        }
       />
     </div>
   );

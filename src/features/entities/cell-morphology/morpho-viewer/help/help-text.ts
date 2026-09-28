@@ -1,13 +1,17 @@
+import { MAX_REFINE } from '../engine/hybrid';
 import { MAX_BUMP_AMPLITUDE } from '../engine/looks';
+import { MIN_RADIUS_VOXELS } from '../engine/mesher';
+import { HEAVY_AXON_FACTOR } from '../engine/prepare';
 import { BASE_RADIUS_FRACTION, SOMA_MIN_RADIUS, STEM_MIN_DISTANCE } from '../engine/soma';
+import { MAX_SHIFT } from '../engine/untangle';
 
 /** What the help card of a control says. engine/README.md has the long form. */
 export interface HelpText {
   text: string;
   /** What a change does, each under a short key: "Higher" and "Lower", "On" and "Off", or a menu's options. */
   effects?: [string, string][];
-  /** A change shows at once, in the view only: the card says so. Not for a section's card. */
-  applies?: 'view';
+  /** A change shows at once in the view only, or rebuilds the mesh: the card says so. Not for a section's card. */
+  applies?: 'view' | 'build';
 }
 
 export const HELP = {
@@ -191,6 +195,169 @@ export const HELP = {
           `raised to ${SOMA_MIN_RADIUS} µm where it is smaller, unless an arbor forks nearer the centre.`,
       ],
     ],
+  },
+  controls: {
+    text:
+      "How the mesh is built, and the bumps' shape, for this viewer until the page is reloaded. A change to the " +
+      'skeleton or the mesh builds it again after a short pause; the old mesh stays until the new one is in. Reset ' +
+      'puts them all back to the defaults.',
+  },
+  smoothing: {
+    text:
+      'Gaussian smoothing along each section, of the path and the radii alike, over σ microns of arc length. It ' +
+      'irons out the jitter of a manual tracing.',
+    effects: [
+      ['Higher', 'Smoother paths and a steadier calibre; small real bends and swellings go too.'],
+      ['Lower', 'Closer to the tracing, noise included. 0 keeps the traced points.'],
+    ],
+    applies: 'build',
+  },
+  'axon-radius': {
+    text:
+      "How the axon's radii are smoothed. Traced axon calibres are mostly noise, so by default they are smoothed " +
+      'much harder than the path.',
+    effects: [
+      ['Traced', "The radii get the same σ as the dendrites'."],
+      ['Heavy', `${HEAVY_AXON_FACTOR} × σ for the radii; the path keeps σ.`],
+      ['Constant', "Every axon point gets the axon's median radius."],
+    ],
+    applies: 'build',
+  },
+  'axon-step': {
+    text:
+      'Resamples every axon section at this step of arc length, after the smoothing. The ends stay, and each point ' +
+      'takes the mean radius over its step. Every point is a ring of the tube, and an axon can be millimetres long.',
+    effects: [
+      [
+        'Longer',
+        'Fewer rings and triangles, faster builds; tight bends are cut short by straight chords.',
+      ],
+      [
+        'Shorter',
+        'Follows the bends more closely, with more triangles. A step finer than the tracing only adds points.',
+      ],
+    ],
+    applies: 'build',
+  },
+  simplify: {
+    text:
+      'Drops skeleton points that change the path and the radius by less than this (Ramer–Douglas–Peucker). The ' +
+      'resampled axon has few points to drop, so this acts mostly on the dendrites.',
+    effects: [
+      [
+        'Higher',
+        'Fewer points and a faster build; gentle bends and changes of calibre flatten out.',
+      ],
+      [
+        'Lower',
+        "More points. Half a voxel drops about half of a tracing's points without changing the mesh.",
+      ],
+    ],
+    applies: 'build',
+  },
+  untangle: {
+    text:
+      'Moves fibres apart where the tracing has them touch without their belonging together, such as an axon traced ' +
+      `through a dendrite. The thinner one goes around, by about a micron as a rule and ${MAX_SHIFT} µm at most. ` +
+      'The statistics say what moved.',
+    effects: [
+      ['On', 'Separate fibres stay separate surfaces.'],
+      [
+        'Off',
+        'Touching fibres are welded, and every weld is a handle through the surface that the cell does not have.',
+      ],
+    ],
+    applies: 'build',
+  },
+  tubes: {
+    text:
+      'Sweeps a tube along a neurite wherever it runs alone, at its traced calibre, and uses voxels only for the ' +
+      'patches around branch points, the soma and contacts.',
+    effects: [
+      ['On', 'Several times faster, far fewer triangles, and thin fibres keep their true radius.'],
+      [
+        'Off',
+        'The whole surface comes from one voxel grid: slower, and fibres thinner than the min radius are thickened.',
+      ],
+    ],
+    applies: 'build',
+  },
+  'tube-aspect': {
+    text:
+      "How long a tube's triangles may be: the most that two rings may be apart, as a multiple of the edge length " +
+      'around them. The surface is the same at any value. Only with the tubes on.',
+    effects: [
+      ['Higher', 'Fewer and longer triangles on straight runs.'],
+      ['Lower', 'Triangles closer to equilateral, and more of them.'],
+    ],
+    applies: 'build',
+  },
+  voxel: {
+    text:
+      'Edge of the voxel grid that meshes the blended parts: branch points, the soma and contacts, or all of the ' +
+      'cell with the tubes off. With the tubes on it is the coarsest grid; around thin fibres the voxels get finer, ' +
+      `down to 1/${MAX_REFINE} of it.`,
+    effects: [
+      [
+        'Smaller',
+        'Finer detail at the junctions, at the cost of triangles, time and memory: with the tubes off, about 1 / voxel².',
+      ],
+      [
+        'Larger',
+        'Faster and lighter. With the tubes off, fibres thinner than the min radius are thickened.',
+      ],
+    ],
+    applies: 'build',
+  },
+  'min-radius': {
+    text:
+      'The smallest radius a voxel grid is given, in its voxels. A fibre thinner than about a voxel falls between ' +
+      `the grid's samples and breaks into pieces, so the slider starts at ${MIN_RADIUS_VOXELS}.`,
+    effects: [
+      [
+        'Higher',
+        'More margin for thin fibres: finer, costlier patches with the tubes on; thicker fibres with them off.',
+      ],
+      ['Lower', 'Cheaper patches, or a truer calibre with the tubes off.'],
+    ],
+    applies: 'build',
+  },
+  blend: {
+    text: 'Width of the smooth fillet where neurites meet, as a multiple of the local radius.',
+    effects: [
+      ['Higher', 'Rounder, webbed branch points, and rounder welds where fibres touch.'],
+      ['Lower', 'Crisper branch points, close to tubes simply joining.'],
+    ],
+    applies: 'build',
+  },
+  'soma-blend': {
+    text: 'The same for the soma and its necks: how smoothly the dendrites and the axon grow out of it.',
+    effects: [
+      ['Higher', 'A soft, flared base to every stem.'],
+      ['Lower', 'Stems meet the soma more abruptly.'],
+    ],
+    applies: 'build',
+  },
+  'mesh-simplify': {
+    text:
+      'How far a simplified triangle may stray from the true surface, as a multiple of the voxel; it also sets how ' +
+      'many vertices go around a tube. Never more than half the local radius, so thin axons are not cut.',
+    effects: [
+      ['Higher', 'Far fewer triangles and smaller exports; curved surfaces get faceted.'],
+      ['Lower', 'A truer surface with more triangles. 0 keeps the raw voxel mesh.'],
+    ],
+    applies: 'build',
+  },
+  gpu: {
+    text:
+      'Computes the voxel field, extracts the surface and checks the simplification in WebGPU compute shaders ' +
+      'instead of on the CPU workers. The mesh is the same either way. Off where the browser has no WebGPU, or ' +
+      'once the device has failed a build.',
+    effects: [
+      ['On', 'Faster builds: about a third less time on the sample cell.'],
+      ['Off', 'CPU workers only.'],
+    ],
+    applies: 'build',
   },
 } satisfies Record<string, HelpText>;
 

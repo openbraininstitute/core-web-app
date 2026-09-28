@@ -31,7 +31,7 @@ function MorphoViewerComponent({ className, swc, name }: MorphoViewerProps) {
   const refHost = useRef<HTMLDivElement | null>(null);
   const [engine, setEngine] = useState<Engine | null>(null);
   const { settings, ...actions } = useViewerSettings();
-  const mesh = useMorphologyMesh(engine, swc, settings.hiddenTypes);
+  const mesh = useMorphologyMesh(engine, swc, settings.hiddenTypes, settings.build);
   const { distances, error: distanceError } = usePathDistances(
     engine?.pool ?? null,
     mesh.layers,

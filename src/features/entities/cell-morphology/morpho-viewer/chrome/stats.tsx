@@ -10,16 +10,15 @@ import {
 } from '../engine/soma';
 import { SWC_SOMA, typeName } from '../engine/swc';
 import { HelpButton } from '../help/help-button';
+import { SectionTitle } from './menu-rows';
 
 import type { Palette } from '../engine/colors';
 import type { MeshStats } from '../engine/mesher';
 import type { MorphologySummary } from '../engine/protocol';
 import type { MorphologyMeshState } from '../use-morphology-mesh';
 
-export interface StatsProps {
-  /** The morphology's name, for the statistics and the files. */
+interface StatsProps {
   name: string;
-  /** The mesh on show, and the build under way. */
   state: MorphologyMeshState;
   palette: Palette;
 }
@@ -30,10 +29,7 @@ export function Stats({ name, state, palette }: StatsProps) {
   const mesh = state.layers.mesh?.stats;
   return (
     <div className="flex flex-col gap-3 text-neutral-700">
-      <div className="flex items-center text-sm font-semibold text-primary-9" data-help-anchor>
-        Statistics
-        <HelpButton topic="stats" title="Statistics" />
-      </div>
+      <SectionTitle title="Statistics" topic="stats" />
       <div className="flex flex-col gap-1">
         <div
           className="flex items-center text-xs uppercase tracking-wide text-neutral-400"

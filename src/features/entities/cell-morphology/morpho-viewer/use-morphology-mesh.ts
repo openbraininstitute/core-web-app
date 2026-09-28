@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { logError, logWarn } from '@/utils/logger';
 
-import { BUILD_PARAMS } from './constants';
+import { type BuildSettings, buildParams } from './constants';
 import {
   errorMessage,
   GpuError,
@@ -13,6 +13,7 @@ import {
 } from './engine/protocol';
 import { SWC_SOMA } from './engine/swc';
 
+import type { HybridParams } from './engine/hybrid';
 import type { MeshResult } from './engine/mesher';
 import type { BuildOptions, MeshPool } from './engine/pool';
 import type { Viewer } from './engine/viewer';
@@ -39,6 +40,8 @@ export interface MorphologyMeshState {
   loadError: string | null;
   /** Neither the GPU nor the CPU could build the mesh: the skeleton stays. */
   buildError: string | null;
+  /** Whether the session has a GPU to build on, once the first build has asked. */
+  gpu: GpuStatus | null;
   layers: Layers;
 }
 
@@ -48,10 +51,11 @@ const INITIAL: MorphologyMeshState = {
   progress: null,
   loadError: null,
   buildError: null,
+  gpu: null,
   layers: { original: null, processed: null, mesh: null },
 };
 
-type GpuStatus = { adapter: string } | { adapter: null; reason: string };
+export type GpuStatus = { adapter: string } | { adapter: null; reason: string };
 
 /** For the session: the first viewer to build asks the workers, and a GPU that fails once stays off. */
 let gpuSession: GpuStatus | null = null;
@@ -80,15 +84,18 @@ function turnGpuOff(reason: unknown): GpuStatus {
   return gpuSession;
 }
 
-/** On the GPU where there is one, and on the CPU where it fails. Null if a later build or load superseded it. */
+/**
+ * On the GPU where there is one and it is wanted, and on the CPU where it fails. Null if a later build or load
+ * superseded it.
+ */
 async function buildMesh(
   pool: MeshPool,
-  includeTypes: number[],
+  params: HybridParams,
+  useGpu: boolean,
   options: BuildOptions
 ): Promise<{ result: MeshResult; backend: string } | null> {
-  const params = { ...BUILD_PARAMS, includeTypes };
   let gpu = await gpuStatus(pool);
-  if (gpu.adapter !== null) {
+  if (useGpu && gpu.adapter !== null) {
     try {
       const result = await pool.build(params, { ...options, backend: 'gpu' });
       if (!result) return null;
@@ -104,7 +111,8 @@ async function buildMesh(
   }
   const result = await pool.build(params, { ...options, backend: 'cpu' });
   if (!result) return null;
-  return { result, backend: gpu.adapter === null ? `CPU (${gpu.reason})` : 'CPU' };
+  if (gpu.adapter === null) return { result, backend: `CPU (${gpu.reason})` };
+  return { result, backend: useGpu ? 'CPU' : 'CPU (GPU switched off)' };
 }
 
 /** The neurite types to mesh: those in the file but the hidden ones. The soma always goes in. */
@@ -117,23 +125,27 @@ const REBUILD_DELAY = 350;
 
 /**
  * Reads the SWC into the workers and shows its skeleton at once, then builds the mesh of the types that are not
- * hidden and hands it to the viewer. Hiding or showing a type rebuilds the mesh; the old one stays until the new one
- * is in.
+ * hidden and hands it to the viewer. Hiding or showing a type, or changing the build settings, rebuilds the mesh; the
+ * old one stays until the new one is in.
  */
 export function useMorphologyMesh(
   engine: Engine | null,
   swc: string,
-  hiddenTypes: number[]
+  hiddenTypes: number[],
+  settings: BuildSettings
 ): MorphologyMeshState {
   const [state, setState] = useState(INITIAL);
   const { summary } = state;
-  // The types to mesh, as a key that stays the same while they do.
+  // The types to mesh and the settings, as keys that stay the same while they do: an update with the same content
+  // does not cancel the running build.
   const include = summary ? meshTypes(summary, hiddenTypes).join(',') : null;
-  /** The types of the mesh on show. */
+  const settingsKey = JSON.stringify(settings);
+  /** The types and the settings of the mesh on show. */
   const shown = useRef<string | null>(null);
-  /** The morphology whose first build has started, and the one whose processed skeleton is on show. */
+  /** The morphology whose first build has started. */
   const started = useRef<MorphologySummary | null>(null);
-  const planned = useRef<MorphologySummary | null>(null);
+  /** The morphology and the settings of the processed skeleton on show. */
+  const planned = useRef<{ summary: MorphologySummary; settingsKey: string } | null>(null);
 
   useEffect(() => {
     if (!engine) return;
@@ -168,15 +180,19 @@ export function useMorphologyMesh(
 
   useEffect(() => {
     if (!engine || !summary || include === null) return;
-    if (include === shown.current) {
+    const key = `${include}|${settingsKey}`;
+    if (key === shown.current) {
       setState((s) => ({ ...s, progress: null }));
       return;
     }
     const { viewer, pool } = engine;
     const types = include === '' ? [] : include.split(',').map(Number);
+    const b: BuildSettings = JSON.parse(settingsKey);
     let live = true;
     const patch = (p: Partial<MorphologyMeshState>) => {
-      if (live) setState((s) => ({ ...s, ...p }));
+      if (!live) return;
+      const keys = Object.keys(p) as (keyof MorphologyMeshState)[];
+      setState((s) => (keys.every((k) => s[k] === p[k]) ? s : { ...s, ...p }));
     };
     const show = (layers: Partial<Layers>) => {
       if (live) setState((s) => ({ ...s, layers: { ...s.layers, ...layers } }));
@@ -193,50 +209,53 @@ export function useMorphologyMesh(
       if (types.length === 0 && summary.soma.model === 'none') {
         // Every type hidden, and no soma to mesh.
         showMesh(null);
-        shown.current = include;
+        shown.current = key;
         patch({ progress: null });
         return;
       }
       // A tick per worker task, hundreds a build: the pill shows whole per cents.
       let percent = 0;
       try {
-        const built = await buildMesh(pool, types, {
-          mesher: 'hybrid',
+        // For the Debug menu's switch, before the build: it can take seconds.
+        patch({ gpu: await gpuStatus(pool) });
+        const built = await buildMesh(pool, buildParams(b, types), b.gpu, {
+          mesher: b.tubes ? 'hybrid' : 'voxel',
           onProgress: (done, total) => {
             const next = total > 0 ? Math.round((100 * done) / total) : 0;
             if (next === percent) return;
             percent = next;
             patch({ progress: next / 100 });
           },
-          // The same for every build of a morphology: the types left out are only left out of the mesh.
+          // The same for every build with these settings: the types left out are only left out of the mesh.
           onPlanned: (processed) => {
-            if (!live || planned.current === summary) return;
-            planned.current = summary;
+            const now = planned.current;
+            if (!live || (now?.summary === summary && now.settingsKey === settingsKey)) return;
+            planned.current = { summary, settingsKey };
             viewer.setSkeleton('processed', processed);
             show({ processed });
           },
         });
         if (!live || !built) return;
         showMesh(built.result);
-        shown.current = include;
-        patch({ backend: built.backend, progress: null });
+        shown.current = key;
+        patch({ backend: built.backend, progress: null, gpu: gpuSession });
       } catch (e) {
         if (!live) return;
         logError('Could not build the morphology mesh', e);
         // The mesh on show has the hidden types in it; the skeleton, without them, stands in.
         showMesh(null);
         shown.current = null;
-        patch({ buildError: errorMessage(e), progress: null });
+        patch({ buildError: errorMessage(e), progress: null, gpu: gpuSession });
       }
     };
-    // The first build starts at once; after that, the eyes wait for the next toggle.
+    // The first build starts at once; after that, the eyes and the sliders wait for the next change.
     const timer = window.setTimeout(build, started.current === summary ? REBUILD_DELAY : 0);
     return () => {
       live = false;
       window.clearTimeout(timer);
       pool.cancel();
     };
-  }, [engine, summary, include]);
+  }, [engine, summary, include, settingsKey]);
 
   return state;
 }

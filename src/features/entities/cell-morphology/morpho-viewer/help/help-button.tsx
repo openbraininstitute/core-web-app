@@ -114,7 +114,11 @@ function HelpCard({ title, help }: { title: string; help: HelpText }) {
           ))}
         </dl>
       )}
-      {help.applies && <div className={styles.applies}>Changes the view only, at once</div>}
+      {help.applies && (
+        <div className={styles.applies} data-applies={help.applies}>
+          {help.applies === 'build' ? 'Builds the mesh again' : 'Changes the view only, at once'}
+        </div>
+      )}
     </>
   );
 }

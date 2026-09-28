@@ -10,7 +10,6 @@ import {
 import { panelStyle, viewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
 
-import { currentPalette, type ViewerActions, type ViewerSettings } from '../use-viewer-settings';
 import { ColorByMenu } from './color-by-menu';
 import { DebugMenu } from './debug-menu';
 import { NeuritesKey } from './neurites-key';
@@ -21,6 +20,7 @@ import { BuildStatus, WheelHint } from './status';
 import type { Look } from '../engine/looks';
 import type { Viewer } from '../engine/viewer';
 import type { MorphologyMeshState } from '../use-morphology-mesh';
+import type { ViewerActions, ViewerSettings } from '../use-viewer-settings';
 
 import styles from '@/features/scan-config/components/color-by/chrome-animations.module.css';
 
@@ -89,7 +89,7 @@ export function MorphoViewerChrome({
             onLook={chooseLook}
             hasMesh={mesh.layers.mesh !== null}
           />
-          {debug && <DebugMenu name={name} state={mesh} palette={currentPalette(settings)} />}
+          {debug && <DebugMenu name={name} state={mesh} settings={settings} update={update} />}
         </div>
         <ChromeButton
           label="Re-centre view"

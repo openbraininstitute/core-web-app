@@ -1,8 +1,10 @@
 import { DEFAULT_TUBE_ASPECT, type HybridParams } from './engine/hybrid';
+import { MIN_RADIUS_VOXELS } from './engine/mesher';
 import { UNTANGLE_VOXELS } from './engine/untangle';
 
 import type { Palette } from './engine/colors';
 import type { BumpParams } from './engine/looks';
+import type { AxonRadiusMode } from './engine/prepare';
 
 // Six-digit hex: a colour input takes no other form.
 export const LIGHT_PALETTE: Palette = {
@@ -19,22 +21,64 @@ export const DARK_PALETTE: Palette = {
   axon: '#1166ff',
 };
 
-const VOXEL = 10 ** -0.9;
+/** How the mesh is built, in the Debug menu's units: µm, or voxels where it says so. */
+export interface BuildSettings {
+  smoothing: number;
+  axonRadius: AxonRadiusMode;
+  axonStep: number;
+  /** × voxel. */
+  simplify: number;
+  untangle: boolean;
+  /** Tubes and voxel patches; off, voxels throughout. */
+  tubes: boolean;
+  tubeAspect: number;
+  voxel: number;
+  /** × voxel. */
+  minRadius: number;
+  /** × radius. */
+  blend: number;
+  /** × radius. */
+  somaBlend: number;
+  /** × voxel. */
+  simplifyMesh: number;
+  /** Where the session has one. */
+  gpu: boolean;
+}
 
-/** The POC's defaults (engine/README.md, Build parameters). The types to mesh are the build's. */
-export const BUILD_PARAMS: Omit<HybridParams, 'includeTypes'> = {
+/** The POC's defaults (engine/README.md, Build parameters). */
+export const DEFAULT_BUILD: BuildSettings = {
   smoothing: 1,
   axonRadius: 'heavy',
   axonStep: 5,
-  simplify: 0.5 * VOXEL,
-  voxel: VOXEL,
+  simplify: 0.5,
+  untangle: true,
+  tubes: true,
+  tubeAspect: DEFAULT_TUBE_ASPECT,
+  voxel: 10 ** -0.9,
+  minRadius: MIN_RADIUS_VOXELS,
   blend: 0.1,
   somaBlend: 1,
-  minRadius: VOXEL,
-  simplifyMesh: VOXEL,
-  tubeAspect: DEFAULT_TUBE_ASPECT,
-  untangle: UNTANGLE_VOXELS * VOXEL,
+  simplifyMesh: 1,
+  gpu: true,
 };
+
+/** The mesher's parameters for the settings and the types to mesh. */
+export function buildParams(b: BuildSettings, includeTypes: number[]): HybridParams {
+  return {
+    smoothing: b.smoothing,
+    axonRadius: b.axonRadius,
+    axonStep: b.axonStep,
+    simplify: b.simplify * b.voxel,
+    voxel: b.voxel,
+    blend: b.blend,
+    somaBlend: b.somaBlend,
+    minRadius: b.minRadius * b.voxel,
+    includeTypes,
+    simplifyMesh: b.simplifyMesh * b.voxel,
+    tubeAspect: b.tubeAspect,
+    untangle: b.untangle ? UNTANGLE_VOXELS * b.voxel : 0,
+  };
+}
 
 /** What the bumps take when they are turned on by hand. */
 export const DEFAULT_BUMPS: BumpParams = { amplitude: 0.06, scale: 1.5, smoothness: 0.5 };

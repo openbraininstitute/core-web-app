@@ -56,3 +56,7 @@
   border-radius: 50%;
   background: #16a34a;
 }
+
+.applies[data-applies="build"]::before {
+  background: #d97706;
+}

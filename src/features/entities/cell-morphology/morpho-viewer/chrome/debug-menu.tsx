@@ -6,8 +6,10 @@ import { ChromeMenu } from '@/features/scan-config/components/color-by/chrome-me
 import { logError } from '@/utils/logger';
 
 import { errorMessage } from '../engine/protocol';
-import { HelpButton } from '../help/help-button';
-import { Stats, type StatsProps } from './stats';
+import { currentPalette, type UpdateSettings, type ViewerSettings } from '../use-viewer-settings';
+import { DebugControls } from './debug-controls';
+import { Note, SectionTitle } from './menu-rows';
+import { Stats } from './stats';
 
 import type { Palette } from '../engine/colors';
 import type { MeshResult } from '../engine/mesher';
@@ -47,6 +49,15 @@ const FORMATS: Format[] = [
   },
 ];
 
+interface DebugMenuProps {
+  /** The morphology's name, for the statistics and the files. */
+  name: string;
+  /** The mesh on show, and the build under way. */
+  state: MorphologyMeshState;
+  settings: ViewerSettings;
+  update: UpdateSettings;
+}
+
 /** Why nothing can be exported now, or null: during a rebuild the mesh on show is not the one the key describes. */
 function unavailable({ summary, progress, loadError, buildError, layers }: MorphologyMeshState) {
   if (loadError) return 'The file could not be read.';
@@ -59,10 +70,11 @@ function unavailable({ summary, progress, loadError, buildError, layers }: Morph
 }
 
 /**
- * The statistics of the file and of the last build, and below them the mesh on show to download. The exporter loads
- * on the first download and writes the file in a worker of its own.
+ * The statistics of the file and of the last build, the controls of the build, and below them the mesh on show to
+ * download. The exporter loads on the first download and writes the file in a worker of its own.
  */
-export function DebugMenu({ name, state, palette }: StatsProps) {
+export function DebugMenu({ name, state, settings, update }: DebugMenuProps) {
+  const palette = currentPalette(settings);
   // Here and not in the menu's content, so that an export survives the menu closing.
   const [running, setRunning] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,19 +102,18 @@ export function DebugMenu({ name, state, palette }: StatsProps) {
       contentClassName="w-80 p-0"
     >
       {(close) => (
-        // The statistics scroll, and the downloads stay in view under them.
+        // The statistics and the controls scroll, and the downloads stay in view under them.
         <div className="flex max-h-[min(50rem,calc(100vh-6rem))] flex-col">
-          <div className="min-h-0 overflow-y-auto p-3">
-            <Stats name={name} state={state} palette={palette} />
+          <div className="min-h-0 overflow-y-auto">
+            <div className="p-3">
+              <Stats name={name} state={state} palette={palette} />
+            </div>
+            <div className="border-t border-neutral-200 p-1 pb-2">
+              <DebugControls settings={settings} update={update} gpu={state.gpu} />
+            </div>
           </div>
           <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
-            <div
-              className="flex items-center px-1 pb-1 text-sm font-semibold text-primary-9"
-              data-help-anchor
-            >
-              Export mesh
-              <HelpButton topic="export" title="Export mesh" />
-            </div>
+            <SectionTitle title="Export mesh" topic="export" className="px-1 pb-1" />
             {FORMATS.map((f) => (
               <button
                 key={f.format}
@@ -124,7 +135,7 @@ export function DebugMenu({ name, state, palette }: StatsProps) {
                 </span>
               </button>
             ))}
-            {reason && <p className="m-0 px-2 text-xs italic">{reason}</p>}
+            {reason && <Note>{reason}</Note>}
             {error && (
               <p role="alert" className="m-0 px-2 text-xs text-error">
                 The export failed: {error}

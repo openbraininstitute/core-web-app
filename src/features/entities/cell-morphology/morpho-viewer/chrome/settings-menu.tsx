@@ -18,24 +18,18 @@ import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin'
 import {
   BackgroundToggle,
   ChromeMenu,
-  MenuRow,
-  MenuSlider,
   SegmentedToggle,
-  ViewerSwitch,
 } from '@/features/scan-config/components/color-by/chrome-menu';
 import { viewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 
 import { MIN_WIDTH } from '../constants';
-import { MAX_BUMP_AMPLITUDE } from '../engine/looks';
 import { besideRow, type Placement } from '../help/beside-row';
-import { HelpButton } from '../help/help-button';
+import { Heading, HelpRow, ICON, SliderRow, ToggleRow } from './menu-rows';
 import { focusChosen, PillOption } from './pill-option';
 
-import type { ReactNode } from 'react';
 import type { Look } from '../engine/looks';
 import type { SkeletonKind } from '../engine/viewer';
-import type { HelpKey } from '../help/help-text';
 import type { UpdateSettings, ViewerSettings } from '../use-viewer-settings';
 
 interface SettingsMenuProps {
@@ -49,7 +43,6 @@ interface SettingsMenuProps {
   hasMesh: boolean;
 }
 
-const ICON = 'size-4 shrink-0';
 const LIGHT = viewerTheme(false);
 /** The look list's width (`w-72`), px. */
 const LOOKS_WIDTH = 288;
@@ -63,7 +56,6 @@ export function SettingsMenu({
   onLook,
   hasMesh,
 }: SettingsMenuProps) {
-  const { bump } = settings;
   return (
     <ChromeMenu
       label="Viewer settings"
@@ -96,40 +88,6 @@ export function SettingsMenu({
         checked={settings.bumps}
         onChange={(bumps) => update({ bumps })}
       />
-      {settings.bumps && (
-        <>
-          <SliderRow
-            title="Bump height"
-            topic="bump-amp"
-            min={0}
-            max={MAX_BUMP_AMPLITUDE}
-            step={0.005}
-            value={bump.amplitude}
-            onChange={(amplitude) => update({ bump: { ...bump, amplitude } })}
-            format={(v) => `${v.toFixed(3)} × r`}
-          />
-          <SliderRow
-            title="Bump scale"
-            topic="bump-scale"
-            min={0.5}
-            max={5}
-            step={0.1}
-            value={bump.scale}
-            onChange={(scale) => update({ bump: { ...bump, scale } })}
-            format={(v) => `${v.toFixed(1)} µm`}
-          />
-          <SliderRow
-            title="Bump smoothness"
-            topic="bump-smooth"
-            min={0}
-            max={1}
-            step={0.05}
-            value={bump.smoothness}
-            onChange={(smoothness) => update({ bump: { ...bump, smoothness } })}
-            format={(v) => v.toFixed(2)}
-          />
-        </>
-      )}
 
       <Heading>View</Heading>
       <ToggleRow
@@ -260,95 +218,5 @@ function LookSelect({
         </PopoverContent>
       </Popover>
     </HelpRow>
-  );
-}
-
-function Heading({ children }: { children: ReactNode }) {
-  return (
-    <div className="px-2 pt-2 pb-1 text-xs uppercase tracking-wide text-neutral-400">
-      {children}
-    </div>
-  );
-}
-
-function Label({ title, topic }: { title: string; topic: HelpKey }) {
-  return (
-    <span className="flex items-center">
-      {title}
-      <HelpButton topic={topic} title={title} />
-    </span>
-  );
-}
-
-/** A row whose label has a "?", the card of which comes up beside the row. */
-function HelpRow({
-  title,
-  topic,
-  icon,
-  disabled,
-  className,
-  children,
-}: {
-  title: string;
-  topic: HelpKey;
-  icon: ReactNode;
-  disabled?: boolean;
-  className?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div data-help-anchor>
-      <MenuRow
-        label={<Label title={title} topic={topic} />}
-        icon={icon}
-        disabled={disabled}
-        className={className}
-      >
-        {children}
-      </MenuRow>
-    </div>
-  );
-}
-
-function ToggleRow({
-  title,
-  topic,
-  icon,
-  checked,
-  onChange,
-  disabled,
-}: {
-  title: string;
-  topic: HelpKey;
-  icon: ReactNode;
-  checked: boolean;
-  onChange(value: boolean): void;
-  disabled?: boolean;
-}) {
-  return (
-    <HelpRow title={title} topic={topic} icon={icon} disabled={disabled}>
-      <ViewerSwitch checked={checked} onChange={onChange} label={title} disabled={disabled} />
-    </HelpRow>
-  );
-}
-
-function SliderRow({
-  title,
-  topic,
-  ...slider
-}: {
-  title: string;
-  topic: HelpKey;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange(value: number): void;
-  format(value: number): string;
-}) {
-  return (
-    <div data-help-anchor>
-      <MenuSlider label={<Label title={title} topic={topic} />} {...slider} />
-    </div>
   );
 }

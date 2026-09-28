@@ -2,7 +2,14 @@
 
 import { useState } from 'react';
 
-import { DARK_PALETTE, DEFAULT_BUMPS, LIGHT_PALETTE, MIN_WIDTH } from './constants';
+import {
+  type BuildSettings,
+  DARK_PALETTE,
+  DEFAULT_BUILD,
+  DEFAULT_BUMPS,
+  LIGHT_PALETTE,
+  MIN_WIDTH,
+} from './constants';
 import { DEFAULT_LOOK } from './engine/looks';
 
 import type { Palette } from './engine/colors';
@@ -33,6 +40,7 @@ export interface ViewerSettings {
   projection: Projection;
   /** In the orthographic view: a perspective one has no single scale. */
   scalebar: boolean;
+  build: BuildSettings;
 }
 
 const DEFAULT_SETTINGS: ViewerSettings = {
@@ -52,6 +60,7 @@ const DEFAULT_SETTINGS: ViewerSettings = {
   spin: false,
   projection: 'orthographic',
   scalebar: true,
+  build: DEFAULT_BUILD,
 };
 
 export function currentPalette(settings: ViewerSettings): Palette {
