@@ -126,6 +126,10 @@ bottom      "Hold Ctrl + scroll to zoom" pill
   mesh lines, scrolling) and the three downloads pinned under them. It shows only where
   `morphologyDebugFlag` (`morphology-debug`) is on, which the Feature Flags tab lists in local,
   preview and staging, off by default. Statistics and Export were two buttons until then.
+  Between the statistics and the downloads, set off by dividers, are the controls
+  (`debug-controls.tsx`, user request 2026-09-28): the POC's build parameters (Smoothing σ to
+  Mesh simplify), a GPU switch and the bump sliders, which moved there from the settings. A
+  change rebuilds after the eyes' pause; Reset restores `DEFAULT_BUILD` and `DEFAULT_BUMPS`.
 - **Neurites card**: swatches open antd's `ColorPicker`, as the circuit legend's; eyes hide a
   type. Where the look ignores the colours, Colour by is disabled with the reason in its tooltip,
   the swatches go hollow, and the card says why.
@@ -662,8 +666,8 @@ morphology:
 
 ## Out of scope / follow-ups
 
-- ~~Feature flag(s) for Export and Stats~~. Done: one Debug menu behind `morphologyDebugFlag`.
-  A CPU/GPU override could go in it.
+- ~~Feature flag(s) for Export and Stats~~. Done: one Debug menu behind `morphologyDebugFlag`,
+  with the build controls and a GPU switch in it.
 - Close draft #1955 and morphoviewer#54. That is outward-facing, so ask first.
 - Remembering the chosen look and settings across visits.
 - Caching built meshes per hidden-type set.
