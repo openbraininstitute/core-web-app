@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
+import { panelStyle } from './contrast';
 import { CATEGORICAL_PALETTE } from './palette';
 import { type ColorMapping, ColorModeDict } from './types';
 
@@ -59,13 +60,7 @@ export function ColorLegend({
 
   if (mapping.mode === ColorModeDict.None || !mapping.property) return null;
 
-  const panelStyle = theme
-    ? {
-        background: theme.panelBackground,
-        color: theme.foreground,
-        boxShadow: `0 0 0 1px ${theme.panelRing}`,
-      }
-    : undefined;
+  const panel = theme ? panelStyle(theme) : undefined;
 
   return (
     <div
@@ -76,7 +71,7 @@ export function ColorLegend({
         !theme && 'ring-1 ring-gray-50 bg-white/5',
         className
       )}
-      style={panelStyle}
+      style={panel}
     >
       {mapping.mode === ColorModeDict.Categorical && mapping.categorical && (
         <CategoricalList

@@ -10,6 +10,7 @@ import { ZoomSlider } from '../zoom-slider/zoom-slider';
 import { ChromeButton, FullscreenButton } from './chrome-button';
 import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
+import { panelStyle } from './contrast';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
@@ -142,13 +143,7 @@ export function CircuitViewerChrome({
   }, []);
   const belowLeft = leftBottom + GAP;
 
-  const panelStyle = theme
-    ? {
-        background: theme.panelBackground,
-        color: theme.foreground,
-        boxShadow: `0 0 0 1px ${theme.panelRing}`,
-      }
-    : undefined;
+  const panel = theme ? panelStyle(theme) : undefined;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
@@ -259,7 +254,7 @@ export function CircuitViewerChrome({
             }
             theme={theme}
             warning
-            style={panelStyle}
+            style={panel}
             className="px-3 py-1.5 text-xs"
           >
             “{hiddenSubject}” is selected but hidden
@@ -302,7 +297,7 @@ export function CircuitViewerChrome({
                 aria-expanded={legendOpen}
                 aria-controls="color-mapping-panel"
                 onClick={() => setLegendOpen((open) => !open)}
-                style={panelStyle}
+                style={panel}
                 className={cn(
                   styles.legendToggle,
                   'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
@@ -338,7 +333,7 @@ export function CircuitViewerChrome({
             action="Show all"
             onAction={() => populations.onChange([])}
             theme={theme}
-            style={panelStyle}
+            style={panel}
             className="pointer-events-auto px-4 py-2 text-sm"
           >
             Every population is hidden

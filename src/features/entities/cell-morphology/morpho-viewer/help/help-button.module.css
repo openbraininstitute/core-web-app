@@ -1,0 +1,58 @@
+/* In the colours of whatever it sits in: a white menu or a themed panel. */
+.help {
+  all: unset;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  margin-left: 5px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.45;
+  cursor: help;
+  transition:
+    opacity 0.12s,
+    background 0.12s;
+}
+
+.help:hover,
+.help[aria-expanded="true"] {
+  opacity: 1;
+}
+
+.help[data-pinned] {
+  border-color: var(--color-primary-8);
+  background: var(--color-primary-8);
+  color: #fff;
+  opacity: 1;
+}
+
+.help:focus-visible {
+  outline: 2px solid var(--color-primary-8);
+  outline-offset: 1px;
+  opacity: 1;
+}
+
+.applies {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-neutral-2);
+  color: var(--color-neutral-4);
+  font-size: 11.5px;
+}
+
+.applies::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+}
