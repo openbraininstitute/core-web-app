@@ -736,7 +736,8 @@ export type TActivityCustomFileRenderer =
 
 export type TActivityCustomFile = {
   id?: string;
-  asset: IAsset;
+  /** Absent for a mini-detail row whose entity carries no top-level asset, e.g. a me-model. */
+  asset?: IAsset;
   entity: IEntity;
   assetPath?: string;
   name?: string;
