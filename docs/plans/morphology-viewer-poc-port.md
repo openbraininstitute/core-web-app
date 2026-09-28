@@ -75,6 +75,7 @@ src/features/entities/cell-morphology/
   morpho-viewer/
     morpho-viewer.tsx               shell (dynamic, ssr:false): engine, settings → viewer
     constants.ts                    palettes, build params, view defaults
+    README.md                       overview: what runs where, Mermaid diagrams of a build
     use-viewer-settings.ts          settings state
     use-morphology-mesh.ts          SWC → skeleton → mesh lifecycle, GPU fallback, status
     use-path-distances.ts           distances of the shown layers, asked of worker 0 once each
@@ -84,7 +85,7 @@ src/features/entities/cell-morphology/
     chrome/    morpho-viewer-chrome.tsx  settings-menu.tsx  color-by-menu.tsx
                pill-option.tsx  neurites-key.tsx  stats-menu.tsx
                scalebar.tsx  status.tsx  export-menu.tsx
-    engine/    (framework-free; see Engine API)
+    engine/    (framework-free; see Engine API; README.md is the in-depth reference)
     export/    index.ts (runs the worker)  export.worker.ts  glb.ts  stl.ts  draco3dgltf.d.ts
 src/features/scan-config/components/color-by/
   chrome-menu.tsx                   settings popover shell + rows, shared with the circuit viewer
