@@ -1,5 +1,6 @@
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { isDirectoryAsset } from '@/features/scan-config/components/file-viewer/directory-entries';
+import { isAssetBackedFile } from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
 
 import type { ReactNode } from 'react';
@@ -25,9 +26,11 @@ type Props = {
 };
 
 export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset?.path.split('/').at(-1);
-  const isDirectory = !!file.asset && isDirectoryAsset(file.asset);
-  const isCircuitDirectory = isDirectory && file.asset?.label === AssetLabel.sonata_circuit;
+  const asset = isAssetBackedFile(file) ? file.asset : undefined;
+  const assetPath = isAssetBackedFile(file) ? file.assetPath : undefined;
+  const fileName = assetPath?.split('/').at(-1) ?? asset?.path.split('/').at(-1);
+  const isDirectory = !!asset && isDirectoryAsset(asset);
+  const isCircuitDirectory = isDirectory && asset?.label === AssetLabel.sonata_circuit;
   const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
   const badgeContent = label ?? (isDirectory ? 'folder' : fileName?.split('.').at(-1));

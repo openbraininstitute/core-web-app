@@ -734,20 +734,16 @@ export const ActivityCustomFileRenderer = {
 export type TActivityCustomFileRenderer =
   (typeof ActivityCustomFileRenderer)[keyof typeof ActivityCustomFileRenderer];
 
-/** Fields shared by every output/input row, regardless of how it is rendered. */
+/** Fields shared by every input/output row, regardless of how it is rendered. */
 type TActivityCustomFileBase = {
   id?: string;
   entity: IEntity;
-  assetPath?: string;
   name?: string;
-  /** Extended type to render the entity under; refs only carry the entitycore type. */
-  dataType?: TExtendedEntitiesTypeDict;
-  enforcedRenderType?: AssetContentType;
 };
 
 /**
  * A row backed by a concrete asset: a file opened in a viewer, or a log stream backed by a
- * synthetic asset. These always carry an `asset`.
+ * synthetic asset. Rendered from the asset.
  */
 export type TAssetBackedFile = TActivityCustomFileBase & {
   renderer:
@@ -755,19 +751,26 @@ export type TAssetBackedFile = TActivityCustomFileBase & {
     | typeof ActivityCustomFileRenderer.TaskConfigurationViewer
     | typeof ActivityCustomFileRenderer.TaskLogsViewer;
   asset: IAsset;
+  assetPath?: string;
+  enforcedRenderType?: AssetContentType;
 };
 
 /**
- * A row that stands for an entity, opened in its mini-detail view. `asset` is optional: an e-model
- * or circuit carries one, but a me-model has no top-level asset of its own — its content lives in
- * its nested morphology and e-model.
+ * A row that stands for an entity, opened in its mini-detail view. It carries no asset: an e-model
+ * or me-model is rendered from the record and its `dataType`, not from a file — refs only carry the
+ * entitycore type, so `dataType` is the extended type to render under.
  */
-type TEntityMiniDetailFile = TActivityCustomFileBase & {
+export type TEntityMiniDetailFile = TActivityCustomFileBase & {
   renderer: typeof ActivityCustomFileRenderer.MiniDetailView;
-  asset?: IAsset;
+  dataType: TExtendedEntitiesTypeDict;
 };
 
 export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile;
+
+/** True for a row backed by a file asset; false for an entity mini-detail row. */
+export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBackedFile {
+  return file.renderer !== ActivityCustomFileRenderer.MiniDetailView;
+}
 
 // Re-exported rather than re-declared: a structurally identical enum is still a
 // *different* enum to TypeScript, so two copies never compare equal.

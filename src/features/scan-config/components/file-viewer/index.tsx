@@ -5,6 +5,7 @@ import { match, P } from 'ts-pattern';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { isAssetBackedFile } from '@/features/scan-config/types';
 import { SonataViewer } from '@/features/sonata-viewer';
 import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
@@ -108,7 +109,7 @@ function renderFileContent(
 /** A row is viewable only if it carries an asset; a mini-detail entity row (e.g. a me-model) has
  * none and is rendered elsewhere, so it never reaches a viewer. */
 function asAssetBacked(file: TActivityCustomFile | undefined): TAssetBackedFile | undefined {
-  return file?.asset ? (file as TAssetBackedFile) : undefined;
+  return file && isAssetBackedFile(file) ? file : undefined;
 }
 
 export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {

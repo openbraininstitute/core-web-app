@@ -8,7 +8,12 @@ import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-confi
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  ActivityCustomFileRenderer,
+  isAssetBackedFile,
+  type TActivityCustomFile,
+  type TAssetBackedFile,
+} from '@/features/scan-config/types';
 import {
   makeLogStreamFileDescriptors,
   makeTaskConfigurationFile,
@@ -85,41 +90,46 @@ export function SimulationFiles({
 
   const loading = inputLoading || outputLoading;
 
+  const selectedAssetPath =
+    selectedFile && isAssetBackedFile(selectedFile)
+      ? (selectedFile.assetPath ?? selectedFile.asset.path)
+      : undefined;
+
   const prioritizedInputFiles = useMemo(() => {
-    const selectedPath = selectedFile?.asset?.path;
+    const selectedPath = selectedAssetPath;
 
     return [...inputFilesWithLogs].sort((a, b) => {
-      const aSelected = a.asset?.path === selectedPath;
-      const bSelected = b.asset?.path === selectedPath;
+      const aSelected = a.asset.path === selectedPath;
+      const bSelected = b.asset.path === selectedPath;
       if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
-      const aPreferred = a.asset?.label === AssetLabel.sonata_circuit;
-      const bPreferred = b.asset?.label === AssetLabel.sonata_circuit;
+      const aPreferred = a.asset.label === AssetLabel.sonata_circuit;
+      const bPreferred = b.asset.label === AssetLabel.sonata_circuit;
       if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
 
       return 0;
     });
-  }, [inputFilesWithLogs, selectedFile?.asset?.path]);
+  }, [inputFilesWithLogs, selectedAssetPath]);
 
   const prioritizedOutputFiles = useMemo(() => {
-    const selectedPath = selectedFile?.asset?.path;
+    const selectedPath = selectedAssetPath;
 
     return [...outputFilesWithLogs].sort((a, b) => {
-      const aSelected = a.asset?.path === selectedPath;
-      const bSelected = b.asset?.path === selectedPath;
+      const aSelected = a.asset.path === selectedPath;
+      const bSelected = b.asset.path === selectedPath;
       if (aSelected !== bSelected) return aSelected ? -1 : 1;
 
       const aPreferred =
-        a.asset?.label === AssetLabel.voltage_report &&
-        a.asset?.content_type === AssetContentType.nwb;
+        a.asset.label === AssetLabel.voltage_report &&
+        a.asset.content_type === AssetContentType.nwb;
       const bPreferred =
-        b.asset?.label === AssetLabel.voltage_report &&
-        b.asset?.content_type === AssetContentType.nwb;
+        b.asset.label === AssetLabel.voltage_report &&
+        b.asset.content_type === AssetContentType.nwb;
       if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
 
       return 0;
     });
-  }, [outputFilesWithLogs, selectedFile?.asset?.path]);
+  }, [outputFilesWithLogs, selectedAssetPath]);
 
   // Notify parent component about the loading state
   useEffect(() => {
@@ -141,11 +151,9 @@ export function SimulationFiles({
       outputIsEmpty={outputFilesWithLogs.length === 0 && !outputLoading}
       inputItems={inputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.id ?? file.asset?.id}
-          selected={
-            file.id ? file.id === selectedFile?.id : file.asset?.path === selectedFile?.asset?.path
-          }
-          key={file.id ?? file.asset?.id}
+          id={file.id ?? file.asset.id}
+          selected={file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath}
+          key={file.id ?? file.asset.id}
           file={file}
           name={file.name}
           onSelect={onSelect}
@@ -153,11 +161,9 @@ export function SimulationFiles({
       ))}
       outputItems={outputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.id ?? file.asset?.id}
-          selected={
-            file.id ? file.id === selectedFile?.id : file.asset?.path === selectedFile?.asset?.path
-          }
-          key={file.id ?? file.asset?.id}
+          id={file.id ?? file.asset.id}
+          selected={file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath}
+          key={file.id ?? file.asset.id}
           file={file}
           name={file.name}
           onSelect={onSelect}
@@ -170,19 +176,19 @@ export function SimulationFiles({
 function useInputFiles(
   simulation: ISimulation,
   context: WorkspaceContext
-): [boolean, TActivityCustomFile[]] {
+): [boolean, TAssetBackedFile[]] {
   const { entity, isLoading } = useModelQuery({
     id: simulation.entity_id,
     context,
   });
 
-  const inputFiles: TActivityCustomFile[] = useMemo(() => {
+  const inputFiles: TAssetBackedFile[] = useMemo(() => {
     const sonataCircuitAsset =
       entity && 'assets' in entity
         ? entity.assets?.find((asset) => asset.label === AssetLabel.sonata_circuit)
         : null;
 
-    const files: TActivityCustomFile[] = [];
+    const files: TAssetBackedFile[] = [];
 
     if (entity && sonataCircuitAsset) {
       files.push({
@@ -211,7 +217,7 @@ function useOutputFiles(
   simulation: ISimulation,
   context: WorkspaceContext,
   enabled: boolean
-): [boolean, TActivityCustomFile[]] {
+): [boolean, TAssetBackedFile[]] {
   const simResultAtom = simResultBySimIdAtomFamily({
     simulationId: simulation.id,
     context,

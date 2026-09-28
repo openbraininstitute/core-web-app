@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { orderOutputFiles } from '@/features/scan-config/outputs/order';
+import { isAssetBackedFile } from '@/features/scan-config/types';
 
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
@@ -26,11 +27,9 @@ describe('orderOutputFiles', () => {
       ExtendedEntitiesTypeDict.EFeatureExtractionResult
     );
 
-    expect(ordered.map((entry) => entry.asset?.path)).toEqual([
-      'extracted_features.json',
-      'figures/IDRest_amp.png',
-      'figures/SAHP_amp.png',
-    ]);
+    expect(
+      ordered.map((entry) => (isAssetBackedFile(entry) ? entry.asset.path : undefined))
+    ).toEqual(['extracted_features.json', 'figures/IDRest_amp.png', 'figures/SAHP_amp.png']);
   });
 
   it('keeps files it does not name last, in the order they arrived', () => {
@@ -39,11 +38,9 @@ describe('orderOutputFiles', () => {
       ExtendedEntitiesTypeDict.EFeatureExtractionResult
     );
 
-    expect(ordered.map((entry) => entry.asset?.path)).toEqual([
-      'extracted_features.json',
-      'figures/IDRest_amp.png',
-      'protocols.json',
-    ]);
+    expect(
+      ordered.map((entry) => (isAssetBackedFile(entry) ? entry.asset.path : undefined))
+    ).toEqual(['extracted_features.json', 'figures/IDRest_amp.png', 'protocols.json']);
   });
 
   it('leaves an output type that declares no order exactly as it is', () => {
