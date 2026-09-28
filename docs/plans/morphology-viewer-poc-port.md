@@ -83,8 +83,8 @@ src/features/entities/cell-morphology/
     use-signal.ts                   (moved)
     help/      help-button.tsx  help-text.ts  beside-row.ts
     chrome/    morpho-viewer-chrome.tsx  settings-menu.tsx  color-by-menu.tsx
-               pill-option.tsx  neurites-key.tsx  stats-menu.tsx
-               scalebar.tsx  status.tsx  export-menu.tsx
+               pill-option.tsx  neurites-key.tsx  debug-menu.tsx  stats.tsx
+               scalebar.tsx  status.tsx
     engine/    (framework-free; see Engine API; README.md is the in-depth reference)
     export/    index.ts (runs the worker)  export.worker.ts  glb.ts  stl.ts  draco3dgltf.d.ts
 src/features/scan-config/components/color-by/
@@ -106,7 +106,7 @@ panel, and reuse its parts. The settings popover's shell and rows moved from
 the circuit menu renders the same DOM as before.
 
 ```
-top-left    [⛶ Fullscreen] [⚙ Settings] [▦ Statistics] [⤓ Export mesh]
+top-left    [⛶ Fullscreen] [⚙ Settings] [🐞 Debug, behind morphologyDebugFlag]
             [⌖ Re-centre view]
 top-right   [Colour by  Section ▾] [▴]
             Neurites card: look key (Fluorescence, Depth-coded) · distance ramp ·
@@ -122,8 +122,10 @@ bottom      "Hold Ctrl + scroll to zoom" pill
   perspective), Background (sun / moon).
 - **Look** (first settings row): the 15 looks in a list beside the menu, each with its one-line
   description; the list carries `data-chrome-menu-keep-open`.
-- **Statistics**: its own `ChromeMenu` popover (morphology + mesh lines), one component for a
-  feature flag to wrap. Export will be another.
+- **Debug** (`debug-menu.tsx`, bug icon): one `ChromeMenu` with the statistics (morphology +
+  mesh lines, scrolling) and the three downloads pinned under them. It shows only where
+  `morphologyDebugFlag` (`morphology-debug`) is on, which the Feature Flags tab lists in local,
+  preview and staging, off by default. Statistics and Export were two buttons until then.
 - **Neurites card**: swatches open antd's `ColorPicker`, as the circuit legend's; eyes hide a
   type. Where the look ignores the colours, Colour by is disabled with the reason in its tooltip,
   the swatches go hollow, and the card says why.
@@ -431,8 +433,8 @@ Types check that every `HelpKey` the panel uses exists.
      mesh at 520 ms (GPU). Axon and basal dendrites hidden and shown again; Distance colours on
      a rebuilt mesh, with the ramp's maximum kept.
 7. **Lazy export: done 2026-09-28.**
-   - `chrome/export-menu.tsx`: `ExportMenu` is a chrome button after Statistics, one component
-     for a flag to wrap. It lists GLB, Draco GLB and STL, disabled until the first mesh. The
+   - `chrome/export-menu.tsx` (since merged with Statistics into `debug-menu.tsx`): `ExportMenu`
+     is a chrome button after Statistics, one component for a flag to wrap. It lists GLB, Draco GLB and STL, disabled until the first mesh. The
      running row shows a spinner ("Compressing…" for Draco) and the others wait. Errors show in
      the menu and go to `logError`. The file is saved with `file-saver` as
      `<name>.glb / .draco.glb / .stl`.
@@ -660,8 +662,8 @@ morphology:
 
 ## Out of scope / follow-ups
 
-- Feature flag(s) for Export and Stats (`defineFlag`, `visible` in local/preview/staging),
-  and maybe a CPU/GPU override. Each is a single component to wrap.
+- ~~Feature flag(s) for Export and Stats~~. Done: one Debug menu behind `morphologyDebugFlag`.
+  A CPU/GPU override could go in it.
 - Close draft #1955 and morphoviewer#54. That is outward-facing, so ask first.
 - Remembering the chosen look and settings across visits.
 - Caching built meshes per hidden-type set.
