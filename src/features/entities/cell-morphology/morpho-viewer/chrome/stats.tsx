@@ -28,7 +28,8 @@ export function Stats({ name, state, palette }: StatsProps) {
   const { summary, buildError, backend } = state;
   const mesh = state.layers.mesh?.stats;
   return (
-    <div className="flex flex-col gap-3 text-neutral-700">
+    // Copyable, in a menu that is `select-none`.
+    <div className="flex select-text flex-col gap-3 text-neutral-700">
       <SectionTitle title="Statistics" topic="stats" />
       <div className="flex flex-col gap-1">
         <div

@@ -73,8 +73,9 @@ export function ChromeMenu({
           e.preventDefault();
           (e.currentTarget as HTMLElement | null)?.focus();
         }}
+        // A drag that misses a slider's handle would otherwise select the page up to the pointer.
         className={cn(
-          'w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl',
+          'w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl select-none',
           contentClassName
         )}
       >
