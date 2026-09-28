@@ -62,6 +62,15 @@ export const electrodeOverlaysFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The morphology viewer's Debug menu: the statistics of the file and the mesh, and the mesh exports. */
+export const morphologyDebugFlag = defineFlag<boolean>({
+  key: 'morphology-debug',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Morphology viewer debug menu (statistics and mesh export)',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -70,6 +79,7 @@ export const flags = [
   circuitSynapticPhysiologyBuildFlag,
   smallScalesViaLaunchSystemFlag,
   electrodeOverlaysFlag,
+  morphologyDebugFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

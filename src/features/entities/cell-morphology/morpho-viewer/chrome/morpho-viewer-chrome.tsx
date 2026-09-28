@@ -2,6 +2,7 @@ import { RiArrowDownSLine, RiFocus3Line } from '@remixicon/react';
 import chroma from 'chroma-js';
 import { useState } from 'react';
 
+import { morphologyDebugFlag, useFlag } from '@/features/feature-flags';
 import {
   ChromeButton,
   FullscreenButton,
@@ -11,11 +12,10 @@ import { cn } from '@/utils/css-class';
 
 import { currentPalette, type ViewerActions, type ViewerSettings } from '../use-viewer-settings';
 import { ColorByMenu } from './color-by-menu';
-import { ExportMenu } from './export-menu';
+import { DebugMenu } from './debug-menu';
 import { NeuritesKey } from './neurites-key';
 import { Scalebar } from './scalebar';
 import { SettingsMenu } from './settings-menu';
-import { StatsMenu } from './stats-menu';
 import { BuildStatus, WheelHint } from './status';
 
 import type { Look } from '../engine/looks';
@@ -31,7 +31,7 @@ interface MorphoViewerChromeProps {
   settings: ViewerSettings;
   actions: ViewerActions;
   mesh: MorphologyMeshState;
-  /** The morphology's name, for the stats. */
+  /** The morphology's name, for the Debug menu. */
   name: string;
   wheelHint: boolean;
   /** The farthest path distance from the soma, once the workers have measured it. */
@@ -41,8 +41,8 @@ interface MorphoViewerChromeProps {
 }
 
 /**
- * The control layer over the morphology, laid out as the circuit viewer's: fullscreen, settings,
- * statistics and export (top-left), re-centre under them, the colours and their key (top-right),
+ * The control layer over the morphology, laid out as the circuit viewer's: fullscreen, settings and,
+ * where its flag is on, debug (top-left), re-centre under them, the colours and their key (top-right),
  * the build's status (top-centre) and the ruler (bottom-left).
  */
 export function MorphoViewerChrome({
@@ -57,6 +57,7 @@ export function MorphoViewerChrome({
   distanceError,
 }: MorphoViewerChromeProps) {
   const [keyOpen, setKeyOpen] = useState(true);
+  const debug = useFlag(morphologyDebugFlag.key);
   const { update } = actions;
   const look = viewer.looks.find((l) => l.id === settings.look) ?? viewer.looks[0];
   // The chrome reads against the look's background, not the Background switch: SEM is black in either.
@@ -88,15 +89,7 @@ export function MorphoViewerChrome({
             onLook={chooseLook}
             hasMesh={mesh.layers.mesh !== null}
           />
-          <StatsMenu
-            name={name}
-            summary={mesh.summary}
-            mesh={mesh.layers.mesh?.stats ?? null}
-            buildError={mesh.buildError}
-            backend={mesh.backend}
-            palette={currentPalette(settings)}
-          />
-          <ExportMenu name={name} state={mesh} palette={currentPalette(settings)} />
+          {debug && <DebugMenu name={name} state={mesh} palette={currentPalette(settings)} />}
         </div>
         <ChromeButton
           label="Re-centre view"

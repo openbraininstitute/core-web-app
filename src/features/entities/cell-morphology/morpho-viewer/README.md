@@ -23,7 +23,7 @@ flowchart TB
     swc["use-cell-morphology-swc.ts<br/>downloads the SWC"] --> viewer["morpho-viewer.tsx<br/>MorphoViewer"]
     viewer --> mesh["use-morphology-mesh.ts<br/>load, build, rebuild"]
     viewer --> dist["use-path-distances.ts<br/>Colour by Distance"]
-    viewer --> chrome["chrome/<br/>settings, key, statistics, export"]
+    viewer --> chrome["chrome/<br/>settings, key, debug"]
     mesh --> pool["engine/pool.ts<br/>MeshPool"]
     dist --> pool
     mesh -- "skeletons, mesh" --> three["engine/viewer.ts<br/>Viewer, three.js"]
@@ -182,7 +182,7 @@ flowchart TD
   holds for the session (`gpuStatus` in [use-morphology-mesh.ts](use-morphology-mesh.ts)).
 - On either backend, if the tubes fail (a clip that finds no loop, a ray that finds no surface), the pool builds
   voxels throughout instead ([pool.ts](engine/pool.ts)), and the statistics say why.
-- The statistics say where the mesh was built, and why there.
+- The statistics in the Debug menu say where the mesh was built, and why there.
 
 ## Colours and path distances
 
@@ -198,10 +198,14 @@ flowchart TD
 - [use-path-distances.ts](use-path-distances.ts) keys the answers by the layer object they were measured for, so
   that a late answer cannot colour a newer mesh.
 
-## Export
+## Debug menu and export
 
-[chrome/export-menu.tsx](chrome/export-menu.tsx) loads [export/](export/index.ts) on the first click. That module
-starts [export/export.worker.ts](export/export.worker.ts), which writes the file and is terminated after:
+[chrome/debug-menu.tsx](chrome/debug-menu.tsx) holds the statistics of the file and the build, and under them the
+downloads. It shows only where the `morphology-debug` flag is on (`morphologyDebugFlag` in
+`src/features/feature-flags/flags.ts`). The Feature Flags tab lists it in local, preview and staging, off by default.
+
+The menu loads [export/](export/index.ts) on the first download. That module starts
+[export/export.worker.ts](export/export.worker.ts), which writes the file and is terminated after:
 
 - GLB and Draco GLB go through glTF-Transform ([export/glb.ts](export/glb.ts)). Draco's encoder is a WASM file
   fetched on demand, and the position bits follow the voxel the mesh was built with.
@@ -219,7 +223,7 @@ are not part of it.
 | Number of workers | `defaultPoolSize` in [engine/pool.ts](engine/pool.ts) |
 | Rebuild delay, GPU and CPU policy | [use-morphology-mesh.ts](use-morphology-mesh.ts) |
 | Looks | `createLooks` in [engine/looks.ts](engine/looks.ts) |
-| Settings, key, statistics, export menu | [chrome/](chrome/morpho-viewer-chrome.tsx) |
+| Settings, key, Debug menu (statistics and export) | [chrome/](chrome/morpho-viewer-chrome.tsx) |
 | Help card texts | [help/help-text.ts](help/help-text.ts) |
 | Menu shell shared with the circuit viewer | `src/features/scan-config/components/color-by/chrome-menu.tsx` |
 

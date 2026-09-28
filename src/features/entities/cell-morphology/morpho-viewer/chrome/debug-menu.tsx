@@ -1,4 +1,4 @@
-import { RiDownload2Line, RiLoader4Line } from '@remixicon/react';
+import { RiBugLine, RiDownload2Line, RiLoader4Line } from '@remixicon/react';
 import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
@@ -7,6 +7,7 @@ import { logError } from '@/utils/logger';
 
 import { errorMessage } from '../engine/protocol';
 import { HelpButton } from '../help/help-button';
+import { Stats, type StatsProps } from './stats';
 
 import type { Palette } from '../engine/colors';
 import type { MeshResult } from '../engine/mesher';
@@ -46,14 +47,6 @@ const FORMATS: Format[] = [
   },
 ];
 
-interface ExportMenuProps {
-  /** The morphology's name, for the file's. */
-  name: string;
-  /** The mesh on show, and the build under way. */
-  state: MorphologyMeshState;
-  palette: Palette;
-}
-
 /** Why nothing can be exported now, or null: during a rebuild the mesh on show is not the one the key describes. */
 function unavailable({ summary, progress, loadError, buildError, layers }: MorphologyMeshState) {
   if (loadError) return 'The file could not be read.';
@@ -66,10 +59,10 @@ function unavailable({ summary, progress, loadError, buildError, layers }: Morph
 }
 
 /**
- * Downloads the mesh on show. The exporter loads on the first click and writes the file in a worker of its own. One
- * component, for a feature flag to wrap.
+ * The statistics of the file and of the last build, and below them the mesh on show to download. The exporter loads
+ * on the first download and writes the file in a worker of its own.
  */
-export function ExportMenu({ name, state, palette }: ExportMenuProps) {
+export function DebugMenu({ name, state, palette }: StatsProps) {
   // Here and not in the menu's content, so that an export survives the menu closing.
   const [running, setRunning] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,48 +83,54 @@ export function ExportMenu({ name, state, palette }: ExportMenuProps) {
 
   return (
     <ChromeMenu
-      label="Export mesh"
-      openLabel="Close export"
-      testId="morphology-export"
-      icon={<RiDownload2Line className="size-4 shrink-0" />}
-      contentClassName="w-64 p-2"
+      label="Debug"
+      openLabel="Close debug"
+      testId="morphology-debug"
+      icon={<RiBugLine className="size-4 shrink-0" />}
+      contentClassName="w-80 p-0"
     >
       {(close) => (
-        <div className="flex flex-col gap-1 text-neutral-700">
-          <div
-            className="flex items-center px-1 pb-1 text-sm font-semibold text-primary-9"
-            data-help-anchor
-          >
-            Export mesh
-            <HelpButton topic="export" title="Export mesh" />
+        // The statistics scroll, and the downloads stay in view under them.
+        <div className="flex max-h-[min(50rem,calc(100vh-6rem))] flex-col">
+          <div className="min-h-0 overflow-y-auto p-3">
+            <Stats name={name} state={state} palette={palette} />
           </div>
-          {FORMATS.map((f) => (
-            <button
-              key={f.format}
-              type="button"
-              aria-label={f.label}
-              aria-description={f.detail}
-              disabled={reason !== null || running !== null}
-              onClick={() => save(f, close)}
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
+          <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
+            <div
+              className="flex items-center px-1 pb-1 text-sm font-semibold text-primary-9"
+              data-help-anchor
             >
-              {running === f.format ? (
-                <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
-              ) : (
-                <RiDownload2Line aria-hidden className="size-4 shrink-0" />
-              )}
-              <span className="flex flex-col">
-                <span className="text-sm">{running === f.format ? f.busy : f.label}</span>
-                <span className="text-xs text-neutral-500">{f.detail}</span>
-              </span>
-            </button>
-          ))}
-          {reason && <p className="m-0 px-2 text-xs italic">{reason}</p>}
-          {error && (
-            <p role="alert" className="m-0 px-2 text-xs text-error">
-              The export failed: {error}
-            </p>
-          )}
+              Export mesh
+              <HelpButton topic="export" title="Export mesh" />
+            </div>
+            {FORMATS.map((f) => (
+              <button
+                key={f.format}
+                type="button"
+                aria-label={f.label}
+                aria-description={f.detail}
+                disabled={reason !== null || running !== null}
+                onClick={() => save(f, close)}
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
+              >
+                {running === f.format ? (
+                  <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
+                ) : (
+                  <RiDownload2Line aria-hidden className="size-4 shrink-0" />
+                )}
+                <span className="flex flex-col">
+                  <span className="text-sm">{running === f.format ? f.busy : f.label}</span>
+                  <span className="text-xs text-neutral-500">{f.detail}</span>
+                </span>
+              </button>
+            ))}
+            {reason && <p className="m-0 px-2 text-xs italic">{reason}</p>}
+            {error && (
+              <p role="alert" className="m-0 px-2 text-xs text-error">
+                The export failed: {error}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </ChromeMenu>

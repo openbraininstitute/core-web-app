@@ -1,7 +1,4 @@
-import { RiBarChartBoxLine } from '@remixicon/react';
 import { Fragment, type ReactNode } from 'react';
-
-import { ChromeMenu } from '@/features/scan-config/components/color-by/chrome-menu';
 
 import { PALETTE_KEYS } from '../engine/colors';
 import {
@@ -17,38 +14,20 @@ import { HelpButton } from '../help/help-button';
 import type { Palette } from '../engine/colors';
 import type { MeshStats } from '../engine/mesher';
 import type { MorphologySummary } from '../engine/protocol';
+import type { MorphologyMeshState } from '../use-morphology-mesh';
 
-interface StatsProps {
+export interface StatsProps {
+  /** The morphology's name, for the statistics and the files. */
   name: string;
-  summary: MorphologySummary | null;
-  mesh: MeshStats | null;
-  /** Why the last build failed, if it did. */
-  buildError: string | null;
-  /** Where the mesh was built, and why there. */
-  backend: string | null;
+  /** The mesh on show, and the build under way. */
+  state: MorphologyMeshState;
   palette: Palette;
 }
 
-/**
- * What the file holds and what the last build made: the POC's lines, behind a chrome button of
- * their own. One component, for a feature flag to wrap.
- */
-export function StatsMenu(props: StatsProps) {
-  return (
-    <ChromeMenu
-      label="Statistics"
-      openLabel="Close statistics"
-      testId="morphology-stats"
-      icon={<RiBarChartBoxLine className="size-4 shrink-0" />}
-      contentClassName="w-80 max-h-[min(36rem,calc(100vh-6rem))] overflow-y-auto p-3"
-    >
-      <Stats {...props} />
-    </ChromeMenu>
-  );
-}
-
-/** A component of its own, so that the lines are only made while the menu is open. */
-function Stats({ name, summary, mesh, buildError, backend, palette }: StatsProps) {
+/** What the file holds and what the last build made: the POC's lines. */
+export function Stats({ name, state, palette }: StatsProps) {
+  const { summary, buildError, backend } = state;
+  const mesh = state.layers.mesh?.stats;
   return (
     <div className="flex flex-col gap-3 text-neutral-700">
       <div className="flex items-center text-sm font-semibold text-primary-9" data-help-anchor>

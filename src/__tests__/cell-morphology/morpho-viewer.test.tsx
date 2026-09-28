@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HELP } from '@/features/entities/cell-morphology/morpho-viewer/help/help-text';
 import { MorphoViewer } from '@/features/entities/cell-morphology/morpho-viewer/morpho-viewer';
+import { defaultFlags } from '@/features/feature-flags/config';
+import { morphologyDebugFlag } from '@/features/feature-flags/flags';
+import { FlagsProvider } from '@/features/feature-flags/provider';
 
 import type { DistanceData } from '@/features/entities/cell-morphology/morpho-viewer/engine/colors';
 import type { MeshStats } from '@/features/entities/cell-morphology/morpho-viewer/engine/mesher';
@@ -219,8 +222,12 @@ function meshStats(patch: Partial<MeshStats> = {}): MeshStats {
   };
 }
 
-async function renderViewer() {
-  const view = render(<MorphoViewer swc="1 1 0 0 0 5 -1" name="Cell A" />);
+async function renderViewer({ debug = true } = {}) {
+  const view = render(
+    <FlagsProvider flags={{ ...defaultFlags, [morphologyDebugFlag.key]: debug }}>
+      <MorphoViewer swc="1 1 0 0 0 5 -1" name="Cell A" />
+    </FlagsProvider>
+  );
   await screen.findByRole('button', { name: 'Viewer settings' });
   return { ...view, viewer: h.viewers.at(-1)!, pool: h.pools.at(-1)! };
 }
@@ -267,7 +274,7 @@ describe('GPU', () => {
       { backend: 'gpu' },
       { backend: 'cpu' },
     ]);
-    fireEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(await screen.findByText('built on the CPU')).toBeInTheDocument();
   });
 
@@ -286,7 +293,7 @@ describe('GPU', () => {
       { backend: 'gpu', mesher: 'hybrid' },
       { backend: 'cpu', mesher: 'hybrid' },
     ]);
-    fireEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(
       await screen.findByText(/built on the CPU \(GPU turned off: 3 open quads\)/)
     ).toBeInTheDocument();
@@ -544,7 +551,7 @@ describe('MorphoViewer', () => {
     expect(viewer.clearMesh).toHaveBeenCalledTimes(2);
     expect(viewer.showSkeleton).toHaveBeenLastCalledWith('original');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(await screen.findByText('Could not be built: boom')).toBeInTheDocument();
   });
 
@@ -556,7 +563,7 @@ describe('MorphoViewer', () => {
     await waitFor(() => expect(viewer.setMesh).toHaveBeenCalledWith(h.result));
 
     fireEvent.click(screen.getByRole('button', { name: 'Hide axon' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Export mesh' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(await screen.findByText('The mesh is being built again.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'GLB' })).toBeDisabled();
 
@@ -624,12 +631,8 @@ describe('MorphoViewer', () => {
     await openSettings();
     collect();
     await close();
-    fireEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     await screen.findByText('Morphology');
-    collect();
-    await close();
-    fireEvent.click(screen.getByRole('button', { name: 'Export mesh' }));
-    await screen.findByRole('button', { name: 'About Export mesh' });
     collect();
     await close();
     // The key comes with a look that has one; Colour by works in one that takes the colours.
@@ -643,19 +646,27 @@ describe('MorphoViewer', () => {
     expect([...shown].sort()).toEqual(Object.keys(HELP).sort());
   });
 
-  it('shows the statistics from a button of their own', async () => {
+  it('shows the statistics above the downloads in the Debug menu', async () => {
     await renderViewer();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(await screen.findByText('285')).toBeInTheDocument();
-    expect(screen.getByText('Cell A')).toBeInTheDocument();
+    const name = screen.getByText('Cell A');
+    const glb = screen.getByRole('button', { name: 'GLB' });
+    expect(name.compareDocumentPosition(glb) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('has no Debug menu where its flag is off', async () => {
+    await renderViewer({ debug: false });
+
+    expect(screen.queryByRole('button', { name: 'Debug' })).toBeNull();
   });
 
   it('loads the exporters on the first export only, and saves the file under the name of the cell', async () => {
     const build = Promise.withResolvers<unknown>();
     h.setup = (pool) => pool.build.mockReturnValue(build.promise);
     await renderViewer();
-    fireEvent.click(screen.getByRole('button', { name: 'Export mesh' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(await screen.findByText('The mesh is still being built.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Draco GLB' })).toBeDisabled();
 
@@ -678,7 +689,7 @@ describe('MorphoViewer', () => {
     const { viewer } = await renderViewer();
     await waitFor(() => expect(viewer.setMesh).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByRole('button', { name: 'Export mesh' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     fireEvent.click(await screen.findByRole('button', { name: 'STL' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('The export failed: out of memory');
     expect(h.saveAs).not.toHaveBeenCalled();
