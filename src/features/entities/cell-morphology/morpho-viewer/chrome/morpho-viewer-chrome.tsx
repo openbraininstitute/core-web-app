@@ -65,15 +65,9 @@ export function MorphoViewerChrome({
   const reason = colorsReason(look, settings.typeTint);
   const types = new Set(mesh.summary?.types.map((t) => t.type));
 
-  // A look can come with its own bumps and occlusion; they stay on for the next look, to be turned off by hand.
   const chooseLook = (id: string) => {
     const next = viewer.looks.find((l) => l.id === id);
-    if (!next) return;
-    update({
-      look: id,
-      ...(next.bumps && { bumps: true, bump: next.bumps }),
-      ...(next.ao && { ao: true }),
-    });
+    if (next) actions.chooseLook(next);
   };
 
   return (

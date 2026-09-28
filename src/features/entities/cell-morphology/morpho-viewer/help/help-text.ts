@@ -47,7 +47,7 @@ export const HELP = {
   look: {
     text:
       'The shading style, each with a line that describes it. Some looks turn the bumps and the ambient occlusion ' +
-      'on, and they stay on for the next look until turned off. Some draw in colours of their own, and the neurite ' +
+      'on; choosing a look without them puts them back as they were. Some draw in colours of their own, and the neurite ' +
       'colours then have no effect.',
     applies: 'view',
   },

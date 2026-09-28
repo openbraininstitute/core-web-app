@@ -431,6 +431,30 @@ describe('MorphoViewer', () => {
     expect(screen.getByRole('button', { name: 'Hide axon' })).toBeEnabled();
   });
 
+  it('puts the bumps and the AO back as they were when leaving a look that brought its own', async () => {
+    const { viewer } = await renderViewer();
+
+    await chooseLook('EM segmentation');
+    await chooseLook('Studio');
+    expect(viewer.setAO).toHaveBeenLastCalledWith(false);
+    expect(viewer.setBumps).toHaveBeenLastCalledWith({ amplitude: 0, scale: 1.5, smoothness: 0.5 });
+
+    // Bumps turned on by hand before stay on, in their own shape.
+    await openSettings();
+    fireEvent.click(screen.getByRole('switch', { name: 'Bumps' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
+    await waitFor(() => expect(screen.queryByRole('switch', { name: 'Mesh' })).toBeNull());
+    await chooseLook('EM segmentation');
+    expect(viewer.setBumps).toHaveBeenLastCalledWith({ amplitude: 0.1, scale: 2, smoothness: 0.3 });
+    await chooseLook('Studio');
+    expect(viewer.setBumps).toHaveBeenLastCalledWith({
+      amplitude: 0.06,
+      scale: 1.5,
+      smoothness: 0.5,
+    });
+    expect(viewer.setAO).toHaveBeenLastCalledWith(false);
+  });
+
   it('enables the neurite colours in EM segmentation once Type tint is on, and turns its bumps and AO on', async () => {
     const { viewer } = await renderViewer();
 

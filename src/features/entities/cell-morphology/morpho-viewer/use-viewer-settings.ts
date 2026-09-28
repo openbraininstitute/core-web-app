@@ -13,7 +13,7 @@ import {
 import { DEFAULT_LOOK } from './engine/looks';
 
 import type { Palette } from './engine/colors';
-import type { BumpParams } from './engine/looks';
+import type { BumpParams, Look } from './engine/looks';
 import type { Projection, SkeletonKind } from './engine/viewer';
 
 export type ColorBy = 'section' | 'distance';
@@ -41,6 +41,8 @@ export interface ViewerSettings {
   /** In the orthographic view: a perspective one has no single scale. */
   scalebar: boolean;
   build: BuildSettings;
+  /** The bumps and the occlusion before the look turned its own on, to be put back when another is chosen. */
+  beforeLook: Pick<ViewerSettings, 'bumps' | 'bump' | 'ao'> | null;
 }
 
 const DEFAULT_SETTINGS: ViewerSettings = {
@@ -61,6 +63,7 @@ const DEFAULT_SETTINGS: ViewerSettings = {
   projection: 'orthographic',
   scalebar: true,
   build: DEFAULT_BUILD,
+  beforeLook: null,
 };
 
 export function currentPalette(settings: ViewerSettings): Palette {
@@ -91,7 +94,19 @@ export function useViewerSettings() {
       hiddenTypes: s.hiddenTypes.length === 0 ? s.hiddenTypes : [],
       colorBy: 'section',
     }));
-  return { settings, update, setColor, resetColors };
+  const chooseLook = (look: Look) =>
+    setSettings((s) => {
+      const before = s.beforeLook ?? { bumps: s.bumps, bump: s.bump, ao: s.ao };
+      return {
+        ...s,
+        ...before,
+        look: look.id,
+        ...(look.bumps && { bumps: true, bump: look.bumps }),
+        ...(look.ao && { ao: true }),
+        beforeLook: look.bumps || look.ao ? before : null,
+      };
+    });
+  return { settings, update, setColor, resetColors, chooseLook };
 }
 
 /** What the chrome can do with the settings. */

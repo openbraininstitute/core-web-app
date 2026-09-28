@@ -684,8 +684,8 @@ files. Light rigs ride on the camera so the lighting stays put while orbiting.
 
 **EM segmentation** is how a cell looks in a segmented FlyWire, MICrONS or
 Neuroglancer volume, not in a micrograph (that is the SEM look). Choosing it
-turns on the bumps, at its own settings, and the ambient occlusion, which
-stay on for the next look. It alone shades the bumps per pixel, so they show on
+turns on the bumps, at its own settings, and the ambient occlusion; in the
+platform, choosing a look without them puts them back as they were. It alone shades the bumps per pixel, so they show on
 the long strips of a swept tube and on the soma's wide triangles, where the
 per-vertex tilt of the other looks leaves them smooth or faceted; the tilt is
 capped at 45° so that the far side of a bump never catches the rim light.
