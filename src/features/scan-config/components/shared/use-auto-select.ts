@@ -10,9 +10,14 @@ type Props = {
   onSelect: (file: TActivityCustomFile) => void;
 };
 
+/** The stable per-row key: every row sets `id`, or an `asset` whose id identifies it. */
+function fileKey(file: TActivityCustomFile): string {
+  return file.id ?? file.asset?.id ?? file.entity.id;
+}
+
 function isSameFile(a: TActivityCustomFile | undefined, b: TActivityCustomFile | undefined) {
   if (!a || !b) return false;
-  return a.asset.id === b.asset.id && a.entity.id === b.entity.id;
+  return fileKey(a) === fileKey(b) && a.entity.id === b.entity.id;
 }
 
 export function useAutoSelectFileOnConfigChange({
