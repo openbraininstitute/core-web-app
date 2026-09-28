@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { FieldSampler } from '@/features/entities/cell-morphology/morpho-viewer/engine/field';
 import {
@@ -15,7 +15,9 @@ import {
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/mesher';
 import { parseSwc, SWC_BASAL } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
 
-import { BRANCHED, checkMesh, flatTriangles, params } from './mesh-utils';
+import { BRANCHED, checkMesh, flatTriangles, MESH_TIMEOUT, params } from './mesh-utils';
+
+vi.setConfig({ testTimeout: MESH_TIMEOUT });
 
 const DIRECTION = [0.62, 0.71, 0.33].map((d) => d / Math.hypot(0.62, 0.71, 0.33));
 

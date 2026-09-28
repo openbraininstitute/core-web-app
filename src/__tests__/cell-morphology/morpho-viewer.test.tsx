@@ -12,6 +12,9 @@ import type { DistanceData } from '@/features/entities/cell-morphology/morpho-vi
 import type { MeshStats } from '@/features/entities/cell-morphology/morpho-viewer/engine/mesher';
 import type { MorphologySummary } from '@/features/entities/cell-morphology/morpho-viewer/engine/protocol';
 
+// Each test renders the viewer and goes through its menus in jsdom, which under coverage on CI takes seconds.
+vi.setConfig({ testTimeout: 20_000 });
+
 const h = vi.hoisted(() => {
   const DARK = { light: ['#000000', '#000000'], dark: ['#000000', '#000000'] };
   const LIGHT = { light: ['#ffffff', '#d9dde6'], dark: ['#2b3140', '#0c0e13'] };

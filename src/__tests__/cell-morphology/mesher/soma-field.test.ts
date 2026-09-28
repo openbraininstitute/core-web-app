@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   FieldSampler,
@@ -46,7 +46,15 @@ import {
   SWC_SOMA,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
 
-import { cell, expectWatertight, radialStats, params as testParams } from './mesh-utils';
+import {
+  cell,
+  expectWatertight,
+  MESH_TIMEOUT,
+  radialStats,
+  params as testParams,
+} from './mesh-utils';
+
+vi.setConfig({ testTimeout: MESH_TIMEOUT });
 
 const params = (over: Partial<HybridParams> = {}): HybridParams =>
   testParams({ blend: 0.1, simplifyMesh: 0.125, ...over });

@@ -15,8 +15,14 @@ export function sampleSwc(): string {
   return readFileSync(new URL('../fixtures/18864_05088.swc', import.meta.url), 'utf8');
 }
 
-/** For what meshes the sample cell: seconds alone, and more while the whole suite shares the machine. */
-export const SAMPLE_CELL_TIMEOUT = 30_000;
+/**
+ * For a file of tests that mesh, set with `vi.setConfig`. CI runs the suite under coverage on a small runner, where a
+ * mesh takes four to fifteen times as long as it does alone.
+ */
+export const MESH_TIMEOUT = 60_000;
+
+/** For what meshes the sample cell: seconds alone, near a minute under coverage on CI. */
+export const SAMPLE_CELL_TIMEOUT = 180_000;
 
 /** Parameters for the small cells of the tests: the skeleton as it is, a voxel of 0.25 µm, blend 0.5, no mesh simplification. */
 export const params = (over: Partial<HybridParams> = {}): HybridParams => ({

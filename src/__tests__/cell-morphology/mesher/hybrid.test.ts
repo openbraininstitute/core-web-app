@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { flooredPath } from '@/features/entities/cell-morphology/morpho-viewer/engine/classify';
 import { FieldSampler } from '@/features/entities/cell-morphology/morpho-viewer/engine/field';
@@ -32,10 +32,13 @@ import {
 import {
   checkMesh,
   expectWatertight,
+  MESH_TIMEOUT,
   SAMPLE_CELL_TIMEOUT,
   sampleSwc,
   params as testParams,
 } from './mesh-utils';
+
+vi.setConfig({ testTimeout: MESH_TIMEOUT });
 
 /** A soma with an axon and a dendrite that forks well outside the soma's band; nothing thinner than the voxel. */
 const BRANCHED = `

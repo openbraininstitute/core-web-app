@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   buildMesh,
@@ -23,10 +23,13 @@ import {
   canonicalTriangles,
   checkMesh,
   connectedComponents,
+  MESH_TIMEOUT,
   params,
   radialStats,
   sampleSwc,
 } from './mesh-utils';
+
+vi.setConfig({ testTimeout: MESH_TIMEOUT });
 
 const sampleCell = () => parseSwc(sampleSwc());
 

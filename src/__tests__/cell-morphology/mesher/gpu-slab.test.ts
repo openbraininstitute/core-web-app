@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { kernel, smoothMin } from '@/features/entities/cell-morphology/morpho-viewer/engine/field';
 import {
@@ -22,7 +22,9 @@ import {
   SWC_SOMA,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
 
-import { BRANCHED, cell, params, sampleSwc } from './mesh-utils';
+import { BRANCHED, cell, MESH_TIMEOUT, params, sampleSwc } from './mesh-utils';
+
+vi.setConfig({ testTimeout: MESH_TIMEOUT });
 
 /**
  * What the field shader computes for block b, in double precision: per sample, the kernel of the closest segment of
