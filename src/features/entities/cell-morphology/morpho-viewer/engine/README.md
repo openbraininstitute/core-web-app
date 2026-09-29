@@ -195,6 +195,8 @@ Switching to perspective keeps the size at the target, so a cell that reaches to
 
 OrbitControls is a turntable about `camera.up`, which it reads once, when it is made. Seen from above or below, a turntable about the cell's y axis would spin the cell in the screen's plane and stop at the poles, so after every change the viewer puts the axis, and `up`, on the screen's vertical as the camera stands (`rotation.ts`). A drag sideways then turns the cell about the screen's vertical and a drag down about its horizontal, whichever way the cell faces, and the spin turns about the screen's vertical too. A straight drag never rolls the cell in the screen's plane, but a circular one can. *Reset view* stands it upright again, and drops what is left of a drag's or a pan's easing so the view stays where it is put. The axis and the easing are OrbitControls' own fields (`_quat`, `_quatInverse`, `_sphericalDelta`, `_panOffset`): if three renames them, the viewer falls back to the plain turntable, and the tests fail.
 
+The axes gizmo in the bottom-right corner shows the cell's own X, Y and Z as the camera sees them (`gizmo.ts`), the viewer telling it the camera's orientation whenever that changes. A click on a tip turns the camera about the target, in 0.3 s and at the same distance, to view the cell from that tip, or from the opposite one when it already does. Seen from the side the cell's Y is up; seen along Y, whichever of X and Z turns the view the least. The turn eases a slerp between the two orientations and keeps OrbitControls' axis on the screen's vertical all the way (`turnCamera`); a drag, a wheel or *Reset view* stops it.
+
 ## Layout
 
 ```
@@ -222,7 +224,8 @@ viewer.ts         three.js scene: chunked mesh upload, looks, skeleton overlays,
 looks.ts          shading styles: materials, light rigs, procedural matcap / environment, bumps and width floor
 colors.ts         neurite and distance colours written into the 8-bit vertex colours
 camera.ts         orthographic / perspective equivalence, orthographic framing and pixel scale
-rotation.ts       free rotation: OrbitControls' turntable kept on the screen's vertical, its easing stopped on a reset
+rotation.ts       free rotation: OrbitControls' turntable kept on the screen's vertical, its easing stopped on a reset, turns to an axis
+gizmo.ts          the axes gizmo: the six half-axes as the camera sees them, the orientation that views the cell from one
 framing.ts        camera framing around the soma, clip ranges, depth-coded range
 ```
 

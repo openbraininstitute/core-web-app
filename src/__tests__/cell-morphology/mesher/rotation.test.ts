@@ -3,9 +3,11 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { describe, expect, it } from 'vitest';
 
+import { axisView } from '@/features/entities/cell-morphology/morpho-viewer/engine/gizmo';
 import {
   followScreenUp,
   stopGlide,
+  turnCamera,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/rotation';
 
 const target = new THREE.Vector3(10, 20, 30);
@@ -91,6 +93,32 @@ describe('rotation', () => {
     settle(controls);
     expectClose(camera.position, position);
     expect(camera.quaternion.angleTo(quaternion)).toBeLessThan(1e-6);
+  });
+
+  it('turns to view from an axis and stays there, at the same distance, with the easing and the turntable on', () => {
+    const controls = orbit();
+    const camera = controls.object;
+    controls.rotateLeft(0.4);
+    controls.rotateUp(0.3);
+    settle(controls);
+    for (const [axis, sign, facing, up] of [
+      [1, 1, new THREE.Vector3(0, 1, 0), null],
+      [0, -1, new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 1, 0)],
+      [2, 1, new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0)],
+    ] as const) {
+      const start = camera.quaternion.clone();
+      const end = axisView(axis, sign, start);
+      stopGlide(controls);
+      for (let i = 1; i <= 10; i++) {
+        turnCamera(controls, start, end, i / 10);
+        controls.update();
+        expect(camera.position.distanceTo(target)).toBeCloseTo(100, 6);
+      }
+      settle(controls);
+      expectClose(from(camera), facing);
+      if (up) expectClose(screenUp(camera), up);
+      expect(camera.quaternion.angleTo(end)).toBeLessThan(1e-6);
+    }
   });
 
   it('leaves a three without these fields to its plain turntable', () => {

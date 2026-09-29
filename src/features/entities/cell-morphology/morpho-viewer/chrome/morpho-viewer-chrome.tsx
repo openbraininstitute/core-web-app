@@ -10,6 +10,7 @@ import {
 import { panelStyle, viewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
 
+import { AxesGizmo } from './axes-gizmo';
 import { ColorByMenu } from './color-by-menu';
 import { DebugMenu } from './debug-menu';
 import { NeuritesKey } from './neurites-key';
@@ -43,7 +44,7 @@ interface MorphoViewerChromeProps {
 /**
  * The control layer over the morphology, laid out as the circuit viewer's: fullscreen, settings and,
  * where its flag is on, debug (top-left), re-centre under them, the colours and their key (top-right),
- * the build's status (top-centre) and the ruler (bottom-left).
+ * the build's status (top-centre), the ruler (bottom-left) and the axes (bottom-right).
  */
 export function MorphoViewerChrome({
   viewer,
@@ -140,6 +141,7 @@ export function MorphoViewerChrome({
       {settings.scalebar && settings.projection === 'orthographic' && (
         <Scalebar viewer={viewer} color={theme.foreground} />
       )}
+      <AxesGizmo viewer={viewer} />
       <WheelHint visible={wheelHint} theme={theme} />
     </div>
   );

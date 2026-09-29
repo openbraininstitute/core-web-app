@@ -28,3 +28,18 @@ export function stopGlide(controls: OrbitControls): void {
   _sphericalDelta?.set(0, 0, 0);
   _panOffset?.set(0, 0, 0);
 }
+
+/** Put the camera `t` of the way along an eased turn about the target between two orientations, as far from it as it is. */
+export function turnCamera(
+  controls: OrbitControls,
+  from: THREE.Quaternion,
+  to: THREE.Quaternion,
+  t: number
+): void {
+  const camera = controls.object;
+  const target = controls.target;
+  const d = camera.position.distanceTo(target);
+  camera.quaternion.slerpQuaternions(from, to, t * t * (3 - 2 * t));
+  camera.position.set(0, 0, d).applyQuaternion(camera.quaternion).add(target);
+  followScreenUp(controls);
+}

@@ -18,6 +18,7 @@ import {
 } from './camera';
 import { type DistanceData, type Palette, paintColors, typeBytes } from './colors';
 import { clipRange, depthSpan, fitDistance, orbitRadius } from './framing';
+import { type Axis, axisView, type Sign } from './gizmo';
 import {
   type BumpParams,
   backgroundCss,
@@ -31,7 +32,7 @@ import {
   showTypeTint,
   withDisplacement,
 } from './looks';
-import { followScreenUp, stopGlide } from './rotation';
+import { followScreenUp, stopGlide, turnCamera } from './rotation';
 import { overlayMaterial, skeletonStyle, standInMaterial } from './skeleton-lines';
 
 import type { LineMaterial } from 'three/addons/lines/LineMaterial.js';
@@ -55,6 +56,8 @@ const SKELETON_WIDTH = 2;
 const SKELETON_CASING = 1;
 /** Vertical field of view of the perspective camera, degrees. */
 const FOV = 45;
+/** How long the camera takes to turn to an axis the gizmo was clicked on, ms. */
+const TURN_MS = 300;
 
 /** A skeleton overlay's segments on show and their colour buffer. */
 interface Overlay {
@@ -161,6 +164,11 @@ export class Viewer {
   private pixelScale: number | null = null;
   private pixelScaleListeners = new Set<(scale: number | null) => void>();
   private wheelListeners = new Set<() => void>();
+  private viewListeners = new Set<(orientation: Readonly<THREE.Quaternion>) => void>();
+  /** The camera's orientation as the view listeners last heard it. */
+  private heardOrientation = new THREE.Quaternion();
+  /** The camera turning to view along an axis: its orientation at either end, and when it set off. */
+  private turn: { from: THREE.Quaternion; to: THREE.Quaternion; start: number } | null = null;
 
   constructor(private container: HTMLElement) {
     // The shaders' shared uniforms outlive a viewer: start from their defaults.
@@ -188,6 +196,7 @@ export class Viewer {
     // Wheel and pointer handlers apply their change inside OrbitControls itself, so the per-frame
     // update() alone would miss them; the change event catches every path.
     this.controls.addEventListener('change', this.onControlsChange);
+    this.controls.addEventListener('start', this.onControlsStart);
     this.controls.addEventListener('end', this.onControlsEnd);
     // Before OrbitControls sees it: outside fullscreen a plain wheel scrolls the page.
     container.addEventListener('wheel', this.onWheel, { capture: true });
@@ -226,6 +235,7 @@ export class Viewer {
     this.resizeObserver.disconnect();
     this.container.removeEventListener('wheel', this.onWheel, { capture: true });
     this.controls.removeEventListener('change', this.onControlsChange);
+    this.controls.removeEventListener('start', this.onControlsStart);
     this.controls.removeEventListener('end', this.onControlsEnd);
     this.controls.dispose();
     this.clearMesh();
@@ -247,6 +257,7 @@ export class Viewer {
     this.renderer.domElement.remove();
     this.pixelScaleListeners.clear();
     this.wheelListeners.clear();
+    this.viewListeners.clear();
   }
 
   // ---------------------------------------------------------------------------
@@ -254,6 +265,7 @@ export class Viewer {
 
   /** Render only when the camera moved (including damping and spin) or the scene changed, and stop when neither did. */
   private frame(): void {
+    this.stepTurn();
     const moved = this.controls.update();
     if (!moved && !this.dirty) {
       this.renderer.setAnimationLoop(null);
@@ -263,6 +275,21 @@ export class Viewer {
     this.updateCameraTied();
     this.draw();
     this.dirty = false;
+    const orientation = this.camera.quaternion;
+    if (!orientation.equals(this.heardOrientation)) {
+      this.heardOrientation.copy(orientation);
+      for (const listener of this.viewListeners) listener(orientation);
+    }
+  }
+
+  /** Move the camera along its turn to an axis. */
+  private stepTurn(): void {
+    const turn = this.turn;
+    if (!turn) return;
+    const t = Math.min(1, (performance.now() - turn.start) / TURN_MS);
+    turnCamera(this.controls, turn.from, turn.to, t);
+    if (t === 1) this.turn = null;
+    this.dirty = true;
   }
 
   private draw(): void {
@@ -286,6 +313,11 @@ export class Viewer {
     followScreenUp(this.controls);
     this.invalidate();
     this.updatePixelScale();
+  };
+
+  // A gesture takes the camera over from a turn to an axis.
+  private onControlsStart = (): void => {
+    this.turn = null;
   };
 
   // A spin held off by a still pointer can have let the loop stop by the time the pointer is let go.
@@ -845,11 +877,27 @@ export class Viewer {
       camera.position.set(0, 0, Math.max(distanceFor(half, FOV), r * 1.05));
     }
     camera.up.set(0, 1, 0);
+    this.turn = null;
     stopGlide(this.controls);
     this.controls.target.set(0, 0, 0);
     this.controls.update();
     this.invalidate();
     this.updatePixelScale();
+  }
+
+  /** Turn the camera about the target to view the cell from the tip of an axis, or from the opposite tip when it already does. */
+  viewAlong(axis: Axis, sign: Sign): void {
+    const from = this.camera.quaternion.clone();
+    this.turn = { from, to: axisView(axis, sign, from), start: performance.now() };
+    stopGlide(this.controls);
+    this.invalidate();
+  }
+
+  /** The camera's orientation now and whenever it turns. */
+  onViewChange(listener: (orientation: Readonly<THREE.Quaternion>) => void): () => void {
+    this.viewListeners.add(listener);
+    listener(this.camera.quaternion);
+    return () => this.viewListeners.delete(listener);
   }
 
   onPixelScaleChange(listener: (scale: number | null) => void): () => void {

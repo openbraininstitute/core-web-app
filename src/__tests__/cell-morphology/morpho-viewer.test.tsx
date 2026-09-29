@@ -16,6 +16,8 @@ import type { MorphologySummary } from '@/features/entities/cell-morphology/morp
 // Each test renders the viewer and goes through its menus in jsdom, which under coverage on CI takes seconds.
 vi.setConfig({ testTimeout: 20_000 });
 
+type Orientation = { x: number; y: number; z: number; w: number };
+
 const h = vi.hoisted(() => {
   const DARK = { light: ['#000000', '#000000'], dark: ['#000000', '#000000'] };
   const LIGHT = { light: ['#ffffff', '#d9dde6'], dark: ['#2b3140', '#0c0e13'] };
@@ -60,6 +62,7 @@ const h = vi.hoisted(() => {
     pixelScale: number | null = 0.5;
     scaleListeners = new Set<(scale: number | null) => void>();
     wheelListeners = new Set<() => void>();
+    viewListeners = new Set<(orientation: Orientation) => void>();
     setDark = vi.fn();
     setColors = vi.fn();
     setHiddenTypes = vi.fn();
@@ -73,6 +76,7 @@ const h = vi.hoisted(() => {
     showSkeleton = vi.fn();
     setSpin = vi.fn();
     resetView = vi.fn();
+    viewAlong = vi.fn();
     setMesh = vi.fn();
     clearMesh = vi.fn();
     setSkeleton = vi.fn();
@@ -98,6 +102,12 @@ const h = vi.hoisted(() => {
     onWheelWithoutCtrl(listener: () => void) {
       this.wheelListeners.add(listener);
       return () => this.wheelListeners.delete(listener);
+    }
+
+    onViewChange(listener: (orientation: Orientation) => void) {
+      this.viewListeners.add(listener);
+      listener({ x: 0, y: 0, z: 0, w: 1 });
+      return () => this.viewListeners.delete(listener);
     }
   }
 
@@ -555,6 +565,25 @@ describe('MorphoViewer', () => {
     expect(viewer.setProjection).toHaveBeenLastCalledWith('perspective');
     expect(container.querySelector('canvas')).toBeNull();
     expect(screen.getByRole('switch', { name: 'Scale bar' })).toBeDisabled();
+  });
+
+  it('puts the nearest axis in front and views the cell from an axis clicked', async () => {
+    const { viewer } = await renderViewer();
+    const tip = (name: string) => screen.getByRole('button', { name: `View from ${name}` });
+    expect(tip('+Z').style.zIndex).toBe('5');
+    expect(tip('−Z').style.zIndex).toBe('0');
+
+    // Seen from +X.
+    act(() => {
+      for (const listener of viewer.viewListeners)
+        listener({ x: 0, y: Math.SQRT1_2, z: 0, w: Math.SQRT1_2 });
+    });
+    expect(tip('+X').style.zIndex).toBe('5');
+
+    fireEvent.click(tip('+X'));
+    expect(viewer.viewAlong).toHaveBeenLastCalledWith(0, 1);
+    fireEvent.click(tip('−Y'));
+    expect(viewer.viewAlong).toHaveBeenLastCalledWith(1, -1);
   });
 
   it('says to hold Ctrl when a plain wheel turns over the view', async () => {

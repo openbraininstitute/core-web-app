@@ -18,7 +18,7 @@ flowchart TB
     swc["use-cell-morphology-swc.ts<br/>downloads the SWC"] --> viewer["morpho-viewer.tsx<br/>MorphoViewer"]
     viewer --> mesh["use-morphology-mesh.ts<br/>load, build, rebuild"]
     viewer --> dist["use-path-distances.ts<br/>Colour by Distance"]
-    viewer --> chrome["chrome/<br/>settings, key, debug"]
+    viewer --> chrome["chrome/<br/>settings, key, axes, debug"]
     mesh --> pool["engine/pool.ts<br/>MeshPool"]
     dist --> pool
     mesh -- "skeletons, mesh" --> three["engine/viewer.ts<br/>Viewer, three.js"]
@@ -197,6 +197,7 @@ The file holds the mesh on show, in µm around the soma, with the current neurit
 | Rebuild delay, GPU and CPU policy | [use-morphology-mesh.ts](use-morphology-mesh.ts) |
 | Looks | `createLooks` in [engine/looks.ts](engine/looks.ts) |
 | Settings, key, Debug menu (statistics, controls and export) | [chrome/](chrome/morpho-viewer-chrome.tsx) |
+| Axes gizmo | [chrome/axes-gizmo.tsx](chrome/axes-gizmo.tsx); the turn to an axis in [engine/gizmo.ts](engine/gizmo.ts) and [engine/rotation.ts](engine/rotation.ts) |
 | Help card texts | [help/help-text.ts](help/help-text.ts) |
 | Menu shell shared with the circuit viewer | `src/features/scan-config/components/color-by/chrome-menu.tsx` |
 
