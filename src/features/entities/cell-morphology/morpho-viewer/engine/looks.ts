@@ -20,10 +20,11 @@
  * Every look's vertex shader also carries the bumps (`BUMP_GLSL`): an organic
  * roughness of the surface, displaced along the shading normal by a noise of
  * the world position and scaled by the `radius` vertex attribute, with the
- * normal tilted to follow. It lives in the shader, not in the mesh: the build,
- * its checks and the exports never see it, it costs nothing per build, and it
- * shows on the long strips of a swept tube where there are no vertices to move.
- * The EM segmentation look also shades them per fragment (`withFragmentBumps`).
+ * normal tilted to follow: per fragment in the looks on three's own materials
+ * (`FRAGMENT_BUMPS_GLSL`), per vertex in the custom shaders. It lives in the
+ * shader, not in the mesh: the build, its checks and the exports never see it,
+ * it costs nothing per build, and, per fragment, it shows on the long strips of
+ * a swept tube where there are no vertices to move.
  * The same hook (`withDisplacement`) can widen a fibre thinner than a few
  * pixels on screen (`WIDEN_GLSL`), so that a whole-cell view of a large cell
  * is not left blank.
@@ -118,7 +119,7 @@ export function setBumpParams(p: BumpParams): void {
  * would swim at the far end, where floats have no bits left for the fraction. The vertex positions are relative to
  * the mesh centre, so what reaches the hash is about 2 000 cells at most at the finest scale, with a fraction good
  * to 10⁻⁴ of a cell. It is gradient noise, not value noise: value noise is flat at every lattice point, and a
- * surface shaded per fragment (`withFragmentBumps`) shows those flat spots as a grid of lumps. The corners are
+ * surface shaded per fragment (`FRAGMENT_BUMPS_GLSL`) shows those flat spots as a grid of lumps. The corners are
  * blended by a quintic, whose analytic gradient is what the displacement's slope is taken from (Quilez): no second
  * evaluation for finite differences. Scaled by 1.2, a sample of 3 million points peaks at ±0.99 with a standard
  * deviation of 0.23, and a median slope of 0.94 per unit of the argument.
@@ -172,22 +173,20 @@ uniform float uBumpAmp;
 uniform float uBumpScale;
 uniform float uBumpDetail;
 ${NOISE_GLSL}
-// Up to three octaves, the finer ones faded in by uBumpDetail, normalised to [-1, 1].
-vec4 bumpField( vec3 x ) {
-	vec4 sum = gradientNoise( x );
-	float norm = 1.0;
+// One octave, of weight w, where a pixel spans footprint cells of the first: out as its own cells shrink from four
+// pixels across to two, where it would alias.
+vec4 bumpOctave( vec3 x, float frequency, float offset, float w, float footprint ) {
+	w *= 1.0 - smoothstep( 0.25, 0.5, frequency * footprint );
+	if ( w <= 0.0 ) return vec4( 0.0 );
+	vec4 n = gradientNoise( frequency * x + offset );
+	return w * vec4( n.x, frequency * n.yzw );
+}
+// Up to three octaves, the finer ones faded in by uBumpDetail, normalised to [-1, 1]; a footprint of 0 keeps them all.
+vec4 bumpField( vec3 x, float footprint ) {
 	float w2 = clamp( uBumpDetail - 1.0, 0.0, 1.0 ), w3 = clamp( uBumpDetail - 2.0, 0.0, 1.0 );
-	if ( w2 > 0.0 ) {
-		vec4 n = gradientNoise( 2.0 * x + 17.0 );
-		sum += 0.5 * w2 * vec4( n.x, 2.0 * n.yzw );
-		norm += 0.5 * w2;
-	}
-	if ( w3 > 0.0 ) {
-		vec4 n = gradientNoise( 4.0 * x + 41.0 );
-		sum += 0.25 * w3 * vec4( n.x, 4.0 * n.yzw );
-		norm += 0.25 * w3;
-	}
-	return sum / norm;
+	vec4 sum = bumpOctave( x, 1.0, 0.0, 1.0, footprint ) + bumpOctave( x, 2.0, 17.0, 0.5 * w2, footprint ) +
+		bumpOctave( x, 4.0, 41.0, 0.25 * w3, footprint );
+	return sum / ( 1.0 + 0.5 * w2 + 0.25 * w3 );
 }
 // The slope along a surface of unit normal n of bumps of peak height amp, from the field's gradient: the normal of the
 // bumped surface is n minus it.
@@ -209,7 +208,7 @@ attribute float radius;
 void bumpDisplace( inout vec3 p, inout vec3 n, float r ) {
 	float amp = uBumpAmp * r;
 	if ( amp <= 0.0 ) return;
-	vec4 f = bumpField( p / uBumpScale );
+	vec4 f = bumpField( p / uBumpScale, 0.0 );
 	p += n * ( amp * f.x );
 	n = normalize( n - bumpSlope( f.yzw, n, amp ) );
 }
@@ -283,14 +282,18 @@ export function addShaderHook<T extends THREE.Material>(
  * bumps are made first thing in `main` and handed to whichever of the two chunks there are: a lit material
  * transforms its normal before it takes the position, so neither can be done where the other is. The width floor comes
  * after the bumps, along the normal they started from.
+ *
+ * A fragment shader with three's `normal_fragment_begin` (not the ShaderMaterials here) shades the bumps per fragment
+ * instead (`FRAGMENT_BUMPS_GLSL`), unless `perFragment` is false, and leaves the vertex normal untilted. Its
+ * declarations, `vBumpPosition` among them, go in front of the shader, for any other hook to use.
  */
-export function withDisplacement<T extends THREE.Material>(m: T): T {
+export function withDisplacement<T extends THREE.Material>(m: T, { perFragment = true } = {}): T {
   const before = m.onBeforeRender;
   m.onBeforeRender = (renderer, ...rest) => {
     before.call(m, renderer, ...rest);
     widenUniforms.uViewHeight.value = Math.max(1, renderer.getViewport(viewport).w);
   };
-  return addShaderHook(m, 'displace', (shader) => {
+  return addShaderHook(m, perFragment ? 'displace' : 'displace-per-vertex', (shader) => {
     Object.assign(shader.uniforms, bumpUniforms, widenUniforms);
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\n${BUMP_GLSL}\n${WIDEN_GLSL}`)
@@ -300,22 +303,35 @@ export function withDisplacement<T extends THREE.Material>(m: T): T {
           '\n\tbumpDisplace( displacedPosition, displacedNormal, radius );\n\twidenToPixels( displacedPosition, normal, radius );'
       )
       .replace(
-        '#include <beginnormal_vertex>',
-        '#include <beginnormal_vertex>\n\tobjectNormal = displacedNormal;'
-      )
-      .replace(
         '#include <begin_vertex>',
         '#include <begin_vertex>\n\ttransformed = displacedPosition;'
+      );
+    // Per fragment, nothing takes the tilted normal, and the compiler drops it.
+    if (perFragment && shader.fragmentShader.includes('#include <normal_fragment_begin>'))
+      shadeBumpsPerFragment(shader);
+    else
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <beginnormal_vertex>',
+        '#include <beginnormal_vertex>\n\tobjectNormal = displacedNormal;'
       );
   });
 }
 
-/** The fragment shader's part of `withFragmentBumps`, after `normal_fragment_maps`: the bumps' normal, per fragment. */
+/**
+ * The bumps' normal per fragment, after `normal_fragment_begin`. A vertex tilts its normal by the bumps' slope at the
+ * vertex, and the triangle interpolates between: on a simplified soma, whose triangles are as wide as a bump, that
+ * draws facets, and on a swept tube, whose rings are microns apart, nothing at all. Here each fragment takes the noise
+ * again at its own point of the undisplaced surface and tilts the normal there, so the bumps are shaded whatever the
+ * triangles, and the octaves too fine for the pixel fade out rather than alias. three's specular anti-aliasing reads
+ * the untilted normal (`nonPerturbedNormal`), as without bumps.
+ */
 const FRAGMENT_BUMPS_GLSL = /* glsl */ `
-	float bumpAmp = uBumpAmp * vBumpRadius;
-	if ( bumpAmp > 0.0 ) {
+	// On the uniform alone, so that every fragment of a quad takes the branch the derivative is in.
+	if ( uBumpAmp > 0.0 ) {
 		vec3 bumpN = normalize( vBumpNormal );
-		vec3 bumpG = bumpSlope( bumpField( vBumpPosition / uBumpScale ).yzw, bumpN, bumpAmp );
+		float bumpFootprint = length( fwidth( vBumpPosition ) ) / uBumpScale;
+		vec3 bumpG = bumpSlope(
+			bumpField( vBumpPosition / uBumpScale, bumpFootprint ).yzw, bumpN, uBumpAmp * vBumpRadius );
 		// No steeper than 45°: past it the normal of a bump's far side turns from the viewer and catches the rim light.
 		normal = normalize( normalMatrix * ( bumpN - bumpG / max( 1.0, length( bumpG ) ) ) );
 		#ifdef DOUBLE_SIDED
@@ -324,34 +340,31 @@ const FRAGMENT_BUMPS_GLSL = /* glsl */ `
 	}
 `;
 
-/**
- * Shade the bumps per fragment, for a lit material of three's (it needs `normal_fragment_maps`). A vertex tilts its
- * normal by the bumps' slope at the vertex, and the triangle interpolates between: on a simplified soma, whose
- * triangles are as wide as a bump, that draws facets, and on a swept tube, whose rings are microns apart, nothing at
- * all. Here each fragment takes the noise again at its own point of the undisplaced surface and tilts the
- * interpolated normal there, so the bumps are shaded whatever the triangles. The displacement itself stays
- * `withDisplacement`'s, which must be applied on top: it declares the `radius` attribute and hands over the uniforms.
- */
-function withFragmentBumps<T extends THREE.Material>(m: T): T {
+/** After `clearcoat_normal_fragment_begin`: the clearcoat on the bumps too, which three leaves on `nonPerturbedNormal`. */
+const CLEARCOAT_BUMPS_GLSL = /* glsl */ `
+	#ifdef USE_CLEARCOAT
+		clearcoatNormal = normal;
+	#endif
+`;
+
+function shadeBumpsPerFragment(shader: THREE.WebGLProgramParametersWithUniforms): void {
   const varyings =
     'varying vec3 vBumpPosition;\nvarying vec3 vBumpNormal;\nvarying float vBumpRadius;';
-  return addShaderHook(m, 'fragment-bumps', (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\n${varyings}`)
+  shader.vertexShader = `${varyings}\n${shader.vertexShader}`.replace(
+    '#include <begin_vertex>',
+    '#include <begin_vertex>\n\tvBumpPosition = position;\n\tvBumpNormal = normal;\n\tvBumpRadius = radius;'
+  );
+  // In front, where three's prefix goes before them: no chunk to anchor on, and ahead of any other hook's code.
+  shader.fragmentShader =
+    `${BUMP_NOISE_GLSL}\nuniform mat3 normalMatrix;\n${varyings}\n${shader.fragmentShader}`
       .replace(
-        '#include <begin_vertex>',
-        '#include <begin_vertex>\n\tvBumpPosition = position;\n\tvBumpNormal = normal;\n\tvBumpRadius = radius;'
-      );
-    shader.fragmentShader = shader.fragmentShader
-      .replace(
-        '#include <common>',
-        `#include <common>\n${BUMP_NOISE_GLSL}\nuniform mat3 normalMatrix;\n${varyings}`
+        '#include <normal_fragment_begin>',
+        `#include <normal_fragment_begin>\n${FRAGMENT_BUMPS_GLSL}`
       )
       .replace(
-        '#include <normal_fragment_maps>',
-        `#include <normal_fragment_maps>\n${FRAGMENT_BUMPS_GLSL}`
+        '#include <clearcoat_normal_fragment_begin>',
+        `#include <clearcoat_normal_fragment_begin>\n${CLEARCOAT_BUMPS_GLSL}`
       );
-  });
 }
 
 export function backgroundCss(look: Look, dark: boolean): string {
@@ -431,8 +444,7 @@ export function showTypeTint(on: boolean): void {
 
 /**
  * EM segmentation, as a segmented electron-microscopy volume is rendered (Neuroglancer, FlyWire, MICrONS): one matte
- * grey for the whole cell, the bumps shaded per fragment (`withFragmentBumps`), and, with the type tint on, a faint
- * tint of the type colours' hue.
+ * grey for the whole cell and, with the type tint on, a faint tint of the type colours' hue.
  */
 function makeEm(): THREE.MeshStandardMaterial {
   const m = new THREE.MeshStandardMaterial({
@@ -451,7 +463,7 @@ function makeEm(): THREE.MeshStandardMaterial {
         'diffuseColor.rgb *= mix( vec3( 1.0 ), vColor.rgb / max( max3( vColor.rgb ), 1e-3 ), uTypeTint );'
       );
   });
-  return withGrain(withFragmentBumps(m), 0.03);
+  return withGrain(m, 0.03);
 }
 
 /**
@@ -582,14 +594,14 @@ const OUTLINE_WIDTH = 1.5;
 /**
  * Back faces pushed out along the normal by `OUTLINE_WIDTH` pixels at their depth: an outline as wide at any distance,
  * in any viewport. `pixelSize` is `withDisplacement`'s, which must be applied on top, and places the displaced point
- * in `transformed` before this pushes it out.
+ * in `transformed` before this pushes it out, just before it is projected.
  */
 function makeOutline(): THREE.Material {
   const m = new THREE.MeshBasicMaterial({ color: 0x14141c, side: THREE.BackSide });
   return addShaderHook(m, 'outline', (shader) => {
     shader.vertexShader = shader.vertexShader.replace(
-      '#include <begin_vertex>',
-      `#include <begin_vertex>\n\ttransformed += normal * ( ${OUTLINE_WIDTH.toFixed(1)} * pixelSize( transformed ) );`
+      '#include <project_vertex>',
+      `transformed += normal * ( ${OUTLINE_WIDTH.toFixed(1)} * pixelSize( transformed ) );\n\t#include <project_vertex>`
     );
   });
 }
@@ -663,13 +675,13 @@ function makeDepthCoded(): THREE.ShaderMaterial {
 /** Where the gold leaf's key light comes from, in camera space; its flakes glint by it. */
 const GOLD_KEY: [number, number, number] = [-0.6, 0.8, 1.3];
 
-/** The gold leaf's flakes, for the fragment shader's declarations. */
+/**
+ * The gold leaf's flakes, for the fragment shader's declarations. The hash, `normalMatrix` and `vBumpPosition` are
+ * `withDisplacement`'s, which must be applied on top: it puts them in front of the shader.
+ */
 const GLINT_PARS_GLSL = /* glsl */ `
-${NOISE_GLSL}
 uniform vec3 uGlintLight;
 uniform vec3 uGlintColor;
-uniform mat3 normalMatrix;
-varying vec3 vGlintPosition;
 // The flakes of one size, cubes size µm on edge, each tilted its own way off the surface: how squarely the flake at p
 // mirrors the key light into the eye (half vector h), 0 to 1.
 float glintFlakes( vec3 p, float size, vec3 n, vec3 h ) {
@@ -684,12 +696,12 @@ const GLINT_GLSL = /* glsl */ `
 	{
 		// Flakes a couple of pixels across at any zoom: the two sizes (powers of two, µm) either side of that are mixed,
 		// so that a flake stays on its spot of the surface and fades out as the next size takes over.
-		float glintLevel = log2( max( 2.5 * length( fwidth( vGlintPosition ) ), 1e-4 ) );
+		float glintLevel = log2( max( 2.5 * length( fwidth( vBumpPosition ) ), 1e-4 ) );
 		float glintSize = exp2( floor( glintLevel ) );
 		vec3 glintH = normalize( uGlintLight + geometryViewDir );
 		float glint = mix(
-			glintFlakes( vGlintPosition, glintSize, normal, glintH ),
-			glintFlakes( vGlintPosition, 2.0 * glintSize, normal, glintH ),
+			glintFlakes( vBumpPosition, glintSize, normal, glintH ),
+			glintFlakes( vBumpPosition, 2.0 * glintSize, normal, glintH ),
 			fract( glintLevel ) );
 		outgoingLight += uGlintColor * glint;
 	}
@@ -706,9 +718,6 @@ function makeGoldLeaf(): THREE.MeshPhysicalMaterial {
       uGlintLight: { value: new THREE.Vector3(...GOLD_KEY).normalize() },
       uGlintColor: { value: new THREE.Color(0xfff0c8).multiplyScalar(8) },
     });
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vGlintPosition;')
-      .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvGlintPosition = position;');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\n${GLINT_PARS_GLSL}`)
       .replace('#include <opaque_fragment>', `${GLINT_GLSL}\n\t#include <opaque_fragment>`);

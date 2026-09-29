@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   createLooks,
   type Look,
+  withDisplacement,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/looks';
 
 /** The shader lib entry three compiles a built-in material from (WebGLPrograms' `shaderIDs`). */
@@ -14,6 +15,7 @@ const SHADER_IDS: Record<string, string> = {
   MeshStandardMaterial: 'physical',
   MeshPhysicalMaterial: 'physical',
   MeshMatcapMaterial: 'matcap',
+  MeshNormalMaterial: 'normal',
 };
 
 /** What three hands a material's `onBeforeCompile`: the shader sources, includes not yet resolved. */
@@ -34,6 +36,16 @@ function compile(m: THREE.Material): {
     null as unknown as THREE.WebGLRenderer
   );
   return shader;
+}
+
+/** The functions and globals declared more than once in a shader, which GLSL refuses: two hooks bringing the same code. */
+function redeclared(source: string): string[] {
+  const names = [
+    ...source.matchAll(
+      /^\s*(?:(?:uniform|varying|attribute)\s+\w+\s+(\w+);|\w+\s+(\w+)\(.*\)\s*\{)\s*$/gm
+    ),
+  ].map((m) => m[1] ?? m[2]);
+  return names.filter((n, i) => names.indexOf(n) !== i);
 }
 
 let looks: Look[];
@@ -65,6 +77,8 @@ describe('looks', () => {
           'widenToPixels( displacedPosition, normal, radius )'
         );
         expect(s.uniforms.uMinWidth, l.id).toBeDefined();
+        expect(redeclared(s.vertexShader), l.id).toEqual([]);
+        expect(redeclared(s.fragmentShader), l.id).toEqual([]);
       }
     }
   });
@@ -76,17 +90,52 @@ describe('looks', () => {
     expect(push).toBeGreaterThan(v.indexOf('transformed = displacedPosition;'));
   });
 
-  it('gives the EM look its per-fragment bumps, type tint and grain', () => {
+  it("shades the bumps per fragment in every look on three's own materials", () => {
+    const perVertex: string[] = [];
+    for (const l of looks) {
+      const s = compile(l.material);
+      const tilted = s.vertexShader.includes('objectNormal = displacedNormal;');
+      if (!s.fragmentShader.includes('bumpField( vBumpPosition / uBumpScale, bumpFootprint )')) {
+        expect(tilted, l.id).toBe(true);
+        perVertex.push(l.id);
+        continue;
+      }
+      // The vertex's normal stays untilted, and so does what three's specular anti-aliasing reads.
+      expect(tilted, l.id).toBe(false);
+      expect(s.fragmentShader, l.id).not.toContain('nonPerturbedNormal =');
+      expect(s.vertexShader, l.id).toContain('vBumpPosition = position;');
+      // The bumps' normal replaces the interpolated one once the chunk has set it up.
+      expect(s.fragmentShader.indexOf('#include <normal_fragment_begin>'), l.id).toBeLessThan(
+        s.fragmentShader.indexOf('bumpN =')
+      );
+      // And the clearcoat's, where there is one.
+      const clearcoat = s.fragmentShader.indexOf('#include <clearcoat_normal_fragment_begin>');
+      if (clearcoat >= 0)
+        expect(s.fragmentShader.indexOf('clearcoatNormal = normal;'), l.id).toBeGreaterThan(
+          clearcoat
+        );
+    }
+    expect(perVertex).toEqual(['fluorescence', 'cajal', 'depth-coded']);
+  });
+
+  it('shades the bumps per fragment in a shader without `common`, and per vertex where asked to', () => {
+    const perFragment = compile(withDisplacement(new THREE.MeshNormalMaterial()));
+    expect(perFragment.fragmentShader).toContain('bumpN =');
+    expect(perFragment.fragmentShader).toContain('vec4 bumpField(');
+    expect(redeclared(perFragment.fragmentShader)).toEqual([]);
+    // The occlusion pass's normals, which follow its depth.
+    const perVertex = compile(
+      withDisplacement(new THREE.MeshNormalMaterial(), { perFragment: false })
+    );
+    expect(perVertex.vertexShader).toContain('objectNormal = displacedNormal;');
+    expect(perVertex.fragmentShader).not.toContain('bumpN =');
+  });
+
+  it('gives the EM look its type tint and grain', () => {
     const s = compile(looks.find((l) => l.id === 'em')!.material);
-    expect(s.vertexShader).toContain('vBumpPosition = position;');
-    expect(s.fragmentShader).toContain('bumpField( vBumpPosition / uBumpScale )');
     expect(s.fragmentShader).toContain('uTypeTint );');
     expect(s.fragmentShader).not.toContain('#include <color_fragment>');
     expect(s.fragmentShader).toContain('( rand( gl_FragCoord.xy ) - 0.5 ) * uGrain');
-    // The bumps' normal replaces the interpolated one after the chunk that sets it up.
-    expect(s.fragmentShader.indexOf('#include <normal_fragment_maps>')).toBeLessThan(
-      s.fragmentShader.indexOf('bumpN =')
-    );
   });
 
   it("adds the gold leaf's flakes to the light once it is all gathered, before it is written out", () => {
@@ -94,6 +143,10 @@ describe('looks', () => {
     const flakes = gold.indexOf('outgoingLight += uGlintColor * glint;');
     expect(flakes).toBeGreaterThan(gold.indexOf('vec3 outgoingLight ='));
     expect(flakes).toBeLessThan(gold.indexOf('#include <opaque_fragment>'));
+    // The flakes are placed by the bumps' hash, which must come first.
+    const hash = gold.indexOf('vec3 latticeRandom(');
+    expect(hash).toBeGreaterThan(-1);
+    expect(gold.indexOf('float glintFlakes(')).toBeGreaterThan(hash);
   });
 
   it('says which looks the neurite colours reach: those whose material reads the vertex colours', () => {

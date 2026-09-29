@@ -739,8 +739,9 @@ export class Viewer {
     gtao.blendIntensity = 1;
     gtao.enabled = this.ao;
     // The pass draws its own normals and depth: with the bumps and the width floor in them the occlusion follows the
-    // surface as drawn.
-    withDisplacement(gtao.normalMaterial);
+    // surface as drawn. The normals tilt per vertex, as the depth it reconstructs the surface from is displaced: tilted
+    // per pixel, they would disagree with it and occlude themselves.
+    withDisplacement(gtao.normalMaterial, { perFragment: false });
     composer.addPass(gtao);
     const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.65, 0.5, 0.2);
     bloom.enabled = this.look.bloom === true;

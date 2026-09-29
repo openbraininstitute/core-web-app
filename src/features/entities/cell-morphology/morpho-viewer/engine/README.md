@@ -685,10 +685,7 @@ files. Light rigs ride on the camera so the lighting stays put while orbiting.
 **EM segmentation** is how a cell looks in a segmented FlyWire, MICrONS or
 Neuroglancer volume, not in a micrograph (that is the SEM look). Choosing it
 turns on the bumps, at its own settings, and the ambient occlusion; in the
-platform, choosing a look without them puts them back as they were. It alone shades the bumps per pixel, so they show on
-the long strips of a swept tube and on the soma's wide triangles, where the
-per-vertex tilt of the other looks leaves them smooth or faceted; the tilt is
-capped at 45° so that the far side of a bump never catches the rim light.
+platform, choosing a look without them puts them back as they were.
 
 **Depth-coded** colours by the depth in front of the camera, so the colours
 keep telling depth as the cell turns. Every frame the viewer takes the depths
@@ -709,7 +706,7 @@ only when the camera moves or the scene changes, and the ambient occlusion
 pass runs at half the device resolution.
 
 **Bumps.** Every look's vertex shader roughens the surface: a vertex moves
-along its shading normal by `height × radius × noise(position)`, and its
+along its shading normal by `height × radius × noise(position)`, and the
 normal tilts with the noise's slope so the lighting follows the bumps. The
 radius is a per-vertex attribute the build carries out of the mesher (a tube
 vertex's ring, a patch vertex's closest section, a cut vertex's neighbour),
@@ -718,9 +715,17 @@ fifth of the radius. The noise is a gradient noise of the position with up to
 three octaves, hashed on integer cells so it does not swim a millimetre from
 the soma; the smoothness slider fades the finer octaves out, which is the
 low-pass that makes the displacement read as a segmented surface rather than
-as grain. The settings have a *Bumps* switch, off by default, and sliders under it for
-height (× radius, 0.06 when turned on), scale (µm, 1.5) and smoothness (0.5),
-all live without a build. The wireframe shows the bumped mesh, the
+as grain. The three custom shaders (Fluorescence, Cajal and Depth-coded) tilt
+the normal per vertex; the looks on three's own materials tilt it per pixel,
+the Glossy look's clearcoat included: each pixel takes the noise's slope at its
+own point, so the bumps show on the long strips of a swept tube and on the
+soma's wide triangles, where a tilt per vertex leaves them smooth or faceted.
+The tilt is capped at 45° so that the far side of a bump never catches the rim
+light, and in a far view an octave fades out before its bumps shrink to two
+pixels across, where they would shimmer. The settings have a *Bumps* switch,
+off by default, and sliders under it for height (× radius, 0.06 when turned
+on), scale (µm, 1.5) and smoothness (0.5), all live without a build. The
+wireframe shows the bumped mesh, the
 ambient-occlusion pass sees it, and the toon outline follows it. The exports
 never include the bumps: they are a rendering, not a change to the mesh, and
 the build's checks never see them.
