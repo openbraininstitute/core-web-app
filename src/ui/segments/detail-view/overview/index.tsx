@@ -500,7 +500,7 @@ export default async function Overview({
         {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
       </div>
       {includes(morphologyTypes, extendedType) && (
-        <CellMorphologyViewer entity={entity as ICellMorphology} />
+        <CellMorphologyViewer entity={entity as ICellMorphology} variant={fieldVariant} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer

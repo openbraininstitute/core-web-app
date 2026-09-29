@@ -173,7 +173,6 @@ export class Viewer {
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.95;
-    this.renderer.localClippingEnabled = true;
     const canvas = this.renderer.domElement;
     canvas.style.display = 'block';
     canvas.style.width = '100%';
@@ -300,8 +299,7 @@ export class Viewer {
 
   /**
    * Per-frame state that follows the camera: the clip range and fog ranges tied
-   * to the orbit distance, cut planes through the orbit target facing the camera,
-   * and the depths the depth-coded look's colours span.
+   * to the orbit distance, and the depths the depth-coded look's colours span.
    */
   private updateCameraTied(): void {
     const camera = this.camera;
@@ -326,8 +324,6 @@ export class Viewer {
         l.fog.near = fog.near;
         l.fog.far = fog.far;
       }
-      // Points nearer to the camera than the target get a negative distance and are clipped.
-      if (l.clip) l.clip.setFromNormalAndCoplanarPoint(dir, target);
     }
     // Only the mesh is drawn by depth.
     if (this.depthSample !== null) {

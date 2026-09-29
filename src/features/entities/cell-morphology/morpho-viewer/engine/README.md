@@ -678,7 +678,6 @@ files. Light rigs ride on the camera so the lighting stays put while orbiting.
 | Fluorescence | Confocal-style projection: additive fresnel glow, GFP-green dendrites and soma, red axon, with a bloom pass. Overlapping fibres add up like a maximum-intensity projection. |
 | Golgi | Golgi-Cox impregnation: an opaque dark neuron on a sepia slide with photographic grain. Ignores type colours. |
 | Cajal | Ink drawing: screen-space cross-hatching that adds a second and third stroke direction as the shading darkens, plus a fresnel contour line. Sepia ink on paper; chalk on slate in the dark theme. |
-| Cutaway | A clipping plane through the orbit target, facing the camera, removes everything nearer than the point you look at. Exposed back faces are drawn in a flat cut colour, so tubes read as hollow cross-sections. Pan to move the cut. |
 | Depth-coded | A depth-coded maximum-intensity projection, as confocal stacks of whole neurons are published (Fiji's temporal-colour code): every fibre glows in the colour of its depth, red near through the spectrum to violet far, and where fibres overlap the brightest wins (blended by MAX). Ignores type colours. |
 | Gold leaf | Polished gold on black lacquer, after the reflective microetchings of neurons: flakes of the leaf, fixed to the surface, catch the key light and go out as the cell turns. |
 
@@ -738,7 +737,7 @@ while the type tint is on, or nothing), and Fluorescence and Depth-coded carry a
 
 The viewer opens orthographic, with a perspective camera to switch to (`camera.ts`). The switch keeps the orbit
 target, the direction and how large the cell is at the target. The orthographic camera stays where the perspective
-one was. Its zoom does not move it, so the fog, the cutaway plane and the depth-coded range take the view's `reach`:
+one was. Its zoom does not move it, so the fog and the depth-coded range take the view's `reach`:
 the distance a perspective camera would need for the same view. The custom shaders take their view direction from
 three's `isOrthographic`. On a switch the ambient-occlusion pass is pointed at the new camera and recompiled for its
 projection. In the orthographic view the viewer reports µm per CSS pixel for the scale bar.

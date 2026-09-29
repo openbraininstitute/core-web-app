@@ -1,7 +1,7 @@
 /**
  * The orthographic view and the perspective one, kept as alike as they can be: switching keeps the target, the
  * direction and how large the cell is at the target. An orthographic camera stays where the perspective one was, so
- * what hangs on the camera's distance (fog, the cutaway plane, the depth colours) works the same, and `reach`, the
+ * what hangs on the camera's distance (fog, the depth colours) works the same, and `reach`, the
  * distance a perspective camera would need for the same view, stands in for the zoom.
  */
 

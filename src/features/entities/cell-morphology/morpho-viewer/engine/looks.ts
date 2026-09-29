@@ -51,8 +51,6 @@ export interface Look {
   fog?: THREE.Fog;
   /** Add a bloom pass in the single view (glow for the fluorescence look). */
   bloom?: boolean;
-  /** Clipping plane the viewer keeps through the orbit target, facing the camera. */
-  clip?: THREE.Plane;
   /** Called when the theme changes, for looks whose materials depend on it. */
   onTheme?: (dark: boolean) => void;
   /** Bumps the page switches on, with these parameters, when the look is chosen; looks without leave the bumps as they are. */
@@ -568,26 +566,6 @@ function makeCajal(pixelRatio: number): THREE.ShaderMaterial {
   });
 }
 
-/**
- * Cutaway: a standard material with a clipping plane; back faces exposed by
- * the cut are drawn in a flat cut colour so tubes read as hollow sections.
- */
-function makeCutaway(plane: THREE.Plane): THREE.MeshStandardMaterial {
-  const m = new THREE.MeshStandardMaterial({
-    vertexColors: true,
-    roughness: 0.6,
-    metalness: 0,
-    side: THREE.DoubleSide,
-    clippingPlanes: [plane],
-  });
-  return addShaderHook(m, 'cutaway', (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <color_fragment>',
-      '#include <color_fragment>\n\tif ( ! gl_FrontFacing ) diffuseColor.rgb = vec3( 0.84, 0.74, 0.60 );'
-    );
-  });
-}
-
 /** Width of the toon look's outline, CSS pixels. */
 const OUTLINE_WIDTH = 1.5;
 
@@ -736,7 +714,6 @@ export function makeEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
 
 export function createLooks(pixelRatio: number): Look[] {
   const cajal = makeCajal(pixelRatio);
-  const cutPlane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
   const looks: Look[] = [
     {
       id: 'flat',
@@ -946,19 +923,6 @@ export function createLooks(pixelRatio: number): Look[] {
         cajal.uniforms.uInk.value.set(dark ? 0xece7da : 0x2a1c10);
         cajal.uniforms.uPaper.value.set(dark ? 0x2b3036 : 0xf4edda);
       },
-    },
-    {
-      id: 'cutaway',
-      label: 'Cutaway',
-      colors: 'palette',
-      hint: 'Everything nearer than the orbit target is cut away, exposing hollow cross-sections. Pan to move the cut.',
-      material: makeCutaway(cutPlane),
-      rig: rig(
-        [new THREE.HemisphereLight(0xffffff, 0x8a8a99, 1.2)],
-        viewLight(0xfff4e8, 2.4, [-0.4, 0.7, 2])
-      ),
-      background: { light: ['#f0f2f5', '#d8dce4'], dark: ['#262b36', '#0f1115'] },
-      clip: cutPlane,
     },
     {
       id: 'depth-coded',
