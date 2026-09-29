@@ -41,7 +41,9 @@ function writeEdgesFile(
   /** Datasets to leave out, per population, for the half-written cases. */
   omit: Record<string, string[]> = {},
   /** `syn_type_id` written verbatim, for the cases where it disagrees with the synapses. */
-  synTypeIds: Record<string, number[]> = {}
+  synTypeIds: Record<string, number[]> = {},
+  /** Populations written with `afferent_center_*` instead, as Build Synaptome does. */
+  centreOnly: ReadonlySet<string> = new Set()
 ) {
   const file = new H5File(name, 'w');
   file.create_group('edges');
@@ -59,9 +61,10 @@ function writeEdgesFile(
       if (!omitted.has(suffix)) file.create_dataset({ name: `${base}/${suffix}`, data });
     };
     const axis = (i: 0 | 1 | 2) => synapses.map((s) => s.position[i]);
-    write('0/afferent_surface_x', axis(0));
-    write('0/afferent_surface_y', axis(1));
-    write('0/afferent_surface_z', axis(2));
+    const at = centreOnly.has(population) ? 'afferent_center' : 'afferent_surface';
+    write(`0/${at}_x`, axis(0));
+    write(`0/${at}_y`, axis(1));
+    write(`0/${at}_z`, axis(2));
     write(
       '0/afferent_section_id',
       synapses.map((s) => s.sectionId)
@@ -95,6 +98,24 @@ function somaOnlyTree(): MorphoViewerTree {
       },
     ],
   };
+}
+
+/** A soma at the origin with one straight dendrite running out along +x. */
+function dendriteTree(): MorphoViewerTree {
+  const sample = (x: number, radius: number, type: MorphoViewerTreeItemType) => ({
+    x,
+    y: 0,
+    z: 0,
+    radius,
+    type,
+    sectionId: type === MorphoViewerTreeItemType.Soma ? 'soma' : 'dend',
+    segmentId: '0',
+    distanceFromSoma: x,
+  });
+  const tip = sample(200, 1, MorphoViewerTreeItemType.Dendrite);
+  const base = { ...sample(100, 1, MorphoViewerTreeItemType.Dendrite), children: [tip] };
+  const soma = { ...sample(0, SOMA_RADIUS, MorphoViewerTreeItemType.Soma), children: [base] };
+  return { cellId: 'cell', roots: [soma] };
 }
 
 /** Wire one edges file up to the loader, counting how often it is opened. */
@@ -179,6 +200,35 @@ describe('loadAfferentSynapses', () => {
     const groups = await harness(file).run([{ file, populations: ['bare', 'full'] }]);
 
     expect(groups.map((g) => g.populationName)).toEqual(['full']);
+  });
+
+  it('falls back to afferent_center and pushes it onto the drawn surface', async () => {
+    const file = writeEdgesFile(
+      'edges-centre.h5',
+      {
+        default: [
+          { position: [150, 0.01, 0], sectionId: 1, targetNodeId: 0 },
+          // Dead on the axis, where Build Synaptome's centres usually sit.
+          { position: [150, 0, 0], sectionId: 1, targetNodeId: 0 },
+        ],
+      },
+      {},
+      {},
+      new Set(['default'])
+    );
+
+    const [group] = await harness(file, { loadTree: async () => dendriteTree() }).run([
+      { file, populations: ['default'] },
+    ]);
+
+    const [x, y, z] = pointAt(group.coordinates, 0);
+    expect(x).toBeCloseTo(150);
+    expect(y).toBeGreaterThan(0.1);
+    expect(z).toBeCloseTo(0);
+    // Pushed off the axis in some direction, never left inside the tube or NaN.
+    const [ax, ay, az] = pointAt(group.coordinates, 1);
+    expect(ax).toBeCloseTo(150);
+    expect(Math.hypot(ay, az)).toBeGreaterThan(0.1);
   });
 
   it('splits a population into one group per synapse type', async () => {

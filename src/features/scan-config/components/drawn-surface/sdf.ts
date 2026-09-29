@@ -37,6 +37,17 @@ export function length(a: Vec3): number {
   return Math.sqrt(dot(a, a));
 }
 
+/** A unit vector perpendicular to `v`, crossed against whichever basis axis `v` leans on least. */
+function anyPerpendicular(v: Vec3): Vec3 {
+  const helper: Vec3 = Math.abs(v[0]) <= Math.abs(v[1]) ? [1, 0, 0] : [0, 1, 0];
+  const c: Vec3 = [
+    v[1] * helper[2] - v[2] * helper[1],
+    v[2] * helper[0] - v[0] * helper[2],
+    v[0] * helper[1] - v[1] * helper[0],
+  ];
+  return scale(c, 1 / length(c));
+}
+
 /**
  * Signed distance from `p` to a sphere, plus the outward unit normal.
  *
@@ -83,7 +94,9 @@ export function sdfCapsuleWithNormal(
   const pb = subtract(p, b);
   const y = dot(pa, ba);
   const z = y - l2;
-  const x2 = l2 * dot(pa, pa) - y * y;
+  // Clamped: on the axis this is 0 in exact maths but can round a hair negative,
+  // and the square roots below would turn that into NaN.
+  const x2 = Math.max(0, l2 * dot(pa, pa) - y * y);
   const y2 = y * y;
   const z2 = z * z;
   const k = sign(rr) * rr * rr * x2;
@@ -98,11 +111,17 @@ export function sdfCapsuleWithNormal(
     const w = Math.sqrt(il2 * (x2 + y2));
     return { distance: w - r1, normal: scale(pa, 1 / w) };
   }
-  // Against the cone flank.
+  // Against the cone flank. The normal leans off the radial direction by the
+  // cone's half-angle: cos = sqrt(a2 / l2) radially, sin = rr / |ba| along the
+  // axis. Built from those two unit parts, it stays unit length at any distance
+  // from the axis, where scaling the whole sum by 1 / w made the axial part blow
+  // up as a point neared the axis and flung projected synapses off the branch.
   const w = Math.sqrt(x2 * a2);
-  const normal = scale(
-    add(scale(ba, rr), scale(subtract(scale(pa, l2), scale(ba, y)), a2)),
-    il2 / w
-  );
+  const radial = subtract(pa, scale(ba, y * il2));
+  const radialLength = length(radial);
+  // On the axis every direction off it is equally near; pick one rather than
+  // divide 0 by 0, so an axial point (a synapse centre, say) lands on the surface.
+  const outward = radialLength > 0 ? scale(radial, 1 / radialLength) : anyPerpendicular(ba);
+  const normal = add(scale(outward, Math.sqrt(Math.max(0, a2 * il2))), scale(ba, rr * il2));
   return { distance: (w + y * rr) * il2 - r1, normal };
 }

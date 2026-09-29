@@ -76,10 +76,20 @@ export function useAfferentSynapses({
   const edges = config?.edges;
 
   useEffect(() => {
-    if (!enabled || !geometry || !edges || !circuitAssetId) return;
+    if (!enabled) return;
+
+    const report = new Report();
+    if (!geometry || !edges || !circuitAssetId) {
+      report
+        .logTask(
+          `Afferent synapses waiting: geometry=${!!geometry} ` +
+            `edges=${edges?.length ?? 'none'} circuitAssetId=${circuitAssetId ?? 'none'}`
+        )
+        .debug();
+      return;
+    }
 
     let cancelled = false;
-    const report = new Report();
 
     const openEdgesFile = async (file: string) => {
       const response = await downloadAsset({
