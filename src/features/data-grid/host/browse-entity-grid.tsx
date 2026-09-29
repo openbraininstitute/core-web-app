@@ -241,15 +241,14 @@ export function EntityDataGrid({
     IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
   >(() => {
     if (!selectionType || !onRowsSelected) return undefined;
-    // compose the caller's cap predicate with the workflow lifecycle gate: a row is selectable
-    // only when both allow it. Rows here always carry `lifecycle_status`, so the gate reads it
-    // directly off the row.
+    // a row is selectable only if every active gate allows it: the workflow lifecycle gate
+    // (picker sections) and the caller's cap predicate (capped fields). Rows here always carry
+    // `lifecycle_status`, so the lifecycle gate reads it directly off the row.
+    const lifecycleGate = applyLifecycleGating ? isEntitySelectableForWorkflow : undefined;
     const composedIsRowSelectable =
-      applyLifecycleGating || pickerIsRowSelectable
-        ? (row: EntityCoreIdentifiableNamed) =>
-            (!applyLifecycleGating || isEntitySelectableForWorkflow(row)) &&
-            (!pickerIsRowSelectable || pickerIsRowSelectable(row))
-        : undefined;
+      lifecycleGate && pickerIsRowSelectable
+        ? (row: EntityCoreIdentifiableNamed) => lifecycleGate(row) && pickerIsRowSelectable(row)
+        : (lifecycleGate ?? pickerIsRowSelectable);
     return {
       mode: selectionType === 'radio' ? SelectionMode.Single : SelectionMode.Multi,
       selectedRows: controlledSelectedRows,
