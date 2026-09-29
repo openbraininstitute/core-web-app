@@ -391,7 +391,11 @@ export function useAgentState(key: string, config?: Config) {
   const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
   useEffect(() => {
-    const stateConfig = config ?? defaultConfig;
+    // The default is a CircuitSimulationScanConfig, so it is only a sane stand-in for the
+    // circuit-simulation key. Applying it to any other key published a circuit-simulation
+    // config under that key on first render (before `config` had hydrated), which the agent
+    // would then read back and try to validate against the wrong schema.
+    const stateConfig = config ?? (key === 'circuit_simulation_config' ? defaultConfig : undefined);
     if (!stateConfig) return;
 
     setAIAgentState(

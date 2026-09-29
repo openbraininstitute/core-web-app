@@ -16,6 +16,7 @@ import {
 } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
 import { Configuration } from '@/ui/segments/workflows/build/ion-channel-build/sections/configuration';
 import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections/output';
+import { useIonChannelAgentSync } from '@/ui/segments/workflows/build/ion-channel-build/use-agent-sync';
 
 import 'katex/dist/katex.min.css';
 
@@ -40,6 +41,10 @@ export function IonChannelModelBuilding({
   const [ionState, updateIoChannelState] = useAtom(
     useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId])
   );
+
+  // Shares the fitting config with the AI assistant. Lives here rather than in
+  // sections/configuration so it survives switching to the Output tab.
+  useIonChannelAgentSync(sessionId);
 
   const effectiveCampaignId = readonly ? originalCampaignId : (ionState.campaignId ?? undefined);
 
