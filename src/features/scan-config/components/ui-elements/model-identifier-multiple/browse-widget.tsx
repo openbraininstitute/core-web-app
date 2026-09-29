@@ -240,22 +240,10 @@ export function ModelIdentifierBrowseWidget({
           return { [activeEntityType]: rows.slice(-1) };
         }
 
-        // when a cap is set, keep the total across all types at or below it: trim the
-        // active tab's rows to the budget left by the other tabs, preferring the newest picks
-        if (typeof maxSelections === 'number') {
-          const otherCount = Object.entries(previous).reduce(
-            (sum, [type, typeRows]) =>
-              type === activeEntityType ? sum : sum + (typeRows?.length ?? 0),
-            0
-          );
-          const budget = Math.max(0, maxSelections - otherCount);
-          return { ...previous, [activeEntityType]: rows.slice(0, budget) };
-        }
-
         return { ...previous, [activeEntityType]: rows };
       });
     },
-    [activeEntityType, isSingleSelect, maxSelections]
+    [activeEntityType, isSingleSelect]
   );
 
   const handleRemoveEntity = useCallback(
