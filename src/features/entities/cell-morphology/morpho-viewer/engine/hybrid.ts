@@ -43,6 +43,7 @@ import {
   type MeshResult,
   type MeshStats,
   meshCenter,
+  meshedSections,
   meshSlab,
   type Prim,
   planPrimitives,
@@ -399,7 +400,7 @@ export function planHybrid(
     interfaceAxes,
     batches,
     bigPatches,
-    skeleton: sectionSegments(prepared.sections, center),
+    skeleton: sectionSegments(meshedSections(prepared), center),
   };
 }
 

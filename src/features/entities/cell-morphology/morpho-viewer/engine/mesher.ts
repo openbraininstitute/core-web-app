@@ -91,7 +91,7 @@ import {
 } from './refine';
 import { chainSegments } from './segments';
 import { stemNeck } from './soma';
-import { type Morphology, SWC_SOMA } from './swc';
+import { type Morphology, type Section, SWC_SOMA } from './swc';
 
 import type { SkeletonData } from './protocol';
 import type { UntangleReport } from './untangle';
@@ -625,7 +625,7 @@ export function planMesh(m: Morphology, params: MeshParams, opts: PlanOptions): 
     rawPoints: countPoints(m.sections),
     untangle: untangleReport(prepared),
     soma: somaMeshed(prepared, prims),
-    skeleton: sectionSegments(prepared.sections, center),
+    skeleton: sectionSegments(meshedSections(prepared), center),
   };
 }
 
@@ -772,6 +772,25 @@ export function somaNecks(m: Morphology, include: Set<number> | null): Map<numbe
     if (neck !== null) necks.set(a.section, neck);
   }
   return necks;
+}
+
+/**
+ * The sections as the mesh builds them, for the processed skeleton: an arbor with a neck (`somaNecks`) starts at the
+ * soma's centre and goes on from the neck's target, without its soma point or anything before the target (points
+ * untangling added, the part of a cut arbor inside the neck). Every type: the viewer hides types in the skeleton itself.
+ */
+export function meshedSections(m: Morphology): Pick<Section, 'type' | 'points'>[] {
+  const soma = somaSphere(m);
+  if (!soma) return m.sections;
+  const necks = somaNecks(m, null);
+  return m.sections.map((s, i) => {
+    const neck = necks.get(i);
+    if (!neck) return s;
+    const points = new Float64Array(4 + neck.length);
+    points.set([...soma.center, soma.radius]);
+    points.set(neck, 4);
+    return { type: s.type, points };
+  });
 }
 
 /** The soma among the primitives `collectPrimitives` made of m, or undefined without one. */

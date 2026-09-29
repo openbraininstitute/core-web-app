@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 
-import { buildMesh } from '@/features/entities/cell-morphology/morpho-viewer/engine/mesher';
+import { planHybrid } from '@/features/entities/cell-morphology/morpho-viewer/engine/hybrid';
+import {
+  buildMesh,
+  meshedSections,
+  planMesh,
+} from '@/features/entities/cell-morphology/morpho-viewer/engine/mesher';
 import {
   countPoints,
   type PrepareParams,
@@ -21,7 +26,13 @@ import {
   SWC_SOMA,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
 
-import { checkMesh, connectedComponents, SAMPLE_CELL_TIMEOUT, sampleSwc } from './mesh-utils';
+import {
+  checkMesh,
+  connectedComponents,
+  params,
+  SAMPLE_CELL_TIMEOUT,
+  sampleSwc,
+} from './mesh-utils';
 
 const OFF: PrepareParams = { smoothing: 0, axonRadius: 'same', simplify: 0 };
 
@@ -37,6 +48,26 @@ function straight(rs: number[], type = SWC_BASAL): string {
 }
 
 const sampleCell = () => parseSwc(sampleSwc());
+
+/**
+ * An outline soma around the origin. A dendrite hangs on its first point, at the edge, and gets a neck; another, on its
+ * third point, starts too near the centre for one; an axon on the first point starts beyond `STEM_FAR_DISTANCE`.
+ */
+const OUTLINE = [
+  '1 1 -3 0 0 1 -1',
+  '2 1 0 3 0 1 1',
+  '3 1 3 0 0 1 2',
+  '4 1 0 -3 0 1 3',
+  '5 3 0 8 0 1 1',
+  '6 3 0 9 0 1 5',
+  '7 3 0 -4 0 1 3',
+  '8 2 0 0 30 1 1',
+  '9 2 0 0 31 1 8',
+].join('\n');
+
+const drawn = (sections: Pick<Section, 'type' | 'points'>[]): number[] => [
+  ...sectionSegments(sections, [0, 0, 0]).positions,
+];
 
 describe('prepareMorphology', () => {
   it('is the identity when everything is off and no section is short', () => {
@@ -239,10 +270,58 @@ describe('sectionSegments', () => {
     expect([...(sk.radii ?? [])]).toEqual([3, 3, 1, 1, 1, 0.5]);
   });
 
+  it('draws an arbor from the soma point its file hangs it on', () => {
+    const m = parseSwc(OUTLINE);
+    expect(m.soma.model).toBe('fit');
+    expect(drawn(m.sections)).toEqual([
+      -3, 0, 0, 0, 8, 0, 0, 8, 0, 0, 9, 0, 3, 0, 0, 0, -4, 0, -3, 0, 0, 0, 0, 30, 0, 0, 30, 0, 0,
+      31,
+    ]);
+  });
+
   it('leaves the radii and the soma out of an overlay', () => {
     const sk = sectionSegments(parseSwc(straight([1, 0.5])).sections, [0, 0, 0]);
     expect(sk.count).toBe(2);
     expect(sk.radii).toBeUndefined();
+  });
+});
+
+describe('meshedSections', () => {
+  it("gives a plan's skeleton the mesh's necks, whichever types the mesh has", () => {
+    const m = parseSwc(OUTLINE);
+    // From the centre; from its soma point, as traced; through the sample added on the ray.
+    const meshed = [
+      0, 0, 0, 0, 8, 0, 0, 8, 0, 0, 9, 0, 3, 0, 0, 0, -4, 0, 0, 0, 0, 0, 0, 25, 0, 0, 25, 0, 0, 30,
+      0, 0, 30, 0, 0, 31,
+    ];
+    const skeleton = (plan: { skeleton: { positions: Float32Array } }) => [
+      ...plan.skeleton.positions,
+    ];
+    expect(skeleton(planMesh(m, params(), { maxSlabs: 1 }))).toEqual(meshed);
+    expect(skeleton(planHybrid(m, params(), { maxBatches: 1 }))).toEqual(meshed);
+    // The viewer hides types in the skeleton itself, and keeps it through a rebuild that shows them again.
+    const somaOnly = params({ includeTypes: [SWC_SOMA] });
+    expect(skeleton(planMesh(m, somaOnly, { maxSlabs: 1 }))).toEqual(meshed);
+  });
+
+  it('starts a cut arbor where its neck ends', () => {
+    // A placeholder soma: no first sample sizes it, so it takes the least radius and every arbor is cut 5 / 0.8 µm out.
+    const m = parseSwc(['1 1 0 0 0 0.1 -1', '2 3 0 2 0 1 1', '3 3 0 20 0 1 2'].join('\n'));
+    expect(m.somaStems.source).toBe('minimum');
+    expect(drawn(meshedSections(m))).toEqual([0, 0, 0, 0, 6.25, 0, 0, 6.25, 0, 0, 20, 0]);
+  });
+
+  it('leaves out what the preparation put between the soma point and a first sample', () => {
+    const m = parseSwc(OUTLINE);
+    const [first, ...rest] = m.sections;
+    // As untangling does: a point of no node ahead of the first sample.
+    const untangled = {
+      ...first,
+      points: Float64Array.of(-3, 0, 0, 1, -1, 4, 0, 1, 0, 8, 0, 1, 0, 9, 0, 1),
+      nodes: Int32Array.of(first.nodes[0], -1, ...first.nodes.subarray(1)),
+    };
+    const skeleton = drawn(meshedSections({ ...m, sections: [untangled, ...rest] }));
+    expect(skeleton.slice(0, 12)).toEqual([0, 0, 0, 0, 8, 0, 0, 8, 0, 0, 9, 0]);
   });
 });
 

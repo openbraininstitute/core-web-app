@@ -130,10 +130,14 @@ export const HELP = {
       'as wide as the mesh draws it.',
     effects: [
       ['Off', 'The mesh alone.'],
-      ['Traced', "The file's skeleton, as traced."],
+      [
+        'Traced',
+        "The file's skeleton as written: a neurite on the soma joins it at the soma point the file links it to.",
+      ],
       [
         'Processed',
-        'What the mesh is built from, after smoothing, resampling, untangling and simplification.',
+        'What the mesh is built from, after smoothing, resampling, untangling and simplification. A neurite on ' +
+          'the soma joins it as in the mesh, most of them by a neck from its centre.',
       ],
     ],
     applies: 'view',

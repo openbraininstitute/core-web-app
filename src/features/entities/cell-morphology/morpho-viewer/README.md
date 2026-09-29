@@ -9,6 +9,9 @@ In short:
 
 - The traced skeleton shows as soon as the SWC is parsed, each fibre as wide as the mesh will draw it. The mesh takes
   over once it is built: about half a second for a cortical cell, a few seconds for a whole-brain projection neuron.
+- The Traced skeleton is the file as written, to check the mesh against: a neurite on the soma starts at the soma
+  point the file links it to, which on a soma of several points can lie at its edge. The Processed skeleton is what
+  the mesh is built from, necks included (`meshedSections` in [engine/mesher.ts](engine/mesher.ts)).
 - Where a neurite runs alone, its surface is swept as a tube. Around branch points, the soma and places where
   fibres touch, a voxel field is meshed instead, and the two are joined by collars.
 - The voxel work runs on the GPU (WebGPU) where the browser has it, and on the CPU otherwise.

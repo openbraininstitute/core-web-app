@@ -167,7 +167,7 @@ export function countPoints(sections: Section[]): number {
  * the mesh, `radii` adds the radius at either end of each, and `soma` comes first as a segment of no length.
  */
 export function sectionSegments(
-  sections: Section[],
+  sections: Pick<Section, 'type' | 'points'>[],
   center: [number, number, number],
   {
     radii: withRadii = false,
