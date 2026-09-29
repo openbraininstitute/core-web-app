@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
 
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import { type Axis, gizmoTips, type Sign } from '../engine/gizmo';
@@ -55,40 +54,28 @@ export function AxesGizmo({ viewer }: { viewer: Viewer }) {
         const { name, color, shade, ink } = AXES[axis];
         const label = `View from ${sign > 0 ? '+' : '−'}${name}`;
         return (
-          <Tooltip key={label}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                aria-label={label}
-                ref={(button) => {
-                  buttons.current[tipIndex(axis, sign)] = button;
-                }}
-                onClick={() => viewer.viewAlong(axis, sign)}
-                style={
-                  sign > 0
-                    ? { background: color, color: ink }
-                    : { background: shade, borderColor: color }
-                }
-                className={cn(
-                  'pointer-events-auto absolute top-0 left-0 flex size-[18px] items-center justify-center rounded-full',
-                  'text-[11px] leading-none font-bold select-none hover:brightness-125 focus-visible:outline-none',
-                  'hover:ring-2 hover:ring-white/80 focus-visible:ring-2 focus-visible:ring-white/80',
-                  sign < 0 && 'border-2'
-                )}
-              >
-                {sign > 0 && name}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent
-              align="center"
-              side="top"
-              sideOffset={2}
-              arrowClassName="bg-gray-200"
-              className="text-primary-9 bg-gray-200"
-            >
-              {label}
-            </TooltipContent>
-          </Tooltip>
+          <button
+            key={label}
+            type="button"
+            aria-label={label}
+            ref={(button) => {
+              buttons.current[tipIndex(axis, sign)] = button;
+            }}
+            onClick={() => viewer.viewAlong(axis, sign)}
+            style={
+              sign > 0
+                ? { background: color, color: ink }
+                : { background: shade, borderColor: color }
+            }
+            className={cn(
+              'pointer-events-auto absolute top-0 left-0 flex size-[18px] items-center justify-center rounded-full',
+              'text-[11px] leading-none font-bold select-none hover:brightness-125 focus-visible:outline-none',
+              'hover:ring-2 hover:ring-white/80 focus-visible:ring-2 focus-visible:ring-white/80',
+              sign < 0 && 'border-2'
+            )}
+          >
+            {sign > 0 && name}
+          </button>
         );
       })}
     </div>
