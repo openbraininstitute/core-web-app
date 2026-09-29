@@ -114,6 +114,13 @@ const NEURITE_PROBE_LIMIT = 256;
  */
 const NEURITE_PROBE_CELL_LIMIT = 8;
 
+/** Where a synapse sits, in order of preference: on the neurite surface, else on its axis. */
+const POSITION_PREFIXES = ['afferent_surface', 'afferent_center'] as const;
+
+function positionAxes(prefix: (typeof POSITION_PREFIXES)[number]) {
+  return [`0/${prefix}_x`, `0/${prefix}_y`, `0/${prefix}_z`];
+}
+
 /**
  * Retrieve afferent synapses from the circuit's edge files, one entry per edge
  * population, each holding a flat `[x, y, z, ...]` array of world coordinates.
@@ -172,30 +179,32 @@ async function readPopulation(
 ): Promise<AfferentSynapseGroup[]> {
   const { report } = input;
   report.logTask(`Reading afferent synapse positions for population "${populationName}"...`);
+  const has = (name: string) => hasDataset(edgesFile, `edges/${populationName}/${name}`);
+  // Surface first; the centre when that is all a circuit states (Build Synaptome
+  // writes `afferent_center_*` alone). Both are world coordinates per SONATA.
+  const prefix = POSITION_PREFIXES.find((p) => positionAxes(p).every(has)) ?? 'afferent_surface';
+  const onAxis = prefix === 'afferent_center';
   // Every dataset this function goes on to read, not just the first: a population
   // carrying `afferent_surface_x` and no `y` is one this cannot draw, and saying
   // which is missing beats `getNumberArray` throwing three lines later.
   // `target_node_id`, unlike the `afferent_*` ones, is not nested under `0/`.
-  const required = [
-    '0/afferent_surface_x',
-    '0/afferent_surface_y',
-    '0/afferent_surface_z',
-    '0/afferent_section_id',
-    'target_node_id',
-  ];
-  const missing = required.filter(
-    (name) => !hasDataset(edgesFile, `edges/${populationName}/${name}`)
-  );
+  const required = [...positionAxes(prefix), '0/afferent_section_id', 'target_node_id'];
+  const missing = required.filter((name) => !has(name));
   if (missing.length > 0) {
     report.logTask(
-      `Population "${populationName}" has no afferent surfaces: ${missing.join(', ')}`
+      `Population "${populationName}" has no usable afferent positions (nor a complete ` +
+        `afferent_center_*): ${missing.join(', ')}`
     );
     return [];
   }
+  if (onAxis) {
+    report.logTask(
+      `Population "${populationName}" has no afferent_surface_*; ` +
+        'using afferent_center_* pushed onto the drawn surface.'
+    );
+  }
   const ds = (name: string) => getNumberArray(report, edgesFile, `edges/${populationName}/${name}`);
-  const arrXs = ds('0/afferent_surface_x');
-  const arrYs = ds('0/afferent_surface_y');
-  const arrZs = ds('0/afferent_surface_z');
+  const [arrXs, arrYs, arrZs] = positionAxes(prefix).map(ds);
   const arrSectionId = ds('0/afferent_section_id');
   const arrTarget = ds('target_node_id');
 
@@ -210,6 +219,7 @@ async function readPopulation(
   // and "projection ran against the wrong shape".
   let worstResidual = 0;
   let rescued = 0;
+  let pushed = 0;
   for (let i = 0; i < arrXs.length; i++) {
     const surface: Vec3 = [arrXs[i], arrYs[i], arrZs[i]];
     const isSoma = isSomaSection(arrSectionId[i]);
@@ -221,6 +231,15 @@ async function readPopulation(
       point = projectOntoSurface(surface, sdf);
       projected++;
       worstResidual = Math.max(worstResidual, Math.abs(sdf(point).distance));
+    } else if (onAxis && cell?.whole) {
+      // A centre sits on the branch axis, inside the tube, so its marker hides on
+      // any branch thicker than it. The finite check is a last guard: a NaN in
+      // the buffer would lose the marker, where the centre at least draws it.
+      const onSurface = projectOntoSurface(surface, cell.whole);
+      if (onSurface.every(Number.isFinite)) {
+        point = onSurface;
+        pushed++;
+      }
     } else if (cell?.whole && cell.somaEnvelope) {
       const rescue = rescueOffSurface(
         surface,
@@ -242,6 +261,7 @@ async function readPopulation(
       `${somaTotal} on a soma, ${projected} projected` +
       (projected > 0 ? `, worst residual ${worstResidual.toFixed(3)}µm` : '') +
       (rescued > 0 ? `, ${rescued} rescued off the surface near a soma` : '') +
+      (pushed > 0 ? `, ${pushed} pushed from the centre onto the surface` : '') +
       '.'
   );
   // Diagnostic only, and up to `NEURITE_PROBE_LIMIT` SDF queries that each walk

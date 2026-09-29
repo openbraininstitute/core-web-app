@@ -108,6 +108,29 @@ describe('sdfCapsuleWithNormal', () => {
     expect(normal[1]).toBeCloseTo(1, 5);
   });
 
+  it('picks a unit normal off the axis for a point exactly on it', () => {
+    const { distance, normal } = sdfCapsuleWithNormal([0, 0, 0], [-5, 0, 0], [5, 0, 0], 2, 2);
+    expect(distance).toBeCloseTo(-2, 5);
+    expect(length(normal)).toBeCloseTo(1, 5);
+    expect(normal[0]).toBeCloseTo(0, 5);
+  });
+
+  it('keeps a tapering cone unit-normal near its axis, so projection lands on it', () => {
+    const a: Vec3 = [-5, 0, 0];
+    const b: Vec3 = [5, 0, 0];
+    for (const offset of [1, 0.1, 1e-3, 1e-6]) {
+      const p: Vec3 = [0, offset, 0];
+      const { distance, normal } = sdfCapsuleWithNormal(p, a, b, 3, 1);
+      expect(length(normal)).toBeCloseTo(1, 5);
+      const landed: Vec3 = [
+        p[0] - normal[0] * distance,
+        p[1] - normal[1] * distance,
+        p[2] - normal[2] * distance,
+      ];
+      expect(sdfCapsuleWithNormal(landed, a, b, 3, 1).distance).toBeCloseTo(0, 5);
+    }
+  });
+
   it('measures from the cap once past the end of the axis', () => {
     // 3 beyond the +X cap centre, minus the radius.
     const { distance } = sdfCapsuleWithNormal([8, 0, 0], [-5, 0, 0], [5, 0, 0], 2, 2);
