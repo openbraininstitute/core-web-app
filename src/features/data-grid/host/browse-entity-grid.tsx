@@ -233,19 +233,38 @@ export function EntityDataGrid({
   const selectionType = mainTableProps?.selectionType;
   const onRowsSelected = mainTableProps?.onRowsSelected;
   const controlledSelectedRows = mainTableProps?.selectedRows;
+  const pickerIsRowSelectable = mainTableProps?.isRowSelectable;
+  const pickerHideSelectAll = mainTableProps?.hideSelectAll;
   const selectionScope = mainTableProps?.selectionScope ?? SelectionScope.Shared;
   const applyLifecycleGating = isWorkflowPickerSection(section);
   const pickerSelection = useMemo<
     IDataGridSelection<EntityCoreIdentifiableNamed> | undefined
   >(() => {
     if (!selectionType || !onRowsSelected) return undefined;
+    // compose the caller's cap predicate with the workflow lifecycle gate: a row is selectable
+    // only when both allow it. Rows here always carry `lifecycle_status`, so the gate reads it
+    // directly off the row.
+    const composedIsRowSelectable =
+      applyLifecycleGating || pickerIsRowSelectable
+        ? (row: EntityCoreIdentifiableNamed) =>
+            (!applyLifecycleGating || isEntitySelectableForWorkflow(row)) &&
+            (!pickerIsRowSelectable || pickerIsRowSelectable(row))
+        : undefined;
     return {
       mode: selectionType === 'radio' ? SelectionMode.Single : SelectionMode.Multi,
       selectedRows: controlledSelectedRows,
       onChange: onRowsSelected,
-      isRowSelectable: applyLifecycleGating ? isEntitySelectableForWorkflow : undefined,
+      isRowSelectable: composedIsRowSelectable,
+      headerCheckbox: pickerHideSelectAll ? false : undefined,
     };
-  }, [selectionType, onRowsSelected, controlledSelectedRows, applyLifecycleGating]);
+  }, [
+    selectionType,
+    onRowsSelected,
+    controlledSelectedRows,
+    applyLifecycleGating,
+    pickerIsRowSelectable,
+    pickerHideSelectAll,
+  ]);
 
   const composedGetRowClass = useCallback(
     (row: EntityCoreIdentifiableNamed) => {

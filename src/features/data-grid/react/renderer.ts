@@ -84,6 +84,8 @@ export interface IGridRendererProps<Row> {
   getRowTestId?: (row: Row) => string;
   /** when false, the row's checkbox/radio is disabled and cannot be picked. */
   isRowSelectable?: (row: Row) => boolean;
+  /** overrides the schema's header select-all checkbox for this render (multi-select only). */
+  headerCheckbox?: boolean;
   /** optional placement of the expand control (default: fixed leading column) */
   expandColumn?: IExpandColumnConfig;
   /** noun shown in the loading overlay as `loading {label}` (default: `entities`) */

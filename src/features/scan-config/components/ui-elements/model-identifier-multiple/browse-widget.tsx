@@ -67,6 +67,8 @@ type TProps = {
   disabled?: boolean;
   /** FromID type stamped on confirmed rows when no binding/registry mapping resolves one */
   fallbackFromIdType?: string;
+  /** optional cap on the number of entities the user may confirm (flat fields only) */
+  maxSelections?: number;
   onConfirm: (refs: TFromIdRef[], groupName?: string) => void;
   onCancel: () => void;
 };
@@ -111,6 +113,7 @@ export function ModelIdentifierBrowseWidget({
   prerequisites,
   disabled,
   fallbackFromIdType,
+  maxSelections,
   onConfirm,
   onCancel,
 }: TProps) {
@@ -150,6 +153,23 @@ export function ModelIdentifierBrowseWidget({
   const activeInput = mergedInputs.find((input) => input.type === activeEntityType);
   const activeSelectedRows = activeEntityType ? (selectionsByType[activeEntityType] ?? []) : [];
   const selectedCount = countSelectedEntities(selectionsByType);
+
+  // when a cap is set, block picking beyond it at the checkbox level
+  // and hide select-all so it can't overshoot. Already-selected rows stay selectable
+  // so they can be unpicked.
+  const capReached = typeof maxSelections === 'number' && selectedCount >= maxSelections;
+  const isRowSelectable = useCallback(
+    (row: EntityCoreIdentifiableNamed) => {
+      if (typeof maxSelections !== 'number' || !activeEntityType) {
+        return true;
+      }
+      const alreadySelected = (selectionsByType[activeEntityType] ?? []).some(
+        (r) => r.id === row.id
+      );
+      return alreadySelected || selectedCount < maxSelections;
+    },
+    [activeEntityType, maxSelections, selectedCount, selectionsByType]
+  );
 
   // custom loader = same dataset-scoped query the /new page used (e.g. EM cell morphologies
   // derived from the chosen reconstruction dataset). when present we replace the base-entity
@@ -220,10 +240,22 @@ export function ModelIdentifierBrowseWidget({
           return { [activeEntityType]: rows.slice(-1) };
         }
 
+        // when a cap is set, keep the total across all types at or below it: trim the
+        // active tab's rows to the budget left by the other tabs, preferring the newest picks
+        if (typeof maxSelections === 'number') {
+          const otherCount = Object.entries(previous).reduce(
+            (sum, [type, typeRows]) =>
+              type === activeEntityType ? sum : sum + (typeRows?.length ?? 0),
+            0
+          );
+          const budget = Math.max(0, maxSelections - otherCount);
+          return { ...previous, [activeEntityType]: rows.slice(0, budget) };
+        }
+
         return { ...previous, [activeEntityType]: rows };
       });
     },
-    [activeEntityType, isSingleSelect]
+    [activeEntityType, isSingleSelect, maxSelections]
   );
 
   const handleRemoveEntity = useCallback(
@@ -277,6 +309,8 @@ export function ModelIdentifierBrowseWidget({
           onConfirm={handleConfirm}
           onCancel={onCancel}
           className="h-full"
+          maxSelections={maxSelections}
+          capReached={capReached}
         />
       ) : null}
 
@@ -304,6 +338,8 @@ export function ModelIdentifierBrowseWidget({
               selectionType: isSingleSelect ? 'radio' : 'checkbox',
               selectedRows: activeSelectedRows,
               onRowsSelected: handleRowsSelected,
+              isRowSelectable: isSingleSelect ? undefined : isRowSelectable,
+              hideSelectAll: typeof maxSelections === 'number',
             }}
             requireEntityTypeSelector={{
               options: entityTypeSelectorOptions,
@@ -348,7 +384,11 @@ export function ModelIdentifierBrowseWidget({
                 />
               ) : (
                 <span className="min-w-0 truncate text-sm text-gray-500">
-                  {isSingleSelect ? 'Select a row to continue' : `${selectedCount} selected`}
+                  {isSingleSelect
+                    ? 'Select a row to continue'
+                    : typeof maxSelections === 'number'
+                      ? `${selectedCount} / ${maxSelections} selected (max ${maxSelections} allowed)`
+                      : `${selectedCount} selected`}
                 </span>
               )}
             </div>

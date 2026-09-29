@@ -14,6 +14,7 @@ import {
   collectWorkflowSessionRefs,
   getAllRefsFromParsed,
   parseModelIdentifierFieldValue,
+  readFieldMaxItems,
   resolveEntityFetchTarget,
   serializeModelIdentifierFieldValue,
 } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
@@ -22,7 +23,9 @@ import { useResolvedModelIdentifierEntities } from '@/features/scan-config/compo
 import {
   type ConfigValue,
   ScanConfigUIElementDict,
+  type TModelIdentifierGrouped,
   type TModelIdentifierMultiple,
+  type TScanConfigUIElementDict,
 } from '@/features/scan-config/types';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -36,7 +39,7 @@ type Props = {
   value: ConfigValue;
   state: Record<string, ConfigValue>;
   setState: (nextState: Record<string, ConfigValue>) => void;
-  paramSchema: TModelIdentifierMultiple;
+  paramSchema: TModelIdentifierMultiple | TModelIdentifierGrouped;
   disabled?: boolean;
   /** root-element-scoped path (e.g. `initialize/neurons`) for left-menu field-error matching */
   errorPathPrefix?: string;
@@ -46,6 +49,10 @@ type Props = {
   visibleItemCount?: number;
   /** replaces the default "Add <entity> to scan" label of the add button (flat lists only) */
   addLabel?: string;
+  /** optional cap on the number of entities the user may select (flat fields only) */
+  maxSelections?: number;
+  /** value stamped on the container's `data-scan-config-block-element` (the mapped ui_element) */
+  blockElement: TScanConfigUIElementDict;
 };
 
 function updateParsedValue(
@@ -55,7 +62,13 @@ function updateParsedValue(
   return serializeModelIdentifierFieldValue(updater(parsed));
 }
 
-export function ModelIdentifierMultiple({
+/**
+ * shared field implementation behind both the flat (`model_identifier_multiple`) and grouped
+ * (`model_identifier_grouped`) ui_elements. The two ui_elements map to distinct outer components
+ * ({@link ModelIdentifierMultiple} / {@link ModelIdentifierGrouped}) that render this with the
+ * right options; the grouped vs flat rendering itself is driven by `parsedValue.storageMode`.
+ */
+function ModelIdentifierField({
   fieldKey,
   value,
   state,
@@ -66,6 +79,8 @@ export function ModelIdentifierMultiple({
   className,
   visibleItemCount,
   addLabel,
+  maxSelections,
+  blockElement,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const workflowField = useScanConfigWorkflowEditorField();
@@ -307,6 +322,7 @@ export function ModelIdentifierMultiple({
           disabled={disabled}
           onConfirm={(refs, groupName) => handleBrowseConfirm(refs, groupName, groupIndex)}
           onCancel={() => handleBrowseCancel(groupIndex)}
+          maxSelections={maxSelections}
         />
       );
     },
@@ -322,13 +338,14 @@ export function ModelIdentifierMultiple({
       projectId,
       sessionRefs,
       virtualLabId,
+      maxSelections,
     ]
   );
 
   return (
     <div
       className={cn('w-full max-w-full min-w-0 overflow-hidden', className)}
-      data-scan-config-block-element={ScanConfigUIElementDict.ModelIdentifierMultiple}
+      data-scan-config-block-element={blockElement}
     >
       <ModelIdentifierSummaryView
         parsedValue={parsedValue}
@@ -351,5 +368,39 @@ export function ModelIdentifierMultiple({
         addLabel={addLabel}
       />
     </div>
+  );
+}
+
+/** Props for the two public outer components (they never set the internal-only fields). */
+type OuterProps = Omit<Props, 'maxSelections' | 'blockElement' | 'paramSchema'>;
+
+/**
+ * `model_identifier_multiple`: flat multi-select (case B list / case C tuple). Honors the
+ * field's `maxItems` cap when present.
+ */
+export function ModelIdentifierMultiple(
+  props: OuterProps & { paramSchema: TModelIdentifierMultiple }
+) {
+  const maxSelections = readFieldMaxItems(props.paramSchema as unknown as Record<string, unknown>);
+  return (
+    <ModelIdentifierField
+      {...props}
+      maxSelections={maxSelections}
+      blockElement={ScanConfigUIElementDict.ModelIdentifierMultiple}
+    />
+  );
+}
+
+/**
+ * `model_identifier_grouped`: case D, named sets (NamedTuple groups). No selection cap for now.
+ */
+export function ModelIdentifierGrouped(
+  props: OuterProps & { paramSchema: TModelIdentifierGrouped }
+) {
+  return (
+    <ModelIdentifierField
+      {...props}
+      blockElement={ScanConfigUIElementDict.ModelIdentifierGrouped}
+    />
   );
 }

@@ -263,6 +263,13 @@ export function countSelectedEntities(
 }
 
 /**
+ * reads the `maxItems` cap off a flat `model_identifier_multiple` field schema, if any.
+ */
+export function readFieldMaxItems(paramSchema: Record<string, unknown>): number | undefined {
+  return typeof paramSchema.maxItems === 'number' ? paramSchema.maxItems : undefined;
+}
+
+/**
  * extracts flat session refs from workflow browse session payload
  *
  * @param sessionSelection - payload from `sessionStorage` (single / list / grouped)

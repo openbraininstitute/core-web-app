@@ -34,6 +34,10 @@ type Props = {
   onConfirm: () => void;
   onCancel: () => void;
   className?: string;
+  /** optional selection cap; shows an `n / max` hint above the confirm action */
+  maxSelections?: number;
+  /** whether the selection cap has been reached; emphasizes the hint */
+  capReached?: boolean;
 };
 
 /**
@@ -53,6 +57,8 @@ export function ModelIdentifierSelectionCart({
   onConfirm,
   onCancel,
   className,
+  maxSelections,
+  capReached,
 }: Props) {
   const instanceId = useId();
   const selectedCount = countSelectedEntities(selectionsByType);
@@ -114,6 +120,16 @@ export function ModelIdentifierSelectionCart({
       </div>
 
       <div className="mt-auto w-full min-w-0 px-2">
+        {typeof maxSelections === 'number' ? (
+          <p
+            className={cn(
+              'pb-2 text-center text-sm tabular-nums',
+              capReached ? 'font-medium text-amber-600' : 'text-gray-500'
+            )}
+          >
+            {selectedCount} / {maxSelections} selected (max {maxSelections} allowed)
+          </p>
+        ) : null}
         <SelectionConfirmActions
           selectedCount={selectedCount}
           disabled={disabled}
