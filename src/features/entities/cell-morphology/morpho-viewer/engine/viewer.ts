@@ -31,6 +31,7 @@ import {
   showTypeTint,
   withDisplacement,
 } from './looks';
+import { followScreenUp, stopGlide } from './rotation';
 import { overlayMaterial, skeletonStyle, standInMaterial } from './skeleton-lines';
 
 import type { LineMaterial } from 'three/addons/lines/LineMaterial.js';
@@ -187,6 +188,7 @@ export class Viewer {
     // Wheel and pointer handlers apply their change inside OrbitControls itself, so the per-frame
     // update() alone would miss them; the change event catches every path.
     this.controls.addEventListener('change', this.onControlsChange);
+    this.controls.addEventListener('end', this.onControlsEnd);
     // Before OrbitControls sees it: outside fullscreen a plain wheel scrolls the page.
     container.addEventListener('wheel', this.onWheel, { capture: true });
 
@@ -224,6 +226,7 @@ export class Viewer {
     this.resizeObserver.disconnect();
     this.container.removeEventListener('wheel', this.onWheel, { capture: true });
     this.controls.removeEventListener('change', this.onControlsChange);
+    this.controls.removeEventListener('end', this.onControlsEnd);
     this.controls.dispose();
     this.clearMesh();
     for (const kind of Object.keys(this.skeletons) as SkeletonKind[])
@@ -280,9 +283,13 @@ export class Viewer {
   }
 
   private onControlsChange = (): void => {
+    followScreenUp(this.controls);
     this.invalidate();
     this.updatePixelScale();
   };
+
+  // A spin held off by a still pointer can have let the loop stop by the time the pointer is let go.
+  private onControlsEnd = (): void => this.invalidate();
 
   private onWheel = (e: WheelEvent): void => {
     if (e.ctrlKey || document.fullscreenElement?.contains(this.container)) return;
@@ -838,6 +845,7 @@ export class Viewer {
       camera.position.set(0, 0, Math.max(distanceFor(half, FOV), r * 1.05));
     }
     camera.up.set(0, 1, 0);
+    stopGlide(this.controls);
     this.controls.target.set(0, 0, 0);
     this.controls.update();
     this.invalidate();

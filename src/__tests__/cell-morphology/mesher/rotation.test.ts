@@ -1,0 +1,105 @@
+// @vitest-environment node
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { describe, expect, it } from 'vitest';
+
+import {
+  followScreenUp,
+  stopGlide,
+} from '@/features/entities/cell-morphology/morpho-viewer/engine/rotation';
+
+const target = new THREE.Vector3(10, 20, 30);
+
+/** Controls wired as the viewer wires them, eased, the camera 100 µm in front of the target and upright. */
+function orbit(): OrbitControls {
+  const camera = new THREE.PerspectiveCamera();
+  camera.position.copy(target).add(new THREE.Vector3(0, 0, 100));
+  const controls = new OrbitControls(camera);
+  controls.enableDamping = true;
+  controls.target.copy(target);
+  controls.addEventListener('change', () => followScreenUp(controls));
+  controls.update();
+  return controls;
+}
+
+/** The frames that ease out what the gestures asked for. */
+function settle(controls: OrbitControls): void {
+  for (let i = 0; i < 400; i++) controls.update();
+}
+
+/** A drag down `angle` radians long, in the small steps a pointer moves by. */
+function dragDown(controls: OrbitControls, angle: number): void {
+  for (let i = 0; i < 12; i++) controls.rotateUp(angle / 12);
+  settle(controls);
+}
+
+const screenUp = (c: THREE.Camera) => new THREE.Vector3(0, 1, 0).applyQuaternion(c.quaternion);
+const screenRight = (c: THREE.Camera) => new THREE.Vector3(1, 0, 0).applyQuaternion(c.quaternion);
+const from = (c: THREE.Camera) => c.position.clone().sub(target).divideScalar(100);
+
+function expectClose(a: THREE.Vector3, b: THREE.Vector3): void {
+  expect(a.distanceTo(b)).toBeLessThan(1e-6);
+}
+
+describe('rotation', () => {
+  it("turns about the screen's vertical on a sideways drag, from above, below and in between", () => {
+    for (const down of [Math.PI / 2, -Math.PI / 2, Math.PI / 5]) {
+      const controls = orbit();
+      const camera = controls.object;
+      dragDown(controls, down);
+      const up = screenUp(camera),
+        right = screenRight(camera),
+        start = from(camera);
+      controls.rotateLeft(0.3);
+      settle(controls);
+      expectClose(screenUp(camera), up);
+      // The camera goes left, so the cell turns right with the pointer.
+      expect(from(camera).sub(start).dot(right)).toBeLessThan(-0.1);
+      expect(camera.position.distanceTo(target)).toBeCloseTo(100, 6);
+      expectClose(camera.getWorldDirection(new THREE.Vector3()), from(camera).negate());
+    }
+  });
+
+  it('goes on over the top on a drag down, without stopping at the pole', () => {
+    const controls = orbit();
+    dragDown(controls, Math.PI / 2);
+    expectClose(from(controls.object), new THREE.Vector3(0, 1, 0));
+    dragDown(controls, Math.PI);
+    expectClose(from(controls.object), new THREE.Vector3(0, -1, 0));
+    expectClose(screenRight(controls.object), new THREE.Vector3(1, 0, 0));
+  });
+
+  it("spins about the screen's vertical, seen from above too", () => {
+    const controls = orbit();
+    const camera = controls.object;
+    dragDown(controls, Math.PI / 2);
+    const up = screenUp(camera);
+    controls.autoRotate = true;
+    for (let i = 0; i < 60; i++) controls.update();
+    expectClose(screenUp(camera), up);
+    expect(Math.abs(from(camera).y)).toBeLessThan(0.99);
+  });
+
+  it('stops the easing of a turn, so a view set meanwhile stays put', () => {
+    const controls = orbit();
+    const camera = controls.object;
+    controls.rotateLeft(0.5);
+    controls.rotateUp(0.5);
+    stopGlide(controls);
+    const position = camera.position.clone(),
+      quaternion = camera.quaternion.clone();
+    settle(controls);
+    expectClose(camera.position, position);
+    expect(camera.quaternion.angleTo(quaternion)).toBeLessThan(1e-6);
+  });
+
+  it('leaves a three without these fields to its plain turntable', () => {
+    const camera = new THREE.PerspectiveCamera();
+    camera.up.set(0, 1, 0);
+    camera.lookAt(0, -1, -1);
+    const controls = { object: camera } as unknown as OrbitControls;
+    expect(() => followScreenUp(controls)).not.toThrow();
+    expect(() => stopGlide(controls)).not.toThrow();
+    expectClose(camera.up, new THREE.Vector3(0, 1, 0));
+  });
+});
