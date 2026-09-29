@@ -32,8 +32,10 @@ export const SECTION_TYPE_COLORS = {
  * categorical palette so the same type reads the same in every circuit.
  */
 export const SYNAPSE_TYPE_COLORS = {
-  excitatory: '#cc3311',
-  inhibitory: '#009e73',
+  excitatory: '#e69f00', // Okabe–Ito orange, CATEGORICAL_PALETTE slot 1
+  // Sky blue rather than slot 0's blue, which sits too close to the
+  // DEFAULT_NEURON_COLOR the synapses are drawn on.
+  inhibitory: '#56b4e9', // Okabe–Ito sky blue, CATEGORICAL_PALETTE slot 5
 } as const;
 
 /**
@@ -59,11 +61,12 @@ export const CATEGORICAL_PALETTE: readonly string[] = [
 /**
  * Categorical slots an untyped synapse group may not take: slot 0 is the blue
  * DEFAULT_NEURON_COLOR wears and synapses sit on the morphology wearing it,
- * slot 2 IS {@link SYNAPSE_TYPE_COLORS}.inhibitory, and slot 4's vermillion is
- * a shade off its excitatory. Landing on one would call an untyped synapse a
- * type it never stated.
+ * slots 1 and 5 ARE {@link SYNAPSE_TYPE_COLORS}.excitatory and .inhibitory,
+ * slot 4's vermillion is a shade off the excitatory orange, and slot 9's cyan
+ * a shade off the inhibitory sky blue. Landing on one would call an untyped
+ * synapse a type it never stated.
  */
-const SYNAPSE_TYPE_RESERVED_SLOTS = new Set([0, 2, 4]);
+const SYNAPSE_TYPE_RESERVED_SLOTS = new Set([0, 1, 4, 5, 9]);
 
 /** The slots left, so the palette is the source of what is free rather than a second list. */
 const UNTYPED_SYNAPSE_SLOTS = CATEGORICAL_PALETTE.map((_, slot) => slot).filter(
