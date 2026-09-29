@@ -53,7 +53,7 @@ const DEFAULT_SETTINGS: ViewerSettings = {
   look: DEFAULT_LOOK,
   typeTint: false,
   ao: false,
-  bumps: false,
+  bumps: true,
   bump: DEFAULT_BUMPS,
   minWidth: MIN_WIDTH.initial,
   showMesh: true,

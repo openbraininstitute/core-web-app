@@ -80,7 +80,6 @@ export function buildParams(b: BuildSettings, includeTypes: number[]): HybridPar
   };
 }
 
-/** What the bumps take when they are turned on by hand. */
-export const DEFAULT_BUMPS: BumpParams = { amplitude: 0.06, scale: 1.5, smoothness: 0.5 };
+export const DEFAULT_BUMPS: BumpParams = { amplitude: 0.08, scale: 2.1, smoothness: 0.8 };
 
 export const MIN_WIDTH = { min: 0, max: 4, step: 0.5, initial: 1 };

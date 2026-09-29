@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { type ComponentType, lazy, Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { DEFAULT_BUMPS } from '@/features/entities/cell-morphology/morpho-viewer/constants';
 import { HELP } from '@/features/entities/cell-morphology/morpho-viewer/help/help-text';
 import { MorphoViewer } from '@/features/entities/cell-morphology/morpho-viewer/morpho-viewer';
 import { defaultFlags } from '@/features/feature-flags/config';
@@ -435,12 +436,13 @@ describe('MorphoViewer', () => {
   it('puts the bumps and the AO back as they were when leaving a look that brought its own', async () => {
     const { viewer } = await renderViewer();
 
+    expect(viewer.setBumps).toHaveBeenLastCalledWith(DEFAULT_BUMPS);
     await chooseLook('EM segmentation');
     await chooseLook('Studio');
     expect(viewer.setAO).toHaveBeenLastCalledWith(false);
-    expect(viewer.setBumps).toHaveBeenLastCalledWith({ amplitude: 0, scale: 1.5, smoothness: 0.5 });
+    expect(viewer.setBumps).toHaveBeenLastCalledWith(DEFAULT_BUMPS);
 
-    // Bumps turned on by hand before stay on, in their own shape.
+    // Bumps turned off by hand before stay off.
     await openSettings();
     fireEvent.click(screen.getByRole('switch', { name: 'Bumps' }));
     fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
@@ -448,11 +450,7 @@ describe('MorphoViewer', () => {
     await chooseLook('EM segmentation');
     expect(viewer.setBumps).toHaveBeenLastCalledWith({ amplitude: 0.1, scale: 2, smoothness: 0.3 });
     await chooseLook('Studio');
-    expect(viewer.setBumps).toHaveBeenLastCalledWith({
-      amplitude: 0.06,
-      scale: 1.5,
-      smoothness: 0.5,
-    });
+    expect(viewer.setBumps).toHaveBeenLastCalledWith({ ...DEFAULT_BUMPS, amplitude: 0 });
     expect(viewer.setAO).toHaveBeenLastCalledWith(false);
   });
 
@@ -824,6 +822,7 @@ describe('MorphoViewer', () => {
     await renderViewer();
     await openSettings();
     expect(screen.queryByText('Bump height')).toBeNull();
+    fireEvent.click(screen.getByRole('switch', { name: 'Bumps' }));
     fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
     await waitFor(() => expect(screen.queryByRole('switch', { name: 'Mesh' })).toBeNull());
 
