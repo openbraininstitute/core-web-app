@@ -2,7 +2,7 @@
 
 import { keepPreviousData, type UseQueryResult, useQueries, useQuery } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { getSimulatableExtracellularRecordingArray } from '@/api/entitycore/queries/model/simulatable-extracellular-recording-array';
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -26,6 +26,7 @@ import {
   referencedArrayOverlays,
   selectReferencedArrayRefs,
 } from '@/features/scan-config/components/model-preview/referenced-arrays';
+import { useDebouncedValue } from '@/hooks/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type {
@@ -70,21 +71,6 @@ export interface IElectrodeOverlays extends IElectrodeOverlaySource {
 }
 
 type TArraySummaryResult = UseQueryResult<TElectrodeLocationsDictionarySummary, Error>;
-
-/**
- * Debounces a value, coalescing rapid origin/rotation edits into one request.
- *
- * @param value - Value to debounce
- * @param delayMs - Quiet period before the value is published
- */
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = window.setTimeout(() => setDebounced(value), delayMs);
-    return () => window.clearTimeout(id);
-  }, [value, delayMs]);
-  return debounced;
-}
 
 /**
  * Builds the key of {@link IElectrodeOverlays.overlayIdByBlockPath}.

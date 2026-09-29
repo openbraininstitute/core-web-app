@@ -32,34 +32,27 @@ describe('SynapseLegend', () => {
     ]);
   });
 
-  it('takes the corner unless the host draws controls there', () => {
-    const { rerender } = render(<SynapseLegend groups={[group('Excitatory', '#cc3311')]} />);
-
-    expect(screen.getByRole('complementary').className).toContain('top-3');
-
-    rerender(<SynapseLegend belowChrome groups={[group('Excitatory', '#cc3311')]} />);
-
-    expect(screen.getByRole('complementary').className).toContain('top-14');
-  });
-
   it('draws nothing when the scene has no synapses', () => {
     render(<SynapseLegend groups={[]} />);
 
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 
-  it('collapses to its icon and comes back', () => {
+  it('collapses to its pill and comes back', () => {
     render(<SynapseLegend groups={[group('Excitatory', '#cc3311')]} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse synapse colours' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Synapses' }));
 
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Synapses' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
 
-    // Reversible, unlike the close button it replaced: hiding a type is only
-    // undoable from the legend.
-    fireEvent.click(screen.getByRole('button', { name: 'Show synapses' }));
+    // Reversible, unlike a close button: hiding a type is only undoable from the legend.
+    fireEvent.click(screen.getByRole('button', { name: 'Synapses' }));
 
-    expect(screen.getByRole('complementary')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
   });
 
   it('shows every group by default and reports each toggle by label', () => {

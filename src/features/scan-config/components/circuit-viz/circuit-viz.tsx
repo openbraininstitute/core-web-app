@@ -2,14 +2,23 @@ import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
+import { useMorphologyLocationPreviews } from '@/features/scan-config/components/hooks/use-morphology-location-previews';
 import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
+import {
+  EXPLICIT_BLOCK_TYPE,
+  MORPHOLOGY_LOCATIONS_CONFIG_KEY,
+  readEntry,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { MorphoViewerCircuitMultipleNeurons } from '@/morpho-viewer';
+import { cn } from '@/utils/css-class';
 
+import { GeneratedLocationsLegend } from './morphology-location/generated-legend';
 import { MorphologyLocationLabels } from './morphology-location/labels';
 import { MorphologyLocationPopover } from './morphology-location/popover';
+import { MorphologyLocationPreviewStatus } from './morphology-location/preview-status';
 import { sequentialCellLoader } from './sequential-loader';
 import {
   circuitDrawsSynapses,
@@ -23,6 +32,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -82,6 +92,8 @@ interface CircuitVizProps {
   scalebarColor?: string;
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
+  /** Background-derived chrome theme for the legends; null keeps the fixed light styling. */
+  theme?: ViewerTheme | null;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
   /**
@@ -128,7 +140,7 @@ interface CircuitVizProps {
   spikes?: ISpikeReplayBinding;
   /**
    * Whether the host draws its own controls in the viewer's top-right corner.
-   * The synapse legend sits below them when it does and takes the corner itself
+   * The legends sit below them when it does and take the corner themselves
    * when it does not.
    */
   chromeTopRight?: boolean;
@@ -178,6 +190,7 @@ export function CircuitVisualization({
   return (
     <CircuitVizView
       {...props}
+      entityId={props.circuit.id}
       source={source}
       onCellClick={onPopulationClick ? handleCellClick : undefined}
     />
@@ -198,6 +211,8 @@ type TCircuitVizViewProps = Omit<
   | 'nodeColors'
   | 'defaultColor'
 > & {
+  /** The circuit or MEModel on show, which generated morphology locations are previewed on. */
+  entityId: string;
   source: SmallCircuitSource;
   /** Whole-cell clicks, from the same pick pass as `cellHover`. */
   onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
@@ -208,6 +223,7 @@ function CircuitVizView({
   backgroundColor,
   scalebarColor,
   showScalebar = true,
+  theme,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -223,8 +239,33 @@ function CircuitVizView({
   spikes,
   chromeTopRight = false,
   onCellClick,
+  entityId,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
+  const locationPreviews = useMorphologyLocationPreviews({
+    config: morphologyLocations?.config,
+    entityId,
+    // The same single-morphology models the preview endpoint accepts.
+    enabled: Boolean(morphologyLocations?.supportsExplicitLocations),
+  });
+  const openLocationBlock =
+    morphologyLocations?.selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY
+      ? readEntry(morphologyLocations.config, morphologyLocations.selectedEntry)
+      : null;
+  // Blocks the legend is hiding, by entry. Only the markers go: the legend still lists them.
+  const [hiddenLocationBlocks, setHiddenLocationBlocks] =
+    useState<ReadonlySet<string>>(EMPTY_LABELS);
+  const toggleLocationBlock = useCallback(
+    (entry: string) => setHiddenLocationBlocks((current) => toggled(current, entry)),
+    []
+  );
+  const visibleGeneratedLocations = useMemo(
+    () =>
+      hiddenLocationBlocks.size === 0
+        ? locationPreviews.locations
+        : locationPreviews.locations.filter(({ entry }) => !hiddenLocationBlocks.has(entry)),
+    [locationPreviews.locations, hiddenLocationBlocks]
+  );
   const {
     selection: locationSelection,
     hover: locationHover,
@@ -235,6 +276,7 @@ function CircuitVizView({
     cells: source.locationCells ?? source.cells,
     sonataSectionIds: source.sonataSectionIds,
     backgroundColor,
+    generatedLocations: visibleGeneratedLocations,
   });
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
@@ -242,13 +284,10 @@ function CircuitVizView({
   // Labels the legend is hiding. Held here because the legend names them and
   // the viewer is handed what is left.
   const [hiddenSynapses, setHiddenSynapses] = useState<ReadonlySet<string>>(EMPTY_LABELS);
-  const toggleSynapseLabel = useCallback((label: string) => {
-    setHiddenSynapses((current) => {
-      const next = new Set(current);
-      if (!next.delete(label)) next.add(label);
-      return next;
-    });
-  }, []);
+  const toggleSynapseLabel = useCallback(
+    (label: string) => setHiddenSynapses((current) => toggled(current, label)),
+    []
+  );
   // Memoized because morphoviewer compares the array by identity and rebuilds
   // the whole point cloud when it changes.
   const visibleSynapses = useMemo(
@@ -404,14 +443,34 @@ function CircuitVizView({
           spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
         />
       )}
-      <SynapseLegend
-        groups={synapses}
-        belowChrome={chromeTopRight}
-        hidden={hiddenSynapses}
-        onToggle={toggleSynapseLabel}
-      />
+      {/* Below the host's own top-right controls when it draws any, in the corner otherwise. */}
+      <div
+        className={cn(
+          'pointer-events-none absolute right-3 z-10 flex flex-col items-stretch gap-2',
+          chromeTopRight ? 'top-14' : 'top-3'
+        )}
+      >
+        <SynapseLegend
+          groups={synapses}
+          hidden={hiddenSynapses}
+          onToggle={toggleSynapseLabel}
+          theme={theme}
+        />
+        <GeneratedLocationsLegend
+          locations={locationPreviews.locations}
+          hidden={hiddenLocationBlocks}
+          onToggle={toggleLocationBlock}
+          theme={theme}
+        />
+      </div>
       <MorphologyLocationLabels labels={locationLabels} />
       <MorphologyLocationPopover hover={locationHover} pickMode={locationPickMode} />
+      {openLocationBlock && openLocationBlock.type !== EXPLICIT_BLOCK_TYPE && (
+        <MorphologyLocationPreviewStatus
+          pending={locationPreviews.isPending}
+          error={locationPreviews.errors.get(morphologyLocations?.selectedEntry ?? '')}
+        />
+      )}
       {loading && (
         <VisualizationLoadingIndicator
           download={download}
@@ -442,12 +501,19 @@ function CircuitVizView({
   );
 }
 
-type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick'> & {
+/** `set` with `key` added, or taken out if it was already there. */
+function toggled(set: ReadonlySet<string>, key: string): ReadonlySet<string> {
+  const next = new Set(set);
+  if (!next.delete(key)) next.add(key);
+  return next;
+}
+
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick' | 'entityId'> & {
   memodelId: string;
 };
 
 /** A single MEModel on the small-circuit viewer, served from its cell morphology. */
 export function MemodelVisualization({ memodelId, ...props }: TMemodelVizProps) {
   const source = useMemodelVisualizationSource({ memodelId, showAxons: props.showAxons });
-  return <CircuitVizView {...props} source={source} />;
+  return <CircuitVizView {...props} entityId={memodelId} source={source} />;
 }
