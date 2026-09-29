@@ -22,7 +22,7 @@ Revised the same day (round 2): looks, help cards, stats, Comlink.
 | 7 | Thickness slider | Replaced by **Min. width** (the POC's width floor): 0–4 px, step 0.5, 0 = off, **default 1 px**. |
 | 8 | Color by Distance | Kept. A worker post-pass gives each vertex the path distance of its nearest skeleton point of the same type. The ColorRamp stays. |
 | 9 | Eye toggle (hide type) | **Rebuild** without that type (POC `includeTypes`). The previous mesh stays on screen with progress. Works in every look. |
-| 10 | Skeleton while building | The traced skeleton draws as soon as the SWC is parsed. When the first mesh lands, the Skeleton select takes over (default off). |
+| 10 | Skeleton while building | The traced skeleton draws as soon as the SWC is parsed, each fibre at its traced width with the min. width as its floor, as the mesh draws it. When the first mesh lands, the Skeleton select takes over (default off). |
 | 11 | Colours vs look | Each look declares whether the neurite colours apply (`palette`, `tint` or `own`). Where they don't, the swatches, Reset colors and Color by are **disabled, with the reason**; the eye toggles stay live. Where the look has its own colour code, the ramp is swapped for the **look's key** (Fluorescence, Depth-coded). |
 | 12 | Help cards | Every control gets a "?" card, built on the app's `Popover`/`Tooltip` molecules. The POC's texts are trimmed to the kept controls, and new texts cover the platform-only ones. |
 | 13 | Stats | At the **bottom** of the panel: morphology summary + mesh build stats + backend. One component, so a later feature flag can wrap it. |
