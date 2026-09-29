@@ -54,7 +54,9 @@ export type EntityCoreOwnership = {
   updated_by: IPerson | null;
 };
 
-export interface EntityCoreIdentifiableNamed extends EntityCoreIdentifiable {
+export interface EntityCoreIdentifiableNamed
+  extends EntityCoreIdentifiable,
+    IEntityLifecycleStatus {
   name: string;
   type: EntityCoreDataType;
 }

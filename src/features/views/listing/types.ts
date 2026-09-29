@@ -19,6 +19,10 @@ export type ListingTableProps<Row = EntityCoreIdentifiableNamed> = {
   /** controlled selection; pair with {@link onRowsSelected} */
   selectedRows?: Row[];
   onRowsSelected?: (rows: Row[]) => void;
+  /** when it returns false the row's checkbox is disabled (e.g. a selection cap is reached) */
+  isRowSelectable?: (row: Row) => boolean;
+  /** hides the header select-all checkbox (used with a selection cap so it can't overshoot) */
+  hideSelectAll?: boolean;
   /**
    * Whether selection survives a scope/controller change. Shared is the default single
    * basket; isolated starts a fresh selection for each scope.
