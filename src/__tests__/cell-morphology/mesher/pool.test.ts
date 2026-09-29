@@ -5,8 +5,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createMesherApi } from '@/features/entities/cell-morphology/morpho-viewer/engine/mesher-api';
 import { MeshPool } from '@/features/entities/cell-morphology/morpho-viewer/engine/pool';
 import { GpuError } from '@/features/entities/cell-morphology/morpho-viewer/engine/protocol';
+import { SWC_SOMA } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
 
 import { BRANCHED, expectWatertight, params } from './mesh-utils';
+
+/** A dendrite of three points, and no soma. */
+const NO_SOMA = `
+  1 3 0 0 0 1 -1
+  2 3 10 0 0 1 1
+  3 3 20 0 0 0.8 2
+`;
 
 function asWorker({ port1, port2 }: MessageChannel): Worker {
   return Object.assign(port1, {
@@ -40,6 +48,9 @@ describe('MeshPool over Comlink', () => {
     const { summary, skeleton } = await p.load(BRANCHED);
     expect(summary.nodeCount).toBe(8);
     expect(skeleton.count).toBeGreaterThan(0);
+    // The soma the mesh is built with, for the skeleton to stand in for it.
+    expect(skeleton.types[0]).toBe(SWC_SOMA);
+    expect(skeleton.radii?.[0]).toBeCloseTo(summary.somaStems.baseRadius, 5);
 
     const progress: number[][] = [];
     const mesh = await p.build(params(), {
@@ -50,6 +61,14 @@ describe('MeshPool over Comlink', () => {
     expectWatertight(mesh!);
     const [done, total] = progress.at(-1)!;
     expect(done).toBe(total);
+  });
+
+  it('leaves the soma out of the skeleton of a file without one', async () => {
+    const { summary, skeleton } = await pool(1).load(NO_SOMA);
+    expect(summary.soma.model).toBe('none');
+    expect(skeleton.count).toBe(2);
+    expect(skeleton.types).not.toContain(SWC_SOMA);
+    expect(skeleton.radii).toHaveLength(4);
   });
 
   it('measures the path distances of a mesh and its skeletons on worker 0', async () => {

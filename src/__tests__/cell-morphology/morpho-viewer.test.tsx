@@ -356,7 +356,7 @@ describe('GPU', () => {
 });
 
 describe('MorphoViewer', () => {
-  it('shows the traced skeleton until the mesh, then what the Skeleton choice says', async () => {
+  it('shows Traced until the mesh, then what the Skeleton choice says, which the viewer gets all along', async () => {
     const build = Promise.withResolvers<unknown>();
     h.setup = (pool) => pool.build.mockReturnValue(build.promise);
     const { viewer } = await renderViewer();
@@ -364,7 +364,8 @@ describe('MorphoViewer', () => {
     await waitFor(() =>
       expect(viewer.setSkeleton).toHaveBeenCalledWith('original', h.skeleton, SUMMARY.size)
     );
-    expect(viewer.showSkeleton).toHaveBeenLastCalledWith('original');
+    // The viewer puts the traced skeleton in for the mesh (skeleton-lines.test.ts).
+    expect(viewer.showSkeleton).toHaveBeenLastCalledWith(null);
     expect(await screen.findByRole('status')).toHaveTextContent('Building mesh… 0 %');
     await openSettings();
     const traced = screen.getByRole('button', { name: 'Traced skeleton' });
@@ -390,7 +391,7 @@ describe('MorphoViewer', () => {
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent('The surface could not be built: boom')
     );
-    expect(viewer.showSkeleton).toHaveBeenLastCalledWith('original');
+    expect(viewer.setMesh).not.toHaveBeenCalled();
   });
 
   it('says when the file cannot be read', async () => {
@@ -628,7 +629,6 @@ describe('MorphoViewer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Hide axon' }));
     expect(await screen.findByText('The surface could not be built: boom')).toBeInTheDocument();
     expect(viewer.clearMesh).toHaveBeenCalledTimes(2);
-    expect(viewer.showSkeleton).toHaveBeenLastCalledWith('original');
 
     fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(await screen.findByText('Could not be built: boom')).toBeInTheDocument();

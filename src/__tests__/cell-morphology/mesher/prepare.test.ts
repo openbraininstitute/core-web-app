@@ -18,6 +18,7 @@ import {
   type Section,
   SWC_AXON,
   SWC_BASAL,
+  SWC_SOMA,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
 
 import { checkMesh, connectedComponents, SAMPLE_CELL_TIMEOUT, sampleSwc } from './mesh-utils';
@@ -222,6 +223,26 @@ describe('prepareMorphology', () => {
     const sk = sectionSegments(out.sections, res.center);
     expect(sk.count).toBe(kept - out.sections.length);
     expect(sk.positions.length).toBe(6 * sk.count);
+  });
+});
+
+describe('sectionSegments', () => {
+  it('gives each segment its radius at either end, and the soma a segment of no length first', () => {
+    const m = parseSwc(straight([1, 0.5]));
+    const sk = sectionSegments(m.sections, [1, 0, 0], {
+      radii: true,
+      soma: { center: [0, 0, 0], radius: 3 },
+    });
+    expect(sk.count).toBe(3);
+    expect([...sk.types]).toEqual([SWC_SOMA, SWC_BASAL, SWC_BASAL]);
+    expect([...sk.positions]).toEqual([-1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]);
+    expect([...(sk.radii ?? [])]).toEqual([3, 3, 1, 1, 1, 0.5]);
+  });
+
+  it('leaves the radii and the soma out of an overlay', () => {
+    const sk = sectionSegments(parseSwc(straight([1, 0.5])).sections, [0, 0, 0]);
+    expect(sk.count).toBe(2);
+    expect(sk.radii).toBeUndefined();
   });
 });
 

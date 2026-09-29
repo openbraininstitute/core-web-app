@@ -564,6 +564,16 @@ export function segmentCount(prims: Prim[]): number {
   return n;
 }
 
+/** The soma's base sphere, which the mesh is built around; null without a soma. */
+export function somaSphere(
+  m: Morphology
+): { center: [number, number, number]; radius: number } | null {
+  const st = m.somaStems;
+  return m.soma.model !== 'none' && st.baseRadius > 0
+    ? { center: st.center, radius: st.baseRadius }
+    : null;
+}
+
 export function meshCenter(m: Morphology): [number, number, number] {
   if (m.soma.model !== 'none') return [...m.soma.center];
   return [
@@ -857,14 +867,14 @@ export function collectPrimitives(m: Morphology, params: MeshParams, floor?: num
   const prims: Prim[] = [];
   const minR = floor ?? Math.max(params.minRadius, MIN_RADIUS_VOXELS * params.voxel);
   const include = params.includeTypes ? new Set(params.includeTypes) : null;
-  const st = m.somaStems;
+  const soma = somaSphere(m);
   let necks = new Map<number, Float64Array>();
-  if (m.soma.model !== 'none' && st.baseRadius > 0) {
+  if (soma) {
     necks = somaNecks(m, include);
     const targets = new Float64Array(4 * necks.size);
     let k = 0;
     for (const n of necks.values()) targets.set(n.subarray(0, 4), 4 * k++);
-    const segs = somaSegments(st.center, st.baseRadius, targets, minR);
+    const segs = somaSegments(soma.center, soma.radius, targets, minR);
     prims.push({
       type: SWC_SOMA,
       beta: params.somaBlend,

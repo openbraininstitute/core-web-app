@@ -162,30 +162,49 @@ export function countPoints(sections: Section[]): number {
   return n;
 }
 
-/** Line segments of the section polylines, relative to `center`, for the overlay. */
+/**
+ * Line segments of the section polylines, relative to `center`, for the overlays. For the skeleton that stands in for
+ * the mesh, `radii` adds the radius at either end of each, and `soma` comes first as a segment of no length.
+ */
 export function sectionSegments(
   sections: Section[],
-  center: [number, number, number]
+  center: [number, number, number],
+  {
+    radii: withRadii = false,
+    soma = null,
+  }: { radii?: boolean; soma?: { center: readonly number[]; radius: number } | null } = {}
 ): SkeletonData {
-  let count = 0;
+  let count = soma ? 1 : 0;
   for (const s of sections) count += Math.max(0, s.points.length / 4 - 1);
   const positions = new Float32Array(count * 6);
+  const radii = withRadii ? new Float32Array(count * 2) : undefined;
   const types = new Uint8Array(count);
+  const [cx, cy, cz] = center;
   let k = 0;
+  if (soma) {
+    const [x, y, z] = soma.center;
+    positions.set([x - cx, y - cy, z - cz, x - cx, y - cy, z - cz]);
+    radii?.fill(soma.radius, 0, 2);
+    types[k++] = SWC_SOMA;
+  }
   for (const s of sections) {
     const p = s.points;
     for (let i = 4; i < p.length; i += 4) {
-      positions[6 * k] = p[i - 4] - center[0];
-      positions[6 * k + 1] = p[i - 3] - center[1];
-      positions[6 * k + 2] = p[i - 2] - center[2];
-      positions[6 * k + 3] = p[i] - center[0];
-      positions[6 * k + 4] = p[i + 1] - center[1];
-      positions[6 * k + 5] = p[i + 2] - center[2];
+      positions[6 * k] = p[i - 4] - cx;
+      positions[6 * k + 1] = p[i - 3] - cy;
+      positions[6 * k + 2] = p[i - 2] - cz;
+      positions[6 * k + 3] = p[i] - cx;
+      positions[6 * k + 4] = p[i + 1] - cy;
+      positions[6 * k + 5] = p[i + 2] - cz;
+      if (radii) {
+        radii[2 * k] = p[i - 1];
+        radii[2 * k + 1] = p[i + 3];
+      }
       types[k] = s.type;
       k++;
     }
   }
-  return { positions, types, count };
+  return { positions, radii, types, count };
 }
 
 // ---------------------------------------------------------------------------

@@ -259,7 +259,7 @@ void widenToPixels( inout vec3 p, vec3 n, float r ) {
  * `customProgramCacheKey`, by default the hook's source, which would be this same wrapper for every material: the
  * key is `name` in front of the key of what it wraps, so that two materials share a program only if their hooks do.
  */
-function addShaderHook<T extends THREE.Material>(
+export function addShaderHook<T extends THREE.Material>(
   m: T,
   name: string,
   hook: (shader: THREE.WebGLProgramParametersWithUniforms) => void

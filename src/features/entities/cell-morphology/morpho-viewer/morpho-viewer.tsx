@@ -54,7 +54,7 @@ function MorphoViewerComponent({ className, swc, name }: MorphoViewerProps) {
 
   useEffect(() => viewer?.onWheelWithoutCtrl(() => setWheelHint(true)), [viewer, setWheelHint]);
 
-  useViewerSync(viewer, settings, mesh.layers.mesh !== null, distances);
+  useViewerSync(viewer, settings, distances);
 
   return (
     <div
@@ -91,7 +91,6 @@ function MorphoViewerComponent({ className, swc, name }: MorphoViewerProps) {
 function useViewerSync(
   viewer: Viewer | null,
   settings: ViewerSettings,
-  hasMesh: boolean,
   distances: DistanceData | null
 ) {
   const palette = currentPalette(settings);
@@ -117,11 +116,7 @@ function useViewerSync(
   useEffect(() => viewer?.setMinWidth(settings.minWidth), [viewer, settings.minWidth]);
   useEffect(() => viewer?.showMesh(settings.showMesh), [viewer, settings.showMesh]);
   useEffect(() => viewer?.setWireframe(settings.wireframe), [viewer, settings.wireframe]);
-  // The traced skeleton stands in for the mesh until it comes.
-  useEffect(
-    () => viewer?.showSkeleton(hasMesh ? settings.skeleton : 'original'),
-    [viewer, hasMesh, settings.skeleton]
-  );
+  useEffect(() => viewer?.showSkeleton(settings.skeleton), [viewer, settings.skeleton]);
   useEffect(() => viewer?.setSpin(settings.spin), [viewer, settings.spin]);
   useEffect(() => viewer?.setProjection(settings.projection), [viewer, settings.projection]);
 }

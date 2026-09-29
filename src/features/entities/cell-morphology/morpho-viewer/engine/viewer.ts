@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -32,7 +31,9 @@ import {
   showTypeTint,
   withDisplacement,
 } from './looks';
+import { overlayMaterial, skeletonStyle, standInMaterial } from './skeleton-lines';
 
+import type { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import type { MeshResult } from './mesher';
 import type { SkeletonData } from './protocol';
 
@@ -116,18 +117,21 @@ export class Viewer {
   private overlays: Record<SkeletonKind, Overlay | null> = { original: null, processed: null };
   private hiddenTypes = new Set<number>();
   // Both are drawn with the transparent objects, after them: the see-through looks would otherwise glow over them.
-  private skeletonLine = new LineMaterial({
+  private skeletonLine = overlayMaterial({
     vertexColors: true,
     linewidth: SKELETON_WIDTH,
     transparent: true,
   });
   // Without depth writes: the line over it has the same depths, and would z-fight with it.
-  private skeletonCasing = new LineMaterial({
+  private skeletonCasing = overlayMaterial({
     color: 0x111111,
     linewidth: SKELETON_WIDTH + 2 * SKELETON_CASING,
     transparent: true,
     depthWrite: false,
   });
+  private skeletonBody = standInMaterial({ vertexColors: true, linewidth: 0 });
+  /** The skeleton to show over the mesh (`skeletonStyle`). */
+  private chosenSkeleton: SkeletonKind | null = null;
   private bounds = new THREE.Box3(new THREE.Vector3(-50, -50, -50), new THREE.Vector3(50, 50, 50));
   /** The original skeleton's points (x, y, z after one another), which `resetView` fits into the view; null before a load. */
   private fitPoints: Float32Array | null = null;
@@ -200,6 +204,7 @@ export class Viewer {
       group.visible = false;
       this.scene.add(group);
     }
+    this.styleSkeletons();
     this.look = this.looks.find((l) => l.id === DEFAULT_LOOK) ?? this.looks[0];
     this.applyLook();
     this.applyBackground();
@@ -226,6 +231,7 @@ export class Viewer {
       this.renderSkeleton(kind, null);
     this.skeletonLine.dispose();
     this.skeletonCasing.dispose();
+    this.skeletonBody.dispose();
     for (const l of this.looks) {
       disposeMaterial(l.material);
       if (l.outline) disposeMaterial(l.outline);
@@ -406,6 +412,7 @@ export class Viewer {
   setMesh(result: MeshResult): void {
     this.clearMesh();
     this.result = result;
+    this.styleSkeletons();
     const n = result.positions.length / 3;
     const normals = new Int16Array(n * 3);
     const src = result.normals;
@@ -466,6 +473,7 @@ export class Viewer {
     this.result = null;
     this.meshColors = null;
     this.depthSample = null;
+    this.styleSkeletons();
     this.invalidate();
   }
 
@@ -500,17 +508,23 @@ export class Viewer {
     let shown = 0;
     for (let i = 0; i < data.count; i++) if (!this.hiddenTypes.has(data.types[i])) shown++;
     if (shown === 0) return;
-    let { positions, types } = data;
+    let { positions, radii, types } = data;
     let kept: Int32Array | null = null;
     if (shown < data.count) {
+      const all = data.radii;
       kept = new Int32Array(shown);
       positions = new Float32Array(6 * shown);
+      radii = all && new Float32Array(2 * shown);
       types = new Uint8Array(shown);
       for (let i = 0, k = 0; i < data.count; i++) {
         if (this.hiddenTypes.has(data.types[i])) continue;
         kept[k] = i;
         types[k] = data.types[i];
         for (let c = 0; c < 6; c++) positions[6 * k + c] = data.positions[6 * i + c];
+        if (radii && all) {
+          radii[2 * k] = all[2 * i];
+          radii[2 * k + 1] = all[2 * i + 1];
+        }
         k++;
       }
     }
@@ -521,11 +535,17 @@ export class Viewer {
     const color = new THREE.InterleavedBufferAttribute(colors, 3, 0, true);
     geo.setAttribute('instanceColorStart', color);
     geo.setAttribute('instanceColorEnd', color);
-    // After the see-through meshes, which are at render order 0, and the line over its casing.
-    for (const [material, order] of [
+    // After the see-through meshes, which are at render order 0, and the line over its casing. Only a skeleton with
+    // its radii can stand in for the mesh.
+    const drawn: [LineMaterial, number][] = [
       [this.skeletonCasing, 1],
       [this.skeletonLine, 2],
-    ] as const) {
+    ];
+    if (radii) {
+      geo.setAttribute('instanceRadius', new THREE.InstancedBufferAttribute(radii, 2));
+      drawn.push([this.skeletonBody, 2]);
+    }
+    for (const [material, order] of drawn) {
       const lines = new LineSegments2(geo, material);
       lines.renderOrder = order;
       group.add(lines);
@@ -592,13 +612,23 @@ export class Viewer {
   showMesh(v: boolean): void {
     this.meshVisible = v;
     this.chunks.visible = v;
-    this.skeletonCasing.visible = v;
+    this.styleSkeletons();
     this.applyLook();
   }
 
-  /** Show one of the skeleton overlays, or none. */
+  /** Show the skeleton `skeletonStyle` picks in the same call that brings or drops the mesh, so no frame has one without the other. */
+  private styleSkeletons(): void {
+    const style = skeletonStyle(this.chosenSkeleton, this.result !== null, this.meshVisible);
+    for (const [k, group] of Object.entries(this.skeletons)) group.visible = k === style.kind;
+    this.skeletonBody.visible = style.body;
+    this.skeletonLine.visible = style.line;
+    this.skeletonCasing.visible = style.casing;
+  }
+
+  /** The skeleton overlay to show over the mesh, or none; until the mesh comes, the traced one stands in for it. */
   showSkeleton(kind: SkeletonKind | null): void {
-    for (const [k, group] of Object.entries(this.skeletons)) group.visible = k === kind;
+    this.chosenSkeleton = kind;
+    this.styleSkeletons();
     this.invalidate();
   }
 
@@ -621,9 +651,10 @@ export class Viewer {
     this.invalidate();
   }
 
-  /** The width floor of every look (looks.ts); 0 turns it off. */
+  /** The width floor of every look (looks.ts), and of the skeleton that stands in for the mesh; 0 turns it off. */
   setMinWidth(pixels: number): void {
     setWidthFloor(pixels);
+    this.skeletonBody.linewidth = pixels;
     this.invalidate();
   }
 

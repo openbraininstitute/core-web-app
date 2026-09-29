@@ -68,6 +68,8 @@ export interface MorphologySummary {
 
 export interface SkeletonData {
   positions: Float32Array;
+  /** The radius at either end of each segment, µm: only the skeleton that stands in for the mesh has them. */
+  radii?: Float32Array;
   types: Uint8Array;
   count: number;
 }
@@ -105,7 +107,7 @@ export function jobTransfer(job: SlabJob): ArrayBuffer[] {
 }
 
 export function skeletonTransfer(s: SkeletonData): ArrayBuffer[] {
-  return buffers(s.positions, s.types);
+  return buffers(...[s.positions, s.types, s.radii].filter((a) => a !== undefined));
 }
 
 /** A plan: its jobs and the prepared skeleton. */

@@ -8,7 +8,7 @@ import { errorMessage } from './engine/protocol';
 
 import type { DistanceData } from './engine/colors';
 import type { MeshPool } from './engine/pool';
-import type { DistanceRequest } from './engine/protocol';
+import type { DistanceRequest, SkeletonData } from './engine/protocol';
 import type { Layers } from './use-morphology-mesh';
 
 export interface PathDistancesState {
@@ -39,9 +39,11 @@ export function usePathDistances(
     if (!pool || !enabled || !original) return;
     const wanted = <T extends object>(layer: T | null): layer is T =>
       layer !== null && !measured.has(layer) && !pending.has(layer);
+    // Without the radii, which only the viewer draws with.
+    const segments = ({ positions, types, count }: SkeletonData) => ({ positions, types, count });
     const request: DistanceRequest = {
-      original: wanted(original) ? original : undefined,
-      processed: wanted(processed) ? processed : undefined,
+      original: wanted(original) ? segments(original) : undefined,
+      processed: wanted(processed) ? segments(processed) : undefined,
       mesh: wanted(mesh) ? { positions: mesh.positions, types: mesh.vertexTypes } : undefined,
     };
     const asked = [original, processed, mesh].filter(wanted);

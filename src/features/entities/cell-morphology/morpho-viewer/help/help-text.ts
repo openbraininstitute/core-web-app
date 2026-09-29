@@ -99,7 +99,8 @@ export const HELP = {
     text:
       'Draws every fibre at least this many pixels wide, however far away the camera is. A whole cell fits on the ' +
       'screen at microns per pixel, where a thin axon covers a fraction of a pixel and all but vanishes. The shader ' +
-      'widens it on screen only: the mesh keeps the true radii. Close up nothing is that thin, and nothing changes.',
+      'widens it on screen only: the mesh keeps the true radii. Close up nothing is that thin, and nothing changes. ' +
+      'The skeleton shown while the mesh is built has the same floor.',
     effects: [
       [
         'Higher',
@@ -125,7 +126,8 @@ export const HELP = {
   skeleton: {
     text:
       'Draws the skeleton as lines in the neurite colours. They are depth-tested, so within a solid mesh they show ' +
-      'only where they leave the surface. The traced skeleton shows on its own until the mesh is built.',
+      'only where they leave the surface. Until the mesh is built, the traced skeleton stands in for it, each fibre ' +
+      'as wide as the mesh draws it.',
     effects: [
       ['Off', 'The mesh alone.'],
       ['Traced', "The file's skeleton, as traced."],

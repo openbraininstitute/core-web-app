@@ -7,8 +7,8 @@ behind each step and the measurements.
 
 In short:
 
-- The traced skeleton shows as soon as the SWC is parsed. The mesh takes over once it is built: about half a second
-  for a cortical cell, a few seconds for a whole-brain projection neuron.
+- The traced skeleton shows as soon as the SWC is parsed, each fibre as wide as the mesh will draw it. The mesh takes
+  over once it is built: about half a second for a cortical cell, a few seconds for a whole-brain projection neuron.
 - Where a neurite runs alone, its surface is swept as a tube. Around branch points, the soma and places where
   fibres touch, a voxel field is meshed instead, and the two are joined by collars.
 - The voxel work runs on the GPU (WebGPU) where the browser has it, and on the CPU otherwise.

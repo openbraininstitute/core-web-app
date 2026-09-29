@@ -25,6 +25,7 @@ import {
   type SlabJob,
   type SlabResult,
   simplifierReady,
+  somaSphere,
 } from './mesher';
 import { sectionSegments, sortedRadii } from './prepare';
 import {
@@ -105,7 +106,11 @@ export function createMesherApi() {
     load: serial((text: string) => {
       morph = parseSwc(text);
       paths = null;
-      const skeleton = sectionSegments(morph.sections, meshCenter(morph));
+      // The traced skeleton stands in for the mesh until it comes.
+      const skeleton = sectionSegments(morph.sections, meshCenter(morph), {
+        radii: true,
+        soma: somaSphere(morph),
+      });
       return Comlink.transfer({ summary: summarize(morph), skeleton }, skeletonTransfer(skeleton));
     }),
     plan: serial((params: MeshParams, options: PlanOptions) => {
