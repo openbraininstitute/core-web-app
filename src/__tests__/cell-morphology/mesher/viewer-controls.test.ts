@@ -57,6 +57,17 @@ function run(max = 2000): void {
   for (let i = 0; i < max && renderer.loop; i++) renderer.loop();
 }
 
+/** Run the loop as `run` does, the clock going on by a 60 Hz frame before each. */
+function runTimed(clock: { now: number }, max = 2000): void {
+  for (let i = 0; i < max && renderer.loop; i++) {
+    clock.now += 16;
+    renderer.loop();
+  }
+}
+
+/** Where the camera looks at the target from, as a unit vector. */
+const facing = () => camera.position.clone().sub(controls.target).normalize();
+
 function pointer(type: string): void {
   renderer.domElement.dispatchEvent(
     new PointerEvent(type, { pointerId: 1, pointerType: 'mouse', button: 0, bubbles: true })
@@ -130,5 +141,42 @@ describe('viewer controls', () => {
     expect(camera.quaternion.angleTo(quaternion)).toBeLessThan(1e-6);
     expect(controls.target.length()).toBeLessThan(1e-9);
     expect(camera.up.y).toBeCloseTo(1, 9);
+  });
+
+  it('turns to view from an axis clicked on the gizmo, telling it every frame, and stays there', () => {
+    const clock = { now: 0 };
+    const now = vi.spyOn(performance, 'now').mockImplementation(() => clock.now);
+    try {
+      const heard: THREE.Quaternion[] = [];
+      viewer.onViewChange((orientation) => heard.push(orientation.clone()));
+      expect(heard).toHaveLength(1);
+      const distance = camera.position.distanceTo(controls.target);
+      viewer.viewAlong(0, 1);
+      runTimed(clock);
+      expect(renderer.loop).toBeNull();
+      expect(facing().x).toBeCloseTo(1, 6);
+      expect(camera.up.y).toBeCloseTo(1, 6);
+      expect(camera.position.distanceTo(controls.target)).toBeCloseTo(distance, 6);
+      // One for each frame of the 0.3 s turn, the last where the camera stopped.
+      expect(heard.length).toBeGreaterThan(15);
+      expect(heard.at(-1)?.angleTo(camera.quaternion)).toBeLessThan(1e-9);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
+  it('lets a drag take over from a turn to an axis', () => {
+    const clock = { now: 0 };
+    const now = vi.spyOn(performance, 'now').mockImplementation(() => clock.now);
+    try {
+      viewer.viewAlong(0, 1);
+      runTimed(clock, 5);
+      pointer('pointerdown');
+      pointer('pointerup');
+      runTimed(clock);
+      expect(facing().x).toBeLessThan(0.9);
+    } finally {
+      now.mockRestore();
+    }
   });
 });
