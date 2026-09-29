@@ -6,9 +6,6 @@ import { useParams } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { type TViewVariant, ViewVariant } from '@/constants';
-import { detailViewCardBorderClass } from '@/ui/segments/detail-view/variant-styles';
-import { cn } from '@/utils/css-class';
 
 import { MorphoViewer } from './morpho-viewer/morpho-viewer';
 import { useCellMorphologySwc } from './morpho-viewer/use-cell-morphology-swc';
@@ -16,25 +13,13 @@ import { useCellMorphologySwc } from './morpho-viewer/use-cell-morphology-swc';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
-export function CellMorphologyViewer({
-  entity,
-  variant = ViewVariant.Default,
-}: {
-  entity: ICellMorphology;
-  variant?: TViewVariant;
-}) {
+export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
   if (!entity) return null;
 
   return (
     // As tall as the circuit viewer: its chrome and menus need the room.
-    <div
-      className={cn(
-        // Clipped to the padding, the white stays out from under a translucent border.
-        'h-[min(740px,80vh)] min-h-90 w-full overflow-hidden rounded-2xl border bg-white bg-clip-padding text-primary-9',
-        detailViewCardBorderClass(variant)
-      )}
-    >
-      <div className="h-full">
+    <div className="h-[min(740px,80vh)] min-h-90 w-full overflow-hidden rounded-2xl border border-white/20 text-primary-9">
+      <div className="h-full bg-white">
         <ErrorBoundary
           FallbackComponent={withErrorConfig({
             cls: { container: 'bg-white' },
@@ -62,7 +47,7 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
     );
   }
   if (result) {
-    return <MorphoViewer className="h-full rounded-2xl" swc={result} name={morphology.name} />;
+    return <MorphoViewer className="h-full" swc={result} name={morphology.name} />;
   }
   if (error) {
     return (

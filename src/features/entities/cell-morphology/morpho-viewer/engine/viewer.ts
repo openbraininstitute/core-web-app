@@ -306,7 +306,6 @@ export class Viewer {
     const target = this.controls.target;
     const d = camera.position.distanceTo(target);
     const reach = this.reach(d);
-    const dir = camera.getWorldDirection(this.viewDir);
     const radius = orbitRadius(this.bounds) || 50;
     // A near plane fixed at the framing distance would cut fibres tens of µm away on a mm-scale cell.
     const { near, far } =
@@ -327,6 +326,7 @@ export class Viewer {
     }
     // Only the mesh is drawn by depth.
     if (this.depthSample !== null) {
+      const dir = camera.getWorldDirection(this.viewDir);
       const span = depthSpan(this.depthSample, camera.position, dir, d, reach);
       setDepthRange(span.near, span.far);
     }
