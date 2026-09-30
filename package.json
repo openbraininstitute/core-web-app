@@ -71,8 +71,6 @@
     "@tanstack/react-query-devtools": "^5.100.9",
     "@tanstack/react-virtual": "^3.13.24",
     "@tolokoban/tgd": "2.2.0",
-    "acorn": "8.18.0",
-    "acorn-walk": "8.3.5",
     "ag-grid-community": "^35.3.0",
     "ag-grid-react": "^35.3.0",
     "ai": "^6.0.202",

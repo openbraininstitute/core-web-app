@@ -13,8 +13,11 @@ import {
 } from '@codemirror/view';
 import { useEffect, useRef, useState } from 'react';
 
+import {
+  type TDistanceFunctionValidation,
+  validateDistanceFunction,
+} from '@/api/one/distance-function';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
-import { validateDistanceFunction } from '@/features/scan-config/components/ui-elements/distance-function/validate';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
 
@@ -24,36 +27,16 @@ export interface DistanceFunctionInputProps {
   disabled?: boolean;
   /** Extra placeholder names the function may use, beyond {value}/{distance}. */
   declaredParameters?: readonly string[];
-  /**
-   * Field path used to publish a non-ajv validation error into the shared field-errors atom, so
-   * the enclosing dictionary entry (e.g. a custom distribution) shows the warning key. The schema
-   * only types this field as a string, so ajv cannot flag an unsafe/invalid function.
-   */
+  maxLength?: number;
   errorPath?: string;
 }
 
-// Build a linter bound to a specific set of declared parameters. Rebuilt (via a Compartment)
-// whenever the parameters change so the inline squiggle re-runs, matching the red-outline state.
-function makeDistanceLinter(params: readonly string[]) {
-  return linter((view): Diagnostic[] => {
-    const text = view.state.doc.toString();
-    if (text.trim().length === 0) return [];
-    const error = validateDistanceFunction(text, params);
-    if (!error) return [];
-    return [
-      {
-        from: Math.min(error.from, text.length),
-        to: Math.min(Math.max(error.to, error.from + 1), text.length),
-        severity: 'error',
-        message: error.message,
-      },
-    ];
-  });
-}
+const VALIDATE_DEBOUNCE_MS = 350;
 
-// can see at a glance which variables and math calls they referenced. No full grammar needed.
+// Highlighting: color `{placeholder}` tokens and known function names so the user can see at a
+// glance which variables and math calls they referenced.
 const PLACEHOLDER_RE = /\{\w+\}/g;
-const FUNCTION_RE = /\b(?:math|Math)\.\w+|\b(?:int|float|abs|min|max)\b/g;
+const FUNCTION_RE = /\bmath\.\w+|\b(?:float|abs|min|max)\b/g;
 
 const placeholderMark = Decoration.mark({ class: 'cm-distance-placeholder' });
 const functionMark = Decoration.mark({ class: 'cm-distance-function' });
@@ -94,36 +77,59 @@ const editorTheme = EditorView.theme({
   '.cm-distance-function': { color: '#08979c' },
 });
 
+/** A linter that reports a single, already-computed server diagnostic (or none). */
+function makeServerLinter(result: TDistanceFunctionValidation | null) {
+  return linter((view): Diagnostic[] => {
+    const len = view.state.doc.length;
+    if (!result || result.valid || len === 0) return [];
+    return [
+      {
+        from: Math.min(result.from, len),
+        to: Math.min(Math.max(result.to, result.from + 1), len),
+        severity: 'error',
+        message: result.error ?? 'Invalid distance function.',
+      },
+    ];
+  });
+}
+
+/** Apply a validation result to the editor (squiggle) and the red outline / message state. */
+function applyResult(
+  view: EditorView,
+  compartment: Compartment,
+  setErrorMessage: (msg: string | null) => void,
+  result: TDistanceFunctionValidation | null
+): void {
+  setErrorMessage(result && !result.valid ? (result.error ?? 'Invalid distance function.') : null);
+  view.dispatch({ effects: compartment.reconfigure(makeServerLinter(result)) });
+  forceLinting(view);
+}
+
 export function DistanceFunctionInput({
   value,
   onChange,
   disabled = false,
   declaredParameters = [],
+  maxLength,
   errorPath,
 }: DistanceFunctionInputProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  // Compartment lets us swap the linter (rebuilt with new parameters) without recreating the editor.
+  // Compartment lets us swap the linter with the latest server result without recreating the editor.
   const linterCompartment = useRef(new Compartment());
-  // Keep the latest onChange in a ref so the editor is created once, not re-created per render.
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  // Same for the declared parameters, so the linter reads current values without recreating the editor.
   const paramsRef = useRef(declaredParameters);
   paramsRef.current = declaredParameters;
-  // Validation is synchronous, so drive the red outline from React state directly rather than
-  // waiting for CodeMirror's debounced linter (which only controls the inline squiggle).
-  const [errorMessage, setErrorMessage] = useState<string | null>(() =>
-    value.trim().length === 0
-      ? null
-      : (validateDistanceFunction(value, declaredParameters)?.message ?? null)
-  );
 
-  // Publish the same error into the shared field-errors atom so the enclosing dictionary entry
-  // (a custom distribution) shows the warning key. ajv cannot: the schema types this as a string.
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Publish the error into the shared field-errors atom so the enclosing dictionary entry shows
+  // the warning key. Cleared on unmount by the hook.
   useFieldError(errorPath, errorMessage ?? undefined);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `value` seeds the initial doc only; a separate effect syncs later changes so editing state (cursor, undo) survives.
+  // Create the editor once. `value` seeds the initial doc; later external changes are synced below.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `value` is the initial doc only.
   useEffect(() => {
     if (!hostRef.current) return;
 
@@ -133,20 +139,18 @@ export function DistanceFunctionInput({
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
         highlightPlugin,
-        linterCompartment.current.of(makeDistanceLinter(paramsRef.current)),
+        linterCompartment.current.of(makeServerLinter(null)),
         editorTheme,
         EditorView.lineWrapping,
         EditorState.readOnly.of(disabled),
         EditorView.editable.of(!disabled),
+        // Enforce max length: reject changes that would exceed it (schema `maxLength`).
+        EditorState.changeFilter.of((tr) =>
+          maxLength === undefined || tr.newDoc.length <= maxLength ? true : []
+        ),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
-            const text = update.state.doc.toString();
-            onChangeRef.current(text);
-            setErrorMessage(
-              text.trim().length === 0
-                ? null
-                : (validateDistanceFunction(text, paramsRef.current)?.message ?? null)
-            );
+            onChangeRef.current(update.state.doc.toString());
           }
         }),
       ],
@@ -158,8 +162,7 @@ export function DistanceFunctionInput({
       view.destroy();
       viewRef.current = null;
     };
-    // Editor is created once; disabled changes are rare and handled by recreating the editor.
-  }, [disabled]);
+  }, [disabled, maxLength]);
 
   // Sync external value changes (e.g. loading a saved config) into the editor.
   useEffect(() => {
@@ -168,33 +171,40 @@ export function DistanceFunctionInput({
     const current = view.state.doc.toString();
     if (current !== value) {
       view.dispatch({ changes: { from: 0, to: current.length, insert: value } });
-      setErrorMessage(
-        value.trim().length === 0
-          ? null
-          : (validateDistanceFunction(value, paramsRef.current)?.message ?? null)
-      );
     }
   }, [value]);
 
-  // When declared parameters change (a parameter added/removed elsewhere), re-validate the
-  // current text: recompute the red-outline state and swap the linter so CodeMirror re-runs it,
-  // since the doc itself did not change and would not otherwise re-trigger linting.
+  // Debounced server validation, re-run when the value or declared parameters change.
   const paramsKey = declaredParameters.join('\u0000');
-  // biome-ignore lint/correctness/useExhaustiveDependencies: paramsKey is the trigger; the body reads paramsRef.current for the current values.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: value and paramsKey are the triggers; the body reads stable refs/setters.
   useEffect(() => {
     const view = viewRef.current;
-    if (!view) return;
-    const text = view.state.doc.toString();
-    setErrorMessage(
-      text.trim().length === 0
-        ? null
-        : (validateDistanceFunction(text, paramsRef.current)?.message ?? null)
-    );
-    view.dispatch({
-      effects: linterCompartment.current.reconfigure(makeDistanceLinter(paramsRef.current)),
-    });
-    forceLinting(view);
-  }, [paramsKey]);
+    if (!view) return undefined;
+    const compartment = linterCompartment.current;
+    if (value.trim().length === 0) {
+      applyResult(view, compartment, setErrorMessage, null);
+      return undefined;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      validateDistanceFunction({
+        function: value,
+        parameters: paramsRef.current,
+        signal: controller.signal,
+      })
+        .then((result) => {
+          const current = viewRef.current;
+          if (current) applyResult(current, compartment, setErrorMessage, result);
+        })
+        .catch(() => {
+          // Aborted or network error: leave the last state; do not block editing.
+        });
+    }, VALIDATE_DEBOUNCE_MS);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [value, paramsKey]);
 
   const hasError = errorMessage !== null;
   return (

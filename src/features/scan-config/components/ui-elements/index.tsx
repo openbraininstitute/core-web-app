@@ -119,11 +119,12 @@ export function UIElementRender({
       {
         paramSchema: { ui_element: ScanConfigUIElementDict.DistanceFunctionInput },
       },
-      () => (
+      ({ paramSchema }) => (
         <DistanceFunctionInput
           value={typeof value === 'string' ? value : ''}
           disabled={disabled}
           declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
+          maxLength={paramSchema.maxLength}
           errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
           onChange={(next) => {
             setState({ ...state, [k]: next || null });

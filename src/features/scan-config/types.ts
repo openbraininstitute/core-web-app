@@ -231,6 +231,7 @@ export interface StringInput extends TBlockElement {
 
 export interface DistanceFunctionInputField extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.DistanceFunctionInput;
+  maxLength?: number;
 }
 
 export interface ModelIdentifier extends TBlockElement {
