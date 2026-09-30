@@ -546,10 +546,7 @@ class Scratch {
   count = 0;
 }
 
-/**
- * What a block's field is until a section writes to it: nothing, shared. A segment's band box takes in blocks that
- * its band does not reach, and they are kept, in the order in which they come, for that order is the vertex order.
- */
+/** What a block's field is until a section writes to it: nothing, shared. A band can reach a block and write none of its samples. */
 const ZERO_ACC = new Float32Array(BS3),
   ZERO_META = new Uint8Array(2 * BS3);
 
@@ -2155,14 +2152,14 @@ function splatSegment(
       for (let ib = band.bx0; ib <= band.bx1; ib++) {
         const lx0 = Math.max(0, gx0 - ib * B),
           lx1 = Math.min(B, gx1 - ib * B);
+        // Before the block's entry: a long diagonal segment's box holds its length cubed in blocks, most never reached.
+        if (!band.reaches(ib, jb, kb)) continue;
         const key = blockKey(g, ib, jb, kb);
         let sc = scratch.get(key);
         if (sc === undefined) {
           sc = scratchPool.pop() ?? new Scratch();
           scratch.set(key, sc);
         }
-        // The block is taken into the field all the same (see `ZERO_ACC`); only its samples are not visited.
-        if (!band.reaches(ib, jb, kb)) continue;
         const data = sc.data,
           touched = sc.touched;
         let count = sc.count;

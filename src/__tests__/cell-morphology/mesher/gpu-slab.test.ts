@@ -125,8 +125,8 @@ describe('binSegments', () => {
     const plan = planMesh(parseSwc(BRANCHED), params(), { maxSlabs: 1 });
     const { blocks, culled } = expectSameField(plan.jobs[0]);
     expect(blocks).toBeGreaterThan(100);
-    // The forked, oblique dendrites leave bounding-box corners that their bands do not reach.
-    expect(culled).toBeGreaterThan(0);
+    // Both leave out the corners of the boxes that the bands of the forked, oblique dendrites do not reach.
+    expect(culled).toBe(0);
   });
 
   it('does so for every slab of a split grid, halo included', () => {

@@ -23,6 +23,7 @@ import {
   canonicalTriangles,
   checkMesh,
   connectedComponents,
+  expectWatertight,
   MESH_TIMEOUT,
   params,
   radialStats,
@@ -79,6 +80,16 @@ function expectSameMesh(a: MeshResult, b: MeshResult): void {
 }
 
 describe('buildMesh', () => {
+  it('takes into the field only the blocks a long diagonal segment reaches', () => {
+    // 200 µm corner to corner: its box holds some 24 000 blocks at 0.5 µm, its band a few hundred.
+    const m = parseSwc(`1 1 0 0 0 5 -1
+2 3 0 0 0 1 1
+3 3 115 115 115 1 2`);
+    const res = buildMesh(m, params({ voxel: 0.5 }));
+    expect(res.stats.blocks).toBeLessThan(2000);
+    expectWatertight(res);
+  });
+
   it('meshes a lone sphere as a closed, outward-facing surface of the right size', () => {
     const r = 5;
     const m = parseSwc(`1 1 3.3 -2.1 7.9 ${r} -1`);
